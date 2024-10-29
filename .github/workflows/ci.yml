@@ -11,6 +11,9 @@ on:
 jobs:
   frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -21,23 +24,22 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        working-directory: ./fontend
         run: npm install
 
       - name: Run ESLint
-        working-directory: ./fontend
         run: npm run lint
 
       - name: Run Prettier
-        working-directory: ./fontend
         run: npm run format
 
       - name: Run tests
-        working-directory: ./fontend
         run: npm test:unit
 
   backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -48,19 +50,15 @@ jobs:
           go-version: '1.23'
 
       - name: Install golangci-lint
-        working-directory: ./backend
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
           echo "$GOPATH/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        working-directory: ./backend
         run: go mod tidy
 
       - name: Run golangci-lint
-        working-directory: ./backend
         run: golangci-lint run
 
       - name: Run tests
-        working-directory: ./backend
         run: go test ./...
