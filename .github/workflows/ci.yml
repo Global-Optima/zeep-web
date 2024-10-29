@@ -33,7 +33,7 @@ jobs:
         run: npm run format
 
       - name: Run tests
-        run: npm test:unit
+        run: npm run test:unit
 
   backend:
     runs-on: ubuntu-latest
