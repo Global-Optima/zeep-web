@@ -11,7 +11,9 @@ on:
 jobs:
   frontend:
     runs-on: ubuntu-latest
-    working-directory: frontend
+    defaults:
+      run:
+        working-directory: ./frontend
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -31,11 +33,13 @@ jobs:
         run: npm run format
 
       - name: Run tests
-        run: npm test:unit
+        run: npm run test:unit
 
   backend:
     runs-on: ubuntu-latest
-    working-directory: backend
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
