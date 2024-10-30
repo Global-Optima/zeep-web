@@ -1,10 +1,12 @@
-import { PRIMARY_ROUTES_CONFIG } from '@/core/routes/kiosk.routes'
-import type { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router'
 import { ERRORS_ROUTES_CONFIG } from '../routes/errors.routes'
+import { KIOSK_ROUTES_CONFIG } from '@/core/routes/kiosk.routes'
+import { ADMIN_ROUTES_CONFIG } from '@/core/routes/admin.routes'
+import type { AppLayouts } from '../types/routes.types'
 
 export type ExtendedRoutePage = RouteRecordRaw & {
 	meta: {
-		layout?: string
+		layout?: AppLayouts
 		title: string
 		pageTitle?: string
 		requiresAuth?: boolean
@@ -14,28 +16,35 @@ export type ExtendedRoutePage = RouteRecordRaw & {
 
 export type ExtendedRouteRecord = Record<string, ExtendedRoutePage>
 
-const ROUTES_RECORDS: ExtendedRouteRecord[] = addNameToRoutes([
-	PRIMARY_ROUTES_CONFIG,
+const ROUTES_RECORDS = addNameToRoutes([
+	KIOSK_ROUTES_CONFIG,
+	ADMIN_ROUTES_CONFIG,
 
 	// Always in the bottom
 	ERRORS_ROUTES_CONFIG,
-])
+] as const)
 
-function addNameToRoutes(records: ExtendedRouteRecord[]): ExtendedRouteRecord[] {
+function addNameToRoutes<T extends readonly ExtendedRouteRecord[]>(records: T): T {
 	return records.map(record => {
 		const updatedRecord: ExtendedRouteRecord = {}
 		Object.entries(record).forEach(([key, value]) => {
 			updatedRecord[key] = { ...value, name: key }
 		})
 		return updatedRecord
-	})
+	}) as unknown as T
 }
+
+type ExtractRouteKeys<T extends readonly ExtendedRouteRecord[]> = T[number] extends infer R
+	? R extends ExtendedRouteRecord
+		? keyof R
+		: never
+	: never
+
+export type RouteKey = ExtractRouteKeys<typeof ROUTES_RECORDS>
 
 export const ROUTES: ExtendedRoutePage[] = ROUTES_RECORDS.flatMap(record => {
 	return Object.values(record)
 })
-
-type RouteKey = keyof typeof ERRORS_ROUTES_CONFIG | keyof typeof PRIMARY_ROUTES_CONFIG
 
 const routeLookupMap: Record<RouteKey, ExtendedRoutePage | undefined> = ROUTES_RECORDS.reduce(
 	(acc, record) => {
@@ -49,4 +58,8 @@ const routeLookupMap: Record<RouteKey, ExtendedRoutePage | undefined> = ROUTES_R
 
 export function getRoute(key: RouteKey): ExtendedRoutePage | undefined {
 	return routeLookupMap[key]
+}
+
+export function getRouteName(key: RouteKey): RouteRecordNameGeneric | undefined {
+	return routeLookupMap[key]?.name
 }

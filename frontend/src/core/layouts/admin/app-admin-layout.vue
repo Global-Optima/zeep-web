@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import PageTitle from '@/core/components/ui/page-title/page-title.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -17,7 +16,7 @@ const currentPageTitle = computed(() => route.meta.pageTitle ?? route.meta.title
 		<main class="relative flex-1 w-full h-full overflow-y-auto">
 			<header class="w-full flex justify-between items-center p-6">
 				<slot name="header">
-					<PageTitle>{{ currentPageTitle }}</PageTitle>
+					<h1>{{ currentPageTitle }}</h1>
 
 					<div class="flex items-center gap-2">
 						<slot name="right-side" />
