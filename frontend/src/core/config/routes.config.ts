@@ -3,6 +3,7 @@ import { ERRORS_ROUTES_CONFIG } from '../routes/errors.routes'
 import { KIOSK_ROUTES_CONFIG } from '@/core/routes/kiosk.routes'
 import { ADMIN_ROUTES_CONFIG } from '@/core/routes/admin.routes'
 import type { AppLayouts } from '../types/routes.types'
+import { AUTH_ROUTES_CONFIG } from '../routes/auth.routes'
 
 export type ExtendedRoutePage = RouteRecordRaw & {
 	meta: {
@@ -19,6 +20,7 @@ export type ExtendedRouteRecord = Record<string, ExtendedRoutePage>
 const ROUTES_RECORDS = addNameToRoutes([
 	KIOSK_ROUTES_CONFIG,
 	ADMIN_ROUTES_CONFIG,
+	AUTH_ROUTES_CONFIG,
 
 	// Always in the bottom
 	ERRORS_ROUTES_CONFIG,

@@ -54,12 +54,15 @@ const isActiveRoute = (routeName: string) => {
 
 		<div class="flex-1 p-6">
 			<router-link
-				:to="{name: getRouteName('ADMIN_DASHBOARD')}"
+				:to="{name: getRouteName('KIOSK_HOME')}"
 				class="w-full flex gap-4 cursor-pointer bg-card items-center justify-center px-4 py-2 rounded-lg text-card-foreground"
 			>
-				<span class="text-lg pi pi-angle-left" />
+				<Icon
+					icon="mingcute:pad-line"
+					class="text-lg pi pi-angle-left"
+				/>
 
-				<p class="text-sm">Return to App</p>
+				<p class="text-sm">Kiosk</p>
 			</router-link>
 		</div>
 	</div>
