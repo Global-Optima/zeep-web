@@ -1,16 +1,27 @@
-import type { ExtendedRouteRecord } from '../config/routes.config'
+import type { AppRouteRecord, ParentRoutePage } from '../config/routes.config'
+import AppDefaultLayout from '../layouts/default/app-default-layout.vue'
 
-export const ERRORS_ROUTES_CONFIG = {
+export const ERROR_CHILDREN_ROUTES = {
 	NOT_FOUND_ERROR: {
-		path: ':pathMatch(.*)*',
+		path: 'not-found',
 		name: 'not-found',
-		meta: { title: 'Not found' },
+		meta: {
+			title: 'Not found',
+		},
 		component: () => import('@/modules/errors/pages/not-found-page.vue'),
 	},
 	INTERNAL_ERROR: {
-		path: ':pathMatch(.*)*',
+		path: 'internal-error',
 		name: 'internal-error',
-		meta: { title: 'Internal server error' },
+		meta: {
+			title: 'Internal server error',
+		},
 		component: () => import('@/modules/errors/pages/internal-error-page.vue'),
 	},
-} satisfies ExtendedRouteRecord
+} satisfies AppRouteRecord
+
+export const ERRORS_ROUTES_CONFIG: ParentRoutePage = {
+	path: 'errors',
+	component: AppDefaultLayout,
+	children: ERROR_CHILDREN_ROUTES,
+}

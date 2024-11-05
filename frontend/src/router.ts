@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import { AppTranslation } from './core/config/locale.config'
 import { ROUTES } from './core/config/routes.config'
 import { DEFAULT_TITLE, TITLE_TEMPLATE } from './core/constants/seo.constants'
-import { AppTranslation } from './core/config/locale.config'
 
 export const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),

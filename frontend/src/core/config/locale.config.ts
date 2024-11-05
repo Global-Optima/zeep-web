@@ -5,7 +5,6 @@ import type {
 	RouteLocationNormalizedGeneric,
 	RouteLocationNormalizedLoadedGeneric,
 } from 'vue-router'
-import ru from '../locales/ru.json'
 
 export const LOCALES = {
 	RU: 'ru',
@@ -32,7 +31,6 @@ export const i18nConfig: I18nType = createI18n({
 	legacy: false,
 	globalInjection: true,
 	fallbackLocale: LOCALES.RU,
-	messages: { ru },
 })
 
 export const AppTranslation = {
