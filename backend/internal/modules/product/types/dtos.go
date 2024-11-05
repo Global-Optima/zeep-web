@@ -9,7 +9,6 @@ type ProductCatalogDTO struct {
 	Price              float64 `json:"price"`
 	IsAvailable        bool    `json:"is_available"`
 	IsOutOfStock       bool    `json:"is_out_of_stock"`
-	DefaultSizeID      int     `json:"default_size_id"`
 }
 
 type ProductDTO struct {
@@ -23,6 +22,7 @@ type ProductDTO struct {
 	IsAvailable        bool           `json:"is_available"`
 	IsOutOfStock       bool           `json:"is_out_of_stock"`
 	Additives          []AdditivesDTO `json:"additives"`
+	DefaultAdditives   []AdditivesDTO `json:"default_additives"`
 	Sizes              []SizeDTO      `json:"sizes"`
 	Nutrition          NutritionDTO   `json:"nutrition"`
 }
@@ -36,6 +36,7 @@ type AdditivesDTO struct {
 }
 
 type SizeDTO struct {
+	SizeID    uint    `json:"size_id"`
 	SizeName  string  `json:"size_name"`
 	Size      float64 `json:"size"`
 	Measure   string  `json:"measure"`

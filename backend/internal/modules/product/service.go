@@ -100,6 +100,10 @@ func mapProductDAOToDTO(result *types.ProductDAO) *types.ProductDTO {
 		productDTO.Additives = append(productDTO.Additives, types.AdditivesDTO(additive))
 	}
 
+	for _, defaultAdditive := range result.DefaultAdditives {
+		productDTO.DefaultAdditives = append(productDTO.DefaultAdditives, types.AdditivesDTO(defaultAdditive))
+	}
+
 	for _, size := range result.Sizes {
 		productDTO.Sizes = append(productDTO.Sizes, types.SizeDTO(size))
 	}

@@ -13,10 +13,12 @@ type ProductDAO struct {
 	IsOutOfStock       bool          `gorm:"column:is_out_of_stock" json:"is_out_of_stock"`
 	Sizes              []SizeDAO     `gorm:"-" json:"sizes"`
 	Additives          []AdditiveDAO `gorm:"-" json:"additives"`
+	DefaultAdditives   []AdditiveDAO `gorm:"-" json:"default_additives"`
 	Nutrition          NutritionDAO  `gorm:"-" json:"nutrition"`
 }
 
 type SizeDAO struct {
+	SizeID    uint    `gorm:"column:id" json:"size_id"`
 	SizeName  string  `gorm:"column:name" json:"size_name"`
 	Size      float64 `gorm:"column:size" json:"size"`
 	Measure   string  `gorm:"column:measure" json:"measure"`
