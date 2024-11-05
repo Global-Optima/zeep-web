@@ -1,5 +1,5 @@
 <template>
-	<div class="px-4 relative">
+	<div class="px-4 relative pb-10">
 		<section class="flex items-center justify-between gap-4 py-5 sm:py-7">
 			<button @click="$router.back">
 				<Icon
@@ -27,7 +27,7 @@
 		</section>
 
 		<div class="mt-4 sm:mt-6">
-			<KioskDetailsEnergy />
+			<KioskDetailsEnergy :energy="{ccal: 400, proteins: 200, carbs: 120, fats:30}" />
 		</div>
 
 		<section class="mt-6 sm:mt-8">
@@ -40,10 +40,23 @@
 				/>
 			</div>
 		</section>
+
+		<section
+			class="fixed bottom-0 left-0 w-full bg-slate-800/90 text-white backdrop-blur-md flex items-center justify-between gap-4 px-6 pt-6 pb-12"
+		>
+			<div>
+				<p class="text-base sm:text-2xl">Итого</p>
+				<p class="text-2xl sm:text-3xl font-medium sm:mt-1">{{ formatPrice(23232) }}</p>
+			</div>
+
+			<KioskCartCheckout />
+		</section>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { formatPrice } from '@/core/utils/price.utils'
+import KioskCartCheckout from '@/modules/kiosk/components/cart/kiosk-cart-checkout.vue'
 import KioskCartItem from '@/modules/kiosk/components/cart/kiosk-cart-item.vue'
 import KioskCartSuggestProduct from '@/modules/kiosk/components/cart/kiosk-cart-suggest-product.vue'
 import KioskDetailsEnergy from '@/modules/kiosk/components/details/kiosk-details-energy.vue'

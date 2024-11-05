@@ -1,8 +1,12 @@
 <template>
 	<section
-		class="w-full py-4 sm:py-6 px-4 flex items-center gap-2 overflow-x-auto no-scrollbar sticky top-0z-10"
+		class="w-full py-4 sm:py-6 px-4 flex items-center gap-2 overflow-x-auto no-scrollbar sticky top-0 z-10"
+		data-testid="search-section"
 	>
-		<div class="relative flex-grow">
+		<div
+			class="relative flex-grow"
+			data-testid="search-input-container"
+		>
 			<input
 				type="text"
 				:value="searchTerm"
@@ -17,12 +21,14 @@
           }
         ]"
 				placeholder="Поиск"
+				data-testid="search-input"
 			/>
 
 			<button
 				v-if="searchTerm"
 				@click="clearSearchTerm"
 				class="absolute right-5 top-5 sm:right-8 sm:top-6 transform"
+				data-testid="clear-button"
 			>
 				<Icon
 					icon="mingcute:close-fill"
@@ -31,15 +37,19 @@
 			</button>
 		</div>
 
-		<div class="flex min-w-min rounded-full overflow-x-auto bg-white">
+		<div
+			class="flex min-w-min rounded-full overflow-x-auto bg-white"
+			data-testid="category-buttons"
+		>
 			<button
 				v-for="category in categories"
 				:key="category"
 				:class="[
-          'text-base sm:text-xl rounded-full p-5 sm:px-8 sm:py-6  whitespace-nowrap transition-colors font-medium',
+          'text-base sm:text-xl rounded-full p-5 sm:px-8 sm:py-6 whitespace-nowrap transition-colors font-medium',
           selectedCategory === category ? 'bg-primary text-primary-foreground' : 'bg-transparent text-gray-500'
         ]"
 				@click.prevent="selectCategory(category)"
+				data-testid="category-button"
 			>
 				{{ category }}
 			</button>
@@ -52,17 +62,7 @@ import { Icon } from '@iconify/vue/dist/iconify.js'
 import { ref } from 'vue'
 
 const emit = defineEmits(['update:category', 'update:searchTerm']);
-const { selectedCategory, searchTerm } = defineProps<{ selectedCategory: string; searchTerm: string }>();
-
-const categories = [
-	'Популярное',
-	'Новинки',
-	'Сезонное',
-	'Кофе',
-	'Чай',
-	'Холодные напитки',
-	'Мороженое'
-];
+const { selectedCategory, searchTerm, categories } = defineProps<{ selectedCategory: string; searchTerm: string, categories: string[] }>();
 
 const isInputFocused = ref(false);
 

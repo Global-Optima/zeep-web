@@ -1,5 +1,6 @@
 <template>
 	<KioskHomeToolbar
+		:categories="categories"
 		:selected-category="selectedCategory"
 		:search-term="searchTerm"
 		@update:category="onUpdateCategory"
@@ -29,10 +30,12 @@
 	</div>
 
 	<Sheet>
-		<SheetTrigger><button class="px-4 mt-5">Test Popup</button></SheetTrigger>
+		<SheetTrigger>
+			<button class="px-4 mt-5">Test Popup</button>
+		</SheetTrigger>
 		<SheetContent
 			side="bottom"
-			class="max-h-[85vh] overflow-auto p-0 pb-14 bg-[#F5F5F7] border-none no-scrollbar"
+			class="max-h-[92vh] overflow-auto p-0 pb-14 bg-[#F5F5F7] border-none no-scrollbar rounded-t-3xl"
 		>
 			<KioskDetailsSheet />
 		</SheetContent>
@@ -56,6 +59,15 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const searchTerm = ref('');
+const categories = [
+	'Популярное',
+	'Новинки',
+	'Сезонное',
+	'Кофе',
+	'Чай',
+	'Холодные напитки',
+	'Мороженое'
+];
 const selectedCategory = ref("Популярное");
 
 const onCartClick = () => {
