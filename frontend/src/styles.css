@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-@import './core/assets/themes/green.css';
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import './core/assets/themes/custom.css';
 
 @tailwind base;
 @tailwind components;
@@ -10,8 +10,7 @@
 		@apply border-border;
 	}
 	body {
-		font-family: 'Inter', sans-serif;
-		@apply bg-background text-foreground text-sm;
+		font-family: 'Montserrat', sans-serif;
 	}
 
 	:root {
@@ -25,5 +24,16 @@
 		--vis-primary-color: var(--primary);
 		--vis-secondary-color: var(--secondary);
 		--vis-text-color: var(--muted-foreground);
+	}
+}
+
+@layer utilities {
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+
+	.no-scrollbar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
 	}
 }

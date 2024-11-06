@@ -1,11 +1,12 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
-
 import autoprefixer from 'autoprefixer'
+import { dirname, resolve } from 'node:path'
 import tailwind from 'tailwindcss'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
 	css: {
@@ -13,7 +14,19 @@ export default defineConfig({
 			plugins: [tailwind(), autoprefixer()],
 		},
 	},
-	plugins: [vue(), vueDevTools()],
+	plugins: [
+		vue(),
+		VueI18nPlugin({
+			include: resolve(dirname(fileURLToPath(import.meta.url)), './src/core/locales/**'),
+		}),
+		VitePWA({
+			registerType: 'autoUpdate',
+			injectRegister: 'auto',
+			devOptions: {
+				enabled: true,
+			},
+		}),
+	],
 	resolve: {
 		alias: {
 			'@': fileURLToPath(new URL('./src', import.meta.url)),

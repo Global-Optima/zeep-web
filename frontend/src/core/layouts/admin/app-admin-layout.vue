@@ -25,7 +25,7 @@ const currentPageTitle = computed(() => route.meta.pageTitle ?? route.meta.title
 			</header>
 
 			<div class="p-6 pt-2 h-full">
-				<slot></slot>
+				<RouterView />
 			</div>
 		</main>
 	</div>
