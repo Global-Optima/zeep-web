@@ -11,7 +11,7 @@
 		</div>
 
 		<div class="flex justify-between items-center mt-3">
-			<p class="text-lg sm:text-2xl">{{ formatPrice(product.price) }}</p>
+			<p class="text-lg sm:text-2xl">{{ formatPrice(product.startPrice) }}</p>
 			<button
 				class="bg-gray-200 text-white p-2 sm:p-3 rounded-full"
 				aria-label="Добавить к заказу"

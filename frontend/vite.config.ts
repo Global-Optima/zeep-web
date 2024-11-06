@@ -13,6 +13,11 @@ export default defineConfig({
 		postcss: {
 			plugins: [tailwind(), autoprefixer()],
 		},
+		preprocessorOptions: {
+			scss: {
+				api: 'modern-compiler',
+			},
+		},
 	},
 	plugins: [
 		vue(),
