@@ -11,13 +11,13 @@ const { error, formItemId } = useFormField()
 </script>
 
 <template>
-  <Label
-    :class="cn(
+	<Label
+		:class="cn(
       error && 'text-destructive',
       props.class,
     )"
-    :for="formItemId"
-  >
-    <slot />
-  </Label>
+		:for="formItemId"
+	>
+		<slot />
+	</Label>
 </template>
