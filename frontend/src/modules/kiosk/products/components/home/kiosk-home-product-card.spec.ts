@@ -10,7 +10,7 @@ describe('KioskHomeProductCard.vue', () => {
 		id: 1,
 		title: 'Test Product',
 		image: 'https://example.com/image.jpg',
-		price: 1999.99,
+		startPrice: 1999.99,
 		category: 'Кофе',
 	}
 
@@ -31,7 +31,7 @@ describe('KioskHomeProductCard.vue', () => {
 		expect(title.exists()).toBe(true)
 		expect(title.text()).toBe(product.title)
 
-		const priceText = formatPrice(product.price)
+		const priceText = formatPrice(product.startPrice)
 		const price = wrapper.find('[data-testid="product-price"]')
 		expect(price.exists()).toBe(true)
 		expect(price.text()).toBe(priceText)

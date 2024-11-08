@@ -1,10 +1,10 @@
 <template>
 	<button
 		@click="onUpdateSize(size)"
-		:class="['rounded-full bg-white text-black sm:w-28 sm:h-28 w-[72px] h-[72px]', selectedSize === size ? 'border-2 border-primary' : '']"
+		:class="['rounded-full sm:w-24 sm:h-24 w-16 h-16', selectedSize === size ? 'bg-primary text-primary-foreground' : 'bg-white text-black']"
 	>
-		<p class="text-base sm:text-2xl font-medium">{{ size.label }}</p>
-		<p class="text-xs sm:text-base">{{ size.volume }} ml</p>
+		<p class="text-lg sm:text-2xl font-medium">{{ size.label }}</p>
+		<!-- <p class="text-xs sm:text-base">{{ size.volume }} ml</p> -->
 	</button>
 </template>
 
