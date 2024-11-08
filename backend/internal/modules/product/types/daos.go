@@ -37,6 +37,6 @@ type AdditiveDAO struct {
 type NutritionDAO struct {
 	Calories      float64 `gorm:"column:calories" json:"calories"`
 	Fat           float64 `gorm:"column:fat" json:"fat"`
-	Carbohydrates float64 `gorm:"column:carbs" json:"carbohydrates"`
+	Carbohydrates float64 `gorm:"column:carbohydrates" json:"carbohydrates"`
 	Proteins      float64 `gorm:"column:proteins" json:"proteins"`
 }

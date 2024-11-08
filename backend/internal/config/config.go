@@ -33,6 +33,7 @@ var AppConfig Config
 func LoadConfig() {
 	viper.SetConfigFile("config.yml")
 	viper.AddConfigPath(".")
+	// TODO: Add dependent on mode load (e.g. Development, Testing)
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("Error reading config file, %s", err)
