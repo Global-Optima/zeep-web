@@ -76,15 +76,15 @@
 </template>
 
 <script setup lang="ts">
- import { ref, computed, type Ref } from 'vue';
- import { useRouter } from 'vue-router';
- import { Icon } from '@iconify/vue';
- import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue';
- import KioskDetailsAdditives from '@/modules/kiosk/products/components/details/kiosk-details-additives.vue';
- import { formatPrice } from '@/core/utils/price.utils';
- import type { Products, ProductSizes } from '@/modules/products/models/product.model';
- import type { Additives } from '@/modules/additives/models/additive.model';
-import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store";
+ import { formatPrice } from '@/core/utils/price.utils'
+import type { Additives } from '@/modules/additives/models/additive.model'
+import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
+import KioskDetailsAdditives from '@/modules/kiosk/products/components/details/kiosk-details-additives.vue'
+import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
+import type { Products, ProductSizes } from '@/modules/products/models/product.model'
+import { Icon } from '@iconify/vue'
+import { computed, ref, type Ref } from 'vue'
+import { useRouter } from 'vue-router'
 
  // Initialize Router
  const router = useRouter();

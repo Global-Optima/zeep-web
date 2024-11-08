@@ -34,7 +34,7 @@
 				class="flex items-center gap-12 rounded-3xl px-8 py-4 bg-slate-700/70 text-white backdrop-blur-md"
 			>
 				<div>
-					<p class="text-base sm:text-xl">Итого</p>
+					<p class="text-base sm:text-xl">Итого ({{ cartStore.totalItems }})</p>
 					<p class="text-2xl sm:text-3xl font-medium sm:mt-1">
 						{{ formatPrice(totalPrice) }}
 					</p>
@@ -48,20 +48,13 @@
 			v-else
 			class="text-center py-10"
 		>
-			<p class="text-xl sm:text-2xl">Ваша корзина пуста</p>
+			<p class="text-xl sm:text-2xl font-medium">Ваша корзина пуста</p>
 			<button
 				@click="goBack"
 				class="mt-4 px-6 py-4 bg-primary text-primary-foreground rounded-2xl text-base sm:text-xl"
 			>
 				Вернуться к покупкам
 			</button>
-		</div>
-
-		<div
-			class="mt-4 sm:mt-6"
-			v-if="cartItemsArray.length"
-		>
-			<KioskDetailsEnergy :energy="calculatedEnergy" />
 		</div>
 
 		<section
@@ -81,16 +74,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { formatPrice } from '@/core/utils/price.utils';
-import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue';
-import KioskCartCheckout from '@/modules/kiosk/cart/components/kiosk-cart-checkout.vue';
-import KioskCartSuggestProduct from '@/modules/kiosk/cart/components/kiosk-cart-suggest-product.vue';
-import KioskDetailsEnergy from '@/modules/kiosk/products/components/details/kiosk-details-energy.vue';
-import { Icon } from '@iconify/vue';
-import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store";
-import type { Products } from "@/modules/products/models/product.model";
+import { formatPrice } from '@/core/utils/price.utils'
+import KioskCartCheckout from '@/modules/kiosk/cart/components/kiosk-cart-checkout.vue'
+import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
+import KioskCartSuggestProduct from '@/modules/kiosk/cart/components/kiosk-cart-suggest-product.vue'
+import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
+import type { Products } from "@/modules/products/models/product.model"
+import { Icon } from '@iconify/vue'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Initialize Router and Cart Store
 const router = useRouter();
@@ -100,17 +92,6 @@ const cartStore = useCartStore();
 const cartItemsArray = computed(() => Object.values(cartStore.cartItems));
 
 const totalPrice = computed(() => cartStore.totalPrice);
-
-// Placeholder for Energy Information
-const calculatedEnergy = computed(() => {
-  // Calculate energy based on cart items
-  return {
-    ccal: 400,
-    proteins: 200,
-    carbs: 120,
-    fats: 30,
-  };
-});
 
 // Suggested Products (Fetch from API or define as needed)
 const suggestedProducts = ref<Products[]>([

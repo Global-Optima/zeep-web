@@ -32,7 +32,6 @@
 </template>
 
 <script setup lang="ts">
- import { defineProps, defineEmits } from 'vue';
  import { formatPrice } from '@/core/utils/price.utils';
  import type { Products } from '@/modules/products/models/product.model';
 

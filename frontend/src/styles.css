@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import './core/assets/themes/custom.css';
+@import 'vue3-toastify/dist/index.css';
 
 @tailwind base;
 @tailwind components;
@@ -24,6 +25,9 @@
 		--vis-primary-color: var(--primary);
 		--vis-secondary-color: var(--secondary);
 		--vis-text-color: var(--muted-foreground);
+
+		--toastify-color-success: #006400;
+		--toastify-color-info: #2b4fb9;
 	}
 }
 

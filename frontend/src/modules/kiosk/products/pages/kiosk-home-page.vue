@@ -21,7 +21,10 @@
 	</section>
 
 	<!-- Cart Button -->
-	<div class="fixed bottom-10 left-0 w-full flex justify-center">
+	<div
+		v-if="!isCartEmpty"
+		class="fixed bottom-10 left-0 w-full flex justify-center"
+	>
 		<button
 			@click="onCartClick"
 			class="rounded-3xl px-6 py-4 sm:px-8 sm:py-6 bg-slate-800/70 text-white backdrop-blur-md"
@@ -38,7 +41,7 @@
 	<!-- Product Details Sheet -->
 	<Sheet
 		:open="isSheetOpen"
-		@close="closeProductSheet"
+		@update:open="closeProductSheet"
 	>
 		<SheetContent
 			side="bottom"
@@ -47,7 +50,6 @@
 			<KioskDetailsSheet
 				v-if="selectedProduct"
 				:product="selectedProduct"
-				@close="closeProductSheet"
 			/>
 		</SheetContent>
 	</Sheet>
@@ -55,26 +57,24 @@
 
 <script setup lang="ts">
  import {
-Sheet,
-SheetContent,
- } from '@/core/components/ui/sheet';
- import { getRouteName } from '@/core/config/routes.config';
- import { formatPrice } from '@/core/utils/price.utils';
- import KioskDetailsSheet from '@/modules/kiosk/products/components/details/kiosk-details-sheet.vue';
- import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue';
- import { products } from '@/modules/kiosk/products/components/home/kiosk-home-products-list';
- import KioskHomeToolbar from '@/modules/kiosk/products/components/home/kiosk-home-toolbar.vue';
- import { computed, ref } from 'vue';
- import { useRouter } from 'vue-router';
-import type { Products } from "@/modules/products/models/product.model";
-import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store";
+  Sheet,
+  SheetContent,
+} from '@/core/components/ui/sheet'
+import { getRouteName } from '@/core/config/routes.config'
+import { formatPrice } from '@/core/utils/price.utils'
+import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
+import KioskDetailsSheet from '@/modules/kiosk/products/components/details/kiosk-details-sheet-content.vue'
+import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
+import { products } from '@/modules/kiosk/products/components/home/kiosk-home-products-list'
+import KioskHomeToolbar from '@/modules/kiosk/products/components/home/kiosk-home-toolbar.vue'
+import type { Products } from "@/modules/products/models/product.model"
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
- // Initialize Router and Cart Store
  const router = useRouter();
  const cartStore = useCartStore();
 
 
- // Search Term and Category Selection
  const searchTerm = ref('');
  const categories = [
 'Популярное',
@@ -87,50 +87,44 @@ import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store";
  ];
  const selectedCategory = ref('Популярное');
 
- // Computed Properties for Cart Totals
  const cartTotalItems = computed(() => cartStore.totalItems);
  const cartTotalPrice = computed(() => cartStore.totalPrice);
+ const isCartEmpty = computed(() => cartStore.isEmpty);
 
- // Selected Product for Sheet
  const selectedProduct = ref<Products | null>(null);
 
- // Computed for determining if Sheet is open
  const isSheetOpen = computed(() => selectedProduct.value !== null);
 
- // Filtered Products based on Search and Category
- const filteredProducts = computed(() => {
-if (searchTerm.value) {
-  return products.filter((product) =>
-	product.title.toLowerCase().includes(searchTerm.value.toLowerCase())
+const filteredProducts = computed(() => {
+  if (searchTerm.value) {
+    return products.filter((product) =>
+    product.title.toLowerCase().includes(searchTerm.value.toLowerCase())
+    );
+  }
+  return products.filter(
+    (product) => product.category === selectedCategory.value
   );
-}
-return products.filter(
-  (product) => product.category === selectedCategory.value
-);
- });
+});
 
- // Methods
- const onCartClick = () => {
-router.push({ name: getRouteName('KIOSK_CART') });
- };
+const onCartClick = () => {
+  router.push({ name: getRouteName('KIOSK_CART') });
+};
 
- const onUpdateCategory = (category: string) => {
-selectedCategory.value = category;
- };
+const onUpdateCategory = (category: string) => {
+  selectedCategory.value = category;
+};
 
- const onUpdateSearchTerm = (newSearchTerm: string) => {
-searchTerm.value = newSearchTerm;
- };
+const onUpdateSearchTerm = (newSearchTerm: string) => {
+  searchTerm.value = newSearchTerm;
+};
 
- const openProductSheet = (product: Products) => {
-selectedProduct.value = product;
- };
+const openProductSheet = (product: Products) => {
+  selectedProduct.value = product;
+};
 
- const closeProductSheet = () => {
-selectedProduct.value = null;
- };
+const closeProductSheet = () => {
+  selectedProduct.value = null;
+};
 </script>
 
-<style lang="scss">
-/* Add your styles here */
-</style>
+<style lang="scss"></style>

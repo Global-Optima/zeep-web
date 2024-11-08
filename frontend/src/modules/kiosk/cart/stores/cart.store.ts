@@ -1,8 +1,8 @@
 // useCartStore.ts
-import { defineStore } from 'pinia'
-import type { Products, ProductSizes } from '@/modules/products/models/product.model'
 import type { Additives } from '@/modules/additives/models/additive.model'
+import type { Products, ProductSizes } from '@/modules/products/models/product.model'
 import md5 from 'md5'
+import { defineStore } from 'pinia'
 
 export interface CartItem {
 	key: string
@@ -24,6 +24,9 @@ export const useCartStore = defineStore('ZEEP_CART', {
 	getters: {
 		totalItems(state): number {
 			return Object.values(state.cartItems).reduce((total, item) => total + item.quantity, 0)
+		},
+		isEmpty(state): boolean {
+			return Object.values(state.cartItems).length === 0
 		},
 		totalPrice(state): number {
 			return Object.values(state.cartItems).reduce((total, item) => {
