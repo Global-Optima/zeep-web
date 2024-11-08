@@ -82,8 +82,6 @@ import { computed, ref, watch } from 'vue'
 
 // Define props
 const props = defineProps<{ product: Products }>()
-const emit = defineEmits({"close": null })
-
 const cartStore = useCartStore()
 
 // Available Sizes (if dynamic, otherwise pass via props or fetch)
