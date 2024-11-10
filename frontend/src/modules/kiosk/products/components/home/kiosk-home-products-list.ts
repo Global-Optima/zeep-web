@@ -4,7 +4,7 @@ export const products: Products[] = [
 	{
 		id: 1,
 		title: 'Капучино Капучино Капучино Капучино Капучино Капучино',
-		price: 150,
+		startPrice: 150,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Кофе',
@@ -12,7 +12,7 @@ export const products: Products[] = [
 	{
 		id: 2,
 		title: 'Эспрессо',
-		price: 120,
+		startPrice: 120,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Кофе',
@@ -20,7 +20,7 @@ export const products: Products[] = [
 	{
 		id: 3,
 		title: 'Зеленый чай',
-		price: 100,
+		startPrice: 100,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Чай',
@@ -28,7 +28,7 @@ export const products: Products[] = [
 	{
 		id: 4,
 		title: 'Чай с лимоном',
-		price: 90,
+		startPrice: 90,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Чай',
@@ -36,7 +36,7 @@ export const products: Products[] = [
 	{
 		id: 5,
 		title: 'Сезонное мороженое',
-		price: 200,
+		startPrice: 200,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Мороженое',
@@ -44,7 +44,7 @@ export const products: Products[] = [
 	{
 		id: 6,
 		title: 'Фисташковое мороженое',
-		price: 210,
+		startPrice: 210,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Мороженое',
@@ -52,7 +52,7 @@ export const products: Products[] = [
 	{
 		id: 7,
 		title: 'Лимонад',
-		price: 130,
+		startPrice: 130,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Холодные напитки',
@@ -60,7 +60,7 @@ export const products: Products[] = [
 	{
 		id: 8,
 		title: 'Ледяной чай',
-		price: 110,
+		startPrice: 110,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Холодные напитки',
@@ -68,7 +68,7 @@ export const products: Products[] = [
 	{
 		id: 9,
 		title: 'Кекс с ягодами',
-		price: 160,
+		startPrice: 160,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Новинки',
@@ -76,7 +76,7 @@ export const products: Products[] = [
 	{
 		id: 10,
 		title: 'Торт',
-		price: 300,
+		startPrice: 300,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Новинки',
@@ -84,7 +84,7 @@ export const products: Products[] = [
 	{
 		id: 11,
 		title: 'Салат',
-		price: 180,
+		startPrice: 180,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Сезонное',
@@ -92,16 +92,15 @@ export const products: Products[] = [
 	{
 		id: 12,
 		title: 'Сезонный смузи',
-		price: 190,
+		startPrice: 190,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Сезонное',
 	},
-	// Additional products for the Popular category
 	{
 		id: 13,
 		title: 'Мокко',
-		price: 160,
+		startPrice: 160,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -109,7 +108,7 @@ export const products: Products[] = [
 	{
 		id: 14,
 		title: 'Кофе с молоком',
-		price: 140,
+		startPrice: 140,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -117,7 +116,7 @@ export const products: Products[] = [
 	{
 		id: 15,
 		title: 'Ванильный латте Ванильный латте',
-		price: 170,
+		startPrice: 170,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -125,7 +124,7 @@ export const products: Products[] = [
 	{
 		id: 16,
 		title: 'Коктейль',
-		price: 220,
+		startPrice: 220,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -133,7 +132,7 @@ export const products: Products[] = [
 	{
 		id: 13,
 		title: 'Мокко',
-		price: 160,
+		startPrice: 160,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -141,7 +140,7 @@ export const products: Products[] = [
 	{
 		id: 14,
 		title: 'Кофе с молоком',
-		price: 140,
+		startPrice: 140,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -149,7 +148,7 @@ export const products: Products[] = [
 	{
 		id: 15,
 		title: 'Ванильный латте',
-		price: 170,
+		startPrice: 170,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -157,7 +156,7 @@ export const products: Products[] = [
 	{
 		id: 16,
 		title: 'Коктейль',
-		price: 220,
+		startPrice: 220,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -165,7 +164,7 @@ export const products: Products[] = [
 	{
 		id: 13,
 		title: 'Мокко',
-		price: 160,
+		startPrice: 160,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -173,7 +172,7 @@ export const products: Products[] = [
 	{
 		id: 14,
 		title: 'Кофе с молоком',
-		price: 140,
+		startPrice: 140,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -181,7 +180,7 @@ export const products: Products[] = [
 	{
 		id: 15,
 		title: 'Ванильный латте',
-		price: 170,
+		startPrice: 170,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',
@@ -189,7 +188,7 @@ export const products: Products[] = [
 	{
 		id: 16,
 		title: 'Коктейль',
-		price: 220,
+		startPrice: 220,
 		image:
 			'https://static.vecteezy.com/system/resources/thumbnails/017/394/931/small_2x/cup-of-hot-cappuccino-coffee-illustration-generative-ai-png.png',
 		category: 'Популярное',

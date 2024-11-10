@@ -47,9 +47,9 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 			<slot />
 
 			<DialogClose
-				class="absolute right-4 top-4 rounded-full bg-slate-800/70 text-white backdrop-blur-md p-2 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
+				class="absolute right-6 top-6 rounded-full bg-slate-800/70 text-white backdrop-blur-md p-2 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
 			>
-				<Cross2Icon class="w-6 h-6" />
+				<Cross2Icon class="w-6 sm:w-8 h-6 sm:h-8" />
 			</DialogClose>
 		</DialogContent>
 	</DialogPortal>

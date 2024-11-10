@@ -1,16 +1,25 @@
 import './styles.css'
 
-import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { createApp } from 'vue'
 
 import App from './App.vue'
-import { router } from './router'
 import { i18nConfig } from './core/config/locale.config'
+import { router } from './router'
+
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+
+import { toastConfig } from '@/core/config/toast.config'
+import Vue3Toastify from 'vue3-toastify'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+pinia.use(piniaPluginPersistedstate)
+
+app.use(pinia)
 app.use(router)
 app.use(i18nConfig)
+app.use(Vue3Toastify, toastConfig)
 
 app.mount('#app')

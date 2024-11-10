@@ -16,8 +16,8 @@
 				:class="[
           'text-base sm:text-xl rounded-full p-5 sm:px-8 sm:py-6 focus:outline-none transition-all font-medium',
           {
-            'w-28 sm:w-32 text-center': !isInputFocused,
-            'w-80': isInputFocused,
+            'w-28 sm:w-36 text-center': !isInputFocused,
+            'w-56 sm:w-80': isInputFocused,
           }
         ]"
 				placeholder="Поиск"

@@ -17,6 +17,7 @@ import {
   FormMessage
 } from '@/core/components/ui/form'
 import { Stepper, StepperItem, StepperTitle, StepperTrigger } from '@/core/components/ui/stepper'
+import { Icon } from "@iconify/vue"
 
 import { toTypedSchema } from '@vee-validate/zod'
 import { ref } from 'vue'
@@ -66,7 +67,7 @@ function onSubmit(values: unknown) {
 		<Dialog>
 			<DialogTrigger as-child>
 				<button
-					class="px-6 py-4 rounded-2xl bg-primary text-primary-foreground text-base sm:text-2xl flex items-center gap-2"
+					class="px-6 py-4 rounded-2xl bg-white text-primary font-medium text-base sm:text-2xl flex items-center gap-2"
 				>
 					Подтвердить
 					<Icon
