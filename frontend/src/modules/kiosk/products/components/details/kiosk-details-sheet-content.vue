@@ -82,7 +82,7 @@
 							v-for="additive in additiveCategory.additives"
 							:key="additive.id"
 							:selected-additives="selectedAdditives"
-              :default-additives='productDetails.defaultAdditives'
+							:default-additives="productDetails.defaultAdditives"
 							:additive="additive"
 							@click:additive="onAdditiveClick"
 						/>
