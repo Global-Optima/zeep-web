@@ -26,7 +26,7 @@ func (r *productRepository) GetStoreProducts(storeID uint, category string, offs
 
 	query := r.db.Table("products").
 		Select(`
-        products.id, 
+        DISTINCT products.id, 
         products.name, 
         products.description, 
         products.image_url, 
@@ -79,7 +79,7 @@ func (r *productRepository) SearchStoreProducts(storeID uint, searchQuery, categ
 
 	query := r.db.Table("products").
 		Select(`
-        products.id, 
+        DISTINCT products.id, 
         products.name, 
         products.description, 
         products.image_url, 
@@ -219,7 +219,6 @@ func (r *productRepository) loadSizes(productID, storeID uint) ([]types.SizeDAO,
             AND store_product_sizes.store_id = ?
         `, storeID).
 		Where("product_sizes.product_id = ?", productID).
-		Or("store_product_sizes.store_id IS NULL").
 		Scan(&sizes).Error
 
 	if err != nil {
@@ -232,9 +231,19 @@ func (r *productRepository) loadSizes(productID, storeID uint) ([]types.SizeDAO,
 func (r *productRepository) loadAdditives(productID, storeID uint) ([]types.AdditiveDAO, error) {
 	var additives []types.AdditiveDAO
 
-	err := r.db.Table("additives").
+	var defaultSizeID int
+	err := r.db.Table("product_sizes").
+		Select("id").
+		Where("product_id = ? AND is_default = true", productID).
+		Scan(&defaultSizeID).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.db.Table("additives").
 		Select(`
-            additives.id, 
+            DISTINCT additives.id, 
             additives.name, 
             additives.description, 
             additive_categories.name as category_name, 
@@ -244,7 +253,7 @@ func (r *productRepository) loadAdditives(productID, storeID uint) ([]types.Addi
             JOIN product_additives 
             ON product_additives.additive_id = additives.id 
             AND product_additives.product_size_id = ?
-        `, productID).
+        `, defaultSizeID).
 		Joins(`
             LEFT JOIN store_additives 
             ON store_additives.additive_id = additives.id 
@@ -272,16 +281,16 @@ func (r *productRepository) loadAdditives(productID, storeID uint) ([]types.Addi
 func (r *productRepository) loadNutrition(productID uint) (types.NutritionDAO, error) {
 	var nutrition types.NutritionDAO
 
-	err := r.db.Table("ingredients").
+	err := r.db.Table("product_ingredients").
 		Select(`
-            SUM(ingredients.calories) as calories, 
-            SUM(ingredients.fat) as fat, 
-            SUM(ingredients.carbs) as carbohydrates, 
-            SUM(ingredients.proteins) as proteins
+            COALESCE(SUM(ingredients.calories), 0) as calories, 
+            COALESCE(SUM(ingredients.fat), 0) as fat, 
+            COALESCE(SUM(ingredients.carbs), 0) as carbohydrates, 
+            COALESCE(SUM(ingredients.proteins), 0) as proteins
         `).
 		Joins(`
-            JOIN product_ingredients 
-            ON product_ingredients.item_ingredient_id = ingredients.id
+            JOIN item_ingredients ON product_ingredients.item_ingredient_id = item_ingredients.id
+            JOIN ingredients ON item_ingredients.ingredient_id = ingredients.id
         `).
 		Where("product_ingredients.product_id = ?", productID).
 		Group("product_ingredients.product_id").

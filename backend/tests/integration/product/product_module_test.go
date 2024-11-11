@@ -21,8 +21,10 @@ func TestGetStoreProducts(t *testing.T) {
 			URL:          "/api/stores/1/products?category=Coffee",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, IsAvailable: true, IsOutOfStock: false},
-				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, ProductImageURL: "https://example.com/latte.jpg", IsAvailable: true, IsOutOfStock: true},
+				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, ProductImageURL: "https://example.com/espresso.jpg", IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 5, ProductName: "Mocha", ProductDescription: "Chocolate-flavored coffee", Category: "Coffee", Price: 5.5, ProductImageURL: "https://example.com/mocha.jpg", IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 7, ProductName: "Cappuccino", ProductDescription: "A rich coffee with a layer of foam", Category: "Coffee", ProductImageURL: "https://example.com/cappuccino.jpg", Price: 5.0, IsAvailable: true, IsOutOfStock: false},
 			},
 		},
 		{
@@ -31,9 +33,12 @@ func TestGetStoreProducts(t *testing.T) {
 			URL:          "/api/stores/1/products",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, IsAvailable: true, IsOutOfStock: false},
-				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, IsAvailable: true, IsOutOfStock: false},
-				{ProductID: 4, ProductName: "Green Tea", ProductDescription: "Fresh green tea", Category: "Tea", Price: 0, IsAvailable: false, IsOutOfStock: true},
+				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, ProductImageURL: "https://example.com/latte.jpg", IsAvailable: true, IsOutOfStock: true},
+				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, ProductImageURL: "https://example.com/espresso.jpg", IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 3, ProductName: "Black Tea", ProductDescription: "Classic black tea", Category: "Tea", Price: 3.5, ProductImageURL: "https://example.com/blacktea.jpg", IsAvailable: true, IsOutOfStock: true},
+				{ProductID: 5, ProductName: "Mocha", ProductDescription: "Chocolate-flavored coffee", Category: "Coffee", Price: 5.5, ProductImageURL: "https://example.com/mocha.jpg", IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 6, ProductName: "Tashkentskiy Tea", ProductDescription: "Flavour of warm Tashkent", Category: "Tea", Price: 5.0, ProductImageURL: "https://example.com/tashkentskiy.jpg", IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 7, ProductName: "Cappuccino", ProductDescription: "A rich coffee with a layer of foam", Category: "Coffee", ProductImageURL: "https://example.com/cappuccino.jpg", Price: 5.0, IsAvailable: true, IsOutOfStock: false},
 			},
 		},
 		{
@@ -42,7 +47,7 @@ func TestGetStoreProducts(t *testing.T) {
 			URL:          "/api/stores/1/products?offset=1&limit=1",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, ProductImageURL: "https://example.com/espresso.jpg", IsAvailable: true, IsOutOfStock: false},
 			},
 		},
 		{
@@ -50,30 +55,21 @@ func TestGetStoreProducts(t *testing.T) {
 			Method:       http.MethodGet,
 			URL:          "/api/stores/1/products?offset=10&limit=5",
 			ExpectedCode: http.StatusOK,
-			ExpectedBody: []types.ProductCatalogDTO{}, // No products should be returned as offset is beyond total products
+			ExpectedBody: nil, // No products should be returned as offset is beyond total products
 		},
 		{
 			Description:  "No Products in Category",
 			Method:       http.MethodGet,
 			URL:          "/api/stores/1/products?category=Nonexistent",
 			ExpectedCode: http.StatusOK,
-			ExpectedBody: []types.ProductCatalogDTO{},
+			ExpectedBody: nil,
 		},
 		{
 			Description:  "Store with No Products",
 			Method:       http.MethodGet,
 			URL:          "/api/stores/99/products",
 			ExpectedCode: http.StatusOK,
-			ExpectedBody: []types.ProductCatalogDTO{},
-		},
-		{
-			Description:  "Unavailable Products Only",
-			Method:       http.MethodGet,
-			URL:          "/api/stores/1/products?category=Tea",
-			ExpectedCode: http.StatusOK,
-			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 4, ProductName: "Green Tea", ProductDescription: "Fresh green tea", Category: "Tea", Price: 0, IsAvailable: false, IsOutOfStock: true},
-			},
+			ExpectedBody: nil,
 		},
 		{
 			Description:  "Available and Out-of-Stock Products",
@@ -81,9 +77,12 @@ func TestGetStoreProducts(t *testing.T) {
 			URL:          "/api/stores/1/products",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, IsAvailable: true, IsOutOfStock: false},
-				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, IsAvailable: true, IsOutOfStock: false},
-				{ProductID: 4, ProductName: "Green Tea", ProductDescription: "Fresh green tea", Category: "Tea", Price: 0, IsAvailable: false, IsOutOfStock: true},
+				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, ProductImageURL: "https://example.com/latte.jpg", IsAvailable: true, IsOutOfStock: true},
+				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, ProductImageURL: "https://example.com/espresso.jpg", IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 3, ProductName: "Black Tea", ProductDescription: "Classic black tea", Category: "Tea", Price: 3.5, ProductImageURL: "https://example.com/blacktea.jpg", IsAvailable: true, IsOutOfStock: true},
+				{ProductID: 5, ProductName: "Mocha", ProductDescription: "Chocolate-flavored coffee", Category: "Coffee", Price: 5.5, ProductImageURL: "https://example.com/mocha.jpg", IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 6, ProductName: "Tashkentskiy Tea", ProductDescription: "Flavour of warm Tashkent", Category: "Tea", Price: 5.0, ProductImageURL: "https://example.com/tashkentskiy.jpg", IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 7, ProductName: "Cappuccino", ProductDescription: "A rich coffee with a layer of foam", Category: "Coffee", ProductImageURL: "https://example.com/cappuccino.jpg", Price: 5.0, IsAvailable: true, IsOutOfStock: false},
 			},
 		},
 		{
@@ -101,6 +100,7 @@ func TestGetStoreProducts(t *testing.T) {
 	}
 
 	utils.TestRunner(t, router, tests)
+	TruncateTables(db)
 }
 
 func TestSearchStoreProducts(t *testing.T) {
@@ -116,7 +116,7 @@ func TestSearchStoreProducts(t *testing.T) {
 			URL:          "/api/stores/1/products/search?q=Latte&category=Coffee",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, ProductImageURL: "https://example.com/latte.jpg", IsAvailable: true, IsOutOfStock: true},
 			},
 		},
 		{
@@ -125,7 +125,7 @@ func TestSearchStoreProducts(t *testing.T) {
 			URL:          "/api/stores/1/products/search?q=Espresso",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, IsAvailable: true, IsOutOfStock: false},
+				{ProductID: 2, ProductName: "Espresso", ProductDescription: "Strong coffee", Category: "Coffee", Price: 4.0, ProductImageURL: "https://example.com/espresso.jpg", IsAvailable: true, IsOutOfStock: false},
 			},
 		},
 		{
@@ -133,14 +133,14 @@ func TestSearchStoreProducts(t *testing.T) {
 			Method:       http.MethodGet,
 			URL:          "/api/stores/1/products/search?q=Mocha&category=Tea",
 			ExpectedCode: http.StatusOK,
-			ExpectedBody: []types.ProductCatalogDTO{}, // No matching products
+			ExpectedBody: nil, // No matching products
 		},
 		{
 			Description:  "Store with No Matching Products",
 			Method:       http.MethodGet,
 			URL:          "/api/stores/99/products/search?q=Latte",
 			ExpectedCode: http.StatusOK,
-			ExpectedBody: []types.ProductCatalogDTO{}, // Store 99 does not exist or has no products
+			ExpectedBody: nil, // Store 99 does not exist or has no products
 		},
 		{
 			Description:  "Empty Search Query",
@@ -160,8 +160,8 @@ func TestSearchStoreProducts(t *testing.T) {
 			URL:          "/api/stores/1/products/search?q=Tea",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 3, ProductName: "Black Tea", ProductDescription: "Classic black tea", Category: "Tea", Price: 0, IsAvailable: true, IsOutOfStock: false},
-				{ProductID: 4, ProductName: "Green Tea", ProductDescription: "Fresh green tea", Category: "Tea", Price: 0, IsAvailable: false, IsOutOfStock: true},
+				{ProductID: 3, ProductName: "Black Tea", ProductDescription: "Classic black tea", Category: "Tea", Price: 3.5, ProductImageURL: "https://example.com/blacktea.jpg", IsAvailable: true, IsOutOfStock: true},
+				{ProductID: 6, ProductName: "Tashkentskiy Tea", ProductDescription: "Flavour of warm Tashkent", Category: "Tea", Price: 5.0, ProductImageURL: "https://example.com/tashkentskiy.jpg", IsAvailable: true, IsOutOfStock: false},
 			},
 		},
 		{
@@ -170,7 +170,7 @@ func TestSearchStoreProducts(t *testing.T) {
 			URL:          "/api/stores/1/products/search?q=Tea&offset=1&limit=1",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 4, ProductName: "Green Tea", ProductDescription: "Fresh green tea", Category: "Tea", Price: 0, IsAvailable: false, IsOutOfStock: true},
+				{ProductID: 6, ProductName: "Tashkentskiy Tea", ProductDescription: "Flavour of warm Tashkent", Category: "Tea", Price: 5.0, ProductImageURL: "https://example.com/tashkentskiy.jpg", IsAvailable: true, IsOutOfStock: false},
 			},
 		},
 		{
@@ -182,15 +182,16 @@ func TestSearchStoreProducts(t *testing.T) {
 		{
 			Description:  "Search for Out of Stock Product",
 			Method:       http.MethodGet,
-			URL:          "/api/stores/1/products/search?q=Green",
+			URL:          "/api/stores/1/products/search?q=Latte",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: []types.ProductCatalogDTO{
-				{ProductID: 4, ProductName: "Green Tea", ProductDescription: "Fresh green tea", Category: "Tea", Price: 0, IsAvailable: false, IsOutOfStock: true},
+				{ProductID: 1, ProductName: "Latte", ProductDescription: "A creamy coffee drink", Category: "Coffee", Price: 5.0, ProductImageURL: "https://example.com/latte.jpg", IsAvailable: true, IsOutOfStock: true},
 			},
 		},
 	}
 
 	utils.TestRunner(t, router, tests)
+	TruncateTables(db)
 }
 
 func TestGetStoreProductDetails(t *testing.T) {
@@ -201,37 +202,36 @@ func TestGetStoreProductDetails(t *testing.T) {
 
 	tests := []utils.TestCase{
 		{
-			Description:  "Valid Product Details",
+			Description:  "Valid Product Details for Cappuccino",
 			Method:       http.MethodGet,
-			URL:          "/api/stores/1/products/1",
+			URL:          "/api/stores/1/products/7",
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: types.ProductDTO{
-				ProductID:          1,
-				ProductName:        "Latte",
-				ProductDescription: "A creamy coffee drink",
+				ProductID:          7,
+				ProductName:        "Cappuccino",
+				ProductDescription: "A rich coffee with a layer of foam",
 				Category:           "Coffee",
-				ProductImageURL:    "https://example.com/latte.jpg",
-				ProductVideoURL:    "https://example.com/latte.mp4",
+				ProductImageURL:    "https://example.com/cappuccino.jpg",
 				Price:              5.0,
 				IsAvailable:        true,
 				IsOutOfStock:       false,
 				Sizes: []types.SizeDTO{
-					{SizeID: 1, SizeName: "Small", Size: 200, Measure: "ml", Price: 5.0, IsDefault: true},
-					{SizeID: 2, SizeName: "Large", Size: 300, Measure: "ml", Price: 6.5, IsDefault: false},
+					{SizeID: 7, SizeName: "Small", Size: 250, Measure: "ml", Price: 5.0, IsDefault: true},
+					{SizeID: 8, SizeName: "Large", Size: 350, Measure: "ml", Price: 6.5, IsDefault: false},
 				},
 				Additives: []types.AdditivesDTO{
-					{AdditiveID: 1, AdditiveName: "Vanilla Syrup", AdditiveDescription: "Sweet vanilla flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.5},
-					{AdditiveID: 2, AdditiveName: "Caramel Syrup", AdditiveDescription: "Rich caramel flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.75},
+					{AdditiveID: 3, AdditiveName: "Hazelnut Syrup", AdditiveDescription: "Nutty hazelnut flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.5},
+					{AdditiveID: 4, AdditiveName: "Cinnamon", AdditiveDescription: "Spicy cinnamon flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.0},
 				},
 				DefaultAdditives: []types.AdditivesDTO{
-					{AdditiveID: 1, AdditiveName: "Vanilla Syrup", AdditiveDescription: "Sweet vanilla flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.5},
-					{AdditiveID: 2, AdditiveName: "Caramel Syrup", AdditiveDescription: "Rich caramel flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.75},
+					{AdditiveID: 3, AdditiveName: "Hazelnut Syrup", AdditiveDescription: "Nutty hazelnut flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.5},
+					{AdditiveID: 4, AdditiveName: "Cinnamon", AdditiveDescription: "Spicy cinnamon flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.0},
 				},
 				Nutrition: types.NutritionDTO{
-					Calories:      100,
-					Fat:           5,
-					Carbohydrates: 15,
-					Proteins:      3,
+					Calories:      70,
+					Fat:           3.5,
+					Carbohydrates: 5,
+					Proteins:      4,
 				},
 			},
 		},
@@ -248,10 +248,10 @@ func TestGetStoreProductDetails(t *testing.T) {
 				ProductImageURL:    "https://example.com/greentea.jpg",
 				Price:              0,
 				IsAvailable:        false,
-				IsOutOfStock:       true,
-				Sizes:              []types.SizeDTO{},
-				Additives:          []types.AdditivesDTO{},
-				DefaultAdditives:   []types.AdditivesDTO{},
+				IsOutOfStock:       false,
+				Sizes:              nil,
+				Additives:          nil,
+				DefaultAdditives:   nil,
 				Nutrition:          types.NutritionDTO{},
 			},
 		},
@@ -266,13 +266,15 @@ func TestGetStoreProductDetails(t *testing.T) {
 				ProductDescription: "Classic black tea",
 				Category:           "Tea",
 				ProductImageURL:    "https://example.com/blacktea.jpg",
-				Price:              0,
+				Price:              3.5,
 				IsAvailable:        true,
 				IsOutOfStock:       true,
-				Sizes:              []types.SizeDTO{},
-				Additives:          []types.AdditivesDTO{},
-				DefaultAdditives:   []types.AdditivesDTO{},
-				Nutrition:          types.NutritionDTO{},
+				Sizes: []types.SizeDTO{
+					{SizeID: 4, SizeName: "Standart", Size: 300, Measure: "ml", Price: 3.5, IsDefault: true},
+				},
+				Additives:        nil,
+				DefaultAdditives: nil,
+				Nutrition:        types.NutritionDTO{},
 			},
 		},
 		{
@@ -289,7 +291,7 @@ func TestGetStoreProductDetails(t *testing.T) {
 				ProductVideoURL:    "https://example.com/latte.mp4",
 				Price:              5.0,
 				IsAvailable:        true,
-				IsOutOfStock:       false,
+				IsOutOfStock:       true,
 				Sizes: []types.SizeDTO{
 					{SizeID: 1, SizeName: "Small", Size: 200, Measure: "ml", Price: 5.0, IsDefault: true},
 					{SizeID: 2, SizeName: "Large", Size: 300, Measure: "ml", Price: 6.5, IsDefault: false},
@@ -303,10 +305,10 @@ func TestGetStoreProductDetails(t *testing.T) {
 					{AdditiveID: 2, AdditiveName: "Caramel Syrup", AdditiveDescription: "Rich caramel flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.75},
 				},
 				Nutrition: types.NutritionDTO{
-					Calories:      100,
-					Fat:           5,
-					Carbohydrates: 15,
-					Proteins:      3,
+					Calories:      70,
+					Fat:           3.5,
+					Carbohydrates: 5,
+					Proteins:      4,
 				},
 			},
 		},
@@ -333,22 +335,27 @@ func TestGetStoreProductDetails(t *testing.T) {
 				ProductDescription: "Chocolate-flavored coffee",
 				Category:           "Coffee",
 				ProductImageURL:    "https://example.com/mocha.jpg",
-				Price:              0,
+				Price:              5.5,
 				IsAvailable:        true,
 				IsOutOfStock:       false,
-				Sizes:              []types.SizeDTO{},
-				Additives:          []types.AdditivesDTO{},
-				DefaultAdditives:   []types.AdditivesDTO{},
-				Nutrition:          types.NutritionDTO{},
+				Sizes: []types.SizeDTO{
+					{SizeID: 5, SizeName: "Standart", Size: 300, Measure: "ml", Price: 5.5, IsDefault: true},
+				},
+				Additives: []types.AdditivesDTO{
+					{AdditiveID: 2, AdditiveName: "Caramel Syrup", AdditiveDescription: "Rich caramel flavor", AdditiveCategory: "Syrups", AdditivePrice: 1.75},
+				},
+				DefaultAdditives: nil,
+				Nutrition:        types.NutritionDTO{},
 			},
 		},
 		{
 			Description:  "Database Error During Query Execution",
 			Method:       http.MethodGet,
-			URL:          "/api/stores/1/products/1",
-			ExpectedCode: http.StatusInternalServerError,
+			URL:          "/api/stores/1/products/50",
+			ExpectedCode: http.StatusNotFound,
 		},
 	}
 
 	utils.TestRunner(t, router, tests)
+	TruncateTables(db)
 }

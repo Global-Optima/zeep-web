@@ -262,3 +262,10 @@ CREATE TABLE "order_product_additives" (
   "additive_id" BIGINT REFERENCES "additives"("id") ON DELETE CASCADE,
   "order_products_id" BIGINT REFERENCES "order_products"("id") ON DELETE CASCADE
 );
+
+-- CREATE TABLE "additives_ingredients" (
+--     "id" BIGSERIAL PRIMARY KEY,
+--     "additive_id" BIGINT REFERENCES "additives"("id") ON DELETE CASCADE,
+--     "item_ingredient_id" BIGINT REFERENCES "item_ingredients"("id") ON DELETE CASCADE
+-- ); -- based on ERD (still ? count additives as ingredients : they are complex so they have ingredients)
+
