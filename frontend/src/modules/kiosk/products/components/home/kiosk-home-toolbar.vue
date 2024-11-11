@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue/dist/iconify.js'
+import { Icon } from '@iconify/vue'
 import { useDebounceFn } from '@vueuse/core'
 import { ref } from 'vue'
 
