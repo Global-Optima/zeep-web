@@ -10,6 +10,7 @@ import { router } from './router'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import { toastConfig } from '@/core/config/toast.config'
+import { VueQueryPlugin } from '@tanstack/vue-query'
 import Vue3Toastify from 'vue3-toastify'
 
 const app = createApp(App)
@@ -21,5 +22,6 @@ app.use(pinia)
 app.use(router)
 app.use(i18nConfig)
 app.use(Vue3Toastify, toastConfig)
+app.use(VueQueryPlugin)
 
 app.mount('#app')

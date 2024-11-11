@@ -1,18 +1,51 @@
 <template>
 	<!-- Toolbar with Categories and Search -->
 	<KioskHomeToolbar
+		v-if="!categoriesLoading"
 		:categories="categories"
-		:selected-category="selectedCategory"
+		:selected-category-id="selectedCategoryId"
 		:search-term="searchTerm"
 		@update:category="onUpdateCategory"
 		@update:search-term="onUpdateSearchTerm"
 	/>
 
+	<div
+		v-else
+		class="w-full py-4 sm:py-6 px-4 flex items-center gap-2 overflow-x-auto no-scrollbar sticky top-0 z-10"
+	>
+		<Skeleton
+			v-for="n in 4"
+			:key="n"
+			class="h-16 w-32 rounded-full bg-gray-200"
+		/>
+	</div>
+
 	<!-- Products Grid -->
 	<section class="w-full px-4 sm:px-6 overflow-y-auto">
-		<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+		<div
+			v-if="productsLoading"
+			class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4"
+		>
+			<Skeleton
+				v-for="n in 6"
+				:key="n"
+				class="rounded-3xl w-full h-60 bg-gray-200"
+			/>
+		</div>
+
+		<div
+			v-else-if="products.length === 0"
+			class="flex items-center justify-center h-20"
+		>
+			<p class="text-lg text-gray-400">Ничего не найдено</p>
+		</div>
+
+		<div
+			v-else
+			class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4"
+		>
 			<KioskHomeProductCard
-				v-for="product in filteredProducts"
+				v-for="product in products"
 				:key="product.id"
 				:product="product"
 				@select-product="openProductSheet"
@@ -20,7 +53,6 @@
 		</div>
 	</section>
 
-	<!-- Cart Button -->
 	<div
 		v-if="!isCartEmpty"
 		class="fixed bottom-10 left-0 w-full flex justify-center"
@@ -38,93 +70,114 @@
 		</button>
 	</div>
 
-	<!-- Product Details Sheet -->
-	<Sheet
+	<Dialog
 		:open="isSheetOpen"
 		@update:open="closeProductSheet"
 	>
-		<SheetContent
-			side="bottom"
-			class="max-h-[92vh] overflow-auto p-0 pb-14 bg-[#F5F5F7] border-none no-scrollbar rounded-t-3xl"
+		<DialogContent
+			class="bg-[#F5F5F7] p-0 max-w-[95vw] rounded-3xl sm:rounded-[36px] overflow-clip"
 		>
-			<KioskDetailsSheet
-				v-if="selectedProduct"
-				:product="selectedProduct"
-			/>
-		</SheetContent>
-	</Sheet>
+			<div class="overflow-auto max-h-[82vh] sm:max-h-[82vh] no-scrollbar">
+				<KioskDetailsSheetContent
+					v-if="selectedProductId"
+					:selected-product-id="selectedProductId"
+				/>
+			</div>
+		</DialogContent>
+	</Dialog>
 </template>
 
 <script setup lang="ts">
- import {
-  Sheet,
-  SheetContent,
-} from '@/core/components/ui/sheet'
-import { getRouteName } from '@/core/config/routes.config'
-import { formatPrice } from '@/core/utils/price.utils'
-import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
-import KioskDetailsSheet from '@/modules/kiosk/products/components/details/kiosk-details-sheet-content.vue'
-import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
-import { products } from '@/modules/kiosk/products/components/home/kiosk-home-products-list'
-import KioskHomeToolbar from '@/modules/kiosk/products/components/home/kiosk-home-toolbar.vue'
-import type { Products } from "@/modules/products/models/product.model"
-import { computed, ref } from 'vue'
+
+import { useQuery } from '@tanstack/vue-query'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
- const router = useRouter();
- const cartStore = useCartStore();
+import {
+  Dialog,
+  DialogContent
+} from '@/core/components/ui/dialog'
 
+import { Skeleton } from '@/core/components/ui/skeleton'
+import { getRouteName } from '@/core/config/routes.config'
+import { formatPrice } from '@/core/utils/price.utils'
+import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
+import KioskDetailsSheetContent from '@/modules/kiosk/products/components/details/kiosk-details-sheet-content.vue'
+import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
+import KioskHomeToolbar from '@/modules/kiosk/products/components/home/kiosk-home-toolbar.vue'
+import type { ProductCategory, StoreProducts } from '@/modules/kiosk/products/models/product.model'
+import { productService } from '@/modules/kiosk/products/services/products.service'
 
- const searchTerm = ref('');
- const categories = [
-'Популярное',
-'Новинки',
-'Сезонное',
-'Кофе',
-'Чай',
-'Холодные напитки',
-'Мороженое',
- ];
- const selectedCategory = ref('Популярное');
+// Initialize router and cart store
+const router = useRouter();
+const cartStore = useCartStore();
 
- const cartTotalItems = computed(() => cartStore.totalItems);
- const cartTotalPrice = computed(() => cartStore.totalPrice);
- const isCartEmpty = computed(() => cartStore.isEmpty);
+const selectedCategoryId = ref<number | null>(null);
+const searchTerm = ref('');
 
- const selectedProduct = ref<Products | null>(null);
+// State for products and selected product
+const selectedProductId = ref<number | null>(null);
 
- const isSheetOpen = computed(() => selectedProduct.value !== null);
+// Reactive queryKey for products
+const productsQueryKey = computed(() => [
+  'products',
+  { categoryId: selectedCategoryId.value, searchTerm: searchTerm.value },
+]);
 
-const filteredProducts = computed(() => {
-  if (searchTerm.value) {
-    return products.filter((product) =>
-    product.title.toLowerCase().includes(searchTerm.value.toLowerCase())
-    );
-  }
-  return products.filter(
-    (product) => product.category === selectedCategory.value
-  );
+// Fetch products based on selected category and search term
+const { data: products, isLoading: productsLoading } = useQuery<StoreProducts[]>({
+  queryKey: productsQueryKey,
+  queryFn: () =>
+    productService.getStoreProducts(
+      selectedCategoryId.value!,
+      searchTerm.value
+    ),
+  enabled: computed(() => Boolean(selectedCategoryId.value)),
+  initialData: []
 });
+
+const { data: categories, isLoading: categoriesLoading } = useQuery<ProductCategory[]>({
+  queryKey: ['categories'],
+  queryFn: () => productService.getStoreCategories(),
+  initialData: []
+});
+
+watch(
+  categories,
+  (newCategories) => {
+    if (newCategories && newCategories.length > 0 && !selectedCategoryId.value) {
+      selectedCategoryId.value = newCategories[0].id;
+    }
+  },
+  { immediate: true }
+);
+
+
+const cartTotalItems = computed(() => cartStore.totalItems);
+const cartTotalPrice = computed(() => cartStore.totalPrice);
+const isCartEmpty = computed(() => cartStore.isEmpty);
+
+const isSheetOpen = computed(() => selectedProductId.value !== null);
+
+function onUpdateCategory(categoryId: number) {
+  selectedCategoryId.value = categoryId;
+}
+
+function onUpdateSearchTerm(newSearchTerm: string) {
+  searchTerm.value = newSearchTerm;
+}
 
 const onCartClick = () => {
   router.push({ name: getRouteName('KIOSK_CART') });
 };
 
-const onUpdateCategory = (category: string) => {
-  selectedCategory.value = category;
-};
-
-const onUpdateSearchTerm = (newSearchTerm: string) => {
-  searchTerm.value = newSearchTerm;
-};
-
-const openProductSheet = (product: Products) => {
-  selectedProduct.value = product;
+const openProductSheet = (productId: number) => {
+  selectedProductId.value = productId;
 };
 
 const closeProductSheet = () => {
-  selectedProduct.value = null;
+  selectedProductId.value = null;
 };
 </script>
 
-<style lang="scss"></style>
+<style scoped lang="scss"></style>
