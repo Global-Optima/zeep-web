@@ -1,7 +1,10 @@
 package routes
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,10 +24,31 @@ func NewRouter(engine *gin.Engine, prefix string, version string) *Router {
 }
 
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
-	router := r.Routes.Group("/stores/:store_id/products")
+	router := r.Routes.Group("/products")
 	{
 		router.GET("", handler.GetStoreProducts)
-		router.GET("/search", handler.SearchStoreProducts)
-		router.GET("/:product_id", handler.GetStoreProductDetails)
+		router.GET("/:productId", handler.GetStoreProductDetails)
+	}
+}
+
+func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
+	router := r.Routes.Group("/stores")
+	{
+		router.GET("", handler.GetAllStores)
+		router.GET("/:storeId/employees", handler.GetStoreEmployees)
+	}
+}
+
+func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHandler) {
+	router := r.Routes.Group("/categories")
+	{
+		router.GET("", handler.GetAllCategories)
+	}
+}
+
+func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
+	router := r.Routes.Group("/additives")
+	{
+		router.GET("", handler.GetAdditivesByStoreAndProduct)
 	}
 }

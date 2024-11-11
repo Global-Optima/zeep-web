@@ -1,13 +1,13 @@
 package product
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 )
 
 type ProductService interface {
-	GetStoreProducts(storeID uint, category string, offset, limit int) ([]types.ProductCatalogDTO, error)
-	SearchStoreProducts(storeID uint, searchQuery, category string, offset, limit int) ([]types.ProductCatalogDTO, error)
-	GetStoreProductDetails(storeID, productID uint) (*types.ProductDTO, error)
+	GetStoreProducts(storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error)
+	GetStoreProductDetails(storeID, productID uint) (*types.StoreProductDetailsDTO, error)
 }
 
 type productService struct {
@@ -18,95 +18,88 @@ func NewProductService(repo ProductRepository) ProductService {
 	return &productService{repo: repo}
 }
 
-func (s *productService) GetStoreProducts(storeID uint, category string, offset, limit int) ([]types.ProductCatalogDTO, error) {
-	results, err := s.repo.GetStoreProducts(storeID, category, offset, limit)
+func (s *productService) GetStoreProducts(storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error) {
+	products, err := s.repo.GetStoreProducts(storeID, categoryID, searchQuery, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 
-	var productDTOs []types.ProductCatalogDTO
-	for _, result := range results {
-		productDTO := types.ProductCatalogDTO{
-			ProductID:          result.ProductID,
-			ProductName:        result.ProductName,
-			ProductDescription: result.ProductDescription,
-			Category:           result.CategoryName,
-			ProductImageURL:    result.ProductImageURL,
-			Price:              result.BasePrice,
-			IsAvailable:        result.IsAvailable,
-			IsOutOfStock:       result.IsOutOfStock,
-		}
-		productDTOs = append(productDTOs, productDTO)
+	productDTOs := make([]types.StoreProductDTO, len(products))
+	for i, product := range products {
+		productDTOs[i] = mapToStoreProductDTO(product)
 	}
 
 	return productDTOs, nil
 }
 
-func (s *productService) SearchStoreProducts(storeID uint, searchQuery, category string, offset, limit int) ([]types.ProductCatalogDTO, error) {
-	results, err := s.repo.SearchStoreProducts(storeID, searchQuery, category, offset, limit)
+func (s *productService) GetStoreProductDetails(storeID, productID uint) (*types.StoreProductDetailsDTO, error) {
+	product, err := s.repo.GetStoreProductDetails(storeID, productID)
 	if err != nil {
 		return nil, err
 	}
+	if product == nil {
+		return nil, nil
+	}
 
-	var productDTOs []types.ProductCatalogDTO
-	for _, result := range results {
-		productDTO := types.ProductCatalogDTO{
-			ProductID:          result.ProductID,
-			ProductName:        result.ProductName,
-			ProductDescription: result.ProductDescription,
-			Category:           result.CategoryName,
-			ProductImageURL:    result.ProductImageURL,
-			Price:              result.BasePrice,
-			IsAvailable:        result.IsAvailable,
-			IsOutOfStock:       result.IsOutOfStock,
+	productDetailsDTO := mapToStoreProductDetailsDTO(product)
+
+	return productDetailsDTO, nil
+}
+
+func mapToStoreProductDetailsDTO(product *data.Product) *types.StoreProductDetailsDTO {
+	sizes := make([]types.ProductSizeDTO, len(product.ProductSizes))
+	for i, size := range product.ProductSizes {
+		sizes[i] = types.ProductSizeDTO{
+			ID:        size.ID,
+			Name:      size.Name,
+			BasePrice: size.BasePrice,
+			Measure:   size.Measure,
 		}
-		productDTOs = append(productDTOs, productDTO)
 	}
 
-	return productDTOs, nil
+	defaultAdditives := make([]types.ProductAdditiveDTO, len(product.DefaultAdditives))
+	for i, pa := range product.DefaultAdditives {
+		additive := pa.Additive
+		defaultAdditives[i] = types.ProductAdditiveDTO{
+			ID:          additive.ID,
+			Name:        additive.Name,
+			Description: additive.Description,
+			ImageURL:    additive.ImageURL,
+		}
+	}
+
+	recipeSteps := make([]types.RecipeStepDTO, len(product.RecipeSteps))
+	for i, step := range product.RecipeSteps {
+		recipeSteps[i] = types.RecipeStepDTO{
+			ID:          step.ID,
+			Description: step.Description,
+			ImageURL:    step.ImageURL,
+			Step:        step.Step,
+		}
+	}
+
+	return &types.StoreProductDetailsDTO{
+		ID:               product.ID,
+		Name:             product.Name,
+		Description:      product.Description,
+		ImageURL:         product.ImageURL,
+		Sizes:            sizes,
+		DefaultAdditives: defaultAdditives,
+		RecipeSteps:      recipeSteps,
+	}
 }
 
-func (s *productService) GetStoreProductDetails(storeID, productID uint) (*types.ProductDTO, error) {
-	result, err := s.repo.GetStoreProductDetails(storeID, productID)
-	if err != nil {
-		return nil, err
+func mapToStoreProductDTO(product data.Product) types.StoreProductDTO {
+	var basePrice float64 = 0
+	if len(product.ProductSizes) > 0 {
+		basePrice = product.ProductSizes[0].BasePrice
 	}
 
-	productDTO := mapProductDAOToDTO(result)
-
-	return productDTO, nil
-}
-
-func mapProductDAOToDTO(result *types.ProductDAO) *types.ProductDTO {
-	productDTO := &types.ProductDTO{
-		ProductID:          result.ProductID,
-		ProductName:        result.ProductName,
-		ProductDescription: result.ProductDescription,
-		Category:           result.CategoryName,
-		ProductImageURL:    result.ProductImageURL,
-		ProductVideoURL:    result.ProductVideoURL,
-		Price:              result.BasePrice,
-		IsAvailable:        result.IsAvailable,
-		IsOutOfStock:       result.IsOutOfStock,
-		Nutrition: types.NutritionDTO{
-			Calories:      result.Nutrition.Calories,
-			Fat:           result.Nutrition.Fat,
-			Carbohydrates: result.Nutrition.Carbohydrates,
-			Proteins:      result.Nutrition.Proteins,
-		},
+	return types.StoreProductDTO{
+		ID:          product.ID,
+		Name:        product.Name,
+		Description: product.Description,
+		ImageURL:    product.ImageURL,
+		BasePrice:   basePrice,
 	}
-
-	for _, additive := range result.Additives {
-		productDTO.Additives = append(productDTO.Additives, types.AdditivesDTO(additive))
-	}
-
-	for _, defaultAdditive := range result.DefaultAdditives {
-		productDTO.DefaultAdditives = append(productDTO.DefaultAdditives, types.AdditivesDTO(defaultAdditive))
-	}
-
-	for _, size := range result.Sizes {
-		productDTO.Sizes = append(productDTO.Sizes, types.SizeDTO(size))
-	}
-
-	return productDTO
 }

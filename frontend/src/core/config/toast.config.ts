@@ -8,7 +8,7 @@ export const toastConfig: ToastContainerOptions = {
 	hideProgressBar: true,
 	pauseOnHover: false,
 	icon: false,
-	bodyClassName: 'text-xl',
+	bodyClassName: 'text-base sm:text-xl',
 	toastClassName: 'w-fit rounded-2xl px-4',
 	containerClassName: 'flex flex-col justify-center items-center',
 	closeButton: false,

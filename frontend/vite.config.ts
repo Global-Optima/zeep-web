@@ -27,6 +27,35 @@ export default defineConfig({
 		VitePWA({
 			registerType: 'autoUpdate',
 			injectRegister: 'auto',
+			workbox: {
+				runtimeCaching: [
+					{
+						urlPattern: ({ request }) =>
+							request.destination === 'style' ||
+							request.destination === 'script' ||
+							request.destination === 'worker',
+						handler: 'StaleWhileRevalidate',
+						options: {
+							cacheName: 'static-resources',
+							expiration: {
+								maxEntries: 50,
+								maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+							},
+						},
+					},
+					{
+						urlPattern: ({ request }) => request.destination === 'image',
+						handler: 'CacheFirst',
+						options: {
+							cacheName: 'images',
+							expiration: {
+								maxEntries: 100,
+								maxAgeSeconds: 60 * 24 * 60 * 60, // 60 days
+							},
+						},
+					},
+				],
+			},
 			devOptions: {
 				enabled: true,
 			},
