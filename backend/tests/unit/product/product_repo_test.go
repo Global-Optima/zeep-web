@@ -25,7 +25,7 @@ func TestProductRepository_GetStoreProducts(t *testing.T) {
 	repo, mock := utils.SetupProductRepository(t)
 
 	columns := []string{"id", "name", "description", "image_url", "category_name", "base_price", "is_available", "is_out_of_stock"}
-	queryRegex := regexp.MustCompile(`SELECT products\.id, products\.name, products\.description, products\.image_url, c\.name as category_name, COALESCE\(store_product_sizes\.price, product_sizes\.base_price\) as base_price, store_products\.is_available, \(CASE WHEN COALESCE\(store_warehouse_stocks\.quantity, 0\) = 0 THEN true ELSE false END\) as is_out_of_stock FROM "products"`)
+	queryRegex := regexp.MustCompile(`SELECT DISTINCT products\.id, products\.name, products\.description, products\.image_url, c\.name as category_name, COALESCE\(store_product_sizes\.price, product_sizes\.base_price\) as base_price, store_products\.is_available, \(CASE WHEN COALESCE\(store_warehouse_stocks\.quantity, 0\) = 0 THEN true ELSE false END\) as is_out_of_stock FROM "products"`)
 
 	testCases := []utils.TestCase{
 		{
@@ -96,7 +96,7 @@ func repoTestSearchStoreProducts(args ...interface{}) (interface{}, error) {
 func TestProductRepository_SearchStoreProducts(t *testing.T) {
 	repo, mock := utils.SetupProductRepository(t)
 	columns := []string{"id", "name", "description", "image_url", "category_name", "base_price", "is_available", "is_out_of_stock"}
-	queryRegex := regexp.MustCompile(`SELECT products\.id, products\.name, products\.description, products\.image_url, c\.name as category_name, COALESCE\(store_product_sizes\.price, product_sizes\.base_price\) as base_price, store_products\.is_available, \(CASE WHEN COALESCE\(store_warehouse_stocks\.quantity, 0\) = 0 THEN true ELSE false END\) as is_out_of_stock FROM "products"`)
+	queryRegex := regexp.MustCompile(`SELECT DISTINCT products\.id, products\.name, products\.description, products\.image_url, c\.name as category_name, COALESCE\(store_product_sizes\.price, product_sizes\.base_price\) as base_price, store_products\.is_available, \(CASE WHEN COALESCE\(store_warehouse_stocks\.quantity, 0\) = 0 THEN true ELSE false END\) as is_out_of_stock FROM "products"`)
 
 	testCases := []utils.TestCase{
 		{
@@ -146,12 +146,14 @@ func repoTestGetStoreProductDetails(args ...interface{}) (interface{}, error) {
 func TestProductRepository_GetStoreProductDetails(t *testing.T) {
 	repo, mock := utils.SetupProductRepository(t)
 
-	mainQueryRegex := regexp.MustCompile(`SELECT products\.id, products\.name, products\.description, products\.image_url, products\.video_url, c\.id as category_id, c\.name as category_name, COALESCE\(store_product_sizes\.price, product_sizes\.base_price\) as base_price, store_products\.is_available, \(CASE WHEN COALESCE\(store_warehouse_stocks\.quantity, 0\) = 0 THEN true ELSE false END\) as is_out_of_stock FROM "products"`)
-	sizeQueryRegex := regexp.MustCompile(`SELECT product_sizes\.id, product_sizes\.name, product_sizes\.size, product_sizes\.measure, COALESCE\(store_product_sizes\.price, product_sizes\.base_price\) as price, product_sizes\.is_default FROM "product_sizes"`)
-	additiveQueryRegex := regexp.MustCompile(`SELECT additives\.id, additives\.name, additives\.description, additive_categories\.name as category_name, COALESCE\(store_additives\.price, additives\.base_price\) as price FROM "additives"`)
-	nutritionQueryRegex := regexp.MustCompile(`SELECT SUM\(ingredients\.calories\) as calories, SUM\(ingredients\.fat\) as fat, SUM\(ingredients\.carbs\) as carbohydrates, SUM\(ingredients\.proteins\) as proteins FROM "ingredients"`)
-	defaultAdditiveQueryRegex := regexp.MustCompile(`SELECT additives\.id, additives\.name, additives\.description, additive_categories\.name as category_name, additives\.base_price as price FROM "additives"`)
+	// Main product details query regex
+	mainQueryRegex := regexp.QuoteMeta(`SELECT products.id, products.name, products.description, products.image_url, products.video_url, c.id as category_id, c.name as category_name, COALESCE(store_product_sizes.price, product_sizes.base_price) as base_price, store_products.is_available, (CASE WHEN COALESCE(store_warehouse_stocks.quantity, 0) = 0 THEN true ELSE false END) as is_out_of_stock FROM "products" JOIN store_products ON store_products.product_id = products.id AND store_products.store_id = $1 LEFT JOIN categories c ON c.id = products.category_id LEFT JOIN product_sizes ON product_sizes.product_id = products.id AND product_sizes.is_default = true LEFT JOIN store_product_sizes ON store_product_sizes.product_size_id = product_sizes.id AND store_product_sizes.store_id = $2 LEFT JOIN store_warehouse_stocks ON store_warehouse_stocks.ingredient_id = products.id AND store_warehouse_stocks.store_warehouse_id = store_products.store_id WHERE products.id = $3 ORDER BY "products"."id" LIMIT $4`)
 
+	// Mocked rows for product details
+	mainMockRows := sqlmock.NewRows([]string{"id", "name", "description", "image_url", "video_url", "category_id", "category_name", "base_price", "is_available", "is_out_of_stock"}).
+		AddRow(1, "Latte", "A creamy coffee drink", "https://example.com/latte.jpg", "https://example.com/latte.mp4", 1, "Coffee", 5.0, true, false)
+
+	// Test case
 	testCases := []utils.TestCase{
 		{
 			Name:      "Get Product Details Success",
@@ -185,26 +187,37 @@ func TestProductRepository_GetStoreProductDetails(t *testing.T) {
 			},
 			ShouldFail: false,
 			SetupMock: func() {
-				mainMockRows := sqlmock.NewRows([]string{"id", "name", "description", "image_url", "video_url", "category_id", "category_name", "base_price", "is_available", "is_out_of_stock"}).
-					AddRow(1, "Latte", "A creamy coffee drink", "https://example.com/latte.jpg", "https://example.com/latte.mp4", 1, "Coffee", 5.0, true, false)
-				mock.ExpectQuery(mainQueryRegex.String()).WithArgs(uint(1), uint(1), uint(1), 1).WillReturnRows(mainMockRows)
+				// Set up main product query expectation with four arguments
+				mock.ExpectQuery(mainQueryRegex).WithArgs(uint(1), uint(1), uint(1), 1).WillReturnRows(mainMockRows)
 
+				// Mock for fetching default size ID for the product in loadAdditives
+				defaultSizeIDMockRows := sqlmock.NewRows([]string{"id"}).AddRow(1)
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT id FROM "product_sizes" WHERE product_id = $1 AND is_default = true`)).
+					WithArgs(uint(1)).WillReturnRows(defaultSizeIDMockRows)
+
+				// Sizes query in loadSizes
 				sizeMockRows := sqlmock.NewRows([]string{"id", "name", "size", "measure", "price", "is_default"}).
 					AddRow(1, "Small", 200, "ml", 5.0, true)
-				mock.ExpectQuery(sizeQueryRegex.String()).WithArgs(uint(1), uint(1)).WillReturnRows(sizeMockRows)
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT product_sizes.id, product_sizes.name, product_sizes.size, product_sizes.measure, COALESCE(store_product_sizes.price, product_sizes.base_price) as price, product_sizes.is_default FROM "product_sizes" LEFT JOIN store_product_sizes ON store_product_sizes.product_size_id = product_sizes.id AND store_product_sizes.store_id = $1 WHERE product_sizes.product_id = $2`)).
+					WithArgs(uint(1), uint(1)).WillReturnRows(sizeMockRows)
 
+				// Additives query in loadAdditives
 				additiveMockRows := sqlmock.NewRows([]string{"id", "name", "description", "category_name", "price"}).
 					AddRow(1, "Vanilla Syrup", "Sweet vanilla flavor", "Syrups", 1.5)
-				mock.ExpectQuery(additiveQueryRegex.String()).WithArgs(uint(1), uint(1), uint(1)).WillReturnRows(additiveMockRows)
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT additives.id, additives.name, additives.description, additive_categories.name as category_name, COALESCE(store_additives.price, additives.base_price) as price FROM "additives" JOIN product_additives ON product_additives.additive_id = additives.id AND product_additives.product_size_id = $1 LEFT JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = $2 LEFT JOIN additive_categories ON additive_categories.id = additives.additive_category_id LEFT JOIN store_warehouse_stocks ON store_warehouse_stocks.ingredient_id = additives.id AND store_warehouse_stocks.store_warehouse_id = $3 WHERE store_additives.additive_id IS NOT NULL OR store_warehouse_stocks.quantity > 0`)).
+					WithArgs(1, uint(1), uint(1)).WillReturnRows(additiveMockRows)
 
+				// Default additives query in loadDefaultAdditives
 				defaultAdditiveMockRows := sqlmock.NewRows([]string{"id", "name", "description", "category_name", "price"}).
 					AddRow(2, "Caramel Syrup", "Rich caramel flavor", "Syrups", 1.75)
-				mock.ExpectQuery(defaultAdditiveQueryRegex.String()).WithArgs(uint(1)).WillReturnRows(defaultAdditiveMockRows)
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT additives.id, additives.name, additives.description, additive_categories.name as category_name, additives.base_price as price FROM "additives" JOIN default_product_additives ON default_product_additives.additive_id = additives.id LEFT JOIN additive_categories ON additive_categories.id = additives.additive_category_id WHERE default_product_additives.product_id = $1`)).
+					WithArgs(uint(1)).WillReturnRows(defaultAdditiveMockRows)
 
+				// Nutrition query in loadNutrition
 				nutritionMockRows := sqlmock.NewRows([]string{"calories", "fat", "carbohydrates", "proteins"}).
-					AddRow(100, 5, 15, 3) // Ensure this matches the expected values, particularly carbohydrates.
-				mock.ExpectQuery(nutritionQueryRegex.String()).WithArgs(uint(1)).WillReturnRows(nutritionMockRows)
-
+					AddRow(100, 5, 15, 3)
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT COALESCE(SUM(ingredients.calories), 0) as calories, COALESCE(SUM(ingredients.fat), 0) as fat, COALESCE(SUM(ingredients.carbs), 0) as carbohydrates, COALESCE(SUM(ingredients.proteins), 0) as proteins FROM "product_ingredients" JOIN item_ingredients ON product_ingredients.item_ingredient_id = item_ingredients.id JOIN ingredients ON item_ingredients.ingredient_id = ingredients.id WHERE product_ingredients.product_id = $1 GROUP BY product_ingredients.product_id`)).
+					WithArgs(uint(1)).WillReturnRows(nutritionMockRows)
 			},
 		},
 		{
@@ -213,7 +226,7 @@ func TestProductRepository_GetStoreProductDetails(t *testing.T) {
 			Expected:   (*types.ProductDAO)(nil),
 			ShouldFail: true,
 			SetupMock: func() {
-				mock.ExpectQuery(mainQueryRegex.String()).
+				mock.ExpectQuery(mainQueryRegex).
 					WithArgs(uint(1), uint(1), uint(5), 1).
 					WillReturnRows(sqlmock.NewRows(nil))
 			},
