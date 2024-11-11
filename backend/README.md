@@ -54,9 +54,10 @@ go test ./...
 Run integration tests to verify backend functionality with other systems:
 
 ```bash
-go test -tags=integration ./test/integration
+go test -tags=integration ./tests/integration
 ```
 
 ---
 
 This structured setup should help you get started with ZeepApp’s backend development in Golang.
+```

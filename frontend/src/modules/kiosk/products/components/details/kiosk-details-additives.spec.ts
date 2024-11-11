@@ -1,11 +1,10 @@
 import { formatPrice } from '@/core/utils/price.utils'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import type { Additive } from '../../models/product.model'
 import KioskDetailsAdditives from './kiosk-details-additives.vue'
 
 describe('KioskDetailsAdditives.vue', () => {
-	const additive: Additive = {
+	const additive = {
 		id: 1,
 		name: 'Vanilla Syrup',
 		imageUrl: 'https://example.com/vanilla.jpg',
@@ -18,7 +17,6 @@ describe('KioskDetailsAdditives.vue', () => {
 			props: {
 				additive,
 				selectedAdditives: [],
-				defaultAdditives: [],
 			},
 		})
 
@@ -50,7 +48,6 @@ describe('KioskDetailsAdditives.vue', () => {
 			props: {
 				additive,
 				selectedAdditives,
-				defaultAdditives: [],
 			},
 		})
 
@@ -78,7 +75,6 @@ describe('KioskDetailsAdditives.vue', () => {
 			props: {
 				additive,
 				selectedAdditives: [],
-				defaultAdditives: [],
 			},
 		})
 

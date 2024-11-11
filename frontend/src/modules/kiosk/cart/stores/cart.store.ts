@@ -1,17 +1,14 @@
 // useCartStore.ts
+import type { Additives } from '@/modules/additives/models/additive.model'
+import type { Products, ProductSizes } from '@/modules/products/models/product.model'
 import md5 from 'md5'
 import { defineStore } from 'pinia'
-import type {
-	Additive,
-	ProductSize,
-	StoreProductDetails,
-} from '../../products/models/product.model'
 
 export interface CartItem {
 	key: string
-	product: StoreProductDetails
-	size: ProductSize
-	additives: Additive[]
+	product: Products
+	size: ProductSizes
+	additives: Additives[]
 	quantity: number
 }
 
@@ -34,17 +31,13 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		totalPrice(state): number {
 			return Object.values(state.cartItems).reduce((total, item) => {
 				const additivesPrice = item.additives.reduce((sum, additive) => sum + additive.price, 0)
-				return total + (item.size.basePrice + additivesPrice) * item.quantity
+				return total + (item.size.price + additivesPrice) * item.quantity
 			}, 0)
 		},
 	},
 
 	actions: {
-		generateCartItemKey(
-			product: StoreProductDetails,
-			size: ProductSize,
-			additives: Additive[],
-		): string {
+		generateCartItemKey(product: Products, size: ProductSizes, additives: Additives[]): string {
 			const additiveIds = additives
 				.map(a => a.id)
 				.sort()
@@ -52,12 +45,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 			return md5(`${product.id}-${size.id}-${additiveIds}`)
 		},
 
-		addToCart(
-			product: StoreProductDetails,
-			size: ProductSize,
-			additives: Additive[],
-			quantity: number = 1,
-		) {
+		addToCart(product: Products, size: ProductSizes, additives: Additives[], quantity: number = 1) {
 			const key = this.generateCartItemKey(product, size, additives)
 			if (this.cartItems[key]) {
 				this.cartItems[key].quantity += quantity
@@ -72,7 +60,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 			}
 		},
 
-		removeFromCart(product: StoreProductDetails, size: ProductSize, additives: Additive[]) {
+		removeFromCart(product: Products, size: ProductSizes, additives: Additives[]) {
 			const key = this.generateCartItemKey(product, size, additives)
 			delete this.cartItems[key]
 		},

@@ -2,14 +2,16 @@
 	<div class="flex gap-4 sm:gap-8 p-4 sm:p-6 rounded-3xl bg-white">
 		<!-- Product Image -->
 		<img
-			:src="item.product.imageUrl"
+			:src="item.product.image"
 			alt="Product Image"
 			class="w-16 h-16 sm:w-fit sm:h-20 object-contain rounded"
 		/>
 
 		<!-- Product Details -->
 		<div class="flex-1">
-			<p class="text-base sm:text-2xl">{{ item.product.name }}, {{ item.size.name }}</p>
+			<p class="text-base sm:text-2xl">
+				{{ item.product.title }}, {{ item.size.label }} ({{ item.size.volume }}ml)
+			</p>
 
 			<div class="mt-2">
 				<div
@@ -81,7 +83,7 @@ const decrement = () => {
 
 // Computed property for item total price
 const itemTotalPrice = computed(() => {
-  const basePrice = props.item.size.basePrice;
+  const basePrice = props.item.size.price;
   const additivesPrice = props.item.additives.reduce(
     (sum, additive) => sum + additive.price,
     0

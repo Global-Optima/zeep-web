@@ -43,65 +43,54 @@
 		>
 			<button
 				v-for="category in categories"
-				:key="category.id"
+				:key="category"
 				:class="[
           'text-base sm:text-xl rounded-full p-5 sm:px-8 sm:py-6 whitespace-nowrap transition-colors font-medium',
-          selectedCategoryId === category.id ? 'bg-primary text-primary-foreground' : 'bg-transparent text-gray-500'
+          selectedCategory === category ? 'bg-primary text-primary-foreground' : 'bg-transparent text-gray-500'
         ]"
-				@click.prevent="selectCategory(category.id)"
+				@click.prevent="selectCategory(category)"
 				data-testid="category-button"
 			>
-				{{ category.name }}
+				{{ category }}
 			</button>
 		</div>
 	</section>
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
-import { useDebounceFn } from '@vueuse/core'
+import { Icon } from '@iconify/vue/dist/iconify.js'
 import { ref } from 'vue'
 
-import type { ProductCategory } from '@/modules/kiosk/products/models/product.model'
-
 const emit = defineEmits(['update:category', 'update:searchTerm']);
-const { selectedCategoryId, searchTerm, categories } = defineProps<{
-  selectedCategoryId: number | null;
-  searchTerm: string;
-  categories: ProductCategory[];
-}>();
+const { selectedCategory, searchTerm, categories } = defineProps<{ selectedCategory: string; searchTerm: string, categories: string[] }>();
 
 const isInputFocused = ref(false);
 
-const debouncedEmitSearchTerm = useDebounceFn((newTerm: string) => {
-  emit('update:searchTerm', newTerm);
-}, 500);
-
 const updateSearchTerm = (event: Event) => {
-  const newTerm = (event.target as HTMLInputElement).value;
-  debouncedEmitSearchTerm(newTerm);
+	const newTerm = (event.target as HTMLInputElement).value;
+	emit('update:searchTerm', newTerm);
 };
 
 const clearSearchTerm = () => {
-  emit('update:searchTerm', '');
+	emit('update:searchTerm', '');
   isInputFocused.value = false;
-};
+}
 
 const handleBlur = () => {
-  if (!searchTerm.trim()) {
-    setTimeout(() => {
-      isInputFocused.value = false;
-    }, 0);
-  }
+	if (!searchTerm.trim()) {
+		setTimeout(() => {
+			isInputFocused.value = false;
+		}, 0);
+	}
 };
 
 const handleFocus = () => {
-  isInputFocused.value = true;
+	isInputFocused.value = true;
 };
 
-const selectCategory = (categoryId: number) => {
-  emit('update:category', categoryId);
-  emit('update:searchTerm', '');
+const selectCategory = (category: string) => {
+	emit('update:category', category);
+	emit('update:searchTerm', '');
 };
 </script>
 
