@@ -7,38 +7,36 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig
-	JWT      JWTConfig
-	Server   ServerConfig
+	DBHost       string `mapstructure:"DB_HOST"`
+	DBPort       int    `mapstructure:"DB_PORT"`
+	DBUser       string `mapstructure:"DB_USER"`
+	DBPassword   string `mapstructure:"DB_PASSWORD"`
+	DBName       string `mapstructure:"DB_NAME"`
+	JWTSecretKey string `mapstructure:"JWT_SECRET_KEY"`
+	ServerPort   int    `mapstructure:"SERVER_PORT"`
+	ClientUrl    string `mapstructure:"CLIENT_URL"`
 }
 
-type DatabaseConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Name     string
-}
+var cfg *Config
 
-type JWTConfig struct {
-	SecretKey string
-}
-
-type ServerConfig struct {
-	Port int
-}
-
-var AppConfig Config
-
-func LoadConfig() {
-	viper.SetConfigFile("config.yml")
-	viper.AddConfigPath(".")
+func LoadConfig(file string) (*Config, error) {
+	viper.SetConfigFile(file)
+	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file, %s", err)
+		return nil, err
 	}
 
-	if err := viper.Unmarshal(&AppConfig); err != nil {
-		log.Fatalf("Unable to decode into struct, %v", err)
+	if err := viper.Unmarshal(&cfg); err != nil {
+		return nil, err
 	}
+
+	return cfg, nil
+}
+
+func GetConfig() *Config {
+	if cfg == nil {
+		log.Fatal("Config not loaded")
+	}
+	return cfg
 }
