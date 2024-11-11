@@ -1,6 +1,7 @@
 package product
 
 import (
+	"log"
 	"net/http"
 	"testing"
 
@@ -11,7 +12,9 @@ import (
 func TestGetStoreProducts(t *testing.T) {
 	handler, db := utils.SetupProductHandler(t)
 	router := utils.SetupTestRouter(handler)
-	TruncateTables(db)
+	if err := TruncateTables(db); err != nil {
+		log.Fatalf("Error truncating tables: %v", err)
+	}
 	SetupMockData(db)
 
 	tests := []utils.TestCase{
@@ -100,13 +103,17 @@ func TestGetStoreProducts(t *testing.T) {
 	}
 
 	utils.TestRunner(t, router, tests)
-	TruncateTables(db)
+	if err := TruncateTables(db); err != nil {
+		log.Fatalf("Error truncating tables: %v", err)
+	}
 }
 
 func TestSearchStoreProducts(t *testing.T) {
 	handler, db := utils.SetupProductHandler(t)
 	router := utils.SetupTestRouter(handler)
-	TruncateTables(db)
+	if err := TruncateTables(db); err != nil {
+		log.Fatalf("Error truncating tables: %v", err)
+	}
 	SetupMockData(db)
 
 	tests := []utils.TestCase{
@@ -191,13 +198,17 @@ func TestSearchStoreProducts(t *testing.T) {
 	}
 
 	utils.TestRunner(t, router, tests)
-	TruncateTables(db)
+	if err := TruncateTables(db); err != nil {
+		log.Fatalf("Error truncating tables: %v", err)
+	}
 }
 
 func TestGetStoreProductDetails(t *testing.T) {
 	handler, db := utils.SetupProductHandler(t)
 	router := utils.SetupTestRouter(handler)
-	TruncateTables(db)
+	if err := TruncateTables(db); err != nil {
+		log.Fatalf("Error truncating tables: %v", err)
+	}
 	SetupMockData(db)
 
 	tests := []utils.TestCase{
@@ -357,5 +368,7 @@ func TestGetStoreProductDetails(t *testing.T) {
 	}
 
 	utils.TestRunner(t, router, tests)
-	TruncateTables(db)
+	if err := TruncateTables(db); err != nil {
+		log.Fatalf("Error truncating tables: %v", err)
+	}
 }
