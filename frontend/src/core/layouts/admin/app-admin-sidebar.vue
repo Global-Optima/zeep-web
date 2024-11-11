@@ -9,6 +9,7 @@ const route = useRoute()
 const currentRouteName = computed(() => route.name)
 
 const isActiveRoute = (routeName: string) => {
+	console.log(currentRouteName.value, routeName)
 	return currentRouteName.value?.toString().includes(routeName) ?? false
 }
 </script>

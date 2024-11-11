@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { cn } from '@/core/utils/tailwind.utils'
 import type { HTMLAttributes } from 'vue'
+import { cn } from '@/core/utils/tailwind.utils'
 
 const props = defineProps<{
   class?: HTMLAttributes['class']
@@ -11,7 +11,7 @@ const props = defineProps<{
 	<div
 		:class="
       cn(
-        'rounded-xl border bg-card text-card-foreground',
+        'rounded-xl border bg-card text-card-foreground shadow',
         props.class,
       )
     "

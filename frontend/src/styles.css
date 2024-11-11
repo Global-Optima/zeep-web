@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-@import './core/assets/themes/green.css';
+@import './core/assets/themes/custom.css';
 @import 'vue3-toastify/dist/index.css';
 
 @tailwind base;
@@ -12,7 +12,6 @@
 	}
 	body {
 		font-family: 'Montserrat', sans-serif;
-		background: var(--background);
 	}
 
 	:root {
