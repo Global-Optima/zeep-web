@@ -4,7 +4,7 @@
 		:class="[
       'text-center bg-white rounded-3xl p-5 min-w-44 max-w-44 flex flex-col justify-between',
       isSelected ? 'bg-primary border-primary border-2' : 'border-2 border-transparent',
-      isDefaultAdditive ? 'cursor-not-allowed ' : 'cursor-pointer',
+      isDefaultAdditive ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
     ]"
 		data-testid="additive-card"
 	>
@@ -30,11 +30,14 @@
         ]"
 				data-testid="additive-price"
 			>
-				{{formatPrice(additive.price) }}
+				{{ formatPrice(additive.price) }}
 			</p>
 			<button
 				class="relative h-6 w-6 sm:w-8 sm:h-8 rounded-full focus:outline-none"
-				:class="isSelected ? 'bg-primary' : 'bg-gray-200'"
+				:class="[
+          isSelected ? 'bg-primary' : 'bg-gray-200',
+          isDefaultAdditive ? 'cursor-not-allowed opacity-50' : '',
+        ]"
 				:disabled="isDefaultAdditive"
 				data-testid="additive-button"
 			>
@@ -57,26 +60,26 @@ const props = defineProps<{
   additive: Additive;
   selectedAdditives: Additive[];
   defaultAdditives: Additive[];
-}>();
+}>()
 
-const emit = defineEmits(['click:additive']);
+const emit = defineEmits(['click:additive'])
 
-const { additive, selectedAdditives, defaultAdditives } = props;
+const { additive, selectedAdditives, defaultAdditives } = props
 
 const isDefaultAdditive = computed(() => {
-  return defaultAdditives.some((item) => item.id === additive.id);
-});
+  return defaultAdditives.some((item) => item.id === additive.id)
+})
 
 const isSelected = computed(() => {
-  return selectedAdditives.some((item) => item.id === additive.id) || isDefaultAdditive.value;
-});
+  return selectedAdditives.some((item) => item.id === additive.id) || isDefaultAdditive.value
+})
 
 const handleClick = () => {
   if (isDefaultAdditive.value) {
-    return;
+    return
   }
-  emit('click:additive', additive);
-};
+  emit('click:additive', additive)
+}
 </script>
 
 <style scoped></style>

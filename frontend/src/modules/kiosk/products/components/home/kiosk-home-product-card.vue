@@ -8,7 +8,7 @@
 			<img
 				:src="product.imageUrl"
 				alt="Product Image"
-				class="w-full h-44 object-contain rounded-lg"
+				class="w-full h-44 sm:h-60 object-contain rounded-lg"
 				data-testid="product-image"
 			/>
 

@@ -84,7 +84,7 @@ const onSubmit = handleSubmit((values) => {
 						name="selectedStoreId"
 					>
 						<FormItem>
-							<FormLabel class="text-sm sm:text-lg">Выберите кафе</FormLabel>
+							<FormLabel class="text-sm sm:text-base">Заведение</FormLabel>
 							<FormControl>
 								<Select
 									v-model="values.selectedStoreId"
@@ -93,19 +93,19 @@ const onSubmit = handleSubmit((values) => {
 									<SelectTrigger class="w-full">
 										<template v-if="storesLoading">
 											<SelectValue
-												class="text-sm sm:text-lg"
+												class="text-sm sm:text-base"
 												placeholder="Загрузка кафе..."
 											/>
 										</template>
 										<template v-else-if="storesError">
 											<SelectValue
-												class="text-sm sm:text-lg"
+												class="text-sm sm:text-base"
 												placeholder="Ошибка загрузки кафе"
 											/>
 										</template>
 										<template v-else>
 											<SelectValue
-												class="text-sm sm:text-lg"
+												class="text-sm sm:text-base"
 												placeholder="Выберите кафе"
 											/>
 										</template>
@@ -115,7 +115,7 @@ const onSubmit = handleSubmit((values) => {
 											v-for="store in stores"
 											:key="store.id"
 											:value="store.id.toString()"
-											class="text-sm sm:text-lg"
+											class="text-sm sm:text-base"
 										>
 											{{ store.name }}
 										</SelectItem>
@@ -131,7 +131,7 @@ const onSubmit = handleSubmit((values) => {
 						name="selectedEmployeeId"
 					>
 						<FormItem v-if="values.selectedStoreId">
-							<FormLabel class="text-sm sm:text-lg">Выберите сотрудника</FormLabel>
+							<FormLabel class="text-sm sm:text-base">Выберите сотрудника</FormLabel>
 							<FormControl>
 								<Select
 									v-model="values.selectedEmployeeId"
@@ -140,19 +140,19 @@ const onSubmit = handleSubmit((values) => {
 									<SelectTrigger class="w-full">
 										<template v-if="employeesLoading">
 											<SelectValue
-												class="text-sm sm:text-lg"
+												class="text-sm sm:text-base"
 												placeholder="Загрузка сотрудников..."
 											/>
 										</template>
 										<template v-else-if="employeesError">
 											<SelectValue
-												class="text-sm sm:text-lg"
+												class="text-sm sm:text-base"
 												placeholder="Ошибка загрузки сотрудников"
 											/>
 										</template>
 										<template v-else>
 											<SelectValue
-												class="text-sm sm:text-lg"
+												class="text-sm sm:text-base"
 												placeholder="Сотрудники"
 											/>
 										</template>
@@ -162,7 +162,7 @@ const onSubmit = handleSubmit((values) => {
 											v-for="employee in employees"
 											:key="employee.id"
 											:value="employee.id.toString()"
-											class="text-sm sm:text-lg"
+											class="text-sm sm:text-base"
 										>
 											{{ employee.name }}
 										</SelectItem>
@@ -178,13 +178,13 @@ const onSubmit = handleSubmit((values) => {
 						name="password"
 					>
 						<FormItem>
-							<FormLabel class="text-sm sm:text-lg">Пароль</FormLabel>
+							<FormLabel class="text-sm sm:text-base">Пароль</FormLabel>
 							<FormControl>
 								<Input
 									type="password"
 									placeholder="Введите пароль сотрудника"
 									v-bind="componentField"
-									class="text-sm sm:text-lg"
+									class="text-sm sm:text-base"
 									required
 								/>
 							</FormControl>

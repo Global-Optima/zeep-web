@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -48,11 +49,17 @@ func applyMigrations(db *gorm.DB, migrationsPath string) error {
 		return fmt.Errorf("failed to create migration driver: %w", err)
 	}
 
+	absPath, err := filepath.Abs(migrationsPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path of migrations: %w", err)
+	}
+
 	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", migrationsPath),
+		"file://"+absPath,
 		"postgres",
 		driver,
 	)
+
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrate instance: %w", err)
 	}

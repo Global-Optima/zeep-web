@@ -8,7 +8,7 @@ import KioskHomeProductCard from './kiosk-home-product-card.vue'
 describe('KioskHomeProductCard.vue', () => {
 	const product: StoreProducts = {
 		id: 1,
-		name: 'Test Product',
+		name: 'Test Product 1',
 		imageUrl: 'https://example.com/image.jpg',
 		basePrice: 1999.99,
 		category: 'Кофе',

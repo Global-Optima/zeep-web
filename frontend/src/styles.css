@@ -7,12 +7,9 @@
 @tailwind utilities;
 
 @layer base {
-	* {
-		@apply border-border;
-	}
 	body {
 		font-family: 'Montserrat', sans-serif;
-		background: var(--background);
+		background: radial-gradient(circle, #f5f5f7 80%, rgb(228, 253, 226) 100%);
 	}
 
 	:root {
@@ -23,12 +20,17 @@
 		--vis-tooltip-backdrop-filter: none !important;
 		--vis-tooltip-padding: none !important;
 
-		--vis-primary-color: var(--primary);
-		--vis-secondary-color: var(--secondary);
-		--vis-text-color: var(--muted-foreground);
+		--vis-primary-color: hsl(var(--primary));
+		--vis-secondary-color: hsl(var(--secondary));
+		--vis-text-color: hsl(var(--muted-foreground));
 
-		--toastify-color-success: #006400;
+		--toastify-color-success: hsl(var(--primary));
 		--toastify-color-info: #2b4fb9;
+
+		--safe-top: env(safe-area-inset-top);
+		--safe-left: env(safe-area-inset-left);
+		--safe-right: env(safe-area-inset-right);
+		--safe-bottom: env(safe-area-inset-bottom);
 	}
 }
 
@@ -40,5 +42,21 @@
 	.no-scrollbar {
 		-ms-overflow-style: none;
 		scrollbar-width: none;
+	}
+
+	.pt-safe {
+		padding-top: var(--safe-top);
+	}
+
+	.pr-safe {
+		padding-right: var(--safe-right);
+	}
+
+	.pl-safe {
+		padding-left: var(--safe-left);
+	}
+
+	.pb-safe {
+		padding-bottom: var(--safe-bottom);
 	}
 }

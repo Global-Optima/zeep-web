@@ -16,6 +16,13 @@ export const KIOSK_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/kiosk/cart/pages/kiosk-cart-page.vue'),
 	},
+	KIOSK_LANDING: {
+		path: 'landing',
+		meta: {
+			title: 'Популряное',
+		},
+		component: () => import('@/modules/kiosk/landing/pages/kiosk-landing-page.vue'),
+	},
 } satisfies AppRouteRecord
 
 export const KIOSK_ROUTES_CONFIG: ParentRoutePage = {

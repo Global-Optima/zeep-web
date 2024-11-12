@@ -59,7 +59,6 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useDebounceFn } from '@vueuse/core'
 import { ref } from 'vue'
 
 import type { ProductCategory } from '@/modules/kiosk/products/models/product.model'
@@ -73,13 +72,10 @@ const { selectedCategoryId, searchTerm, categories } = defineProps<{
 
 const isInputFocused = ref(false);
 
-const debouncedEmitSearchTerm = useDebounceFn((newTerm: string) => {
-  emit('update:searchTerm', newTerm);
-}, 500);
 
 const updateSearchTerm = (event: Event) => {
   const newTerm = (event.target as HTMLInputElement).value;
-  debouncedEmitSearchTerm(newTerm);
+  emit('update:searchTerm', newTerm);
 };
 
 const clearSearchTerm = () => {
