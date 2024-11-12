@@ -115,7 +115,7 @@
 		>
 			<SheetContent
 				side="bottom"
-				class="bg-white p-0 max-w-[95vw] h-[92vh] rounded-[40px] mx-auto overflow-clip overflow-y-auto no-scrollbar"
+				class="p-0 overflow-clip rounded-t-3xl overflow-y-auto h-[92vh] no-scrollbar bg-[#F5F5F7] border-t-0"
 			>
 				<KioskDetailsSheetContent :selected-product-id="selectedProductId" />
 			</SheetContent>

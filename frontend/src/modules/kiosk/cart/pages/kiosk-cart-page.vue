@@ -1,5 +1,5 @@
 <template>
-	<div class="px-4 relative pt-safe">
+	<div class="px-4 relative pt-safe pb-44 no-scrollbar">
 		<section class="flex items-center justify-between gap-4 py-5 sm:py-7">
 			<button @click="goBack">
 				<Icon

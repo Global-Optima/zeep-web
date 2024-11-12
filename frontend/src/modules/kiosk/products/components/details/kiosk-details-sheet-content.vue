@@ -1,92 +1,73 @@
 <template>
-	<div class="relative bg-[#F5F5F7]">
-		<!-- Loading State -->
-		<div
-			v-if="isLoading"
-			class="flex items-center justify-center h-full"
-		>
-			<!-- You can replace this with your skeleton loader -->
-			<p>Loading...</p>
-		</div>
+	<!-- Product  -->
+	<div v-if="productDetails">
+		<!-- Product Image -->
+		<img
+			:src="productDetails.imageUrl"
+			alt="Product Image"
+			class="w-full h-[500px] sm:h-[600px] object-cover rounded-3xl"
+		/>
 
-		<!-- Error State -->
+		<!-- Gradient Overlay -->
 		<div
-			v-else-if="isError"
-			class="flex items-center justify-center h-full"
-		>
-			<p>Error loading product details.</p>
-		</div>
+			class="absolute inset-0 h-[500px] sm:h-[600px] bg-gradient-to-t to-50% from-[#F5F5F7] to-transparent pointer-events-none"
+		></div>
 
 		<!-- Product Details -->
-		<div v-else-if="productDetails">
-			<!-- Product Image -->
-			<img
-				:src="productDetails.imageUrl"
-				alt="Product Image"
-				class="w-full h-[500px] sm:h-[600px] object-cover rounded-3xl"
-			/>
+		<div class="w-full p-4 sm:p-8 sm:-mt-24 relative">
+			<h1 class="text-2xl sm:text-4xl font-medium">{{ productDetails.name }}</h1>
+			<p class="text-base sm:text-xl mt-1 sm:mt-3">{{ productDetails.description }}</p>
 
-			<!-- Gradient Overlay -->
+			<!-- Size Selection and Add to Cart -->
+			<div class="flex items-center gap-4 justify-between mt-5 sm:mt-10">
+				<!-- Size Options -->
+				<div class="flex items-center gap-2">
+					<KioskDetailsSizes
+						v-for="size in productDetails.sizes"
+						:key="size.id"
+						:size="size"
+						:selected-size="selectedSize"
+						@click:size="onSizeClick"
+					/>
+				</div>
+
+				<!-- Price and Add to Cart Button -->
+				<div class="flex items-center gap-4 sm:gap-6">
+					<p class="text-2xl sm:text-3xl font-medium">
+						{{ formatPrice(totalPrice) }}
+					</p>
+					<button
+						@click="handleAddToCart"
+						class="rounded-full bg-primary text-primary-foreground p-2 sm:p-4"
+					>
+						<Icon
+							icon="mingcute:add-line"
+							class="text-2xl sm:text-3xl"
+						/>
+					</button>
+				</div>
+			</div>
+
+			<div class="mt-6 sm:mt-8">
+				<KioskDetailsEnergy :energy="calculatedEnergy" />
+			</div>
+
+			<!-- Additives Selection -->
 			<div
-				class="absolute inset-0 h-[500px] sm:h-[600px] bg-gradient-to-t to-50% from-[#F5F5F7] to-transparent pointer-events-none"
-			></div>
-
-			<!-- Product Details -->
-			<div class="w-full p-4 sm:p-8 sm:-mt-24 relative">
-				<h1 class="text-2xl sm:text-4xl font-medium">{{ productDetails.name }}</h1>
-				<p class="text-base sm:text-xl mt-1 sm:mt-3">{{ productDetails.description }}</p>
-
-				<!-- Size Selection and Add to Cart -->
-				<div class="flex items-center gap-4 justify-between mt-5 sm:mt-10">
-					<!-- Size Options -->
-					<div class="flex items-center gap-2">
-						<KioskDetailsSizes
-							v-for="size in productDetails.sizes"
-							:key="size.id"
-							:size="size"
-							:selected-size="selectedSize"
-							@click:size="onSizeClick"
-						/>
-					</div>
-
-					<!-- Price and Add to Cart Button -->
-					<div class="flex items-center gap-4 sm:gap-6">
-						<p class="text-2xl sm:text-3xl font-medium">
-							{{ formatPrice(totalPrice) }}
-						</p>
-						<button
-							@click="handleAddToCart"
-							class="rounded-full bg-primary text-primary-foreground p-2 sm:p-4"
-						>
-							<Icon
-								icon="mingcute:add-line"
-								class="text-2xl sm:text-3xl"
-							/>
-						</button>
-					</div>
-				</div>
-
-				<div class="mt-6 sm:mt-8">
-					<KioskDetailsEnergy :energy="calculatedEnergy" />
-				</div>
-
-				<!-- Additives Selection -->
-				<div
-					class="mt-6 sm:mt-8"
-					v-for="additiveCategory in additiveCategories"
-					:key="additiveCategory.id"
-				>
-					<p class="text-lg sm:text-2xl font-medium">{{ additiveCategory.name }}</p>
-					<div class="flex overflow-x-auto no-scrollbar gap-1 mt-2 sm:mt-4">
-						<KioskDetailsAdditives
-							v-for="additive in additiveCategory.additives"
-							:key="additive.id"
-							:selected-additives="selectedAdditives"
-							:default-additives="productDetails.defaultAdditives"
-							:additive="additive"
-							@click:additive="onAdditiveClick"
-						/>
-					</div>
+				class="mt-6 sm:mt-8"
+				v-for="additiveCategory in additiveCategories"
+				:key="additiveCategory.id"
+			>
+				<p class="text-lg sm:text-2xl font-medium">{{ additiveCategory.name }}</p>
+				<div class="flex overflow-x-auto no-scrollbar gap-1 mt-2 sm:mt-4">
+					<KioskDetailsAdditives
+						v-for="additive in additiveCategory.additives"
+						:key="additive.id"
+						:selected-additives="selectedAdditives"
+						:default-additives="productDetails.defaultAdditives"
+						:additive="additive"
+						@click:additive="onAdditiveClick"
+					/>
 				</div>
 			</div>
 		</div>
