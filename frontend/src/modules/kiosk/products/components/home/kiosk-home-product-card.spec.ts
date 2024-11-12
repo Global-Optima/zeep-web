@@ -1,17 +1,18 @@
 import { formatPrice } from '@/core/utils/price.utils'
-import type { Products } from '@/modules/products/models/product.model'
 import { router } from '@/router'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
+import type { StoreProducts } from '../../models/product.model'
 import KioskHomeProductCard from './kiosk-home-product-card.vue'
 
 describe('KioskHomeProductCard.vue', () => {
-	const product: Products = {
+	const product: StoreProducts = {
 		id: 1,
-		title: 'Test Product',
-		image: 'https://example.com/image.jpg',
-		startPrice: 1999.99,
+		name: 'Test Product 1',
+		imageUrl: 'https://example.com/image.jpg',
+		basePrice: 1999.99,
 		category: 'Кофе',
+		description: 'Test Product Description',
 	}
 
 	it('renders the product information correctly', () => {
@@ -24,14 +25,14 @@ describe('KioskHomeProductCard.vue', () => {
 
 		const img = wrapper.find('[data-testid="product-image"]')
 		expect(img.exists()).toBe(true)
-		expect(img.attributes('src')).toBe(product.image)
+		expect(img.attributes('src')).toBe(product.imageUrl)
 		expect(img.attributes('alt')).toBe('Product Image')
 
 		const title = wrapper.find('[data-testid="product-title"]')
 		expect(title.exists()).toBe(true)
-		expect(title.text()).toBe(product.title)
+		expect(title.text()).toBe(product.name)
 
-		const priceText = formatPrice(product.startPrice)
+		const priceText = formatPrice(product.basePrice)
 		const price = wrapper.find('[data-testid="product-price"]')
 		expect(price.exists()).toBe(true)
 		expect(price.text()).toBe(priceText)

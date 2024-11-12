@@ -9,19 +9,19 @@ export const KIOSK_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/kiosk/products/pages/kiosk-home-page.vue'),
 	},
-	KIOSK_PRODUCT_DETAILS: {
-		path: ':id',
-		meta: {
-			title: 'Детали продукта',
-		},
-		component: () => import('@/modules/kiosk/products/pages/kiosk-product-details-page.vue'),
-	},
 	KIOSK_CART: {
 		path: 'cart',
 		meta: {
 			title: 'Корзина',
 		},
 		component: () => import('@/modules/kiosk/cart/pages/kiosk-cart-page.vue'),
+	},
+	KIOSK_LANDING: {
+		path: 'landing',
+		meta: {
+			title: 'Популряное',
+		},
+		component: () => import('@/modules/kiosk/landing/pages/kiosk-landing-page.vue'),
 	},
 } satisfies AppRouteRecord
 

@@ -22,5 +22,13 @@ router.beforeEach(async (to, _from, next) => {
 	const metaTitle = to.meta?.title ? TITLE_TEMPLATE(to.meta.title as string) : DEFAULT_TITLE
 	document.title = metaTitle
 
+	// if (to.name !== getRouteName('LOGIN')) {
+	// 	const storeId = localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)
+
+	// 	if (!storeId) {
+	// 		return next({ name: getRouteName('LOGIN') })
+	// 	}
+	// }
+
 	return next()
 })

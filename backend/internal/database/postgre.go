@@ -1,56 +1,75 @@
 package database
 
 import (
+	"fmt"
 	"log"
+	"path/filepath"
+	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	postgresMigration "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-var dbConn *gorm.DB
 
 type DBHandler struct {
 	DB *gorm.DB
 }
 
-func InitDB(url string) DBHandler {
-	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
+// InitDB initializes the database connection and applies migrations
+func InitDB(dsn string) (*DBHandler, error) {
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("error occured while opening db conn: %s", err)
+		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
-	log.Println("database connected: ", url)
+	if err := applyMigrations(db, "migrations"); err != nil {
+		return nil, fmt.Errorf("failed to apply migrations: %w", err)
+	}
 
-	err = db.Migrator().CreateTable(
-	// &addresses.CustomerAddress{},
-	// &addresses.FacilityAddress{},
-	// &products.Additive{},
-	// &products.AdditiveCategory{},
-	// &products.Category{},
-	// &products.Category{},
-	// &products.Product{},
-	// &products.ProductAdditive{},
-	// &products.ProductSize{},
-	// &products.RecipeStep{},
-	// TODO: add tables to create
+	log.Println("Database connected and migrations applied successfully.")
+	return &DBHandler{DB: db}, nil
+}
+
+// applyMigrations applies database migrations from the specified path
+func applyMigrations(db *gorm.DB, migrationsPath string) error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get sqlDB from gorm DB: %w", err)
+	}
+
+	// Optional: Configure connection pooling
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	driver, err := postgresMigration.WithInstance(sqlDB, &postgresMigration.Config{})
+	if err != nil {
+		return fmt.Errorf("failed to create migration driver: %w", err)
+	}
+
+	absPath, err := filepath.Abs(migrationsPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path of migrations: %w", err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://"+absPath,
+		"postgres",
+		driver,
 	)
 
 	if err != nil {
-		log.Fatalf("error occurred while migration: %s", err)
+		return fmt.Errorf("failed to initialize migrate instance: %w", err)
 	}
 
-	log.Println("migrations done")
-
-	dbConn = db
-	return DBHandler{db}
-}
-
-func GetDBHandler() *DBHandler {
-	if dbConn == nil {
-		log.Fatal("database connection is not initialized")
+	log.Println("Starting migrations...")
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("migration error: %w", err)
 	}
-
-	return &DBHandler{DB: dbConn}
+	log.Println("Migrations completed successfully.")
+	return nil
 }
 
 type BaseRepository interface {

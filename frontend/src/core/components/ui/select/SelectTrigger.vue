@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
-import { CaretSortIcon } from '@radix-icons/vue'
+import { ChevronDownIcon } from '@radix-icons/vue'
 import { SelectIcon, SelectTrigger, type SelectTriggerProps, useForwardProps } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
 
@@ -25,7 +25,7 @@ const forwardedProps = useForwardProps(delegatedProps)
 	>
 		<slot />
 		<SelectIcon as-child>
-			<CaretSortIcon class="w-4 h-4 opacity-50 shrink-0" />
+			<ChevronDownIcon class="ml-2 w-4 h-4 sm:w-5 sm:h-5 opacity-50 shrink-0" />
 		</SelectIcon>
 	</SelectTrigger>
 </template>

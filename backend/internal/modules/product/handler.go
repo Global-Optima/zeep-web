@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type ProductHandler struct {
@@ -17,91 +17,61 @@ func NewProductHandler(service ProductService) *ProductHandler {
 }
 
 func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
-	storeID, err := strconv.Atoi(c.Param("store_id"))
-	if err != nil || storeID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid store_id parameter"})
-		return
-	}
+	storeIDParam := c.Query("storeId")
+	categoryIDParam := c.Query("categoryId")
+	searchQuery := c.Query("search")
 
-	category := c.Query("category")
-	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
-	if err != nil || offset < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid offset parameter"})
-		return
-	}
-
-	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if err != nil || limit <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit parameter"})
-		return
-	}
-
-	products, err := h.service.GetStoreProducts(uint(storeID), category, offset, limit)
+	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve products", "details": err.Error()})
+		utils.SendBadRequestError(c, "Invalid store Id")
 		return
 	}
 
-	c.JSON(http.StatusOK, products)
-}
-
-func (h *ProductHandler) SearchStoreProducts(c *gin.Context) {
-	storeID, err := strconv.Atoi(c.Param("store_id"))
-	if err != nil || storeID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid store_id parameter"})
-		return
-	}
-
-	searchQuery := c.Query("q")
-	if searchQuery == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Search query cannot be empty"})
-		return
-	}
-
-	category := c.Query("category")
-	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
-	if err != nil || offset < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid offset parameter"})
-		return
-	}
-
-	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if err != nil || limit <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit parameter"})
-		return
-	}
-
-	products, err := h.service.SearchStoreProducts(uint(storeID), searchQuery, category, offset, limit)
+	categoryID, err := strconv.ParseUint(categoryIDParam, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search products", "details": err.Error()})
+		utils.SendBadRequestError(c, "Invalid category Id")
 		return
 	}
 
-	c.JSON(http.StatusOK, products)
+	limit, offset := utils.ParsePaginationParams(c)
+
+	products, err := h.service.GetStoreProducts(uint(storeID), uint(categoryID), searchQuery, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve products"})
+		return
+	}
+
+	// meta := gin.H{"limit": limit, "offset": offset, "total": len(products)}
+
+	utils.SuccessResponse(c, products)
 }
 
 func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
-	storeID, err := strconv.Atoi(c.Param("store_id"))
-	if err != nil || storeID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid store_id parameter"})
-		return
-	}
+	storeIDParam := c.Query("storeId")
+	productIDParam := c.Param("productId")
 
-	productID, err := strconv.Atoi(c.Param("product_id"))
-	if err != nil || productID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product_id parameter"})
-		return
-	}
-
-	product, err := h.service.GetStoreProductDetails(uint(storeID), uint(productID))
+	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve product details", "details": err.Error()})
-		}
+		utils.SendBadRequestError(c, "Invalid store ID")
 		return
 	}
 
-	c.JSON(http.StatusOK, product)
+	productID, err := strconv.ParseUint(productIDParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid product ID")
+		return
+	}
+
+	productDetails, err := h.service.GetStoreProductDetails(uint(storeID), uint(productID))
+	if err != nil {
+		utils.SendInternalError(c, "Failed to retrieve product details")
+		return
+	}
+
+	if productDetails == nil {
+		utils.SendNotFoundError(c, "Product not found")
+		return
+	}
+
+	utils.SuccessResponse(c, productDetails)
 }

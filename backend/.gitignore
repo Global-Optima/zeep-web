@@ -5,6 +5,7 @@
 *.dylib
 
 *.test
+tmp
 
 *.out
 
@@ -13,4 +14,3 @@ go.work.sum
 
 .env
 config.yml
-config.test.yml

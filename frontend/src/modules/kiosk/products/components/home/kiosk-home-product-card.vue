@@ -6,9 +6,9 @@
 	>
 		<div>
 			<img
-				:src="product.image"
+				:src="product.imageUrl"
 				alt="Product Image"
-				class="w-full h-44 object-contain rounded-lg"
+				class="w-full h-44 sm:h-60 object-contain rounded-lg"
 				data-testid="product-image"
 			/>
 
@@ -16,7 +16,7 @@
 				class="text-base sm:text-xl mt-3 line-clamp-2 min-h-[3rem]"
 				data-testid="product-title"
 			>
-				{{ product.title }}
+				{{ product.name }}
 			</h3>
 		</div>
 
@@ -25,26 +25,26 @@
 				class="text-xl sm:text-2xl font-medium"
 				data-testid="product-price"
 			>
-				{{ formatPrice(product.startPrice) }}
+				{{ formatPrice(product.basePrice) }}
 			</p>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
- import { formatPrice } from '@/core/utils/price.utils';
- import type { Products } from '@/modules/products/models/product.model';
+ import { formatPrice } from '@/core/utils/price.utils'
+import type { StoreProducts } from '@/modules/kiosk/products/models/product.model'
 
  const props = defineProps<{
-product: Products;
+product: StoreProducts;
  }>();
 
  const emit = defineEmits<{
-(e: 'select-product', product: Products): void;
+  (e: 'select-product', product: number): void;
  }>();
 
  const selectProduct = () => {
-emit('select-product', props.product);
+  emit('select-product', props.product.id);
  };
 </script>
 
