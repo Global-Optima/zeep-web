@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: db
+    image: postgres:16-alpine
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PG_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PG_PASSWORD}
+    ports:
+      - '8081:80'
+    depends_on:
+      - db
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      SERVER_PORT: ${SERVER_PORT}
+      CLIENT_URL: ${CLIENT_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    depends_on:
+      - db
+    expose:
+      - '8080'
+
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - '80:80'
+
+volumes:
+  db_data:

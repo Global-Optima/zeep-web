@@ -15,6 +15,12 @@
 			<button
 				class="bg-gray-200 text-white p-2 sm:p-3 rounded-full"
 				aria-label="Добавить к заказу"
+				@click="() => cartStore.addToCart(product, {
+            id: 4,
+            name: 'S',
+            basePrice: product.basePrice,
+            measure: 'гр.'
+        }, [])"
 			>
 				<Icon
 					icon="mingcute:add-line"
@@ -27,10 +33,13 @@
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { StoreProducts } from '@/modules/kiosk/products/models/product.model'
+import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
+import type { StoreProductDetails } from '@/modules/kiosk/products/models/product.model'
 import { Icon } from '@iconify/vue'
 
-const { product } = defineProps<{ product: StoreProducts }>()
+const { product } = defineProps<{ product: StoreProductDetails }>()
+
+const cartStore = useCartStore()
 </script>
 
 <style scoped></style>

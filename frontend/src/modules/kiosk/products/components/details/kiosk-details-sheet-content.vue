@@ -1,5 +1,5 @@
 <template>
-	<div class="relative">
+	<div class="relative bg-[#F5F5F7]">
 		<!-- Loading State -->
 		<div
 			v-if="isLoading"
@@ -106,19 +106,19 @@ import { Icon } from '@iconify/vue'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 
-const {selectedProductId} = defineProps<{ selectedProductId: number }>();
+const {selectedProductId} = defineProps<{ selectedProductId: number | null }>();
 const cartStore = useCartStore();
 
 
 const { data: productDetails, isLoading, isError } = useQuery({
   queryKey:['product-details', selectedProductId],
-  queryFn: () => productService.getStoreProductDetails(selectedProductId),
+  queryFn: () => productService.getStoreProductDetails(selectedProductId!),
   enabled: Boolean(selectedProductId),
 });
 
 const { data: additiveCategories } = useQuery({
   queryKey:['additive-categories', selectedProductId],
-  queryFn: () => productService.getAdditiveCategoriesByStoreAndProduct(selectedProductId),
+  queryFn: () => productService.getAdditiveCategoriesByStoreAndProduct(selectedProductId!),
   enabled: Boolean(selectedProductId),
 });
 

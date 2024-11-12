@@ -1,5 +1,5 @@
 <template>
-	<div class="px-4 relative pb-10">
+	<div class="px-4 relative pt-safe">
 		<section class="flex items-center justify-between gap-4 py-5 sm:py-7">
 			<button @click="goBack">
 				<Icon
@@ -31,11 +31,11 @@
 			class="fixed bottom-10 left-0 w-full flex justify-center"
 		>
 			<div
-				class="flex items-center gap-12 rounded-3xl px-8 py-4 bg-slate-700/70 text-white backdrop-blur-md"
+				class="flex items-center gap-12 rounded-3xl px-6 sm:px-8 py-4 bg-slate-700/70 text-white backdrop-blur-md"
 			>
 				<div>
-					<p class="text-base sm:text-xl">Итого ({{ cartStore.totalItems }})</p>
-					<p class="text-2xl sm:text-3xl font-medium sm:mt-1">
+					<p class="text-sm sm:text-xl">Итого ({{ cartStore.totalItems }})</p>
+					<p class="text-xl sm:text-3xl font-medium sm:mt-1">
 						{{ formatPrice(totalPrice) }}
 					</p>
 				</div>
@@ -79,45 +79,41 @@ import KioskCartCheckout from '@/modules/kiosk/cart/components/kiosk-cart-checko
 import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
 import KioskCartSuggestProduct from '@/modules/kiosk/cart/components/kiosk-cart-suggest-product.vue'
 import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
-import type { Products } from "@/modules/products/models/product.model"
+import type { StoreProductDetails } from '@/modules/kiosk/products/models/product.model'
 import { Icon } from '@iconify/vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Initialize Router and Cart Store
 const router = useRouter();
 const cartStore = useCartStore();
 
-// Computed Properties
 const cartItemsArray = computed(() => Object.values(cartStore.cartItems));
 
 const totalPrice = computed(() => cartStore.totalPrice);
 
-// Suggested Products (Fetch from API or define as needed)
-const suggestedProducts = ref<Products[]>([
+const suggestedProducts = ref<StoreProductDetails[]>([
   {
-    id: 1,
-    title: 'Круассан с шоколадом',
-    image: 'https://static.vecteezy.com/system/resources/thumbnails/017/340/374/small_2x/fresh-cooked-yellow-croissant-png.png',
-    category: 'Еда',
-    startPrice: 1000
+    id: 1000,
+    name: 'Круассан с шоколадом',
+    imageUrl: 'https://lamin8patisserie.com.au/cdn/shop/products/Chocolatecroissant_530x@2x.png?v=1611018458',
+    basePrice: 1200,
+    description: 'Круассан с шоколадом',
+    sizes: [],
+    defaultAdditives: [],
+    recipeSteps: []
   },
   {
     id: 2,
-    title: 'Круассан с курицей',
-    image: 'https://static.vecteezy.com/system/resources/thumbnails/017/340/374/small_2x/fresh-cooked-yellow-croissant-png.png',
-    category: 'Еда',
-    startPrice: 1000
-  },
-  {
-    id: 3,
-    title: 'Круассан с семгой',
-    image: 'https://static.vecteezy.com/system/resources/thumbnails/017/340/374/small_2x/fresh-cooked-yellow-croissant-png.png',
-    category: 'Еда',
-    startPrice: 1000
+    name: 'Круассан с курицей',
+    imageUrl: 'https://static.vecteezy.com/system/resources/previews/044/308/224/non_2x/croissant-sanwich-isolated-on-transparent-background-png.png',
+    basePrice: 1240,
+    description: 'Круассан с курицей',
+    sizes: [],
+    defaultAdditives: [],
+    recipeSteps: []
   },
 ])
-// Methods
+
 const goBack = () => {
   router.back();
 };

@@ -91,8 +91,8 @@ type Additive struct {
 	AdditiveCategoryID *uint             `gorm:"index"`
 	Category           *AdditiveCategory `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL"`
 	ImageURL           string            `gorm:"size:2048"`
-
-	StorePrice float64 `gorm:"-" json:"storePrice"`
+	
+	StorePrice         float64           `gorm:"-"`
 }
 
 type AdditiveCategory struct {

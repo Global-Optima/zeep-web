@@ -1,42 +1,87 @@
 <template>
-	<select @change="switchLanguage">
-		<option
-			v-for="locale in supportedLocales"
-			:key="`locale-${locale.label}`"
-			:value="locale.locale"
-			:selected="currentLocale === locale.locale"
+	<Select v-model="selectedLocale">
+		<SelectTrigger
+			class="bg-gray-600/60 backdrop-blur-md rounded-3xl text-white border-none text-base sm:text-xl py-6 px-4"
 		>
-			{{ locale.label}}
-		</option>
-	</select>
+			<SelectValue
+				placeholder="Select language"
+				class="flex items-center gap-3"
+			/>
+		</SelectTrigger>
+		<SelectContent>
+			<SelectItem
+				v-for="locale in supportedLocales"
+				:key="locale.locale"
+				:value="locale.locale"
+			>
+				<div class="flex items-center gap-3">
+					<Icon
+						:icon="locale.icon"
+						class="text-2xl sm:text-3xl w-fit"
+					/>
+					<span class="text-base sm:text-lg">{{ locale.label }}</span>
+				</div>
+			</SelectItem>
+		</SelectContent>
+	</Select>
 </template>
 
 <script setup lang="ts">
-import { AppTranslation, LOCALES, type LocaleTypes } from "@/core/config/locale.config"
+import { AppTranslation, LOCALES, type LocaleTypes } from '@/core/config/locale.config'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from "vue-router"
+import { useRouter } from 'vue-router'
 
-const {  locale: currentLocale } = useI18n<{ t: (key: string) => string; locale: string }>();
 
-    const supportedLocales = [
-      {label: "English", locale: LOCALES.EN},
-      {label: "Русский", locale: LOCALES.RU},
-      {label: "Қазақ", locale: LOCALES.KK},
 
-    ];
+// Import Iconify for icons
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/core/components/ui/select'
+import { Icon } from '@iconify/vue'
 
-    const router = useRouter();
+const { locale } = useI18n()
+const router = useRouter()
 
-    const switchLanguage = async (event: Event) => {
-      const newLocale = (event.target as HTMLSelectElement).value as LocaleTypes;
+const supportedLocales = [
+  {
+    label: 'EN',
+    locale: LOCALES.EN,
+    icon: 'twemoji:flag-united-kingdom',
+  },
+  {
+    label: 'RU',
+    locale: LOCALES.RU,
+    icon: 'twemoji:flag-russia',
+  },
+  {
+    label: 'KZ',
+    locale: LOCALES.KK,
+    icon: 'twemoji:flag-kazakhstan',
+  },
+]
 
-      await AppTranslation.switchLanguage(newLocale);
+const selectedLocale = ref(locale.value)
 
-      try {
-        await router.replace({ params: { locale: newLocale } });
-      } catch (e) {
-        console.error("Error switching language:", e);
-        await router.push("/");
-      }
-    };
+const switchLanguage = async (newLocale: LocaleTypes) => {
+  await AppTranslation.switchLanguage(newLocale)
+  try {
+    await router.replace({ params: { locale: newLocale } })
+  } catch (e) {
+    console.error('Error switching language:', e)
+    await router.push('/')
+  }
+}
+
+// Watch for changes in selectedLocale and switch language
+watch(selectedLocale, (newLocale) => {
+  locale.value = newLocale
+  switchLanguage(newLocale as LocaleTypes)
+})
 </script>
+
+<style scoped></style>

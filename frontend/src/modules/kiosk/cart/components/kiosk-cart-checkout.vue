@@ -67,19 +67,19 @@ function onSubmit(values: unknown) {
 		<Dialog>
 			<DialogTrigger as-child>
 				<button
-					class="px-6 py-4 rounded-2xl bg-white text-primary font-medium text-base sm:text-2xl flex items-center gap-2"
+					class="px-4 py-3 sm:px-6 sm:py-4 rounded-2xl bg-white text-primary font-medium text-sm sm:text-xl flex items-center gap-2"
 				>
 					Подтвердить
 					<Icon
 						icon="mingcute:right-line"
-						class="text-base sm:text-2xl"
+						class="text-base sm:text-xl"
 					/>
 				</button>
 			</DialogTrigger>
-			<DialogContent class="w-full max-w-[90vw] p-6">
+			<DialogContent class="w-full max-w-[90vw] sm:max-w-md p-4 sm:p-6">
 				<DialogHeader>
-					<DialogTitle class="text-2xl">Оформить заказ</DialogTitle>
-					<DialogDescription class="text-lg">
+					<DialogTitle class="text-lg sm:text-2xl">Оформить заказ</DialogTitle>
+					<DialogDescription class="text-sm sm:text-lg">
 						Пожалуйста, заполните необходимые данные для оформления заказа.
 					</DialogDescription>
 				</DialogHeader>
@@ -90,6 +90,7 @@ function onSubmit(values: unknown) {
 					class="block w-full"
 				>
 					<form
+						class="w-full"
 						@submit.prevent="() => {
               validate()
               if (stepIndex === steps.length && meta.valid) {
@@ -103,7 +104,7 @@ function onSubmit(values: unknown) {
 								:key="step.step"
 								:step="step.step"
 							>
-								<StepperTrigger as-child> </StepperTrigger>
+								<StepperTrigger as-child></StepperTrigger>
 
 								<div class="mt-5 flex flex-col items-center text-center">
 									<StepperTitle></StepperTitle>
@@ -119,13 +120,13 @@ function onSubmit(values: unknown) {
 									name="userName"
 								>
 									<FormItem>
-										<FormLabel class="text-xl font-normal">
+										<FormLabel class="text-base sm:text-xl font-normal">
 											Введите ваше имя для отображения заказа
 										</FormLabel>
 										<FormControl>
 											<input
 												type="text"
-												class="w-full border border-border rounded-2xl px-4 py-4 text-xl"
+												class="w-full border border-border rounded-2xl px-4 py-2 text-base sm:text-xl"
 												placeholder="Алихан"
 												v-bind="componentField"
 											/>
@@ -135,7 +136,7 @@ function onSubmit(values: unknown) {
 								</FormField>
 								<Button
 									variant="ghost"
-									class="mt-2 text-xl"
+									class="mt-2 text-base sm:text-xl"
 									@click="setFieldValue('userName', 'User' + Math.floor(Math.random() * 1000))"
 								>
 									Сгенерировать случайную метку
@@ -146,26 +147,26 @@ function onSubmit(values: unknown) {
 							<template v-if="stepIndex === 2">
 								<FormField name="paymentMethod">
 									<FormItem>
-										<FormLabel class="text-xl font-normal">Способ оплаты</FormLabel>
+										<FormLabel class="text-base sm:text-xl font-normal">Способ оплаты</FormLabel>
 										<FormControl>
-											<div class="flex gap-4">
+											<div class="flex flex-col sm:flex-row gap-4">
 												<div
 													:class="[
-                            'p-4 border rounded cursor-pointer',
+                            'p-4 border rounded cursor-pointer flex-1',
                             values.paymentMethod === 'bankCard' ? 'border-primary' : 'border-gray-300'
                           ]"
 													@click="setFieldValue('paymentMethod', 'bankCard')"
 												>
-													<p class="text-xl">Банковская карта</p>
+													<p class="text-base sm:text-xl">Банковская карта</p>
 												</div>
 												<div
 													:class="[
-                            'p-4 border rounded cursor-pointer',
+                            'p-4 border rounded cursor-pointer flex-1',
                             values.paymentMethod === 'cash' ? 'border-primary' : 'border-gray-300'
                           ]"
 													@click="setFieldValue('paymentMethod', 'cash')"
 												>
-													<p class="text-xl">Наличные</p>
+													<p class="text-base sm:text-xl">Наличные</p>
 												</div>
 											</div>
 										</FormControl>
@@ -182,7 +183,7 @@ function onSubmit(values: unknown) {
 								variant="outline"
 								size="lg"
 								@click="prevStep()"
-								class="px-6 py-4 rounded-2xl border-border border-2 text-base sm:text-xl"
+								class="px-4 py-3 sm:px-6 sm:py-4 rounded-2xl border-border border-2 text-base sm:text-xl"
 							>
 								Назад
 							</button>
@@ -193,7 +194,7 @@ function onSubmit(values: unknown) {
 									type="button"
 									:disabled="isNextDisabled"
 									@click="meta.valid && nextStep()"
-									class="px-6 py-4 rounded-2xl bg-primary text-primary-foreground text-base sm:text-xl"
+									class="px-4 py-3 sm:px-6 sm:py-4 rounded-2xl bg-primary text-primary-foreground text-base sm:text-xl"
 								>
 									Далее
 								</button>
@@ -202,7 +203,7 @@ function onSubmit(values: unknown) {
 									v-else
 									type="submit"
 									:disabled="!meta.valid"
-									class="px-6 py-4 rounded-2xl bg-primary text-primary-foreground text-base sm:text-xl"
+									class="px-4 py-3 sm:px-6 sm:py-4 rounded-2xl bg-primary text-primary-foreground text-base sm:text-xl"
 								>
 									Отправить
 								</button>
