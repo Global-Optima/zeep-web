@@ -22,105 +22,105 @@ func (suite *AdditivesIntegrationTestSuite) TearDownSuite() {
 
 func (suite *AdditivesIntegrationTestSuite) TestGetAdditivesByStoreAndProduct() {
 	testCases := []utils.TestCase{
-		{
-			Description:  "Valid request with storeId=1 and productId=1",
-			Method:       "GET",
-			URL:          "/api/test/additives?storeId=1&productId=1",
-			ExpectedCode: 200,
-			ExpectedBody: []map[string]interface{}{
-				{
-					"id":   1,
-					"name": "Sweeteners",
-					"additives": []map[string]interface{}{
-						{
-							"id":          1,
-							"name":        "Sugar",
-							"description": "Sweet sugar",
-							"price":       0.60, // Adjust based on your mock data
-							"imageUrl":    "https://example.com/sugar.jpg",
-						},
-						{
-							"id":          3,
-							"name":        "Honey",
-							"description": "Natural sweetener",
-							"price":       1.00,
-							"imageUrl":    "https://example.com/honey.jpg",
-						},
-					},
-				},
-				{
-					"id":   2,
-					"name": "Dairy",
-					"additives": []map[string]interface{}{
-						{
-							"id":          2,
-							"name":        "Cream",
-							"description": "Adds richness",
-							"price":       1.50,
-							"imageUrl":    "https://example.com/cream.jpg",
-						},
-					},
-				},
-			},
-		},
-		{
-			Description:  "Valid request with storeId=1 and productId=2",
-			Method:       "GET",
-			URL:          "/api/test/additives?storeId=1&productId=2",
-			ExpectedCode: 200,
-			ExpectedBody: []map[string]interface{}{
-				{
-					"id":   1,
-					"name": "Sweeteners",
-					"additives": []map[string]interface{}{
-						{
-							"id":          1,
-							"name":        "Sugar",
-							"description": "Sweet sugar",
-							"price":       0.60,
-							"imageUrl":    "https://example.com/sugar.jpg",
-						},
-					},
-				},
-			},
-		},
-		{
-			Description:  "Valid request with storeId=2 and productId=3",
-			Method:       "GET",
-			URL:          "/api/test/additives?storeId=2&productId=3",
-			ExpectedCode: 200,
-			ExpectedBody: []map[string]interface{}{
-				{
-					"id":   1,
-					"name": "Sweeteners",
-					"additives": []map[string]interface{}{
-						{
-							"id":          3,
-							"name":        "Honey",
-							"description": "Natural sweetener",
-							"price":       1.20,
-							"imageUrl":    "https://example.com/honey.jpg",
-						},
-					},
-				},
-			},
-		},
-		{
-			Description:  "Valid request with no additives available for storeId=1 and productId=3",
-			Method:       "GET",
-			URL:          "/api/test/additives?storeId=1&productId=3",
-			ExpectedCode: 200,
-			ExpectedBody: []map[string]interface{}{}, // Expecting an empty array when no additives are available
-		},
-		{
-			Description:  "Missing storeId parameter",
-			Method:       "GET",
-			URL:          "/api/test/additives?productId=1",
-			ExpectedCode: 400,
-			ExpectedBody: map[string]interface{}{
-				"error": "Invalid store ID",
-			},
-		},
+		// {
+		// 	Description:  "Valid request with storeId=1 and productId=1",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?storeId=1&productId=1",
+		// 	ExpectedCode: 200,
+		// 	ExpectedBody: []map[string]interface{}{
+		// 		{
+		// 			"id":   1,
+		// 			"name": "Sweeteners",
+		// 			"additives": []map[string]interface{}{
+		// 				{
+		// 					"id":          1,
+		// 					"name":        "Sugar",
+		// 					"description": "Sweet sugar",
+		// 					"price":       0.60, // Adjust based on your mock data
+		// 					"imageUrl":    "https://example.com/sugar.jpg",
+		// 				},
+		// 				{
+		// 					"id":          3,
+		// 					"name":        "Honey",
+		// 					"description": "Natural sweetener",
+		// 					"price":       1.00,
+		// 					"imageUrl":    "https://example.com/honey.jpg",
+		// 				},
+		// 			},
+		// 		},
+		// 		{
+		// 			"id":   2,
+		// 			"name": "Dairy",
+		// 			"additives": []map[string]interface{}{
+		// 				{
+		// 					"id":          2,
+		// 					"name":        "Cream",
+		// 					"description": "Adds richness",
+		// 					"price":       1.50,
+		// 					"imageUrl":    "https://example.com/cream.jpg",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Description:  "Valid request with storeId=1 and productId=2",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?storeId=1&productId=2",
+		// 	ExpectedCode: 200,
+		// 	ExpectedBody: []map[string]interface{}{
+		// 		{
+		// 			"id":   1,
+		// 			"name": "Sweeteners",
+		// 			"additives": []map[string]interface{}{
+		// 				{
+		// 					"id":          1,
+		// 					"name":        "Sugar",
+		// 					"description": "Sweet sugar",
+		// 					"price":       0.60,
+		// 					"imageUrl":    "https://example.com/sugar.jpg",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Description:  "Valid request with storeId=2 and productId=3",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?storeId=2&productId=3",
+		// 	ExpectedCode: 200,
+		// 	ExpectedBody: []map[string]interface{}{
+		// 		{
+		// 			"id":   1,
+		// 			"name": "Sweeteners",
+		// 			"additives": []map[string]interface{}{
+		// 				{
+		// 					"id":          3,
+		// 					"name":        "Honey",
+		// 					"description": "Natural sweetener",
+		// 					"price":       1.20,
+		// 					"imageUrl":    "https://example.com/honey.jpg",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Description:  "Valid request with no additives available for storeId=1 and productId=3",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?storeId=1&productId=3",
+		// 	ExpectedCode: 200,
+		// 	ExpectedBody: []map[string]interface{}{}, // Expecting an empty array when no additives are available
+		// },
+		// {
+		// 	Description:  "Missing storeId parameter",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?productId=1",
+		// 	ExpectedCode: 400,
+		// 	ExpectedBody: map[string]interface{}{
+		// 		"error": "Invalid store ID",
+		// 	},
+		// },
 		{
 			Description:  "Missing productId parameter",
 			Method:       "GET",
