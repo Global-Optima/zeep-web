@@ -17,7 +17,6 @@ type DBHandler struct {
 	DB *gorm.DB
 }
 
-// InitDB initializes the database connection and applies migrations
 func InitDB(dsn string) (*DBHandler, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -32,7 +31,6 @@ func InitDB(dsn string) (*DBHandler, error) {
 	return &DBHandler{DB: db}, nil
 }
 
-// applyMigrations applies database migrations from the specified path
 func applyMigrations(db *gorm.DB, migrationsPath string) error {
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -53,6 +51,7 @@ func applyMigrations(db *gorm.DB, migrationsPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get absolute path of migrations: %w", err)
 	}
+	absPath = filepath.ToSlash(absPath)
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://"+absPath,

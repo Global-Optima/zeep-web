@@ -23,7 +23,8 @@ func (r *additiveRepository) GetAdditivesByStoreAndProduct(storeID uint, product
 
 	err := r.db.Preload("Additives", func(db *gorm.DB) *gorm.DB {
 		return db.Joins("LEFT JOIN store_additives sa ON sa.additive_id = additives.id AND sa.store_id = ?", storeID).
-			Select("additives.*, COALESCE(NULLIF(sa.price, 0), additives.base_price) AS store_price")
+			Joins("INNER JOIN product_additives pa ON pa.additive_id = additives.id AND pa.product_size_id = ?", productID). // Filter by productId
+			Select("additives.*, COALESCE(sa.price, additives.base_price) AS price")                                         // Override base price with store price
 	}).Find(&categories).Error
 
 	if err != nil {
