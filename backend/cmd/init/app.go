@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
@@ -56,12 +57,15 @@ func InitializeModule[T any, H any](
 	registerRoutes(handler)
 }
 
-func InitializeRouter(dbHandler *database.DBHandler) *gin.Engine {
+func InitializeRouter(dbHandler *database.DBHandler, storageRepo storage.StorageRepository) *gin.Engine {
 
 	router := gin.Default()
 	router.Use(cors.Default())
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
+
+	storageHandler := storage.NewStorageHandler(storageRepo)        // temp
+	storage.RegisterStorageRoutes(apiRouter.Routes, storageHandler) // temp
 
 	InitializeModule(
 		dbHandler,
@@ -102,13 +106,28 @@ func InitializeRouter(dbHandler *database.DBHandler) *gin.Engine {
 	return router
 }
 
+// Temporary init: for testing purposes
+func InitializeStorage(cfg *config.Config) storage.StorageRepository {
+	storageRepo, err := storage.NewStorageRepository(
+		cfg.S3Endpoint,
+		cfg.S3AccessKey,
+		cfg.S3SecretKey,
+		cfg.S3BucketName,
+	)
+	if err != nil {
+		log.Fatalf("Failed to initialize storage repository: %v", err)
+	}
+	return storageRepo
+}
+
 func InitializeApp() (*gin.Engine, *config.Config) {
 
 	cfg := InitializeConfig()
 
 	dbHandler := InitializeDatabase(cfg)
 
-	router := InitializeRouter(dbHandler)
+	storageRepo := InitializeStorage(cfg) // temp
 
+	router := InitializeRouter(dbHandler, storageRepo) // temp
 	return router, cfg
 }
