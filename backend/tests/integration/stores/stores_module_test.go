@@ -31,24 +31,20 @@ func (suite *StoresIntegrationTestSuite) TestGetAllStores() {
 			ExpectedBody: []map[string]interface{}{
 				{
 					"id":          1,
-					"name":        "Downtown Cafe",
+					"name":        "Downtown Coffee",
 					"isFranchise": true,
 					"facilityAddress": map[string]interface{}{
-						"id":        1,
-						"address":   "123 Coffee St.",
-						"longitude": "34.0522",
-						"latitude":  "-118.2437",
+						"id":      1,
+						"address": "123 Coffee St",
 					},
 				},
 				{
 					"id":          2,
-					"name":        "Uptown Cafe",
+					"name":        "Uptown Snacks",
 					"isFranchise": false,
 					"facilityAddress": map[string]interface{}{
-						"id":        2,
-						"address":   "456 Tea Ave.",
-						"longitude": "40.7128",
-						"latitude":  "-74.0060",
+						"id":      2,
+						"address": "456 Snack Ave",
 					},
 				},
 			},
