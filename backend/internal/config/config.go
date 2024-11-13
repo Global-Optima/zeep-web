@@ -15,6 +15,8 @@ type Config struct {
 	JWTSecretKey string `mapstructure:"JWT_SECRET_KEY"`
 	ServerPort   int    `mapstructure:"SERVER_PORT"`
 	ClientUrl    string `mapstructure:"CLIENT_URL"`
+	S3AccessKey  string `mapstructure:"PSKZ_ACCESS_KEY"`
+	S3SecretKey  string `mapstructure:"PSKZ_SECRET_KEY"`
 }
 
 var cfg *Config
