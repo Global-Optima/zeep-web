@@ -58,7 +58,7 @@ jobs:
         run: go mod tidy
 
       - name: Run golangci-lint
-        run: golangci-lint run -v --concurrency=2
+        run: golangci-lint run -v --concurrency=2 --timeout=5m
 
       - name: Run tests
         run: go test ./...
