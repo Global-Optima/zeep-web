@@ -1,13 +1,12 @@
 package storage
 
 import (
-	"errors"
+	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
+	"github.com/Global-Optima/zeep-web/backend/api/storage/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,30 +18,8 @@ func NewStorageHandler(repo StorageRepository) *StorageHandler {
 	return &StorageHandler{storageRepo: repo}
 }
 
-func determineFileType(fileName string) (types.FileType, error) {
-	ext := strings.ToLower(filepath.Ext(fileName))
-
-	switch ext {
-	case ".jpg", ".jpeg":
-		return types.ProductImage, nil
-	case ".png":
-		return types.ProfilePicture, nil
-	case ".mp4", ".mov":
-		return types.ProductVideo, nil
-	default:
-		return types.FileType{}, errors.New("unsupported file type")
-	}
-}
-
 func (h *StorageHandler) UploadFileHandler(c *gin.Context) {
-	file, err := c.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "File is required"})
-		return
-	}
-
-	fileName := file.Filename
-	fileType, err := determineFileType(fileName)
+	file, fileType, fileName, err := utils.GetFileFromContext(c, types.FileTypeMapping)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -55,16 +32,27 @@ func (h *StorageHandler) UploadFileHandler(c *gin.Context) {
 	}
 	defer fileData.Close()
 
-	fileBytes := make([]byte, file.Size)
-	_, err = fileData.Read(fileBytes)
+	fileBytes, err := io.ReadAll(fileData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file data"})
 		return
 	}
 
-	filePath, err := h.storageRepo.UploadFile(fileType, fileName, fileBytes)
+	key := fileType.FullPath(fileName)
+
+	exists, err := h.storageRepo.FileExists(key)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file", "details:": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check file existence", "details": err.Error()})
+		return
+	}
+	if exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "File already exists"})
+		return
+	}
+
+	filePath, err := h.storageRepo.UploadFile(key, fileBytes)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file", "details": err.Error()})
 		return
 	}
 
@@ -78,13 +66,25 @@ func (h *StorageHandler) DeleteFileHandler(c *gin.Context) {
 		return
 	}
 
-	fileType, err := determineFileType(fileName)
+	fileType, err := utils.DetermineFileType(fileName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = h.storageRepo.DeleteFile(fileType, fileName)
+	key := fileType.FullPath(fileName)
+
+	exists, err := h.storageRepo.FileExists(key)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check file existence", "details": err.Error()})
+		return
+	}
+	if !exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "File doesn't exist"})
+		return
+	}
+
+	err = h.storageRepo.DeleteFile(key)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete file"})
 		return
@@ -100,13 +100,25 @@ func (h *StorageHandler) GetFileURLHandler(c *gin.Context) {
 		return
 	}
 
-	fileType, err := determineFileType(fileName)
+	fileType, err := utils.DetermineFileType(fileName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fileURL, err := h.storageRepo.GetFileURL(fileType, fileName)
+	key := fileType.FullPath(fileName)
+
+	exists, err := h.storageRepo.FileExists(key)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check file existence", "details": err.Error()})
+		return
+	}
+	if !exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "File doesn't exist"})
+		return
+	}
+
+	fileURL, err := h.storageRepo.GetFileURL(key)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get file URL"})
 		return
@@ -115,7 +127,6 @@ func (h *StorageHandler) GetFileURLHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"fileURL": fileURL})
 }
 
-// temp method for testing purposes
 func (h *StorageHandler) DownloadAndSaveFileHandler(c *gin.Context) {
 	fileName := c.Query("filename")
 	if fileName == "" {
@@ -123,13 +134,25 @@ func (h *StorageHandler) DownloadAndSaveFileHandler(c *gin.Context) {
 		return
 	}
 
-	fileType, err := determineFileType(fileName)
+	fileType, err := utils.DetermineFileType(fileName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fileData, err := h.storageRepo.DownloadFile(fileType, fileName)
+	key := fileType.FullPath(fileName)
+
+	exists, err := h.storageRepo.FileExists(key)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check file existence", "details": err.Error()})
+		return
+	}
+	if !exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "File doesn't exist"})
+		return
+	}
+
+	fileData, err := h.storageRepo.DownloadFile(key)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to download file"})
 		return
@@ -150,7 +173,6 @@ func (h *StorageHandler) DownloadAndSaveFileHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "File downloaded and saved locally", "path": fileName})
 }
 
-// temp method for testing purposes
 func (h *StorageHandler) ListBucketsHandler(c *gin.Context) {
 	buckets, err := h.storageRepo.ListBuckets()
 	if err != nil {

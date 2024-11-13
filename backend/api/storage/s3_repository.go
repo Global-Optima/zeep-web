@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"os"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -16,10 +18,11 @@ import (
 )
 
 type StorageRepository interface {
-	UploadFile(fileType types.FileType, fileName string, fileData []byte) (string, error)
-	DeleteFile(fileType types.FileType, fileName string) error
-	GetFileURL(fileType types.FileType, fileName string) (string, error)
-	DownloadFile(fileType types.FileType, fileName string) ([]byte, error)
+	UploadFile(key string, fileData []byte) (string, error)
+	DeleteFile(key string) error
+	GetFileURL(key string) (string, error)
+	FileExists(key string) (bool, error)
+	DownloadFile(key string) ([]byte, error)
 	ListBuckets() ([]types.BucketInfo, error)
 }
 
@@ -66,8 +69,7 @@ func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (St
 	}, nil
 }
 
-func (r *storageRepository) UploadFile(fileType types.FileType, fileName string, fileData []byte) (string, error) {
-	key := fileType.FullPath(fileName)
+func (r *storageRepository) UploadFile(key string, fileData []byte) (string, error) {
 	_, err := r.s3Client.PutObject(&s3.PutObjectInput{
 		Bucket: aws.String(r.bucketName),
 		Key:    aws.String(key),
@@ -81,8 +83,7 @@ func (r *storageRepository) UploadFile(fileType types.FileType, fileName string,
 	return key, nil
 }
 
-func (r *storageRepository) DeleteFile(fileType types.FileType, fileName string) error {
-	key := fileType.FullPath(fileName)
+func (r *storageRepository) DeleteFile(key string) error {
 	_, err := r.s3Client.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(r.bucketName),
 		Key:    aws.String(key),
@@ -90,15 +91,26 @@ func (r *storageRepository) DeleteFile(fileType types.FileType, fileName string)
 	return err
 }
 
-func (r *storageRepository) GetFileURL(fileType types.FileType, fileName string) (string, error) {
-	key := fileType.FullPath(fileName)
+func (r *storageRepository) GetFileURL(key string) (string, error) {
 	return fmt.Sprintf("%s/%s/%s", r.s3Client.Endpoint, r.bucketName, url.PathEscape(key)), nil
 }
 
-// temp method for testing purposes
-func (r *storageRepository) DownloadFile(fileType types.FileType, fileName string) ([]byte, error) {
-	key := fileType.FullPath(fileName)
+func (r *storageRepository) FileExists(key string) (bool, error) {
+	_, err := r.s3Client.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(r.bucketName),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.RequestFailure); ok && aerr.StatusCode() == http.StatusNotFound {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
 
+// temp method for testing purposes
+func (r *storageRepository) DownloadFile(key string) ([]byte, error) {
 	resp, err := r.s3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(r.bucketName),
 		Key:    aws.String(key),
