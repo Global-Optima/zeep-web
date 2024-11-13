@@ -1,17 +1,28 @@
 <script setup lang="ts">
 import { getRouteName } from '@/core/config/routes.config'
+import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store";
+import KioskProductDetails from "@/modules/kiosk/products/components/details/kiosk-product-details.vue";
+import { useProductStore } from "@/modules/kiosk/products/stores/current-product.store";
 import { onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const productStore = useProductStore()
+const cartStore = useCartStore()
 let inactivityTimeout: ReturnType<typeof setTimeout> | null = null
 const inactivityDuration = 60 * 1000
+
+const resetAppStates = () => {
+  productStore.closeBottomSheet()
+  cartStore.clearCart()
+}
 
 const resetInactivityTimer = () => {
   if (inactivityTimeout) {
     clearTimeout(inactivityTimeout)
   }
   inactivityTimeout = setTimeout(() => {
+    resetAppStates()
     router.push({ name: getRouteName('KIOSK_LANDING') })
   }, inactivityDuration)
 }
@@ -47,6 +58,8 @@ onBeforeUnmount(() => {
 				</transition>
 			</router-view>
 		</main>
+
+		<KioskProductDetails />
 	</div>
 </template>
 

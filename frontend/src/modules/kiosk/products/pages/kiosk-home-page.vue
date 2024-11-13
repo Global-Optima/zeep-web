@@ -135,6 +135,7 @@ import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/kio
 import KioskHomeToolbarTablet from '@/modules/kiosk/products/components/home/kiosk-home-toolbar-tablet.vue'
 import type { ProductCategory, StoreProducts } from '@/modules/kiosk/products/models/product.model'
 import { productService } from '@/modules/kiosk/products/services/products.service'
+import { useProductStore } from "@/modules/kiosk/products/stores/current-product.store"
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
@@ -210,9 +211,12 @@ const onCartClick = () => {
   router.push({ name: getRouteName('KIOSK_CART') });
 };
 
+const productStore = useProductStore()
+
 const openProductSheet = (productId: number) => {
-  selectedProductId.value = productId;
-  isSheetOpen.value = true; // Open the Sheet
+//   selectedProductId.value = productId;
+//   isSheetOpen.value = true; // Open the Sheet
+	productStore.selectProduct(productId);
 };
 
 const closeProductSheet = () => {
