@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -16,6 +17,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -45,11 +47,48 @@ func loadConfig() *config.Config {
 	baseDir := filepath.Join(filepath.Dir(b), "../../..")
 	envFilePath := filepath.Join(baseDir, "tests", ".env")
 
-	cfg, err := config.LoadConfig(envFilePath)
+	if _, err := os.Stat(envFilePath); err == nil {
+		err := godotenv.Load(envFilePath)
+		if err != nil {
+			log.Fatalf("Failed to load .env file! Details: %s", err)
+		}
+		log.Println("Loaded configuration from .env file")
+	} else {
+		log.Println(".env file not found. Loading configuration from environment variables")
+	}
+
+	cfg, err := LoadConfigFromEnv()
 	if err != nil {
-		log.Fatalf("Failed to load testing config! Details: %s", err)
+		log.Fatalf("Failed to load configuration from environment variables! Details: %s", err)
 	}
 	return cfg
+}
+
+func LoadConfigFromEnv() (*config.Config, error) {
+	port, err := strconv.Atoi(getEnv("DB_PORT", "5432"))
+	if err != nil {
+		log.Printf("Invalid DB_PORT value; using default 5432. Error: %v", err)
+		port = 5432
+	}
+
+	cfg := &config.Config{
+		DBUser:     getEnv("DB_USER", "defaultuser"),
+		DBPassword: getEnv("DB_PASSWORD", "defaultpassword"),
+		DBName:     getEnv("DB_NAME", "defaultdb"),
+		DBHost:     getEnv("DB_HOST", "localhost"),
+		DBPort:     port,
+	}
+
+	return cfg, nil
+}
+
+func getEnv(key, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		log.Printf("Environment variable %s not set, using default: %s", key, defaultValue)
+		return defaultValue
+	}
+	return value
 }
 
 func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
