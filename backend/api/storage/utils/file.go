@@ -10,13 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var ErrUnsupportedFileType = errors.New("unsupported file type or file missing")
+var (
+	ErrUnsupportedFileType = errors.New("unsupported file type or file missing")
+	ErrFileTooLarge        = errors.New("file exceeds maximum allowed size")
+)
 
-// determines the file volume and returns the file metadata
+// determines the file volume, validates file size and returns the file metadata
 func GetFileFromContext(c *gin.Context, fileTypeMapping map[string]types.FileType) (*multipart.FileHeader, types.FileType, string, error) {
 	for formField, fileType := range fileTypeMapping {
 		file, err := c.FormFile(formField)
 		if err == nil {
+			if err := fileType.ValidateSize(file.Size); err != nil {
+				return nil, types.FileType{}, "", ErrFileTooLarge
+			}
+
 			fileName := StandardizeFileName(fileType, file.Filename)
 			return file, fileType, fileName, nil
 		}
