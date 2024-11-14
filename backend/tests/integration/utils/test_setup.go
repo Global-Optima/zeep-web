@@ -31,7 +31,8 @@ type TestEnvironment struct {
 func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	cfg := loadConfig()
 	db := setupDatabase(cfg, t)
-	router := setupRouter(db)
+	redisClient := setupRedis(cfg, t)
+	router := setupRouter(db, redisClient)
 
 	truncateAndLoadMockData(db)
 
@@ -71,12 +72,29 @@ func LoadConfigFromEnv() (*config.Config, error) {
 		port = 5432
 	}
 
+	redisDB, err := strconv.Atoi(getEnv("REDIS_DB", "0"))
+	if err != nil {
+		log.Printf("Invalid REDIS_DB value; using default 0. Error: %v", err)
+		redisDB = 0
+	}
+
+	redisPort, err := strconv.Atoi(getEnv("REDIS_PORT", "6379"))
+	if err != nil {
+		log.Printf("Invalid REDIS_PORT value; using default 6379. Error: %v", err)
+		redisPort = 6379
+	}
+
 	cfg := &config.Config{
 		DBUser:     getEnv("DB_USER", "defaultuser"),
 		DBPassword: getEnv("DB_PASSWORD", "defaultpassword"),
 		DBName:     getEnv("DB_NAME", "defaultdb"),
 		DBHost:     getEnv("DB_HOST", "localhost"),
 		DBPort:     port,
+
+		RedisHost:     "REDIS_HOST",
+		RedisPort:     redisPort,
+		RedisPassword: "REDIS_PASSWORD",
+		RedisDB:       redisDB,
 	}
 
 	return cfg, nil
@@ -102,15 +120,24 @@ func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
 	return db
 }
 
-func setupRouter(db *gorm.DB) *gin.Engine {
+func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
+	redisClient, err := database.InitRedis(cfg.RedisHost, cfg.RedisPort, cfg.RedisPassword, cfg.RedisDB)
+	if err != nil {
+		t.Fatalf("Failed to initialize Redis: %v", err)
+	}
+
+	return redisClient
+}
+
+func setupRouter(db *gorm.DB, redisClient *database.RedisClient) *gin.Engine {
 	router := gin.Default()
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 
 	dbHandler := &database.DBHandler{DB: db}
-	apiRouter.RegisterProductRoutes(product.NewProductHandler(product.NewProductService(product.NewProductRepository(dbHandler.DB))))
+	apiRouter.RegisterProductRoutes(product.NewProductHandler(product.NewProductService(product.NewProductRepository(dbHandler.DB), redisClient.Client)))
 	apiRouter.RegisterStoresRoutes(stores.NewStoreHandler(stores.NewStoreService(stores.NewStoreRepository(dbHandler.DB))))
-	apiRouter.RegisterProductCategoriesRoutes(categories.NewCategoryHandler(categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB))))
-	apiRouter.RegisterAdditivesRoutes(additives.NewAdditiveHandler(additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB))))
+	apiRouter.RegisterProductCategoriesRoutes(categories.NewCategoryHandler(categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB), redisClient.Client)))
+	apiRouter.RegisterAdditivesRoutes(additives.NewAdditiveHandler(additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB), redisClient.Client)))
 
 	return router
 }

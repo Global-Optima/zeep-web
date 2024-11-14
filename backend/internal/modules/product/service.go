@@ -1,38 +1,78 @@
 package product
 
 import (
+	"encoding/json"
+	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
 type ProductService interface {
-	GetStoreProducts(storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error)
-	GetStoreProductDetails(storeID, productID uint) (*types.StoreProductDetailsDTO, error)
+	GetStoreProducts(c *gin.Context, storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error)
+	GetStoreProductDetails(c *gin.Context, storeID, productID uint) (*types.StoreProductDetailsDTO, error)
 }
 
 type productService struct {
-	repo ProductRepository
+	repo        ProductRepository
+	redisClient *redis.Client
 }
 
-func NewProductService(repo ProductRepository) ProductService {
-	return &productService{repo: repo}
+func NewProductService(repo ProductRepository, redisClient *redis.Client) ProductService {
+	return &productService{
+		repo:        repo,
+		redisClient: redisClient,
+	}
 }
 
-func (s *productService) GetStoreProducts(storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error) {
+func (s *productService) GetStoreProducts(c *gin.Context, storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error) {
+	// Generate a cache key based on query parameters
+	cacheKey := fmt.Sprintf("products:store:%d:category:%d:search:%s:limit:%d:offset:%d", storeID, categoryID, searchQuery, limit, offset)
+
+	// Attempt to fetch from cache
+	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
+	if err == nil {
+		var products []types.StoreProductDTO
+		if json.Unmarshal([]byte(cachedData), &products) == nil {
+			return products, nil
+		}
+	}
+
+	// Cache miss; fetch from repository
 	products, err := s.repo.GetStoreProducts(storeID, categoryID, searchQuery, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 
+	// Convert to DTOs and cache the result
 	productDTOs := make([]types.StoreProductDTO, len(products))
 	for i, product := range products {
 		productDTOs[i] = mapToStoreProductDTO(product)
 	}
 
+	data, _ := json.Marshal(productDTOs)
+	s.redisClient.Set(c, cacheKey, data, time.Hour) // Cache with a 1-hour expiration
+
 	return productDTOs, nil
 }
 
-func (s *productService) GetStoreProductDetails(storeID, productID uint) (*types.StoreProductDetailsDTO, error) {
+func (s *productService) GetStoreProductDetails(c *gin.Context, storeID, productID uint) (*types.StoreProductDetailsDTO, error) {
+	// Generate a unique cache key for product details
+	cacheKey := fmt.Sprintf("product:store:%d:product:%d", storeID, productID)
+
+	// Attempt to fetch from cache
+	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
+	if err == nil {
+		var productDetails types.StoreProductDetailsDTO
+		if json.Unmarshal([]byte(cachedData), &productDetails) == nil {
+			return &productDetails, nil
+		}
+	}
+
+	// Cache miss; fetch from repository
 	product, err := s.repo.GetStoreProductDetails(storeID, productID)
 	if err != nil {
 		return nil, err
@@ -41,7 +81,10 @@ func (s *productService) GetStoreProductDetails(storeID, productID uint) (*types
 		return nil, nil
 	}
 
+	// Convert to DTO and cache the result
 	productDetailsDTO := mapToStoreProductDetailsDTO(product)
+	data, _ := json.Marshal(productDetailsDTO)
+	s.redisClient.Set(c, cacheKey, data, time.Hour) // Cache with a 1-hour expiration
 
 	return productDetailsDTO, nil
 }
