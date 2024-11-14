@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"errors"
 	"mime/multipart"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	ErrUnsupportedFileType = errors.New("unsupported file type or file missing")
-	ErrFileTooLarge        = errors.New("file exceeds maximum allowed size")
+	ErrUnsupportedFileType = types.ErrUnsupportedFileType
+	ErrFileTooLarge        = types.ErrFileTooLarge
+	sanitizedPattern       = regexp.MustCompile(`[^a-zA-Z0-9._-]`)
 )
 
 // determines the file volume, validates file size and returns the file metadata
@@ -24,16 +25,25 @@ func GetFileFromContext(c *gin.Context, fileTypeMapping map[string]types.FileTyp
 				return nil, types.FileType{}, "", ErrFileTooLarge
 			}
 
-			fileName := StandardizeFileName(fileType, file.Filename)
+			fileName := StandardizeFileName(fileType, SanitizeFileName(file.Filename))
 			return file, fileType, fileName, nil
 		}
 	}
 	return nil, types.FileType{}, "", ErrUnsupportedFileType
 }
 
-// removes duplicate extensions and returns a unique filename
+// removes potentially dangerous characters from filenames
+func SanitizeFileName(fileName string) string {
+	fileName = sanitizedPattern.ReplaceAllString(fileName, "_")
+	return fileName
+}
+
+// removes duplicate extensions and ensures only one valid extension remains.
 func StandardizeFileName(fileType types.FileType, fileName string) string {
 	baseName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	for strings.HasSuffix(baseName, fileType.Extension) {
+		baseName = strings.TrimSuffix(baseName, fileType.Extension)
+	}
 	return baseName + fileType.Extension
 }
 
