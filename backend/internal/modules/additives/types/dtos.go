@@ -9,7 +9,8 @@ type AdditiveDTO struct {
 }
 
 type AdditiveCategoryDTO struct {
-	ID        uint          `json:"id"`
-	Name      string        `json:"name"`
-	Additives []AdditiveDTO `json:"additives"`
+	ID               uint          `json:"id"`
+	Name             string        `json:"name"`
+	Additives        []AdditiveDTO `json:"additives"`
+	IsMultipleSelect bool          `json:"isMultipleSelect"`
 }

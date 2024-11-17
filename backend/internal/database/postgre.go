@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/golang-migrate/migrate/v4"
 	postgresMigration "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -17,7 +18,6 @@ type DBHandler struct {
 	DB *gorm.DB
 }
 
-// InitDB initializes the database connection and applies migrations
 func InitDB(dsn string) (*DBHandler, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -28,38 +28,36 @@ func InitDB(dsn string) (*DBHandler, error) {
 		return nil, fmt.Errorf("failed to apply migrations: %w", err)
 	}
 
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SQL DB from gorm DB: %w", err)
+	}
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
 	log.Println("Database connected and migrations applied successfully.")
 	return &DBHandler{DB: db}, nil
 }
 
-// applyMigrations applies database migrations from the specified path
 func applyMigrations(db *gorm.DB, migrationsPath string) error {
 	sqlDB, err := db.DB()
 	if err != nil {
-		return fmt.Errorf("failed to get sqlDB from gorm DB: %w", err)
+		return fmt.Errorf("failed to get SQL DB from gorm DB: %w", err)
 	}
-
-	// Optional: Configure connection pooling
-	sqlDB.SetMaxOpenConns(25)
-	sqlDB.SetMaxIdleConns(25)
-	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	driver, err := postgresMigration.WithInstance(sqlDB, &postgresMigration.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to create migration driver: %w", err)
 	}
 
-	absPath, err := filepath.Abs(migrationsPath)
-	if err != nil {
-		return fmt.Errorf("failed to get absolute path of migrations: %w", err)
-	}
+	sourceURL := determineSourceURL(migrationsPath)
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://"+absPath,
+		sourceURL,
 		"postgres",
 		driver,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrate instance: %w", err)
 	}
@@ -70,6 +68,21 @@ func applyMigrations(db *gorm.DB, migrationsPath string) error {
 	}
 	log.Println("Migrations completed successfully.")
 	return nil
+}
+
+func determineSourceURL(migrationsPath string) string {
+	cfg := config.GetConfig()
+	absPath, err := filepath.Abs(migrationsPath)
+	if err != nil {
+		log.Fatalf("failed to get absolute path of migrations: %v", err)
+	}
+
+	sourceURL := "file://" + absPath
+	if cfg.IsDevelopment {
+		sourceURL = "file://" + migrationsPath
+	}
+
+	return sourceURL
 }
 
 type BaseRepository interface {

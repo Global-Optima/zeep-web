@@ -35,7 +35,7 @@ func SendErrorWithStatus(c *gin.Context, message string, status int) {
 	})
 }
 
-func SendInternalError(c *gin.Context, message string) {
+func SendInternalServerError(c *gin.Context, message string) {
 	SendErrorWithStatus(c, message, http.StatusInternalServerError)
 }
 

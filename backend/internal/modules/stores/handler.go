@@ -18,7 +18,7 @@ func NewStoreHandler(service StoreService) *StoreHandler {
 func (h *StoreHandler) GetAllStores(c *gin.Context) {
 	stores, err := h.service.GetAllStores()
 	if err != nil {
-		utils.SendInternalError(c, "Failed to retrieve stores")
+		utils.SendInternalServerError(c, "Failed to retrieve stores")
 		return
 	}
 
@@ -35,7 +35,7 @@ func (h *StoreHandler) GetStoreEmployees(c *gin.Context) {
 
 	employees, err := h.service.GetStoreEmployees(uint(storeID))
 	if err != nil {
-		utils.SendInternalError(c, "Failed to retrieve employees")
+		utils.SendInternalServerError(c, "Failed to retrieve employees")
 		return
 	}
 

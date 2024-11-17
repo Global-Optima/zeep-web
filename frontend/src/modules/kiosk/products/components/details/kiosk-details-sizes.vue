@@ -1,21 +1,21 @@
 <template>
 	<button
 		@click="onUpdateSize(size)"
-		:class="['rounded-full sm:w-24 sm:h-24 w-16 h-16', selectedSize === size ? 'bg-primary text-primary-foreground' : 'bg-white text-black']"
+		:class="['rounded-full sm:w-20 sm:h-20 w-14 h-14', isSelected ? 'bg-primary text-primary-foreground' : '']"
 	>
-		<p class="text-lg sm:text-2xl font-medium">{{ size.name.charAt(0) }}</p>
-		<!-- <p class="text-xs sm:text-base">{{ size.volume }} ml</p> -->
+		<p class="text-xl sm:text-3xl">{{ size.name.charAt(0) }}</p>
 	</button>
 </template>
 
 <script setup lang="ts">
-import type { ProductSize } from '@/modules/kiosk/products/models/product.model'
+import type { ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
 
 
-const {size, selectedSize} = defineProps<{size: ProductSize, selectedSize: ProductSize | null}>()
+
+const {size, isSelected} = defineProps<{size: ProductSizeDTO, isSelected: boolean}>()
 const emit = defineEmits(["click:size"])
 
-const onUpdateSize = (newSize: ProductSize) => {
+const onUpdateSize = (newSize: ProductSizeDTO) => {
   emit("click:size", newSize)
 }
 </script>

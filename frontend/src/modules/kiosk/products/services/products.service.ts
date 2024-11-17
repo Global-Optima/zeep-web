@@ -1,15 +1,15 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { CURRENT_STORE_COOKIES_CONFIG } from '@/modules/stores/constants/store-cookies.constant'
 import type {
-	AdditiveCategory,
+	AdditiveCategoryDTO,
 	ProductCategory,
-	StoreProductDetails,
+	StoreProductDetailsDTO,
 	StoreProducts,
 } from '../models/product.model'
 
 class ProductService {
 	async getStoreProducts(
-		categoryId: number,
+		categoryId: number | null,
 		searchQuery = '',
 		limit = 10,
 		offset = 0,
@@ -46,11 +46,11 @@ class ProductService {
 		}
 	}
 
-	async getStoreProductDetails(productId: number): Promise<StoreProductDetails> {
+	async getStoreProductDetails(productId: number): Promise<StoreProductDetailsDTO> {
 		const storeId = localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)
 
 		try {
-			const response = await apiClient.get<StoreProductDetails>(`/products/${productId}`, {
+			const response = await apiClient.get<StoreProductDetailsDTO>(`/products/${productId}`, {
 				params: {
 					storeId,
 				},
@@ -65,22 +65,16 @@ class ProductService {
 		}
 	}
 
-	async getAdditiveCategoriesByStoreAndProduct(productId: number): Promise<AdditiveCategory[]> {
-		const storeId = localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)
-
+	async getAdditiveCategoriesByProductSize(productSizeId: number): Promise<AdditiveCategoryDTO[]> {
 		try {
-			const response = await apiClient.get<AdditiveCategory[]>(`/additives`, {
+			const response = await apiClient.get<AdditiveCategoryDTO[]>(`/additives`, {
 				params: {
-					storeId,
-					productId,
+					productSizeId,
 				},
 			})
 			return response.data
 		} catch (error) {
-			console.error(
-				`Failed to fetch additives for store ID ${storeId} and product ID ${productId}:`,
-				error,
-			)
+			console.error(`Failed to fetch additives for product size ID ${productSizeId}:`, error)
 			throw error
 		}
 	}

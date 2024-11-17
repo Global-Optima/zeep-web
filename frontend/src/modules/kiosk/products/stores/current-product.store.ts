@@ -5,7 +5,7 @@ interface CurrentProductState {
 	isBottomSheetOpen: boolean
 }
 
-export const useProductStore = defineStore('CURRENT_PRODUCT_STORE', {
+export const useSelectedProductStore = defineStore('SELECTED_PRODUCT_STORE', {
 	state: (): CurrentProductState => ({
 		selectedProductId: null,
 		isBottomSheetOpen: false,

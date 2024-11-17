@@ -13,40 +13,35 @@ export interface ProductCategory {
 	description: string
 }
 
-export interface StoreProductDetails {
+// src/modules/kiosk/products/models/store-product-details.dto.ts
+
+export interface StoreProductDetailsDTO {
 	id: number
 	name: string
 	description: string
 	imageUrl: string
-	basePrice: number
-	sizes: ProductSize[]
-	defaultAdditives: Additive[]
-	recipeSteps: RecipeStep[]
+	sizes: ProductSizeDTO[]
+	defaultAdditives: AdditiveDTO[]
 }
 
-export interface ProductSize {
+export interface ProductSizeDTO {
 	id: number
 	name: string
 	basePrice: number
 	measure: string
 }
 
-export interface Additive {
+export interface AdditiveDTO {
 	id: number
 	name: string
+	description: string
 	price: number
 	imageUrl: string
 }
 
-export interface AdditiveCategory {
+export interface AdditiveCategoryDTO {
 	id: number
 	name: string
-	additives: Additive[]
-}
-
-export interface RecipeStep {
-	id: number
-	description: string
-	imageUrl: string
-	step: number
+	additives: AdditiveDTO[]
+	isMultipleSelect: boolean
 }

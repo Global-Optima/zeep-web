@@ -31,11 +31,11 @@
 			class="fixed bottom-10 left-0 w-full flex justify-center"
 		>
 			<div
-				class="flex items-center gap-12 rounded-3xl px-6 sm:px-8 py-4 bg-slate-700/70 text-white backdrop-blur-md"
+				class="flex items-center gap-12 rounded-full px-4 pl-10 py-4 bg-primary text-white backdrop-blur-md"
 			>
 				<div>
-					<p class="text-sm sm:text-xl">Итого ({{ cartStore.totalItems }})</p>
-					<p class="text-xl sm:text-3xl font-medium sm:mt-1">
+					<p class="text-sm sm:text-lg">Итого ({{ cartStore.totalItems }})</p>
+					<p class="text-xl sm:text-3xl font-medium">
 						{{ formatPrice(totalPrice) }}
 					</p>
 				</div>
@@ -79,7 +79,7 @@ import KioskCartCheckout from '@/modules/kiosk/cart/components/kiosk-cart-checko
 import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
 import KioskCartSuggestProduct from '@/modules/kiosk/cart/components/kiosk-cart-suggest-product.vue'
 import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
-import type { StoreProductDetails } from '@/modules/kiosk/products/models/product.model'
+import type { StoreProductDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { Icon } from '@iconify/vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -91,26 +91,22 @@ const cartItemsArray = computed(() => Object.values(cartStore.cartItems));
 
 const totalPrice = computed(() => cartStore.totalPrice);
 
-const suggestedProducts = ref<StoreProductDetails[]>([
+const suggestedProducts = ref<StoreProductDetailsDTO[]>([
   {
     id: 1000,
     name: 'Круассан с шоколадом',
     imageUrl: 'https://lamin8patisserie.com.au/cdn/shop/products/Chocolatecroissant_530x@2x.png?v=1611018458',
-    basePrice: 1200,
     description: 'Круассан с шоколадом',
     sizes: [],
     defaultAdditives: [],
-    recipeSteps: []
   },
   {
     id: 2,
     name: 'Круассан с курицей',
     imageUrl: 'https://static.vecteezy.com/system/resources/previews/044/308/224/non_2x/croissant-sanwich-isolated-on-transparent-background-png.png',
-    basePrice: 1240,
     description: 'Круассан с курицей',
     sizes: [],
     defaultAdditives: [],
-    recipeSteps: []
   },
 ])
 

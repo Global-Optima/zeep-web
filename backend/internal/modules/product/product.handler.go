@@ -1,9 +1,9 @@
 package product
 
 import (
-	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -18,30 +18,41 @@ func NewProductHandler(service ProductService) *ProductHandler {
 
 func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
 	storeIDParam := c.Query("storeId")
-	categoryIDParam := c.Query("categoryId")
-	searchQuery := c.Query("search")
-
 	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store Id")
+		utils.SendBadRequestError(c, "Invalid storeId")
 		return
 	}
 
-	categoryID, err := strconv.ParseUint(categoryIDParam, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid category Id")
-		return
+	categoryIDParam := c.Query("categoryId")
+	var categoryID *uint
+	if categoryIDParam != "" {
+		catID, err := strconv.ParseUint(categoryIDParam, 10, 64)
+		if err != nil {
+			utils.SendBadRequestError(c, "Invalid categoryId")
+			return
+		}
+		temp := uint(catID)
+		categoryID = &temp
 	}
+
+	searchQuery := c.Query("search")
 
 	limit, offset := utils.ParsePaginationParams(c)
 
-	products, err := h.service.GetStoreProducts(uint(storeID), uint(categoryID), searchQuery, limit, offset)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve products"})
-		return
+	filter := types.ProductFilterDao{
+		StoreID:     uint(storeID),
+		CategoryID:  categoryID,
+		SearchQuery: searchQuery,
+		Limit:       limit,
+		Offset:      offset,
 	}
 
-	// meta := gin.H{"limit": limit, "offset": offset, "total": len(products)}
+	products, err := h.service.GetStoreProducts(filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve products")
+		return
+	}
 
 	utils.SuccessResponse(c, products)
 }
@@ -64,7 +75,7 @@ func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
 
 	productDetails, err := h.service.GetStoreProductDetails(uint(storeID), uint(productID))
 	if err != nil {
-		utils.SendInternalError(c, "Failed to retrieve product details")
+		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
 	}
 

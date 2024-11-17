@@ -2,9 +2,10 @@
 	<div
 		@click="handleClick"
 		:class="[
-      'text-center bg-white rounded-3xl p-5 min-w-44 max-w-44 flex flex-col justify-between',
-      isSelected ? 'bg-primary border-primary border-2' : 'border-2 border-transparent',
-      isDefaultAdditive ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+      'text-center bg-white rounded-3xl p-5 min-w-44 max-w-44 flex flex-col justify-between border-2',
+      isSelected ? 'bg-primary border-primary' : 'border-transparent',
+      isDefault  ? 'cursor-not-allowed opacity-60 !border-primary' : 'cursor-pointer',
+
     ]"
 		data-testid="additive-card"
 	>
@@ -23,22 +24,21 @@
 
 		<div class="flex items-center justify-between mt-5">
 			<p
-				v-if="!isDefaultAdditive"
 				:class="[
           'text-gray-400 text-lg sm:text-xl',
           isSelected ? 'text-black' : '',
         ]"
 				data-testid="additive-price"
 			>
-				{{ formatPrice(additive.price) }}
+				{{ isDefault ? formatPrice(0) : formatPrice(additive.price) }}
 			</p>
 			<button
 				class="relative h-6 w-6 sm:w-8 sm:h-8 rounded-full focus:outline-none"
 				:class="[
           isSelected ? 'bg-primary' : 'bg-gray-200',
-          isDefaultAdditive ? 'cursor-not-allowed opacity-50' : '',
+          isDefault ? 'cursor-not-allowed opacity-50' : '',
         ]"
-				:disabled="isDefaultAdditive"
+				:disabled="isDefault"
 				data-testid="additive-button"
 			>
 				<span
@@ -53,29 +53,18 @@
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { Additive } from '@/modules/kiosk/products/models/product.model'
-import { computed } from 'vue'
+import type { AdditiveDTO } from '@/modules/kiosk/products/models/product.model'
 
-const props = defineProps<{
-  additive: Additive;
-  selectedAdditives: Additive[];
-  defaultAdditives: Additive[];
+const {additive, isSelected, isDefault} = defineProps<{
+  additive: AdditiveDTO;
+  isSelected: boolean;
+  isDefault:boolean;
 }>()
 
 const emit = defineEmits(['click:additive'])
 
-const { additive, selectedAdditives, defaultAdditives } = props
-
-const isDefaultAdditive = computed(() => {
-  return defaultAdditives.some((item) => item.id === additive.id)
-})
-
-const isSelected = computed(() => {
-  return selectedAdditives.some((item) => item.id === additive.id) || isDefaultAdditive.value
-})
-
 const handleClick = () => {
-  if (isDefaultAdditive.value) {
+  if (isDefault) {
     return
   }
   emit('click:additive', additive)

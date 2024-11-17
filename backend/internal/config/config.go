@@ -1,42 +1,55 @@
-package config
+	package config
 
-import (
-	"log"
+	import (
+		"log"
 
-	"github.com/spf13/viper"
-)
+		"github.com/spf13/viper"
+	)
 
-type Config struct {
-	DBHost       string `mapstructure:"DB_HOST"`
-	DBPort       int    `mapstructure:"DB_PORT"`
-	DBUser       string `mapstructure:"DB_USER"`
-	DBPassword   string `mapstructure:"DB_PASSWORD"`
-	DBName       string `mapstructure:"DB_NAME"`
-	JWTSecretKey string `mapstructure:"JWT_SECRET_KEY"`
-	ServerPort   int    `mapstructure:"SERVER_PORT"`
-	ClientUrl    string `mapstructure:"CLIENT_URL"`
-}
+	const (
+		EnvDevelopment = "development"	
+		EnvProduction  = "production"
+		EnvTest        = "test"
+	)
 
-var cfg *Config
+	type Config struct {
+		Env          string `mapstructure:"ENV"`
+		DBHost       string `mapstructure:"DB_HOST"`
+		DBPort       int    `mapstructure:"DB_PORT"`
+		DBUser       string `mapstructure:"DB_USER"`
+		DBPassword   string `mapstructure:"DB_PASSWORD"`
+		DBName       string `mapstructure:"DB_NAME"`
+		JWTSecretKey string `mapstructure:"JWT_SECRET_KEY"`
+		ServerPort   int    `mapstructure:"SERVER_PORT"`
+		ClientUrl    string `mapstructure:"CLIENT_URL"`
 
-func LoadConfig(file string) (*Config, error) {
-	viper.SetConfigFile(file)
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
+		IsDevelopment bool
+		IsTest        bool
 	}
 
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, err
+	var cfg *Config
+
+	func LoadConfig(file string) (*Config, error) {
+		viper.SetConfigFile(file)
+		viper.AutomaticEnv()
+
+		if err := viper.ReadInConfig(); err != nil {
+			return nil, err
+		}
+
+		if err := viper.Unmarshal(&cfg); err != nil {
+			return nil, err
+		}
+
+		cfg.IsDevelopment = cfg.Env == EnvDevelopment
+		cfg.IsTest = cfg.Env == EnvTest
+
+		return cfg, nil
 	}
 
-	return cfg, nil
-}
-
-func GetConfig() *Config {
-	if cfg == nil {
-		log.Fatal("Config not loaded")
+	func GetConfig() *Config {
+		if cfg == nil {
+			log.Fatal("Config not loaded")
+		}
+		return cfg
 	}
-	return cfg
-}

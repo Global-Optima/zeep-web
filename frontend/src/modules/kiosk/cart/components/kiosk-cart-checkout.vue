@@ -17,9 +17,9 @@ import {
   FormMessage
 } from '@/core/components/ui/form'
 import { Stepper, StepperItem, StepperTitle, StepperTrigger } from '@/core/components/ui/stepper'
-import { Icon } from "@iconify/vue"
 
 import { toTypedSchema } from '@vee-validate/zod'
+import { ChevronRight } from 'lucide-vue-next'
 import { ref } from 'vue'
 import * as z from 'zod'
 
@@ -52,7 +52,6 @@ const steps = [
 
 function onSubmit(values: unknown) {
   console.log('Order created:', values)
-  // Optionally, close the dialog or show a success message here
 }
 </script>
 
@@ -66,14 +65,8 @@ function onSubmit(values: unknown) {
 	>
 		<Dialog>
 			<DialogTrigger as-child>
-				<button
-					class="px-4 py-3 sm:px-6 sm:py-4 rounded-2xl bg-white text-primary font-medium text-sm sm:text-xl flex items-center gap-2"
-				>
-					Подтвердить
-					<Icon
-						icon="mingcute:right-line"
-						class="text-base sm:text-xl"
-					/>
+				<button class="p-4 rounded-full bg-white text-primary flex items-center">
+					<ChevronRight class="w-9 h-9" />
 				</button>
 			</DialogTrigger>
 			<DialogContent class="w-full max-w-[90vw] sm:max-w-md p-4 sm:p-6">
