@@ -98,7 +98,7 @@ func LoadConfigFromEnv() (*config.Config, error) {
 
 		RedisHost:     redisHost,
 		RedisPort:     redisPort,
-		RedisPassword: "REDIS_PASSWORD",
+		RedisPassword: "",
 		RedisDB:       redisDB,
 	}
 
