@@ -1,24 +1,43 @@
 package product
 
 import (
+	"encoding/json"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
 type ProductService interface {
-	GetStoreProducts(storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error)
-	GetStoreProductDetails(storeID, productID uint) (*types.StoreProductDetailsDTO, error)
+	GetStoreProducts(c *gin.Context, storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error)
+	GetStoreProductDetails(c *gin.Context, storeID, productID uint) (*types.StoreProductDetailsDTO, error)
 }
 
 type productService struct {
-	repo ProductRepository
+	repo        ProductRepository
+	redisClient *redis.Client
 }
 
-func NewProductService(repo ProductRepository) ProductService {
-	return &productService{repo: repo}
+func NewProductService(repo ProductRepository, redisClient *redis.Client) ProductService {
+	return &productService{
+		repo:        repo,
+		redisClient: redisClient,
+	}
 }
 
-func (s *productService) GetStoreProducts(storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error) {
+func (s *productService) GetStoreProducts(c *gin.Context, storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error) {
+	cacheKey := utils.GenerateCacheKey("products:store", storeID, "category", categoryID, "search", searchQuery, "limit", limit, "offset", offset)
+
+	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
+	if err == nil {
+		var products []types.StoreProductDTO
+		if err := json.Unmarshal([]byte(cachedData), &products); err == nil && len(products) > 0 {
+			return products, nil
+		}
+	}
+
 	products, err := s.repo.GetStoreProducts(storeID, categoryID, searchQuery, limit, offset)
 	if err != nil {
 		return nil, err
@@ -29,10 +48,24 @@ func (s *productService) GetStoreProducts(storeID, categoryID uint, searchQuery 
 		productDTOs[i] = mapToStoreProductDTO(product)
 	}
 
+	data, _ := json.Marshal(productDTOs)
+	ttl := utils.GetTTL("warm")
+	s.redisClient.Set(c, cacheKey, data, ttl)
+
 	return productDTOs, nil
 }
 
-func (s *productService) GetStoreProductDetails(storeID, productID uint) (*types.StoreProductDetailsDTO, error) {
+func (s *productService) GetStoreProductDetails(c *gin.Context, storeID, productID uint) (*types.StoreProductDetailsDTO, error) {
+	cacheKey := utils.GenerateCacheKey("product:store", storeID, "product", productID)
+
+	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
+	if err == nil {
+		var productDetails types.StoreProductDetailsDTO
+		if err := json.Unmarshal([]byte(cachedData), &productDetails); err == nil {
+			return &productDetails, nil
+		}
+	}
+
 	product, err := s.repo.GetStoreProductDetails(storeID, productID)
 	if err != nil {
 		return nil, err
@@ -42,6 +75,9 @@ func (s *productService) GetStoreProductDetails(storeID, productID uint) (*types
 	}
 
 	productDetailsDTO := mapToStoreProductDetailsDTO(product)
+	data, _ := json.Marshal(productDetailsDTO)
+	ttl := utils.GetTTL("warm")
+	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return productDetailsDTO, nil
 }

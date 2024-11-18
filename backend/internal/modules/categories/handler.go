@@ -14,7 +14,7 @@ func NewCategoryHandler(service CategoryService) *CategoryHandler {
 }
 
 func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
-	categories, err := h.service.GetCategories()
+	categories, err := h.service.GetCategories(c)
 
 	if err != nil {
 		utils.SendInternalError(c, "Failed to retrieve categories")

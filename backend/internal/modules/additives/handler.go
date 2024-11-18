@@ -31,7 +31,7 @@ func (h *AdditiveHandler) GetAdditivesByStoreAndProduct(c *gin.Context) {
 		return
 	}
 
-	additives, err := h.service.GetAdditivesByStoreAndProduct(uint(storeID), uint(productID))
+	additives, err := h.service.GetAdditivesByStoreAndProduct(c, uint(storeID), uint(productID))
 	if err != nil {
 		utils.SendInternalError(c, "Failed to retrieve additives")
 		return
