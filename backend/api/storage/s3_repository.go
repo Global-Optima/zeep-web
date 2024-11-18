@@ -18,6 +18,7 @@ import (
 )
 
 type StorageRepository interface {
+	GetLogger() *logrus.Logger
 	UploadFile(key string, fileData []byte) (string, error)
 	DeleteFile(key string) error
 	GetFileURL(key string) (string, error)
@@ -77,6 +78,7 @@ func (r *storageRepository) UploadFile(key string, fileData []byte) (string, err
 		ACL:    aws.String("public-read"),
 	})
 	if err != nil {
+		r.logger.Errorf("Error occured: %s", err.Error())
 		return "", err
 	}
 
@@ -107,6 +109,10 @@ func (r *storageRepository) FileExists(key string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (r *storageRepository) GetLogger() *logrus.Logger {
+	return r.logger
 }
 
 // temp method for testing purposes
