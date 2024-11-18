@@ -3,10 +3,10 @@ package product
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 )
@@ -31,7 +31,6 @@ func NewProductService(repo ProductRepository, redisClient *redis.Client) Produc
 func (s *productService) GetStoreProducts(c *gin.Context, storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error) {
 	cacheKey := fmt.Sprintf("products:store:%d:category:%d:search:%s:limit:%d:offset:%d", storeID, categoryID, searchQuery, limit, offset)
 
-	// Attempt to fetch from cache
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
 		var products []types.StoreProductDTO
@@ -40,29 +39,27 @@ func (s *productService) GetStoreProducts(c *gin.Context, storeID, categoryID ui
 		}
 	}
 
-	// Cache miss; fetch from repository
 	products, err := s.repo.GetStoreProducts(storeID, categoryID, searchQuery, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to DTOs and cache the result
 	productDTOs := make([]types.StoreProductDTO, len(products))
 	for i, product := range products {
 		productDTOs[i] = mapToStoreProductDTO(product)
 	}
 
 	data, _ := json.Marshal(productDTOs)
-	s.redisClient.Set(c, cacheKey, data, time.Hour) // Cache with a 1-hour expiration
+	ttl := utils.GetTTL(utils.TTLWarm)
+	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return productDTOs, nil
 }
 
 func (s *productService) GetStoreProductDetails(c *gin.Context, storeID, productID uint) (*types.StoreProductDetailsDTO, error) {
-	// Generate a unique cache key for product details
+
 	cacheKey := fmt.Sprintf("product:store:%d:product:%d", storeID, productID)
 
-	// Attempt to fetch from cache
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
 		var productDetails types.StoreProductDetailsDTO
@@ -71,7 +68,6 @@ func (s *productService) GetStoreProductDetails(c *gin.Context, storeID, product
 		}
 	}
 
-	// Cache miss; fetch from repository
 	product, err := s.repo.GetStoreProductDetails(storeID, productID)
 	if err != nil {
 		return nil, err
@@ -80,10 +76,10 @@ func (s *productService) GetStoreProductDetails(c *gin.Context, storeID, product
 		return nil, nil
 	}
 
-	// Convert to DTO and cache the result
 	productDetailsDTO := mapToStoreProductDetailsDTO(product)
 	data, _ := json.Marshal(productDetailsDTO)
-	s.redisClient.Set(c, cacheKey, data, time.Hour) // Cache with a 1-hour expiration
+	ttl := utils.GetTTL(utils.TTLWarm)
+	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return productDetailsDTO, nil
 }

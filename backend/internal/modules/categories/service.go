@@ -2,10 +2,10 @@ package categories
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 )
@@ -48,7 +48,8 @@ func (s *categoryService) GetCategories(c *gin.Context) ([]types.CategoryDTO, er
 	}
 
 	data, _ := json.Marshal(dtos)
-	s.redisClient.Set(c, cacheKey, data, time.Hour)
+	ttl := utils.GetTTL(utils.TTLWarm)
+	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return dtos, nil
 }

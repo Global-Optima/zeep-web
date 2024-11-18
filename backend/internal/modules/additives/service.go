@@ -3,9 +3,9 @@ package additives
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 )
@@ -43,7 +43,8 @@ func (s *additiveService) GetAdditivesByStoreAndProduct(c *gin.Context, storeID 
 	}
 
 	data, _ := json.Marshal(additives)
-	s.redisClient.Set(c, cacheKey, data, time.Hour)
+	ttl := utils.GetTTL(utils.TTLWarm)
+	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return additives, nil
 }
