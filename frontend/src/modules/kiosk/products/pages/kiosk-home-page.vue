@@ -1,7 +1,7 @@
 <template>
-	<div class="flex h-screen sm:flex-row flex-col pt-safe">
+	<div class="flex sm:flex-row flex-col pt-safe h-screen">
 		<!-- Sidebar for tablet and larger screens -->
-		<div class="pl-4 py-4">
+		<div class="py-4 pl-4">
 			<KioskHomeSidebarTablet
 				@update:category="onUpdateCategory"
 				:categories="categories"
@@ -10,7 +10,7 @@
 		</div>
 
 		<!-- Main Content -->
-		<div class="flex-1 flex flex-col">
+		<div class="flex flex-col flex-1">
 			<!-- Toolbar for mobile view -->
 			<KioskHomeToolbarMobile
 				v-if="!categoriesLoading"
@@ -23,17 +23,17 @@
 			/>
 			<div
 				v-else
-				class="w-full py-4 sm:py-6 px-4 flex items-center gap-2 overflow-x-auto no-scrollbar sticky top-0 z-10 sm:hidden"
+				class="top-0 z-10 sticky flex items-center gap-2 sm:hidden px-4 py-4 sm:py-6 w-full overflow-x-auto no-scrollbar"
 			>
 				<Skeleton
 					v-for="n in 4"
 					:key="n"
-					class="h-16 w-32 rounded-full bg-gray-200"
+					class="bg-gray-200 rounded-full w-32 h-16"
 				/>
 			</div>
 
 			<!-- Search Bar for tablet and larger screens -->
-			<div class="hidden sm:block px-4 pt-4">
+			<div class="sm:block hidden px-4 pt-4">
 				<KioskHomeToolbarTablet
 					:search-term="searchTerm"
 					@update:search-term="onUpdateSearchTerm"
@@ -44,25 +44,25 @@
 			<section class="flex-1 p-4 overflow-y-auto">
 				<div
 					v-if="productsLoading"
-					class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4"
+					class="gap-2 sm:gap-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
 				>
 					<Skeleton
 						v-for="n in 8"
 						:key="n"
-						class="rounded-lg w-full h-48 bg-gray-200"
+						class="bg-gray-200 rounded-lg w-full h-48"
 					/>
 				</div>
 
 				<div
 					v-else-if="products.length === 0"
-					class="flex items-center justify-center h-20 text-gray-500"
+					class="flex justify-center items-center h-20 text-gray-500"
 				>
 					<p class="text-lg">Ничего не найдено</p>
 				</div>
 
 				<div
 					v-else
-					class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4"
+					class="gap-2 sm:gap-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3"
 				>
 					<KioskHomeProductCard
 						v-for="product in products"
@@ -74,7 +74,10 @@
 		</div>
 
 		<!-- Cart Button for mobile -->
-		<div class="fixed bottom-6 right-6 flex justify-center">
+		<div
+			v-if="!cartStore.isEmpty"
+			class="right-6 bottom-6 fixed flex justify-center"
+		>
 			<KioskHomeCart />
 		</div>
 	</div>
@@ -82,6 +85,7 @@
 
 <script setup lang="ts">
 import { Skeleton } from '@/core/components/ui/skeleton'
+import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeSidebarTablet from '@/modules/kiosk/products/components/home/kiosk-home-sidebar-tablet.vue'
 import KioskHomeToolbarTablet from '@/modules/kiosk/products/components/home/kiosk-home-toolbar-tablet.vue'
@@ -99,6 +103,8 @@ const KioskHomeCart = defineAsyncComponent(() =>
 const KioskHomeToolbarMobile = defineAsyncComponent(() =>
   import('@/modules/kiosk/products/components/home/kiosk-home-toolbar-mobile.vue')
 )
+
+const cartStore = useCartStore()
 
 // Reactive References
 const selectedCategoryId = ref<number | null>(null)

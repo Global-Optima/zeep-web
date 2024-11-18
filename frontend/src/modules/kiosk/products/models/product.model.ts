@@ -37,6 +37,7 @@ export interface AdditiveDTO {
 	description: string
 	price: number
 	imageUrl: string
+	categoryId: number
 }
 
 export interface AdditiveCategoryDTO {

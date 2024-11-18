@@ -1,4 +1,3 @@
-// useCartStore.ts
 import md5 from 'md5'
 import { defineStore } from 'pinia'
 import type {
@@ -102,6 +101,36 @@ export const useCartStore = defineStore('ZEEP_CART', {
 
 		clearCart() {
 			this.cartItems = {}
+		},
+
+		updateCartItem(
+			key: string,
+			updates: {
+				size?: ProductSizeDTO
+				additives?: AdditiveDTO[]
+				quantity?: number
+			},
+		) {
+			const existingItem = this.cartItems[key]
+			if (!existingItem) return
+
+			const updatedSize = updates.size || existingItem.size
+			const updatedAdditives = updates.additives || existingItem.additives
+			const updatedQuantity = updates.quantity ?? existingItem.quantity
+
+			const newKey = this.generateCartItemKey(existingItem.product, updatedSize, updatedAdditives)
+
+			if (newKey !== key) {
+				delete this.cartItems[key]
+			}
+
+			this.cartItems[newKey] = {
+				key: newKey,
+				product: existingItem.product,
+				size: updatedSize,
+				additives: updatedAdditives,
+				quantity: updatedQuantity,
+			}
 		},
 	},
 

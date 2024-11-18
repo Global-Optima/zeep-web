@@ -6,6 +6,7 @@ type AdditiveDTO struct {
 	Description string  `json:"description"`
 	Price       float64 `json:"price"`
 	ImageURL    string  `json:"imageUrl"`
+	CategoryId  uint    `json:"categoryId"`
 }
 
 type AdditiveCategoryDTO struct {

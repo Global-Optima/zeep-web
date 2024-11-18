@@ -1,21 +1,25 @@
 <!-- src/components/ProductImage.vue -->
 <template>
-	<div class="relative pb-52 overflow-y-auto no-scrollbar">
+	<div class="relative overflow-y-auto no-scrollbar">
 		<img
 			:src="imageUrl"
 			:alt="altText"
-			class="w-full h-[500px] object-cover"
+			:class="cn('w-full object-cover h-[500px]', imageClass)"
 		/>
-		<div class="absolute inset-0 bg-gradient-to-t from-gray-100 via-transparent h-[500px]"></div>
+		<div
+			:class="cn('absolute inset-0 bg-gradient-to-t from-gray-100 via-transparent h-[500px]', overlayClass)"
+		></div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { cn } from '@/core/utils/tailwind.utils'
 
-const {imageUrl, altText} = defineProps<{
+const {imageUrl, altText, imageClass, overlayClass} = defineProps<{
   imageUrl: string
-  altText: string
+  altText: string,
+  imageClass?: string,
+  overlayClass?: string
 }>()
 </script>
 

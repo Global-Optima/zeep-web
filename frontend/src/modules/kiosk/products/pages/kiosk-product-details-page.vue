@@ -39,7 +39,6 @@
 			:sizes="state.productDetails.sizes"
 			:selectedSizeId="state.selectedSize?.id"
 			:totalPrice="totalPrice"
-			:formatPrice="formatPrice"
 			@select-size="onSizeSelect"
 			@addToCart="handleAddToCart"
 		/>
@@ -52,7 +51,6 @@ import { productService } from '@/modules/kiosk/products/services/products.servi
 import { computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { formatPrice } from '@/core/utils/price.utils'
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
 import KioskDetailsBack from '@/modules/kiosk/products/components/details/kiosk-details-back.vue'
 import KioskDetailsBottomBar from '@/modules/kiosk/products/components/details/kiosk-details-bottom-bar.vue'

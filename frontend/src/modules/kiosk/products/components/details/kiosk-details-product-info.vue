@@ -1,6 +1,6 @@
 <!-- src/components/ProductInfo.vue -->
 <template>
-	<section class="p-8">
+	<section :class="cn('p-8', containerClass)">
 		<h1 class="font-medium text-2xl sm:text-4xl">{{ name }}</h1>
 		<p class="mt-3 text-base sm:text-xl">{{ description }}</p>
 
@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
+import { cn } from '@/core/utils/tailwind.utils'
 import KioskDetailsEnergy from '@/modules/kiosk/products/components/details/kiosk-details-energy.vue'
-import { defineProps } from 'vue'
 
 defineProps<{
   name: string
@@ -23,6 +23,7 @@ defineProps<{
     carbs: number
     fats: number
   }
+  containerClass?: string
 }>()
 </script>
 

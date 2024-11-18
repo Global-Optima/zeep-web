@@ -67,6 +67,7 @@ func (r *additiveRepository) GetAdditiveCategoriesByProductSize(productSizeID ui
 			Description: additive.Description,
 			Price:       pa.Additive.StorePrice,
 			ImageURL:    additive.ImageURL,
+			CategoryId:  categoryID,
 		})
 	}
 

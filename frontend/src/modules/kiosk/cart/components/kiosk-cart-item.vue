@@ -1,10 +1,10 @@
 <template>
-	<div class="flex gap-4 sm:gap-8 p-4 sm:p-6 rounded-3xl bg-white">
+	<div class="flex gap-4 sm:gap-8 bg-white p-4 sm:p-6 rounded-3xl">
 		<!-- Product Image -->
 		<img
 			:src="item.product.imageUrl"
 			alt="Product Image"
-			class="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded"
+			class="rounded w-16 sm:w-20 h-16 sm:h-20 object-contain"
 		/>
 
 		<!-- Product Details -->
@@ -21,7 +21,7 @@
 			</div>
 
 			<div class="flex justify-between items-center mt-2">
-				<p class="text-lg sm:text-2xl font-medium">
+				<p class="font-medium text-lg sm:text-2xl">
 					{{ formatPrice(itemTotalPrice) }}
 				</p>
 
@@ -29,21 +29,21 @@
 				<div class="flex items-center gap-2">
 					<button
 						@click="decrement"
-						class="p-1 sm:p-2 bg-gray-200 rounded-xl"
+						class="bg-gray-200 p-1 sm:p-3 rounded-xl"
 					>
 						<Icon
 							icon="mingcute:minimize-line"
-							class="text-lg sm:text-xl"
+							class="text-lg sm:text-2xl"
 						/>
 					</button>
 
-					<span class="text-base sm:text-2xl mx-1 sm:mx-2">
+					<span class="mx-1 sm:mx-2 text-base sm:text-2xl">
 						{{ item.quantity }}
 					</span>
 
 					<button
 						@click="increment"
-						class="p-1 sm:p-2 bg-gray-200 rounded-xl"
+						class="bg-gray-200 p-1 sm:p-3 rounded-xl"
 					>
 						<Icon
 							icon="mingcute:add-line"
@@ -71,11 +71,13 @@ const props = defineProps<{
 const cartStore = useCartStore();
 
 // Reactive methods
-const increment = () => {
+const increment = (e: Event) => {
+  e.stopPropagation()
   cartStore.incrementQuantity(props.item.key);
 };
 
-const decrement = () => {
+const decrement = (e: Event) => {
+  e.stopPropagation()
   cartStore.decrementQuantity(props.item.key);
 };
 

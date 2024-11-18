@@ -20,24 +20,31 @@
 				@click="handleAddToCart"
 				class="flex items-center gap-3 bg-primary px-10 py-5 rounded-full text-primary-foreground"
 			>
-				<Plus class="w-6 sm:w-8 h-6 sm:h-8" />
-				<p class="text-xl sm:text-3xl">{{ formattedPrice }}</p>
+				<displayIcon
+					v-if="displayIcon"
+					class="w-6 sm:w-8 h-6 sm:h-8"
+				/>
+				<Plus
+					v-else
+					class="w-6 sm:w-8 h-6 sm:h-8"
+				/>
+				<p class="text-xl sm:text-3xl">{{ formatPrice(totalPrice) }}</p>
 			</button>
 		</div>
 	</section>
 </template>
 
 <script setup lang="ts">
+import { formatPrice } from '@/core/utils/price.utils'
 import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
 import type { ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
-import { Plus } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { Plus, type LucideIcon } from 'lucide-vue-next'
 
-const props = defineProps<{
+const {sizes, selectedSizeId, totalPrice, displayIcon } = defineProps<{
   sizes: ProductSizeDTO[]
   selectedSizeId: number | undefined
-  totalPrice: number
-  formatPrice: (price: number) => string
+  totalPrice: number,
+  displayIcon?: LucideIcon,
 }>()
 
 const emits = defineEmits<{
@@ -54,10 +61,8 @@ const handleAddToCart = () => {
 }
 
 const isSelected = (sizeId: number) => {
-  return props.selectedSizeId === sizeId
+  return selectedSizeId === sizeId
 }
-
-const formattedPrice = computed(() => props.formatPrice(props.totalPrice))
 </script>
 
 <style scoped>
