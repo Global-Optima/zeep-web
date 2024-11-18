@@ -1,8 +1,10 @@
 package routes
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/gin-gonic/gin"
@@ -50,5 +52,17 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.Routes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditivesByStoreAndProduct)
+	}
+}
+
+func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
+	router := r.Routes.Group("/employees")
+	{
+		router.POST("", middleware.RoleMiddleware("director"), handler.CreateEmployee)
+		router.GET("", handler.GetEmployeesByStore)
+		router.GET("/:id", handler.GetEmployeeByID)
+		router.PUT("/:id", middleware.RoleMiddleware("director"), handler.UpdateEmployee)
+		router.DELETE("/:id", middleware.RoleMiddleware("director"), handler.DeleteEmployee)
+		router.GET("/roles", handler.GetAllRoles)
 	}
 }

@@ -40,3 +40,11 @@ type EmployeeRole struct {
 	Name      string     `gorm:"size:50;not null;unique"`
 	Employees []Employee `gorm:"foreignKey:RoleID;constraint:OnDelete:SET NULL"`
 }
+
+type EmployeeAuth struct {
+	BaseEntity
+	EmployeeID     uint     `gorm:"not null;index"`
+	Employee       Employee `gorm:"foreignKey:EmployeeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Username       string   `gorm:"size:100;not null;unique"`
+	HashedPassword string   `gorm:"not null"`
+}
