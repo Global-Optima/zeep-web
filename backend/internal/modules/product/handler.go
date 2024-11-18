@@ -35,7 +35,7 @@ func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
 
 	limit, offset := utils.ParsePaginationParams(c)
 
-	products, err := h.service.GetStoreProducts(uint(storeID), uint(categoryID), searchQuery, limit, offset)
+	products, err := h.service.GetStoreProducts(c, uint(storeID), uint(categoryID), searchQuery, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve products"})
 		return
@@ -47,7 +47,7 @@ func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
-	storeIDParam := c.Param("storeId")
+	storeIDParam := c.Query("storeId")
 	productIDParam := c.Param("productId")
 
 	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
@@ -62,7 +62,7 @@ func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
 		return
 	}
 
-	productDetails, err := h.service.GetStoreProductDetails(uint(storeID), uint(productID))
+	productDetails, err := h.service.GetStoreProductDetails(c, uint(storeID), uint(productID))
 	if err != nil {
 		utils.SendInternalError(c, "Failed to retrieve product details")
 		return
