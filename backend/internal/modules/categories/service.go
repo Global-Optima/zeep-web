@@ -27,7 +27,7 @@ func NewCategoryService(repo CategoryRepository, redisClient *redis.Client) Cate
 }
 
 func (s *categoryService) GetCategories(c *gin.Context) ([]types.CategoryDTO, error) {
-	cacheKey := "categories:all"
+	cacheKey := utils.GenerateCacheKey("categories", "all")
 
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
@@ -48,7 +48,7 @@ func (s *categoryService) GetCategories(c *gin.Context) ([]types.CategoryDTO, er
 	}
 
 	data, _ := json.Marshal(dtos)
-	ttl := utils.GetTTL(utils.TTLWarm)
+	ttl := utils.GetTTL("warm")
 	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return dtos, nil

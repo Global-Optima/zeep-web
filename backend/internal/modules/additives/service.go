@@ -2,7 +2,6 @@ package additives
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -27,7 +26,7 @@ func NewAdditiveService(repo AdditiveRepository, redisClient *redis.Client) Addi
 }
 
 func (s *additiveService) GetAdditivesByStoreAndProduct(c *gin.Context, storeID uint, productID uint) ([]types.AdditiveCategoryDTO, error) {
-	cacheKey := fmt.Sprintf("additives:store:%d:product:%d", storeID, productID)
+	cacheKey := utils.GenerateCacheKey("additives:store", storeID, "product", productID)
 
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
@@ -43,7 +42,7 @@ func (s *additiveService) GetAdditivesByStoreAndProduct(c *gin.Context, storeID 
 	}
 
 	data, _ := json.Marshal(additives)
-	ttl := utils.GetTTL(utils.TTLWarm)
+	ttl := utils.GetTTL("warm")
 	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return additives, nil

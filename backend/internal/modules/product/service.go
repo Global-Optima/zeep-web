@@ -2,7 +2,6 @@ package product
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
@@ -29,7 +28,7 @@ func NewProductService(repo ProductRepository, redisClient *redis.Client) Produc
 }
 
 func (s *productService) GetStoreProducts(c *gin.Context, storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error) {
-	cacheKey := fmt.Sprintf("products:store:%d:category:%d:search:%s:limit:%d:offset:%d", storeID, categoryID, searchQuery, limit, offset)
+	cacheKey := utils.GenerateCacheKey("products:store", storeID, "category", categoryID, "search", searchQuery, "limit", limit, "offset", offset)
 
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
@@ -50,15 +49,14 @@ func (s *productService) GetStoreProducts(c *gin.Context, storeID, categoryID ui
 	}
 
 	data, _ := json.Marshal(productDTOs)
-	ttl := utils.GetTTL(utils.TTLWarm)
+	ttl := utils.GetTTL("warm")
 	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return productDTOs, nil
 }
 
 func (s *productService) GetStoreProductDetails(c *gin.Context, storeID, productID uint) (*types.StoreProductDetailsDTO, error) {
-
-	cacheKey := fmt.Sprintf("product:store:%d:product:%d", storeID, productID)
+	cacheKey := utils.GenerateCacheKey("product:store", storeID, "product", productID)
 
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
@@ -78,7 +76,7 @@ func (s *productService) GetStoreProductDetails(c *gin.Context, storeID, product
 
 	productDetailsDTO := mapToStoreProductDetailsDTO(product)
 	data, _ := json.Marshal(productDetailsDTO)
-	ttl := utils.GetTTL(utils.TTLWarm)
+	ttl := utils.GetTTL("warm")
 	s.redisClient.Set(c, cacheKey, data, ttl)
 
 	return productDetailsDTO, nil

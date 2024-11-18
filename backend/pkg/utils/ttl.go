@@ -1,20 +1,17 @@
 package utils
 
 import (
-	"fmt"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 )
 
-const (
-	TTLHot  = "hot"
-	TTLWarm = "warm"
-	TTLCool = "cold"
-)
+var TTLMapper = map[string]time.Duration{}
 
-var TTLMapper = map[string]time.Duration{
-	TTLHot:  5 * time.Minute,
-	TTLWarm: 1 * time.Hour,
-	TTLCool: 24 * time.Hour,
+func InitTTLFromConfig(cfg *config.Config) {
+	TTLMapper["hot"] = time.Duration(cfg.TTL.Hot) * time.Second
+	TTLMapper["warm"] = time.Duration(cfg.TTL.Warm) * time.Second
+	TTLMapper["cold"] = time.Duration(cfg.TTL.Cool) * time.Second
 }
 
 func GetTTL(category string) time.Duration {
@@ -23,12 +20,4 @@ func GetTTL(category string) time.Duration {
 		return 1 * time.Hour
 	}
 	return ttl
-}
-
-func SetTTL(category string, ttl time.Duration) error {
-	if category == "" {
-		return fmt.Errorf("category name cannot be empty")
-	}
-	TTLMapper[category] = ttl
-	return nil
 }
