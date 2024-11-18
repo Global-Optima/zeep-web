@@ -3,10 +3,12 @@ package utils
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -78,6 +80,9 @@ func LoadConfigFromEnv() (*config.Config, error) {
 		redisDB = 0
 	}
 
+	redisHost := getEnv("REDIS_HOST", "localhost")
+	redisHost = validateRedisHost(redisHost)
+
 	redisPort, err := strconv.Atoi(getEnv("REDIS_PORT", "6379"))
 	if err != nil {
 		log.Printf("Invalid REDIS_PORT value; using default 6379. Error: %v", err)
@@ -91,7 +96,7 @@ func LoadConfigFromEnv() (*config.Config, error) {
 		DBHost:     getEnv("DB_HOST", "localhost"),
 		DBPort:     port,
 
-		RedisHost:     "REDIS_HOST",
+		RedisHost:     redisHost,
 		RedisPort:     redisPort,
 		RedisPassword: "REDIS_PASSWORD",
 		RedisDB:       redisDB,
@@ -107,6 +112,27 @@ func getEnv(key, defaultValue string) string {
 		return defaultValue
 	}
 	return value
+}
+
+func validateRedisHost(redisHost string) string {
+	if redisHost == "" {
+		log.Println("REDIS_HOST is empty; using default 'localhost'")
+		return "localhost"
+	}
+
+	if net.ParseIP(redisHost) != nil {
+		return redisHost
+	}
+
+	if strings.Contains(redisHost, ":") {
+		hostPart := strings.Split(redisHost, ":")[0]
+		if hostPart == "" || len(hostPart) > 253 {
+			log.Printf("Invalid REDIS_HOST value '%s'; using 'localhost'", redisHost)
+			return "localhost"
+		}
+	}
+
+	return redisHost
 }
 
 func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
