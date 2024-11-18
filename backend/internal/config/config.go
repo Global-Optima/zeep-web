@@ -26,6 +26,8 @@ type Config struct {
 	RedisPort     int    `mapstructure:"REDIS_PORT"`
 	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
 	RedisDB       int    `mapstructure:"REDIS_DB"`
+
+	TTL TTLConfig
 }
 
 var cfg *Config
@@ -41,6 +43,12 @@ func LoadConfig(file string) (*Config, error) {
 	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, err
 	}
+
+	var ttl TTLConfig
+	if err := viper.Unmarshal(&ttl); err != nil {
+		return nil, err
+	}
+	cfg.TTL = ttl
 
 	return cfg, nil
 }
