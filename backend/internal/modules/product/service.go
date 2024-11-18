@@ -29,14 +29,13 @@ func NewProductService(repo ProductRepository, redisClient *redis.Client) Produc
 }
 
 func (s *productService) GetStoreProducts(c *gin.Context, storeID, categoryID uint, searchQuery string, limit, offset int) ([]types.StoreProductDTO, error) {
-	// Generate a cache key based on query parameters
 	cacheKey := fmt.Sprintf("products:store:%d:category:%d:search:%s:limit:%d:offset:%d", storeID, categoryID, searchQuery, limit, offset)
 
 	// Attempt to fetch from cache
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
 		var products []types.StoreProductDTO
-		if json.Unmarshal([]byte(cachedData), &products) == nil {
+		if err := json.Unmarshal([]byte(cachedData), &products); err == nil && len(products) > 0 {
 			return products, nil
 		}
 	}
@@ -67,7 +66,7 @@ func (s *productService) GetStoreProductDetails(c *gin.Context, storeID, product
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
 		var productDetails types.StoreProductDetailsDTO
-		if json.Unmarshal([]byte(cachedData), &productDetails) == nil {
+		if err := json.Unmarshal([]byte(cachedData), &productDetails); err == nil {
 			return &productDetails, nil
 		}
 	}

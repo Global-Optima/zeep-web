@@ -47,7 +47,7 @@ func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
-	storeIDParam := c.Param("storeId")
+	storeIDParam := c.Query("storeId")
 	productIDParam := c.Param("productId")
 
 	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)

@@ -32,7 +32,7 @@ func (s *categoryService) GetCategories(c *gin.Context) ([]types.CategoryDTO, er
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
 		var categories []types.CategoryDTO
-		if json.Unmarshal([]byte(cachedData), &categories) == nil {
+		if err := json.Unmarshal([]byte(cachedData), &categories); err == nil && len(categories) > 0 {
 			return categories, nil
 		}
 	}

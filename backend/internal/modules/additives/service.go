@@ -32,7 +32,7 @@ func (s *additiveService) GetAdditivesByStoreAndProduct(c *gin.Context, storeID 
 	cachedData, err := s.redisClient.Get(c, cacheKey).Result()
 	if err == nil {
 		var additives []types.AdditiveCategoryDTO
-		if json.Unmarshal([]byte(cachedData), &additives) == nil {
+		if err := json.Unmarshal([]byte(cachedData), &additives); err == nil && len(additives) > 0 {
 			return additives, nil
 		}
 	}
