@@ -10,9 +10,11 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +24,7 @@ func InitializeConfig() *config.Config {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+	utils.InitTTLFromConfig(cfg)
 	return cfg
 }
 
@@ -72,7 +75,6 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	router.Use(cors.Default())
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
 
-
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
 	storageHandler := storage.NewStorageHandler(storageRepo)        // temp
@@ -112,6 +114,15 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		},
 		additives.NewAdditiveHandler,
 		apiRouter.RegisterAdditivesRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (employees.EmployeeService, error) {
+			return employees.NewEmployeeService(employees.NewEmployeeRepository(dbHandler.DB)), nil
+		},
+		employees.NewEmployeeHandler,
+		apiRouter.RegisterEmployeesRoutes,
 	)
 
 	return router

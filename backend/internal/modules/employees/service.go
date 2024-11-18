@@ -41,7 +41,7 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 	if input.StoreID == 0 {
 		return nil, errors.New("employee must belong to a valid store")
 	}
-	if input.Username == "" || input.Password == "" {
+	if input.Username == "" || input.Password == "" || len(input.Password) > 6 {
 		return nil, errors.New("username and password cannot be empty")
 	}
 
