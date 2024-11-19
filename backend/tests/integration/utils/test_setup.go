@@ -3,10 +3,12 @@ package utils
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -31,6 +33,7 @@ type TestEnvironment struct {
 func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	cfg := loadConfig()
 	db := setupDatabase(cfg, t)
+	setupRedis(cfg, t)
 	router := setupRouter(db)
 
 	truncateAndLoadMockData(db)
@@ -71,12 +74,32 @@ func LoadConfigFromEnv() (*config.Config, error) {
 		port = 5432
 	}
 
+	redisDB, err := strconv.Atoi(getEnv("REDIS_DB", "0"))
+	if err != nil {
+		log.Printf("Invalid REDIS_DB value; using default 0. Error: %v", err)
+		redisDB = 0
+	}
+
+	redisHost := getEnv("REDIS_HOST", "localhost")
+	redisHost = validateRedisHost(redisHost)
+
+	redisPort, err := strconv.Atoi(getEnv("REDIS_PORT", "6379"))
+	if err != nil {
+		log.Printf("Invalid REDIS_PORT value; using default 6379. Error: %v", err)
+		redisPort = 6379
+	}
+
 	cfg := &config.Config{
 		DBUser:     getEnv("DB_USER", "defaultuser"),
 		DBPassword: getEnv("DB_PASSWORD", "defaultpassword"),
 		DBName:     getEnv("DB_NAME", "defaultdb"),
 		DBHost:     getEnv("DB_HOST", "localhost"),
 		DBPort:     port,
+
+		RedisHost:     redisHost,
+		RedisPort:     redisPort,
+		RedisPassword: "",
+		RedisDB:       redisDB,
 	}
 
 	return cfg, nil
@@ -91,6 +114,27 @@ func getEnv(key, defaultValue string) string {
 	return value
 }
 
+func validateRedisHost(redisHost string) string {
+	if redisHost == "" {
+		log.Println("REDIS_HOST is empty; using default 'localhost'")
+		return "localhost"
+	}
+
+	if net.ParseIP(redisHost) != nil {
+		return redisHost
+	}
+
+	if strings.Contains(redisHost, ":") {
+		hostPart := strings.Split(redisHost, ":")[0]
+		if hostPart == "" || len(hostPart) > 253 {
+			log.Printf("Invalid REDIS_HOST value '%s'; using 'localhost'", redisHost)
+			return "localhost"
+		}
+	}
+
+	return redisHost
+}
+
 func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
@@ -100,6 +144,15 @@ func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
 		t.Fatalf("Failed to initialize test database! Details: %v", err)
 	}
 	return db
+}
+
+func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
+	redisClient, err := database.InitRedis(cfg.RedisHost, cfg.RedisPort, cfg.RedisPassword, cfg.RedisDB)
+	if err != nil {
+		t.Fatalf("Failed to initialize Redis: %v", err)
+	}
+
+	return redisClient
 }
 
 func setupRouter(db *gorm.DB) *gin.Engine {

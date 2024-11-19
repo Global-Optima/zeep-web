@@ -1,8 +1,11 @@
 package additives
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -24,12 +27,27 @@ func (h *AdditiveHandler) GetAdditivesByStoreAndProduct(c *gin.Context) {
 		return
 	}
 
+	cacheKey := utils.BuildCacheKey("additives", map[string]string{
+		"productSizeId": productSizeIDParam,
+	})
+
+	cacheUtil := utils.GetCacheInstance()
+
+	var cachedAdditives []types.AdditiveCategoryDTO
+	if err := cacheUtil.Get(cacheKey, &cachedAdditives); err == nil {
+		utils.SuccessResponse(c, cachedAdditives)
+		return
+	}
+
 	additives, err := h.service.GetAdditivesByStoreAndProductSize(uint(productSizeID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve additives")
 		return
 	}
 
-	utils.SuccessResponse(c, additives)
+	if err := cacheUtil.Set(cacheKey, additives, 10*time.Minute); err != nil {
+		fmt.Printf("Failed to cache additives: %v\n", err)
+	}
 
+	utils.SuccessResponse(c, additives)
 }

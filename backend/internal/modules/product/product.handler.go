@@ -1,7 +1,9 @@
 package product
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -48,10 +50,30 @@ func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
 		Offset:      offset,
 	}
 
+	cacheKey := utils.BuildCacheKey("storeProducts", map[string]string{
+		"storeId":    storeIDParam,
+		"categoryId": categoryIDParam,
+		"search":     searchQuery,
+		"limit":      strconv.Itoa(limit),
+		"offset":     strconv.Itoa(offset),
+	})
+
+	cacheUtil := utils.GetCacheInstance()
+
+	var cachedProducts []types.StoreProductDTO
+	if err := cacheUtil.Get(cacheKey, &cachedProducts); err == nil {
+		utils.SuccessResponse(c, cachedProducts)
+		return
+	}
+
 	products, err := h.service.GetStoreProducts(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve products")
 		return
+	}
+
+	if err := cacheUtil.Set(cacheKey, products, 5*time.Minute); err != nil {
+		fmt.Printf("Failed to cache products: %v\n", err)
 	}
 
 	utils.SuccessResponse(c, products)
@@ -73,6 +95,19 @@ func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
 		return
 	}
 
+	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
+		"storeId":   storeIDParam,
+		"productId": productIDParam,
+	})
+
+	cacheUtil := utils.GetCacheInstance()
+
+	var cachedProductDetails *types.StoreProductDetailsDTO
+	if err := cacheUtil.Get(cacheKey, &cachedProductDetails); err == nil {
+		utils.SuccessResponse(c, cachedProductDetails)
+		return
+	}
+
 	productDetails, err := h.service.GetStoreProductDetails(uint(storeID), uint(productID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
@@ -82,6 +117,10 @@ func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
 	if productDetails == nil {
 		utils.SendNotFoundError(c, "Product not found")
 		return
+	}
+
+	if err := cacheUtil.Set(cacheKey, productDetails, 10*time.Minute); err != nil {
+		fmt.Printf("Failed to cache product details: %v\n", err)
 	}
 
 	utils.SuccessResponse(c, productDetails)

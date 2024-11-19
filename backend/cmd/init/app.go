@@ -7,11 +7,13 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -40,6 +42,17 @@ func InitializeDatabase(cfg *config.Config) *database.DBHandler {
 	return dbHandler
 }
 
+func InitializeRedis(cfg *config.Config) *database.RedisClient {
+	redisClient, err := database.InitRedis(cfg.RedisHost, cfg.RedisPort, cfg.RedisPassword, cfg.RedisDB)
+	if err != nil {
+		log.Fatalf("Failed to initialize Redis: %v", err)
+	}
+
+	utils.InitCache(redisClient.Client, redisClient.Ctx)
+
+	return redisClient
+}
+
 func InitializeModule[T any, H any](
 	dbHandler *database.DBHandler,
 	initService func(dbHandler *database.DBHandler) (T, error),
@@ -57,10 +70,10 @@ func InitializeModule[T any, H any](
 	registerRoutes(handler)
 }
 
-func InitializeRouter(dbHandler *database.DBHandler, storageRepo storage.StorageRepository) *gin.Engine {
-
+func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo storage.StorageRepository) *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.Default())
+	router.Use(middleware.RedisMiddleware(redisClient.Client))
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
@@ -126,8 +139,10 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 
 	dbHandler := InitializeDatabase(cfg)
 
+	redisClient := InitializeRedis(cfg)
+
 	storageRepo := InitializeStorage(cfg) // temp
 
-	router := InitializeRouter(dbHandler, storageRepo) // temp
+	router := InitializeRouter(dbHandler, redisClient, storageRepo) // temp
 	return router, cfg
 }

@@ -1,6 +1,8 @@
 package additives
 
-import "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+)
 
 type AdditiveService interface {
 	GetAdditivesByStoreAndProductSize(productID uint) ([]types.AdditiveCategoryDTO, error)

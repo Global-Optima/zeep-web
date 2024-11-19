@@ -12,6 +12,7 @@ type AdditiveRepository interface {
 
 type additiveRepository struct {
 	db *gorm.DB
+	
 }
 
 func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {

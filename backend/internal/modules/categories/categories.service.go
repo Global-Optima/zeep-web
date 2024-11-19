@@ -3,10 +3,11 @@ package categories
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
+	"github.com/gin-gonic/gin"
 )
 
 type CategoryService interface {
-	GetCategories() ([]types.CategoryDTO, error)
+	GetCategories(c *gin.Context) ([]types.CategoryDTO, error)
 }
 
 type categoryService struct {
@@ -14,10 +15,12 @@ type categoryService struct {
 }
 
 func NewCategoryService(repo CategoryRepository) CategoryService {
-	return &categoryService{repo: repo}
+	return &categoryService{
+		repo: repo,
+	}
 }
 
-func (s *categoryService) GetCategories() ([]types.CategoryDTO, error) {
+func (s *categoryService) GetCategories(c *gin.Context) ([]types.CategoryDTO, error) {
 	categories, err := s.repo.GetCategories()
 	if err != nil {
 		return nil, err
