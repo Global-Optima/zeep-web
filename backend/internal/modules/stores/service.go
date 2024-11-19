@@ -59,21 +59,12 @@ func mapToStoreDTO(store data.Store) types.StoreDTO {
 }
 
 func mapToEmployeeDTO(employee data.Employee) types.EmployeeDTO {
-	var roleDTO *types.EmployeeRoleDTO
-
-	if employee.Role != nil {
-		roleDTO = &types.EmployeeRoleDTO{
-			ID:   employee.Role.ID,
-			Name: employee.Role.Name,
-		}
-	}
-
 	return types.EmployeeDTO{
 		ID:       employee.ID,
 		Name:     employee.Name,
 		Phone:    employee.Phone,
 		Email:    employee.Email,
 		IsActive: employee.IsActive,
-		Role:     roleDTO,
+		Role:     employee.Role,
 	}
 }

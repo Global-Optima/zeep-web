@@ -6,9 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RoleMiddleware(requiredRole string) gin.HandlerFunc {
+func RoleMiddleware(requiredRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// user role set in the context after authentication
 		userRole, exists := c.Get("role")
 		if !exists {
 			c.JSON(http.StatusForbidden, gin.H{"error": "role not found in context"})
@@ -16,12 +15,14 @@ func RoleMiddleware(requiredRole string) gin.HandlerFunc {
 			return
 		}
 
-		if userRole != requiredRole {
-			c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized access"})
-			c.Abort()
-			return
+		for _, role := range requiredRoles {
+			if userRole == role {
+				c.Next()
+				return
+			}
 		}
 
-		c.Next()
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized access"})
+		c.Abort()
 	}
 }

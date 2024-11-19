@@ -14,16 +14,11 @@ type StoreDTO struct {
 	FacilityAddress *FacilityAddressDTO `json:"facilityAddress,omitempty"`
 }
 
-type EmployeeRoleDTO struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
-}
-
 type EmployeeDTO struct {
-	ID       uint             `json:"id"`
-	Name     string           `json:"name"`
-	Phone    string           `json:"phone"`
-	Email    string           `json:"email"`
-	IsActive bool             `json:"isActive"`
-	Role     *EmployeeRoleDTO `json:"role,omitempty"`
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+	IsActive bool   `json:"isActive"`
+	Role     string `json:"role,omitempty"`
 }
