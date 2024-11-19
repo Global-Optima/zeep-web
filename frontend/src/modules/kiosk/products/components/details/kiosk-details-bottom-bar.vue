@@ -2,7 +2,7 @@
 <template>
 	<section class="bottom-4 left-0 fixed flex justify-center w-full">
 		<div
-			class="z-20 flex items-center gap-4 bg-white/50 shadow-2xl backdrop-blur-sm px-6 py-4 rounded-full"
+			class="z-20 flex items-center gap-4 bg-white/50 shadow-2xl backdrop-blur-sm p-2 rounded-full"
 		>
 			<!-- Size Selection -->
 			<div class="flex items-center bg-gray-200 rounded-full overflow-x-auto no-scrollbar">

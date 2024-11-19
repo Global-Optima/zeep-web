@@ -169,7 +169,7 @@ const handleUpdate = () => {
 		:open="isOpen"
 		@update:open="onClose"
 	>
-		<DialogContent class="bg-[#F5F5F7] p-0 border-none max-w-[90vw] h-[90vh] overflow-hidden">
+		<DialogContent class="bg-[#F5F5F7] p-0 border-none max-w-full h-full">
 			<div class="relative bg-gray-100 pb-44 w-full h-full text-black overflow-y-auto no-scrollbar">
 				<!-- Product Image -->
 				<KioskDetailsProductImage

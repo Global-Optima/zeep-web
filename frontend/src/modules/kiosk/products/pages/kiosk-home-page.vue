@@ -10,10 +10,11 @@
 		</div>
 
 		<!-- Main Content -->
-		<div class="flex flex-col flex-1 sm:hidden">
+		<div class="flex flex-col flex-1">
 			<!-- Toolbar for mobile view -->
 			<KioskHomeToolbarMobile
 				v-if="!categoriesLoading"
+				class="block sm:hidden"
 				:categories="categories"
 				:selected-category-id="selectedCategoryId"
 				:search-term="searchTerm"
