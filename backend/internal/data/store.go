@@ -8,6 +8,7 @@ type Store struct {
 	IsFranchise       bool               `gorm:"default:false"`
 	AdminID           *uint              `gorm:"index;not null"`
 	Admin             *Employee          `gorm:"foreignKey:AdminID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Status            string             `gorm:"size:20;default:'active'"`
 	Additives         []StoreAdditive    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	ProductSizes      []StoreProductSize `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	Products          []StoreProduct     `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`

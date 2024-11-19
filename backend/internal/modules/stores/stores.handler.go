@@ -19,6 +19,7 @@ func NewStoreHandler(service StoreService) *StoreHandler {
 }
 
 func (h *StoreHandler) GetAllStores(c *gin.Context) {
+	searchTerm := c.Query("searchTerm")
 	cacheKey := "stores:all"
 
 	cacheUtil := utils.GetCacheInstance()
@@ -29,7 +30,7 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 		return
 	}
 
-	stores, err := h.service.GetAllStores()
+	stores, err := h.service.GetAllStores(searchTerm)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve stores")
 		return
@@ -42,36 +43,78 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 	utils.SuccessResponse(c, stores)
 }
 
-func (h *StoreHandler) GetStoreEmployees(c *gin.Context) {
-	storeIDParam := c.Param("storeId")
+func (h *StoreHandler) CreateStore(c *gin.Context) {
+	var storeDTO types.StoreDTO
 
-	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
+	if err := c.ShouldBindJSON(&storeDTO); err != nil {
+		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
+		return
+	}
+
+	createdStore, err := h.service.CreateStore(storeDTO)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to create store: "+err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, createdStore)
+}
+
+func (h *StoreHandler) GetStoreByID(c *gin.Context) {
+
+	storeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "Invalid store ID")
 		return
 	}
 
-	cacheKey := utils.BuildCacheKey("storeEmployees", map[string]string{
-		"storeId": storeIDParam,
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-
-	var cachedEmployees []types.EmployeeDTO
-	if err := cacheUtil.Get(cacheKey, &cachedEmployees); err == nil {
-		utils.SuccessResponse(c, cachedEmployees)
-		return
-	}
-
-	employees, err := h.service.GetStoreEmployees(uint(storeID))
+	store, err := h.service.GetStoreByID(uint(storeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve employees")
+		utils.SendInternalServerError(c, "Failed to retrieve store: "+err.Error())
 		return
 	}
 
-	if err := cacheUtil.Set(cacheKey, employees, 15*time.Minute); err != nil {
-		fmt.Printf("Failed to cache employees: %v\n", err)
+	utils.SuccessResponse(c, store)
+}
+
+func (h *StoreHandler) UpdateStore(c *gin.Context) {
+	var storeDTO types.StoreDTO
+
+	if err := c.ShouldBindJSON(&storeDTO); err != nil {
+		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
+		return
 	}
 
-	utils.SuccessResponse(c, employees)
+	storeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid store ID")
+		return
+	}
+	storeDTO.ID = uint(storeID)
+
+	updatedStore, err := h.service.UpdateStore(storeDTO)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to update store: "+err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, updatedStore)
+}
+
+func (h *StoreHandler) DeleteStore(c *gin.Context) {
+
+	storeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid store ID")
+		return
+	}
+
+	hardDelete := c.Query("hardDelete") == "true"
+
+	if err := h.service.DeleteStore(uint(storeID), hardDelete); err != nil {
+		utils.SendInternalServerError(c, "Failed to delete store: "+err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, gin.H{"message": "Store deleted successfully"})
 }
