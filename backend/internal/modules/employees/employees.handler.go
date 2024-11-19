@@ -30,7 +30,7 @@ func (h *EmployeeHandler) CreateEmployee(c *gin.Context) {
 			utils.SendBadRequestError(c, err.Error())
 			return
 		}
-		utils.SendInternalError(c, err.Error())
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *EmployeeHandler) GetEmployeesByStore(c *gin.Context) {
 
 	employees, err := h.service.GetEmployeesByStore(uint(storeID), role, limit, offset)
 	if err != nil {
-		utils.SendInternalError(c, err.Error())
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
 
 	employee, err := h.service.GetEmployeeByID(uint(id))
 	if err != nil {
-		utils.SendInternalError(c, err.Error())
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
 
 	err = h.service.UpdateEmployee(uint(id), input)
 	if err != nil {
-		utils.SendInternalError(c, err.Error())
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
@@ -117,7 +117,7 @@ func (h *EmployeeHandler) DeleteEmployee(c *gin.Context) {
 
 	err = h.service.DeleteEmployee(uint(id))
 	if err != nil {
-		utils.SendInternalError(c, err.Error())
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
@@ -144,7 +144,7 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 			utils.SendBadRequestError(c, err.Error())
 			return
 		}
-		utils.SendInternalError(c, err.Error())
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
@@ -154,7 +154,7 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 	roles, err := h.service.GetAllRoles()
 	if err != nil {
-		utils.SendInternalError(c, err.Error())
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
