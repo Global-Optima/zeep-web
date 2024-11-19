@@ -24,7 +24,7 @@ func NewStoreRepository(db *gorm.DB) StoreRepository {
 func (r *storeRepository) GetAllStores(searchTerm string) ([]data.Store, error) {
 	var stores []data.Store
 
-	query := r.db.Where("status = ?", "active").Preload("FacilityAddress")
+	query := r.db.Preload("FacilityAddress").Where("status = ?", "active").Preload("FacilityAddress")
 
 	if searchTerm != "" {
 		query = query.Where("name ILIKE ? OR CAST(id AS TEXT) = ?", "%"+searchTerm+"%", searchTerm)

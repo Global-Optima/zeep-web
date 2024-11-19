@@ -5,6 +5,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -25,11 +26,8 @@ func NewStoreService(repo StoreRepository) StoreService {
 }
 
 func (s *storeService) CreateStore(storeDTO types.StoreDTO) (*types.StoreDTO, error) {
-	if storeDTO.Name == "" {
-		return nil, errors.New("store name cannot be empty")
-	}
-	if storeDTO.FacilityAddress == nil || storeDTO.FacilityAddress.Address == "" {
-		return nil, errors.New("facility address is required")
+	if err := validStoreDTO(storeDTO, false); err != nil {
+		return nil, err
 	}
 
 	store := mapToStoreEntity(storeDTO)
@@ -54,6 +52,7 @@ func (s *storeService) GetAllStores(searchTerm string) ([]types.StoreDTO, error)
 
 	return storeDTOs, nil
 }
+
 func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 	if storeID == 0 {
 		return nil, errors.New("store ID cannot be zero")
@@ -71,11 +70,8 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 }
 
 func (s *storeService) UpdateStore(storeDTO types.StoreDTO) (*types.StoreDTO, error) {
-	if storeDTO.ID == 0 {
-		return nil, errors.New("store ID is required for update")
-	}
-	if storeDTO.Name == "" {
-		return nil, errors.New("store name cannot be empty")
+	if err := validStoreDTO(storeDTO, true); err != nil {
+		return nil, err
 	}
 
 	store, err := s.repo.GetStoreByID(storeDTO.ID)
@@ -86,13 +82,7 @@ func (s *storeService) UpdateStore(storeDTO types.StoreDTO) (*types.StoreDTO, er
 		return nil, err
 	}
 
-	store.Name = storeDTO.Name
-	store.IsFranchise = storeDTO.IsFranchise
-	if storeDTO.FacilityAddress != nil {
-		store.FacilityAddressID = &storeDTO.FacilityAddress.ID
-	}
-	store.Status = storeDTO.Status
-
+	updateStoreFields(store, storeDTO)
 	updatedStore, err := s.repo.UpdateStore(store)
 	if err != nil {
 		return nil, err
@@ -110,28 +100,110 @@ func (s *storeService) DeleteStore(storeID uint, hardDelete bool) error {
 }
 
 func mapToStoreDTO(store data.Store) *types.StoreDTO {
+	var facilityAddress *types.FacilityAddressDTO
+	if store.FacilityAddress != nil {
+		facilityAddress = &types.FacilityAddressDTO{
+			ID:        store.FacilityAddress.ID,
+			Address:   store.FacilityAddress.Address,
+			Latitude:  *store.FacilityAddress.Latitude,
+			Longitude: *store.FacilityAddress.Longitude,
+		}
+	}
+
 	return &types.StoreDTO{
-		ID:          store.ID,
-		Name:        store.Name,
-		IsFranchise: store.IsFranchise,
-		Status:      store.Status,
-		FacilityAddress: &types.FacilityAddressDTO{
-			ID:      store.FacilityAddress.ID,
-			Address: store.FacilityAddress.Address,
-		},
+		ID:              store.ID,
+		Name:            store.Name,
+		IsFranchise:     store.IsFranchise,
+		Status:          store.Status,
+		ContactPhone:    store.ContactPhone,
+		ContactEmail:    store.ContactEmail,
+		StoreHours:      store.StoreHours,
+		FacilityAddress: facilityAddress,
 	}
 }
 
 func mapToStoreEntity(dto types.StoreDTO) *data.Store {
 	return &data.Store{
-		Name:        dto.Name,
-		IsFranchise: dto.IsFranchise,
-		Status:      dto.Status,
+		Name:         dto.Name,
+		IsFranchise:  dto.IsFranchise,
+		Status:       dto.Status,
+		ContactPhone: dto.ContactPhone,
+		ContactEmail: dto.ContactEmail,
+		StoreHours:   dto.StoreHours,
 		FacilityAddressID: func() *uint {
 			if dto.FacilityAddress != nil {
 				return &dto.FacilityAddress.ID
 			}
 			return nil
 		}(),
+	}
+}
+
+func validStoreDTO(storeDTO types.StoreDTO, isPartialUpdate bool) error {
+	if !isPartialUpdate && storeDTO.ID == 0 {
+		return errors.New("store ID is required")
+	}
+
+	if !isPartialUpdate && storeDTO.Name == "" {
+		return errors.New("store name cannot be empty")
+	}
+
+	if storeDTO.ContactPhone != "" && !utils.IsValidPhone(storeDTO.ContactPhone) {
+		return errors.New("invalid phone number format")
+	}
+
+	if storeDTO.ContactEmail != "" && !utils.IsValidEmail(storeDTO.ContactEmail) {
+		return errors.New("invalid email format")
+	}
+
+	if !isPartialUpdate && storeDTO.StoreHours == "" {
+		return errors.New("store hours cannot be empty")
+	}
+
+	if storeDTO.FacilityAddress != nil {
+		if storeDTO.FacilityAddress.Address == "" {
+			return errors.New("facility address cannot be empty")
+		}
+
+		if storeDTO.FacilityAddress.Latitude != 0 && !utils.IsValidLatitude(storeDTO.FacilityAddress.Latitude) {
+			return errors.New("invalid latitude format")
+		}
+		if storeDTO.FacilityAddress.Longitude != 0 && !utils.IsValidLongitude(storeDTO.FacilityAddress.Longitude) {
+			return errors.New("invalid longitude format")
+		}
+	}
+
+	return nil
+}
+
+func updateStoreFields(store *data.Store, storeDTO types.StoreDTO) {
+	if storeDTO.Name != "" {
+		store.Name = storeDTO.Name
+	}
+	if storeDTO.IsFranchise {
+		store.IsFranchise = storeDTO.IsFranchise
+	}
+	if storeDTO.ContactPhone != "" {
+		store.ContactPhone = storeDTO.ContactPhone
+	}
+	if storeDTO.ContactEmail != "" {
+		store.ContactEmail = storeDTO.ContactEmail
+	}
+	if storeDTO.StoreHours != "" {
+		store.StoreHours = storeDTO.StoreHours
+	}
+	if storeDTO.FacilityAddress != nil {
+		if storeDTO.FacilityAddress.Address != "" {
+			store.FacilityAddress.Address = storeDTO.FacilityAddress.Address
+		}
+		if storeDTO.FacilityAddress.Latitude != 0 {
+			store.FacilityAddress.Latitude = &storeDTO.FacilityAddress.Latitude
+		}
+		if storeDTO.FacilityAddress.Longitude != 0 {
+			store.FacilityAddress.Longitude = &storeDTO.FacilityAddress.Longitude
+		}
+	}
+	if storeDTO.Status != "" {
+		store.Status = storeDTO.Status
 	}
 }

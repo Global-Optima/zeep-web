@@ -107,6 +107,9 @@ CREATE TABLE IF NOT EXISTS
 		facility_address_id INT REFERENCES facility_addresses (id) ON UPDATE CASCADE ON DELETE SET NULL,
 		is_franchise BOOLEAN DEFAULT FALSE,
 		status VARCHAR(20) DEFAULT 'active',
+		contact_phone VARCHAR(20),
+		contact_email VARCHAR(255),
+		store_hours VARCHAR(255),
 		admin_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
