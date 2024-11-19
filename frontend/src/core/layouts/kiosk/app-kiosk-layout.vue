@@ -5,6 +5,7 @@ import { useSelectedProductStore } from "@/modules/kiosk/products/stores/current
 import { onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
+const pagesOmitRedirect = [ getRouteName('KIOSK_ORDERS')]
 
 const router = useRouter()
 const productStore = useSelectedProductStore()
@@ -22,6 +23,9 @@ const resetInactivityTimer = () => {
     clearTimeout(inactivityTimeout)
   }
   inactivityTimeout = setTimeout(() => {
+    const currentRouteName = router.currentRoute.value.name
+    if (pagesOmitRedirect.some(page => page === currentRouteName)) return
+
     resetAppStates()
     router.push({ name: getRouteName('KIOSK_LANDING') })
   }, inactivityDuration)

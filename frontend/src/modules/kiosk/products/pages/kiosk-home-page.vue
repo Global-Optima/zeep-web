@@ -1,7 +1,7 @@
 <template>
 	<div class="flex sm:flex-row flex-col pt-safe h-screen">
 		<!-- Sidebar for tablet and larger screens -->
-		<div class="py-4 pl-4">
+		<div class="sm:block hidden py-4 pl-4">
 			<KioskHomeSidebarTablet
 				@update:category="onUpdateCategory"
 				:categories="categories"
@@ -10,11 +10,10 @@
 		</div>
 
 		<!-- Main Content -->
-		<div class="flex flex-col flex-1">
+		<div class="flex flex-col flex-1 sm:hidden">
 			<!-- Toolbar for mobile view -->
 			<KioskHomeToolbarMobile
 				v-if="!categoriesLoading"
-				class="block sm:hidden"
 				:categories="categories"
 				:selected-category-id="selectedCategoryId"
 				:search-term="searchTerm"

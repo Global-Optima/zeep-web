@@ -68,7 +68,7 @@ const onSubmit = handleSubmit((values) => {
 </script>
 
 <template>
-	<div class="w-full h-full flex items-center justify-center">
+	<div class="flex justify-center items-center bg-gray-100 w-full h-full">
 		<Card class="">
 			<CardHeader>
 				<CardTitle class="text-xl sm:text-2xl">Вход для сотрудника</CardTitle>
@@ -76,7 +76,7 @@ const onSubmit = handleSubmit((values) => {
 			</CardHeader>
 			<CardContent>
 				<form
-					class="w-full space-y-6"
+					class="space-y-6 w-full"
 					@submit="onSubmit"
 				>
 					<FormField

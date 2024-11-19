@@ -86,7 +86,7 @@ const onBaristaClick = () => {
 								class="flex items-center gap-3 mb-1 py-6 w-full"
 							>
 								<Store class="w-5 h-5" />
-								<p class="text-base">Киоск</p>
+								<p class="text-base">Бариста</p>
 							</Button>
 
 							<Button

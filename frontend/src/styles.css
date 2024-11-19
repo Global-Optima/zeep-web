@@ -44,6 +44,15 @@
 		scrollbar-width: none;
 	}
 
+	.scrollable {
+		-ms-overflow-style: unset;
+		scrollbar-width: unset;
+	}
+
+	.scrollable::-webkit-scrollbar {
+		display: unset;
+	}
+
 	.pt-safe {
 		padding-top: var(--safe-top);
 	}
