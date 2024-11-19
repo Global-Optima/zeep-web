@@ -18,6 +18,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -151,6 +152,8 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 	if err != nil {
 		t.Fatalf("Failed to initialize Redis: %v", err)
 	}
+
+	utils.InitCache(redisClient.Client, redisClient.Ctx)
 
 	return redisClient
 }
