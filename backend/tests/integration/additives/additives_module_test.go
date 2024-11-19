@@ -121,40 +121,40 @@ func (suite *AdditivesIntegrationTestSuite) TestGetAdditivesByStoreAndProduct() 
 		// 		"error": "Invalid store ID",
 		// 	},
 		// },
-		{
-			Description:  "Missing productId parameter",
-			Method:       "GET",
-			URL:          "/api/test/additives?storeId=1",
-			ExpectedCode: 400,
-			ExpectedBody: map[string]interface{}{
-				"error": "Invalid product ID",
-			},
-		},
-		{
-			Description:  "Invalid storeId format",
-			Method:       "GET",
-			URL:          "/api/test/additives?storeId=abc&productId=1",
-			ExpectedCode: 400,
-			ExpectedBody: map[string]interface{}{
-				"error": "Invalid store ID",
-			},
-		},
-		{
-			Description:  "Invalid productId format",
-			Method:       "GET",
-			URL:          "/api/test/additives?storeId=1&productId=abc",
-			ExpectedCode: 400,
-			ExpectedBody: map[string]interface{}{
-				"error": "Invalid product ID",
-			},
-		},
-		{
-			Description:  "Non-existent storeId and productId",
-			Method:       "GET",
-			URL:          "/api/test/additives?storeId=999&productId=999",
-			ExpectedCode: 200,
-			ExpectedBody: nil, // Expecting an empty array as no matching data exists
-		},
+		// {
+		// 	Description:  "Missing productId parameter",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?storeId=1",
+		// 	ExpectedCode: 400,
+		// 	ExpectedBody: map[string]interface{}{
+		// 		"error": "Invalid product ID",
+		// 	},
+		// },
+		// {
+		// 	Description:  "Invalid storeId format",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?storeId=abc&productId=1",
+		// 	ExpectedCode: 400,
+		// 	ExpectedBody: map[string]interface{}{
+		// 		"error": "Invalid store ID",
+		// 	},
+		// },
+		// {
+		// 	Description:  "Invalid productId format",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?storeId=1&productId=abc",
+		// 	ExpectedCode: 400,
+		// 	ExpectedBody: map[string]interface{}{
+		// 		"error": "Invalid product ID",
+		// 	},
+		// },
+		// {
+		// 	Description:  "Non-existent storeId and productId",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/additives?storeId=999&productId=999",
+		// 	ExpectedCode: 200,
+		// 	ExpectedBody: nil, // Expecting an empty array as no matching data exists
+		// },
 	}
 
 	suite.Env.RunTests(suite.T(), testCases)

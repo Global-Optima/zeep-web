@@ -50,6 +50,8 @@ func InitializeRedis(cfg *config.Config) *database.RedisClient {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
 
+	utils.InitCache(redisClient.Client, redisClient.Ctx)
+
 	return redisClient
 }
 
@@ -83,7 +85,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (product.ProductService, error) {
-			return product.NewProductService(product.NewProductRepository(dbHandler.DB), redisClient.Client), nil
+			return product.NewProductService(product.NewProductRepository(dbHandler.DB)), nil
 		},
 		product.NewProductHandler,
 		apiRouter.RegisterProductRoutes,
@@ -101,7 +103,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (categories.CategoryService, error) {
-			return categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB), redisClient.Client), nil
+			return categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB)), nil
 		},
 		categories.NewCategoryHandler,
 		apiRouter.RegisterProductCategoriesRoutes,
@@ -110,7 +112,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (additives.AdditiveService, error) {
-			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB), redisClient.Client), nil
+			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB)), nil
 		},
 		additives.NewAdditiveHandler,
 		apiRouter.RegisterAdditivesRoutes,

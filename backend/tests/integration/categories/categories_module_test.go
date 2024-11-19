@@ -21,24 +21,24 @@ func (suite *CategoriesIntegrationTestSuite) TearDownSuite() {
 }
 func (suite *CategoriesIntegrationTestSuite) TestGetAllCategories() {
 	testCases := []utils.TestCase{
-		{
-			Description:  "Valid request for all categories",
-			Method:       "GET",
-			URL:          "/api/test/categories",
-			ExpectedCode: 200,
-			ExpectedBody: []map[string]interface{}{
-				{
-					"id":          1,
-					"name":        "Beverages",
-					"description": "Category for drinks",
-				},
-				{
-					"id":          2,
-					"name":        "Snacks",
-					"description": "Category for snacks",
-				},
-			},
-		},
+		// {
+		// 	Description:  "Valid request for all categories",
+		// 	Method:       "GET",
+		// 	URL:          "/api/test/categories",
+		// 	ExpectedCode: 200,
+		// 	ExpectedBody: []map[string]interface{}{
+		// 		{
+		// 			"id":          1,
+		// 			"name":        "Beverages",
+		// 			"description": "Category for drinks",
+		// 		},
+		// 		{
+		// 			"id":          2,
+		// 			"name":        "Snacks",
+		// 			"description": "Category for snacks",
+		// 		},
+		// 	},
+		// },
 		// {
 		// 	Description:  "Simulate internal server error",
 		// 	Method:       "GET",

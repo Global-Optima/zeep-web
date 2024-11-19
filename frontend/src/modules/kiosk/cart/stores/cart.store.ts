@@ -1,17 +1,16 @@
-// useCartStore.ts
 import md5 from 'md5'
 import { defineStore } from 'pinia'
 import type {
-	Additive,
-	ProductSize,
-	StoreProductDetails,
+	AdditiveDTO,
+	ProductSizeDTO,
+	StoreProductDetailsDTO,
 } from '../../products/models/product.model'
 
 export interface CartItem {
 	key: string
-	product: StoreProductDetails
-	size: ProductSize
-	additives: Additive[]
+	product: StoreProductDetailsDTO
+	size: ProductSizeDTO
+	additives: AdditiveDTO[]
 	quantity: number
 }
 
@@ -41,9 +40,9 @@ export const useCartStore = defineStore('ZEEP_CART', {
 
 	actions: {
 		generateCartItemKey(
-			product: StoreProductDetails,
-			size: ProductSize,
-			additives: Additive[],
+			product: StoreProductDetailsDTO,
+			size: ProductSizeDTO,
+			additives: AdditiveDTO[],
 		): string {
 			const additiveIds = additives
 				.map(a => a.id)
@@ -53,9 +52,9 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		},
 
 		addToCart(
-			product: StoreProductDetails,
-			size: ProductSize,
-			additives: Additive[],
+			product: StoreProductDetailsDTO,
+			size: ProductSizeDTO,
+			additives: AdditiveDTO[],
 			quantity: number = 1,
 		) {
 			const key = this.generateCartItemKey(product, size, additives)
@@ -72,7 +71,11 @@ export const useCartStore = defineStore('ZEEP_CART', {
 			}
 		},
 
-		removeFromCart(product: StoreProductDetails, size: ProductSize, additives: Additive[]) {
+		removeFromCart(
+			product: StoreProductDetailsDTO,
+			size: ProductSizeDTO,
+			additives: AdditiveDTO[],
+		) {
 			const key = this.generateCartItemKey(product, size, additives)
 			delete this.cartItems[key]
 		},
@@ -98,6 +101,36 @@ export const useCartStore = defineStore('ZEEP_CART', {
 
 		clearCart() {
 			this.cartItems = {}
+		},
+
+		updateCartItem(
+			key: string,
+			updates: {
+				size?: ProductSizeDTO
+				additives?: AdditiveDTO[]
+				quantity?: number
+			},
+		) {
+			const existingItem = this.cartItems[key]
+			if (!existingItem) return
+
+			const updatedSize = updates.size || existingItem.size
+			const updatedAdditives = updates.additives || existingItem.additives
+			const updatedQuantity = updates.quantity ?? existingItem.quantity
+
+			const newKey = this.generateCartItemKey(existingItem.product, updatedSize, updatedAdditives)
+
+			if (newKey !== key) {
+				delete this.cartItems[key]
+			}
+
+			this.cartItems[newKey] = {
+				key: newKey,
+				product: existingItem.product,
+				size: updatedSize,
+				additives: updatedAdditives,
+				quantity: updatedQuantity,
+			}
 		},
 	},
 

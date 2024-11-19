@@ -1,0 +1,105 @@
+package product
+
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"gorm.io/gorm"
+)
+
+type ProductRepository interface {
+	GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error)
+	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
+}
+
+type productRepository struct {
+	db *gorm.DB
+}
+
+func NewProductRepository(db *gorm.DB) ProductRepository {
+	return &productRepository{db: db}
+}
+
+func (r *productRepository) GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error) {
+	var products []data.Product
+
+	query := r.db.
+		Model(&data.Product{}).
+		Joins("JOIN store_products ON store_products.product_id = products.id").
+		Where("store_products.store_id = ? AND store_products.is_available = TRUE", filter.StoreID).
+		Preload("ProductSizes", "is_default = TRUE")
+
+	if filter.CategoryID != nil {
+		query = query.Where("products.category_id = ?", *filter.CategoryID)
+	}
+
+	if filter.SearchQuery != "" {
+		searchPattern := "%" + filter.SearchQuery + "%"
+		query = query.Where("(products.name ILIKE ? OR products.description ILIKE ?)", searchPattern, searchPattern)
+	}
+
+	err := query.
+		Limit(filter.Limit).
+		Offset(filter.Offset).
+		Find(&products).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	if products == nil {
+		products = []data.Product{}
+	}
+
+	return products, nil
+}
+
+func (r *productRepository) GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error) {
+	var product data.Product
+
+	// Preload only ProductSizes and DefaultAdditives, exclude additive categories and their additives
+	err := r.db.
+		Preload("ProductSizes").
+		Preload("DefaultAdditives.Additive").
+		Preload("Category").
+		Where("id = ?", productID).
+		First(&product).
+		Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, err
+	}
+
+	// Verify that the product is available in the specified store
+	var storeProduct data.StoreProduct
+	err = r.db.
+		Where("product_id = ? AND store_id = ? AND is_available = ?", productID, storeID, true).
+		First(&storeProduct).
+		Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, err
+	}
+
+	// Fetch default additives
+	var defaultAdditives []data.DefaultProductAdditive
+	err = r.db.
+		Preload("Additive").
+		Where("product_id = ?", productID).
+		Find(&defaultAdditives).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Map models to DTO
+	productDTO := mapToStoreProductDetailsDTO(&product, defaultAdditives)
+
+	return productDTO, nil
+}

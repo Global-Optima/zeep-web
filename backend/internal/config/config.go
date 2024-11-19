@@ -6,13 +6,19 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config struct {
-	DBHost     string `mapstructure:"DB_HOST"`
-	DBPort     int    `mapstructure:"DB_PORT"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPassword string `mapstructure:"DB_PASSWORD"`
-	DBName     string `mapstructure:"DB_NAME"`
+const (
+	EnvDevelopment = "development"
+	EnvProduction  = "production"
+	EnvTest        = "test"
+)
 
+type Config struct {
+	Env          string `mapstructure:"ENV"`
+	DBHost       string `mapstructure:"DB_HOST"`
+	DBPort       int    `mapstructure:"DB_PORT"`
+	DBUser       string `mapstructure:"DB_USER"`
+	DBPassword   string `mapstructure:"DB_PASSWORD"`
+	DBName       string `mapstructure:"DB_NAME"`
 	JWTSecretKey string `mapstructure:"JWT_SECRET_KEY"`
 	ServerPort   int    `mapstructure:"SERVER_PORT"`
 	ClientUrl    string `mapstructure:"CLIENT_URL"`
@@ -22,12 +28,13 @@ type Config struct {
 	S3Endpoint   string `mapstructure:"PSKZ_ENDPOINT"`
 	S3BucketName string `mapstructure:"PSKZ_BUCKETNAME"`
 
+	IsDevelopment bool
+	IsTest        bool
+
 	RedisHost     string `mapstructure:"REDIS_HOST"`
 	RedisPort     int    `mapstructure:"REDIS_PORT"`
 	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
 	RedisDB       int    `mapstructure:"REDIS_DB"`
-
-	TTL TTLConfig
 }
 
 var cfg *Config
@@ -44,11 +51,8 @@ func LoadConfig(file string) (*Config, error) {
 		return nil, err
 	}
 
-	var ttl TTLConfig
-	if err := viper.Unmarshal(&ttl); err != nil {
-		return nil, err
-	}
-	cfg.TTL = ttl
+	cfg.IsDevelopment = cfg.Env == EnvDevelopment
+	cfg.IsTest = cfg.Env == EnvTest
 
 	return cfg, nil
 }

@@ -26,7 +26,7 @@ Configurations are specified in the `config.yaml` file, which includes database 
 3. **Run Server in Development Mode**
    The main entry file for the server is located at `./cmd/main.go`. Start the server in development mode by running:
    ```bash
-   go run ./cmd/main.go
+   air
    ```
 
 4. **Environment Setup**  

@@ -12,7 +12,7 @@ import {
 } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
 
-const props = defineProps<DialogContentProps & { class?: HTMLAttributes['class'] }>()
+const {includeCloseButton=true, ...props} = defineProps<DialogContentProps & { class?: HTMLAttributes['class'], includeCloseButton?: boolean }>()
 const emits = defineEmits<DialogContentEmits>()
 
 const delegatedProps = computed(() => {
@@ -27,7 +27,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 <template>
 	<DialogPortal>
 		<DialogOverlay
-			class="fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+			class="z-50 fixed inset-0 bg-black/80 data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
 		/>
 		<DialogContent
 			v-bind="forwarded"
@@ -40,7 +40,8 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 			<slot />
 
 			<DialogClose
-				class="absolute right-4 top-4 rounded-full bg-slate-800/70 text-white backdrop-blur-md p-2 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
+				v-if="includeCloseButton"
+				class="top-4 right-4 absolute bg-slate-800/70 data-[state=open]:bg-secondary hover:opacity-100 backdrop-blur-md p-2 rounded-full focus:ring-2 focus:ring-ring ring-offset-background focus:ring-offset-2 text-white transition-opacity focus:outline-none disabled:pointer-events-none"
 			>
 				<Cross2Icon class="w-5 sm:w-8 h-5 sm:h-8" />
 			</DialogClose>
