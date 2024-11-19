@@ -12,7 +12,13 @@ type RedisClient struct {
 	Ctx    context.Context
 }
 
+var redisInstance *RedisClient
+
 func InitRedis(host string, port int, password string, db int) (*RedisClient, error) {
+	if redisInstance != nil {
+		return redisInstance, nil
+	}
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", host, port),
 		Password: password,
@@ -24,8 +30,17 @@ func InitRedis(host string, port int, password string, db int) (*RedisClient, er
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 
-	return &RedisClient{
+	redisInstance = &RedisClient{
 		Client: rdb,
 		Ctx:    ctx,
-	}, nil
+	}
+
+	return redisInstance, nil
+}
+
+func GetRedisClient() (*RedisClient, error) {
+	if redisInstance == nil {
+		return nil, fmt.Errorf("Redis client is not initialized")
+	}
+	return redisInstance, nil
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -33,8 +34,8 @@ type TestEnvironment struct {
 func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	cfg := loadConfig()
 	db := setupDatabase(cfg, t)
-	redisClient := setupRedis(cfg, t)
-	router := setupRouter(db, redisClient)
+	setupRedis(cfg, t)
+	router := setupRouter(db)
 
 	truncateAndLoadMockData(db)
 
@@ -152,18 +153,20 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 		t.Fatalf("Failed to initialize Redis: %v", err)
 	}
 
+	utils.InitCache(redisClient.Client, redisClient.Ctx)
+
 	return redisClient
 }
 
-func setupRouter(db *gorm.DB, redisClient *database.RedisClient) *gin.Engine {
+func setupRouter(db *gorm.DB) *gin.Engine {
 	router := gin.Default()
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 
 	dbHandler := &database.DBHandler{DB: db}
-	apiRouter.RegisterProductRoutes(product.NewProductHandler(product.NewProductService(product.NewProductRepository(dbHandler.DB), redisClient.Client)))
+	apiRouter.RegisterProductRoutes(product.NewProductHandler(product.NewProductService(product.NewProductRepository(dbHandler.DB))))
 	apiRouter.RegisterStoresRoutes(stores.NewStoreHandler(stores.NewStoreService(stores.NewStoreRepository(dbHandler.DB))))
-	apiRouter.RegisterProductCategoriesRoutes(categories.NewCategoryHandler(categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB), redisClient.Client)))
-	apiRouter.RegisterAdditivesRoutes(additives.NewAdditiveHandler(additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB), redisClient.Client)))
+	apiRouter.RegisterProductCategoriesRoutes(categories.NewCategoryHandler(categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB))))
+	apiRouter.RegisterAdditivesRoutes(additives.NewAdditiveHandler(additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB))))
 
 	return router
 }

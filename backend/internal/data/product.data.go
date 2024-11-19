@@ -88,16 +88,17 @@ type Additive struct {
 	Description        string            `gorm:"type:text"`
 	BasePrice          float64           `gorm:"type:decimal(10,2);default:0"`
 	Size               string            `gorm:"size:200"`
-	AdditiveCategoryID *uint             `gorm:"index"`
+	AdditiveCategoryID uint              `gorm:"index"`
 	Category           *AdditiveCategory `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL"`
 	ImageURL           string            `gorm:"size:2048"`
-	
-	StorePrice         float64           `gorm:"-"`
+
+	StorePrice float64 `gorm:"-"`
 }
 
 type AdditiveCategory struct {
 	BaseEntity
-	Name        string     `gorm:"size:100;not null"`
-	Description string     `gorm:"type:text"`
-	Additives   []Additive `gorm:"foreignKey:AdditiveCategoryID"`
+	Name             string     `gorm:"size:100;not null"`
+	Description      string     `gorm:"type:text"`
+	Additives        []Additive `gorm:"foreignKey:AdditiveCategoryID"`
+	IsMultipleSelect bool       `gorm:"default:true" json:"is_multiple_select"`
 }

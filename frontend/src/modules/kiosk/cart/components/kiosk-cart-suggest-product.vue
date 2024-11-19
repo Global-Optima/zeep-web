@@ -11,14 +11,14 @@
 		</div>
 
 		<div class="flex justify-between items-center mt-3">
-			<p class="text-lg sm:text-2xl">{{ formatPrice(product.basePrice) }}</p>
+			<p class="text-lg sm:text-2xl">{{ 1200 }}</p>
 			<button
 				class="bg-gray-200 text-white p-2 sm:p-3 rounded-full"
 				aria-label="Добавить к заказу"
 				@click="() => cartStore.addToCart(product, {
             id: 4,
             name: 'S',
-            basePrice: product.basePrice,
+            basePrice: 1200,
             measure: 'гр.'
         }, [])"
 			>
@@ -32,12 +32,11 @@
 </template>
 
 <script setup lang="ts">
-import { formatPrice } from '@/core/utils/price.utils'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
-import type { StoreProductDetails } from '@/modules/kiosk/products/models/product.model'
+import type { StoreProductDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { Icon } from '@iconify/vue'
 
-const { product } = defineProps<{ product: StoreProductDetails }>()
+const { product } = defineProps<{ product: StoreProductDetailsDTO }>()
 
 const cartStore = useCartStore()
 </script>

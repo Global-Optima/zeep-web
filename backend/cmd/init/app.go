@@ -13,6 +13,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -47,6 +48,8 @@ func InitializeRedis(cfg *config.Config) *database.RedisClient {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
 
+	utils.InitCache(redisClient.Client, redisClient.Ctx)
+
 	return redisClient
 }
 
@@ -72,7 +75,6 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	router.Use(cors.Default())
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
 
-
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
 	storageHandler := storage.NewStorageHandler(storageRepo)        // temp
@@ -81,7 +83,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (product.ProductService, error) {
-			return product.NewProductService(product.NewProductRepository(dbHandler.DB), redisClient.Client), nil
+			return product.NewProductService(product.NewProductRepository(dbHandler.DB)), nil
 		},
 		product.NewProductHandler,
 		apiRouter.RegisterProductRoutes,
@@ -99,7 +101,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (categories.CategoryService, error) {
-			return categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB), redisClient.Client), nil
+			return categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB)), nil
 		},
 		categories.NewCategoryHandler,
 		apiRouter.RegisterProductCategoriesRoutes,
@@ -108,7 +110,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (additives.AdditiveService, error) {
-			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB), redisClient.Client), nil
+			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB)), nil
 		},
 		additives.NewAdditiveHandler,
 		apiRouter.RegisterAdditivesRoutes,
