@@ -28,7 +28,7 @@ func IsValidPassword(password string) error {
 		hasSpecial   = false
 	)
 
-	if len(password) >= 8 {
+	if len(password) >= 6 {
 		hasMinLength = true
 	}
 

@@ -22,6 +22,10 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 	searchTerm := c.Query("searchTerm")
 	cacheKey := "stores:all"
 
+	if searchTerm != "" {
+		cacheKey = "stores:" + searchTerm
+	}
+
 	cacheUtil := utils.GetCacheInstance()
 
 	var cachedStores []types.StoreDTO
