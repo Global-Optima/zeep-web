@@ -40,7 +40,7 @@ func InitRedis(host string, port int, password string, db int) (*RedisClient, er
 
 func GetRedisClient() (*RedisClient, error) {
 	if redisInstance == nil {
-		return nil, fmt.Errorf("Redis client is not initialized")
+		return nil, fmt.Errorf("redis client is not initialized")
 	}
 	return redisInstance, nil
 }

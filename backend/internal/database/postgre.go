@@ -77,6 +77,8 @@ func determineSourceURL(migrationsPath string) string {
 		log.Fatalf("failed to get absolute path of migrations: %v", err)
 	}
 
+	absPath = filepath.ToSlash(absPath)
+
 	sourceURL := "file://" + absPath
 	if cfg.IsDevelopment {
 		sourceURL = "file://" + migrationsPath
