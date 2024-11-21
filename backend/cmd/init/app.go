@@ -29,11 +29,11 @@ func InitializeConfig() *config.Config {
 
 func InitializeDatabase(cfg *config.Config) *database.DBHandler {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.DBHost,
-		cfg.DBPort,
-		cfg.DBUser,
-		cfg.DBPassword,
-		cfg.DBName,
+		cfg.Database.Host,
+		cfg.Database.Port,
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.Name,
 	)
 
 	dbHandler, err := database.InitDB(dsn)
@@ -44,7 +44,7 @@ func InitializeDatabase(cfg *config.Config) *database.DBHandler {
 }
 
 func InitializeRedis(cfg *config.Config) *database.RedisClient {
-	redisClient, err := database.InitRedis(cfg.RedisHost, cfg.RedisPort, cfg.RedisPassword, cfg.RedisDB)
+	redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
 	if err != nil {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
@@ -132,10 +132,10 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 // Temporary init: for testing purposes
 func InitializeStorage(cfg *config.Config) storage.StorageRepository {
 	storageRepo, err := storage.NewStorageRepository(
-		cfg.S3Endpoint,
-		cfg.S3AccessKey,
-		cfg.S3SecretKey,
-		cfg.S3BucketName,
+		cfg.S3.Endpoint,
+		cfg.S3.AccessKey,
+		cfg.S3.SecretKey,
+		cfg.S3.BucketName,
 	)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage repository: %v", err)

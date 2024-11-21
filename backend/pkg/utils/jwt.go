@@ -33,14 +33,14 @@ func GenerateJWT(claims jwt.Claims, expiration time.Duration) (string, error) {
 	cfg := config.GetConfig()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(cfg.JWTSecretKey))
+	return token.SignedString([]byte(cfg.JWT.SecretKey))
 }
 
 func ValidateJWT(tokenString string, claims jwt.Claims) error {
 	cfg := config.GetConfig()
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cfg.JWTSecretKey), nil
+		return []byte(cfg.JWT.SecretKey), nil
 	})
 
 	if err != nil {
