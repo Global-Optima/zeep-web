@@ -2,6 +2,7 @@ package stores
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
@@ -26,14 +27,39 @@ func NewStoreService(repo StoreRepository) StoreService {
 }
 
 func (s *storeService) CreateStore(storeDTO types.StoreDTO) (*types.StoreDTO, error) {
-	if err := validStoreDTO(storeDTO, false); err != nil {
+	if err := validStoreDTO(storeDTO, true, false); err != nil {
 		return nil, err
 	}
 
+	var facilityAddress *data.FacilityAddress
+	existingFacilityAddress, err := s.repo.GetFacilityAddressByAddress(storeDTO.FacilityAddress.Address)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, fmt.Errorf("error checking existing facility address: %w", err)
+	}
+
+	if existingFacilityAddress != nil {
+		facilityAddress = existingFacilityAddress
+	} else {
+		facilityAddress = &data.FacilityAddress{
+			Address:   storeDTO.FacilityAddress.Address,
+			Longitude: &storeDTO.FacilityAddress.Longitude,
+			Latitude:  &storeDTO.FacilityAddress.Latitude,
+		}
+		facilityAddress, err = s.repo.CreateFacilityAddress(facilityAddress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create facility address: %w", err)
+		}
+	}
+
+	if facilityAddress != nil {
+		storeDTO.FacilityAddress.ID = &facilityAddress.ID
+	}
+
 	store := mapToStoreEntity(storeDTO)
+
 	createdStore, err := s.repo.CreateStore(store)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create store: %w", err)
 	}
 
 	return mapToStoreDTO(*createdStore), nil
@@ -70,11 +96,11 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 }
 
 func (s *storeService) UpdateStore(storeDTO types.StoreDTO) (*types.StoreDTO, error) {
-	if err := validStoreDTO(storeDTO, true); err != nil {
+	if err := validStoreDTO(storeDTO, false, true); err != nil {
 		return nil, err
 	}
 
-	store, err := s.repo.GetStoreByID(storeDTO.ID)
+	store, err := s.repo.GetStoreByID(*storeDTO.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("store not found")
@@ -103,15 +129,15 @@ func mapToStoreDTO(store data.Store) *types.StoreDTO {
 	var facilityAddress *types.FacilityAddressDTO
 	if store.FacilityAddress != nil {
 		facilityAddress = &types.FacilityAddressDTO{
-			ID:        store.FacilityAddress.ID,
+			ID:        &store.FacilityAddress.ID,
 			Address:   store.FacilityAddress.Address,
-			Latitude:  *store.FacilityAddress.Latitude,
-			Longitude: *store.FacilityAddress.Longitude,
+			Longitude: safeFloat(store.FacilityAddress.Longitude),
+			Latitude:  safeFloat(store.FacilityAddress.Latitude),
 		}
 	}
 
 	return &types.StoreDTO{
-		ID:              store.ID,
+		ID:              &store.ID,
 		Name:            store.Name,
 		IsFranchise:     store.IsFranchise,
 		Status:          store.Status,
@@ -123,24 +149,24 @@ func mapToStoreDTO(store data.Store) *types.StoreDTO {
 }
 
 func mapToStoreEntity(dto types.StoreDTO) *data.Store {
+	var facilityAddressID *uint
+	if dto.FacilityAddress != nil && dto.FacilityAddress.ID != nil {
+		facilityAddressID = dto.FacilityAddress.ID
+	}
+
 	return &data.Store{
-		Name:         dto.Name,
-		IsFranchise:  dto.IsFranchise,
-		Status:       dto.Status,
-		ContactPhone: dto.ContactPhone,
-		ContactEmail: dto.ContactEmail,
-		StoreHours:   dto.StoreHours,
-		FacilityAddressID: func() *uint {
-			if dto.FacilityAddress != nil {
-				return &dto.FacilityAddress.ID
-			}
-			return nil
-		}(),
+		Name:              dto.Name,
+		IsFranchise:       dto.IsFranchise,
+		Status:            dto.Status,
+		ContactPhone:      dto.ContactPhone,
+		ContactEmail:      dto.ContactEmail,
+		StoreHours:        dto.StoreHours,
+		FacilityAddressID: facilityAddressID,
 	}
 }
 
-func validStoreDTO(storeDTO types.StoreDTO, isPartialUpdate bool) error {
-	if !isPartialUpdate && storeDTO.ID == 0 {
+func validStoreDTO(storeDTO types.StoreDTO, isCreate, isPartialUpdate bool) error {
+	if !isCreate && !isPartialUpdate && storeDTO.ID == nil {
 		return errors.New("store ID is required")
 	}
 
@@ -206,4 +232,11 @@ func updateStoreFields(store *data.Store, storeDTO types.StoreDTO) {
 	if storeDTO.Status != "" {
 		store.Status = storeDTO.Status
 	}
+}
+
+func safeFloat(f *float64) float64 {
+	if f == nil {
+		return 0
+	}
+	return *f
 }

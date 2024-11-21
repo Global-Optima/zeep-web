@@ -13,7 +13,7 @@ type Employee struct {
 	StoreID        *uint             `gorm:"index"`
 	Store          *Store            `gorm:"foreignKey:StoreID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	IsActive       bool              `gorm:"default:true"`
-	HashedPassword string            `gorm:"not null"`
+	HashedPassword string            `gorm:"size:255;not null"`
 	Audits         []EmployeeAudit   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 	Workdays       []EmployeeWorkday `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 }

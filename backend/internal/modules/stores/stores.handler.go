@@ -94,7 +94,8 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 		utils.SendBadRequestError(c, "Invalid store ID")
 		return
 	}
-	storeDTO.ID = uint(storeID)
+	id := uint(storeID)
+	storeDTO.ID = &id
 
 	updatedStore, err := h.service.UpdateStore(storeDTO)
 	if err != nil {

@@ -35,15 +35,12 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 
 func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.Routes.Group("/stores")
-
-	router.GET("", handler.GetAllStores)
-	router.GET("/:id", handler.GetStoreByID)
-
-	protected := router.Use(middleware.RoleMiddleware("admin"))
 	{
-		protected.POST("", handler.CreateStore)
-		protected.PUT("/:id", handler.UpdateStore)
-		protected.DELETE("/:id", handler.DeleteStore)
+		router.GET("", handler.GetAllStores)
+		router.GET("/:id", handler.GetStoreByID)
+		router.POST("", middleware.RoleMiddleware("Admin"), handler.CreateStore)
+		router.PUT("/:id", middleware.RoleMiddleware("Admin"), handler.UpdateStore)
+		router.DELETE("/:id", middleware.RoleMiddleware("Admin"), handler.DeleteStore)
 	}
 }
 
@@ -64,13 +61,13 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.Routes.Group("/employees")
 	{
-		router.POST("", middleware.RoleMiddleware("director"), handler.CreateEmployee)
-		router.GET("", middleware.RoleMiddleware("director", "manager"), handler.GetEmployeesByStore)
+		router.POST("", middleware.RoleMiddleware("Director"), handler.CreateEmployee)
+		router.GET("", middleware.RoleMiddleware("Director", "Manager"), handler.GetEmployeesByStore)
 		router.GET("/:id", handler.GetEmployeeByID)
-		router.PUT("/:id", middleware.RoleMiddleware("director"), handler.UpdateEmployee)
-		router.DELETE("/:id", middleware.RoleMiddleware("director"), handler.DeleteEmployee)
-		router.GET("/roles", middleware.RoleMiddleware("director", "manager"), handler.GetAllRoles)
-		router.PUT("/:id/password", middleware.RoleMiddleware("employee", "manager", "director"), handler.UpdatePassword)
+		router.PUT("/:id", middleware.RoleMiddleware("Director"), handler.UpdateEmployee)
+		router.DELETE("/:id", middleware.RoleMiddleware("Director"), handler.DeleteEmployee)
+		router.GET("/roles", middleware.RoleMiddleware("Director", "Manager"), handler.GetAllRoles)
+		router.PUT("/:id/password", middleware.RoleMiddleware("Employee", "Manager", "Director"), handler.UpdatePassword)
 		router.POST("/login", handler.EmployeeLogin)
 	}
 }

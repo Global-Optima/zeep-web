@@ -11,6 +11,8 @@ type StoreRepository interface {
 	GetStoreByID(storeID uint) (*data.Store, error)
 	UpdateStore(store *data.Store) (*data.Store, error)
 	DeleteStore(storeID uint, hardDelete bool) error
+	CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error)
+	GetFacilityAddressByAddress(address string) (*data.FacilityAddress, error)
 }
 
 type storeRepository struct {
@@ -69,4 +71,19 @@ func (r *storeRepository) DeleteStore(storeID uint, hardDelete bool) error {
 		}
 	}
 	return nil
+}
+
+func (r *storeRepository) CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error) {
+	if err := r.db.Create(facilityAddress).Error; err != nil {
+		return nil, err
+	}
+	return facilityAddress, nil
+}
+
+func (r *storeRepository) GetFacilityAddressByAddress(address string) (*data.FacilityAddress, error) {
+	var facilityAddress data.FacilityAddress
+	if err := r.db.Where("address = ?", address).First(&facilityAddress).Error; err != nil {
+		return nil, err
+	}
+	return &facilityAddress, nil
 }

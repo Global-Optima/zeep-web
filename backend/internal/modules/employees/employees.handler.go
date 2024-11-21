@@ -181,9 +181,7 @@ func (h *EmployeeHandler) EmployeeLogin(c *gin.Context) {
 		return
 	}
 
-	c.Set("role", claims.Role)
-
 	utils.SetCookie(c, "auth_token", token, utils.CookieExpiration)
 
-	c.JSON(http.StatusOK, gin.H{"message": "login successful"})
+	c.JSON(http.StatusOK, gin.H{"message": "login successful", "token": token})
 }

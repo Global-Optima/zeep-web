@@ -2,21 +2,23 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
 func RoleMiddleware(requiredRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userRole, exists := c.Get("role")
-		if !exists {
-			c.JSON(http.StatusForbidden, gin.H{"error": "role not found in context"})
+		claims, err := ExtractTokenAndValidate(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid token"})
 			c.Abort()
 			return
 		}
 
 		for _, role := range requiredRoles {
-			if userRole == role {
+			if claims.Role == role {
 				c.Next()
 				return
 			}
@@ -25,4 +27,27 @@ func RoleMiddleware(requiredRoles ...string) gin.HandlerFunc {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized access"})
 		c.Abort()
 	}
+}
+
+func ExtractTokenAndValidate(c *gin.Context) (*utils.EmployeeClaims, error) {
+	authHeader := c.GetHeader("Authorization")
+	var tokenString string
+
+	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+	} else {
+
+		cookie, err := c.Cookie("auth_token")
+		if err != nil {
+			return nil, err
+		}
+		tokenString = cookie
+	}
+
+	claims := &utils.EmployeeClaims{}
+	if err := utils.ValidateJWT(tokenString, claims); err != nil {
+		return nil, err
+	}
+
+	return claims, nil
 }
