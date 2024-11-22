@@ -62,13 +62,12 @@ const proceedToPayment = () => {
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="space-y-8 bg-white shadow-lg mx-auto p-10 rounded-lg max-w-3xl"
+			class="space-y-8 bg-white shadow-lg mx-auto sm:p-12 !rounded-[40px] sm:max-w-3xl bg-gradient-to-tr from-emerald-50 from-5% to-white"
 		>
 			<DialogHeader>
-				<DialogTitle class="text-gray-800 sm:text-3xl">Выберите способ оплаты</DialogTitle>
-				<p class="mt-3 text-gray-600 sm:text-2xl">
-					Пожалуйста, выберите предпочитаемый способ оплаты.
-				</p>
+				<DialogTitle class="text-gray-900 font-medium sm:text-4xl text-center">
+					Выберите способ оплаты</DialogTitle
+				>
 			</DialogHeader>
 
 			<!-- Payment Options -->
@@ -88,7 +87,7 @@ const proceedToPayment = () => {
 				>
 					<component
 						:is="option.icon"
-						class="mb-4 sm:mb-6 w-14 sm:w-20 h-14 sm:h-20"
+						class="mb-4 sm:mb-6 w-14 sm:w-24 h-14 sm:h-24"
 					/>
 					<p class="font-medium text-center sm:text-2xl">{{ option.label }}</p>
 				</div>
@@ -112,23 +111,21 @@ const proceedToPayment = () => {
 			</p>
 
 			<!-- Footer Buttons -->
-			<DialogFooter class="flex justify-between space-x-4 sm:!mt-14">
+			<div class="flex justify-between items-center !mt-16 w-full">
 				<Button
 					variant="ghost"
-					@click="emit('back')"
-					:disabled="isLoading"
+					@click="$emit('back')"
 					class="sm:px-6 sm:py-8 sm:text-2xl"
 				>
 					Назад
 				</Button>
 				<Button
-					@click="proceedToPayment"
-					:disabled="isLoading"
+					type="submit"
 					class="bg-primary sm:px-6 sm:py-8 text-white sm:text-2xl"
 				>
-					{{ isLoading ? 'Ожидание...' : 'Продолжить' }}
+					Продолжить
 				</Button>
-			</DialogFooter>
+			</div>
 		</DialogContent>
 	</Dialog>
 </template>

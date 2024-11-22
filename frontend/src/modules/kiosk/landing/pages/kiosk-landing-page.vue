@@ -28,9 +28,9 @@
 					></div>
 
 					<!-- Text Content -->
-					<div class="absolute bottom-40 left-12 z-10">
-						<p class="text-white text-2xl sm:text-3xl font-medium">{{ slide.title }}</p>
-						<p class="text-white text-3xl sm:text-4xl font-medium mt-2 sm:mt-3">
+					<div class="absolute bottom-64 left-12 z-10">
+						<p class="text-white text-2xl sm:text-5xl">{{ slide.title }}</p>
+						<p class="text-white text-3xl sm:text-5xl font-medium mt-2 sm:mt-4">
 							{{ formatPrice(slide.price) }}
 						</p>
 					</div>
@@ -50,10 +50,10 @@
 
 		<!-- Touch Indicator -->
 		<div
-			class="absolute bottom-10 w-full flex items-center justify-center animate-bounce gap-3 z-10 text-gray-400"
+			class="absolute bottom-20 w-full flex items-center justify-center animate-bounce gap-3 z-10 text-gray-400"
 		>
-			<MousePointerClickIcon class="w-6 h-6 sm:w-8 sm:h-8" />
-			<p class="text-base sm:text-xl">Перейти в каталог</p>
+			<MousePointerClickIcon class="w-6 h-6 sm:w-10 sm:h-10" />
+			<p class="text-base sm:text-3xl">Перейти в каталог</p>
 		</div>
 	</div>
 </template>

@@ -57,18 +57,17 @@ const handleSubmit = form.handleSubmit((values) => {
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="space-y-8 bg-white shadow-lg mx-auto sm:p-10 rounded-lg sm:max-w-3xl"
+			class="space-y-8 bg-white shadow-lg mx-auto sm:p-12 !rounded-[40px] sm:max-w-3xl bg-gradient-to-tr from-emerald-50 from-5% to-white"
 		>
 			<DialogHeader>
-				<DialogTitle class="text-gray-800 sm:text-3xl"> Обзор и оформление заказа </DialogTitle>
-				<p class="mt-3 text-gray-600 sm:text-2xl">
-					Укажите ваше имя для заказа или нажмите, чтобы сгенерировать уникальное имя.
-				</p>
+				<DialogTitle class="text-gray-900 font-medium sm:text-4xl text-center">
+					Укажите ваше имя для заказа
+				</DialogTitle>
 			</DialogHeader>
 
 			<form
 				@submit="handleSubmit"
-				class="space-y-6"
+				class="space-y-6 !mt-12"
 			>
 				<!-- Customer Name Field -->
 				<FormField
@@ -76,7 +75,6 @@ const handleSubmit = form.handleSubmit((values) => {
 					v-slot="{ componentField }"
 				>
 					<FormItem>
-						<FormLabel class="font-medium text-gray-700 sm:text-2xl"> Ваше имя </FormLabel>
 						<FormControl>
 							<Input
 								type="text"
@@ -92,15 +90,15 @@ const handleSubmit = form.handleSubmit((values) => {
 				<!-- Generate Unique Name Button -->
 				<Button
 					type="button"
-					variant="outline"
+					variant="link"
 					@click="generateUniqueName"
-					class="sm:!mt-6 sm:px-6 sm:py-8 w-full text-gray-600 sm:text-2xl"
+					class="sm:!mt-6 sm:px-6 sm:py-8 w-full text-gray-600 sm:text-2xl hover:bg-transparent"
 				>
 					Сгенерировать уникальное имя
 				</Button>
 
 				<!-- Footer Buttons -->
-				<DialogFooter class="flex justify-between space-x-4 sm:!mt-14">
+				<div class="flex justify-between items-center !mt-16 w-full">
 					<Button
 						variant="ghost"
 						@click="$emit('back')"
@@ -114,7 +112,7 @@ const handleSubmit = form.handleSubmit((values) => {
 					>
 						Продолжить
 					</Button>
-				</DialogFooter>
+				</div>
 			</form>
 		</DialogContent>
 	</Dialog>
