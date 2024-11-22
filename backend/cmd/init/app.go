@@ -10,6 +10,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
@@ -114,6 +115,15 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		},
 		additives.NewAdditiveHandler,
 		apiRouter.RegisterAdditivesRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (employees.EmployeeService, error) {
+			return employees.NewEmployeeService(employees.NewEmployeeRepository(dbHandler.DB)), nil
+		},
+		employees.NewEmployeeHandler,
+		apiRouter.RegisterEmployeesRoutes,
 	)
 
 	return router
