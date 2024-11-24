@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { CreditCard, Loader, QrCode } from 'lucide-vue-next'
 import { ref } from 'vue'
 
@@ -62,10 +62,10 @@ const proceedToPayment = () => {
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="space-y-8 bg-white shadow-lg mx-auto sm:p-12 !rounded-[40px] sm:max-w-3xl bg-gradient-to-tr from-emerald-50 from-5% to-white"
+			class="space-y-8 bg-white sm:p-12 !rounded-[40px] sm:max-w-3xl text-black"
 		>
 			<DialogHeader>
-				<DialogTitle class="text-gray-900 font-medium sm:text-4xl text-center">
+				<DialogTitle class="font-medium text-center text-gray-900 sm:text-4xl">
 					Выберите способ оплаты</DialogTitle
 				>
 			</DialogHeader>
@@ -121,6 +121,7 @@ const proceedToPayment = () => {
 				</Button>
 				<Button
 					type="submit"
+					@click="proceedToPayment"
 					class="bg-primary sm:px-6 sm:py-8 text-white sm:text-2xl"
 				>
 					Продолжить

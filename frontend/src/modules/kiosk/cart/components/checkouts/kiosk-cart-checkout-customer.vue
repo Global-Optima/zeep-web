@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
-  FormMessage,
+  FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -57,10 +56,10 @@ const handleSubmit = form.handleSubmit((values) => {
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="space-y-8 bg-white shadow-lg mx-auto sm:p-12 !rounded-[40px] sm:max-w-3xl bg-gradient-to-tr from-emerald-50 from-5% to-white"
+			class="space-y-8 bg-white sm:p-12 !rounded-[40px] sm:max-w-3xl text-black"
 		>
 			<DialogHeader>
-				<DialogTitle class="text-gray-900 font-medium sm:text-4xl text-center">
+				<DialogTitle class="font-medium text-center text-gray-900 sm:text-4xl">
 					Укажите ваше имя для заказа
 				</DialogTitle>
 			</DialogHeader>
@@ -92,13 +91,13 @@ const handleSubmit = form.handleSubmit((values) => {
 					type="button"
 					variant="link"
 					@click="generateUniqueName"
-					class="sm:!mt-6 sm:px-6 sm:py-8 w-full text-gray-600 sm:text-2xl hover:bg-transparent"
+					class="hover:bg-transparent sm:!mt-6 sm:px-6 sm:py-8 w-full text-gray-600 sm:text-2xl"
 				>
 					Сгенерировать уникальное имя
 				</Button>
 
 				<!-- Footer Buttons -->
-				<div class="flex justify-between items-center !mt-16 w-full">
+				<div class="flex justify-between items-center !mt-12 w-full">
 					<Button
 						variant="ghost"
 						@click="$emit('back')"

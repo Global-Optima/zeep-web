@@ -2,8 +2,12 @@
 import { getRouteName } from '@/core/config/routes.config'
 import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
 import { useSelectedProductStore } from "@/modules/kiosk/products/stores/current-product.store"
-import { onBeforeUnmount, onMounted } from 'vue'
+import { defineAsyncComponent, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+
+const KioskDetailsModal = defineAsyncComponent(() =>
+  import('@/modules/kiosk/products/components/details/kiosk-details-modal.vue')
+);
 
 const pagesOmitRedirect = [ getRouteName('KIOSK_ORDERS')]
 
@@ -62,6 +66,8 @@ onBeforeUnmount(() => {
 				</transition>
 			</router-view>
 		</main>
+
+		<KioskDetailsModal />
 	</div>
 </template>
 

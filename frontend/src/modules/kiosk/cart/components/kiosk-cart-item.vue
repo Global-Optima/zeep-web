@@ -4,7 +4,7 @@
 		<img
 			:src="item.product.imageUrl"
 			alt="Product Image"
-			class="rounded w-16 sm:w-20 h-16 sm:h-20 object-contain"
+			class="rounded w-16 sm:w-28 h-16 sm:h-28 oject-contain"
 		/>
 
 		<!-- Product Details -->

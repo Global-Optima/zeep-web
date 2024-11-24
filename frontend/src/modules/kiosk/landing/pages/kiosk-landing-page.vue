@@ -4,7 +4,7 @@
 		@click="handleClick"
 	>
 		<!-- Language Selector -->
-		<div class="absolute top-20 right-8 z-10">
+		<div class="top-8 right-8 z-10 absolute">
 			<LocaleSwitch />
 		</div>
 
@@ -24,13 +24,13 @@
 				<div class="relative w-full h-full">
 					<!-- Gradient Overlay Behind Text -->
 					<div
-						class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-transparent via-transparent to-black"
+						class="bottom-0 left-0 absolute bg-gradient-to-t from-transparent via-transparent to-black w-full h-1/2"
 					></div>
 
 					<!-- Text Content -->
-					<div class="absolute bottom-64 left-12 z-10">
-						<p class="text-white text-2xl sm:text-5xl">{{ slide.title }}</p>
-						<p class="text-white text-3xl sm:text-5xl font-medium mt-2 sm:mt-4">
+					<div class="bottom-64 left-12 z-10 absolute">
+						<p class="text-2xl text-white sm:text-5xl">{{ slide.title }}</p>
+						<p class="mt-2 sm:mt-4 font-medium text-3xl text-white sm:text-5xl">
 							{{ formatPrice(slide.price) }}
 						</p>
 					</div>
@@ -50,9 +50,9 @@
 
 		<!-- Touch Indicator -->
 		<div
-			class="absolute bottom-20 w-full flex items-center justify-center animate-bounce gap-3 z-10 text-gray-400"
+			class="bottom-20 z-10 absolute flex justify-center items-center gap-3 w-full text-gray-400 animate-bounce"
 		>
-			<MousePointerClickIcon class="w-6 h-6 sm:w-10 sm:h-10" />
+			<MousePointerClickIcon class="w-6 sm:w-10 h-6 sm:h-10" />
 			<p class="text-base sm:text-3xl">Перейти в каталог</p>
 		</div>
 	</div>
