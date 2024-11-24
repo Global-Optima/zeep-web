@@ -279,8 +279,9 @@ CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
     employee_id INT REFERENCES employees (id) ON DELETE SET NULL,
+	store_id INT REFERENCES stores (id) ON DELETE SET NULL,
     delivery_address_id INT REFERENCES customer_addresses (id) ON DELETE SET NULL,
-    order_status VARCHAR(50),
+    order_status VARCHAR(50) NOT NULL,
     order_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     total DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -291,7 +292,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_products (
     id SERIAL PRIMARY KEY,
     order_id INT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-    product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
+    product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
     quantity INT NOT NULL CHECK (quantity > 0),
     price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -303,10 +304,10 @@ CREATE TABLE IF NOT EXISTS order_product_additives (
     id SERIAL PRIMARY KEY,
     order_product_id INT NOT NULL REFERENCES order_products (id) ON DELETE CASCADE,
     additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
+	price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 
 
 -- ItemIngredients Table
