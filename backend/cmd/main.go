@@ -10,7 +10,7 @@ import (
 func main() {
 	router, cfg := initializer.InitializeApp()
 
-	port := cfg.ServerPort
+	port := cfg.Server.Port
 	log.Printf("Starting server on port %d...", port)
 	if err := router.Run(fmt.Sprintf(":%d", port)); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

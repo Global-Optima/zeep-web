@@ -13,28 +13,16 @@ const (
 )
 
 type Config struct {
-	Env          string `mapstructure:"ENV"`
-	DBHost       string `mapstructure:"DB_HOST"`
-	DBPort       int    `mapstructure:"DB_PORT"`
-	DBUser       string `mapstructure:"DB_USER"`
-	DBPassword   string `mapstructure:"DB_PASSWORD"`
-	DBName       string `mapstructure:"DB_NAME"`
-	JWTSecretKey string `mapstructure:"JWT_SECRET_KEY"`
-	ServerPort   int    `mapstructure:"SERVER_PORT"`
-	ClientUrl    string `mapstructure:"CLIENT_URL"`
-
-	S3AccessKey  string `mapstructure:"PSKZ_ACCESS_KEY"`
-	S3SecretKey  string `mapstructure:"PSKZ_SECRET_KEY"`
-	S3Endpoint   string `mapstructure:"PSKZ_ENDPOINT"`
-	S3BucketName string `mapstructure:"PSKZ_BUCKETNAME"`
-
+	Env           string `mapstructure:"ENV"`
 	IsDevelopment bool
 	IsTest        bool
 
-	RedisHost     string `mapstructure:"REDIS_HOST"`
-	RedisPort     int    `mapstructure:"REDIS_PORT"`
-	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
-	RedisDB       int    `mapstructure:"REDIS_DB"`
+	Database DatabaseConfig `mapstructure:",squash"`
+	Server   ServerConfig   `mapstructure:",squash"`
+	JWT      JWTConfig      `mapstructure:",squash"`
+	S3       S3Config       `mapstructure:",squash"`
+	Redis    RedisConfig    `mapstructure:",squash"`
+	Kafka    KafkaConfig    `mapstructure:",squash"`
 }
 
 var cfg *Config

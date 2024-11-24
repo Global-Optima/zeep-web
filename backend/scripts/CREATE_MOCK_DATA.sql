@@ -470,21 +470,22 @@ VALUES
 
 -- Insert into Store
 INSERT INTO
-  stores (name, facility_address_id, is_franchise, admin_id)
+  stores (id, name, facility_address_id, is_franchise, status, contact_phone, contact_email, store_hours, admin_id, created_at, updated_at)
 VALUES
-  ('Центральное кафе', 1, false, NULL),
-  ('Кофейня на углу', 2, true, NULL),
-  ('Маленький магазин на Советской', 3, true, NULL),
-  ('Кофейня у вокзала', 4, false, NULL),
-  ('Городской кофе', 5, true, NULL),
-  ('Летняя терраса', 6, true, NULL),
-  ('Кафе на проспекте', 7, false, NULL),
-  ('Заведение у реки', 8, true, NULL),
-  ('Чайный дом', 9, false, NULL),
-  ('Кофе и компании', 10, true, NULL),
-  ('Парк-кафе', 11, false, NULL),
-  ('Восточный уголок', 12, true, NULL),
-  ('Семейная кофейня', 13, false, NULL);
+  (1, 'Центральное кафе', 1, false, 'active', '79001112233', 'central@example.com', '8:00-20:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (2, 'Кофейня на углу', 2, true, 'active', '79002223344', 'corner@example.com', '9:00-22:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (3, 'Маленький магазин на Советской', 3, true, 'active', '79003334455', 'smallstore@example.com', '8:00-18:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (4, 'Кофейня у вокзала', 4, false, 'inactive', '79004445566', 'station@example.com', '10:00-22:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (5, 'Городской кофе', 5, true, 'active', '79005556677', 'citycoffee@example.com', '7:00-23:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (6, 'Летняя терраса', 6, true, 'active', '79006667788', 'terrace@example.com', '10:00-22:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (7, 'Кафе на проспекте', 7, false, 'active', '79007778899', 'avenuecafe@example.com', '9:00-21:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (8, 'Заведение у реки', 8, true, 'active', '79008889900', 'riverside@example.com', '10:00-22:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (9, 'Чайный дом', 9, false, 'inactive', '79009990011', 'teahouse@example.com', '8:00-20:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (10, 'Кофе и компании', 10, true, 'active', '79010001122', 'coffeeandco@example.com', '8:00-22:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (11, 'Парк-кафе', 11, false, 'active', '79011002233', 'parkcafe@example.com', '10:00-21:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (12, 'Восточный уголок', 12, true, 'active', '79012003344', 'easterncorner@example.com', '10:00-23:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (13, 'Семейная кофейня', 13, false, 'active', '79013004455', 'familycafe@example.com', '9:00-22:00', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 
 -- Insert into StoreAdditives
 INSERT INTO
@@ -833,188 +834,30 @@ VALUES
     false
   );
 
--- Insert into EmployeeRole
-INSERT INTO
-  employee_roles (name)
-VALUES
-  ('Менеджер'),
-  ('Бариста'),
-  ('Кассир'),
-  ('Администратор'),
-  ('Официант'),
-  ('Уборщик'),
-  ('Шеф-повар'),
-  ('Помощник повара'),
-  ('Старший кассир'),
-  ('Складской работник'),
-  ('Заведующий'),
-  ('Маркетолог'),
-  ('Менеджер по персоналу');
-
 -- Insert into Employee
 INSERT INTO
-  employees (name, phone, email, role_id, store_id, is_active)
+  employees (id, name, phone, email, role, store_id, is_active, hashed_password, created_at, updated_at)
 VALUES
-  (
-    'Елена Соколова',
-    '79551234567',
-    'elena@example.com',
-    1,
-    1,
-    true
-  ),
-  (
-    'Сергей Павлов',
-    '79667778899',
-    'sergey@example.com',
-    2,
-    2,
-    true
-  ),
-  (
-    'Анна Федорова',
-    '79223334455',
-    'anna@example.com',
-    3,
-    1,
-    true
-  ),
-  (
-    'Иван Иванов',
-    '79161234567',
-    'ivan@example.com',
-    4,
-    3,
-    true
-  ),
-  (
-    'Мария Смирнова',
-    '79345566778',
-    'maria@example.com',
-    5,
-    2,
-    true
-  ),
-  (
-    'Олег Кузнецов',
-    '79991234567',
-    'oleg@example.com',
-    6,
-    1,
-    false
-  ),
-  (
-    'Татьяна Орлова',
-    '79882233445',
-    'tatiana@example.com',
-    7,
-    4,
-    true
-  ),
-  (
-    'Алексей Попов',
-    '79002221133',
-    'alexei@example.com',
-    8,
-    3,
-    true
-  ),
-  (
-    'Юлия Петрова',
-    '79115555666',
-    'yulia@example.com',
-    9,
-    2,
-    true
-  ),
-  (
-    'Дмитрий Фролов',
-    '79553334456',
-    'dmitry@example.com',
-    10,
-    1,
-    false
-  ),
-  (
-    'Наталья Волкова',
-    '79225556677',
-    'natalya@example.com',
-    11,
-    5,
-    true
-  ),
-  (
-    'Светлана Крылова',
-    '79331112223',
-    'svetlana@example.com',
-    12,
-    3,
-    true
-  ),
-  (
-    'Виктор Соколов',
-    '79442233445',
-    'victor@example.com',
-    13,
-    4,
-    true
-  ),
-  (
-    'Андрей Лебедев',
-    '79118887799',
-    'andrei@example.com',
-    1,
-    1,
-    true
-  ),
-  (
-    'Ольга Николаева',
-    '79664445566',
-    'olga@example.com',
-    2,
-    5,
-    true
-  ),
-  (
-    'Максим Морозов',
-    '79552233456',
-    'maksim@example.com',
-    3,
-    2,
-    true
-  ),
-  (
-    'Людмила Громова',
-    '79774445511',
-    'lyudmila@example.com',
-    4,
-    3,
-    false
-  ),
-  (
-    'София Зайцева',
-    '79883332211',
-    'sofia@example.com',
-    5,
-    4,
-    true
-  ),
-  (
-    'Владимир Козлов',
-    '79338887799',
-    'vladimir@example.com',
-    6,
-    5,
-    true
-  ),
-  (
-    'Алена Белова',
-    '79229998877',
-    'alena@example.com',
-    7,
-    1,
-    true
-  );
+  (1, 'Елена Соколова', '79551234567', 'elena@example.com', 'Manager', 1, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (2, 'Сергей Павлов', '79667778899', 'sergey@example.com', 'Barista', 2, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (3, 'Анна Федорова', '79223334455', 'anna@example.com', 'Waiter', 1, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (4, 'Иван Иванов', '79161234567', 'ivan@example.com', 'Director', 3, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (5, 'Мария Смирнова', '79345566778', 'maria@example.com', 'Supervisor', 2, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (6, 'Олег Кузнецов', '79991234567', 'oleg@example.com', 'Cleaner', 1, false, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (7, 'Татьяна Орлова', '79882233445', 'tatiana@example.com', 'Manager', 4, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (8, 'Алексей Попов', '79002221133', 'alexei@example.com', 'Waiter', 3, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (9, 'Юлия Петрова', '79115555666', 'yulia@example.com', 'Barista', 2, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (10, 'Дмитрий Фролов', '79553334456', 'dmitry@example.com', 'Waiter', 1, false, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (11, 'Наталья Волкова', '79225556677', 'natalya@example.com', 'Barista', 5, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (12, 'Светлана Крылова', '79331112223', 'svetlana@example.com', 'Manager', 3, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (13, 'Виктор Соколов', '79442233445', 'victor@example.com', 'Supervisor', 4, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (14, 'Андрей Лебедев', '79118887799', 'andrei@example.com', 'Cleaner', 1, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (15, 'Ольга Николаева', '79664445566', 'olga@example.com', 'Supervisor', 5, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (16, 'Максим Морозов', '79552233456', 'maksim@example.com', 'Waiter', 2, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (17, 'Людмила Громова', '79774445511', 'lyudmila@example.com', 'Cleaner', 3, false, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (18, 'София Зайцева', '79883332211', 'sofia@example.com', 'Barista', 4, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (19, 'Владимир Козлов', '79338887799', 'vladimir@example.com', 'Cashier', 5, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (20, 'Алена Белова', '79229998877', 'alena@example.com', 'Waiter', 1, true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into EmployeeAudit
 INSERT INTO

@@ -24,7 +24,7 @@ func SetCookie(c *gin.Context, name, value string, expiration time.Duration) {
 		value,
 		int(expiration.Seconds()),
 		CookiePath,
-		cfg.ClientUrl,
+		cfg.Server.ClientURL,
 		CookieSecure,
 		CookieHttpOnly,
 	)
@@ -42,7 +42,7 @@ func ClearCookie(c *gin.Context, name string) {
 		"",
 		-1,
 		CookiePath,
-		cfg.ClientUrl,
+		cfg.Server.ClientURL,
 		CookieSecure,
 		CookieHttpOnly,
 	)
