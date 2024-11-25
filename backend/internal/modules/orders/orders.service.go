@@ -91,10 +91,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 		return fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
 
-	websockets.Manager.SendEvent(websockets.OrderEvent{
-		Type:    "order_added",
-		Payload: eventData,
-	})
+	websockets.GetHubInstance().Broadcast("orders", "order_created", eventData)
 
 	return nil
 }
@@ -151,10 +148,7 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		}
 	}
 
-	websockets.Manager.SendEvent(websockets.OrderEvent{
-		Type:    "status_changed",
-		Payload: eventData,
-	})
+	websockets.GetHubInstance().Broadcast("orders", "suborder_completed", eventData)
 
 	return nil
 }

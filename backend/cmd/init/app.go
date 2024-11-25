@@ -15,6 +15,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/websockets"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-contrib/cors"
@@ -85,6 +86,10 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	router := gin.Default()
 	router.Use(cors.Default())
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
+
+	hub := websockets.GetHubInstance()
+
+	router.GET("/ws", websockets.WebSocketHandler(hub))
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
@@ -175,5 +180,6 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 	kafkaProducer := InitializeKafka(cfg)
 
 	router := InitializeRouter(dbHandler, redisClient, kafkaProducer, storageRepo) // temp
+
 	return router, cfg
 }
