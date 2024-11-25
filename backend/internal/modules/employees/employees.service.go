@@ -20,7 +20,7 @@ type EmployeeService interface {
 	DeleteEmployee(employeeID uint) error
 	UpdatePassword(employeeID uint, input types.UpdatePasswordDTO) error
 	GetAllRoles() ([]types.RoleDTO, error)
-	EmployeeLogin(email, password string) (string, error) // temp for testing purposes
+	EmployeeLogin(employeeID uint, password string) (string, error)
 }
 
 type employeeService struct {
@@ -44,7 +44,7 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 		return nil, fmt.Errorf("password validation failed: %v", err)
 	}
 
-	if !types.IsValidRole(input.Role) {
+	if !types.IsEmployeeValidRole(string(input.Role)) {
 		return nil, errors.New("invalid role specified")
 	}
 
@@ -66,7 +66,7 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 		Phone:          input.Phone,
 		Email:          input.Email,
 		Role:           input.Role,
-		StoreID:        &input.StoreID,
+		StoreID:        input.StoreID,
 		HashedPassword: hashedPassword,
 		IsActive:       true,
 	}
@@ -137,7 +137,7 @@ func (s *employeeService) UpdateEmployee(employeeID uint, input types.UpdateEmpl
 		employee.Role = *input.Role
 	}
 	if input.StoreID != nil {
-		employee.StoreID = input.StoreID
+		employee.StoreID = *input.StoreID
 	}
 
 	if err := s.repo.UpdateEmployee(employee); err != nil {
@@ -216,8 +216,8 @@ func (s *employeeService) GetAllRoles() ([]types.RoleDTO, error) {
 	return roleDTOs, nil
 }
 
-func (s *employeeService) EmployeeLogin(email, password string) (string, error) {
-	employee, err := s.repo.GetEmployeeByEmailOrPhone(email, "")
+func (s *employeeService) EmployeeLogin(employeeId uint, password string) (string, error) {
+	employee, err := s.repo.GetEmployeeByID(employeeId)
 	if err != nil {
 		return "", fmt.Errorf("invalid credentials: %v", err)
 	}
@@ -228,15 +228,14 @@ func (s *employeeService) EmployeeLogin(email, password string) (string, error) 
 
 	claims := utils.EmployeeClaims{
 		BaseClaims: utils.BaseClaims{
-			ID:   employee.ID,
-			Type: "employee",
 			RegisteredClaims: jwt.RegisteredClaims{
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
 			},
 		},
-		Role:    employee.Role,
-		StoreID: employee.StoreID,
+		Role:       employee.Role,
+		StoreID:    employee.StoreID,
+		EmployeeID: employee.ID,
 	}
 
 	return utils.GenerateJWT(claims, 24*time.Hour)
@@ -249,6 +248,6 @@ func mapToEmployeeDTO(employee *data.Employee) *types.EmployeeDTO {
 		Phone:   employee.Phone,
 		Email:   employee.Email,
 		Role:    employee.Role,
-		StoreID: *employee.StoreID,
+		StoreID: employee.StoreID,
 	}
 }

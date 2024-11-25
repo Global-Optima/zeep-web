@@ -91,16 +91,20 @@ func LoadConfigFromEnv() (*config.Config, error) {
 	}
 
 	cfg := &config.Config{
-		DBUser:     getEnv("DB_USER", "defaultuser"),
-		DBPassword: getEnv("DB_PASSWORD", "defaultpassword"),
-		DBName:     getEnv("DB_NAME", "defaultdb"),
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     port,
+		Database: config.DatabaseConfig{
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     port,
+			User:     getEnv("DB_USER", "defaultuser"),
+			Password: getEnv("DB_PASSWORD", "defaultpassword"),
+			Name:     getEnv("DB_NAME", "defaultdb"),
+		},
 
-		RedisHost:     redisHost,
-		RedisPort:     redisPort,
-		RedisPassword: "",
-		RedisDB:       redisDB,
+		Redis: config.RedisConfig{
+			Host:     redisHost,
+			Port:     redisPort,
+			Password: getEnv("REDIS_PASSWORD", ""),
+			DB:       redisDB,
+		},
 	}
 
 	return cfg, nil
@@ -138,7 +142,7 @@ func validateRedisHost(redisHost string) string {
 
 func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
+		cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.Password, cfg.Database.Name,
 	)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -148,7 +152,7 @@ func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
 }
 
 func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
-	redisClient, err := database.InitRedis(cfg.RedisHost, cfg.RedisPort, cfg.RedisPassword, cfg.RedisDB)
+	redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
 	if err != nil {
 		t.Fatalf("Failed to initialize Redis: %v", err)
 	}

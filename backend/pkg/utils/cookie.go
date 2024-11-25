@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -8,26 +9,36 @@ import (
 )
 
 const (
-	CookieExpiration = 8 * time.Hour // General cookie expiration time
-	CookiePath       = "/"           // Cookie path
-	CookieSecure     = true          // Secure cookies for HTTPS
-	CookieHttpOnly   = true          // Restrict cookie access to HTTP(S)
-	SameSiteStrict   = "Strict"      // SameSite policy for strict cross-site behavior
-	SameSiteLax      = "Lax"         // Alternative SameSite policy if needed
+	CookieExpiration = 8 * time.Hour
+	CookiePath       = "/"
 )
 
 func SetCookie(c *gin.Context, name, value string, expiration time.Duration) {
 	cfg := config.GetConfig()
 
-	c.SetCookie(
-		name,
-		value,
-		int(expiration.Seconds()),
-		CookiePath,
-		cfg.ClientUrl,
-		CookieSecure,
-		CookieHttpOnly,
-	)
+	secure := true
+	domain := cfg.Server.ClientURL
+	sameSite := http.SameSiteNoneMode
+
+	if cfg.IsDevelopment {
+		secure = false
+		domain = "localhost"
+		sameSite = http.SameSiteLaxMode
+	}
+
+	cookie := &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     CookiePath,
+		Domain:   domain,
+		Expires:  time.Now().Add(expiration),
+		MaxAge:   int(expiration.Seconds()),
+		Secure:   secure,
+		HttpOnly: true,
+		SameSite: sameSite,
+	}
+
+	http.SetCookie(c.Writer, cookie)
 }
 
 func GetCookie(c *gin.Context, name string) (string, error) {
@@ -37,13 +48,27 @@ func GetCookie(c *gin.Context, name string) (string, error) {
 func ClearCookie(c *gin.Context, name string) {
 	cfg := config.GetConfig()
 
-	c.SetCookie(
-		name,
-		"",
-		-1,
-		CookiePath,
-		cfg.ClientUrl,
-		CookieSecure,
-		CookieHttpOnly,
-	)
+	secure := true
+	domain := cfg.Server.ClientURL
+	sameSite := http.SameSiteNoneMode
+
+	if cfg.IsDevelopment {
+		secure = false
+		domain = "localhost"
+		sameSite = http.SameSiteLaxMode
+	}
+
+	cookie := &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     CookiePath,
+		Domain:   domain,
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		Secure:   secure,
+		HttpOnly: true,
+		SameSite: sameSite,
+	}
+
+	http.SetCookie(c.Writer, cookie)
 }

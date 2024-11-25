@@ -5,6 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,10 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.Routes.Group("/stores")
 	{
 		router.GET("", handler.GetAllStores)
-		router.GET("/:storeId/employees", handler.GetStoreEmployees)
+		router.GET("/:id", handler.GetStoreByID)
+		router.POST("", middleware.EmployeeRoleMiddleware("Admin"), handler.CreateStore)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware("Admin"), handler.UpdateStore)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware("Admin"), handler.DeleteStore)
 	}
 }
 
@@ -58,13 +62,16 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.Routes.Group("/employees")
 	{
-		router.POST("", middleware.RoleMiddleware("director"), handler.CreateEmployee)
-		router.GET("", middleware.RoleMiddleware("director", "manager"), handler.GetEmployeesByStore)
+		router.POST("", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.CreateEmployee)
+		router.GET("", handler.GetEmployeesByStore)
+		router.GET("/current", handler.GetCurrentEmployee)
 		router.GET("/:id", handler.GetEmployeeByID)
-		router.PUT("/:id", middleware.RoleMiddleware("director"), handler.UpdateEmployee)
-		router.DELETE("/:id", middleware.RoleMiddleware("director"), handler.DeleteEmployee)
-		router.GET("/roles", middleware.RoleMiddleware("director", "manager"), handler.GetAllRoles)
-		router.PUT("/:id/password", middleware.RoleMiddleware("employee", "manager", "director"), handler.UpdatePassword)
-		router.POST("/login", handler.EmployeeLogin) // temp for testing purposes
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.UpdateEmployee)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.DeleteEmployee)
+		router.GET("/roles", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager), handler.GetAllRoles)
+		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager, types.RoleEmployee), handler.UpdatePassword)
+		router.POST("/login", handler.EmployeeLogin)
+		router.POST("/logout", handler.EmployeeLogout)
+
 	}
 }

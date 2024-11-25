@@ -2,27 +2,39 @@
 	<div class="relative bg-gray-100 pt-safe w-full min-h-screen">
 		<!-- Header: Order Status Selector -->
 		<header
-			class="top-0 left-0 fixed flex justify-center items-center bg-white p-4 border-b w-full overflow-x-auto no-scrollbar"
+			class="top-0 left-0 fixed flex justify-between items-center bg-white p-4 border-b w-full overflow-x-auto no-scrollbar"
 		>
-			<button
-				v-for="status in statuses"
-				:key="status.label"
-				@click="onSelectStatus(status)"
-				:class="[
+			<Button
+				size="icon"
+				variant="outline"
+				@click="$router.back"
+			>
+				<ChevronLeft />
+			</Button>
+
+			<div class="flex items-center">
+				<button
+					v-for="status in statuses"
+					:key="status.label"
+					@click="onSelectStatus(status)"
+					:class="[
           'flex items-center gap-2 px-5 py-2 rounded-xl text-lg whitespace-nowrap',
           status.label === selectedStatus.label ? 'bg-primary text-primary-foreground' : ''
         ]"
-			>
-				<p>{{ status.label }}</p>
-				<p
-					:class="[
+				>
+					<p>{{ status.label }}</p>
+					<p
+						:class="[
             'bg-gray-100 px-2 py-1 rounded-sm text-black text-xs',
             status.label === selectedStatus.label ? 'bg-green-700 text-primary-foreground' : ''
           ]"
-				>
-					{{ status.count }}
-				</p>
-			</button>
+					>
+						{{ status.count }}
+					</p>
+				</button>
+			</div>
+
+			<div></div>
 		</header>
 
 		<!-- Main Layout -->
@@ -46,9 +58,9 @@
             ]"
 					>
 						<div>
-							<div class="flex items-center gap-2 text-lg">
-								<p class="font-medium">{{ order.customerName }}</p>
+							<div class="flex flex-col text-lg">
 								<p class="text-gray-500">#{{ order.id }}</p>
+								<p class="font-medium">{{ order.customerName }}</p>
 							</div>
 							<div class="mt-1 text-gray-700 text-sm">
 								<span>{{ order.type === 'Delivery' ? 'Доставка' : 'Кафе' }}</span
@@ -203,7 +215,8 @@
 </template>
 
 <script setup lang="ts">
-import { Check, Plus, Printer, Truck } from 'lucide-vue-next'
+import { Button } from '@/core/components/ui/button'
+import { Check, ChevronLeft, Plus, Printer, Truck } from 'lucide-vue-next'
 import { computed, nextTick, ref, watch } from 'vue'
 
 /**

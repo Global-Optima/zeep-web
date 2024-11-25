@@ -16,7 +16,7 @@ type EmployeeRepository interface {
 	DeleteEmployee(employeeID uint) error
 
 	GetEmployeeByEmailOrPhone(email string, phone string) (*data.Employee, error)
-	GetAllRoles() ([]types.Role, error)
+	GetAllRoles() ([]types.EmployeeRole, error)
 }
 
 type employeeRepository struct {
@@ -69,8 +69,8 @@ func (r *employeeRepository) DeleteEmployee(employeeID uint) error {
 	return r.db.Model(&data.Employee{}).Where("id = ?", employeeID).Update("is_active", false).Error
 }
 
-func (r *employeeRepository) GetAllRoles() ([]types.Role, error) {
-	roles := []types.Role{
+func (r *employeeRepository) GetAllRoles() ([]types.EmployeeRole, error) {
+	roles := []types.EmployeeRole{
 		types.RoleAdmin,
 		types.RoleManager,
 		types.RoleEmployee,
