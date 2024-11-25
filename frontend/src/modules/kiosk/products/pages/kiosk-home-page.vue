@@ -116,7 +116,7 @@ watch(
 )
 
 // Fetch Products
-const { data: products, isLoading: productsLoading } = useQuery<StoreProducts[]>({
+const { data: products } = useQuery<StoreProducts[]>({
   queryKey: productsQueryKey,
   queryFn: () =>
     productService.getStoreProducts(

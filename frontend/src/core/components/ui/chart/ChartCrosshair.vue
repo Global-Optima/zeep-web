@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<{
 
 // Use weakmap to store reference to each datapoint for Tooltip
 const wm = new WeakMap()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function template(d: any) {
   if (wm.has(d)) {
     return wm.get(d)
@@ -39,6 +40,12 @@ function color(d: unknown, i: number) {
 </script>
 
 <template>
-  <VisTooltip :horizontal-shift="20" :vertical-shift="20" />
-  <VisCrosshair :template="template" :color="color" />
+	<VisTooltip
+		:horizontal-shift="20"
+		:vertical-shift="20"
+	/>
+	<VisCrosshair
+		:template="template"
+		:color="color"
+	/>
 </template>

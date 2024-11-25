@@ -16,8 +16,8 @@ const forwardedProps = useForwardProps(delegatedProps)
 </script>
 
 <template>
-  <RangeCalendarCellTrigger
-    :class="cn(
+	<RangeCalendarCellTrigger
+		:class="cn(
       buttonVariants({ variant: 'ghost' }),
       'h-8 w-8 p-0 font-normal data-[selected]:opacity-100',
       '[&[data-today]:not([data-selected])]:bg-accent [&[data-today]:not([data-selected])]:text-accent-foreground',
@@ -33,8 +33,8 @@ const forwardedProps = useForwardProps(delegatedProps)
       'data-[unavailable]:text-destructive-foreground data-[unavailable]:line-through',
       props.class,
     )"
-    v-bind="forwardedProps"
-  >
-    <slot />
-  </RangeCalendarCellTrigger>
+		v-bind="forwardedProps"
+	>
+		<slot />
+	</RangeCalendarCellTrigger>
 </template>

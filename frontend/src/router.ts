@@ -4,6 +4,7 @@ import { AppTranslation } from './core/config/locale.config'
 import { getRouteName, ROUTES } from './core/config/routes.config'
 import { DEFAULT_TITLE, TITLE_TEMPLATE } from './core/constants/seo.constants'
 import { useEmployeeAuthStore } from './modules/auth/store/employee-auth.store'
+import { employeesService } from './modules/employees/services/employees.service'
 import { CURRENT_STORE_COOKIES_CONFIG } from './modules/stores/constants/store-cookies.constant'
 
 export const router = createRouter({
@@ -31,19 +32,19 @@ router.beforeEach(async (to, _from, next) => {
 		}
 	}
 
-	// if (to.meta?.requiresAuth) {
-	// 	try {
-	// 		const currentEmployee = await employeesService.getCurrentEmployee()
+	if (to.meta?.requiresAuth) {
+		try {
+			const currentEmployee = await employeesService.getCurrentEmployee()
 
-	// 		if (!currentEmployee) {
-	// 			return next({ name: getRouteName('LOGIN') })
-	// 		}
+			if (!currentEmployee) {
+				return next({ name: getRouteName('LOGIN') })
+			}
 
-	// 		setCurrentEmployee(currentEmployee)
-	// 	} catch {
-	// 		return next({ name: getRouteName('INTERNAL_ERROR') })
-	// 	}
-	// }
+			setCurrentEmployee(currentEmployee)
+		} catch {
+			return next({ name: getRouteName('INTERNAL_ERROR') })
+		}
+	}
 
 	const metaTitle = to.meta?.title ? TITLE_TEMPLATE(to.meta.title as string) : DEFAULT_TITLE
 	document.title = metaTitle

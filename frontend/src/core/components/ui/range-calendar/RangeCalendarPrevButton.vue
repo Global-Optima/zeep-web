@@ -17,16 +17,16 @@ const forwardedProps = useForwardProps(delegatedProps)
 </script>
 
 <template>
-  <RangeCalendarPrev
-    :class="cn(
+	<RangeCalendarPrev
+		:class="cn(
       buttonVariants({ variant: 'outline' }),
       'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
       props.class,
     )"
-    v-bind="forwardedProps"
-  >
-    <slot>
-      <ChevronLeftIcon class="h-4 w-4" />
-    </slot>
-  </RangeCalendarPrev>
+		v-bind="forwardedProps"
+	>
+		<slot>
+			<ChevronLeftIcon class="h-4 w-4" />
+		</slot>
+	</RangeCalendarPrev>
 </template>

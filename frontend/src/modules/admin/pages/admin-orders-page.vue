@@ -132,26 +132,11 @@ const limit = ref(DEFAULT_LIMIT)
 // Computed property for displayed orders based on limit
 const displayedOrders = computed(() => orders.value.data.slice(0, limit.value))
 
-// Check if there are more orders to load
-const hasMoreOrders = computed(
-  () => orders.value.meta.totalItems > displayedOrders.value.length
-)
-
 const router = useRouter()
 
 // Navigate to order details
 const goToOrder = (orderId: number) => {
   router.push(`/admin/orders/${orderId}`)
-}
-
-// Load more orders
-const handleLoadMore = () => {
-  const leftItemsCount = orders.value.meta.totalItems - limit.value
-  if (leftItemsCount >= DEFAULT_LIMIT) {
-    limit.value += DEFAULT_LIMIT
-  } else if (leftItemsCount > 0) {
-    limit.value += leftItemsCount
-  }
 }
 
 // Format date using date-fns
