@@ -31,15 +31,14 @@ type OrderDTO struct {
 }
 
 type OrderProductDTO struct {
-	ID             uint                      `json:"id"`
-	OrderID        uint                      `json:"order_id"`
-	ProductSizeID  uint                      `json:"product_size_id"`
-	Quantity       int                       `json:"quantity"`
-	Price          float64                   `json:"price"`
-	SubOrderStatus string                    `json:"sub_order_status"`
-	Additives      []OrderProductAdditiveDTO `json:"additives,omitempty"`
-	CreatedAt      time.Time                 `json:"created_at"`
-	UpdatedAt      time.Time                 `json:"updated_at"`
+	ID            uint                      `json:"id"`
+	OrderID       uint                      `json:"order_id"`
+	ProductSizeID uint                      `json:"product_size_id"`
+	Quantity      int                       `json:"quantity"`
+	Price         float64                   `json:"price"`
+	Additives     []OrderProductAdditiveDTO `json:"additives,omitempty"`
+	CreatedAt     time.Time                 `json:"created_at"`
+	UpdatedAt     time.Time                 `json:"updated_at"`
 }
 
 type OrderProductAdditiveDTO struct {

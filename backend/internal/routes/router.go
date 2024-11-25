@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/websockets"
 	"github.com/gin-gonic/gin"
 )
 
@@ -84,4 +85,8 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.GET("/suborders/count", handler.GetSubOrderCount)
 		router.GET("/:order_id/receipt", handler.GeneratePDFReceipt)
 	}
+
+	r.Routes.GET("/orders/ws", func(c *gin.Context) {
+		websockets.Manager.HandleConnections(c.Writer, c.Request)
+	})
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/kafka"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/websockets"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
 	"github.com/IBM/sarama"
 )
@@ -90,11 +91,15 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 		return fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
 
+	websockets.Manager.SendEvent(websockets.OrderEvent{
+		Type:    "order_added",
+		Payload: eventData,
+	})
+
 	return nil
 }
 
 func (s *orderService) CompleteSubOrder(subOrderID uint) error {
-
 	subOrder, err := s.repo.GetSubOrderByID(subOrderID)
 	if err != nil {
 		return fmt.Errorf("suborder not found: %w", err)
@@ -145,6 +150,11 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 			return fmt.Errorf("failed to publish completed order event to Kafka: %w", err)
 		}
 	}
+
+	websockets.Manager.SendEvent(websockets.OrderEvent{
+		Type:    "status_changed",
+		Payload: eventData,
+	})
 
 	return nil
 }
