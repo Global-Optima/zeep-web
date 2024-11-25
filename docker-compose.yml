@@ -12,8 +12,6 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - db_data:/var/lib/postgresql/data
-    networks:
-      - backend_network
 
   pgadmin:
     container_name: pgadmin
@@ -42,8 +40,6 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DB: ${REDIS_DB}
-    networks:
-      - backend_network
     volumes:
       - redis_data:/var/lib/redis/data
 
@@ -75,8 +71,6 @@ services:
       - redis
     expose:
       - '8080'
-    networks:
-      - backend_network
 
   nginx:
     container_name: nginx
@@ -87,9 +81,6 @@ services:
       - backend
     ports:
       - '80:80'
-
-networks:
-  backend_network:
 
 volumes:
   db_data:
