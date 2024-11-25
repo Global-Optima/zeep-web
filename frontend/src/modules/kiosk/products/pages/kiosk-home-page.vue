@@ -31,7 +31,7 @@
 			</div>
 
 			<!-- Products Grid -->
-			<section class="flex-1 pt-3 pr-4 pl-3 overflow-y-auto">
+			<section class="flex-1 pt-3 pr-4 pb-4 pl-3 overflow-y-auto no-scrollbar">
 				<div
 					v-if="products.length === 0"
 					class="flex justify-center items-center h-20 text-gray-500"

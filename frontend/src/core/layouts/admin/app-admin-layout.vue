@@ -40,7 +40,7 @@ const onBaristaClick = () => {
 					<Button
 						variant="outline"
 						@click="onBaristaClick"
-						class="flex items-center gap-3 mb-2 py-6 w-full"
+						class="flex items-center gap-3 mb-2 py-5 w-full"
 					>
 						<Coffee class="w-5 h-5" />
 						<p class="text-base">Бариста</p>
@@ -48,7 +48,7 @@ const onBaristaClick = () => {
 
 					<Button
 						@click="onKioskClick"
-						class="flex items-center gap-3 py-6 w-full"
+						class="flex items-center gap-3 py-5 w-full"
 					>
 						<Store class="w-5 h-5" />
 						<p class="text-base">Киоск</p>

@@ -61,7 +61,7 @@ const navItems: NavItem[] = [
 		>
 			<router-link
 				:to="{name: item.routeName}"
-				class="flex items-center gap-4 mx-[-0.65rem] px-3 py-2 rounded-xl hover:text-foreground"
+				class="flex items-center gap-4 mx-[-0.65rem] px-3 py-2 rounded-lg hover:text-foreground"
 				:class="{
           'bg-muted text-foreground': isActiveRoute(item.routeName),
           'text-muted-foreground': !isActiveRoute(item.routeName),

@@ -1,6 +1,6 @@
 <template>
 	<aside
-		class="sm:flex flex-col hidden bg-white px-6 py-8 rounded-3xl max-w-[250px] h-full overflow-hidden"
+		class="sm:flex flex-col hidden bg-white px-6 py-8 rounded-3xl max-w-[250px] h-full overflow-y-auto no-scrollbar"
 	>
 		<p class="font-semibold text-3xl">ZEEP</p>
 		<ul class="flex flex-col justify-center mt-8">

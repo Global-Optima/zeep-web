@@ -7,7 +7,7 @@ import {
 </script>
 
 <template>
-	<div class="space-y-8">
+	<div class="space-y-8 w-full">
 		<div class="flex items-center">
 			<Avatar class="w-9 h-9">
 				<AvatarImage

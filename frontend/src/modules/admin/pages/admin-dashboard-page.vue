@@ -44,61 +44,59 @@ const statisticCards = [
 </script>
 
 <template>
-	<div class="md:flex flex-col hidden">
-		<div class="flex-1 space-y-4">
-			<!-- Top Bar -->
-			<div class="flex items-center space-x-2">
-				<AdminDashboardDateRangePicker />
-				<Button>Скачать</Button>
+	<div class="flex-1 space-y-4">
+		<!-- Top Bar -->
+		<div class="flex items-center space-x-2">
+			<AdminDashboardDateRangePicker />
+			<Button>Скачать</Button>
+		</div>
+
+		<!-- Statistic Cards -->
+		<div class="space-y-4">
+			<div class="gap-4 grid md:grid-cols-2 lg:grid-cols-4">
+				<Card
+					v-for="(card, index) in statisticCards"
+					:key="index"
+				>
+					<CardHeader class="flex flex-row justify-between items-center space-y-0 pb-2">
+						<CardTitle class="font-medium text-sm">
+							{{ card.title }}
+						</CardTitle>
+						<component
+							:is="card.icon"
+							class="w-4 h-4 text-muted-foreground"
+						/>
+					</CardHeader>
+					<CardContent>
+						<div class="font-bold text-2xl">
+							{{ card.value }}
+						</div>
+						<p class="text-muted-foreground text-xs">
+							{{ card.description }}
+						</p>
+					</CardContent>
+				</Card>
 			</div>
 
-			<!-- Statistic Cards -->
-			<div class="space-y-4">
-				<div class="gap-4 grid md:grid-cols-2 lg:grid-cols-4">
-					<Card
-						v-for="(card, index) in statisticCards"
-						:key="index"
-					>
-						<CardHeader class="flex flex-row justify-between items-center space-y-0 pb-2">
-							<CardTitle class="font-medium text-sm">
-								{{ card.title }}
-							</CardTitle>
-							<component
-								:is="card.icon"
-								class="w-4 h-4 text-muted-foreground"
-							/>
-						</CardHeader>
-						<CardContent>
-							<div class="font-bold text-2xl">
-								{{ card.value }}
-							</div>
-							<p class="text-muted-foreground text-xs">
-								{{ card.description }}
-							</p>
-						</CardContent>
-					</Card>
-				</div>
-
-				<!-- Overview and Recent Sales -->
-				<div class="gap-4 grid md:grid-cols-2 lg:grid-cols-7">
-					<Card class="col-span-4">
-						<CardHeader>
-							<CardTitle>Обзор</CardTitle>
-						</CardHeader>
-						<CardContent class="pl-2">
-							<AdminDashboardOverview />
-						</CardContent>
-					</Card>
-					<Card class="col-span-3">
-						<CardHeader>
-							<CardTitle>Последние продажи</CardTitle>
-							<CardDescription> Вы сделали 265 продаж в этом месяце. </CardDescription>
-						</CardHeader>
-						<CardContent>
-							<AdminDashboardRecentSales />
-						</CardContent>
-					</Card>
-				</div>
+			<!-- Overview and Recent Sales -->
+			<div class="gap-4 grid md:grid-cols-2 lg:grid-cols-7">
+				<Card class="col-span-4">
+					<CardHeader>
+						<CardTitle>Обзор</CardTitle>
+					</CardHeader>
+					<CardContent class="pl-2">
+						<AdminDashboardOverview />
+					</CardContent>
+				</Card>
+				<Card class="col-span-3">
+					<CardHeader>
+						<CardTitle>Последние продажи</CardTitle>
+						<CardDescription> Вы сделали 265 продаж в этом месяце. </CardDescription>
+					</CardHeader>
+					<CardContent>
+						<AdminDashboardRecentSales />
+					</CardContent>
+				</Card>
 			</div>
 		</div>
 	</div>
