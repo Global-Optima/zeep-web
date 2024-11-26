@@ -99,7 +99,7 @@ const employees = ref<Employee[]>([
     id: 1,
     firstName: 'Алексей',
     lastName: 'Смирнов',
-    avatar: 'https://via.placeholder.com/32x32', // Placeholder image
+    avatar: 'https://via.placeholder.com/32x32',
     role: 'manager',
     phone: '+79161234567',
     storeName: 'Магазин №1',
@@ -115,8 +115,88 @@ const employees = ref<Employee[]>([
     storeName: 'Магазин №2',
     status: 'disabled',
   },
-  // Add more mock employees as needed
-])
+  {
+    id: 3,
+    firstName: 'Дмитрий',
+    lastName: 'Попов',
+    avatar: 'https://via.placeholder.com/32x32',
+    role: 'barista',
+    phone: '+79261234568',
+    storeName: 'Магазин №1',
+    status: 'active',
+  },
+  {
+    id: 4,
+    firstName: 'Ольга',
+    lastName: 'Кузнецова',
+    avatar: 'https://via.placeholder.com/32x32',
+    role: 'cashier',
+    phone: '+79269876544',
+    storeName: 'Магазин №3',
+    status: 'active',
+  },
+  {
+    id: 5,
+    firstName: 'Игорь',
+    lastName: 'Лебедев',
+    avatar: 'https://via.placeholder.com/32x32',
+    role: 'manager',
+    phone: '+79361234569',
+    storeName: 'Магазин №2',
+    status: 'disabled',
+  },
+  {
+    id: 6,
+    firstName: 'Анна',
+    lastName: 'Васильева',
+    avatar: 'https://via.placeholder.com/32x32',
+    role: 'barista',
+    phone: '+79369876545',
+    storeName: 'Магазин №1',
+    status: 'active',
+  },
+  {
+    id: 7,
+    firstName: 'Максим',
+    lastName: 'Соколов',
+    avatar: 'https://via.placeholder.com/32x32',
+    role: 'technician',
+    phone: '+79461234560',
+    storeName: 'Магазин №4',
+    status: 'active',
+  },
+  {
+    id: 8,
+    firstName: 'Татьяна',
+    lastName: 'Зайцева',
+    avatar: 'https://via.placeholder.com/32x32',
+    role: 'cashier',
+    phone: '+79469876546',
+    storeName: 'Магазин №3',
+    status: 'disabled',
+  },
+  {
+    id: 9,
+    firstName: 'Сергей',
+    lastName: 'Морозов',
+    avatar: 'https://via.placeholder.com/32x32',
+    role: 'security',
+    phone: '+79561234561',
+    storeName: 'Магазин №4',
+    status: 'active',
+  },
+  {
+    id: 10,
+    firstName: 'Марина',
+    lastName: 'Фёдорова',
+    avatar: 'https://via.placeholder.com/32x32',
+    role: 'manager',
+    phone: '+79569876547',
+    storeName: 'Магазин №2',
+    status: 'active',
+  },
+]);
+
 
 const router = useRouter()
 
@@ -135,8 +215,10 @@ const ROLE_FORMATTED: Record<string, string> = {
   manager: 'Менеджер',
   cashier: 'Кассир',
   stocker: 'Кладовщик',
-  // Add other roles as needed
-}
+  barista: 'Бариста',
+  technician: 'Техник',
+  security: 'Охранник',
+};
 
 // Status colors and formatted text
 const STATUS_COLOR: Record<string, string> = {

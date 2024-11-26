@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getRouteName } from '@/core/config/routes.config'
-import { Home, LineChart, Package, ShoppingCart, Users, Warehouse, type LucideIcon } from 'lucide-vue-next'
+import { Home, Package, ShoppingCart, Users, Warehouse, type LucideIcon } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -39,11 +39,6 @@ const navItems: NavItem[] = [
     name: 'Склад',
     routeName: getRouteName("ADMIN_WAREHOUSE"),
     icon: Warehouse,
-  },
-  {
-    name: 'Аналитика',
-    routeName: getRouteName("ADMIN_ANALYTICS"),
-    icon: LineChart,
   },
   {
     name: 'Сотрудники',

@@ -1,13 +1,13 @@
 <template>
-	<div class="relative bg-gray-100 pt-safe w-full min-h-screen">
+	<div class="relative bg-gray-100 pt-safe w-full h-screen overflow-hidden">
 		<!-- Header: Order Status Selector -->
 		<header
-			class="top-0 left-0 fixed flex justify-between items-center bg-white p-4 border-b w-full overflow-x-auto no-scrollbar"
+			class="top-0 left-0 z-20 sticky flex justify-between items-center bg-white p-4 border-b w-full overflow-x-auto no-scrollbar"
 		>
 			<Button
 				size="icon"
 				variant="outline"
-				@click="$router.back"
+				@click="onBackClick"
 			>
 				<ChevronLeft />
 			</Button>
@@ -38,14 +38,14 @@
 		</header>
 
 		<!-- Main Layout -->
-		<div class="grid grid-cols-4 bg-gray-100 mt-[77px] w-full min-h-full">
+		<div class="relative grid grid-cols-4 bg-gray-100 pb-4 w-full h-[calc(100vh-74px)]">
 			<!-- Section 1: Orders -->
-			<section class="col-span-1 p-2 border-r h-full">
-				<p class="py-1 font-medium text-center">Заказы</p>
+			<section class="col-span-1 border-r h-full overflow-y-auto no-scrollbar">
+				<p class="top-0 z-10 sticky bg-gray-100 py-3 font-medium text-center">Заказы</p>
 
 				<div
 					v-if="filteredOrders.length > 0"
-					class="flex flex-col gap-2 mt-2 overflow-y-auto no-scrollbar"
+					class="flex flex-col gap-2 px-2"
 					ref="ordersSection"
 				>
 					<div
@@ -91,12 +91,12 @@
 			</section>
 
 			<!-- Section 2: Suborders -->
-			<section class="col-span-1 p-2 border-r h-full">
-				<p class="py-1 font-medium text-center">Подзаказы</p>
+			<section class="col-span-1 border-r h-full overflow-y-auto no-scrollbar">
+				<p class="top-0 z-10 sticky bg-gray-100 py-3 font-medium text-center">Подзаказы</p>
 
 				<div
 					v-if="selectedOrder"
-					class="flex flex-col flex-1 gap-2 mt-2 overflow-y-auto no-scrollbar"
+					class="flex flex-col gap-2 px-2"
 					ref="subordersSection"
 				>
 					<div
@@ -138,68 +138,78 @@
 			</section>
 
 			<!-- Section 3: Suborder Details -->
-			<section class="col-span-2 p-2 h-full">
-				<p class="py-1 font-medium text-center">Детали подзаказа</p>
+			<section class="col-span-2 border-r h-full overflow-y-auto no-scrollbar">
+				<p class="top-0 z-10 sticky bg-gray-100 py-3 font-medium text-center">Детали подзаказа</p>
+
 				<div
+					class="px-2 rounded-xl"
 					v-if="selectedSuborder"
-					class="flex flex-col gap-4 bg-white mt-2 p-4 rounded-xl overflow-y-auto"
 					ref="detailsSection"
 				>
-					<div>
-						<p class="font-medium text-xl">{{ selectedSuborder.productName }}</p>
-						<!-- Toppings List -->
-						<ul
-							v-if="selectedSuborder.toppings.length > 0"
-							class="space-y-1 mt-2"
-						>
-							<li
-								v-for="(topping, index) in selectedSuborder.toppings"
-								:key="index"
-								class="flex items-center"
-							>
-								<Plus class="mr-2 w-4 h-4 text-gray-500" />
-								<span class="text-gray-700">{{ topping }}</span>
-							</li>
-						</ul>
-						<p
-							v-else
-							class="mt-2 text-gray-700"
-						>
-							Без топпингов
-						</p>
-					</div>
-					<div>
-						<p class="font-medium text-lg">Комментарий</p>
-						<p class="mt-1 text-gray-700">
-							{{ selectedSuborder.comments || 'Стандартное приготовление' }}
-						</p>
-					</div>
-					<div>
-						<p class="font-medium text-lg">Время приготовления</p>
-						<p class="mt-1 text-gray-700">
-							{{ selectedSuborder.prepTime || 'Не указано' }}
-						</p>
-					</div>
-					<div class="flex items-center gap-2 mt-4">
+					<div class="relative flex flex-col gap-4 bg-white p-6 rounded-xl overflow-y-auto">
 						<button
-							class="p-4 border rounded-xl"
+							class="top-6 right-6 absolute"
 							:disabled="selectedSuborder.status === 'Done'"
 							@click="printQrCode"
 						>
-							<Printer class="w-6 h-6" />
+							<Printer
+								stroke-width="1.5"
+								class="w-8 h-8"
+							/>
 						</button>
-						<button
-							@click="toggleSuborderStatus(selectedSuborder)"
-							:disabled="selectedSuborder.status === 'Done'"
-							:class="[
+
+						<div>
+							<p class="font-medium text-xl">{{ selectedSuborder.productName }}</p>
+							<!-- Toppings List -->
+							<ul
+								v-if="selectedSuborder.toppings.length > 0"
+								class="space-y-1 mt-2"
+							>
+								<li
+									v-for="(topping, index) in selectedSuborder.toppings"
+									:key="index"
+									class="flex items-center"
+								>
+									<Plus class="mr-2 w-4 h-4 text-gray-500" />
+									<span class="text-gray-700">{{ topping }}</span>
+								</li>
+							</ul>
+							<p
+								v-else
+								class="mt-2 text-gray-700"
+							>
+								Без топпингов
+							</p>
+						</div>
+
+						<div>
+							<p class="font-medium text-lg">Комментарий</p>
+							<p class="mt-1 text-gray-700">
+								{{ selectedSuborder.comments || 'Стандартное приготовление' }}
+							</p>
+						</div>
+
+						<div>
+							<p class="font-medium text-lg">Время приготовления</p>
+							<p class="mt-1 text-gray-700">
+								{{ selectedSuborder.prepTime || 'Не указано' }}
+							</p>
+						</div>
+
+						<div class="flex items-center gap-2 mt-4">
+							<button
+								@click="toggleSuborderStatus(selectedSuborder)"
+								:disabled="selectedSuborder.status === 'Done'"
+								:class="[
                 'flex-1 px-4 py-4 rounded-xl text-primary-foreground',
                 selectedSuborder.status === 'Done'
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-primary'
               ]"
-						>
-							{{ selectedSuborder.status === 'Done' ? 'Выполнено' : 'Выполнить' }}
-						</button>
+							>
+								{{ selectedSuborder.status === 'Done' ? 'Выполнено' : 'Выполнить' }}
+							</button>
+						</div>
 					</div>
 				</div>
 
@@ -216,8 +226,10 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
+import { getRouteName } from '@/core/config/routes.config'
 import { Check, ChevronLeft, Plus, Printer, Truck } from 'lucide-vue-next'
 import { computed, nextTick, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 /**
  * Interfaces for typing
@@ -253,6 +265,12 @@ const scrollToTop = async () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 };
+
+const router = useRouter()
+
+const onBackClick = () => {
+  router.push({name: getRouteName("ADMIN_DASHBOARD")})
+}
 
 
 /**
@@ -292,6 +310,7 @@ const scrollToTop = async () => {
         status: 'In Progress',
         prepTime: '2 мин',
       },
+
     ],
   },
   {

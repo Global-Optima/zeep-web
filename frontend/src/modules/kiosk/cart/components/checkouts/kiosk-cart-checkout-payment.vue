@@ -15,7 +15,7 @@ const emit = defineEmits<{
   (e: 'proceed', paymentMethod: string): void;
 }>();
 
-const selectedPayment = ref('');
+const selectedPayment = ref<null | string>('');
 const error = ref('');
 const isLoading = ref(false);
 
@@ -23,6 +23,12 @@ const paymentOptions = [
   { id: 'kaspi', label: 'Kaspi QR', icon: QrCode },
   { id: 'card', label: 'Оплата картой', icon: CreditCard },
 ];
+
+// Handle Payment Option Selection
+const selectPaymentMethod = (method: string) => {
+  selectedPayment.value = method;
+  processPayment();
+};
 
 // Simulate Payment Process
 const processPayment = async () => {
@@ -34,24 +40,18 @@ const processPayment = async () => {
     const success = Math.random() > 0.3;
 
     if (!success) {
+      selectedPayment.value = null
       throw new Error('Ошибка при обработке, попробуйте снова!');
     }
 
-    emit('proceed', selectedPayment.value);
+    if (selectedPayment.value) {
+      emit('proceed', selectedPayment.value);
+    }
   } catch (err) {
     error.value = (err as Error).message;
   } finally {
     isLoading.value = false;
   }
-};
-
-const proceedToPayment = () => {
-  if (!selectedPayment.value) {
-    error.value = 'Выберите способ оплаты.';
-    return;
-  }
-
-  processPayment();
 };
 </script>
 
@@ -83,7 +83,7 @@ const proceedToPayment = () => {
             'bg-primary text-white': selectedPayment === option.id,
             'border-gray-300': selectedPayment !== option.id,
           }"
-					@click="selectedPayment = option.id"
+					@click="selectPaymentMethod(option.id)"
 				>
 					<component
 						:is="option.icon"
@@ -111,20 +111,14 @@ const proceedToPayment = () => {
 			</p>
 
 			<!-- Footer Buttons -->
-			<div class="flex justify-between items-center !mt-16 w-full">
+			<div class="flex justify-center items-center !mt-0 w-full">
 				<Button
 					variant="ghost"
+					:disabled="isLoading"
 					@click="$emit('back')"
 					class="sm:px-6 sm:py-8 sm:text-2xl"
 				>
 					Назад
-				</Button>
-				<Button
-					type="submit"
-					@click="proceedToPayment"
-					class="bg-primary sm:px-6 sm:py-8 text-white sm:text-2xl"
-				>
-					Продолжить
 				</Button>
 			</div>
 		</DialogContent>

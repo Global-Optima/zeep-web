@@ -55,7 +55,8 @@ const stepsConfig: StepConfig[] = [
       import('@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout-confirm.vue')
     ),
     onProceed: () => {
-      router.push({ name: getRouteName('KIOSK_LANDING') });
+      resetKioskState.resetAll()
+      router.push({ name: getRouteName("KIOSK_HOME") });
     },
     onBack: 'payment',
   },
@@ -74,7 +75,6 @@ const closeAllAndReset = () => {
     selectedPayment: '',
     qrCodeUrl: 'https://urbocoffee.kz/',
   });
-  resetKioskState.resetAll();
 };
 
 const handleProceed = (stepName: string, data: StepState) => {

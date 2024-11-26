@@ -10,14 +10,6 @@ export const ADMIN_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/admin/pages/admin-dashboard-page.vue'),
 	},
-	ADMIN_ANALYTICS: {
-		path: 'analytics',
-		meta: {
-			title: 'Аналитика',
-			requiresAuth: true,
-		},
-		component: () => import('@/modules/admin/pages/admin-analytics-page.vue'),
-	},
 	ADMIN_ORDERS: {
 		path: 'orders',
 		meta: {

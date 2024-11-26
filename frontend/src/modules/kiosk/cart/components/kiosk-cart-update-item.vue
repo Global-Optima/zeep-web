@@ -14,7 +14,7 @@ import type {
   ProductSizeDTO
 } from '@/modules/kiosk/products/models/product.model'
 import { productService } from '@/modules/kiosk/products/services/products.service'
-import { Pencil, X } from 'lucide-vue-next'
+import { X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 
 interface UpdateCartDialogProps {
@@ -209,7 +209,7 @@ const handleUpdate = () => {
 					:sizes="productDetails.sizes"
 					:selectedSizeId="selectedSize.id"
 					:totalPrice="totalPrice"
-					:display-icon="Pencil"
+					display-icon="update"
 					@select-size="onSizeSelect"
 					@add-to-cart="handleUpdate"
 				/>
