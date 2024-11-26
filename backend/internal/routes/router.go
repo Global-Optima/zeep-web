@@ -77,7 +77,7 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.Routes.Group("/orders")
 	{
 		router.POST("/", handler.CreateOrder)
-		router.PUT("/suborders/:subOrderId/complete", handler.CompleteSubOrder)
+		router.PUT("/suborders/:subOrderId/complete", middleware.RoleMiddleware("Barista"), handler.CompleteSubOrder)
 		router.GET("/", handler.GetAllOrders)
 		router.GET("/suborders", handler.GetSubOrders)
 		router.GET("/statuses/count", handler.GetStatusesCount)

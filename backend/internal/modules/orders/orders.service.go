@@ -42,7 +42,6 @@ func NewOrderService(repo OrderRepository, kafkaProducer *kafka.KafkaProducer) O
 }
 
 func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
-
 	var productSizeIDs []uint
 	var additiveIDs []uint
 	for _, product := range createOrderDTO.Products {
