@@ -22,7 +22,6 @@ func SetCookie(c *gin.Context, name, value string, expiration time.Duration) {
 
 	if cfg.IsDevelopment {
 		secure = false
-		domain = "localhost"
 		sameSite = http.SameSiteLaxMode
 	}
 
@@ -54,7 +53,6 @@ func ClearCookie(c *gin.Context, name string) {
 
 	if cfg.IsDevelopment {
 		secure = false
-		domain = "localhost"
 		sameSite = http.SameSiteLaxMode
 	}
 
