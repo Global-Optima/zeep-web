@@ -114,16 +114,7 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		}
 	}
 
-	eventData, err := json.Marshal(orderEvent)
-	if err != nil {
-		return fmt.Errorf("failed to serialize updated order event: %w", err)
-	}
-
 	kafkaConfig := config.GetConfig().Kafka
-	err = s.kafkaProducer.SendMessage(kafkaConfig.Topics.ActiveOrders, fmt.Sprintf("%d", subOrder.OrderID), string(eventData))
-	if err != nil {
-		return fmt.Errorf("failed to publish updated order event to Kafka: %w", err)
-	}
 
 	allCompleted := true
 	for _, item := range orderEvent.Items {
@@ -137,18 +128,35 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		orderEvent.Status = "completed"
 		orderEvent.Timestamp = time.Now()
 
-		eventData, err = json.Marshal(orderEvent)
+		completedEventData, err := json.Marshal(orderEvent)
 		if err != nil {
 			return fmt.Errorf("failed to serialize completed order event: %w", err)
 		}
 
-		err = s.kafkaProducer.SendMessage(kafkaConfig.Topics.ActiveOrders, fmt.Sprintf("%d", subOrder.OrderID), string(eventData))
+		err = s.kafkaProducer.SendMessage(kafkaConfig.Topics.CompletedOrders, fmt.Sprintf("%d", subOrder.OrderID), string(completedEventData))
 		if err != nil {
-			return fmt.Errorf("failed to publish completed order event to Kafka: %w", err)
+			return fmt.Errorf("failed to publish completed order to Kafka: %w", err)
 		}
-	}
 
-	websockets.GetHubInstance().Broadcast("orders", "suborder_completed", eventData)
+		err = s.repo.UpdateOrderStatus(subOrder.OrderID, "completed")
+		if err != nil {
+			return fmt.Errorf("failed to update order status in database: %w", err)
+		}
+
+		websockets.GetHubInstance().Broadcast("orders", "order_completed", completedEventData)
+	} else {
+		updatedEventData, err := json.Marshal(orderEvent)
+		if err != nil {
+			return fmt.Errorf("failed to serialize updated order event: %w", err)
+		}
+
+		err = s.kafkaProducer.SendMessage(kafkaConfig.Topics.ActiveOrders, fmt.Sprintf("%d", subOrder.OrderID), string(updatedEventData))
+		if err != nil {
+			return fmt.Errorf("failed to publish updated order to Kafka: %w", err)
+		}
+
+		websockets.GetHubInstance().Broadcast("orders", "suborder_completed", updatedEventData)
+	}
 
 	return nil
 }
