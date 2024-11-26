@@ -6,8 +6,11 @@ import (
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
 )
+
+var Logger = logger.GetInstance()
 
 type OrderHandler struct {
 	service OrderService
@@ -95,7 +98,11 @@ func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 
 	c.Header("Content-Type", "application/pdf")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=order_%d_receipt.pdf", orderID))
-	c.Writer.Write(pdfData)
+	if _, err := c.Writer.Write(pdfData); err != nil {
+		Logger.Error(fmt.Sprintf("Failed to write PDF data: %v", err))
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
