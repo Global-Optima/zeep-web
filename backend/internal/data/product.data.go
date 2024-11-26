@@ -6,15 +6,16 @@ import (
 
 type Product struct {
 	BaseEntity
-	Name             string                   `gorm:"size:100;not null"`
-	Description      string                   `gorm:"type:text"`
-	ImageURL         string                   `gorm:"size:2048"`
-	VideoURL         string                   `gorm:"size:2048"`
-	CategoryID       *uint                    `gorm:"index;not null"`
-	Category         *ProductCategory         `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-	RecipeSteps      []RecipeStep             `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	ProductSizes     []ProductSize            `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	DefaultAdditives []DefaultProductAdditive `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	Name               string                   `gorm:"size:100;not null"`
+	Description        string                   `gorm:"type:text"`
+	ImageURL           string                   `gorm:"size:2048"`
+	VideoURL           string                   `gorm:"size:2048"`
+	CategoryID         *uint                    `gorm:"index;not null"`
+	Category           *ProductCategory         `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	RecipeSteps        []RecipeStep             `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	ProductSizes       []ProductSize            `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	DefaultAdditives   []DefaultProductAdditive `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	ProductIngredients []ProductIngredient      `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 }
 
 type RecipeStep struct {
@@ -42,10 +43,11 @@ type ProductSize struct {
 
 type ProductIngredient struct {
 	BaseEntity
-	ItemIngredientID uint       `gorm:"index;not null"`
-	ProductID        uint       `gorm:"index;not null"`
-	Product          Product    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	Ingredient       Ingredient `gorm:"foreignKey:ItemIngredientID;constraint:OnDelete:CASCADE"`
+	ItemIngredientID uint           `gorm:"index;not null"`
+	ItemIngredient   ItemIngredient `gorm:"foreignKey:ItemIngredientID;constraint:OnDelete:CASCADE"`
+	ProductID        uint           `gorm:"index;not null"`
+	Product          Product        `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	Ingredient       Ingredient     `gorm:"foreignKey:ItemIngredientID;constraint:OnDelete:CASCADE"`
 }
 
 type ProductAdditive struct {

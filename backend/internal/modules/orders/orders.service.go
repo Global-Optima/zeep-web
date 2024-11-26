@@ -26,7 +26,7 @@ type OrderService interface {
 	GeneratePDFReceipt(orderID uint) ([]byte, error)
 
 	UpdateInventory(productID uint, quantity int) error
-	GetLowStockProducts(threshold float64) ([]data.Product, error)
+	GetLowStockIngredients(threshold float64) ([]data.Ingredient, error)
 }
 
 type orderService struct {
@@ -281,8 +281,8 @@ func (s *orderService) UpdateInventory(productID uint, quantity int) error {
 	return s.repo.UpdateInventory(productID, quantity)
 }
 
-func (s *orderService) GetLowStockProducts(threshold float64) ([]data.Product, error) {
-	return s.repo.GetLowStockProducts(threshold)
+func (s *orderService) GetLowStockIngredients(threshold float64) ([]data.Ingredient, error) {
+	return s.repo.GetLowStockIngredients(threshold)
 }
 
 func ValidateProductSizes(productSizeIDs []uint, repo OrderRepository) (map[uint]float64, error) {
