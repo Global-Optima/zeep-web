@@ -6,6 +6,10 @@ import (
 	"github.com/IBM/sarama"
 )
 
+type ConsumerGroupHandler interface {
+	sarama.ConsumerGroupHandler
+}
+
 type KafkaHandler struct {
 	ProcessMessage func(topic, key, value string) error
 }

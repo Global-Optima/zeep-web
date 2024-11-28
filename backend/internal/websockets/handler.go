@@ -21,7 +21,6 @@ func WebSocketHandler(hub *WebSocketHub) gin.HandlerFunc {
 			return
 		}
 
-		// Subscribe client to channel
 		channel := c.Query("channel")
 		if channel == "" {
 			channel = "default"
@@ -38,14 +37,12 @@ func WebSocketHandler(hub *WebSocketHub) gin.HandlerFunc {
 			conn.Close()
 		}()
 
-		// Listen for incoming messages (optional, if clients send messages)
 		for {
 			var msg BroadcastMessage
 			err := conn.ReadJSON(&msg)
 			if err != nil {
 				break
 			}
-			// Process incoming message if needed
 		}
 	}
 }

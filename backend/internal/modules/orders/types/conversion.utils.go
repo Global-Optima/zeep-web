@@ -1,6 +1,8 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+)
 
 func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices map[uint]float64, additivePrices map[uint]float64) (data.Order, float64) {
 	var total float64
@@ -39,7 +41,7 @@ func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices 
 		EmployeeID:        createOrderDTO.EmployeeID,
 		StoreID:           createOrderDTO.StoreID,
 		DeliveryAddressID: createOrderDTO.DeliveryAddressID,
-		OrderStatus:       "pending",
+		OrderStatus:       string(OrderStatusPending),
 		OrderProducts:     orderProducts,
 	}
 

@@ -14,5 +14,5 @@ type OrderEvent struct {
 
 type SubOrderEvent struct {
 	SubOrderID uint   `json:"sub_order_id"`
-	Status     string `json:"status"` // e.g., 'pending', 'completed'
+	Status     string `json:"status"` // e.g., 'PENDING', 'COMPLETED'
 }

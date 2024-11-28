@@ -2,15 +2,6 @@ package data
 
 import "time"
 
-type ItemIngredient struct {
-	BaseEntity
-	IngredientID uint       `gorm:"not null;index"`
-	Ingredient   Ingredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
-	ItemID       uint       `gorm:"not null;index"`
-	Product      Product    `gorm:"foreignKey:ItemID;constraint:OnDelete:CASCADE"`
-	Quantity     float64    `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
-}
-
 type CityWarehouse struct {
 	BaseEntity
 	FacilityAddressID uint            `gorm:"not null;index"`

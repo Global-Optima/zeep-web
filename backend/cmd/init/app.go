@@ -15,8 +15,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/websockets"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
+	"github.com/Global-Optima/zeep-web/backend/internal/websockets"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -57,12 +57,13 @@ func InitializeRedis(cfg *config.Config) *database.RedisClient {
 	return redisClient
 }
 
-func InitializeKafka(cfg *config.Config) *kafka.KafkaProducer {
-	kafkaProducer, err := kafka.NewKafkaProducer()
+func InitializeKafka(cfg *config.Config) *kafka.KafkaManager {
+	kafkaManager, err := kafka.NewKafkaManager(cfg.Kafka)
 	if err != nil {
-		log.Fatalf("Failed to initialize Kafka producer: %v", err)
+		log.Fatalf("failed to initialize kafka instance: %v", err)
+		return nil
 	}
-	return kafkaProducer
+	return kafkaManager
 }
 
 func InitializeModule[T any, H any](
@@ -82,7 +83,7 @@ func InitializeModule[T any, H any](
 	registerRoutes(handler)
 }
 
-func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, kafkaProducer *kafka.KafkaProducer, storageRepo storage.StorageRepository) *gin.Engine {
+func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, kafkaManager *kafka.KafkaManager, storageRepo storage.StorageRepository) *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.Default())
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
@@ -144,7 +145,11 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (orders.OrderService, error) {
-			return orders.NewOrderService(orders.NewOrderRepository(dbHandler.DB), kafkaProducer), nil
+			return orders.NewOrderService(
+				orders.NewOrderRepository(dbHandler.DB),
+				orders.NewSubOrderRepository(dbHandler.DB),
+				kafkaManager,
+				orders.NewOrdersNotifier(hub)), nil
 		},
 		orders.NewOrderHandler,
 		apiRouter.RegisterOrderRoutes,
@@ -177,9 +182,9 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 
 	storageRepo := InitializeStorage(cfg) // temp
 
-	kafkaProducer := InitializeKafka(cfg)
+	kafkaManager := InitializeKafka(cfg)
 
-	router := InitializeRouter(dbHandler, redisClient, kafkaProducer, storageRepo) // temp
+	router := InitializeRouter(dbHandler, redisClient, kafkaManager, storageRepo) // temp
 
 	return router, cfg
 }

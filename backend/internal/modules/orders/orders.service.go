@@ -1,18 +1,14 @@
 package orders
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/kafka"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/websockets"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
-	"github.com/IBM/sarama"
 )
 
 type OrderService interface {
@@ -25,19 +21,22 @@ type OrderService interface {
 	CompleteSubOrder(subOrderID uint) error
 	GeneratePDFReceipt(orderID uint) ([]byte, error)
 
-	UpdateInventory(productID uint, quantity int) error
 	GetLowStockIngredients(threshold float64) ([]data.Ingredient, error)
 }
 
 type orderService struct {
-	repo          OrderRepository
-	kafkaProducer *kafka.KafkaProducer
+	orderRepo      OrderRepository
+	subOrderRepo   SubOrderRepository
+	kafkaManager   *kafka.KafkaManager
+	ordersNotifier *OrdersNotifier
 }
 
-func NewOrderService(repo OrderRepository, kafkaProducer *kafka.KafkaProducer) OrderService {
+func NewOrderService(orderRepo OrderRepository, subOrderRepo SubOrderRepository, kafkaManager *kafka.KafkaManager, ordersNotifier *OrdersNotifier) OrderService {
 	return &orderService{
-		repo:          repo,
-		kafkaProducer: kafkaProducer,
+		orderRepo:      orderRepo,
+		subOrderRepo:   subOrderRepo,
+		kafkaManager:   kafkaManager,
+		ordersNotifier: ordersNotifier,
 	}
 }
 
@@ -49,11 +48,11 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 		additiveIDs = append(additiveIDs, product.Additives...)
 	}
 
-	productPrices, err := ValidateProductSizes(productSizeIDs, s.repo)
+	productPrices, err := ValidateProductSizes(productSizeIDs, s.orderRepo)
 	if err != nil {
 		return err
 	}
-	additivePrices, err := ValidateAdditives(additiveIDs, s.repo)
+	additivePrices, err := ValidateAdditives(additiveIDs, s.orderRepo)
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,8 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, productPrices, additivePrices)
 	order.Total = total
 
-	err = s.repo.CreateOrder(&order)
+	Logger.Debug(fmt.Sprintf("%+v", order))
+	err = s.orderRepo.CreateOrder(&order)
 	if err != nil {
 		return fmt.Errorf("failed to save order to database: %w", err)
 	}
@@ -69,13 +69,13 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 	orderEvent := types.OrderEvent{
 		OrderID:   order.ID,
 		StoreID:   order.StoreID,
-		Status:    "pending",
+		Status:    string(types.OrderStatusPending),
 		Timestamp: time.Now(),
 	}
 	for _, product := range order.OrderProducts {
 		orderEvent.Items = append(orderEvent.Items, types.SubOrderEvent{
 			SubOrderID: product.ID,
-			Status:     "pending",
+			Status:     string(types.OrderStatusPending),
 		})
 	}
 
@@ -84,128 +84,69 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 		return fmt.Errorf("failed to serialize order event: %w", err)
 	}
 
-	kafkaConfig := config.GetConfig().Kafka
-	err = s.kafkaProducer.SendMessage(kafkaConfig.Topics.ActiveOrders, fmt.Sprintf("%d", order.ID), string(eventData))
+	err = s.kafkaManager.PublishEvent(s.kafkaManager.Topics.ActiveOrders, fmt.Sprintf("%d", order.ID), eventData)
 	if err != nil {
 		return fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
 
-	websockets.GetHubInstance().Broadcast("orders", "order_created", eventData)
+	s.ordersNotifier.NotifyNewOrder(order.ID, orderEvent)
 
 	return nil
 }
 
 func (s *orderService) CompleteSubOrder(subOrderID uint) error {
-	subOrder, err := s.repo.GetSubOrderByID(subOrderID)
+	subOrder, err := s.subOrderRepo.GetSubOrderByID(subOrderID)
 	if err != nil {
 		return fmt.Errorf("suborder not found: %w", err)
 	}
 
-	orderEvent, err := s.GetActiveOrderEvent(subOrder.OrderID)
+	orderEvent, err := s.kafkaManager.GetOrderEvent(s.kafkaManager.Topics.ActiveOrders, subOrder.OrderID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch order event from Kafka: %w", err)
 	}
 
 	for i, item := range orderEvent.Items {
 		if item.SubOrderID == subOrderID {
-			orderEvent.Items[i].Status = "completed"
+			orderEvent.Items[i].Status = string(types.OrderStatusCompleted)
 			break
 		}
 	}
 
-	kafkaConfig := config.GetConfig().Kafka
-
 	allCompleted := true
 	for _, item := range orderEvent.Items {
-		if item.Status != "completed" {
+		if item.Status != string(types.OrderStatusCompleted) {
 			allCompleted = false
 			break
 		}
 	}
 
+	orderEvent.Timestamp = time.Now()
+	var topic string
 	if allCompleted {
-		orderEvent.Status = "completed"
-		orderEvent.Timestamp = time.Now()
+		orderEvent.Status = string(types.OrderStatusCompleted)
+		topic = s.kafkaManager.Topics.CompletedOrders
 
-		completedEventData, err := json.Marshal(orderEvent)
-		if err != nil {
-			return fmt.Errorf("failed to serialize completed order event: %w", err)
-		}
-
-		err = s.kafkaProducer.SendMessage(kafkaConfig.Topics.CompletedOrders, fmt.Sprintf("%d", subOrder.OrderID), string(completedEventData))
-		if err != nil {
-			return fmt.Errorf("failed to publish completed order to Kafka: %w", err)
-		}
-
-		err = s.repo.UpdateOrderStatus(subOrder.OrderID, "completed")
+		err = s.orderRepo.UpdateOrderStatus(subOrder.OrderID, string(types.OrderStatusCompleted))
 		if err != nil {
 			return fmt.Errorf("failed to update order status in database: %w", err)
 		}
 
-		websockets.GetHubInstance().Broadcast("orders", "order_completed", completedEventData)
+		s.ordersNotifier.NotifyOrderCompleted(subOrder.OrderID, orderEvent)
 	} else {
-		updatedEventData, err := json.Marshal(orderEvent)
-		if err != nil {
-			return fmt.Errorf("failed to serialize updated order event: %w", err)
-		}
+		topic = s.kafkaManager.Topics.ActiveOrders
+		s.ordersNotifier.NotifySubOrderCompleted(subOrder.OrderID, subOrderID, orderEvent)
+	}
 
-		err = s.kafkaProducer.SendMessage(kafkaConfig.Topics.ActiveOrders, fmt.Sprintf("%d", subOrder.OrderID), string(updatedEventData))
-		if err != nil {
-			return fmt.Errorf("failed to publish updated order to Kafka: %w", err)
-		}
-
-		websockets.GetHubInstance().Broadcast("orders", "suborder_completed", updatedEventData)
+	err = s.kafkaManager.PublishEvent(topic, fmt.Sprintf("%d", subOrder.OrderID), orderEvent)
+	if err != nil {
+		return fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
 
 	return nil
 }
 
-func (s *orderService) GetActiveOrderEvent(orderID uint) (*types.OrderEvent, error) {
-	kafkaConfig := config.GetConfig().Kafka
-
-	config := sarama.NewConfig()
-	config.Consumer.Return.Errors = true
-	config.Consumer.Offsets.Initial = sarama.OffsetOldest
-
-	consumer, err := sarama.NewConsumerGroup(kafkaConfig.Brokers, kafkaConfig.ConsumerGroupID, config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Kafka consumer: %w", err)
-	}
-	defer consumer.Close()
-
-	resultChan := make(chan *types.OrderEvent, 1)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	handler := kafka.NewKafkaHandler(func(topic, key, value string) error {
-		var event types.OrderEvent
-		if err := json.Unmarshal([]byte(value), &event); err != nil {
-			return fmt.Errorf("failed to unmarshal message: %w", err)
-		}
-
-		if event.OrderID == orderID {
-			resultChan <- &event
-			cancel()
-		}
-		return nil
-	})
-
-	go func() {
-		if err := consumer.Consume(ctx, []string{kafkaConfig.Topics.ActiveOrders}, handler); err != nil {
-			fmt.Printf("Error consuming Kafka topic: %v\n", err)
-		}
-	}()
-
-	select {
-	case result := <-resultChan:
-		return result, nil
-	case <-ctx.Done():
-		return nil, fmt.Errorf("timeout fetching order event for order ID %d", orderID)
-	}
-}
-
 func (s *orderService) GetAllOrders(status *string) ([]types.OrderDTO, error) {
-	orders, err := s.repo.GetAllOrders(status)
+	orders, err := s.orderRepo.GetAllOrders(status)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +159,7 @@ func (s *orderService) GetAllOrders(status *string) ([]types.OrderDTO, error) {
 }
 
 func (s *orderService) GetSubOrders(orderID uint) ([]types.OrderProductDTO, error) {
-	subOrders, err := s.repo.GetSubOrders(orderID)
+	subOrders, err := s.subOrderRepo.GetSubOrders(orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -231,15 +172,15 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.OrderProductDTO, erro
 }
 
 func (s *orderService) GetStatusesCount() (map[string]int64, error) {
-	return s.repo.GetStatusesCount()
+	return s.orderRepo.GetStatusesCount()
 }
 
 func (s *orderService) GetSubOrderCount(orderID uint) (int64, error) {
-	return s.repo.GetSubOrderCount(orderID)
+	return s.subOrderRepo.GetSubOrderCount(orderID)
 }
 
 func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
-	order, err := s.repo.GetOrderById(orderID)
+	order, err := s.orderRepo.GetOrderById(orderID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch order details: %w", err)
 	}
@@ -252,7 +193,7 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	}
 
 	for _, product := range order.OrderProducts {
-		productSizeLabel, err := s.repo.GetProductSizeLabel(product.ProductSizeID)
+		productSizeLabel, err := s.orderRepo.GetProductSizeLabel(product.ProductSizeID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch size label: %w", err)
 		}
@@ -277,12 +218,8 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	return pdf.GeneratePDFReceipt(details)
 }
 
-func (s *orderService) UpdateInventory(productID uint, quantity int) error {
-	return s.repo.UpdateInventory(productID, quantity)
-}
-
 func (s *orderService) GetLowStockIngredients(threshold float64) ([]data.Ingredient, error) {
-	return s.repo.GetLowStockIngredients(threshold)
+	return s.orderRepo.GetLowStockIngredients(threshold)
 }
 
 func ValidateProductSizes(productSizeIDs []uint, repo OrderRepository) (map[uint]float64, error) {
