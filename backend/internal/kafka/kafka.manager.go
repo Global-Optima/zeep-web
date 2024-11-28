@@ -9,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
 	"github.com/IBM/sarama"
+	"github.com/cenkalti/backoff/v4"
 )
 
 type KafkaManager struct {
@@ -70,16 +71,27 @@ func (k *KafkaManager) GetOrderEvent(topic string, orderID uint) (*types.OrderEv
 		}
 
 		if event.OrderID == orderID {
-			resultChan <- &event
-			cancel() // Cancel the context as we found the needed event
+			select {
+			case resultChan <- &event:
+			default:
+			}
+			cancel() // Signal completion
 		}
 		return nil
 	})
 
-	go func() {
+	operation := func() error {
 		if err := k.Consumer.Consume(ctx, []string{topic}, handler); err != nil {
+			return err
 		}
-	}()
+		return nil
+	}
+
+	expBackoff := backoff.NewExponentialBackOff()
+	err := backoff.Retry(operation, expBackoff)
+	if err != nil {
+		return nil, fmt.Errorf("failed to consume Kafka messages: %w", err)
+	}
 
 	select {
 	case result := <-resultChan:

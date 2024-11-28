@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"log"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/IBM/sarama"
@@ -41,30 +40,4 @@ func (c *KafkaConsumer) Consume(ctx context.Context, topics []string, handler sa
 
 func (c *KafkaConsumer) Close() error {
 	return c.client.Close()
-}
-
-func parseRebalanceStrategy(strategy string) sarama.BalanceStrategy {
-	switch strategy {
-	case "range":
-		return sarama.NewBalanceStrategyRange()
-	case "round_robin":
-		return sarama.NewBalanceStrategyRoundRobin()
-	case "sticky":
-		return sarama.NewBalanceStrategySticky()
-	default:
-		log.Printf("Unknown rebalance strategy '%s', defaulting to round_robin", strategy)
-		return sarama.BalanceStrategyRoundRobin
-	}
-}
-
-func parseOffsetInitial(initial string) int64 {
-	switch initial {
-	case "newest":
-		return sarama.OffsetNewest
-	case "oldest":
-		return sarama.OffsetOldest
-	default:
-		log.Printf("Unknown offset initial '%s', defaulting to oldest", initial)
-		return sarama.OffsetOldest
-	}
 }
