@@ -69,13 +69,13 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 	orderEvent := types.OrderEvent{
 		OrderID:   order.ID,
 		StoreID:   order.StoreID,
-		Status:    string(types.OrderStatusPending),
+		Status:    types.OrderStatusPending,
 		Timestamp: time.Now(),
 	}
 	for _, product := range order.OrderProducts {
 		orderEvent.Items = append(orderEvent.Items, types.SubOrderEvent{
 			SubOrderID: product.ID,
-			Status:     string(types.OrderStatusPending),
+			Status:     types.OrderStatusPending,
 		})
 	}
 
@@ -107,14 +107,14 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 
 	for i, item := range orderEvent.Items {
 		if item.SubOrderID == subOrderID {
-			orderEvent.Items[i].Status = string(types.OrderStatusCompleted)
+			orderEvent.Items[i].Status = types.OrderStatusCompleted
 			break
 		}
 	}
 
 	allCompleted := true
 	for _, item := range orderEvent.Items {
-		if item.Status != string(types.OrderStatusCompleted) {
+		if item.Status != types.OrderStatusCompleted {
 			allCompleted = false
 			break
 		}
@@ -123,7 +123,7 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 	orderEvent.Timestamp = time.Now()
 	var topic string
 	if allCompleted {
-		orderEvent.Status = string(types.OrderStatusCompleted)
+		orderEvent.Status = types.OrderStatusCompleted
 		topic = s.kafkaManager.Topics.CompletedOrders
 
 		err = s.orderRepo.UpdateOrderStatus(subOrder.OrderID, string(types.OrderStatusCompleted))
