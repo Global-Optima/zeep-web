@@ -399,4 +399,14 @@ CREATE TABLE IF NOT EXISTS stock_request_ingredients (
 	deleted_at TIMESTAMPTZ
 );
 
-
+-- Suppliers Table
+CREATE TABLE IF NOT EXISTS suppliers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(20),
+    address VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
