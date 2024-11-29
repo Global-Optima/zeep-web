@@ -54,7 +54,7 @@ func (r *orderRepository) CreateOrder(order *data.Order) error {
 		}
 
 		productSizeIDs := extractProductSizeIDs(order.OrderProducts)
-		productSizes, err := fetchProductSizes(tx, productSizeIDs)
+		productSizes, err := FetchProductSizes(tx, productSizeIDs)
 		if err != nil {
 			return fmt.Errorf("failed to fetch product sizes: %w", err)
 		}
@@ -183,7 +183,7 @@ func extractProductSizeIDs(subOrders []data.OrderProduct) []uint {
 	return ids
 }
 
-func fetchProductSizes(tx *gorm.DB, productSizeIDs []uint) (map[uint]data.ProductSize, error) {
+func FetchProductSizes(tx *gorm.DB, productSizeIDs []uint) (map[uint]data.ProductSize, error) {
 	var productSizes []data.ProductSize
 	if err := tx.Where("id IN ?", productSizeIDs).Find(&productSizes).Error; err != nil {
 		return nil, err

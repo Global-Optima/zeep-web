@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
@@ -135,4 +137,15 @@ func ConvertDTOToOrderProductAdditive(additiveDTO *OrderProductAdditiveDTO) data
 		AdditiveID:     additiveDTO.AdditiveID,
 		Price:          additiveDTO.Price,
 	}
+}
+
+func ArrayToCSV(arr []uint) string {
+	var result string
+	for i, val := range arr {
+		if i > 0 {
+			result += ","
+		}
+		result += fmt.Sprintf("%d", val)
+	}
+	return result
 }

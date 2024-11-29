@@ -1,7 +1,6 @@
 package orders
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -79,12 +78,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 		})
 	}
 
-	eventData, err := json.Marshal(orderEvent)
-	if err != nil {
-		return fmt.Errorf("failed to serialize order event: %w", err)
-	}
-
-	err = s.kafkaManager.PublishEvent(s.kafkaManager.Topics.ActiveOrders, fmt.Sprintf("%d", order.ID), eventData)
+	err = s.kafkaManager.PublishEvent(s.kafkaManager.Topics.ActiveOrders, fmt.Sprintf("%d", order.ID), orderEvent)
 	if err != nil {
 		return fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
