@@ -15,6 +15,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/internal/websockets"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -153,6 +154,15 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		},
 		orders.NewOrderHandler,
 		apiRouter.RegisterOrderRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (supplier.SupplierService, error) {
+			return supplier.NewSupplierService(supplier.NewSupplierRepository(dbHandler.DB)), nil
+		},
+		supplier.NewSupplierHandler,
+		apiRouter.RegisterSupplierRoutes,
 	)
 
 	return router
