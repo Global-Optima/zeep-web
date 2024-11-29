@@ -9,6 +9,13 @@ import (
 type ProductRepository interface {
 	GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error)
 	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
+	DeleteProduct(productID uint) error
+
+	UpdateProduct(product *data.Product) error
+	CreateProduct(product *data.Product) (uint, error)
+	CreateProductSizes(productID uint, sizes []data.ProductSize) error
+	AssignProductAdditives(productSizeID uint, additives []data.ProductAdditive) error
+	AssignDefaultAdditives(productID uint, additives []data.DefaultProductAdditive) error
 }
 
 type productRepository struct {
@@ -99,7 +106,43 @@ func (r *productRepository) GetStoreProductDetails(storeID uint, productID uint)
 	}
 
 	// Map models to DTO
-	productDTO := mapToStoreProductDetailsDTO(&product, defaultAdditives)
+	productDTO := types.MapToStoreProductDetailsDTO(&product, defaultAdditives)
 
 	return productDTO, nil
+}
+
+func (r *productRepository) DeleteProduct(productID uint) error {
+	return r.db.Where("id = ?", productID).Delete(&data.Product{}).Error
+}
+
+func (r *productRepository) CreateProduct(product *data.Product) (uint, error) {
+	if err := r.db.Create(product).Error; err != nil {
+		return 0, err
+	}
+	return product.ID, nil
+}
+
+func (r *productRepository) CreateProductSizes(productID uint, sizes []data.ProductSize) error {
+	for i := range sizes {
+		sizes[i].ProductID = productID
+	}
+	return r.db.Create(&sizes).Error
+}
+
+func (r *productRepository) AssignProductAdditives(productSizeID uint, additives []data.ProductAdditive) error {
+	for i := range additives {
+		additives[i].ProductSizeID = productSizeID
+	}
+	return r.db.Create(&additives).Error
+}
+
+func (r *productRepository) AssignDefaultAdditives(productID uint, additives []data.DefaultProductAdditive) error {
+	for i := range additives {
+		additives[i].ProductID = productID
+	}
+	return r.db.Create(&additives).Error
+}
+
+func (r *productRepository) UpdateProduct(product *data.Product) error {
+	return r.db.Save(product).Error
 }
