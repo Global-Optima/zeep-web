@@ -39,19 +39,7 @@ func (s *supplierService) UpdateSupplier(id uint, dto types.UpdateSupplierDTO) e
 	if err != nil {
 		return err
 	}
-	if dto.Name != nil {
-		supplier.Name = *dto.Name
-	}
-	if dto.ContactEmail != nil {
-		supplier.ContactEmail = *dto.ContactEmail
-	}
-	if dto.ContactPhone != nil {
-		supplier.ContactPhone = *dto.ContactPhone
-	}
-	if dto.Address != nil {
-		supplier.Address = *dto.Address
-	}
-	return s.repo.UpdateSupplier(supplier)
+	return s.repo.UpdateSupplier(id, supplier)
 }
 
 func (s *supplierService) DeleteSupplier(id uint) error {

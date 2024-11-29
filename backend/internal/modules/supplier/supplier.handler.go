@@ -23,6 +23,11 @@ func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
 		return
 	}
 
+	if err := types.ValidateCreateSupplierDTO(createDTO); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"validation_error": err.Error()})
+		return
+	}
+
 	response, err := h.service.CreateSupplier(createDTO)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -58,6 +63,11 @@ func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
 	var updateDTO types.UpdateSupplierDTO
 	if err := c.ShouldBindJSON(&updateDTO); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := types.ValidateUpdateSupplierDTO(updateDTO); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"validation_error": err.Error()})
 		return
 	}
 

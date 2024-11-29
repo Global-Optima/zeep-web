@@ -8,7 +8,7 @@ import (
 type SupplierRepository interface {
 	CreateSupplier(supplier *data.Supplier) error
 	GetSupplierByID(id uint) (*data.Supplier, error)
-	UpdateSupplier(supplier *data.Supplier) error
+	UpdateSupplier(id uint, supplier *data.Supplier) error
 	DeleteSupplier(id uint) error
 	ListSuppliers() ([]data.Supplier, error)
 }
@@ -31,8 +31,8 @@ func (r *supplierRepository) GetSupplierByID(id uint) (*data.Supplier, error) {
 	return &supplier, err
 }
 
-func (r *supplierRepository) UpdateSupplier(supplier *data.Supplier) error {
-	return r.db.Save(supplier).Error
+func (r *supplierRepository) UpdateSupplier(id uint, supplier *data.Supplier) error {
+	return r.db.Model(&data.Supplier{}).Where("id = ?", id).Updates(supplier).Error
 }
 
 func (r *supplierRepository) DeleteSupplier(id uint) error {
