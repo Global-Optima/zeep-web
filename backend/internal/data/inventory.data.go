@@ -43,3 +43,11 @@ type StockRequestIngredient struct {
 	Ingredient     Ingredient   `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	Quantity       float64      `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 }
+
+type Supplier struct {
+	BaseEntity
+	Name         string `gorm:"size:255;not null"`
+	ContactEmail string `gorm:"size:255"`
+	ContactPhone string `gorm:"size:20"`
+	Address      string `gorm:"size:255"`
+}
