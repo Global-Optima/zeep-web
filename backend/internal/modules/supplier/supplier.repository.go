@@ -1,0 +1,46 @@
+package supplier
+
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"gorm.io/gorm"
+)
+
+type SupplierRepository interface {
+	CreateSupplier(supplier *data.Supplier) error
+	GetSupplierByID(id uint) (*data.Supplier, error)
+	UpdateSupplier(id uint, supplier *data.Supplier) error
+	DeleteSupplier(id uint) error
+	ListSuppliers() ([]data.Supplier, error)
+}
+
+type supplierRepository struct {
+	db *gorm.DB
+}
+
+func NewSupplierRepository(db *gorm.DB) SupplierRepository {
+	return &supplierRepository{db}
+}
+
+func (r *supplierRepository) CreateSupplier(supplier *data.Supplier) error {
+	return r.db.Create(supplier).Error
+}
+
+func (r *supplierRepository) GetSupplierByID(id uint) (*data.Supplier, error) {
+	var supplier data.Supplier
+	err := r.db.First(&supplier, id).Error
+	return &supplier, err
+}
+
+func (r *supplierRepository) UpdateSupplier(id uint, supplier *data.Supplier) error {
+	return r.db.Model(&data.Supplier{}).Where("id = ?", id).Updates(supplier).Error
+}
+
+func (r *supplierRepository) DeleteSupplier(id uint) error {
+	return r.db.Delete(&data.Supplier{}, id).Error
+}
+
+func (r *supplierRepository) ListSuppliers() ([]data.Supplier, error) {
+	var suppliers []data.Supplier
+	err := r.db.Find(&suppliers).Error
+	return suppliers, err
+}
