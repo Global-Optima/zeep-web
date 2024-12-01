@@ -6,8 +6,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/gin-gonic/gin"
 )
 
@@ -72,6 +74,29 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager, types.RoleEmployee), handler.UpdatePassword)
 		router.POST("/login", handler.EmployeeLogin)
 		router.POST("/logout", handler.EmployeeLogout)
+	}
+}
 
+func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
+	router := r.Routes.Group("/orders")
+	{
+		router.POST("", handler.CreateOrder)
+		router.PUT("/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(types.RoleEmployee), handler.CompleteSubOrder)
+		router.GET("", handler.GetAllOrders)
+		router.GET("/suborders", handler.GetSubOrders)
+		router.GET("/statuses/count", handler.GetStatusesCount)
+		router.GET("/suborders/count", handler.GetSubOrderCount)
+		router.GET("/:order_id/receipt", handler.GeneratePDFReceipt)
+	}
+}
+
+func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
+	router := r.Routes.Group("/supplier")
+	{
+		router.GET("", handler.ListSuppliers)
+		router.GET("/:id", handler.GetSupplierByID)
+		router.POST("", handler.CreateSupplier)
+		router.PUT("/:id", handler.UpdateSupplier)
+		router.DELETE("/:id", handler.DeleteSupplier)
 	}
 }

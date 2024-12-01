@@ -941,7 +941,7 @@ VALUES
 
 -- Insert into ProductIngredients
 INSERT INTO
-  product_ingredients (item_ingredient_id, product_id)
+  product_ingredients (item_ingredient_id, product_size_id)
 VALUES
   (1, 1),
   (2, 1),
