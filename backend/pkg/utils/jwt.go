@@ -14,14 +14,15 @@ const (
 
 type BaseClaims struct {
 	ID   uint   `json:"id"`   // Unified ID for employees/customers
-	Type string `json:"type"` // employee or customer
+	Type string `json:"type"` // employee(store/warehouse) or customer
 	jwt.RegisteredClaims
 }
 
 type EmployeeClaims struct {
 	BaseClaims
-	Role    string `json:"role"`
-	StoreID *uint  `json:"store_id,omitempty"`
+	Role          string `json:"role"`
+	WorkplaceID   *uint  `json:"workplace_id,omitempty"`   // Store or Warehouse ID
+	WorkplaceType string `json:"workplace_type,omitempty"` // "Store" or "Warehouse"
 }
 
 type CustomerClaims struct {

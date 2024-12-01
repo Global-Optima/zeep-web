@@ -37,23 +37,14 @@ func (h *EmployeeHandler) CreateEmployee(c *gin.Context) {
 	c.JSON(http.StatusCreated, employee)
 }
 
-func (h *EmployeeHandler) GetEmployeesByStore(c *gin.Context) {
-	storeIDParam := c.Query("storeId")
-	roleParam := c.Query("role")
-	limit, offset := utils.ParsePaginationParams(c)
-
-	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
+func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
+	queryParams, err := types.ParseEmployeeQueryParams(c.Request.URL.Query())
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store ID")
+		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
-	var role *string
-	if roleParam != "" {
-		role = &roleParam
-	}
-
-	employees, err := h.service.GetEmployeesByStore(uint(storeID), role, limit, offset)
+	employees, err := h.service.GetEmployees(*queryParams)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
