@@ -123,7 +123,7 @@ const handleProceed = async (stepName: string, data: StepState) => {
   if (step?.onProceed) {
     try {
       await step.onProceed(data);
-    } catch (error) {
+    } catch {
       return;
     }
   }

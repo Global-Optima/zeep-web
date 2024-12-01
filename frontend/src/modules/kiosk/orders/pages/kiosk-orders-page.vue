@@ -47,12 +47,15 @@ interface Suborder {
   productName: string;
   toppings: string[];
   status: 'In Progress' | 'Done';
+  comments?: string;
   prepTime: string;
 }
 
 interface Order {
   id: number;
   customerName: string;
+  customerEmail: string;
+  details: string;
   eta: string;
   suborders: Suborder[];
   status: 'Active' | 'Completed' | 'In Delivery';
@@ -83,7 +86,6 @@ const scrollToTop = async () => {
 const orders = ref<Order[]>([
   // ... (Your mock data remains the same)
 ]);
-
 
 /**
  * Reactive states
