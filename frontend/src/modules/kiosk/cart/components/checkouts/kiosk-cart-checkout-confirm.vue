@@ -18,7 +18,7 @@ const emit = defineEmits<{
 <template>
 	<Dialog
 		:open="props.isOpen"
-		@update:open="emit('close')"
+		@update:open="emit('proceed')"
 	>
 		<DialogContent
 			:include-close-button="false"

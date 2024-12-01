@@ -1,9 +1,5 @@
 package data
 
-import (
-	"time"
-)
-
 type OrderStatus string
 
 const (
@@ -17,12 +13,12 @@ const (
 
 type Order struct {
 	BaseEntity
-	CustomerID        uint           `gorm:"index;not null"`
+	CustomerID        *uint          `gorm:"index"`
+	CustomerName      string         `gorm:"size:255"`
 	EmployeeID        *uint          `gorm:"index"`
-	StoreID           *uint          `gorm:"index"`
+	StoreID           uint           `gorm:"index"`
 	DeliveryAddressID *uint          `gorm:"index"`
 	OrderStatus       OrderStatus    `gorm:"size:50;not null"`
-	OrderDate         time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
 	Total             float64        `gorm:"type:decimal(10,2);not null;check:total >= 0"`
 	OrderProducts     []OrderProduct `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
 }

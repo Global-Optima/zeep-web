@@ -20,7 +20,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'back'): void;
-  (e: 'proceed', customerName: string): void;
+  (e: 'proceed', data: {customerName: string}): void;
 }>();
 
 // Form Schema with Zod
@@ -45,7 +45,7 @@ const form = useForm({
 });
 
 const handleSubmit = form.handleSubmit((values) => {
-  emit('proceed', values.customerName);
+  emit('proceed', {customerName: values.customerName});
 });
 </script>
 

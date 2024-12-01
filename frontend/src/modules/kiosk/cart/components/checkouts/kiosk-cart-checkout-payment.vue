@@ -12,7 +12,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'back'): void;
-  (e: 'proceed', paymentMethod: string): void;
+  (e: 'proceed', data: {paymentMethod: string}): void;
 }>();
 
 const selectedPayment = ref<null | string>('');
@@ -45,7 +45,7 @@ const processPayment = async () => {
     }
 
     if (selectedPayment.value) {
-      emit('proceed', selectedPayment.value);
+      emit('proceed', {paymentMethod: selectedPayment.value});
     }
   } catch (err) {
     error.value = (err as Error).message;

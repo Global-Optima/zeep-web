@@ -312,12 +312,12 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS orders (
 		id SERIAL PRIMARY KEY,
-		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
+		customer_id INT REFERENCES customers (id) ON DELETE CASCADE,
+		customer_name VARCHAR(255) NOT NULL,
 		employee_id INT REFERENCES employees (id) ON DELETE SET NULL,
-		store_id INT REFERENCES stores (id) ON DELETE SET NULL,
+		store_id INT REFERENCES stores (id) NOT NULL,
 		delivery_address_id INT REFERENCES customer_addresses (id) ON DELETE SET NULL,
 		order_status VARCHAR(50) NOT NULL,
-		order_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		total DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

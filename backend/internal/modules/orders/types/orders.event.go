@@ -8,9 +8,8 @@ import (
 
 type OrderEvent struct {
 	OrderID   uint             `json:"order_id"`
-	StoreID   *uint            `json:"store_id"`
 	Status    data.OrderStatus `json:"status"`
-	Timestamp time.Time        `json:"timestamp"`
+	CreatedAt time.Time        `json:"createdAt"`
 	Items     []SubOrderEvent  `json:"items"`
 }
 

@@ -10,7 +10,7 @@ func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices 
 	var total float64
 	var orderProducts []data.OrderProduct
 
-	for _, productDTO := range createOrderDTO.Products {
+	for _, productDTO := range createOrderDTO.OrderItems {
 		var additives []data.OrderProductAdditive
 		var productTotal float64
 
@@ -18,7 +18,7 @@ func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices 
 			productTotal = price * float64(productDTO.Quantity)
 		}
 
-		for _, additiveID := range productDTO.Additives {
+		for _, additiveID := range productDTO.AdditivesIDs {
 			if price, exists := additivePrices[additiveID]; exists {
 				additives = append(additives, data.OrderProductAdditive{
 					AdditiveID: additiveID,
@@ -40,6 +40,7 @@ func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices 
 
 	order := data.Order{
 		CustomerID:        createOrderDTO.CustomerID,
+		CustomerName:      createOrderDTO.CustomerName,
 		EmployeeID:        createOrderDTO.EmployeeID,
 		StoreID:           createOrderDTO.StoreID,
 		DeliveryAddressID: createOrderDTO.DeliveryAddressID,
@@ -58,7 +59,7 @@ func ConvertOrderToDTO(order *data.Order) OrderDTO {
 		StoreID:           order.StoreID,
 		DeliveryAddressID: order.DeliveryAddressID,
 		OrderStatus:       order.OrderStatus,
-		OrderDate:         order.OrderDate,
+		CreatedAt:         order.CreatedAt,
 		Total:             order.Total,
 	}
 
@@ -105,7 +106,6 @@ func ConvertDTOToOrder(orderDTO *OrderDTO) data.Order {
 		StoreID:           orderDTO.StoreID,
 		DeliveryAddressID: orderDTO.DeliveryAddressID,
 		OrderStatus:       orderDTO.OrderStatus,
-		OrderDate:         orderDTO.OrderDate,
 		Total:             orderDTO.Total,
 	}
 

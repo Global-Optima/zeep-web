@@ -59,7 +59,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { ChevronDown, Download, Plus } from 'lucide-vue-next'
-import { defineEmits, ref } from 'vue'
+import {  ref } from 'vue'
 
 // Emit events to parent component
 const emits = defineEmits<{
