@@ -126,8 +126,7 @@ func (s *storeService) DeleteStore(storeID uint, hardDelete bool) error {
 }
 
 func mapToStoreDTO(store data.Store) *types.StoreDTO {
-	var facilityAddress *types.FacilityAddressDTO
-	facilityAddress = &types.FacilityAddressDTO{
+	facilityAddress := &types.FacilityAddressDTO{
 		ID:        store.FacilityAddress.ID,
 		Address:   store.FacilityAddress.Address,
 		Longitude: safeFloat(store.FacilityAddress.Longitude),
@@ -147,8 +146,7 @@ func mapToStoreDTO(store data.Store) *types.StoreDTO {
 }
 
 func mapToStoreEntity(dto types.StoreDTO) *data.Store {
-	var facilityAddressID uint
-	facilityAddressID = dto.FacilityAddress.ID
+	facilityAddressID := dto.FacilityAddress.ID
 
 	return &data.Store{
 		Name:              dto.Name,
