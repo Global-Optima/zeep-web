@@ -59,18 +59,44 @@ func (k *KafkaManager) PublishEvent(topic string, key string, event interface{})
 	return nil
 }
 
-func (k *KafkaManager) GetOrderEvent(topic string, orderID uint) (*types.OrderEvent, error) {
+func (k *KafkaManager) PublishOrderEvent(topic string, key string, storeID uint, event interface{}) error {
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("failed to serialize event: %w", err)
+	}
+
+	msg := &sarama.ProducerMessage{
+		Topic: topic,
+		Key:   sarama.StringEncoder(fmt.Sprintf("%d-%s", storeID, key)), // Include storeID in key
+		Value: sarama.ByteEncoder(eventData),
+	}
+
+	err = k.Producer.SendMessage(msg)
+	if err != nil {
+		return fmt.Errorf("failed to publish message to Kafka topic %s: %w", topic, err)
+	}
+
+	return nil
+}
+
+func (k *KafkaManager) GetOrderEvent(topic string, orderID uint, storeID uint) (*types.OrderEvent, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	resultChan := make(chan *types.OrderEvent, 1)
-	handler := NewKafkaHandler(func(_, _, value string) error {
+	handler := NewKafkaHandler(func(_, key, value string) error {
 		var event types.OrderEvent
 		if err := json.Unmarshal([]byte(value), &event); err != nil {
 			return fmt.Errorf("failed to unmarshal message: %w", err)
 		}
 
-		if event.OrderID == orderID {
+		var retrievedStoreID uint
+		_, err := fmt.Sscanf(key, "%d-", &retrievedStoreID)
+		if err != nil || retrievedStoreID != storeID {
+			return nil // Ignore if storeID doesn't match
+		}
+
+		if event.ID == orderID {
 			select {
 			case resultChan <- &event:
 			default:

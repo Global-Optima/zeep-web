@@ -25,8 +25,8 @@ func NewOrdersNotifier(hub *websockets.WebSocketHub) *OrdersNotifier {
 	}
 }
 
-func (n *OrdersNotifier) NotifyNewOrder(orderID uint, data types.OrderEvent) {
-	channel := "orders"
+func (n *OrdersNotifier) NotifyNewOrder(orderID uint, storeID uint, data types.OrderEvent) {
+	channel := websockets.GetStoreChannel(storeID)
 	event := EventOrderCreated
 	message := fmt.Sprintf("New order with ID %d has been created", orderID)
 	n.hub.Broadcast(channel, string(event), map[string]interface{}{
@@ -35,8 +35,8 @@ func (n *OrdersNotifier) NotifyNewOrder(orderID uint, data types.OrderEvent) {
 	})
 }
 
-func (n *OrdersNotifier) NotifySubOrderCompleted(orderID uint, subOrderID uint, data *types.OrderEvent) {
-	channel := "orders"
+func (n *OrdersNotifier) NotifySubOrderCompleted(orderID uint, subOrderID uint, storeID uint, data *types.OrderEvent) {
+	channel := websockets.GetStoreChannel(storeID)
 	event := EventSubOrderCompleted
 	message := fmt.Sprintf("Sub-order %d of order %d has been completed", subOrderID, orderID)
 	n.hub.Broadcast(channel, string(event), map[string]interface{}{
@@ -45,8 +45,8 @@ func (n *OrdersNotifier) NotifySubOrderCompleted(orderID uint, subOrderID uint, 
 	})
 }
 
-func (n *OrdersNotifier) NotifyOrderCompleted(orderID uint, data *types.OrderEvent) {
-	channel := "orders"
+func (n *OrdersNotifier) NotifyOrderCompleted(orderID uint, storeID uint, data *types.OrderEvent) {
+	channel := websockets.GetStoreChannel(storeID)
 	event := EventOrderCompleted
 	message := fmt.Sprintf("Order %d has been completed", orderID)
 	n.hub.Broadcast(channel, string(event), map[string]interface{}{

@@ -81,30 +81,11 @@ func (r *subOrderRepository) GetSubOrderByID(subOrderID uint) (*data.OrderProduc
 	return &orderProduct, err
 }
 
-func (r *subOrderRepository) GetStatusesCount() (map[string]int64, error) {
-	var counts []struct {
-		OrderStatus string
-		Count       int64
-	}
-	err := r.db.Model(&data.Order{}).
-		Select("order_status, COUNT(*) as count").
-		Group("order_status").
-		Scan(&counts).Error
-	if err != nil {
-		return nil, err
-	}
-
-	statusCount := make(map[string]int64)
-	for _, c := range counts {
-		statusCount[c.OrderStatus] = c.Count
-	}
-	return statusCount, nil
-}
-
 func (r *subOrderRepository) GetSubOrderCount(orderID uint) (int64, error) {
-	var count int64
+	var sum int64
 	err := r.db.Model(&data.OrderProduct{}).
 		Where("order_id = ?", orderID).
-		Count(&count).Error
-	return count, err
+		Select("sum(quantity)").
+		Scan(&sum).Error
+	return sum, err
 }

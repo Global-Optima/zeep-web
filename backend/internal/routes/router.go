@@ -80,12 +80,12 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.Routes.Group("/orders")
 	{
-		router.POST("", handler.CreateOrder)
-		router.PUT("/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(types.RoleEmployee), handler.CompleteSubOrder)
-		router.GET("", handler.GetAllOrders)
-		router.GET("/suborders", handler.GetSubOrders)
-		router.GET("/statuses/count", handler.GetStatusesCount)
-		router.GET("/suborders/count", handler.GetSubOrderCount)
+		router.POST("/:storeId", handler.CreateOrder)
+		router.PUT("/:storeId/:orderId/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(types.RoleEmployee), handler.CompleteSubOrder)
+		router.GET("/:storeId", handler.GetAllOrders)                              // add storeId
+		router.GET("/:storeId/:orderId/suborders/", handler.GetSubOrders)          // add storeId and orderId
+		router.GET("/:storeId/statuses/count", handler.GetStatusesCount)           // retrieves number for each label
+		router.GET("/:storeId/:orderId/suborders/count", handler.GetSubOrderCount) // number of suborders, should be retrieved from kafka
 		router.GET("/:order_id/receipt", handler.GeneratePDFReceipt)
 	}
 }
