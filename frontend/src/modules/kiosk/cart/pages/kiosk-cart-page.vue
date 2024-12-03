@@ -1,81 +1,13 @@
-<script setup lang="ts">
-import { formatPrice } from '@/core/utils/price.utils'
-import KioskCartCheckout from '@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout.vue'
-import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
-import KioskCartSuggestProduct from '@/modules/kiosk/cart/components/kiosk-cart-suggest-product.vue'
-import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
-import type { AdditiveDTO, ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
-import { Icon } from '@iconify/vue'
-import { computed, defineAsyncComponent, ref } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter();
-const cartStore = useCartStore();
-
-const KioskCartUpdateItem = defineAsyncComponent(() =>
-  import('@/modules/kiosk/cart/components/kiosk-cart-update-item.vue')
-);
-
-const cartItemsArray = computed(() => Object.values(cartStore.cartItems));
-const totalPrice = computed(() => cartStore.totalPrice);
-
-const suggestedProducts = ref([
-  {
-    id: 1000,
-    name: 'Круассан с шоколадом',
-    imageUrl:
-      'https://lamin8patisserie.com.au/cdn/shop/products/Chocolatecroissant_530x@2x.png?v=1611018458',
-    description: 'Круассан с шоколадом',
-    sizes: [],
-    defaultAdditives: [],
-  },
-  {
-    id: 2,
-    name: 'Круассан с курицей',
-    imageUrl:
-      'https://static.vecteezy.com/system/resources/previews/044/308/224/non_2x/croissant-sanwich-isolated-on-transparent-background-png.png',
-    description: 'Круассан с курицей',
-    sizes: [],
-    defaultAdditives: [],
-  },
-]);
-
-const selectedCartItem = ref<CartItem | null>(null);
-
-const goBack = () => {
-  router.back();
-};
-
-const clearCart = () => {
-  cartStore.clearCart();
-};
-
-const openUpdateDialog = (cartItem: CartItem) => {
-  selectedCartItem.value = cartItem;
-};
-
-const closeUpdateDialog = () => {
-  selectedCartItem.value = null;
-};
-
-const handleUpdate = (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveDTO[]) => {
-  if (!selectedCartItem.value) return;
-  cartStore.updateCartItem(selectedCartItem.value.key, {
-    size: updatedSize,
-    additives: updatedAdditives,
-  });
-  closeUpdateDialog();
-};
-</script>
-
 <template>
-	<div class="relative px-4 pt-safe pb-44 no-scrollbar">
+	<div class="relative px-12 pt-safe pb-44 no-scrollbar">
 		<!-- Header Section -->
-		<section class="flex justify-between items-center gap-4 py-5 sm:py-7">
+		<section
+			class="top-0 left-0 fixed flex justify-between items-center gap-4 bg-white/30 backdrop-blur-md px-12 py-5 sm:py-7 w-full"
+		>
 			<button @click="goBack">
 				<Icon
 					icon="mingcute:left-line"
-					class="text-3xl sm:text-4xl"
+					class="text-3xl sm:text-5xl"
 				/>
 			</button>
 
@@ -90,7 +22,7 @@ const handleUpdate = (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveDTO
 		</section>
 
 		<!-- Cart Items -->
-		<section class="flex flex-col gap-1 sm:gap-2">
+		<section class="flex flex-col gap-1 sm:gap-2 pt-28">
 			<div
 				v-for="cartItem in cartItemsArray"
 				:key="cartItem.key"
@@ -161,6 +93,76 @@ const handleUpdate = (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveDTO
 		</section>
 	</div>
 </template>
+
+<script setup lang="ts">
+import { formatPrice } from '@/core/utils/price.utils'
+import KioskCartCheckout from '@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout.vue'
+import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
+import KioskCartSuggestProduct from '@/modules/kiosk/cart/components/kiosk-cart-suggest-product.vue'
+import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
+import type { AdditiveDTO, ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
+import { Icon } from '@iconify/vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter();
+const cartStore = useCartStore();
+
+const KioskCartUpdateItem = defineAsyncComponent(() =>
+  import('@/modules/kiosk/cart/components/kiosk-cart-update-item.vue')
+);
+
+const cartItemsArray = computed(() => Object.values(cartStore.cartItems));
+const totalPrice = computed(() => cartStore.totalPrice);
+
+const suggestedProducts = ref([
+  {
+    id: 1000,
+    name: 'Круассан с шоколадом',
+    imageUrl:
+      'https://lamin8patisserie.com.au/cdn/shop/products/Chocolatecroissant_530x@2x.png?v=1611018458',
+    description: 'Круассан с шоколадом',
+    sizes: [],
+    defaultAdditives: [],
+  },
+  {
+    id: 2,
+    name: 'Круассан с курицей',
+    imageUrl:
+      'https://static.vecteezy.com/system/resources/previews/044/308/224/non_2x/croissant-sanwich-isolated-on-transparent-background-png.png',
+    description: 'Круассан с курицей',
+    sizes: [],
+    defaultAdditives: [],
+  },
+]);
+
+const selectedCartItem = ref<CartItem | null>(null);
+
+const goBack = () => {
+  router.back();
+};
+
+const clearCart = () => {
+  cartStore.clearCart();
+};
+
+const openUpdateDialog = (cartItem: CartItem) => {
+  selectedCartItem.value = cartItem;
+};
+
+const closeUpdateDialog = () => {
+  selectedCartItem.value = null;
+};
+
+const handleUpdate = (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveDTO[]) => {
+  if (!selectedCartItem.value) return;
+  cartStore.updateCartItem(selectedCartItem.value.key, {
+    size: updatedSize,
+    additives: updatedAdditives,
+  });
+  closeUpdateDialog();
+};
+</script>
 
 <style scoped>
 /* Add your styles here */

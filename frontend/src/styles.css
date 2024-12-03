@@ -20,11 +20,11 @@
 		--vis-tooltip-backdrop-filter: none !important;
 		--vis-tooltip-padding: none !important;
 
-		--vis-primary-color: hsl(var(--primary));
-		--vis-secondary-color: hsl(var(--secondary));
-		--vis-text-color: hsl(var(--muted-foreground));
+		--vis-primary-color: 142.1 66.2% 36.3%;
+		--vis-secondary-color: 160 81% 40%;
+		--vis-text-color: 240 3.8% 46.1%;
 
-		--toastify-color-success: hsl(var(--primary));
+		--toastify-color-success: var(--primary);
 		--toastify-color-info: #2b4fb9;
 
 		--safe-top: env(safe-area-inset-top);
@@ -42,6 +42,15 @@
 	.no-scrollbar {
 		-ms-overflow-style: none;
 		scrollbar-width: none;
+	}
+
+	.scrollable {
+		-ms-overflow-style: unset;
+		scrollbar-width: unset;
+	}
+
+	.scrollable::-webkit-scrollbar {
+		display: unset;
 	}
 
 	.pt-safe {

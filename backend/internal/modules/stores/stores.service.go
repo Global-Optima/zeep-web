@@ -52,7 +52,7 @@ func (s *storeService) CreateStore(storeDTO types.StoreDTO) (*types.StoreDTO, er
 	}
 
 	if facilityAddress != nil {
-		storeDTO.FacilityAddress.ID = &facilityAddress.ID
+		storeDTO.FacilityAddress.ID = facilityAddress.ID
 	}
 
 	store := mapToStoreEntity(storeDTO)
@@ -100,7 +100,7 @@ func (s *storeService) UpdateStore(storeDTO types.StoreDTO) (*types.StoreDTO, er
 		return nil, err
 	}
 
-	store, err := s.repo.GetStoreByID(*storeDTO.ID)
+	store, err := s.repo.GetStoreByID(storeDTO.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("store not found")
@@ -126,18 +126,15 @@ func (s *storeService) DeleteStore(storeID uint, hardDelete bool) error {
 }
 
 func mapToStoreDTO(store data.Store) *types.StoreDTO {
-	var facilityAddress *types.FacilityAddressDTO
-	if store.FacilityAddress != nil {
-		facilityAddress = &types.FacilityAddressDTO{
-			ID:        &store.FacilityAddress.ID,
-			Address:   store.FacilityAddress.Address,
-			Longitude: safeFloat(store.FacilityAddress.Longitude),
-			Latitude:  safeFloat(store.FacilityAddress.Latitude),
-		}
+	facilityAddress := &types.FacilityAddressDTO{
+		ID:        store.FacilityAddress.ID,
+		Address:   store.FacilityAddress.Address,
+		Longitude: safeFloat(store.FacilityAddress.Longitude),
+		Latitude:  safeFloat(store.FacilityAddress.Latitude),
 	}
 
 	return &types.StoreDTO{
-		ID:              &store.ID,
+		ID:              store.ID,
 		Name:            store.Name,
 		IsFranchise:     store.IsFranchise,
 		Status:          store.Status,
@@ -149,10 +146,7 @@ func mapToStoreDTO(store data.Store) *types.StoreDTO {
 }
 
 func mapToStoreEntity(dto types.StoreDTO) *data.Store {
-	var facilityAddressID *uint
-	if dto.FacilityAddress != nil && dto.FacilityAddress.ID != nil {
-		facilityAddressID = dto.FacilityAddress.ID
-	}
+	facilityAddressID := dto.FacilityAddress.ID
 
 	return &data.Store{
 		Name:              dto.Name,
@@ -166,10 +160,6 @@ func mapToStoreEntity(dto types.StoreDTO) *data.Store {
 }
 
 func validStoreDTO(storeDTO types.StoreDTO, isCreate, isPartialUpdate bool) error {
-	if !isCreate && !isPartialUpdate && storeDTO.ID == nil {
-		return errors.New("store ID is required")
-	}
-
 	if !isPartialUpdate && storeDTO.Name == "" {
 		return errors.New("store name cannot be empty")
 	}

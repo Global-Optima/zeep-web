@@ -9,15 +9,3 @@ export interface Store {
 	}
 	isFranchise: boolean
 }
-
-export interface Employee {
-	id: number
-	name: string
-	phone: string
-	email: string
-	isActive: boolean
-	role: {
-		id: number
-		name: string
-	}
-}

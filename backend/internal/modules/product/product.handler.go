@@ -62,8 +62,10 @@ func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
 
 	var cachedProducts []types.StoreProductDTO
 	if err := cacheUtil.Get(cacheKey, &cachedProducts); err == nil {
-		utils.SuccessResponse(c, cachedProducts)
-		return
+		if !utils.IsEmpty(cachedProducts) {
+			utils.SuccessResponse(c, cachedProducts)
+			return
+		}
 	}
 
 	products, err := h.service.GetStoreProducts(filter)
@@ -104,8 +106,11 @@ func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
 
 	var cachedProductDetails *types.StoreProductDetailsDTO
 	if err := cacheUtil.Get(cacheKey, &cachedProductDetails); err == nil {
-		utils.SuccessResponse(c, cachedProductDetails)
-		return
+		if !utils.IsEmpty(cachedProductDetails) {
+			utils.SuccessResponse(c, cachedProductDetails)
+			return
+		}
+
 	}
 
 	productDetails, err := h.service.GetStoreProductDetails(uint(storeID), uint(productID))

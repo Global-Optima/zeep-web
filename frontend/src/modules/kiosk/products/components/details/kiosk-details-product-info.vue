@@ -2,7 +2,7 @@
 <template>
 	<section :class="cn('p-8', containerClass)">
 		<h1 class="font-medium text-2xl sm:text-4xl">{{ name }}</h1>
-		<p class="mt-3 text-base sm:text-xl">{{ description }}</p>
+		<p class="mt-3 text-base sm:text-2xl">{{ description }}</p>
 
 		<div class="mt-8">
 			<KioskDetailsEnergy :energy="energy" />

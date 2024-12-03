@@ -1,8 +1,8 @@
 <!-- src/components/FixedBottomBar.vue -->
 <template>
-	<section class="bottom-4 left-0 fixed flex justify-center w-full">
+	<section class="bottom-14 left-0 fixed flex justify-center w-full">
 		<div
-			class="z-20 flex items-center gap-4 bg-white/50 shadow-2xl backdrop-blur-sm px-6 py-4 rounded-full"
+			class="z-20 flex items-center gap-4 bg-white/50 shadow-2xl backdrop-blur-sm p-2 rounded-full"
 		>
 			<!-- Size Selection -->
 			<div class="flex items-center bg-gray-200 rounded-full overflow-x-auto no-scrollbar">
@@ -20,8 +20,8 @@
 				@click="handleAddToCart"
 				class="flex items-center gap-3 bg-primary px-10 py-5 rounded-full text-primary-foreground"
 			>
-				<displayIcon
-					v-if="displayIcon"
+				<Pencil
+					v-if="displayIcon === 'update'"
 					class="w-6 sm:w-8 h-6 sm:h-8"
 				/>
 				<Plus
@@ -38,13 +38,13 @@
 import { formatPrice } from '@/core/utils/price.utils'
 import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
 import type { ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
-import { Plus, type LucideIcon } from 'lucide-vue-next'
+import { Pencil, Plus } from 'lucide-vue-next'
 
-const {sizes, selectedSizeId, totalPrice, displayIcon } = defineProps<{
+const {sizes, selectedSizeId, totalPrice, displayIcon = "add" } = defineProps<{
   sizes: ProductSizeDTO[]
   selectedSizeId: number | undefined
   totalPrice: number,
-  displayIcon?: LucideIcon,
+  displayIcon?: "add" | "update",
 }>()
 
 const emits = defineEmits<{

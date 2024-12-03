@@ -1,6 +1,6 @@
 -- FacilityAddress Table
-CREATE TABLE IF NOT EXISTS
-	facility_addresses (
+CREATE TABLE
+	IF NOT EXISTS facility_addresses (
 		id SERIAL PRIMARY KEY,
 		address VARCHAR(255) NOT NULL,
 		longitude DECIMAL(9, 6),
@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- ProductCategory Table
-CREATE TABLE IF NOT EXISTS
-	product_categories (
+CREATE TABLE
+	IF NOT EXISTS product_categories (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		description TEXT,
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- AdditiveCategory Table
-CREATE TABLE IF NOT EXISTS
-	additive_categories (
+CREATE TABLE
+	IF NOT EXISTS additive_categories (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		description TEXT,
@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- Product Table
-CREATE TABLE IF NOT EXISTS
-	products (
+CREATE TABLE
+	IF NOT EXISTS products (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		description TEXT,
@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- RecipeStep Table
-CREATE TABLE IF NOT EXISTS
-	recipe_steps (
+CREATE TABLE
+	IF NOT EXISTS recipe_steps (
 		id SERIAL PRIMARY KEY,
 		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
 		step INT NOT NULL,
@@ -62,8 +62,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- ProductSize Table
-CREATE TABLE IF NOT EXISTS
-	product_sizes (
+CREATE TABLE
+	IF NOT EXISTS product_sizes (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		measure VARCHAR(50),
@@ -78,8 +78,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- Additive Table
-CREATE TABLE IF NOT EXISTS
-	additives (
+CREATE TABLE
+	IF NOT EXISTS additives (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		description TEXT,
@@ -93,13 +93,13 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- Store Table
-CREATE TABLE IF NOT EXISTS
-	stores (
+CREATE TABLE
+	IF NOT EXISTS stores (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		facility_address_id INT REFERENCES facility_addresses (id) ON UPDATE CASCADE ON DELETE SET NULL,
 		is_franchise BOOLEAN DEFAULT FALSE,
-		status VARCHAR(20) DEFAULT 'active',
+		status VARCHAR(20) DEFAULT 'ACTIVE',
 		contact_phone VARCHAR(20),
 		contact_email VARCHAR(255),
 		store_hours VARCHAR(255),
@@ -110,8 +110,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- StoreAdditive Table
-CREATE TABLE IF NOT EXISTS
-	store_additives (
+CREATE TABLE
+	IF NOT EXISTS store_additives (
 		id SERIAL PRIMARY KEY,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
@@ -122,8 +122,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- StoreProductSize Table
-CREATE TABLE IF NOT EXISTS
-	store_product_sizes (
+CREATE TABLE
+	IF NOT EXISTS store_product_sizes (
 		id SERIAL PRIMARY KEY,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
@@ -134,8 +134,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- StoreProduct Table
-CREATE TABLE IF NOT EXISTS
-	store_products (
+CREATE TABLE
+	IF NOT EXISTS store_products (
 		id SERIAL PRIMARY KEY,
 		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
@@ -146,8 +146,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- ProductAdditive Table
-CREATE TABLE IF NOT EXISTS
-	product_additives (
+CREATE TABLE
+	IF NOT EXISTS product_additives (
 		id SERIAL PRIMARY KEY,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
@@ -157,8 +157,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- DefaultProductAdditive Table
-CREATE TABLE IF NOT EXISTS
-	default_product_additives (
+CREATE TABLE
+	IF NOT EXISTS default_product_additives (
 		id SERIAL PRIMARY KEY,
 		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
@@ -168,8 +168,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- Ingredient Table
-CREATE TABLE IF NOT EXISTS
-	ingredients (
+CREATE TABLE
+	IF NOT EXISTS ingredients (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		calories DECIMAL(5, 2) CHECK (calories >= 0),
@@ -183,8 +183,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- ProductIngredient Table
-CREATE TABLE IF NOT EXISTS
-	product_ingredients (
+CREATE TABLE
+	IF NOT EXISTS product_ingredients (
 		id SERIAL PRIMARY KEY,
 		item_ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
@@ -194,19 +194,20 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- ItemIngredients Table
-CREATE TABLE IF NOT EXISTS item_ingredients (
-    id SERIAL PRIMARY KEY,
-    ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-    item_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
-    quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS item_ingredients (
+		id SERIAL PRIMARY KEY,
+		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+		item_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
+		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- Customer Table
-CREATE TABLE IF NOT EXISTS
-	customers (
+CREATE TABLE
+	IF NOT EXISTS customers (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		password VARCHAR(255) NOT NULL,
@@ -219,8 +220,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- Employee Table
-CREATE TABLE IF NOT EXISTS
-	employees (
+CREATE TABLE
+	IF NOT EXISTS employees (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		phone VARCHAR(15) UNIQUE,
@@ -235,8 +236,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- EmployeeAudit Table
-CREATE TABLE IF NOT EXISTS
-	employee_audits (
+CREATE TABLE
+	IF NOT EXISTS employee_audits (
 		id SERIAL PRIMARY KEY,
 		start_work_at TIMESTAMPTZ,
 		end_work_at TIMESTAMPTZ,
@@ -247,8 +248,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- EmployeeWorkday Table
-CREATE TABLE IF NOT EXISTS
-	employee_workdays (
+CREATE TABLE
+	IF NOT EXISTS employee_workdays (
 		id SERIAL PRIMARY KEY,
 		day VARCHAR(15) NOT NULL,
 		start_at TIME NOT NULL,
@@ -260,8 +261,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- Referral Table
-CREATE TABLE IF NOT EXISTS
-	referrals (
+CREATE TABLE
+	IF NOT EXISTS referrals (
 		id SERIAL PRIMARY KEY,
 		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
 		referee_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
@@ -271,8 +272,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- VerificationCode Table
-CREATE TABLE IF NOT EXISTS
-	verification_codes (
+CREATE TABLE
+	IF NOT EXISTS verification_codes (
 		id SERIAL PRIMARY KEY,
 		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
 		code VARCHAR(6) NOT NULL,
@@ -283,8 +284,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- CustomerAddress Table
-CREATE TABLE IF NOT EXISTS
-	customer_addresses (
+CREATE TABLE
+	IF NOT EXISTS customer_addresses (
 		id SERIAL PRIMARY KEY,
 		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
 		address VARCHAR(255) NOT NULL,
@@ -296,8 +297,8 @@ CREATE TABLE IF NOT EXISTS
 	);
 
 -- Bonus Table
-CREATE TABLE IF NOT EXISTS
-	bonuses (
+CREATE TABLE
+	IF NOT EXISTS bonuses (
 		id SERIAL PRIMARY KEY,
 		bonuses DECIMAL(10, 2) CHECK (bonuses >= 0),
 		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
@@ -307,106 +308,114 @@ CREATE TABLE IF NOT EXISTS
 		deleted_at TIMESTAMPTZ
 	);
 
-
 -- Orders Table
-CREATE TABLE IF NOT EXISTS orders (
-    id SERIAL PRIMARY KEY,
-    customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
-    employee_id INT REFERENCES employees (id) ON DELETE SET NULL,
-	store_id INT REFERENCES stores (id) ON DELETE SET NULL,
-    delivery_address_id INT REFERENCES customer_addresses (id) ON DELETE SET NULL,
-    order_status VARCHAR(50) NOT NULL,
-    order_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    total DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS orders (
+		id SERIAL PRIMARY KEY,
+		customer_id INT REFERENCES customers (id) ON DELETE CASCADE,
+		customer_name VARCHAR(255) NOT NULL,
+		employee_id INT REFERENCES employees (id) ON DELETE SET NULL,
+		store_id INT REFERENCES stores (id) NOT NULL,
+		delivery_address_id INT REFERENCES customer_addresses (id) ON DELETE SET NULL,
+		order_status VARCHAR(50) NOT NULL,
+		total DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- OrderProducts Table
-CREATE TABLE IF NOT EXISTS order_products (
-    id SERIAL PRIMARY KEY,
-    order_id INT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-    product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
-    quantity INT NOT NULL CHECK (quantity > 0),
-    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS order_products (
+		id SERIAL PRIMARY KEY,
+		order_id INT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
+		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
+		quantity INT NOT NULL CHECK (quantity > 0),
+		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- OrderProductAdditives Table
-CREATE TABLE IF NOT EXISTS order_product_additives (
-    id SERIAL PRIMARY KEY,
-    order_product_id INT NOT NULL REFERENCES order_products (id) ON DELETE CASCADE,
-    additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
-	price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS order_product_additives (
+		id SERIAL PRIMARY KEY,
+		order_product_id INT NOT NULL REFERENCES order_products (id) ON DELETE CASCADE,
+		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
+		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- CityWarehouses Table
-CREATE TABLE IF NOT EXISTS city_warehouses (
-    id SERIAL PRIMARY KEY,
-    facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS city_warehouses (
+		id SERIAL PRIMARY KEY,
+		facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE CASCADE,
+		name VARCHAR(255) NOT NULL,
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- StoreWarehouses Table
-CREATE TABLE IF NOT EXISTS store_warehouses (
-    id SERIAL PRIMARY KEY,
-    store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-    city_warehouse_id INT NOT NULL REFERENCES city_warehouses (id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS store_warehouses (
+		id SERIAL PRIMARY KEY,
+		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
+		city_warehouse_id INT NOT NULL REFERENCES city_warehouses (id) ON DELETE CASCADE,
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- StoreWarehouseStock Table
-CREATE TABLE IF NOT EXISTS store_warehouse_stocks (
-    id SERIAL PRIMARY KEY,
-    store_warehouse_id INT NOT NULL REFERENCES store_warehouses (id) ON DELETE CASCADE,
-    ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-    quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS store_warehouse_stocks (
+		id SERIAL PRIMARY KEY,
+		store_warehouse_id INT NOT NULL REFERENCES store_warehouses (id) ON DELETE CASCADE,
+		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- StockRequests Table
-CREATE TABLE IF NOT EXISTS stock_requests (
-    id SERIAL PRIMARY KEY,
-    city_warehouse_id INT NOT NULL REFERENCES city_warehouses (id) ON DELETE CASCADE,
-    status VARCHAR(50) NOT NULL,
-    request_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS stock_requests (
+		id SERIAL PRIMARY KEY,
+		city_warehouse_id INT NOT NULL REFERENCES city_warehouses (id) ON DELETE CASCADE,
+		status VARCHAR(50) NOT NULL,
+		request_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- StockRequestIngredients Table
-CREATE TABLE IF NOT EXISTS stock_request_ingredients (
-    id SERIAL PRIMARY KEY,
-    stock_request_id INT NOT NULL REFERENCES stock_requests (id) ON DELETE CASCADE,
-    ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-    quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS stock_request_ingredients (
+		id SERIAL PRIMARY KEY,
+		stock_request_id INT NOT NULL REFERENCES stock_requests (id) ON DELETE CASCADE,
+		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- Suppliers Table
-CREATE TABLE IF NOT EXISTS suppliers (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    contact_email VARCHAR(255),
-    contact_phone VARCHAR(20),
-    address VARCHAR(255),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS suppliers (
+		id SERIAL PRIMARY KEY,
+		name VARCHAR(255) NOT NULL,
+		contact_email VARCHAR(255),
+		contact_phone VARCHAR(20),
+		address VARCHAR(255),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);

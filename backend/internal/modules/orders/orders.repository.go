@@ -11,7 +11,7 @@ import (
 type OrderRepository interface {
 	GetAllOrders(status *string) ([]data.Order, error)
 	CreateOrder(order *data.Order) error
-	UpdateOrderStatus(orderID uint, status string) error
+	UpdateOrderStatus(orderID uint, status data.OrderStatus) error
 	GetOrderById(orderID uint) (*data.Order, error)
 	DeleteOrder(orderID uint) error
 
@@ -74,7 +74,7 @@ func (r *orderRepository) CreateOrder(order *data.Order) error {
 	})
 }
 
-func (r *orderRepository) UpdateOrderStatus(orderID uint, status string) error {
+func (r *orderRepository) UpdateOrderStatus(orderID uint, status data.OrderStatus) error {
 	return r.db.Model(&data.Order{}).Where("id = ?", orderID).Update("order_status", status).Error
 }
 

@@ -56,13 +56,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	err := h.service.CreateOrder(&orderDTO)
-	if err != nil {
+	orderId, err := h.service.CreateOrder(&orderDTO)
+	if err != nil || orderId == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create order"})
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, gin.H{"orderId": &orderId})
 }
 
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {

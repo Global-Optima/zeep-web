@@ -2,7 +2,6 @@ package orders
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/kafka"
@@ -16,7 +15,7 @@ type OrderService interface {
 	GetStatusesCount() (map[string]int64, error)
 	GetSubOrderCount(orderID uint) (int64, error)
 
-	CreateOrder(createOrderDTO *types.CreateOrderDTO) error
+	CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint, error)
 	CompleteSubOrder(subOrderID uint) error
 	GeneratePDFReceipt(orderID uint) ([]byte, error)
 
@@ -39,21 +38,21 @@ func NewOrderService(orderRepo OrderRepository, subOrderRepo SubOrderRepository,
 	}
 }
 
-func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
+func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint, error) {
 	var productSizeIDs []uint
 	var additiveIDs []uint
-	for _, product := range createOrderDTO.Products {
+	for _, product := range createOrderDTO.OrderItems {
 		productSizeIDs = append(productSizeIDs, product.ProductSizeID)
-		additiveIDs = append(additiveIDs, product.Additives...)
+		additiveIDs = append(additiveIDs, product.AdditivesIDs...)
 	}
 
 	productPrices, err := ValidateProductSizes(productSizeIDs, s.orderRepo)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	additivePrices, err := ValidateAdditives(additiveIDs, s.orderRepo)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, productPrices, additivePrices)
@@ -62,30 +61,30 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) error {
 	Logger.Debug(fmt.Sprintf("%+v", order))
 	err = s.orderRepo.CreateOrder(&order)
 	if err != nil {
-		return fmt.Errorf("failed to save order to database: %w", err)
+		print(err)
+		return nil, fmt.Errorf("failed to save order to database: %w", err)
 	}
 
 	orderEvent := types.OrderEvent{
 		OrderID:   order.ID,
-		StoreID:   order.StoreID,
-		Status:    types.OrderStatusPending,
-		Timestamp: time.Now(),
+		Status:    order.OrderStatus,
+		CreatedAt: order.CreatedAt,
 	}
 	for _, product := range order.OrderProducts {
 		orderEvent.Items = append(orderEvent.Items, types.SubOrderEvent{
 			SubOrderID: product.ID,
-			Status:     types.OrderStatusPending,
+			Status:     data.OrderStatusPending,
 		})
 	}
 
 	err = s.kafkaManager.PublishEvent(s.kafkaManager.Topics.ActiveOrders, fmt.Sprintf("%d", order.ID), orderEvent)
 	if err != nil {
-		return fmt.Errorf("failed to publish order to Kafka: %w", err)
+		return nil, fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
 
 	s.ordersNotifier.NotifyNewOrder(order.ID, orderEvent)
 
-	return nil
+	return &order.ID, nil
 }
 
 func (s *orderService) CompleteSubOrder(subOrderID uint) error {
@@ -101,26 +100,25 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 
 	for i, item := range orderEvent.Items {
 		if item.SubOrderID == subOrderID {
-			orderEvent.Items[i].Status = types.OrderStatusCompleted
+			orderEvent.Items[i].Status = data.OrderStatusCompleted
 			break
 		}
 	}
 
 	allCompleted := true
 	for _, item := range orderEvent.Items {
-		if item.Status != types.OrderStatusCompleted {
+		if item.Status != data.OrderStatusCompleted {
 			allCompleted = false
 			break
 		}
 	}
 
-	orderEvent.Timestamp = time.Now()
 	var topic string
 	if allCompleted {
-		orderEvent.Status = types.OrderStatusCompleted
+		orderEvent.Status = data.OrderStatusCompleted
 		topic = s.kafkaManager.Topics.CompletedOrders
 
-		err = s.orderRepo.UpdateOrderStatus(subOrder.OrderID, string(types.OrderStatusCompleted))
+		err = s.orderRepo.UpdateOrderStatus(subOrder.OrderID, data.OrderStatusCompleted)
 		if err != nil {
 			return fmt.Errorf("failed to update order status in database: %w", err)
 		}
@@ -181,8 +179,8 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 
 	details := pdf.PDFReceiptDetails{
 		OrderID:   order.ID,
-		StoreID:   *order.StoreID,
-		OrderDate: order.OrderDate.Format("2006-01-02 15:04:05"),
+		StoreID:   order.StoreID,
+		OrderDate: order.CreatedAt.Format("2006-01-02 15:04:05"),
 		Total:     order.Total,
 	}
 

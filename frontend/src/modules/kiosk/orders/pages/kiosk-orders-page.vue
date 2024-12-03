@@ -1,64 +1,195 @@
+<!-- OrderManagement.vue -->
 <template>
-	<div class="w-full h-screen overflow-hidden">
-		<header class="flex justify-center items-center gap-1 bg-white py-4 border-b">
-			<button
-				v-for="status in statuses"
-				:key="status.label"
-				:class="cn('flex items-center gap-2 px-5 py-2 rounded-xl text-lg', status.label === selectedStatus?.label ? 'bg-primary text-primary-foreground' :'')"
-				@click="selectedStatus = status"
-			>
-				<p>{{ status.label }}</p>
-				<p
-					:class="cn('bg-gray-100 px-2 py-1 rounded-sm text-black text-xs', status.label === selectedStatus?.label ? 'bg-green-700 text-primary-foreground' :'')"
-				>
-					{{ status.count }}
-				</p>
-			</button>
-		</header>
+	<div class="relative bg-gray-100 pt-safe w-full h-screen overflow-hidden">
+		<!-- Header: Order Status Selector -->
+		<OrderStatusSelector
+			:statuses="statuses"
+			:selectedStatus="selectedStatus"
+			@selectStatus="onSelectStatus"
+			@back="onBackClick"
+		/>
 
-		<main class="grid grid-cols-4 bg-gray-100 w-full h-full">
-			<section class="col-span-1 p-2 border-r h-full">
-				<p class="font-medium text-center">Заказы</p>
-				<div class="flex flex-col gap-2 mt-2 overflow-y-auto no-scrollbar">
-					<div class="flex justify-between items-start gap-2 bg-white p-4 rounded-xl">
-						<div>
-							<div class="flex items-center gap-2 text-lg">
-								<p class="font-medium">Mooray</p>
-								<p class="text-gray-500">#3302</p>
-							</div>
+		<!-- Main Layout -->
+		<div class="relative grid grid-cols-4 bg-gray-100 pb-4 w-full h-[calc(100vh-74px)]">
+			<OrdersList
+				:orders="filteredOrders"
+				:selectedOrder="selectedOrder"
+				@selectOrder="selectOrder"
+			/>
 
-							<p class="mt-1 text-gray-700 text-sm">Доставка, 3 шт</p>
-						</div>
+			<SubordersList
+				:suborders="selectedOrder?.suborders || null"
+				:selectedSuborder="selectedSuborder"
+				@selectSuborder="selectSuborder"
+			/>
 
-						<div>~5 мин</div>
-					</div>
-				</div>
-			</section>
-			<section class="col-span-1 p-2 border-r h-full">
-				<p class="font-medium text-center">Подзаказы</p>
-			</section>
-			<section class="col-span-2 p-2 border-r h-full">3</section>
-		</main>
+			<SubOrderDetails
+				:suborder="selectedSuborder"
+				@toggleSuborderStatus="toggleSuborderStatus"
+				@printQrCode="printQrCode"
+			/>
+		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { cn } from '@/core/utils/tailwind.utils'
-import { ref } from 'vue'
+import { getRouteName } from '@/core/config/routes.config'
+import OrderStatusSelector from '@/modules/kiosk/orders/components/order-status-selector.vue'
+import OrdersList from '@/modules/kiosk/orders/components/orders-list.vue'
+import SubOrderDetails from '@/modules/kiosk/orders/components/sub-order-details.vue'
+import SubordersList from '@/modules/kiosk/orders/components/suborders-list.vue'
+import { computed, nextTick, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
-interface Status {
-  label: string
-  count: number
+
+interface Suborder {
+  id: number;
+  productName: string;
+  toppings: string[];
+  status: 'In Progress' | 'Done';
+  comments?: string;
+  prepTime: string;
 }
 
+interface Order {
+  id: number;
+  customerName: string;
+  customerEmail: string;
+  details: string;
+  eta: string;
+  suborders: Suborder[];
+  status: 'Active' | 'Completed' | 'In Delivery';
+  type: 'Delivery' | 'In-Store';
+}
+
+interface Status {
+  label: string;
+  count: number;
+}
+
+const router = useRouter();
+
+const onBackClick = () => {
+  router.push({ name: getRouteName('ADMIN_DASHBOARD') });
+};
+
+const scrollToTop = async () => {
+  await nextTick();
+  if (window && window.scrollTo) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+
+/**
+ * Mock data with different statuses and order types
+ */
+const orders = ref<Order[]>([
+  // ... (Your mock data remains the same)
+]);
+
+/**
+ * Reactive states
+ */
 const statuses = ref<Status[]>([
-  {label: "Все", count: 12},
-  {label: "Активные", count: 4},
-  {label: "Завершенные", count: 6},
-  {label: "В доставке", count: 2},
-])
+  { label: 'Все', count: orders.value.length },
+  { label: 'Активные', count: orders.value.filter((o) => o.status === 'Active').length },
+  { label: 'Завершенные', count: orders.value.filter((o) => o.status === 'Completed').length },
+  { label: 'В доставке', count: orders.value.filter((o) => o.status === 'In Delivery').length },
+]);
 
-const selectedStatus = ref<Status | null>(null)
+const selectedStatus = ref<Status>(statuses.value[0]);
+const selectedOrder = ref<Order | null>(null);
+const selectedSuborder = ref<Suborder | null>(null);
+
+/**
+ * Computed values
+ */
+const filteredOrders = computed(() => {
+  switch (selectedStatus.value.label) {
+    case 'Активные':
+      return orders.value.filter((order) => order.status === 'Active');
+    case 'Завершенные':
+      return orders.value.filter((order) => order.status === 'Completed');
+    case 'В доставке':
+      return orders.value.filter((order) => order.status === 'In Delivery');
+    default:
+      return orders.value;
+  }
+});
+
+/**
+ * Methods
+ */
+const onSelectStatus = async (status: Status) => {
+  selectedStatus.value = status;
+  selectedOrder.value = null;
+  selectedSuborder.value = null;
+  await scrollToTop();
+};
+
+const selectOrder = async (order: Order) => {
+  if (selectedOrder.value?.id === order.id) return;
+  selectedOrder.value = order;
+  selectedSuborder.value = null;
+  await scrollToTop();
+};
+
+const selectSuborder = async (suborder: Suborder) => {
+  if (selectedSuborder.value?.id === suborder.id) return;
+  selectedSuborder.value = suborder;
+  await scrollToTop();
+};
+
+/**
+ * Toggle suborder status between 'In Progress' and 'Done'
+ */
+const toggleSuborderStatus = (suborder: Suborder) => {
+  if (suborder.status === 'Done') return;
+  suborder.status = 'Done';
+
+  // Check if all suborders are done to mark the order as completed
+  const allDone = selectedOrder.value?.suborders.every((so) => so.status === 'Done');
+  if (allDone && selectedOrder.value?.status === 'Active') {
+    selectedOrder.value.status = 'Completed';
+    updateStatusCounts();
+    // Unselect order and suborder when order is completed
+    selectedOrder.value = null;
+    selectedSuborder.value = null;
+  }
+};
+
+const printQrCode = () => {
+  console.log('Print QR Code');
+};
+
+/**
+ * Watchers
+ */
+watch(
+  () => orders.value,
+  () => {
+    updateStatusCounts();
+  },
+  { deep: true }
+);
+
+/**
+ * Update counts in statuses based on orders
+ */
+const updateStatusCounts = () => {
+  statuses.value = statuses.value.map((status) => {
+    switch (status.label) {
+      case 'Все':
+        return { ...status, count: orders.value.length };
+      case 'Активные':
+        return { ...status, count: orders.value.filter((o) => o.status === 'Active').length };
+      case 'Завершенные':
+        return { ...status, count: orders.value.filter((o) => o.status === 'Completed').length };
+      case 'В доставке':
+        return { ...status, count: orders.value.filter((o) => o.status === 'In Delivery').length };
+      default:
+        return status;
+    }
+  });
+};
 </script>
-
-<style scoped></style>

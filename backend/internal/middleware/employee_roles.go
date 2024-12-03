@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-func RoleMiddleware(requiredRoles ...string) gin.HandlerFunc {
+func EmployeeRoleMiddleware(requiredRoles ...types.EmployeeRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := ExtractTokenAndValidate(c)
+		claims, err := ExtractEmployeeTokenAndValidate(c)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid token"})
 			c.Abort()
@@ -29,7 +30,7 @@ func RoleMiddleware(requiredRoles ...string) gin.HandlerFunc {
 	}
 }
 
-func ExtractTokenAndValidate(c *gin.Context) (*utils.EmployeeClaims, error) {
+func ExtractEmployeeTokenAndValidate(c *gin.Context) (*utils.EmployeeClaims, error) {
 	authHeader := c.GetHeader("Authorization")
 	var tokenString string
 
@@ -37,7 +38,7 @@ func ExtractTokenAndValidate(c *gin.Context) (*utils.EmployeeClaims, error) {
 		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
 	} else {
 
-		cookie, err := c.Cookie("auth_token")
+		cookie, err := c.Cookie("EMPLOYEES_TOKEN")
 		if err != nil {
 			return nil, err
 		}

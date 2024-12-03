@@ -35,8 +35,10 @@ func (h *AdditiveHandler) GetAdditivesByStoreAndProduct(c *gin.Context) {
 
 	var cachedAdditives []types.AdditiveCategoryDTO
 	if err := cacheUtil.Get(cacheKey, &cachedAdditives); err == nil {
-		utils.SuccessResponse(c, cachedAdditives)
-		return
+		if !utils.IsEmpty(cachedAdditives) {
+			utils.SuccessResponse(c, cachedAdditives)
+			return
+		}
 	}
 
 	additives, err := h.service.GetAdditivesByStoreAndProductSize(uint(productSizeID))
