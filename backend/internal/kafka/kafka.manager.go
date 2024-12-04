@@ -39,7 +39,7 @@ func NewKafkaManager(cfg config.KafkaConfig) (*KafkaManager, error) {
 	}, nil
 }
 
-func (k *KafkaManager) PublishEvent(topic string, key string, event interface{}) error {
+func (k *KafkaManager) PublishOrderEvent(topic string, storeID uint, event types.OrderEvent) error {
 	eventData, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to serialize event: %w", err)
@@ -47,27 +47,7 @@ func (k *KafkaManager) PublishEvent(topic string, key string, event interface{})
 
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
-		Key:   sarama.StringEncoder(key),
-		Value: sarama.ByteEncoder(eventData),
-	}
-
-	err = k.Producer.SendMessage(msg)
-	if err != nil {
-		return fmt.Errorf("failed to publish message to Kafka topic %s: %w", topic, err)
-	}
-
-	return nil
-}
-
-func (k *KafkaManager) PublishOrderEvent(topic string, key string, storeID uint, event interface{}) error {
-	eventData, err := json.Marshal(event)
-	if err != nil {
-		return fmt.Errorf("failed to serialize event: %w", err)
-	}
-
-	msg := &sarama.ProducerMessage{
-		Topic: topic,
-		Key:   sarama.StringEncoder(fmt.Sprintf("%d-%s", storeID, key)), // Include storeID in key
+		Key:   sarama.StringEncoder(fmt.Sprintf("%d", storeID)), // Partition by only StoreID
 		Value: sarama.ByteEncoder(eventData),
 	}
 
@@ -91,7 +71,7 @@ func (k *KafkaManager) GetOrderEvent(topic string, orderID uint, storeID uint) (
 		}
 
 		var retrievedStoreID uint
-		_, err := fmt.Sscanf(key, "%d-", &retrievedStoreID)
+		_, err := fmt.Sscanf(key, "%d", &retrievedStoreID)
 		if err != nil || retrievedStoreID != storeID {
 			return nil // Ignore if storeID doesn't match
 		}

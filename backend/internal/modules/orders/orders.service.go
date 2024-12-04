@@ -118,7 +118,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint,
 		}
 	}
 
-	err = s.kafkaManager.PublishEvent(s.kafkaManager.Topics.ActiveOrders, fmt.Sprintf("%d", order.ID), orderEvent)
+	err = s.kafkaManager.PublishOrderEvent(s.kafkaManager.Topics.ActiveOrders, orderEvent.StoreID, orderEvent)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
@@ -253,7 +253,7 @@ func (s *orderService) CompleteSubOrder(subOrderID, orderID, storeID uint) error
 		s.ordersNotifier.NotifySubOrderCompleted(subOrder.OrderID, subOrderID, storeID, orderEvent)
 	}
 
-	err = s.kafkaManager.PublishEvent(topic, fmt.Sprintf("%d", subOrder.OrderID), orderEvent)
+	err = s.kafkaManager.PublishOrderEvent(topic, storeID, *orderEvent)
 	if err != nil {
 		return fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
