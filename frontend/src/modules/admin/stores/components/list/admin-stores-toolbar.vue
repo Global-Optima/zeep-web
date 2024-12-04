@@ -6,13 +6,12 @@
 		<div class="flex items-center space-x-2 w-full md:w-auto">
 			<!-- Search Input -->
 			<Input
-				v-model="searchQuery"
+				v-model="searchQueryRef"
 				placeholder="Поиск"
-				class="w-full md:w-64"
+				class="bg-white w-full md:w-64"
 				@input="onSearchInput"
 			/>
 			<!-- Filter Menu -->
-
 			<DropdownMenu>
 				<DropdownMenuTrigger as-child>
 					<Button
@@ -26,12 +25,12 @@
 				<DropdownMenuContent align="end">
 					<DropdownMenuItem @click="applyFilter('all')">Все</DropdownMenuItem>
 					<DropdownMenuItem @click="applyFilter('active')">Активные</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter('disabled')">Отключенные</DropdownMenuItem>
+					<DropdownMenuItem @click="applyFilter('inactive')">Неактивные</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>
 
-		<!-- Right Side: Export and Add Employee Buttons -->
+		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
 			<Button
 				variant="ghost"
@@ -43,7 +42,7 @@
 			</Button>
 			<Button
 				class="w-full md:w-auto"
-				@click="addEmployee"
+				@click="addStore"
 			>
 				<Plus class="mr-2 w-4 h-4" />
 				Добавить
@@ -53,43 +52,48 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
 import {
-  Button,
-} from '@/core/components/ui/button'; // Adjust import paths as necessary
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
+import { getRouteName } from '@/core/config/routes.config'
 import { ChevronDown, Download, Plus } from 'lucide-vue-next'
-import {  ref } from 'vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-// Emit events to parent component
+const router = useRouter();
+
+
+
+// Emits
 const emits = defineEmits<{
-  (e: 'update:searchQuery', value: string): void
-  (e: 'filterChanged', filter: string): void
-  (e: 'exportData'): void
-  (e: 'addEmployee'): void
-}>()
+  (e: 'update:searchQuery', value: string): void;
+  (e: 'filterChanged', filter: string): void;
+  (e: 'exportData'): void;
+  (e: 'addStore'): void;
+}>();
 
 // State variables
-const searchQuery = ref('')
+const searchQueryRef = ref("");
 
 // Methods
 const onSearchInput = () => {
-  emits('update:searchQuery', searchQuery.value)
-}
+  emits('update:searchQuery', searchQueryRef.value);
+};
 
 const applyFilter = (filter: string) => {
-  emits('filterChanged', filter)
-}
+  emits('filterChanged', filter);
+};
 
 const exportData = () => {
-  emits('exportData')
-}
+  emits('exportData');
+};
 
-const addEmployee = () => {
-  emits('addEmployee')
-}
+const addStore = () => {
+  router.push({ name: getRouteName("ADMIN_STORE_CREATE") });
+};
 </script>
-
-<style scoped>
-/* Add any custom styles if necessary */
-</style>

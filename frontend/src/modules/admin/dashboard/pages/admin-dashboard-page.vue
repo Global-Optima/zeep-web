@@ -7,9 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
-import AdminDashboardDateRangePicker from '@/modules/admin/components/dashboard/admin-dashboard-date-range-picker.vue'
-import AdminDashboardOverview from '@/modules/admin/components/dashboard/admin-dashboard-overview.vue'
-import AdminDashboardRecentSales from '@/modules/admin/components/dashboard/admin-dashboard-recent-sales.vue'
+import AdminDashboardDateRangePicker from '@/modules/admin/dashboard/components/admin-dashboard-date-range-picker.vue'
+import AdminDashboardOverview from '@/modules/admin/dashboard/components/admin-dashboard-overview.vue'
+import AdminDashboardRecentSales from '@/modules/admin/dashboard/components/admin-dashboard-recent-sales.vue'
 
 // Import Lucide icons
 import { Activity, DollarSign, ShoppingCart, Users } from 'lucide-vue-next'

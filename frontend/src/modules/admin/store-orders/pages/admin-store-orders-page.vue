@@ -9,15 +9,18 @@
 			Заказы не найдены
 		</p>
 		<!-- If there are orders, display the table -->
-		<Table v-else>
+		<Table
+			v-else
+			class="bg-white rounded-xl"
+		>
 			<TableHeader>
 				<TableRow>
-					<TableHead>Создано</TableHead>
-					<TableHead>Заказчик</TableHead>
-					<TableHead>Сумма</TableHead>
-					<TableHead class="hidden md:table-cell">Оплата</TableHead>
-					<TableHead class="hidden md:table-cell">Статус</TableHead>
-					<TableHead class="hidden md:table-cell">Комментарий</TableHead>
+					<TableHead class="p-4">Создано</TableHead>
+					<TableHead class="p-4">Заказчик</TableHead>
+					<TableHead class="p-4">Сумма</TableHead>
+					<TableHead class="hidden p-4 md:table-cell">Оплата</TableHead>
+					<TableHead class="hidden p-4 md:table-cell">Статус</TableHead>
+					<TableHead class="hidden p-4 md:table-cell">Комментарий</TableHead>
 				</TableRow>
 			</TableHeader>
 			<TableBody>
@@ -27,16 +30,16 @@
 					class="hover:bg-gray-50 h-12 cursor-pointer"
 					@click="goToOrder(order.id)"
 				>
-					<TableCell class="font-medium">
+					<TableCell class="p-4">
 						{{ formatDate(order.createdAt) }}
 					</TableCell>
-					<TableCell class="font-medium">
+					<TableCell class="p-4 font-medium">
 						{{ getUserFullName(order.user) }}
 					</TableCell>
-					<TableCell class="font-medium">
+					<TableCell class="p-4 font-medium">
 						{{ formatPrice(order.totalPrice) }}
 					</TableCell>
-					<TableCell class="hidden font-medium md:table-cell">
+					<TableCell class="hidden p-4 md:table-cell">
 						<div
 							v-if="order.isPaid"
 							class="flex items-center gap-2 text-green-500"
@@ -52,7 +55,7 @@
 							Не оплачено
 						</div>
 					</TableCell>
-					<TableCell class="hidden font-medium md:table-cell">
+					<TableCell class="hidden p-4 md:table-cell">
 						<p
 							:class="[
                 'inline-flex w-fit items-center rounded-md px-2.5 py-1 text-xs',
@@ -62,7 +65,7 @@
 							{{ ORDER_STATUS_FORMATTED[order.status] }}
 						</p>
 					</TableCell>
-					<TableCell class="hidden font-medium md:table-cell">
+					<TableCell class="hidden p-4 md:table-cell">
 						<p class="max-w-60 truncate">
 							{{ order.notes || 'Нет комментариев' }}
 						</p>
@@ -78,7 +81,6 @@ import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { Check, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import {
   Table,
@@ -228,11 +230,10 @@ const limit = ref(DEFAULT_LIMIT)
 // Computed property for displayed orders based on limit
 const displayedOrders = computed(() => orders.value.data.slice(0, limit.value))
 
-const router = useRouter()
 
 // Navigate to order details
 const goToOrder = (orderId: number) => {
-  router.push(`/admin/orders/${orderId}`)
+  console.log(orderId)
 }
 
 // Format date using date-fns

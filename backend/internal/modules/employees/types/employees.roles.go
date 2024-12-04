@@ -3,10 +3,10 @@ package types
 type EmployeeRole string
 
 const (
-	RoleAdmin    EmployeeRole = "Admin"
-	RoleDirector EmployeeRole = "Director"
-	RoleManager  EmployeeRole = "Manager"
-	RoleEmployee EmployeeRole = "Employee"
+	RoleAdmin    EmployeeRole = "ADMIN"
+	RoleDirector EmployeeRole = "DIRECTOR"
+	RoleManager  EmployeeRole = "MANAGER"
+	RoleEmployee EmployeeRole = "EMPLOYEE"
 )
 
 func IsEmployeeValidRole(role string) bool {

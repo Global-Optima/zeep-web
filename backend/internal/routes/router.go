@@ -41,9 +41,9 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	{
 		router.GET("", handler.GetAllStores)
 		router.GET("/:id", handler.GetStoreByID)
-		router.POST("", middleware.EmployeeRoleMiddleware("Admin"), handler.CreateStore)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware("Admin"), handler.UpdateStore)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware("Admin"), handler.DeleteStore)
+		router.POST("", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.CreateStore)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.UpdateStore)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.DeleteStore)
 	}
 }
 
