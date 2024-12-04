@@ -6,7 +6,9 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/kafka"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
 	"github.com/google/uuid"
@@ -29,6 +31,8 @@ type OrderService interface {
 type orderService struct {
 	orderRepo      OrderRepository
 	subOrderRepo   SubOrderRepository
+	productRepo    product.ProductRepository
+	additiveRepo   additives.AdditiveRepository
 	kafkaManager   *kafka.KafkaManager
 	ordersNotifier *OrdersNotifier
 }
@@ -58,11 +62,11 @@ func (s *orderService) GetAllOrders(storeID uint, status *string) ([]types.Order
 func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint, error) {
 	productSizeIDs, additiveIDs := RetrieveIDs(*createOrderDTO)
 
-	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.orderRepo)
+	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.productRepo)
 	if err != nil {
 		return nil, err
 	}
-	additivePrices, additiveNames, err := ValidateAdditives(additiveIDs, s.orderRepo)
+	additivePrices, additiveNames, err := ValidateAdditives(additiveIDs, s.additiveRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +138,7 @@ func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
 	return productSizeIDs, additiveIDs
 }
 
-func ValidateProductSizes(productSizeIDs []uint, repo OrderRepository) (map[uint]float64, map[uint]string, error) {
+func ValidateProductSizes(productSizeIDs []uint, repo product.ProductRepository) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	productNames := make(map[uint]string)
 	for _, id := range productSizeIDs {
@@ -148,7 +152,7 @@ func ValidateProductSizes(productSizeIDs []uint, repo OrderRepository) (map[uint
 	return prices, productNames, nil
 }
 
-func ValidateAdditives(additiveIDs []uint, repo OrderRepository) (map[uint]float64, map[uint]string, error) {
+func ValidateAdditives(additiveIDs []uint, repo additives.AdditiveRepository) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 	for _, id := range additiveIDs {
@@ -169,7 +173,7 @@ func calculateETA(orderType string) time.Time {
 	return time.Now().Add(15 * time.Minute)
 }
 
-func GetCachedProductSize(productSizeID uint, repo OrderRepository) (*data.ProductSize, error) {
+func GetCachedProductSize(productSizeID uint, repo product.ProductRepository) (*data.ProductSize, error) {
 	cache := utils.GetCacheInstance()
 	cacheKey := fmt.Sprintf("product_size:%d", productSizeID)
 
@@ -188,7 +192,7 @@ func GetCachedProductSize(productSizeID uint, repo OrderRepository) (*data.Produ
 	return productSize, nil
 }
 
-func GetCachedAdditive(additiveID uint, repo OrderRepository) (*data.Additive, error) {
+func GetCachedAdditive(additiveID uint, repo additives.AdditiveRepository) (*data.Additive, error) {
 	cache := utils.GetCacheInstance()
 	cacheKey := fmt.Sprintf("additive:%d", additiveID)
 
@@ -286,7 +290,7 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	}
 
 	for _, product := range order.OrderProducts {
-		productSize, err := s.orderRepo.GetProductSizeWithProduct(product.ProductSizeID)
+		productSize, err := s.productRepo.GetProductSizeWithProduct(product.ProductSizeID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch size label: %w", err)
 		}

@@ -7,6 +7,7 @@ import (
 )
 
 type ProductRepository interface {
+	GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error)
 	GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error)
 	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
 	DeleteProduct(productID uint) error
@@ -24,6 +25,16 @@ type productRepository struct {
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
+}
+
+func (r *productRepository) GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error) {
+	var productSize data.ProductSize
+	err := r.db.Preload("Product").First(&productSize, productSizeID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &productSize, nil
 }
 
 func (r *productRepository) GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error) {
