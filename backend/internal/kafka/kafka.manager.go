@@ -78,7 +78,13 @@ func (k *KafkaManager) FetchOrderEvent(orderID, storeID uint, topic string) (*ty
 	}
 	defer consumer.Close()
 
-	partitionConsumer, err := consumer.ConsumePartition(topic, int32(DefaultPartition), sarama.OffsetOldest)
+	partition := int32(DefaultPartition)
+
+	latestOffset, err := client.GetOffset(topic, partition, sarama.OffsetNewest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch latest offset: %w", err)
+	}
+	partitionConsumer, err := consumer.ConsumePartition(topic, partition, latestOffset-1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to consume partition: %w", err)
 	}
