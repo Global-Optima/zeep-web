@@ -349,9 +349,9 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
--- CityWarehouses Table
+-- Warehouses Table (refactor)
 CREATE TABLE
-	IF NOT EXISTS city_warehouses (
+	IF NOT EXISTS warehouses (
 		id SERIAL PRIMARY KEY,
 		facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE CASCADE,
 		name VARCHAR(255) NOT NULL,
@@ -365,7 +365,7 @@ CREATE TABLE
 	IF NOT EXISTS store_warehouses (
 		id SERIAL PRIMARY KEY,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-		city_warehouse_id INT NOT NULL REFERENCES city_warehouses (id) ON DELETE CASCADE,
+		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -387,7 +387,7 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS stock_requests (
 		id SERIAL PRIMARY KEY,
-		city_warehouse_id INT NOT NULL REFERENCES city_warehouses (id) ON DELETE CASCADE,
+		city_warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		status VARCHAR(50) NOT NULL,
 		request_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

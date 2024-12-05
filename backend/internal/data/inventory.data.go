@@ -54,18 +54,19 @@ type Supplier struct {
 
 type SKU struct {
 	BaseEntity
-	ID               string  `gorm:"unique;not null"`
-	Name             string  `gorm:"size:255;not null"`
-	Description      string  `gorm:"type:text"`
-	SafetyStock      float64 `gorm:"type:decimal(10,2);not null"`
-	ExpirationFlag   bool    `gorm:"not null"`
-	Quantity         float64 `gorm:"type:decimal(10,2);not null;check:quantity >= 0"`
-	UnitID           uint    `gorm:"not null"`
-	Unit             Unit    `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
-	Category         string  `gorm:"size:255"`
-	Barcode          string  `gorm:"unique;size:255"`
-	ExpirationPeriod int     `gorm:"not null;default:1095"` // 3 years
-	IsActive         bool    `gorm:"not null;default:true"`
+	Name             string     `gorm:"size:255;not null"`
+	Description      string     `gorm:"type:text"`
+	SafetyStock      float64    `gorm:"type:decimal(10,2);not null"`
+	ExpirationFlag   bool       `gorm:"not null"`
+	Quantity         float64    `gorm:"type:decimal(10,2);not null;check:quantity >= 0"`
+	UnitID           uint       `gorm:"not null"`
+	Unit             Unit       `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
+	Category         string     `gorm:"size:255"`
+	Barcode          string     `gorm:"unique;size:255"`
+	ExpirationPeriod int        `gorm:"not null;default:1095"` // 3 years in days
+	IsActive         bool       `gorm:"not null;default:true"`
+	Package          *Package   `gorm:"foreignKey:SKU_ID"`
+	Deliveries       []Delivery `gorm:"foreignKey:SKU_ID"`
 }
 
 type Unit struct {
@@ -81,4 +82,25 @@ type Package struct {
 	PackageSize   float64 `gorm:"type:decimal(10,2);not null"`
 	PackageUnitID uint    `gorm:"not null"`
 	PackageUnit   Unit    `gorm:"foreignKey:PackageUnitID;constraint:OnDelete:SET NULL"`
+}
+
+type Delivery struct {
+	BaseEntity
+	SKU_ID         uint      `gorm:"not null;index"`
+	SKU            SKU       `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
+	Barcode        string    `gorm:"size:255;not null"`
+	DeliveryDate   time.Time `gorm:"not null"`
+	ExpirationDate time.Time `gorm:"not null"`
+}
+
+// shall be refactored
+type AuditLog struct {
+	BaseEntity
+	Action        string    `gorm:"size:50;not null"`
+	SKU_ID        uint      `gorm:"index"`
+	SKU           SKU       `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
+	Quantity      float64   `gorm:"type:decimal(10,2)"`
+	UnitOfMeasure string    `gorm:"size:50"`
+	PerformedBy   uint      `gorm:"not null"` // Foreign key to User
+	PerformedAt   time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 }
