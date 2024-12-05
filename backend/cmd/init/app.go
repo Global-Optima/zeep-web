@@ -167,6 +167,8 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 			return orders.NewOrderService(
 				orders.NewOrderRepository(dbHandler.DB),
 				orders.NewSubOrderRepository(dbHandler.DB),
+				product.NewProductRepository(dbHandler.DB),
+				additives.NewAdditiveRepository(dbHandler.DB),
 				kafkaManager,
 				orders.NewOrdersNotifier(hub)), nil
 		},

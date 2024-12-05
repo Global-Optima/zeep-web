@@ -7,24 +7,29 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	"github.com/Global-Optima/zeep-web/backend/internal/kafka/setup"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/IBM/sarama"
-	"github.com/cenkalti/backoff/v4"
 )
 
 type KafkaManager struct {
-	Producer KafkaProducer
-	Consumer KafkaConsumer
-	Topics   Topics
+	Producer       setup.KafkaProducer
+	Consumer       setup.KafkaConsumer
+	Topics         Topics
+	ConsumeTimeOut time.Duration
 }
 
+var Logger = logger.GetInstance()
+var DefaultPartition = 0
+
 func NewKafkaManager(cfg config.KafkaConfig) (*KafkaManager, error) {
-	producer, err := NewKafkaProducer(cfg)
+	producer, err := setup.NewKafkaProducer(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize Kafka producer: %w", err)
 	}
 
-	consumer, err := NewKafkaConsumer(cfg)
+	consumer, err := setup.NewKafkaConsumer(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize Kafka consumer: %w", err)
 	}
@@ -33,76 +38,110 @@ func NewKafkaManager(cfg config.KafkaConfig) (*KafkaManager, error) {
 		Producer: *producer,
 		Consumer: *consumer,
 		Topics: Topics{
-			ActiveOrders:    cfg.Topics.ActiveOrders,
-			CompletedOrders: cfg.Topics.CompletedOrders,
+			ActiveOrders:    Topic(cfg.Topics.ActiveOrders),
+			CompletedOrders: Topic(cfg.Topics.CompletedOrders),
 		},
+		ConsumeTimeOut: 3 * time.Second,
 	}, nil
 }
 
-func (k *KafkaManager) PublishOrderEvent(topic string, storeID uint, event types.OrderEvent) error {
+func (k *KafkaManager) PublishOrderEvent(topic Topic, storeID uint, event types.OrderEvent) error {
 	eventData, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to serialize event: %w", err)
 	}
 
 	msg := &sarama.ProducerMessage{
-		Topic: topic,
-		Key:   sarama.StringEncoder(fmt.Sprintf("%d", storeID)), // Partition by only StoreID
+		Topic: k.GetTopic(topic),
+		Key:   sarama.StringEncoder(fmt.Sprintf("%d", storeID)),
 		Value: sarama.ByteEncoder(eventData),
 	}
 
 	err = k.Producer.SendMessage(msg)
 	if err != nil {
-		return fmt.Errorf("failed to publish message to Kafka topic %s: %w", topic, err)
+		return fmt.Errorf("failed to publish message to Kafka topic %s: %w", k.GetTopic(topic), err)
 	}
 
 	return nil
 }
 
-func (k *KafkaManager) GetOrderEvent(topic string, orderID uint, storeID uint) (*types.OrderEvent, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (k *KafkaManager) FetchOrderEvent(orderID, storeID uint, topic string) (*types.OrderEvent, error) {
+	client, err := sarama.NewClient(k.Consumer.Brokers, sarama.NewConfig())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Kafka client: %w", err)
+	}
+	defer client.Close()
+
+	consumer, err := sarama.NewConsumerFromClient(client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Kafka consumer: %w", err)
+	}
+	defer consumer.Close()
+
+	partitionConsumer, err := consumer.ConsumePartition(topic, int32(DefaultPartition), sarama.OffsetOldest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to consume partition: %w", err)
+	}
+	defer partitionConsumer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), k.ConsumeTimeOut)
 	defer cancel()
 
-	resultChan := make(chan *types.OrderEvent, 1)
-	handler := NewKafkaHandler(func(_, key, value string) error {
-		var event types.OrderEvent
-		if err := json.Unmarshal([]byte(value), &event); err != nil {
-			return fmt.Errorf("failed to unmarshal message: %w", err)
-		}
-
-		var retrievedStoreID uint
-		_, err := fmt.Sscanf(key, "%d", &retrievedStoreID)
-		if err != nil || retrievedStoreID != storeID {
-			return nil // Ignore if storeID doesn't match
-		}
-
-		if event.ID == orderID {
-			select {
-			case resultChan <- &event:
-			default:
+	for {
+		select {
+		case msg := <-partitionConsumer.Messages():
+			var event types.OrderEvent
+			if err := json.Unmarshal(msg.Value, &event); err != nil {
+				fmt.Printf("Failed to unmarshal Kafka message: %v\n", err)
+				continue
 			}
-			cancel() // Signal completion
-		}
-		return nil
-	})
 
-	operation := func() error {
-		if err := k.Consumer.Consume(ctx, []string{topic}, handler); err != nil {
-			return err
+			// Match the orderID and storeID
+			if event.ID == orderID && event.StoreID == storeID {
+				return &event, nil
+			}
+
+		case <-ctx.Done():
+			return nil, fmt.Errorf("timeout while fetching order event for OrderID %d", orderID)
 		}
-		return nil
 	}
+}
 
-	expBackoff := backoff.NewExponentialBackOff()
-	err := backoff.Retry(operation, expBackoff)
+func (k *KafkaManager) FetchOrders(topic string) ([]types.OrderEvent, error) {
+	client, err := sarama.NewClient(k.Consumer.Brokers, sarama.NewConfig())
 	if err != nil {
-		return nil, fmt.Errorf("failed to consume Kafka messages: %w", err)
+		return nil, fmt.Errorf("failed to create Kafka client: %w", err)
 	}
+	defer client.Close()
 
-	select {
-	case result := <-resultChan:
-		return result, nil
-	case <-ctx.Done():
-		return nil, fmt.Errorf("timeout fetching order event for order ID %d", orderID)
+	consumer, err := sarama.NewConsumerFromClient(client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Kafka consumer: %w", err)
+	}
+	defer consumer.Close()
+
+	partitionConsumer, err := consumer.ConsumePartition(topic, int32(DefaultPartition), sarama.OffsetOldest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to consume partition: %w", err)
+	}
+	defer partitionConsumer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), k.ConsumeTimeOut)
+	defer cancel()
+
+	var messages []types.OrderEvent
+	for {
+		select {
+		case msg := <-partitionConsumer.Messages():
+			var event types.OrderEvent
+			if err := json.Unmarshal(msg.Value, &event); err != nil {
+				fmt.Printf("Failed to unmarshal Kafka message: %v\n", err)
+				continue
+			}
+			messages = append(messages, event)
+
+		case <-ctx.Done():
+			return messages, nil
+		}
 	}
 }

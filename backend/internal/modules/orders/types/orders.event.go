@@ -19,6 +19,7 @@ type OrderEvent struct {
 }
 
 type SubOrderEvent struct {
+	ID            uint             `json:"id"`
 	SubOrderID    uint             `json:"subOrderId"`
 	ProductSizeID uint             `json:"productSizeId"`
 	ProductName   string           `json:"productName"`

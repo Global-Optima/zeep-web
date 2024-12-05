@@ -55,6 +55,7 @@ func ConvertOrderToDTO(order *data.Order) OrderDTO {
 	orderDTO := OrderDTO{
 		ID:                order.ID,
 		CustomerID:        order.CustomerID,
+		CustomerName:      &order.CustomerName,
 		EmployeeID:        order.EmployeeID,
 		StoreID:           order.StoreID,
 		DeliveryAddressID: order.DeliveryAddressID,

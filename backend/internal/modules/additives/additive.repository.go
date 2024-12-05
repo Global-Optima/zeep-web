@@ -1,6 +1,7 @@
 package additives
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -81,6 +82,9 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 	var additive data.Additive
 	err := r.db.Where("id = ?", additiveID).First(&additive).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("additive with ID %d not found", additiveID)
+		}
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
 	return &additive, nil
