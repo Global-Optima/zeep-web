@@ -5,6 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
@@ -40,9 +41,9 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	{
 		router.GET("", handler.GetAllStores)
 		router.GET("/:id", handler.GetStoreByID)
-		router.POST("", middleware.RoleMiddleware("Admin"), handler.CreateStore)
-		router.PUT("/:id", middleware.RoleMiddleware("Admin"), handler.UpdateStore)
-		router.DELETE("/:id", middleware.RoleMiddleware("Admin"), handler.DeleteStore)
+		router.POST("", middleware.EmployeeRoleMiddleware("Admin"), handler.CreateStore)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware("Admin"), handler.UpdateStore)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware("Admin"), handler.DeleteStore)
 	}
 }
 
@@ -63,14 +64,16 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.Routes.Group("/employees")
 	{
-		router.POST("", middleware.RoleMiddleware("Director"), handler.CreateEmployee)
-		router.GET("", middleware.RoleMiddleware("Director", "Manager"), handler.GetEmployees)
+		router.POST("", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.CreateEmployee)
+		router.GET("", handler.GetEmployeesByStore)
+		router.GET("/current", handler.GetCurrentEmployee)
 		router.GET("/:id", handler.GetEmployeeByID)
-		router.PUT("/:id", middleware.RoleMiddleware("Director"), handler.UpdateEmployee)
-		router.DELETE("/:id", middleware.RoleMiddleware("Director"), handler.DeleteEmployee)
-		router.GET("/roles", middleware.RoleMiddleware("Director", "Manager"), handler.GetAllRoles)
-		router.PUT("/:id/password", middleware.RoleMiddleware("Employee", "Manager", "Director"), handler.UpdatePassword)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.UpdateEmployee)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.DeleteEmployee)
+		router.GET("/roles", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager), handler.GetAllRoles)
+		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager, types.RoleBarista), handler.UpdatePassword)
 		router.POST("/login", handler.EmployeeLogin)
+		router.POST("/logout", handler.EmployeeLogout)
 	}
 }
 
@@ -78,12 +81,13 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.Routes.Group("/orders")
 	{
 		router.POST("", handler.CreateOrder)
-		router.PUT("/suborders/:subOrderId/complete", middleware.RoleMiddleware("Barista"), handler.CompleteSubOrder)
+		router.PUT("/:orderId/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(types.RoleBarista), handler.CompleteSubOrder)
 		router.GET("", handler.GetAllOrders)
-		router.GET("/suborders", handler.GetSubOrders)
+		router.GET("/:orderId/suborders", handler.GetSubOrders)
+		router.GET("/:orderId", handler.GetActiveOrder)
 		router.GET("/statuses/count", handler.GetStatusesCount)
-		router.GET("/suborders/count", handler.GetSubOrderCount)
-		router.GET("/:order_id/receipt", handler.GeneratePDFReceipt)
+		router.GET("/:orderId/suborders/count", handler.GetSubOrderCount)
+		router.GET("/:orderId/receipt", handler.GeneratePDFReceipt)
 	}
 }
 

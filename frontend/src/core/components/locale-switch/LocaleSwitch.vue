@@ -1,7 +1,7 @@
 <template>
 	<Select v-model="selectedLocale">
 		<SelectTrigger
-			class="bg-gray-600/60 backdrop-blur-md rounded-3xl text-white border-none text-base sm:text-xl py-6 px-4"
+			class="bg-gray-600/60 backdrop-blur-md rounded-3xl text-white border-none text-base sm:text-3xl py-8 px-6"
 		>
 			<SelectValue
 				placeholder="Select language"
@@ -14,12 +14,12 @@
 				:key="locale.locale"
 				:value="locale.locale"
 			>
-				<div class="flex items-center gap-3">
+				<div class="flex items-center gap-4">
 					<Icon
 						:icon="locale.icon"
-						class="text-2xl sm:text-3xl w-fit"
+						class="text-2xl sm:text-3xl"
 					/>
-					<span class="text-base sm:text-lg">{{ locale.label }}</span>
+					<span class="text-base sm:text-3xl">{{ locale.label }}</span>
 				</div>
 			</SelectItem>
 		</SelectContent>

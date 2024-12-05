@@ -24,8 +24,10 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 
 	var cachedCategories []types.CategoryDTO
 	if err := cacheUtil.Get(cacheKey, &cachedCategories); err == nil {
-		utils.SuccessResponse(c, cachedCategories)
-		return
+		if !utils.IsEmpty(cachedCategories) {
+			utils.SuccessResponse(c, cachedCategories)
+			return
+		}
 	}
 
 	categories, err := h.service.GetCategories(c)

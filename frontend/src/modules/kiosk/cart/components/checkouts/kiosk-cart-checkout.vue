@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { getRouteName } from '@/core/config/routes.config'
+import { toastError } from '@/core/config/toast.config'
+import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { useResetKioskState } from '@/modules/kiosk/hooks/use-reset-kiosk.hook'
+import type { CreateOrderDTO } from '@/modules/orders/models/orders.models'
+import { orderService } from '@/modules/orders/services/orders.service'
+import { CURRENT_STORE_COOKIES_CONFIG } from '@/modules/stores/constants/store-cookies.constant'
+import { useMutation } from '@tanstack/vue-query'
 import { ChevronRight } from 'lucide-vue-next'
 import { defineAsyncComponent, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -9,24 +15,40 @@ interface StepState {
   customerName: string;
   selectedPayment: string;
   qrCodeUrl: string;
+  orderId?: number;
 }
 
 const stepState = ref<StepState>({
   customerName: '',
   selectedPayment: '',
-  qrCodeUrl: 'https://urbocoffee.kz/',
+  qrCodeUrl: '',
+  orderId: undefined,
 });
 
+const router = useRouter();
+const resetKioskState = useResetKioskState();
+const { cartItems, clearCart } = useCartStore();
+const storeId = Number(localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)) || 1;
+
+// Mutation for creating the order
+const createOrderMutation = useMutation({
+  mutationFn: (orderDTO: CreateOrderDTO) => orderService.createOrder(orderDTO),
+  onSuccess: (response) => {
+    stepState.value.orderId = response.orderId;
+    stepState.value.qrCodeUrl = `/api/v1/orders/${response.orderId}/receipt`;
+  },
+  onError: (error) => {
+    console.error('Failed to create order:', error);
+    toastError('An error occurred while creating the order. Please try again.');
+  },
+});
 
 interface StepConfig {
   name: string;
   component: ReturnType<typeof defineAsyncComponent>;
-  onProceed?: (data: StepState) => void;
+  onProceed?: (data: StepState) => Promise<void> | void;
   onBack?: string | null;
 }
-
-const router = useRouter();
-const resetKioskState = useResetKioskState();
 
 const stepsConfig: StepConfig[] = [
   {
@@ -35,7 +57,8 @@ const stepsConfig: StepConfig[] = [
       import('@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout-customer.vue')
     ),
     onProceed: (data: { customerName: string }) => {
-      return stepState.value.customerName = data.customerName
+      stepState.value.customerName = data.customerName;
+      console.log(stepState.value.customerName)
     },
     onBack: null,
   },
@@ -44,8 +67,24 @@ const stepsConfig: StepConfig[] = [
     component: defineAsyncComponent(() =>
       import('@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout-payment.vue')
     ),
-    onProceed: (data: { selectedPayment: string }) => {
+    onProceed: async (data: { selectedPayment: string }) => {
       stepState.value.selectedPayment = data.selectedPayment;
+      console.log("HERE", stepState.value.customerName)
+      try {
+        const orderDTO: CreateOrderDTO = {
+          customerName: stepState.value.customerName,
+          storeId: storeId,
+          orderItems: Object.entries(cartItems).map(([_, item]) => ({
+            productSizeId: item.size.id,
+            quantity: item.quantity,
+            additivesIds: item.additives.map((add) => add.id),
+          })),
+        };
+
+        await createOrderMutation.mutateAsync(orderDTO);
+      } catch (error) {
+        throw error;
+      }
     },
     onBack: 'customer',
   },
@@ -55,7 +94,9 @@ const stepsConfig: StepConfig[] = [
       import('@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout-confirm.vue')
     ),
     onProceed: () => {
-      router.push({ name: getRouteName('KIOSK_LANDING') });
+      resetKioskState.resetAll();
+      clearCart();
+      router.push({ name: getRouteName('KIOSK_HOME') });
     },
     onBack: 'payment',
   },
@@ -72,15 +113,19 @@ const closeAllAndReset = () => {
   Object.assign(stepState.value, {
     customerName: '',
     selectedPayment: '',
-    qrCodeUrl: 'https://urbocoffee.kz/',
+    qrCodeUrl: '',
+    orderId: undefined,
   });
-  resetKioskState.resetAll();
 };
 
-const handleProceed = (stepName: string, data: StepState) => {
+const handleProceed = async (stepName: string, data: StepState) => {
   const step = stepsConfig.find((s) => s.name === stepName);
   if (step?.onProceed) {
-    step.onProceed(data);
+    try {
+      await step.onProceed(data);
+    } catch {
+      return;
+    }
   }
   const nextStepIndex = stepsConfig.findIndex((s) => s.name === stepName) + 1;
   if (stepsConfig[nextStepIndex]) {
@@ -110,7 +155,7 @@ const handleBack = (stepName: string) => {
 		:is="step.component"
 		:isOpen="currentStep === step.name"
 		@close="closeAllAndReset"
-		@proceed="(data: StepState) => handleProceed(step.name, data)"
+		@proceed="(data: any) => handleProceed(step.name, data)"
 		@back="() => handleBack(step.name)"
 		v-bind="stepState"
 	/>

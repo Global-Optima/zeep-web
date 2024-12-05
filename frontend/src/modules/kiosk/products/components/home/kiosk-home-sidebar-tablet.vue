@@ -1,17 +1,17 @@
 <template>
 	<aside
-		class="hidden sm:flex py-8 px-6 bg-white h-full overflow-hidden flex-col max-w-[250px] rounded-3xl"
+		class="sm:flex flex-col hidden bg-white px-6 py-8 rounded-3xl max-w-[250px] h-full overflow-y-auto no-scrollbar"
 	>
-		<p class="text-3xl font-semibold">ZEEP</p>
-		<ul class="flex flex-col justify-center gap-4 mt-8">
+		<p class="font-semibold text-3xl">ZEEP</p>
+		<ul class="flex flex-col justify-center mt-8">
 			<li
 				v-for="category in categories"
 				:key="category.id"
 				@click="onUpdateCategory(category.id)"
 				:class="[
-						'cursor-pointer text-xl',
-						category.id === selectedCategoryId ? 'text-primary' : 'text-gray-600',
-					]"
+          'cursor-pointer text-2xl py-4 category-item',
+          category.id === selectedCategoryId ? 'text-primary' : 'text-gray-600',
+        ]"
 			>
 				{{ category.name }}
 			</li>
@@ -33,4 +33,8 @@ const onUpdateCategory = (categoryId: number ) => {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.category-item:not(:last-child) {
+  border-bottom: 1px solid #f1f1f1;
+}
+</style>

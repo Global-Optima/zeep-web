@@ -6,11 +6,9 @@ import (
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
-
-var Logger = logger.GetInstance()
 
 type OrderHandler struct {
 	service OrderService
@@ -21,11 +19,32 @@ func NewOrderHandler(service OrderService) *OrderHandler {
 }
 
 func (h *OrderHandler) GetAllOrders(c *gin.Context) {
-	status := c.Query("status")
+	storeIDStr := c.Query("storeId")
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
 
-	orders, err := h.service.GetAllOrders(&status)
+	status := c.Query("status")
+	limitStr := c.DefaultQuery("limit", "10")  // Default limit is 10
+	offsetStr := c.DefaultQuery("offset", "0") // Default offset is 0
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		utils.SendBadRequestError(c, "invalid limit parameter")
+		return
+	}
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil || offset < 0 {
+		utils.SendBadRequestError(c, "invalid offset parameter")
+		return
+	}
+
+	orders, err := h.service.GetAllOrders(uint(storeID), &status, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch orders"})
+		utils.SendInternalServerError(c, "failed to fetch orders")
 		return
 	}
 
@@ -33,16 +52,24 @@ func (h *OrderHandler) GetAllOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetSubOrders(c *gin.Context) {
-	orderIDStr := c.Query("order_id")
-	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
-	if err != nil || orderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or missing order_id"})
+	storeIDStr := c.Query("storeId")
+	orderIDStr := c.Param("orderId")
+
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
 		return
 	}
 
-	subOrders, err := h.service.GetSubOrders(uint(orderID))
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
+	if err != nil || orderID == 0 {
+		utils.SendBadRequestError(c, "invalid order ID")
+		return
+	}
+
+	subOrders, err := h.service.GetSubOrders(uint(storeID), uint(orderID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch suborders"})
+		utils.SendInternalServerError(c, "failed to fetch suborders")
 		return
 	}
 
@@ -50,32 +77,56 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
+	storeIDStr := c.Query("storeId")
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
 	var orderDTO types.CreateOrderDTO
 	if err := c.ShouldBindJSON(&orderDTO); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input data"})
+		utils.SendBadRequestError(c, "invalid input data")
 		return
 	}
 
-	err := h.service.CreateOrder(&orderDTO)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create order"})
+	orderDTO.StoreID = uint(storeID)
+
+	orderId, err := h.service.CreateOrder(&orderDTO)
+	if err != nil || orderId == nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to create order: %s", err.Error()))
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, gin.H{"orderId": orderId})
 }
 
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
+	storeIDStr := c.Query("storeId")
+	orderIDStr := c.Param("orderId")
 	subOrderIDStr := c.Param("subOrderId")
-	subOrderID, err := strconv.ParseUint(subOrderIDStr, 10, 64)
-	if err != nil || subOrderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or missing subOrderId"})
+
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
 		return
 	}
 
-	err = h.service.CompleteSubOrder(uint(subOrderID))
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to complete suborder"})
+		utils.SendBadRequestError(c, "invalid order ID")
+		return
+	}
+
+	subOrderID, err := strconv.ParseUint(subOrderIDStr, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid suborder ID")
+		return
+	}
+
+	err = h.service.CompleteSubOrder(uint(subOrderID), uint(orderID), uint(storeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to complete suborder")
 		return
 	}
 
@@ -83,32 +134,38 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 }
 
 func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
-	orderIDParam := c.Param("order_id")
+	orderIDParam := c.Param("orderId")
 	orderID, err := strconv.ParseUint(orderIDParam, 10, 64)
 	if err != nil || orderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order ID"})
+		utils.SendBadRequestError(c, "invalid order ID")
 		return
 	}
 
 	pdfData, err := h.service.GeneratePDFReceipt(uint(orderID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate PDF receipt"})
+		utils.SendInternalServerError(c, "failed to generate PDF receipt")
 		return
 	}
 
 	c.Header("Content-Type", "application/pdf")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=order_%d_receipt.pdf", orderID))
 	if _, err := c.Writer.Write(pdfData); err != nil {
-		Logger.Error(fmt.Sprintf("Failed to write PDF data: %v", err))
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
-	counts, err := h.service.GetStatusesCount()
+	storeIDStr := c.Query("storeId")
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
+	counts, err := h.service.GetStatusesCount(uint(storeID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch statuses count"})
+		utils.SendInternalServerError(c, "failed to fetch statuses count")
 		return
 	}
 
@@ -116,18 +173,51 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetSubOrderCount(c *gin.Context) {
-	orderIDStr := c.Query("order_id")
-	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
-	if err != nil || orderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or missing order_id"})
+	storeIDStr := c.Query("storeId")
+	orderIDStr := c.Param("orderId")
+
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
 		return
 	}
 
-	count, err := h.service.GetSubOrderCount(uint(orderID))
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch suborder count"})
+		utils.SendBadRequestError(c, "invalid order ID")
+		return
+	}
+
+	count, err := h.service.GetSubOrderCount(uint(orderID), uint(storeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to fetch suborder count")
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"count": count})
+}
+
+func (h *OrderHandler) GetActiveOrder(c *gin.Context) {
+	storeIDStr := c.Query("storeId")
+	orderIDStr := c.Param("orderId")
+
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
+	if err != nil || orderID == 0 {
+		utils.SendBadRequestError(c, "invalid order ID")
+		return
+	}
+
+	subOrders, err := h.service.GetActiveOrderEvent(uint(storeID), uint(orderID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to fetch suborders")
+		return
+	}
+
+	c.JSON(http.StatusOK, subOrders)
 }

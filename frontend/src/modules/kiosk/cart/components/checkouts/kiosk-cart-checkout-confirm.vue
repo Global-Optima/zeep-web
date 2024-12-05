@@ -18,11 +18,11 @@ const emit = defineEmits<{
 <template>
 	<Dialog
 		:open="props.isOpen"
-		@update:open="emit('close')"
+		@update:open="emit('proceed')"
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="space-y-8 bg-white shadow-lg mx-auto p-10 rounded-lg max-w-3xl"
+			class="space-y-8 bg-white sm:p-12 !rounded-[40px] sm:max-w-3xl text-black"
 		>
 			<DialogHeader class="flex flex-col justify-center items-center w-full">
 				<DialogTitle class="text-center text-primary sm:text-3xl">Заказ подтвержден</DialogTitle>

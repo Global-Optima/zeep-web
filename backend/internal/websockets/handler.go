@@ -13,17 +13,12 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func WebSocketHandler(hub *WebSocketHub) gin.HandlerFunc {
+func WebSocketHandler(hub *WebSocketHub, channel string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade to WebSocket"})
 			return
-		}
-
-		channel := c.Query("channel")
-		if channel == "" {
-			channel = "default"
 		}
 
 		sub := Subscription{

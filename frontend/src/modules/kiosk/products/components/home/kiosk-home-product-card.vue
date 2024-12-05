@@ -32,20 +32,20 @@
 </template>
 
 <script setup lang="ts">
- import { getRouteName } from '@/core/config/routes.config'
-import { formatPrice } from '@/core/utils/price.utils'
+ import { formatPrice } from '@/core/utils/price.utils'
+import { useCurrentProductStore } from '@/modules/kiosk/products/components/hooks/use-current-product.hook'
 import type { StoreProducts } from '@/modules/kiosk/products/models/product.model'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
+// const router = useRouter()
+const currentProductStore = useCurrentProductStore()
 
  const {product} = defineProps<{
   product: StoreProducts;
 }>();
 
  const selectProduct = () => {
-  // productStore.selectProduct(product.id)
-  router.push({name: getRouteName("KIOSK_DETAILS"), params: {id: product.id}})
+  // router.push({name: getRouteName("KIOSK_DETAILS"), params: {id: product.id}})
+  currentProductStore.openModal(product.id)
 };
 </script>
 

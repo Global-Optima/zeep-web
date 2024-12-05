@@ -2,50 +2,57 @@ package types
 
 import (
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
 type CreateOrderDTO struct {
-	CustomerID        uint                `json:"customer_id"`
-	EmployeeID        *uint               `json:"employee_id,omitempty"`
-	StoreID           *uint               `json:"store_id"`
-	DeliveryAddressID *uint               `json:"delivery_address_id"`
-	Products          []CreateSubOrderDTO `json:"products"`
+	CustomerID        *uint                `json:"customerId,omitempty"`
+	CustomerName      string               `json:"customerName"`
+	EmployeeID        *uint                `json:"employeeId,omitempty"`
+	StoreID           uint                 `json:"storeId"`
+	DeliveryAddressID *uint                `json:"deliveryAddressId"`
+	OrderItems        []CreateOrderItemDTO `json:"orderItems"`
+	OrderType         string               `json:"type"` // delivery or in cafe
 }
 
-type CreateSubOrderDTO struct {
-	ProductSizeID uint   `json:"product_size_id"`
+type CreateOrderItemDTO struct {
+	ProductSizeID uint   `json:"productSizeId"`
 	Quantity      int    `json:"quantity"`
-	Additives     []uint `json:"additives"` //list of ids
+	AdditivesIDs  []uint `json:"additivesIds"`
 }
 
 type OrderDTO struct {
 	ID                uint              `json:"id"`
-	CustomerID        uint              `json:"customer_id"`
-	EmployeeID        *uint             `json:"employee_id,omitempty"`
-	StoreID           *uint             `json:"store_id,omitempty"`
-	DeliveryAddressID *uint             `json:"delivery_address_id,omitempty"`
-	OrderStatus       string            `json:"order_status"`
-	OrderDate         time.Time         `json:"order_date"`
+	CustomerID        *uint             `json:"customerId"`
+	CustomerName      *string           `json:"customerName"`
+	EmployeeID        *uint             `json:"employeeId,omitempty"`
+	StoreID           uint              `json:"storeId"`
+	DeliveryAddressID *uint             `json:"deliveryAddressId,omitempty"`
+	OrderStatus       data.OrderStatus  `json:"orderStatus"`
+	CreatedAt         time.Time         `json:"orderDate"`
 	Total             float64           `json:"total"`
-	OrderProducts     []OrderProductDTO `json:"order_products,omitempty"`
+	SubOrdersQuantity int               `json:"subOrdersQuantity"`
+	OrderProducts     []OrderProductDTO `json:"orderProducts,omitempty"`
+	Timestamp         time.Time         `json:"timestamp"`
 }
 
 type OrderProductDTO struct {
 	ID            uint                      `json:"id"`
-	OrderID       uint                      `json:"order_id"`
-	ProductSizeID uint                      `json:"product_size_id"`
+	OrderID       uint                      `json:"orderId"`
+	ProductSizeID uint                      `json:"productSizeId"`
 	Quantity      int                       `json:"quantity"`
 	Price         float64                   `json:"price"`
 	Additives     []OrderProductAdditiveDTO `json:"additives,omitempty"`
-	CreatedAt     time.Time                 `json:"created_at"`
-	UpdatedAt     time.Time                 `json:"updated_at"`
+	CreatedAt     time.Time                 `json:"createdAt"`
+	UpdatedAt     time.Time                 `json:"updatedAt"`
 }
 
 type OrderProductAdditiveDTO struct {
 	ID             uint      `json:"id"`
-	OrderProductID uint      `json:"order_product_id"`
-	AdditiveID     uint      `json:"additive_id"`
+	OrderProductID uint      `json:"orderProductId"`
+	AdditiveID     uint      `json:"additiveId"`
 	Price          float64   `json:"price"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
 }

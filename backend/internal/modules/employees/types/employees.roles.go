@@ -1,17 +1,17 @@
 package types
 
-type Role string
+type EmployeeRole string
 
 const (
-	RoleAdmin    Role = "Admin"
-	RoleDirector Role = "Director"
-	RoleManager  Role = "Manager"
-	RoleEmployee Role = "Employee"
+	RoleAdmin    EmployeeRole = "Admin"
+	RoleDirector EmployeeRole = "Director"
+	RoleManager  EmployeeRole = "Manager"
+	RoleBarista  EmployeeRole = "Barista"
 )
 
-func IsValidRole(role string) bool {
-	switch Role(role) {
-	case RoleAdmin, RoleDirector, RoleManager, RoleEmployee:
+func IsEmployeeValidRole(role string) bool {
+	switch EmployeeRole(role) {
+	case RoleAdmin, RoleDirector, RoleManager, RoleBarista:
 		return true
 	default:
 		return false

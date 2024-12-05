@@ -1,14 +1,13 @@
 <template>
 	<button
 		@click="onCartClick"
-		class="flex items-center gap-3 rounded-full px-6 sm:px-8 py-4 bg-primary
-				text-primary-foreground shadow-xl backdrop-blur-md"
+		class="flex items-center gap-3 bg-primary shadow-xl backdrop-blur-md px-6 sm:px-8 py-6 rounded-full text-primary-foreground"
 	>
-		<p class="text-xl sm:text-3xl">
+		<p class="text-xl sm:text-4xl">
 			{{ formatPrice(cartStore.totalPrice) }}
 		</p>
 
-		<ChevronRight class="w-7 h-7" />
+		<ChevronRight class="w-8 h-8" />
 	</button>
 </template>
 

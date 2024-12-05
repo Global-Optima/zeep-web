@@ -84,24 +84,24 @@ export const ROUTES: RouteRecordRaw[] = PARENT_ROUTES_RECORDS.map(record => {
 	return route
 })
 
-const routeLookupMap: Record<RouteKey, AppRoutePage | undefined> = CHILDREN_ROUTES_RECORDS.reduce(
+const routeLookupMap: Record<RouteKey, AppRoutePage> = CHILDREN_ROUTES_RECORDS.reduce(
 	(acc, record) => {
 		Object.entries(record).forEach(([key, value]) => {
 			acc[key as RouteKey] = value
 		})
 		return acc
 	},
-	{} as Record<RouteKey, AppRoutePage | undefined>,
+	{} as Record<RouteKey, AppRoutePage>,
 )
 
-export function getRoute(key: RouteKey): AppRoutePage | undefined {
+export function getRoute(key: RouteKey): AppRoutePage {
 	return routeLookupMap[key]
 }
 
-export function getRouteName(key: RouteKey): string | undefined {
-	return routeLookupMap[key]?.name
+export function getRouteName(key: RouteKey): string {
+	return routeLookupMap[key].name!
 }
 
-export function getRoutePath(key: RouteKey): string | undefined {
-	return routeLookupMap[key]?.path
+export function getRoutePath(key: RouteKey): string {
+	return routeLookupMap[key].path
 }

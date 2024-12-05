@@ -17,5 +17,8 @@ export const toastConfig: ToastContainerOptions = {
 export const toastSuccess = (msg: string, options?: ToastOptions) =>
 	toast(msg, { type: 'success', position: 'top-center', ...options })
 
+export const toastError = (msg: string, options?: ToastOptions) =>
+	toast(msg, { type: 'error', position: 'top-center', ...options })
+
 export const toastInfo = (msg: string, options?: ToastOptions) =>
 	toast(msg, { type: 'info', position: 'top-center', ...options })

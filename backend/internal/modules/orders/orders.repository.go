@@ -2,25 +2,21 @@ package orders
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"gorm.io/gorm"
 )
 
 type OrderRepository interface {
-	GetAllOrders(status *string) ([]data.Order, error)
+	GetAllOrders(storeID uint, status *string, limit int, offset int) ([]data.Order, error)
+	GetStoreOrderById(storeID, orderID uint) (*data.Order, error)
+	GetOrderByOrderId(orderID uint) (*data.Order, error)
 	CreateOrder(order *data.Order) error
-	UpdateOrderStatus(orderID uint, status string) error
-	GetOrderById(orderID uint) (*data.Order, error)
+	UpdateOrderStatus(orderID uint, storeID uint, status data.OrderStatus) error
 	DeleteOrder(orderID uint) error
 
-	GetStatusesCount() (map[string]int64, error)
-	UpdateTime(subOrderID uint, updatedTime time.Time) error
+	GetStatusesCount(storeID uint) (map[string]int64, error)
 	GetLowStockIngredients(threshold float64) ([]data.Ingredient, error)
-	GetProductSizeLabel(productSizeID uint) (string, error)
-	GetAdditiveByID(additiveID uint) (*data.Additive, error)
-	GetProductSizeByID(productSizeID uint) (*data.ProductSize, error)
 }
 
 type orderRepository struct {
@@ -31,20 +27,36 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 	return &orderRepository{db: db}
 }
 
-func (r *orderRepository) GetAllOrders(status *string) ([]data.Order, error) {
+func (r *orderRepository) GetAllOrders(storeID uint, status *string, limit int, offset int) ([]data.Order, error) {
 	var orders []data.Order
-	query := r.db.Preload("OrderProducts")
+	query := r.db.Preload("OrderProducts").Where("store_id = ?", storeID)
 
 	if status != nil && *status != "" {
 		query = query.Where("order_status = ?", *status)
 	}
 
-	err := query.Find(&orders).Error
+	err := query.Limit(limit).Offset(offset).Find(&orders).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return orders, nil
+}
+
+func (r *orderRepository) GetStoreOrderById(storeID, orderID uint) (*data.Order, error) {
+	var order data.Order
+	err := r.db.Preload("OrderProducts.Additives").
+		Where("id = ? AND store_id = ?", orderID, storeID).
+		First(&order).Error
+	return &order, err
+}
+
+func (r *orderRepository) GetOrderByOrderId(orderID uint) (*data.Order, error) {
+	var order data.Order
+	err := r.db.Preload("OrderProducts.Additives").
+		Where("id = ?", orderID).
+		First(&order).Error
+	return &order, err
 }
 
 func (r *orderRepository) CreateOrder(order *data.Order) error {
@@ -54,7 +66,7 @@ func (r *orderRepository) CreateOrder(order *data.Order) error {
 		}
 
 		productSizeIDs := extractProductSizeIDs(order.OrderProducts)
-		productSizes, err := FetchProductSizes(tx, productSizeIDs)
+		productSizes, err := fetchProductSizes(tx, productSizeIDs)
 		if err != nil {
 			return fmt.Errorf("failed to fetch product sizes: %w", err)
 		}
@@ -74,29 +86,24 @@ func (r *orderRepository) CreateOrder(order *data.Order) error {
 	})
 }
 
-func (r *orderRepository) UpdateOrderStatus(orderID uint, status string) error {
-	return r.db.Model(&data.Order{}).Where("id = ?", orderID).Update("order_status", status).Error
-}
-
-func (r *orderRepository) GetOrderById(orderID uint) (*data.Order, error) {
-	var order data.Order
-	err := r.db.Preload("OrderProducts.Additives").
-		Where("id = ?", orderID).
-		First(&order).Error
-	return &order, err
+func (r *orderRepository) UpdateOrderStatus(orderID uint, storeID uint, status data.OrderStatus) error {
+	return r.db.Model(&data.Order{}).
+		Where("id = ? AND store_id = ?", orderID, storeID).
+		Update("order_status", status).Error
 }
 
 func (r *orderRepository) DeleteOrder(orderID uint) error {
 	return r.db.Delete(&data.Order{}, orderID).Error
 }
 
-func (r *orderRepository) GetStatusesCount() (map[string]int64, error) {
+func (r *orderRepository) GetStatusesCount(storeID uint) (map[string]int64, error) {
 	var counts []struct {
 		OrderStatus string
 		Count       int64
 	}
 	err := r.db.Model(&data.Order{}).
 		Select("order_status, COUNT(*) as count").
+		Where("store_id = ?", storeID).
 		Group("order_status").
 		Scan(&counts).Error
 	if err != nil {
@@ -108,32 +115,6 @@ func (r *orderRepository) GetStatusesCount() (map[string]int64, error) {
 		statusCount[c.OrderStatus] = c.Count
 	}
 	return statusCount, nil
-}
-
-func (r *orderRepository) UpdateTime(subOrderID uint, updatedTime time.Time) error {
-	return r.db.Model(&data.OrderProduct{}).
-		Where("id = ?", subOrderID).
-		Update("updated_at", updatedTime).Error
-}
-
-func updateIngredientStock(tx *gorm.DB, ingredientID uint, requiredQuantity float64) error {
-	var stock data.StoreWarehouseStock
-	if err := tx.Where("ingredient_id = ?", ingredientID).First(&stock).Error; err != nil {
-		return fmt.Errorf("failed to find stock for ingredient %d: %w", ingredientID, err)
-	}
-
-	if stock.Quantity < requiredQuantity {
-		return fmt.Errorf("insufficient stock for ingredient %d: available %f, required %f",
-			ingredientID, stock.Quantity, requiredQuantity)
-	}
-
-	if err := tx.Model(&data.StoreWarehouseStock{}).
-		Where("ingredient_id = ?", ingredientID).
-		UpdateColumn("quantity", gorm.Expr("quantity - ?", requiredQuantity)).Error; err != nil {
-		return fmt.Errorf("failed to update inventory for ingredient %d: %w", ingredientID, err)
-	}
-
-	return nil
 }
 
 func (r *orderRepository) GetLowStockIngredients(threshold float64) ([]data.Ingredient, error) {
@@ -151,30 +132,6 @@ func (r *orderRepository) GetLowStockIngredients(threshold float64) ([]data.Ingr
 	return ingredients, nil
 }
 
-func (r *orderRepository) GetProductSizeLabel(productSizeID uint) (string, error) {
-	var productSize data.ProductSize
-	err := r.db.Where("id = ?", productSizeID).First(&productSize).Error
-	return productSize.Name, err
-}
-
-func (r *orderRepository) GetProductSizeByID(productSizeID uint) (*data.ProductSize, error) {
-	var productSize data.ProductSize
-	err := r.db.Where("id = ?", productSizeID).First(&productSize).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch product size with ID %d: %w", productSizeID, err)
-	}
-	return &productSize, nil
-}
-
-func (r *orderRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
-	var additive data.Additive
-	err := r.db.Where("id = ?", additiveID).First(&additive).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
-	}
-	return &additive, nil
-}
-
 func extractProductSizeIDs(subOrders []data.OrderProduct) []uint {
 	var ids []uint
 	for _, subOrder := range subOrders {
@@ -183,7 +140,7 @@ func extractProductSizeIDs(subOrders []data.OrderProduct) []uint {
 	return ids
 }
 
-func FetchProductSizes(tx *gorm.DB, productSizeIDs []uint) (map[uint]data.ProductSize, error) {
+func fetchProductSizes(tx *gorm.DB, productSizeIDs []uint) (map[uint]data.ProductSize, error) {
 	var productSizes []data.ProductSize
 	if err := tx.Where("id IN ?", productSizeIDs).Find(&productSizes).Error; err != nil {
 		return nil, err
@@ -204,5 +161,25 @@ func updateStockForProductSize(tx *gorm.DB, subOrder data.OrderProduct, productS
 			return err
 		}
 	}
+	return nil
+}
+
+func updateIngredientStock(tx *gorm.DB, ingredientID uint, requiredQuantity float64) error {
+	var stock data.StoreWarehouseStock
+	if err := tx.Where("ingredient_id = ?", ingredientID).First(&stock).Error; err != nil {
+		return fmt.Errorf("failed to find stock for ingredient %d: %w", ingredientID, err)
+	}
+
+	if stock.Quantity < requiredQuantity {
+		return fmt.Errorf("insufficient stock for ingredient %d: available %f, required %f",
+			ingredientID, stock.Quantity, requiredQuantity)
+	}
+
+	if err := tx.Model(&data.StoreWarehouseStock{}).
+		Where("ingredient_id = ?", ingredientID).
+		UpdateColumn("quantity", gorm.Expr("quantity - ?", requiredQuantity)).Error; err != nil {
+		return fmt.Errorf("failed to update inventory for ingredient %d: %w", ingredientID, err)
+	}
+
 	return nil
 }

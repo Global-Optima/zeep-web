@@ -1,7 +1,7 @@
 <template>
 	<div class="flex sm:flex-row flex-col pt-safe h-screen">
 		<!-- Sidebar for tablet and larger screens -->
-		<div class="py-4 pl-4">
+		<div class="sm:block hidden py-4 pl-4">
 			<KioskHomeSidebarTablet
 				@update:category="onUpdateCategory"
 				:categories="categories"
@@ -21,19 +21,9 @@
 				@update:category="onUpdateCategory"
 				@update:search-term="onUpdateSearchTerm"
 			/>
-			<div
-				v-else
-				class="top-0 z-10 sticky flex items-center gap-2 sm:hidden px-4 py-4 sm:py-6 w-full overflow-x-auto no-scrollbar"
-			>
-				<Skeleton
-					v-for="n in 4"
-					:key="n"
-					class="bg-gray-200 rounded-full w-32 h-16"
-				/>
-			</div>
 
 			<!-- Search Bar for tablet and larger screens -->
-			<div class="sm:block hidden px-4 pt-4">
+			<div class="sm:block hidden pt-4 pr-4 pl-3">
 				<KioskHomeToolbarTablet
 					:search-term="searchTerm"
 					@update:search-term="onUpdateSearchTerm"
@@ -41,20 +31,9 @@
 			</div>
 
 			<!-- Products Grid -->
-			<section class="flex-1 p-4 overflow-y-auto">
+			<section class="flex-1 pt-3 pr-4 pb-4 pl-3 overflow-y-auto no-scrollbar">
 				<div
-					v-if="productsLoading"
-					class="gap-2 sm:gap-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"
-				>
-					<Skeleton
-						v-for="n in 8"
-						:key="n"
-						class="bg-gray-200 rounded-lg w-full h-48"
-					/>
-				</div>
-
-				<div
-					v-else-if="products.length === 0"
+					v-if="products.length === 0"
 					class="flex justify-center items-center h-20 text-gray-500"
 				>
 					<p class="text-lg">Ничего не найдено</p>
@@ -62,7 +41,7 @@
 
 				<div
 					v-else
-					class="gap-2 sm:gap-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3"
+					class="gap-2 sm:gap-2 grid grid-cols-2 sm:grid-cols-3"
 				>
 					<KioskHomeProductCard
 						v-for="product in products"
@@ -76,7 +55,7 @@
 		<!-- Cart Button for mobile -->
 		<div
 			v-if="!cartStore.isEmpty"
-			class="right-6 bottom-6 fixed flex justify-center"
+			class="right-8 bottom-8 fixed flex justify-center"
 		>
 			<KioskHomeCart />
 		</div>
@@ -84,7 +63,6 @@
 </template>
 
 <script setup lang="ts">
-import { Skeleton } from '@/core/components/ui/skeleton'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeSidebarTablet from '@/modules/kiosk/products/components/home/kiosk-home-sidebar-tablet.vue'
@@ -138,7 +116,7 @@ watch(
 )
 
 // Fetch Products
-const { data: products, isLoading: productsLoading } = useQuery<StoreProducts[]>({
+const { data: products } = useQuery<StoreProducts[]>({
   queryKey: productsQueryKey,
   queryFn: () =>
     productService.getStoreProducts(

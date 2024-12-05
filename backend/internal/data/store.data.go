@@ -3,11 +3,11 @@ package data
 type Store struct {
 	BaseEntity
 	Name              string             `gorm:"size:255;not null"`
-	FacilityAddressID *uint              `gorm:"index;not null"`
-	FacilityAddress   *FacilityAddress   `gorm:"foreignKey:FacilityAddressID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	FacilityAddressID uint               `gorm:"index;not null"`
+	FacilityAddress   FacilityAddress    `gorm:"foreignKey:FacilityAddressID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	IsFranchise       bool               `gorm:"default:false"`
 	AdminID           *uint              `gorm:"index;not null"`
-	Status            string             `gorm:"size:20;default:'active'"`
+	Status            string             `gorm:"size:20;default:'ACTIVE'"`
 	ContactPhone      string             `gorm:"size:20"`
 	ContactEmail      string             `gorm:"size:255"`
 	StoreHours        string             `gorm:"size:255"`

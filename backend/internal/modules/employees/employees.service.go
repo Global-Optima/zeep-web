@@ -189,8 +189,8 @@ func (s *employeeService) GetAllRoles() ([]types.RoleDTO, error) {
 	return roleDTOs, nil
 }
 
-func (s *employeeService) EmployeeLogin(email, password string) (string, error) {
-	employee, err := s.repo.GetEmployeeByEmailOrPhone(email, "")
+func (s *employeeService) EmployeeLogin(employeeId uint, password string) (string, error) {
+	employee, err := s.repo.GetEmployeeByID(employeeId)
 	if err != nil {
 		return "", fmt.Errorf("invalid credentials: %v", err)
 	}
@@ -216,8 +216,6 @@ func (s *employeeService) EmployeeLogin(email, password string) (string, error) 
 
 	claims := utils.EmployeeClaims{
 		BaseClaims: utils.BaseClaims{
-			ID:   employee.ID,
-			Type: "employee",
 			RegisteredClaims: jwt.RegisteredClaims{
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now()),

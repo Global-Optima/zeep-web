@@ -14,7 +14,7 @@ import type {
   ProductSizeDTO
 } from '@/modules/kiosk/products/models/product.model'
 import { productService } from '@/modules/kiosk/products/services/products.service'
-import { Pencil } from 'lucide-vue-next'
+import { X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 
 interface UpdateCartDialogProps {
@@ -169,8 +169,18 @@ const handleUpdate = () => {
 		:open="isOpen"
 		@update:open="onClose"
 	>
-		<DialogContent class="bg-[#F5F5F7] p-0 border-none max-w-[90vw] h-[90vh] overflow-hidden">
-			<div class="relative bg-gray-100 pb-44 w-full h-full text-black overflow-y-auto no-scrollbar">
+		<DialogContent
+			:include-close-button="false"
+			class="bg-[#F5F5F7] p-0 border-none !rounded-[52px] max-w-[80vw] h-[90vh] overflow-clip"
+		>
+			<div class="relative bg-gray-100 pb-44 w-full text-black overflow-y-auto no-scrollbar">
+				<button
+					@click="onClose"
+					class="top-14 right-14 z-10 fixed bg-gray-300 bg-opacity-90 p-3 rounded-full"
+				>
+					<X class="w-8 h-8 text-gray-800" />
+				</button>
+
 				<!-- Product Image -->
 				<KioskDetailsProductImage
 					:imageUrl="productDetails.imageUrl"
@@ -199,7 +209,7 @@ const handleUpdate = () => {
 					:sizes="productDetails.sizes"
 					:selectedSizeId="selectedSize.id"
 					:totalPrice="totalPrice"
-					:display-icon="Pencil"
+					display-icon="update"
 					@select-size="onSizeSelect"
 					@add-to-cart="handleUpdate"
 				/>

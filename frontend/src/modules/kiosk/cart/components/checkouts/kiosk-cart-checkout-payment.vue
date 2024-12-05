@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { CreditCard, Loader, QrCode } from 'lucide-vue-next'
 import { ref } from 'vue'
 
@@ -12,10 +12,10 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'back'): void;
-  (e: 'proceed', paymentMethod: string): void;
+  (e: 'proceed', data: {paymentMethod: string}): void;
 }>();
 
-const selectedPayment = ref('');
+const selectedPayment = ref<null | string>('');
 const error = ref('');
 const isLoading = ref(false);
 
@@ -23,6 +23,12 @@ const paymentOptions = [
   { id: 'kaspi', label: 'Kaspi QR', icon: QrCode },
   { id: 'card', label: 'Оплата картой', icon: CreditCard },
 ];
+
+// Handle Payment Option Selection
+const selectPaymentMethod = (method: string) => {
+  selectedPayment.value = method;
+  processPayment();
+};
 
 // Simulate Payment Process
 const processPayment = async () => {
@@ -34,24 +40,18 @@ const processPayment = async () => {
     const success = Math.random() > 0.3;
 
     if (!success) {
+      selectedPayment.value = null
       throw new Error('Ошибка при обработке, попробуйте снова!');
     }
 
-    emit('proceed', selectedPayment.value);
+    if (selectedPayment.value) {
+      emit('proceed', {paymentMethod: selectedPayment.value});
+    }
   } catch (err) {
     error.value = (err as Error).message;
   } finally {
     isLoading.value = false;
   }
-};
-
-const proceedToPayment = () => {
-  if (!selectedPayment.value) {
-    error.value = 'Выберите способ оплаты.';
-    return;
-  }
-
-  processPayment();
 };
 </script>
 
@@ -62,13 +62,12 @@ const proceedToPayment = () => {
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="space-y-8 bg-white shadow-lg mx-auto p-10 rounded-lg max-w-3xl"
+			class="space-y-8 bg-white sm:p-12 !rounded-[40px] sm:max-w-3xl text-black"
 		>
 			<DialogHeader>
-				<DialogTitle class="text-gray-800 sm:text-3xl">Выберите способ оплаты</DialogTitle>
-				<p class="mt-3 text-gray-600 sm:text-2xl">
-					Пожалуйста, выберите предпочитаемый способ оплаты.
-				</p>
+				<DialogTitle class="font-medium text-center text-gray-900 sm:text-4xl">
+					Выберите способ оплаты</DialogTitle
+				>
 			</DialogHeader>
 
 			<!-- Payment Options -->
@@ -84,11 +83,11 @@ const proceedToPayment = () => {
             'bg-primary text-white': selectedPayment === option.id,
             'border-gray-300': selectedPayment !== option.id,
           }"
-					@click="selectedPayment = option.id"
+					@click="selectPaymentMethod(option.id)"
 				>
 					<component
 						:is="option.icon"
-						class="mb-4 sm:mb-6 w-14 sm:w-20 h-14 sm:h-20"
+						class="mb-4 sm:mb-6 w-14 sm:w-24 h-14 sm:h-24"
 					/>
 					<p class="font-medium text-center sm:text-2xl">{{ option.label }}</p>
 				</div>
@@ -112,23 +111,16 @@ const proceedToPayment = () => {
 			</p>
 
 			<!-- Footer Buttons -->
-			<DialogFooter class="flex justify-between space-x-4 sm:!mt-14">
+			<div class="flex justify-center items-center !mt-0 w-full">
 				<Button
 					variant="ghost"
-					@click="emit('back')"
 					:disabled="isLoading"
+					@click="$emit('back')"
 					class="sm:px-6 sm:py-8 sm:text-2xl"
 				>
 					Назад
 				</Button>
-				<Button
-					@click="proceedToPayment"
-					:disabled="isLoading"
-					class="bg-primary sm:px-6 sm:py-8 text-white sm:text-2xl"
-				>
-					{{ isLoading ? 'Ожидание...' : 'Продолжить' }}
-				</Button>
-			</DialogFooter>
+			</div>
 		</DialogContent>
 	</Dialog>
 </template>

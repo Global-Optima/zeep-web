@@ -3,6 +3,7 @@ package init
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -84,14 +85,31 @@ func InitializeModule[T any, H any](
 	registerRoutes(handler)
 }
 
-func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, kafkaManager *kafka.KafkaManager, storageRepo storage.StorageRepository) *gin.Engine {
-	router := gin.Default()
-	router.Use(cors.Default())
-	router.Use(middleware.RedisMiddleware(redisClient.Client))
-
+func InitializeWebsocket(router *gin.Engine) *websockets.WebSocketHub {
 	hub := websockets.GetHubInstance()
+	wsGroup := router.Group("/ws")
 
-	router.GET("/ws", websockets.WebSocketHandler(hub))
+	ordersHandler := websockets.OrdersWebSocketHandler(hub)
+	websockets.RegisterOrderWebsocketRoutes(wsGroup, ordersHandler)
+
+	return hub
+}
+
+func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, kafkaManager *kafka.KafkaManager, storageRepo storage.StorageRepository) *gin.Engine {
+	cfg := config.GetConfig()
+
+	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{cfg.Server.ClientURL},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	router.Use(middleware.RedisMiddleware(redisClient.Client))
+	hub := InitializeWebsocket(router)
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
@@ -149,6 +167,8 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 			return orders.NewOrderService(
 				orders.NewOrderRepository(dbHandler.DB),
 				orders.NewSubOrderRepository(dbHandler.DB),
+				product.NewProductRepository(dbHandler.DB),
+				additives.NewAdditiveRepository(dbHandler.DB),
 				kafkaManager,
 				orders.NewOrdersNotifier(hub)), nil
 		},

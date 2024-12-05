@@ -15,12 +15,12 @@
 		<button
 			v-if="searchTerm"
 			@click="clearSearchTerm"
-			class="absolute right-5 top-5 sm:right-8 sm:top-6 transform"
+			class="top-5 sm:top-6 right-5 sm:right-8 absolute transform"
 			data-testid="clear-button"
 		>
 			<Icon
 				icon="mingcute:close-fill"
-				class="text-primary text-2xl"
+				class="text-3xl text-primary"
 			/>
 		</button>
 	</div>

@@ -5,6 +5,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	ACTIVE_STORE_STATUS   = "ACTIVE"
+	DISABLED_STORE_STATUS = "DISABLED"
+)
+
 type StoreRepository interface {
 	GetAllStores(searchTerm string) ([]data.Store, error)
 	CreateStore(store *data.Store) (*data.Store, error)
@@ -26,7 +31,7 @@ func NewStoreRepository(db *gorm.DB) StoreRepository {
 func (r *storeRepository) GetAllStores(searchTerm string) ([]data.Store, error) {
 	var stores []data.Store
 
-	query := r.db.Preload("FacilityAddress").Where("status = ?", "active").Preload("FacilityAddress")
+	query := r.db.Preload("FacilityAddress").Where("status = ?", ACTIVE_STORE_STATUS).Preload("FacilityAddress")
 
 	if searchTerm != "" {
 		query = query.Where("name ILIKE ? OR CAST(id AS TEXT) = ?", "%"+searchTerm+"%", searchTerm)
@@ -66,7 +71,7 @@ func (r *storeRepository) DeleteStore(storeID uint, hardDelete bool) error {
 			return err
 		}
 	} else {
-		if err := r.db.Model(&data.Store{}).Where("id = ?", storeID).Update("status", "inactive").Error; err != nil {
+		if err := r.db.Model(&data.Store{}).Where("id = ?", storeID).Update("status", DISABLED_STORE_STATUS).Error; err != nil {
 			return err
 		}
 	}

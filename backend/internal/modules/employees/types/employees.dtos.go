@@ -60,13 +60,13 @@ type WarehouseEmployeeDetailsDTO struct {
 }
 
 type UpdatePasswordDTO struct {
-	OldPassword string `json:"old_password" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required"`
+	OldPassword string `json:"oldPassword" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required"`
 }
 
 type LoginDTO struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	EmployeeId uint   `json:"employeeId" binding:"required"`
+	Password   string `json:"password" binding:"required"`
 }
 
 type RoleDTO struct {

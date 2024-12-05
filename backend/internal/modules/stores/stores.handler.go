@@ -30,8 +30,11 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 
 	var cachedStores []types.StoreDTO
 	if err := cacheUtil.Get(cacheKey, &cachedStores); err == nil {
-		utils.SuccessResponse(c, cachedStores)
-		return
+		// Check if the cached data is empty
+		if !utils.IsEmpty(cachedStores) {
+			utils.SuccessResponse(c, cachedStores)
+			return
+		}
 	}
 
 	stores, err := h.service.GetAllStores(searchTerm)
@@ -40,6 +43,7 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 		return
 	}
 
+	// Cache the fresh data
 	if err := cacheUtil.Set(cacheKey, stores, 30*time.Minute); err != nil {
 		fmt.Printf("Failed to cache stores: %v\n", err)
 	}
@@ -95,7 +99,7 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 		return
 	}
 	id := uint(storeID)
-	storeDTO.ID = &id
+	storeDTO.ID = id
 
 	updatedStore, err := h.service.UpdateStore(storeDTO)
 	if err != nil {
