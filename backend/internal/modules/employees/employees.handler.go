@@ -165,7 +165,7 @@ func (h *EmployeeHandler) EmployeeLogin(c *gin.Context) {
 		return
 	}
 
-	token, err := h.service.EmployeeLogin(input.EmployeeId, input.Password)
+	token, err := h.service.EmployeeLogin(input.Email, input.Password)
 	if err != nil {
 		utils.SendErrorWithStatus(c, "invalid credentials", http.StatusUnauthorized)
 		return
@@ -196,7 +196,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.service.GetEmployeeByID(claims.EmployeeID)
+	employee, err := h.service.GetEmployeeByID(claims.ID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch employee details")
 		return

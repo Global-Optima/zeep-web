@@ -189,8 +189,8 @@ func (s *employeeService) GetAllRoles() ([]types.RoleDTO, error) {
 	return roleDTOs, nil
 }
 
-func (s *employeeService) EmployeeLogin(employeeId uint, password string) (string, error) {
-	employee, err := s.repo.GetEmployeeByID(employeeId)
+func (s *employeeService) EmployeeLogin(email, password string) (string, error) {
+	employee, err := s.repo.GetEmployeeByEmailOrPhone(email, "")
 	if err != nil {
 		return "", fmt.Errorf("invalid credentials: %v", err)
 	}
@@ -208,10 +208,10 @@ func (s *employeeService) EmployeeLogin(employeeId uint, password string) (strin
 
 	if employee.StoreEmployee != nil {
 		workplaceID = &employee.StoreEmployee.StoreID
-		workplaceType = "store"
+		workplaceType = "Store"
 	} else if employee.WarehouseEmployee != nil {
 		workplaceID = &employee.WarehouseEmployee.WarehouseID
-		workplaceType = "warehouse"
+		workplaceType = "Warehouse"
 	}
 
 	claims := utils.EmployeeClaims{
