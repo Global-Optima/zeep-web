@@ -1,6 +1,9 @@
 package additives
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"gorm.io/gorm"
@@ -8,11 +11,11 @@ import (
 
 type AdditiveRepository interface {
 	GetAdditiveCategoriesByProductSize(productSizeID uint) ([]types.AdditiveCategoryDTO, error)
+	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 }
 
 type additiveRepository struct {
 	db *gorm.DB
-	
 }
 
 func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
@@ -22,7 +25,6 @@ func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 func (r *additiveRepository) GetAdditiveCategoriesByProductSize(productSizeID uint) ([]types.AdditiveCategoryDTO, error) {
 	var productAdditives []data.ProductAdditive
 
-	// Fetch all product additives for the given product size
 	err := r.db.
 		Preload("Additive").
 		Where("product_size_id = ?", productSizeID).
@@ -33,16 +35,13 @@ func (r *additiveRepository) GetAdditiveCategoriesByProductSize(productSizeID ui
 		return nil, err
 	}
 
-	// Map to a map of AdditiveCategoryID to AdditiveCategoryDTO
 	categoryMap := make(map[uint]*types.AdditiveCategoryDTO)
 
 	for _, pa := range productAdditives {
 		additive := pa.Additive
 
-		// Assuming additive has AdditiveCategoryID
 		categoryID := additive.AdditiveCategoryID
 
-		// Initialize category in map if not present
 		if _, exists := categoryMap[categoryID]; !exists {
 			category := data.AdditiveCategory{}
 			err := r.db.
@@ -61,7 +60,6 @@ func (r *additiveRepository) GetAdditiveCategoriesByProductSize(productSizeID ui
 			}
 		}
 
-		// Append additive to the category
 		categoryMap[categoryID].Additives = append(categoryMap[categoryID].Additives, types.AdditiveDTO{
 			ID:          additive.ID,
 			Name:        additive.Name,
@@ -78,4 +76,16 @@ func (r *additiveRepository) GetAdditiveCategoriesByProductSize(productSizeID ui
 	}
 
 	return additiveCategories, nil
+}
+
+func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
+	var additive data.Additive
+	err := r.db.Where("id = ?", additiveID).First(&additive).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("additive with ID %d not found", additiveID)
+		}
+		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
+	}
+	return &additive, nil
 }

@@ -73,7 +73,7 @@ func (r *employeeRepository) GetAllRoles() ([]types.EmployeeRole, error) {
 	roles := []types.EmployeeRole{
 		types.RoleAdmin,
 		types.RoleManager,
-		types.RoleEmployee,
+		types.RoleBarista,
 	}
 	return roles, nil
 }

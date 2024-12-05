@@ -1,6 +1,12 @@
 package kafka
 
+type Topic string
+
 type Topics struct {
-	ActiveOrders    string
-	CompletedOrders string
+	ActiveOrders    Topic
+	CompletedOrders Topic
+}
+
+func (k *KafkaManager) GetTopic(topic Topic) string {
+	return string(topic)
 }

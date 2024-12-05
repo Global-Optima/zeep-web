@@ -13,6 +13,7 @@ type CreateOrderDTO struct {
 	StoreID           uint                 `json:"storeId"`
 	DeliveryAddressID *uint                `json:"deliveryAddressId"`
 	OrderItems        []CreateOrderItemDTO `json:"orderItems"`
+	OrderType         string               `json:"type"` // delivery or in cafe
 }
 
 type CreateOrderItemDTO struct {
@@ -31,7 +32,9 @@ type OrderDTO struct {
 	OrderStatus       data.OrderStatus  `json:"orderStatus"`
 	CreatedAt         time.Time         `json:"orderDate"`
 	Total             float64           `json:"total"`
+	SubOrdersQuantity int               `json:"subOrdersQuantity"`
 	OrderProducts     []OrderProductDTO `json:"orderProducts,omitempty"`
+	Timestamp         time.Time         `json:"timestamp"`
 }
 
 type OrderProductDTO struct {

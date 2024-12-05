@@ -71,7 +71,7 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.UpdateEmployee)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.DeleteEmployee)
 		router.GET("/roles", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager), handler.GetAllRoles)
-		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager, types.RoleEmployee), handler.UpdatePassword)
+		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager, types.RoleBarista), handler.UpdatePassword)
 		router.POST("/login", handler.EmployeeLogin)
 		router.POST("/logout", handler.EmployeeLogout)
 	}
@@ -81,12 +81,13 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.Routes.Group("/orders")
 	{
 		router.POST("", handler.CreateOrder)
-		router.PUT("/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(types.RoleEmployee), handler.CompleteSubOrder)
+		router.PUT("/:orderId/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(types.RoleBarista), handler.CompleteSubOrder)
 		router.GET("", handler.GetAllOrders)
-		router.GET("/suborders", handler.GetSubOrders)
+		router.GET("/:orderId/suborders", handler.GetSubOrders)
+		router.GET("/:orderId", handler.GetActiveOrder)
 		router.GET("/statuses/count", handler.GetStatusesCount)
-		router.GET("/suborders/count", handler.GetSubOrderCount)
-		router.GET("/:order_id/receipt", handler.GeneratePDFReceipt)
+		router.GET("/:orderId/suborders/count", handler.GetSubOrderCount)
+		router.GET("/:orderId/receipt", handler.GeneratePDFReceipt)
 	}
 }
 

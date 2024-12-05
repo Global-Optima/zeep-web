@@ -85,6 +85,16 @@ func InitializeModule[T any, H any](
 	registerRoutes(handler)
 }
 
+func InitializeWebsocket(router *gin.Engine) *websockets.WebSocketHub {
+	hub := websockets.GetHubInstance()
+	wsGroup := router.Group("/ws")
+
+	ordersHandler := websockets.OrdersWebSocketHandler(hub)
+	websockets.RegisterOrderWebsocketRoutes(wsGroup, ordersHandler)
+
+	return hub
+}
+
 func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, kafkaManager *kafka.KafkaManager, storageRepo storage.StorageRepository) *gin.Engine {
 	cfg := config.GetConfig()
 
@@ -99,10 +109,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	}))
 
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
-
-	hub := websockets.GetHubInstance()
-
-	router.GET("/ws", websockets.WebSocketHandler(hub))
+	hub := InitializeWebsocket(router)
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
@@ -160,6 +167,8 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 			return orders.NewOrderService(
 				orders.NewOrderRepository(dbHandler.DB),
 				orders.NewSubOrderRepository(dbHandler.DB),
+				product.NewProductRepository(dbHandler.DB),
+				additives.NewAdditiveRepository(dbHandler.DB),
 				kafkaManager,
 				orders.NewOrdersNotifier(hub)), nil
 		},
