@@ -6,14 +6,19 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/kafka"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
 	"github.com/google/uuid"
 )
 
+var Logger = logger.GetInstance()
+
 type OrderService interface {
-	GetAllOrders(storeID uint, status *string) ([]types.OrderDTO, error)
+	GetAllOrders(storeID uint, status *string, limit int, offset int) ([]types.OrderDTO, error)
 	GetSubOrders(storeID, orderID uint) ([]types.SubOrderEvent, error)
 	GetStatusesCount(storeID uint) (map[string]int64, error)
 	GetSubOrderCount(orderID, storeID uint) (int64, error)
@@ -29,21 +34,25 @@ type OrderService interface {
 type orderService struct {
 	orderRepo      OrderRepository
 	subOrderRepo   SubOrderRepository
+	productRepo    product.ProductRepository
+	additiveRepo   additives.AdditiveRepository
 	kafkaManager   *kafka.KafkaManager
 	ordersNotifier *OrdersNotifier
 }
 
-func NewOrderService(orderRepo OrderRepository, subOrderRepo SubOrderRepository, kafkaManager *kafka.KafkaManager, ordersNotifier *OrdersNotifier) OrderService {
+func NewOrderService(orderRepo OrderRepository, subOrderRepo SubOrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, kafkaManager *kafka.KafkaManager, ordersNotifier *OrdersNotifier) OrderService {
 	return &orderService{
 		orderRepo:      orderRepo,
 		subOrderRepo:   subOrderRepo,
+		productRepo:    productRepo,
+		additiveRepo:   additiveRepo,
 		kafkaManager:   kafkaManager,
 		ordersNotifier: ordersNotifier,
 	}
 }
 
-func (s *orderService) GetAllOrders(storeID uint, status *string) ([]types.OrderDTO, error) {
-	orders, err := s.orderRepo.GetAllOrders(storeID, status)
+func (s *orderService) GetAllOrders(storeID uint, status *string, limit int, offset int) ([]types.OrderDTO, error) {
+	orders, err := s.orderRepo.GetAllOrders(storeID, status, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +67,11 @@ func (s *orderService) GetAllOrders(storeID uint, status *string) ([]types.Order
 func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint, error) {
 	productSizeIDs, additiveIDs := RetrieveIDs(*createOrderDTO)
 
-	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.orderRepo)
+	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.productRepo)
 	if err != nil {
 		return nil, err
 	}
-	additivePrices, additiveNames, err := ValidateAdditives(additiveIDs, s.orderRepo)
+	additivePrices, additiveNames, err := ValidateAdditives(additiveIDs, s.additiveRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -70,10 +79,8 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint,
 	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, productPrices, additivePrices)
 	order.Total = total
 
-	Logger.Debug(fmt.Sprintf("%+v", order))
 	err = s.orderRepo.CreateOrder(&order)
 	if err != nil {
-		fmt.Println(err)
 		return nil, fmt.Errorf("failed to save order to database: %w", err)
 	}
 
@@ -90,7 +97,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint,
 
 	for _, product := range order.OrderProducts {
 		for i := 0; i < product.Quantity; i++ {
-			subOrderID := uuid.New().ID()
+			ID := uuid.New().ID()
 
 			subOrderAdditives := []types.AdditiveDetail{}
 			for _, additive := range product.Additives {
@@ -102,7 +109,8 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint,
 			}
 
 			subOrder := types.SubOrderEvent{
-				SubOrderID:    uint(subOrderID),
+				ID:            uint(ID),
+				SubOrderID:    product.ID,
 				ProductSizeID: product.ProductSizeID,
 				ProductName:   productNames[product.ProductSizeID],
 				Additives:     subOrderAdditives,
@@ -114,7 +122,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint,
 		}
 	}
 
-	err = s.kafkaManager.PublishEvent(s.kafkaManager.Topics.ActiveOrders, fmt.Sprintf("%d", order.ID), orderEvent)
+	err = s.kafkaManager.PublishOrderEvent(s.kafkaManager.Topics.ActiveOrders, orderEvent.StoreID, orderEvent)
 	if err != nil {
 		return nil, fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
@@ -134,27 +142,45 @@ func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
 	return productSizeIDs, additiveIDs
 }
 
-func ValidateProductSizes(productSizeIDs []uint, repo OrderRepository) (map[uint]float64, map[uint]string, error) {
+func ValidateProductSizes(productSizeIDs []uint, repo product.ProductRepository) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	productNames := make(map[uint]string)
 	for _, id := range productSizeIDs {
-		productSize, err := GetCachedProductSize(id, repo)
+		productSize, err := repo.GetProductSizeWithProduct(id)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid product size ID: %d", id)
 		}
+		if productSize == nil {
+			return nil, nil, fmt.Errorf("product size with ID %d is nil", id)
+		}
+		if productSize.Product.Name == "" {
+			return nil, nil, fmt.Errorf("product size with ID %d has an associated product with an empty name", id)
+		}
+
 		prices[id] = productSize.BasePrice
 		productNames[id] = productSize.Product.Name
+
 	}
 	return prices, productNames, nil
 }
 
-func ValidateAdditives(additiveIDs []uint, repo OrderRepository) (map[uint]float64, map[uint]string, error) {
+func ValidateAdditives(additiveIDs []uint, repo additives.AdditiveRepository) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 	for _, id := range additiveIDs {
-		additive, err := GetCachedAdditive(id, repo)
+		additive, err := repo.GetAdditiveByID(id)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid additive ID: %d", id)
+		}
+		if additive == nil {
+			return nil, nil, fmt.Errorf("additive with ID %d is nil", id)
+		}
+		if additive.Name == "" {
+			return nil, nil, fmt.Errorf("additive with ID %d has an empty name", id)
+		}
+
+		if additive.BasePrice < 0 {
+			return nil, nil, fmt.Errorf("additive with ID %d has an invalid base price", id)
 		}
 		prices[id] = additive.BasePrice
 		additiveNames[id] = additive.Name
@@ -169,60 +195,59 @@ func calculateETA(orderType string) time.Time {
 	return time.Now().Add(15 * time.Minute)
 }
 
-func GetCachedProductSize(productSizeID uint, repo OrderRepository) (*data.ProductSize, error) {
+func GetCachedProductSize(productSizeID uint, repo product.ProductRepository) (*data.ProductSize, error) {
 	cache := utils.GetCacheInstance()
 	cacheKey := fmt.Sprintf("product_size:%d", productSizeID)
 
-	var productSize *data.ProductSize
-	err := cache.Get(cacheKey, &productSize)
-	if err == nil {
-		return productSize, nil
+	var productSize data.ProductSize
+	if err := cache.Get(cacheKey, &productSize); err == nil {
+		return &productSize, nil
 	}
 
-	productSize, err = repo.GetProductSizeWithProduct(productSizeID)
+	productSizePtr, err := repo.GetProductSizeWithProduct(productSizeID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("product size with ID %d not found", productSizeID)
 	}
 
-	_ = cache.Set(cacheKey, productSize, 30*time.Minute)
-	return productSize, nil
+	_ = cache.Set(cacheKey, productSizePtr, 30*time.Minute)
+	return productSizePtr, nil
 }
 
-func GetCachedAdditive(additiveID uint, repo OrderRepository) (*data.Additive, error) {
+func GetCachedAdditive(additiveID uint, repo additives.AdditiveRepository) (*data.Additive, error) {
 	cache := utils.GetCacheInstance()
 	cacheKey := fmt.Sprintf("additive:%d", additiveID)
 
-	var additive *data.Additive
-	err := cache.Get(cacheKey, &additive)
-	if err == nil {
-		return additive, nil
+	var additive data.Additive
+	if err := cache.Get(cacheKey, &additive); err == nil {
+		return &additive, nil
 	}
 
-	additive, err = repo.GetAdditiveByID(additiveID)
+	additivePtr, err := repo.GetAdditiveByID(additiveID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("additive with ID %d not found", additiveID)
 	}
 
-	_ = cache.Set(cacheKey, additive, 10*time.Minute)
-	return additive, nil
+	_ = cache.Set(cacheKey, additivePtr, 10*time.Minute)
+	return additivePtr, nil
 }
 
 func (s *orderService) CompleteSubOrder(subOrderID, orderID, storeID uint) error {
-	subOrder, err := s.subOrderRepo.GetSubOrderByID(subOrderID)
-	if err != nil {
-		return fmt.Errorf("suborder not found: %w", err)
-	}
-
-	orderEvent, err := s.kafkaManager.GetOrderEvent(s.kafkaManager.Topics.ActiveOrders, orderID, storeID)
+	orderEvent, err := s.kafkaManager.FetchOrderEvent(orderID, storeID, string(s.kafkaManager.Topics.ActiveOrders))
 	if err != nil {
 		return fmt.Errorf("failed to fetch order event from Kafka: %w", err)
 	}
 
+	subOrderFound := false
 	for i, item := range orderEvent.Items {
-		if item.SubOrderID == subOrderID {
+		if item.ID == subOrderID {
 			orderEvent.Items[i].Status = data.OrderStatusCompleted
+			subOrderFound = true
 			break
 		}
+	}
+
+	if !subOrderFound {
+		return fmt.Errorf("suborder %d not found in order %d", subOrderID, orderID)
 	}
 
 	allCompleted := true
@@ -233,23 +258,28 @@ func (s *orderService) CompleteSubOrder(subOrderID, orderID, storeID uint) error
 		}
 	}
 
-	var topic string
+	order, err := s.orderRepo.GetOrderByOrderId(orderID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch order from db %s", err.Error())
+	}
+
+	var topic kafka.Topic
 	if allCompleted {
 		orderEvent.Status = string(data.OrderStatusCompleted)
 		topic = s.kafkaManager.Topics.CompletedOrders
 
-		err = s.orderRepo.UpdateOrderStatus(subOrder.OrderID, storeID, data.OrderStatusCompleted)
+		err = s.orderRepo.UpdateOrderStatus(order.ID, storeID, data.OrderStatusCompleted)
 		if err != nil {
 			return fmt.Errorf("failed to update order status in database: %w", err)
 		}
 
-		s.ordersNotifier.NotifyOrderCompleted(subOrder.OrderID, storeID, orderEvent)
+		s.ordersNotifier.NotifyOrderCompleted(order.ID, storeID, orderEvent)
 	} else {
 		topic = s.kafkaManager.Topics.ActiveOrders
-		s.ordersNotifier.NotifySubOrderCompleted(subOrder.OrderID, subOrderID, storeID, orderEvent)
+		s.ordersNotifier.NotifySubOrderCompleted(order.ID, subOrderID, storeID, orderEvent)
 	}
 
-	err = s.kafkaManager.PublishEvent(topic, fmt.Sprintf("%d", subOrder.OrderID), orderEvent)
+	err = s.kafkaManager.PublishOrderEvent(topic, storeID, *orderEvent)
 	if err != nil {
 		return fmt.Errorf("failed to publish order to Kafka: %w", err)
 	}
@@ -258,7 +288,7 @@ func (s *orderService) CompleteSubOrder(subOrderID, orderID, storeID uint) error
 }
 
 func (s *orderService) GetSubOrders(storeID, orderID uint) ([]types.SubOrderEvent, error) {
-	orderEvent, err := s.kafkaManager.GetOrderEvent(s.kafkaManager.Topics.ActiveOrders, orderID, storeID)
+	orderEvent, err := s.kafkaManager.FetchOrderEvent(orderID, storeID, string(s.kafkaManager.Topics.ActiveOrders))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch OrderEvent from Kafka: %w", err)
 	}
@@ -286,7 +316,7 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	}
 
 	for _, product := range order.OrderProducts {
-		productSize, err := s.orderRepo.GetProductSizeWithProduct(product.ProductSizeID)
+		productSize, err := s.productRepo.GetProductSizeWithProduct(product.ProductSizeID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch size label: %w", err)
 		}
@@ -311,17 +341,12 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	return pdf.GeneratePDFReceipt(details)
 }
 
-func (s *orderService) GetActiveOrderEvent(orderID uint, storeID uint) (*types.OrderEvent, error) {
-	orderEvent, err := s.kafkaManager.GetOrderEvent(s.kafkaManager.Topics.ActiveOrders, orderID, storeID)
+func (s *orderService) GetActiveOrderEvent(orderID, storeID uint) (*types.OrderEvent, error) {
+	event, err := s.kafkaManager.FetchOrderEvent(orderID, storeID, string(s.kafkaManager.Topics.ActiveOrders))
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch order event from Kafka: %w", err)
+		return nil, fmt.Errorf("failed to fetch active order event: %w", err)
 	}
-
-	if orderEvent.StoreID != storeID {
-		return nil, fmt.Errorf("order %d does not belong to store %d", orderID, storeID)
-	}
-
-	return orderEvent, nil
+	return event, nil
 }
 
 func (s *orderService) GetStatusesCount(storeID uint) (map[string]int64, error) {

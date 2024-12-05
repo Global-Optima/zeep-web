@@ -32,7 +32,7 @@ type OrderDTO struct {
 	OrderStatus       data.OrderStatus  `json:"orderStatus"`
 	CreatedAt         time.Time         `json:"orderDate"`
 	Total             float64           `json:"total"`
-	SubOrdersQuantity int               `json:"sub_orders_quantity"`
+	SubOrdersQuantity int               `json:"subOrdersQuantity"`
 	OrderProducts     []OrderProductDTO `json:"orderProducts,omitempty"`
 	Timestamp         time.Time         `json:"timestamp"`
 }

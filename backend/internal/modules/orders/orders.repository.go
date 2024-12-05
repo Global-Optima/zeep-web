@@ -8,7 +8,7 @@ import (
 )
 
 type OrderRepository interface {
-	GetAllOrders(storeID uint, status *string) ([]data.Order, error)
+	GetAllOrders(storeID uint, status *string, limit int, offset int) ([]data.Order, error)
 	GetStoreOrderById(storeID, orderID uint) (*data.Order, error)
 	GetOrderByOrderId(orderID uint) (*data.Order, error)
 	CreateOrder(order *data.Order) error
@@ -17,10 +17,6 @@ type OrderRepository interface {
 
 	GetStatusesCount(storeID uint) (map[string]int64, error)
 	GetLowStockIngredients(threshold float64) ([]data.Ingredient, error)
-
-	// helpers
-	GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error)
-	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 }
 
 type orderRepository struct {
@@ -31,7 +27,7 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 	return &orderRepository{db: db}
 }
 
-func (r *orderRepository) GetAllOrders(storeID uint, status *string) ([]data.Order, error) {
+func (r *orderRepository) GetAllOrders(storeID uint, status *string, limit int, offset int) ([]data.Order, error) {
 	var orders []data.Order
 	query := r.db.Preload("OrderProducts").Where("store_id = ?", storeID)
 
@@ -39,7 +35,7 @@ func (r *orderRepository) GetAllOrders(storeID uint, status *string) ([]data.Ord
 		query = query.Where("order_status = ?", *status)
 	}
 
-	err := query.Find(&orders).Error
+	err := query.Limit(limit).Offset(offset).Find(&orders).Error
 	if err != nil {
 		return nil, err
 	}
@@ -134,25 +130,6 @@ func (r *orderRepository) GetLowStockIngredients(threshold float64) ([]data.Ingr
 	}
 
 	return ingredients, nil
-}
-
-func (r *orderRepository) GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error) {
-	var productSize data.ProductSize
-	err := r.db.Preload("Product").First(&productSize, productSizeID).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &productSize, nil
-}
-
-func (r *orderRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
-	var additive data.Additive
-	err := r.db.Where("id = ?", additiveID).First(&additive).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
-	}
-	return &additive, nil
 }
 
 func extractProductSizeIDs(subOrders []data.OrderProduct) []uint {
