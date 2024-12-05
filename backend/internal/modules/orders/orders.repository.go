@@ -8,7 +8,7 @@ import (
 )
 
 type OrderRepository interface {
-	GetAllOrders(storeID uint, status *string) ([]data.Order, error)
+	GetAllOrders(storeID uint, status *string, limit int, offset int) ([]data.Order, error)
 	GetStoreOrderById(storeID, orderID uint) (*data.Order, error)
 	GetOrderByOrderId(orderID uint) (*data.Order, error)
 	CreateOrder(order *data.Order) error
@@ -27,7 +27,7 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 	return &orderRepository{db: db}
 }
 
-func (r *orderRepository) GetAllOrders(storeID uint, status *string) ([]data.Order, error) {
+func (r *orderRepository) GetAllOrders(storeID uint, status *string, limit int, offset int) ([]data.Order, error) {
 	var orders []data.Order
 	query := r.db.Preload("OrderProducts").Where("store_id = ?", storeID)
 
@@ -35,7 +35,7 @@ func (r *orderRepository) GetAllOrders(storeID uint, status *string) ([]data.Ord
 		query = query.Where("order_status = ?", *status)
 	}
 
-	err := query.Find(&orders).Error
+	err := query.Limit(limit).Offset(offset).Find(&orders).Error
 	if err != nil {
 		return nil, err
 	}

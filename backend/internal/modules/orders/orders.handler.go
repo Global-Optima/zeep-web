@@ -27,8 +27,22 @@ func (h *OrderHandler) GetAllOrders(c *gin.Context) {
 	}
 
 	status := c.Query("status")
+	limitStr := c.DefaultQuery("limit", "10")  // Default limit is 10
+	offsetStr := c.DefaultQuery("offset", "0") // Default offset is 0
 
-	orders, err := h.service.GetAllOrders(uint(storeID), &status)
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		utils.SendBadRequestError(c, "invalid limit parameter")
+		return
+	}
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil || offset < 0 {
+		utils.SendBadRequestError(c, "invalid offset parameter")
+		return
+	}
+
+	orders, err := h.service.GetAllOrders(uint(storeID), &status, limit, offset)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch orders")
 		return

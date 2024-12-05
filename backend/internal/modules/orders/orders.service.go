@@ -18,7 +18,7 @@ import (
 var Logger = logger.GetInstance()
 
 type OrderService interface {
-	GetAllOrders(storeID uint, status *string) ([]types.OrderDTO, error)
+	GetAllOrders(storeID uint, status *string, limit int, offset int) ([]types.OrderDTO, error)
 	GetSubOrders(storeID, orderID uint) ([]types.SubOrderEvent, error)
 	GetStatusesCount(storeID uint) (map[string]int64, error)
 	GetSubOrderCount(orderID, storeID uint) (int64, error)
@@ -51,8 +51,8 @@ func NewOrderService(orderRepo OrderRepository, subOrderRepo SubOrderRepository,
 	}
 }
 
-func (s *orderService) GetAllOrders(storeID uint, status *string) ([]types.OrderDTO, error) {
-	orders, err := s.orderRepo.GetAllOrders(storeID, status)
+func (s *orderService) GetAllOrders(storeID uint, status *string, limit int, offset int) ([]types.OrderDTO, error) {
+	orders, err := s.orderRepo.GetAllOrders(storeID, status, limit, offset)
 	if err != nil {
 		return nil, err
 	}
