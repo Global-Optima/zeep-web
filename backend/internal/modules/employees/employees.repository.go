@@ -32,32 +32,35 @@ func NewEmployeeRepository(db *gorm.DB) EmployeeRepository {
 }
 
 func (r *employeeRepository) CreateEmployee(employee *data.Employee) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(employee).Error; err != nil {
-			return err
-		}
-
-		if employee.Type == types.ToString(types.StoreEmployee) {
-			storeEmployee := &data.StoreEmployee{
-				EmployeeID:  employee.ID,
-				StoreID:     employee.StoreEmployee.StoreID,
-				IsFranchise: employee.StoreEmployee.IsFranchise,
-			}
-			if err := tx.Create(storeEmployee).Error; err != nil {
+	return r.db.Transaction(
+		func(tx *gorm.DB) error {
+			if err := tx.Create(employee).Error; err != nil {
 				return err
 			}
-		} else if employee.Type == types.ToString(types.WarehouseEmployee) {
-			warehouseEmployee := &data.WarehouseEmployee{
-				EmployeeID:  employee.ID,
-				WarehouseID: employee.WarehouseEmployee.WarehouseID,
-			}
-			if err := tx.Create(warehouseEmployee).Error; err != nil {
-				return err
-			}
-		}
 
-		return nil
-	})
+			if employee.Type == types.StoreEmployee {
+				storeEmployee := &data.StoreEmployee{
+					EmployeeID:  employee.ID,
+					StoreID:     employee.StoreEmployee.StoreID,
+					IsFranchise: employee.StoreEmployee.IsFranchise,
+				}
+
+				if err := tx.Create(storeEmployee).Error; err != nil {
+					return err
+				}
+			} else if employee.Type == types.WarehouseEmployee {
+				warehouseEmployee := &data.WarehouseEmployee{
+					EmployeeID:  employee.ID,
+					WarehouseID: employee.WarehouseEmployee.WarehouseID,
+				}
+				if err := tx.Create(warehouseEmployee).Error; err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
+	)
 }
 
 func (r *employeeRepository) GetEmployees(query types.GetEmployeesQuery) ([]data.Employee, error) {
@@ -151,11 +154,11 @@ func (r *employeeRepository) UpdateEmployee(employee *data.Employee) error {
 			return err
 		}
 
-		if employee.Type == types.ToString(types.StoreEmployee) && employee.StoreEmployee != nil {
+		if employee.Type == types.StoreEmployee && employee.StoreEmployee != nil {
 			if err := tx.Save(employee.StoreEmployee).Error; err != nil {
 				return err
 			}
-		} else if employee.Type == types.ToString(types.WarehouseEmployee) && employee.WarehouseEmployee != nil {
+		} else if employee.Type == types.WarehouseEmployee && employee.WarehouseEmployee != nil {
 			if err := tx.Save(employee.WarehouseEmployee).Error; err != nil {
 				return err
 			}

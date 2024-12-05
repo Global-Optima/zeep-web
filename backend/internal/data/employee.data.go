@@ -2,6 +2,8 @@ package data
 
 import (
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
 
 type Employee struct {
@@ -10,8 +12,8 @@ type Employee struct {
 	Phone             string             `gorm:"size:15;unique"`
 	Email             string             `gorm:"size:255;unique"`
 	HashedPassword    string             `gorm:"size:255;not null"`
-	Role              string             `gorm:"size:50;not null"` // Admin, Manager, etc.
-	Type              string             `gorm:"size:50;not null"`
+	Role              types.EmployeeRole `gorm:"size:50;not null"` // Admin, Manager, etc.
+	Type              types.EmployeeType `gorm:"size:50;not null"`
 	IsActive          bool               `gorm:"default:true"`
 	StoreEmployee     *StoreEmployee     `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee *WarehouseEmployee `gorm:"foreignKey:EmployeeID"`

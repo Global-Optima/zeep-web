@@ -9,7 +9,7 @@ const (
 	RoleBarista  EmployeeRole = "Barista"
 )
 
-func IsValidRole(role string) bool {
+func IsValidRole(role EmployeeRole) bool {
 	switch EmployeeRole(role) {
 	case RoleAdmin, RoleDirector, RoleManager, RoleBarista:
 		return true

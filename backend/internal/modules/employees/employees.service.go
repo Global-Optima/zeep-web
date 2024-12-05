@@ -54,7 +54,7 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 		Phone:          input.Phone,
 		Email:          input.Email,
 		Role:           input.Role,
-		Type:           types.ToString(input.Type),
+		Type:           input.Type,
 		HashedPassword: hashedPassword,
 		IsActive:       true,
 	}
@@ -221,7 +221,7 @@ func (s *employeeService) EmployeeLogin(email, password string) (string, error) 
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
 			},
 		},
-		Role:          employee.Role,
+		Role:          string(employee.Role),
 		WorkplaceID:   workplaceID,
 		WorkplaceType: workplaceType,
 	}
@@ -237,7 +237,7 @@ func mapToEmployeeDTO(employee *data.Employee) *types.EmployeeDTO {
 		Email:    employee.Email,
 		Role:     employee.Role,
 		IsActive: employee.IsActive,
-		Type:     types.ToEmployeeType(employee.Type),
+		Type:     employee.Type,
 	}
 
 	if employee.StoreEmployee != nil {

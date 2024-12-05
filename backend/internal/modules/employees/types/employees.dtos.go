@@ -4,7 +4,7 @@ type CreateEmployeeDTO struct {
 	Name             string               `json:"name" binding:"required"`
 	Phone            string               `json:"phone"`
 	Email            string               `json:"email" binding:"required"`
-	Role             string               `json:"role" binding:"required"`
+	Role             EmployeeRole         `json:"role" binding:"required"`
 	Password         string               `json:"password" binding:"required"`
 	Type             EmployeeType         `json:"type" binding:"required"`
 	StoreDetails     *StoreDetailsDTO     `json:"storeDetails,omitempty"`
@@ -24,7 +24,7 @@ type UpdateEmployeeDTO struct {
 	Name             *string                    `json:"name,omitempty"`
 	Phone            *string                    `json:"phone,omitempty"`
 	Email            *string                    `json:"email,omitempty"`
-	Role             *string                    `json:"role,omitempty"`
+	Role             *EmployeeRole              `json:"role,omitempty"`
 	StoreDetails     *UpdateStoreDetailsDTO     `json:"storeDetails,omitempty"`
 	WarehouseDetails *UpdateWarehouseDetailsDTO `json:"warehouseDetails,omitempty"`
 }
@@ -43,7 +43,7 @@ type EmployeeDTO struct {
 	Name             string                       `json:"name"`
 	Phone            string                       `json:"phone"`
 	Email            string                       `json:"email"`
-	Role             string                       `json:"role"`
+	Role             EmployeeRole                 `json:"role"`
 	IsActive         bool                         `json:"isActive"`
 	Type             EmployeeType                 `json:"type"`
 	StoreDetails     *StoreEmployeeDetailsDTO     `json:"storeDetails,omitempty"`
