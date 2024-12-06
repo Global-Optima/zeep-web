@@ -1,6 +1,8 @@
 package sku
 
 import (
+	"errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku/types"
 	"gorm.io/gorm"
@@ -11,6 +13,7 @@ type SKURepository interface {
 	GetSKUByID(skuID uint) (*data.SKU, error)
 	CreateSKU(sku *data.SKU) error
 	UpdateSKU(sku *data.SKU) error
+	UpdateSKUFields(skuID uint, fields map[string]interface{}) (*data.SKU, error)
 	DeleteSKU(skuID uint) error
 	DeactivateSKU(skuID uint) error
 }
@@ -46,7 +49,7 @@ func (r *skuRepository) GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error) 
 			query = query.Where("is_active = ?", *filter.IsActive)
 		}
 	} else {
-		// By default, retrieve only active SKUs
+
 		query = query.Where("is_active = ?", true)
 	}
 
@@ -73,6 +76,23 @@ func (r *skuRepository) CreateSKU(sku *data.SKU) error {
 
 func (r *skuRepository) UpdateSKU(sku *data.SKU) error {
 	return r.db.Save(sku).Error
+}
+
+func (r *skuRepository) UpdateSKUFields(skuID uint, fields map[string]interface{}) (*data.SKU, error) {
+	var sku data.SKU
+
+	if err := r.db.First(&sku, skuID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("SKU not found")
+		}
+		return nil, err
+	}
+
+	if err := r.db.Model(&sku).Updates(fields).Error; err != nil {
+		return nil, err
+	}
+
+	return &sku, nil
 }
 
 func (r *skuRepository) DeleteSKU(skuID uint) error {

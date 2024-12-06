@@ -10,6 +10,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
 	"github.com/gin-gonic/gin"
 )
 
@@ -99,5 +100,17 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 		router.POST("", handler.CreateSupplier)
 		router.PUT("/:id", handler.UpdateSupplier)
 		router.DELETE("/:id", handler.DeleteSupplier)
+	}
+}
+
+func (r *Router) RegisterSKURoutes(handler *sku.SKUHandler) {
+	router := r.Routes.Group("/warehouse/sku")
+	{
+		router.GET("", handler.GetAllSKUs)
+		router.GET("/:id", handler.GetSKUByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.CreateSKU)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.UpdateSKU)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.DeleteSKU)
+		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.DeactivateSKU)
 	}
 }

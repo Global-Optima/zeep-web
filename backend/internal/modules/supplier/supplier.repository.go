@@ -1,6 +1,8 @@
 package supplier
 
 import (
+	"errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"gorm.io/gorm"
 )
@@ -8,7 +10,7 @@ import (
 type SupplierRepository interface {
 	CreateSupplier(supplier *data.Supplier) error
 	GetSupplierByID(id uint) (*data.Supplier, error)
-	UpdateSupplier(id uint, supplier *data.Supplier) error
+	UpdateSupplier(id uint, fields map[string]interface{}) error
 	DeleteSupplier(id uint) error
 	ListSuppliers() ([]data.Supplier, error)
 }
@@ -31,8 +33,19 @@ func (r *supplierRepository) GetSupplierByID(id uint) (*data.Supplier, error) {
 	return &supplier, err
 }
 
-func (r *supplierRepository) UpdateSupplier(id uint, supplier *data.Supplier) error {
-	return r.db.Model(&data.Supplier{}).Where("id = ?", id).Updates(supplier).Error
+func (r *supplierRepository) UpdateSupplier(id uint, fields map[string]interface{}) error {
+	if len(fields) == 0 {
+		return errors.New("no fields to update")
+	}
+
+	if err := r.db.Model(&data.Supplier{}).Where("id = ?", id).Updates(fields).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("supplier not found")
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (r *supplierRepository) DeleteSupplier(id uint) error {
