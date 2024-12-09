@@ -81,12 +81,11 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.Routes.Group("/orders")
 	{
 		router.POST("", handler.CreateOrder)
-		router.PUT("/:orderId/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(types.RoleBarista), handler.CompleteSubOrder)
-		router.GET("", handler.GetAllOrders)
+		router.GET("/ws/:storeId", handler.ServeWS)
+		router.PUT("/:orderId/suborders/:subOrderId/complete", handler.CompleteSubOrder)
+		router.GET("", handler.GetAllBaristaOrders)
 		router.GET("/:orderId/suborders", handler.GetSubOrders)
-		router.GET("/:orderId", handler.GetActiveOrder)
 		router.GET("/statuses/count", handler.GetStatusesCount)
-		router.GET("/:orderId/suborders/count", handler.GetSubOrderCount)
 		router.GET("/:orderId/receipt", handler.GeneratePDFReceipt)
 	}
 }

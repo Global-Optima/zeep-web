@@ -312,36 +312,36 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS orders (
 		id SERIAL PRIMARY KEY,
-		customer_id INT REFERENCES customers (id) ON DELETE CASCADE,
+		customer_id INT REFERENCES customers (id) ON DELETE SET NULL,
 		customer_name VARCHAR(255) NOT NULL,
 		employee_id INT REFERENCES employees (id) ON DELETE SET NULL,
 		store_id INT REFERENCES stores (id) NOT NULL,
 		delivery_address_id INT REFERENCES customer_addresses (id) ON DELETE SET NULL,
-		order_status VARCHAR(50) NOT NULL,
+		status VARCHAR(50) NOT NULL,
 		total DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
 
--- OrderProducts Table
+-- SubOrders Table
 CREATE TABLE
-	IF NOT EXISTS order_products (
+	IF NOT EXISTS suborders (
 		id SERIAL PRIMARY KEY,
 		order_id INT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
-		quantity INT NOT NULL CHECK (quantity > 0),
+		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE SET NULL,
 		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+		status VARCHAR(50) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
 
--- OrderProductAdditives Table
+-- SubOrdersAdditives Table
 CREATE TABLE
-	IF NOT EXISTS order_product_additives (
+	IF NOT EXISTS suborder_additives (
 		id SERIAL PRIMARY KEY,
-		order_product_id INT NOT NULL REFERENCES order_products (id) ON DELETE CASCADE,
+		suborder_id INT NOT NULL REFERENCES suborders (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
 		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

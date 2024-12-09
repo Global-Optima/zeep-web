@@ -1,68 +1,82 @@
 export enum OrderStatus {
-	PENDING = 'PENDING',
+	PREPARING = 'PREPARING',
 	COMPLETED = 'COMPLETED',
-	CONFIRMED = 'CONFIRMED',
-	SHIPPED = 'SHIPPED',
+	IN_DELIVERY = 'IN_DELIVERY',
 	DELIVERED = 'DELIVERED',
 	CANCELLED = 'CANCELLED',
 }
 
-export interface CreateOrderItemDTO {
+export enum SubOrderStatus {
+	PREPARING = 'PREPARING',
+	COMPLETED = 'COMPLETED',
+}
+
+export interface OrderStatusesCountDTO {
+	ALL: number
+	PREPARING: number
+	COMPLETED: number
+	IN_DELIVERY: number
+	DELIVERED: number
+	CANCELLED: number
+}
+
+export interface CreateSubOrderDTO {
 	productSizeId: number
 	quantity: number
 	additivesIds: number[]
 }
 
 export interface CreateOrderDTO {
-	customerId?: number
 	customerName: string
-	employeeId?: number
 	storeId: number
 	deliveryAddressId?: number
-	orderItems: CreateOrderItemDTO[]
+	subOrders: CreateSubOrderDTO[]
 }
 
-export interface OrderProductAdditiveDTO {
+export interface SubOrderAdditiveDTO {
 	id: number
-	orderProductId: number
-	additiveId: number
+	subOrderId: number
+	additive: OrderAdditiveDTO
 	price: number
 	createdAt: string
 	updatedAt: string
 }
 
-export interface OrderProductDTO {
+export interface SubOrderDTO {
 	id: number
 	orderId: number
-	productSizeId: number
-	quantity: number
+	productSize: OrderProductSizeDTO
 	price: number
-	additives?: OrderProductAdditiveDTO[]
+	status: SubOrderStatus
+	additives: SubOrderAdditiveDTO[]
 	createdAt: string
 	updatedAt: string
 }
 
 export interface OrderDTO {
 	id: number
-	customerId: number
+	customerId?: number
+	customerName?: string
 	employeeId?: number
-	storeId?: number
+	storeId: number
 	deliveryAddressId?: number
-	orderStatus: OrderStatus
-	orderDate: string
+	status: OrderStatus
+	createdAt: string
 	total: number
-	orderProducts?: OrderProductDTO[]
+	subOrdersQuantity: number
+	subOrders: SubOrderDTO[]
 }
 
-export interface SubOrderEvent {
-	subOrderId: number
-	status: OrderStatus
+export interface OrderProductSizeDTO {
+	id: number
+	sizeName: string
+	productName: string
+	size: string
 }
 
-export interface OrderEvent {
-	orderId: number
-	storeId?: number
-	status: OrderStatus
-	timestamp: string
-	items: SubOrderEvent[]
+export interface OrderAdditiveDTO {
+	id: number
+	name: string
+	description: string
+	size: string
 }
