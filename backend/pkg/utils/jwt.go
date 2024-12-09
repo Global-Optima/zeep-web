@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -14,14 +13,16 @@ const (
 )
 
 type BaseClaims struct {
+	ID   uint   `json:"id"`   // Unified ID for employees/customers
+	Type string `json:"type"` // employee(store/warehouse) or customer
 	jwt.RegisteredClaims
 }
 
 type EmployeeClaims struct {
 	BaseClaims
-	Role       types.EmployeeRole `json:"role"`
-	StoreID    uint               `json:"storeId"`
-	EmployeeID uint               `json:"employeeId"`
+	Role          string `json:"role"`
+	WorkplaceID   *uint  `json:"workplace_id,omitempty"`   // Store or Warehouse ID
+	WorkplaceType string `json:"workplace_type,omitempty"` // "Store" or "Warehouse"
 }
 
 type CustomerClaims struct {

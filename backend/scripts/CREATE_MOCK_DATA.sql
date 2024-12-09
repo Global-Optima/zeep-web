@@ -48,6 +48,154 @@ VALUES
   ),
   ('Улица Кирова, 2, Уфа', 56.0367, 54.7352);
 
+-- Insert into CityWarehouses
+INSERT INTO
+  city_warehouses (facility_address_id, name)
+VALUES
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Улица Ленина, 12, Москва'
+    ),
+    'Московский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Проспект Мира, 45, Санкт-Петербург'
+    ),
+    'Санкт-Петербургский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Улица Советская, 89, Екатеринбург'
+    ),
+    'Екатеринбургский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Улица Куйбышева, 101, Новосибирск'
+    ),
+    'Новосибирский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Площадь Революции, 17, Нижний Новгород'
+    ),
+    'Нижегородский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Проспект Гагарина, 27, Казань'
+    ),
+    'Казанский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Улица Ленина, 64, Пермь'
+    ),
+    'Пермский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Проспект Победы, 5, Самара'
+    ),
+    'Самарский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Улица Большая Садовая, 101, Ростов-на-Дону'
+    ),
+    'Ростовский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Невский проспект, 88, Санкт-Петербург'
+    ),
+    'Второй Санкт-Петербургский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Улица Советская, 18, Волгоград'
+    ),
+    'Волгоградский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Улица Октябрьская, 5, Челябинск'
+    ),
+    'Челябинский склад'
+  ),
+  (
+    (
+      SELECT
+        id
+      FROM
+        facility_addresses
+      WHERE
+        address = 'Улица Кирова, 2, Уфа'
+    ),
+    'Уфимский склад'
+  );
+
 -- Insert into ProductCategory
 INSERT INTO
   product_categories (name, description)
@@ -943,38 +1091,80 @@ VALUES
 INSERT INTO
   product_ingredients (item_ingredient_id, product_size_id)
 VALUES
-  (1, 1),
-  (2, 1),
-  (1, 2),
-  (3, 3),
-  (4, 1),
-  (5, 2),
-  (6, 2),
-  (7, 3),
-  (8, 4),
-  (9, 5),
-  (10, 5),
-  (11, 6),
-  (12, 7),
-  (13, 8),
-  (14, 8),
-  (15, 9),
-  (16, 10),
-  (17, 11),
-  (18, 12),
-  (19, 13),
-  (20, 14),
-  (3, 4),
-  (4, 5),
-  (6, 6),
-  (7, 7),
-  (8, 8),
-  (9, 9),
-  (10, 10),
-  (11, 11),
-  (12, 12),
-  (13, 13);
+  -- Product Size 1 (S, Product 1)
+  (1, 1), -- Сахар
+  (2, 1), -- Молоко
+  (4, 1), -- Корица
+  -- Product Size 2 (M, Product 1)
+  (1, 2), -- Сахар
+  (3, 2), -- Шоколад
+  (5, 2), -- Мед
+  -- Product Size 3 (L, Product 1)
+  (3, 3), -- Шоколад
+  (6, 3), -- Ваниль
+  (7, 3), -- Орехи
+  -- Product Size 4 (S, Product 2)
+  (4, 4), -- Корица
+  (2, 4), -- Молоко
+  (8, 4), -- Кокосовое молоко
+  -- Product Size 5 (M, Product 2)
+  (5, 5), -- Мед
+  (1, 5), -- Сахар
+  (9, 5), -- Яблоки
+  -- Product Size 6 (L, Product 2)
+  (6, 6), -- Ваниль
+  (3, 6), -- Шоколад
+  (10, 6), -- Бананы
+  -- Product Size 7 (S, Product 3)
+  (7, 7), -- Орехи
+  (8, 7), -- Кокосовое молоко
+  (13, 7), -- Мята
+  -- Product Size 8 (M, Product 3)
+  (9, 8), -- Яблоки
+  (14, 8), -- Лимонный сок
+  (4, 8), -- Корица
+  -- Product Size 9 (L, Product 3)
+  (10, 9), -- Бананы
+  (15, 9), -- Какао-порошок
+  (11, 9), -- Сливки
+  -- Product Size 10 (S, Product 4)
+  (11, 10), -- Сливки
+  (16, 10), -- Кленовый сироп
+  (2, 10), -- Молоко
+  -- Product Size 11 (M, Product 4)
+  (12, 11), -- Апельсины
+  (17, 11), -- Клубника
+  (8, 11), -- Кокосовое молоко
+  -- Product Size 12 (L, Product 4)
+  (13, 12), -- Мята
+  (18, 12), -- Имбирь
+  (5, 12), -- Мед
+  -- Product Size 13 (S, Product 5)
+  (14, 13), -- Лимонный сок
+  (19, 13), -- Соль
+  (15, 13), -- Какао-порошок
+  -- Product Size 14 (M, Product 5)
+  (20, 14), -- Фисташки
+  (3, 14), -- Шоколад
+  (6, 14), -- Ваниль
+  -- Product Size 15 (L, Product 5)
+  (7, 15), -- Орехи
+  (1, 15), -- Сахар
+  (11, 15), -- Сливки
+  -- Product Size 16 (S, Product 6)
+  (9, 16), -- Яблоки
+  (4, 16), -- Корица
+  (14, 16), -- Лимонный сок
+  -- Product Size 17 (M, Product 6)
+  (10, 17), -- Бананы
+  (17, 17), -- Клубника
+  (13, 17), -- Мята
+  -- Product Size 18 (L, Product 6)
+  (18, 18), -- Имбирь
+  (12, 18), -- Апельсины
+  (20, 18);
 
+-- Фисташки
 -- Insert into Customer
 INSERT INTO
   customers (name, password, phone, is_verified, is_banned)
@@ -1009,8 +1199,8 @@ INSERT INTO
     phone,
     email,
     role,
-    store_id,
     is_active,
+    type,
     hashed_password,
     created_at,
     updated_at
@@ -1022,8 +1212,8 @@ VALUES
     '79551234567',
     'elena@example.com',
     'Manager',
-    1,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1034,8 +1224,8 @@ VALUES
     '79667778899',
     'sergey@example.com',
     'Barista',
-    2,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1046,8 +1236,8 @@ VALUES
     '79223334455',
     'anna@example.com',
     'Waiter',
-    1,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1058,8 +1248,8 @@ VALUES
     '79161234567',
     'ivan@example.com',
     'Director',
-    3,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1070,8 +1260,8 @@ VALUES
     '79345566778',
     'maria@example.com',
     'Supervisor',
-    2,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1082,8 +1272,8 @@ VALUES
     '79991234567',
     'oleg@example.com',
     'Cleaner',
-    1,
     false,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1094,8 +1284,8 @@ VALUES
     '79882233445',
     'tatiana@example.com',
     'Manager',
-    4,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1106,8 +1296,8 @@ VALUES
     '79002221133',
     'alexei@example.com',
     'Waiter',
-    3,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1118,8 +1308,8 @@ VALUES
     '79115555666',
     'yulia@example.com',
     'Barista',
-    2,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1130,8 +1320,8 @@ VALUES
     '79553334456',
     'dmitry@example.com',
     'Waiter',
-    1,
     false,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1142,8 +1332,8 @@ VALUES
     '79225556677',
     'natalya@example.com',
     'Barista',
-    5,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1154,8 +1344,8 @@ VALUES
     '79331112223',
     'svetlana@example.com',
     'Manager',
-    3,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1166,8 +1356,8 @@ VALUES
     '79442233445',
     'victor@example.com',
     'Supervisor',
-    4,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1178,8 +1368,8 @@ VALUES
     '79118887799',
     'andrei@example.com',
     'Cleaner',
-    1,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1190,8 +1380,8 @@ VALUES
     '79664445566',
     'olga@example.com',
     'Supervisor',
-    5,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1202,8 +1392,8 @@ VALUES
     '79552233456',
     'maksim@example.com',
     'Waiter',
-    2,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1214,8 +1404,8 @@ VALUES
     '79774445511',
     'lyudmila@example.com',
     'Cleaner',
-    3,
     false,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1226,8 +1416,8 @@ VALUES
     '79883332211',
     'sofia@example.com',
     'Barista',
-    4,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1238,8 +1428,8 @@ VALUES
     '79338887799',
     'vladimir@example.com',
     'Cashier',
-    5,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1250,8 +1440,8 @@ VALUES
     '79229998877',
     'alena@example.com',
     'Waiter',
-    1,
     true,
+    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
