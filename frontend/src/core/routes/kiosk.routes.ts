@@ -21,7 +21,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 		meta: {
 			title: 'Заказы',
 		},
-		component: () => import('@/modules/kiosk/orders/pages/kiosk-orders-page.vue'),
+		component: () => import('@/modules/kiosk/orders/pages/kiosk-orders-page-v2.vue'),
 	},
 	KIOSK_CART: {
 		path: 'cart',

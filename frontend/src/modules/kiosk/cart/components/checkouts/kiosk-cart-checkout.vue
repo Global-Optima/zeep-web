@@ -74,7 +74,7 @@ const stepsConfig: StepConfig[] = [
         const orderDTO: CreateOrderDTO = {
           customerName: stepState.value.customerName,
           storeId: storeId,
-          orderItems: Object.entries(cartItems).map(([_, item]) => ({
+          subOrders: Object.entries(cartItems).map(([_, item]) => ({
             productSizeId: item.size.id,
             quantity: item.quantity,
             additivesIds: item.additives.map((add) => add.id),

@@ -2,57 +2,49 @@ package orders
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/kafka"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
-	"github.com/google/uuid"
 )
 
-var Logger = logger.GetInstance()
-
 type OrderService interface {
-	GetAllOrders(storeID uint, status *string, limit int, offset int) ([]types.OrderDTO, error)
-	GetSubOrders(storeID, orderID uint) ([]types.SubOrderEvent, error)
-	GetStatusesCount(storeID uint) (map[string]int64, error)
-	GetSubOrderCount(orderID, storeID uint) (int64, error)
-
-	CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint, error)
-	CompleteSubOrder(subOrderID, orderID, storeID uint) error
+	GetAllBaristaOrders(storeID uint, status *string) ([]types.OrderDTO, error)
+	GetSubOrders(orderID uint) ([]types.SuborderDTO, error)
+	GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error)
+	CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
+	CompleteSubOrder(subOrderID uint) error
 	GeneratePDFReceipt(orderID uint) ([]byte, error)
-	GetActiveOrderEvent(orderID uint, storeID uint) (*types.OrderEvent, error)
+	GetOrderBySubOrder(subOrderID uint) (*data.Order, error)
+	GetOrderById(orderId uint) (types.OrderDTO, error)
+}
 
-	GetLowStockIngredients(threshold float64) ([]data.Ingredient, error)
+type orderValidationResults struct {
+	ProductPrices  map[uint]float64
+	ProductNames   map[uint]string
+	AdditivePrices map[uint]float64
+	AdditiveNames  map[uint]string
 }
 
 type orderService struct {
-	orderRepo      OrderRepository
-	subOrderRepo   SubOrderRepository
-	productRepo    product.ProductRepository
-	additiveRepo   additives.AdditiveRepository
-	kafkaManager   *kafka.KafkaManager
-	ordersNotifier *OrdersNotifier
+	orderRepo    OrderRepository
+	productRepo  product.ProductRepository
+	additiveRepo additives.AdditiveRepository
 }
 
-func NewOrderService(orderRepo OrderRepository, subOrderRepo SubOrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, kafkaManager *kafka.KafkaManager, ordersNotifier *OrdersNotifier) OrderService {
+func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository) OrderService {
 	return &orderService{
-		orderRepo:      orderRepo,
-		subOrderRepo:   subOrderRepo,
-		productRepo:    productRepo,
-		additiveRepo:   additiveRepo,
-		kafkaManager:   kafkaManager,
-		ordersNotifier: ordersNotifier,
+		orderRepo:    orderRepo,
+		productRepo:  productRepo,
+		additiveRepo: additiveRepo,
 	}
 }
 
-func (s *orderService) GetAllOrders(storeID uint, status *string, limit int, offset int) ([]types.OrderDTO, error) {
-	orders, err := s.orderRepo.GetAllOrders(storeID, status, limit, offset)
+// Get all orders with optional filtering by status
+func (s *orderService) GetAllBaristaOrders(storeID uint, status *string) ([]types.OrderDTO, error) {
+	orders, err := s.orderRepo.GetAllBaristaOrders(storeID, status)
 	if err != nil {
 		return nil, err
 	}
@@ -64,104 +56,152 @@ func (s *orderService) GetAllOrders(storeID uint, status *string, limit int, off
 	return orderDTOs, nil
 }
 
-func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*uint, error) {
+// Get suborders for a specific order
+func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
+	suborders, err := s.orderRepo.GetSubOrdersByOrderID(orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	var subOrderDTOs []types.SuborderDTO
+	for _, suborder := range suborders {
+		subOrderDTOs = append(subOrderDTOs, types.ConvertSuborderToDTO(&suborder))
+	}
+	return subOrderDTOs, nil
+}
+
+// Create a new order
+func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
 	productSizeIDs, additiveIDs := RetrieveIDs(*createOrderDTO)
 
-	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.productRepo)
+	// Validate product sizes and additives
+	validations, err := s.ValidationResults(productSizeIDs, additiveIDs)
 	if err != nil {
-		return nil, err
-	}
-	additivePrices, additiveNames, err := ValidateAdditives(additiveIDs, s.additiveRepo)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, productPrices, additivePrices)
+	// Convert DTO to Order
+	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, validations.ProductPrices, validations.AdditivePrices)
 	order.Total = total
 
+	// Save the order and related data to the database
 	err = s.orderRepo.CreateOrder(&order)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save order to database: %w", err)
 	}
 
-	orderEvent := types.OrderEvent{
-		ID:                order.ID,
-		CustomerName:      createOrderDTO.CustomerName,
-		ETA:               calculateETA(createOrderDTO.OrderType),
-		OrderType:         createOrderDTO.OrderType,
-		StoreID:           order.StoreID,
-		SubOrdersQuantity: 0,
-		Status:            string(data.OrderStatusPending),
-		Timestamp:         time.Now(),
-	}
+	return &order, nil
+}
 
-	for _, product := range order.OrderProducts {
-		for i := 0; i < product.Quantity; i++ {
-			ID := uuid.New().ID()
-
-			subOrderAdditives := []types.AdditiveDetail{}
-			for _, additive := range product.Additives {
-				subOrderAdditives = append(subOrderAdditives, types.AdditiveDetail{
-					AdditiveID: additive.AdditiveID,
-					Name:       additiveNames[additive.AdditiveID],
-					Price:      additivePrices[additive.AdditiveID],
-				})
-			}
-
-			subOrder := types.SubOrderEvent{
-				ID:            uint(ID),
-				SubOrderID:    product.ID,
-				ProductSizeID: product.ProductSizeID,
-				ProductName:   productNames[product.ProductSizeID],
-				Additives:     subOrderAdditives,
-				ETA:           calculateETA(createOrderDTO.OrderType),
-				Status:        data.OrderStatusPending,
-			}
-			orderEvent.Items = append(orderEvent.Items, subOrder)
-			orderEvent.SubOrdersQuantity++
-		}
-	}
-
-	err = s.kafkaManager.PublishOrderEvent(s.kafkaManager.Topics.ActiveOrders, orderEvent.StoreID, orderEvent)
+// Complete a suborder
+func (s *orderService) CompleteSubOrder(subOrderID uint) error {
+	// Update suborder status
+	err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
 	if err != nil {
-		return nil, fmt.Errorf("failed to publish order to Kafka: %w", err)
+		return fmt.Errorf("failed to complete suborder: %w", err)
 	}
 
-	s.ordersNotifier.NotifyNewOrder(order.ID, order.StoreID, orderEvent)
-
-	return &order.ID, nil
-}
-
-func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
-	var productSizeIDs []uint
-	var additiveIDs []uint
-	for _, product := range createOrderDTO.OrderItems {
-		productSizeIDs = append(productSizeIDs, product.ProductSizeID)
-		additiveIDs = append(additiveIDs, product.AdditivesIDs...)
+	// Check if all suborders for the parent order are completed
+	orderID, allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to check suborders: %w", err)
 	}
-	return productSizeIDs, additiveIDs
-}
 
-func ValidateProductSizes(productSizeIDs []uint, repo product.ProductRepository) (map[uint]float64, map[uint]string, error) {
-	prices := make(map[uint]float64)
-	productNames := make(map[uint]string)
-	for _, id := range productSizeIDs {
-		productSize, err := repo.GetProductSizeWithProduct(id)
+	// If all suborders are completed, determine the order status
+	if allCompleted {
+		order, err := s.orderRepo.GetOrderById(orderID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid product size ID: %d", id)
-		}
-		if productSize == nil {
-			return nil, nil, fmt.Errorf("product size with ID %d is nil", id)
-		}
-		if productSize.Product.Name == "" {
-			return nil, nil, fmt.Errorf("product size with ID %d has an associated product with an empty name", id)
+			return fmt.Errorf("failed to fetch order: %w", err)
 		}
 
-		prices[id] = productSize.BasePrice
-		productNames[id] = productSize.Product.Name
+		var newStatus data.OrderStatus
+		if order.DeliveryAddressID != nil {
+			newStatus = data.OrderStatusInDelivery
+		} else {
+			newStatus = data.OrderStatusCompleted
+		}
 
+		err = s.orderRepo.UpdateOrderStatus(orderID, newStatus)
+		if err != nil {
+			return fmt.Errorf("failed to update order status: %w", err)
+		}
 	}
-	return prices, productNames, nil
+
+	return nil
+}
+
+// Generate a PDF receipt for an order
+func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
+	order, err := s.orderRepo.GetOrderById(orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch order details: %w", err)
+	}
+
+	details := pdf.PDFReceiptDetails{
+		OrderID:   order.ID,
+		StoreID:   order.StoreID,
+		OrderDate: order.CreatedAt.Format("2006-01-02 15:04:05"),
+		Total:     order.Total,
+	}
+
+	for _, suborder := range order.Suborders {
+		pdfSuborder := pdf.PDFSubOrder{
+			ProductName: fmt.Sprintf("Product #%d", suborder.ProductSizeID),
+			Price:       suborder.Price,
+			Status:      string(suborder.Status),
+		}
+
+		for _, additive := range suborder.Additives {
+			pdfSuborder.Additives = append(pdfSuborder.Additives, pdf.PDFAdditive{
+				Name:  fmt.Sprintf("Additive #%d", additive.AdditiveID),
+				Price: additive.Price,
+			})
+		}
+
+		details.SubOrders = append(details.SubOrders, pdfSuborder)
+	}
+
+	return pdf.GeneratePDFReceipt(details)
+}
+
+// Get statuses count for orders in a store
+func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error) {
+	countsMap, err := s.orderRepo.GetStatusesCount(storeID)
+	if err != nil {
+		return types.OrderStatusesCountDTO{}, err
+	}
+
+	dto := types.OrderStatusesCountDTO{
+		PREPARING:   countsMap[data.OrderStatusPreparing],
+		COMPLETED:   countsMap[data.OrderStatusCompleted],
+		IN_DELIVERY: countsMap[data.OrderStatusInDelivery],
+		DELIVERED:   countsMap[data.OrderStatusDelivered],
+		CANCELLED:   countsMap[data.OrderStatusCancelled],
+	}
+
+	dto.ALL = dto.PREPARING + dto.COMPLETED + dto.IN_DELIVERY + dto.DELIVERED + dto.CANCELLED
+
+	return dto, nil
+}
+
+// Validate product sizes and additives
+func (s *orderService) ValidationResults(productSizeIDs, additiveIDs []uint) (*orderValidationResults, error) {
+	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.productRepo)
+	if err != nil {
+		return nil, fmt.Errorf("product validation failed: %w", err)
+	}
+
+	additivePrices, additiveNames, err := ValidateAdditives(additiveIDs, s.additiveRepo)
+	if err != nil {
+		return nil, fmt.Errorf("additive validation failed: %w", err)
+	}
+
+	return &orderValidationResults{
+		ProductPrices:  productPrices,
+		ProductNames:   productNames,
+		AdditivePrices: additivePrices,
+		AdditiveNames:  additiveNames,
+	}, nil
 }
 
 func ValidateAdditives(additiveIDs []uint, repo additives.AdditiveRepository) (map[uint]float64, map[uint]string, error) {
@@ -188,175 +228,53 @@ func ValidateAdditives(additiveIDs []uint, repo additives.AdditiveRepository) (m
 	return prices, additiveNames, nil
 }
 
-func calculateETA(orderType string) time.Time {
-	if orderType == "Доставка" {
-		return time.Now().Add(30 * time.Minute)
-	}
-	return time.Now().Add(15 * time.Minute)
-}
-
-func GetCachedProductSize(productSizeID uint, repo product.ProductRepository) (*data.ProductSize, error) {
-	cache := utils.GetCacheInstance()
-	cacheKey := fmt.Sprintf("product_size:%d", productSizeID)
-
-	var productSize data.ProductSize
-	if err := cache.Get(cacheKey, &productSize); err == nil {
-		return &productSize, nil
-	}
-
-	productSizePtr, err := repo.GetProductSizeWithProduct(productSizeID)
-	if err != nil {
-		return nil, fmt.Errorf("product size with ID %d not found", productSizeID)
-	}
-
-	_ = cache.Set(cacheKey, productSizePtr, 30*time.Minute)
-	return productSizePtr, nil
-}
-
-func GetCachedAdditive(additiveID uint, repo additives.AdditiveRepository) (*data.Additive, error) {
-	cache := utils.GetCacheInstance()
-	cacheKey := fmt.Sprintf("additive:%d", additiveID)
-
-	var additive data.Additive
-	if err := cache.Get(cacheKey, &additive); err == nil {
-		return &additive, nil
-	}
-
-	additivePtr, err := repo.GetAdditiveByID(additiveID)
-	if err != nil {
-		return nil, fmt.Errorf("additive with ID %d not found", additiveID)
-	}
-
-	_ = cache.Set(cacheKey, additivePtr, 10*time.Minute)
-	return additivePtr, nil
-}
-
-func (s *orderService) CompleteSubOrder(subOrderID, orderID, storeID uint) error {
-	orderEvent, err := s.kafkaManager.FetchOrderEvent(orderID, storeID, string(s.kafkaManager.Topics.ActiveOrders))
-	if err != nil {
-		return fmt.Errorf("failed to fetch order event from Kafka: %w", err)
-	}
-
-	subOrderFound := false
-	for i, item := range orderEvent.Items {
-		if item.ID == subOrderID {
-			orderEvent.Items[i].Status = data.OrderStatusCompleted
-			subOrderFound = true
-			break
-		}
-	}
-
-	if !subOrderFound {
-		return fmt.Errorf("suborder %d not found in order %d", subOrderID, orderID)
-	}
-
-	allCompleted := true
-	for _, item := range orderEvent.Items {
-		if item.Status != data.OrderStatusCompleted {
-			allCompleted = false
-			break
-		}
-	}
-
-	order, err := s.orderRepo.GetOrderByOrderId(orderID)
-	if err != nil {
-		return fmt.Errorf("failed to fetch order from db %s", err.Error())
-	}
-
-	var topic kafka.Topic
-	if allCompleted {
-		orderEvent.Status = string(data.OrderStatusCompleted)
-		topic = s.kafkaManager.Topics.CompletedOrders
-
-		err = s.orderRepo.UpdateOrderStatus(order.ID, storeID, data.OrderStatusCompleted)
+func ValidateProductSizes(productSizeIDs []uint, repo product.ProductRepository) (map[uint]float64, map[uint]string, error) {
+	prices := make(map[uint]float64)
+	productNames := make(map[uint]string)
+	for _, id := range productSizeIDs {
+		productSize, err := repo.GetProductSizeWithProduct(id)
 		if err != nil {
-			return fmt.Errorf("failed to update order status in database: %w", err)
+			return nil, nil, fmt.Errorf("invalid product size ID: %d", id)
+		}
+		if productSize == nil {
+			return nil, nil, fmt.Errorf("product size with ID %d is nil", id)
+		}
+		if productSize.Product.Name == "" {
+			return nil, nil, fmt.Errorf("product size with ID %d has an associated product with an empty name", id)
 		}
 
-		s.ordersNotifier.NotifyOrderCompleted(order.ID, storeID, orderEvent)
-	} else {
-		topic = s.kafkaManager.Topics.ActiveOrders
-		s.ordersNotifier.NotifySubOrderCompleted(order.ID, subOrderID, storeID, orderEvent)
-	}
+		prices[id] = productSize.BasePrice
+		productNames[id] = productSize.Product.Name
 
-	err = s.kafkaManager.PublishOrderEvent(topic, storeID, *orderEvent)
+	}
+	return prices, productNames, nil
+}
+
+func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
+	var productSizeIDs []uint
+	var additiveIDs []uint
+	for _, product := range createOrderDTO.Suborders {
+		productSizeIDs = append(productSizeIDs, product.ProductSizeID)
+		additiveIDs = append(additiveIDs, product.AdditivesIDs...)
+	}
+	return productSizeIDs, additiveIDs
+}
+
+func (s *orderService) GetOrderBySubOrder(subOrderID uint) (*data.Order, error) {
+	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
 	if err != nil {
-		return fmt.Errorf("failed to publish order to Kafka: %w", err)
+		return nil, fmt.Errorf("failed to fetch order for suborder %d: %w", subOrderID, err)
 	}
 
-	return nil
+	return order, nil
 }
 
-func (s *orderService) GetSubOrders(storeID, orderID uint) ([]types.SubOrderEvent, error) {
-	orderEvent, err := s.kafkaManager.FetchOrderEvent(orderID, storeID, string(s.kafkaManager.Topics.ActiveOrders))
+func (s *orderService) GetOrderById(orderId uint) (types.OrderDTO, error) {
+	order, err := s.orderRepo.GetOrderById(orderId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch OrderEvent from Kafka: %w", err)
+		return types.OrderDTO{}, fmt.Errorf("failed to fetch order with ID %d: %w", orderId, err)
 	}
 
-	if orderEvent.StoreID != storeID {
-		return nil, fmt.Errorf("order %d does not belong to store %d", orderID, storeID)
-	}
-
-	var subOrders []types.SubOrderEvent
-	subOrders = append(subOrders, orderEvent.Items...)
-	return subOrders, nil
-}
-
-func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
-	order, err := s.orderRepo.GetOrderByOrderId(orderID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch order details: %w", err)
-	}
-
-	details := pdf.PDFReceiptDetails{
-		OrderID:   order.ID,
-		StoreID:   order.StoreID,
-		OrderDate: order.CreatedAt.Format("2006-01-02 15:04:05"),
-		Total:     order.Total,
-	}
-
-	for _, product := range order.OrderProducts {
-		productSize, err := s.productRepo.GetProductSizeWithProduct(product.ProductSizeID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch size label: %w", err)
-		}
-
-		pdfProduct := pdf.PDFProduct{
-			ProductName: fmt.Sprintf("Product #%d", product.ProductSizeID),
-			Size:        productSize.Name,
-			Quantity:    product.Quantity,
-			Price:       product.Price,
-		}
-
-		for _, additive := range product.Additives {
-			pdfProduct.Additives = append(pdfProduct.Additives, pdf.PDFAdditive{
-				Name:  fmt.Sprintf("Additive #%d", additive.AdditiveID),
-				Price: additive.Price,
-			})
-		}
-
-		details.Products = append(details.Products, pdfProduct)
-	}
-
-	return pdf.GeneratePDFReceipt(details)
-}
-
-func (s *orderService) GetActiveOrderEvent(orderID, storeID uint) (*types.OrderEvent, error) {
-	event, err := s.kafkaManager.FetchOrderEvent(orderID, storeID, string(s.kafkaManager.Topics.ActiveOrders))
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch active order event: %w", err)
-	}
-	return event, nil
-}
-
-func (s *orderService) GetStatusesCount(storeID uint) (map[string]int64, error) {
-	return s.orderRepo.GetStatusesCount(storeID)
-}
-
-func (s *orderService) GetSubOrderCount(orderID, storeID uint) (int64, error) {
-	return s.subOrderRepo.GetSubOrderCount(orderID)
-}
-
-func (s *orderService) GetLowStockIngredients(threshold float64) ([]data.Ingredient, error) {
-	return s.orderRepo.GetLowStockIngredients(threshold)
+	orderDTO := types.ConvertOrderToDTO(order)
+	return orderDTO, nil
 }

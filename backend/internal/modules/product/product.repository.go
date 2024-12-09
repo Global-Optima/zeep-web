@@ -6,7 +6,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"gorm.io/gorm"
 )
 
@@ -30,8 +29,6 @@ type productRepository struct {
 func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
 }
-
-var Logger = logger.GetInstance()
 
 func (r *productRepository) GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error) {
 	var productSize data.ProductSize

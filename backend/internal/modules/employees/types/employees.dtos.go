@@ -1,12 +1,14 @@
 package types
 
+import "github.com/Global-Optima/zeep-web/backend/internal/data"
+
 type CreateEmployeeDTO struct {
 	Name             string               `json:"name" binding:"required"`
 	Phone            string               `json:"phone"`
 	Email            string               `json:"email" binding:"required"`
-	Role             EmployeeRole         `json:"role" binding:"required"`
+	Role             data.EmployeeRole    `json:"role" binding:"required"`
 	Password         string               `json:"password" binding:"required"`
-	Type             EmployeeType         `json:"type" binding:"required"`
+	Type             data.EmployeeType    `json:"type" binding:"required"`
 	StoreDetails     *StoreDetailsDTO     `json:"storeDetails,omitempty"`
 	WarehouseDetails *WarehouseDetailsDTO `json:"warehouseDetails,omitempty"`
 }
@@ -24,7 +26,7 @@ type UpdateEmployeeDTO struct {
 	Name             *string                    `json:"name,omitempty"`
 	Phone            *string                    `json:"phone,omitempty"`
 	Email            *string                    `json:"email,omitempty"`
-	Role             *EmployeeRole              `json:"role,omitempty"`
+	Role             *data.EmployeeRole         `json:"role,omitempty"`
 	StoreDetails     *UpdateStoreDetailsDTO     `json:"storeDetails,omitempty"`
 	WarehouseDetails *UpdateWarehouseDetailsDTO `json:"warehouseDetails,omitempty"`
 }
@@ -43,9 +45,9 @@ type EmployeeDTO struct {
 	Name             string                       `json:"name"`
 	Phone            string                       `json:"phone"`
 	Email            string                       `json:"email"`
-	Role             EmployeeRole                 `json:"role"`
+	Role             data.EmployeeRole            `json:"role"`
 	IsActive         bool                         `json:"isActive"`
-	Type             EmployeeType                 `json:"type"`
+	Type             data.EmployeeType            `json:"type"`
 	StoreDetails     *StoreEmployeeDetailsDTO     `json:"storeDetails,omitempty"`
 	WarehouseDetails *WarehouseEmployeeDetailsDTO `json:"warehouseDetails,omitempty"`
 }

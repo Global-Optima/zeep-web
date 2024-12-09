@@ -68,6 +68,7 @@ func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
 	queryParams, err := types.ParseEmployeeQueryParams(c.Request.URL.Query())
 	if err != nil {
 		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
@@ -198,6 +199,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 
 	employee, err := h.service.GetEmployeeByID(claims.ID)
 	if err != nil {
+		print(err)
 		utils.SendInternalServerError(c, "failed to fetch employee details")
 		return
 	}

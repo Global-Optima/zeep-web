@@ -5,7 +5,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
@@ -64,13 +63,14 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.Routes.Group("/employees")
 	{
-		router.POST("", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.CreateEmployee)
+		router.POST("", handler.CreateEmployee)
+		router.GET("", handler.GetEmployees)
 		router.GET("/current", handler.GetCurrentEmployee)
 		router.GET("/:id", handler.GetEmployeeByID)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.UpdateEmployee)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.DeleteEmployee)
-		router.GET("/roles", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager), handler.GetAllRoles)
-		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(types.RoleDirector, types.RoleManager, types.RoleBarista), handler.UpdatePassword)
+		router.PUT("/:id", handler.UpdateEmployee)
+		router.DELETE("/:id", handler.DeleteEmployee)
+		router.GET("/roles", handler.GetAllRoles)
+		router.PUT("/:id/password", handler.UpdatePassword)
 		router.POST("/login", handler.EmployeeLogin)
 		router.POST("/logout", handler.EmployeeLogout)
 	}
@@ -80,12 +80,11 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.Routes.Group("/orders")
 	{
 		router.POST("", handler.CreateOrder)
-		router.PUT("/:orderId/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(types.RoleBarista), handler.CompleteSubOrder)
-		router.GET("", handler.GetAllOrders)
+		router.GET("/ws/:storeId", handler.ServeWS)
+		router.PUT("/:orderId/suborders/:subOrderId/complete", handler.CompleteSubOrder)
+		router.GET("", handler.GetAllBaristaOrders)
 		router.GET("/:orderId/suborders", handler.GetSubOrders)
-		router.GET("/:orderId", handler.GetActiveOrder)
 		router.GET("/statuses/count", handler.GetStatusesCount)
-		router.GET("/:orderId/suborders/count", handler.GetSubOrderCount)
 		router.GET("/:orderId/receipt", handler.GeneratePDFReceipt)
 	}
 }

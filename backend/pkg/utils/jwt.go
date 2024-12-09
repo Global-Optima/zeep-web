@@ -5,29 +5,27 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/golang-jwt/jwt/v5"
-)
-
-const (
-	JWTExpiration = 2 * time.Hour
 )
 
 type BaseClaims struct {
 	ID   uint   `json:"id"`   // Unified ID for employees/customers
 	Type string `json:"type"` // employee(store/warehouse) or customer
-	jwt.RegisteredClaims
 }
 
 type EmployeeClaims struct {
-	BaseClaims
-	Role          string `json:"role"`
-	WorkplaceID   *uint  `json:"workplace_id,omitempty"`   // Store or Warehouse ID
-	WorkplaceType string `json:"workplace_type,omitempty"` // "Store" or "Warehouse"
+	jwt.RegisteredClaims
+	ID           uint              `json:"id"`
+	Role         data.EmployeeRole `json:"role"`
+	WorkplaceID  uint              `json:"workplaceId"`
+	EmployeeType data.EmployeeType `json:"workplaceType"`
 }
 
 type CustomerClaims struct {
-	BaseClaims
-	IsVerified bool `json:"is_verified"`
+	jwt.RegisteredClaims
+	ID         string `json:"id"`
+	IsVerified bool   `json:"isVerified"`
 }
 
 func GenerateJWT(claims jwt.Claims, expiration time.Duration) (string, error) {

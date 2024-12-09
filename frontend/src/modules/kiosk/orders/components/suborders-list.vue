@@ -17,15 +17,19 @@
         ]"
 			>
 				<div>
-					<p class="font-medium text-lg">{{ suborder.productName }}</p>
-					<p class="line-clamp-2 text-gray-700 text-sm">{{ suborder.toppings.join(', ') }}</p>
+					<p class="font-medium text-lg">
+						{{ suborder.productSize.productName }} {{ suborder.productSize.sizeName }}
+					</p>
+					<p class="line-clamp-2 text-gray-700 text-sm">
+						{{ suborder.additives.map(a => a.additive.name).join(', ') }}
+					</p>
 				</div>
 				<div>
 					<p
-						v-if="suborder.status === 'In Progress'"
+						v-if="suborder.status === SubOrderStatus.PREPARING"
 						class="text-blue-600"
 					>
-						{{ suborder.prepTime }}
+						2 мин.
 					</p>
 					<Check
 						v-else
@@ -45,27 +49,20 @@
 </template>
 
 <script setup lang="ts">
+import { SubOrderStatus, type SubOrderDTO } from '@/modules/orders/models/orders.models'
 import { Check } from 'lucide-vue-next'
 
-interface Suborder {
-  id: number;
-  productName: string;
-  toppings: string[];
-  status: 'In Progress' | 'Done';
-  comments?: string;
-  prepTime: string;
-}
 
 defineProps<{
-  suborders: Suborder[] | null;
-  selectedSuborder: Suborder | null;
+  suborders: SubOrderDTO[] | null;
+  selectedSuborder: SubOrderDTO | null;
 }>();
 
 const emits = defineEmits<{
-  (e: 'selectSuborder', suborder: Suborder): void;
+  (e: 'selectSuborder', suborder: SubOrderDTO): void;
 }>();
 
-const selectSuborder = (suborder: Suborder) => {
+const selectSuborder = (suborder: SubOrderDTO) => {
   emits('selectSuborder', suborder);
 };
 </script>
