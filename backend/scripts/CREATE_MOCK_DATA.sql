@@ -1191,21 +1191,20 @@ VALUES
     false
   );
 
-
-  -- Insert into Employee
-INSERT INTO employees (
+-- Insert into Employee
+INSERT INTO
+  employees (
     id,
     name,
     phone,
     email,
     role,
     type,
-    type,
     is_active,
     hashed_password,
     created_at,
     updated_at
-)
+  )
 VALUES
   (
     1,
