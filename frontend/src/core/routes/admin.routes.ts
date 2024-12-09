@@ -66,6 +66,14 @@ export const ADMIN_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/admin/products/pages/admin-product-details-page.vue'),
 	},
+	ADMIN_PRODUCT_SIZE_DETAILS: {
+		path: 'product-sizes/:id',
+		meta: {
+			title: 'Детали размера товара',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/products/pages/admin-product-sizes-details-page.vue'),
+	},
 	ADMIN_INGREDIENTS_DETAILS: {
 		path: 'ingredients/:id',
 		meta: {
