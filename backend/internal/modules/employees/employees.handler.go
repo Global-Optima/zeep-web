@@ -64,23 +64,14 @@ func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
 	c.JSON(http.StatusOK, employee)
 }
 
-func (h *EmployeeHandler) GetEmployeesByStore(c *gin.Context) {
-	storeIDParam := c.Query("storeId")
-	roleParam := c.Query("role")
-	limit, offset := utils.ParsePaginationParams(c)
-
-	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
+func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
+	queryParams, err := types.ParseEmployeeQueryParams(c.Request.URL.Query())
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store ID")
+		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
-	var role *string
-	if roleParam != "" {
-		role = &roleParam
-	}
-
-	employees, err := h.service.GetEmployeesByStore(uint(storeID), role, limit, offset)
+	employees, err := h.service.GetEmployees(*queryParams)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
@@ -174,7 +165,7 @@ func (h *EmployeeHandler) EmployeeLogin(c *gin.Context) {
 		return
 	}
 
-	token, err := h.service.EmployeeLogin(input.EmployeeId, input.Password)
+	token, err := h.service.EmployeeLogin(input.Email, input.Password)
 	if err != nil {
 		utils.SendErrorWithStatus(c, "invalid credentials", http.StatusUnauthorized)
 		return
@@ -205,7 +196,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.service.GetEmployeeByID(claims.EmployeeID)
+	employee, err := h.service.GetEmployeeByID(claims.ID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch employee details")
 		return

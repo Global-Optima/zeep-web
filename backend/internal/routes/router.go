@@ -65,7 +65,6 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.Routes.Group("/employees")
 	{
 		router.POST("", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.CreateEmployee)
-		router.GET("", handler.GetEmployeesByStore)
 		router.GET("/current", handler.GetCurrentEmployee)
 		router.GET("/:id", handler.GetEmployeeByID)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleDirector), handler.UpdateEmployee)

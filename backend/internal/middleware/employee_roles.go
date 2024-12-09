@@ -19,7 +19,7 @@ func EmployeeRoleMiddleware(requiredRoles ...types.EmployeeRole) gin.HandlerFunc
 		}
 
 		for _, role := range requiredRoles {
-			if claims.Role == role {
+			if claims.Role == string(role) {
 				c.Next()
 				return
 			}
