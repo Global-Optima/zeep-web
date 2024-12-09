@@ -204,6 +204,10 @@ func (s *employeeService) EmployeeLogin(email, password string) (string, error) 
 		return "", errors.New("this employee is not registered")
 	}
 
+	if employee == nil {
+		return "", errors.New("this employee is not registered")
+	}
+
 	if err := utils.ComparePassword(employee.HashedPassword, password); err != nil {
 		return "", errors.New("invalid credentials")
 	}

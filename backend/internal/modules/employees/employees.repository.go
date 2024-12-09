@@ -121,6 +121,7 @@ func (r *employeeRepository) GetWarehouseEmployees(warehouseID uint, role *strin
 
 	if role != nil {
 		query = query.Where("employees.role = ?", *role)
+		query = query.Where("employees.role = ?", *role)
 	}
 
 	err := query.Limit(limit).Offset(offset).Find(&employees).Error

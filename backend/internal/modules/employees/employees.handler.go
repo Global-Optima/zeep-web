@@ -1,7 +1,6 @@
 package employees
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -68,6 +67,7 @@ func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
 func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
 	queryParams, err := types.ParseEmployeeQueryParams(c.Request.URL.Query())
 	if err != nil {
+		utils.SendBadRequestError(c, err.Error())
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
@@ -191,16 +191,11 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("CLAIMSSSS token", token)
-
 	claims := &utils.EmployeeClaims{}
 	if err := utils.ValidateJWT(token, claims); err != nil {
 		utils.SendErrorWithStatus(c, "invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-
-	fmt.Println("CLAIMSSSS", claims)
-	fmt.Println("CLAIMSSSS IDDD", claims.ID)
 
 	employee, err := h.service.GetEmployeeByID(claims.ID)
 	if err != nil {

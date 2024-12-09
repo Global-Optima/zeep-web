@@ -194,16 +194,15 @@ CREATE TABLE
 	);
 
 -- ItemIngredients Table
-CREATE TABLE
-	IF NOT EXISTS item_ingredients (
-		id SERIAL PRIMARY KEY,
-		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-		item_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
-		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
+CREATE TABLE IF NOT EXISTS item_ingredients (
+    id SERIAL PRIMARY KEY,
+    ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+    item_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
+    quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	deleted_at TIMESTAMPTZ
+);
 
 -- CityWarehouses Table
 CREATE TABLE
