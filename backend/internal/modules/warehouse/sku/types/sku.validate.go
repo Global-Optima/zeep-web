@@ -41,6 +41,10 @@ func ValidateAndApplyUpdate(sku *data.SKU, req *UpdateSKURequest) error {
 		sku.UnitID = *req.UnitID
 	}
 
+	if req.SupplierID != nil {
+		sku.SupplierID = *req.SupplierID
+	}
+
 	if req.Category != nil {
 		sku.Category = *req.Category
 	}

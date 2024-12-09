@@ -28,7 +28,7 @@ func NewSKURepository(db *gorm.DB) SKURepository {
 
 func (r *skuRepository) GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error) {
 	var skus []data.SKU
-	query := r.db.Preload("Unit").Preload("Package")
+	query := r.db.Preload("Unit").Preload("Supplier").Preload("Package")
 
 	if filter != nil {
 		if filter.Name != nil && *filter.Name != "" {
@@ -48,6 +48,9 @@ func (r *skuRepository) GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error) 
 		if filter.IsActive != nil {
 			query = query.Where("is_active = ?", *filter.IsActive)
 		}
+		if filter.SupplierID != nil {
+			query = query.Where("supplier_id = ?", *filter.SupplierID)
+		}
 	} else {
 
 		query = query.Where("is_active = ?", true)
@@ -63,7 +66,7 @@ func (r *skuRepository) GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error) 
 
 func (r *skuRepository) GetSKUByID(skuID uint) (*data.SKU, error) {
 	var sku data.SKU
-	err := r.db.Preload("Unit").Preload("Package").First(&sku, skuID).Error
+	err := r.db.Preload("Unit").Preload("Supplier").Preload("Package").First(&sku, skuID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +84,7 @@ func (r *skuRepository) UpdateSKU(sku *data.SKU) error {
 func (r *skuRepository) UpdateSKUFields(skuID uint, fields map[string]interface{}) (*data.SKU, error) {
 	var sku data.SKU
 
-	if err := r.db.First(&sku, skuID).Error; err != nil {
+	if err := r.db.Preload("Unit").Preload("Supplier").First(&sku, skuID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("SKU not found")
 		}
@@ -89,6 +92,10 @@ func (r *skuRepository) UpdateSKUFields(skuID uint, fields map[string]interface{
 	}
 
 	if err := r.db.Model(&sku).Updates(fields).Error; err != nil {
+		return nil, err
+	}
+
+	if err := r.db.Preload("Unit").Preload("Supplier").Preload("Package").First(&sku, skuID).Error; err != nil {
 		return nil, err
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
 	"github.com/gin-gonic/gin"
 )
@@ -112,5 +113,14 @@ func (r *Router) RegisterSKURoutes(handler *sku.SKUHandler) {
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.UpdateSKU)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.DeleteSKU)
 		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.DeactivateSKU)
+	}
+}
+
+func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
+	router := r.Routes.Group("/barcode")
+	{
+		router.POST("/generate", handler.GenerateBarcode)
+		router.GET("/:barcode", handler.RetrieveSKUByBarcode)
+		router.POST("/print", handler.PrintAdditionalBarcodes)
 	}
 }

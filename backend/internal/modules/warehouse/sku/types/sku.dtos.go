@@ -7,6 +7,7 @@ type CreateSKURequest struct {
 	ExpirationFlag   bool    `json:"expirationFlag"`
 	Quantity         float64 `json:"quantity" binding:"required,gte=0"`
 	UnitID           uint    `json:"unitId" binding:"required"`
+	SupplierID       uint    `json:"supplierId" binding:"required"`
 	Category         string  `json:"category"`
 	Barcode          string  `json:"barcode"`
 	ExpirationPeriod int     `json:"expirationPeriod"` // in days, default is 1095 (3 years)
@@ -19,6 +20,7 @@ type UpdateSKURequest struct {
 	ExpirationFlag   *bool    `json:"expirationFlag"`
 	Quantity         *float64 `json:"quantity" binding:"omitempty,gte=0"`
 	UnitID           *uint    `json:"unitId"`
+	SupplierID       *uint    `json:"supplierId"`
 	Category         *string  `json:"category"`
 	Barcode          *string  `json:"barcode"`
 	ExpirationPeriod *int     `json:"expirationPeriod"` // in days
@@ -34,6 +36,8 @@ type SKUResponse struct {
 	Quantity         float64 `json:"quantity"`
 	UnitID           uint    `json:"unitId"`
 	UnitName         string  `json:"unitName"`
+	SupplierID       uint    `json:"supplierId"`
+	SupplierName     string  `json:"supplierName"`
 	Category         string  `json:"category"`
 	Barcode          string  `json:"barcode"`
 	ExpirationPeriod int     `json:"expirationPeriod"`
@@ -48,4 +52,5 @@ type SKUFilter struct {
 	LowStock       *bool
 	ExpirationFlag *bool
 	IsActive       *bool
+	SupplierID     *uint
 }

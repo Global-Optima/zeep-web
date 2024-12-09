@@ -1,0 +1,53 @@
+package types
+
+type GenerateBarcodeRequest struct {
+	SKU_ID uint `json:"skuId" binding:"required"`
+}
+
+type GenerateBarcodeResponse struct {
+	SKU_ID    uint   `json:"skuId"`
+	Barcode   string `json:"barcode"`
+	Message   string `json:"message"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type RetrieveSKUByBarcodeRequest struct {
+	Barcode string `json:"barcode" binding:"required"`
+}
+
+type RetrieveSKUByBarcodeResponse struct {
+	SKU_ID    uint    `json:"skuId"`
+	Name      string  `json:"name"`
+	Quantity  float64 `json:"quantity"`
+	Unit      string  `json:"unit"`
+	Category  string  `json:"category"`
+	Barcode   string  `json:"barcode"`
+	CreatedAt string  `json:"createdAt"`
+	UpdatedAt string  `json:"updatedAt"`
+}
+
+type PrintAdditionalBarcodesRequest struct {
+	SKU_ID   uint `json:"skuId" binding:"required"`
+	Quantity int  `json:"quantity" binding:"required,gt=0"`
+}
+
+type PrintAdditionalBarcodesResponse struct {
+	SKU_ID    uint     `json:"skuId"`
+	Barcodes  []string `json:"barcodes"`
+	Message   string   `json:"message"`
+	PrintedAt string   `json:"printedAt"`
+}
+
+type BarcodeScanRequest struct {
+	Barcode  string  `json:"barcode" binding:"required"`
+	Quantity float64 `json:"quantity" binding:"required,gt=0"`
+}
+
+type BarcodeScanResponse struct {
+	SKU_ID    uint    `json:"skuId"`
+	Name      string  `json:"name"`
+	Quantity  float64 `json:"deductedQuantity"`
+	Remaining float64 `json:"remainingQuantity"`
+	Message   string  `json:"message"`
+	ScannedAt string  `json:"scannedAt"`
+}

@@ -32,6 +32,8 @@ func ConvertSKUToSKUResponse(sku *data.SKU) *SKUResponse {
 		Quantity:         sku.Quantity,
 		UnitID:           sku.UnitID,
 		UnitName:         sku.Unit.Name,
+		SupplierID:       sku.SupplierID,
+		SupplierName:     sku.Supplier.Name,
 		Category:         sku.Category,
 		Barcode:          sku.Barcode,
 		ExpirationPeriod: sku.ExpirationPeriod,
@@ -77,6 +79,10 @@ func ConvertUpdateSKURequestToMap(req *UpdateSKURequest, updateFields map[string
 
 	if req.UnitID != nil {
 		updateFields["unit_id"] = *req.UnitID
+	}
+
+	if req.SupplierID != nil {
+		updateFields["supplier_id"] = *req.SupplierID
 	}
 
 	if req.Category != nil {

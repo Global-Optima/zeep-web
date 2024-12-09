@@ -44,6 +44,14 @@ type StockRequestIngredient struct {
 	Quantity       float64      `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 }
 
+type IngredientsMapping struct {
+	BaseEntity
+	IngredientID uint       `gorm:"not null;index"`
+	Ingredient   Ingredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	SKU_ID       uint       `gorm:"not null;index"`
+	SKU          SKU        `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
+}
+
 type Supplier struct {
 	BaseEntity
 	Name         string `gorm:"size:255;not null"`
@@ -59,6 +67,8 @@ type SKU struct {
 	SafetyStock      float64    `gorm:"type:decimal(10,2);not null"`
 	ExpirationFlag   bool       `gorm:"not null"`
 	Quantity         float64    `gorm:"type:decimal(10,2);not null;check:quantity >= 0"`
+	SupplierID       uint       `gorm:"not null;index"`
+	Supplier         Supplier   `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
 	UnitID           uint       `gorm:"not null"`
 	Unit             Unit       `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 	Category         string     `gorm:"size:255"`
@@ -86,9 +96,13 @@ type Package struct {
 
 type Delivery struct {
 	BaseEntity
-	SKU_ID         uint      `gorm:"not null;index"`
-	SKU            SKU       `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
+	SKU_ID         uint `gorm:"not null;index"`
+	SKU            SKU  `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
+	Status         string
+	Source         uint
+	Target         uint
 	Barcode        string    `gorm:"size:255;not null"`
+	Quantity       float64   `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 	DeliveryDate   time.Time `gorm:"not null"`
 	ExpirationDate time.Time `gorm:"not null"`
 }
@@ -101,6 +115,6 @@ type AuditLog struct {
 	SKU           SKU       `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
 	Quantity      float64   `gorm:"type:decimal(10,2)"`
 	UnitOfMeasure string    `gorm:"size:50"`
-	PerformedBy   uint      `gorm:"not null"` // Foreign key to User
+	PerformedBy   uint      `gorm:"not null"` // Foreign key to Admin or Responsible Employee
 	PerformedAt   time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 }
