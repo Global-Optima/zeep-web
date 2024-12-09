@@ -1,6 +1,7 @@
 package employees
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -190,14 +191,20 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("CLAIMSSSS token", token)
+
 	claims := &utils.EmployeeClaims{}
 	if err := utils.ValidateJWT(token, claims); err != nil {
 		utils.SendErrorWithStatus(c, "invalid or expired token", http.StatusUnauthorized)
 		return
 	}
 
+	fmt.Println("CLAIMSSSS", claims)
+	fmt.Println("CLAIMSSSS IDDD", claims.ID)
+
 	employee, err := h.service.GetEmployeeByID(claims.ID)
 	if err != nil {
+		print(err)
 		utils.SendInternalServerError(c, "failed to fetch employee details")
 		return
 	}

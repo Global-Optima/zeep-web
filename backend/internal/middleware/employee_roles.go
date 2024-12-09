@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-func EmployeeRoleMiddleware(requiredRoles ...types.EmployeeRole) gin.HandlerFunc {
+func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, err := ExtractEmployeeTokenAndValidate(c)
 		if err != nil {
@@ -19,7 +19,7 @@ func EmployeeRoleMiddleware(requiredRoles ...types.EmployeeRole) gin.HandlerFunc
 		}
 
 		for _, role := range requiredRoles {
-			if claims.Role == string(role) {
+			if claims.Role == role {
 				c.Next()
 				return
 			}

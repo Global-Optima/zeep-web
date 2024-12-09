@@ -2,9 +2,32 @@ package data
 
 import (
 	"time"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
+
+type EmployeeType string
+
+const (
+	StoreEmployeeType     EmployeeType = "STORE"
+	WarehouseEmployeeType EmployeeType = "WAREHOUSE"
+)
+
+type EmployeeRole string
+
+const (
+	RoleAdmin    EmployeeRole = "ADMIN"
+	RoleDirector EmployeeRole = "DIRECTOR"
+	RoleManager  EmployeeRole = "MANAGER"
+	RoleBarista  EmployeeRole = "BARISTA"
+)
+
+func IsValidEmployeeRole(role EmployeeRole) bool {
+	switch EmployeeRole(role) {
+	case RoleAdmin, RoleDirector, RoleManager, RoleBarista:
+		return true
+	default:
+		return false
+	}
+}
 
 type Employee struct {
 	BaseEntity
@@ -12,8 +35,8 @@ type Employee struct {
 	Phone             string             `gorm:"size:15;unique"`
 	Email             string             `gorm:"size:255;unique"`
 	HashedPassword    string             `gorm:"size:255;not null"`
-	Role              types.EmployeeRole `gorm:"size:50;not null"`
-	Type              types.EmployeeType `gorm:"size:50;not null"`
+	Role              EmployeeRole       `gorm:"size:50;not null"`
+	Type              EmployeeType       `gorm:"size:50;not null"`
 	IsActive          bool               `gorm:"default:true"`
 	StoreEmployee     *StoreEmployee     `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee *WarehouseEmployee `gorm:"foreignKey:EmployeeID"`

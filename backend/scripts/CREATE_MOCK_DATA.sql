@@ -1199,8 +1199,8 @@ INSERT INTO
     phone,
     email,
     role,
-    is_active,
     type,
+    is_active,
     hashed_password,
     created_at,
     updated_at
@@ -1212,8 +1212,8 @@ VALUES
     '79551234567',
     'elena@example.com',
     'Manager',
+    'Store',
     true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1224,8 +1224,8 @@ VALUES
     '79667778899',
     'sergey@example.com',
     'Barista',
+    'Store',
     true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1236,8 +1236,8 @@ VALUES
     '79223334455',
     'anna@example.com',
     'Waiter',
+    'Store',
     true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1248,8 +1248,8 @@ VALUES
     '79161234567',
     'ivan@example.com',
     'Director',
+    'Store',
     true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1260,8 +1260,8 @@ VALUES
     '79345566778',
     'maria@example.com',
     'Supervisor',
+    'Store',
     true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1272,8 +1272,8 @@ VALUES
     '79991234567',
     'oleg@example.com',
     'Cleaner',
+    'Warehouse',
     false,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1284,8 +1284,8 @@ VALUES
     '79882233445',
     'tatiana@example.com',
     'Manager',
+    'Warehouse',
     true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1296,8 +1296,8 @@ VALUES
     '79002221133',
     'alexei@example.com',
     'Waiter',
+    'Warehouse',
     true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1308,8 +1308,8 @@ VALUES
     '79115555666',
     'yulia@example.com',
     'Barista',
+    'Warehouse',
     true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
@@ -1320,132 +1320,80 @@ VALUES
     '79553334456',
     'dmitry@example.com',
     'Waiter',
+    'Warehouse',
     false,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    11,
-    'Наталья Волкова',
-    '79225556677',
-    'natalya@example.com',
-    'Barista',
-    true,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    12,
-    'Светлана Крылова',
-    '79331112223',
-    'svetlana@example.com',
-    'Manager',
-    true,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    13,
-    'Виктор Соколов',
-    '79442233445',
-    'victor@example.com',
-    'Supervisor',
-    true,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    14,
-    'Андрей Лебедев',
-    '79118887799',
-    'andrei@example.com',
-    'Cleaner',
-    true,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    15,
-    'Ольга Николаева',
-    '79664445566',
-    'olga@example.com',
-    'Supervisor',
-    true,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    16,
-    'Максим Морозов',
-    '79552233456',
-    'maksim@example.com',
-    'Waiter',
-    true,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    17,
-    'Людмила Громова',
-    '79774445511',
-    'lyudmila@example.com',
-    'Cleaner',
-    false,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    18,
-    'София Зайцева',
-    '79883332211',
-    'sofia@example.com',
-    'Barista',
-    true,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    19,
-    'Владимир Козлов',
-    '79338887799',
-    'vladimir@example.com',
-    'Cashier',
-    true,
-    'STORE',
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    20,
-    'Алена Белова',
-    '79229998877',
-    'alena@example.com',
-    'Waiter',
-    true,
-    'STORE',
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
   );
+
+-- Insert into StoreEmployee
+INSERT INTO
+  store_employees (
+    id,
+    employee_id,
+    store_id,
+    is_franchise,
+    created_at,
+    updated_at
+  )
+VALUES
+  (
+    1,
+    1,
+    1,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    2,
+    2,
+    true,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    3,
+    3,
+    3,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    4,
+    4,
+    1,
+    true,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    5,
+    5,
+    2,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
+
+-- Insert into WarehouseEmployee
+INSERT INTO
+  warehouse_employees (
+    id,
+    employee_id,
+    warehouse_id,
+    created_at,
+    updated_at
+  )
+VALUES
+  (1, 6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (2, 7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (3, 8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (4, 9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (5, 10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into EmployeeAudit
 INSERT INTO

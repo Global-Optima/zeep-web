@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -22,14 +23,14 @@ func ValidateEmployee(input CreateEmployeeDTO) error {
 		return fmt.Errorf("password validation failed: %v", err)
 	}
 
-	if IsValidRole(input.Role) {
+	if data.IsValidEmployeeRole(input.Role) {
 		return errors.New("invalid role specified")
 	}
 
-	if input.Type == StoreEmployee && input.StoreDetails == nil {
+	if input.Type == data.StoreEmployeeType && input.StoreDetails == nil {
 		return errors.New("store details are required for store employees")
 	}
-	if input.Type == WarehouseEmployee && input.WarehouseDetails == nil {
+	if input.Type == data.WarehouseEmployeeType && input.WarehouseDetails == nil {
 		return errors.New("warehouse details are required for warehouse employees")
 	}
 
@@ -52,7 +53,7 @@ func PrepareUpdateFields(input UpdateEmployeeDTO) (map[string]interface{}, error
 		updateFields["email"] = *input.Email
 	}
 	if input.Role != nil {
-		if !IsValidRole(*input.Role) {
+		if !data.IsValidEmployeeRole(*input.Role) {
 			return nil, fmt.Errorf("invalid role: %v", *input.Role)
 		}
 		updateFields["role"] = *input.Role

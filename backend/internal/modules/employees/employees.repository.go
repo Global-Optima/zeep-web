@@ -20,7 +20,7 @@ type EmployeeRepository interface {
 	DeleteEmployee(employeeID uint) error
 
 	GetEmployeeByEmailOrPhone(email string, phone string) (*data.Employee, error)
-	GetAllRoles() ([]types.EmployeeRole, error)
+	GetAllRoles() ([]data.EmployeeRole, error)
 }
 
 type employeeRepository struct {
@@ -38,7 +38,7 @@ func (r *employeeRepository) CreateEmployee(employee *data.Employee) error {
 				return err
 			}
 
-			if employee.Type == types.StoreEmployee {
+			if employee.Type == data.StoreEmployeeType {
 				storeEmployee := &data.StoreEmployee{
 					EmployeeID:  employee.ID,
 					StoreID:     employee.StoreEmployee.StoreID,
@@ -48,7 +48,7 @@ func (r *employeeRepository) CreateEmployee(employee *data.Employee) error {
 				if err := tx.Create(storeEmployee).Error; err != nil {
 					return err
 				}
-			} else if employee.Type == types.WarehouseEmployee {
+			} else if employee.Type == data.WarehouseEmployeeType {
 				warehouseEmployee := &data.WarehouseEmployee{
 					EmployeeID:  employee.ID,
 					WarehouseID: employee.WarehouseEmployee.WarehouseID,
@@ -130,9 +130,6 @@ func (r *employeeRepository) GetWarehouseEmployees(warehouseID uint, role *strin
 func (r *employeeRepository) GetEmployeeByID(employeeID uint) (*data.Employee, error) {
 	var employee data.Employee
 	err := r.db.Preload("StoreEmployee").Preload("WarehouseEmployee").First(&employee, employeeID).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
 	return &employee, err
 }
 
@@ -154,11 +151,11 @@ func (r *employeeRepository) UpdateEmployee(employee *data.Employee) error {
 			return err
 		}
 
-		if employee.Type == types.StoreEmployee && employee.StoreEmployee != nil {
+		if employee.Type == data.StoreEmployeeType && employee.StoreEmployee != nil {
 			if err := tx.Save(employee.StoreEmployee).Error; err != nil {
 				return err
 			}
-		} else if employee.Type == types.WarehouseEmployee && employee.WarehouseEmployee != nil {
+		} else if employee.Type == data.WarehouseEmployeeType && employee.WarehouseEmployee != nil {
 			if err := tx.Save(employee.WarehouseEmployee).Error; err != nil {
 				return err
 			}
@@ -190,11 +187,11 @@ func (r *employeeRepository) DeleteEmployee(employeeID uint) error {
 	return r.db.Model(&data.Employee{}).Where("id = ?", employeeID).Update("is_active", false).Error
 }
 
-func (r *employeeRepository) GetAllRoles() ([]types.EmployeeRole, error) {
-	roles := []types.EmployeeRole{
-		types.RoleAdmin,
-		types.RoleManager,
-		types.RoleBarista,
+func (r *employeeRepository) GetAllRoles() ([]data.EmployeeRole, error) {
+	roles := []data.EmployeeRole{
+		data.RoleAdmin,
+		data.RoleManager,
+		data.RoleBarista,
 	}
 	return roles, nil
 }

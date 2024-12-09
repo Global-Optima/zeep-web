@@ -59,12 +59,12 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 		IsActive:       true,
 	}
 
-	if input.Type == types.StoreEmployee && input.StoreDetails != nil {
+	if input.Type == data.StoreEmployeeType && input.StoreDetails != nil {
 		employee.StoreEmployee = &data.StoreEmployee{
 			StoreID:     input.StoreDetails.StoreID,
 			IsFranchise: input.StoreDetails.IsFranchise,
 		}
-	} else if input.Type == types.WarehouseEmployee && input.WarehouseDetails != nil {
+	} else if input.Type == data.WarehouseEmployeeType && input.WarehouseDetails != nil {
 		employee.WarehouseEmployee = &data.WarehouseEmployee{
 			WarehouseID: input.WarehouseDetails.WarehouseID,
 		}
@@ -92,14 +92,19 @@ func (s *employeeService) GetEmployees(query types.GetEmployeesQuery) ([]types.E
 }
 
 func (s *employeeService) GetEmployeeByID(employeeID uint) (*types.EmployeeDTO, error) {
+	fmt.Print("employeeID", employeeID)
+
 	if employeeID == 0 {
 		return nil, errors.New("invalid employee ID")
 	}
 
 	employee, err := s.repo.GetEmployeeByID(employeeID)
+	fmt.Print("ERRRRRORRRR", err)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve employee: %v", err)
 	}
+
 	if employee == nil {
 		return nil, errors.New("employee not found")
 	}
@@ -203,27 +208,26 @@ func (s *employeeService) EmployeeLogin(email, password string) (string, error) 
 		return "", errors.New("invalid credentials")
 	}
 
-	var workplaceID *uint
-	var workplaceType string
+	var workplaceID uint
+	var workplaceType data.EmployeeType
 
 	if employee.StoreEmployee != nil {
-		workplaceID = &employee.StoreEmployee.StoreID
-		workplaceType = "Store"
+		workplaceID = employee.StoreEmployee.StoreID
+		workplaceType = data.StoreEmployeeType
 	} else if employee.WarehouseEmployee != nil {
-		workplaceID = &employee.WarehouseEmployee.WarehouseID
-		workplaceType = "Warehouse"
+		workplaceID = employee.WarehouseEmployee.WarehouseID
+		workplaceType = data.WarehouseEmployeeType
 	}
 
 	claims := utils.EmployeeClaims{
-		BaseClaims: utils.BaseClaims{
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-				IssuedAt:  jwt.NewNumericDate(time.Now()),
-			},
+		ID: employee.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
-		Role:          string(employee.Role),
-		WorkplaceID:   workplaceID,
-		WorkplaceType: workplaceType,
+		Role:         employee.Role,
+		WorkplaceID:  workplaceID,
+		EmployeeType: workplaceType,
 	}
 
 	return utils.GenerateJWT(claims, 24*time.Hour)
