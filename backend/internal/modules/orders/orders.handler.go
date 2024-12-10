@@ -2,15 +2,14 @@ package orders
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
-
-var Logger = logger.GetInstance()
 
 type OrderHandler struct {
 	service OrderService
@@ -20,29 +19,38 @@ func NewOrderHandler(service OrderService) *OrderHandler {
 	return &OrderHandler{service: service}
 }
 
-func (h *OrderHandler) GetAllOrders(c *gin.Context) {
+func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
+	storeIDStr := c.Query("storeId")
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
 	status := c.Query("status")
 
-	orders, err := h.service.GetAllOrders(&status)
+	orders, err := h.service.GetAllBaristaOrders(uint(storeID), &status)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch orders"})
+		utils.SendInternalServerError(c, "failed to fetch orders")
 		return
 	}
 
 	c.JSON(http.StatusOK, orders)
 }
 
+// Get all suborders for a specific order
 func (h *OrderHandler) GetSubOrders(c *gin.Context) {
-	orderIDStr := c.Query("order_id")
+	orderIDStr := c.Param("orderId")
+
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil || orderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or missing order_id"})
+		utils.SendBadRequestError(c, "invalid order ID")
 		return
 	}
 
 	subOrders, err := h.service.GetSubOrders(uint(orderID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch suborders"})
+		utils.SendInternalServerError(c, "failed to fetch suborders")
 		return
 	}
 
@@ -52,82 +60,117 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	var orderDTO types.CreateOrderDTO
 	if err := c.ShouldBindJSON(&orderDTO); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input data"})
+		utils.SendBadRequestError(c, "invalid input data")
 		return
 	}
 
-	orderId, err := h.service.CreateOrder(&orderDTO)
-	if err != nil || orderId == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create order"})
+	createdOrder, err := h.service.CreateOrder(&orderDTO)
+	if err != nil || createdOrder == nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to create order: %s", err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"orderId": &orderId})
+	createdOrderWithPreloads, err := h.service.GetOrderById(createdOrder.ID)
+	if err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to fetch created order with ID %d: %s", createdOrder.ID, err.Error()))
+		return
+	}
+
+	BroadcastOrderCreated(orderDTO.StoreID, createdOrderWithPreloads)
+
+	c.JSON(http.StatusCreated, createdOrderWithPreloads)
 }
 
+// Complete a suborder
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 	subOrderIDStr := c.Param("subOrderId")
+
 	subOrderID, err := strconv.ParseUint(subOrderIDStr, 10, 64)
-	if err != nil || subOrderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or missing subOrderId"})
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid suborder ID")
 		return
 	}
 
 	err = h.service.CompleteSubOrder(uint(subOrderID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to complete suborder"})
+		utils.SendInternalServerError(c, "failed to complete suborder")
 		return
 	}
+
+	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	if err != nil {
+		errorMessage := fmt.Sprintf("failed to get order: %v", err)
+		utils.SendInternalServerError(c, errorMessage)
+		return
+	}
+
+	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 
 	c.Status(http.StatusOK)
 }
 
+// Generate a PDF receipt for a specific order
 func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
-	orderIDParam := c.Param("order_id")
-	orderID, err := strconv.ParseUint(orderIDParam, 10, 64)
+	orderIDStr := c.Param("orderId")
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil || orderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order ID"})
+		utils.SendBadRequestError(c, "invalid order ID")
 		return
 	}
 
 	pdfData, err := h.service.GeneratePDFReceipt(uint(orderID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate PDF receipt"})
+		utils.SendInternalServerError(c, "failed to generate PDF receipt")
 		return
 	}
 
 	c.Header("Content-Type", "application/pdf")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=order_%d_receipt.pdf", orderID))
 	if _, err := c.Writer.Write(pdfData); err != nil {
-		Logger.Error(fmt.Sprintf("Failed to write PDF data: %v", err))
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 }
 
+// Get count of orders grouped by statuses
 func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
-	counts, err := h.service.GetStatusesCount()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch statuses count"})
+	storeIDStr := c.Query("storeId")
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
 		return
 	}
 
-	c.JSON(http.StatusOK, counts)
+	statusesWithCounts, err := h.service.GetStatusesCount(uint(storeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to fetch statuses count")
+		return
+	}
+
+	c.JSON(http.StatusOK, statusesWithCounts)
 }
 
-func (h *OrderHandler) GetSubOrderCount(c *gin.Context) {
-	orderIDStr := c.Query("order_id")
-	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
-	if err != nil || orderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or missing order_id"})
+func (h *OrderHandler) ServeWS(c *gin.Context) {
+	storeIDStr := c.Param("storeId")
+	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
+	if err != nil || storeID == 0 {
+		utils.SendBadRequestError(c, "invalid store ID")
 		return
 	}
 
-	count, err := h.service.GetSubOrderCount(uint(orderID))
+	conn, err := UpgradeConnection(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch suborder count"})
+		utils.SendInternalServerError(c, "failed to upgrade WebSocket connection")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"count": count})
+	// Fetch initial orders for the store
+	initialOrders, err := h.service.GetAllBaristaOrders(uint(storeID), nil)
+	if err != nil {
+		log.Printf("Failed to fetch initial orders for store %d: %v", storeID, err)
+		utils.SendInternalServerError(c, "failed to fetch initial orders")
+		return
+	}
+
+	HandleClient(uint(storeID), conn, initialOrders)
 }

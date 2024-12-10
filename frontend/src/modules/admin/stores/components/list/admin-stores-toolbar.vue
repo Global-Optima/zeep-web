@@ -6,10 +6,10 @@
 		<div class="flex items-center space-x-2 w-full md:w-auto">
 			<!-- Search Input -->
 			<Input
-				v-model="searchQueryRef"
+				v-model="searchTerm"
 				placeholder="Поиск"
+				type="search"
 				class="bg-white w-full md:w-64"
-				@input="onSearchInput"
 			/>
 			<!-- Filter Menu -->
 			<DropdownMenu>
@@ -23,30 +23,17 @@
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
-					<DropdownMenuItem @click="applyFilter('all')">Все</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter('active')">Активные</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter('inactive')">Неактивные</DropdownMenuItem>
+					<DropdownMenuItem @click="setFranchiseFilter(undefined)">Все</DropdownMenuItem>
+					<DropdownMenuItem @click="setFranchiseFilter(true)">Франшиза</DropdownMenuItem>
+					<DropdownMenuItem @click="setFranchiseFilter(false)">Не франшиза</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>
 
 		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<Button
-				variant="ghost"
-				class="w-full md:w-auto"
-				@click="exportData"
-			>
-				<Download class="mr-2 w-4 h-4" />
-				Экспорт
-			</Button>
-			<Button
-				class="w-full md:w-auto"
-				@click="addStore"
-			>
-				<Plus class="mr-2 w-4 h-4" />
-				Добавить
-			</Button>
+			<Button variant="outline"> Экспорт </Button>
+			<Button @click="addStore"> Добавить </Button>
 		</div>
 	</div>
 </template>
@@ -61,39 +48,38 @@ import {
 } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import { ChevronDown, Download, Plus } from 'lucide-vue-next'
-import { ref } from 'vue'
+import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
+import { useDebounce } from '@vueuse/core'
+import { ChevronDown } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-const router = useRouter();
+// Props
+const props = defineProps<{ filter: StoresFilter }>()
+const emit = defineEmits(['update:filter'])
 
+// Local copy of the filter to avoid direct mutation
+const localFilter = ref({ ...props.filter })
 
+// Search term with debouncing
+const searchTerm = ref(localFilter.value.searchTerm || '')
+const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
-// Emits
-const emits = defineEmits<{
-  (e: 'update:searchQuery', value: string): void;
-  (e: 'filterChanged', filter: string): void;
-  (e: 'exportData'): void;
-  (e: 'addStore'): void;
-}>();
+// Watch debounced search term and emit updates
+watch(debouncedSearchTerm, (newValue) => {
+	localFilter.value.searchTerm = newValue
+	emit('update:filter', { searchTerm: newValue.trim() })
+})
 
-// State variables
-const searchQueryRef = ref("");
+// Update franchise filter
+function setFranchiseFilter(isFranchise: boolean | undefined) {
+	localFilter.value.isFranchise = isFranchise
+	emit('update:filter', { isFranchise })
+}
 
-// Methods
-const onSearchInput = () => {
-  emits('update:searchQuery', searchQueryRef.value);
-};
-
-const applyFilter = (filter: string) => {
-  emits('filterChanged', filter);
-};
-
-const exportData = () => {
-  emits('exportData');
-};
-
+// Navigate to add store page
+const router = useRouter()
 const addStore = () => {
-  router.push({ name: getRouteName("ADMIN_STORE_CREATE") });
-};
+	router.push({ name: getRouteName('ADMIN_STORE_CREATE') })
+}
 </script>

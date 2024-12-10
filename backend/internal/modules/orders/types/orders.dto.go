@@ -7,49 +7,73 @@ import (
 )
 
 type CreateOrderDTO struct {
-	CustomerID        *uint                `json:"customerId,omitempty"`
-	CustomerName      string               `json:"customerName"`
-	EmployeeID        *uint                `json:"employeeId,omitempty"`
-	StoreID           uint                 `json:"storeId"`
-	DeliveryAddressID *uint                `json:"deliveryAddressId"`
-	OrderItems        []CreateOrderItemDTO `json:"orderItems"`
+	CustomerID        *uint               `json:"customerId,omitempty"`
+	CustomerName      string              `json:"customerName"`
+	EmployeeID        *uint               `json:"employeeId,omitempty"`
+	StoreID           uint                `json:"storeId"`
+	DeliveryAddressID *uint               `json:"deliveryAddressId"`
+	Suborders         []CreateSubOrderDTO `json:"subOrders"`
 }
 
-type CreateOrderItemDTO struct {
+type OrderStatusesCountDTO struct {
+	ALL         int64 `json:"ALL"`
+	PREPARING   int64 `json:"PREPARING"`
+	COMPLETED   int64 `json:"COMPLETED"`
+	IN_DELIVERY int64 `json:"IN_DELIVERY"`
+	DELIVERED   int64 `json:"DELIVERED"`
+	CANCELLED   int64 `json:"CANCELLED"`
+}
+
+type CreateSubOrderDTO struct {
 	ProductSizeID uint   `json:"productSizeId"`
 	Quantity      int    `json:"quantity"`
 	AdditivesIDs  []uint `json:"additivesIds"`
 }
 
 type OrderDTO struct {
-	ID                uint              `json:"id"`
-	CustomerID        *uint             `json:"customerId"`
-	CustomerName      *string           `json:"customerName"`
-	EmployeeID        *uint             `json:"employeeId,omitempty"`
-	StoreID           uint              `json:"storeId"`
-	DeliveryAddressID *uint             `json:"deliveryAddressId,omitempty"`
-	OrderStatus       data.OrderStatus  `json:"orderStatus"`
-	CreatedAt         time.Time         `json:"orderDate"`
-	Total             float64           `json:"total"`
-	OrderProducts     []OrderProductDTO `json:"orderProducts,omitempty"`
+	ID                uint             `json:"id"`
+	CustomerID        *uint            `json:"customerId,omitempty"`
+	CustomerName      *string          `json:"customerName"`
+	EmployeeID        *uint            `json:"employeeId,omitempty"`
+	StoreID           uint             `json:"storeId"`
+	DeliveryAddressID *uint            `json:"deliveryAddressId,omitempty"`
+	Status            data.OrderStatus `json:"status"`
+	CreatedAt         time.Time        `json:"createdAt"`
+	Total             float64          `json:"total"`
+	SubordersQuantity int              `json:"subOrdersQuantity"`
+	Suborders         []SuborderDTO    `json:"subOrders"`
 }
 
-type OrderProductDTO struct {
-	ID            uint                      `json:"id"`
-	OrderID       uint                      `json:"orderId"`
-	ProductSizeID uint                      `json:"productSizeId"`
-	Quantity      int                       `json:"quantity"`
-	Price         float64                   `json:"price"`
-	Additives     []OrderProductAdditiveDTO `json:"additives,omitempty"`
-	CreatedAt     time.Time                 `json:"createdAt"`
-	UpdatedAt     time.Time                 `json:"updatedAt"`
+type SuborderDTO struct {
+	ID          uint                  `json:"id"`
+	OrderID     uint                  `json:"orderId"`
+	ProductSize ProductSizeDTO        `json:"productSize"`
+	Price       float64               `json:"price"`
+	Status      data.SubOrderStatus   `json:"status"`
+	Additives   []SuborderAdditiveDTO `json:"additives"`
+	CreatedAt   time.Time             `json:"createdAt"`
+	UpdatedAt   time.Time             `json:"updatedAt"`
 }
 
-type OrderProductAdditiveDTO struct {
-	ID             uint      `json:"id"`
-	OrderProductID uint      `json:"orderProductId"`
-	AdditiveID     uint      `json:"additiveId"`
-	Price          float64   `json:"price"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+type ProductSizeDTO struct {
+	ID          uint   `json:"id"`
+	SizeName    string `json:"sizeName"`
+	ProductName string `json:"productName"`
+	Size        int    `json:"size"`
+}
+
+type AdditiveDTO struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Size        string `json:"size"`
+}
+
+type SuborderAdditiveDTO struct {
+	ID         uint        `json:"id"`
+	SuborderID uint        `json:"subOrderId"`
+	Additive   AdditiveDTO `json:"additive"`
+	Price      float64     `json:"price"`
+	CreatedAt  time.Time   `json:"createdAt"`
+	UpdatedAt  time.Time   `json:"updatedAt"`
 }

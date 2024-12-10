@@ -1,4 +1,4 @@
-package kafka
+package setup
 
 import (
 	"log"
@@ -13,7 +13,8 @@ type Producer interface {
 }
 
 type KafkaProducer struct {
-	client sarama.SyncProducer
+	client  sarama.SyncProducer
+	Brokers []string
 }
 
 func NewKafkaProducer(cfg config.KafkaConfig) (*KafkaProducer, error) {
@@ -27,7 +28,7 @@ func NewKafkaProducer(cfg config.KafkaConfig) (*KafkaProducer, error) {
 		return nil, err
 	}
 
-	return &KafkaProducer{client: producer}, nil
+	return &KafkaProducer{client: producer, Brokers: cfg.Brokers}, nil
 }
 
 func (p *KafkaProducer) SendMessage(msg *sarama.ProducerMessage) error {

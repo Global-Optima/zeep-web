@@ -1,6 +1,6 @@
 <template>
 	<Tabs default-value="details">
-		<TabsList class="grid w-full grid-cols-2 mb-6">
+		<TabsList class="grid grid-cols-2 mx-auto mb-6 w-full max-w-6xl">
 			<TabsTrigger
 				class="py-2"
 				value="details"
@@ -24,11 +24,11 @@
 
 <script setup lang="ts">
 import {
-	Tabs,
-	TabsContent,
-	TabsList,
-	TabsTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from '@/core/components/ui/tabs'
-import AdminProductDetails from "@/modules/admin/products/components/details/admin-product-details.vue";
-import AdminProductsVariants from "@/modules/admin/products/components/details/admin-products-variants.vue";
+import AdminProductDetails from "@/modules/admin/products/components/details/admin-product-details.vue"
+import AdminProductsVariants from "@/modules/admin/products/components/details/admin-products-variants.vue"
 </script>

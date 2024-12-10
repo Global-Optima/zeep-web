@@ -12,7 +12,6 @@ type StoreDTO struct {
 	Name            string              `json:"name"`
 	IsFranchise     bool                `json:"isFranchise"`
 	FacilityAddress *FacilityAddressDTO `json:"facilityAddress,omitempty"`
-	Status          string              `json:"status"`
 	ContactPhone    string              `json:"contactPhone"`
 	ContactEmail    string              `json:"contactEmail"`
 	StoreHours      string              `json:"storeHours"`

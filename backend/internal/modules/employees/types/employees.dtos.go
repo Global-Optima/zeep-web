@@ -1,29 +1,64 @@
 package types
 
+import "github.com/Global-Optima/zeep-web/backend/internal/data"
+
 type CreateEmployeeDTO struct {
-	Name     string       `json:"name" binding:"required"`
-	Phone    string       `json:"phone"`
-	Email    string       `json:"email" binding:"required"`
-	Role     EmployeeRole `json:"role" binding:"required"`
-	StoreID  uint         `json:"storeId"`
-	Password string       `json:"password" binding:"required"`
+	Name             string               `json:"name" binding:"required"`
+	Phone            string               `json:"phone"`
+	Email            string               `json:"email" binding:"required"`
+	Role             data.EmployeeRole    `json:"role" binding:"required"`
+	Password         string               `json:"password" binding:"required"`
+	Type             data.EmployeeType    `json:"type" binding:"required"`
+	StoreDetails     *StoreDetailsDTO     `json:"storeDetails,omitempty"`
+	WarehouseDetails *WarehouseDetailsDTO `json:"warehouseDetails,omitempty"`
+}
+
+type StoreDetailsDTO struct {
+	StoreID     uint `json:"storeId" binding:"required"`
+	IsFranchise bool `json:"isFranchise,omitempty"`
+}
+
+type WarehouseDetailsDTO struct {
+	WarehouseID uint `json:"warehouseId" binding:"required"`
 }
 
 type UpdateEmployeeDTO struct {
-	Name    *string       `json:"name"`
-	Phone   *string       `json:"phone"`
-	Email   *string       `json:"email"`
-	Role    *EmployeeRole `json:"role"`
-	StoreID *uint         `json:"store_id"`
+	Name             *string                    `json:"name,omitempty"`
+	Phone            *string                    `json:"phone,omitempty"`
+	Email            *string                    `json:"email,omitempty"`
+	Role             *data.EmployeeRole         `json:"role,omitempty"`
+	StoreDetails     *UpdateStoreDetailsDTO     `json:"storeDetails,omitempty"`
+	WarehouseDetails *UpdateWarehouseDetailsDTO `json:"warehouseDetails,omitempty"`
+}
+
+type UpdateStoreDetailsDTO struct {
+	StoreID     *uint `json:"storeId,omitempty"`
+	IsFranchise *bool `json:"isFranchise,omitempty"`
+}
+
+type UpdateWarehouseDetailsDTO struct {
+	WarehouseID *uint `json:"warehouseId,omitempty"`
 }
 
 type EmployeeDTO struct {
-	ID      uint         `json:"id"`
-	Name    string       `json:"name"`
-	Phone   string       `json:"phone"`
-	Email   string       `json:"email"`
-	Role    EmployeeRole `json:"role"`
-	StoreID uint         `json:"storeId"`
+	ID               uint                         `json:"id"`
+	Name             string                       `json:"name"`
+	Phone            string                       `json:"phone"`
+	Email            string                       `json:"email"`
+	Role             data.EmployeeRole            `json:"role"`
+	IsActive         bool                         `json:"isActive"`
+	Type             data.EmployeeType            `json:"type"`
+	StoreDetails     *StoreEmployeeDetailsDTO     `json:"storeDetails,omitempty"`
+	WarehouseDetails *WarehouseEmployeeDetailsDTO `json:"warehouseDetails,omitempty"`
+}
+
+type StoreEmployeeDetailsDTO struct {
+	StoreID     uint `json:"storeId"`
+	IsFranchise bool `json:"isFranchise"`
+}
+
+type WarehouseEmployeeDetailsDTO struct {
+	WarehouseID uint `json:"warehouseId"`
 }
 
 type UpdatePasswordDTO struct {
@@ -32,11 +67,19 @@ type UpdatePasswordDTO struct {
 }
 
 type LoginDTO struct {
-	EmployeeId uint   `json:"employeeId" binding:"required"`
-	Password   string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type RoleDTO struct {
-	ID   uint   `json:"id"`
 	Name string `json:"name"`
+}
+
+type GetEmployeesQuery struct {
+	Type        *string `json:"type,omitempty"`
+	Role        *string `json:"role,omitempty"`
+	StoreID     *uint   `json:"storeId,omitempty"`
+	WarehouseID *uint   `json:"warehouseId,omitempty"`
+	Limit       int     `json:"limit,omitempty"`
+	Offset      int     `json:"offset,omitempty"`
 }

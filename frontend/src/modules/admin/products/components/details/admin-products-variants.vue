@@ -49,7 +49,7 @@
 							@click="onVariantClick(variant.id)"
 							class="hover:bg-slate-50"
 						>
-							<TableCell class="font-medium py-4">{{ variant.name }}</TableCell>
+							<TableCell class="py-4 font-medium">{{ variant.name }}</TableCell>
 							<TableCell>{{ variant.size }}</TableCell>
 							<TableCell>
 								{{ variant.basePrice }}
@@ -58,7 +58,8 @@
 								<input
 									type="checkbox"
 									:checked="variant.isDefault"
-									@click="setDefaultVariant(variant.id)"
+									class="w-4 h-4"
+									@click="e => setDefaultVariant(e, variant.id)"
 								/>
 							</TableCell>
 						</TableRow>
@@ -70,24 +71,28 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/core/components/ui/button';
-import { Card, CardContent } from '@/core/components/ui/card';
+import { Button } from '@/core/components/ui/button'
+import { Card, CardContent } from '@/core/components/ui/card'
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/core/components/ui/table';
-import { Input } from '@/core/components/ui/input';
-import { ref } from 'vue';
-import { ListFilter } from "lucide-vue-next";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
-DropdownMenuLabel,
-DropdownMenuSeparator,
-DropdownMenuItem } from "@/core/components/ui/dropdown-menu";
-import { useRouter } from "vue-router";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/core/components/ui/dropdown-menu"
+import { Input } from '@/core/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/core/components/ui/table'
+import { ListFilter } from "lucide-vue-next"
+import { ref } from 'vue'
+import { useRouter } from "vue-router"
 
 const router = useRouter()
 
@@ -100,7 +105,9 @@ const variants = ref([
 ]);
 
 // Set default variant
-const setDefaultVariant = (id: number) => {
+const setDefaultVariant = (e: MouseEvent, id: number) => {
+  e.stopPropagation()
+
 	variants.value = variants.value.map((variant) => ({
 		...variant,
 		isDefault: variant.id === id, // Mark only the selected variant as default

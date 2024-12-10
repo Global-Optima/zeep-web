@@ -2,31 +2,19 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import type {
 	CreateOrderDTO,
 	OrderDTO,
-	OrderProductDTO,
 	OrderStatus,
+	OrderStatusesCountDTO,
 } from '../models/orders.models'
 
 class OrderService {
-	async getAllOrders(status?: OrderStatus): Promise<OrderDTO[]> {
+	async getAllOrders(storeId: string, status?: OrderStatus): Promise<OrderDTO[]> {
 		try {
 			const response = await apiClient.get<OrderDTO[]>('/orders', {
-				params: { status },
+				params: { status, storeId },
 			})
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch orders:', error)
-			throw error
-		}
-	}
-
-	async getSubOrders(orderId: number): Promise<OrderProductDTO[]> {
-		try {
-			const response = await apiClient.get<OrderProductDTO[]>('/orders/suborders', {
-				params: { order_id: orderId },
-			})
-			return response.data
-		} catch (error) {
-			console.error('Failed to fetch sub-orders:', error)
 			throw error
 		}
 	}
@@ -40,9 +28,13 @@ class OrderService {
 		}
 	}
 
-	async completeSubOrder(subOrderId: number): Promise<void> {
+	async completeSubOrder(storeId: string, orderId: number, subOrderId: number): Promise<void> {
 		try {
-			await apiClient.post(`/orders/suborders/${subOrderId}/complete`)
+			await apiClient.put(
+				`/orders/${orderId}/suborders/${subOrderId}/complete`,
+				{},
+				{ params: { storeId } },
+			)
 		} catch (error) {
 			console.error('Failed to complete sub-order:', error)
 			throw error
@@ -61,10 +53,11 @@ class OrderService {
 		}
 	}
 
-	async getStatusesCount(): Promise<{ [key in OrderStatus]?: number }> {
+	async getStatusesCount(storeId: string): Promise<OrderStatusesCountDTO> {
 		try {
-			const response =
-				await apiClient.get<{ [key in OrderStatus]?: number }>('/orders/statuses/count')
+			const response = await apiClient.get<OrderStatusesCountDTO>('/orders/statuses/count', {
+				params: { storeId },
+			})
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch statuses count:', error)

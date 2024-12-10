@@ -8,7 +8,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
-	"github.com/Global-Optima/zeep-web/backend/internal/kafka"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
@@ -18,8 +17,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
-	"github.com/Global-Optima/zeep-web/backend/internal/websockets"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -59,14 +58,14 @@ func InitializeRedis(cfg *config.Config) *database.RedisClient {
 	return redisClient
 }
 
-func InitializeKafka(cfg *config.Config) *kafka.KafkaManager {
-	kafkaManager, err := kafka.NewKafkaManager(cfg.Kafka)
-	if err != nil {
-		log.Fatalf("failed to initialize kafka instance: %v", err)
-		return nil
-	}
-	return kafkaManager
-}
+// func InitializeKafka(cfg *config.Config) *kafka.KafkaManager {
+// 	kafkaManager, err := kafka.NewKafkaManager(cfg.Kafka)
+// 	if err != nil {
+// 		log.Fatalf("failed to initialize kafka instance: %v", err)
+// 		return nil
+// 	}
+// 	return kafkaManager
+// }
 
 func InitializeModule[T any, H any](
 	dbHandler *database.DBHandler,
@@ -85,10 +84,13 @@ func InitializeModule[T any, H any](
 	registerRoutes(handler)
 }
 
-func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, kafkaManager *kafka.KafkaManager, storageRepo storage.StorageRepository) *gin.Engine {
+func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo storage.StorageRepository) *gin.Engine {
 	cfg := config.GetConfig()
 
 	router := gin.Default()
+	router.Use(logger.ZapRequestLogger())
+	router.Use(gin.Recovery())
+
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{cfg.Server.ClientURL},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
@@ -99,10 +101,6 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	}))
 
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
-
-	hub := websockets.GetHubInstance()
-
-	router.GET("/ws", websockets.WebSocketHandler(hub))
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
@@ -159,9 +157,9 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		func(dbHandler *database.DBHandler) (orders.OrderService, error) {
 			return orders.NewOrderService(
 				orders.NewOrderRepository(dbHandler.DB),
-				orders.NewSubOrderRepository(dbHandler.DB),
-				kafkaManager,
-				orders.NewOrdersNotifier(hub)), nil
+				product.NewProductRepository(dbHandler.DB),
+				additives.NewAdditiveRepository(dbHandler.DB),
+			), nil
 		},
 		orders.NewOrderHandler,
 		apiRouter.RegisterOrderRoutes,
@@ -194,8 +192,12 @@ func InitializeStorage(cfg *config.Config) storage.StorageRepository {
 }
 
 func InitializeApp() (*gin.Engine, *config.Config) {
-
 	cfg := InitializeConfig()
+
+	err := logger.Init("info", "app.log", cfg.IsDevelopment)
+	if err != nil {
+		panic(err)
+	}
 
 	dbHandler := InitializeDatabase(cfg)
 
@@ -203,9 +205,9 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 
 	storageRepo := InitializeStorage(cfg) // temp
 
-	kafkaManager := InitializeKafka(cfg)
+	// kafkaManager := InitializeKafka(cfg)
 
-	router := InitializeRouter(dbHandler, redisClient, kafkaManager, storageRepo) // temp
+	router := InitializeRouter(dbHandler, redisClient, storageRepo) // temp
 
 	return router, cfg
 }

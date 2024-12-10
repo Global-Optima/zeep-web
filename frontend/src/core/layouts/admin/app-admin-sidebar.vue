@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { getRouteName, type RouteKey } from '@/core/config/routes.config'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
-import { EmployeeRoles } from '@/modules/employees/models/employees.models'
+import { EmployeeRole } from '@/modules/employees/models/employees.models'
 import { Apple, ChartBar, ListPlus, Package, ShoppingCart, Store, Users, Warehouse, type LucideIcon } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
@@ -44,7 +44,7 @@ interface NavItem {
   routeKey: RouteKey
   icon: LucideIcon
   badge?: number
-  accessRoles: EmployeeRoles[]
+  accessRoles: EmployeeRole[]
 }
 
 const route = useRoute()
@@ -56,22 +56,22 @@ const isActiveRoute = (routeKey: RouteKey) => {
   return route.name === routeName || (route.name && route.name.toString().startsWith(routeName))
 }
 
-const canAccessRoute = (accessRoles: EmployeeRoles[]) => {
+const canAccessRoute = (accessRoles: EmployeeRole[]) => {
   const employeeRole = currentEmployee.value?.role
   return employeeRole ? accessRoles.includes(employeeRole) : false
 }
 
 const navItems: NavItem[] = [
-  { name: 'Аналитика', routeKey: 'ADMIN_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRoles.ADMIN, EmployeeRoles.DIRECTOR] },
-  { name: 'Аналитика магазина', routeKey: 'ADMIN_STORE_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRoles.MANAGER] },
-  { name: 'Заказы магазина', routeKey: 'ADMIN_STORE_ORDERS', icon: ShoppingCart, accessRoles: [EmployeeRoles.MANAGER, EmployeeRoles.EMPLOYEE] },
-  { name: 'Все товары', routeKey: 'ADMIN_PRODUCTS', icon: Package, accessRoles: [EmployeeRoles.ADMIN, EmployeeRoles.DIRECTOR] },
-  { name: 'Все топпинги', routeKey: 'ADMIN_ADDITIVES', icon: ListPlus, accessRoles: [EmployeeRoles.ADMIN, EmployeeRoles.DIRECTOR] },
-  { name: 'Товары магазина', routeKey: 'ADMIN_STORE_PRODUCTS', icon: Package, accessRoles: [EmployeeRoles.MANAGER, EmployeeRoles.EMPLOYEE] },
-  { name: 'Склад магазина', routeKey: 'ADMIN_STORE_WAREHOUSE', icon: Warehouse, accessRoles: [EmployeeRoles.MANAGER, EmployeeRoles.EMPLOYEE] },
-  { name: 'Сотрудники', routeKey: 'ADMIN_EMPLOYEES', icon: Users, accessRoles: [EmployeeRoles.MANAGER] },
-  { name: 'Ингредиенты', routeKey: "ADMIN_INGREDIENTS", icon: Apple, accessRoles: [EmployeeRoles.ADMIN, EmployeeRoles.DIRECTOR]  },
-  { name: 'Магазины', routeKey: 'ADMIN_STORES', icon: Store, accessRoles: [EmployeeRoles.ADMIN, EmployeeRoles.DIRECTOR] },
+  { name: 'Аналитика', routeKey: 'ADMIN_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
+  { name: 'Аналитика магазина', routeKey: 'ADMIN_STORE_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRole.MANAGER] },
+  { name: 'Заказы магазина', routeKey: 'ADMIN_STORE_ORDERS', icon: ShoppingCart, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Товары', routeKey: 'ADMIN_PRODUCTS', icon: Package, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
+  { name: 'Топпинги', routeKey: 'ADMIN_ADDITIVES', icon: ListPlus, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
+  { name: 'Товары магазина', routeKey: 'ADMIN_STORE_PRODUCTS', icon: Package, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Склад магазина', routeKey: 'ADMIN_STORE_WAREHOUSE', icon: Warehouse, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Сотрудники', routeKey: 'ADMIN_EMPLOYEES', icon: Users, accessRoles: [EmployeeRole.MANAGER] },
+  { name: 'Ингредиенты', routeKey: "ADMIN_INGREDIENTS", icon: Apple, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR]  },
+  { name: 'Магазины', routeKey: 'ADMIN_STORES', icon: Store, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
 ]
 
 

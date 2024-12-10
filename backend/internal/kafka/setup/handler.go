@@ -1,4 +1,4 @@
-package kafka
+package setup
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ func (h *MessageHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim
 		if err != nil {
 			fmt.Printf("Error processing Kafka message: %v\n", err)
 		}
-		session.MarkMessage(message, "")
+		session.MarkMessage(message, "") // Mark message as processed
 	}
 	return nil
 }

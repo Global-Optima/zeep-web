@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-func EmployeeRoleMiddleware(requiredRoles ...types.EmployeeRole) gin.HandlerFunc {
+func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, err := ExtractEmployeeTokenAndValidate(c)
 		if err != nil {
@@ -38,7 +39,7 @@ func ExtractEmployeeTokenAndValidate(c *gin.Context) (*utils.EmployeeClaims, err
 		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
 	} else {
 
-		cookie, err := c.Cookie("EMPLOYEES_TOKEN")
+		cookie, err := c.Cookie(employees.EMPLOYEE_TOKEN_COOKIE_KEY)
 		if err != nil {
 			return nil, err
 		}

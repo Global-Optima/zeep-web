@@ -138,6 +138,14 @@ export const ADMIN_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/admin/stores/pages/admin-stores-create-page.vue'),
 	},
+	ADMIN_STORE_DETAILS: {
+		path: 'stores/:id',
+		meta: {
+			title: 'Детали магазина',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/stores/pages/admin-store-details-page.vue'),
+	},
 } satisfies AppRouteRecord
 
 export const ADMIN_ROUTES_CONFIG = {

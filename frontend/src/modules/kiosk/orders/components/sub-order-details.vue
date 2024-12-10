@@ -10,7 +10,7 @@
 			<div class="relative flex flex-col gap-4 bg-white p-6 rounded-xl overflow-y-auto">
 				<button
 					class="top-6 right-6 absolute"
-					:disabled="suborder.status === 'Done'"
+					:disabled="suborder.status === 'COMPLETED'"
 					@click="printQrCode"
 				>
 					<Printer
@@ -20,19 +20,21 @@
 				</button>
 
 				<div>
-					<p class="font-medium text-xl">{{ suborder.productName }}</p>
+					<p class="font-medium text-xl">
+						{{ suborder.productSize.productName }} {{ suborder.productSize.sizeName }}
+					</p>
 					<!-- Toppings List -->
 					<ul
-						v-if="suborder.toppings.length > 0"
+						v-if="suborder.additives.length > 0"
 						class="space-y-1 mt-2"
 					>
 						<li
-							v-for="(topping, index) in suborder.toppings"
+							v-for="(topping, index) in suborder.additives"
 							:key="index"
 							class="flex items-center"
 						>
 							<Plus class="mr-2 w-4 h-4 text-gray-500" />
-							<span class="text-gray-700">{{ topping }}</span>
+							<span class="text-gray-700">{{ topping.additive.name }}</span>
 						</li>
 					</ul>
 					<p
@@ -46,29 +48,29 @@
 				<div>
 					<p class="font-medium text-lg">Комментарий</p>
 					<p class="mt-1 text-gray-700">
-						{{ suborder.comments || 'Стандартное приготовление' }}
+						{{ 'Стандартное приготовление' }}
 					</p>
 				</div>
 
 				<div>
 					<p class="font-medium text-lg">Время приготовления</p>
 					<p class="mt-1 text-gray-700">
-						{{ suborder.prepTime || 'Не указано' }}
+						{{ '2 мин'  }}
 					</p>
 				</div>
 
 				<div class="flex items-center gap-2 mt-4">
 					<button
 						@click="toggleSuborderStatus(suborder)"
-						:disabled="suborder.status === 'Done'"
+						:disabled="suborder.status === 'COMPLETED'"
 						:class="[
               'flex-1 px-4 py-4 rounded-xl text-primary-foreground',
-              suborder.status === 'Done'
+              suborder.status === 'COMPLETED'
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-primary'
             ]"
 					>
-						{{ suborder.status === 'Done' ? 'Выполнено' : 'Выполнить' }}
+						{{ suborder.status === "COMPLETED" ? 'Выполнено' : 'Выполнить' }}
 					</button>
 				</div>
 			</div>
@@ -84,27 +86,19 @@
 </template>
 
 <script setup lang="ts">
+import type { SubOrderDTO } from '@/modules/orders/models/orders.models'
 import { Plus, Printer } from 'lucide-vue-next'
 
-interface Suborder {
-  id: number;
-  productName: string;
-  toppings: string[];
-  status: 'In Progress' | 'Done';
-  comments?: string;
-  prepTime: string;
-}
-
 const props = defineProps<{
-  suborder: Suborder | null;
+  suborder: SubOrderDTO | null;
 }>();
 
 const emits = defineEmits<{
-  (e: 'toggleSuborderStatus', suborder: Suborder): void;
-  (e: 'printQrCode', suborder: Suborder): void;
+  (e: 'toggleSuborderStatus', suborder: SubOrderDTO): void;
+  (e: 'printQrCode', suborder: SubOrderDTO): void;
 }>();
 
-const toggleSuborderStatus = (suborder: Suborder) => {
+const toggleSuborderStatus = (suborder: SubOrderDTO) => {
   emits('toggleSuborderStatus', suborder);
 };
 

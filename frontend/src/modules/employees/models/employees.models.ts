@@ -1,20 +1,27 @@
+export enum EmployeeRole {
+	ADMIN = 'ADMIN',
+	DIRECTOR = 'DIRECTOR',
+	MANAGER = 'MANAGER',
+	BARISTA = 'BARISTA',
+	WAREHOUSE = 'WAREHOUSE_EMPLOYEE',
+}
+
+export enum EmployeeType {
+	Store = 'STORE',
+	Warehouse = 'WAREHOUSE',
+}
+
 export interface Employee {
 	id: number
 	name: string
 	phone: string
 	email: string
-	storeId: boolean
-	role: EmployeeRoles
+	role: EmployeeRole
+	isActive: boolean
+	type: EmployeeType
 }
 
 export interface EmployeeLoginDTO {
-	employeeId: number
+	email: string
 	password: string
-}
-
-export enum EmployeeRoles {
-	ADMIN = 'ADMIN',
-	DIRECTOR = 'DIRECTOR',
-	MANAGER = 'MANAGER',
-	EMPLOYEE = 'EMPLOYEE',
 }

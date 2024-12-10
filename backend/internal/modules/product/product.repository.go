@@ -1,12 +1,16 @@
 package product
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"gorm.io/gorm"
 )
 
 type ProductRepository interface {
+	GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error)
 	GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error)
 	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
 	DeleteProduct(productID uint) error
@@ -24,6 +28,23 @@ type productRepository struct {
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
+}
+
+func (r *productRepository) GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error) {
+	var productSize data.ProductSize
+	err := r.db.Preload("Product").First(&productSize, productSizeID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to fetch ProductSize ID %d: %w", productSizeID, err)
+	}
+
+	if productSize.Product.ID == 0 || productSize.Product.Name == "" {
+		return nil, fmt.Errorf("product size with ID %d has no valid associated product", productSizeID)
+	}
+
+	return &productSize, nil
 }
 
 func (r *productRepository) GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error) {

@@ -1,23 +1,31 @@
 <template>
 	<div class="relative bg-gray-100 pb-32 min-h-screen text-black">
 		<!-- Loading State -->
-		<KioskDetailsLoading v-if="state.isLoading" />
+		<KioskDetailsLoading v-if="isLoading" />
+
+		<!-- Error State -->
+		<div
+			v-else-if="error"
+			class="p-4 text-red-500"
+		>
+			{{ error }}
+		</div>
 
 		<!-- Product Content -->
 		<div
-			v-else-if="state.productDetails"
+			v-else-if="productDetails"
 			class="pb-44"
 		>
 			<!-- Product Image -->
 			<KioskDetailsProductImage
-				:imageUrl="state.productDetails.imageUrl"
-				:altText="state.productDetails.name"
+				:imageUrl="productDetails.imageUrl"
+				:altText="productDetails.name"
 			/>
 
 			<!-- Product Information -->
 			<KioskDetailsProductInfo
-				:name="state.productDetails.name"
-				:description="state.productDetails.description"
+				:name="productDetails.name"
+				:description="productDetails.description"
 				:energy="calculatedEnergy"
 			/>
 
@@ -32,9 +40,9 @@
 
 		<!-- Fixed Bottom Section -->
 		<KioskDetailsBottomBar
-			v-if="state.productDetails"
-			:sizes="state.productDetails.sizes"
-			:selectedSizeId="state.selectedSize?.id"
+			v-if="productDetails"
+			:sizes="productDetails.sizes"
+			:selectedSizeId="selectedSize?.id"
 			:totalPrice="totalPrice"
 			@select-size="onSizeSelect"
 			@addToCart="handleAddToCart"
@@ -45,7 +53,7 @@
 <script setup lang="ts">
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { productService } from '@/modules/kiosk/products/services/products.service'
-import { computed, defineProps, onMounted, reactive, watch } from 'vue'
+import { computed, defineEmits, defineProps, onMounted, ref, watch } from 'vue'
 
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
 import KioskDetailsBottomBar from '@/modules/kiosk/products/components/details/kiosk-details-bottom-bar.vue'
@@ -66,67 +74,74 @@ const props = defineProps<{
 }>();
 
 // Define emitted events
-const emit = defineEmits(['close']);
+const emit = defineEmits<{
+  (e: 'close'): void;
+}>();
 
 const cartStore = useCartStore();
 
-const state = reactive({
-  productDetails: null as StoreProductDetailsDTO | null,
-  additives: [] as AdditiveCategoryDTO[],
-  selectedSize: null as ProductSizeDTO | null,
-  selectedAdditives: {} as Record<number, AdditiveDTO[]>,
-  quantity: 1,
-  isLoading: true,
-  error: null as string | null,
-});
+// Reactive state
+const productDetails = ref<StoreProductDetailsDTO | null>(null);
+const additives = ref<AdditiveCategoryDTO[]>([]);
+const selectedSize = ref<ProductSizeDTO | null>(null);
+const selectedAdditives = ref<Record<number, AdditiveDTO[]>>({});
+const quantity = ref<number>(1);
+const isLoading = ref<boolean>(true);
+const error = ref<string | null>(null);
 
 // Fetch product details based on productId prop
 const fetchProductDetails = async () => {
+  isLoading.value = true;
+  error.value = null;
   try {
-    state.isLoading = true;
-    const productDetails = await productService.getStoreProductDetails(props.productId);
-    state.productDetails = productDetails;
+    const details = await productService.getStoreProductDetails(props.productId);
+    productDetails.value = details;
 
-    if (productDetails.sizes.length > 0) {
-      state.selectedSize = productDetails.sizes[0];
-      await fetchAdditives(state.selectedSize.id);
+    if (details.sizes.length > 0) {
+      selectedSize.value = details.sizes[0];
+      await fetchAdditives(details.sizes[0].id);
     }
-  } catch {
-    state.error = 'Failed to load product details.';
+  } catch (err) {
+    console.error('Error fetching product details:', err);
+    error.value = 'Failed to load product details.';
   } finally {
-    state.isLoading = false;
+    isLoading.value = false;
   }
 };
 
 // Fetch additives based on selected size
 const fetchAdditives = async (sizeId: number) => {
   try {
-    state.additives = await productService.getAdditiveCategoriesByProductSize(sizeId);
-  } catch {
-    state.error = 'Failed to fetch additives.';
+    const fetchedAdditives = await productService.getAdditiveCategoriesByProductSize(sizeId);
+    additives.value = fetchedAdditives;
+  } catch (err) {
+    console.error('Error fetching additives:', err);
+    error.value = 'Failed to fetch additives.';
   }
 };
 
 // Compute total price
 const totalPrice = computed(() => {
-  const basePrice = state.selectedSize?.basePrice || 0;
-  const additivePrice = Object.values(state.selectedAdditives)
+  if (!selectedSize.value) return 0;
+  const basePrice = selectedSize.value.basePrice;
+  const additivePrice = Object.values(selectedAdditives.value)
     .flat()
     .reduce((sum, add) => sum + add.price, 0);
-  return (basePrice + additivePrice) * state.quantity;
+  return (basePrice + additivePrice) * quantity.value;
 });
 
 // Placeholder for energy calculation logic
 const calculatedEnergy = computed(() => {
-  const details = state.productDetails;
-  return details
-    ? { ccal: 400, proteins: 20, carbs: 13, fats: 10 }
-    : { ccal: 0, proteins: 0, carbs: 0, fats: 0 };
+  if (!productDetails.value) {
+    return { ccal: 0, proteins: 0, carbs: 0, fats: 0 };
+  }
+  // Replace with actual calculation logic
+  return { ccal: 400, proteins: 20, carbs: 13, fats: 10 };
 });
 
-// Sort additives categories
+// Sort additives categories with memoization
 const sortedAdditiveCategories = computed(() =>
-  state.additives.map((category) => ({
+  additives.value.map((category) => ({
     ...category,
     additives: [
       ...category.additives.filter((a) => isAdditiveDefault(a.id)),
@@ -136,35 +151,37 @@ const sortedAdditiveCategories = computed(() =>
 );
 
 // Handle size selection
-const onSizeSelect = (size: ProductSizeDTO) => {
-  if (state.selectedSize?.id === size.id) return;
-  state.selectedSize = size;
-  state.selectedAdditives = {};
-  fetchAdditives(size.id);
+const onSizeSelect = async (size: ProductSizeDTO) => {
+  if (selectedSize.value?.id === size.id) return;
+  selectedSize.value = size;
+  selectedAdditives.value = {};
+  await fetchAdditives(size.id);
 };
 
 // Toggle additive selection
 const onAdditiveToggle = (categoryId: number, additive: AdditiveDTO) => {
-  const current = state.selectedAdditives[categoryId] || [];
+  const current = selectedAdditives.value[categoryId] || [];
   const isSelected = current.some((a) => a.id === additive.id);
-  state.selectedAdditives[categoryId] = isSelected
-    ? current.filter((a) => a.id !== additive.id)
-    : [...current, additive];
+  if (isSelected) {
+    selectedAdditives.value[categoryId] = current.filter((a) => a.id !== additive.id);
+  } else {
+    selectedAdditives.value[categoryId] = [...current, additive];
+  }
 };
 
 // Check if additive is selected
-const isAdditiveSelected = (categoryId: number, additiveId: number) =>
-  state.selectedAdditives[categoryId]?.some((a) => a.id === additiveId) || false;
+const isAdditiveSelected = (categoryId: number, additiveId: number): boolean =>
+  selectedAdditives.value[categoryId]?.some((a) => a.id === additiveId) || false;
 
 // Check if additive is default
-const isAdditiveDefault = (additiveId: number) =>
-  state.productDetails?.defaultAdditives.some((add) => add.id === additiveId) || false;
+const isAdditiveDefault = (additiveId: number): boolean =>
+  productDetails.value?.defaultAdditives.some((add) => add.id === additiveId) || false;
 
 // Handle add to cart action
 const handleAddToCart = () => {
-  if (!state.productDetails || !state.selectedSize) return;
-  const allAdditives = Object.values(state.selectedAdditives).flat();
-  cartStore.addToCart(state.productDetails, state.selectedSize, allAdditives, state.quantity);
+  if (!productDetails.value || !selectedSize.value) return;
+  const allAdditives = Object.values(selectedAdditives.value).flat();
+  cartStore.addToCart(productDetails.value, selectedSize.value, allAdditives, quantity.value);
   // Emit close event to parent component
   emit('close');
 };
@@ -175,18 +192,16 @@ onMounted(fetchProductDetails);
 // Watch for changes in productId prop
 watch(
   () => props.productId,
-  (newProductId, oldProductId) => {
+  async (newProductId, oldProductId) => {
     if (newProductId !== oldProductId) {
-
-      state.productDetails = null;
-      state.additives = [];
-      state.selectedSize = null;
-      state.selectedAdditives = {};
-      state.quantity = 1;
-      state.isLoading = true;
-      state.error = null;
-
-      fetchProductDetails();
+      // Reset state
+      productDetails.value = null;
+      additives.value = [];
+      selectedSize.value = null;
+      selectedAdditives.value = {};
+      quantity.value = 1;
+      error.value = null;
+      await fetchProductDetails();
     }
   }
 );

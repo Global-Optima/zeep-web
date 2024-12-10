@@ -22,18 +22,21 @@
 						<p class="font-medium">{{ order.customerName }}</p>
 					</div>
 					<div class="mt-1 text-gray-700 text-sm">
-						<span>{{ order.type === 'Delivery' ? 'Доставка' : 'Кафе' }}</span
-						>, <span>{{ order.suborders.length }} шт.</span>
+						<!-- Translate orderType -->
+						<span> {{ order.deliveryAddressId !== null ? 'Доставка' : 'Кафе' }} </span>,
+						<span>{{ order.subOrdersQuantity }} шт.</span>
 					</div>
 				</div>
 				<div>
-					<template v-if="order.status === 'Active'">
-						<p class="text-blue-600">{{ order.eta }}</p>
+					<!-- Adjust status icons/text as needed -->
+					<template v-if="order.status === OrderStatus.PREPARING">
+						<!-- If you want to show ETA as text -->
+						<p class="text-blue-600">{{ formatEta(order.subOrdersQuantity) }}</p>
 					</template>
-					<template v-else-if="order.status === 'In Delivery'">
+					<template v-else-if="order.status === 'IN_DELIVERY'">
 						<Truck class="w-5 h-5 text-yellow-500" />
 					</template>
-					<template v-else-if="order.status === 'Completed'">
+					<template v-else-if="order.status === 'COMPLETED'">
 						<Check class="w-5 h-5 text-green-500" />
 					</template>
 				</div>
@@ -50,38 +53,24 @@
 </template>
 
 <script setup lang="ts">
+import { OrderStatus, type OrderDTO } from '@/modules/orders/models/orders.models'
 import { Check, Truck } from 'lucide-vue-next'
 
-interface Suborder {
-  id: number;
-  productName: string;
-  toppings: string[];
-  status: 'In Progress' | 'Done';
-  comments?: string;
-  prepTime: string;
-}
-
-interface Order {
-  id: number;
-  customerName: string;
-  customerEmail: string;
-  details: string;
-  eta: string;
-  suborders: Suborder[];
-  status: 'Active' | 'Completed' | 'In Delivery';
-  type: 'Delivery' | 'In-Store';
-}
-
 defineProps<{
-  orders: Order[];
-  selectedOrder: Order | null;
-}>();
+  orders: OrderDTO[];
+  selectedOrder: OrderDTO | null;
+}>()
 
 const emits = defineEmits<{
-  (e: 'selectOrder', order: Order): void;
-}>();
+  (e: 'selectOrder', order: OrderDTO): void;
+}>()
 
-const selectOrder = (order: Order) => {
+const selectOrder = (order: OrderDTO) => {
   emits('selectOrder', order);
-};
+}
+
+function formatEta(subOrdersCount: number): string {
+  const baseSubOrderEta = 2
+  return `${baseSubOrderEta*subOrdersCount} мин`
+}
 </script>
