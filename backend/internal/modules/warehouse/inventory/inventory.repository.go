@@ -18,9 +18,9 @@ type InventoryRepository interface {
 	GetExpiringItems(warehouseID uint, thresholdDays int) ([]data.Delivery, error)
 	ExtendExpiration(deliveryID uint, newExpirationDate time.Time) error
 	GetDeliveryByID(deliveryID uint, delivery *data.Delivery) error
-	UpdateDeliveryStatus(delivery data.Delivery) error
 	ConvertInventoryItemsToStockRequest(items []types.InventoryItem) ([]data.StockRequestIngredient, error)
-	GetDeliveries(warehouseID *uint, status string, startDate, endDate *time.Time) ([]data.Delivery, error)
+	GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]data.Delivery, error)
+	CreateAuditLog(log data.AuditLog) error
 }
 
 type inventoryRepository struct {
@@ -56,19 +56,27 @@ func (r *inventoryRepository) TransferStock(sourceWarehouseID, targetWarehouseID
 	defer tx.Rollback()
 
 	for _, item := range items {
-		err := tx.Model(&data.StoreWarehouseStock{}).
+		var pkg data.Package
+		if err := r.db.Where("sku_id = ?", item.IngredientID).First(&pkg).Error; err != nil {
+			return fmt.Errorf("failed to retrieve package for SKU %d: %w", item.IngredientID, err)
+		}
+
+		var unit data.Unit
+		if err := r.db.First(&unit, pkg.PackageUnitID).Error; err != nil {
+			return fmt.Errorf("failed to retrieve unit for SKU %d: %w", item.IngredientID, err)
+		}
+
+		measurementQuantity := item.Quantity * pkg.PackageSize * unit.ConversionFactor
+
+		if err := tx.Model(&data.StoreWarehouseStock{}).
 			Where("store_warehouse_id = ? AND ingredient_id = ?", sourceWarehouseID, item.IngredientID).
-			Update("quantity", gorm.Expr("quantity - ?", item.Quantity)).Error
-		if err != nil {
+			Update("quantity", gorm.Expr("quantity - ?", item.Quantity)).Error; err != nil {
 			return err
 		}
-	}
 
-	for _, item := range items {
-		err := tx.Model(&data.StoreWarehouseStock{}).
+		if err := tx.Model(&data.StoreWarehouseStock{}).
 			Where("store_warehouse_id = ? AND ingredient_id = ?", targetWarehouseID, item.IngredientID).
-			Update("quantity", gorm.Expr("quantity + ?", item.Quantity)).Error
-		if err != nil {
+			Update("quantity", gorm.Expr("quantity + ?", measurementQuantity)).Error; err != nil {
 			return err
 		}
 	}
@@ -115,40 +123,37 @@ func (r *inventoryRepository) GetDeliveryByID(deliveryID uint, delivery *data.De
 	return r.db.First(delivery, "id = ?", deliveryID).Error
 }
 
-func (r *inventoryRepository) UpdateDeliveryStatus(delivery data.Delivery) error {
-	return r.db.Model(&data.Delivery{}).
-		Where("id = ?", delivery.ID).
-		Update("status", delivery.Status).Error
-}
-
 func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.InventoryItem) ([]data.StockRequestIngredient, error) {
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
-		var mapping data.IngredientsMapping
-		err := r.db.Where("sku_id = ?", item.SKU_ID).First(&mapping).Error
-		if err != nil {
-			return nil, fmt.Errorf("failed to find ingredient mapping for SKU_ID %d: %w", item.SKU_ID, err)
+		var pkg data.Package
+		if err := r.db.Where("sku_id = ?", item.SKU_ID).First(&pkg).Error; err != nil {
+			return nil, fmt.Errorf("failed to retrieve package for SKU_ID %d: %w", item.SKU_ID, err)
 		}
 
+		var unit data.Unit
+		if err := r.db.First(&unit, pkg.PackageUnitID).Error; err != nil {
+			return nil, fmt.Errorf("failed to retrieve unit for SKU_ID %d: %w", item.SKU_ID, err)
+		}
+
+		measurementQuantity := item.Quantity * pkg.PackageSize * unit.ConversionFactor
+
 		converted[i] = data.StockRequestIngredient{
-			IngredientID: mapping.IngredientID,
-			Quantity:     item.Quantity,
+			IngredientID: item.SKU_ID,
+			Quantity:     measurementQuantity,
 		}
 	}
 
 	return converted, nil
 }
 
-func (r *inventoryRepository) GetDeliveries(warehouseID *uint, status string, startDate, endDate *time.Time) ([]data.Delivery, error) {
+func (r *inventoryRepository) GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]data.Delivery, error) {
 	var deliveries []data.Delivery
 	query := r.db.Model(&data.Delivery{})
 
 	if warehouseID != nil {
 		query = query.Where("target = ?", *warehouseID)
-	}
-	if status != "" {
-		query = query.Where("status = ?", status)
 	}
 	if startDate != nil {
 		query = query.Where("delivery_date >= ?", *startDate)
@@ -159,4 +164,8 @@ func (r *inventoryRepository) GetDeliveries(warehouseID *uint, status string, st
 
 	err := query.Find(&deliveries).Error
 	return deliveries, err
+}
+
+func (r *inventoryRepository) CreateAuditLog(log data.AuditLog) error {
+	return r.db.Create(&log).Error
 }

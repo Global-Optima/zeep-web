@@ -17,7 +17,7 @@ type InventoryService interface {
 	PickupStock(req types.PickupRequest) error
 	GetExpiringItems(warehouseID uint, thresholdDays int) ([]types.UpcomingExpirationResponse, error)
 	ExtendExpiration(req types.ExtendExpirationRequest) error
-	GetDeliveries(warehouseID *uint, status string, startDate, endDate *time.Time) ([]types.DeliveryResponse, error)
+	GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]types.DeliveryResponse, error)
 }
 
 type inventoryService struct {
@@ -90,7 +90,6 @@ func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) e
 			sku := existingSKUs[item.SKU_ID]
 			deliveries[i] = data.Delivery{
 				SKU_ID:         sku.ID,
-				Status:         "Pending",
 				Source:         req.SupplierID,
 				Target:         req.WarehouseID,
 				Barcode:        sku.Barcode,
@@ -104,7 +103,6 @@ func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) e
 				if sku.Name == *item.Name {
 					deliveries[i] = data.Delivery{
 						SKU_ID:         sku.ID,
-						Status:         "Pending",
 						Source:         req.SupplierID,
 						Target:         req.WarehouseID,
 						Barcode:        sku.Barcode,
@@ -213,8 +211,8 @@ func (s *inventoryService) ExtendExpiration(req types.ExtendExpirationRequest) e
 	return nil
 }
 
-func (s *inventoryService) GetDeliveries(warehouseID *uint, status string, startDate, endDate *time.Time) ([]types.DeliveryResponse, error) {
-	deliveries, err := s.repo.GetDeliveries(warehouseID, status, startDate, endDate)
+func (s *inventoryService) GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]types.DeliveryResponse, error) {
+	deliveries, err := s.repo.GetDeliveries(warehouseID, startDate, endDate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch deliveries: %w", err)
 	}
@@ -224,7 +222,6 @@ func (s *inventoryService) GetDeliveries(warehouseID *uint, status string, start
 		response[i] = types.DeliveryResponse{
 			ID:             delivery.ID,
 			SKU_ID:         delivery.SKU_ID,
-			Status:         delivery.Status,
 			Source:         delivery.Source,
 			Target:         delivery.Target,
 			Barcode:        delivery.Barcode,
@@ -235,4 +232,17 @@ func (s *inventoryService) GetDeliveries(warehouseID *uint, status string, start
 	}
 
 	return response, nil
+}
+
+func (s *inventoryService) logAudit(action string, skuID uint, deliveryID *uint, quantity float64, unit string, userID uint) error {
+	auditLog := data.AuditLog{
+		Action:        action,
+		DeliveryID:    deliveryID,
+		SKU_ID:        skuID,
+		Quantity:      quantity,
+		UnitOfMeasure: unit,
+		PerformedBy:   userID,
+		PerformedAt:   time.Now(),
+	}
+	return s.repo.CreateAuditLog(auditLog)
 }

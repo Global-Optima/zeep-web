@@ -122,7 +122,6 @@ func (h *InventoryHandler) ExtendExpiration(c *gin.Context) {
 
 func (h *InventoryHandler) GetDeliveries(c *gin.Context) {
 	warehouseIDStr := c.Query("warehouseID")
-	status := c.Query("status")
 	startDateStr := c.Query("startDate")
 	endDateStr := c.Query("endDate")
 
@@ -155,7 +154,7 @@ func (h *InventoryHandler) GetDeliveries(c *gin.Context) {
 		endDate = &parsedEndDate
 	}
 
-	deliveries, err := h.service.GetDeliveries(warehouseID, status, startDate, endDate)
+	deliveries, err := h.service.GetDeliveries(warehouseID, startDate, endDate)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch deliveries: "+err.Error())
 		return

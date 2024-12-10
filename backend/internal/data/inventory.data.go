@@ -96,11 +96,10 @@ type Package struct {
 
 type Delivery struct {
 	BaseEntity
-	SKU_ID         uint `gorm:"not null;index"`
-	SKU            SKU  `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
-	Status         string
-	Source         uint
-	Target         uint
+	SKU_ID         uint      `gorm:"not null;index"`
+	SKU            SKU       `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
+	Source         uint      `gorm:"not null"`
+	Target         uint      `gorm:"not null"`
 	Barcode        string    `gorm:"size:255;not null"`
 	Quantity       float64   `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 	DeliveryDate   time.Time `gorm:"not null"`
@@ -111,6 +110,7 @@ type Delivery struct {
 type AuditLog struct {
 	BaseEntity
 	Action        string    `gorm:"size:50;not null"`
+	DeliveryID    *uint     `gorm:"index"`
 	SKU_ID        uint      `gorm:"index"`
 	SKU           SKU       `gorm:"foreignKey:SKU_ID;constraint:OnDelete:CASCADE"`
 	Quantity      float64   `gorm:"type:decimal(10,2)"`

@@ -50,7 +50,6 @@ type ExtendExpirationRequest struct {
 type DeliveryResponse struct {
 	ID             uint      `json:"id"`
 	SKU_ID         uint      `json:"skuId"`
-	Status         string    `json:"status"`
 	Source         uint      `json:"source"`
 	Target         uint      `json:"target"`
 	Barcode        string    `json:"barcode"`
