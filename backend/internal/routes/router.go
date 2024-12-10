@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
@@ -40,9 +41,9 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	{
 		router.GET("", handler.GetAllStores)
 		router.GET("/:id", handler.GetStoreByID)
-		router.POST("", middleware.EmployeeRoleMiddleware("Admin"), handler.CreateStore)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware("Admin"), handler.UpdateStore)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware("Admin"), handler.DeleteStore)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateStore)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStore)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeleteStore)
 	}
 }
 

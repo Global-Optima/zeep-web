@@ -14,10 +14,11 @@ const (
 type EmployeeRole string
 
 const (
-	RoleAdmin    EmployeeRole = "ADMIN"
-	RoleDirector EmployeeRole = "DIRECTOR"
-	RoleManager  EmployeeRole = "MANAGER"
-	RoleBarista  EmployeeRole = "BARISTA"
+	RoleAdmin     EmployeeRole = "ADMIN"
+	RoleDirector  EmployeeRole = "DIRECTOR"
+	RoleManager   EmployeeRole = "MANAGER"
+	RoleBarista   EmployeeRole = "BARISTA"
+	RoleWarehouse EmployeeRole = "WAREHOUSE_EMPLOYEE"
 )
 
 func IsValidEmployeeRole(role EmployeeRole) bool {

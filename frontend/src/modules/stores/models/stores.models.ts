@@ -1,11 +1,14 @@
 export interface Store {
 	id: number
 	name: string
+	isFranchise: boolean
 	facilityAddress: {
 		id: number
 		address: string
-		longitude: string
-		latitude: string
+		longitude: number
+		latitude: number
 	}
-	isFranchise: boolean
+	contactPhone: string
+	contactEmail: string
+	storeHours: string
 }

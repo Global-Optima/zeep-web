@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -38,7 +39,7 @@ func ExtractEmployeeTokenAndValidate(c *gin.Context) (*utils.EmployeeClaims, err
 		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
 	} else {
 
-		cookie, err := c.Cookie("EMPLOYEES_TOKEN")
+		cookie, err := c.Cookie(employees.EMPLOYEE_TOKEN_COOKIE_KEY)
 		if err != nil {
 			return nil, err
 		}

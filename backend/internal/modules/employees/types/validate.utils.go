@@ -93,8 +93,8 @@ func ParseEmployeeQueryParams(query url.Values) (*GetEmployeesQuery, error) {
 	}
 
 	// Parse `store_id`
-	if query.Get("store_id") != "" {
-		storeID, err := strconv.ParseUint(query.Get("store_id"), 10, 64)
+	if query.Get("storeId") != "" {
+		storeID, err := strconv.ParseUint(query.Get("storeId"), 10, 64)
 		if err != nil {
 			return nil, errors.New("invalid store ID")
 		}
@@ -103,8 +103,8 @@ func ParseEmployeeQueryParams(query url.Values) (*GetEmployeesQuery, error) {
 	}
 
 	// Parse `warehouse_id`
-	if query.Get("warehouse_id") != "" {
-		warehouseID, err := strconv.ParseUint(query.Get("warehouse_id"), 10, 64)
+	if query.Get("warehouseId") != "" {
+		warehouseID, err := strconv.ParseUint(query.Get("warehouseId"), 10, 64)
 		if err != nil {
 			return nil, errors.New("invalid warehouse ID")
 		}

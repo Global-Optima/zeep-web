@@ -11,7 +11,6 @@ import (
 
 const (
 	EMPLOYEE_TOKEN_COOKIE_KEY = "EMPLOYEE_TOKEN"
-	STORE_ID_COOKIE_KEY       = "EMPLOYEE_TOKEN"
 )
 
 type EmployeeHandler struct {

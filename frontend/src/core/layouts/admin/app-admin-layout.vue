@@ -20,8 +20,8 @@ const onBaristaClick = () => {
 
 <template>
 	<div class="grid md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr] bg-white w-full min-h-screen">
-		<div class="md:block hidden bg-muted/40 border-r">
-			<div class="flex flex-col gap-2 h-full max-h-screen">
+		<div class="md:block relative hidden bg-muted/40 border-r">
+			<div class="top-0 sticky flex flex-col gap-2 h-full max-h-screen">
 				<div class="flex items-center px-4 lg:px-6 border-b h-14 lg:h-[60px]">
 					<a
 						href="/admin"
@@ -57,10 +57,10 @@ const onBaristaClick = () => {
 			</div>
 		</div>
 
-		<div class="flex flex-col">
+		<div class="flex flex-col overflow-y-auto">
 			<AppAdminHeader />
 
-			<main class="flex-1 p-4 lg:p-6">
+			<main class="flex-1 bg-slate-50 p-4 lg:p-6">
 				<RouterView />
 			</main>
 		</div>

@@ -137,7 +137,6 @@ func mapToStoreDTO(store data.Store) *types.StoreDTO {
 		ID:              store.ID,
 		Name:            store.Name,
 		IsFranchise:     store.IsFranchise,
-		Status:          store.Status,
 		ContactPhone:    store.ContactPhone,
 		ContactEmail:    store.ContactEmail,
 		StoreHours:      store.StoreHours,
@@ -151,7 +150,6 @@ func mapToStoreEntity(dto types.StoreDTO) *data.Store {
 	return &data.Store{
 		Name:              dto.Name,
 		IsFranchise:       dto.IsFranchise,
-		Status:            dto.Status,
 		ContactPhone:      dto.ContactPhone,
 		ContactEmail:      dto.ContactEmail,
 		StoreHours:        dto.StoreHours,
@@ -218,9 +216,6 @@ func updateStoreFields(store *data.Store, storeDTO types.StoreDTO) {
 		if storeDTO.FacilityAddress.Longitude != 0 {
 			store.FacilityAddress.Longitude = &storeDTO.FacilityAddress.Longitude
 		}
-	}
-	if storeDTO.Status != "" {
-		store.Status = storeDTO.Status
 	}
 }
 

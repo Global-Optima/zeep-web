@@ -8,7 +8,7 @@
 			<Input
 				v-model="searchQuery"
 				placeholder="Поиск"
-				class="w-full md:w-64"
+				class="bg-white w-full md:w-64"
 				@input="onSearchInput"
 			/>
 			<!-- Filter Menu -->
@@ -58,8 +58,12 @@ import {
 } from '@/core/components/ui/button'; // Adjust import paths as necessary
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
+import { getRouteName } from '@/core/config/routes.config'
 import { ChevronDown, Download, Plus } from 'lucide-vue-next'
-import {  ref } from 'vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // Emit events to parent component
 const emits = defineEmits<{
@@ -86,7 +90,7 @@ const exportData = () => {
 }
 
 const addEmployee = () => {
-  emits('addEmployee')
+  router.push({name: getRouteName("ADMIN_CREATE_EMPLOYEE")})
 }
 </script>
 

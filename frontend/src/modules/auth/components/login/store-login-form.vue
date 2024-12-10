@@ -135,6 +135,7 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
 import {
   Card,
   CardContent,
@@ -142,7 +143,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
-import { Button } from '@/core/components/ui/button'
 import {
   FormControl,
   FormField,
@@ -196,7 +196,7 @@ const {mutate: loginEmployee} = useMutation({
 
 const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
   queryKey: ['stores'],
-  queryFn: storesService.getStores,
+  queryFn: () => storesService.getStores(),
   initialData: [],
 })
 

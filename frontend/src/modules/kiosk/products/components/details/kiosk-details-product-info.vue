@@ -5,24 +5,18 @@
 		<p class="mt-3 text-base sm:text-2xl">{{ description }}</p>
 
 		<div class="mt-8">
-			<KioskDetailsEnergy :energy="energy" />
+			<KioskDetailsIngredients />
 		</div>
 	</section>
 </template>
 
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
-import KioskDetailsEnergy from '@/modules/kiosk/products/components/details/kiosk-details-energy.vue'
+import KioskDetailsIngredients from '@/modules/kiosk/products/components/details/kiosk-details-ingredients.vue'
 
 defineProps<{
   name: string
   description: string
-  energy: {
-    ccal: number
-    proteins: number
-    carbs: number
-    fats: number
-  }
   containerClass?: string
 }>()
 </script>

@@ -1,8 +1,9 @@
 export enum EmployeeRole {
-	RoleAdmin = 'ADMIN',
-	RoleDirector = 'DIRECTOR',
-	RoleManager = 'MANAGER',
-	RoleEmployee = 'EMPLOYEE',
+	ADMIN = 'ADMIN',
+	DIRECTOR = 'DIRECTOR',
+	MANAGER = 'MANAGER',
+	BARISTA = 'BARISTA',
+	WAREHOUSE = 'WAREHOUSE_EMPLOYEE',
 }
 
 export enum EmployeeType {

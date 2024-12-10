@@ -8,14 +8,16 @@
 			Сотрудники не найдены
 		</p>
 		<!-- If there are employees, display the table -->
-		<Table v-else>
+		<Table
+			v-else
+			class="bg-white rounded-xl"
+		>
 			<TableHeader>
 				<TableRow>
-					<TableHead>Сотрудник</TableHead>
-					<TableHead>Роль</TableHead>
-					<TableHead>Телефон</TableHead>
-					<TableHead>Магазин</TableHead>
-					<TableHead>Статус</TableHead>
+					<TableHead class="p-4">Сотрудник</TableHead>
+					<TableHead class="p-4">Роль</TableHead>
+					<TableHead class="p-4">Телефон</TableHead>
+					<TableHead class="p-4">Статус</TableHead>
 				</TableRow>
 			</TableHeader>
 			<TableBody>
@@ -26,37 +28,22 @@
 					@click="goToEmployee(employee.id)"
 				>
 					<!-- Employee Name and Image -->
-					<TableCell class="flex items-center space-x-3">
-						<img
-							:src="employee.avatar"
-							alt="Avatar"
-							class="rounded-full w-8 h-8 object-cover"
-						/>
+					<TableCell class="p-4">
 						<span class="font-medium"> {{ employee.firstName }} {{ employee.lastName }} </span>
 					</TableCell>
 					<!-- Role -->
-					<TableCell class="font-medium">
-						<span
-							:class="[
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-              ]"
-						>
-							{{ ROLE_FORMATTED[employee.role] }}
-						</span>
+					<TableCell class="p-4">
+						{{ ROLE_FORMATTED[employee.role] }}
 					</TableCell>
-					<!-- Phone Number -->
-					<TableCell class="font-medium">
+
+					<TableCell class="p-4">
 						{{ formatPhoneNumber(employee.phone) }}
 					</TableCell>
-					<!-- Working Store Name -->
-					<TableCell class="font-medium">
-						{{ employee.storeName }}
-					</TableCell>
-					<!-- Status -->
-					<TableCell class="font-medium">
+
+					<TableCell class="p-4">
 						<span
 							:class="[
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs ',
                 STATUS_COLOR[employee.status],
               ]"
 						>
@@ -90,7 +77,6 @@ interface Employee {
   avatar: string
   role: string
   phone: string
-  storeName: string
   status: string
 }
 
@@ -102,7 +88,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'manager',
     phone: '+79161234567',
-    storeName: 'Магазин №1',
     status: 'active',
   },
   {
@@ -112,7 +97,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'cashier',
     phone: '+79169876543',
-    storeName: 'Магазин №2',
     status: 'disabled',
   },
   {
@@ -122,7 +106,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'barista',
     phone: '+79261234568',
-    storeName: 'Магазин №1',
     status: 'active',
   },
   {
@@ -132,7 +115,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'cashier',
     phone: '+79269876544',
-    storeName: 'Магазин №3',
     status: 'active',
   },
   {
@@ -142,7 +124,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'manager',
     phone: '+79361234569',
-    storeName: 'Магазин №2',
     status: 'disabled',
   },
   {
@@ -152,7 +133,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'barista',
     phone: '+79369876545',
-    storeName: 'Магазин №1',
     status: 'active',
   },
   {
@@ -162,7 +142,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'technician',
     phone: '+79461234560',
-    storeName: 'Магазин №4',
     status: 'active',
   },
   {
@@ -172,7 +151,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'cashier',
     phone: '+79469876546',
-    storeName: 'Магазин №3',
     status: 'disabled',
   },
   {
@@ -182,7 +160,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'security',
     phone: '+79561234561',
-    storeName: 'Магазин №4',
     status: 'active',
   },
   {
@@ -192,7 +169,6 @@ const employees = ref<Employee[]>([
     avatar: 'https://via.placeholder.com/32x32',
     role: 'manager',
     phone: '+79569876547',
-    storeName: 'Магазин №2',
     status: 'active',
   },
 ]);
