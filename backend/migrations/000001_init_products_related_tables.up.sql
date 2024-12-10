@@ -407,6 +407,7 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+
 -- Suppliers Table
 CREATE TABLE
 	IF NOT EXISTS suppliers (
@@ -419,3 +420,68 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+-- Units Table
+CREATE TABLE IF NOT EXISTS units (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    conversion_factor DECIMAL(10,4) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
+-- SKUs Table
+CREATE TABLE IF NOT EXISTS skus (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
+    expiration_flag BOOLEAN NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL CHECK (quantity >= 0),
+    supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
+    category VARCHAR(255),
+    barcode VARCHAR(255) UNIQUE,
+    expiration_period INT NOT NULL DEFAULT 1095, -- Default 3 years
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
+-- Packages Table
+CREATE TABLE IF NOT EXISTS packages (
+    id SERIAL PRIMARY KEY,
+    sku_id INT NOT NULL REFERENCES skus(id) ON DELETE CASCADE,
+    package_size DECIMAL(10,2) NOT NULL,
+    package_unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
+-- Ingredients Mapping Table
+CREATE TABLE IF NOT EXISTS ingredients_mapping (
+    id SERIAL PRIMARY KEY,
+    ingredient_id INT NOT NULL REFERENCES ingredients(id) ON DELETE CASCADE,
+    sku_id INT NOT NULL REFERENCES skus(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
+-- Deliveries Table
+CREATE TABLE IF NOT EXISTS deliveries (
+    id SERIAL PRIMARY KEY,
+    sku_id INT NOT NULL REFERENCES skus(id) ON DELETE CASCADE,
+    source INT NOT NULL,
+    target INT NOT NULL,
+    barcode VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL CHECK (quantity > 0),
+    delivery_date TIMESTAMPTZ NOT NULL,
+    expiration_date TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);

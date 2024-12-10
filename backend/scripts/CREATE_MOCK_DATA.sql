@@ -1309,3 +1309,92 @@ VALUES
   (100.00, 1, '2024-12-31 23:59:59+00'),
   (50.00, 2, '2024-06-30 23:59:59+00'),
   (25.00, 3, '2024-04-30 23:59:59+00');
+
+
+INSERT INTO warehouses (facility_address_id, name)
+VALUES
+    (1, 'Central Warehouse - Moscow'),
+    (2, 'Central Warehouse - St. Petersburg'),
+    (3, 'Central Warehouse - Ekaterinburg'),
+    (4, 'Central Warehouse - Novosibirsk'),
+    (5, 'Central Warehouse - Kazan');
+
+INSERT INTO store_warehouses (store_id, warehouse_id)
+VALUES
+    (1, 1), -- Store 1 linked to Central Warehouse in Moscow
+    (2, 2), -- Store 2 linked to Central Warehouse in St. Petersburg
+    (3, 3), -- Store 3 linked to Central Warehouse in Ekaterinburg
+    (4, 4), -- Store 4 linked to Central Warehouse in Novosibirsk
+    (5, 5); -- Store 5 linked to Central Warehouse in Kazan
+
+
+-- Insert into Suppliers
+INSERT INTO suppliers (name, contact_email, contact_phone, address)
+VALUES
+    ('Nestlé', 'contact@nestle.com', '+1 800 225 2270', 'Avenue Nestlé 55, 1800 Vevey, Switzerland'),
+    ('Coca-Cola', 'info@coca-cola.com', '+1 800 438 2653', '1 Coca-Cola Plaza, Atlanta, GA 30313, USA'),
+    ('PepsiCo', 'support@pepsico.com', '+1 914 253 2000', '700 Anderson Hill Rd, Purchase, NY 10577, USA'),
+    ('Lipton', 'info@lipton.com', '+44 800 776 647', 'Unilever House, Springfield Dr, Leatherhead KT22 7GR, UK'),
+    ('Starbucks', 'help@starbucks.com', '+1 800 782 7282', '2401 Utah Ave S, Seattle, WA 98134, USA'),
+    ('Mondelez', 'support@mondelez.com', '+1 855 535 5648', '100 Deforest Ave, East Hanover, NJ 07936, USA'),
+    ('Danone', 'contact@danone.com', '+33 1 44 35 20 20', '17 Boulevard Haussmann, 75009 Paris, France'),
+    ('Mars', 'support@mars.com', '+1 703 821 4900', '6885 Elm St, McLean, VA 22101, USA'),
+    ('Unilever', 'contact@unilever.com', '+44 20 7822 5252', '100 Victoria Embankment, London EC4Y 0DY, UK'),
+    ('General Mills', 'support@generalmills.com', '+1 800 248 7310', '1 General Mills Blvd, Minneapolis, MN 55426, USA');
+
+
+-- Insert into Units
+INSERT INTO units (name, conversion_factor)
+VALUES
+    ('kg', 1.0),
+    ('g', 0.001),
+    ('L', 1.0),
+    ('ml', 0.001);
+
+-- Insert into SKUs
+INSERT INTO skus (name, description, safety_stock, expiration_flag, quantity, supplier_id, unit_id, category, barcode, expiration_period, is_active)
+VALUES
+    ('Milk', '1L pack of milk', 50, TRUE, 100, 1, 4, 'Dairy', '111111111111', 1095, TRUE),
+    ('Sugar', '1kg pack of sugar', 20, TRUE, 200, 2, 4, 'Sweeteners', '222222222222', 1095, TRUE),
+    ('Chocolate', '500g pack of chocolate', 15, TRUE, 150, 1, 2, 'Confectionery', '333333333333', 730, TRUE),
+    ('Cinnamon', '200g pack of cinnamon', 10, TRUE, 80, 2, 2, 'Spices', '444444444444', 1460, TRUE),
+    ('Vanilla', '50ml vanilla extract bottle', 25, TRUE, 60, 1, 3, 'Flavorings', '555555555555', 1460, TRUE);
+
+-- Insert into Ingredients Mapping
+INSERT INTO ingredients_mapping (ingredient_id, sku_id)
+VALUES
+    (2, 1), -- Milk linked to SKU 1
+    (1, 2), -- Sugar linked to SKU 2
+    (3, 3), -- Chocolate linked to SKU 3
+    (4, 4), -- Cinnamon linked to SKU 4
+    (6, 5); -- Vanilla linked to SKU 5
+
+
+-- Insert into Packages
+INSERT INTO packages (sku_id, package_size, package_unit_id)
+VALUES
+    (1, 1.0, 4), -- 1L Milk
+    (2, 1.0, 4), -- 1kg Sugar
+    (3, 0.5, 2), -- 500g Chocolate
+    (4, 0.2, 2), -- 200g Cinnamon
+    (5, 0.05, 3); -- 50ml Vanilla
+
+-- Insert into Deliveries
+INSERT INTO deliveries (sku_id, source, target, barcode, quantity, delivery_date, expiration_date)
+VALUES
+    (1, 1, 1, '111111111111', 50, '2024-12-01', '2026-12-01'), -- Milk Delivery
+    (2, 2, 1, '222222222222', 30, '2024-12-05', '2025-06-05'), -- Sugar Delivery
+    (3, 1, 1, '333333333333', 40, '2024-11-20', '2025-11-20'), -- Chocolate Delivery
+    (4, 2, 2, '444444444444', 20, '2024-12-10', '2026-06-10'), -- Cinnamon Delivery
+    (5, 1, 2, '555555555555', 15, '2024-12-15', '2027-12-15'); -- Vanilla Delivery
+
+
+-- Insert into Store Warehouse Stocks
+INSERT INTO store_warehouse_stocks (store_warehouse_id, ingredient_id, quantity)
+VALUES
+    (1, 2, 100), -- Milk in Store A Warehouse
+    (1, 1, 50),  -- Sugar in Store A Warehouse
+    (1, 3, 80),  -- Chocolate in Store A Warehouse
+    (2, 4, 40),  -- Cinnamon in Store B Warehouse
+    (2, 6, 15);  -- Vanilla in Store B Warehouse
+

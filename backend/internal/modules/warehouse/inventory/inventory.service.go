@@ -26,8 +26,12 @@ type inventoryService struct {
 	barcodeRepo barcode.BarcodeRepository
 }
 
-func NewInventoryService(repo InventoryRepository) InventoryService {
-	return &inventoryService{repo: repo}
+func NewInventoryService(repo InventoryRepository, skuRepo sku.SKURepository, barcodeRepo barcode.BarcodeRepository) InventoryService {
+	return &inventoryService{
+		repo:        repo,
+		skuRepo:     skuRepo,
+		barcodeRepo: barcodeRepo,
+	}
 }
 
 func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) error {

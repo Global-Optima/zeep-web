@@ -17,6 +17,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/internal/websockets"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -183,6 +187,48 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		},
 		supplier.NewSupplierHandler,
 		apiRouter.RegisterSupplierRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (sku.SKUService, error) {
+			return sku.NewSKUService(sku.NewSKURepository(dbHandler.DB)), nil
+		},
+		sku.NewSKUHandler,
+		apiRouter.RegisterSKURoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (barcode.BarcodeService, error) {
+			return barcode.NewBarcodeService(
+				barcode.NewBarcodeRepository(dbHandler.DB),
+				sku.NewSKURepository(dbHandler.DB),
+				barcode.NewPrinterService()), nil
+		},
+		barcode.NewBarcodeHandler,
+		apiRouter.RegisterBarcodeRouter,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (inventory.InventoryService, error) {
+			return inventory.NewInventoryService(
+				inventory.NewInventoryRepository(dbHandler.DB),
+				sku.NewSKURepository(dbHandler.DB),
+				barcode.NewBarcodeRepository(dbHandler.DB)), nil
+		},
+		inventory.NewInventoryHandler,
+		apiRouter.RegisterInventoryRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (warehouse.WarehouseService, error) {
+			return warehouse.NewWarehouseService(warehouse.NewWarehouseRepository(dbHandler.DB)), nil
+		},
+		warehouse.NewWarehouseHandler,
+		apiRouter.RegisterWarehouseRoutes,
 	)
 
 	return router
