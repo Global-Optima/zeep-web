@@ -11,7 +11,9 @@ import (
 type SKURepository interface {
 	GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error)
 	GetSKUByID(skuID uint) (*data.SKU, error)
+	GetSKUsByIDs(skuIDs []uint) ([]data.SKU, error)
 	CreateSKU(sku *data.SKU) error
+	CreateSKUs(skus []data.SKU) error
 	UpdateSKU(sku *data.SKU) error
 	UpdateSKUFields(skuID uint, fields map[string]interface{}) (*data.SKU, error)
 	DeleteSKU(skuID uint) error
@@ -73,8 +75,26 @@ func (r *skuRepository) GetSKUByID(skuID uint) (*data.SKU, error) {
 	return &sku, nil
 }
 
+func (r *skuRepository) GetSKUsByIDs(skuIDs []uint) ([]data.SKU, error) {
+	var skus []data.SKU
+	if len(skuIDs) == 0 {
+		return skus, nil // Return an empty slice if no IDs are provided
+	}
+
+	err := r.db.Where("id IN ?", skuIDs).Find(&skus).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return skus, nil
+}
+
 func (r *skuRepository) CreateSKU(sku *data.SKU) error {
 	return r.db.Create(sku).Error
+}
+
+func (r *skuRepository) CreateSKUs(skus []data.SKU) error {
+	return r.db.Create(&skus).Error
 }
 
 func (r *skuRepository) UpdateSKU(sku *data.SKU) error {

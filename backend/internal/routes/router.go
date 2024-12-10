@@ -10,7 +10,9 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
 	"github.com/gin-gonic/gin"
 )
@@ -105,7 +107,7 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 }
 
 func (r *Router) RegisterSKURoutes(handler *sku.SKUHandler) {
-	router := r.Routes.Group("/warehouse/sku")
+	router := r.Routes.Group("/sku")
 	{
 		router.GET("", handler.GetAllSKUs)
 		router.GET("/:id", handler.GetSKUByID)
@@ -122,5 +124,29 @@ func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
 		router.POST("/generate", handler.GenerateBarcode)
 		router.GET("/:barcode", handler.RetrieveSKUByBarcode)
 		router.POST("/print", handler.PrintAdditionalBarcodes)
+	}
+}
+
+func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
+	router := r.Routes.Group("/inventory")
+	{
+		router.POST("/receive", handler.ReceiveInventory)
+		router.GET("/levels/:warehouseID", handler.GetInventoryLevels)
+		router.POST("/pickup", handler.PickupStock)
+		router.POST("/transfer", handler.TransferInventory)
+
+		router.GET("/expiration/upcoming/:warehouseID", handler.GetExpiringItems)
+		router.POST("/expiration/extend", handler.ExtendExpiration)
+
+		router.GET("/deliveries", handler.GetDeliveries)
+	}
+}
+
+func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
+	router := r.Routes.Group("/warehouse")
+	{
+		router.POST("/stores", handler.AssignStoreToWarehouse)
+		router.PUT("/stores/:storeId", handler.ReassignStore)
+		router.GET("/:warehouseId/stores", handler.ListStoresForWarehouse)
 	}
 }

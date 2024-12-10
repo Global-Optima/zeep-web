@@ -1,9 +1,11 @@
 package inventory
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory/types"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +19,8 @@ type InventoryRepository interface {
 	ExtendExpiration(deliveryID uint, newExpirationDate time.Time) error
 	GetDeliveryByID(deliveryID uint, delivery *data.Delivery) error
 	UpdateDeliveryStatus(delivery data.Delivery) error
+	ConvertInventoryItemsToStockRequest(items []types.InventoryItem) ([]data.StockRequestIngredient, error)
+	GetDeliveries(warehouseID *uint, status string, startDate, endDate *time.Time) ([]data.Delivery, error)
 }
 
 type inventoryRepository struct {
@@ -115,4 +119,44 @@ func (r *inventoryRepository) UpdateDeliveryStatus(delivery data.Delivery) error
 	return r.db.Model(&data.Delivery{}).
 		Where("id = ?", delivery.ID).
 		Update("status", delivery.Status).Error
+}
+
+func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.InventoryItem) ([]data.StockRequestIngredient, error) {
+	converted := make([]data.StockRequestIngredient, len(items))
+
+	for i, item := range items {
+		var mapping data.IngredientsMapping
+		err := r.db.Where("sku_id = ?", item.SKU_ID).First(&mapping).Error
+		if err != nil {
+			return nil, fmt.Errorf("failed to find ingredient mapping for SKU_ID %d: %w", item.SKU_ID, err)
+		}
+
+		converted[i] = data.StockRequestIngredient{
+			IngredientID: mapping.IngredientID,
+			Quantity:     item.Quantity,
+		}
+	}
+
+	return converted, nil
+}
+
+func (r *inventoryRepository) GetDeliveries(warehouseID *uint, status string, startDate, endDate *time.Time) ([]data.Delivery, error) {
+	var deliveries []data.Delivery
+	query := r.db.Model(&data.Delivery{})
+
+	if warehouseID != nil {
+		query = query.Where("target = ?", *warehouseID)
+	}
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+	if startDate != nil {
+		query = query.Where("delivery_date >= ?", *startDate)
+	}
+	if endDate != nil {
+		query = query.Where("delivery_date <= ?", *endDate)
+	}
+
+	err := query.Find(&deliveries).Error
+	return deliveries, err
 }
