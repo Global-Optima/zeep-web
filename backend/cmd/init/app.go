@@ -87,8 +87,15 @@ func InitializeModule[T any, H any](
 func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo storage.StorageRepository) *gin.Engine {
 	cfg := config.GetConfig()
 
-	router := gin.Default()
+	router := gin.New()
 	router.Use(logger.ZapRequestLogger())
+
+	serviceLogger := logger.GetZapServiceLogger()
+
+	serviceLogger.Info("info")
+	serviceLogger.Warn("warn")
+	serviceLogger.Error("error")
+
 	router.Use(gin.Recovery())
 
 	router.Use(cors.New(cors.Config{
@@ -159,6 +166,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 				orders.NewOrderRepository(dbHandler.DB),
 				product.NewProductRepository(dbHandler.DB),
 				additives.NewAdditiveRepository(dbHandler.DB),
+				serviceLogger,
 			), nil
 		},
 		orders.NewOrderHandler,
@@ -194,7 +202,7 @@ func InitializeStorage(cfg *config.Config) storage.StorageRepository {
 func InitializeApp() (*gin.Engine, *config.Config) {
 	cfg := InitializeConfig()
 
-	err := logger.Init("info", "app.log", cfg.IsDevelopment)
+	err := logger.InitRequestLogger("info", "gin.log", "service.log", cfg.IsDevelopment)
 	if err != nil {
 		panic(err)
 	}

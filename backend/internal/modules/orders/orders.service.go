@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
@@ -32,13 +33,15 @@ type orderService struct {
 	orderRepo    OrderRepository
 	productRepo  product.ProductRepository
 	additiveRepo additives.AdditiveRepository
+	logger       *zap.SugaredLogger
 }
 
-func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository) OrderService {
+func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, logger *zap.SugaredLogger) OrderService {
 	return &orderService{
 		orderRepo:    orderRepo,
 		productRepo:  productRepo,
 		additiveRepo: additiveRepo,
+		logger:       logger,
 	}
 }
 
@@ -46,6 +49,7 @@ func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepos
 func (s *orderService) GetAllBaristaOrders(storeID uint, status *string) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetAllBaristaOrders(storeID, status)
 	if err != nil {
+		s.logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -60,6 +64,7 @@ func (s *orderService) GetAllBaristaOrders(storeID uint, status *string) ([]type
 func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 	suborders, err := s.orderRepo.GetSubOrdersByOrderID(orderID)
 	if err != nil {
+		s.logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -77,6 +82,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 	// Validate product sizes and additives
 	validations, err := s.ValidationResults(productSizeIDs, additiveIDs)
 	if err != nil {
+		s.logger.Error(err.Error())
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
@@ -87,7 +93,8 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 	// Save the order and related data to the database
 	err = s.orderRepo.CreateOrder(&order)
 	if err != nil {
-		return nil, fmt.Errorf("failed to save order to database: %w", err)
+		s.logger.Error(err.Error())
+		return nil, err
 	}
 
 	return &order, nil
@@ -98,12 +105,14 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 	// Update suborder status
 	err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
 	if err != nil {
+		s.logger.Error(err.Error())
 		return fmt.Errorf("failed to complete suborder: %w", err)
 	}
 
 	// Check if all suborders for the parent order are completed
 	orderID, allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(subOrderID)
 	if err != nil {
+		s.logger.Error(err.Error())
 		return fmt.Errorf("failed to check suborders: %w", err)
 	}
 
@@ -111,6 +120,7 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 	if allCompleted {
 		order, err := s.orderRepo.GetOrderById(orderID)
 		if err != nil {
+			s.logger.Error(err.Error())
 			return fmt.Errorf("failed to fetch order: %w", err)
 		}
 
@@ -122,7 +132,9 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		}
 
 		err = s.orderRepo.UpdateOrderStatus(orderID, newStatus)
+
 		if err != nil {
+			s.logger.Error(err.Error())
 			return fmt.Errorf("failed to update order status: %w", err)
 		}
 	}
@@ -134,6 +146,7 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	order, err := s.orderRepo.GetOrderById(orderID)
 	if err != nil {
+		s.logger.Error(err.Error())
 		return nil, fmt.Errorf("failed to fetch order details: %w", err)
 	}
 
@@ -168,6 +181,7 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error) {
 	countsMap, err := s.orderRepo.GetStatusesCount(storeID)
 	if err != nil {
+		s.logger.Error(err.Error())
 		return types.OrderStatusesCountDTO{}, err
 	}
 
