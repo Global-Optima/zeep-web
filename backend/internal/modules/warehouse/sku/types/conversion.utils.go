@@ -15,6 +15,7 @@ func ConvertCreateSKURequestToSKU(req *CreateSKURequest) *data.SKU {
 		ExpirationFlag:   req.ExpirationFlag,
 		Quantity:         req.Quantity,
 		UnitID:           req.UnitID,
+		SupplierID:       req.SupplierID,
 		Category:         req.Category,
 		Barcode:          req.Barcode,
 		ExpirationPeriod: req.ExpirationPeriod,

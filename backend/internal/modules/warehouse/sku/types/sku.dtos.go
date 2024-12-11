@@ -35,9 +35,9 @@ type SKUResponse struct {
 	ExpirationFlag   bool    `json:"expirationFlag"`
 	Quantity         float64 `json:"quantity"`
 	UnitID           uint    `json:"unitId"`
-	UnitName         string  `json:"unitName"`
+	UnitName         string  `json:"unitName,omitempty"`
 	SupplierID       uint    `json:"supplierId"`
-	SupplierName     string  `json:"supplierName"`
+	SupplierName     string  `json:"supplierName,omitempty"`
 	Category         string  `json:"category"`
 	Barcode          string  `json:"barcode"`
 	ExpirationPeriod int     `json:"expirationPeriod"`

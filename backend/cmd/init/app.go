@@ -216,7 +216,8 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 			return inventory.NewInventoryService(
 				inventory.NewInventoryRepository(dbHandler.DB),
 				sku.NewSKURepository(dbHandler.DB),
-				barcode.NewBarcodeRepository(dbHandler.DB)), nil
+				barcode.NewBarcodeRepository(dbHandler.DB),
+				inventory.NewPackageRepository(dbHandler.DB)), nil
 		},
 		inventory.NewInventoryHandler,
 		apiRouter.RegisterInventoryRoutes,

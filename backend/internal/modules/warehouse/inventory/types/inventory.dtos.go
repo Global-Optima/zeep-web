@@ -17,6 +17,14 @@ type InventoryItem struct {
 	Quantity       float64  `json:"quantity" binding:"required,gte=0"` // Quantity to log
 	UnitID         *uint    `json:"unitId,omitempty"`                  // Required for new SKUs
 	Category       *string  `json:"category,omitempty"`                // Optional for new SKUs
+	Expiration     *int     `json:"expiration,omitempty"`              // Optional; in days, overrides default expiration
+	Package        *Package `json:"package,omitempty"`                 // Required for new SKUs
+
+}
+
+type Package struct {
+	PackageSize   float64 `json:"packageSize" binding:"required,gte=0"`
+	PackageUnitID uint    `json:"packageUnitId" binding:"required"`
 }
 
 type TransferInventoryRequest struct {
