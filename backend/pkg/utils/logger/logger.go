@@ -16,14 +16,18 @@ const (
 	InfoLevelStr    = "info"
 	WarningLevelStr = "warning"
 	ErrorLevelStr   = "error"
+	LogMaxSize      = 1024
+	LogMaxBackups   = 30
+	LogMaxAge       = 90
+	LogCompress     = true
 )
 
 var (
-	ginLogger            *zap.Logger
-	sugaredServiceLogger *zap.SugaredLogger
+	loggerGin            *zap.Logger
+	sugaredLoggerService *zap.SugaredLogger
 )
 
-func InitRequestLogger(logLevel, ginLogFile, serviceLogFile string, dev bool) error {
+func InitLoggers(logLevel, ginLogFile, serviceLogFile string, dev bool) error {
 	level, err := parseLogLevel(logLevel)
 	if err != nil {
 		return err
@@ -31,18 +35,18 @@ func InitRequestLogger(logLevel, ginLogFile, serviceLogFile string, dev bool) er
 
 	ginLog := &lumberjack.Logger{
 		Filename:   ginLogFile,
-		MaxSize:    1024,
-		MaxBackups: 30,
-		MaxAge:     90,
-		Compress:   true,
+		MaxSize:    LogMaxSize,
+		MaxBackups: LogMaxBackups,
+		MaxAge:     LogMaxAge,
+		Compress:   LogCompress,
 	}
 
 	serviceLog := &lumberjack.Logger{
 		Filename:   serviceLogFile,
-		MaxSize:    1024,
-		MaxBackups: 30,
-		MaxAge:     90,
-		Compress:   true,
+		MaxSize:    LogMaxSize,
+		MaxBackups: LogMaxBackups,
+		MaxAge:     LogMaxAge,
+		Compress:   LogCompress,
 	}
 
 	consoleEncoder := buildConsoleEncoder(dev)
@@ -72,11 +76,11 @@ func InitRequestLogger(logLevel, ginLogFile, serviceLogFile string, dev bool) er
 	serviceCore := zapcore.NewTee(consoleCore, serviceFileCore)
 	ginCore := zapcore.NewTee(consoleCore, ginFileCore)
 
-	ginLogger = zap.New(ginCore, zap.AddCaller(), zap.AddCallerSkip(1))
+	loggerGin = zap.New(ginCore, zap.AddCaller(), zap.AddCallerSkip(1))
 
-	serviceLogger := zap.New(serviceCore, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
-	zap.ReplaceGlobals(serviceLogger)
-	sugaredServiceLogger = NewSugar("service", serviceLogger)
+	loggerService := zap.New(serviceCore, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	zap.ReplaceGlobals(loggerService)
+	sugaredLoggerService = NewSugar("service", loggerService)
 
 	// Test log entry
 	zap.L().Info("Logger initialized", zap.String("level", logLevel))
@@ -129,12 +133,12 @@ func NewSugar(name string, logger *zap.Logger) *zap.SugaredLogger {
 		return logger.Sugar()
 	}
 
-	sugaredServiceLogger = logger.Named(name).Sugar()
+	sugaredLoggerService = logger.Named(name).Sugar()
 
-	return sugaredServiceLogger
+	return sugaredLoggerService
 }
 
-func ZapRequestLogger() gin.HandlerFunc {
+func ZapLoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.FullPath()
@@ -162,7 +166,7 @@ func ZapRequestLogger() gin.HandlerFunc {
 			lvl = zap.InfoLevel
 		}
 
-		logger := ginLogger // or zap.L() if you prefer the global
+		logger := loggerGin // or zap.L() if you prefer the global
 		if !logger.Core().Enabled(lvl) {
 			return
 		}
@@ -194,14 +198,14 @@ func logMessage(msg string, lvl zapcore.Level, fields []zap.Field) {
 
 	switch lvl {
 	case zap.InfoLevel:
-		ginLogger.Info(msg, fields...)
+		loggerGin.Info(msg, fields...)
 	case zap.WarnLevel:
-		ginLogger.Warn(msg, fields...)
+		loggerGin.Warn(msg, fields...)
 	case zap.ErrorLevel:
-		ginLogger.Error(msg, fields...)
+		loggerGin.Error(msg, fields...)
 	}
 }
 
-func GetZapServiceLogger() *zap.SugaredLogger {
-	return sugaredServiceLogger
+func GetZapSugaredLogger() *zap.SugaredLogger {
+	return sugaredLoggerService
 }

@@ -88,13 +88,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	cfg := config.GetConfig()
 
 	router := gin.New()
-	router.Use(logger.ZapRequestLogger())
-
-	serviceLogger := logger.GetZapServiceLogger()
-
-	serviceLogger.Info("info")
-	serviceLogger.Warn("warn")
-	serviceLogger.Error("error")
+	router.Use(logger.ZapLoggerMiddleware())
 
 	router.Use(gin.Recovery())
 
@@ -166,7 +160,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 				orders.NewOrderRepository(dbHandler.DB),
 				product.NewProductRepository(dbHandler.DB),
 				additives.NewAdditiveRepository(dbHandler.DB),
-				serviceLogger,
+				logger.GetZapSugaredLogger(),
 			), nil
 		},
 		orders.NewOrderHandler,
@@ -202,7 +196,7 @@ func InitializeStorage(cfg *config.Config) storage.StorageRepository {
 func InitializeApp() (*gin.Engine, *config.Config) {
 	cfg := InitializeConfig()
 
-	err := logger.InitRequestLogger("info", "gin.log", "service.log", cfg.IsDevelopment)
+	err := logger.InitLoggers("info", "logs/gin.log", "logs/service.log", cfg.IsDevelopment)
 	if err != nil {
 		panic(err)
 	}
