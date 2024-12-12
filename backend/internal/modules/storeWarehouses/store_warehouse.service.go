@@ -3,14 +3,16 @@ package storeWarehouses
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
-	"github.com/pkg/errors"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
 type StoreWarehouseService interface {
-	GetStoreWarehouseStockList(query types.GetStoreWarehouseStockQuery) ([]types.StoreWarehouseIngredientDTO, error)
-	GetStoreWarehouseStockById(storeId, ingredientId uint) (*types.StoreWarehouseIngredientDTO, error)
-	UpdateStoreWarehouseStockById(id uint, input types.UpdateStoreWarehouseIngredientDTO) error
+	AddStock(storeId uint, dto types.AddStockDTO) (uint, error)
+	GetStockList(storeId uint, query types.GetStockQuery) ([]types.StockDTO, error)
+	GetStockById(storeId, stockId uint) (*types.StockDTO, error)
+	UpdateStockById(storeId, stockId uint, input types.UpdateStockDTO) error
+	DeleteStockById(storeId, stockId uint) error
 }
 
 type storeWarehouseService struct {
@@ -25,14 +27,26 @@ func NewStoreWarehouseService(repo StoreWarehouseRepository, logger *zap.Sugared
 	}
 }
 
-func (s *storeWarehouseService) GetStoreWarehouseStockList(query types.GetStoreWarehouseStockQuery) ([]types.StoreWarehouseIngredientDTO, error) {
-	ingredients, err := s.repo.GetStoreWarehouseStockList(query)
+func (s *storeWarehouseService) AddStock(storeId uint, dto types.AddStockDTO) (uint, error) {
+	id, err := s.repo.AddStock(storeId, dto)
 	if err != nil {
-		s.logger.Errorf("error getting store ingredients: %v", err)
+		wrappedErr := utils.WrapError("error adding new stock element", err)
+		s.logger.Error(wrappedErr)
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (s *storeWarehouseService) GetStockList(storeId uint, query types.GetStockQuery) ([]types.StockDTO, error) {
+	ingredients, err := s.repo.GetStockList(storeId, query)
+	if err != nil {
+		wrappedErr := utils.WrapError("error getting store stock list", err)
+		s.logger.Error(wrappedErr)
 		return nil, err
 	}
 
-	dtos := make([]types.StoreWarehouseIngredientDTO, len(ingredients))
+	dtos := make([]types.StockDTO, len(ingredients))
 	for i, ingredient := range ingredients {
 		dtos[i] = *mapToStoreWarehouseIngredient(&ingredient)
 	}
@@ -40,30 +54,30 @@ func (s *storeWarehouseService) GetStoreWarehouseStockList(query types.GetStoreW
 	return dtos, nil
 }
 
-func (s *storeWarehouseService) GetStoreWarehouseStockById(storeId, ingredientId uint) (*types.StoreWarehouseIngredientDTO, error) {
-	ingredient, err := s.repo.GetStoreWarehouseStockById(storeId, ingredientId)
+func (s *storeWarehouseService) GetStockById(storeId, stockId uint) (*types.StockDTO, error) {
+	ingredient, err := s.repo.GetStockById(storeId, stockId)
 	if err != nil {
-		errMsg := "error getting store ingredient"
-		s.logger.Error(errors.Wrapf(err, errMsg))
-		return nil, errors.Wrapf(err, errMsg)
+		wrappedErr := utils.WrapError("error getting store ingredient", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	return mapToStoreWarehouseIngredient(ingredient), nil
 }
 
-func (s *storeWarehouseService) UpdateStoreWarehouseStockById(id uint, input types.UpdateStoreWarehouseIngredientDTO) error {
+func (s *storeWarehouseService) UpdateStockById(storeId, stockId uint, input types.UpdateStockDTO) error {
 	updateFields, err := types.PrepareUpdateFields(input)
 	if err != nil {
-		errMsg := "error preparing update fields"
-		s.logger.Error(errors.Wrapf(err, errMsg))
-		return errors.Wrapf(err, errMsg)
+		wrappedErr := utils.WrapError("error preparing update fields", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
-	return s.repo.PartialUpdateStoreWarehouseStock(id, updateFields)
+	return s.repo.PartialUpdateStock(storeId, stockId, updateFields)
 }
 
-func mapToStoreWarehouseIngredient(storeIngredient *data.StoreWarehouseStock) *types.StoreWarehouseIngredientDTO {
-	dto := &types.StoreWarehouseIngredientDTO{
+func mapToStoreWarehouseIngredient(storeIngredient *data.StoreWarehouseStock) *types.StockDTO {
+	dto := &types.StockDTO{
 		ID:                storeIngredient.IngredientID,
 		Name:              storeIngredient.Ingredient.Name,
 		CurrentStock:      storeIngredient.Quantity,
@@ -72,4 +86,14 @@ func mapToStoreWarehouseIngredient(storeIngredient *data.StoreWarehouseStock) *t
 	}
 
 	return dto
+}
+
+func (s *storeWarehouseService) DeleteStockById(storeId, stockId uint) error {
+	err := s.repo.DeleteStockById(storeId, stockId)
+	if err != nil {
+		wrappedErr := utils.WrapError("error deleting stock", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+	return nil
 }

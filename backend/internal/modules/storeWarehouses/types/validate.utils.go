@@ -6,36 +6,24 @@ import (
 	"strconv"
 )
 
-func PrepareUpdateFields(input UpdateStoreWarehouseIngredientDTO) (map[string]interface{}, error) {
+func PrepareUpdateFields(input UpdateStockDTO) (map[string]interface{}, error) {
 	updateFields := map[string]interface{}{}
 
 	if input.CurrentStock != nil {
-		updateFields["store_warehouse_stock.quantity"] = *input.CurrentStock
+		updateFields["quantity"] = *input.CurrentStock
 	}
 	if input.LowStockThreshold != nil {
-		updateFields["store_warehouse_stock.low_stock_threshold"] = *input.LowStockThreshold
+		updateFields["low_stock_threshold"] = *input.LowStockThreshold
 	}
 
 	return updateFields, nil
 }
 
-func ParseStoreWarehouseIngredientParams(query url.Values) (*GetStoreWarehouseStockQuery, error) {
-	params := &GetStoreWarehouseStockQuery{}
+func ParseStockParams(query url.Values) (*GetStockQuery, error) {
+	params := &GetStockQuery{}
 
-	if query.Get("storeId") != "" {
-		storeID, err := strconv.ParseUint(query.Get("storeId"), 10, 64)
-		if err != nil {
-			return nil, errors.New("invalid store ID")
-		}
-		storeIDUint := uint(storeID)
-		params.StoreID = storeIDUint
-	} else {
-		return nil, errors.New("storeId is required")
-	}
-
-	// Parse `searchTerm`
 	if query.Get("searchTerm") != "" {
-		searchTerm := query.Get("role")
+		searchTerm := query.Get("searchTerm")
 		params.SearchTerm = &searchTerm
 	}
 
@@ -47,24 +35,38 @@ func ParseStoreWarehouseIngredientParams(query url.Values) (*GetStoreWarehouseSt
 		params.LowStockOnly = &lowStockOnly
 	}
 
-	if query.Get("limit") != "" {
-		limit, err := strconv.Atoi(query.Get("limit"))
-		if err != nil || limit < 0 {
-			return nil, errors.New("invalid limit")
+	return params, nil
+}
+
+func ParseAddStockParams(query url.Values) (*AddStockDTO, error) {
+	params := &AddStockDTO{}
+
+	if query.Get("ingredientId") != "" {
+		ingredientID, err := strconv.ParseUint(query.Get("ingredientId"), 10, 64)
+		if err != nil {
+			return nil, errors.New("invalid ingredient ID")
 		}
-		params.Limit = limit
+		params.IngredientID = uint(ingredientID)
 	} else {
-		params.Limit = 10 // Default value
+		return nil, errors.New("ingredientId is required")
 	}
 
-	if query.Get("offset") != "" {
-		offset, err := strconv.Atoi(query.Get("offset"))
-		if err != nil || offset < 0 {
-			return nil, errors.New("invalid offset")
+	if query.Get("currentStock") != "" {
+		currentStock, err := strconv.ParseFloat(query.Get("currentStock"), 64)
+		if err != nil {
+			return nil, errors.New("invalid current stock value")
 		}
-		params.Offset = offset
+		params.CurrentStock = currentStock
+	}
+
+	if query.Get("lowStockAlert") != "" {
+		lowStockThreshold, err := strconv.ParseFloat(query.Get("lowStockAlert"), 64)
+		if err != nil {
+			return nil, errors.New("invalid low stock alert value")
+		}
+		params.LowStockThreshold = lowStockThreshold
 	} else {
-		params.Offset = 0 // Default value
+		return nil, errors.New("lowStockAlert is required")
 	}
 
 	return params, nil

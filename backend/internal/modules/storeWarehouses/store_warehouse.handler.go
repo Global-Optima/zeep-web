@@ -1,6 +1,7 @@
 package storeWarehouses
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -15,39 +16,70 @@ func NewStoreWarehouseHandler(service StoreWarehouseService) *StoreWarehouseHand
 	return &StoreWarehouseHandler{service: service}
 }
 
-func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
-	queryParams, err := types.ParseStoreWarehouseIngredientParams(c.Request.URL.Query())
+func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
+	var dto types.AddStockDTO
+
+	storeID, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
 	if err != nil {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
-	ingredients, err := h.service.GetStoreWarehouseStockList(*queryParams)
+	id, err := h.service.AddStock(uint(storeID), dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve products")
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	utils.SuccessResponse(c, ingredients)
+	utils.SuccessResponse(c, gin.H{
+		"message": fmt.Sprintf("store warehouse stock with id %d successfully created", id),
+	})
+}
+
+func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
+	storeID, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
+	queryParams, err := types.ParseStockParams(c.Request.URL.Query())
+	if err != nil {
+		utils.SendBadRequestError(c, err.Error())
+		return
+	}
+	queryParams.Pagination = utils.ParsePagination(c)
+
+	stockList, err := h.service.GetStockList(uint(storeID), *queryParams)
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponseWithPagination(c, stockList, queryParams.Pagination)
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
+	storeId, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid store id")
+		return
+	}
 
-	storeId, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	stockId, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid store warehouse stock id")
 		return
 	}
 
-	ingredientId, err := strconv.ParseUint(c.Param("ingredientId"), 10, 64)
+	ingredients, err := h.service.GetStockById(uint(storeId), uint(stockId))
 	if err != nil {
-		utils.SendBadRequestError(c, "ingredientId is required")
-		return
-	}
-
-	ingredients, err := h.service.GetStoreWarehouseStockById(uint(storeId), uint(ingredientId))
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve products")
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
@@ -55,14 +87,15 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) UpdateStoreWarehouseIngredient(c *gin.Context) {
-	var input types.UpdateStoreWarehouseIngredientDTO
+	var input types.UpdateStockDTO
 
-	if c.Param("id") != "" {
-		utils.SendBadRequestError(c, "empty store warehouse stock id")
+	storeId, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid store warehouse store id")
 		return
 	}
 
-	storeWarehouseStockId, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	stockId, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid store warehouse stock id")
 		return
@@ -73,11 +106,33 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseIngredient(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateStoreWarehouseStockById(uint(storeWarehouseStockId), input)
+	err = h.service.UpdateStockById(uint(storeId), uint(stockId), input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve products")
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
 	utils.SuccessResponse(c, gin.H{"message": "stock updated successfully"})
+}
+
+func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
+	storeId, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid store warehouse stock id")
+		return
+	}
+
+	stockId, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid store warehouse stock id")
+		return
+	}
+
+	err = h.service.DeleteStockById(uint(storeId), uint(stockId))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, gin.H{"message": "stock deleted successfully"})
 }

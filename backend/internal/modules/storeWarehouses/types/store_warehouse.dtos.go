@@ -1,6 +1,8 @@
 package types
 
-type StoreWarehouseIngredientDTO struct {
+import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+
+type StockDTO struct {
 	ID                uint    `json:"id"`
 	Name              string  `json:"name"`
 	CurrentStock      float64 `json:"currentStock"`
@@ -9,22 +11,20 @@ type StoreWarehouseIngredientDTO struct {
 	LowStockThreshold float64 `json:"minimumStockThreshold"`
 }
 
-type GetStoreWarehouseStockQuery struct {
-	StoreID      uint    `json:"storeId" binding:"required"`
+type GetStockQuery struct {
 	SearchTerm   *string `json:"searchTerm,omitempty"`
 	LowStockOnly *bool   `json:"lowStockAlert,omitempty"`
-	Limit        int     `json:"limit,omitempty"`
-	Offset       int     `json:"offset,omitempty"`
+	Pagination   *utils.Pagination
 }
 
-type UpdateStoreWarehouseIngredientDTO struct {
+type UpdateStockDTO struct {
+	StockId           uint     `json:"stockId"`
 	CurrentStock      *float64 `json:"currentStock"`
 	LowStockThreshold *float64 `json:"lowStockThreshold"`
 }
 
-type AddIngredientDTO struct {
-	StoreID           uint     `json:"storeId" binding:"required"`
-	IngredientID      uint     `json:"ingredientId" binding:"required"`
-	CurrentStock      *float64 `json:"currentStock"`
-	LowStockThreshold float64  `json:"lowStockAlert"`
+type AddStockDTO struct {
+	IngredientID      uint    `json:"ingredientId" binding:"required"`
+	CurrentStock      float64 `json:"currentStock" binding:"required,gte=0"`
+	LowStockThreshold float64 `json:"lowStockAlert" binding:"required,gte=0"`
 }

@@ -1460,7 +1460,7 @@ VALUES
 
 
 INSERT INTO
-    store_warehouse_stocks (store_warehouse_id, ingredient_id, quantity, lowStockThreshold, created_at, updated_at)
+    store_warehouse_stocks (store_warehouse_id, ingredient_id, quantity, low_stock_threshold, created_at, updated_at)
 VALUES
     (1, 1, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (1, 2, 50, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -1468,4 +1468,4 @@ VALUES
     (2, 2, 30, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (2, 1, 40, 80, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (3, 1, 10000, 1000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 120, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 3, 120, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

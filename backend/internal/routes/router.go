@@ -103,10 +103,13 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 }
 
 func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
-	router := r.Routes.Group("/store-ingredients")
+	router := r.Routes.Group("/store-warehouse-stock/:store_id")
+	router.Use(middleware.EmployeeIdentity(), middleware.MatchesStore())
 	{
 		router.GET("", handler.GetStoreWarehouseStockList)
 		router.GET("/:id", handler.GetStoreWarehouseStockById)
+		router.POST("", handler.AddStoreWarehouseStock)
 		router.PUT("/:id", handler.UpdateStoreWarehouseIngredient)
+		router.DELETE("/:id", handler.DeleteStoreWarehouseStockById)
 	}
 }
