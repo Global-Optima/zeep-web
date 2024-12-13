@@ -111,11 +111,13 @@ func (s *inventoryService) ExtendExpiration(req types.ExtendExpirationRequest) e
 		return fmt.Errorf("failed to fetch delivery: %w", err)
 	}
 
-	if err := types.ValidateExpirationDate(req.NewExpirationDate, delivery.ExpirationDate); err != nil {
+	if err := types.ValidateExpirationDays(req.AddDays); err != nil {
 		return err
 	}
 
-	if err := s.repo.ExtendExpiration(req.DeliveryID, req.NewExpirationDate); err != nil {
+	newExpirationDate := delivery.ExpirationDate.AddDate(0, 0, req.AddDays)
+
+	if err := s.repo.ExtendExpiration(req.DeliveryID, newExpirationDate); err != nil {
 		return fmt.Errorf("failed to extend expiration date: %w", err)
 	}
 

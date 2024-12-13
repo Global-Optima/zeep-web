@@ -19,7 +19,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
@@ -182,11 +182,11 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	InitializeModule(
 		dbHandler,
-		func(dbHandler *database.DBHandler) (sku.SKUService, error) {
-			return sku.NewSKUService(sku.NewSKURepository(dbHandler.DB)), nil
+		func(dbHandler *database.DBHandler) (stockMaterial.StockMaterialService, error) {
+			return stockMaterial.NewStockMaterialService(stockMaterial.NewStockMaterialRepository(dbHandler.DB)), nil
 		},
-		sku.NewSKUHandler,
-		apiRouter.RegisterSKURoutes,
+		stockMaterial.NewStockMaterialHandler,
+		apiRouter.RegisterStockMaterialRoutes,
 	)
 
 	InitializeModule(
@@ -194,7 +194,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		func(dbHandler *database.DBHandler) (barcode.BarcodeService, error) {
 			return barcode.NewBarcodeService(
 				barcode.NewBarcodeRepository(dbHandler.DB),
-				sku.NewSKURepository(dbHandler.DB),
+				stockMaterial.NewStockMaterialRepository(dbHandler.DB),
 				barcode.NewPrinterService()), nil
 		},
 		barcode.NewBarcodeHandler,
@@ -206,7 +206,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		func(dbHandler *database.DBHandler) (inventory.InventoryService, error) {
 			return inventory.NewInventoryService(
 				inventory.NewInventoryRepository(dbHandler.DB),
-				sku.NewSKURepository(dbHandler.DB),
+				stockMaterial.NewStockMaterialRepository(dbHandler.DB),
 				barcode.NewBarcodeRepository(dbHandler.DB),
 				inventory.NewPackageRepository(dbHandler.DB)), nil
 		},

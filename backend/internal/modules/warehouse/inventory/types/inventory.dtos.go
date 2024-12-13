@@ -51,8 +51,8 @@ type UpcomingExpirationResponse struct {
 }
 
 type ExtendExpirationRequest struct {
-	DeliveryID        uint      `json:"deliveryId" binding:"required"`
-	NewExpirationDate time.Time `json:"newExpirationDate" binding:"required"`
+	DeliveryID uint `json:"deliveryId" binding:"required"`
+	AddDays    int  `json:"addDays" binding:"required,gte=0"`
 }
 
 type DeliveryResponse struct {
