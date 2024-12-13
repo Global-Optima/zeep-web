@@ -30,7 +30,7 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.AddStock(uint(storeID), dto)
+	id, err := h.service.AddStock(uint(storeID), &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
@@ -48,14 +48,13 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 		return
 	}
 
-	queryParams, err := types.ParseStockParams(c.Request.URL.Query())
+	queryParams, err := types.ParseStockParamsWithPagination(c)
 	if err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
-	queryParams.Pagination = utils.ParsePagination(c)
 
-	stockList, err := h.service.GetStockList(uint(storeID), *queryParams)
+	stockList, err := h.service.GetStockList(uint(storeID), queryParams)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
@@ -86,7 +85,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 	utils.SuccessResponse(c, ingredients)
 }
 
-func (h *StoreWarehouseHandler) UpdateStoreWarehouseIngredient(c *gin.Context) {
+func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 	var input types.UpdateStockDTO
 
 	storeId, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
@@ -106,7 +105,7 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseIngredient(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateStockById(uint(storeId), uint(stockId), input)
+	err = h.service.UpdateStockById(uint(storeId), uint(stockId), &input)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return

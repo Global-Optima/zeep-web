@@ -9,6 +9,7 @@ import (
 	"strconv"
 )
 
+// MatchesStore middleware must be used in case the url path contains parameter store_id
 func MatchesStore() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		storeID, err := strconv.ParseUint(c.Param("store_id"), 10, 64)

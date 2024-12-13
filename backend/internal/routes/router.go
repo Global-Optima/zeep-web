@@ -109,7 +109,7 @@ func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWare
 		router.GET("", handler.GetStoreWarehouseStockList)
 		router.GET("/:id", handler.GetStoreWarehouseStockById)
 		router.POST("", handler.AddStoreWarehouseStock)
-		router.PUT("/:id", handler.UpdateStoreWarehouseIngredient)
+		router.PUT("/:id", handler.UpdateStoreWarehouseStockById)
 		router.DELETE("/:id", handler.DeleteStoreWarehouseStockById)
 	}
 }

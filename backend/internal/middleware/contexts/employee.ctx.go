@@ -7,12 +7,12 @@ import (
 	"reflect"
 )
 
-const EmployeeCtx = "Employee"
+const EMPLOYEE_CONTEXT = "Employee"
 
 func GetEmployeeClaimsFromCtx(c *gin.Context) (*utils.EmployeeClaims, error) {
 	var claims *utils.EmployeeClaims
 
-	ctx, ok := c.Get(EmployeeCtx)
+	ctx, ok := c.Get(EMPLOYEE_CONTEXT)
 	if !ok {
 		return nil, fmt.Errorf("no employee context found")
 	}
@@ -27,5 +27,5 @@ func GetEmployeeClaimsFromCtx(c *gin.Context) (*utils.EmployeeClaims, error) {
 }
 
 func SetEmployeeCtx(c *gin.Context, claims *utils.EmployeeClaims) {
-	c.Set(EmployeeCtx, claims)
+	c.Set(EMPLOYEE_CONTEXT, claims)
 }
