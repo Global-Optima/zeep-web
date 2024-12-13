@@ -1,6 +1,7 @@
 package inventory
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -45,17 +46,35 @@ func (r *inventoryRepository) LogIncomingInventory(deliveries []data.Delivery) e
 
 func (r *inventoryRepository) LogAndUpdateStock(deliveries []data.Delivery, warehouseID uint) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-
 		if err := tx.Create(&deliveries).Error; err != nil {
 			return fmt.Errorf("failed to log deliveries: %w", err)
 		}
 
 		for _, delivery := range deliveries {
-			err := tx.Model(&data.WarehouseStock{}).
-				Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, delivery.StockMaterialID).
-				Update("quantity", gorm.Expr("quantity + ?", delivery.Quantity)).Error
+			var stock data.WarehouseStock
+			err := tx.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, delivery.StockMaterialID).
+				First(&stock).Error
+
 			if err != nil {
-				return fmt.Errorf("failed to update stock levels: %w", err)
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					newStock := data.WarehouseStock{
+						WarehouseID:     warehouseID,
+						StockMaterialID: delivery.StockMaterialID,
+						Quantity:        delivery.Quantity,
+					}
+					if err := tx.Create(&newStock).Error; err != nil {
+						return fmt.Errorf("failed to create warehouse stock: %w", err)
+					}
+				} else {
+					return fmt.Errorf("failed to query warehouse stock: %w", err)
+				}
+			} else {
+				err = tx.Model(&data.WarehouseStock{}).
+					Where("id = ?", stock.ID).
+					Update("quantity", gorm.Expr("quantity + ?", delivery.Quantity)).Error
+				if err != nil {
+					return fmt.Errorf("failed to update warehouse stock quantity: %w", err)
+				}
 			}
 		}
 

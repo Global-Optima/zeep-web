@@ -15,6 +15,9 @@ func ValidateExpirationDate(newExpirationDate, oldExpirationDate time.Time) erro
 }
 
 func ValidatePackage(item InventoryItem) *data.Package {
+	if item.Package == nil {
+		return nil
+	}
 	if item.SKU_ID == 0 {
 		return nil
 	}
