@@ -8,7 +8,6 @@ func ConvertToListStoresResponse(stores []data.Store) []ListStoresResponse {
 		response[i] = ListStoresResponse{
 			StoreID: store.ID,
 			Name:    store.Name,
-			Status:  store.Status,
 		}
 	}
 	return response

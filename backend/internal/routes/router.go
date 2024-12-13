@@ -110,10 +110,10 @@ func (r *Router) RegisterSKURoutes(handler *sku.SKUHandler) {
 	{
 		router.GET("", handler.GetAllSKUs)
 		router.GET("/:id", handler.GetSKUByID)
-		router.POST("", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.CreateSKU)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.UpdateSKU)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.DeleteSKU)
-		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(types.RoleAdmin), handler.DeactivateSKU)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateSKU)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateSKU)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeleteSKU)
+		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeactivateSKU)
 	}
 }
 

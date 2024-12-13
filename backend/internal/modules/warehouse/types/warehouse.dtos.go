@@ -12,5 +12,4 @@ type ReassignStoreRequest struct {
 type ListStoresResponse struct {
 	StoreID uint   `json:"storeId"`
 	Name    string `json:"name"`
-	Status  string `json:"status"`
 }
