@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	EMPLOYEE_TOKEN_COOKIE_KEY = "EMPLOYEE_TOKEN"
+	EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY = "EMPLOYEE_TOKEN"
 )
 
 type EmployeeHandler struct {
@@ -172,18 +172,18 @@ func (h *EmployeeHandler) EmployeeLogin(c *gin.Context) {
 	}
 
 	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateJWT(token, claims); err != nil {
+	if err := utils.ValidateEmployeeJWT(token, claims); err != nil {
 		utils.SendInternalServerError(c, "failed to validate token")
 		return
 	}
 
-	utils.SetCookie(c, EMPLOYEE_TOKEN_COOKIE_KEY, token, utils.CookieExpiration)
+	utils.SetCookie(c, EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, token, utils.CookieExpiration)
 
 	utils.SuccessResponse(c, gin.H{"message": "login successful", "token": token})
 }
 
 func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
-	token, err := c.Cookie(EMPLOYEE_TOKEN_COOKIE_KEY)
+	token, err := c.Cookie(EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 
 	if err != nil {
 		utils.SendErrorWithStatus(c, "authentication token missing", http.StatusUnauthorized)
@@ -191,7 +191,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 	}
 
 	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateJWT(token, claims); err != nil {
+	if err := utils.ValidateEmployeeJWT(token, claims); err != nil {
 		utils.SendErrorWithStatus(c, "invalid or expired token", http.StatusUnauthorized)
 		return
 	}
@@ -208,7 +208,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 }
 
 func (h *EmployeeHandler) EmployeeLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, EMPLOYEE_TOKEN_COOKIE_KEY)
+	token, err := utils.GetCookie(c, EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 	if err != nil {
 		// Token not found in cookie
 		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
@@ -216,12 +216,12 @@ func (h *EmployeeHandler) EmployeeLogout(c *gin.Context) {
 	}
 
 	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateJWT(token, claims); err != nil {
+	if err := utils.ValidateEmployeeJWT(token, claims); err != nil {
 		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
 		return
 	}
 
-	utils.ClearCookie(c, EMPLOYEE_TOKEN_COOKIE_KEY)
+	utils.ClearCookie(c, EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 
 	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
 }

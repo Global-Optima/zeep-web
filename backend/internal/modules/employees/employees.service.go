@@ -3,6 +3,7 @@ package employees
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -223,10 +224,23 @@ func (s *employeeService) EmployeeLogin(email, password string) (string, error) 
 		workplaceType = data.WarehouseEmployeeType
 	}
 
-	claims := utils.EmployeeClaims{
+	cfg := config.GetConfig()
+
+	AccessClaims := utils.EmployeeClaims{
 		ID: employee.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(cfg.JWT.AccessTokenTTL)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+		Role:         employee.Role,
+		WorkplaceID:  workplaceID,
+		EmployeeType: workplaceType,
+	}
+
+	RefreshClaims := utils.EmployeeClaims{
+		ID: employee.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(cfg.JWT.RefreshTokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 		Role:         employee.Role,

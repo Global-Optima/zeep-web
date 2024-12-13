@@ -28,18 +28,38 @@ type CustomerClaims struct {
 	IsVerified bool   `json:"isVerified"`
 }
 
-func GenerateJWT(claims jwt.Claims, expiration time.Duration) (string, error) {
-	cfg := config.GetConfig()
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(cfg.JWT.SecretKey))
+type TokenPair struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
-func ValidateJWT(tokenString string, claims jwt.Claims) error {
+func GenerateJWT(claims jwt.Claims, expiration time.Duration) (TokenPair, error) {
+	cfg := config.GetConfig()
+
+	tokenWithClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	accessToken, err := tokenWithClaims.SignedString([]byte(cfg.JWT.EmployeeSecretKey))
+	if err != nil {
+		return TokenPair{}, err
+	}
+	refreshToken, err := tokenWithClaims.SignedString([]byte(cfg.JWT.EmployeeSecretKey))
+	if err != nil {
+		return TokenPair{}, err
+	}
+
+	tokenPair := TokenPair{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	return tokenPair, nil
+}
+
+func ValidateEmployeeJWT(tokenString string, claims jwt.Claims) error {
 	cfg := config.GetConfig()
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cfg.JWT.SecretKey), nil
+		return []byte(cfg.JWT.EmployeeSecretKey), nil
 	})
 
 	if err != nil {
