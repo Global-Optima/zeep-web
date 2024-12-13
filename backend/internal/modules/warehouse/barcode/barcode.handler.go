@@ -30,20 +30,20 @@ func (h *BarcodeHandler) GenerateBarcode(c *gin.Context) {
 	utils.SuccessResponse(c, response)
 }
 
-func (h *BarcodeHandler) RetrieveSKUByBarcode(c *gin.Context) {
+func (h *BarcodeHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
 	barcode := c.Param("barcode")
 	if barcode == "" {
 		utils.SendBadRequestError(c, "Barcode is required")
 		return
 	}
 
-	req := types.RetrieveSKUByBarcodeRequest{
+	req := types.RetrieveStockMaterialByBarcodeRequest{
 		Barcode: barcode,
 	}
 
-	response, err := h.service.RetrieveSKUByBarcode(&req)
+	response, err := h.service.RetrieveStockMaterialByBarcode(&req)
 	if err != nil {
-		if err.Error() == "SKU not found with the provided barcode" {
+		if err.Error() == "StockMaterial not found with the provided barcode" {
 			utils.SendNotFoundError(c, err.Error())
 		} else {
 			utils.SendInternalServerError(c, err.Error())

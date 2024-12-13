@@ -5,9 +5,9 @@ import "time"
 type StockRequestStatus string
 
 var (
-	StockRequestCreated    StockRequestStatus = "Created"
-	StockRequestInDelivery StockRequestStatus = "In Delivery"
-	StockRequestCompleted  StockRequestStatus = "Completed"
+	StockRequestCreated    StockRequestStatus = "CREATED"
+	StockRequestInDelivery StockRequestStatus = "IN_DELIVERY"
+	StockRequestCompleted  StockRequestStatus = "COMPLETED"
 )
 
 type Warehouse struct {

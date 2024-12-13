@@ -9,16 +9,16 @@ type ReceiveInventoryRequest struct {
 }
 
 type InventoryItem struct {
-	SKU_ID         uint     `json:"skuId"`                             // For existing SKUs
-	Name           *string  `json:"name"`                              // Required for new SKUs
-	Description    *string  `json:"description,omitempty"`             // Optional for new SKUs
-	SafetyStock    *float64 `json:"safetyStock,omitempty"`             // Required for new SKUs
-	ExpirationFlag *bool    `json:"expirationFlag,omitempty"`          // Required for new SKUs
-	Quantity       float64  `json:"quantity" binding:"required,gte=0"` // Quantity to log
-	UnitID         *uint    `json:"unitId,omitempty"`                  // Required for new SKUs
-	Category       *string  `json:"category,omitempty"`                // Optional for new SKUs
-	Expiration     *int     `json:"expiration,omitempty"`              // Optional; in days, overrides default expiration
-	Package        *Package `json:"package,omitempty"`                 // Required for new SKUs
+	StockMaterialID uint     `json:"stockMaterialId"`                   // For existing SKUs
+	Name            *string  `json:"name"`                              // Required for new SKUs
+	Description     *string  `json:"description,omitempty"`             // Optional for new SKUs
+	SafetyStock     *float64 `json:"safetyStock,omitempty"`             // Required for new SKUs
+	ExpirationFlag  *bool    `json:"expirationFlag,omitempty"`          // Required for new SKUs
+	Quantity        float64  `json:"quantity" binding:"required,gte=0"` // Quantity to log
+	UnitID          *uint    `json:"unitId,omitempty"`                  // Required for new SKUs
+	Category        *string  `json:"category,omitempty"`                // Optional for new SKUs
+	Expiration      *int     `json:"expiration,omitempty"`              // Optional; in days, overrides default expiration
+	Package         *Package `json:"package,omitempty"`                 // Required for new SKUs
 
 }
 
@@ -44,10 +44,10 @@ type InventoryLevelsResponse struct {
 }
 
 type UpcomingExpirationResponse struct {
-	SKU_ID         uint      `json:"skuId"`
-	Name           string    `json:"name"`
-	ExpirationDate time.Time `json:"expirationDate"`
-	Quantity       float64   `json:"quantity"`
+	StockMaterialID uint      `json:"stockMaterialId"`
+	Name            string    `json:"name"`
+	ExpirationDate  time.Time `json:"expirationDate"`
+	Quantity        float64   `json:"quantity"`
 }
 
 type ExtendExpirationRequest struct {
@@ -56,12 +56,12 @@ type ExtendExpirationRequest struct {
 }
 
 type DeliveryResponse struct {
-	ID             uint      `json:"id"`
-	SKU_ID         uint      `json:"skuId"`
-	Source         uint      `json:"source"`
-	Target         uint      `json:"target"`
-	Barcode        string    `json:"barcode"`
-	Quantity       float64   `json:"quantity"`
-	DeliveryDate   time.Time `json:"deliveryDate"`
-	ExpirationDate time.Time `json:"expirationDate"`
+	ID              uint      `json:"id"`
+	StockMaterialID uint      `json:"stockMaterialId"`
+	Source          uint      `json:"source"`
+	Target          uint      `json:"target"`
+	Barcode         string    `json:"barcode"`
+	Quantity        float64   `json:"quantity"`
+	DeliveryDate    time.Time `json:"deliveryDate"`
+	ExpirationDate  time.Time `json:"expirationDate"`
 }

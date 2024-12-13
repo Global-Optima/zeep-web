@@ -13,7 +13,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/gin-gonic/gin"
 )
 
@@ -105,15 +105,15 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 	}
 }
 
-func (r *Router) RegisterSKURoutes(handler *sku.SKUHandler) {
-	router := r.Routes.Group("/sku")
+func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMaterialHandler) {
+	router := r.Routes.Group("/stockMaterial")
 	{
-		router.GET("", handler.GetAllSKUs)
-		router.GET("/:id", handler.GetSKUByID)
-		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateSKU)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateSKU)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeleteSKU)
-		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeactivateSKU)
+		router.GET("", handler.GetAllStockMaterials)
+		router.GET("/:id", handler.GetStockMaterialByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateStockMaterial)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStockMaterial)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeleteStockMaterial)
+		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeactivateStockMaterial)
 	}
 }
 
@@ -121,7 +121,7 @@ func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
 	router := r.Routes.Group("/barcode")
 	{
 		router.POST("/generate", handler.GenerateBarcode)
-		router.GET("/:barcode", handler.RetrieveSKUByBarcode)
+		router.GET("/:barcode", handler.RetrieveStockMaterialByBarcode)
 		router.POST("/print", handler.PrintAdditionalBarcodes)
 	}
 }

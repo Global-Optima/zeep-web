@@ -18,7 +18,7 @@ func ValidatePackage(item InventoryItem) *data.Package {
 	if item.Package == nil {
 		return nil
 	}
-	if item.SKU_ID == 0 {
+	if item.StockMaterialID == 0 {
 		return nil
 	}
 	if item.Package.PackageSize == 0 {
@@ -28,7 +28,7 @@ func ValidatePackage(item InventoryItem) *data.Package {
 		return nil
 	}
 	return &data.Package{
-		StockMaterialID: item.SKU_ID,
+		StockMaterialID: item.StockMaterialID,
 		PackageSize:     item.Package.PackageSize,
 		PackageUnitID:   item.Package.PackageUnitID,
 	}

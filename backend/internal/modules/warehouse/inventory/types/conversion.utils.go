@@ -12,9 +12,9 @@ func ConvertInventoryItemsToStockRequest(items []InventoryItem, db *gorm.DB) ([]
 
 	for i, item := range items {
 		var mapping data.IngredientsMapping
-		err := db.Where("stock_material_id = ?", item.SKU_ID).First(&mapping).Error
+		err := db.Where("stock_material_id = ?", item.StockMaterialID).First(&mapping).Error
 		if err != nil {
-			return nil, fmt.Errorf("failed to find ingredient mapping for SKU_ID %d: %w", item.SKU_ID, err)
+			return nil, fmt.Errorf("failed to find ingredient mapping for StockMaterialID %d: %w", item.StockMaterialID, err)
 		}
 
 		converted[i] = data.StockRequestIngredient{
@@ -30,14 +30,14 @@ func DeliveriesToDeliveryResponses(deliveries []data.Delivery) []DeliveryRespons
 	response := make([]DeliveryResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = DeliveryResponse{
-			ID:             delivery.ID,
-			SKU_ID:         delivery.StockMaterialID,
-			Source:         delivery.SupplierID,
-			Target:         delivery.WarehouseID,
-			Barcode:        delivery.Barcode,
-			Quantity:       delivery.Quantity,
-			DeliveryDate:   delivery.DeliveryDate,
-			ExpirationDate: delivery.ExpirationDate,
+			ID:              delivery.ID,
+			StockMaterialID: delivery.StockMaterialID,
+			Source:          delivery.SupplierID,
+			Target:          delivery.WarehouseID,
+			Barcode:         delivery.Barcode,
+			Quantity:        delivery.Quantity,
+			DeliveryDate:    delivery.DeliveryDate,
+			ExpirationDate:  delivery.ExpirationDate,
 		}
 	}
 	return response
@@ -47,8 +47,8 @@ func StocksToInventoryItems(stocks []data.WarehouseStock) []InventoryItem {
 	response := make([]InventoryItem, len(stocks))
 	for i, stock := range stocks {
 		response[i] = InventoryItem{
-			SKU_ID:   stock.StockMaterialID,
-			Quantity: stock.Quantity,
+			StockMaterialID: stock.StockMaterialID,
+			Quantity:        stock.Quantity,
 		}
 	}
 	return response
@@ -58,10 +58,10 @@ func ExpiringItemsToResponses(deliveries []data.Delivery) []UpcomingExpirationRe
 	response := make([]UpcomingExpirationResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = UpcomingExpirationResponse{
-			SKU_ID:         delivery.StockMaterialID,
-			Name:           delivery.StockMaterial.Name,
-			ExpirationDate: delivery.ExpirationDate,
-			Quantity:       delivery.Quantity,
+			StockMaterialID: delivery.StockMaterialID,
+			Name:            delivery.StockMaterial.Name,
+			ExpirationDate:  delivery.ExpirationDate,
+			Quantity:        delivery.Quantity,
 		}
 	}
 	return response

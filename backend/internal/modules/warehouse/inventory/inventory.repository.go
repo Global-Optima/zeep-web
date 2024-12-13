@@ -205,8 +205,8 @@ func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.
 	for i, item := range items {
 
 		var stockMaterial data.StockMaterial
-		if err := r.db.First(&stockMaterial, item.SKU_ID).Error; err != nil {
-			return nil, fmt.Errorf("failed to retrieve stock material for SKU_ID %d: %w", item.SKU_ID, err)
+		if err := r.db.First(&stockMaterial, item.StockMaterialID).Error; err != nil {
+			return nil, fmt.Errorf("failed to retrieve stock material for StockMaterialID %d: %w", item.StockMaterialID, err)
 		}
 
 		var mapping data.IngredientsMapping

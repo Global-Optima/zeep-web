@@ -1,9 +1,9 @@
 package types
 
 const (
-	AuditActionReceiveInventory = "Receive Inventory"
-	AuditActionTransferStart    = "Transfer Start"
-	AuditActionTransferComplete = "Transfer Complete"
-	AuditActionStorePickup      = "Store Pickup"
-	AuditActionExpirationExtend = "Expiration Extend"
+	AuditActionReceiveInventory = "RECEIVE_INVENTORY"
+	AuditActionTransferStart    = "TRANSFER_START"
+	AuditActionTransferComplete = "TRANSFER_COMPLETE"
+	AuditActionStorePickup      = "STORE_PICKUP"
+	AuditActionExpirationExtend = "EXPIRATION_EXTEND"
 )

@@ -5,54 +5,54 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type BarcodeService interface {
 	GenerateBarcode(req *types.GenerateBarcodeRequest) (*types.GenerateBarcodeResponse, error)
-	RetrieveSKUByBarcode(req *types.RetrieveSKUByBarcodeRequest) (*types.RetrieveSKUByBarcodeResponse, error)
+	RetrieveStockMaterialByBarcode(req *types.RetrieveStockMaterialByBarcodeRequest) (*types.RetrieveStockMaterialByBarcodeResponse, error)
 	PrintAdditionalBarcodes(req *types.PrintAdditionalBarcodesRequest) (*types.PrintAdditionalBarcodesResponse, error)
 }
 
 type barcodeService struct {
-	repo    BarcodeRepository
-	skuRepo sku.SKURepository
+	repo              BarcodeRepository
+	stockMaterialRepo stockMaterial.StockMaterialRepository
 
 	printerService PrinterService
 }
 
-func NewBarcodeService(repo BarcodeRepository, skuRepo sku.SKURepository, printerService PrinterService) BarcodeService {
+func NewBarcodeService(repo BarcodeRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, printerService PrinterService) BarcodeService {
 	return &barcodeService{
-		repo:           repo,
-		skuRepo:        skuRepo,
-		printerService: printerService,
+		repo:              repo,
+		stockMaterialRepo: stockMaterialRepo,
+		printerService:    printerService,
 	}
 }
 
 func (s *barcodeService) GenerateBarcode(req *types.GenerateBarcodeRequest) (*types.GenerateBarcodeResponse, error) {
-	sku, err := s.skuRepo.GetSKUByID(req.SKU_ID)
+	stockMaterial, err := s.stockMaterialRepo.GetStockMaterialByID(req.StockMaterialID)
 	if err != nil {
 		return nil, err
 	}
-	if sku == nil {
-		return nil, errors.New("SKU not found")
+	if stockMaterial == nil {
+		return nil, errors.New("StockMaterial not found")
 	}
 
-	supplierMaterial, err := s.repo.GetSupplierMaterialByStockMaterialID(req.SKU_ID)
+	supplierMaterial, err := s.repo.GetSupplierMaterialByStockMaterialID(req.StockMaterialID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch supplier for SKU: %w", err)
+		return nil, fmt.Errorf("failed to fetch supplier for StockMaterial: %w", err)
 	}
 	if supplierMaterial == nil {
-		return nil, errors.New("supplier not found for the given SKU")
+		return nil, errors.New("supplier not found for the given StockMaterial")
 	}
 
-	barcode, err := utils.GenerateUPCBarcode(*sku, supplierMaterial.SupplierID)
+	barcode, err := utils.GenerateUPCBarcode(*stockMaterial, supplierMaterial.SupplierID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.repo.AssignBarcode(barcode, req.SKU_ID)
+	err = s.repo.AssignBarcode(barcode, req.StockMaterialID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,30 +62,30 @@ func (s *barcodeService) GenerateBarcode(req *types.GenerateBarcodeRequest) (*ty
 		return nil, err
 	}
 
-	response := types.ToGenerateBarcodeResponse(*sku, barcode)
+	response := types.ToGenerateBarcodeResponse(*stockMaterial, barcode)
 	return &response, nil
 }
 
-func (s *barcodeService) RetrieveSKUByBarcode(req *types.RetrieveSKUByBarcodeRequest) (*types.RetrieveSKUByBarcodeResponse, error) {
-	sku, err := s.repo.GetSKUByBarcode(req.Barcode)
+func (s *barcodeService) RetrieveStockMaterialByBarcode(req *types.RetrieveStockMaterialByBarcodeRequest) (*types.RetrieveStockMaterialByBarcodeResponse, error) {
+	stockMaterial, err := s.repo.GetStockMaterialByBarcode(req.Barcode)
 	if err != nil {
 		return nil, err
 	}
-	if sku == nil {
-		return nil, errors.New("SKU not found with the provided barcode")
+	if stockMaterial == nil {
+		return nil, errors.New("StockMaterial not found with the provided barcode")
 	}
 
-	response := types.ToRetrieveSKUByBarcodeResponse(*sku)
+	response := types.ToRetrieveStockMaterialByBarcodeResponse(*stockMaterial)
 	return &response, nil
 }
 
 func (s *barcodeService) PrintAdditionalBarcodes(req *types.PrintAdditionalBarcodesRequest) (*types.PrintAdditionalBarcodesResponse, error) {
-	sku, err := s.skuRepo.GetSKUByID(req.SKU_ID)
+	stockMaterial, err := s.stockMaterialRepo.GetStockMaterialByID(req.StockMaterialID)
 	if err != nil {
 		return nil, err
 	}
-	if sku == nil {
-		return nil, errors.New("SKU not found")
+	if stockMaterial == nil {
+		return nil, errors.New("StockMaterial not found")
 	}
 
 	if req.Quantity <= 0 {
@@ -94,13 +94,13 @@ func (s *barcodeService) PrintAdditionalBarcodes(req *types.PrintAdditionalBarco
 
 	var barcodes []string
 	for i := 0; i < req.Quantity; i++ {
-		err := s.printerService.PrintBarcode(sku.Barcode)
+		err := s.printerService.PrintBarcode(stockMaterial.Barcode)
 		if err != nil {
 			return nil, fmt.Errorf("failed to print barcode: %w", err)
 		}
-		barcodes = append(barcodes, sku.Barcode)
+		barcodes = append(barcodes, stockMaterial.Barcode)
 	}
 
-	response := types.ToPrintAdditionalBarcodesResponse(req.SKU_ID, barcodes)
+	response := types.ToPrintAdditionalBarcodesResponse(req.StockMaterialID, barcodes)
 	return &response, nil
 }

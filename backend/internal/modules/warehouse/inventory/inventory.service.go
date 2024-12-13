@@ -7,7 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 )
 
 type InventoryService interface {
@@ -21,35 +21,35 @@ type InventoryService interface {
 }
 
 type inventoryService struct {
-	repo        InventoryRepository
-	skuRepo     sku.SKURepository
-	barcodeRepo barcode.BarcodeRepository
-	packageRepo PackageRepository
+	repo              InventoryRepository
+	stockMaterialRepo stockMaterial.StockMaterialRepository
+	barcodeRepo       barcode.BarcodeRepository
+	packageRepo       PackageRepository
 }
 
-func NewInventoryService(repo InventoryRepository, skuRepo sku.SKURepository, barcodeRepo barcode.BarcodeRepository, packageRepo PackageRepository) InventoryService {
+func NewInventoryService(repo InventoryRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, packageRepo PackageRepository) InventoryService {
 	return &inventoryService{
-		repo:        repo,
-		skuRepo:     skuRepo,
-		barcodeRepo: barcodeRepo,
-		packageRepo: packageRepo,
+		repo:              repo,
+		stockMaterialRepo: stockMaterialRepo,
+		barcodeRepo:       barcodeRepo,
+		packageRepo:       packageRepo,
 	}
 }
 
 func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) error {
-	existingSKUs, newSKUItems, err := s.separateExistingAndNewSKUs(req.Items)
+	existingStockMaterials, newStockMaterialItems, err := s.separateExistingAndNewStockMaterials(req.Items)
 	if err != nil {
 		return err
 	}
 
-	createdSKUs, err := s.createAndRegisterNewSKUs(req.SupplierID, newSKUItems)
+	createdStockMaterials, err := s.createAndRegisterNewStockMaterials(req.SupplierID, newStockMaterialItems)
 	if err != nil {
 		return err
 	}
 
-	fullItems := s.mergeSKUItems(req.Items, createdSKUs)
+	fullItems := s.mergeStockMaterialItems(req.Items, createdStockMaterials)
 
-	deliveries, err := s.createDeliveries(req, existingSKUs, createdSKUs, fullItems)
+	deliveries, err := s.createDeliveries(req, existingStockMaterials, createdStockMaterials, fullItems)
 	if err != nil {
 		return err
 	}
@@ -134,47 +134,47 @@ func (s *inventoryService) GetDeliveries(warehouseID *uint, startDate, endDate *
 // Helper methods
 func (s *inventoryService) createDeliveries(
 	req types.ReceiveInventoryRequest,
-	existingSKUs map[uint]*data.StockMaterial,
-	newSKUs []data.StockMaterial,
+	existingStockMaterials map[uint]*data.StockMaterial,
+	newStockMaterials []data.StockMaterial,
 	fullItems []types.InventoryItem,
 ) ([]data.Delivery, error) {
 	deliveries := []data.Delivery{}
-	newSKUMap := make(map[uint]*data.StockMaterial)
+	newStockMaterialMap := make(map[uint]*data.StockMaterial)
 
-	for _, sku := range newSKUs {
-		newSKUMap[sku.ID] = &sku
+	for _, stockMaterial := range newStockMaterials {
+		newStockMaterialMap[stockMaterial.ID] = &stockMaterial
 	}
 
 	for _, item := range fullItems {
-		var sku *data.StockMaterial
+		var stockMaterial *data.StockMaterial
 		var found bool
 
-		if item.SKU_ID != 0 {
-			sku, found = existingSKUs[item.SKU_ID]
+		if item.StockMaterialID != 0 {
+			stockMaterial, found = existingStockMaterials[item.StockMaterialID]
 			if !found {
-				sku = newSKUMap[item.SKU_ID]
-				found = sku != nil
+				stockMaterial = newStockMaterialMap[item.StockMaterialID]
+				found = stockMaterial != nil
 			}
 		}
 
 		if !found {
-			return nil, fmt.Errorf("failed to find SKU for item: %v", item)
+			return nil, fmt.Errorf("failed to find StockMaterial for item: %v", item)
 		}
 
-		if err := s.ensureSupplierMaterialAssociation(req.SupplierID, sku.ID); err != nil {
+		if err := s.ensureSupplierMaterialAssociation(req.SupplierID, stockMaterial.ID); err != nil {
 			return nil, err
 		}
 
-		expirationPeriod := sku.ExpirationPeriodInDays
+		expirationPeriod := stockMaterial.ExpirationPeriodInDays
 		if item.Expiration != nil {
 			expirationPeriod = *item.Expiration
 		}
 
 		delivery := data.Delivery{
-			StockMaterialID: sku.ID,
+			StockMaterialID: stockMaterial.ID,
 			SupplierID:      req.SupplierID,
 			WarehouseID:     req.WarehouseID,
-			Barcode:         sku.Barcode,
+			Barcode:         stockMaterial.Barcode,
 			Quantity:        item.Quantity,
 			DeliveryDate:    time.Now(),
 			ExpirationDate:  time.Now().AddDate(0, 0, expirationPeriod),
@@ -185,8 +185,8 @@ func (s *inventoryService) createDeliveries(
 	return deliveries, nil
 }
 
-func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []types.InventoryItem) ([]data.StockMaterial, error) {
-	newSKUs := []data.StockMaterial{}
+func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, items []types.InventoryItem) ([]data.StockMaterial, error) {
+	newStockMaterials := []data.StockMaterial{}
 
 	for _, item := range items {
 		expirationPeriod := 1095
@@ -194,7 +194,7 @@ func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []typ
 			expirationPeriod = *item.Expiration
 		}
 
-		newSKU := data.StockMaterial{
+		newStockMaterial := data.StockMaterial{
 			Name:                   *item.Name,
 			Description:            *item.Description,
 			SafetyStock:            *item.SafetyStock,
@@ -205,73 +205,73 @@ func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []typ
 			IsActive:               true,
 		}
 
-		if err := s.skuRepo.CreateSKU(&newSKU); err != nil {
-			return nil, fmt.Errorf("failed to create new SKU %s: %w", *item.Name, err)
+		if err := s.stockMaterialRepo.CreateStockMaterial(&newStockMaterial); err != nil {
+			return nil, fmt.Errorf("failed to create new StockMaterial %s: %w", *item.Name, err)
 		}
-		item.SKU_ID = newSKU.ID
+		item.StockMaterialID = newStockMaterial.ID
 
-		if err := s.ensureSupplierMaterialAssociation(supplierID, newSKU.ID); err != nil {
-			return nil, fmt.Errorf("failed to associate supplier %d with SKU %d: %w", supplierID, newSKU.ID, err)
+		if err := s.ensureSupplierMaterialAssociation(supplierID, newStockMaterial.ID); err != nil {
+			return nil, fmt.Errorf("failed to associate supplier %d with StockMaterial %d: %w", supplierID, newStockMaterial.ID, err)
 		}
 
-		barcode, err := s.barcodeRepo.GenerateAndAssignBarcode(newSKU.ID)
+		barcode, err := s.barcodeRepo.GenerateAndAssignBarcode(newStockMaterial.ID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to generate barcode for SKU %d: %w", newSKU.ID, err)
+			return nil, fmt.Errorf("failed to generate barcode for StockMaterial %d: %w", newStockMaterial.ID, err)
 		}
-		newSKU.Barcode = barcode
+		newStockMaterial.Barcode = barcode
 
 		newPackage := types.ValidatePackage(item)
 		if newPackage == nil {
-			return nil, fmt.Errorf("package data not provided for new sku")
+			return nil, fmt.Errorf("package data not provided for new stockMaterial")
 		}
 
 		if err := s.packageRepo.CreatePackage(newPackage); err != nil {
-			return nil, fmt.Errorf("failed to create package for SKU %d: %w", newSKU.ID, err)
+			return nil, fmt.Errorf("failed to create package for StockMaterial %d: %w", newStockMaterial.ID, err)
 		}
 
-		newSKUs = append(newSKUs, newSKU)
+		newStockMaterials = append(newStockMaterials, newStockMaterial)
 	}
 
-	return newSKUs, nil
+	return newStockMaterials, nil
 }
 
-func (s *inventoryService) separateExistingAndNewSKUs(items []types.InventoryItem) (map[uint]*data.StockMaterial, []types.InventoryItem, error) {
-	existingSKUs := make(map[uint]*data.StockMaterial)
-	newSKUItems := []types.InventoryItem{}
-	skuIDs := []uint{}
+func (s *inventoryService) separateExistingAndNewStockMaterials(items []types.InventoryItem) (map[uint]*data.StockMaterial, []types.InventoryItem, error) {
+	existingStockMaterials := make(map[uint]*data.StockMaterial)
+	newStockMaterialItems := []types.InventoryItem{}
+	stockMaterialIDs := []uint{}
 
 	for _, item := range items {
-		if item.SKU_ID != 0 {
-			skuIDs = append(skuIDs, item.SKU_ID)
+		if item.StockMaterialID != 0 {
+			stockMaterialIDs = append(stockMaterialIDs, item.StockMaterialID)
 		} else {
-			newSKUItems = append(newSKUItems, item)
+			newStockMaterialItems = append(newStockMaterialItems, item)
 		}
 	}
 
-	if len(skuIDs) > 0 {
-		skus, err := s.skuRepo.GetSKUsByIDs(skuIDs)
+	if len(stockMaterialIDs) > 0 {
+		stockMaterials, err := s.stockMaterialRepo.GetStockMaterialsByIDs(stockMaterialIDs)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to fetch existing SKUs: %w", err)
+			return nil, nil, fmt.Errorf("failed to fetch existing StockMaterials: %w", err)
 		}
-		for _, sku := range skus {
-			existingSKUs[sku.ID] = &sku
+		for _, stockMaterial := range stockMaterials {
+			existingStockMaterials[stockMaterial.ID] = &stockMaterial
 		}
 	}
 
-	return existingSKUs, newSKUItems, nil
+	return existingStockMaterials, newStockMaterialItems, nil
 }
 
-func (s *inventoryService) mergeSKUItems(items []types.InventoryItem, createdSKUs []data.StockMaterial) []types.InventoryItem {
-	createdSKUMap := make(map[string]uint)
-	for _, sku := range createdSKUs {
-		createdSKUMap[sku.Name] = sku.ID
+func (s *inventoryService) mergeStockMaterialItems(items []types.InventoryItem, createdStockMaterials []data.StockMaterial) []types.InventoryItem {
+	createdStockMaterialMap := make(map[string]uint)
+	for _, stockMaterial := range createdStockMaterials {
+		createdStockMaterialMap[stockMaterial.Name] = stockMaterial.ID
 	}
 
 	fullItems := make([]types.InventoryItem, len(items))
 	for i, item := range items {
-		if item.SKU_ID == 0 {
-			if id, found := createdSKUMap[*item.Name]; found {
-				item.SKU_ID = id
+		if item.StockMaterialID == 0 {
+			if id, found := createdStockMaterialMap[*item.Name]; found {
+				item.StockMaterialID = id
 			}
 		}
 		fullItems[i] = item
