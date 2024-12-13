@@ -38,20 +38,20 @@ func (r *orderRepository) GetAllBaristaOrders(storeID uint, status *string) ([]d
 	now := time.Now().UTC()
 
 	// Calculate the start and end of the range (yesterday to tomorrow)
-	startOfYesterday := time.Date(now.Year(), now.Month(), now.Day()-1, 0, 0, 0, 0, time.UTC)
-	endOfTomorrow := time.Date(now.Year(), now.Month(), now.Day()+1, 23, 59, 59, 999999999, time.UTC)
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, time.UTC)
 
 	query := r.db.Preload("Suborders.ProductSize").
 		Preload("Suborders.ProductSize.Product").
 		Preload("Suborders.Additives.Additive").
 		Where("store_id = ?", storeID).
-		Where("created_at >= ? AND created_at <= ?", startOfYesterday, endOfTomorrow)
+		Where("created_at >= ? AND created_at <= ?", startOfToday, endOfToday)
 
 	if status != nil && *status != "" {
 		query = query.Where("status = ?", *status)
 	}
 
-	err := query.Find(&orders).Error
+	err := query.Order("created_at asc").Find(&orders).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch barista orders: %w", err)
 	}

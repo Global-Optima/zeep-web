@@ -38,8 +38,7 @@ func ExtractEmployeeTokenAndValidate(c *gin.Context) (*utils.EmployeeClaims, err
 	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
 	} else {
-
-		cookie, err := c.Cookie(employees.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
+		cookie, err := c.Cookie(employees.EMPLOYEE_TOKEN_COOKIE_KEY)
 		if err != nil {
 			return nil, err
 		}
@@ -47,7 +46,7 @@ func ExtractEmployeeTokenAndValidate(c *gin.Context) (*utils.EmployeeClaims, err
 	}
 
 	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateEmployeeJWT(tokenString, claims); err != nil {
+	if err := utils.ValidateJWT(tokenString, claims); err != nil {
 		return nil, err
 	}
 

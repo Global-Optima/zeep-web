@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/gin-gonic/gin"
@@ -98,5 +99,17 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 		router.POST("", handler.CreateSupplier)
 		router.PUT("/:id", handler.UpdateSupplier)
 		router.DELETE("/:id", handler.DeleteSupplier)
+	}
+}
+
+func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
+	router := r.Routes.Group("/store-warehouse-stock/:store_id")
+	router.Use(middleware.EmployeeIdentity(), middleware.MatchesStore())
+	{
+		router.GET("", handler.GetStoreWarehouseStockList)
+		router.GET("/:id", handler.GetStoreWarehouseStockById)
+		router.POST("", handler.AddStoreWarehouseStock)
+		router.PUT("/:id", handler.UpdateStoreWarehouseStockById)
+		router.DELETE("/:id", handler.DeleteStoreWarehouseStockById)
 	}
 }
