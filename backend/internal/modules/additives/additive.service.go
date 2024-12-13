@@ -2,6 +2,8 @@ package additives
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"go.uber.org/zap"
 )
 
 type AdditiveService interface {
@@ -9,17 +11,23 @@ type AdditiveService interface {
 }
 
 type additiveService struct {
-	repo AdditiveRepository
+	repo   AdditiveRepository
+	logger *zap.SugaredLogger
 }
 
-func NewAdditiveService(repo AdditiveRepository) AdditiveService {
-	return &additiveService{repo: repo}
+func NewAdditiveService(repo AdditiveRepository, logger *zap.SugaredLogger) AdditiveService {
+	return &additiveService{
+		repo:   repo,
+		logger: logger,
+	}
 }
 
 func (s *additiveService) GetAdditivesByStoreAndProductSize(productSizeID uint) ([]types.AdditiveCategoryDTO, error) {
 	additiveCategories, err := s.repo.GetAdditiveCategoriesByProductSize(productSizeID)
 	if err != nil {
-		return nil, err
+		wrappedErr := utils.WrapError("failed to retrieve additives", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	if additiveCategories == nil {

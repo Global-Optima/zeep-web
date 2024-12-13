@@ -75,6 +75,7 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 		router.PUT("/:id/password", handler.UpdatePassword)
 		router.POST("/login", handler.EmployeeLogin)
 		router.POST("/logout", handler.EmployeeLogout)
+		router.POST("/refresh", handler.EmployeeRefresh)
 	}
 }
 

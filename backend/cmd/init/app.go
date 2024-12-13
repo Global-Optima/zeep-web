@@ -112,7 +112,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (product.ProductService, error) {
-			return product.NewProductService(product.NewProductRepository(dbHandler.DB)), nil
+			return product.NewProductService(product.NewProductRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		product.NewProductHandler,
 		apiRouter.RegisterProductRoutes,
@@ -148,7 +148,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (employees.EmployeeService, error) {
-			return employees.NewEmployeeService(employees.NewEmployeeRepository(dbHandler.DB)), nil
+			return employees.NewEmployeeService(employees.NewEmployeeRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		employees.NewEmployeeHandler,
 		apiRouter.RegisterEmployeesRoutes,
