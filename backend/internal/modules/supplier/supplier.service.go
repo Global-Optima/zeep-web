@@ -35,11 +35,7 @@ func (s *supplierService) GetSupplierByID(id uint) (types.SupplierResponse, erro
 }
 
 func (s *supplierService) UpdateSupplier(id uint, dto types.UpdateSupplierDTO) error {
-	updateFields, err := types.ConvertUpdateSupplierDTOToMap(dto)
-	if err != nil {
-		return err
-	}
-	return s.repo.UpdateSupplier(id, updateFields)
+	return s.repo.UpdateSupplier(id, dto)
 }
 
 func (s *supplierService) DeleteSupplier(id uint) error {
@@ -47,7 +43,7 @@ func (s *supplierService) DeleteSupplier(id uint) error {
 }
 
 func (s *supplierService) ListSuppliers() ([]types.SupplierResponse, error) {
-	suppliers, err := s.repo.ListSuppliers()
+	suppliers, err := s.repo.GetAllSuppliers()
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func ValidateAndApplyUpdate(sku *data.SKU, req *UpdateSKURequest) error {
+func ValidateAndApplyUpdate(sku *data.StockMaterial, req *UpdateSKURequest) error {
 	if req.Name != nil {
 		if *req.Name == "" {
 			return errors.New("SKU name cannot be empty")
@@ -30,19 +30,8 @@ func ValidateAndApplyUpdate(sku *data.SKU, req *UpdateSKURequest) error {
 		sku.ExpirationFlag = *req.ExpirationFlag
 	}
 
-	if req.Quantity != nil {
-		if *req.Quantity < 0 {
-			return errors.New("SKU quantity cannot be negative")
-		}
-		sku.Quantity = *req.Quantity
-	}
-
 	if req.UnitID != nil {
 		sku.UnitID = *req.UnitID
-	}
-
-	if req.SupplierID != nil {
-		sku.SupplierID = *req.SupplierID
 	}
 
 	if req.Category != nil {
@@ -54,7 +43,7 @@ func ValidateAndApplyUpdate(sku *data.SKU, req *UpdateSKURequest) error {
 	}
 
 	if req.ExpirationPeriod != nil {
-		sku.ExpirationPeriod = *req.ExpirationPeriod
+		sku.ExpirationPeriodInDays = *req.ExpirationPeriod
 	}
 
 	if req.IsActive != nil {

@@ -132,7 +132,7 @@ func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
 	{
 		router.POST("/receive", handler.ReceiveInventory)
 		router.GET("/levels/:warehouseID", handler.GetInventoryLevels)
-		router.POST("/pickup", handler.PickupStock)
+		router.POST("/pickup", handler.PickupStock) // store
 		router.POST("/transfer", handler.TransferInventory)
 
 		router.GET("/expiration/upcoming/:warehouseID", handler.GetExpiringItems)
@@ -143,10 +143,10 @@ func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
 }
 
 func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
-	router := r.Routes.Group("/warehouse")
+	router := r.Routes.Group("/warehouse") // store
 	{
-		router.POST("/stores", handler.AssignStoreToWarehouse)
-		router.PUT("/stores/:storeId", handler.ReassignStore)
-		router.GET("/:warehouseId/stores", handler.ListStoresForWarehouse)
+		router.POST("/stores", handler.AssignStoreToWarehouse)              // store
+		router.PUT("/stores/:storeId", handler.ReassignStore)               // store
+		router.GET("/:warehouseId/stores", handler.GetAllStoresByWarehouse) // store
 	}
 }

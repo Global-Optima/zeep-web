@@ -7,44 +7,39 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func ConvertCreateSKURequestToSKU(req *CreateSKURequest) *data.SKU {
-	return &data.SKU{
-		Name:             req.Name,
-		Description:      req.Description,
-		SafetyStock:      req.SafetyStock,
-		ExpirationFlag:   req.ExpirationFlag,
-		Quantity:         req.Quantity,
-		UnitID:           req.UnitID,
-		SupplierID:       req.SupplierID,
-		Category:         req.Category,
-		Barcode:          req.Barcode,
-		ExpirationPeriod: req.ExpirationPeriod,
-		IsActive:         true,
+func ConvertCreateSKURequestToSKU(req *CreateSKURequest) *data.StockMaterial {
+	return &data.StockMaterial{
+		Name:                   req.Name,
+		Description:            req.Description,
+		SafetyStock:            req.SafetyStock,
+		ExpirationFlag:         req.ExpirationFlag,
+		UnitID:                 req.UnitID,
+		Category:               req.Category,
+		Barcode:                req.Barcode,
+		ExpirationPeriodInDays: req.ExpirationPeriod,
+		IsActive:               true,
 	}
 }
 
-func ConvertSKUToSKUResponse(sku *data.SKU) *SKUResponse {
+func ConvertSKUToSKUResponse(sku *data.StockMaterial) *SKUResponse {
 	return &SKUResponse{
 		ID:               sku.ID,
 		Name:             sku.Name,
 		Description:      sku.Description,
 		SafetyStock:      sku.SafetyStock,
 		ExpirationFlag:   sku.ExpirationFlag,
-		Quantity:         sku.Quantity,
 		UnitID:           sku.UnitID,
 		UnitName:         sku.Unit.Name,
-		SupplierID:       sku.SupplierID,
-		SupplierName:     sku.Supplier.Name,
 		Category:         sku.Category,
 		Barcode:          sku.Barcode,
-		ExpirationPeriod: sku.ExpirationPeriod,
+		ExpirationPeriod: sku.ExpirationPeriodInDays,
 		IsActive:         sku.IsActive,
 		CreatedAt:        sku.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:        sku.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
-func ConvertUpdateSKURequestToSKU(sku *data.SKU, req *UpdateSKURequest) error {
+func ConvertUpdateSKURequestToSKU(sku *data.StockMaterial, req *UpdateSKURequest) error {
 	return ValidateAndApplyUpdate(sku, req)
 }
 

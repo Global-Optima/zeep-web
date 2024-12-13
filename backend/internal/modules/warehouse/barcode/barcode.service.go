@@ -6,6 +6,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/sku"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type BarcodeService interface {
@@ -38,7 +39,20 @@ func (s *barcodeService) GenerateBarcode(req *types.GenerateBarcodeRequest) (*ty
 		return nil, errors.New("SKU not found")
 	}
 
-	barcode, err := s.repo.GenerateAndAssignBarcode(req.SKU_ID)
+	supplierMaterial, err := s.repo.GetSupplierMaterialByStockMaterialID(req.SKU_ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch supplier for SKU: %w", err)
+	}
+	if supplierMaterial == nil {
+		return nil, errors.New("supplier not found for the given SKU")
+	}
+
+	barcode, err := utils.GenerateUPCBarcode(*sku, supplierMaterial.SupplierID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.repo.AssignBarcode(barcode, req.SKU_ID)
 	if err != nil {
 		return nil, err
 	}

@@ -9,7 +9,7 @@ import (
 type WarehouseService interface {
 	AssignStoreToWarehouse(req types.AssignStoreToWarehouseRequest) error
 	ReassignStore(storeID uint, req types.ReassignStoreRequest) error
-	ListStoresForWarehouse(warehouseID uint) ([]types.ListStoresResponse, error)
+	GetAllStoresByWarehouse(warehouseID uint) ([]types.ListStoresResponse, error)
 }
 
 type warehouseService struct {
@@ -25,11 +25,11 @@ func (s *warehouseService) AssignStoreToWarehouse(req types.AssignStoreToWarehou
 }
 
 func (s *warehouseService) ReassignStore(storeID uint, req types.ReassignStoreRequest) error {
-	return s.repo.ReassignStoreToWarehouse(storeID, req.NewWarehouseID)
+	return s.repo.ReassignStoreToWarehouse(storeID, req.WarehouseID)
 }
 
-func (s *warehouseService) ListStoresForWarehouse(warehouseID uint) ([]types.ListStoresResponse, error) {
-	stores, err := s.repo.ListStoresForWarehouse(warehouseID)
+func (s *warehouseService) GetAllStoresByWarehouse(warehouseID uint) ([]types.ListStoresResponse, error) {
+	stores, err := s.repo.GetAllStoresByWarehouse(warehouseID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list stores: %w", err)
 	}

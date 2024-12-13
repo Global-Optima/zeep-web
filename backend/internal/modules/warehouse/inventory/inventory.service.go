@@ -54,12 +54,8 @@ func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) e
 		return err
 	}
 
-	if err := s.repo.LogIncomingInventory(deliveries); err != nil {
+	if err := s.repo.LogAndUpdateStock(deliveries, req.WarehouseID); err != nil {
 		return fmt.Errorf("failed to log incoming inventory: %w", err)
-	}
-
-	if err := s.updateStockLevels(req.WarehouseID, fullItems); err != nil {
-		return err
 	}
 
 	return nil
@@ -138,19 +134,19 @@ func (s *inventoryService) GetDeliveries(warehouseID *uint, startDate, endDate *
 // Helper methods
 func (s *inventoryService) createDeliveries(
 	req types.ReceiveInventoryRequest,
-	existingSKUs map[uint]*data.SKU,
-	newSKUs []data.SKU,
+	existingSKUs map[uint]*data.StockMaterial,
+	newSKUs []data.StockMaterial,
 	fullItems []types.InventoryItem,
 ) ([]data.Delivery, error) {
 	deliveries := []data.Delivery{}
-	newSKUMap := make(map[uint]*data.SKU)
+	newSKUMap := make(map[uint]*data.StockMaterial)
 
 	for _, sku := range newSKUs {
 		newSKUMap[sku.ID] = &sku
 	}
 
 	for _, item := range fullItems {
-		var sku *data.SKU
+		var sku *data.StockMaterial
 		var found bool
 
 		if item.SKU_ID != 0 {
@@ -165,19 +161,23 @@ func (s *inventoryService) createDeliveries(
 			return nil, fmt.Errorf("failed to find SKU for item: %v", item)
 		}
 
-		expirationPeriod := sku.ExpirationPeriod
+		if err := s.ensureSupplierMaterialAssociation(req.SupplierID, sku.ID); err != nil {
+			return nil, err
+		}
+
+		expirationPeriod := sku.ExpirationPeriodInDays
 		if item.Expiration != nil {
 			expirationPeriod = *item.Expiration
 		}
 
 		delivery := data.Delivery{
-			SKU_ID:         sku.ID,
-			Source:         req.SupplierID,
-			Target:         req.WarehouseID,
-			Barcode:        sku.Barcode,
-			Quantity:       item.Quantity,
-			DeliveryDate:   time.Now(),
-			ExpirationDate: time.Now().AddDate(0, 0, expirationPeriod),
+			StockMaterialID: sku.ID,
+			SupplierID:      req.SupplierID,
+			WarehouseID:     req.WarehouseID,
+			Barcode:         sku.Barcode,
+			Quantity:        item.Quantity,
+			DeliveryDate:    time.Now(),
+			ExpirationDate:  time.Now().AddDate(0, 0, expirationPeriod),
 		}
 		deliveries = append(deliveries, delivery)
 	}
@@ -185,8 +185,8 @@ func (s *inventoryService) createDeliveries(
 	return deliveries, nil
 }
 
-func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []types.InventoryItem) ([]data.SKU, error) {
-	newSKUs := []data.SKU{}
+func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []types.InventoryItem) ([]data.StockMaterial, error) {
+	newSKUs := []data.StockMaterial{}
 
 	for _, item := range items {
 		expirationPeriod := 1095
@@ -194,21 +194,23 @@ func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []typ
 			expirationPeriod = *item.Expiration
 		}
 
-		newSKU := data.SKU{
-			Name:             *item.Name,
-			Description:      *item.Description,
-			SafetyStock:      *item.SafetyStock,
-			ExpirationFlag:   *item.ExpirationFlag,
-			Quantity:         item.Quantity,
-			SupplierID:       supplierID,
-			UnitID:           *item.UnitID,
-			Category:         *item.Category,
-			ExpirationPeriod: expirationPeriod,
-			IsActive:         true,
+		newSKU := data.StockMaterial{
+			Name:                   *item.Name,
+			Description:            *item.Description,
+			SafetyStock:            *item.SafetyStock,
+			ExpirationFlag:         *item.ExpirationFlag,
+			UnitID:                 *item.UnitID,
+			Category:               *item.Category,
+			ExpirationPeriodInDays: expirationPeriod,
+			IsActive:               true,
 		}
 
 		if err := s.skuRepo.CreateSKU(&newSKU); err != nil {
 			return nil, fmt.Errorf("failed to create new SKU %s: %w", *item.Name, err)
+		}
+
+		if err := s.ensureSupplierMaterialAssociation(supplierID, newSKU.ID); err != nil {
+			return nil, fmt.Errorf("failed to associate supplier %d with SKU %d: %w", supplierID, newSKU.ID, err)
 		}
 
 		barcode, err := s.barcodeRepo.GenerateAndAssignBarcode(newSKU.ID)
@@ -218,9 +220,9 @@ func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []typ
 		newSKU.Barcode = barcode
 
 		newPackage := data.Package{
-			SKU_ID:        newSKU.ID,
-			PackageSize:   item.Package.PackageSize,
-			PackageUnitID: item.Package.PackageUnitID,
+			StockMaterialID: newSKU.ID,
+			PackageSize:     item.Package.PackageSize,
+			PackageUnitID:   item.Package.PackageUnitID,
 		}
 		if err := s.packageRepo.CreatePackage(&newPackage); err != nil {
 			return nil, fmt.Errorf("failed to create package for SKU %d: %w", newSKU.ID, err)
@@ -232,8 +234,8 @@ func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []typ
 	return newSKUs, nil
 }
 
-func (s *inventoryService) separateExistingAndNewSKUs(items []types.InventoryItem) (map[uint]*data.SKU, []types.InventoryItem, error) {
-	existingSKUs := make(map[uint]*data.SKU)
+func (s *inventoryService) separateExistingAndNewSKUs(items []types.InventoryItem) (map[uint]*data.StockMaterial, []types.InventoryItem, error) {
+	existingSKUs := make(map[uint]*data.StockMaterial)
 	newSKUItems := []types.InventoryItem{}
 	skuIDs := []uint{}
 
@@ -258,7 +260,7 @@ func (s *inventoryService) separateExistingAndNewSKUs(items []types.InventoryIte
 	return existingSKUs, newSKUItems, nil
 }
 
-func (s *inventoryService) mergeSKUItems(items []types.InventoryItem, createdSKUs []data.SKU) []types.InventoryItem {
+func (s *inventoryService) mergeSKUItems(items []types.InventoryItem, createdSKUs []data.StockMaterial) []types.InventoryItem {
 	createdSKUMap := make(map[string]uint)
 	for _, sku := range createdSKUs {
 		createdSKUMap[sku.Name] = sku.ID
@@ -277,14 +279,21 @@ func (s *inventoryService) mergeSKUItems(items []types.InventoryItem, createdSKU
 	return fullItems
 }
 
-func (s *inventoryService) updateStockLevels(warehouseID uint, items []types.InventoryItem) error {
-	stockItems, err := s.repo.ConvertInventoryItemsToStockRequest(items)
+func (s *inventoryService) ensureSupplierMaterialAssociation(supplierID, stockMaterialID uint) error {
+	exists, err := s.repo.SupplierMaterialExists(supplierID, stockMaterialID)
 	if err != nil {
-		return fmt.Errorf("failed to convert inventory items: %w", err)
+		return fmt.Errorf("failed to check supplier-material association: %w", err)
 	}
 
-	if err := s.repo.UpdateStockLevels(warehouseID, stockItems); err != nil {
-		return fmt.Errorf("failed to update stock levels: %w", err)
+	if !exists {
+		association := data.SupplierMaterial{
+			SupplierID:      supplierID,
+			StockMaterialID: stockMaterialID,
+		}
+
+		if err := s.repo.CreateSupplierMaterial(&association); err != nil {
+			return fmt.Errorf("failed to create supplier-material association: %w", err)
+		}
 	}
 
 	return nil

@@ -1351,36 +1351,35 @@ VALUES
     ('L', 1.0),
     ('ml', 0.001);
 
--- Insert into SKUs
-INSERT INTO skus (name, description, safety_stock, expiration_flag, quantity, supplier_id, unit_id, category, barcode, expiration_period, is_active)
+INSERT INTO stock_materials (name, description, safety_stock, expiration_flag, quantity, unit_id, category, barcode, expiration_period_in_days, is_active)
 VALUES
-    ('Milk', '1L pack of milk', 50, TRUE, 100, 1, 4, 'Dairy', '111111111111', 1095, TRUE),
-    ('Sugar', '1kg pack of sugar', 20, TRUE, 200, 2, 4, 'Sweeteners', '222222222222', 1095, TRUE),
-    ('Chocolate', '500g pack of chocolate', 15, TRUE, 150, 1, 2, 'Confectionery', '333333333333', 730, TRUE),
-    ('Cinnamon', '200g pack of cinnamon', 10, TRUE, 80, 2, 2, 'Spices', '444444444444', 1460, TRUE),
-    ('Vanilla', '50ml vanilla extract bottle', 25, TRUE, 60, 1, 3, 'Flavorings', '555555555555', 1460, TRUE);
-
--- Insert into Ingredients Mapping
-INSERT INTO ingredients_mapping (ingredient_id, sku_id)
-VALUES
-    (2, 1), -- Milk linked to SKU 1
-    (1, 2), -- Sugar linked to SKU 2
-    (3, 3), -- Chocolate linked to SKU 3
-    (4, 4), -- Cinnamon linked to SKU 4
-    (6, 5); -- Vanilla linked to SKU 5
+    ('Milk', '1L pack of milk', 50, TRUE, 100, 3, 'Dairy', '111111111111', 1095, TRUE),
+    ('Sugar', '1kg pack of sugar', 20, TRUE, 200, 2, 'Sweeteners', '222222222222', 1095, TRUE),
+    ('Chocolate', '500g pack of chocolate', 15, TRUE, 150, 2, 'Confectionery', '333333333333', 730, TRUE),
+    ('Cinnamon', '200g pack of cinnamon', 10, TRUE, 80, 2, 'Spices', '444444444444', 1460, TRUE),
+    ('Vanilla', '50ml vanilla extract bottle', 25, TRUE, 60, 4, 'Flavorings', '555555555555', 1460, TRUE);
 
 
--- Insert into Packages
-INSERT INTO packages (sku_id, package_size, package_unit_id)
+INSERT INTO ingredients_mapping (ingredient_id, stock_material_id)
 VALUES
-    (1, 1.0, 4), -- 1L Milk
-    (2, 1.0, 4), -- 1kg Sugar
+    (2, 1), -- Milk linked to stock material
+    (1, 2), -- Sugar linked to stock material
+    (3, 3), -- Chocolate linked to stock material
+    (4, 4), -- Cinnamon linked to stock material
+    (6, 5); -- Vanilla linked to stock material
+
+
+
+INSERT INTO packages (stock_material_id, package_size, package_unit_id)
+VALUES
+    (1, 1.0, 3), -- 1L Milk
+    (2, 1.0, 2), -- 1kg Sugar
     (3, 0.5, 2), -- 500g Chocolate
     (4, 0.2, 2), -- 200g Cinnamon
-    (5, 0.05, 3); -- 50ml Vanilla
+    (5, 0.05, 4); -- 50ml Vanilla
 
--- Insert into Deliveries
-INSERT INTO deliveries (sku_id, source, target, barcode, quantity, delivery_date, expiration_date)
+
+INSERT INTO deliveries (stock_material_id, supplier_id, warehouse_id, barcode, quantity, delivery_date, expiration_date)
 VALUES
     (1, 1, 1, '111111111111', 50, '2024-12-01', '2026-12-01'), -- Milk Delivery
     (2, 2, 1, '222222222222', 30, '2024-12-05', '2025-06-05'), -- Sugar Delivery
@@ -1389,12 +1388,13 @@ VALUES
     (5, 1, 2, '555555555555', 15, '2024-12-15', '2027-12-15'); -- Vanilla Delivery
 
 
--- Insert into Store Warehouse Stocks
-INSERT INTO store_warehouse_stocks (store_warehouse_id, ingredient_id, quantity)
+
+INSERT INTO warehouse_stocks (warehouse_id, stock_material_id, quantity)
 VALUES
-    (1, 2, 100), -- Milk in Store A Warehouse
-    (1, 1, 50),  -- Sugar in Store A Warehouse
-    (1, 3, 80),  -- Chocolate in Store A Warehouse
-    (2, 4, 40),  -- Cinnamon in Store B Warehouse
-    (2, 6, 15);  -- Vanilla in Store B Warehouse
+    (1, 1, 50), -- Milk in Warehouse 1
+    (1, 2, 30), -- Sugar in Warehouse 1
+    (1, 3, 40), -- Chocolate in Warehouse 1
+    (2, 4, 20), -- Cinnamon in Warehouse 2
+    (2, 5, 15); -- Vanilla in Warehouse 2
+
 

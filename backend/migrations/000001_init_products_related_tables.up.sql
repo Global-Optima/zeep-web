@@ -431,19 +431,17 @@ CREATE TABLE IF NOT EXISTS units (
     deleted_at TIMESTAMPTZ
 );
 
--- SKUs Table
-CREATE TABLE IF NOT EXISTS skus (
+-- StockMaterials Table
+CREATE TABLE IF NOT EXISTS stock_materials (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
     expiration_flag BOOLEAN NOT NULL,
-    quantity DECIMAL(10,2) NOT NULL CHECK (quantity >= 0),
-    supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
     unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
     category VARCHAR(255),
     barcode VARCHAR(255) UNIQUE,
-    expiration_period INT NOT NULL DEFAULT 1095, -- Default 3 years
+    expiration_period_in_days INT NOT NULL DEFAULT 1095, -- Default 3 years
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -453,7 +451,7 @@ CREATE TABLE IF NOT EXISTS skus (
 -- Packages Table
 CREATE TABLE IF NOT EXISTS packages (
     id SERIAL PRIMARY KEY,
-    sku_id INT NOT NULL REFERENCES skus(id) ON DELETE CASCADE,
+    stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     package_size DECIMAL(10,2) NOT NULL,
     package_unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -465,7 +463,7 @@ CREATE TABLE IF NOT EXISTS packages (
 CREATE TABLE IF NOT EXISTS ingredients_mapping (
     id SERIAL PRIMARY KEY,
     ingredient_id INT NOT NULL REFERENCES ingredients(id) ON DELETE CASCADE,
-    sku_id INT NOT NULL REFERENCES skus(id) ON DELETE CASCADE,
+    stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
@@ -474,9 +472,9 @@ CREATE TABLE IF NOT EXISTS ingredients_mapping (
 -- Deliveries Table
 CREATE TABLE IF NOT EXISTS deliveries (
     id SERIAL PRIMARY KEY,
-    sku_id INT NOT NULL REFERENCES skus(id) ON DELETE CASCADE,
-    source INT NOT NULL,
-    target INT NOT NULL,
+    stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
+    supplier_id INT NOT NULL,
+    warehouse_id INT NOT NULL,
     barcode VARCHAR(255) NOT NULL,
     quantity DECIMAL(10,2) NOT NULL CHECK (quantity > 0),
     delivery_date TIMESTAMPTZ NOT NULL,
@@ -485,3 +483,21 @@ CREATE TABLE IF NOT EXISTS deliveries (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
 );
+
+CREATE TABLE IF NOT EXISTS warehouse_stocks (
+    id SERIAL PRIMARY KEY,
+    warehouse_id INT NOT NULL REFERENCES warehouses(id) ON DELETE CASCADE,
+    stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
+    quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS supplier_materials (
+    id SERIAL PRIMARY KEY,
+    stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
+    supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+)

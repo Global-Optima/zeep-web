@@ -6,7 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func ToGenerateBarcodeResponse(sku data.SKU, barcode string) GenerateBarcodeResponse {
+func ToGenerateBarcodeResponse(sku data.StockMaterial, barcode string) GenerateBarcodeResponse {
 	return GenerateBarcodeResponse{
 		SKU_ID:    sku.ID,
 		Barcode:   barcode,
@@ -15,11 +15,10 @@ func ToGenerateBarcodeResponse(sku data.SKU, barcode string) GenerateBarcodeResp
 	}
 }
 
-func ToRetrieveSKUByBarcodeResponse(sku data.SKU) RetrieveSKUByBarcodeResponse {
+func ToRetrieveSKUByBarcodeResponse(sku data.StockMaterial) RetrieveSKUByBarcodeResponse {
 	return RetrieveSKUByBarcodeResponse{
 		SKU_ID:    sku.ID,
 		Name:      sku.Name,
-		Quantity:  sku.Quantity,
 		Unit:      sku.Unit.Name,
 		Category:  sku.Category,
 		Barcode:   sku.Barcode,
@@ -37,7 +36,7 @@ func ToPrintAdditionalBarcodesResponse(skuID uint, barcodes []string) PrintAddit
 	}
 }
 
-func ToBarcodeScanResponse(sku data.SKU, deductedQty, remainingQty float64) BarcodeScanResponse {
+func ToBarcodeScanResponse(sku data.StockMaterial, deductedQty, remainingQty float64) BarcodeScanResponse {
 	return BarcodeScanResponse{
 		SKU_ID:    sku.ID,
 		Name:      sku.Name,

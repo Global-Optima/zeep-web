@@ -9,13 +9,13 @@ import (
 )
 
 type SKURepository interface {
-	GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error)
-	GetSKUByID(skuID uint) (*data.SKU, error)
-	GetSKUsByIDs(skuIDs []uint) ([]data.SKU, error)
-	CreateSKU(sku *data.SKU) error
-	CreateSKUs(skus []data.SKU) error
-	UpdateSKU(sku *data.SKU) error
-	UpdateSKUFields(skuID uint, fields map[string]interface{}) (*data.SKU, error)
+	GetAllSKUs(filter *types.SKUFilter) ([]data.StockMaterial, error)
+	GetSKUByID(skuID uint) (*data.StockMaterial, error)
+	GetSKUsByIDs(skuIDs []uint) ([]data.StockMaterial, error)
+	CreateSKU(sku *data.StockMaterial) error
+	CreateSKUs(skus []data.StockMaterial) error
+	UpdateSKU(sku *data.StockMaterial) error
+	UpdateSKUFields(skuID uint, fields map[string]interface{}) (*data.StockMaterial, error)
 	DeleteSKU(skuID uint) error
 	DeactivateSKU(skuID uint) error
 }
@@ -28,9 +28,9 @@ func NewSKURepository(db *gorm.DB) SKURepository {
 	return &skuRepository{db: db}
 }
 
-func (r *skuRepository) GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error) {
-	var skus []data.SKU
-	query := r.db.Preload("Unit").Preload("Supplier").Preload("Package")
+func (r *skuRepository) GetAllSKUs(filter *types.SKUFilter) ([]data.StockMaterial, error) {
+	var skus []data.StockMaterial
+	query := r.db.Preload("Unit").Preload("Package")
 
 	if filter != nil {
 		if filter.Name != nil && *filter.Name != "" {
@@ -50,9 +50,6 @@ func (r *skuRepository) GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error) 
 		if filter.IsActive != nil {
 			query = query.Where("is_active = ?", *filter.IsActive)
 		}
-		if filter.SupplierID != nil {
-			query = query.Where("supplier_id = ?", *filter.SupplierID)
-		}
 	} else {
 
 		query = query.Where("is_active = ?", true)
@@ -66,17 +63,17 @@ func (r *skuRepository) GetAllSKUs(filter *types.SKUFilter) ([]data.SKU, error) 
 	return skus, nil
 }
 
-func (r *skuRepository) GetSKUByID(skuID uint) (*data.SKU, error) {
-	var sku data.SKU
-	err := r.db.Preload("Unit").Preload("Supplier").Preload("Package").First(&sku, skuID).Error
+func (r *skuRepository) GetSKUByID(skuID uint) (*data.StockMaterial, error) {
+	var sku data.StockMaterial
+	err := r.db.Preload("Unit").Preload("Package").First(&sku, skuID).Error
 	if err != nil {
 		return nil, err
 	}
 	return &sku, nil
 }
 
-func (r *skuRepository) GetSKUsByIDs(skuIDs []uint) ([]data.SKU, error) {
-	var skus []data.SKU
+func (r *skuRepository) GetSKUsByIDs(skuIDs []uint) ([]data.StockMaterial, error) {
+	var skus []data.StockMaterial
 	if len(skuIDs) == 0 {
 		return skus, nil // Return an empty slice if no IDs are provided
 	}
@@ -89,22 +86,22 @@ func (r *skuRepository) GetSKUsByIDs(skuIDs []uint) ([]data.SKU, error) {
 	return skus, nil
 }
 
-func (r *skuRepository) CreateSKU(sku *data.SKU) error {
+func (r *skuRepository) CreateSKU(sku *data.StockMaterial) error {
 	return r.db.Create(sku).Error
 }
 
-func (r *skuRepository) CreateSKUs(skus []data.SKU) error {
+func (r *skuRepository) CreateSKUs(skus []data.StockMaterial) error {
 	return r.db.Create(&skus).Error
 }
 
-func (r *skuRepository) UpdateSKU(sku *data.SKU) error {
+func (r *skuRepository) UpdateSKU(sku *data.StockMaterial) error {
 	return r.db.Save(sku).Error
 }
 
-func (r *skuRepository) UpdateSKUFields(skuID uint, fields map[string]interface{}) (*data.SKU, error) {
-	var sku data.SKU
+func (r *skuRepository) UpdateSKUFields(skuID uint, fields map[string]interface{}) (*data.StockMaterial, error) {
+	var sku data.StockMaterial
 
-	if err := r.db.Preload("Unit").Preload("Supplier").First(&sku, skuID).Error; err != nil {
+	if err := r.db.Preload("Unit").First(&sku, skuID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("SKU not found")
 		}
@@ -115,7 +112,7 @@ func (r *skuRepository) UpdateSKUFields(skuID uint, fields map[string]interface{
 		return nil, err
 	}
 
-	if err := r.db.Preload("Unit").Preload("Supplier").Preload("Package").First(&sku, skuID).Error; err != nil {
+	if err := r.db.Preload("Unit").Preload("Package").First(&sku, skuID).Error; err != nil {
 		return nil, err
 	}
 
@@ -123,9 +120,9 @@ func (r *skuRepository) UpdateSKUFields(skuID uint, fields map[string]interface{
 }
 
 func (r *skuRepository) DeleteSKU(skuID uint) error {
-	return r.db.Delete(&data.SKU{}, skuID).Error
+	return r.db.Delete(&data.StockMaterial{}, skuID).Error
 }
 
 func (r *skuRepository) DeactivateSKU(skuID uint) error {
-	return r.db.Model(&data.SKU{}).Where("id = ?", skuID).Update("is_active", false).Error
+	return r.db.Model(&data.StockMaterial{}).Where("id = ?", skuID).Update("is_active", false).Error
 }

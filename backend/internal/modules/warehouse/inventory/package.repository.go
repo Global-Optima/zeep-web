@@ -31,7 +31,7 @@ func (r *packageRepository) GetAllPackages() ([]data.Package, error) {
 
 func (r *packageRepository) GetPackageBySKU(skuID uint) (*data.Package, error) {
 	var pkg data.Package
-	if err := r.db.Where("sku_id = ?", skuID).First(&pkg).Error; err != nil {
+	if err := r.db.Where("stock_material_id = ?", skuID).First(&pkg).Error; err != nil {
 		return nil, err
 	}
 	return &pkg, nil

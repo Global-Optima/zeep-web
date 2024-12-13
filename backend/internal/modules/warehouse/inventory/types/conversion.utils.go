@@ -12,7 +12,7 @@ func ConvertInventoryItemsToStockRequest(items []InventoryItem, db *gorm.DB) ([]
 
 	for i, item := range items {
 		var mapping data.IngredientsMapping
-		err := db.Where("sku_id = ?", item.SKU_ID).First(&mapping).Error
+		err := db.Where("stock_material_id = ?", item.SKU_ID).First(&mapping).Error
 		if err != nil {
 			return nil, fmt.Errorf("failed to find ingredient mapping for SKU_ID %d: %w", item.SKU_ID, err)
 		}
@@ -31,9 +31,9 @@ func DeliveriesToDeliveryResponses(deliveries []data.Delivery) []DeliveryRespons
 	for i, delivery := range deliveries {
 		response[i] = DeliveryResponse{
 			ID:             delivery.ID,
-			SKU_ID:         delivery.SKU_ID,
-			Source:         delivery.Source,
-			Target:         delivery.Target,
+			SKU_ID:         delivery.StockMaterialID,
+			Source:         delivery.SupplierID,
+			Target:         delivery.WarehouseID,
 			Barcode:        delivery.Barcode,
 			Quantity:       delivery.Quantity,
 			DeliveryDate:   delivery.DeliveryDate,
@@ -43,11 +43,11 @@ func DeliveriesToDeliveryResponses(deliveries []data.Delivery) []DeliveryRespons
 	return response
 }
 
-func StocksToInventoryItems(stocks []data.StoreWarehouseStock) []InventoryItem {
+func StocksToInventoryItems(stocks []data.WarehouseStock) []InventoryItem {
 	response := make([]InventoryItem, len(stocks))
 	for i, stock := range stocks {
 		response[i] = InventoryItem{
-			SKU_ID:   stock.IngredientID,
+			SKU_ID:   stock.StockMaterialID,
 			Quantity: stock.Quantity,
 		}
 	}
@@ -58,8 +58,8 @@ func ExpiringItemsToResponses(deliveries []data.Delivery) []UpcomingExpirationRe
 	response := make([]UpcomingExpirationResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = UpcomingExpirationResponse{
-			SKU_ID:         delivery.SKU_ID,
-			Name:           delivery.SKU.Name,
+			SKU_ID:         delivery.StockMaterialID,
+			Name:           delivery.StockMaterial.Name,
 			ExpirationDate: delivery.ExpirationDate,
 			Quantity:       delivery.Quantity,
 		}

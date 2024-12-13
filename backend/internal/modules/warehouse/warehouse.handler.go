@@ -54,7 +54,7 @@ func (h *WarehouseHandler) ReassignStore(c *gin.Context) {
 	utils.SendMessageWithStatus(c, "Store reassigned successfully", http.StatusOK)
 }
 
-func (h *WarehouseHandler) ListStoresForWarehouse(c *gin.Context) {
+func (h *WarehouseHandler) GetAllStoresByWarehouse(c *gin.Context) {
 	warehouseIDStr := c.Param("warehouseId")
 	warehouseID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
 	if err != nil {
@@ -62,7 +62,7 @@ func (h *WarehouseHandler) ListStoresForWarehouse(c *gin.Context) {
 		return
 	}
 
-	stores, err := h.service.ListStoresForWarehouse(uint(warehouseID))
+	stores, err := h.service.GetAllStoresByWarehouse(uint(warehouseID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to list stores: "+err.Error())
 		return

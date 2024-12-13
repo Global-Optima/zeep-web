@@ -8,7 +8,7 @@ import (
 type WarehouseRepository interface {
 	AssignStoreToWarehouse(storeID, warehouseID uint) error
 	ReassignStoreToWarehouse(storeID, newWarehouseID uint) error
-	ListStoresForWarehouse(warehouseID uint) ([]data.Store, error)
+	GetAllStoresByWarehouse(warehouseID uint) ([]data.Store, error)
 }
 
 type warehouseRepository struct {
@@ -33,7 +33,7 @@ func (r *warehouseRepository) ReassignStoreToWarehouse(storeID, newWarehouseID u
 		Update("warehouse_id", newWarehouseID).Error
 }
 
-func (r *warehouseRepository) ListStoresForWarehouse(warehouseID uint) ([]data.Store, error) {
+func (r *warehouseRepository) GetAllStoresByWarehouse(warehouseID uint) ([]data.Store, error) {
 	var stores []data.Store
 	err := r.db.Joins("JOIN store_warehouses ON stores.id = store_warehouses.store_id").
 		Where("store_warehouses.warehouse_id = ?", warehouseID).

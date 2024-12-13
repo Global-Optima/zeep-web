@@ -6,7 +6,7 @@ type AssignStoreToWarehouseRequest struct {
 }
 
 type ReassignStoreRequest struct {
-	NewWarehouseID uint `json:"newWarehouseId" binding:"required"`
+	WarehouseID uint `json:"warehouseId" binding:"required"`
 }
 
 type ListStoresResponse struct {
