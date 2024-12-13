@@ -208,6 +208,7 @@ func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []typ
 		if err := s.skuRepo.CreateSKU(&newSKU); err != nil {
 			return nil, fmt.Errorf("failed to create new SKU %s: %w", *item.Name, err)
 		}
+		item.SKU_ID = newSKU.ID
 
 		if err := s.ensureSupplierMaterialAssociation(supplierID, newSKU.ID); err != nil {
 			return nil, fmt.Errorf("failed to associate supplier %d with SKU %d: %w", supplierID, newSKU.ID, err)
@@ -219,12 +220,12 @@ func (s *inventoryService) createAndRegisterNewSKUs(supplierID uint, items []typ
 		}
 		newSKU.Barcode = barcode
 
-		newPackage := data.Package{
-			StockMaterialID: newSKU.ID,
-			PackageSize:     item.Package.PackageSize,
-			PackageUnitID:   item.Package.PackageUnitID,
+		newPackage := types.ValidatePackage(item)
+		if newPackage == nil {
+			return nil, fmt.Errorf("package data not provided for new sku")
 		}
-		if err := s.packageRepo.CreatePackage(&newPackage); err != nil {
+
+		if err := s.packageRepo.CreatePackage(newPackage); err != nil {
 			return nil, fmt.Errorf("failed to create package for SKU %d: %w", newSKU.ID, err)
 		}
 

@@ -3,6 +3,8 @@ package types
 import (
 	"errors"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
 func ValidateExpirationDate(newExpirationDate, oldExpirationDate time.Time) error {
@@ -10,4 +12,21 @@ func ValidateExpirationDate(newExpirationDate, oldExpirationDate time.Time) erro
 		return errors.New("new expiration date cannot be earlier than the current expiration date")
 	}
 	return nil
+}
+
+func ValidatePackage(item InventoryItem) *data.Package {
+	if item.SKU_ID == 0 {
+		return nil
+	}
+	if item.Package.PackageSize == 0 {
+		return nil
+	}
+	if item.Package.PackageUnitID == 0 {
+		return nil
+	}
+	return &data.Package{
+		StockMaterialID: item.SKU_ID,
+		PackageSize:     item.Package.PackageSize,
+		PackageUnitID:   item.Package.PackageUnitID,
+	}
 }
