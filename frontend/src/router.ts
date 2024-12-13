@@ -24,30 +24,45 @@ export const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
 	const { setCurrentEmployee } = useEmployeeAuthStore()
 
-	if (to.name !== getRouteName('LOGIN')) {
-		const storeId = localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)
-
-		if (!storeId) {
-			return next({ name: getRouteName('LOGIN') })
-		}
+	// Check for login page access
+	if (to.name === getRouteName('LOGIN')) {
+		return next()
 	}
 
+	// Check for store ID in localStorage
+	const storeId = localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)
+	if (!storeId) {
+		return next({ name: getRouteName('LOGIN') })
+	}
+
+	// If route requires authentication
 	if (to.meta?.requiresAuth) {
 		try {
-			const currentEmployee = await employeesService.getCurrentEmployee()
+			// Check if the employee is already set in the store
+			const employeeFromStore = useEmployeeAuthStore().currentEmployee
 
-			if (!currentEmployee) {
-				return next({ name: getRouteName('LOGIN') })
+			if (!employeeFromStore) {
+				// Fetch current employee if not already set
+				const currentEmployee = await employeesService.getCurrentEmployee()
+
+				if (!currentEmployee) {
+					// Redirect to login if no employee is returned
+					return next({ name: getRouteName('LOGIN') })
+				}
+
+				// Set current employee in the store
+				setCurrentEmployee(currentEmployee)
 			}
-
-			setCurrentEmployee(currentEmployee)
-		} catch {
+		} catch (error) {
+			// Handle errors and redirect to an appropriate page
+			console.error('Error fetching current employee:', error)
 			return next({ name: getRouteName('INTERNAL_ERROR') })
 		}
 	}
 
-	const metaTitle = to.meta?.title ? TITLE_TEMPLATE(to.meta.title as string) : DEFAULT_TITLE
-	document.title = metaTitle
+	// Set page title
+	document.title = to.meta?.title ? TITLE_TEMPLATE(to.meta.title as string) : DEFAULT_TITLE
 
+	// Allow navigation
 	return next()
 })

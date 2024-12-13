@@ -1,5 +1,5 @@
 import { apiClient } from '@/core/config/axios-instance.config'
-import type { Employee, EmployeeLoginDTO } from '../models/employees.models'
+import { EmployeeType, type Employee, type EmployeeLoginDTO } from '../models/employees.models'
 
 class EmployeesService {
 	private readonly baseUrl = '/employees'
@@ -7,11 +7,23 @@ class EmployeesService {
 	async getStoreEmployees(storeID: number): Promise<Employee[]> {
 		try {
 			const response = await apiClient.get<Employee[]>(this.baseUrl, {
-				params: { storeId: storeID },
+				params: { type: EmployeeType.Store, storeId: storeID },
 			})
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch employees for store ID ${storeID}:`, error)
+			throw error
+		}
+	}
+
+	async getWarehouseEmployees(warehouseId: number): Promise<Employee[]> {
+		try {
+			const response = await apiClient.get<Employee[]>(this.baseUrl, {
+				params: { type: EmployeeType.Warehouse, warehouseId: warehouseId },
+			})
+			return response.data
+		} catch (error) {
+			console.error(`Failed to fetch employees for warehouse ID ${warehouseId}:`, error)
 			throw error
 		}
 	}

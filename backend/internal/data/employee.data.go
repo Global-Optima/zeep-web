@@ -2,22 +2,58 @@ package data
 
 import (
 	"time"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
+
+type EmployeeType string
+
+const (
+	StoreEmployeeType     EmployeeType = "STORE"
+	WarehouseEmployeeType EmployeeType = "WAREHOUSE"
+)
+
+type EmployeeRole string
+
+const (
+	RoleAdmin     EmployeeRole = "ADMIN"
+	RoleDirector  EmployeeRole = "DIRECTOR"
+	RoleManager   EmployeeRole = "MANAGER"
+	RoleBarista   EmployeeRole = "BARISTA"
+	RoleWarehouse EmployeeRole = "WAREHOUSE_EMPLOYEE"
+)
+
+func IsValidEmployeeRole(role EmployeeRole) bool {
+	switch EmployeeRole(role) {
+	case RoleAdmin, RoleDirector, RoleManager, RoleBarista:
+		return true
+	default:
+		return false
+	}
+}
 
 type Employee struct {
 	BaseEntity
-	Name           string             `gorm:"size:255;not null"`
-	Phone          string             `gorm:"size:15;unique"`
-	Email          string             `gorm:"size:255;unique"`
-	Role           types.EmployeeRole `gorm:"size:50;not null"`
-	StoreID        uint               `gorm:"index"`
-	Store          Store              `gorm:"foreignKey:StoreID;constraint:OnUpdate:CASCADE"`
-	IsActive       bool               `gorm:"default:true"`
-	HashedPassword string             `gorm:"size:255;not null"`
-	Audits         []EmployeeAudit    `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
-	Workdays       []EmployeeWorkday  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+	Name              string             `gorm:"size:255;not null"`
+	Phone             string             `gorm:"size:15;unique"`
+	Email             string             `gorm:"size:255;unique"`
+	HashedPassword    string             `gorm:"size:255;not null"`
+	Role              EmployeeRole       `gorm:"size:50;not null"`
+	Type              EmployeeType       `gorm:"size:50;not null"`
+	IsActive          bool               `gorm:"default:true"`
+	StoreEmployee     *StoreEmployee     `gorm:"foreignKey:EmployeeID"`
+	WarehouseEmployee *WarehouseEmployee `gorm:"foreignKey:EmployeeID"`
+}
+
+type StoreEmployee struct {
+	BaseEntity
+	EmployeeID  uint `gorm:"not null;uniqueIndex"`
+	StoreID     uint `gorm:"not null"`
+	IsFranchise bool `gorm:"default:false"`
+}
+
+type WarehouseEmployee struct {
+	BaseEntity
+	EmployeeID  uint `gorm:"not null;uniqueIndex"`
+	WarehouseID uint `gorm:"not null"`
 }
 
 type EmployeeAudit struct {

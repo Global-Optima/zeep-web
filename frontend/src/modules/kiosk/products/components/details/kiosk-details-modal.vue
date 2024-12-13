@@ -32,12 +32,25 @@ const handleModalClose = () => {
 
 <style lang="scss" scoped>
 .modal-style {
-  max-width: calc(100% - 112px) !important;
+  max-width: 100% !important;
   margin: 0 auto !important;
   background-color: #F5F5F7 !important;
   border-radius: 3rem 3rem 0 0 !important;
-  overflow: clip !important;;
+  overflow: clip !important;
 }
+
+@media (min-width: 640px) {
+  .modal-style {
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .modal-style {
+    max-width: calc(100% - 112px) !important;
+  }
+}
+
 
 :deep(.swipe-modal-content>.panel) {
   -ms-overflow-style: none;
