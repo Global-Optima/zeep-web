@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { productService } from '@/modules/kiosk/products/services/products.service'
-import { computed, defineEmits, defineProps, onMounted, ref, watch } from 'vue'
+import { computed, defineProps, onMounted, ref, watch } from 'vue'
 
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
 import KioskDetailsBottomBar from '@/modules/kiosk/products/components/details/kiosk-details-bottom-bar.vue'
