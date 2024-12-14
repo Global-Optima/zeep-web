@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
@@ -32,21 +33,26 @@ type orderService struct {
 	orderRepo    OrderRepository
 	productRepo  product.ProductRepository
 	additiveRepo additives.AdditiveRepository
+	logger       *zap.SugaredLogger
 }
 
-func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository) OrderService {
+func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, logger *zap.SugaredLogger) OrderService {
 	return &orderService{
 		orderRepo:    orderRepo,
 		productRepo:  productRepo,
 		additiveRepo: additiveRepo,
+		logger:       logger,
 	}
 }
 
 // Get all orders with optional filtering by status
 func (s *orderService) GetAllBaristaOrders(storeID uint, status *string) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetAllBaristaOrders(storeID, status)
+
 	if err != nil {
-		return nil, err
+		wrappedErr := fmt.Errorf("error getting barista orders: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return nil, wrappedErr
 	}
 
 	var orderDTOs []types.OrderDTO
@@ -60,7 +66,9 @@ func (s *orderService) GetAllBaristaOrders(storeID uint, status *string) ([]type
 func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 	suborders, err := s.orderRepo.GetSubOrdersByOrderID(orderID)
 	if err != nil {
-		return nil, err
+		wrappedErr := fmt.Errorf("error getting suborders by orderID: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return nil, wrappedErr
 	}
 
 	var subOrderDTOs []types.SuborderDTO
@@ -77,7 +85,9 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 	// Validate product sizes and additives
 	validations, err := s.ValidationResults(productSizeIDs, additiveIDs)
 	if err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
+		wrappedErr := fmt.Errorf("validation failed: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return nil, wrappedErr
 	}
 
 	// Convert DTO to Order
@@ -87,7 +97,9 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 	// Save the order and related data to the database
 	err = s.orderRepo.CreateOrder(&order)
 	if err != nil {
-		return nil, fmt.Errorf("failed to save order to database: %w", err)
+		wrappedErr := fmt.Errorf("error creating order: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return nil, wrappedErr
 	}
 
 	return &order, nil
@@ -98,20 +110,26 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 	// Update suborder status
 	err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
 	if err != nil {
-		return fmt.Errorf("failed to complete suborder: %w", err)
+		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return wrappedErr
 	}
 
 	// Check if all suborders for the parent order are completed
 	orderID, allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(subOrderID)
 	if err != nil {
-		return fmt.Errorf("failed to check suborders: %w", err)
+		wrappedErr := fmt.Errorf("failed to check suborder: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return wrappedErr
 	}
 
 	// If all suborders are completed, determine the order status
 	if allCompleted {
 		order, err := s.orderRepo.GetOrderById(orderID)
 		if err != nil {
-			return fmt.Errorf("failed to fetch order: %w", err)
+			wrappedErr := fmt.Errorf("failed to get order by id: %w", err)
+			s.logger.Error(wrappedErr.Error())
+			return wrappedErr
 		}
 
 		var newStatus data.OrderStatus
@@ -122,8 +140,11 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		}
 
 		err = s.orderRepo.UpdateOrderStatus(orderID, newStatus)
+
 		if err != nil {
-			return fmt.Errorf("failed to update order status: %w", err)
+			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
+			s.logger.Error(wrappedErr.Error())
+			return wrappedErr
 		}
 	}
 
@@ -134,7 +155,9 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	order, err := s.orderRepo.GetOrderById(orderID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch order details: %w", err)
+		wrappedErr := fmt.Errorf("failed to fetch order details: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return nil, wrappedErr
 	}
 
 	details := pdf.PDFReceiptDetails{
@@ -168,7 +191,9 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error) {
 	countsMap, err := s.orderRepo.GetStatusesCount(storeID)
 	if err != nil {
-		return types.OrderStatusesCountDTO{}, err
+		wrappedErr := fmt.Errorf("error couting statuses: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return types.OrderStatusesCountDTO{}, wrappedErr
 	}
 
 	dto := types.OrderStatusesCountDTO{
@@ -263,7 +288,9 @@ func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
 func (s *orderService) GetOrderBySubOrder(subOrderID uint) (*data.Order, error) {
 	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch order for suborder %d: %w", subOrderID, err)
+		wrappedErr := fmt.Errorf("failed to fetch order for suborder %d: %w", subOrderID, err)
+		s.logger.Error(wrappedErr.Error())
+		return nil, wrappedErr
 	}
 
 	return order, nil
@@ -272,7 +299,9 @@ func (s *orderService) GetOrderBySubOrder(subOrderID uint) (*data.Order, error) 
 func (s *orderService) GetOrderById(orderId uint) (types.OrderDTO, error) {
 	order, err := s.orderRepo.GetOrderById(orderId)
 	if err != nil {
-		return types.OrderDTO{}, fmt.Errorf("failed to fetch order with ID %d: %w", orderId, err)
+		wrappedErr := fmt.Errorf("failed to fetch order with ID %d: %w", orderId, err)
+		s.logger.Error(wrappedErr.Error())
+		return types.OrderDTO{}, wrappedErr
 	}
 
 	orderDTO := types.ConvertOrderToDTO(order)

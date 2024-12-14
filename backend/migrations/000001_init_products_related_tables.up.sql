@@ -232,7 +232,8 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		store_warehouse_id INT NOT NULL REFERENCES store_warehouses (id) ON DELETE CASCADE,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
+		low_stock_threshold DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+        quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ

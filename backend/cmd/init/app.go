@@ -14,6 +14,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
@@ -87,8 +88,9 @@ func InitializeModule[T any, H any](
 func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo storage.StorageRepository) *gin.Engine {
 	cfg := config.GetConfig()
 
-	router := gin.Default()
-	router.Use(logger.ZapRequestLogger())
+	router := gin.New()
+	router.Use(logger.ZapLoggerMiddleware())
+
 	router.Use(gin.Recovery())
 
 	router.Use(cors.New(cors.Config{
@@ -159,6 +161,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 				orders.NewOrderRepository(dbHandler.DB),
 				product.NewProductRepository(dbHandler.DB),
 				additives.NewAdditiveRepository(dbHandler.DB),
+				logger.GetZapSugaredLogger(),
 			), nil
 		},
 		orders.NewOrderHandler,
@@ -172,6 +175,15 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		},
 		supplier.NewSupplierHandler,
 		apiRouter.RegisterSupplierRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (storeWarehouses.StoreWarehouseService, error) {
+			return storeWarehouses.NewStoreWarehouseService(storeWarehouses.NewStoreWarehouseRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
+		},
+		storeWarehouses.NewStoreWarehouseHandler,
+		apiRouter.RegisterStoreWarehouseRoutes,
 	)
 
 	return router
@@ -194,7 +206,7 @@ func InitializeStorage(cfg *config.Config) storage.StorageRepository {
 func InitializeApp() (*gin.Engine, *config.Config) {
 	cfg := InitializeConfig()
 
-	err := logger.Init("info", "app.log", cfg.IsDevelopment)
+	err := logger.InitLoggers("info", "logs/gin.log", "logs/service.log", cfg.IsDevelopment)
 	if err != nil {
 		panic(err)
 	}

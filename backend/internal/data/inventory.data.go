@@ -19,11 +19,12 @@ type StoreWarehouse struct {
 
 type StoreWarehouseStock struct {
 	BaseEntity
-	StoreWarehouseID uint           `gorm:"not null;index"`
-	StoreWarehouse   StoreWarehouse `gorm:"foreignKey:StoreWarehouseID;constraint:OnDelete:CASCADE"`
-	IngredientID     uint           `gorm:"not null;index"`
-	Ingredient       Ingredient     `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
-	Quantity         float64        `gorm:"type:decimal(10,2);not null;check:quantity >= 0"`
+	StoreWarehouseID  uint           `gorm:"not null;index"`
+	StoreWarehouse    StoreWarehouse `gorm:"foreignKey:StoreWarehouseID;constraint:OnDelete:CASCADE"`
+	IngredientID      uint           `gorm:"not null;index"`
+	Ingredient        Ingredient     `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	LowStockThreshold float64        `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
+	Quantity          float64        `gorm:"type:decimal(10,2);not null;check:quantity >= 0"`
 }
 
 type StockRequest struct {
