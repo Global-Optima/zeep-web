@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
@@ -26,6 +27,26 @@ func NewRouter(engine *gin.Engine, prefix string, version string) *Router {
 		Prefix:  prefix,
 		Version: version,
 		Routes:  router,
+	}
+}
+
+func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandler) {
+	router := r.Routes.Group("/auth")
+	{
+		customersRoutes := router.Group("/customers")
+		{
+			customersRoutes.POST("/register", handler.CustomerRegister)
+			customersRoutes.POST("/login", handler.CustomerLogin)
+			customersRoutes.POST("/refresh", handler.CustomerRefresh)
+			customersRoutes.POST("/logout", handler.CustomerLogout)
+		}
+
+		employeesRoutes := router.Group("/employees")
+		{
+			employeesRoutes.POST("/login", handler.EmployeeLogin)
+			employeesRoutes.POST("/refresh", handler.EmployeeRefresh)
+			employeesRoutes.POST("/logout", handler.EmployeeLogout)
+		}
 	}
 }
 
@@ -73,9 +94,6 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 		router.DELETE("/:id", handler.DeleteEmployee)
 		router.GET("/roles", handler.GetAllRoles)
 		router.PUT("/:id/password", handler.UpdatePassword)
-		router.POST("/login", handler.EmployeeLogin)
-		router.POST("/logout", handler.EmployeeLogout)
-		router.POST("/refresh", handler.EmployeeRefresh)
 	}
 }
 
@@ -105,7 +123,7 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 
 func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
 	router := r.Routes.Group("/store-warehouse-stock/:store_id")
-	router.Use(middleware.EmployeeIdentity(), middleware.MatchesStore())
+	router.Use(middleware.EmployeeAuth(), middleware.MatchesStore())
 	{
 		router.GET("", handler.GetStoreWarehouseStockList)
 		router.GET("/:id", handler.GetStoreWarehouseStockById)

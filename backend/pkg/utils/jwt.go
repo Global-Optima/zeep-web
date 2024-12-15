@@ -2,48 +2,49 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"strings"
+	"time"
 )
 
 type UserType string
+type TokenType string
 
 const (
-	UserEmployee         UserType = "employee"
-	UserCustomer         UserType = "customer"
-	ACCESS_TOKEN_HEADER           = "Authorization"
-	REFRESH_TOKEN_HEADER          = "Refresh-Token"
+	TokenAccess  TokenType = "access"
+	TokenRefresh TokenType = "refresh"
+
+	ACCESS_TOKEN_HEADER  = "Authorization"
+	REFRESH_TOKEN_HEADER = "Refresh-Token"
+
+	EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY  = "EMPLOYEE_ACCESS_TOKEN"
+	EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY = "EMPLOYEE_REFRESH_TOKEN"
+	CUSTOMER_ACCESS_TOKEN_COOKIE_KEY  = "CUSTOMER_ACCESS_TOKEN"
+	CUSTOMER_REFRESH_TOKEN_COOKIE_KEY = "CUSTOMER_REFRESH_TOKEN"
 )
 
-type UserClaims interface {
-	jwt.Claims
-	GetUserType() UserType
-}
-
-type EmployeeClaims struct {
-	jwt.RegisteredClaims
+type EmployeeClaimsData struct {
 	ID           uint              `json:"id"`
 	Role         data.EmployeeRole `json:"role"`
 	WorkplaceID  uint              `json:"workplaceId"`
 	EmployeeType data.EmployeeType `json:"workplaceType"`
 }
 
-func (ec *EmployeeClaims) GetUserType() UserType {
-	return UserEmployee
+type EmployeeClaims struct {
+	jwt.RegisteredClaims
+	EmployeeClaimsData
+}
+
+type CustomerClaimsData struct {
+	ID         uint `json:"id"`
+	IsVerified bool `json:"isVerified"`
 }
 
 type CustomerClaims struct {
 	jwt.RegisteredClaims
-	ID         string `json:"id"`
-	IsVerified bool   `json:"isVerified"`
-}
-
-func (ec *CustomerClaims) GetUserType() UserType {
-	return UserCustomer
+	CustomerClaimsData
 }
 
 type TokenPair struct {
@@ -51,23 +52,34 @@ type TokenPair struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-func GenerateJWT(claims UserClaims) (string, error) {
-	var secretKey string
+func GenerateCustomerJWT(input *CustomerClaimsData, tokenType TokenType) (string, error) {
+	var ttl time.Duration
 
 	cfg := config.GetConfig()
 
-	switch claims.GetUserType() {
-	case UserEmployee:
-		secretKey = cfg.JWT.EmployeeSecretKey
-	case UserCustomer:
-		secretKey = cfg.JWT.CustomerSecretKey
+	switch tokenType {
+	case TokenAccess:
+		ttl = cfg.JWT.CustomerAccessTokenTTL
+	case TokenRefresh:
+		ttl = cfg.JWT.CustomerRefreshTokenTTL
 	default:
-		return "", errors.New("unsupported user type")
+		return "", errors.New("unsupported token type")
+	}
+
+	claims := CustomerClaims{
+		CustomerClaimsData: *input,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
+			Issuer:    "zeep-web",
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 	}
 
 	tokenWithClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := tokenWithClaims.SignedString([]byte(secretKey))
+	tokenWithClaims.Header["tokenType"] = tokenType
+
+	tokenString, err := tokenWithClaims.SignedString([]byte(cfg.JWT.CustomerSecretKey))
 	if err != nil {
 		return "", err
 	}
@@ -75,84 +87,85 @@ func GenerateJWT(claims UserClaims) (string, error) {
 	return tokenString, nil
 }
 
-func ValidateEmployeeJWT(tokenString string, claims jwt.Claims) error {
+func GenerateEmployeeJWT(input *EmployeeClaimsData, tokenType TokenType) (string, error) {
+	var ttl time.Duration
+
 	cfg := config.GetConfig()
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cfg.JWT.EmployeeSecretKey), nil
-	})
+	switch tokenType {
+	case TokenAccess:
+		ttl = cfg.JWT.EmployeeAccessTokenTTL
+	case TokenRefresh:
+		ttl = cfg.JWT.EmployeeRefreshTokenTTL
+	default:
+		return "", errors.New("unsupported token type")
+	}
 
+	claims := EmployeeClaims{
+		EmployeeClaimsData: *input,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
+			Issuer:    "zeep-web",
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	tokenWithClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenWithClaims.Header["tokenType"] = tokenType
+
+	tokenString, err := tokenWithClaims.SignedString([]byte(cfg.JWT.EmployeeSecretKey))
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if !token.Valid {
-		return errors.New("invalid employee token")
-	}
-
-	return nil
+	return tokenString, nil
 }
 
-func ValidateCustomerJWT(tokenString string, claims jwt.Claims) error {
+func ValidateCustomerJWT(tokenString string, claims *CustomerClaims, tokenType TokenType) error {
 	cfg := config.GetConfig()
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.JWT.CustomerSecretKey), nil
 	})
-
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	if !token.Valid {
-		return errors.New("invalid customer token")
+	err = validateJWT(token, tokenType)
+	if err != nil {
+		return fmt.Errorf("token validation failed: %w", err)
 	}
 
 	return nil
 }
 
-func ExtractEmployeeAccessTokenAndValidate(c *gin.Context) (*EmployeeClaims, error) {
-	authHeader := c.GetHeader(ACCESS_TOKEN_HEADER)
-	var tokenString string
+func ValidateEmployeeJWT(tokenString string, claims *EmployeeClaims, tokenType TokenType) error {
+	cfg := config.GetConfig()
 
-	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
-	} else {
-		cookie, err := c.Cookie(employees.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-
-		if err != nil {
-			return nil, err
-		}
-		tokenString = cookie
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.JWT.EmployeeSecretKey), nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	claims := &EmployeeClaims{}
-	if err := ValidateEmployeeJWT(tokenString, claims); err != nil {
-		return nil, err
+	err = validateJWT(token, tokenType)
+	if err != nil {
+		return fmt.Errorf("token validation failed: %w", err)
 	}
 
-	return claims, nil
+	return nil
 }
 
-func ExtractEmployeeRefreshTokenAndValidate(c *gin.Context) (*EmployeeClaims, error) {
-	refreshHeader := c.GetHeader(REFRESH_TOKEN_HEADER)
-	var tokenString string
-
-	if refreshHeader != "" && strings.HasPrefix(refreshHeader, "Bearer ") {
-		tokenString = strings.TrimPrefix(refreshHeader, "Bearer ")
-	} else {
-		cookie, err := c.Cookie(employees.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
-
-		if err != nil {
-			return nil, err
-		}
-		tokenString = cookie
+func validateJWT(token *jwt.Token, expectedType TokenType) error {
+	if !token.Valid {
+		return errors.New("token is invalid")
 	}
 
-	claims := &EmployeeClaims{}
-	if err := ValidateEmployeeJWT(tokenString, claims); err != nil {
-		return nil, err
+	tokenType, ok := token.Header["tokenType"].(string)
+	if !ok || TokenType(tokenType) != expectedType {
+		return fmt.Errorf("invalid token type: expected %s, got %s", expectedType, tokenType)
 	}
 
-	return claims, nil
+	return nil
 }

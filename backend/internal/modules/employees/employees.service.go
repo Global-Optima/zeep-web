@@ -3,7 +3,6 @@ package employees
 import (
 	"errors"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -19,8 +18,6 @@ type EmployeeService interface {
 	DeleteEmployee(employeeID uint) error
 	UpdatePassword(employeeID uint, input types.UpdatePasswordDTO) error
 	GetAllRoles() ([]types.RoleDTO, error)
-	EmployeeLogin(email, password string) (*utils.TokenPair, error)
-	RefreshEmployeeAccessToken(refreshToken string) (string, error)
 }
 
 type employeeService struct {
@@ -210,78 +207,6 @@ func (s *employeeService) GetAllRoles() ([]types.RoleDTO, error) {
 		}
 	}
 	return roleDTOs, nil
-}
-
-func (s *employeeService) EmployeeLogin(email, password string) (*utils.TokenPair, error) {
-	employee, err := s.repo.GetEmployeeByEmailOrPhone(email, "")
-	if err != nil {
-		wrappedErr := utils.WrapError("invalid credentials", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	if employee == nil {
-		return nil, errors.New("this employee is not registered")
-	}
-
-	if err := utils.ComparePassword(employee.HashedPassword, password); err != nil {
-		return nil, errors.New("invalid credentials")
-	}
-
-	cfg := config.GetConfig()
-
-	accessClaims := types.MapEmployeeToTokenClaims(employee, cfg.JWT.AccessTokenTTL)
-	refreshClaims := types.MapEmployeeToTokenClaims(employee, cfg.JWT.RefreshTokenTTL)
-
-	accessToken, err := utils.GenerateJWT(accessClaims)
-	if err != nil {
-		return nil, utils.WrapError("failed to generate access token", err)
-	}
-	refreshToken, err := utils.GenerateJWT(refreshClaims)
-	if err != nil {
-		return nil, utils.WrapError("failed to generate refresh token", err)
-	}
-
-	tokenPair := utils.TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return &tokenPair, nil
-}
-
-func (s *employeeService) RefreshEmployeeAccessToken(refreshToken string) (string, error) {
-	claims := &utils.EmployeeClaims{}
-	err := utils.ValidateEmployeeJWT(refreshToken, claims)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to validate refresh token", err)
-		return "", wrappedErr
-	}
-
-	if claims.ID == 0 {
-		wrappedErr := utils.WrapError("invalid refresh token payload", errors.New("id cannot be 0"))
-		return "", wrappedErr
-	}
-
-	employee, err := s.repo.GetEmployeeByID(claims.ID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve employee", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	cfg := config.GetConfig()
-
-	accessClaims := types.MapEmployeeToTokenClaims(employee, cfg.JWT.AccessTokenTTL)
-
-	accessToken, err := utils.GenerateJWT(accessClaims)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to generate access token", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	return accessToken, nil
 }
 
 func mapToEmployeeDTO(employee *data.Employee) *types.EmployeeDTO {

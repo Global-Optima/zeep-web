@@ -3,11 +3,9 @@ package types
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/golang-jwt/jwt/v5"
-	"time"
 )
 
-func MapEmployeeToTokenClaims(employee *data.Employee, expTime time.Duration) *utils.EmployeeClaims {
+func MapEmployeeToClaimsData(employee *data.Employee) *utils.EmployeeClaimsData {
 	var workplaceID uint
 	var workplaceType data.EmployeeType
 
@@ -19,16 +17,20 @@ func MapEmployeeToTokenClaims(employee *data.Employee, expTime time.Duration) *u
 		workplaceType = data.WarehouseEmployeeType
 	}
 
-	claims := utils.EmployeeClaims{
-		ID: employee.ID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expTime)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
+	employeeData := utils.EmployeeClaimsData{
+		ID:           employee.ID,
 		Role:         employee.Role,
 		WorkplaceID:  workplaceID,
 		EmployeeType: workplaceType,
 	}
 
-	return &claims
+	return &employeeData
+}
+
+func MapCustomerToClaimsData(customer *data.Customer) *utils.CustomerClaimsData {
+	customerData := utils.CustomerClaimsData{
+		ID:         customer.ID,
+		IsVerified: customer.IsVerified,
+	}
+	return &customerData
 }

@@ -2,6 +2,8 @@ package init
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
 	"log"
 	"time"
 
@@ -111,6 +113,20 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	InitializeModule(
 		dbHandler,
+		func(dbHandler *database.DBHandler) (auth.AuthenticationService, error) {
+			return auth.NewAuthenticationService(
+				auth.NewAuthorizationRepository(dbHandler.DB),
+				customers.NewCustomerRepository(dbHandler.DB),
+				employees.NewEmployeeRepository(dbHandler.DB),
+				logger.GetZapSugaredLogger(),
+			), nil
+		},
+		auth.NewAuthenticationHandler,
+		apiRouter.RegisterAuthenticationRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
 		func(dbHandler *database.DBHandler) (product.ProductService, error) {
 			return product.NewProductService(product.NewProductRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
@@ -139,7 +155,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (additives.AdditiveService, error) {
-			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB)), nil
+			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		additives.NewAdditiveHandler,
 		apiRouter.RegisterAdditivesRoutes,

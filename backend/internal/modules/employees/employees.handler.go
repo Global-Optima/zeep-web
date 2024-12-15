@@ -9,11 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY  = "EMPLOYEE_ACCESS_TOKEN"
-	EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY = "EMPLOYEE_REFRESH_TOKEN"
-)
-
 type EmployeeHandler struct {
 	service EmployeeService
 }
@@ -158,46 +153,21 @@ func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 	utils.SuccessResponse(c, roles)
 }
 
-func (h *EmployeeHandler) EmployeeLogin(c *gin.Context) {
-	var input types.LoginDTO
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, err.Error())
-		return
-	}
-
-	tokenPair, err := h.service.EmployeeLogin(input.Email, input.Password)
-	if err != nil {
-		utils.SendErrorWithStatus(c, "invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateEmployeeJWT(tokenPair.AccessToken, claims); err != nil {
-		utils.SendInternalServerError(c, "failed to validate token")
-		return
-	}
-
-	utils.SetCookie(c, EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, utils.CookieExpiration)
-
-	utils.SuccessResponse(c, gin.H{"message": "login successful", "token": tokenPair.AccessToken})
-}
-
 func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
-	token, err := c.Cookie(EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
+	token, err := c.Cookie(utils.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 
 	if err != nil {
-		utils.SendErrorWithStatus(c, "authentication token missing", http.StatusUnauthorized)
+		utils.SendErrorWithStatus(c, "access token missing", http.StatusUnauthorized)
 		return
 	}
 
 	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateEmployeeJWT(token, claims); err != nil {
+	if err := utils.ValidateEmployeeJWT(token, claims, utils.TokenAccess); err != nil {
 		utils.SendErrorWithStatus(c, "invalid or expired token", http.StatusUnauthorized)
 		return
 	}
 
-	employee, err := h.service.GetEmployeeByID(claims.ID)
+	employee, err := h.service.GetEmployeeByID(claims.EmployeeClaimsData.ID)
 	if err != nil {
 		print(err)
 		utils.SendInternalServerError(c, "failed to fetch employee details")
@@ -206,42 +176,4 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 
 	print(employee)
 	utils.SuccessResponse(c, employee)
-}
-
-func (h *EmployeeHandler) EmployeeLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-	if err != nil {
-		// Token not found in cookie
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateEmployeeJWT(token, claims); err != nil {
-		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
-	utils.ClearCookie(c, EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-
-	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
-}
-
-func (h *EmployeeHandler) EmployeeRefresh(c *gin.Context) {
-	token, err := utils.GetCookie(c, EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
-	if err != nil {
-		// Token not found in cookie
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateEmployeeJWT(token, claims); err != nil {
-		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
-	utils.ClearCookie(c, EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-
-	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
 }
