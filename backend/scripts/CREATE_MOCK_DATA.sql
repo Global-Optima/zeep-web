@@ -1527,3 +1527,17 @@ VALUES
     (2, 5, 15); -- Vanilla in Warehouse 2
 
 
+INSERT INTO stock_requests (store_id, warehouse_id, status, request_date, created_at, updated_at)
+VALUES
+    (1, 1, 'CREATED', '2024-12-01', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (2, 2, 'PROCESSED', '2024-12-02', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 3, 'IN_DELIVERY', '2024-12-03', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 4, 'COMPLETED', '2024-12-04', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, quantity, delivered_date, expiration_date, created_at, updated_at)
+VALUES
+    (1, 1, 10, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk for Request 1
+    (1, 2, 5, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Sugar for Request 1
+    (2, 3, 3, '2024-12-05', '2026-12-05', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate for Request 2
+    (3, 4, 7, '2024-12-06', '2025-06-06', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon for Request 3
+    (4, 5, 2, '2024-12-07', '2027-12-07', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Vanilla for Request 4
