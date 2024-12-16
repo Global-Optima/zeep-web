@@ -14,6 +14,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
@@ -178,6 +179,15 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		},
 		supplier.NewSupplierHandler,
 		apiRouter.RegisterSupplierRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (storeWarehouses.StoreWarehouseService, error) {
+			return storeWarehouses.NewStoreWarehouseService(storeWarehouses.NewStoreWarehouseRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
+		},
+		storeWarehouses.NewStoreWarehouseHandler,
+		apiRouter.RegisterStoreWarehouseRoutes,
 	)
 
 	InitializeModule(
