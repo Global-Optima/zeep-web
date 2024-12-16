@@ -99,7 +99,6 @@ func (s *employeeService) GetEmployeeByID(employeeID uint) (*types.EmployeeDTO, 
 	}
 
 	employee, err := s.repo.GetEmployeeByID(employeeID)
-	fmt.Print("ERRRRRORRRR", err)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve employee: %v", err)

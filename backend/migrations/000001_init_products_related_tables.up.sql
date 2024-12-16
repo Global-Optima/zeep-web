@@ -2,9 +2,9 @@
 CREATE TABLE
 	IF NOT EXISTS facility_addresses (
 		id SERIAL PRIMARY KEY,
-		address VARCHAR(255) NOT NULL,
-		longitude DECIMAL(9, 6),
-		latitude DECIMAL(9, 6),
+		address VARCHAR(255) UNIQUE NOT NULL,
+		longitude DECIMAL(9, 6) UNIQUE,
+		latitude DECIMAL(9, 6) UNIQUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -14,7 +14,7 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS product_categories (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(100) NOT NULL,
+		name VARCHAR(100) UNIQUE NOT NULL,
 		description TEXT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -25,7 +25,7 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS additive_categories (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(100) NOT NULL,
+		name VARCHAR(100) UNIQUE NOT NULL,
 		description TEXT,
 		is_multiple_select BOOLEAN NOT NULL DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -37,7 +37,7 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS products (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(100) NOT NULL,
+		name VARCHAR(100) UNIQUE NOT NULL,
 		description TEXT,
 		image_url VARCHAR(2048),
 		video_url VARCHAR(2048),
@@ -81,11 +81,11 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS additives (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
+		name VARCHAR(255) UNIQUE NOT NULL,
 		description TEXT,
 		base_price DECIMAL(10, 2) DEFAULT 0,
 		size VARCHAR(200),
-		additive_category_id INT REFERENCES additive_categories (id) ON DELETE SET NULL,
+		additive_category_id INT REFERENCES additive_categories (id),
 		image_url VARCHAR(2048),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -96,12 +96,12 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS stores (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
-		facility_address_id INT REFERENCES facility_addresses (id) ON UPDATE CASCADE ON DELETE SET NULL,
+		name VARCHAR(255) UNIQUE NOT NULL,
+		facility_address_id INT REFERENCES facility_addresses (id),
 		is_franchise BOOLEAN DEFAULT FALSE,
 		status VARCHAR(20) DEFAULT 'ACTIVE',
-		contact_phone VARCHAR(20),
-		contact_email VARCHAR(255),
+		contact_phone VARCHAR(20) UNIQUE,
+		contact_email VARCHAR(255) UNIQUE,
 		store_hours VARCHAR(255),
 		admin_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -171,7 +171,7 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS ingredients (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
+		name VARCHAR(255) UNIQUE NOT NULL,
 		calories DECIMAL(5, 2) CHECK (calories >= 0),
 		fat DECIMAL(5, 2) CHECK (fat >= 0),
 		carbs DECIMAL(5, 2) CHECK (carbs >= 0),
@@ -194,15 +194,16 @@ CREATE TABLE
 	);
 
 -- ItemIngredients Table
-CREATE TABLE IF NOT EXISTS item_ingredients (
-    id SERIAL PRIMARY KEY,
-    ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-    item_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
-    quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+CREATE TABLE
+	IF NOT EXISTS item_ingredients (
+		id SERIAL PRIMARY KEY,
+		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+		item_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
+		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- CityWarehouses Table
 CREATE TABLE
@@ -233,7 +234,7 @@ CREATE TABLE
 		store_warehouse_id INT NOT NULL REFERENCES store_warehouses (id) ON DELETE CASCADE,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		low_stock_threshold DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-        quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
+		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ

@@ -1,7 +1,6 @@
 <template>
-	<AdminStoreManage
+	<AdminStoreDetailsForm
 		v-if="storeData"
-		:isEditing="true"
 		:initialData="storeData"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
@@ -11,10 +10,11 @@
 
 <script lang="ts" setup>
 import { getRouteName } from '@/core/config/routes.config'
-import AdminStoreManage from '@/modules/admin/stores/components/details/admin-store-manage.vue'
-import type { Store } from '@/modules/stores/models/stores.models'
+import AdminStoreDetailsForm from '@/modules/admin/stores/components/details/admin-store-details-form.vue'
+import type { UpdateStoreDTO } from '@/modules/stores/models/stores-dto.model'
 import { storesService } from '@/modules/stores/services/stores.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -24,22 +24,25 @@ const storeId = route.params.id as string
 
 const queryClient = useQueryClient()
 
+const isStoreQueryEnabled = computed(() => !!storeId)
+
 const { data: storeData } = useQuery({
 	queryKey: ['store', storeId],
 	queryFn: () => storesService.getStore(Number(storeId)),
-	enabled: !!storeId,
+	enabled: isStoreQueryEnabled,
 })
 
 const updateMutation = useMutation({
-	mutationFn: (updatedData: Partial<Store>) => storesService.updateStore(Number(storeId), updatedData),
+  mutationFn: (updatedData: UpdateStoreDTO) => storesService.updateStore(Number(storeId), updatedData),
 	onSuccess: () => {
-    queryClient.invalidateQueries({queryKey: ['stores']})
+		queryClient.invalidateQueries({ queryKey: ['stores'] })
 		queryClient.invalidateQueries({queryKey: ['store', storeId]})
 		router.push({name: getRouteName("ADMIN_STORES")})
 	},
 })
 
-function handleUpdate(updatedData: Store) {
+function handleUpdate(updatedData: UpdateStoreDTO) {
+  console.log("HERE")
 	updateMutation.mutate(updatedData)
 }
 

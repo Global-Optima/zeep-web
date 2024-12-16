@@ -18,44 +18,39 @@ func NewProductHandler(service ProductService) *ProductHandler {
 	return &ProductHandler{service: service}
 }
 
-func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
-	storeIDParam := c.Query("storeId")
-	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid storeId")
+func (h *ProductHandler) GetProducts(c *gin.Context) {
+	var filter types.ProductsFilterDto
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
 
-	categoryIDParam := c.Query("categoryId")
-	var categoryID *uint
-	if categoryIDParam != "" {
-		catID, err := strconv.ParseUint(categoryIDParam, 10, 64)
+	if filter.StoreID != nil {
+		storeID, err := strconv.ParseUint(c.Query("storeId"), 10, 64)
+		if err != nil {
+			utils.SendBadRequestError(c, "Invalid storeId")
+			return
+		}
+		temp := uint(storeID)
+		filter.StoreID = &temp
+	}
+
+	if filter.CategoryID != nil {
+		categoryID, err := strconv.ParseUint(c.Query("categoryId"), 10, 64)
 		if err != nil {
 			utils.SendBadRequestError(c, "Invalid categoryId")
 			return
 		}
-		temp := uint(catID)
-		categoryID = &temp
-	}
-
-	searchQuery := c.Query("search")
-
-	limit, offset := utils.ParsePaginationParams(c)
-
-	filter := types.ProductFilterDao{
-		StoreID:     uint(storeID),
-		CategoryID:  categoryID,
-		SearchQuery: searchQuery,
-		Limit:       limit,
-		Offset:      offset,
+		temp := uint(categoryID)
+		filter.CategoryID = &temp
 	}
 
 	cacheKey := utils.BuildCacheKey("storeProducts", map[string]string{
-		"storeId":    storeIDParam,
-		"categoryId": categoryIDParam,
-		"search":     searchQuery,
-		"limit":      strconv.Itoa(limit),
-		"offset":     strconv.Itoa(offset),
+		"storeId":    c.Query("storeId"),
+		"categoryId": c.Query("categoryId"),
+		"search":     c.Query("search"),
+		"limit":      strconv.Itoa(filter.Limit),
+		"offset":     strconv.Itoa(filter.Offset),
 	})
 
 	cacheUtil := utils.GetCacheInstance()
@@ -68,7 +63,8 @@ func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
 		}
 	}
 
-	products, err := h.service.GetStoreProducts(filter)
+	products, err := h.service.GetProducts(filter)
+
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve products")
 		return
@@ -81,7 +77,7 @@ func (h *ProductHandler) GetStoreProducts(c *gin.Context) {
 	utils.SuccessResponse(c, products)
 }
 
-func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
+func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 	storeIDParam := c.Query("storeId")
 	productIDParam := c.Param("productId")
 
@@ -110,7 +106,6 @@ func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
 			utils.SuccessResponse(c, cachedProductDetails)
 			return
 		}
-
 	}
 
 	productDetails, err := h.service.GetStoreProductDetails(uint(storeID), uint(productID))

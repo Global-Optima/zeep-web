@@ -1,6 +1,9 @@
 package stores
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"gorm.io/gorm"
 )
@@ -87,7 +90,10 @@ func (r *storeRepository) CreateFacilityAddress(facilityAddress *data.FacilityAd
 
 func (r *storeRepository) GetFacilityAddressByAddress(address string) (*data.FacilityAddress, error) {
 	var facilityAddress data.FacilityAddress
-	if err := r.db.Where("address = ?", address).First(&facilityAddress).Error; err != nil {
+	if err := r.db.Where("trim(lower(address)) = ?", strings.ToLower(strings.TrimSpace(address))).First(&facilityAddress).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &facilityAddress, nil

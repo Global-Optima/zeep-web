@@ -37,7 +37,7 @@ import SubordersList from '@/modules/kiosk/orders/components/suborders-list.vue'
 import { useOrderEventsService } from '@/modules/kiosk/orders/services/orders-event.service'
 import { OrderStatus, SubOrderStatus, type OrderDTO, type SubOrderDTO } from '@/modules/orders/models/orders.models'
 import { orderService } from '@/modules/orders/services/orders.service'
-import { CURRENT_STORE_COOKIES_CONFIG } from '@/modules/stores/constants/store-cookies.constant'
+import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -48,7 +48,7 @@ interface Status {
 }
 
 const router = useRouter()
-const storeId = String(localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key))
+const {currentStoreId} = useCurrentStoreStore()
 
 const onBackClick = () => {
 	router.push({ name: getRouteName('ADMIN_DASHBOARD') })
@@ -73,7 +73,9 @@ const statuses = ref<Status[]>([
 ])
 
 const fetchStatuses = async (): Promise<Status[]> => {
-	const data = await orderService.getStatusesCount(storeId)
+  if (!currentStoreId) return []
+
+	const data = await orderService.getStatusesCount(currentStoreId)
 	return [
 		{ label: 'Все', count: data.ALL },
 		{ label: 'Активные', count: data.PREPARING },
@@ -83,12 +85,12 @@ const fetchStatuses = async (): Promise<Status[]> => {
 }
 
 const {data: fetchedStatuses} = useQuery({
-  queryKey: ['statuses', storeId],
+  queryKey: ['statuses', currentStoreId],
   queryFn: fetchStatuses ,
 })
 
 // Use the composable
-const { getOrdersRef } = useOrderEventsService(storeId)
+const { getOrdersRef } = useOrderEventsService(currentStoreId!)
 
 // Filtered orders based on selectedStatus
 const filteredOrders = computed(() => {
@@ -133,9 +135,10 @@ async function toggleSuborderStatus(suborder: SubOrderDTO) {
 
 	const orderId = selectedOrder.value.id
 	const suborderId = suborder.id
+  if (!currentStoreId) return
 
 	try {
-		await orderService.completeSubOrder(storeId, orderId, suborderId)
+		await orderService.completeSubOrder(currentStoreId, orderId, suborderId)
 		suborder.status = SubOrderStatus.COMPLETED
 
 		const allDone = selectedOrder.value?.subOrders.every((so) => so.status === SubOrderStatus.COMPLETED)

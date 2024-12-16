@@ -2,10 +2,11 @@ package storeWarehouses
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 type StoreWarehouseHandler struct {
@@ -38,6 +39,31 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 
 	utils.SuccessResponse(c, gin.H{
 		"message": fmt.Sprintf("store warehouse stock with id %d successfully created", id),
+	})
+}
+
+func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
+	var dto types.AddMultipleStockDTO
+
+	storeID, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, err.Error())
+		return
+	}
+
+	err = h.service.AddMultipleStock(uint(storeID), &dto)
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, gin.H{
+		"message": "success",
 	})
 }
 

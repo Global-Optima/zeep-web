@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
-import { productService } from '@/modules/kiosk/products/services/products.service'
+import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -77,7 +77,7 @@ const state = reactive({
 const fetchProductDetails = async () => {
   try {
     state.isLoading = true;
-    const productDetails = await productService.getStoreProductDetails(state.productId);
+    const productDetails = await productsService.getStoreProductDetails(state.productId);
     state.productDetails = productDetails;
 
     if (productDetails.sizes.length > 0) {
@@ -93,7 +93,7 @@ const fetchProductDetails = async () => {
 
 const fetchAdditives = async (sizeId: number) => {
   try {
-    state.additives = await productService.getAdditiveCategoriesByProductSize(sizeId);
+    state.additives = await productsService.getAdditiveCategoriesByProductSize(sizeId);
   } catch {
     state.error = 'Failed to fetch additives.';
   }

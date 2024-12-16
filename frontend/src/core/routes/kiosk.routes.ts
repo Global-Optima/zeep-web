@@ -40,7 +40,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 } satisfies AppRouteRecord
 
 export const KIOSK_ROUTES_CONFIG: ParentRoutePage = {
-	path: 'kiosk',
+	path: '/kiosk',
 	component: AppKioskLayout,
 	children: KIOSK_CHILDREN_ROUTES,
 }

@@ -2,10 +2,8 @@
 	<div class="flex flex-col gap-6 mx-auto w-full md:w-2/3">
 		<Card>
 			<CardHeader>
-				<CardTitle>{{ isEditing ? 'Обновить магазин' : 'Создать магазин' }}</CardTitle>
-				<CardDescription>
-					Заполните форму ниже, чтобы {{ isEditing ? 'обновить' : 'создать' }} магазин.
-				</CardDescription>
+				<CardTitle>Обновить магазин</CardTitle>
+				<CardDescription> Заполните форму ниже, чтобы обновить магазин. </CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form
@@ -13,44 +11,38 @@
 					class="gap-6 grid"
 				>
 					<!-- Store Name and Is Franchise -->
-					<div class="flex items-end gap-4">
-						<div class="flex-grow">
-							<FormField
-								name="name"
-								v-slot="{ componentField }"
-							>
-								<FormItem>
-									<FormLabel>Название магазина</FormLabel>
-									<FormControl>
-										<Input
-											v-bind="componentField"
-											placeholder="Введите название магазина"
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							</FormField>
-						</div>
+					<FormField
+						name="name"
+						v-slot="{ componentField }"
+					>
+						<FormItem>
+							<FormLabel>Название магазина</FormLabel>
+							<FormControl>
+								<Input
+									v-bind="componentField"
+									placeholder="Введите название магазина"
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					</FormField>
 
-						<div>
-							<FormField
-								name="isFranchise"
-								v-slot="{ field }"
-							>
-								<FormItem class="flex items-center gap-3 mb-3">
-									<Switch
-										id="is-franchise"
-										v-model="field.value"
-									/>
-									<Label
-										class="!m-0"
-										for="is-franchise"
-										>Франшиза</Label
-									>
-								</FormItem>
-							</FormField>
-						</div>
-					</div>
+					<FormField
+						name="isFranchise"
+						v-slot="{ value, handleChange }"
+					>
+						<FormItem class="flex items-center gap-3">
+							<Label for="is-franchise"> Франшиза </Label>
+
+							<Switch
+								id="is-franchise"
+								:checked="value"
+								@update:checked="handleChange"
+								class="!mb-1"
+							/>
+						</FormItem>
+					</FormField>
+
 					<!-- Facility Address -->
 					<FormField
 						name="facilityAddress.address"
@@ -128,7 +120,7 @@
 							type="submit"
 							class="flex-1"
 						>
-							{{ isEditing ? 'Обновить' : 'Создать' }}
+							Обновить
 						</Button>
 						<Button
 							variant="outline"
@@ -163,6 +155,7 @@ import {
 import { Input } from '@/core/components/ui/input'
 import { Label } from '@/core/components/ui/label'
 import { Switch } from '@/core/components/ui/switch'
+import type { UpdateStoreDTO } from '@/modules/stores/models/stores-dto.model'
 import type { Store } from '@/modules/stores/models/stores.models'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
@@ -170,12 +163,11 @@ import * as z from 'zod'
 
 // Props
 const props = defineProps<{
-	isEditing: boolean
 	initialData: Partial<Store>
 }>()
 
 const emit = defineEmits<{
-	(e: 'onSubmit', formValues: Store): void
+	(e: 'onSubmit', formValues: UpdateStoreDTO): void
 	(e: 'onCancel'): void
 }>()
 
@@ -196,7 +188,7 @@ const schema = toTypedSchema(
 )
 
 // Initialize form
-const { handleSubmit } = useForm<Store>({
+const { handleSubmit } = useForm<UpdateStoreDTO>({
 	validationSchema: schema,
 	initialValues: props.initialData,
 })

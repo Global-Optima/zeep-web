@@ -30,7 +30,6 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 
 	var cachedStores []types.StoreDTO
 	if err := cacheUtil.Get(cacheKey, &cachedStores); err == nil {
-		// Check if the cached data is empty
 		if !utils.IsEmpty(cachedStores) {
 			utils.SuccessResponse(c, cachedStores)
 			return
@@ -52,7 +51,7 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 }
 
 func (h *StoreHandler) CreateStore(c *gin.Context) {
-	var storeDTO types.StoreDTO
+	var storeDTO types.CreateStoreDTO
 
 	if err := c.ShouldBindJSON(&storeDTO); err != nil {
 		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
@@ -86,9 +85,9 @@ func (h *StoreHandler) GetStoreByID(c *gin.Context) {
 }
 
 func (h *StoreHandler) UpdateStore(c *gin.Context) {
-	var storeDTO types.StoreDTO
+	var dto types.UpdateStoreDTO
 
-	if err := c.ShouldBindJSON(&storeDTO); err != nil {
+	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
 		return
 	}
@@ -98,10 +97,8 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 		utils.SendBadRequestError(c, "Invalid store ID")
 		return
 	}
-	id := uint(storeID)
-	storeDTO.ID = id
 
-	updatedStore, err := h.service.UpdateStore(storeDTO)
+	updatedStore, err := h.service.UpdateStore(uint(storeID), dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to update store: "+err.Error())
 		return

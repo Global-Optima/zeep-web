@@ -13,7 +13,7 @@ import type {
   AdditiveDTO,
   ProductSizeDTO
 } from '@/modules/kiosk/products/models/product.model'
-import { productService } from '@/modules/kiosk/products/services/products.service'
+import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -44,7 +44,7 @@ const error = ref<string | null>(null);
 const fetchAdditives = async () => {
   try {
     isLoading.value = true;
-    const fetchedCategories = await productService.getAdditiveCategoriesByProductSize(selectedSize.value.id);
+    const fetchedCategories = await productsService.getAdditiveCategoriesByProductSize(selectedSize.value.id);
 
     // Merge fetched additives with pre-selected ones
     additivesCategories.value = fetchedCategories.map((category) => ({

@@ -26,13 +26,55 @@ export const ADMIN_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/admin/store-orders/pages/admin-store-orders-page.vue'),
 	},
-	ADMIN_STORE_WAREHOUSE: {
-		path: 'store-warehouse',
+	ADMIN_STORE_STOCKS: {
+		path: 'store-stocks',
 		meta: {
 			title: 'Склад Магазина',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/store-warehouse/pages/admin-store-warehouse-page.vue'),
+		component: () => import('@/modules/admin/store-warehouse/pages/admin-store-stocks-page.vue'),
+	},
+	ADMIN_STORE_STOCKS_DETAILS: {
+		path: 'store-stocks/:id',
+		meta: {
+			title: 'Детали запаса',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/store-warehouse/pages/admin-store-stocks-details-page.vue'),
+	},
+	ADMIN_CREATE_STORE_STOCKS: {
+		path: 'store-stocks/create',
+		meta: {
+			title: 'Добавить в склад магазина',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/store-warehouse/pages/admin-store-stocks-create-page.vue'),
+	},
+	ADMIN_SUPPLIERS: {
+		path: 'suppliers',
+		meta: {
+			title: 'Постащики',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/suppliers/pages/admin-suppliers-page.vue'),
+	},
+	ADMIN_CREATE_SUPPLIER: {
+		path: 'suppliers/create',
+		meta: {
+			title: 'Создать постащика',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/suppliers/pages/admin-suppliers-create-page.vue'),
+	},
+	ADMIN_SUPPLIERS_DETAILS: {
+		path: 'suppliers/:id',
+		meta: {
+			title: 'Детали постащика',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/suppliers/pages/admin-suppliers-details-page.vue'),
 	},
 	ADMIN_ADDITIVES: {
 		path: 'additives',
@@ -104,7 +146,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 			title: 'Добавить сотрудника',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/employees/pages/admin-employees-create-page.vue'),
+		component: () => import('@/modules/admin/employees/pages/admin-store-employees-create-page.vue'),
 	},
 	ADMIN_EMPLOYEES: {
 		path: 'employees',
@@ -112,7 +154,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 			title: 'Сотрудники',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/employees/pages/admin-employees-page.vue'),
+		component: () => import('@/modules/admin/employees/pages/admin-store-employees-page.vue'),
 	},
 	ADMIN_EMPLOYEES_DETAILS: {
 		path: 'employees/:id',
@@ -120,7 +162,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 			title: 'Сотрудник',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/employees/pages/admin-employees-details-page.vue'),
+		component: () => import('@/modules/admin/employees/pages/admin-store-employees-details-page.vue'),
 	},
 	ADMIN_STORES: {
 		path: 'stores',
@@ -149,7 +191,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 } satisfies AppRouteRecord
 
 export const ADMIN_ROUTES_CONFIG = {
-	path: 'admin',
+	path: '/admin',
 	component: AppAdminLayout,
 	children: ADMIN_CHILDREN_ROUTES,
 } satisfies ParentRoutePage

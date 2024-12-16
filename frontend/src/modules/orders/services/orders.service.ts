@@ -7,7 +7,7 @@ import type {
 } from '../models/orders.models'
 
 class OrderService {
-	async getAllOrders(storeId: string, status?: OrderStatus): Promise<OrderDTO[]> {
+	async getAllOrders(storeId: number, status?: OrderStatus): Promise<OrderDTO[]> {
 		try {
 			const response = await apiClient.get<OrderDTO[]>('/orders', {
 				params: { status, storeId },
@@ -28,7 +28,7 @@ class OrderService {
 		}
 	}
 
-	async completeSubOrder(storeId: string, orderId: number, subOrderId: number): Promise<void> {
+	async completeSubOrder(storeId: number, orderId: number, subOrderId: number): Promise<void> {
 		try {
 			await apiClient.put(
 				`/orders/${orderId}/suborders/${subOrderId}/complete`,
@@ -53,7 +53,7 @@ class OrderService {
 		}
 	}
 
-	async getStatusesCount(storeId: string): Promise<OrderStatusesCountDTO> {
+	async getStatusesCount(storeId: number): Promise<OrderStatusesCountDTO> {
 		try {
 			const response = await apiClient.get<OrderStatusesCountDTO>('/orders/statuses/count', {
 				params: { storeId },

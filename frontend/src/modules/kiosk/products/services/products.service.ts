@@ -1,37 +1,22 @@
 import { apiClient } from '@/core/config/axios-instance.config'
-import { CURRENT_STORE_COOKIES_CONFIG } from '@/modules/stores/constants/store-cookies.constant'
+import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	AdditiveCategoryDTO,
 	ProductCategory,
+	Products,
+	ProductsFilter,
 	StoreProductDetailsDTO,
-	StoreProducts,
 } from '../models/product.model'
 
 class ProductService {
-	async getStoreProducts(
-		categoryId: number | null,
-		searchQuery = '',
-		limit = 10,
-		offset = 0,
-	): Promise<StoreProducts[]> {
-		const storeId = localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)
-
+	async getProducts(filter?: ProductsFilter): Promise<Products[]> {
 		try {
-			const response = await apiClient.get<StoreProducts[]>(`/products`, {
-				params: {
-					storeId,
-					categoryId,
-					search: searchQuery,
-					limit,
-					offset,
-				},
+			const response = await apiClient.get<Products[]>(`/products`, {
+				params: buildRequestFilter(filter),
 			})
 			return response.data
 		} catch (error) {
-			console.error(
-				`Failed to fetch products for store ID ${storeId} and category ID ${categoryId}:`,
-				error,
-			)
+			console.error(`Failed to fetch products: `, error)
 			throw error
 		}
 	}
@@ -46,9 +31,10 @@ class ProductService {
 		}
 	}
 
-	async getStoreProductDetails(productId: number): Promise<StoreProductDetailsDTO> {
-		const storeId = localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)
-
+	async getStoreProductDetails(
+		productId: number,
+		storeId: number,
+	): Promise<StoreProductDetailsDTO> {
 		try {
 			const response = await apiClient.get<StoreProductDetailsDTO>(`/products/${productId}`, {
 				params: {
@@ -80,4 +66,4 @@ class ProductService {
 	}
 }
 
-export const productService = new ProductService()
+export const productsService = new ProductService()

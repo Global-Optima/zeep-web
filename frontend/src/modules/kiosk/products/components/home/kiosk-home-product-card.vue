@@ -34,13 +34,13 @@
 <script setup lang="ts">
  import { formatPrice } from '@/core/utils/price.utils'
 import { useCurrentProductStore } from '@/modules/kiosk/products/components/hooks/use-current-product.hook'
-import type { StoreProducts } from '@/modules/kiosk/products/models/product.model'
+import type { Products } from '@/modules/kiosk/products/models/product.model'
 
 // const router = useRouter()
 const currentProductStore = useCurrentProductStore()
 
  const {product} = defineProps<{
-  product: StoreProducts;
+  product: Products;
 }>();
 
  const selectProduct = () => {

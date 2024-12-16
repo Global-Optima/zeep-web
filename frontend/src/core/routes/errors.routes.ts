@@ -21,7 +21,7 @@ export const ERROR_CHILDREN_ROUTES = {
 } satisfies AppRouteRecord
 
 export const ERRORS_ROUTES_CONFIG: ParentRoutePage = {
-	path: 'errors',
+	path: '/errors',
 	component: AppDefaultLayout,
 	children: ERROR_CHILDREN_ROUTES,
 }

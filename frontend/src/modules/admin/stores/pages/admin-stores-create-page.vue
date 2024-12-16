@@ -1,6 +1,5 @@
 <template>
-	<AdminStoreManage
-		:isEditing="false"
+	<AdminStoreCreateForm
 		:initialData="defaultStoreData"
 		@onSubmit="handleCreate"
 		@onCancel="handleCancel"
@@ -8,8 +7,8 @@
 </template>
 
 <script lang="ts" setup>
-import AdminStoreManage from '@/modules/admin/stores/components/details/admin-store-manage.vue'
-import type { Store } from '@/modules/stores/models/stores.models'
+import AdminStoreCreateForm from '@/modules/admin/stores/components/create/admin-store-create-form.vue'
+import type { CreateStoreDTO } from '@/modules/stores/models/stores-dto.model'
 import { storesService } from '@/modules/stores/services/stores.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
@@ -18,11 +17,10 @@ const router = useRouter()
 const queryClient = useQueryClient()
 
 // Default values for a new store
-const defaultStoreData: Partial<Store> = {
+const defaultStoreData: Partial<CreateStoreDTO> = {
 	name: '',
 	isFranchise: false,
 	facilityAddress: {
-		id: 0,
 		address: '',
 		longitude: 0,
 		latitude: 0,
@@ -34,14 +32,14 @@ const defaultStoreData: Partial<Store> = {
 
 // Mutation for creating a store
 const createMutation = useMutation({
-	mutationFn: (newStoreData: Store) => storesService.createStore(newStoreData),
+	mutationFn: (newStoreData: CreateStoreDTO) => storesService.createStore(newStoreData),
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['stores'] })
 		router.push({ name: 'ADMIN_STORES' })
 	},
 })
 
-function handleCreate(newStoreData: Store) {
+function handleCreate(newStoreData: CreateStoreDTO) {
 	createMutation.mutate(newStoreData)
 }
 

@@ -7,7 +7,7 @@ const orders = ref<OrderDTO[]>([])
 
 const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'}`
 
-export function useOrderEventsService(storeId: string) {
+export function useOrderEventsService(storeId: number) {
 	const url = `${wsUrl}/orders/ws/${storeId}`
 	const queryClient = useQueryClient()
 

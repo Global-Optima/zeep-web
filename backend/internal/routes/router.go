@@ -32,8 +32,8 @@ func NewRouter(engine *gin.Engine, prefix string, version string) *Router {
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	router := r.Routes.Group("/products")
 	{
-		router.GET("", handler.GetStoreProducts)
-		router.GET("/:productId", handler.GetStoreProductDetails)
+		router.GET("", handler.GetProducts)
+		router.GET("/:productId", handler.GetProductDetails)
 	}
 }
 
@@ -92,9 +92,9 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 }
 
 func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
-	router := r.Routes.Group("/supplier")
+	router := r.Routes.Group("/suppliers")
 	{
-		router.GET("", handler.ListSuppliers)
+		router.GET("", handler.GetSuppliers)
 		router.GET("/:id", handler.GetSupplierByID)
 		router.POST("", handler.CreateSupplier)
 		router.PUT("/:id", handler.UpdateSupplier)
@@ -109,6 +109,7 @@ func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWare
 		router.GET("", handler.GetStoreWarehouseStockList)
 		router.GET("/:id", handler.GetStoreWarehouseStockById)
 		router.POST("", handler.AddStoreWarehouseStock)
+		router.POST("/multiple", handler.AddMultipleStoreWarehouseStock)
 		router.PUT("/:id", handler.UpdateStoreWarehouseStockById)
 		router.DELETE("/:id", handler.DeleteStoreWarehouseStockById)
 	}

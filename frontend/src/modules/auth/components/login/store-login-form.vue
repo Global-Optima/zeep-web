@@ -162,8 +162,8 @@ import { getRouteName } from '@/core/config/routes.config'
 import { toastError, toastSuccess } from '@/core/config/toast.config'
 import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
 import { employeesService } from '@/modules/employees/services/employees.service'
-import { CURRENT_STORE_COOKIES_CONFIG } from '@/modules/stores/constants/store-cookies.constant'
 import { storesService } from "@/modules/stores/services/stores.service"
+import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
@@ -173,7 +173,7 @@ import * as z from 'zod'
 
 const formSchema = toTypedSchema(
   z.object({
-    selectedStoreId: z.string().min(1, {message: "Пожалуйста, выберите магазин"}),
+    selectedStoreId: z.coerce.number().min(1, {message: "Пожалуйста, выберите магазин"}),
     selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
     password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
   })
@@ -194,6 +194,8 @@ const {mutate: loginEmployee} = useMutation({
 		},
 })
 
+const {setCurrentStore} = useCurrentStoreStore()
+
 const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
   queryKey: ['stores'],
   queryFn: () => storesService.getStores(),
@@ -213,7 +215,7 @@ watch(() => values.selectedStoreId, (newStore) => {
 
 const router = useRouter()
 const onSubmit = handleSubmit((values) => {
-  localStorage.setItem(CURRENT_STORE_COOKIES_CONFIG.key, values.selectedStoreId)
+  setCurrentStore(values.selectedStoreId)
   loginEmployee({email: values.selectedEmployeeEmail, password: values.password})
 })
 </script>

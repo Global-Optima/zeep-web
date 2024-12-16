@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -56,28 +57,28 @@ func (h *SupplierHandler) GetSupplierByID(c *gin.Context) {
 func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
+		utils.SendBadRequestError(c, "invalid ID")
 		return
 	}
 
 	var updateDTO types.UpdateSupplierDTO
 	if err := c.ShouldBindJSON(&updateDTO); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
 	if err := types.ValidateUpdateSupplierDTO(updateDTO); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"validation_error": err.Error()})
+		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
 	err = h.service.UpdateSupplier(uint(id), updateDTO)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "supplier updated successfully"})
+	utils.SuccessResponse(c, gin.H{"message": "supplier updated successfully"})
 }
 
 func (h *SupplierHandler) DeleteSupplier(c *gin.Context) {
@@ -96,8 +97,8 @@ func (h *SupplierHandler) DeleteSupplier(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "supplier deleted successfully"})
 }
 
-func (h *SupplierHandler) ListSuppliers(c *gin.Context) {
-	suppliers, err := h.service.ListSuppliers()
+func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
+	suppliers, err := h.service.GetSuppliers()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

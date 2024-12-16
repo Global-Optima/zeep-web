@@ -1,8 +1,18 @@
 <template>
-	<div class="flex md:flex-row flex-col gap-4">
+	<p
+		v-if="!employee"
+		class="text-muted-foreground"
+	>
+		Сотрудник не найден
+	</p>
+
+	<div
+		v-else
+		class="flex md:flex-row flex-col gap-4"
+	>
 		<!-- Left Side: Employee Details Card -->
 		<div class="w-full md:w-1/3">
-			<AdminEmployeesDetailsInfo />
+			<AdminEmployeesDetailsInfo :employee="employee" />
 		</div>
 
 		<!-- Right Side: Main Content -->
@@ -64,9 +74,10 @@ import AdminEmployeesDetailsActivities from '@/modules/admin/employees/component
 import AdminEmployeesDetailsInfo from '@/modules/admin/employees/components/details/admin-employees-details-info.vue'
 import AdminEmployeesDetailsShifts from '@/modules/admin/employees/components/details/admin-employees-details-shifts.vue'
 import AdminEmployeesDetailsStats from '@/modules/admin/employees/components/details/admin-employees-details-stats.vue'
+import { employeesService } from '@/modules/employees/services/employees.service'
+import { useQuery } from '@tanstack/vue-query'
 import { ref } from 'vue'
-
-
+import { useRoute } from 'vue-router'
 
 interface Stat {
   totalSales: string;
@@ -84,6 +95,15 @@ interface Shift {
   date: string;
   shift: string;
 }
+
+const route = useRoute()
+const employeeId = route.params.id as string
+
+const { data: employee } = useQuery({
+  queryKey: ['employee', employeeId],
+	queryFn: () => employeesService.getEmployeeById(Number(employeeId)),
+  enabled: !!employeeId,
+})
 
 const employeeStats = ref<Stat>({
   totalSales: formatPrice(3500000),

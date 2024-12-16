@@ -4,14 +4,14 @@
 		<div class="w-full md:w-2/3">
 			<Card>
 				<CardHeader>
-					<CardTitle>{{ isEditing ? 'Обновить сотрудника' : 'Создать сотрудника' }}</CardTitle>
+					<CardTitle>Обновить сотрудника</CardTitle>
 					<CardDescription>
-						Заполните форму ниже, чтобы {{ isEditing ? 'обновить' : 'создать' }} сотрудника.
+						Заполните форму ниже, чтобы обновить данные сотрудника.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form
-						@submit.prevent="onSubmit"
+						@submit="submitForm"
 						class="gap-6 grid"
 					>
 						<!-- Name and Surname -->
@@ -85,69 +85,26 @@
 								</FormItem>
 							</FormField>
 						</div>
-						<!-- Password -->
+
+						<!-- Roles Selector -->
 						<FormField
-							name="password"
-							v-slot="{ field, errorMessage }"
-						>
-							<FormItem>
-								<FormLabel>Пароль</FormLabel>
-								<FormControl>
-									<Input
-										type="password"
-										v-model="field.value"
-										placeholder="Введите пароль"
-										:disabled="isEditing"
-									/>
-								</FormControl>
-								<FormMessage v-if="errorMessage">{{ errorMessage }}</FormMessage>
-							</FormItem>
-						</FormField>
-						<!-- Store Selector -->
-						<FormField
-							name="storeId"
-							v-slot="{ field, errorMessage }"
-						>
-							<FormItem>
-								<FormLabel>Магазин</FormLabel>
-								<FormControl>
-									<Select v-model="field.value">
-										<SelectTrigger id="store">
-											<SelectValue placeholder="Выберите магазин" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem
-												v-for="store in stores"
-												:key="store.id"
-												:value="store.id.toString()"
-											>
-												{{ store.name }}
-											</SelectItem>
-										</SelectContent>
-									</Select>
-								</FormControl>
-								<FormMessage v-if="errorMessage">{{ errorMessage }}</FormMessage>
-							</FormItem>
-						</FormField>
-						<!-- Position Selector -->
-						<FormField
-							name="position"
+							name="role"
 							v-slot="{ field, errorMessage }"
 						>
 							<FormItem>
 								<FormLabel>Должность</FormLabel>
 								<FormControl>
 									<Select v-model="field.value">
-										<SelectTrigger id="position">
+										<SelectTrigger id="role">
 											<SelectValue placeholder="Выберите должность" />
 										</SelectTrigger>
 										<SelectContent>
 											<SelectItem
-												v-for="position in positions"
-												:key="position.value"
-												:value="position.value"
+												v-for="role in roles"
+												:key="role.value"
+												:value="role.value"
 											>
-												{{ position.label }}
+												{{ role.label }}
 											</SelectItem>
 										</SelectContent>
 									</Select>
@@ -161,7 +118,7 @@
 								type="submit"
 								class="flex-1"
 							>
-								{{ isEditing ? 'Обновить' : 'Создать' }}
+								Обновить
 							</Button>
 							<Button
 								variant="outline"
@@ -206,7 +163,6 @@
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import * as z from 'zod'
 
 import { Button } from '@/core/components/ui/button'
@@ -228,77 +184,52 @@ import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import AdminEmployeesCreateImage from '@/modules/admin/employees/components/create/admin-employees-create-image.vue'
 import AdminEmployeesCreateWorkHours from '@/modules/admin/employees/components/create/admin-employees-create-work-hours.vue'
+import { EmployeeRole, type Employee, type UpdateEmployeeDto } from '@/modules/employees/models/employees.models'
 
-const router = useRouter();
-const isEditing = ref(false); // Set to true if editing an existing employee
+// Props
+const props = defineProps<{
+	initialData: Employee
+}>()
 
-// Mock data for stores and positions
-const stores = ref([
-  { id: 1, name: 'Магазин А' },
-  { id: 2, name: 'Магазин Б' },
-  { id: 3, name: 'Магазин В' },
-]);
+const emit = defineEmits<{
+	(e: 'onSubmit', formValues: UpdateEmployeeDto): void
+	(e: 'onCancel'): void
+}>()
 
-const positions = ref([
-  { value: 'manager', label: 'Менеджер' },
-  { value: 'cashier', label: 'Кассир' },
-  { value: 'barista', label: 'Бариста' },
+// Roles
+const roles = ref([
+	{ value: EmployeeRole.MANAGER, label: 'Менеджер' },
+	{ value: EmployeeRole.BARISTA, label: 'Бариста' },
 ]);
 
 // Define the Zod schema for form validation
 const schema = toTypedSchema(
-  z.object({
-    name: z.string().min(2, 'Имя должно содержать минимум 2 символа').max(50, 'Имя должно содержать не более 50 символов'),
-    surname: z.string().min(2, 'Фамилия должна содержать минимум 2 символа').max(50, 'Фамилия должна содержать не более 50 символов'),
-    email: z.string().email('Введите действительный адрес электронной почты'),
-    phone: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
-    password: isEditing.value
-      ? z.string().optional()
-      : z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
-    storeId: z.string().nonempty('Выберите магазин'),
-    position: z.string().nonempty('Выберите должность'),
-  })
+	z.object({
+		name: z.string().min(2, 'Имя должно содержать минимум 2 символа').max(50, 'Имя должно содержать не более 50 символов'),
+		surname: z.string().min(2, 'Фамилия должна содержать минимум 2 символа').max(50, 'Фамилия должна содержать не более 50 символов'),
+		email: z.string().email('Введите действительный адрес электронной почты'),
+		phone: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
+		role: z.string().min(1, 'Выберите должность'),
+	})
 );
 
-// Initialize the form with Vee-Validate
-const { handleSubmit, errors, values } = useForm({
-  validationSchema: schema,
-  initialValues: {
-    name: '',
-    surname: '',
-    email: '',
-    phone: '',
-    password: '',
-    storeId: '',
-    position: '',
-  },
-});
+// Initialize the form with initial data
+const { handleSubmit } = useForm<UpdateEmployeeDto>({
+	validationSchema: schema,
+	initialValues: props.initialData,
+})
 
-// Employee data (including image and working hours)
+// Employee image and working hours state
 const employee = ref({
-  image: null as File | null,
-  workingHours: {},
-});
+	image: null,
+	workingHours: {},
+})
 
-// Handle form submission
-const onSubmit = handleSubmit((formValues) => {
-  const employeeData = {
-    ...formValues,
-    image: employee.value.image,
-    workingHours: employee.value.workingHours,
-  };
-  if (isEditing.value) {
-    // Update employee logic
-    console.log('Employee updated:', employeeData);
-  } else {
-    // Create employee logic
-    console.log('Employee created:', employeeData);
-  }
-  router.push('/employees'); // Redirect after saving
-});
+const submitForm = handleSubmit((formValues) => {
+	emit('onSubmit', formValues)
+})
 
-// Handle cancel action
 const handleCancel = () => {
-  router.push('/employees');
-};
+	emit('onCancel')
+}
 </script>

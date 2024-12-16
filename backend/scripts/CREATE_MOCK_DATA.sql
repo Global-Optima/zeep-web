@@ -7,46 +7,7 @@ VALUES
     'Проспект Мира, 45, Санкт-Петербург',
     30.3158,
     59.9343
-  ),
-  (
-    'Улица Советская, 89, Екатеринбург',
-    60.6094,
-    56.8389
-  ),
-  (
-    'Улица Куйбышева, 101, Новосибирск',
-    82.9204,
-    55.0415
-  ),
-  (
-    'Площадь Революции, 17, Нижний Новгород',
-    44.0059,
-    56.3269
-  ),
-  ('Проспект Гагарина, 27, Казань', 49.1233, 55.8304),
-  ('Улица Ленина, 64, Пермь', 56.2516, 58.0105),
-  ('Проспект Победы, 5, Самара', 50.1834, 53.2038),
-  (
-    'Улица Большая Садовая, 101, Ростов-на-Дону',
-    39.7015,
-    47.2225
-  ),
-  (
-    'Невский проспект, 88, Санкт-Петербург',
-    30.3543,
-    59.9311
-  ),
-  (
-    'Улица Советская, 18, Волгоград',
-    44.5018,
-    48.7080
-  ),
-  (
-    'Улица Октябрьская, 5, Челябинск',
-    61.4026,
-    55.1600
-  ),
-  ('Улица Кирова, 2, Уфа', 56.0367, 54.7352);
+  );
 
 -- Insert into CityWarehouses
 INSERT INTO
@@ -73,127 +34,6 @@ VALUES
         address = 'Проспект Мира, 45, Санкт-Петербург'
     ),
     'Санкт-Петербургский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Советская, 89, Екатеринбург'
-    ),
-    'Екатеринбургский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Куйбышева, 101, Новосибирск'
-    ),
-    'Новосибирский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Площадь Революции, 17, Нижний Новгород'
-    ),
-    'Нижегородский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Проспект Гагарина, 27, Казань'
-    ),
-    'Казанский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Ленина, 64, Пермь'
-    ),
-    'Пермский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Проспект Победы, 5, Самара'
-    ),
-    'Самарский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Большая Садовая, 101, Ростов-на-Дону'
-    ),
-    'Ростовский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Невский проспект, 88, Санкт-Петербург'
-    ),
-    'Второй Санкт-Петербургский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Советская, 18, Волгоград'
-    ),
-    'Волгоградский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Октябрьская, 5, Челябинск'
-    ),
-    'Челябинский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Кирова, 2, Уфа'
-    ),
-    'Уфимский склад'
   );
 
 -- Insert into ProductCategory
@@ -616,10 +456,9 @@ VALUES
     'https://static.vecteezy.com/system/resources/previews/041/042/862/non_2x/ai-generated-heaping-spoonful-of-cocoa-powder-free-png.png'
   );
 
--- Insert into Store
+-- Insert into Stores
 INSERT INTO
   stores (
-    id,
     name,
     facility_address_id,
     is_franchise,
@@ -633,7 +472,6 @@ INSERT INTO
   )
 VALUES
   (
-    1,
     'Центральное кафе',
     1,
     false,
@@ -646,156 +484,12 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    2,
     'Кофейня на углу',
     2,
     true,
     'ACTIVE',
     '79002223344',
     'corner@example.com',
-    '9:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    3,
-    'Маленький магазин на Советской',
-    3,
-    true,
-    'ACTIVE',
-    '79003334455',
-    'smallstore@example.com',
-    '8:00-18:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    4,
-    'Кофейня у вокзала',
-    4,
-    false,
-    'DISABLED',
-    '79004445566',
-    'station@example.com',
-    '10:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    5,
-    'Городской кофе',
-    5,
-    true,
-    'ACTIVE',
-    '79005556677',
-    'citycoffee@example.com',
-    '7:00-23:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    6,
-    'Летняя терраса',
-    6,
-    true,
-    'ACTIVE',
-    '79006667788',
-    'terrace@example.com',
-    '10:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    7,
-    'Кафе на проспекте',
-    7,
-    false,
-    'ACTIVE',
-    '79007778899',
-    'avenuecafe@example.com',
-    '9:00-21:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    8,
-    'Заведение у реки',
-    8,
-    true,
-    'ACTIVE',
-    '79008889900',
-    'riverside@example.com',
-    '10:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    9,
-    'Чайный дом',
-    9,
-    false,
-    'DISABLED',
-    '79009990011',
-    'teahouse@example.com',
-    '8:00-20:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    10,
-    'Кофе и компании',
-    10,
-    true,
-    'ACTIVE',
-    '79010001122',
-    'coffeeandco@example.com',
-    '8:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    11,
-    'Парк-кафе',
-    11,
-    false,
-    'ACTIVE',
-    '79011002233',
-    'parkcafe@example.com',
-    '10:00-21:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    12,
-    'Восточный уголок',
-    12,
-    true,
-    'ACTIVE',
-    '79012003344',
-    'easterncorner@example.com',
-    '10:00-23:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    13,
-    'Семейная кофейня',
-    13,
-    false,
-    'ACTIVE',
-    '79013004455',
-    'familycafe@example.com',
     '9:00-22:00',
     NULL,
     CURRENT_TIMESTAMP,
@@ -809,23 +503,23 @@ VALUES
   (1, 1, 60.00),
   (2, 1, 75.00),
   (3, 2, 85.00),
-  (1, 3, 65.00),
+  (1, 2, 65.00),
   (4, 1, 50.00),
-  (5, 4, 90.00),
-  (6, 5, 70.00),
-  (7, 6, 100.00),
-  (8, 7, 55.00),
-  (9, 8, 45.00),
-  (10, 9, 15.00),
-  (11, 10, 5.00),
-  (12, 11, 80.00),
-  (13, 12, 40.00),
-  (14, 13, 30.00),
-  (3, 4, 75.00),
-  (6, 6, 85.00),
-  (9, 7, 65.00),
-  (5, 8, 95.00),
-  (2, 9, 70.00);
+  (5, 1, 90.00),
+  (6, 2, 70.00),
+  (7, 2, 100.00),
+  (8, 1, 55.00),
+  (9, 1, 45.00),
+  (10, 2, 15.00),
+  (11, 2, 5.00),
+  (12, 1, 80.00),
+  (13, 1, 40.00),
+  (14, 2, 30.00),
+  (3, 2, 75.00),
+  (6, 1, 85.00),
+  (9, 1, 65.00),
+  (5, 2, 95.00),
+  (2, 2, 70.00);
 
 -- Insert into StoreProductSizes
 INSERT INTO
@@ -834,23 +528,23 @@ VALUES
   (1, 1, 210.00),
   (2, 1, 260.00),
   (3, 2, 310.00),
-  (1, 3, 220.00),
-  (2, 4, 270.00),
-  (3, 5, 330.00),
-  (1, 6, 215.00),
-  (2, 7, 265.00),
-  (3, 8, 320.00),
-  (1, 9, 225.00),
-  (2, 10, 275.00),
-  (3, 11, 315.00),
-  (1, 12, 230.00),
-  (2, 13, 280.00),
-  (3, 1, 300.00),
+  (1, 2, 220.00),
+  (2, 1, 270.00),
+  (3, 1, 330.00),
+  (1, 2, 215.00),
+  (2, 2, 265.00),
+  (3, 1, 320.00),
+  (1, 1, 225.00),
+  (2, 2, 275.00),
+  (3, 2, 315.00),
+  (1, 1, 230.00),
+  (2, 1, 280.00),
+  (3, 2, 300.00),
   (1, 2, 210.00),
-  (2, 3, 270.00),
-  (3, 4, 325.00),
-  (1, 5, 250.00),
-  (2, 6, 290.00);
+  (2, 1, 270.00),
+  (3, 1, 325.00),
+  (1, 2, 250.00),
+  (2, 2, 290.00);
 
 -- Insert into StoreProduct
 INSERT INTO
@@ -882,22 +576,22 @@ VALUES
   (2, 2, false),
   (3, 2, true),
   (4, 2, true),
-  (5, 3, false),
-  (6, 3, true),
-  (7, 3, false),
-  (8, 3, true),
-  (9, 4, true),
-  (10, 4, true),
-  (11, 4, false),
-  (12, 4, true),
-  (13, 5, true),
-  (14, 5, true),
-  (15, 5, false),
-  (16, 5, true),
-  (17, 6, true),
-  (18, 6, false),
-  (19, 6, true),
-  (20, 6, true);
+  (5, 2, false),
+  (6, 2, true),
+  (7, 2, false),
+  (8, 2, true),
+  (9, 2, true),
+  (10, 2, true),
+  (11, 2, false),
+  (12, 2, true),
+  (13, 2, true),
+  (14, 2, true),
+  (15, 2, false),
+  (16, 2, true),
+  (17, 2, true),
+  (18, 2, false),
+  (19, 2, true),
+  (20, 2, true);
 
 -- Insert into ProductAdditive
 INSERT INTO
@@ -1330,7 +1024,6 @@ VALUES
 -- Insert into StoreEmployee
 INSERT INTO
   store_employees (
-    id,
     employee_id,
     store_id,
     is_franchise,
@@ -1338,62 +1031,21 @@ INSERT INTO
     updated_at
   )
 VALUES
-  (
-    1,
-    1,
-    1,
-    false,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    2,
-    2,
-    2,
-    true,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    3,
-    3,
-    3,
-    false,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    4,
-    4,
-    1,
-    true,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    5,
-    5,
-    2,
-    false,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  );
+  (1, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (2, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (3, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (4, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (5, 2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into WarehouseEmployee
 INSERT INTO
-  warehouse_employees (
-    id,
-    employee_id,
-    warehouse_id,
-    created_at,
-    updated_at
-  )
+  warehouse_employees (employee_id, warehouse_id, created_at, updated_at)
 VALUES
-  (1, 6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (2, 7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (3, 8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (4, 9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (5, 10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (8, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into EmployeeAudit
 INSERT INTO
@@ -1449,23 +1101,72 @@ VALUES
   (25.00, 3, '2024-04-30 23:59:59+00');
 
 INSERT INTO
-    store_warehouses (store_id, city_warehouse_id, created_at, updated_at)
+  store_warehouses (
+    store_id,
+    city_warehouse_id,
+    created_at,
+    updated_at
+  )
 VALUES
-    (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (5, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (6, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
+  (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO
-    store_warehouse_stocks (store_warehouse_id, ingredient_id, quantity, low_stock_threshold, created_at, updated_at)
+  store_warehouse_stocks (
+    store_warehouse_id,
+    ingredient_id,
+    quantity,
+    low_stock_threshold,
+    created_at,
+    updated_at
+  )
 VALUES
-    (1, 1, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (1, 2, 50, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 1, 20, 30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 30, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 1, 40, 80, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 1, 10000, 1000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 120, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (1, 1, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (
+    1,
+    2,
+    50,
+    500,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    1,
+    20,
+    30,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    2,
+    30,
+    100,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    1,
+    40,
+    80,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    1,
+    1,
+    10000,
+    1000,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    1,
+    3,
+    120,
+    500,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
