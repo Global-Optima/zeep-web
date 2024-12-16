@@ -9,13 +9,6 @@ export const KIOSK_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/kiosk/products/pages/kiosk-home-page.vue'),
 	},
-	KIOSK_DETAILS: {
-		path: ':id',
-		meta: {
-			title: 'Детали товара',
-		},
-		component: () => import('@/modules/kiosk/products/pages/kiosk-product-details-page.vue'),
-	},
 	KIOSK_ORDERS: {
 		path: 'orders',
 		meta: {

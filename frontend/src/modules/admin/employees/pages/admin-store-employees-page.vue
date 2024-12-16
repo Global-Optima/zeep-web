@@ -47,6 +47,6 @@ const { data: employees } = useQuery({
 })
 
 function updateFilter(updatedFilter: EmployeesFilter) {
-  filter.value = updatedFilter
+  filter.value = {...filter.value, ...updatedFilter}
 }
 </script>

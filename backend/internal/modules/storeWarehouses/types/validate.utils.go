@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ParseStockParamsWithPagination(c *gin.Context) (*GetStockQuery, error) {
-	var params GetStockQuery
+func ParseStockParamsWithPagination(c *gin.Context) (*GetStockFilterQuery, error) {
+	var params GetStockFilterQuery
 
 	if err := c.ShouldBindQuery(&params); err != nil {
 		return nil, err

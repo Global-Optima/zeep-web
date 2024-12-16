@@ -9,7 +9,7 @@ import (
 type StoreWarehouseService interface {
 	AddStock(storeId uint, dto *types.AddStockDTO) (uint, error)
 	AddMultipleStock(storeId uint, dto *types.AddMultipleStockDTO) error
-	GetStockList(storeId uint, query *types.GetStockQuery) ([]types.StockDTO, error)
+	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StockDTO, error)
 	GetStockById(storeId, stockId uint) (*types.StockDTO, error)
 	UpdateStockById(storeId, stockId uint, input *types.UpdateStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
@@ -62,7 +62,7 @@ func (s *storeWarehouseService) AddStock(storeId uint, dto *types.AddStockDTO) (
 	return id, nil
 }
 
-func (s *storeWarehouseService) GetStockList(storeId uint, query *types.GetStockQuery) ([]types.StockDTO, error) {
+func (s *storeWarehouseService) GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StockDTO, error) {
 	stockList, err := s.repo.GetStockList(storeId, query)
 	if err != nil {
 		wrappedErr := utils.WrapError("error getting store stock list", err)

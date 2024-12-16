@@ -78,7 +78,7 @@ func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "supplier updated successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "supplier updated successfully"})
 }
 
 func (h *SupplierHandler) DeleteSupplier(c *gin.Context) {

@@ -11,12 +11,12 @@ type StoreProductDTO struct {
 }
 
 type StoreProductDetailsDTO struct {
-	ID               uint                        `json:"id"`
-	Name             string                      `json:"name"`
-	Description      string                      `json:"description"`
-	ImageURL         string                      `json:"imageUrl"`
-	Sizes            []ProductSizeDTO            `json:"sizes"`
-	DefaultAdditives []additiveTypes.AdditiveDTO `json:"defaultAdditives"`
+	ID               uint                                    `json:"id"`
+	Name             string                                  `json:"name"`
+	Description      string                                  `json:"description"`
+	ImageURL         string                                  `json:"imageUrl"`
+	Sizes            []ProductSizeDTO                        `json:"sizes"`
+	DefaultAdditives []additiveTypes.AdditiveCategoryItemDTO `json:"defaultAdditives"`
 }
 
 type ProductSizeDTO struct {

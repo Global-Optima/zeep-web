@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"fmt"
-	"gorm.io/gorm"
 	"math"
 	"strconv"
+
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,14 +23,29 @@ type Pagination struct {
 	TotalPages int `json:"totalPages"`
 }
 
+func ApplyPagination[T any](query *gorm.DB, pagination *Pagination, model T) (*gorm.DB, error) {
+	var totalCount int64
+
+	// Count total records matching the query
+	if err := query.Model(model).Count(&totalCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Set pagination totals
+	pagination.SetTotal(totalCount)
+
+	// Apply pagination using GORM Scopes
+	return query.Scopes(pagination.PaginateGorm()), nil
+}
+
 // PaginateGorm must be attached to the gorm query in form of query.Scopes(Pagination.PaginateGorm())
 func (p *Pagination) PaginateGorm() func(db *gorm.DB) *gorm.DB {
 	if p.Page < 1 {
-		p.Page = 1
+		p.Page = DEFAULT_PAGE
 	}
 
-	if p.PageSize < 0 {
-		p.Page = 10
+	if p.PageSize < 1 || p.PageSize > MAX_PAGE_SIZE {
+		p.PageSize = DEFAULT_PAGE_SIZE
 	}
 
 	return func(db *gorm.DB) *gorm.DB {
@@ -41,46 +56,32 @@ func (p *Pagination) PaginateGorm() func(db *gorm.DB) *gorm.DB {
 // SetTotal must be used after query with PaginateGorm was completed
 func (p *Pagination) SetTotal(totalCount int64) {
 	p.TotalCount = int(totalCount)
-	p.TotalPages = int(math.Ceil(float64(p.TotalCount) / float64(p.PageSize)))
-}
-
-func ParsePaginationParams(c *gin.Context) (limit int, offset int) {
-	limitStr := c.DefaultQuery("limit", "10")
-	offsetStr := c.DefaultQuery("offset", "0")
-
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit < 1 {
-		limit = 25
+	if p.PageSize > 0 {
+		p.TotalPages = int(math.Ceil(float64(totalCount) / float64(p.PageSize)))
+	} else {
+		p.TotalPages = 0
 	}
-
-	offset, err = strconv.Atoi(offsetStr)
-	if err != nil || offset < 0 {
-		offset = 0
-	}
-
-	return limit, offset
 }
 
 func ParsePagination(c *gin.Context) *Pagination {
-	pageStr := c.DefaultQuery("page", fmt.Sprintf("%d", DEFAULT_PAGE))
-	page, err := strconv.Atoi(pageStr)
-	if err != nil || page < 1 {
-		page = DEFAULT_PAGE
-	}
+	page, _ := parsePositiveInt(c.DefaultQuery("page", strconv.Itoa(DEFAULT_PAGE)), DEFAULT_PAGE)
+	pageSize, _ := parsePositiveInt(c.DefaultQuery("pageSize", strconv.Itoa(DEFAULT_PAGE_SIZE)), DEFAULT_PAGE_SIZE)
 
-	pageSizeStr := c.DefaultQuery("pageSize", fmt.Sprintf("%d", DEFAULT_PAGE_SIZE))
-	pageSize, err := strconv.Atoi(pageSizeStr)
-	if err != nil || pageSize < 1 {
-		pageSize = DEFAULT_PAGE_SIZE
-	}
+	// Enforce maximum page size
 	if pageSize > MAX_PAGE_SIZE {
 		pageSize = MAX_PAGE_SIZE
 	}
 
 	return &Pagination{
-		Page:       page,
-		PageSize:   pageSize,
-		TotalCount: 0,
-		TotalPages: 0,
+		Page:     page,
+		PageSize: pageSize,
 	}
+}
+
+func parsePositiveInt(input string, defaultValue int) (int, error) {
+	value, err := strconv.Atoi(input)
+	if err != nil || value < 1 {
+		return defaultValue, err
+	}
+	return value, nil
 }

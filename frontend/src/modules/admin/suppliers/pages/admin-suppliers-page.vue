@@ -19,20 +19,20 @@ import type { SuppliersFilter } from '@/modules/admin/suppliers/models/suppliers
 import { suppliersService } from '@/modules/admin/suppliers/services/suppliers.service'
 import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
 import { useQuery } from '@tanstack/vue-query'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const filter = ref<SuppliersFilter>({
   searchTerm: '',
 })
 
 const { data: suppliers } = useQuery({
-  queryKey: ['suppliers', filter.value],
+  queryKey: computed(() => ['suppliers', filter.value]),
   queryFn: () => suppliersService.getSuppliers(filter.value),
   initialData: []
 })
 
 function updateFilter(updatedFilter: Partial<StoresFilter>) {
-  Object.assign(filter.value, updatedFilter)
+  filter.value = {...filter.value, ...updatedFilter}
 }
 </script>
 

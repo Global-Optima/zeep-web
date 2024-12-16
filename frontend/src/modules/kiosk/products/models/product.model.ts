@@ -1,3 +1,5 @@
+import type { AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+
 export interface ProductsFilter {
 	storeId?: number
 	categoryId?: number
@@ -27,7 +29,7 @@ export interface StoreProductDetailsDTO {
 	description: string
 	imageUrl: string
 	sizes: ProductSizeDTO[]
-	defaultAdditives: AdditiveDTO[]
+	defaultAdditives: AdditiveCategoryItem[]
 }
 
 export interface ProductSizeDTO {
@@ -35,20 +37,4 @@ export interface ProductSizeDTO {
 	name: string
 	basePrice: number
 	measure: string
-}
-
-export interface AdditiveDTO {
-	id: number
-	name: string
-	description: string
-	price: number
-	imageUrl: string
-	categoryId: number
-}
-
-export interface AdditiveCategoryDTO {
-	id: number
-	name: string
-	additives: AdditiveDTO[]
-	isMultipleSelect: boolean
 }

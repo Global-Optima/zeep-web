@@ -90,7 +90,7 @@ export function useOrderEventsService(storeId: number) {
 	// Sort orders by timestamp
 	function sortOrders(orderList: OrderDTO[]): OrderDTO[] {
 		return orderList.sort(
-			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
 		)
 	}
 

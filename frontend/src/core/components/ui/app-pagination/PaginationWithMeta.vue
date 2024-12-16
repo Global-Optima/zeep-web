@@ -1,85 +1,104 @@
 <script setup lang="ts">
-import {
-  Button,
-} from '@/core/components/ui/button'
-
-import {
-  Pagination,
-  PaginationEllipsis,
-  PaginationFirst,
-  PaginationLast,
-  PaginationList,
-  PaginationListItem,
-  PaginationNext,
-  PaginationPrev,
-} from '@/core/components/ui/pagination'
+import { Button } from '@/core/components/ui/button'
 import type { PaginationMeta } from '@/core/utils/pagination.utils'
-
-import { computed } from 'vue'
+import { DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue'
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
 
 // Props: Accepts PaginationMeta and sibling count
 const props = defineProps<{
   meta: PaginationMeta,
-  siblingCount?: number
-}>()
+}>();
 
-// Emit: Emits an event when the page changes
 const emit = defineEmits<{
-  (e: 'update:page', page: number): void
-}>()
+  (e: 'update:page', page: number): void,
+  (e: 'update:pageSize', pageSize: number): void
+}>();
 
-// Compute the total pages and default page from meta
-const totalPages = computed(() => props.meta.totalPages)
-const currentPage = computed(() => props.meta.page)
+const pageSizeOptions = [10, 20, 30, 40, 50];
+const selectedPageSize = ref(props.meta.pageSize);
 
-// Handle page change
+const totalPages = computed(() => props.meta.totalPages);
+const currentPage = computed(() => props.meta.page);
+
+watch(selectedPageSize, (newPageSize) => {
+  emit('update:pageSize', Number(newPageSize));
+});
+
 const handlePageChange = (newPage: number) => {
-  emit('update:page', newPage)
-}
+  emit('update:page', newPage);
+};
 </script>
 
 <template>
-	<Pagination
-		v-slot="{ page }"
-		:total="totalPages"
-		:sibling-count="siblingCount || 1"
-		show-edges
-		:default-page="currentPage"
-		@update:page="handlePageChange"
-	>
-		<PaginationList
-			v-slot="{ items }"
-			class="flex items-center gap-1"
-		>
-			<PaginationFirst />
-			<PaginationPrev />
-
-			<template
-				v-for="(item, index) in items"
-				:key="index"
+	<div class="flex items-center space-x-6 lg:space-x-8">
+		<!-- Rows per page dropdown -->
+		<div class="flex items-center space-x-2">
+			<p class="font-medium text-sm">Cтрок на странице</p>
+			<select
+				class="border-gray-300 border rounded-md w-[70px] h-8 text-center text-sm"
+				v-model="selectedPageSize"
 			>
-				<PaginationListItem
-					v-if="item.type === 'page'"
-					:value="item.value"
-					as-child
+				<option
+					v-for="size in pageSizeOptions"
+					:key="size"
+					:value="size"
 				>
-					<Button
-						class="p-0 w-10 h-10"
-						:variant="item.value === page ? 'default' : 'outline'"
-						@click="handlePageChange(item.value)"
-					>
-						{{ item.value }}
-					</Button>
-				</PaginationListItem>
-				<PaginationEllipsis
-					v-else
-					:key="item.type"
-					:index="index"
-				/>
-			</template>
+					{{ size }}
+				</option>
+			</select>
+		</div>
 
-			<PaginationNext />
-			<PaginationLast />
-		</PaginationList>
-	</Pagination>
+		<!-- Page count display -->
+		<div class="flex justify-center items-center w-[100px] font-medium text-nowrap text-sm">
+			Страница {{ currentPage }} из {{ totalPages }}
+		</div>
+
+		<!-- Navigation buttons -->
+		<div class="flex items-center space-x-2">
+			<!-- First page button -->
+			<Button
+				variant="outline"
+				class="lg:flex hidden p-0 w-8 h-8"
+				:disabled="currentPage === 1"
+				@click="handlePageChange(1)"
+			>
+				<span class="sr-only">Go to first page</span>
+				<DoubleArrowLeftIcon class="w-4 h-4" />
+			</Button>
+
+			<!-- Previous page button -->
+			<Button
+				variant="outline"
+				class="p-0 w-8 h-8"
+				:disabled="currentPage === 1"
+				@click="handlePageChange(currentPage - 1)"
+			>
+				<span class="sr-only">Go to previous page</span>
+				<ChevronLeftIcon class="w-4 h-4" />
+			</Button>
+
+			<!-- Next page button -->
+			<Button
+				variant="outline"
+				class="p-0 w-8 h-8"
+				:disabled="currentPage === totalPages"
+				@click="handlePageChange(currentPage + 1)"
+			>
+				<span class="sr-only">Go to next page</span>
+				<ChevronRightIcon class="w-4 h-4" />
+			</Button>
+
+			<!-- Last page button -->
+			<Button
+				variant="outline"
+				class="lg:flex hidden p-0 w-8 h-8"
+				:disabled="currentPage === totalPages"
+				@click="handlePageChange(totalPages)"
+			>
+				<span class="sr-only">Go to last page</span>
+				<DoubleArrowRightIcon class="w-4 h-4" />
+			</Button>
+		</div>
+	</div>
 </template>

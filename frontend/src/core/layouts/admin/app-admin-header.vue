@@ -87,10 +87,14 @@ import { useMutation } from '@tanstack/vue-query'
 import { CircleUser, Menu, Search, Store } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
+const {currentEmployee, setCurrentEmployee} = useEmployeeAuthStore()
+
+
 const {mutate: logoutEmployee} = useMutation({
 		mutationFn: () => employeesService.logout(),
 		onSuccess: () => {
 			toastSuccess("Вы вышли из системы")
+      setCurrentEmployee(null)
 			router.push({name: getRouteName("LOGIN")})
 		},
 		onError: () => {
@@ -99,9 +103,6 @@ const {mutate: logoutEmployee} = useMutation({
 })
 
 const router = useRouter()
-const {currentEmployee} = useEmployeeAuthStore()
-console.log(currentEmployee)
-
 
 const onKioskClick = () => {
 	router.push({name: getRouteName('KIOSK_HOME')})

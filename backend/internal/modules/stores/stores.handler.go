@@ -31,7 +31,7 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 	var cachedStores []types.StoreDTO
 	if err := cacheUtil.Get(cacheKey, &cachedStores); err == nil {
 		if !utils.IsEmpty(cachedStores) {
-			utils.SuccessResponse(c, cachedStores)
+			utils.SendSuccessResponse(c, cachedStores)
 			return
 		}
 	}
@@ -47,7 +47,7 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 		fmt.Printf("Failed to cache stores: %v\n", err)
 	}
 
-	utils.SuccessResponse(c, stores)
+	utils.SendSuccessResponse(c, stores)
 }
 
 func (h *StoreHandler) CreateStore(c *gin.Context) {
@@ -64,7 +64,7 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, createdStore)
+	utils.SendSuccessResponse(c, createdStore)
 }
 
 func (h *StoreHandler) GetStoreByID(c *gin.Context) {
@@ -81,7 +81,7 @@ func (h *StoreHandler) GetStoreByID(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, store)
+	utils.SendSuccessResponse(c, store)
 }
 
 func (h *StoreHandler) UpdateStore(c *gin.Context) {
@@ -104,7 +104,7 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, updatedStore)
+	utils.SendSuccessResponse(c, updatedStore)
 }
 
 func (h *StoreHandler) DeleteStore(c *gin.Context) {
@@ -122,5 +122,5 @@ func (h *StoreHandler) DeleteStore(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "Store deleted successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "Store deleted successfully"})
 }

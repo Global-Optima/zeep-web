@@ -23,12 +23,10 @@ const supplierId = route.params.id as string
 
 const queryClient = useQueryClient()
 
-const isSupplierQueryEnabled = computed(() => !!supplierId)
-
 const { data: supplierData } = useQuery({
 	queryKey: ['supplier', supplierId],
 	queryFn: () => suppliersService.getSupplier(Number(supplierId)),
-	enabled: isSupplierQueryEnabled,
+	enabled: computed(() => !!supplierId),
 })
 
 const updateMutation = useMutation({

@@ -1,16 +1,18 @@
 import { apiClient } from '@/core/config/axios-instance.config'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
+import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	CreateOrderDTO,
 	OrderDTO,
-	OrderStatus,
+	OrdersFilterQuery,
 	OrderStatusesCountDTO,
 } from '../models/orders.models'
 
 class OrderService {
-	async getAllOrders(storeId: number, status?: OrderStatus): Promise<OrderDTO[]> {
+	async getAllOrders(filter?: OrdersFilterQuery) {
 		try {
-			const response = await apiClient.get<OrderDTO[]>('/orders', {
-				params: { status, storeId },
+			const response = await apiClient.get<PaginatedResponse<OrderDTO[]>>('/orders', {
+				params: buildRequestFilter(filter),
 			})
 			return response.data
 		} catch (error) {

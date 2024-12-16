@@ -6,7 +6,17 @@
 
 	<Card>
 		<CardContent class="mt-4">
-			<AdminStoresList :stores="stores ?? []" />
+			<p
+				v-if="!stores || stores.length === 0"
+				class="text-muted-foreground"
+			>
+				Магазины не найдены
+			</p>
+
+			<AdminStoresList
+				v-else
+				:stores="stores"
+			/>
 		</CardContent>
 	</Card>
 </template>
@@ -18,7 +28,7 @@ import AdminStoresToolbar from '@/modules/admin/stores/components/list/admin-sto
 import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
 import { storesService } from '@/modules/stores/services/stores.service'
 import { useQuery } from '@tanstack/vue-query'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 // Reactive filter object
 const filter = ref<StoresFilter>({
@@ -28,13 +38,14 @@ const filter = ref<StoresFilter>({
 
 // Query stores data
 const { data: stores } = useQuery({
-  queryKey: ['stores', filter],
+  queryKey: computed(() => ['stores', filter.value]),
   queryFn: () => storesService.getStores(filter.value),
+  initialData: []
 })
 
 // Update filter handler
 function updateFilter(updatedFilter: Partial<StoresFilter>) {
-  Object.assign(filter.value, updatedFilter)
+  filter.value = {...filter.value, ...updatedFilter}
 }
 </script>
 

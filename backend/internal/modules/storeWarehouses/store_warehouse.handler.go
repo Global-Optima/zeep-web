@@ -37,7 +37,7 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{
+	utils.SendSuccessResponse(c, gin.H{
 		"message": fmt.Sprintf("store warehouse stock with id %d successfully created", id),
 	})
 }
@@ -62,7 +62,7 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{
+	utils.SendSuccessResponse(c, gin.H{
 		"message": "success",
 	})
 }
@@ -86,7 +86,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponseWithPagination(c, stockList, queryParams.Pagination)
+	utils.SendSuccessResponseWithPagination(c, stockList, queryParams.Pagination)
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
@@ -108,7 +108,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, ingredients)
+	utils.SendSuccessResponse(c, ingredients)
 }
 
 func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
@@ -137,7 +137,7 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "stock updated successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "stock updated successfully"})
 }
 
 func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
@@ -159,5 +159,5 @@ func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "stock deleted successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "stock deleted successfully"})
 }

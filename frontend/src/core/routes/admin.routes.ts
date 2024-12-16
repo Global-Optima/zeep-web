@@ -146,7 +146,8 @@ export const ADMIN_CHILDREN_ROUTES = {
 			title: 'Добавить сотрудника',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/employees/pages/admin-store-employees-create-page.vue'),
+		component: () =>
+			import('@/modules/admin/employees/pages/admin-store-employees-create-page.vue'),
 	},
 	ADMIN_EMPLOYEES: {
 		path: 'employees',
@@ -162,7 +163,8 @@ export const ADMIN_CHILDREN_ROUTES = {
 			title: 'Сотрудник',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/employees/pages/admin-store-employees-details-page.vue'),
+		component: () =>
+			import('@/modules/admin/employees/pages/admin-store-employees-details-page.vue'),
 	},
 	ADMIN_STORES: {
 		path: 'stores',
@@ -187,6 +189,24 @@ export const ADMIN_CHILDREN_ROUTES = {
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/stores/pages/admin-store-details-page.vue'),
+	},
+	ADMIN_PRODUCT_CATEGORIES: {
+		path: 'product-categories',
+		meta: {
+			title: 'Категории товаров',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/product-categories/pages/admin-product-categories-page.vue'),
+	},
+	ADMIN_ADDITIVE_CATEGORIES: {
+		path: 'additive-categories',
+		meta: {
+			title: 'Категории топпингов',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/additive-categories/pages/admin-additive-categories-page.vue'),
 	},
 } satisfies AppRouteRecord
 

@@ -124,6 +124,7 @@
 					<!-- Action Buttons -->
 					<div class="flex gap-4 mt-6">
 						<Button
+							:disabled="!meta.valid"
 							type="submit"
 							class="flex-1"
 						>
@@ -194,7 +195,7 @@ const schema = toTypedSchema(
 )
 
 // Initialize form
-const { handleSubmit } = useForm<CreateStoreDTO>({
+const { handleSubmit, resetForm, meta } = useForm<CreateStoreDTO>({
 	validationSchema: schema,
 	initialValues: props.initialData,
 })
@@ -206,6 +207,7 @@ const submitForm = handleSubmit((formValues) => {
 
 // Handle cancel
 const handleCancel = () => {
+  resetForm()
 	emit('onCancel')
 }
 </script>

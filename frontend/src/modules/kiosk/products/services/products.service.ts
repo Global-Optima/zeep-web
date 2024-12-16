@@ -1,7 +1,7 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import type { AdditiveCategories } from '@/modules/admin/additives/models/additives.model'
 import type {
-	AdditiveCategoryDTO,
 	ProductCategory,
 	Products,
 	ProductsFilter,
@@ -23,7 +23,7 @@ class ProductService {
 
 	async getStoreCategories(): Promise<ProductCategory[]> {
 		try {
-			const response = await apiClient.get<ProductCategory[]>(`/categories`)
+			const response = await apiClient.get<ProductCategory[]>(`/product-categories`)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch categories:`, error)
@@ -51,9 +51,9 @@ class ProductService {
 		}
 	}
 
-	async getAdditiveCategoriesByProductSize(productSizeId: number): Promise<AdditiveCategoryDTO[]> {
+	async getAdditiveCategories(productSizeId: number): Promise<AdditiveCategories[]> {
 		try {
-			const response = await apiClient.get<AdditiveCategoryDTO[]>(`/additives`, {
+			const response = await apiClient.get<AdditiveCategories[]>(`/additives/categories`, {
 				params: {
 					productSizeId,
 				},

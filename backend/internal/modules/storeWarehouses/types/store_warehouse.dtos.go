@@ -11,7 +11,7 @@ type StockDTO struct {
 	LowStockThreshold float64 `json:"lowStockThreshold"`
 }
 
-type GetStockQuery struct {
+type GetStockFilterQuery struct {
 	Search       *string `form:"search"`
 	LowStockOnly *bool   `form:"lowStockOnly"`
 	Pagination   *utils.Pagination

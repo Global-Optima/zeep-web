@@ -38,7 +38,7 @@ func (h *EmployeeHandler) CreateEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, employee)
+	utils.SendSuccessResponse(c, employee)
 }
 
 func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
@@ -77,7 +77,7 @@ func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, employees)
+	utils.SendSuccessResponse(c, employees)
 }
 
 func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
@@ -100,7 +100,7 @@ func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "employee updated successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
 }
 
 func (h *EmployeeHandler) DeleteEmployee(c *gin.Context) {
@@ -117,7 +117,7 @@ func (h *EmployeeHandler) DeleteEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "employee deleted successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "employee deleted successfully"})
 }
 
 func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
@@ -144,7 +144,7 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "password updated successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "password updated successfully"})
 }
 
 func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
@@ -154,7 +154,7 @@ func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, roles)
+	utils.SendSuccessResponse(c, roles)
 }
 
 func (h *EmployeeHandler) EmployeeLogin(c *gin.Context) {
@@ -179,7 +179,7 @@ func (h *EmployeeHandler) EmployeeLogin(c *gin.Context) {
 
 	utils.SetCookie(c, EMPLOYEE_TOKEN_COOKIE_KEY, token, utils.CookieExpiration)
 
-	utils.SuccessResponse(c, gin.H{"message": "login successful", "token": token})
+	utils.SendSuccessResponse(c, gin.H{"message": "login successful", "token": token})
 }
 
 func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
@@ -204,7 +204,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 	}
 
 	print(employee)
-	utils.SuccessResponse(c, employee)
+	utils.SendSuccessResponse(c, employee)
 }
 
 func (h *EmployeeHandler) EmployeeLogout(c *gin.Context) {
@@ -223,5 +223,5 @@ func (h *EmployeeHandler) EmployeeLogout(c *gin.Context) {
 
 	utils.ClearCookie(c, EMPLOYEE_TOKEN_COOKIE_KEY)
 
-	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
+	utils.SendSuccessResponse(c, gin.H{"message": "logout successful"})
 }

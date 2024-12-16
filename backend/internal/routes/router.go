@@ -49,7 +49,7 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 }
 
 func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHandler) {
-	router := r.Routes.Group("/categories")
+	router := r.Routes.Group("/product-categories")
 	{
 		router.GET("", handler.GetAllCategories)
 	}
@@ -58,7 +58,8 @@ func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHan
 func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.Routes.Group("/additives")
 	{
-		router.GET("", handler.GetAdditivesByStoreAndProduct)
+		router.GET("", handler.GetAdditives)
+		router.GET("/categories", handler.GetAdditiveCategories)
 	}
 }
 
@@ -82,9 +83,10 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.Routes.Group("/orders")
 	{
 		router.POST("", handler.CreateOrder)
+		router.GET("", handler.GetOrders)
 		router.GET("/ws/:storeId", handler.ServeWS)
 		router.PUT("/:orderId/suborders/:subOrderId/complete", handler.CompleteSubOrder)
-		router.GET("", handler.GetAllBaristaOrders)
+		router.GET("/kiosk", handler.GetAllBaristaOrders)
 		router.GET("/:orderId/suborders", handler.GetSubOrders)
 		router.GET("/statuses/count", handler.GetStatusesCount)
 		router.GET("/:orderId/receipt", handler.GeneratePDFReceipt)

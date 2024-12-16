@@ -26,10 +26,9 @@ const queryClient = useQueryClient()
 
 const {currentStoreId} = useCurrentStoreStore()
 
-const queryKey = computed(() => ['store-stock', storeStockId, { storeId: currentStoreId}])
 
 const { data: storeStockData } = useQuery({
-  queryKey: queryKey,
+  queryKey: computed(() => ['store-stock', storeStockId, { storeId: currentStoreId}]),
 	queryFn: () =>{    if (!currentStoreId) throw new Error('No store ID available')
   return storeStocksService.getStoreStock(currentStoreId, Number(storeStockId))},
   enabled: computed(() => !!currentStoreId),

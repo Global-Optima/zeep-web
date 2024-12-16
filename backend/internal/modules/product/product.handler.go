@@ -58,7 +58,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	var cachedProducts []types.StoreProductDTO
 	if err := cacheUtil.Get(cacheKey, &cachedProducts); err == nil {
 		if !utils.IsEmpty(cachedProducts) {
-			utils.SuccessResponse(c, cachedProducts)
+			utils.SendSuccessResponse(c, cachedProducts)
 			return
 		}
 	}
@@ -74,7 +74,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		fmt.Printf("Failed to cache products: %v\n", err)
 	}
 
-	utils.SuccessResponse(c, products)
+	utils.SendSuccessResponse(c, products)
 }
 
 func (h *ProductHandler) GetProductDetails(c *gin.Context) {
@@ -103,7 +103,7 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 	var cachedProductDetails *types.StoreProductDetailsDTO
 	if err := cacheUtil.Get(cacheKey, &cachedProductDetails); err == nil {
 		if !utils.IsEmpty(cachedProductDetails) {
-			utils.SuccessResponse(c, cachedProductDetails)
+			utils.SendSuccessResponse(c, cachedProductDetails)
 			return
 		}
 	}
@@ -123,5 +123,5 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 		fmt.Printf("Failed to cache product details: %v\n", err)
 	}
 
-	utils.SuccessResponse(c, productDetails)
+	utils.SendSuccessResponse(c, productDetails)
 }

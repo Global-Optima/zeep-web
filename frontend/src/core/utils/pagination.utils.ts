@@ -16,8 +16,8 @@ export interface PaginatedResponse<T> {
 }
 
 export interface PaginationParams {
-	page: number
-	pageSize: number
+	page?: number
+	pageSize?: number
 }
 
 export function hasMorePages(meta: PaginationMeta): boolean {

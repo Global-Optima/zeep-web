@@ -13,7 +13,7 @@ import (
 type StoreWarehouseRepository interface {
 	AddStock(storeId uint, dto *types.AddStockDTO) (uint, error)
 	AddOrUpdateStock(storeId uint, dto *types.AddStockDTO) error
-	GetStockList(storeId uint, query *types.GetStockQuery) ([]data.StoreWarehouseStock, error)
+	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error)
 	GetStockById(storeId, stockId uint) (*data.StoreWarehouseStock, error)
 	UpdateStock(storeId, stockId uint, dto *types.UpdateStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
@@ -156,34 +156,33 @@ func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStockDTO
 	return storeWarehouseStock.ID, nil
 }
 
-func (r *storeWarehouseRepository) GetStockList(storeID uint, query *types.GetStockQuery) ([]data.StoreWarehouseStock, error) {
+func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error) {
 	if storeID == 0 {
 		return nil, fmt.Errorf("storeId cannot be 0")
 	}
 
 	var storeWarehouseStockList []data.StoreWarehouseStock
 
-	dbQuery := r.db.Model(&data.StoreWarehouseStock{}).
+	query := r.db.Model(&data.StoreWarehouseStock{}).
 		Joins("JOIN store_warehouses ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
 		Joins("JOIN ingredients ON store_warehouse_stocks.ingredient_id = ingredients.id").
 		Where("store_warehouses.store_id = ?", storeID)
 
-	if query.LowStockOnly != nil && *query.LowStockOnly {
-		dbQuery = dbQuery.Where("store_warehouse_stocks.quantity < store_warehouse_stocks.low_stock_threshold")
+	if filter.LowStockOnly != nil && *filter.LowStockOnly {
+		query = query.Where("store_warehouse_stocks.quantity < store_warehouse_stocks.low_stock_threshold")
 	}
 
-	if query.Search != nil && *query.Search != "" {
-		dbQuery = dbQuery.Where("ingredients.name ILIKE ?", "%"+*query.Search+"%")
+	if filter.Search != nil && *filter.Search != "" {
+		query = query.Where("ingredients.name ILIKE ?", "%"+*filter.Search+"%")
 	}
 
-	var totalRecords int64
-	if err := dbQuery.Count(&totalRecords).Error; err != nil {
-		return nil, fmt.Errorf("failed to count total records: %w", err)
+	var err error
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StoreWarehouseStock{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
-	query.Pagination.SetTotal(totalRecords)
 
-	err := dbQuery.
-		Scopes(query.Pagination.PaginateGorm()).
+	err = query.
 		Preload("Ingredient").
 		Preload("StoreWarehouse").
 		Find(&storeWarehouseStockList).Error

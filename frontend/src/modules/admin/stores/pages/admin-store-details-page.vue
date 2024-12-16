@@ -24,12 +24,10 @@ const storeId = route.params.id as string
 
 const queryClient = useQueryClient()
 
-const isStoreQueryEnabled = computed(() => !!storeId)
-
 const { data: storeData } = useQuery({
 	queryKey: ['store', storeId],
 	queryFn: () => storesService.getStore(Number(storeId)),
-	enabled: isStoreQueryEnabled,
+	enabled: computed(() => !!storeId),
 })
 
 const updateMutation = useMutation({
