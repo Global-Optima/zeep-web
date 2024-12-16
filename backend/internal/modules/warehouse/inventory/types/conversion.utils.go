@@ -48,6 +48,7 @@ func StocksToInventoryItems(stocks []data.WarehouseStock) []InventoryItem {
 	for i, stock := range stocks {
 		response[i] = InventoryItem{
 			StockMaterialID: stock.StockMaterialID,
+			Name:            &stock.StockMaterial.Name,
 			Quantity:        stock.Quantity,
 		}
 	}
@@ -58,6 +59,7 @@ func ExpiringItemsToResponses(deliveries []data.Delivery) []UpcomingExpirationRe
 	response := make([]UpcomingExpirationResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = UpcomingExpirationResponse{
+			DeliveryID:      delivery.ID,
 			StockMaterialID: delivery.StockMaterialID,
 			Name:            delivery.StockMaterial.Name,
 			ExpirationDate:  delivery.ExpirationDate,

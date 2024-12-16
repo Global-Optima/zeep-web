@@ -162,7 +162,7 @@ func (r *inventoryRepository) PickupStock(storeWarehouseID uint, items []data.St
 
 func (r *inventoryRepository) GetExpiringItems(warehouseID uint, thresholdDays int) ([]data.Delivery, error) {
 	var deliveries []data.Delivery
-	err := r.db.Where("warehouse_id = ? AND expiration_date <= ?", warehouseID, time.Now().AddDate(0, 0, thresholdDays)).
+	err := r.db.Preload("StockMaterial").Where("warehouse_id = ? AND expiration_date <= ?", warehouseID, time.Now().AddDate(0, 0, thresholdDays)).
 		Find(&deliveries).Error
 	return deliveries, err
 }

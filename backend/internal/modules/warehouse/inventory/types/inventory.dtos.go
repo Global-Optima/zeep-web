@@ -44,6 +44,7 @@ type InventoryLevelsResponse struct {
 }
 
 type UpcomingExpirationResponse struct {
+	DeliveryID      uint      `json:"deliveryId"`
 	StockMaterialID uint      `json:"stockMaterialId"`
 	Name            string    `json:"name"`
 	ExpirationDate  time.Time `json:"expirationDate"`

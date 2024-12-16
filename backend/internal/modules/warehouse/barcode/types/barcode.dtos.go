@@ -16,14 +16,13 @@ type RetrieveStockMaterialByBarcodeRequest struct {
 }
 
 type RetrieveStockMaterialByBarcodeResponse struct {
-	StockMaterialID uint    `json:"stockMaterialId"`
-	Name            string  `json:"name"`
-	Quantity        float64 `json:"quantity"`
-	Unit            string  `json:"unit"`
-	Category        string  `json:"category"`
-	Barcode         string  `json:"barcode"`
-	CreatedAt       string  `json:"createdAt"`
-	UpdatedAt       string  `json:"updatedAt"`
+	StockMaterialID uint   `json:"stockMaterialId"`
+	Name            string `json:"name"`
+	Unit            string `json:"unit"`
+	Category        string `json:"category"`
+	Barcode         string `json:"barcode"`
+	CreatedAt       string `json:"createdAt"`
+	UpdatedAt       string `json:"updatedAt"`
 }
 
 type PrintAdditionalBarcodesRequest struct {

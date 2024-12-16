@@ -14,6 +14,7 @@ type StockMaterialRepository interface {
 	GetStockMaterialsByIDs(stockMaterialIDs []uint) ([]data.StockMaterial, error)
 	CreateStockMaterial(stockMaterial *data.StockMaterial) error
 	CreateStockMaterials(stockMaterials []data.StockMaterial) error
+	CreateSupplierMaterial(supplierMaterial *data.SupplierMaterial) error
 	UpdateStockMaterial(stockMaterial *data.StockMaterial) error
 	UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialRequest) (*data.StockMaterial, error)
 	DeleteStockMaterial(stockMaterialID uint) error
@@ -92,6 +93,10 @@ func (r *stockMaterialRepository) CreateStockMaterial(stockMaterial *data.StockM
 
 func (r *stockMaterialRepository) CreateStockMaterials(stockMaterials []data.StockMaterial) error {
 	return r.db.Create(&stockMaterials).Error
+}
+
+func (r *stockMaterialRepository) CreateSupplierMaterial(supplierMaterial *data.SupplierMaterial) error {
+	return r.db.Create(supplierMaterial).Error
 }
 
 func (r *stockMaterialRepository) UpdateStockMaterial(stockMaterial *data.StockMaterial) error {
