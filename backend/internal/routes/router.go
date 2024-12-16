@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
@@ -160,5 +161,18 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 		router.POST("/stores", handler.AssignStoreToWarehouse)              // store
 		router.PUT("/stores/:storeId", handler.ReassignStore)               // store
 		router.GET("/:warehouseId/stores", handler.GetAllStoresByWarehouse) // store
+	}
+}
+
+func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
+	router := r.Routes.Group("/stock-requests")
+	{
+		router.GET("", handler.GetStockRequests)                                                                                               // Get all stock requests with filtering
+		router.GET("/low-stock", handler.GetLowStockIngredients)                                                                               // Get low-stock ingredients
+		router.GET("/marketplace-products", handler.GetMarketplaceProducts)                                                                    // Get marketplace products
+		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.CreateStockRequest)                                       // Create a new stock request (cart creation)
+		router.PATCH("/:requestId/status", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStockRequestStatus)                // Update stock request status
+		router.POST("/:requestId/ingredients", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.AddStockRequestIngredient)         // Add ingredient to cart
+		router.DELETE("/ingredients/:ingredientId", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.DeleteStockRequestIngredient) // Delete ingredient from cart
 	}
 }

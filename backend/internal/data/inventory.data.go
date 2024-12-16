@@ -6,8 +6,10 @@ type StockRequestStatus string
 
 var (
 	StockRequestCreated    StockRequestStatus = "CREATED"
+	StockRequestProcessed  StockRequestStatus = "PROCESSED"
 	StockRequestInDelivery StockRequestStatus = "IN_DELIVERY"
 	StockRequestCompleted  StockRequestStatus = "COMPLETED"
+	StockRequestRejected   StockRequestStatus = "REJECTED"
 )
 
 type Warehouse struct {
@@ -37,7 +39,9 @@ type StoreWarehouseStock struct {
 
 type StockRequest struct {
 	BaseEntity
-	WarehouseID uint                     `gorm:"not null;index"`
+	StoreID     uint                     `gorm:"not null;index"` // Links to Store
+	Store       Store                    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	WarehouseID uint                     `gorm:"not null;index"` // Central warehouse fulfilling the request
 	Warehouse   Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
 	Status      StockRequestStatus       `gorm:"size:50;not null"`
 	RequestDate *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
@@ -52,7 +56,7 @@ type StockRequestIngredient struct {
 	Ingredient     Ingredient   `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	Quantity       float64      `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 	DeliveredDate  time.Time    `gorm:"not null;default:CURRENT_TIMESTAMP"` // Delivery start date
-	ExpirationDate time.Time    `gorm:"not null"`                           // Calculated from DeliveredDate + ExpirationPeriod
+	ExpirationDate time.Time    `gorm:"not null"`                           // Calculated from DeliveredDate + ExpirationPeriodInDays
 }
 
 type IngredientsMapping struct {
