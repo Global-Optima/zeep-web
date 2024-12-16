@@ -20,7 +20,6 @@ type UpdateStockMaterialRequest struct {
 	ExpirationFlag         *bool    `json:"expirationFlag"`
 	Quantity               *float64 `json:"quantity" binding:"omitempty,gte=0"`
 	UnitID                 *uint    `json:"unitId"`
-	SupplierID             *uint    `json:"supplierId"`
 	Category               *string  `json:"category"`
 	Barcode                *string  `json:"barcode"`
 	ExpirationPeriodInDays *int     `json:"expirationPeriodInDays"` // in days
@@ -36,8 +35,6 @@ type StockMaterialResponse struct {
 	Quantity               float64 `json:"quantity"`
 	UnitID                 uint    `json:"unitId"`
 	UnitName               string  `json:"unitName,omitempty"`
-	SupplierID             uint    `json:"supplierId"`
-	SupplierName           string  `json:"supplierName,omitempty"`
 	Category               string  `json:"category"`
 	Barcode                string  `json:"barcode"`
 	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"` // in days

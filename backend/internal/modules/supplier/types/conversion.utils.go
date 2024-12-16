@@ -24,22 +24,3 @@ func ToSupplier(dto CreateSupplierDTO) data.Supplier {
 		Address:      dto.Address,
 	}
 }
-
-func ConvertUpdateSupplierDTOToMap(dto UpdateSupplierDTO) (map[string]interface{}, error) {
-	updateFields := make(map[string]interface{})
-
-	if dto.Name != nil {
-		updateFields["name"] = *dto.Name
-	}
-	if dto.ContactEmail != nil {
-		updateFields["contact_email"] = *dto.ContactEmail
-	}
-	if dto.ContactPhone != nil {
-		updateFields["contact_phone"] = *dto.ContactPhone
-	}
-	if dto.Address != nil {
-		updateFields["address"] = *dto.Address
-	}
-
-	return updateFields, nil
-}

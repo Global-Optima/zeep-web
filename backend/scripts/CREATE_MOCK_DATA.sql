@@ -50,7 +50,7 @@ VALUES
 
 -- Insert into CityWarehouses
 INSERT INTO
-  city_warehouses (facility_address_id, name)
+  warehouses (facility_address_id, name)
 VALUES
   (
     (
@@ -619,7 +619,6 @@ VALUES
 -- Insert into Store
 INSERT INTO
   stores (
-    id,
     name,
     facility_address_id,
     is_franchise,
@@ -633,7 +632,6 @@ INSERT INTO
   )
 VALUES
   (
-    1,
     'Центральное кафе',
     1,
     false,
@@ -646,7 +644,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    2,
     'Кофейня на углу',
     2,
     true,
@@ -659,7 +656,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    3,
     'Маленький магазин на Советской',
     3,
     true,
@@ -672,7 +668,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    4,
     'Кофейня у вокзала',
     4,
     false,
@@ -685,7 +680,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    5,
     'Городской кофе',
     5,
     true,
@@ -698,7 +692,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    6,
     'Летняя терраса',
     6,
     true,
@@ -711,8 +704,7 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    7,
-    'Кафе на проспекте',
+   'Кафе на проспекте',
     7,
     false,
     'ACTIVE',
@@ -724,7 +716,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    8,
     'Заведение у реки',
     8,
     true,
@@ -737,7 +728,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    9,
     'Чайный дом',
     9,
     false,
@@ -750,7 +740,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    10,
     'Кофе и компании',
     10,
     true,
@@ -763,7 +752,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    11,
     'Парк-кафе',
     11,
     false,
@@ -776,7 +764,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    12,
     'Восточный уголок',
     12,
     true,
@@ -789,7 +776,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    13,
     'Семейная кофейня',
     13,
     false,
@@ -1194,7 +1180,6 @@ VALUES
 -- Insert into Employee
 INSERT INTO
   employees (
-    id,
     name,
     phone,
     email,
@@ -1207,7 +1192,6 @@ INSERT INTO
   )
 VALUES
   (
-    1,
     'Елена Соколова',
     '79551234567',
     'elena@example.com',
@@ -1219,7 +1203,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    2,
     'Сергей Павлов',
     '79667778899',
     'sergey@example.com',
@@ -1231,7 +1214,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    3,
     'Анна Федорова',
     '79223334455',
     'anna@example.com',
@@ -1243,7 +1225,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    4,
     'Иван Иванов',
     '79161234567',
     'ivan@example.com',
@@ -1255,7 +1236,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    5,
     'Мария Смирнова',
     '79345566778',
     'maria@example.com',
@@ -1267,7 +1247,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    6,
     'Олег Кузнецов',
     '79991234567',
     'oleg@example.com',
@@ -1279,7 +1258,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    7,
     'Татьяна Орлова',
     '79882233445',
     'tatiana@example.com',
@@ -1291,7 +1269,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    8,
     'Алексей Попов',
     '79002221133',
     'alexei@example.com',
@@ -1303,7 +1280,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    9,
     'Юлия Петрова',
     '79115555666',
     'yulia@example.com',
@@ -1315,7 +1291,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    10,
     'Дмитрий Фролов',
     '79553334456',
     'dmitry@example.com',
@@ -1330,7 +1305,6 @@ VALUES
 -- Insert into StoreEmployee
 INSERT INTO
   store_employees (
-    id,
     employee_id,
     store_id,
     is_franchise,
@@ -1341,13 +1315,11 @@ VALUES
   (
     1,
     1,
-    1,
     false,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
   ),
   (
-    2,
     2,
     2,
     true,
@@ -1357,13 +1329,11 @@ VALUES
   (
     3,
     3,
-    3,
     false,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
   ),
   (
-    4,
     4,
     1,
     true,
@@ -1371,7 +1341,6 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-    5,
     5,
     2,
     false,
@@ -1382,18 +1351,17 @@ VALUES
 -- Insert into WarehouseEmployee
 INSERT INTO
   warehouse_employees (
-    id,
     employee_id,
     warehouse_id,
     created_at,
     updated_at
   )
 VALUES
-  (1, 6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (2, 7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (3, 8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (4, 9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (5, 10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into EmployeeAudit
 INSERT INTO
@@ -1449,7 +1417,7 @@ VALUES
   (25.00, 3, '2024-04-30 23:59:59+00');
 
 INSERT INTO
-    store_warehouses (store_id, city_warehouse_id, created_at, updated_at)
+    store_warehouses (store_id, warehouse_id, created_at, updated_at)
 VALUES
     (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -1512,13 +1480,13 @@ VALUES
     ('L', 1.0),
     ('ml', 0.001);
 
-INSERT INTO stock_materials (name, description, safety_stock, expiration_flag, quantity, unit_id, category, barcode, expiration_period_in_days, is_active)
+INSERT INTO stock_materials (name, description, safety_stock, expiration_flag, unit_id, category, barcode, expiration_period_in_days, is_active)
 VALUES
-    ('Milk', '1L pack of milk', 50, TRUE, 100, 3, 'Dairy', '111111111111', 1095, TRUE),
-    ('Sugar', '1kg pack of sugar', 20, TRUE, 200, 2, 'Sweeteners', '222222222222', 1095, TRUE),
-    ('Chocolate', '500g pack of chocolate', 15, TRUE, 150, 2, 'Confectionery', '333333333333', 730, TRUE),
-    ('Cinnamon', '200g pack of cinnamon', 10, TRUE, 80, 2, 'Spices', '444444444444', 1460, TRUE),
-    ('Vanilla', '50ml vanilla extract bottle', 25, TRUE, 60, 4, 'Flavorings', '555555555555', 1460, TRUE);
+    ('Milk', '1L pack of milk', 50, TRUE, 3, 'Dairy', '111111111111', 1095, TRUE),
+    ('Sugar', '1kg pack of sugar', 20, TRUE, 2, 'Sweeteners', '222222222222', 1095, TRUE),
+    ('Chocolate', '500g pack of chocolate', 15, TRUE, 2, 'Confectionery', '333333333333', 730, TRUE),
+    ('Cinnamon', '200g pack of cinnamon', 10, TRUE, 2, 'Spices', '444444444444', 1460, TRUE),
+    ('Vanilla', '50ml vanilla extract bottle', 25, TRUE, 4, 'Flavorings', '555555555555', 1460, TRUE);
 
 
 INSERT INTO ingredients_mapping (ingredient_id, stock_material_id)

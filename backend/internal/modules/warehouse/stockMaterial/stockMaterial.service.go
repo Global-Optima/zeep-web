@@ -65,14 +65,7 @@ func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMateria
 }
 
 func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialRequest) (*types.StockMaterialResponse, error) {
-	updateFields := make(map[string]interface{})
-
-	err := types.ConvertUpdateStockMaterialRequestToMap(req, updateFields)
-	if err != nil {
-		return nil, err
-	}
-
-	updated, err := s.repo.UpdateStockMaterialFields(stockMaterialID, updateFields)
+	updated, err := s.repo.UpdateStockMaterialFields(stockMaterialID, *req)
 	if err != nil {
 		return nil, err
 	}

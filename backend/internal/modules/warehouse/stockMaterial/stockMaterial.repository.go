@@ -15,7 +15,7 @@ type StockMaterialRepository interface {
 	CreateStockMaterial(stockMaterial *data.StockMaterial) error
 	CreateStockMaterials(stockMaterials []data.StockMaterial) error
 	UpdateStockMaterial(stockMaterial *data.StockMaterial) error
-	UpdateStockMaterialFields(stockMaterialID uint, fields map[string]interface{}) (*data.StockMaterial, error)
+	UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialRequest) (*data.StockMaterial, error)
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
 }
@@ -98,7 +98,7 @@ func (r *stockMaterialRepository) UpdateStockMaterial(stockMaterial *data.StockM
 	return r.db.Save(stockMaterial).Error
 }
 
-func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint, fields map[string]interface{}) (*data.StockMaterial, error) {
+func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialRequest) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
 
 	if err := r.db.Preload("Unit").First(&stockMaterial, stockMaterialID).Error; err != nil {
