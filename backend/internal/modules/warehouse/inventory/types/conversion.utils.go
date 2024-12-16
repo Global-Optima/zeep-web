@@ -32,8 +32,8 @@ func DeliveriesToDeliveryResponses(deliveries []data.Delivery) []DeliveryRespons
 		response[i] = DeliveryResponse{
 			ID:              delivery.ID,
 			StockMaterialID: delivery.StockMaterialID,
-			Source:          delivery.SupplierID,
-			Target:          delivery.WarehouseID,
+			SupplierID:      delivery.SupplierID,
+			WarehouseID:     delivery.WarehouseID,
 			Barcode:         delivery.Barcode,
 			Quantity:        delivery.Quantity,
 			DeliveryDate:    delivery.DeliveryDate,

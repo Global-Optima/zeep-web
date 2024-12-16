@@ -1,11 +1,11 @@
 package types
 
 type GenerateBarcodeRequest struct {
-	StockMaterialID uint `json:"skuId" binding:"required"`
+	StockMaterialID uint `json:"stockMaterialId" binding:"required"`
 }
 
 type GenerateBarcodeResponse struct {
-	StockMaterialID uint   `json:"skuId"`
+	StockMaterialID uint   `json:"stockMaterialId"`
 	Barcode         string `json:"barcode"`
 	Message         string `json:"message"`
 	CreatedAt       string `json:"createdAt"`
@@ -16,7 +16,7 @@ type RetrieveStockMaterialByBarcodeRequest struct {
 }
 
 type RetrieveStockMaterialByBarcodeResponse struct {
-	StockMaterialID uint    `json:"skuId"`
+	StockMaterialID uint    `json:"stockMaterialId"`
 	Name            string  `json:"name"`
 	Quantity        float64 `json:"quantity"`
 	Unit            string  `json:"unit"`
@@ -27,12 +27,12 @@ type RetrieveStockMaterialByBarcodeResponse struct {
 }
 
 type PrintAdditionalBarcodesRequest struct {
-	StockMaterialID uint `json:"skuId" binding:"required"`
+	StockMaterialID uint `json:"stockMaterialId" binding:"required"`
 	Quantity        int  `json:"quantity" binding:"required,gt=0"`
 }
 
 type PrintAdditionalBarcodesResponse struct {
-	StockMaterialID uint     `json:"skuId"`
+	StockMaterialID uint     `json:"stockMaterialId"`
 	Barcodes        []string `json:"barcodes"`
 	Message         string   `json:"message"`
 	PrintedAt       string   `json:"printedAt"`
@@ -44,7 +44,7 @@ type BarcodeScanRequest struct {
 }
 
 type BarcodeScanResponse struct {
-	StockMaterialID uint    `json:"skuId"`
+	StockMaterialID uint    `json:"stockMaterialId"`
 	Name            string  `json:"name"`
 	Quantity        float64 `json:"deductedQuantity"`
 	Remaining       float64 `json:"remainingQuantity"`

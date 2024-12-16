@@ -58,8 +58,8 @@ type ExtendExpirationRequest struct {
 type DeliveryResponse struct {
 	ID              uint      `json:"id"`
 	StockMaterialID uint      `json:"stockMaterialId"`
-	Source          uint      `json:"source"`
-	Target          uint      `json:"target"`
+	SupplierID      uint      `json:"supplierId"`
+	WarehouseID     uint      `json:"warehouseId"`
 	Barcode         string    `json:"barcode"`
 	Quantity        float64   `json:"quantity"`
 	DeliveryDate    time.Time `json:"deliveryDate"`

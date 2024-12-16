@@ -7,7 +7,7 @@ import (
 
 type PackageRepository interface {
 	GetAllPackages() ([]data.Package, error)
-	GetPackageBySKU(skuID uint) (*data.Package, error)
+	GetPackageByStockMaterial(stockMaterialID uint) (*data.Package, error)
 	CreatePackage(pkg *data.Package) error
 	UpdatePackage(pkg *data.Package) error
 	DeletePackage(packageID uint) error
@@ -29,9 +29,9 @@ func (r *packageRepository) GetAllPackages() ([]data.Package, error) {
 	return packages, nil
 }
 
-func (r *packageRepository) GetPackageBySKU(skuID uint) (*data.Package, error) {
+func (r *packageRepository) GetPackageByStockMaterial(stockMaterialID uint) (*data.Package, error) {
 	var pkg data.Package
-	if err := r.db.Where("stock_material_id = ?", skuID).First(&pkg).Error; err != nil {
+	if err := r.db.Where("stock_material_id = ?", stockMaterialID).First(&pkg).Error; err != nil {
 		return nil, err
 	}
 	return &pkg, nil
