@@ -2,6 +2,8 @@ package init
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
 	"log"
 	"time"
 
@@ -17,6 +19,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
@@ -111,8 +117,22 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	InitializeModule(
 		dbHandler,
+		func(dbHandler *database.DBHandler) (auth.AuthenticationService, error) {
+			return auth.NewAuthenticationService(
+				auth.NewAuthorizationRepository(dbHandler.DB),
+				customers.NewCustomerRepository(dbHandler.DB),
+				employees.NewEmployeeRepository(dbHandler.DB),
+				logger.GetZapSugaredLogger(),
+			), nil
+		},
+		auth.NewAuthenticationHandler,
+		apiRouter.RegisterAuthenticationRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
 		func(dbHandler *database.DBHandler) (product.ProductService, error) {
-			return product.NewProductService(product.NewProductRepository(dbHandler.DB)), nil
+			return product.NewProductService(product.NewProductRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		product.NewProductHandler,
 		apiRouter.RegisterProductRoutes,
@@ -139,7 +159,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (additives.AdditiveService, error) {
-			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB)), nil
+			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		additives.NewAdditiveHandler,
 		apiRouter.RegisterAdditivesRoutes,
@@ -148,7 +168,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (employees.EmployeeService, error) {
-			return employees.NewEmployeeService(employees.NewEmployeeRepository(dbHandler.DB)), nil
+			return employees.NewEmployeeService(employees.NewEmployeeRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		employees.NewEmployeeHandler,
 		apiRouter.RegisterEmployeesRoutes,
@@ -184,6 +204,49 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		},
 		storeWarehouses.NewStoreWarehouseHandler,
 		apiRouter.RegisterStoreWarehouseRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (stockMaterial.StockMaterialService, error) {
+			return stockMaterial.NewStockMaterialService(stockMaterial.NewStockMaterialRepository(dbHandler.DB)), nil
+		},
+		stockMaterial.NewStockMaterialHandler,
+		apiRouter.RegisterStockMaterialRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (barcode.BarcodeService, error) {
+			return barcode.NewBarcodeService(
+				barcode.NewBarcodeRepository(dbHandler.DB),
+				stockMaterial.NewStockMaterialRepository(dbHandler.DB),
+				barcode.NewPrinterService()), nil
+		},
+		barcode.NewBarcodeHandler,
+		apiRouter.RegisterBarcodeRouter,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (inventory.InventoryService, error) {
+			return inventory.NewInventoryService(
+				inventory.NewInventoryRepository(dbHandler.DB),
+				stockMaterial.NewStockMaterialRepository(dbHandler.DB),
+				barcode.NewBarcodeRepository(dbHandler.DB),
+				inventory.NewPackageRepository(dbHandler.DB)), nil
+		},
+		inventory.NewInventoryHandler,
+		apiRouter.RegisterInventoryRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (warehouse.WarehouseService, error) {
+			return warehouse.NewWarehouseService(warehouse.NewWarehouseRepository(dbHandler.DB)), nil
+		},
+		warehouse.NewWarehouseHandler,
+		apiRouter.RegisterWarehouseRoutes,
 	)
 
 	return router

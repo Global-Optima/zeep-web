@@ -69,7 +69,7 @@ func (s *supplierService) DeleteSupplier(id uint) error {
 }
 
 func (s *supplierService) GetSuppliers() ([]types.SupplierResponse, error) {
-	suppliers, err := s.repo.ListSuppliers()
+	suppliers, err := s.repo.GetAllSuppliers()
 	if err != nil {
 		return nil, err
 	}

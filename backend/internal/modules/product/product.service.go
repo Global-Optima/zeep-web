@@ -1,8 +1,11 @@
 package product
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"go.uber.org/zap"
 )
 
 type ProductService interface {
@@ -14,17 +17,23 @@ type ProductService interface {
 }
 
 type productService struct {
-	repo ProductRepository
+	repo   ProductRepository
+	logger *zap.SugaredLogger
 }
 
-func NewProductService(repo ProductRepository) ProductService {
-	return &productService{repo: repo}
+func NewProductService(repo ProductRepository, logger *zap.SugaredLogger) ProductService {
+	return &productService{
+		repo:   repo,
+		logger: logger,
+	}
 }
 
 func (s *productService) GetProducts(filter types.ProductsFilterDto) ([]types.StoreProductDTO, error) {
 	products, err := s.repo.GetStoreProducts(filter)
 	if err != nil {
-		return nil, err
+		wrappedErr := utils.WrapError("failed to retrieve products", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	productDTOs := make([]types.StoreProductDTO, len(products))
@@ -38,7 +47,9 @@ func (s *productService) GetProducts(filter types.ProductsFilterDto) ([]types.St
 func (s *productService) GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error) {
 	productDetails, err := s.repo.GetStoreProductDetails(storeID, productID)
 	if err != nil {
-		return nil, err
+		wrappedErr := fmt.Errorf("failed to retrieve product for storeID = %d, productID = %d: %w", storeID, productID, err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 	if productDetails == nil {
 		return nil, nil
@@ -52,12 +63,16 @@ func (s *productService) CreateProduct(dto *types.CreateStoreProduct) error {
 
 	productID, err := s.repo.CreateProduct(product)
 	if err != nil {
-		return err
+		wrappedErr := utils.WrapError("failed to create product", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	productSizes := types.ToProductSizesModels(dto.ProductSizes, productID)
 	if err := s.repo.CreateProductSizes(productID, productSizes); err != nil {
-		return err
+		wrappedErr := utils.WrapError("failed to create product sizes", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	if err := AssignAdditives(productID, productSizes, dto.Additives, s.repo); err != nil {
@@ -71,7 +86,9 @@ func (s *productService) UpdateProduct(dto *types.UpdateStoreProduct) error {
 	product := types.UpdateToProductModel(dto)
 
 	if err := s.repo.UpdateProduct(product); err != nil {
-		return err
+		wrappedErr := fmt.Errorf("failed to update product for productID = %d: %w", dto.ID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	return nil

@@ -3,12 +3,10 @@ package employees
 import (
 	"errors"
 	"fmt"
-	"time"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -20,15 +18,18 @@ type EmployeeService interface {
 	DeleteEmployee(employeeID uint) error
 	UpdatePassword(employeeID uint, input types.UpdatePasswordDTO) error
 	GetAllRoles() ([]types.RoleDTO, error)
-	EmployeeLogin(email, password string) (string, error)
 }
 
 type employeeService struct {
-	repo EmployeeRepository
+	repo   EmployeeRepository
+	logger *zap.SugaredLogger
 }
 
-func NewEmployeeService(repo EmployeeRepository) EmployeeService {
-	return &employeeService{repo: repo}
+func NewEmployeeService(repo EmployeeRepository, logger *zap.SugaredLogger) EmployeeService {
+	return &employeeService{
+		repo:   repo,
+		logger: logger,
+	}
 }
 
 func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.EmployeeDTO, error) {
@@ -38,7 +39,9 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 
 	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(input.Email, input.Phone)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("error checking employee uniqueness: %v", err)
+		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 	if existingEmployee != nil {
 		return nil, errors.New("an employee with the same email or phone already exists")
@@ -71,7 +74,9 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 	}
 
 	if err := s.repo.CreateEmployee(employee); err != nil {
-		return nil, fmt.Errorf("failed to create employee: %v", err)
+		wrappedErr := utils.WrapError("failed to create employee", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	return mapToEmployeeDTO(employee), nil
@@ -80,7 +85,9 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 func (s *employeeService) GetEmployees(query types.GetEmployeesQuery) ([]types.EmployeeDTO, error) {
 	employees, err := s.repo.GetEmployees(query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve employees: %v", err)
+		wrappedErr := utils.WrapError("failed to retrieve employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	dtos := make([]types.EmployeeDTO, len(employees))
@@ -99,9 +106,10 @@ func (s *employeeService) GetEmployeeByID(employeeID uint) (*types.EmployeeDTO, 
 	}
 
 	employee, err := s.repo.GetEmployeeByID(employeeID)
-
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve employee: %v", err)
+		wrappedErr := fmt.Errorf("failed to retrieve employee for employee with ID = %d: %w", employeeID, err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	if employee == nil {
@@ -114,11 +122,13 @@ func (s *employeeService) GetEmployeeByID(employeeID uint) (*types.EmployeeDTO, 
 func (s *employeeService) UpdateEmployee(employeeID uint, input types.UpdateEmployeeDTO) error {
 	updateFields, err := types.PrepareUpdateFields(input)
 	if err != nil {
-		return fmt.Errorf("validation failed: %v", err)
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	if err := s.repo.PartialUpdateEmployee(employeeID, updateFields); err != nil {
-		return fmt.Errorf("failed to update employee: %v", err)
+		wrappedErr := fmt.Errorf("failed to update employee for employee with ID = %d: %w", employeeID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	return nil
@@ -131,14 +141,18 @@ func (s *employeeService) DeleteEmployee(employeeID uint) error {
 
 	employee, err := s.repo.GetEmployeeByID(employeeID)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve employee: %v", err)
+		wrappedErr := utils.WrapError("failed to retrieve employee", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 	if employee == nil {
 		return errors.New("employee not found")
 	}
 
 	if err := s.repo.DeleteEmployee(employeeID); err != nil {
-		return fmt.Errorf("failed to delete employee: %v", err)
+		wrappedErr := fmt.Errorf("failed to delete employee with ID = %d: %w", employeeID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	return nil
@@ -172,7 +186,9 @@ func (s *employeeService) UpdatePassword(employeeID uint, input types.UpdatePass
 
 	employee.HashedPassword = hashedPassword
 	if err := s.repo.UpdateEmployee(employee); err != nil {
-		return fmt.Errorf("failed to update password: %v", err)
+		wrappedErr := fmt.Errorf("failed to update password for employee with ID = %d: %w", employeeID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	return nil
@@ -191,49 +207,6 @@ func (s *employeeService) GetAllRoles() ([]types.RoleDTO, error) {
 		}
 	}
 	return roleDTOs, nil
-}
-
-func (s *employeeService) EmployeeLogin(email, password string) (string, error) {
-	employee, err := s.repo.GetEmployeeByEmailOrPhone(email, "")
-	if err != nil {
-		return "", fmt.Errorf("invalid credentials: %v", err)
-	}
-
-	if employee == nil {
-		return "", errors.New("this employee is not registered")
-	}
-
-	if employee == nil {
-		return "", errors.New("this employee is not registered")
-	}
-
-	if err := utils.ComparePassword(employee.HashedPassword, password); err != nil {
-		return "", errors.New("invalid credentials")
-	}
-
-	var workplaceID uint
-	var workplaceType data.EmployeeType
-
-	if employee.StoreEmployee != nil {
-		workplaceID = employee.StoreEmployee.StoreID
-		workplaceType = data.StoreEmployeeType
-	} else if employee.WarehouseEmployee != nil {
-		workplaceID = employee.WarehouseEmployee.WarehouseID
-		workplaceType = data.WarehouseEmployeeType
-	}
-
-	claims := utils.EmployeeClaims{
-		ID: employee.ID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-		Role:         employee.Role,
-		WorkplaceID:  workplaceID,
-		EmployeeType: workplaceType,
-	}
-
-	return utils.GenerateJWT(claims, 24*time.Hour)
 }
 
 func mapToEmployeeDTO(employee *data.Employee) *types.EmployeeDTO {

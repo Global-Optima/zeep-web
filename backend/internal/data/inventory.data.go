@@ -2,7 +2,15 @@ package data
 
 import "time"
 
-type CityWarehouse struct {
+type StockRequestStatus string
+
+var (
+	StockRequestCreated    StockRequestStatus = "CREATED"
+	StockRequestInDelivery StockRequestStatus = "IN_DELIVERY"
+	StockRequestCompleted  StockRequestStatus = "COMPLETED"
+)
+
+type Warehouse struct {
 	BaseEntity
 	FacilityAddressID uint            `gorm:"not null;index"`
 	FacilityAddress   FacilityAddress `gorm:"foreignKey:FacilityAddressID;constraint:OnDelete:CASCADE"`
@@ -11,10 +19,10 @@ type CityWarehouse struct {
 
 type StoreWarehouse struct {
 	BaseEntity
-	StoreID         uint          `gorm:"not null;index"`
-	Store           Store         `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
-	CityWarehouseID uint          `gorm:"not null;index"`
-	CityWarehouse   CityWarehouse `gorm:"foreignKey:CityWarehouseID;constraint:OnDelete:CASCADE"`
+	StoreID     uint      `gorm:"not null;index"`
+	Store       Store     `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	WarehouseID uint      `gorm:"not null;index"`
+	Warehouse   Warehouse `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
 }
 
 type StoreWarehouseStock struct {
@@ -29,11 +37,11 @@ type StoreWarehouseStock struct {
 
 type StockRequest struct {
 	BaseEntity
-	CityWarehouseID uint                     `gorm:"not null;index"`
-	CityWarehouse   CityWarehouse            `gorm:"foreignKey:CityWarehouseID;constraint:OnDelete:CASCADE"`
-	Status          string                   `gorm:"size:50;not null"`
-	RequestDate     *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
-	Ingredients     []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
+	WarehouseID uint                     `gorm:"not null;index"`
+	Warehouse   Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
+	Status      StockRequestStatus       `gorm:"size:50;not null"`
+	RequestDate *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
+	Ingredients []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
 }
 
 type StockRequestIngredient struct {
@@ -43,6 +51,16 @@ type StockRequestIngredient struct {
 	IngredientID   uint         `gorm:"not null;index"`
 	Ingredient     Ingredient   `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	Quantity       float64      `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
+	DeliveredDate  time.Time    `gorm:"not null;default:CURRENT_TIMESTAMP"` // Delivery start date
+	ExpirationDate time.Time    `gorm:"not null"`                           // Calculated from DeliveredDate + ExpirationPeriod
+}
+
+type IngredientsMapping struct {
+	BaseEntity
+	IngredientID    uint          `gorm:"not null;index"`
+	Ingredient      Ingredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	StockMaterialID uint          `gorm:"not null;index"`
+	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
 }
 
 type Supplier struct {
@@ -51,4 +69,65 @@ type Supplier struct {
 	ContactEmail string `gorm:"size:255"`
 	ContactPhone string `gorm:"size:20"`
 	Address      string `gorm:"size:255"`
+}
+
+type WarehouseStock struct {
+	BaseEntity
+	WarehouseID     uint          `gorm:"not null;index"`
+	Warehouse       Warehouse     `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
+	StockMaterialID uint          `gorm:"index"`
+	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
+	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity >= 0"`
+}
+
+type StockMaterial struct {
+	BaseEntity
+	Name                   string   `gorm:"size:255;not null"`
+	Description            string   `gorm:"type:text"`
+	SafetyStock            float64  `gorm:"type:decimal(10,2);not null"`
+	ExpirationFlag         bool     `gorm:"not null"`
+	UnitID                 uint     `gorm:"not null"`
+	Unit                   Unit     `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
+	Category               string   `gorm:"size:255"`
+	Barcode                string   `gorm:"unique;size:255"`
+	ExpirationPeriodInDays int      `gorm:"not null;default:1095"` // 3 years in days
+	IsActive               bool     `gorm:"not null;default:true"`
+	Package                *Package `gorm:"foreignKey:StockMaterialID"`
+}
+
+type Unit struct {
+	BaseEntity
+	Name             string  `gorm:"size:50;not null;unique"`
+	ConversionFactor float64 `gorm:"type:decimal(10,4);not null"` // To base unit
+}
+
+type Package struct {
+	BaseEntity
+	StockMaterialID uint          `gorm:"index"`
+	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
+	PackageSize     float64       `gorm:"type:decimal(10,2);not null"`
+	PackageUnitID   uint          `gorm:"not null"`
+	PackageUnit     Unit          `gorm:"foreignKey:PackageUnitID;constraint:OnDelete:SET NULL"`
+}
+
+type SupplierMaterial struct {
+	ID              uint          `gorm:"primaryKey;autoIncrement"`
+	StockMaterialID uint          `gorm:"not null;index"`
+	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
+	SupplierID      uint          `gorm:"not null;index"`
+	Supplier        Supplier      `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
+	CreatedAt       time.Time     `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
+	UpdatedAt       time.Time     `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
+}
+
+type Delivery struct {
+	BaseEntity
+	StockMaterialID uint          `gorm:"not null;index"`
+	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
+	SupplierID      uint          `gorm:"not null"`
+	WarehouseID     uint          `gorm:"not null"`
+	Barcode         string        `gorm:"size:255;not null"`
+	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
+	DeliveryDate    time.Time     `gorm:"not null"`
+	ExpirationDate  time.Time     `gorm:"not null"`
 }
