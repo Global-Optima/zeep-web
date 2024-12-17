@@ -10,6 +10,16 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+	-- Units Table
+CREATE TABLE IF NOT EXISTS units (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    conversion_factor DECIMAL(10,4) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
 -- ProductCategory Table
 CREATE TABLE
 	IF NOT EXISTS product_categories (
@@ -503,16 +513,6 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
-
--- Units Table
-CREATE TABLE IF NOT EXISTS units (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    conversion_factor DECIMAL(10,4) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-);
 
 -- StockMaterials Table
 CREATE TABLE IF NOT EXISTS stock_materials (

@@ -48,6 +48,14 @@ VALUES
   ),
   ('Улица Кирова, 2, Уфа', 56.0367, 54.7352);
 
+-- Insert into Units
+INSERT INTO units (name, conversion_factor)
+VALUES
+    ('kg', 1.0),
+    ('g', 0.001),
+    ('L', 1.0),
+    ('ml', 0.001);
+
 -- Insert into CityWarehouses
 INSERT INTO
   warehouses (facility_address_id, name)
@@ -1472,14 +1480,6 @@ VALUES
     ('General Mills', 'support@generalmills.com', '+1 800 248 7310', '1 General Mills Blvd, Minneapolis, MN 55426, USA');
 
 
--- Insert into Units
-INSERT INTO units (name, conversion_factor)
-VALUES
-    ('kg', 1.0),
-    ('g', 0.001),
-    ('L', 1.0),
-    ('ml', 0.001);
-
 INSERT INTO stock_materials (name, description, safety_stock, expiration_flag, unit_id, category, barcode, expiration_period_in_days, is_active)
 VALUES
     ('Milk', '1L pack of milk', 50, TRUE, 3, 'Dairy', '111111111111', 1095, TRUE),
@@ -1527,17 +1527,29 @@ VALUES
     (2, 5, 15); -- Vanilla in Warehouse 2
 
 
+-- Insert into StockRequests (Initial Requests)
 INSERT INTO stock_requests (store_id, warehouse_id, status, request_date, created_at, updated_at)
 VALUES
-    (1, 1, 'CREATED', '2024-12-01', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 'PROCESSED', '2024-12-02', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 'IN_DELIVERY', '2024-12-03', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 4, 'COMPLETED', '2024-12-04', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (1, 1, 'CREATED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (2, 2, 'PROCESSED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 3, 'IN_DELIVERY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 4, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, quantity, delivered_date, expiration_date, created_at, updated_at)
+-- Insert into StockRequestIngredients (Items for Stock Requests)
+INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, quantity, created_at, updated_at)
 VALUES
-    (1, 1, 10, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk for Request 1
-    (1, 2, 5, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Sugar for Request 1
-    (2, 3, 3, '2024-12-05', '2026-12-05', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate for Request 2
-    (3, 4, 7, '2024-12-06', '2025-06-06', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon for Request 3
-    (4, 5, 2, '2024-12-07', '2027-12-07', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Vanilla for Request 4
+    -- StockRequest 1 (Store 1 -> Warehouse 1)
+    (1, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    (1, 2, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+
+    -- StockRequest 2 (Store 2 -> Warehouse 2)
+    (2, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Chocolate
+    (2, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Cinnamon
+
+    -- StockRequest 3 (Store 3 -> Warehouse 3)
+    (3, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Vanilla
+    (3, 1, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+
+    -- StockRequest 4 (Store 4 -> Warehouse 4)
+    (4, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);  -- Chocolate
