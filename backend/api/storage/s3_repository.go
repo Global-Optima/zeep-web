@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -103,11 +104,13 @@ func (r *storageRepository) FileExists(key string) (bool, error) {
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		if aerr, ok := err.(awserr.RequestFailure); ok && aerr.StatusCode() == http.StatusNotFound {
+		var awsErr awserr.RequestFailure
+		if errors.As(err, &awsErr) && awsErr.StatusCode() == http.StatusNotFound {
 			return false, nil
 		}
 		return false, err
 	}
+
 	return true, nil
 }
 
