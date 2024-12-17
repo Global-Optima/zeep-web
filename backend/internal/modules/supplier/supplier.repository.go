@@ -1,16 +1,19 @@
 package supplier
 
 import (
+	"errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
 	"gorm.io/gorm"
 )
 
 type SupplierRepository interface {
 	CreateSupplier(supplier *data.Supplier) error
 	GetSupplierByID(id uint) (*data.Supplier, error)
-	UpdateSupplier(id uint, supplier *data.Supplier) error
+	UpdateSupplier(id uint, fields types.UpdateSupplierDTO) error
 	DeleteSupplier(id uint) error
-	ListSuppliers() ([]data.Supplier, error)
+	GetAllSuppliers() ([]data.Supplier, error)
 }
 
 type supplierRepository struct {
@@ -31,15 +34,22 @@ func (r *supplierRepository) GetSupplierByID(id uint) (*data.Supplier, error) {
 	return &supplier, err
 }
 
-func (r *supplierRepository) UpdateSupplier(id uint, supplier *data.Supplier) error {
-	return r.db.Model(&data.Supplier{}).Where("id = ?", id).Updates(supplier).Error
+func (r *supplierRepository) UpdateSupplier(id uint, fields types.UpdateSupplierDTO) error {
+	if err := r.db.Model(&data.Supplier{}).Where("id = ?", id).Updates(fields).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("supplier not found")
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (r *supplierRepository) DeleteSupplier(id uint) error {
 	return r.db.Delete(&data.Supplier{}, id).Error
 }
 
-func (r *supplierRepository) ListSuppliers() ([]data.Supplier, error) {
+func (r *supplierRepository) GetAllSuppliers() ([]data.Supplier, error) {
 	var suppliers []data.Supplier
 	err := r.db.Find(&suppliers).Error
 	return suppliers, err

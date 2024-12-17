@@ -1,6 +1,10 @@
 package types
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 func ValidateCreateSupplierDTO(input CreateSupplierDTO) error {
 	if input.Name == "" {
@@ -31,7 +35,7 @@ func ValidateUpdateSupplierDTO(input UpdateSupplierDTO) error {
 		return errors.New("name must not exceed 255 characters")
 	}
 
-	if input.ContactEmail != nil && len(*input.ContactEmail) > 255 {
+	if input.ContactEmail != nil && len(*input.ContactEmail) > 255 && !utils.IsValidEmail(*input.ContactEmail) {
 		return errors.New("contact_email must not exceed 255 characters")
 	}
 

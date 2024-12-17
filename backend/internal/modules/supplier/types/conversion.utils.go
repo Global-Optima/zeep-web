@@ -1,6 +1,8 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+)
 
 func ToSupplierResponse(supplier data.Supplier) SupplierResponse {
 	return SupplierResponse{

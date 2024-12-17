@@ -12,6 +12,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/gin-gonic/gin"
 )
 
@@ -130,5 +134,50 @@ func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWare
 		router.POST("", handler.AddStoreWarehouseStock)
 		router.PUT("/:id", handler.UpdateStoreWarehouseStockById)
 		router.DELETE("/:id", handler.DeleteStoreWarehouseStockById)
+	}
+}
+
+func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMaterialHandler) {
+	router := r.Routes.Group("/stock-material")
+	{
+		router.GET("", handler.GetAllStockMaterials)
+		router.GET("/:id", handler.GetStockMaterialByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateStockMaterial)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStockMaterial)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeleteStockMaterial)
+		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeactivateStockMaterial)
+	}
+}
+
+func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
+	router := r.Routes.Group("/barcode")
+	{
+		router.POST("/generate", handler.GenerateBarcode)
+		router.GET("/:barcode", handler.RetrieveStockMaterialByBarcode)
+		router.POST("/print", handler.PrintAdditionalBarcodes)
+	}
+}
+
+func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
+	router := r.Routes.Group("/inventory")
+	{
+		router.POST("/receive", handler.ReceiveInventory)
+		router.GET("/levels/:warehouseID", handler.GetInventoryLevels)
+		router.POST("/pickup", handler.PickupStock) // store
+		router.POST("/transfer", handler.TransferInventory)
+
+		router.GET("/expiration/upcoming/:warehouseID", handler.GetExpiringItems)
+		router.POST("/expiration/extend", handler.ExtendExpiration)
+
+		router.GET("/deliveries", handler.GetDeliveries)
+	}
+}
+
+func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
+	router := r.Routes.Group("/warehouse") // store
+	{
+		router.POST("/stores", handler.AssignStoreToWarehouse)              // store
+		router.PUT("/stores/:storeId", handler.ReassignStore)               // store
+		router.GET("/:warehouseId/stores", handler.GetAllStoresByWarehouse) // store
 	}
 }
