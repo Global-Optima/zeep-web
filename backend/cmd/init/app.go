@@ -2,6 +2,8 @@ package init
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
 	"log"
 	"time"
 
@@ -115,8 +117,22 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	InitializeModule(
 		dbHandler,
+		func(dbHandler *database.DBHandler) (auth.AuthenticationService, error) {
+			return auth.NewAuthenticationService(
+				auth.NewAuthorizationRepository(dbHandler.DB),
+				customers.NewCustomerRepository(dbHandler.DB),
+				employees.NewEmployeeRepository(dbHandler.DB),
+				logger.GetZapSugaredLogger(),
+			), nil
+		},
+		auth.NewAuthenticationHandler,
+		apiRouter.RegisterAuthenticationRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
 		func(dbHandler *database.DBHandler) (product.ProductService, error) {
-			return product.NewProductService(product.NewProductRepository(dbHandler.DB)), nil
+			return product.NewProductService(product.NewProductRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		product.NewProductHandler,
 		apiRouter.RegisterProductRoutes,
@@ -143,7 +159,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (additives.AdditiveService, error) {
-			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB)), nil
+			return additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		additives.NewAdditiveHandler,
 		apiRouter.RegisterAdditivesRoutes,
@@ -152,7 +168,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	InitializeModule(
 		dbHandler,
 		func(dbHandler *database.DBHandler) (employees.EmployeeService, error) {
-			return employees.NewEmployeeService(employees.NewEmployeeRepository(dbHandler.DB)), nil
+			return employees.NewEmployeeService(employees.NewEmployeeRepository(dbHandler.DB), logger.GetZapSugaredLogger()), nil
 		},
 		employees.NewEmployeeHandler,
 		apiRouter.RegisterEmployeesRoutes,
