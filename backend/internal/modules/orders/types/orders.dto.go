@@ -4,7 +4,15 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
+
+type OrdersFilterQuery struct {
+	Search     *string           `form:"search"`
+	Status     *data.OrderStatus `form:"status"`
+	StoreID    *uint             `form:"storeId"`
+	Pagination *utils.Pagination
+}
 
 type CreateOrderDTO struct {
 	CustomerID        *uint               `json:"customerId,omitempty"`

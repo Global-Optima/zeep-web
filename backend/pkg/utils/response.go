@@ -6,28 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SuccessResponse(c *gin.Context, data interface{}) {
+func SendSuccessResponse(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, data)
 }
 
-func SuccessResponseWithPagination(c *gin.Context, data interface{}, pagination *Pagination) {
+func SendSuccessResponseWithPagination(c *gin.Context, data interface{}, pagination *Pagination) {
 	c.JSON(http.StatusOK, gin.H{
 		"data":       data,
 		"pagination": pagination,
 	})
-}
-
-func SuccessPaginatedResponse(c *gin.Context, data interface{}, meta interface{}) {
-	if meta != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"data": data,
-			"meta": meta,
-		})
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"data": data,
-		})
-	}
 }
 
 func SendMessageWithStatus(c *gin.Context, message string, status int) {

@@ -2,10 +2,11 @@ package storeWarehouses
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 type StoreWarehouseHandler struct {
@@ -36,8 +37,33 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{
+	utils.SendSuccessResponse(c, gin.H{
 		"message": fmt.Sprintf("store warehouse stock with id %d successfully created", id),
+	})
+}
+
+func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
+	var dto types.AddMultipleStockDTO
+
+	storeID, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, err.Error())
+		return
+	}
+
+	err = h.service.AddMultipleStock(uint(storeID), &dto)
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SendSuccessResponse(c, gin.H{
+		"message": "success",
 	})
 }
 
@@ -60,7 +86,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponseWithPagination(c, stockList, queryParams.Pagination)
+	utils.SendSuccessResponseWithPagination(c, stockList, queryParams.Pagination)
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
@@ -82,7 +108,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, ingredients)
+	utils.SendSuccessResponse(c, ingredients)
 }
 
 func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
@@ -111,7 +137,7 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "stock updated successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "stock updated successfully"})
 }
 
 func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
@@ -133,5 +159,5 @@ func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "stock deleted successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "stock deleted successfully"})
 }

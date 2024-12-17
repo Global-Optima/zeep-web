@@ -7,7 +7,7 @@ const orders = ref<OrderDTO[]>([])
 
 const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'}`
 
-export function useOrderEventsService(storeId: string) {
+export function useOrderEventsService(storeId: number) {
 	const url = `${wsUrl}/orders/ws/${storeId}`
 	const queryClient = useQueryClient()
 
@@ -90,7 +90,7 @@ export function useOrderEventsService(storeId: string) {
 	// Sort orders by timestamp
 	function sortOrders(orderList: OrderDTO[]): OrderDTO[] {
 		return orderList.sort(
-			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
 		)
 	}
 

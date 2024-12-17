@@ -1,6 +1,6 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
-import type { StoresFilter } from '../models/stores-dto.model'
+import type { CreateStoreDTO, StoresFilter, UpdateStoreDTO } from '../models/stores-dto.model'
 import type { Store } from '../models/stores.models'
 
 class StoreService {
@@ -26,7 +26,7 @@ class StoreService {
 		}
 	}
 
-	async updateStore(id: number, dto: Partial<Store>) {
+	async updateStore(id: number, dto: UpdateStoreDTO) {
 		try {
 			const response = await apiClient.put<void>(`/stores/${id}`, dto)
 			return response.data
@@ -36,7 +36,7 @@ class StoreService {
 		}
 	}
 
-	async createStore(dto: Store) {
+	async createStore(dto: CreateStoreDTO) {
 		try {
 			const response = await apiClient.post<void>(`/stores`, dto)
 			return response.data

@@ -25,7 +25,7 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 	var cachedCategories []types.CategoryDTO
 	if err := cacheUtil.Get(cacheKey, &cachedCategories); err == nil {
 		if !utils.IsEmpty(cachedCategories) {
-			utils.SuccessResponse(c, cachedCategories)
+			utils.SendSuccessResponse(c, cachedCategories)
 			return
 		}
 	}
@@ -40,5 +40,5 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 		fmt.Printf("Failed to cache categories: %v\n", err)
 	}
 
-	utils.SuccessResponse(c, categories)
+	utils.SendSuccessResponse(c, categories)
 }

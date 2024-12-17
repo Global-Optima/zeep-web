@@ -1,16 +1,18 @@
 import { apiClient } from '@/core/config/axios-instance.config'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
+import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	CreateOrderDTO,
 	OrderDTO,
-	OrderStatus,
+	OrdersFilterQuery,
 	OrderStatusesCountDTO,
 } from '../models/orders.models'
 
 class OrderService {
-	async getAllOrders(storeId: string, status?: OrderStatus): Promise<OrderDTO[]> {
+	async getAllOrders(filter?: OrdersFilterQuery) {
 		try {
-			const response = await apiClient.get<OrderDTO[]>('/orders', {
-				params: { status, storeId },
+			const response = await apiClient.get<PaginatedResponse<OrderDTO[]>>('/orders', {
+				params: buildRequestFilter(filter),
 			})
 			return response.data
 		} catch (error) {
@@ -28,7 +30,7 @@ class OrderService {
 		}
 	}
 
-	async completeSubOrder(storeId: string, orderId: number, subOrderId: number): Promise<void> {
+	async completeSubOrder(storeId: number, orderId: number, subOrderId: number): Promise<void> {
 		try {
 			await apiClient.put(
 				`/orders/${orderId}/suborders/${subOrderId}/complete`,
@@ -53,7 +55,7 @@ class OrderService {
 		}
 	}
 
-	async getStatusesCount(storeId: string): Promise<OrderStatusesCountDTO> {
+	async getStatusesCount(storeId: number): Promise<OrderStatusesCountDTO> {
 		try {
 			const response = await apiClient.get<OrderStatusesCountDTO>('/orders/statuses/count', {
 				params: { storeId },

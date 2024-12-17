@@ -5,7 +5,10 @@
 			class="z-20 flex items-center gap-4 bg-white/50 shadow-2xl backdrop-blur-sm p-2 rounded-full"
 		>
 			<!-- Size Selection -->
-			<div class="flex items-center bg-gray-200 rounded-full overflow-x-auto no-scrollbar">
+			<div
+				v-if="isMultipleSizes"
+				class="flex items-center bg-gray-200 rounded-full overflow-x-auto no-scrollbar"
+			>
 				<KioskDetailsSizes
 					v-for="size in sizes"
 					:key="size.id"
@@ -39,6 +42,7 @@ import { formatPrice } from '@/core/utils/price.utils'
 import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
 import type { ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
 import { Pencil, Plus } from 'lucide-vue-next'
+import { computed } from "vue";
 
 const {sizes, selectedSizeId, totalPrice, displayIcon = "add" } = defineProps<{
   sizes: ProductSizeDTO[]
@@ -59,6 +63,8 @@ const onSizeSelect = (size: ProductSizeDTO) => {
 const handleAddToCart = () => {
   emits('addToCart')
 }
+
+const isMultipleSizes = computed(() => sizes.length > 1)
 
 const isSelected = (sizeId: number) => {
   return selectedSizeId === sizeId

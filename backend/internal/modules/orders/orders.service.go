@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+
 	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -12,7 +13,8 @@ import (
 )
 
 type OrderService interface {
-	GetAllBaristaOrders(storeID uint, status *string) ([]types.OrderDTO, error)
+	GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error)
+	GetAllBaristaOrders(storeID uint) ([]types.OrderDTO, error)
 	GetSubOrders(orderID uint) ([]types.SuborderDTO, error)
 	GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error)
 	CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
@@ -45,9 +47,22 @@ func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepos
 	}
 }
 
-// Get all orders with optional filtering by status
-func (s *orderService) GetAllBaristaOrders(storeID uint, status *string) ([]types.OrderDTO, error) {
-	orders, err := s.orderRepo.GetAllBaristaOrders(storeID, status)
+func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error) {
+	orders, err := s.orderRepo.GetOrders(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var orderDTOs []types.OrderDTO
+	for _, order := range orders {
+		orderDTOs = append(orderDTOs, types.ConvertOrderToDTO(&order))
+	}
+
+	return orderDTOs, nil
+}
+
+func (s *orderService) GetAllBaristaOrders(storeID uint) ([]types.OrderDTO, error) {
+	orders, err := s.orderRepo.GetAllBaristaOrders(storeID)
 
 	if err != nil {
 		wrappedErr := fmt.Errorf("error getting barista orders: %w", err)
@@ -55,14 +70,15 @@ func (s *orderService) GetAllBaristaOrders(storeID uint, status *string) ([]type
 		return nil, wrappedErr
 	}
 
-	var orderDTOs []types.OrderDTO
+	orderDTOs := make([]types.OrderDTO, 0)
+
 	for _, order := range orders {
 		orderDTOs = append(orderDTOs, types.ConvertOrderToDTO(&order))
 	}
+
 	return orderDTOs, nil
 }
 
-// Get suborders for a specific order
 func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 	suborders, err := s.orderRepo.GetSubOrdersByOrderID(orderID)
 	if err != nil {
@@ -78,11 +94,9 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 	return subOrderDTOs, nil
 }
 
-// Create a new order
 func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
 	productSizeIDs, additiveIDs := RetrieveIDs(*createOrderDTO)
 
-	// Validate product sizes and additives
 	validations, err := s.ValidationResults(productSizeIDs, additiveIDs)
 	if err != nil {
 		wrappedErr := fmt.Errorf("validation failed: %w", err)
@@ -90,11 +104,9 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 		return nil, wrappedErr
 	}
 
-	// Convert DTO to Order
 	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, validations.ProductPrices, validations.AdditivePrices)
 	order.Total = total
 
-	// Save the order and related data to the database
 	err = s.orderRepo.CreateOrder(&order)
 	if err != nil {
 		wrappedErr := fmt.Errorf("error creating order: %w", err)
@@ -105,9 +117,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 	return &order, nil
 }
 
-// Complete a suborder
 func (s *orderService) CompleteSubOrder(subOrderID uint) error {
-	// Update suborder status
 	err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
@@ -115,7 +125,6 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		return wrappedErr
 	}
 
-	// Check if all suborders for the parent order are completed
 	orderID, allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(subOrderID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to check suborder: %w", err)
@@ -123,7 +132,6 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		return wrappedErr
 	}
 
-	// If all suborders are completed, determine the order status
 	if allCompleted {
 		order, err := s.orderRepo.GetOrderById(orderID)
 		if err != nil {
@@ -151,7 +159,6 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 	return nil
 }
 
-// Generate a PDF receipt for an order
 func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	order, err := s.orderRepo.GetOrderById(orderID)
 	if err != nil {
@@ -187,7 +194,6 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	return pdf.GeneratePDFReceipt(details)
 }
 
-// Get statuses count for orders in a store
 func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error) {
 	countsMap, err := s.orderRepo.GetStatusesCount(storeID)
 	if err != nil {
@@ -209,7 +215,6 @@ func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountD
 	return dto, nil
 }
 
-// Validate product sizes and additives
 func (s *orderService) ValidationResults(productSizeIDs, additiveIDs []uint) (*orderValidationResults, error) {
 	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.productRepo)
 	if err != nil {

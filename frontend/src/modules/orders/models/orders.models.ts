@@ -1,3 +1,5 @@
+import type { PaginationParams } from '@/core/utils/pagination.utils'
+
 export enum OrderStatus {
 	PREPARING = 'PREPARING',
 	COMPLETED = 'COMPLETED',
@@ -56,7 +58,7 @@ export interface SubOrderDTO {
 export interface OrderDTO {
 	id: number
 	customerId?: number
-	customerName?: string
+	customerName: string
 	employeeId?: number
 	storeId: number
 	deliveryAddressId?: number
@@ -65,6 +67,7 @@ export interface OrderDTO {
 	total: number
 	subOrdersQuantity: number
 	subOrders: SubOrderDTO[]
+	isPaid?: boolean
 }
 
 export interface OrderProductSizeDTO {
@@ -79,4 +82,10 @@ export interface OrderAdditiveDTO {
 	name: string
 	description: string
 	size: string
+}
+
+export interface OrdersFilterQuery extends PaginationParams {
+	search?: string
+	status?: OrderStatus
+	storeId?: number
 }

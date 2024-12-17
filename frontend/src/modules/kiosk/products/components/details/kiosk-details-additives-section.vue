@@ -1,46 +1,46 @@
 <!-- src/components/AdditivesSection.vue -->
 <template>
 	<div :class="cn('flex flex-col gap-6 mt-2 px-8', containerClass)">
-		<div
+		<template
 			v-for="category in categories"
 			:key="category.id"
 		>
-			<p class="font-medium text-lg sm:text-2xl">{{ category.name }}</p>
-			<div class="flex flex-wrap gap-2 mt-4">
-				<KioskDetailsAdditivesCard
-					v-for="additive in category.additives"
-					:key="additive.id"
-					:additive="additive"
-					:is-default="isAdditiveDefault(additive.id)"
-					:is-selected="isAdditiveSelected(category.id, additive.id)"
-					@click:additive="() => onAdditiveToggle(category.id, additive)"
-				/>
+			<div v-if="category.additives.length > 0">
+				<p class="font-medium text-lg sm:text-2xl">{{ category.name }}</p>
+				<div class="flex flex-wrap gap-2 mt-4">
+					<KioskDetailsAdditivesCard
+						v-for="additive in category.additives"
+						:key="additive.id"
+						:additive="additive"
+						:is-default="isAdditiveDefault(additive.id)"
+						:is-selected="isAdditiveSelected(category.id, additive.id)"
+						@click:additive="() => onAdditiveToggle(category.id, additive)"
+					/>
+				</div>
 			</div>
-		</div>
+		</template>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
+import type { AdditiveCategories, AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
 import KioskDetailsAdditivesCard from '@/modules/kiosk/products/components/details/kiosk-details-additives-card.vue'
-import type { AdditiveCategoryDTO, AdditiveDTO } from '@/modules/kiosk/products/models/product.model'
 
 defineProps<{
-  categories: AdditiveCategoryDTO[]
+  categories: AdditiveCategories[]
   isAdditiveDefault: (additiveId: number) => boolean
   isAdditiveSelected: (categoryId: number, additiveId: number) => boolean
   containerClass?: string
 }>()
 
 const emits = defineEmits<{
-  (e: 'toggleAdditive', categoryId: number, additive: AdditiveDTO): void
+  (e: 'toggleAdditive', categoryId: number, additive: AdditiveCategoryItem): void
 }>()
 
-const onAdditiveToggle = (categoryId: number, additive: AdditiveDTO) => {
+const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItem) => {
   emits('toggleAdditive', categoryId, additive)
 }
 </script>
 
-<style scoped>
-/* Add any specific styles if needed */
-</style>
+<style scoped></style>

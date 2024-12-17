@@ -1,12 +1,13 @@
 package auth
 
 import (
+	"net/http"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 type AuthenticationHandler struct {
@@ -31,7 +32,7 @@ func (h *AuthenticationHandler) CustomerRegister(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "new user registered"})
+	utils.SendSuccessResponse(c, gin.H{"message": "new user registered"})
 }
 
 func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
@@ -59,7 +60,7 @@ func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
 	utils.SetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.CustomerAccessTokenTTL)
 	utils.SetCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.CustomerRefreshTokenTTL)
 
-	utils.SuccessResponse(c, gin.H{
+	utils.SendSuccessResponse(c, gin.H{
 		"message": "login successful",
 		"data": gin.H{
 			"accessToken":  tokenPair.AccessToken,
@@ -87,7 +88,7 @@ func (h *AuthenticationHandler) CustomerRefresh(c *gin.Context) {
 	utils.SetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.CustomerAccessTokenTTL)
 	utils.SetCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.CustomerRefreshTokenTTL)
 
-	utils.SuccessResponse(c, gin.H{
+	utils.SendSuccessResponse(c, gin.H{
 		"message": "refresh successful",
 		"data": gin.H{
 			"accessToken":  tokenPair.AccessToken,
@@ -113,7 +114,7 @@ func (h *AuthenticationHandler) CustomerLogout(c *gin.Context) {
 	utils.ClearCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
 	utils.ClearCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
 
-	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
+	utils.SendSuccessResponse(c, gin.H{"message": "logout successful"})
 }
 
 func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
@@ -143,7 +144,7 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 	utils.SetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.EmployeeAccessTokenTTL)
 	utils.SetCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.EmployeeRefreshTokenTTL)
 
-	utils.SuccessResponse(c, gin.H{
+	utils.SendSuccessResponse(c, gin.H{
 		"message": "login successful",
 		"data": gin.H{
 			"accessToken":  tokenPair.AccessToken,
@@ -170,7 +171,7 @@ func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
 
 	utils.SetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, newAccessToken, cfg.JWT.CustomerAccessTokenTTL)
 
-	utils.SuccessResponse(c, gin.H{
+	utils.SendSuccessResponse(c, gin.H{
 		"message": "refresh successful",
 		"data": gin.H{
 			"accessToken": newAccessToken,
@@ -195,5 +196,5 @@ func (h *AuthenticationHandler) EmployeeLogout(c *gin.Context) {
 	utils.ClearCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 	utils.ClearCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
 
-	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
+	utils.SendSuccessResponse(c, gin.H{"message": "logout successful"})
 }

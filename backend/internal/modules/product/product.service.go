@@ -9,7 +9,7 @@ import (
 )
 
 type ProductService interface {
-	GetStoreProducts(filter types.ProductFilterDao) ([]types.StoreProductDTO, error)
+	GetProducts(filter types.ProductsFilterDto) ([]types.StoreProductDTO, error)
 	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
 	CreateProduct(product *types.CreateStoreProduct) error
 	UpdateProduct(product *types.UpdateStoreProduct) error
@@ -28,7 +28,7 @@ func NewProductService(repo ProductRepository, logger *zap.SugaredLogger) Produc
 	}
 }
 
-func (s *productService) GetStoreProducts(filter types.ProductFilterDao) ([]types.StoreProductDTO, error) {
+func (s *productService) GetProducts(filter types.ProductsFilterDto) ([]types.StoreProductDTO, error) {
 	products, err := s.repo.GetStoreProducts(filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve products", err)

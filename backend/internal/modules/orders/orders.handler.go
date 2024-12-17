@@ -19,6 +19,24 @@ func NewOrderHandler(service OrderService) *OrderHandler {
 	return &OrderHandler{service: service}
 }
 
+func (h *OrderHandler) GetOrders(c *gin.Context) {
+	var filter types.OrdersFilterQuery
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
+		return
+	}
+
+	filter.Pagination = utils.ParsePagination(c)
+
+	additives, err := h.service.GetOrders(filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch orders")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
+}
+
 func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
 	storeIDStr := c.Query("storeId")
 	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
@@ -27,9 +45,7 @@ func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
 		return
 	}
 
-	status := c.Query("status")
-
-	orders, err := h.service.GetAllBaristaOrders(uint(storeID), &status)
+	orders, err := h.service.GetAllBaristaOrders(uint(storeID))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch orders")
 		return
@@ -164,8 +180,8 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 		return
 	}
 
-	// Fetch initial orders for the store
-	initialOrders, err := h.service.GetAllBaristaOrders(uint(storeID), nil)
+	initialOrders, err := h.service.GetAllBaristaOrders(uint(storeID))
+
 	if err != nil {
 		log.Printf("Failed to fetch initial orders for store %d: %v", storeID, err)
 		utils.SendInternalServerError(c, "failed to fetch initial orders")

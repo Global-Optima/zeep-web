@@ -14,7 +14,7 @@ export const AUTH_CHILDREN_ROUTES = {
 } satisfies AppRouteRecord
 
 export const AUTH_ROUTES_CONFIG: ParentRoutePage = {
-	path: '',
+	path: '/',
 	component: AppDefaultLayout,
 	children: AUTH_CHILDREN_ROUTES,
 }

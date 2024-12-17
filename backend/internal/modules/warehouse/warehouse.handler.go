@@ -68,5 +68,5 @@ func (h *WarehouseHandler) GetAllStoresByWarehouse(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, stores)
+	utils.SendSuccessResponse(c, stores)
 }

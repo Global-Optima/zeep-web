@@ -30,11 +30,11 @@ func MapToStoreProductDetailsDTO(product *data.Product, defaultAdditives []data.
 				additiveCategoryMap[categoryID] = &additiveTypes.AdditiveCategoryDTO{
 					ID:        categoryID,
 					Name:      additive.Category.Name,
-					Additives: []additiveTypes.AdditiveDTO{},
+					Additives: []additiveTypes.AdditiveCategoryItemDTO{},
 				}
 			}
 
-			additiveDTO := additiveTypes.AdditiveDTO{
+			additiveDTO := additiveTypes.AdditiveCategoryItemDTO{
 				ID:          additive.ID,
 				Name:        additive.Name,
 				Description: additive.Description,
@@ -50,7 +50,7 @@ func MapToStoreProductDetailsDTO(product *data.Product, defaultAdditives []data.
 
 	for _, da := range defaultAdditives {
 		additive := da.Additive
-		additiveDTO := additiveTypes.AdditiveDTO{
+		additiveDTO := additiveTypes.AdditiveCategoryItemDTO{
 			ID:          additive.ID,
 			Name:        additive.Name,
 			Description: additive.Description,

@@ -7,11 +7,41 @@ type FacilityAddressDTO struct {
 	Latitude  float64 `json:"latitude,omitempty"`
 }
 
+type CreateFacilityAddressDTO struct {
+	Address   string   `json:"address"`
+	Longitude *float64 `json:"longitude,omitempty"`
+	Latitude  *float64 `json:"latitude,omitempty"`
+}
+
+type UpdateFacilityAddressDTO struct {
+	Address   string   `json:"address"`
+	Longitude *float64 `json:"longitude,omitempty"`
+	Latitude  *float64 `json:"latitude,omitempty"`
+}
+
+type CreateStoreDTO struct {
+	Name            string                   `json:"name"`
+	IsFranchise     bool                     `json:"isFranchise"`
+	FacilityAddress UpdateFacilityAddressDTO `json:"facilityAddress"`
+	ContactPhone    string                   `json:"contactPhone"`
+	ContactEmail    string                   `json:"contactEmail"`
+	StoreHours      string                   `json:"storeHours"`
+}
+
+type UpdateStoreDTO struct {
+	Name            string                   `json:"name"`
+	IsFranchise     bool                     `json:"isFranchise"`
+	FacilityAddress CreateFacilityAddressDTO `json:"facilityAddress"`
+	ContactPhone    string                   `json:"contactPhone"`
+	ContactEmail    string                   `json:"contactEmail"`
+	StoreHours      string                   `json:"storeHours"`
+}
+
 type StoreDTO struct {
 	ID              uint                `json:"id"`
 	Name            string              `json:"name"`
 	IsFranchise     bool                `json:"isFranchise"`
-	FacilityAddress *FacilityAddressDTO `json:"facilityAddress,omitempty"`
+	FacilityAddress *FacilityAddressDTO `json:"facilityAddress"`
 	ContactPhone    string              `json:"contactPhone"`
 	ContactEmail    string              `json:"contactEmail"`
 	StoreHours      string              `json:"storeHours"`

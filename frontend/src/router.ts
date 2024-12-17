@@ -1,28 +1,27 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { AppTranslation } from './core/config/locale.config'
+import {
+	CURRENT_STORE_STORAGE_KEY,
+	useCurrentStoreStore,
+} from '@/modules/stores/store/current-store.store'
 import { getRouteName, ROUTES } from './core/config/routes.config'
 import { DEFAULT_TITLE, TITLE_TEMPLATE } from './core/constants/seo.constants'
 import { useEmployeeAuthStore } from './modules/auth/store/employee-auth.store'
 import { employeesService } from './modules/employees/services/employees.service'
-import { CURRENT_STORE_COOKIES_CONFIG } from './modules/stores/constants/store-cookies.constant'
 
 export const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	scrollBehavior() {
 		return { top: 0 }
 	},
-	routes: [
-		{
-			path: '/:locale?',
-			beforeEnter: AppTranslation.routeMiddleware,
-			children: ROUTES,
-		},
-	],
+	routes: ROUTES,
 })
 
 router.beforeEach(async (to, _from, next) => {
 	const { setCurrentEmployee } = useEmployeeAuthStore()
+	const { currentStoreId } = useCurrentStoreStore()
+
+	localStorage.getItem(CURRENT_STORE_STORAGE_KEY)
 
 	// Check for login page access
 	if (to.name === getRouteName('LOGIN')) {
@@ -30,8 +29,7 @@ router.beforeEach(async (to, _from, next) => {
 	}
 
 	// Check for store ID in localStorage
-	const storeId = localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)
-	if (!storeId) {
+	if (!currentStoreId) {
 		return next({ name: getRouteName('LOGIN') })
 	}
 

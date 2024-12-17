@@ -1,9 +1,7 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
 import autoprefixer from 'autoprefixer'
-import { dirname, resolve } from 'node:path'
 import tailwind from 'tailwindcss'
 import { defineConfig } from 'vite'
 import viteCompression from 'vite-plugin-compression'
@@ -22,9 +20,6 @@ export default defineConfig({
 	},
 	plugins: [
 		vue(),
-		VueI18nPlugin({
-			include: resolve(dirname(fileURLToPath(import.meta.url)), './src/core/locales/**'),
-		}),
 		VitePWA({
 			registerType: 'autoUpdate',
 			injectRegister: 'auto',
