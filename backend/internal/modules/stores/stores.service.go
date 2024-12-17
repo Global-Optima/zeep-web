@@ -6,7 +6,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -137,52 +136,6 @@ func mapToStoreDTO(store data.Store) *types.StoreDTO {
 		StoreHours:      store.StoreHours,
 		FacilityAddress: facilityAddress,
 	}
-}
-
-func mapToStoreEntity(dto types.StoreDTO) *data.Store {
-	facilityAddressID := dto.FacilityAddress.ID
-
-	return &data.Store{
-		Name:              dto.Name,
-		IsFranchise:       dto.IsFranchise,
-		ContactPhone:      dto.ContactPhone,
-		ContactEmail:      dto.ContactEmail,
-		StoreHours:        dto.StoreHours,
-		FacilityAddressID: facilityAddressID,
-	}
-}
-
-func validStoreDTO(storeDTO types.StoreDTO, isCreate, isPartialUpdate bool) error {
-	if !isPartialUpdate && storeDTO.Name == "" {
-		return errors.New("store name cannot be empty")
-	}
-
-	if storeDTO.ContactPhone != "" && !utils.IsValidPhone(storeDTO.ContactPhone) {
-		return errors.New("invalid phone number format")
-	}
-
-	if storeDTO.ContactEmail != "" && !utils.IsValidEmail(storeDTO.ContactEmail) {
-		return errors.New("invalid email format")
-	}
-
-	if !isPartialUpdate && storeDTO.StoreHours == "" {
-		return errors.New("store hours cannot be empty")
-	}
-
-	if storeDTO.FacilityAddress != nil {
-		if storeDTO.FacilityAddress.Address == "" {
-			return errors.New("facility address cannot be empty")
-		}
-
-		if storeDTO.FacilityAddress.Latitude != 0 && !utils.IsValidLatitude(storeDTO.FacilityAddress.Latitude) {
-			return errors.New("invalid latitude format")
-		}
-		if storeDTO.FacilityAddress.Longitude != 0 && !utils.IsValidLongitude(storeDTO.FacilityAddress.Longitude) {
-			return errors.New("invalid longitude format")
-		}
-	}
-
-	return nil
 }
 
 func updateStoreFields(store *data.Store, dto types.UpdateStoreDTO) {

@@ -54,7 +54,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import { EMPLOYEE_ROLES_FORMATTED, EmployeeRole, type Employee } from '@/modules/employees/models/employees.models'
+import { EMPLOYEE_ROLES_FORMATTED, type Employee } from '@/modules/employees/models/employees.models'
 
 const {employees} = defineProps<{employees: Employee[]}>()
 

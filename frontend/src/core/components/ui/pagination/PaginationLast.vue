@@ -19,11 +19,14 @@ const delegatedProps = computed(() => {
 </script>
 
 <template>
-  <PaginationLast v-bind="delegatedProps">
-    <Button :class="cn('w-9 h-9 p-0', props.class)" variant="outline">
-      <slot>
-        <DoubleArrowRightIcon />
-      </slot>
-    </Button>
-  </PaginationLast>
+	<PaginationLast v-bind="delegatedProps">
+		<Button
+			:class="cn('w-9 h-9 p-0', props.class)"
+			variant="outline"
+		>
+			<slot>
+				<DoubleArrowRightIcon />
+			</slot>
+		</Button>
+	</PaginationLast>
 </template>
