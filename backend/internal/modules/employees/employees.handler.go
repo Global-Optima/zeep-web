@@ -1,6 +1,7 @@
 package employees
 
 import (
+	authTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"net/http"
 	"strconv"
 
@@ -62,7 +63,6 @@ func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
 func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
 	queryParams, err := types.ParseEmployeeQueryParams(c.Request.URL.Query())
 	if err != nil {
-		utils.SendBadRequestError(c, err.Error())
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
@@ -154,15 +154,15 @@ func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 }
 
 func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
-	token, err := c.Cookie(utils.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
+	token, err := c.Cookie(authTypes.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 
 	if err != nil {
 		utils.SendErrorWithStatus(c, "access token missing", http.StatusUnauthorized)
 		return
 	}
 
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateEmployeeJWT(token, claims, utils.TokenAccess); err != nil {
+	claims := &authTypes.EmployeeClaims{}
+	if err := authTypes.ValidateEmployeeJWT(token, claims, authTypes.TokenAccess); err != nil {
 		utils.SendErrorWithStatus(c, "invalid or expired token", http.StatusUnauthorized)
 		return
 	}

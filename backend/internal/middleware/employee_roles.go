@@ -2,16 +2,21 @@ package middleware
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/tokens"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := tokens.ExtractEmployeeAccessTokenAndValidate(c)
+		zapLogger := logger.GetZapSugaredLogger()
+
+		claims, err := contexts.GetEmployeeClaimsFromCtx(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid token"})
+			zapLogger.Warnf("missing or invalid token: %v", err)
+			utils.SendErrorWithStatus(c, "missing or invalid token", http.StatusUnauthorized)
 			c.Abort()
 			return
 		}
@@ -23,7 +28,7 @@ func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc 
 			}
 		}
 
-		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized access"})
+		utils.SendErrorWithStatus(c, "unauthorized access", http.StatusForbidden)
 		c.Abort()
 	}
 }

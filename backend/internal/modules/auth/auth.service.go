@@ -13,11 +13,11 @@ import (
 )
 
 type AuthenticationService interface {
-	EmployeeLogin(email, password string) (*utils.TokenPair, error)
+	EmployeeLogin(email, password string) (*types.TokenPair, error)
 	EmployeeRefreshAccessToken(refreshToken string) (string, error)
 	CustomerRegister(input *types.CustomerRegisterDTO) (uint, error)
-	CustomerLogin(email, password string) (*utils.TokenPair, error)
-	CustomerRefreshTokens(refreshToken string) (*utils.TokenPair, error)
+	CustomerLogin(email, password string) (*types.TokenPair, error)
+	CustomerRefreshTokens(refreshToken string) (*types.TokenPair, error)
 }
 
 type authenticationService struct {
@@ -41,7 +41,7 @@ func NewAuthenticationService(
 	}
 }
 
-func (s *authenticationService) EmployeeLogin(email, password string) (*utils.TokenPair, error) {
+func (s *authenticationService) EmployeeLogin(email, password string) (*types.TokenPair, error) {
 	employee, err := s.employeesRepo.GetEmployeeByEmailOrPhone(email, "")
 	if err != nil {
 		wrappedErr := utils.WrapError("invalid credentials", err)
@@ -59,16 +59,16 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*utils.To
 
 	employeeData := types.MapEmployeeToClaimsData(employee)
 
-	accessToken, err := utils.GenerateEmployeeJWT(employeeData, utils.TokenAccess)
+	accessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
 	if err != nil {
 		return nil, utils.WrapError("failed to generate access token", err)
 	}
-	refreshToken, err := utils.GenerateEmployeeJWT(employeeData, utils.TokenRefresh)
+	refreshToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenRefresh)
 	if err != nil {
 		return nil, utils.WrapError("failed to generate refresh token", err)
 	}
 
-	tokenPair := utils.TokenPair{
+	tokenPair := types.TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
@@ -77,8 +77,8 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*utils.To
 }
 
 func (s *authenticationService) EmployeeRefreshAccessToken(refreshToken string) (string, error) {
-	claims := &utils.EmployeeClaims{}
-	err := utils.ValidateEmployeeJWT(refreshToken, claims, utils.TokenRefresh)
+	claims := &types.EmployeeClaims{}
+	err := types.ValidateEmployeeJWT(refreshToken, claims, types.TokenRefresh)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to validate refresh token", err)
 		return "", wrappedErr
@@ -98,7 +98,7 @@ func (s *authenticationService) EmployeeRefreshAccessToken(refreshToken string) 
 
 	employeeData := types.MapEmployeeToClaimsData(employee)
 
-	newAccessToken, err := utils.GenerateEmployeeJWT(employeeData, utils.TokenAccess)
+	newAccessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to generate access token", err)
 		s.logger.Error(wrappedErr)
@@ -148,7 +148,7 @@ func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDT
 	return id, nil
 }
 
-func (s *authenticationService) CustomerLogin(phone, password string) (*utils.TokenPair, error) {
+func (s *authenticationService) CustomerLogin(phone, password string) (*types.TokenPair, error) {
 	customer, err := s.repo.GetCustomerByPhone(phone)
 	if err != nil {
 		wrappedErr := utils.WrapError("error retrieving customer", err)
@@ -166,16 +166,16 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*utils.To
 
 	employeeData := types.MapCustomerToClaimsData(customer)
 
-	accessToken, err := utils.GenerateCustomerJWT(employeeData, utils.TokenAccess)
+	accessToken, err := types.GenerateCustomerJWT(employeeData, types.TokenAccess)
 	if err != nil {
 		return nil, utils.WrapError("failed to generate access token", err)
 	}
-	refreshToken, err := utils.GenerateCustomerJWT(employeeData, utils.TokenRefresh)
+	refreshToken, err := types.GenerateCustomerJWT(employeeData, types.TokenRefresh)
 	if err != nil {
 		return nil, utils.WrapError("failed to generate refresh token", err)
 	}
 
-	tokenPair := utils.TokenPair{
+	tokenPair := types.TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
@@ -183,9 +183,9 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*utils.To
 	return &tokenPair, nil
 }
 
-func (s *authenticationService) CustomerRefreshTokens(refreshToken string) (*utils.TokenPair, error) {
-	claims := &utils.CustomerClaims{}
-	err := utils.ValidateCustomerJWT(refreshToken, claims, utils.TokenRefresh)
+func (s *authenticationService) CustomerRefreshTokens(refreshToken string) (*types.TokenPair, error) {
+	claims := &types.CustomerClaims{}
+	err := types.ValidateCustomerJWT(refreshToken, claims, types.TokenRefresh)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to validate refresh token", err)
 		return nil, wrappedErr
@@ -205,7 +205,7 @@ func (s *authenticationService) CustomerRefreshTokens(refreshToken string) (*uti
 
 	accessClaims := types.MapCustomerToClaimsData(customer)
 
-	accessToken, err := utils.GenerateCustomerJWT(accessClaims, utils.TokenAccess)
+	accessToken, err := types.GenerateCustomerJWT(accessClaims, types.TokenAccess)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to generate access token", err)
 		s.logger.Error(wrappedErr)
@@ -214,14 +214,14 @@ func (s *authenticationService) CustomerRefreshTokens(refreshToken string) (*uti
 
 	customerData := types.MapCustomerToClaimsData(customer)
 
-	refreshToken, err = utils.GenerateCustomerJWT(customerData, utils.TokenRefresh)
+	refreshToken, err = types.GenerateCustomerJWT(customerData, types.TokenRefresh)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to generate access token", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	tokenPair := &utils.TokenPair{
+	tokenPair := &types.TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}

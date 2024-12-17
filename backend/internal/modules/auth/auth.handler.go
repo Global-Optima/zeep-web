@@ -48,16 +48,16 @@ func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
 		return
 	}
 
-	claims := &utils.CustomerClaims{}
-	if err := utils.ValidateCustomerJWT(tokenPair.AccessToken, claims, utils.TokenAccess); err != nil {
+	claims := &types.CustomerClaims{}
+	if err := types.ValidateCustomerJWT(tokenPair.AccessToken, claims, types.TokenAccess); err != nil {
 		utils.SendInternalServerError(c, "failed to validate token")
 		return
 	}
 
 	cfg := config.GetConfig()
 
-	utils.SetCookie(c, utils.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.CustomerAccessTokenTTL)
-	utils.SetCookie(c, utils.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.CustomerRefreshTokenTTL)
+	utils.SetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.CustomerAccessTokenTTL)
+	utils.SetCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.CustomerRefreshTokenTTL)
 
 	utils.SuccessResponse(c, gin.H{
 		"message": "login successful",
@@ -69,7 +69,7 @@ func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) CustomerRefresh(c *gin.Context) {
-	token, err := utils.GetCookie(c, utils.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
+	token, err := types.ExtractToken(c, types.REFRESH_TOKEN_HEADER, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
 	if err != nil {
 		// Token not found in cookie
 		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
@@ -84,8 +84,8 @@ func (h *AuthenticationHandler) CustomerRefresh(c *gin.Context) {
 
 	cfg := config.GetConfig()
 
-	utils.SetCookie(c, utils.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.CustomerAccessTokenTTL)
-	utils.SetCookie(c, utils.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.CustomerRefreshTokenTTL)
+	utils.SetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.CustomerAccessTokenTTL)
+	utils.SetCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.CustomerRefreshTokenTTL)
 
 	utils.SuccessResponse(c, gin.H{
 		"message": "refresh successful",
@@ -97,21 +97,21 @@ func (h *AuthenticationHandler) CustomerRefresh(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) CustomerLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, utils.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
+	token, err := utils.GetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
 	if err != nil {
 		// Token not found in cookie
 		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
 		return
 	}
 
-	claims := &utils.CustomerClaims{}
-	if err := utils.ValidateCustomerJWT(token, claims, utils.TokenAccess); err != nil {
+	claims := &types.CustomerClaims{}
+	if err := types.ValidateCustomerJWT(token, claims, types.TokenAccess); err != nil {
 		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
 		return
 	}
 
-	utils.ClearCookie(c, utils.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
-	utils.ClearCookie(c, utils.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
+	utils.ClearCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
+	utils.ClearCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
 
 	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
 }
@@ -132,16 +132,16 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 
 	logrus.Info(tokenPair.AccessToken)
 
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateEmployeeJWT(tokenPair.AccessToken, claims, utils.TokenAccess); err != nil {
+	claims := &types.EmployeeClaims{}
+	if err := types.ValidateEmployeeJWT(tokenPair.AccessToken, claims, types.TokenAccess); err != nil {
 		utils.SendInternalServerError(c, "failed to validate token "+err.Error())
 		return
 	}
 
 	cfg := config.GetConfig()
 
-	utils.SetCookie(c, utils.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.EmployeeAccessTokenTTL)
-	utils.SetCookie(c, utils.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.EmployeeRefreshTokenTTL)
+	utils.SetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.EmployeeAccessTokenTTL)
+	utils.SetCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.EmployeeRefreshTokenTTL)
 
 	utils.SuccessResponse(c, gin.H{
 		"message": "login successful",
@@ -153,7 +153,7 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
-	refreshToken, err := utils.GetCookie(c, utils.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
+	refreshToken, err := types.ExtractToken(c, types.REFRESH_TOKEN_HEADER, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
 	if err != nil {
 		// Token not found in cookie
 		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
@@ -168,7 +168,7 @@ func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
 
 	cfg := config.GetConfig()
 
-	utils.SetCookie(c, utils.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, newAccessToken, cfg.JWT.CustomerAccessTokenTTL)
+	utils.SetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, newAccessToken, cfg.JWT.CustomerAccessTokenTTL)
 
 	utils.SuccessResponse(c, gin.H{
 		"message": "refresh successful",
@@ -179,21 +179,21 @@ func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) EmployeeLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, utils.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
+	token, err := utils.GetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 	if err != nil {
 		// Token not found in cookie
 		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
 		return
 	}
 
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateEmployeeJWT(token, claims, utils.TokenAccess); err != nil {
+	claims := &types.EmployeeClaims{}
+	if err := types.ValidateEmployeeJWT(token, claims, types.TokenAccess); err != nil {
 		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
 		return
 	}
 
-	utils.ClearCookie(c, utils.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-	utils.ClearCookie(c, utils.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
+	utils.ClearCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
+	utils.ClearCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
 
 	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
 }

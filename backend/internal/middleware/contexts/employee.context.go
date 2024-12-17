@@ -2,22 +2,22 @@ package contexts
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/gin-gonic/gin"
 	"reflect"
 )
 
-const EMPLOYEE_CONTEXT = "Employee"
+const EMPLOYEE_CONTEXT = "EMPLOYEE_CONTEXT"
 
-func GetEmployeeClaimsFromCtx(c *gin.Context) (*utils.EmployeeClaims, error) {
-	var claims *utils.EmployeeClaims
+func GetEmployeeClaimsFromCtx(c *gin.Context) (*types.EmployeeClaims, error) {
+	var claims *types.EmployeeClaims
 
 	ctx, ok := c.Get(EMPLOYEE_CONTEXT)
 	if !ok {
 		return nil, fmt.Errorf("no employee context found")
 	}
 
-	claims, ok = ctx.(*utils.EmployeeClaims)
+	claims, ok = ctx.(*types.EmployeeClaims)
 	if !ok {
 		wrappedErr := fmt.Errorf("error getting employee context: type assertion failed, from <%v> to <%v>", reflect.TypeOf(ctx), reflect.TypeOf(claims))
 		return nil, wrappedErr
@@ -26,6 +26,6 @@ func GetEmployeeClaimsFromCtx(c *gin.Context) (*utils.EmployeeClaims, error) {
 	return claims, nil
 }
 
-func SetEmployeeCtx(c *gin.Context, claims *utils.EmployeeClaims) {
+func SetEmployeeCtx(c *gin.Context, claims *types.EmployeeClaims) {
 	c.Set(EMPLOYEE_CONTEXT, claims)
 }

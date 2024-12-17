@@ -1,6 +1,7 @@
 package product
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -46,7 +47,7 @@ func (s *productService) GetStoreProducts(filter types.ProductFilterDao) ([]type
 func (s *productService) GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error) {
 	productDetails, err := s.repo.GetStoreProductDetails(storeID, productID)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve product", err)
+		wrappedErr := fmt.Errorf("failed to retrieve product for storeID = %d, productID = %d: %w", storeID, productID, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
@@ -85,7 +86,7 @@ func (s *productService) UpdateProduct(dto *types.UpdateStoreProduct) error {
 	product := types.UpdateToProductModel(dto)
 
 	if err := s.repo.UpdateProduct(product); err != nil {
-		wrappedErr := utils.WrapError("failed to update product", err)
+		wrappedErr := fmt.Errorf("failed to update product for productID = %d: %w", dto.ID, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}

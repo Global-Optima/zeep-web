@@ -107,7 +107,7 @@ func (s *employeeService) GetEmployeeByID(employeeID uint) (*types.EmployeeDTO, 
 
 	employee, err := s.repo.GetEmployeeByID(employeeID)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve employee", err)
+		wrappedErr := fmt.Errorf("failed to retrieve employee for employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
@@ -122,11 +122,11 @@ func (s *employeeService) GetEmployeeByID(employeeID uint) (*types.EmployeeDTO, 
 func (s *employeeService) UpdateEmployee(employeeID uint, input types.UpdateEmployeeDTO) error {
 	updateFields, err := types.PrepareUpdateFields(input)
 	if err != nil {
-		return fmt.Errorf("validation failed: %v", err)
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	if err := s.repo.PartialUpdateEmployee(employeeID, updateFields); err != nil {
-		wrappedErr := utils.WrapError("failed to update employee", err)
+		wrappedErr := fmt.Errorf("failed to update employee for employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
@@ -150,7 +150,7 @@ func (s *employeeService) DeleteEmployee(employeeID uint) error {
 	}
 
 	if err := s.repo.DeleteEmployee(employeeID); err != nil {
-		wrappedErr := utils.WrapError("failed to delete employee", err)
+		wrappedErr := fmt.Errorf("failed to delete employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
@@ -186,7 +186,7 @@ func (s *employeeService) UpdatePassword(employeeID uint, input types.UpdatePass
 
 	employee.HashedPassword = hashedPassword
 	if err := s.repo.UpdateEmployee(employee); err != nil {
-		wrappedErr := utils.WrapError("failed to update password", err)
+		wrappedErr := fmt.Errorf("failed to update password for employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}

@@ -2,10 +2,9 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-func MapEmployeeToClaimsData(employee *data.Employee) *utils.EmployeeClaimsData {
+func MapEmployeeToClaimsData(employee *data.Employee) *EmployeeClaimsData {
 	var workplaceID uint
 	var workplaceType data.EmployeeType
 
@@ -17,7 +16,7 @@ func MapEmployeeToClaimsData(employee *data.Employee) *utils.EmployeeClaimsData 
 		workplaceType = data.WarehouseEmployeeType
 	}
 
-	employeeData := utils.EmployeeClaimsData{
+	employeeData := EmployeeClaimsData{
 		ID:           employee.ID,
 		Role:         employee.Role,
 		WorkplaceID:  workplaceID,
@@ -27,8 +26,8 @@ func MapEmployeeToClaimsData(employee *data.Employee) *utils.EmployeeClaimsData 
 	return &employeeData
 }
 
-func MapCustomerToClaimsData(customer *data.Customer) *utils.CustomerClaimsData {
-	customerData := utils.CustomerClaimsData{
+func MapCustomerToClaimsData(customer *data.Customer) *CustomerClaimsData {
+	customerData := CustomerClaimsData{
 		ID:         customer.ID,
 		IsVerified: customer.IsVerified,
 	}

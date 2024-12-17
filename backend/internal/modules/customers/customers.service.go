@@ -1,13 +1,13 @@
 package customers
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
 type CustomerService interface {
-	GetCustomerById(id uint) (*types.CustomerDTO, error)
+	GetCustomerById(id uint) (*types.CustomerAdminDTO, error)
 }
 
 type customerService struct {
@@ -22,13 +22,13 @@ func NewEmployeeService(repo CustomerRepository, logger *zap.SugaredLogger) Cust
 	}
 }
 
-func (s *customerService) GetCustomerById(customerID uint) (*types.CustomerDTO, error) {
+func (s *customerService) GetCustomerById(customerID uint) (*types.CustomerAdminDTO, error) {
 	customer, err := s.repo.GetCustomerByID(customerID)
 	if err != nil {
-		wrappedErr := utils.WrapError("error retrieving customer", err)
+		wrappedErr := fmt.Errorf("error retrieving customer with ID = %d: %w", customerID, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
-	
+
 	return types.MapToCustomerDTO(customer), nil
 }

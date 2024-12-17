@@ -2,17 +2,22 @@ package middleware
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/tokens"
+	authTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func EmployeeAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		zapLogger := logger.GetZapSugaredLogger()
 
-		claims, err := tokens.ExtractEmployeeAccessTokenAndValidate(c)
+		claims, err := authTypes.ExtractEmployeeAccessTokenAndValidate(c)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid token"})
+			zapLogger.Warn("missing or invalid token")
+			utils.SendErrorWithStatus(c, "missing or invalid token", http.StatusUnauthorized)
+			c.Abort()
 			return
 		}
 
@@ -23,10 +28,13 @@ func EmployeeAuth() gin.HandlerFunc {
 
 func CustomerAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		zapLogger := logger.GetZapSugaredLogger()
 
-		claims, err := tokens.ExtractCustomerAccessTokenAndValidate(c)
+		claims, err := authTypes.ExtractCustomerAccessTokenAndValidate(c)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid token"})
+			zapLogger.Warn("missing or invalid token")
+			utils.SendErrorWithStatus(c, "missing or invalid token", http.StatusUnauthorized)
+			c.Abort()
 			return
 		}
 
