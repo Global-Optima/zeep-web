@@ -115,13 +115,11 @@ type StockMaterialPackage struct {
 }
 
 type SupplierMaterial struct {
-	ID              uint          `gorm:"primaryKey;autoIncrement"`
+	BaseEntity
 	StockMaterialID uint          `gorm:"not null;index"`
 	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
 	SupplierID      uint          `gorm:"not null;index"`
 	Supplier        Supplier      `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
-	CreatedAt       time.Time     `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
-	UpdatedAt       time.Time     `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
 }
 
 type SupplierWarehouseDelivery struct {

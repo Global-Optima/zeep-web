@@ -49,12 +49,12 @@ func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) e
 
 	fullItems := s.mergeStockMaterialItems(req.Items, createdStockMaterials)
 
-	deliveries, err := s.createDeliveries(req, existingStockMaterials, createdStockMaterials, fullItems)
+	deliveries, err := s.assembleDeliveries(req, existingStockMaterials, createdStockMaterials, fullItems)
 	if err != nil {
 		return err
 	}
 
-	if err := s.repo.LogAndUpdateStock(deliveries, req.WarehouseID); err != nil {
+	if err := s.repo.RecordDeliveriesAndUpdateStock(deliveries, req.WarehouseID); err != nil {
 		return fmt.Errorf("failed to log incoming inventory: %w", err)
 	}
 
@@ -134,7 +134,7 @@ func (s *inventoryService) GetDeliveries(warehouseID *uint, startDate, endDate *
 }
 
 // Helper methods
-func (s *inventoryService) createDeliveries(
+func (s *inventoryService) assembleDeliveries(
 	req types.ReceiveInventoryRequest,
 	existingStockMaterials map[uint]*data.StockMaterial,
 	newStockMaterials []data.StockMaterial,
