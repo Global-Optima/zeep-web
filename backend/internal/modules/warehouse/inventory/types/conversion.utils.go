@@ -11,7 +11,7 @@ func ConvertInventoryItemsToStockRequest(items []InventoryItem, db *gorm.DB) ([]
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
-		var mapping data.IngredientsMapping
+		var mapping data.IngredientStockMaterialMapping
 		err := db.Where("stock_material_id = ?", item.StockMaterialID).First(&mapping).Error
 		if err != nil {
 			return nil, fmt.Errorf("failed to find ingredient mapping for StockMaterialID %d: %w", item.StockMaterialID, err)

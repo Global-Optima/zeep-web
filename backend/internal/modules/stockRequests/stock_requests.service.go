@@ -53,7 +53,7 @@ func (s *stockRequestService) CreateStockRequest(req types.CreateStockRequestDTO
 
 	ingredients := []data.StockRequestIngredient{}
 	for _, item := range req.Items {
-		var mapping data.IngredientsMapping
+		var mapping data.IngredientStockMaterialMapping
 		if err := s.repo.GetMappingByIngredientID(item.StockMaterialID, &mapping); err != nil {
 			return 0, fmt.Errorf("failed to map ingredient for stock material ID %d: %w", item.StockMaterialID, err)
 		}
@@ -98,7 +98,7 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 
 	if status.Status == data.StockRequestInDelivery {
 		for _, ingredient := range request.Ingredients {
-			var mapping data.IngredientsMapping
+			var mapping data.IngredientStockMaterialMapping
 			if err := s.repo.GetMappingByIngredientID(ingredient.IngredientID, &mapping); err != nil {
 				return fmt.Errorf("failed to map ingredient for stock material ID %d: %w", ingredient.IngredientID, err)
 			}
@@ -111,19 +111,17 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 
 	if status.Status == data.StockRequestCompleted {
 		for _, ingredient := range request.Ingredients {
-			var mapping data.IngredientsMapping
+			var mapping data.IngredientStockMaterialMapping
 			if err := s.repo.GetMappingByIngredientID(ingredient.IngredientID, &mapping); err != nil {
 				return fmt.Errorf("failed to map ingredient for stock material ID %d: %w", ingredient.IngredientID, err)
 			}
 
-			expirationPeriod := mapping.StockMaterial.ExpirationPeriodInDays
-			deliveredDate := time.Now()
-			expirationDate := deliveredDate.AddDate(0, 0, expirationPeriod)
+			dates := types.UpdateIngredientDates{
+				DeliveredDate:  time.Now(),
+				ExpirationDate: time.Now().AddDate(0, 0, mapping.StockMaterial.ExpirationPeriodInDays),
+			}
 
-			ingredient.DeliveredDate = deliveredDate
-			ingredient.ExpirationDate = expirationDate
-
-			if err := s.repo.UpdateStockRequestIngredientDates(&ingredient); err != nil {
+			if err := s.repo.UpdateStockRequestIngredientDates(&dates); err != nil {
 				return fmt.Errorf("failed to update ingredient dates for ingredient ID %d: %w", ingredient.IngredientID, err)
 			}
 
@@ -169,7 +167,7 @@ func (s *stockRequestService) AddStockRequestIngredient(requestID uint, item typ
 		return fmt.Errorf("failed to fetch stock request: %w", err)
 	}
 
-	var mapping data.IngredientsMapping
+	var mapping data.IngredientStockMaterialMapping
 	if err := s.repo.GetMappingByIngredientID(item.StockMaterialID, &mapping); err != nil {
 		return fmt.Errorf("failed to map ingredient for stock material ID %d: %w", item.StockMaterialID, err)
 	}

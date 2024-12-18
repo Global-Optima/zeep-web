@@ -1489,7 +1489,7 @@ VALUES
     ('Vanilla', '50ml vanilla extract bottle', 25, TRUE, 4, 'Flavorings', '555555555555', 1460, TRUE);
 
 
-INSERT INTO ingredients_mapping (ingredient_id, stock_material_id)
+INSERT INTO ingredient_stock_material_mapping (ingredient_id, stock_material_id)
 VALUES
     (2, 1), -- Milk linked to stock material
     (1, 2), -- Sugar linked to stock material

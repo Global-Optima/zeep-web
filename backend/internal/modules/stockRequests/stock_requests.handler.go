@@ -3,7 +3,6 @@ package stockRequests
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -37,38 +36,9 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.StockRequestFilter
 
-	if storeID := c.Query("storeId"); storeID != "" {
-		id, err := strconv.ParseUint(storeID, 10, 64)
-		if err == nil {
-			storeIDUint := uint(id)
-			filter.StoreID = &storeIDUint
-		}
-	}
-
-	if warehouseID := c.Query("warehouseId"); warehouseID != "" {
-		id, err := strconv.ParseUint(warehouseID, 10, 64)
-		if err == nil {
-			warehouseIDUint := uint(id)
-			filter.WarehouseID = &warehouseIDUint
-		}
-	}
-
-	if status := c.Query("status"); status != "" {
-		filter.Status = &status
-	}
-
-	if startDate := c.Query("startDate"); startDate != "" {
-		parsedDate, err := time.Parse(time.RFC3339, startDate)
-		if err == nil {
-			filter.StartDate = &parsedDate
-		}
-	}
-
-	if endDate := c.Query("endDate"); endDate != "" {
-		parsedDate, err := time.Parse(time.RFC3339, endDate)
-		if err == nil {
-			filter.EndDate = &parsedDate
-		}
+	if err := c.ShouldBindJSON(&filter); err != nil {
+		utils.SendBadRequestError(c, err.Error())
+		return
 	}
 
 	requests, err := h.service.GetStockRequests(filter)
@@ -114,7 +84,7 @@ func (h *StockRequestHandler) GetLowStockIngredients(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, ingredients)
+	utils.SuccessResponseWithPagination(c, ingredients, nil) // add pagination
 }
 
 func (h *StockRequestHandler) GetMarketplaceProducts(c *gin.Context) {

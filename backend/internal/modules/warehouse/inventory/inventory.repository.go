@@ -209,7 +209,7 @@ func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.
 			return nil, fmt.Errorf("failed to retrieve stock material for StockMaterialID %d: %w", item.StockMaterialID, err)
 		}
 
-		var mapping data.IngredientsMapping
+		var mapping data.IngredientStockMaterialMapping
 		if err := r.db.Where("stock_material_id = ?", stockMaterial.ID).First(&mapping).Error; err != nil {
 			return nil, fmt.Errorf("failed to retrieve ingredient mapping for StockMaterialID %d: %w", stockMaterial.ID, err)
 		}
@@ -229,7 +229,7 @@ func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.
 }
 
 func (r *inventoryRepository) ResolveIngredientID(stockMaterialID uint) (uint, error) {
-	var mapping data.IngredientsMapping
+	var mapping data.IngredientStockMaterialMapping
 	err := r.db.Where("stock_material_id = ?", stockMaterialID).First(&mapping).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

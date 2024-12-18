@@ -20,6 +20,11 @@ type UpdateStockRequestStatusDTO struct {
 	Status data.StockRequestStatus `json:"status" binding:"required,oneof=CREATED IN_DELIVERY PROCESSED COMPLETED REJECTED"`
 }
 
+type UpdateIngredientDates struct {
+	DeliveredDate  time.Time
+	ExpirationDate time.Time
+}
+
 type StockRequestResponse struct {
 	RequestID     uint                       `json:"requestId"`
 	StoreID       uint                       `json:"storeId"`

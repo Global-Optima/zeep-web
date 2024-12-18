@@ -59,7 +59,7 @@ type StockRequestIngredient struct {
 	ExpirationDate time.Time    `gorm:"not null"`                           // Calculated from DeliveredDate + ExpirationPeriodInDays
 }
 
-type IngredientsMapping struct {
+type IngredientStockMaterialMapping struct {
 	BaseEntity
 	IngredientID    uint          `gorm:"not null;index"`
 	Ingredient      Ingredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`

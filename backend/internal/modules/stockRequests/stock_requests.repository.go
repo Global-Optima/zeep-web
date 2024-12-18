@@ -14,12 +14,12 @@ type StockRequestRepository interface {
 	CreateStockRequest(stockRequest *data.StockRequest) error
 	AddIngredientsToStockRequest(ingredients []data.StockRequestIngredient) error
 	DeleteStockRequestIngredient(ingredientID uint) error
-	UpdateStockRequestIngredientDates(ingredient *data.StockRequestIngredient) error
+	UpdateStockRequestIngredientDates(dates *types.UpdateIngredientDates) error
 
 	GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error)
 	GetStockRequestByID(requestID uint) (*data.StockRequest, error)
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
-	GetMappingByIngredientID(ingredientID uint, mapping *data.IngredientsMapping) error
+	GetMappingByIngredientID(ingredientID uint, mapping *data.IngredientStockMaterialMapping) error
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) error
 	AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantity float64) error
 	GetLastStockRequestDate(storeWarehouseID uint) (*time.Time, error)
@@ -49,12 +49,9 @@ func (r *stockRequestRepository) DeleteStockRequestIngredient(ingredientID uint)
 	return r.db.Delete(&data.StockRequestIngredient{}, ingredientID).Error
 }
 
-func (r *stockRequestRepository) UpdateStockRequestIngredientDates(ingredient *data.StockRequestIngredient) error {
-	return r.db.Model(ingredient).
-		Updates(map[string]interface{}{
-			"delivered_date":  ingredient.DeliveredDate,
-			"expiration_date": ingredient.ExpirationDate,
-		}).Error
+func (r *stockRequestRepository) UpdateStockRequestIngredientDates(dates *types.UpdateIngredientDates) error {
+	return r.db.Model(&data.StockRequestIngredient{}).
+		Updates(dates).Error
 }
 
 func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error) {
@@ -102,7 +99,7 @@ func (r *stockRequestRepository) UpdateStockRequestStatus(stockRequest *data.Sto
 	return r.db.Model(stockRequest).Update("status", stockRequest.Status).Error
 }
 
-func (r *stockRequestRepository) GetMappingByIngredientID(ingredientID uint, mapping *data.IngredientsMapping) error {
+func (r *stockRequestRepository) GetMappingByIngredientID(ingredientID uint, mapping *data.IngredientStockMaterialMapping) error {
 	return r.db.Where("ingredient_id = ?", ingredientID).First(mapping).Error
 }
 
@@ -142,7 +139,7 @@ func (r *stockRequestRepository) GetMarketplaceStockMaterials(storeID uint, filt
 		return nil, fmt.Errorf("failed to retrieve store warehouse for store ID %d: %w", storeID, err)
 	}
 
-	var mappings []data.IngredientsMapping
+	var mappings []data.IngredientStockMaterialMapping
 	query := r.db.Preload("Ingredient.Unit").Preload("StockMaterial")
 
 	if filters.Category != nil {

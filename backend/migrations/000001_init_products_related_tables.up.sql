@@ -543,7 +543,7 @@ CREATE TABLE IF NOT EXISTS packages (
 );
 
 -- Ingredients Mapping Table
-CREATE TABLE IF NOT EXISTS ingredients_mapping (
+CREATE TABLE IF NOT EXISTS ingredient_stock_material_mapping (
     id SERIAL PRIMARY KEY,
     ingredient_id INT NOT NULL REFERENCES ingredients(id) ON DELETE CASCADE,
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
