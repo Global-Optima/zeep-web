@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
@@ -59,6 +60,17 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	{
 		router.GET("", handler.GetProducts)
 		router.GET("/:productId", handler.GetProductDetails)
+	}
+}
+
+func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler) {
+	router := r.Routes.Group("/ingredients")
+	{
+		router.POST("", handler.CreateIngredient)
+		router.PUT("/:id", handler.UpdateIngredient)
+		router.DELETE("/:id", handler.DeleteIngredient)
+		router.GET("/:id", handler.GetIngredientByID)
+		router.GET("", handler.GetIngredients)
 	}
 }
 
