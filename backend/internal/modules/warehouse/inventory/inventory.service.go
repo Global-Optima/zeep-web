@@ -106,7 +106,7 @@ func (s *inventoryService) GetExpiringItems(warehouseID uint, thresholdDays int)
 }
 
 func (s *inventoryService) ExtendExpiration(req types.ExtendExpirationRequest) error {
-	var delivery data.Delivery
+	var delivery data.SupplierWarehouseDelivery
 	if err := s.repo.GetDeliveryByID(req.DeliveryID, &delivery); err != nil {
 		return fmt.Errorf("failed to fetch delivery: %w", err)
 	}
@@ -139,8 +139,8 @@ func (s *inventoryService) createDeliveries(
 	existingStockMaterials map[uint]*data.StockMaterial,
 	newStockMaterials []data.StockMaterial,
 	fullItems []types.InventoryItem,
-) ([]data.Delivery, error) {
-	deliveries := []data.Delivery{}
+) ([]data.SupplierWarehouseDelivery, error) {
+	deliveries := []data.SupplierWarehouseDelivery{}
 	newStockMaterialMap := make(map[uint]*data.StockMaterial)
 
 	for _, stockMaterial := range newStockMaterials {
@@ -172,7 +172,7 @@ func (s *inventoryService) createDeliveries(
 			expirationPeriod = *item.Expiration
 		}
 
-		delivery := data.Delivery{
+		delivery := data.SupplierWarehouseDelivery{
 			StockMaterialID: stockMaterial.ID,
 			SupplierID:      req.SupplierID,
 			WarehouseID:     req.WarehouseID,

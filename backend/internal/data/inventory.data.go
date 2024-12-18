@@ -124,7 +124,7 @@ type SupplierMaterial struct {
 	UpdatedAt       time.Time     `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
 }
 
-type Delivery struct {
+type SupplierWarehouseDelivery struct {
 	BaseEntity
 	StockMaterialID uint          `gorm:"not null;index"`
 	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`

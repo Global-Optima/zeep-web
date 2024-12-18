@@ -168,7 +168,6 @@ func (r *stockRequestRepository) GetAllStockMaterials(storeID uint, filters type
 			Category:        mapping.StockMaterial.Category,
 			Unit:            mapping.Ingredient.Unit.Name,
 			AvailableQty:    quantity,
-			Price:           0, // Set price if applicable
 		})
 	}
 

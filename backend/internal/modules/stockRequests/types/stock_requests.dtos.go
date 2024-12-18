@@ -67,7 +67,6 @@ type StockMaterialDTO struct {
 	Category        string  `json:"category"`
 	Unit            string  `json:"unit"`
 	AvailableQty    float64 `json:"availableQuantity"`
-	Price           float64 `json:"price,omitempty"`
 }
 
 type StockMaterialFilter struct {

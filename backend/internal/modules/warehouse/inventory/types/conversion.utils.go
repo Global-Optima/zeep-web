@@ -26,7 +26,7 @@ func ConvertInventoryItemsToStockRequest(items []InventoryItem, db *gorm.DB) ([]
 	return converted, nil
 }
 
-func DeliveriesToDeliveryResponses(deliveries []data.Delivery) []DeliveryResponse {
+func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) []DeliveryResponse {
 	response := make([]DeliveryResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = DeliveryResponse{
@@ -55,7 +55,7 @@ func StocksToInventoryItems(stocks []data.WarehouseStock) []InventoryItem {
 	return response
 }
 
-func ExpiringItemsToResponses(deliveries []data.Delivery) []UpcomingExpirationResponse {
+func ExpiringItemsToResponses(deliveries []data.SupplierWarehouseDelivery) []UpcomingExpirationResponse {
 	response := make([]UpcomingExpirationResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = UpcomingExpirationResponse{
