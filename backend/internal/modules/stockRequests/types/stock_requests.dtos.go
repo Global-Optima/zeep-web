@@ -61,7 +61,7 @@ type StockRequestFilter struct {
 	EndDate     *time.Time `json:"endDate,omitempty"`
 }
 
-type ProductMarketplaceDTO struct {
+type StockMaterialDTO struct {
 	StockMaterialID uint    `json:"stockMaterialId"`
 	Name            string  `json:"name"`
 	Category        string  `json:"category"`
@@ -70,7 +70,7 @@ type ProductMarketplaceDTO struct {
 	Price           float64 `json:"price,omitempty"`
 }
 
-type MarketplaceFilter struct {
+type StockMaterialFilter struct {
 	Category *string `json:"category,omitempty"`
 	Search   *string `json:"search,omitempty"`
 }

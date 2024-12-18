@@ -13,7 +13,7 @@ type StockRequestService interface {
 	GetStockRequests(filter types.StockRequestFilter) ([]types.StockRequestResponse, error)
 	UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error
 	GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error)
-	GetMarketplaceProducts(storeID uint, filter types.MarketplaceFilter) ([]types.ProductMarketplaceDTO, error)
+	GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
 	AddStockRequestIngredient(requestID uint, item types.StockRequestItemDTO) error
 	DeleteStockRequestIngredient(ingredientID uint) error
 }
@@ -157,8 +157,8 @@ func (s *stockRequestService) GetLowStockIngredients(storeID uint) ([]types.LowS
 	return responses, nil
 }
 
-func (s *stockRequestService) GetMarketplaceProducts(storeID uint, filter types.MarketplaceFilter) ([]types.ProductMarketplaceDTO, error) {
-	return s.repo.GetMarketplaceStockMaterials(storeID, filter)
+func (s *stockRequestService) GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error) {
+	return s.repo.GetAllStockMaterials(storeID, filter)
 }
 
 func (s *stockRequestService) AddStockRequestIngredient(requestID uint, item types.StockRequestItemDTO) error {

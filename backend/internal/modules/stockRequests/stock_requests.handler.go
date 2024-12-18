@@ -87,20 +87,20 @@ func (h *StockRequestHandler) GetLowStockIngredients(c *gin.Context) {
 	utils.SuccessResponseWithPagination(c, ingredients, nil) // add pagination
 }
 
-func (h *StockRequestHandler) GetMarketplaceProducts(c *gin.Context) {
+func (h *StockRequestHandler) GetAllStockMaterials(c *gin.Context) {
 	storeID, err := strconv.Atoi(c.Query("storeId"))
 	if err != nil {
 		utils.SendBadRequestError(c, "Invalid store ID")
 		return
 	}
 
-	var filter types.MarketplaceFilter
+	var filter types.StockMaterialFilter
 	if err = c.ShouldBindQuery(&filter); err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
-	products, err := h.service.GetMarketplaceProducts(uint(storeID), filter)
+	products, err := h.service.GetAllStockMaterials(uint(storeID), filter)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return

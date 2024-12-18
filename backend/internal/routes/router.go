@@ -169,7 +169,7 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 	{
 		router.GET("", handler.GetStockRequests)                                                                                               // Get all stock requests with filtering
 		router.GET("/low-stock", handler.GetLowStockIngredients)                                                                               // Get low-stock ingredients
-		router.GET("/marketplace-products", handler.GetMarketplaceProducts)                                                                    // Get marketplace products
+		router.GET("/marketplace-products", handler.GetAllStockMaterials)                                                                      // Get marketplace products
 		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.CreateStockRequest)                                       // Create a new stock request (cart creation)
 		router.PATCH("/:requestId/status", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStockRequestStatus)                // Update stock request status
 		router.POST("/:requestId/ingredients", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.AddStockRequestIngredient)         // Add ingredient to cart

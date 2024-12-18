@@ -24,7 +24,7 @@ type StockRequestRepository interface {
 	AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantity float64) error
 	GetLastStockRequestDate(storeWarehouseID uint) (*time.Time, error)
 	GetLowStockIngredients(storeWarehouseID uint) ([]data.StoreWarehouseStock, error)
-	GetMarketplaceStockMaterials(storeID uint, filters types.MarketplaceFilter) ([]types.ProductMarketplaceDTO, error)
+	GetAllStockMaterials(storeID uint, filters types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
 }
@@ -133,7 +133,7 @@ func (r *stockRequestRepository) GetLowStockIngredients(storeWarehouseID uint) (
 	return stocks, err
 }
 
-func (r *stockRequestRepository) GetMarketplaceStockMaterials(storeID uint, filters types.MarketplaceFilter) ([]types.ProductMarketplaceDTO, error) {
+func (r *stockRequestRepository) GetAllStockMaterials(storeID uint, filters types.StockMaterialFilter) ([]types.StockMaterialDTO, error) {
 	storeWarehouse, err := r.GetStoreWarehouse(storeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve store warehouse for store ID %d: %w", storeID, err)
@@ -155,14 +155,14 @@ func (r *stockRequestRepository) GetMarketplaceStockMaterials(storeID uint, filt
 		return nil, fmt.Errorf("failed to retrieve ingredient mappings: %w", err)
 	}
 
-	products := []types.ProductMarketplaceDTO{}
+	products := []types.StockMaterialDTO{}
 	for _, mapping := range mappings {
 		quantity, err := r.GetWarehouseStockQuantity(storeWarehouse.WarehouseID, mapping.StockMaterialID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve stock quantity for stock material ID %d: %w", mapping.StockMaterialID, err)
 		}
 
-		products = append(products, types.ProductMarketplaceDTO{
+		products = append(products, types.StockMaterialDTO{
 			StockMaterialID: mapping.StockMaterialID,
 			Name:            mapping.StockMaterial.Name,
 			Category:        mapping.StockMaterial.Category,
