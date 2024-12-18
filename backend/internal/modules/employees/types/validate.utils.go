@@ -75,7 +75,7 @@ func PrepareUpdateFields(input UpdateEmployeeDTO) (map[string]interface{}, error
 	return updateFields, nil
 }
 
-func ParseEmployeeQueryParamsWithPagination(c *gin.Context) (*GetEmployeesFilter, error) {
+func ParseEmployeeQuery(c *gin.Context) (*GetEmployeesFilter, error) {
 	params := &GetEmployeesFilter{}
 
 	err := c.ShouldBindQuery(params)
@@ -84,6 +84,10 @@ func ParseEmployeeQueryParamsWithPagination(c *gin.Context) (*GetEmployeesFilter
 	}
 
 	params.Pagination = utils.ParsePagination(c)
+	params.Sort, err = utils.ParseSortParamsForModel(c, &data.Employee{})
+	if err != nil {
+		return nil, err
+	}
 
 	return params, nil
 }

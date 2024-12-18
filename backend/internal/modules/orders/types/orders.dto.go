@@ -8,10 +8,10 @@ import (
 )
 
 type OrdersFilterQuery struct {
-	Search     *string           `form:"search"`
-	Status     *data.OrderStatus `form:"status"`
-	StoreID    *uint             `form:"storeId"`
-	Pagination *utils.Pagination
+	Search  *string           `form:"search"`
+	Status  *data.OrderStatus `form:"status"`
+	StoreID *uint             `form:"storeId"`
+	utils.BaseFilter
 }
 
 type CreateOrderDTO struct {

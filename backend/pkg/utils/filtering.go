@@ -33,7 +33,52 @@ type Pagination struct {
 
 type Sort struct {
 	Field     string `json:"field"`
-	Direction string `json:"order"`
+	Direction string `json:"direction"`
+}
+
+type FilterProvider interface {
+	GetPagination() *Pagination
+	GetSort() *Sort
+	SetPagination(pagination *Pagination)
+	SetSort(sort *Sort)
+}
+
+type BaseFilter struct {
+	Pagination *Pagination
+	Sort       *Sort
+}
+
+func (b *BaseFilter) SetPagination(pagination *Pagination) {
+	b.Pagination = pagination
+}
+
+func (b *BaseFilter) SetSort(sort *Sort) {
+	b.Sort = sort
+}
+
+func (b *BaseFilter) GetPagination() *Pagination {
+	return b.Pagination
+}
+
+func (b *BaseFilter) GetSort() *Sort {
+	return b.Sort
+}
+
+func ParseQueryWithBaseFilter(c *gin.Context, filter FilterProvider, model interface{}) error {
+	pagination := ParsePagination(c)
+	filter.SetPagination(pagination)
+
+	sortParams, err := ParseSortParamsForModel(c, model)
+	if err != nil {
+		return err
+	}
+	filter.SetSort(sortParams)
+
+	if err := c.ShouldBindQuery(filter); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ApplySortedPaginationForModel[T any](query *gorm.DB, pagination *Pagination, sort *Sort, model T) (*gorm.DB, error) {
@@ -106,14 +151,44 @@ func parsePositiveInt(input string, defaultValue int) (int, error) {
 	return value, nil
 }
 
+func (s *Sort) SortGorm() func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if s == nil {
+			return defaultGormSort(db)
+		}
+
+		validOrders := map[string]bool{"asc": true, "desc": true}
+		order := strings.ToLower(s.Direction)
+		if !validOrders[order] {
+			return defaultGormSort(db)
+		}
+
+		if s.Field == "" {
+			return defaultGormSort(db)
+		}
+
+		field := camelToSnake(s.Field)
+		if field == "" {
+			return defaultGormSort(db)
+		}
+
+		orderClause := fmt.Sprintf("%s %s", field, order)
+		return db.Order(orderClause)
+	}
+}
+
+func defaultGormSort(db *gorm.DB) *gorm.DB {
+	orderClause := fmt.Sprintf("%s %s",
+		camelToSnake(DEFAULT_SORT_PARAMETER), DEFAULT_SORT_DIRECTION)
+	return db.Order(orderClause)
+}
+
 func ParseSortParamsForModel(c *gin.Context, model interface{}) (*Sort, error) {
 	var field, order string
 
-	sortBy := c.Query("sortBy")
-
-	if sortBy == "" {
-		return defaultSort(), nil
-	}
+	defaultQuery := fmt.Sprintf("%s,%s",
+		DEFAULT_SORT_PARAMETER, DEFAULT_SORT_DIRECTION)
+	sortBy := c.DefaultQuery("sortBy", defaultQuery)
 
 	parts := strings.Split(sortBy, ",")
 	if len(parts) == 2 {
@@ -136,13 +211,6 @@ func ParseSortParamsForModel(c *gin.Context, model interface{}) (*Sort, error) {
 		Field:     field,
 		Direction: order,
 	}, nil
-}
-
-func defaultSort() *Sort {
-	return &Sort{
-		Field:     DEFAULT_SORT_PARAMETER,
-		Direction: DEFAULT_SORT_DIRECTION,
-	}
 }
 
 func isSortableField(field string, model interface{}) bool {
@@ -203,32 +271,6 @@ func isSortableField(field string, model interface{}) bool {
 	}
 
 	return true
-}
-
-func (s *Sort) SortGorm() func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if s == nil {
-			return db
-		}
-
-		validOrders := map[string]bool{"asc": true, "desc": true}
-		order := strings.ToLower(s.Direction)
-		if !validOrders[order] {
-			return db
-		}
-
-		if s.Field == "" {
-			return db
-		}
-
-		field := camelToSnake(s.Field)
-		if field == "" {
-			return db
-		}
-
-		orderClause := fmt.Sprintf("%s %s", field, order)
-		return db.Order(orderClause)
-	}
 }
 
 func camelToSnake(fieldName string) string {

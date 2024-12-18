@@ -83,5 +83,5 @@ type GetEmployeesFilter struct {
 	Role        *string `form:"role,omitempty"`
 	StoreID     *uint   `form:"storeId,omitempty"`
 	WarehouseID *uint   `form:"warehouseId,omitempty"`
-	Pagination  *utils.Pagination
+	utils.BaseFilter
 }

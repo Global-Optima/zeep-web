@@ -1,6 +1,8 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type StockDTO struct {
 	ID                uint    `json:"id"`
@@ -14,8 +16,7 @@ type StockDTO struct {
 type GetStockFilterQuery struct {
 	Search       *string `form:"search"`
 	LowStockOnly *bool   `form:"lowStockOnly"`
-	Sort         *utils.Sort
-	Pagination   *utils.Pagination
+	utils.BaseFilter
 }
 
 type UpdateStockDTO struct {

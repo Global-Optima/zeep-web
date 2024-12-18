@@ -2,6 +2,7 @@ package storeWarehouses
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
@@ -74,19 +75,19 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 		return
 	}
 
-	queryParams, err := types.ParseStockParamsWithPagination(c)
-	if err != nil {
+	stockFilter := &types.GetStockFilterQuery{}
+	if err := utils.ParseQueryWithBaseFilter(c, stockFilter, &data.StoreWarehouseStock{}); err != nil {
 		utils.SendBadRequestError(c, "failed to parse pagination parameters")
 		return
 	}
 
-	stockList, err := h.service.GetStockList(uint(storeID), queryParams)
+	stockList, err := h.service.GetStockList(uint(storeID), stockFilter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to to retrieve stock list")
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, stockList, queryParams.Pagination)
+	utils.SendSuccessResponseWithPagination(c, stockList, stockFilter.GetPagination())
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {

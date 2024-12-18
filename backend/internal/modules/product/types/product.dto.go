@@ -74,5 +74,5 @@ type ProductsFilterDto struct {
 	StoreID    *uint   `form:"storeId"`
 	CategoryID *uint   `form:"categoryId"`
 	Search     *string `form:"search"`
-	Pagination *utils.Pagination
+	utils.BaseFilter
 }
