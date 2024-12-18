@@ -11,9 +11,17 @@ import (
 )
 
 type AdditiveRepository interface {
-	GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditives(filter types.AdditiveFilterQuery) ([]data.Additive, error)
+	CreateAdditive(additive *data.Additive) error
+	UpdateAdditive(additive *data.Additive) error
+	DeleteAdditive(additiveID uint) error
+
+	GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
+	CreateAdditiveCategory(category *data.AdditiveCategory) error
+	UpdateAdditiveCategory(category *data.AdditiveCategory) error
+	DeleteAdditiveCategory(categoryID uint) error
+	GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error)
 }
 
 type additiveRepository struct {
@@ -97,4 +105,40 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
 	return &additive, nil
+}
+
+func (r *additiveRepository) CreateAdditive(additive *data.Additive) error {
+	return r.db.Create(additive).Error
+}
+
+func (r *additiveRepository) UpdateAdditive(additive *data.Additive) error {
+	return r.db.Save(additive).Error
+}
+
+func (r *additiveRepository) DeleteAdditive(additiveID uint) error {
+	return r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error
+}
+
+func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCategory) error {
+	return r.db.Create(category).Error
+}
+
+func (r *additiveRepository) UpdateAdditiveCategory(category *data.AdditiveCategory) error {
+	return r.db.Save(category).Error
+}
+
+func (r *additiveRepository) DeleteAdditiveCategory(categoryID uint) error {
+	return r.db.Where("id = ?", categoryID).Delete(&data.AdditiveCategory{}).Error
+}
+
+func (r *additiveRepository) GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error) {
+	var category data.AdditiveCategory
+	err := r.db.Preload("Additives").First(&category, categoryID).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &category, nil
 }

@@ -96,7 +96,19 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.Routes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditives)
-		router.GET("/categories", handler.GetAdditiveCategories)
+		router.POST("", handler.CreateAdditive)
+		router.PUT("", handler.UpdateAdditive)
+		router.DELETE("/:id", handler.DeleteAdditive)
+		router.GET("/:id", handler.GetAdditiveByID)
+
+		additiveCategories := router.Group("/categories")
+		{
+			additiveCategories.GET("", handler.GetAdditiveCategories)
+			additiveCategories.POST("", handler.CreateAdditiveCategory)
+			additiveCategories.PUT("", handler.UpdateAdditiveCategory)
+			additiveCategories.DELETE("/:id", handler.DeleteAdditiveCategory)
+			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
+		}
 	}
 }
 
