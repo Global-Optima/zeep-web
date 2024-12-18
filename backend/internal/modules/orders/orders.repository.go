@@ -1,6 +1,7 @@
 package orders
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,6 +26,8 @@ type OrderRepository interface {
 	AddSubOrderAdditive(subOrderID uint, additive *data.SuborderAdditive) error
 	CheckAllSubordersCompleted(subOrderID uint) (uint, bool, error)
 	GetOrderBySubOrderID(subOrderID uint) (*data.Order, error)
+
+	GetOrderDetails(orderID uint) (*data.Order, error)
 }
 
 type orderRepository struct {
@@ -220,6 +223,26 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch order for suborder %d: %w", subOrderID, err)
+	}
+
+	return &order, nil
+}
+
+func (r *orderRepository) GetOrderDetails(orderID uint) (*data.Order, error) {
+	var order data.Order
+
+	err := r.db.Preload("Suborders.Additives.Additive").
+		Preload("Suborders.ProductSize.Product").
+		Preload("Suborders.ProductSize.Additives.Additive").
+		Preload("DeliveryAddress").
+		Where("id = ?", orderID).
+		First(&order).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to fetch order details: %w", err)
 	}
 
 	return &order, nil

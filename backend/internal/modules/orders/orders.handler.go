@@ -190,3 +190,24 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 
 	HandleClient(uint(storeID), conn, initialOrders)
 }
+
+func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
+	orderID, err := strconv.ParseUint(c.Param("orderId"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid order ID")
+		return
+	}
+
+	orderDetails, err := h.service.GetOrderDetails(uint(orderID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch order details")
+		return
+	}
+
+	if orderDetails == nil {
+		utils.SendNotFoundError(c, "Order not found")
+		return
+	}
+
+	utils.SendSuccessResponse(c, orderDetails)
+}

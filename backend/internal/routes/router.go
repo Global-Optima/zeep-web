@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
@@ -62,6 +63,17 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	}
 }
 
+func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler) {
+	router := r.Routes.Group("/ingredients")
+	{
+		router.POST("", handler.CreateIngredient)
+		router.PUT("/:id", handler.UpdateIngredient)
+		router.DELETE("/:id", handler.DeleteIngredient)
+		router.GET("/:id", handler.GetIngredientByID)
+		router.GET("", handler.GetIngredients)
+	}
+}
+
 func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.Routes.Group("/stores")
 	{
@@ -84,7 +96,19 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.Routes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditives)
-		router.GET("/categories", handler.GetAdditiveCategories)
+		router.POST("", handler.CreateAdditive)
+		router.PUT("", handler.UpdateAdditive)
+		router.DELETE("/:id", handler.DeleteAdditive)
+		router.GET("/:id", handler.GetAdditiveByID)
+
+		additiveCategories := router.Group("/categories")
+		{
+			additiveCategories.GET("", handler.GetAdditiveCategories)
+			additiveCategories.POST("", handler.CreateAdditiveCategory)
+			additiveCategories.PUT("", handler.UpdateAdditiveCategory)
+			additiveCategories.DELETE("/:id", handler.DeleteAdditiveCategory)
+			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
+		}
 	}
 }
 
@@ -113,6 +137,7 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.GET("/:orderId/suborders", handler.GetSubOrders)
 		router.GET("/statuses/count", handler.GetStatusesCount)
 		router.GET("/:orderId/receipt", handler.GeneratePDFReceipt)
+		router.GET("/:orderId", handler.GetOrderDetails)
 	}
 }
 

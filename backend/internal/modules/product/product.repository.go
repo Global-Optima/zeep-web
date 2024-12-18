@@ -140,10 +140,6 @@ func (r *productRepository) GetStoreProductDetails(storeID uint, productID uint)
 	return productDTO, nil
 }
 
-func (r *productRepository) DeleteProduct(productID uint) error {
-	return r.db.Where("id = ?", productID).Delete(&data.Product{}).Error
-}
-
 func (r *productRepository) CreateProduct(product *data.Product) (uint, error) {
 	if err := r.db.Create(product).Error; err != nil {
 		return 0, err
@@ -174,4 +170,16 @@ func (r *productRepository) AssignDefaultAdditives(productID uint, additives []d
 
 func (r *productRepository) UpdateProduct(product *data.Product) error {
 	return r.db.Save(product).Error
+}
+
+func (r *productRepository) UpdateProductSize(productSize *data.ProductSize) error {
+	return r.db.Save(productSize).Error
+}
+
+func (r *productRepository) DeleteProduct(productID uint) error {
+	return r.db.Where("id = ?", productID).Delete(&data.Product{}).Error
+}
+
+func (r *productRepository) DeleteProductSize(productSizeID uint) error {
+	return r.db.Where("id = ?", productSizeID).Delete(&data.ProductSize{}).Error
 }
