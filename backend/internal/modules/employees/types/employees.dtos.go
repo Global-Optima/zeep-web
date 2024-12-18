@@ -1,6 +1,9 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type CreateEmployeeDTO struct {
 	Name             string               `json:"name" binding:"required"`
@@ -75,11 +78,10 @@ type RoleDTO struct {
 	Name string `json:"name"`
 }
 
-type GetEmployeesQuery struct {
-	Type        *string `json:"type,omitempty"`
-	Role        *string `json:"role,omitempty"`
-	StoreID     *uint   `json:"storeId,omitempty"`
-	WarehouseID *uint   `json:"warehouseId,omitempty"`
-	Limit       int     `json:"limit,omitempty"`
-	Offset      int     `json:"offset,omitempty"`
+type GetEmployeesFilter struct {
+	Type        *string `form:"type,omitempty"`
+	Role        *string `form:"role,omitempty"`
+	StoreID     *uint   `form:"storeId,omitempty"`
+	WarehouseID *uint   `form:"warehouseId,omitempty"`
+	Pagination  *utils.Pagination
 }

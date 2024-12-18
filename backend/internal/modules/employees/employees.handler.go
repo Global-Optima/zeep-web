@@ -61,15 +61,17 @@ func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
 }
 
 func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
-	queryParams, err := types.ParseEmployeeQueryParams(c.Request.URL.Query())
+	var queryParams types.GetEmployeesFilter
+
+	err := c.ShouldBindQuery(&queryParams)
 	if err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
 	}
 
-	employees, err := h.service.GetEmployees(*queryParams)
+	employees, err := h.service.GetEmployees(queryParams)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to retrieve employees")
 		return
 	}
 
@@ -86,13 +88,13 @@ func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
 
 	var input types.UpdateEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	err = h.service.UpdateEmployee(uint(id), input)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to update employee")
 		return
 	}
 
@@ -109,7 +111,7 @@ func (h *EmployeeHandler) DeleteEmployee(c *gin.Context) {
 
 	err = h.service.DeleteEmployee(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to delete employee")
 		return
 	}
 
@@ -126,17 +128,17 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 
 	var input types.UpdatePasswordDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	err = h.service.UpdatePassword(uint(id), input)
 	if err != nil {
 		if err.Error() == "incorrect old password" || err.Error() == "password validation failed" {
-			utils.SendBadRequestError(c, err.Error())
+			utils.SendBadRequestError(c, "passwords mismatch")
 			return
 		}
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to update password")
 		return
 	}
 
@@ -146,7 +148,7 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 	roles, err := h.service.GetAllRoles()
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to retrieve roles")
 		return
 	}
 

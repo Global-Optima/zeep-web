@@ -176,16 +176,16 @@ func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetS
 		query = query.Where("ingredients.name ILIKE ?", "%"+*filter.Search+"%")
 	}
 
+	query.Preload("Ingredient").
+		Preload("StoreWarehouse")
+
 	var err error
-	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StoreWarehouseStock{})
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreWarehouseStock{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
 
-	err = query.
-		Preload("Ingredient").
-		Preload("StoreWarehouse").
-		Find(&storeWarehouseStockList).Error
+	err = query.Find(&storeWarehouseStockList).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve stock list: %w", err)
 	}

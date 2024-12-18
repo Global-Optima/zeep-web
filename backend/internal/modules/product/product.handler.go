@@ -49,8 +49,8 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		"storeId":    c.Query("storeId"),
 		"categoryId": c.Query("categoryId"),
 		"search":     c.Query("search"),
-		"limit":      strconv.Itoa(filter.Limit),
-		"offset":     strconv.Itoa(filter.Offset),
+		"page":       strconv.Itoa(filter.Pagination.Page),
+		"pageSize":   strconv.Itoa(filter.Pagination.PageSize),
 	})
 
 	cacheUtil := utils.GetCacheInstance()
@@ -58,7 +58,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	var cachedProducts []types.StoreProductDTO
 	if err := cacheUtil.Get(cacheKey, &cachedProducts); err == nil {
 		if !utils.IsEmpty(cachedProducts) {
-			utils.SendSuccessResponse(c, cachedProducts)
+			utils.SendSuccessResponseWithPagination(c, cachedProducts, filter.Pagination)
 			return
 		}
 	}
@@ -74,7 +74,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		fmt.Printf("Failed to cache products: %v\n", err)
 	}
 
-	utils.SendSuccessResponse(c, products)
+	utils.SendSuccessResponseWithPagination(c, products, filter.Pagination)
 }
 
 func (h *ProductHandler) GetProductDetails(c *gin.Context) {

@@ -1,6 +1,9 @@
 package types
 
-import additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+import (
+	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type StoreProductDTO struct {
 	ID          uint    `json:"id"`
@@ -70,7 +73,6 @@ type UpdateProductSizeDTO struct {
 type ProductsFilterDto struct {
 	StoreID    *uint   `form:"storeId"`
 	CategoryID *uint   `form:"categoryId"`
-	SearchTerm *string `form:"searchTerm"`
-	Limit      int     `form:"limit,default=10"`
-	Offset     int     `form:"offset,default=0"`
+	Search     *string `form:"search"`
+	Pagination *utils.Pagination
 }

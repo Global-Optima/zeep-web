@@ -12,7 +12,7 @@ import (
 
 type EmployeeService interface {
 	CreateEmployee(input types.CreateEmployeeDTO) (*types.EmployeeDTO, error)
-	GetEmployees(query types.GetEmployeesQuery) ([]types.EmployeeDTO, error)
+	GetEmployees(query types.GetEmployeesFilter) ([]types.EmployeeDTO, error)
 	GetEmployeeByID(employeeID uint) (*types.EmployeeDTO, error)
 	UpdateEmployee(employeeID uint, input types.UpdateEmployeeDTO) error
 	DeleteEmployee(employeeID uint) error
@@ -82,7 +82,7 @@ func (s *employeeService) CreateEmployee(input types.CreateEmployeeDTO) (*types.
 	return mapToEmployeeDTO(employee), nil
 }
 
-func (s *employeeService) GetEmployees(query types.GetEmployeesQuery) ([]types.EmployeeDTO, error) {
+func (s *employeeService) GetEmployees(query types.GetEmployeesFilter) ([]types.EmployeeDTO, error) {
 	employees, err := s.repo.GetEmployees(query)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve employees", err)

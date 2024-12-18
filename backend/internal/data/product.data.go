@@ -6,12 +6,12 @@ import (
 
 type Product struct {
 	BaseEntity
-	Name             string                   `gorm:"size:100;not null"`
+	Name             string                   `gorm:"size:100;not null" sort:"name"`
 	Description      string                   `gorm:"type:text"`
 	ImageURL         string                   `gorm:"size:2048"`
 	VideoURL         string                   `gorm:"size:2048"`
 	CategoryID       *uint                    `gorm:"index;not null"`
-	Category         *ProductCategory         `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	Category         *ProductCategory         `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"categories"`
 	RecipeSteps      []RecipeStep             `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 	ProductSizes     []ProductSize            `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 	DefaultAdditives []DefaultProductAdditive `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
@@ -70,12 +70,12 @@ type ItemIngredient struct {
 
 type Ingredient struct {
 	BaseEntity
-	Name      string              `gorm:"size:255;not null;index"`
-	Calories  float64             `gorm:"type:decimal(5,2);check:calories >= 0"`
-	Fat       float64             `gorm:"type:decimal(5,2);check:fat >= 0"`
-	Carbs     float64             `gorm:"type:decimal(5,2);check:carbs >= 0"`
-	Proteins  float64             `gorm:"type:decimal(5,2);check:proteins >= 0"`
-	ExpiresAt *time.Time          `gorm:"type:timestamp"`
+	Name      string              `gorm:"size:255;not null;index" sort:"name"`
+	Calories  float64             `gorm:"type:decimal(5,2);check:calories >= 0" sort:"calories"`
+	Fat       float64             `gorm:"type:decimal(5,2);check:fat >= 0" sort:"fat"`
+	Carbs     float64             `gorm:"type:decimal(5,2);check:carbs >= 0" sort:"carbs"`
+	Proteins  float64             `gorm:"type:decimal(5,2);check:proteins >= 0" sort:"proteins"`
+	ExpiresAt *time.Time          `gorm:"type:timestamp" sort:"expiresAt"`
 	Products  []ProductIngredient `gorm:"foreignKey:ItemIngredientID"`
 }
 

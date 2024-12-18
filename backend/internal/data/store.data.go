@@ -2,10 +2,10 @@ package data
 
 type Store struct {
 	BaseEntity
-	Name              string             `gorm:"size:255;not null"`
+	Name              string             `gorm:"size:255;not null" sort:"name"`
 	FacilityAddressID uint               `gorm:"index;not null"`
 	FacilityAddress   FacilityAddress    `gorm:"foreignKey:FacilityAddressID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-	IsFranchise       bool               `gorm:"default:false"`
+	IsFranchise       bool               `gorm:"default:false" sort:"isFranchise"`
 	AdminID           *uint              `gorm:"index;not null"`
 	ContactPhone      string             `gorm:"size:20"`
 	ContactEmail      string             `gorm:"size:255"`

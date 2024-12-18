@@ -14,6 +14,7 @@ type StockDTO struct {
 type GetStockFilterQuery struct {
 	Search       *string `form:"search"`
 	LowStockOnly *bool   `form:"lowStockOnly"`
+	Sort         *utils.Sort
 	Pagination   *utils.Pagination
 }
 

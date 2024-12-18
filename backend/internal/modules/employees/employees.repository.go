@@ -2,6 +2,7 @@ package employees
 
 import (
 	"errors"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -11,7 +12,7 @@ import (
 
 type EmployeeRepository interface {
 	CreateEmployee(employee *data.Employee) error
-	GetEmployees(query types.GetEmployeesQuery) ([]data.Employee, error)
+	GetEmployees(filter types.GetEmployeesFilter) ([]data.Employee, error)
 	GetStoreEmployees(storeID uint, role *string, limit, offset int) ([]data.Employee, error)
 	GetWarehouseEmployees(warehouseID uint, role *string, limit, offset int) ([]data.Employee, error)
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
@@ -63,35 +64,34 @@ func (r *employeeRepository) CreateEmployee(employee *data.Employee) error {
 	)
 }
 
-func (r *employeeRepository) GetEmployees(query types.GetEmployeesQuery) ([]data.Employee, error) {
+func (r *employeeRepository) GetEmployees(filter types.GetEmployeesFilter) ([]data.Employee, error) {
 	var employees []data.Employee
 	dbQuery := r.db.Where("is_active = TRUE")
 
-	if query.Type != nil {
-		dbQuery = dbQuery.Where("LOWER(type) = ?", strings.ToLower(*query.Type))
+	if filter.Type != nil {
+		dbQuery = dbQuery.Where("LOWER(type) = ?", strings.ToLower(*filter.Type))
 	}
-	if query.StoreID != nil {
+	if filter.StoreID != nil {
 		dbQuery = dbQuery.Joins("LEFT JOIN store_employees ON employees.id = store_employees.employee_id").
-			Where("store_employees.store_id = ?", *query.StoreID)
+			Where("store_employees.store_id = ?", *filter.StoreID)
 	}
-	if query.WarehouseID != nil {
+	if filter.WarehouseID != nil {
 		dbQuery = dbQuery.Joins("LEFT JOIN warehouse_employees ON employees.id = warehouse_employees.employee_id").
-			Where("warehouse_employees.warehouse_id = ?", *query.WarehouseID)
+			Where("warehouse_employees.warehouse_id = ?", *filter.WarehouseID)
 	}
-	if query.Role != nil {
-		dbQuery = dbQuery.Where("LOWER(role) = ?", strings.ToLower(*query.Role))
+	if filter.Role != nil {
+		dbQuery = dbQuery.Where("LOWER(role) = ?", strings.ToLower(*filter.Role))
 	}
 
-	if query.Limit > 0 {
-		dbQuery = dbQuery.Limit(query.Limit)
-	}
-	if query.Offset >= 0 {
-		dbQuery = dbQuery.Offset(query.Offset)
+	var err error
+	dbQuery, err = utils.ApplyPagination(dbQuery, filter.Pagination, &data.Employee{})
+	if err != nil {
+		return nil, err
 	}
 
 	dbQuery = dbQuery.Preload("StoreEmployee").Preload("WarehouseEmployee")
 
-	err := dbQuery.Find(&employees).Error
+	err = dbQuery.Find(&employees).Error
 	if err != nil {
 		return nil, err
 	}

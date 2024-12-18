@@ -32,13 +32,13 @@ func IsValidEmployeeRole(role EmployeeRole) bool {
 
 type Employee struct {
 	BaseEntity
-	Name              string             `gorm:"size:255;not null"`
+	Name              string             `gorm:"size:255;not null" sort:"name"`
 	Phone             string             `gorm:"size:15;unique"`
-	Email             string             `gorm:"size:255;unique"`
+	Email             string             `gorm:"size:255;unique" sort:"email"`
 	HashedPassword    string             `gorm:"size:255;not null"`
-	Role              EmployeeRole       `gorm:"size:50;not null"`
-	Type              EmployeeType       `gorm:"size:50;not null"`
-	IsActive          bool               `gorm:"default:true"`
+	Role              EmployeeRole       `gorm:"size:50;not null" sort:"role"`
+	Type              EmployeeType       `gorm:"size:50;not null" sort:"type"`
+	IsActive          bool               `gorm:"default:true" sort:"isActive"`
 	StoreEmployee     *StoreEmployee     `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee *WarehouseEmployee `gorm:"foreignKey:EmployeeID"`
 }
@@ -47,7 +47,7 @@ type StoreEmployee struct {
 	BaseEntity
 	EmployeeID  uint `gorm:"not null;uniqueIndex"`
 	StoreID     uint `gorm:"not null"`
-	IsFranchise bool `gorm:"default:false"`
+	IsFranchise bool `gorm:"default:false" sort:"isFranchise"`
 }
 
 type WarehouseEmployee struct {
@@ -61,7 +61,7 @@ type EmployeeAudit struct {
 	StartWorkAt *time.Time `gorm:"type:timestamp"`
 	EndWorkAt   *time.Time `gorm:"type:timestamp"`
 	EmployeeID  uint       `gorm:"index;not null"`
-	Employee    Employee   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+	Employee    Employee   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employees"`
 }
 
 type EmployeeWorkday struct {
@@ -70,5 +70,5 @@ type EmployeeWorkday struct {
 	StartAt    string   `gorm:"type:time;not null"`
 	EndAt      string   `gorm:"type:time;not null"`
 	EmployeeID uint     `gorm:"index;not null"`
-	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employees"`
 }

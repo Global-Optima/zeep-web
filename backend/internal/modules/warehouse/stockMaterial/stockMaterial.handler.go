@@ -47,7 +47,7 @@ func (h *StockMaterialHandler) GetAllStockMaterials(c *gin.Context) {
 
 	stockMaterialResponses, err := h.service.GetAllStockMaterials(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to retrieve stock materials")
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 		if err.Error() == "StockMaterial not found" {
 			utils.SendNotFoundError(c, "StockMaterial not found")
 		} else {
-			utils.SendInternalServerError(c, err.Error())
+			utils.SendInternalServerError(c, "failed to retrieve stockMaterial")
 		}
 		return
 	}
@@ -78,13 +78,13 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
 	var req types.CreateStockMaterialRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	stockMaterialResponse, err := h.service.CreateStockMaterial(&req)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to create stockMaterial")
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 
 	var req types.UpdateStockMaterialRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		if err.Error() == "StockMaterial not found" {
 			utils.SendNotFoundError(c, "StockMaterial not found")
 		} else {
-			utils.SendBadRequestError(c, err.Error())
+			utils.SendInternalServerError(c, "failed to update stockMaterial")
 		}
 		return
 	}
@@ -131,7 +131,7 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 		if err.Error() == "StockMaterial not found" {
 			utils.SendNotFoundError(c, "StockMaterial not found")
 		} else {
-			utils.SendInternalServerError(c, err.Error())
+			utils.SendInternalServerError(c, "failed to delete stockMaterial")
 		}
 		return
 	}
@@ -152,7 +152,7 @@ func (h *StockMaterialHandler) DeactivateStockMaterial(c *gin.Context) {
 		if err.Error() == "StockMaterial not found" {
 			utils.SendNotFoundError(c, "StockMaterial not found")
 		} else {
-			utils.SendInternalServerError(c, err.Error())
+			utils.SendInternalServerError(c, "failed to deactivate stockMaterial")
 		}
 		return
 	}

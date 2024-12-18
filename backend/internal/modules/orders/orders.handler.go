@@ -28,13 +28,13 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 
 	filter.Pagination = utils.ParsePagination(c)
 
-	additives, err := h.service.GetOrders(filter)
+	orders, err := h.service.GetOrders(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch orders")
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
+	utils.SendSuccessResponseWithPagination(c, orders, filter.Pagination)
 }
 
 func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {

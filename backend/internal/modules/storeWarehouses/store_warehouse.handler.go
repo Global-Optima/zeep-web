@@ -27,13 +27,13 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	id, err := h.service.AddStock(uint(storeID), &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to add new stock")
 		return
 	}
 
@@ -52,13 +52,13 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	err = h.service.AddMultipleStock(uint(storeID), &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to add new multiple stocks")
 		return
 	}
 
@@ -76,13 +76,13 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 
 	queryParams, err := types.ParseStockParamsWithPagination(c)
 	if err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "failed to parse pagination parameters")
 		return
 	}
 
 	stockList, err := h.service.GetStockList(uint(storeID), queryParams)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to to retrieve stock list")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 
 	ingredients, err := h.service.GetStockById(uint(storeId), uint(stockId))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to retrieve stock")
 		return
 	}
 
@@ -127,13 +127,13 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "failed to bind json body")
 		return
 	}
 
 	err = h.service.UpdateStockById(uint(storeId), uint(stockId), &input)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to update stock")
 		return
 	}
 
@@ -155,7 +155,7 @@ func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
 
 	err = h.service.DeleteStockById(uint(storeId), uint(stockId))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to delete stock")
 		return
 	}
 

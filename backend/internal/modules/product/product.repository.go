@@ -3,6 +3,7 @@ package product
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
@@ -63,14 +64,18 @@ func (r *productRepository) GetStoreProducts(filter types.ProductsFilterDto) ([]
 		query = query.Where("products.category_id = ?", *filter.CategoryID)
 	}
 
-	if filter.SearchTerm != nil {
-		searchPattern := "%" + *filter.SearchTerm + "%"
+	if filter.Search != nil {
+		searchPattern := "%" + *filter.Search + "%"
 		query = query.Where("(products.name ILIKE ? OR products.description ILIKE ?)", searchPattern, searchPattern)
 	}
 
-	err := query.
-		Limit(filter.Limit).
-		Offset(filter.Offset).
+	var err error
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.Product{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
+	}
+
+	err = query.
 		Find(&products).Error
 
 	if err != nil {
@@ -97,7 +102,7 @@ func (r *productRepository) GetStoreProductDetails(storeID uint, productID uint)
 		Error
 
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, gorm.ErrRecordNotFound
 		}
 		return nil, err
@@ -111,7 +116,7 @@ func (r *productRepository) GetStoreProductDetails(storeID uint, productID uint)
 		Error
 
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, gorm.ErrRecordNotFound
 		}
 		return nil, err
