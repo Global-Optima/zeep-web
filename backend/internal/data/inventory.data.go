@@ -86,17 +86,17 @@ type WarehouseStock struct {
 
 type StockMaterial struct {
 	BaseEntity
-	Name                   string   `gorm:"size:255;not null"`
-	Description            string   `gorm:"type:text"`
-	SafetyStock            float64  `gorm:"type:decimal(10,2);not null"`
-	ExpirationFlag         bool     `gorm:"not null"`
-	UnitID                 uint     `gorm:"not null"`
-	Unit                   Unit     `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
-	Category               string   `gorm:"size:255"`
-	Barcode                string   `gorm:"unique;size:255"`
-	ExpirationPeriodInDays int      `gorm:"not null;default:1095"` // 3 years in days
-	IsActive               bool     `gorm:"not null;default:true"`
-	Package                *Package `gorm:"foreignKey:StockMaterialID"`
+	Name                   string                `gorm:"size:255;not null"`
+	Description            string                `gorm:"type:text"`
+	SafetyStock            float64               `gorm:"type:decimal(10,2);not null"`
+	ExpirationFlag         bool                  `gorm:"not null"`
+	UnitID                 uint                  `gorm:"not null"`
+	Unit                   Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
+	Category               string                `gorm:"size:255"`
+	Barcode                string                `gorm:"unique;size:255"`
+	ExpirationPeriodInDays int                   `gorm:"not null;default:1095"` // 3 years in days
+	IsActive               bool                  `gorm:"not null;default:true"`
+	Package                *StockMaterialPackage `gorm:"foreignKey:StockMaterialID"`
 }
 
 type Unit struct {
@@ -105,7 +105,7 @@ type Unit struct {
 	ConversionFactor float64 `gorm:"type:decimal(10,4);not null"` // To base unit
 }
 
-type Package struct {
+type StockMaterialPackage struct {
 	BaseEntity
 	StockMaterialID uint          `gorm:"index"`
 	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`

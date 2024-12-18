@@ -197,23 +197,25 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS product_ingredients (
 		id SERIAL PRIMARY KEY,
-		item_ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
+		quantity DECIMAL(10,2) NOT NULL CHECK (quantity > 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
 
--- ItemIngredients Table
-CREATE TABLE IF NOT EXISTS item_ingredients (
-    id SERIAL PRIMARY KEY,
-    ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-    item_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
-    quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMPTZ
-);
+-- AdditiveIngredients Table 
+CREATE TABLE
+	IF NOT EXISTS additive_ingredients (
+		id SERIAL PRIMARY KEY,
+		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
+		quantity DECIMAL(10,2) NOT NULL CHECK (quantity > 0),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- CityWarehouses Table
 CREATE TABLE
@@ -553,7 +555,7 @@ CREATE TABLE IF NOT EXISTS ingredient_stock_material_mapping (
 );
 
 -- Deliveries Table
-CREATE TABLE IF NOT EXISTS deliveries (
+CREATE TABLE IF NOT EXISTS supplier_warehouse_deliveries (
     id SERIAL PRIMARY KEY,
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     supplier_id INT NOT NULL,
