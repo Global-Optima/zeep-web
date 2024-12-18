@@ -9,6 +9,12 @@ type WarehouseRepository interface {
 	AssignStoreToWarehouse(storeID, warehouseID uint) error
 	ReassignStoreToWarehouse(storeID, newWarehouseID uint) error
 	GetAllStoresByWarehouse(warehouseID uint) ([]data.Store, error)
+
+	CreateWarehouse(warehouse *data.Warehouse, facilityAddress *data.FacilityAddress) error
+	GetWarehouseByID(id uint) (*data.Warehouse, error)
+	GetAllWarehouses() ([]data.Warehouse, error)
+	UpdateWarehouse(warehouse *data.Warehouse) error
+	DeleteWarehouse(id uint) error
 }
 
 type warehouseRepository struct {
@@ -39,4 +45,38 @@ func (r *warehouseRepository) GetAllStoresByWarehouse(warehouseID uint) ([]data.
 		Where("store_warehouses.warehouse_id = ?", warehouseID).
 		Find(&stores).Error
 	return stores, err
+}
+
+func (r *warehouseRepository) CreateWarehouse(warehouse *data.Warehouse, facilityAddress *data.FacilityAddress) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(facilityAddress).Error; err != nil {
+			return err
+		}
+		warehouse.FacilityAddressID = facilityAddress.ID
+		return tx.Create(warehouse).Error
+	})
+}
+
+func (r *warehouseRepository) GetWarehouseByID(id uint) (*data.Warehouse, error) {
+	var warehouse data.Warehouse
+	if err := r.db.Preload("FacilityAddress").First(&warehouse, id).Error; err != nil {
+		return nil, err
+	}
+	return &warehouse, nil
+}
+
+func (r *warehouseRepository) GetAllWarehouses() ([]data.Warehouse, error) {
+	var warehouses []data.Warehouse
+	if err := r.db.Preload("FacilityAddress").Find(&warehouses).Error; err != nil {
+		return nil, err
+	}
+	return warehouses, nil
+}
+
+func (r *warehouseRepository) UpdateWarehouse(warehouse *data.Warehouse) error {
+	return r.db.Save(warehouse).Error
+}
+
+func (r *warehouseRepository) DeleteWarehouse(id uint) error {
+	return r.db.Delete(&data.Warehouse{}, id).Error
 }

@@ -156,11 +156,23 @@ func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
 }
 
 func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
-	router := r.Routes.Group("/warehouse") // store
+	router := r.Routes.Group("/warehouse")
 	{
-		router.POST("/stores", handler.AssignStoreToWarehouse)              // store
-		router.PUT("/stores/:storeId", handler.ReassignStore)               // store
-		router.GET("/:warehouseId/stores", handler.GetAllStoresByWarehouse) // store
+		warehouseRoutes := router.Group("")
+		{
+			warehouseRoutes.POST("", handler.CreateWarehouse)                // Create a new warehouse
+			warehouseRoutes.GET("", handler.GetAllWarehouses)                // Get all warehouses
+			warehouseRoutes.GET("/:warehouseId", handler.GetWarehouseByID)   // Get a specific warehouse by ID
+			warehouseRoutes.PUT("/:warehouseId", handler.UpdateWarehouse)    // Update warehouse details
+			warehouseRoutes.DELETE("/:warehouseId", handler.DeleteWarehouse) // Delete a warehouse
+		}
+
+		storeRoutes := router.Group("/stores")
+		{
+			storeRoutes.POST("", handler.AssignStoreToWarehouse)              // Assign a store to a warehouse
+			storeRoutes.PUT("/:storeId", handler.ReassignStore)               // Reassign a store to another warehouse
+			storeRoutes.GET("/:warehouseId", handler.GetAllStoresByWarehouse) // Get all stores assigned to a specific warehouse
+		}
 	}
 }
 

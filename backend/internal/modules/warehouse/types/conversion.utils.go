@@ -12,3 +12,32 @@ func ConvertToListStoresResponse(stores []data.Store) []ListStoresResponse {
 	}
 	return response
 }
+
+func ToWarehouseResponse(warehouse data.Warehouse) *WarehouseResponse {
+	return &WarehouseResponse{
+		ID:   warehouse.ID,
+		Name: warehouse.Name,
+		FacilityAddress: FacilityAddressDTO{
+			Address:   warehouse.FacilityAddress.Address,
+			Longitude: warehouse.FacilityAddress.Longitude,
+			Latitude:  warehouse.FacilityAddress.Latitude,
+		},
+		CreatedAt: warehouse.CreatedAt.String(),
+		UpdatedAt: warehouse.UpdatedAt.String(),
+	}
+}
+
+func ToFacilityAddressModel(dto FacilityAddressDTO) data.FacilityAddress {
+	return data.FacilityAddress{
+		Address:   dto.Address,
+		Longitude: dto.Longitude,
+		Latitude:  dto.Latitude,
+	}
+}
+
+func ToWarehouseModel(dto CreateWarehouseDTO, facilityAddressID uint) data.Warehouse {
+	return data.Warehouse{
+		FacilityAddressID: facilityAddressID,
+		Name:              dto.Name,
+	}
+}
