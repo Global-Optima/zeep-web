@@ -22,6 +22,8 @@ type OrderService interface {
 	GeneratePDFReceipt(orderID uint) ([]byte, error)
 	GetOrderBySubOrder(subOrderID uint) (*data.Order, error)
 	GetOrderById(orderId uint) (types.OrderDTO, error)
+
+	GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, error)
 }
 
 type orderValidationResults struct {
@@ -311,4 +313,16 @@ func (s *orderService) GetOrderById(orderId uint) (types.OrderDTO, error) {
 
 	orderDTO := types.ConvertOrderToDTO(order)
 	return orderDTO, nil
+}
+
+func (s *orderService) GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, error) {
+	order, err := s.orderRepo.GetOrderDetails(orderID)
+	if err != nil {
+		return nil, err
+	}
+	if order == nil {
+		return nil, nil
+	}
+
+	return types.MapToOrderDetailsDTO(order), nil
 }

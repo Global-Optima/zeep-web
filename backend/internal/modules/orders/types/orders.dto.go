@@ -85,3 +85,49 @@ type SuborderAdditiveDTO struct {
 	CreatedAt  time.Time   `json:"createdAt"`
 	UpdatedAt  time.Time   `json:"updatedAt"`
 }
+
+type OrderDetailsDTO struct {
+	ID              uint                 `json:"id"`
+	CustomerName    *string              `json:"customerName,omitempty"` // Optional
+	Status          string               `json:"status"`
+	Total           float64              `json:"total"`
+	Suborders       []SuborderDetailsDTO `json:"suborders"`
+	DeliveryAddress *DeliveryAddressDTO  `json:"deliveryAddress,omitempty"` // Optional
+}
+
+type SuborderDetailsDTO struct {
+	ID          uint                  `json:"id"`
+	Price       float64               `json:"price"`
+	Status      string                `json:"status"`
+	ProductSize ProductSizeDetailsDTO `json:"productSize"`
+	Additives   []AdditiveDetailsDTO  `json:"additives"`
+}
+
+type ProductSizeDetailsDTO struct {
+	ID        uint              `json:"id"`
+	Name      string            `json:"name"`
+	Measure   string            `json:"measure"`
+	BasePrice float64           `json:"basePrice"`
+	Product   ProductDetailsDTO `json:"product"`
+}
+
+type ProductDetailsDTO struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageURL    string `json:"imageUrl"`
+}
+
+type AdditiveDetailsDTO struct {
+	ID          uint    `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	BasePrice   float64 `json:"basePrice"`
+}
+
+type DeliveryAddressDTO struct {
+	ID        uint   `json:"id"`
+	Address   string `json:"address"`
+	Longitude string `json:"longitude"`
+	Latitude  string `json:"latitude"`
+}

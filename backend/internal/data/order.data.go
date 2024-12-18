@@ -19,14 +19,15 @@ const (
 
 type Order struct {
 	BaseEntity
-	CustomerID        *uint       `gorm:"index"`
-	CustomerName      string      `gorm:"size:255"`
-	EmployeeID        *uint       `gorm:"index"`
-	StoreID           uint        `gorm:"index"`
-	DeliveryAddressID *uint       `gorm:"index"`
-	Status            OrderStatus `gorm:"size:50;not null"`
-	Total             float64     `gorm:"type:decimal(10,2);not null;check:total >= 0"`
-	Suborders         []Suborder  `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
+	CustomerID        *uint           `gorm:"index"`
+	CustomerName      string          `gorm:"size:255"`
+	EmployeeID        *uint           `gorm:"index"`
+	StoreID           uint            `gorm:"index"`
+	DeliveryAddressID *uint           `gorm:"index"`
+	DeliveryAddress   CustomerAddress `gorm:"foreignKey:DeliveryAddressID;constraint:OnDelete:CASCADE"`
+	Status            OrderStatus     `gorm:"size:50;not null"`
+	Total             float64         `gorm:"type:decimal(10,2);not null;check:total >= 0"`
+	Suborders         []Suborder      `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
 }
 
 // Suborder Model
