@@ -53,3 +53,7 @@ func SendBadRequestError(c *gin.Context, message string) {
 func SendNotFoundError(c *gin.Context, message string) {
 	SendErrorWithStatus(c, message, http.StatusNotFound)
 }
+
+func SuccessCreatedResponse(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusCreated, data)
+}

@@ -30,13 +30,13 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"requestId": requestID})
+	utils.SuccessCreatedResponse(c, gin.H{"requestId": requestID})
 }
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.StockRequestFilter
 
-	if err := c.ShouldBindJSON(&filter); err != nil {
+	if err := c.ShouldBindQuery(&filter); err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
@@ -47,7 +47,7 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, requests)
+	utils.SuccessResponseWithPagination(c, requests, nil) // add pagination
 }
 
 func (h *StockRequestHandler) UpdateStockRequestStatus(c *gin.Context) {
@@ -95,11 +95,9 @@ func (h *StockRequestHandler) GetMarketplaceProducts(c *gin.Context) {
 	}
 
 	var filter types.MarketplaceFilter
-	if category := c.Query("category"); category != "" {
-		filter.Category = &category
-	}
-	if search := c.Query("search"); search != "" {
-		filter.Search = &search
+	if err = c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, err.Error())
+		return
 	}
 
 	products, err := h.service.GetMarketplaceProducts(uint(storeID), filter)
@@ -108,7 +106,7 @@ func (h *StockRequestHandler) GetMarketplaceProducts(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, products)
+	utils.SuccessResponseWithPagination(c, products, nil) // add pagination
 }
 
 func (h *StockRequestHandler) AddStockRequestIngredient(c *gin.Context) {
