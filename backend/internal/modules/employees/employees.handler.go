@@ -1,7 +1,9 @@
 package employees
 
 import (
-	authTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
+	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"net/http"
 	"strconv"
 
@@ -16,89 +18,6 @@ type EmployeeHandler struct {
 
 func NewEmployeeHandler(service EmployeeService) *EmployeeHandler {
 	return &EmployeeHandler{service: service}
-}
-
-func (h *EmployeeHandler) CreateEmployee(c *gin.Context) {
-	var input types.CreateEmployeeDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, err.Error())
-		return
-	}
-
-	employee, err := h.service.CreateEmployee(input)
-	if err != nil {
-		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
-			utils.SendBadRequestError(c, err.Error())
-			return
-		}
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	utils.SendSuccessResponse(c, employee)
-}
-
-func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.ParseUint(idParam, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
-		return
-	}
-
-	employee, err := h.service.GetEmployeeByID(uint(id))
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	if employee == nil {
-		utils.SendErrorWithStatus(c, "employee not found", http.StatusNotFound)
-		return
-	}
-
-	c.JSON(http.StatusOK, employee)
-}
-
-func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
-	var queryParams types.GetEmployeesFilter
-
-	err := c.ShouldBindQuery(&queryParams)
-	if err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
-		return
-	}
-
-	employees, err := h.service.GetEmployees(queryParams)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve employees")
-		return
-	}
-
-	utils.SendSuccessResponse(c, employees)
-}
-
-func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.ParseUint(idParam, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
-		return
-	}
-
-	var input types.UpdateEmployeeDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
-	err = h.service.UpdateEmployee(uint(id), input)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to update employee")
-		return
-	}
-
-	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
 }
 
 func (h *EmployeeHandler) DeleteEmployee(c *gin.Context) {
@@ -132,7 +51,7 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdatePassword(uint(id), input)
+	err = h.service.UpdatePassword(uint(id), &input)
 	if err != nil {
 		if err.Error() == "incorrect old password" || err.Error() == "password validation failed" {
 			utils.SendBadRequestError(c, "passwords mismatch")
@@ -156,26 +75,199 @@ func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 }
 
 func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
-	token, err := c.Cookie(authTypes.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		utils.SendErrorWithStatus(c, "access token missing", http.StatusUnauthorized)
+		utils.SendErrorWithStatus(c, "failed to retrieve claims", http.StatusUnauthorized)
 		return
 	}
 
-	claims := &authTypes.EmployeeClaims{}
-	if err := authTypes.ValidateEmployeeJWT(token, claims, authTypes.TokenAccess); err != nil {
-		utils.SendErrorWithStatus(c, "invalid or expired token", http.StatusUnauthorized)
+	var storeEmployee *types.StoreEmployeeDTO
+	var warehouseEmployee *types.WarehouseEmployeeDTO
+
+	switch claims.EmployeeType {
+	case data.StoreEmployeeType:
+		storeEmployee, err = h.service.GetStoreEmployeeByID(claims.EmployeeClaimsData.ID)
+		if err != nil {
+			print(err)
+			utils.SendInternalServerError(c, "failed to fetch employee details")
+			return
+		}
+		utils.SendSuccessResponse(c, storeEmployee)
+	case data.WarehouseEmployeeType:
+		warehouseEmployee, err = h.service.GetWarehouseEmployeeByID(claims.EmployeeClaimsData.ID)
+		if err != nil {
+			print(err)
+			utils.SendInternalServerError(c, "failed to fetch employee details")
+			return
+		}
+		utils.SendSuccessResponse(c, warehouseEmployee)
+	}
+
+	utils.SendBadRequestError(c, fmt.Sprintf("invalid employee type: %v", claims.EmployeeType))
+}
+
+func (h *EmployeeHandler) CreateStoreEmployee(c *gin.Context) {
+	var input types.CreateStoreEmployeeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
-	employee, err := h.service.GetEmployeeByID(claims.EmployeeClaimsData.ID)
+	employee, err := h.service.CreateStoreEmployee(&input)
 	if err != nil {
-		print(err)
-		utils.SendInternalServerError(c, "failed to fetch employee details")
+		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
+			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+			return
+		}
+		utils.SendInternalServerError(c, "failed to create store employee")
 		return
 	}
 
-	print(employee)
 	utils.SendSuccessResponse(c, employee)
+}
+
+func (h *EmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
+	var input types.CreateWarehouseEmployeeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	employee, err := h.service.CreateWarehouseEmployee(&input)
+	if err != nil {
+		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
+			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+			return
+		}
+		utils.SendInternalServerError(c, "failed to create warehouse employee")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employee)
+}
+
+func (h *EmployeeHandler) GetStoreEmployeeByID(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	employee, err := h.service.GetStoreEmployeeByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve store employee details")
+		return
+	}
+
+	if employee == nil {
+		utils.SendErrorWithStatus(c, "employee not found", http.StatusNotFound)
+		return
+	}
+
+	c.JSON(http.StatusOK, employee)
+}
+
+func (h *EmployeeHandler) GetWarehouseEmployeeByID(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	employee, err := h.service.GetWarehouseEmployeeByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve warehouse employee details")
+		return
+	}
+
+	if employee == nil {
+		utils.SendErrorWithStatus(c, "employee not found", http.StatusNotFound)
+		return
+	}
+
+	c.JSON(http.StatusOK, employee)
+}
+
+func (h *EmployeeHandler) GetStoreEmployees(c *gin.Context) {
+	var filter *types.GetStoreEmployeesFilter
+
+	err := utils.ParseQueryWithBaseFilter(c, filter, &data.Employee{})
+	if err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
+
+	employees, err := h.service.GetStoreEmployees(filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve store employees")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employees)
+}
+
+func (h *EmployeeHandler) GetWarehouseEmployees(c *gin.Context) {
+	var filter *types.GetWarehouseEmployeesFilter
+
+	err := utils.ParseQueryWithBaseFilter(c, filter, &data.Employee{})
+	if err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
+
+	employees, err := h.service.GetWarehouseEmployees(filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve warehouse employees")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employees)
+}
+
+func (h *EmployeeHandler) UpdateStoreEmployee(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	var input types.UpdateStoreEmployeeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	err = h.service.UpdateStoreEmployee(uint(id), &input)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to update store employee")
+		return
+	}
+
+	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
+}
+
+func (h *EmployeeHandler) UpdateWarehouseEmployee(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	var input types.UpdateWarehouseEmployeeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	err = h.service.UpdateWarehouseEmployee(uint(id), &input)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to update warehouse employee")
+		return
+	}
+
+	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
 }

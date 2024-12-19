@@ -1179,8 +1179,9 @@ VALUES
 
 -- Insert into Employee
 INSERT INTO
-  employees (
-    name,
+    employees (
+    first_name,
+    last_name,
     phone,
     email,
     role,
@@ -1189,118 +1190,129 @@ INSERT INTO
     hashed_password,
     created_at,
     updated_at
-  )
+)
 VALUES
-  (
-    'Елена Соколова',
-    '79551234567',
-    'elena@example.com',
-    'ADMIN',
-    'STORE',
-    true,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Сергей Павлов',
-    '79667778899',
-    'sergey@example.com',
-    'DIRECTOR',
-    'STORE',
-    true,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Анна Федорова',
-    '79223334455',
-    'anna@example.com',
-    'MANAGER',
-    'STORE',
-    true,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Иван Иванов',
-    '79161234567',
-    'ivan@example.com',
-    'BARISTA',
-    'STORE',
-    true,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Мария Смирнова',
-    '79345566778',
-    'maria@example.com',
-    'WAREHOUSE_EMPLOYEE',
-    'WAREHOUSE',
-    true,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Олег Кузнецов',
-    '79991234567',
-    'oleg@example.com',
-    'WAREHOUSE_EMPLOYEE',
-    'WAREHOUSE',
-    false,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Татьяна Орлова',
-    '79882233445',
-    'tatiana@example.com',
-    'WAREHOUSE_EMPLOYEE',
-    'WAREHOUSE',
-    true,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Алексей Попов',
-    '79002221133',
-    'alexei@example.com',
-    'WAREHOUSE_EMPLOYEE',
-    'WAREHOUSE',
-    true,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Юлия Петрова',
-    '79115555666',
-    'yulia@example.com',
-    'WAREHOUSE_EMPLOYEE',
-    'WAREHOUSE',
-    true,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Дмитрий Фролов',
-    '79553334456',
-    'dmitry@example.com',
-    'WAREHOUSE_EMPLOYEE',
-    'WAREHOUSE',
-    false,
-    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  );
+    (
+        'Елена',
+        'Соколова',
+        '79551234567',
+        'elena@example.com',
+        'ADMIN',
+        'STORE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Сергей',
+        'Павлов',
+        '79667778899',
+        'sergey@example.com',
+        'DIRECTOR',
+        'STORE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Анна',
+        'Федорова',
+        '79223334455',
+        'anna@example.com',
+        'MANAGER',
+        'STORE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Иван',
+        'Иванов',
+        '79161234567',
+        'ivan@example.com',
+        'BARISTA',
+        'STORE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Мария',
+        'Смирнова',
+        '79345566778',
+        'maria@example.com',
+        'WAREHOUSE_EMPLOYEE',
+        'WAREHOUSE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Олег',
+        'Кузнецов',
+        '79991234567',
+        'oleg@example.com',
+        'WAREHOUSE_EMPLOYEE',
+        'WAREHOUSE',
+        false,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Татьяна',
+        'Орлова',
+        '79882233445',
+        'tatiana@example.com',
+        'WAREHOUSE_EMPLOYEE',
+        'WAREHOUSE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Алексей',
+        'Попов',
+        '79002221133',
+        'alexei@example.com',
+        'WAREHOUSE_EMPLOYEE',
+        'WAREHOUSE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Юлия',
+        'Петрова',
+        '79115555666',
+        'yulia@example.com',
+        'WAREHOUSE_EMPLOYEE',
+        'WAREHOUSE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Дмитрий',
+        'Фролов',
+        '79553334456',
+        'dmitry@example.com',
+        'WAREHOUSE_EMPLOYEE',
+        'WAREHOUSE',
+        false,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
+
 
 -- Insert into StoreEmployee
 INSERT INTO
@@ -1544,74 +1556,63 @@ VALUES
   ('L', 1.0),
   ('ml', 0.001);
 
-INSERT INTO
-  stock_materials (
-    name,
-    description,
-    safety_stock,
-    expiration_flag,
-    unit_id,
-    category,
-    barcode,
-    expiration_period_in_days,
-    is_active
-  )
 VALUES
-  (
-    'Milk',
-    '1L pack of milk',
-    50,
-    TRUE,
-    3,
-    'Dairy',
-    '111111111111',
-    1095,
-    TRUE
-  ),
-  (
-    'Sugar',
-    '1kg pack of sugar',
-    20,
-    TRUE,
-    2,
-    'Sweeteners',
-    '222222222222',
-    1095,
-    TRUE
-  ),
-  (
-    'Chocolate',
-    '500g pack of chocolate',
-    15,
-    TRUE,
-    2,
-    'Confectionery',
-    '333333333333',
-    730,
-    TRUE
-  ),
-  (
-    'Cinnamon',
-    '200g pack of cinnamon',
-    10,
-    TRUE,
-    2,
-    'Spices',
-    '444444444444',
-    1460,
-    TRUE
-  ),
-  (
-    'Vanilla',
-    '50ml vanilla extract bottle',
-    25,
-    TRUE,
-    4,
-    'Flavorings',
-    '555555555555',
-    1460,
-    TRUE
-  );
+    (
+        'Молоко',
+        'Упаковка молока 1 литр',
+        50,
+        TRUE,
+        3,
+        'Молочные продукты',
+        '111111111111',
+        1095,
+        TRUE
+    ),
+    (
+        'Сахар',
+        'Упаковка сахара 1 кг',
+        20,
+        TRUE,
+        2,
+        'Сахаросодержащие',
+        '222222222222',
+        1095,
+        TRUE
+    ),
+    (
+        'Шоколад',
+        'Упаковка шоколада 500 г',
+        15,
+        TRUE,
+        2,
+        'Кондитерские изделия',
+        '333333333333',
+        730,
+        TRUE
+    ),
+    (
+        'Корица',
+        'Упаковка корицы 200 г',
+        10,
+        TRUE,
+        2,
+        'Специи',
+        '444444444444',
+        1460,
+        TRUE
+    ),
+    (
+        'Ваниль',
+        'Бутылочка ванильного экстракта 50 мл',
+        25,
+        TRUE,
+        4,
+        'Ароматизаторы',
+        '555555555555',
+        1460,
+        TRUE
+    );
+
 
 INSERT INTO
   ingredients_mapping (ingredient_id, stock_material_id)

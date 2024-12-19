@@ -3,6 +3,8 @@ package storeWarehouses
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
@@ -21,9 +23,9 @@ func NewStoreWarehouseHandler(service StoreWarehouseService) *StoreWarehouseHand
 func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 	var dto types.AddStockDTO
 
-	storeID, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	storeID, err := fetchStoreId(c)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store ID")
+		utils.SendBadRequestError(c, "invalid store warehouse store id")
 		return
 	}
 
@@ -32,7 +34,7 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.AddStock(uint(storeID), &dto)
+	id, err := h.service.AddStock(storeID, &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to add new stock")
 		return
@@ -46,9 +48,9 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 	var dto types.AddMultipleStockDTO
 
-	storeID, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	storeID, err := fetchStoreId(c)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store ID")
+		utils.SendBadRequestError(c, "invalid store warehouse store id")
 		return
 	}
 
@@ -57,7 +59,7 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	err = h.service.AddMultipleStock(uint(storeID), &dto)
+	err = h.service.AddMultipleStock(storeID, &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to add new multiple stocks")
 		return
@@ -69,9 +71,9 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
-	storeID, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	storeID, err := fetchStoreId(c)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store ID")
+		utils.SendBadRequestError(c, "invalid store warehouse store id")
 		return
 	}
 
@@ -81,7 +83,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 		return
 	}
 
-	stockList, err := h.service.GetStockList(uint(storeID), stockFilter)
+	stockList, err := h.service.GetStockList(storeID, stockFilter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to to retrieve stock list")
 		return
@@ -91,9 +93,9 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
-	storeId, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	storeID, err := fetchStoreId(c)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store id")
+		utils.SendBadRequestError(c, "invalid store warehouse store id")
 		return
 	}
 
@@ -103,7 +105,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	ingredients, err := h.service.GetStockById(uint(storeId), uint(stockId))
+	ingredients, err := h.service.GetStockById(storeID, uint(stockId))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve stock")
 		return
@@ -115,7 +117,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 	var input types.UpdateStockDTO
 
-	storeId, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	storeID, err := fetchStoreId(c)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid store warehouse store id")
 		return
@@ -132,7 +134,7 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateStockById(uint(storeId), uint(stockId), &input)
+	err = h.service.UpdateStockById(storeID, uint(stockId), &input)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to update stock")
 		return
@@ -142,9 +144,9 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
-	storeId, err := strconv.ParseUint(c.Param("store_id"), 10, 64)
+	storeID, err := fetchStoreId(c)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse stock id")
+		utils.SendBadRequestError(c, "invalid store warehouse store id")
 		return
 	}
 
@@ -154,11 +156,37 @@ func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteStockById(uint(storeId), uint(stockId))
+	err = h.service.DeleteStockById(storeID, uint(stockId))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to delete stock")
 		return
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "stock deleted successfully"})
+}
+
+func fetchStoreId(c *gin.Context) (uint, error) {
+	employeeClaims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		return 0, err
+	}
+
+	if employeeClaims.Role == data.RoleAdmin || employeeClaims.Role == data.RoleDirector {
+		storeId, err := strconv.ParseUint(c.Query("store_id"), 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		if storeId == 0 {
+			return 0, errors.New("invalid store id: id cannot be 0")
+		}
+		return uint(storeId), nil
+	}
+
+	if employeeClaims.EmployeeType == data.StoreEmployeeType {
+		if employeeClaims.WorkplaceID == 0 {
+			return 0, errors.New("invalid store id: id cannot be 0")
+		}
+		return employeeClaims.WorkplaceID, nil
+	}
+	return 0, fmt.Errorf("invalid employee type: forbidden for %s", data.StoreEmployeeType)
 }

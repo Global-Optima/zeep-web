@@ -54,7 +54,8 @@ func (r *productRepository) GetStoreProducts(filter types.ProductsFilterDto) ([]
 	query := r.db.
 		Model(&data.Product{}).
 		Joins("JOIN store_products ON store_products.product_id = products.id").
-		Preload("ProductSizes", "is_default = TRUE")
+		Preload("ProductSizes", "is_default = TRUE").
+		Preload("ProductSizes.ProductsIngredients")
 
 	if filter.StoreID != nil {
 		query = query.Where("store_products.store_id = ? AND store_products.is_available = TRUE", filter.StoreID)

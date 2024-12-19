@@ -32,7 +32,8 @@ func IsValidEmployeeRole(role EmployeeRole) bool {
 
 type Employee struct {
 	BaseEntity
-	Name              string             `gorm:"size:255;not null" sort:"name"`
+	FirstName         string             `gorm:"size:255;not null" sort:"firstName"`
+	LastName          string             `gorm:"size:255;not null" sort:"lastName"`
 	Phone             string             `gorm:"size:15;unique"`
 	Email             string             `gorm:"size:255;unique" sort:"email"`
 	HashedPassword    string             `gorm:"size:255;not null"`

@@ -115,11 +115,22 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.Routes.Group("/employees")
 	{
-		router.POST("", handler.CreateEmployee)
-		router.GET("", handler.GetEmployees)
+		storeEmployees := router.Group("/store")
+		{
+			storeEmployees.POST("", handler.CreateStoreEmployee)
+			storeEmployees.GET("", handler.GetStoreEmployees)
+			storeEmployees.GET("/:id", handler.GetStoreEmployeeByID)
+			storeEmployees.PUT("/:id", handler.UpdateStoreEmployee)
+		}
+		warehouseEmployees := router.Group("/warehouse")
+		{
+			warehouseEmployees.POST("", handler.CreateWarehouseEmployee)
+			warehouseEmployees.GET("", handler.GetWarehouseEmployees)
+			warehouseEmployees.GET("/:id", handler.GetWarehouseEmployeeByID)
+			warehouseEmployees.PUT("/:id", handler.UpdateWarehouseEmployee)
+		}
+
 		router.GET("/current", handler.GetCurrentEmployee)
-		router.GET("/:id", handler.GetEmployeeByID)
-		router.PUT("/:id", handler.UpdateEmployee)
 		router.DELETE("/:id", handler.DeleteEmployee)
 		router.GET("/roles", handler.GetAllRoles)
 		router.PUT("/:id/password", handler.UpdatePassword)
@@ -153,8 +164,8 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 }
 
 func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
-	router := r.Routes.Group("/store-warehouse-stock/:store_id")
-	router.Use(middleware.EmployeeAuth(), middleware.MatchesStore())
+	router := r.Routes.Group("/store-warehouse-stock")
+	router.Use(middleware.EmployeeAuth())
 	{
 		router.GET("", handler.GetStoreWarehouseStockList)
 		router.GET("/:id", handler.GetStoreWarehouseStockById)

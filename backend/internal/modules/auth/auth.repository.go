@@ -11,15 +11,15 @@ type AuthenticationRepository interface {
 	GetCustomerByPhone(phone string) (*data.Customer, error)
 }
 
-type authorizationRepository struct {
+type authenticationRepository struct {
 	db *gorm.DB
 }
 
-func NewAuthorizationRepository(db *gorm.DB) AuthenticationRepository {
-	return &authorizationRepository{db: db}
+func NewAuthenticationRepository(db *gorm.DB) AuthenticationRepository {
+	return &authenticationRepository{db: db}
 }
 
-func (r *authorizationRepository) CreateCustomer(customer *data.Customer) (uint, error) {
+func (r *authenticationRepository) CreateCustomer(customer *data.Customer) (uint, error) {
 	createdCustomer := &data.Customer{}
 
 	err := r.db.Model(&data.Customer{}).
@@ -32,7 +32,7 @@ func (r *authorizationRepository) CreateCustomer(customer *data.Customer) (uint,
 	return createdCustomer.ID, nil
 }
 
-func (r *authorizationRepository) GetCustomerByPhone(phone string) (*data.Customer, error) {
+func (r *authenticationRepository) GetCustomerByPhone(phone string) (*data.Customer, error) {
 	var customer data.Customer
 	err := r.db.
 		Where("phone = ?", phone).

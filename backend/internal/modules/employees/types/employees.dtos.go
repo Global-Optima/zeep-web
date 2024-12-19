@@ -6,14 +6,23 @@ import (
 )
 
 type CreateEmployeeDTO struct {
-	Name             string               `json:"name" binding:"required"`
-	Phone            string               `json:"phone"`
-	Email            string               `json:"email" binding:"required"`
-	Role             data.EmployeeRole    `json:"role" binding:"required"`
-	Password         string               `json:"password" binding:"required"`
-	Type             data.EmployeeType    `json:"type" binding:"required"`
-	StoreDetails     *StoreDetailsDTO     `json:"storeDetails,omitempty"`
-	WarehouseDetails *WarehouseDetailsDTO `json:"warehouseDetails,omitempty"`
+	FirstName string            `json:"firstName" binding:"required"`
+	LastName  string            `json:"lastName" binding:"required"`
+	Phone     string            `json:"phone"`
+	Email     string            `json:"email" binding:"required"`
+	Role      data.EmployeeRole `json:"role" binding:"required"`
+	Password  string            `json:"password" binding:"required"`
+}
+
+type CreateStoreEmployeeDTO struct {
+	CreateEmployeeDTO
+	StoreID     uint `json:"storeId" binding:"required"`
+	IsFranchise bool `json:"isFranchise,omitempty"`
+}
+
+type CreateWarehouseEmployeeDTO struct {
+	CreateEmployeeDTO
+	WarehouseID uint `json:"warehouseId" binding:"required"`
 }
 
 type StoreDetailsDTO struct {
@@ -26,33 +35,43 @@ type WarehouseDetailsDTO struct {
 }
 
 type UpdateEmployeeDTO struct {
-	Name             *string                    `json:"name,omitempty"`
-	Phone            *string                    `json:"phone,omitempty"`
-	Email            *string                    `json:"email,omitempty"`
-	Role             *data.EmployeeRole         `json:"role,omitempty"`
-	StoreDetails     *UpdateStoreDetailsDTO     `json:"storeDetails,omitempty"`
-	WarehouseDetails *UpdateWarehouseDetailsDTO `json:"warehouseDetails,omitempty"`
+	FirstName *string            `json:"firstName,omitempty"`
+	LastName  *string            `json:"lastName,omitempty"`
+	Phone     *string            `json:"phone,omitempty"`
+	Email     *string            `json:"email,omitempty"`
+	Role      *data.EmployeeRole `json:"role,omitempty"`
 }
 
-type UpdateStoreDetailsDTO struct {
+type UpdateStoreEmployeeDTO struct {
+	UpdateEmployeeDTO
 	StoreID     *uint `json:"storeId,omitempty"`
 	IsFranchise *bool `json:"isFranchise,omitempty"`
 }
 
-type UpdateWarehouseDetailsDTO struct {
+type UpdateWarehouseEmployeeDTO struct {
+	UpdateEmployeeDTO
 	WarehouseID *uint `json:"warehouseId,omitempty"`
 }
 
 type EmployeeDTO struct {
-	ID               uint                         `json:"id"`
-	Name             string                       `json:"name"`
-	Phone            string                       `json:"phone"`
-	Email            string                       `json:"email"`
-	Role             data.EmployeeRole            `json:"role"`
-	IsActive         bool                         `json:"isActive"`
-	Type             data.EmployeeType            `json:"type"`
-	StoreDetails     *StoreEmployeeDetailsDTO     `json:"storeDetails,omitempty"`
-	WarehouseDetails *WarehouseEmployeeDetailsDTO `json:"warehouseDetails,omitempty"`
+	ID        uint              `json:"id"`
+	FirstName string            `json:"firstName"`
+	LastName  string            `json:"lastName"`
+	Phone     string            `json:"phone"`
+	Email     string            `json:"email"`
+	Role      data.EmployeeRole `json:"role"`
+	IsActive  bool              `json:"isActive"`
+}
+
+type StoreEmployeeDTO struct {
+	EmployeeDTO
+	StoreID     uint `json:"storeId"`
+	IsFranchise bool `json:"isFranchise"`
+}
+
+type WarehouseEmployeeDTO struct {
+	EmployeeDTO
+	WarehouseID uint `json:"warehouseId"`
 }
 
 type StoreEmployeeDetailsDTO struct {
@@ -78,10 +97,18 @@ type RoleDTO struct {
 	Name string `json:"name"`
 }
 
-type GetEmployeesFilter struct {
-	Type        *string `form:"type,omitempty"`
+type GetStoreEmployeesFilter struct {
+	StoreID  uint    `form:"storeId" binding:"required"`
+	Role     *string `form:"role,omitempty"`
+	IsActive *bool   `form:"isActive,omitempty"`
+	Search   *string `form:"search,omitempty"`
+	utils.BaseFilter
+}
+
+type GetWarehouseEmployeesFilter struct {
+	WarehouseID uint    `form:"warehouseId" binding:"required"`
 	Role        *string `form:"role,omitempty"`
-	StoreID     *uint   `form:"storeId,omitempty"`
-	WarehouseID *uint   `form:"warehouseId,omitempty"`
+	IsActive    *bool   `form:"isActive,omitempty"`
+	Search      *string `form:"search,omitempty"`
 	utils.BaseFilter
 }

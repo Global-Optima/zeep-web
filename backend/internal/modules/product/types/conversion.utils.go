@@ -69,12 +69,38 @@ func MapToStoreProductDTO(product data.Product) StoreProductDTO {
 		basePrice = product.ProductSizes[0].BasePrice
 	}
 
+	var ingredients []ProductIngredientDTO
+	for _, size := range product.ProductSizes {
+		for _, productIngredient := range size.ProductIngredients {
+			ingredient := productIngredient.Ingredient
+			ingredients = append(ingredients, ProductIngredientDTO{
+				ID:       ingredient.ID,
+				Name:     ingredient.Name,
+				Calories: ingredient.Calories,
+				Fat:      ingredient.Fat,
+				Carbs:    ingredient.Carbs,
+				Proteins: ingredient.Proteins,
+			})
+		}
+	}
+
+	// Remove duplicate ingredients (if necessary)
+	uniqueIngredients := make(map[uint]ProductIngredientDTO)
+	for _, ingredient := range ingredients {
+		uniqueIngredients[ingredient.ID] = ingredient
+	}
+	ingredients = nil
+	for _, ingredient := range uniqueIngredients {
+		ingredients = append(ingredients, ingredient)
+	}
+
 	return StoreProductDTO{
 		ID:          product.ID,
 		Name:        product.Name,
 		Description: product.Description,
 		ImageURL:    product.ImageURL,
 		BasePrice:   basePrice,
+		Ingredients: ingredients,
 	}
 }
 

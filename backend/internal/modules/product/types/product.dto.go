@@ -6,11 +6,21 @@ import (
 )
 
 type StoreProductDTO struct {
-	ID          uint    `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	ImageURL    string  `json:"imageUrl"`
-	BasePrice   float64 `json:"basePrice"`
+	ID          uint                   `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	ImageURL    string                 `json:"imageUrl"`
+	BasePrice   float64                `json:"basePrice"`
+	Ingredients []ProductIngredientDTO `json:"ingredients"`
+}
+
+type ProductIngredientDTO struct {
+	ID       uint    `json:"id"`
+	Name     string  `json:"name"`
+	Calories float64 `json:"calories"`
+	Fat      float64 `json:"fat"`
+	Carbs    float64 `json:"carbs"`
+	Proteins float64 `json:"proteins"`
 }
 
 type StoreProductDetailsDTO struct {

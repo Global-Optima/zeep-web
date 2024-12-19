@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/gin-gonic/gin"
 )
 
 func ValidateEmployee(input CreateEmployeeDTO) error {
-	if input.Name == "" {
+	if input.LastName == "" {
 		return errors.New("employee name cannot be empty")
 	}
 
@@ -25,69 +24,90 @@ func ValidateEmployee(input CreateEmployeeDTO) error {
 		return errors.New("invalid role specified")
 	}
 
-	if input.Type == data.StoreEmployeeType && input.StoreDetails == nil {
+	return nil
+}
+
+func ValidateStoreEmployee(input *CreateStoreEmployeeDTO) error {
+	if err := ValidateEmployee(input.CreateEmployeeDTO); err != nil {
+		return err
+	}
+
+	if input.StoreID == 0 {
 		return errors.New("store details are required for store employees")
 	}
-	if input.Type == data.WarehouseEmployeeType && input.WarehouseDetails == nil {
+
+	return nil
+}
+
+func ValidateWarehouseEmployee(input *CreateWarehouseEmployeeDTO) error {
+	if err := ValidateEmployee(input.CreateEmployeeDTO); err != nil {
+		return err
+	}
+
+	if input.WarehouseID == 0 {
 		return errors.New("warehouse details are required for warehouse employees")
 	}
 
 	return nil
 }
 
-func PrepareUpdateFields(input UpdateEmployeeDTO) (map[string]interface{}, error) {
-	updateFields := map[string]interface{}{}
+func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
+	employee := &data.Employee{}
 
-	if input.Name != nil {
-		updateFields["name"] = *input.Name
+	if input.FirstName != nil {
+		employee.FirstName = *input.FirstName
 	}
 	if input.Phone != nil {
-		updateFields["phone"] = *input.Phone
+		employee.Phone = *input.Phone
 	}
 	if input.Email != nil {
 		if !utils.IsValidEmail(*input.Email) {
-			return nil, errors.New("invalid email format")
+			return employee, errors.New("invalid email format")
 		}
-		updateFields["email"] = *input.Email
+		employee.Email = *input.Email
 	}
 	if input.Role != nil {
 		if !data.IsValidEmployeeRole(*input.Role) {
-			return nil, fmt.Errorf("invalid role: %v", *input.Role)
+			return employee, fmt.Errorf("invalid role: %v", *input.Role)
 		}
-		updateFields["role"] = *input.Role
+		employee.Role = *input.Role
 	}
 
-	if input.StoreDetails != nil {
-		if input.StoreDetails.StoreID != nil {
-			updateFields["store_employee.store_id"] = *input.StoreDetails.StoreID
-		}
-		if input.StoreDetails.IsFranchise != nil {
-			updateFields["store_employee.is_franchise"] = *input.StoreDetails.IsFranchise
-		}
-	}
-
-	if input.WarehouseDetails != nil {
-		if input.WarehouseDetails.WarehouseID != nil {
-			updateFields["warehouse_employee.warehouse_id"] = *input.WarehouseDetails.WarehouseID
-		}
-	}
-
-	return updateFields, nil
+	return employee, nil
 }
 
-func ParseEmployeeQuery(c *gin.Context) (*GetEmployeesFilter, error) {
-	params := &GetEmployeesFilter{}
-
-	err := c.ShouldBindQuery(params)
+func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*data.Employee, error) {
+	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
 	if err != nil {
-		return nil, err
+		return employee, err
 	}
 
-	params.Pagination = utils.ParsePagination(c)
-	params.Sort, err = utils.ParseSortParamsForModel(c, &data.Employee{})
-	if err != nil {
-		return nil, err
+	if input.StoreID != nil {
+		employee.StoreEmployee = &data.StoreEmployee{
+			StoreID: *input.StoreID,
+		}
+	}
+	if input.IsFranchise != nil {
+		if employee.StoreEmployee == nil {
+			employee.StoreEmployee = &data.StoreEmployee{}
+		}
+		employee.StoreEmployee.IsFranchise = *input.IsFranchise
 	}
 
-	return params, nil
+	return employee, nil
+}
+
+func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.Employee, error) {
+	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
+	if err != nil {
+		return employee, err
+	}
+
+	if input.WarehouseID != nil {
+		employee.WarehouseEmployee = &data.WarehouseEmployee{
+			WarehouseID: *input.WarehouseID,
+		}
+	}
+
+	return employee, nil
 }
