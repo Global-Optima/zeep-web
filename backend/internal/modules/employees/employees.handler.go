@@ -191,39 +191,39 @@ func (h *EmployeeHandler) GetWarehouseEmployeeByID(c *gin.Context) {
 }
 
 func (h *EmployeeHandler) GetStoreEmployees(c *gin.Context) {
-	var filter *types.GetStoreEmployeesFilter
+	var filter types.GetStoreEmployeesFilter
 
-	err := utils.ParseQueryWithBaseFilter(c, filter, &data.Employee{})
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Employee{})
 	if err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
 	}
 
-	employees, err := h.service.GetStoreEmployees(filter)
+	employees, err := h.service.GetStoreEmployees(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve store employees")
 		return
 	}
 
-	utils.SendSuccessResponse(c, employees)
+	utils.SendSuccessResponseWithPagination(c, employees, filter.Pagination)
 }
 
 func (h *EmployeeHandler) GetWarehouseEmployees(c *gin.Context) {
-	var filter *types.GetWarehouseEmployeesFilter
+	var filter types.GetWarehouseEmployeesFilter
 
-	err := utils.ParseQueryWithBaseFilter(c, filter, &data.Employee{})
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Employee{})
 	if err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
 	}
 
-	employees, err := h.service.GetWarehouseEmployees(filter)
+	employees, err := h.service.GetWarehouseEmployees(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve warehouse employees")
 		return
 	}
 
-	utils.SendSuccessResponse(c, employees)
+	utils.SendSuccessResponseWithPagination(c, employees, filter.Pagination)
 }
 
 func (h *EmployeeHandler) UpdateStoreEmployee(c *gin.Context) {
@@ -270,4 +270,112 @@ func (h *EmployeeHandler) UpdateWarehouseEmployee(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
+}
+
+func (h *EmployeeHandler) CreateEmployeeWorkday(c *gin.Context) {
+	var workday types.CreateEmployeeWorkdayDTO
+	if err := c.ShouldBindJSON(&workday); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	_, err := h.service.CreateEmployeeWorkDay(&workday)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to create workday")
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "workday created successfully", http.StatusCreated)
+}
+
+func (h *EmployeeHandler) GetEmployeeWorkday(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	workday, err := h.service.GetEmployeeWorkday(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve workday")
+		return
+	}
+
+	utils.SendSuccessResponse(c, workday)
+}
+
+func (h *EmployeeHandler) GetEmployeeWorkdays(c *gin.Context) {
+	var employeeID uint
+
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		utils.SendErrorWithStatus(c, "failed to retrieve employee context", http.StatusUnauthorized)
+		return
+	}
+
+	if claims.Role != data.RoleAdmin && claims.Role != data.RoleDirector {
+		employeeID = claims.EmployeeClaimsData.ID
+	} else {
+		id, err := strconv.ParseUint(c.Query("employeeId"), 10, 64)
+		if err != nil {
+			utils.SendBadRequestError(c, "invalid employee ID")
+			return
+		}
+		employeeID = uint(id)
+	}
+
+	workdays, err := h.service.GetEmployeeWorkdays(employeeID)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve workdays")
+		return
+	}
+
+	utils.SendSuccessResponse(c, workdays)
+}
+
+func (h *EmployeeHandler) UpdateEmployeeWorkday(c *gin.Context) {
+	idParam := c.Param("id")
+	workdayID, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid workday ID")
+		return
+	}
+
+	var updateWorkday types.UpdateEmployeeWorkdayDTO
+	if err := c.ShouldBindJSON(&updateWorkday); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	err = h.service.UpdateEmployeeWorkday(uint(workdayID), &updateWorkday)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to update workday")
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "workday updated successfully", http.StatusOK)
+}
+
+func (h *EmployeeHandler) DeleteEmployeeWorkday(c *gin.Context) {
+	idParam := c.Param("id")
+	workdayID, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid workday ID")
+		return
+	}
+
+	var updateWorkday types.UpdateEmployeeWorkdayDTO
+	if err := c.ShouldBindJSON(&updateWorkday); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	err = h.service.DeleteEmployeeWorkday(uint(workdayID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to delete workday")
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "workday deleted successfully", http.StatusOK)
 }

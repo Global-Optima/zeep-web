@@ -99,8 +99,11 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
-	storageHandler := storage.NewStorageHandler(storageRepo)        // temp
-	storage.RegisterStorageRoutes(apiRouter.Routes, storageHandler) // temp
+	//apiRouter.CustomerRoutes.Use(middleware.CustomerAuth())
+	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
+
+	storageHandler := storage.NewStorageHandler(storageRepo)                // temp
+	storage.RegisterStorageRoutes(apiRouter.EmployeeRoutes, storageHandler) // temp
 
 	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
 	appContainer.MustInitModules()

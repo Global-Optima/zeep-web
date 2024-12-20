@@ -55,7 +55,8 @@ func (r *productRepository) GetStoreProducts(filter types.ProductsFilterDto) ([]
 		Model(&data.Product{}).
 		Joins("JOIN store_products ON store_products.product_id = products.id").
 		Preload("ProductSizes", "is_default = TRUE").
-		Preload("ProductSizes.ProductsIngredients")
+		Preload("ProductSizes.ProductIngredients").
+		Preload("ProductSizes.ProductIngredients.Ingredient")
 
 	if filter.StoreID != nil {
 		query = query.Where("store_products.store_id = ? AND store_products.is_available = TRUE", filter.StoreID)
@@ -67,7 +68,7 @@ func (r *productRepository) GetStoreProducts(filter types.ProductsFilterDto) ([]
 
 	if filter.Search != nil {
 		searchPattern := "%" + *filter.Search + "%"
-		query = query.Where("(products.name ILIKE ? OR products.description ILIKE ?)", searchPattern, searchPattern)
+		query = query.Where("products.name ILIKE ? OR products.description ILIKE ?", searchPattern, searchPattern)
 	}
 
 	var err error

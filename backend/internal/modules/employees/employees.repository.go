@@ -18,11 +18,18 @@ type EmployeeRepository interface {
 	GetTypedEmployeeByID(employeeID uint, employeeType data.EmployeeType) (*data.Employee, error)
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
 	UpdateEmployee(employeeType data.EmployeeType, employee *data.Employee) error
+
 	PartialUpdateEmployee(employeeID uint, employeeType data.EmployeeType, employee *data.Employee) error
 	DeleteEmployeeById(employeeID uint, employeeType data.EmployeeType) error
-
 	GetEmployeeByEmailOrPhone(email string, phone string) (*data.Employee, error)
 	GetAllRoles() ([]data.EmployeeRole, error)
+
+	CreateEmployeeWorkday(employee *data.EmployeeWorkday) (uint, error)
+	GetEmployeeWorkdayByEmployeeAndDay(employeeID uint, day data.Weekday) (*data.EmployeeWorkday, error)
+	GetEmployeeWorkdayByID(workdayID uint) (*data.EmployeeWorkday, error)
+	GetEmployeeWorkdaysByEmployeeID(employeeID uint) ([]data.EmployeeWorkday, error)
+	UpdateEmployeeWorkdayById(workdayID uint, workday *data.EmployeeWorkday) error
+	DeleteEmployeeWorkday(workdayID uint) error
 }
 
 type employeeRepository struct {
@@ -114,8 +121,11 @@ func (r *employeeRepository) GetStoreEmployees(filter *types.GetStoreEmployeesFi
 	var employees []data.Employee
 	query := r.db.Preload("StoreEmployee").Where("is_active = TRUE").
 		Joins("JOIN store_employees ON employees.id = store_employees.employee_id").
-		Where("store_employees.store_id = ?", filter.StoreID).
-		Where("is_active = ?", filter.IsActive != nil && *filter.IsActive)
+		Where("store_employees.store_id = ?", filter.StoreID)
+
+	if filter.IsActive != nil {
+		query = query.Where("is_active = ?", *filter.IsActive)
+	}
 
 	if filter.Role != nil {
 		query = query.Where("employees.role = ?", *filter.Role)
@@ -228,18 +238,14 @@ func (r *employeeRepository) UpdateEmployee(employeeType data.EmployeeType, empl
 // TODO remove redundant?
 func (r *employeeRepository) PartialUpdateEmployee(employeeID uint, employeeType data.EmployeeType, employee *data.Employee) error {
 	if employeeType == data.StoreEmployeeType {
-		if err := r.db.Model(&data.StoreEmployee{}).Where("employee_id = ? AND", employeeID, employeeType).Updates(employee).Error; err != nil {
-			return err
-		}
+		return r.db.Model(&data.Employee{}).Where("id = ? AND type = ?", employeeID, employeeType).Updates(employee).Error
 	}
 
 	if employeeType == data.WarehouseEmployeeType {
-		if err := r.db.Model(&data.WarehouseEmployee{}).Where("employee_id = ?", employeeID).Updates(employee).Error; err != nil {
-			return err
-		}
+		return r.db.Model(&data.Employee{}).Where("id = ? AND type = ?", employeeID, employeeType).Updates(employee).Error
 	}
 
-	return fmt.Errorf("could not identify employee type")
+	return fmt.Errorf("unsupported employee type: %v", employeeType)
 	//return r.db.Model(&data.Employee{}).Where("id = ?", employeeID).Updates(fields).Error
 }
 
@@ -254,4 +260,67 @@ func (r *employeeRepository) GetAllRoles() ([]data.EmployeeRole, error) {
 		data.RoleBarista,
 	}
 	return roles, nil
+}
+
+func (r *employeeRepository) GetEmployeeWorkdayByEmployeeAndDay(employeeID uint, day data.Weekday) (*data.EmployeeWorkday, error) {
+	var workday data.EmployeeWorkday
+
+	if employeeID == 0 {
+		return nil, fmt.Errorf("employeeID cannot be zero")
+	}
+
+	err := r.db.Where("employee_id = ? AND day = ?", employeeID, day).First(&workday).Error
+	if err != nil {
+		return nil, err
+	}
+	return &workday, err
+}
+
+func (r *employeeRepository) CreateEmployeeWorkday(workday *data.EmployeeWorkday) (uint, error) {
+	if workday == nil {
+		return 0, fmt.Errorf("workday is nil")
+	}
+
+	existingWorkday, err := r.GetEmployeeWorkdayByEmployeeAndDay(workday.EmployeeID, workday.Day)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, err
+	}
+	if existingWorkday != nil {
+		return 0, fmt.Errorf("workday for employee %d in %v already exists", workday.EmployeeID, workday.Day)
+	}
+
+	err = r.db.Create(workday).Error
+	if err != nil {
+		return 0, err
+	}
+	return workday.ID, nil
+}
+
+func (r *employeeRepository) GetEmployeeWorkdayByID(workdayID uint) (*data.EmployeeWorkday, error) {
+	var workday data.EmployeeWorkday
+	err := r.db.
+		Preload("Employee").
+		First(&workday, workdayID).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return &workday, nil
+}
+
+func (r *employeeRepository) GetEmployeeWorkdaysByEmployeeID(employeeID uint) ([]data.EmployeeWorkday, error) {
+	var workdays []data.EmployeeWorkday
+	err := r.db.Where("employee_id = ?", employeeID).Find(&workdays).Error
+	if err != nil {
+		return nil, err
+	}
+	return workdays, nil
+}
+
+func (r *employeeRepository) UpdateEmployeeWorkdayById(workdayID uint, workday *data.EmployeeWorkday) error {
+	return r.db.Model(&data.EmployeeWorkday{}).Where("id = ?", workdayID).Updates(workday).Error
+}
+
+func (r *employeeRepository) DeleteEmployeeWorkday(workdayID uint) error {
+	return r.db.Where("id = ?", workdayID).Delete(&data.EmployeeWorkday{}).Error
 }

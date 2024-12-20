@@ -30,11 +30,31 @@ func IsValidEmployeeRole(role EmployeeRole) bool {
 	}
 }
 
+type Weekday string
+
+const (
+	Monday    Weekday = "MONDAY"
+	Tuesday   Weekday = "TUESDAY"
+	Wednesday Weekday = "WEDNESDAY"
+	Thursday  Weekday = "THURSDAY"
+	Friday    Weekday = "FRIDAY"
+	Saturday  Weekday = "SATURDAY"
+	Sunday    Weekday = "SUNDAY"
+)
+
+func IsValidWeekday(weekday Weekday) bool {
+	switch Weekday(weekday) {
+	case Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday:
+		return true
+	}
+	return false
+}
+
 type Employee struct {
 	BaseEntity
 	FirstName         string             `gorm:"size:255;not null" sort:"firstName"`
 	LastName          string             `gorm:"size:255;not null" sort:"lastName"`
-	Phone             string             `gorm:"size:15;unique"`
+	Phone             string             `gorm:"size:16;unique"`
 	Email             string             `gorm:"size:255;unique" sort:"email"`
 	HashedPassword    string             `gorm:"size:255;not null"`
 	Role              EmployeeRole       `gorm:"size:50;not null" sort:"role"`
@@ -67,9 +87,9 @@ type EmployeeAudit struct {
 
 type EmployeeWorkday struct {
 	BaseEntity
-	Day        string   `gorm:"size:15;not null"`
-	StartAt    string   `gorm:"type:time;not null"`
-	EndAt      string   `gorm:"type:time;not null"`
+	Day        Weekday  `gorm:"size:15;not null" sort:"day"`
+	StartAt    string   `gorm:"type:time;not null" sort:"startAt"`
+	EndAt      string   `gorm:"type:time;not null" sort:"endAt"`
 	EmployeeID uint     `gorm:"index;not null"`
 	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employees"`
 }

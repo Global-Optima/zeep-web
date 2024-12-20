@@ -2,6 +2,8 @@ package product
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -20,7 +22,7 @@ func NewProductHandler(service ProductService) *ProductHandler {
 
 func (h *ProductHandler) GetProducts(c *gin.Context) {
 	var filter types.ProductsFilterDto
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
 		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
@@ -46,9 +48,9 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	}
 
 	cacheKey := utils.BuildCacheKey("storeProducts", map[string]string{
-		"storeId":    c.Query("storeId"),
-		"categoryId": c.Query("categoryId"),
-		"search":     c.Query("search"),
+		"storeId":    c.DefaultQuery("storeId", ""),
+		"categoryId": c.DefaultQuery("categoryId", ""),
+		"search":     c.DefaultQuery("search", ""),
 		"page":       strconv.Itoa(filter.Pagination.Page),
 		"pageSize":   strconv.Itoa(filter.Pagination.PageSize),
 	})
@@ -124,4 +126,16 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, productDetails)
+}
+
+func (h *ProductHandler) CreateProduct(c *gin.Context) {
+	var input *types.CreateStoreProduct
+
+	err := h.service.CreateProduct(input)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }

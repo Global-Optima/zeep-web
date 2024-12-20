@@ -1,6 +1,7 @@
 package additives
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
@@ -95,7 +96,7 @@ func (h *AdditiveHandler) GetAdditiveCategoryByID(c *gin.Context) {
 
 func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 	var filter types.AdditiveFilterQuery
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Additive{}); err != nil {
 		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}

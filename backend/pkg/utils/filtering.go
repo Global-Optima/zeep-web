@@ -65,6 +65,10 @@ func (b *BaseFilter) GetSort() *Sort {
 }
 
 func ParseQueryWithBaseFilter(c *gin.Context, filter FilterProvider, model interface{}) error {
+	if filter == nil {
+		return fmt.Errorf("filter cannot be a nil pointer")
+	}
+
 	pagination := ParsePagination(c)
 	filter.SetPagination(pagination)
 

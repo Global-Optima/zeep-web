@@ -112,3 +112,23 @@ type GetWarehouseEmployeesFilter struct {
 	Search      *string `form:"search,omitempty"`
 	utils.BaseFilter
 }
+
+type CreateEmployeeWorkdayDTO struct {
+	Day        data.Weekday `json:"day" binding:"required"`
+	StartAt    string       `json:"startAt"`
+	EndAt      string       `json:"endAt"`
+	EmployeeID uint         `json:"employeeId"`
+}
+
+type EmployeeWorkdayDTO struct {
+	ID         uint         `json:"id"`
+	Day        data.Weekday `json:"day"`
+	StartAt    string       `json:"startAt"`
+	EndAt      string       `json:"endAt"`
+	EmployeeID uint         `json:"employeeId"`
+}
+
+type UpdateEmployeeWorkdayDTO struct {
+	StartAt *string `json:"startAt,omitempty"`
+	EndAt   *string `json:"endAt,omitempty"`
+}

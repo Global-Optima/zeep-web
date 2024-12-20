@@ -83,7 +83,7 @@ func (r *additiveRepository) GetAdditives(filter types.AdditiveFilterQuery) ([]d
 	}
 
 	var err error
-	query, err = utils.ApplyPagination(query, filter.Pagination, &data.Additive{})
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Additive{})
 	if err != nil {
 		return nil, err
 	}

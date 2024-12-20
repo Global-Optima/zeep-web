@@ -13,7 +13,7 @@ type AdditiveFilterQuery struct {
 	MaxPrice      *float64 `form:"maxPrice"`
 	CategoryID    *uint    `form:"categoryId"`
 	ProductSizeID *uint    `form:"productSizeId"`
-	Pagination    *utils.Pagination
+	utils.BaseFilter
 }
 
 type AdditiveDTO struct {

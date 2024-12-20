@@ -6,9 +6,10 @@ import (
 
 type Customer struct {
 	BaseEntity
-	Name       string            `gorm:"size:255;not null" sort:"name"`
+	FirstName  string            `gorm:"size:255;not null" sort:"firstName"`
+	LastName   string            `gorm:"size:255;not null" sort:"lastName"`
 	Password   string            `gorm:"size:255;not null"`
-	Phone      string            `gorm:"size:15;unique"`
+	Phone      string            `gorm:"size:16;unique"`
 	IsVerified bool              `gorm:"default:false" sort:"isVerified"`
 	IsBanned   bool              `gorm:"default:false" sort:"isBanned"`
 	Addresses  []CustomerAddress `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`

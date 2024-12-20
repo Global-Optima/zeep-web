@@ -226,7 +226,8 @@ VALUES
     'Природная и газированная минеральная вода'
   ),
   ('Фраппе', 'Кофейные напитки со льдом'),
-  ('Травяные чаи', 'Настои и чаи на травах');
+  ('Травяные чаи', 'Настои и чаи на травах'),
+  ('Круассаны', 'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе');;
 
 -- Insert into AdditiveCategory
 INSERT INTO
@@ -418,6 +419,20 @@ VALUES
     'https://static.vecteezy.com/system/resources/thumbnails/027/145/750/small_2x/iced-caramel-latte-topped-with-whipped-cream-and-caramel-sauce-perfect-for-drink-catalog-ai-generated-png.png',
     'https://example.com/videos/caramel-latte.mp4',
     2
+  ),
+  (
+      'Круассан с шоколадом',
+      'Нежный хрустящий круассан с шоколадной начинкой',
+      'https://www.pngplay.com/wp-content/uploads/15/Pain-Au-Chocolat-Transparent-PNG.png',
+      NULL,
+      13
+  ),
+  (
+      'Круассан с миндалем',
+      'Ароматный круассан с миндальной начинкой и посыпкой',
+      'https://www.pngplay.com/wp-content/uploads/15/Croissants-Transparent-Image.png',
+      NULL,
+      13
   );
 
 -- Insert into RecipeStep
@@ -1153,29 +1168,33 @@ VALUES
 -- Фисташки
 -- Insert into Customer
 INSERT INTO
-  customers (name, password, phone, is_verified, is_banned)
+    customers (first_name, last_name, password, phone, is_verified, is_banned)
 VALUES
-  (
-    'Иван Иванов',
-    'hashed_password_123',
-    '79031234567',
-    true,
-    false
-  ),
-  (
-    'Мария Смирнова',
-    'hashed_password_456',
-    '79876543210',
-    false,
-    false
-  ),
-  (
-    'Алексей Петров',
-    'hashed_password_789',
-    '79998887766',
-    true,
-    false
-  );
+    (
+        'Иван',
+        'Иванов',
+        'hashed_password_123',
+        '79031234567',
+        true,
+        false
+    ),
+    (
+        'Мария',
+        'Смирнова',
+        'hashed_password_456',
+        '79876543210',
+        false,
+        false
+    ),
+    (
+        'Алексей',
+        'Петров',
+        'hashed_password_789',
+        '79998887766',
+        true,
+        false
+    );
+
 
 -- Insert into Employee
 INSERT INTO
@@ -1556,6 +1575,18 @@ VALUES
   ('L', 1.0),
   ('ml', 0.001);
 
+INSERT INTO
+    stock_materials (
+    name,
+    description,
+    safety_stock,
+    expiration_flag,
+    unit_id,
+    category,
+    barcode,
+    expiration_period_in_days,
+    is_active
+)
 VALUES
     (
         'Молоко',

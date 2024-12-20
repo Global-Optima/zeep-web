@@ -129,7 +129,8 @@ func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDT
 	}
 
 	customer := &data.Customer{
-		Name:       input.Name,
+		FirstName:  input.FirstName,
+		LastName:   input.LastName,
 		Password:   hashedPassword,
 		Phone:      input.Phone,
 		IsVerified: false,

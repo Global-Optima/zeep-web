@@ -23,6 +23,12 @@ type EmployeeService interface {
 	DeleteEmployee(employeeID uint) error
 	UpdatePassword(employeeID uint, input *types.UpdatePasswordDTO) error
 	GetAllRoles() ([]types.RoleDTO, error)
+
+	CreateEmployeeWorkDay(dto *types.CreateEmployeeWorkdayDTO) (uint, error)
+	GetEmployeeWorkday(workdayID uint) (*types.EmployeeWorkdayDTO, error)
+	GetEmployeeWorkdays(employeeID uint) ([]types.EmployeeWorkdayDTO, error)
+	UpdateEmployeeWorkday(workdayID uint, dto *types.UpdateEmployeeWorkdayDTO) error
+	DeleteEmployeeWorkday(workdayID uint) error
 }
 
 type employeeService struct {
@@ -39,12 +45,14 @@ func NewEmployeeService(repo EmployeeRepository, logger *zap.SugaredLogger) Empl
 
 func (s *employeeService) CreateStoreEmployee(input *types.CreateStoreEmployeeDTO) (*types.StoreEmployeeDTO, error) {
 	if err := types.ValidateStoreEmployee(input); err != nil {
+		s.logger.Error(err)
 		return nil, err
 	}
 
 	hashedPassword, err := s.createNewEmployeePassword(&input.CreateEmployeeDTO)
 	if err != nil {
 		wrappedErr := utils.WrapError("error creating employee", err)
+		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
@@ -294,4 +302,96 @@ func (s *employeeService) GetAllRoles() ([]types.RoleDTO, error) {
 		}
 	}
 	return roleDTOs, nil
+}
+
+func (s *employeeService) CreateEmployeeWorkDay(dto *types.CreateEmployeeWorkdayDTO) (uint, error) {
+	if err := types.ValidateEmployeeWorkday(dto); err != nil {
+		return 0, utils.WrapError("invalid employee work day", err)
+	}
+
+	existingWorkday, err := s.repo.GetEmployeeWorkdayByEmployeeAndDay(dto.EmployeeID, dto.Day)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		wrappedErr := utils.WrapError("failed to check existing workday", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
+	// If workday exists, return an error
+	if existingWorkday != nil {
+		errMsg := "workday already exists for this employee on the given day"
+		s.logger.Error(errMsg)
+		return 0, fmt.Errorf(errMsg)
+	}
+
+	// If no existing workday, create a new one
+	workday := &data.EmployeeWorkday{
+		Day:        dto.Day,
+		StartAt:    dto.StartAt,
+		EndAt:      dto.EndAt,
+		EmployeeID: dto.EmployeeID,
+	}
+
+	// Create the new workday
+	id, err := s.repo.CreateEmployeeWorkday(workday)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to create employee workday", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	return id, nil
+}
+
+func (s *employeeService) GetEmployeeWorkday(workdayID uint) (*types.EmployeeWorkdayDTO, error) {
+	workday, err := s.repo.GetEmployeeWorkdayByID(workdayID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve employee workday", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dto := types.MapToEmployeeWorkday(workday)
+	return dto, nil
+}
+
+func (s *employeeService) GetEmployeeWorkdays(employeeID uint) ([]types.EmployeeWorkdayDTO, error) {
+	workdays, err := s.repo.GetEmployeeWorkdaysByEmployeeID(employeeID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve employee workdays", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	dtos := make([]types.EmployeeWorkdayDTO, len(workdays))
+	for i, workday := range workdays {
+		dtos[i] = *types.MapToEmployeeWorkday(&workday)
+	}
+
+	return dtos, nil
+}
+
+func (s *employeeService) UpdateEmployeeWorkday(workdayID uint, dto *types.UpdateEmployeeWorkdayDTO) error {
+	workday, err := types.WorkdaysUpdateFields(dto)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update employee workday", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	err = s.repo.UpdateEmployeeWorkdayById(workdayID, workday)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update employee workday", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+	return nil
+}
+
+func (s *employeeService) DeleteEmployeeWorkday(workdayID uint) error {
+	// Delete the workday by ID
+	err := s.repo.DeleteEmployeeWorkday(workdayID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to delete employee workday", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+	return nil
 }

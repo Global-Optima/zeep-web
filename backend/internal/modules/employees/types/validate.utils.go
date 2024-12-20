@@ -8,20 +8,26 @@ import (
 )
 
 func ValidateEmployee(input CreateEmployeeDTO) error {
-	if input.LastName == "" {
-		return errors.New("employee name cannot be empty")
+	if input.LastName == "" || input.FirstName == "" {
+		return errors.New("employee name cannot contain empty values")
 	}
 
 	if !utils.IsValidEmail(input.Email) {
 		return errors.New("invalid email format")
 	}
 
+	if input.Phone != "" {
+		if !utils.IsValidPhone(input.Phone, "") {
+			return errors.New("invalid phone number format")
+		}
+	}
+
 	if err := utils.IsValidPassword(input.Password); err != nil {
 		return fmt.Errorf("password validation failed: %v", err)
 	}
 
-	if data.IsValidEmployeeRole(input.Role) {
-		return errors.New("invalid role specified")
+	if !data.IsValidEmployeeRole(input.Role) {
+		return fmt.Errorf("invalid role specified: %s", input.Role)
 	}
 
 	return nil
@@ -57,8 +63,13 @@ func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
 	if input.FirstName != nil {
 		employee.FirstName = *input.FirstName
 	}
+	if input.LastName != nil {
+		employee.LastName = *input.LastName
+	}
 	if input.Phone != nil {
-		employee.Phone = *input.Phone
+		if utils.IsValidPhone(*input.Phone, "") {
+			employee.Phone = utils.FormatPhoneInput(*input.Phone)
+		}
 	}
 	if input.Email != nil {
 		if !utils.IsValidEmail(*input.Email) {
@@ -110,4 +121,44 @@ func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.Emp
 	}
 
 	return employee, nil
+}
+
+func ValidateEmployeeWorkday(input *CreateEmployeeWorkdayDTO) error {
+	if !data.IsValidWeekday(input.Day) {
+		return fmt.Errorf("not a valid weekday: %s", input.Day)
+	}
+
+	if err := utils.ValidateTime(input.StartAt); err != nil {
+		return fmt.Errorf("start at validation failed: %v", err)
+	}
+
+	if err := utils.ValidateTime(input.EndAt); err != nil {
+		return fmt.Errorf("end at validation failed: %v", err)
+	}
+
+	if input.EmployeeID == 0 {
+		return fmt.Errorf("employee ID cannot be zero")
+	}
+
+	return nil
+}
+
+func WorkdaysUpdateFields(input *UpdateEmployeeWorkdayDTO) (*data.EmployeeWorkday, error) {
+	workday := &data.EmployeeWorkday{}
+
+	if input.StartAt != nil {
+		if err := utils.ValidateTime(*input.StartAt); err != nil {
+			return nil, err
+		}
+		workday.StartAt = *input.StartAt
+	}
+
+	if input.EndAt != nil {
+		if err := utils.ValidateTime(*input.EndAt); err != nil {
+			return nil, err
+		}
+		workday.EndAt = *input.EndAt
+	}
+
+	return workday, nil
 }

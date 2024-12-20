@@ -100,14 +100,15 @@ CREATE TABLE
 		facility_address_id INT REFERENCES facility_addresses (id),
 		is_franchise BOOLEAN DEFAULT FALSE,
 		status VARCHAR(20) DEFAULT 'ACTIVE',
-		contact_phone VARCHAR(20) UNIQUE,
+		contact_phone VARCHAR(16) UNIQUE,
 		contact_email VARCHAR(255) UNIQUE,
 		store_hours VARCHAR(255),
 		admin_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
-	);
+        CONSTRAINT valid_phone CHECK (contact_phone ~ '^\+[1-9]\d{1,14}$'
+);
 
 -- StoreAdditive Table
 CREATE TABLE
@@ -268,22 +269,25 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS customers (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
+        first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
 		password VARCHAR(255) NOT NULL,
-		phone VARCHAR(15) UNIQUE,
+		phone VARCHAR(16) UNIQUE,
 		is_verified BOOLEAN DEFAULT FALSE,
 		is_banned BOOLEAN DEFAULT FALSE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
+        CONSTRAINT valid_phone CHECK (phone ~ '^\+[1-9]\d{1,14}$'
 	);
 
 -- Employee Table
 CREATE TABLE
 	IF NOT EXISTS employees (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
-		phone VARCHAR(15) UNIQUE,
+		first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
+		phone VARCHAR(16) UNIQUE,
 		email VARCHAR(255) UNIQUE,
 		hashed_password VARCHAR(255) NOT NULL,
 		role VARCHAR(50) NOT NULL,
@@ -292,6 +296,7 @@ CREATE TABLE
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
+        CONSTRAINT valid_phone CHECK (phone ~ '^\+[1-9]\d{1,14}$'
 	);
 
 -- StoreEmployee Table
@@ -496,11 +501,12 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		contact_email VARCHAR(255),
-		contact_phone VARCHAR(20),
+		contact_phone VARCHAR(16),
 		address VARCHAR(255),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
+        CONSTRAINT valid_phone CHECK (contact_phone ~ '^\+[1-9]\d{1,14}$'
 	);
 
 -- Units Table
