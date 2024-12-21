@@ -47,7 +47,7 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponseWithPagination(c, requests, nil) // add pagination
+	utils.SendSuccessResponseWithPagination(c, requests, nil) // add pagination
 }
 
 func (h *StockRequestHandler) UpdateStockRequestStatus(c *gin.Context) {
@@ -84,7 +84,7 @@ func (h *StockRequestHandler) GetLowStockIngredients(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponseWithPagination(c, ingredients, nil) // add pagination
+	utils.SendSuccessResponseWithPagination(c, ingredients, nil) // add pagination
 }
 
 func (h *StockRequestHandler) GetAllStockMaterials(c *gin.Context) {
@@ -106,7 +106,7 @@ func (h *StockRequestHandler) GetAllStockMaterials(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponseWithPagination(c, products, nil) // add pagination
+	utils.SendSuccessResponseWithPagination(c, products, nil) // add pagination
 }
 
 func (h *StockRequestHandler) AddStockRequestIngredient(c *gin.Context) {
