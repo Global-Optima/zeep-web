@@ -67,7 +67,7 @@ type Ingredient struct {
 	Carbs     float64             `gorm:"type:decimal(5,2);check:carbs >= 0"`
 	Proteins  float64             `gorm:"type:decimal(5,2);check:proteins >= 0"`
 	ExpiresAt *time.Time          `gorm:"type:timestamp"`
-	Products  []ProductIngredient `gorm:"foreignKey:ItemIngredientID"`
+	Products  []ProductIngredient `gorm:"foreignKey:IngredientID"`
 	UnitID    uint                `gorm:"not null"` // Link to Unit
 	Unit      Unit                `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 }

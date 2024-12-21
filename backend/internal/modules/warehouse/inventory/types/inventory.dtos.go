@@ -22,6 +22,11 @@ type InventoryItem struct {
 
 }
 
+type ExistingInventoryItem struct {
+	StockMaterialID uint    `json:"stockMaterialId"`                   // For existing SKUs
+	Quantity        float64 `json:"quantity" binding:"required,gte=0"` // Quantity to log
+}
+
 type Package struct {
 	PackageSize   float64 `json:"packageSize" binding:"required,gte=0"`
 	PackageUnitID uint    `json:"packageUnitId" binding:"required"`

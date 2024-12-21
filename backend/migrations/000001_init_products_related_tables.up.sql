@@ -534,7 +534,7 @@ CREATE TABLE IF NOT EXISTS stock_materials (
 );
 
 -- Packages Table
-CREATE TABLE IF NOT EXISTS packages (
+CREATE TABLE IF NOT EXISTS stock_material_packages (
     id SERIAL PRIMARY KEY,
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     package_size DECIMAL(10,2) NOT NULL,
