@@ -9,13 +9,6 @@ export const KIOSK_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/kiosk/products/pages/kiosk-home-page.vue'),
 	},
-	KIOSK_DETAILS: {
-		path: ':id',
-		meta: {
-			title: 'Детали товара',
-		},
-		component: () => import('@/modules/kiosk/products/pages/kiosk-product-details-page.vue'),
-	},
 	KIOSK_ORDERS: {
 		path: 'orders',
 		meta: {
@@ -40,7 +33,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 } satisfies AppRouteRecord
 
 export const KIOSK_ROUTES_CONFIG: ParentRoutePage = {
-	path: 'kiosk',
+	path: '/kiosk',
 	component: AppKioskLayout,
 	children: KIOSK_CHILDREN_ROUTES,
 }

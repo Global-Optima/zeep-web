@@ -51,7 +51,7 @@ func (h *StockMaterialHandler) GetAllStockMaterials(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, stockMaterialResponses)
+	utils.SendSuccessResponse(c, stockMaterialResponses)
 }
 
 func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
@@ -72,7 +72,7 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, stockMaterialResponse)
+	utils.SendSuccessResponse(c, stockMaterialResponse)
 }
 
 func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
@@ -88,7 +88,7 @@ func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, stockMaterialResponse)
+	utils.SendSuccessResponse(c, stockMaterialResponse)
 }
 
 func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
@@ -115,7 +115,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, stockMaterialResponse)
+	utils.SendSuccessResponse(c, stockMaterialResponse)
 }
 
 func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {

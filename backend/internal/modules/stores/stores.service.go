@@ -6,15 +6,14 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
 type StoreService interface {
-	CreateStore(storeDTO types.StoreDTO) (*types.StoreDTO, error)
+	CreateStore(storeDTO types.CreateStoreDTO) (*types.StoreDTO, error)
 	GetAllStores(searchTerm string) ([]types.StoreDTO, error)
 	GetStoreByID(storeID uint) (*types.StoreDTO, error)
-	UpdateStore(storeDTO types.StoreDTO) (*types.StoreDTO, error)
+	UpdateStore(storeId uint, storeDTO types.UpdateStoreDTO) (*types.StoreDTO, error)
 	DeleteStore(storeID uint, hardDelete bool) error
 }
 
@@ -26,13 +25,9 @@ func NewStoreService(repo StoreRepository) StoreService {
 	return &storeService{repo: repo}
 }
 
-func (s *storeService) CreateStore(storeDTO types.StoreDTO) (*types.StoreDTO, error) {
-	if err := validStoreDTO(storeDTO, true, false); err != nil {
-		return nil, err
-	}
-
+func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.StoreDTO, error) {
 	var facilityAddress *data.FacilityAddress
-	existingFacilityAddress, err := s.repo.GetFacilityAddressByAddress(storeDTO.FacilityAddress.Address)
+	existingFacilityAddress, err := s.repo.GetFacilityAddressByAddress(createStoreDto.FacilityAddress.Address)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, fmt.Errorf("error checking existing facility address: %w", err)
 	}
@@ -41,9 +36,9 @@ func (s *storeService) CreateStore(storeDTO types.StoreDTO) (*types.StoreDTO, er
 		facilityAddress = existingFacilityAddress
 	} else {
 		facilityAddress = &data.FacilityAddress{
-			Address:   storeDTO.FacilityAddress.Address,
-			Longitude: &storeDTO.FacilityAddress.Longitude,
-			Latitude:  &storeDTO.FacilityAddress.Latitude,
+			Address:   createStoreDto.FacilityAddress.Address,
+			Longitude: createStoreDto.FacilityAddress.Longitude,
+			Latitude:  createStoreDto.FacilityAddress.Latitude,
 		}
 		facilityAddress, err = s.repo.CreateFacilityAddress(facilityAddress)
 		if err != nil {
@@ -51,11 +46,14 @@ func (s *storeService) CreateStore(storeDTO types.StoreDTO) (*types.StoreDTO, er
 		}
 	}
 
-	if facilityAddress != nil {
-		storeDTO.FacilityAddress.ID = facilityAddress.ID
+	store := &data.Store{
+		Name:              createStoreDto.Name,
+		IsFranchise:       createStoreDto.IsFranchise,
+		ContactPhone:      createStoreDto.ContactPhone,
+		ContactEmail:      createStoreDto.ContactEmail,
+		StoreHours:        createStoreDto.StoreHours,
+		FacilityAddressID: facilityAddress.ID,
 	}
-
-	store := mapToStoreEntity(storeDTO)
 
 	createdStore, err := s.repo.CreateStore(store)
 	if err != nil {
@@ -95,12 +93,8 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 	return mapToStoreDTO(*store), nil
 }
 
-func (s *storeService) UpdateStore(storeDTO types.StoreDTO) (*types.StoreDTO, error) {
-	if err := validStoreDTO(storeDTO, false, true); err != nil {
-		return nil, err
-	}
-
-	store, err := s.repo.GetStoreByID(storeDTO.ID)
+func (s *storeService) UpdateStore(storeId uint, updateStoreDto types.UpdateStoreDTO) (*types.StoreDTO, error) {
+	store, err := s.repo.GetStoreByID(storeId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("store not found")
@@ -108,7 +102,7 @@ func (s *storeService) UpdateStore(storeDTO types.StoreDTO) (*types.StoreDTO, er
 		return nil, err
 	}
 
-	updateStoreFields(store, storeDTO)
+	updateStoreFields(store, updateStoreDto)
 	updatedStore, err := s.repo.UpdateStore(store)
 	if err != nil {
 		return nil, err
@@ -144,78 +138,30 @@ func mapToStoreDTO(store data.Store) *types.StoreDTO {
 	}
 }
 
-func mapToStoreEntity(dto types.StoreDTO) *data.Store {
-	facilityAddressID := dto.FacilityAddress.ID
-
-	return &data.Store{
-		Name:              dto.Name,
-		IsFranchise:       dto.IsFranchise,
-		ContactPhone:      dto.ContactPhone,
-		ContactEmail:      dto.ContactEmail,
-		StoreHours:        dto.StoreHours,
-		FacilityAddressID: facilityAddressID,
+func updateStoreFields(store *data.Store, dto types.UpdateStoreDTO) {
+	if dto.Name != "" {
+		store.Name = dto.Name
 	}
-}
-
-func validStoreDTO(storeDTO types.StoreDTO, isCreate, isPartialUpdate bool) error {
-	if !isPartialUpdate && storeDTO.Name == "" {
-		return errors.New("store name cannot be empty")
+	if dto.IsFranchise {
+		store.IsFranchise = dto.IsFranchise
 	}
-
-	if storeDTO.ContactPhone != "" && !utils.IsValidPhone(storeDTO.ContactPhone) {
-		return errors.New("invalid phone number format")
+	if dto.ContactPhone != "" {
+		store.ContactPhone = dto.ContactPhone
 	}
-
-	if storeDTO.ContactEmail != "" && !utils.IsValidEmail(storeDTO.ContactEmail) {
-		return errors.New("invalid email format")
+	if dto.ContactEmail != "" {
+		store.ContactEmail = dto.ContactEmail
 	}
-
-	if !isPartialUpdate && storeDTO.StoreHours == "" {
-		return errors.New("store hours cannot be empty")
+	if dto.StoreHours != "" {
+		store.StoreHours = dto.StoreHours
 	}
-
-	if storeDTO.FacilityAddress != nil {
-		if storeDTO.FacilityAddress.Address == "" {
-			return errors.New("facility address cannot be empty")
-		}
-
-		if storeDTO.FacilityAddress.Latitude != 0 && !utils.IsValidLatitude(storeDTO.FacilityAddress.Latitude) {
-			return errors.New("invalid latitude format")
-		}
-		if storeDTO.FacilityAddress.Longitude != 0 && !utils.IsValidLongitude(storeDTO.FacilityAddress.Longitude) {
-			return errors.New("invalid longitude format")
-		}
+	if dto.FacilityAddress.Address != "" {
+		store.FacilityAddress.Address = dto.FacilityAddress.Address
 	}
-
-	return nil
-}
-
-func updateStoreFields(store *data.Store, storeDTO types.StoreDTO) {
-	if storeDTO.Name != "" {
-		store.Name = storeDTO.Name
+	if dto.FacilityAddress.Latitude != nil {
+		store.FacilityAddress.Latitude = dto.FacilityAddress.Latitude
 	}
-	if storeDTO.IsFranchise {
-		store.IsFranchise = storeDTO.IsFranchise
-	}
-	if storeDTO.ContactPhone != "" {
-		store.ContactPhone = storeDTO.ContactPhone
-	}
-	if storeDTO.ContactEmail != "" {
-		store.ContactEmail = storeDTO.ContactEmail
-	}
-	if storeDTO.StoreHours != "" {
-		store.StoreHours = storeDTO.StoreHours
-	}
-	if storeDTO.FacilityAddress != nil {
-		if storeDTO.FacilityAddress.Address != "" {
-			store.FacilityAddress.Address = storeDTO.FacilityAddress.Address
-		}
-		if storeDTO.FacilityAddress.Latitude != 0 {
-			store.FacilityAddress.Latitude = &storeDTO.FacilityAddress.Latitude
-		}
-		if storeDTO.FacilityAddress.Longitude != 0 {
-			store.FacilityAddress.Longitude = &storeDTO.FacilityAddress.Longitude
-		}
+	if dto.FacilityAddress.Longitude != nil {
+		store.FacilityAddress.Longitude = dto.FacilityAddress.Longitude
 	}
 }
 

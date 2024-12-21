@@ -52,8 +52,8 @@
 
 <script setup lang="ts">
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
-import { productService } from '@/modules/kiosk/products/services/products.service'
-import { computed, defineEmits, defineProps, onMounted, ref, watch } from 'vue'
+import { productsService } from '@/modules/kiosk/products/services/products.service'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
 import KioskDetailsBottomBar from '@/modules/kiosk/products/components/details/kiosk-details-bottom-bar.vue'
@@ -61,12 +61,12 @@ import KioskDetailsLoading from '@/modules/kiosk/products/components/details/kio
 import KioskDetailsProductImage from '@/modules/kiosk/products/components/details/kiosk-details-product-image.vue'
 import KioskDetailsProductInfo from '@/modules/kiosk/products/components/details/kiosk-details-product-info.vue'
 
+import type { AdditiveCategories, AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
 import type {
-  AdditiveCategoryDTO,
-  AdditiveDTO,
   ProductSizeDTO,
   StoreProductDetailsDTO,
 } from '@/modules/kiosk/products/models/product.model'
+import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 
 // Define props
 const props = defineProps<{
@@ -82,19 +82,23 @@ const cartStore = useCartStore();
 
 // Reactive state
 const productDetails = ref<StoreProductDetailsDTO | null>(null);
-const additives = ref<AdditiveCategoryDTO[]>([]);
+const additives = ref<AdditiveCategories[]>([]);
 const selectedSize = ref<ProductSizeDTO | null>(null);
-const selectedAdditives = ref<Record<number, AdditiveDTO[]>>({});
+const selectedAdditives = ref<Record<number, AdditiveCategoryItem[]>>({});
 const quantity = ref<number>(1);
 const isLoading = ref<boolean>(true);
 const error = ref<string | null>(null);
+
+const {currentStoreId} = useCurrentStoreStore()
 
 // Fetch product details based on productId prop
 const fetchProductDetails = async () => {
   isLoading.value = true;
   error.value = null;
   try {
-    const details = await productService.getStoreProductDetails(props.productId);
+    if (!currentStoreId) return
+
+    const details = await productsService.getStoreProductDetails(props.productId, currentStoreId);
     productDetails.value = details;
 
     if (details.sizes.length > 0) {
@@ -112,7 +116,7 @@ const fetchProductDetails = async () => {
 // Fetch additives based on selected size
 const fetchAdditives = async (sizeId: number) => {
   try {
-    const fetchedAdditives = await productService.getAdditiveCategoriesByProductSize(sizeId);
+    const fetchedAdditives = await productsService.getAdditiveCategories(sizeId);
     additives.value = fetchedAdditives;
   } catch (err) {
     console.error('Error fetching additives:', err);
@@ -159,7 +163,7 @@ const onSizeSelect = async (size: ProductSizeDTO) => {
 };
 
 // Toggle additive selection
-const onAdditiveToggle = (categoryId: number, additive: AdditiveDTO) => {
+const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItem) => {
   const current = selectedAdditives.value[categoryId] || [];
   const isSelected = current.some((a) => a.id === additive.id);
   if (isSelected) {

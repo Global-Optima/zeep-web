@@ -7,13 +7,18 @@
 			value="item-1"
 			class="bg-white border-none rounded-3xl"
 		>
-			<AccordionTrigger class="px-6 py-6 font-normal text-2xl hover:no-underline">
-				Детали
+			<AccordionTrigger class="px-7 py-6 text-2xl hover:no-underline font-normal">
+				Ингредиенты
 			</AccordionTrigger>
-			<AccordionContent class="px-2">
-				<section class="justify-items-center gap-2 sm:gap-4 grid grid-cols-4">
+			<AccordionContent class="px-2 pb-4">
+				<section>
+					<p class="text-base font-normal sm:text-2xl px-5">
+						Кофе, молоко, сахар, лед, сливки, ванильный сироп
+					</p>
+				</section>
+				<section class="justify-items-center gap-2 sm:gap-4 grid grid-cols-4 mt-6">
 					<div class="flex flex-col items-start">
-						<p class="text-gray-600 text-xs sm:text-lg">Энергия</p>
+						<p class="text-gray-600 text-xs sm:text-xl">Энергия</p>
 						<p
 							class="font-medium text-base sm:text-2xl"
 							data-testid="energy-ccal"
@@ -51,26 +56,6 @@
 							32.4 г
 						</p>
 					</div>
-				</section>
-			</AccordionContent>
-		</AccordionItem>
-	</Accordion>
-
-	<Accordion
-		type="single"
-		collapsible
-		class="mt-2"
-	>
-		<AccordionItem
-			value="item-1"
-			class="bg-white border-none rounded-3xl"
-		>
-			<AccordionTrigger class="px-6 py-6 font-normal text-2xl hover:no-underline">
-				Ингредиенты
-			</AccordionTrigger>
-			<AccordionContent class="px-7">
-				<section>
-					<p class="text-base sm:text-2xl">Кофе, молоко, сахар, лед, сливки, ванильный сироп</p>
 				</section>
 			</AccordionContent>
 		</AccordionItem>

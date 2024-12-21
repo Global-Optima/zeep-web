@@ -6,12 +6,14 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
 type AdditiveRepository interface {
-	GetAdditiveCategoriesByProductSize(productSizeID uint) ([]types.AdditiveCategoryDTO, error)
+	GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
+	GetAdditives(filter types.AdditiveFilterQuery) ([]data.Additive, error)
 }
 
 type additiveRepository struct {
@@ -22,60 +24,67 @@ func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
 }
 
-func (r *additiveRepository) GetAdditiveCategoriesByProductSize(productSizeID uint) ([]types.AdditiveCategoryDTO, error) {
-	var productAdditives []data.ProductAdditive
+func (r *additiveRepository) GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
+	var categories []data.AdditiveCategory
 
-	err := r.db.
-		Preload("Additive").
-		Where("product_size_id = ?", productSizeID).
-		Find(&productAdditives).
-		Error
+	query := r.db.Preload("Additives")
 
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where(
+			"additive_categories.name LIKE ? OR additive_categories.description LIKE ?",
+			searchTerm, searchTerm,
+		)
+	}
+
+	if filter.ProductSizeId != nil {
+		query = query.Preload("Additives", "EXISTS (SELECT 1 FROM product_additives WHERE product_additives.additive_id = additives.id AND product_additives.product_size_id = ?)", *filter.ProductSizeId)
+	}
+
+	if err := query.Find(&categories).Error; err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
+func (r *additiveRepository) GetAdditives(filter types.AdditiveFilterQuery) ([]data.Additive, error) {
+	var additives []data.Additive
+
+	query := r.db.
+		Preload("Category").
+		Joins("JOIN additive_categories ON additives.additive_category_id = additive_categories.id")
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
+	}
+
+	if filter.MinPrice != nil {
+		query = query.Where("additives.base_price >= ?", *filter.MinPrice)
+	}
+	if filter.MaxPrice != nil {
+		query = query.Where("additives.base_price <= ?", *filter.MaxPrice)
+	}
+
+	if filter.CategoryID != nil {
+		query = query.Where("additive_categories.id = ?", *filter.CategoryID)
+	}
+	if filter.ProductSizeID != nil {
+		query = query.Where("product_additives.product_size_id = ?", *filter.ProductSizeID)
+	}
+
+	var err error
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.Additive{})
 	if err != nil {
 		return nil, err
 	}
 
-	categoryMap := make(map[uint]*types.AdditiveCategoryDTO)
-
-	for _, pa := range productAdditives {
-		additive := pa.Additive
-
-		categoryID := additive.AdditiveCategoryID
-
-		if _, exists := categoryMap[categoryID]; !exists {
-			category := data.AdditiveCategory{}
-			err := r.db.
-				Where("id = ?", categoryID).
-				First(&category).
-				Error
-			if err != nil {
-				return nil, err
-			}
-
-			categoryMap[categoryID] = &types.AdditiveCategoryDTO{
-				ID:               category.ID,
-				Name:             category.Name,
-				IsMultipleSelect: category.IsMultipleSelect,
-				Additives:        []types.AdditiveDTO{},
-			}
-		}
-
-		categoryMap[categoryID].Additives = append(categoryMap[categoryID].Additives, types.AdditiveDTO{
-			ID:          additive.ID,
-			Name:        additive.Name,
-			Description: additive.Description,
-			Price:       pa.Additive.StorePrice,
-			ImageURL:    additive.ImageURL,
-			CategoryId:  categoryID,
-		})
+	if err := query.Find(&additives).Error; err != nil {
+		return nil, err
 	}
 
-	var additiveCategories []types.AdditiveCategoryDTO
-	for _, category := range categoryMap {
-		additiveCategories = append(additiveCategories, *category)
-	}
-
-	return additiveCategories, nil
+	return additives, nil
 }
 
 func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {

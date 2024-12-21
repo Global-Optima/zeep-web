@@ -3,7 +3,7 @@
 		<!-- Employee Image -->
 		<img
 			class="mb-6 rounded-full w-48 h-48 object-cover"
-			:src="employee.image"
+			:src="employee.imageUrl"
 			alt="Employee Image"
 		/>
 		<!-- Employee Attributes -->
@@ -31,38 +31,18 @@
 
 <script setup lang="ts">
 import Button from '@/core/components/ui/button/Button.vue'
+import { EMPLOYEE_ROLES_FORMATTED, type Employee } from '@/modules/employees/models/employees.models'
 import { Pencil } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
-interface Employee {
-  image: string;
-  name: string;
-  position: string;
-  email: string;
-  phone: string;
-  status: string;
-  storeAddress: string;
-  isActive: boolean;
-}
-
-const employee = ref<Employee>({
-  image: 'https://via.placeholder.com/400x300',
-  name: 'Иван Иванов',
-  position: 'Менеджер по продажам',
-  email: 'ivan.ivanov@example.com',
-  phone: '+7 (495) 123-45-67',
-  status: 'Активен',
-  storeAddress: 'ул. Ленина, 123, Москва, Россия',
-  isActive: true,
-});
+const {employee} = defineProps<{employee: Employee}>()
 
 const attributes = computed(() => [
-  { label: 'Имя', value: employee.value.name },
-  { label: 'Должность', value: employee.value.position },
-  { label: 'Email', value: employee.value.email },
-  { label: 'Телефон', value: employee.value.phone },
-  { label: 'Статус', value: employee.value.status },
-  { label: 'Адрес магазина', value: employee.value.storeAddress },
+  { label: 'Имя', value: employee.name },
+  { label: 'Должность', value: EMPLOYEE_ROLES_FORMATTED[employee.role] },
+  { label: 'Email', value: employee.email },
+  { label: 'Телефон', value: employee.phone },
+  { label: 'Статус', value: employee.isActive ? "Активен" : "Деактивирован" },
 ]);
 </script>
 

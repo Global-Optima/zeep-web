@@ -1,13 +1,17 @@
 package supplier
 
-import "github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
+import (
+	"fmt"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
+)
 
 type SupplierService interface {
 	CreateSupplier(dto types.CreateSupplierDTO) (types.SupplierResponse, error)
 	GetSupplierByID(id uint) (types.SupplierResponse, error)
 	UpdateSupplier(id uint, dto types.UpdateSupplierDTO) error
 	DeleteSupplier(id uint) error
-	ListSuppliers() ([]types.SupplierResponse, error)
+	GetSuppliers() ([]types.SupplierResponse, error)
 }
 
 type supplierService struct {
@@ -35,14 +39,36 @@ func (s *supplierService) GetSupplierByID(id uint) (types.SupplierResponse, erro
 }
 
 func (s *supplierService) UpdateSupplier(id uint, dto types.UpdateSupplierDTO) error {
-	return s.repo.UpdateSupplier(id, dto)
+	supplier, err := s.repo.GetSupplierByID(id)
+	if err != nil {
+		return fmt.Errorf("failed to fetch supplier with ID %d: %w", id, err)
+	}
+
+	if dto.Name != nil {
+		supplier.Name = *dto.Name
+	}
+	if dto.ContactEmail != nil {
+		supplier.ContactEmail = *dto.ContactEmail
+	}
+	if dto.ContactPhone != nil {
+		supplier.ContactPhone = *dto.ContactPhone
+	}
+	if dto.Address != nil {
+		supplier.Address = *dto.Address
+	}
+
+	if err := s.repo.UpdateSupplier(id, supplier); err != nil {
+		return fmt.Errorf("failed to update supplier with ID %d: %w", id, err)
+	}
+
+	return nil
 }
 
 func (s *supplierService) DeleteSupplier(id uint) error {
 	return s.repo.DeleteSupplier(id)
 }
 
-func (s *supplierService) ListSuppliers() ([]types.SupplierResponse, error) {
+func (s *supplierService) GetSuppliers() ([]types.SupplierResponse, error) {
 	suppliers, err := s.repo.GetAllSuppliers()
 	if err != nil {
 		return nil, err

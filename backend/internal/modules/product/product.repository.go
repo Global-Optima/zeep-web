@@ -11,7 +11,7 @@ import (
 
 type ProductRepository interface {
 	GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error)
-	GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error)
+	GetStoreProducts(filter types.ProductsFilterDto) ([]data.Product, error)
 	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
 	DeleteProduct(productID uint) error
 
@@ -47,21 +47,24 @@ func (r *productRepository) GetProductSizeWithProduct(productSizeID uint) (*data
 	return &productSize, nil
 }
 
-func (r *productRepository) GetStoreProducts(filter types.ProductFilterDao) ([]data.Product, error) {
+func (r *productRepository) GetStoreProducts(filter types.ProductsFilterDto) ([]data.Product, error) {
 	var products []data.Product
 
 	query := r.db.
 		Model(&data.Product{}).
 		Joins("JOIN store_products ON store_products.product_id = products.id").
-		Where("store_products.store_id = ? AND store_products.is_available = TRUE", filter.StoreID).
 		Preload("ProductSizes", "is_default = TRUE")
+
+	if filter.StoreID != nil {
+		query = query.Where("store_products.store_id = ? AND store_products.is_available = TRUE", filter.StoreID)
+	}
 
 	if filter.CategoryID != nil {
 		query = query.Where("products.category_id = ?", *filter.CategoryID)
 	}
 
-	if filter.SearchQuery != "" {
-		searchPattern := "%" + filter.SearchQuery + "%"
+	if filter.SearchTerm != nil {
+		searchPattern := "%" + *filter.SearchTerm + "%"
 		query = query.Where("(products.name ILIKE ? OR products.description ILIKE ?)", searchPattern, searchPattern)
 	}
 

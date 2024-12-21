@@ -67,8 +67,9 @@ import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeSidebarTablet from '@/modules/kiosk/products/components/home/kiosk-home-sidebar-tablet.vue'
 import KioskHomeToolbarTablet from '@/modules/kiosk/products/components/home/kiosk-home-toolbar-tablet.vue'
-import type { ProductCategory, StoreProducts } from '@/modules/kiosk/products/models/product.model'
-import { productService } from '@/modules/kiosk/products/services/products.service'
+import type { ProductCategory, Products } from '@/modules/kiosk/products/models/product.model'
+import { productsService } from '@/modules/kiosk/products/services/products.service'
+import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
@@ -100,7 +101,7 @@ const categoriesQueryKey = ['categories']
 // Fetch Categories
 const { data: categories, isLoading: categoriesLoading } = useQuery<ProductCategory[]>({
   queryKey: categoriesQueryKey,
-  queryFn: () => productService.getStoreCategories(),
+  queryFn: () => productsService.getStoreCategories(),
   initialData: []
 })
 
@@ -115,14 +116,16 @@ watch(
   { immediate: true }
 )
 
+const {currentStoreId} = useCurrentStoreStore()
+
 // Fetch Products
-const { data: products } = useQuery<StoreProducts[]>({
+const { data: products } = useQuery<Products[]>({
   queryKey: productsQueryKey,
   queryFn: () =>
-    productService.getStoreProducts(
-      selectedCategoryId.value,
-      searchTerm.value
-    ),
+    productsService.getProducts({
+      storeId: currentStoreId!, categoryId: selectedCategoryId.value!, searchTerm: searchTerm.value,
+
+    }),
   enabled: computed(() => Boolean(selectedCategoryId.value) || searchTerm.value.trim() !== ''),
   initialData: []
 })

@@ -5,7 +5,7 @@ import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { useResetKioskState } from '@/modules/kiosk/hooks/use-reset-kiosk.hook'
 import type { CreateOrderDTO } from '@/modules/orders/models/orders.models'
 import { orderService } from '@/modules/orders/services/orders.service'
-import { CURRENT_STORE_COOKIES_CONFIG } from '@/modules/stores/constants/store-cookies.constant'
+import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useMutation } from '@tanstack/vue-query'
 import { ChevronRight } from 'lucide-vue-next'
 import { defineAsyncComponent, ref } from 'vue'
@@ -28,7 +28,7 @@ const stepState = ref<StepState>({
 const router = useRouter();
 const resetKioskState = useResetKioskState();
 const { cartItems, clearCart } = useCartStore();
-const storeId = Number(localStorage.getItem(CURRENT_STORE_COOKIES_CONFIG.key)) || 1;
+const {currentStoreId} = useCurrentStoreStore()
 
 // Mutation for creating the order
 const createOrderMutation = useMutation({
@@ -71,9 +71,11 @@ const stepsConfig: StepConfig[] = [
       stepState.value.selectedPayment = data.selectedPayment;
       console.log("HERE", stepState.value.customerName)
       try {
+        if (!currentStoreId) return
+
         const orderDTO: CreateOrderDTO = {
           customerName: stepState.value.customerName,
-          storeId: storeId,
+          storeId: currentStoreId,
           subOrders: Object.entries(cartItems).map(([_, item]) => ({
             productSizeId: item.size.id,
             quantity: item.quantity,

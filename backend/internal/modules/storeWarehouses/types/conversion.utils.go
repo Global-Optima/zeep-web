@@ -7,7 +7,7 @@ func MapToStockDTO(stock data.StoreWarehouseStock) StockDTO {
 		ID:                stock.ID,
 		Name:              stock.Ingredient.Name,
 		Quantity:          stock.Quantity,
-		Unit:              "кг", //TODO change to Ingredient.Units
+		Unit:              "кг", //TODO: change to Ingredient.Units
 		LowStockThreshold: stock.LowStockThreshold,
 		LowStockAlert:     stock.Quantity < stock.LowStockThreshold,
 	}

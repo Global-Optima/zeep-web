@@ -3,33 +3,49 @@
 		:filter="filter"
 		@update:filter="updateFilter"
 	/>
-	<AdminStoresList :stores="stores" />
+
+	<Card>
+		<CardContent class="mt-4">
+			<p
+				v-if="!stores || stores.length === 0"
+				class="text-muted-foreground"
+			>
+				Магазины не найдены
+			</p>
+
+			<AdminStoresList
+				v-else
+				:stores="stores"
+			/>
+		</CardContent>
+	</Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/core/components/ui/card'
 import AdminStoresList from '@/modules/admin/stores/components/list/admin-stores-list.vue'
 import AdminStoresToolbar from '@/modules/admin/stores/components/list/admin-stores-toolbar.vue'
 import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
 import { storesService } from '@/modules/stores/services/stores.service'
 import { useQuery } from '@tanstack/vue-query'
-import { reactive } from 'vue'
+import { computed, ref } from 'vue'
 
 // Reactive filter object
-const filter = reactive<StoresFilter>({
+const filter = ref<StoresFilter>({
   searchTerm: '',
   isFranchise: undefined,
 })
 
 // Query stores data
 const { data: stores } = useQuery({
-  queryKey: ['stores', filter],
-  queryFn: () => storesService.getStores(filter),
-  initialData: [],
+  queryKey: computed(() => ['stores', filter.value]),
+  queryFn: () => storesService.getStores(filter.value),
+  initialData: []
 })
 
 // Update filter handler
 function updateFilter(updatedFilter: Partial<StoresFilter>) {
-  Object.assign(filter, updatedFilter)
+  filter.value = {...filter.value, ...updatedFilter}
 }
 </script>
 

@@ -2,6 +2,7 @@ package storeWarehouses
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -11,10 +12,12 @@ import (
 
 type StoreWarehouseRepository interface {
 	AddStock(storeId uint, dto *types.AddStockDTO) (uint, error)
-	GetStockList(storeId uint, query *types.GetStockQuery) ([]data.StoreWarehouseStock, error)
+	AddOrUpdateStock(storeId uint, dto *types.AddStockDTO) error
+	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error)
 	GetStockById(storeId, stockId uint) (*data.StoreWarehouseStock, error)
 	UpdateStock(storeId, stockId uint, dto *types.UpdateStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
+	WithTransaction(txFunc func(txRepo storeWarehouseRepository) error) error
 }
 
 type storeWarehouseRepository struct {
@@ -23,6 +26,85 @@ type storeWarehouseRepository struct {
 
 func NewStoreWarehouseRepository(db *gorm.DB) StoreWarehouseRepository {
 	return &storeWarehouseRepository{db: db}
+}
+
+func (r *storeWarehouseRepository) WithTransaction(txFunc func(txRepo storeWarehouseRepository) error) error {
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return fmt.Errorf("failed to start transaction: %w", tx.Error)
+	}
+
+	// Clone the repository with the transaction instance
+	txRepo := r.cloneWithTransaction(tx)
+
+	// Execute the transaction logic
+	if err := txFunc(txRepo); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (r *storeWarehouseRepository) cloneWithTransaction(tx *gorm.DB) storeWarehouseRepository {
+	return storeWarehouseRepository{
+		db: tx,
+	}
+}
+
+func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.AddStockDTO) error {
+	// Fetch the StoreWarehouse for the given storeID
+	var storeWarehouse data.StoreWarehouse
+	err := r.db.
+		Where("store_id = ?", storeID).
+		First(&storeWarehouse).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("store warehouse not found for store ID %d", storeID)
+		}
+		return fmt.Errorf("failed to fetch store warehouse: %w", err)
+	}
+
+	// Fetch the existing stock (if any) for the given ingredient
+	var existingStock data.StoreWarehouseStock
+	err = r.db.
+		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouse.ID, dto.IngredientID).
+		First(&existingStock).Error
+
+	if err == nil {
+		// Update existing stock
+		existingStock.Quantity += dto.Quantity
+		existingStock.LowStockThreshold = dto.LowStockThreshold
+		err = r.db.Save(&existingStock).Error
+		if err != nil {
+			return fmt.Errorf("failed to update store warehouse stock: %w", err)
+		}
+		return nil
+	}
+
+	// If no existing stock, create a new stock entry
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		storeWarehouseStock := data.StoreWarehouseStock{
+			StoreWarehouseID:  storeWarehouse.ID,
+			IngredientID:      dto.IngredientID,
+			Quantity:          dto.Quantity,
+			LowStockThreshold: dto.LowStockThreshold,
+		}
+
+		err = r.db.Create(&storeWarehouseStock).Error
+		if err != nil {
+			return fmt.Errorf("failed to create store warehouse stock: %w", err)
+		}
+		return nil
+	}
+
+	// Handle unexpected errors
+	return fmt.Errorf("failed to add or update stock: %w", err)
 }
 
 func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStockDTO) (uint, error) {
@@ -74,44 +156,41 @@ func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStockDTO
 	return storeWarehouseStock.ID, nil
 }
 
-func (r *storeWarehouseRepository) GetStockList(storeID uint, query *types.GetStockQuery) ([]data.StoreWarehouseStock, error) {
-	var StoreWarehouseStockList []data.StoreWarehouseStock
-	var dbQuery *gorm.DB
-	var totalRecords int64
-
+func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error) {
 	if storeID == 0 {
 		return nil, fmt.Errorf("storeId cannot be 0")
 	}
 
-	dbQuery = r.db.
-		Model(&data.StoreWarehouseStock{}).
+	var storeWarehouseStockList []data.StoreWarehouseStock
+
+	query := r.db.Model(&data.StoreWarehouseStock{}).
 		Joins("JOIN store_warehouses ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
 		Joins("JOIN ingredients ON store_warehouse_stocks.ingredient_id = ingredients.id").
 		Where("store_warehouses.store_id = ?", storeID)
 
-	if query.LowStockOnly != nil && *query.LowStockOnly {
-		dbQuery = dbQuery.Where("store_warehouse_stocks.quantity < store_warehouse_stocks.low_stock_threshold")
+	if filter.LowStockOnly != nil && *filter.LowStockOnly {
+		query = query.Where("store_warehouse_stocks.quantity < store_warehouse_stocks.low_stock_threshold")
 	}
 
-	if query.Search != nil && *query.Search != "" {
-		dbQuery = dbQuery.Where("ingredients.name ILIKE ?", "%"+*query.Search+"%")
+	if filter.Search != nil && *filter.Search != "" {
+		query = query.Where("ingredients.name ILIKE ?", "%"+*filter.Search+"%")
 	}
 
-	dbQuery.Preload("Ingredient").Preload("StoreWarehouse")
-
-	//Query with pagination
-
-	if err := dbQuery.Count(&totalRecords).Error; err != nil {
-		return nil, err
-	}
-	query.Pagination.SetTotal(totalRecords)
-
-	err := dbQuery.Scopes(query.Pagination.PaginateGorm()).Find(&StoreWarehouseStockList).Error
+	var err error
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StoreWarehouseStock{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
 
-	return StoreWarehouseStockList, nil
+	err = query.
+		Preload("Ingredient").
+		Preload("StoreWarehouse").
+		Find(&storeWarehouseStockList).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve stock list: %w", err)
+	}
+
+	return storeWarehouseStockList, nil
 }
 
 func (r *storeWarehouseRepository) GetStockById(storeId, stockId uint) (*data.StoreWarehouseStock, error) {

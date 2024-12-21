@@ -16,13 +16,13 @@
 			data-testid="additive-image"
 		/>
 		<p
-			class="mt-3 flex-grow text-sm sm:text-base"
+			class="flex-grow mt-3 text-sm sm:text-base"
 			data-testid="additive-name"
 		>
 			{{ additive.name }}
 		</p>
 
-		<div class="flex items-center justify-between mt-5">
+		<div class="flex justify-between items-center mt-5">
 			<p
 				:class="[
           'text-gray-400 text-lg sm:text-xl',
@@ -33,7 +33,7 @@
 				{{ isDefault ? formatPrice(0) : formatPrice(additive.price) }}
 			</p>
 			<button
-				class="relative h-6 w-6 sm:w-8 sm:h-8 rounded-full focus:outline-none"
+				class="relative rounded-full w-6 sm:w-8 h-6 sm:h-8 focus:outline-none"
 				:class="[
           isSelected ? 'bg-primary' : 'bg-gray-200',
           isDefault ? 'cursor-not-allowed opacity-50' : '',
@@ -43,7 +43,7 @@
 			>
 				<span
 					v-if="isSelected"
-					class="absolute inset-0 m-auto sm:w-4 sm:h-4 h-3 w-3 rounded-full bg-white"
+					class="absolute inset-0 bg-white m-auto rounded-full w-3 sm:w-4 h-3 sm:h-4"
 					data-testid="additive-selected-indicator"
 				></span>
 			</button>
@@ -53,10 +53,10 @@
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { AdditiveDTO } from '@/modules/kiosk/products/models/product.model'
+import type { AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
 
 const {additive, isSelected, isDefault} = defineProps<{
-  additive: AdditiveDTO;
+  additive: AdditiveCategoryItem;
   isSelected: boolean;
   isDefault:boolean;
 }>()

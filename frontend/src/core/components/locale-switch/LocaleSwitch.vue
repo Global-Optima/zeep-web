@@ -1,7 +1,7 @@
 <template>
 	<Select v-model="selectedLocale">
 		<SelectTrigger
-			class="bg-gray-600/60 backdrop-blur-md rounded-3xl text-white border-none text-base sm:text-3xl py-8 px-6"
+			class="bg-gray-600/60 backdrop-blur-md px-6 py-8 border-none rounded-3xl text-base text-white sm:text-3xl"
 		>
 			<SelectValue
 				placeholder="Select language"
@@ -45,6 +45,7 @@ import {
 import { Icon } from '@iconify/vue'
 
 const { locale } = useI18n()
+console.log(locale)
 const router = useRouter()
 
 const supportedLocales = [

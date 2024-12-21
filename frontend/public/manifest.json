@@ -3,9 +3,9 @@
 	"short_name": "ZEEP",
 	"description": "Новая эра кофеен и чайных домов, где скорость и цифровой подход становятся синонимом удобства.",
 	"background_color": "#F5F5F7",
-	"theme_colors": "transparent",
+	"theme_color": "#F5F5F7",
 	"display": "standalone",
-	"start_url": "./ru/kiosk",
+	"start_url": "./kiosk",
 	"icons": [
 		{
 			"src": "/android-icon-36x36.png",

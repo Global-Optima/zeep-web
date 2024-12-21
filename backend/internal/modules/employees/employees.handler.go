@@ -1,16 +1,13 @@
 package employees
 
 import (
+	authTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-)
-
-const (
-	EMPLOYEE_TOKEN_COOKIE_KEY = "EMPLOYEE_TOKEN"
 )
 
 type EmployeeHandler struct {
@@ -38,7 +35,7 @@ func (h *EmployeeHandler) CreateEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, employee)
+	utils.SendSuccessResponse(c, employee)
 }
 
 func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
@@ -67,7 +64,6 @@ func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
 	queryParams, err := types.ParseEmployeeQueryParams(c.Request.URL.Query())
 	if err != nil {
 		utils.SendBadRequestError(c, err.Error())
-		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
@@ -77,7 +73,7 @@ func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, employees)
+	utils.SendSuccessResponse(c, employees)
 }
 
 func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
@@ -100,7 +96,7 @@ func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "employee updated successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
 }
 
 func (h *EmployeeHandler) DeleteEmployee(c *gin.Context) {
@@ -117,7 +113,7 @@ func (h *EmployeeHandler) DeleteEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "employee deleted successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "employee deleted successfully"})
 }
 
 func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
@@ -144,7 +140,7 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, gin.H{"message": "password updated successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "password updated successfully"})
 }
 
 func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
@@ -154,49 +150,24 @@ func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, roles)
-}
-
-func (h *EmployeeHandler) EmployeeLogin(c *gin.Context) {
-	var input types.LoginDTO
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, err.Error())
-		return
-	}
-
-	token, err := h.service.EmployeeLogin(input.Email, input.Password)
-	if err != nil {
-		utils.SendErrorWithStatus(c, "invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateJWT(token, claims); err != nil {
-		utils.SendInternalServerError(c, "failed to validate token")
-		return
-	}
-
-	utils.SetCookie(c, EMPLOYEE_TOKEN_COOKIE_KEY, token, utils.CookieExpiration)
-
-	utils.SuccessResponse(c, gin.H{"message": "login successful", "token": token})
+	utils.SendSuccessResponse(c, roles)
 }
 
 func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
-	token, err := c.Cookie(EMPLOYEE_TOKEN_COOKIE_KEY)
+	token, err := c.Cookie(authTypes.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 
 	if err != nil {
-		utils.SendErrorWithStatus(c, "authentication token missing", http.StatusUnauthorized)
+		utils.SendErrorWithStatus(c, "access token missing", http.StatusUnauthorized)
 		return
 	}
 
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateJWT(token, claims); err != nil {
+	claims := &authTypes.EmployeeClaims{}
+	if err := authTypes.ValidateEmployeeJWT(token, claims, authTypes.TokenAccess); err != nil {
 		utils.SendErrorWithStatus(c, "invalid or expired token", http.StatusUnauthorized)
 		return
 	}
 
-	employee, err := h.service.GetEmployeeByID(claims.ID)
+	employee, err := h.service.GetEmployeeByID(claims.EmployeeClaimsData.ID)
 	if err != nil {
 		print(err)
 		utils.SendInternalServerError(c, "failed to fetch employee details")
@@ -204,24 +175,5 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 	}
 
 	print(employee)
-	utils.SuccessResponse(c, employee)
-}
-
-func (h *EmployeeHandler) EmployeeLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, EMPLOYEE_TOKEN_COOKIE_KEY)
-	if err != nil {
-		// Token not found in cookie
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &utils.EmployeeClaims{}
-	if err := utils.ValidateJWT(token, claims); err != nil {
-		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
-	utils.ClearCookie(c, EMPLOYEE_TOKEN_COOKIE_KEY)
-
-	utils.SuccessResponse(c, gin.H{"message": "logout successful"})
+	utils.SendSuccessResponse(c, employee)
 }

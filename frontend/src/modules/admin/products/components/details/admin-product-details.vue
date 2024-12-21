@@ -127,20 +127,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { Input } from '@/core/components/ui/input'
 import { Label } from '@/core/components/ui/label'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/core/components/ui/select'
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { getRouteName } from '@/core/config/routes.config'
 import { ChevronLeft } from 'lucide-vue-next'
@@ -151,29 +143,6 @@ const router = useRouter()
 
 const productName = ref('')
 const productDescription = ref('')
-
-const defaultAdditives = ref([
-  { id: 1, name: 'Карамельный сироп', size: '500 мл', imageUrl: 'caramel.jpg' },
-  { id: 2, name: 'Ванильный сироп', size: '500 мл', imageUrl: 'vanilla.jpg' },
-  { id: 3, name: 'Шоколадный сироп', size: '500 мл', imageUrl: 'chocolate.jpg' },
-])
-
-const technicalCardIngredients = ref([
-    {
-        id: 1,
-        imageUrl: 'ingredient1.jpg',
-        name: 'Кофе',
-        unit: 'грамм',
-        weight: 30,
-    },
-    {
-        id: 2,
-        imageUrl: 'ingredient2.jpg',
-        name: 'Молоко',
-        unit: 'мл',
-        weight: 100,
-    },
-]);
 
 const onBackClick = () => {
   router.push({name: getRouteName("ADMIN_PRODUCTS")})

@@ -1,10 +1,5 @@
-import { nextTick } from 'vue'
-import { createI18n, type I18n } from 'vue-i18n'
-import type {
-	NavigationGuardNext,
-	RouteLocationNormalizedGeneric,
-	RouteLocationNormalizedLoadedGeneric,
-} from 'vue-router'
+import jsonLocalesMessages from '@/core/locales'
+import { createI18n } from 'vue-i18n'
 
 export const LOCALES = {
 	RU: 'ru',
@@ -13,25 +8,6 @@ export const LOCALES = {
 }
 export type LocaleTypes = 'ru' | 'kk' | 'en'
 export const SUPPORTED_LOCALES = Object.values(LOCALES)
-
-type I18nType = I18n<
-	{
-		ru: object
-		en: object
-		kk: object
-	},
-	Record<string, unknown>,
-	Record<string, unknown>,
-	LocaleTypes,
-	false
->
-
-export const i18nConfig: I18nType = createI18n({
-	locale: LOCALES.RU,
-	legacy: false,
-	globalInjection: true,
-	fallbackLocale: LOCALES.RU,
-})
 
 export const AppTranslation = {
 	get defaultLocale() {
@@ -51,19 +27,8 @@ export const AppTranslation = {
 	},
 
 	async switchLanguage(newLocale: LocaleTypes) {
-		await AppTranslation.loadLocaleMessages(newLocale)
 		AppTranslation.currentLocale = newLocale
-		document.querySelector('html')?.setAttribute('lang', newLocale)
 		localStorage.setItem('user-locale', newLocale)
-	},
-
-	async loadLocaleMessages(locale: LocaleTypes) {
-		if (!i18nConfig.global.availableLocales.includes(locale)) {
-			const messages = await import(`@/core/locales/${locale}.json`)
-			i18nConfig.global.setLocaleMessage(locale, messages.default)
-		}
-
-		return nextTick()
 	},
 
 	isLocaleSupported(locale: LocaleTypes) {
@@ -75,7 +40,6 @@ export const AppTranslation = {
 
 		return {
 			locale: locale,
-			localeNoRegion: locale.split('-')[0],
 		}
 	},
 
@@ -101,36 +65,14 @@ export const AppTranslation = {
 			return userPreferredLocale.locale
 		}
 
-		if (AppTranslation.isLocaleSupported(userPreferredLocale.localeNoRegion as LocaleTypes)) {
-			return userPreferredLocale.localeNoRegion
-		}
-
 		return AppTranslation.defaultLocale
 	},
-
-	async routeMiddleware(
-		to: RouteLocationNormalizedGeneric,
-		_from: RouteLocationNormalizedLoadedGeneric,
-		next: NavigationGuardNext,
-	) {
-		const paramLocale = to.params.locale as LocaleTypes
-
-		if (!AppTranslation.isLocaleSupported(paramLocale)) {
-			return next(AppTranslation.guessDefaultLocale())
-		}
-
-		await AppTranslation.switchLanguage(paramLocale)
-
-		return next()
-	},
-
-	i18nRoute(to: RouteLocationNormalizedGeneric) {
-		return {
-			...to,
-			params: {
-				locale: AppTranslation.currentLocale,
-				...to.params,
-			},
-		}
-	},
 }
+
+export const i18nConfig = createI18n({
+	locale: AppTranslation.guessDefaultLocale(),
+	legacy: false,
+	globalInjection: true,
+	fallbackLocale: LOCALES.RU,
+	messages: jsonLocalesMessages,
+})
