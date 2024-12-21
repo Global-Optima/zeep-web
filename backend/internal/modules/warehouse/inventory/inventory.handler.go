@@ -3,7 +3,6 @@ package inventory
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -121,40 +120,13 @@ func (h *InventoryHandler) ExtendExpiration(c *gin.Context) {
 }
 
 func (h *InventoryHandler) GetDeliveries(c *gin.Context) {
-	warehouseIDStr := c.Query("warehouseID")
-	startDateStr := c.Query("startDate")
-	endDateStr := c.Query("endDate")
-
-	var warehouseID *uint
-	if warehouseIDStr != "" {
-		parsedID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid warehouse ID")
-			return
-		}
-		id := uint(parsedID)
-		warehouseID = &id
+	var filter types.DeliveryFilter
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters: "+err.Error())
+		return
 	}
 
-	var startDate, endDate *time.Time
-	if startDateStr != "" {
-		parsedStartDate, err := time.Parse(time.RFC3339, startDateStr)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid start date format, use RFC3339")
-			return
-		}
-		startDate = &parsedStartDate
-	}
-	if endDateStr != "" {
-		parsedEndDate, err := time.Parse(time.RFC3339, endDateStr)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid end date format, use RFC3339")
-			return
-		}
-		endDate = &parsedEndDate
-	}
-
-	deliveries, err := h.service.GetDeliveries(warehouseID, startDate, endDate)
+	deliveries, err := h.service.GetDeliveries(filter.WarehouseID, filter.StartDate, filter.EndDate)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch deliveries: "+err.Error())
 		return

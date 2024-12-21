@@ -2,10 +2,11 @@ package init
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
 	"log"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -16,6 +17,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
@@ -247,6 +249,15 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		},
 		warehouse.NewWarehouseHandler,
 		apiRouter.RegisterWarehouseRoutes,
+	)
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (stockRequests.StockRequestService, error) {
+			return stockRequests.NewStockRequestService(stockRequests.NewStockRequestRepository(dbHandler.DB)), nil
+		},
+		stockRequests.NewStockRequestHandler,
+		apiRouter.RegisterStockRequestRoutes,
 	)
 
 	return router

@@ -43,28 +43,19 @@ type ProductSize struct {
 
 type ProductIngredient struct {
 	BaseEntity
-	ItemIngredientID uint           `gorm:"index;not null"`
-	ItemIngredient   ItemIngredient `gorm:"foreignKey:ItemIngredientID;constraint:OnDelete:CASCADE"`
-	ProductSizeID    uint           `gorm:"index;not null"`
-	ProductSize      ProductSize    `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
-	Ingredient       Ingredient     `gorm:"foreignKey:ItemIngredientID;constraint:OnDelete:CASCADE"`
+	IngredientID  uint        `gorm:"index;not null"`
+	Ingredient    Ingredient  `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	ProductSizeID uint        `gorm:"index;not null"`
+	ProductSize   ProductSize `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
+	Quantity      float64     `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 }
 
 type AdditiveIngredient struct {
 	BaseEntity
-	ItemIngredientID uint           `gorm:"index;not null"`
-	ItemIngredient   ItemIngredient `gorm:"foreignKey:ItemIngredientID;constraint:OnDelete:CASCADE"`
-	AdditiveID       uint           `gorm:"index;not null"`
-	Additive         Additive       `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
-	Ingredient       Ingredient     `gorm:"foreignKey:ItemIngredientID;constraint:OnDelete:CASCADE"`
-}
-
-type ItemIngredient struct {
-	BaseEntity
-	IngredientID uint       `gorm:"not null;index"`
+	IngredientID uint       `gorm:"index;not null"`
 	Ingredient   Ingredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
-	ItemID       uint       `gorm:"not null;index"`
-	Product      Product    `gorm:"foreignKey:ItemID;constraint:OnDelete:CASCADE"`
+	AdditiveID   uint       `gorm:"index;not null"`
+	Additive     Additive   `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	Quantity     float64    `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 }
 
@@ -76,7 +67,9 @@ type Ingredient struct {
 	Carbs     float64             `gorm:"type:decimal(5,2);check:carbs >= 0"`
 	Proteins  float64             `gorm:"type:decimal(5,2);check:proteins >= 0"`
 	ExpiresAt *time.Time          `gorm:"type:timestamp"`
-	Products  []ProductIngredient `gorm:"foreignKey:ItemIngredientID"`
+	Products  []ProductIngredient `gorm:"foreignKey:IngredientID"`
+	UnitID    uint                `gorm:"not null"` // Link to Unit
+	Unit      Unit                `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 }
 
 type ProductAdditive struct {

@@ -10,6 +10,16 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+	-- Units Table
+CREATE TABLE IF NOT EXISTS units (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    conversion_factor DECIMAL(10,4) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
 -- ProductCategory Table
 CREATE TABLE
 	IF NOT EXISTS product_categories (
@@ -177,6 +187,7 @@ CREATE TABLE
 		carbs DECIMAL(5, 2) CHECK (carbs >= 0),
 		proteins DECIMAL(5, 2) CHECK (proteins >= 0),
 		expires_at TIMESTAMPTZ,
+    	unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -186,20 +197,21 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS product_ingredients (
 		id SERIAL PRIMARY KEY,
-		item_ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
+		quantity DECIMAL(10,2) NOT NULL CHECK (quantity > 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
 
--- ItemIngredients Table
+-- AdditiveIngredients Table 
 CREATE TABLE
-	IF NOT EXISTS item_ingredients (
+	IF NOT EXISTS additive_ingredients (
 		id SERIAL PRIMARY KEY,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-		item_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
-		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
+		quantity DECIMAL(10,2) NOT NULL CHECK (quantity > 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -244,6 +256,7 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS stock_requests (
 		id SERIAL PRIMARY KEY,
+		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		status VARCHAR(50) NOT NULL,
 		request_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -503,16 +516,6 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
--- Units Table
-CREATE TABLE IF NOT EXISTS units (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    conversion_factor DECIMAL(10,4) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-);
-
 -- StockMaterials Table
 CREATE TABLE IF NOT EXISTS stock_materials (
     id SERIAL PRIMARY KEY,
@@ -531,7 +534,7 @@ CREATE TABLE IF NOT EXISTS stock_materials (
 );
 
 -- Packages Table
-CREATE TABLE IF NOT EXISTS packages (
+CREATE TABLE IF NOT EXISTS stock_material_packages (
     id SERIAL PRIMARY KEY,
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     package_size DECIMAL(10,2) NOT NULL,
@@ -542,7 +545,7 @@ CREATE TABLE IF NOT EXISTS packages (
 );
 
 -- Ingredients Mapping Table
-CREATE TABLE IF NOT EXISTS ingredients_mapping (
+CREATE TABLE IF NOT EXISTS ingredient_stock_material_mapping (
     id SERIAL PRIMARY KEY,
     ingredient_id INT NOT NULL REFERENCES ingredients(id) ON DELETE CASCADE,
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
@@ -552,7 +555,7 @@ CREATE TABLE IF NOT EXISTS ingredients_mapping (
 );
 
 -- Deliveries Table
-CREATE TABLE IF NOT EXISTS deliveries (
+CREATE TABLE IF NOT EXISTS supplier_warehouse_deliveries (
     id SERIAL PRIMARY KEY,
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     supplier_id INT NOT NULL,
@@ -581,5 +584,6 @@ CREATE TABLE IF NOT EXISTS supplier_materials (
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-)
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	deleted_at TIMESTAMPTZ
+);
