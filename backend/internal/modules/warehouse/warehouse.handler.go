@@ -68,7 +68,7 @@ func (h *WarehouseHandler) GetAllStoresByWarehouse(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessPaginatedResponse(c, stores, nil) // add pagination
+	utils.SendSuccessResponseWithPagination(c, stores, nil) // add pagination
 }
 
 func (h *WarehouseHandler) CreateWarehouse(c *gin.Context) {
@@ -101,7 +101,7 @@ func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, warehouse)
+	utils.SendSuccessResponse(c, warehouse)
 }
 
 func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
@@ -111,7 +111,7 @@ func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessPaginatedResponse(c, warehouses, nil) // add pagination
+	utils.SendSuccessResponseWithPagination(c, warehouses, nil) // add pagination
 }
 
 func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {
@@ -135,7 +135,7 @@ func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
-	utils.SuccessResponse(c, updated)
+	utils.SendSuccessResponse(c, updated)
 }
 
 func (h *WarehouseHandler) DeleteWarehouse(c *gin.Context) {

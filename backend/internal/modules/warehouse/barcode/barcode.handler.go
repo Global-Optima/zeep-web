@@ -27,7 +27,7 @@ func (h *BarcodeHandler) GenerateBarcode(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, response)
+	utils.SendSuccessResponse(c, response)
 }
 
 func (h *BarcodeHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
@@ -51,7 +51,7 @@ func (h *BarcodeHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, response)
+	utils.SendSuccessResponse(c, response)
 }
 
 func (h *BarcodeHandler) PrintAdditionalBarcodes(c *gin.Context) {
@@ -67,5 +67,5 @@ func (h *BarcodeHandler) PrintAdditionalBarcodes(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, response)
+	utils.SendSuccessResponse(c, response)
 }

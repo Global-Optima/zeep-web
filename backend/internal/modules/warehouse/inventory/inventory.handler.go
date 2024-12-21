@@ -61,7 +61,7 @@ func (h *InventoryHandler) GetInventoryLevels(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, levels)
+	utils.SendSuccessResponse(c, levels)
 }
 
 func (h *InventoryHandler) PickupStock(c *gin.Context) {
@@ -101,7 +101,7 @@ func (h *InventoryHandler) GetExpiringItems(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, items)
+	utils.SendSuccessResponse(c, items)
 }
 
 func (h *InventoryHandler) ExtendExpiration(c *gin.Context) {
@@ -132,5 +132,5 @@ func (h *InventoryHandler) GetDeliveries(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, deliveries)
+	utils.SendSuccessResponse(c, deliveries)
 }

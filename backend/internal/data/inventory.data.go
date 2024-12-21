@@ -25,10 +25,6 @@ type StoreWarehouse struct {
 	Store       Store     `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	WarehouseID uint      `gorm:"not null;index"`
 	Warehouse   Warehouse `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
-	StoreID     uint      `gorm:"not null;index"`
-	Store       Store     `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
-	WarehouseID uint      `gorm:"not null;index"`
-	Warehouse   Warehouse `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
 }
 
 type StoreWarehouseStock struct {

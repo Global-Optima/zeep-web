@@ -8,9 +8,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
-
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
