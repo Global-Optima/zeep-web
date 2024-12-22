@@ -10,11 +10,12 @@ import (
 
 type StockRequestService interface {
 	CreateStockRequest(req types.CreateStockRequestDTO) (uint, error)
-	GetStockRequests(filter types.StockRequestFilter) ([]types.StockRequestResponse, error)
+	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
+	GetStockRequestByID(id uint) (types.StockRequestResponse, error)
 	UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error
 	GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error)
 	GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
-	AddStockRequestIngredient(requestID uint, item types.StockRequestItemDTO) error
+	AddStockRequestIngredient(requestID uint, item types.CreateStockRequestItemDTO) error
 	DeleteStockRequestIngredient(ingredientID uint) error
 }
 
@@ -72,7 +73,7 @@ func (s *stockRequestService) CreateStockRequest(req types.CreateStockRequestDTO
 	return stockRequest.ID, nil
 }
 
-func (s *stockRequestService) GetStockRequests(filter types.StockRequestFilter) ([]types.StockRequestResponse, error) {
+func (s *stockRequestService) GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error) {
 	requests, err := s.repo.GetStockRequests(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stock requests: %w", err)
@@ -80,9 +81,18 @@ func (s *stockRequestService) GetStockRequests(filter types.StockRequestFilter) 
 
 	responses := []types.StockRequestResponse{}
 	for _, request := range requests {
-		responses = append(responses, types.ToStockRequestResponse(request))
+		responses = append(responses, types.ToStockRequestResponse(&request))
 	}
 	return responses, nil
+}
+
+func (s *stockRequestService) GetStockRequestByID(id uint) (types.StockRequestResponse, error) {
+	request, err := s.repo.GetStockRequestByID(id)
+	if err != nil {
+		return types.StockRequestResponse{}, fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	return types.ToStockRequestResponse(request), nil
 }
 
 func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error {
@@ -161,7 +171,7 @@ func (s *stockRequestService) GetAllStockMaterials(storeID uint, filter types.St
 	return s.repo.GetAllStockMaterials(storeID, filter)
 }
 
-func (s *stockRequestService) AddStockRequestIngredient(requestID uint, item types.StockRequestItemDTO) error {
+func (s *stockRequestService) AddStockRequestIngredient(requestID uint, item types.CreateStockRequestItemDTO) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)

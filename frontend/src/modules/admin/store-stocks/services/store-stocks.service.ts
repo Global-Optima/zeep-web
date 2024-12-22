@@ -6,13 +6,13 @@ import type {
 	StoreStocks,
 	StoreStocksFilter,
 	UpdateStoreStock,
-} from '@/modules/admin/store-warehouse/models/store-stock.model'
+} from '@/modules/admin/store-stocks/models/store-stock.model'
 
 class StoreStocksService {
 	async getStoreStocks(storeId: number, filter?: StoreStocksFilter) {
 		try {
 			const response = await apiClient.get<PaginatedResponse<StoreStocks[]>>(
-				`/store-warehouse-stock/${storeId}`,
+				`/store-stock/${storeId}`,
 				{
 					params: buildRequestFilter(filter),
 				},
@@ -26,7 +26,7 @@ class StoreStocksService {
 
 	async getStoreStock(storeId: number, id: number) {
 		try {
-			const response = await apiClient.get<StoreStocks>(`/store-warehouse-stock/${storeId}/${id}`)
+			const response = await apiClient.get<StoreStocks>(`/store-stock/${storeId}/${id}`)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch store stock by id ${id}:`, error)
@@ -36,7 +36,7 @@ class StoreStocksService {
 
 	async updateStoreStock(storeId: number, id: number, dto: UpdateStoreStock) {
 		try {
-			const response = await apiClient.put<void>(`/store-warehouse-stock/${storeId}/${id}`, dto)
+			const response = await apiClient.put<void>(`/store-stock/${storeId}/${id}`, dto)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to update store stock by id ${id}:`, error)
@@ -46,7 +46,7 @@ class StoreStocksService {
 
 	async createMultipleStoreStock(storeId: number, dto: CreateMultipleStoreStock) {
 		try {
-			const response = await apiClient.post<void>(`/store-warehouse-stock/${storeId}`, dto)
+			const response = await apiClient.post<void>(`/store-stock/${storeId}`, dto)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to create store stock:`, error)

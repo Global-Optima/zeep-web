@@ -111,7 +111,7 @@ func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, warehouses, nil) // add pagination
+	utils.SendSuccessResponse(c, warehouses)
 }
 
 func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {

@@ -7,9 +7,9 @@
 
 <script lang="ts" setup>
 import { getRouteName } from '@/core/config/routes.config'
-import AdminStoreStocksCreateForm from '@/modules/admin/store-warehouse/components/create/admin-store-stocks-create-form.vue'
-import type { CreateMultipleStoreStock } from '@/modules/admin/store-warehouse/models/store-stock.model'
-import { storeStocksService } from '@/modules/admin/store-warehouse/services/store-stocks.service'
+import AdminStoreStocksCreateForm from '@/modules/admin/store-stocks/components/create/admin-store-stocks-create-form.vue'
+import type { CreateMultipleStoreStock } from '@/modules/admin/store-stocks/models/store-stock.model'
+import { storeStocksService } from '@/modules/admin/store-stocks/services/store-stocks.service'
 import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'

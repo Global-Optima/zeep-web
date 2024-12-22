@@ -45,15 +45,15 @@
 
 <script setup lang="ts">
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/core/components/ui/table'
-import type { StoreStocks } from '@/modules/admin/store-warehouse/models/store-stock.model'
-import { useRouter } from 'vue-router'
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/core/components/ui/table';
+import type { StoreStocks } from '@/modules/admin/store-stocks/models/store-stock.model';
+import { useRouter } from 'vue-router';
 
 // Props
 const { stocks } = defineProps<{ stocks: StoreStocks[] }>();

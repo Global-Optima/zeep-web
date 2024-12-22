@@ -13,7 +13,7 @@ import (
 type InventoryService interface {
 	ReceiveInventory(req types.ReceiveInventoryRequest) error
 	TransferInventory(req types.TransferInventoryRequest) error
-	GetInventoryLevels(warehouseID uint) ([]types.InventoryItem, error)
+	GetInventoryLevels(filter *types.GetInventoryLevelsFilterQuery) ([]types.InventoryItem, error)
 	PickupStock(req types.PickupRequest) error
 	GetExpiringItems(warehouseID uint, thresholdDays int) ([]types.UpcomingExpirationResponse, error)
 	ExtendExpiration(req types.ExtendExpirationRequest) error
@@ -74,8 +74,8 @@ func (s *inventoryService) TransferInventory(req types.TransferInventoryRequest)
 	return nil
 }
 
-func (s *inventoryService) GetInventoryLevels(warehouseID uint) ([]types.InventoryItem, error) {
-	stocks, err := s.repo.GetInventoryLevels(warehouseID)
+func (s *inventoryService) GetInventoryLevels(filter *types.GetInventoryLevelsFilterQuery) ([]types.InventoryItem, error) {
+	stocks, err := s.repo.GetInventoryLevels(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch inventory levels: %w", err)
 	}

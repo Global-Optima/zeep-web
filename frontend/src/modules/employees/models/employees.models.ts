@@ -20,6 +20,13 @@ export interface Employee {
 	isActive: boolean
 	type: EmployeeType
 	imageUrl?: string
+
+	storeDetails?: {
+		storeId: number
+	}
+	warehouseDetails?: {
+		warehouseId: number
+	}
 }
 
 export interface EmployeeLoginDTO {

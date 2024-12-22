@@ -4,14 +4,15 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type CreateStockRequestDTO struct {
-	StoreID uint                  `json:"storeId" binding:"required"`
-	Items   []StockRequestItemDTO `json:"items" binding:"required"`
+	StoreID uint                        `json:"storeId" binding:"required"`
+	Items   []CreateStockRequestItemDTO `json:"items" binding:"required"`
 }
 
-type StockRequestItemDTO struct {
+type CreateStockRequestItemDTO struct {
 	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
 	Quantity        float64 `json:"quantity" binding:"required,gt=0"`
 }
@@ -53,12 +54,13 @@ type LowStockIngredientResponse struct {
 	LowStockThreshold float64 `json:"lowStockThreshold"`
 }
 
-type StockRequestFilter struct {
-	StoreID     *uint      `json:"storeId,omitempty"`
-	WarehouseID *uint      `json:"warehouseId,omitempty"`
-	Status      *string    `json:"status,omitempty"`
-	StartDate   *time.Time `json:"startDate,omitempty"`
-	EndDate     *time.Time `json:"endDate,omitempty"`
+type GetStockRequestsFilter struct {
+	Pagination  *utils.Pagination
+	StoreID     *uint      `form:"storeId,omitempty"`
+	WarehouseID *uint      `form:"warehouseId,omitempty"`
+	Status      *string    `form:"status,omitempty"`
+	StartDate   *time.Time `form:"startDate,omitempty"`
+	EndDate     *time.Time `form:"endDate,omitempty"`
 }
 
 type StockMaterialDTO struct {

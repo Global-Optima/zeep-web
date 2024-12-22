@@ -7,6 +7,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,7 @@ type InventoryRepository interface {
 	LogAndUpdateStock(deliveries []data.SupplierWarehouseDelivery, warehouseID uint) error
 
 	TransferStock(sourceWarehouseID, targetWarehouseID uint, items []data.StockRequestIngredient) error
-	GetInventoryLevels(warehouseID uint) ([]data.WarehouseStock, error)
+	GetInventoryLevels(filter *types.GetInventoryLevelsFilterQuery) ([]data.WarehouseStock, error)
 	PickupStock(storeWarehouseID uint, items []data.StockRequestIngredient) error
 
 	GetDeliveryByID(deliveryID uint, delivery *data.SupplierWarehouseDelivery) error
@@ -147,12 +148,36 @@ func (r *inventoryRepository) TransferStock(sourceWarehouseID, targetWarehouseID
 	return tx.Commit().Error
 }
 
-func (r *inventoryRepository) GetInventoryLevels(warehouseID uint) ([]data.WarehouseStock, error) {
+func (r *inventoryRepository) GetInventoryLevels(filter *types.GetInventoryLevelsFilterQuery) ([]data.WarehouseStock, error) {
 	var stocks []data.WarehouseStock
-	err := r.db.Preload("StockMaterial").Preload("Warehouse").
-		Where("warehouse_id = ?", warehouseID).
-		Find(&stocks).Error
-	return stocks, err
+
+	query := r.db.Model(&data.WarehouseStock{}).
+		Preload("StockMaterial").
+		Preload("Warehouse")
+
+	if filter != nil {
+		if filter.WarehouseID != nil {
+			query = query.Where("warehouse_id = ?", *filter.WarehouseID)
+		}
+
+		if filter.Search != nil && *filter.Search != "" {
+			search := "%" + *filter.Search + "%"
+			query = query.Where("stock_materials.name ILIKE ?", search).
+				Joins("JOIN stock_materials ON stock_materials.id = warehouse_stocks.stock_material_id")
+		}
+	}
+
+	var err error
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.WarehouseStock{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := query.Find(&stocks).Error; err != nil {
+		return nil, err
+	}
+
+	return stocks, nil
 }
 
 func (r *inventoryRepository) PickupStock(storeWarehouseID uint, items []data.StockRequestIngredient) error {

@@ -73,25 +73,25 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/core/components/ui/card'
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
-import type { StoreStocks, UpdateStoreStock } from '@/modules/admin/store-warehouse/models/store-stock.model'
+import type { StoreStocks, UpdateStoreStock } from '@/modules/admin/store-stocks/models/store-stock.model'
 
 // Props
 const props = defineProps<{

@@ -48,20 +48,21 @@ func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 }
 
 func (h *InventoryHandler) GetInventoryLevels(c *gin.Context) {
-	warehouseIDStr := c.Param("warehouseID")
-	warehouseID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid warehouse ID")
+	var filter types.GetInventoryLevelsFilterQuery
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
 
-	levels, err := h.service.GetInventoryLevels(uint(warehouseID))
+	filter.Pagination = utils.ParsePagination(c)
+
+	levels, err := h.service.GetInventoryLevels(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch inventory levels: "+err.Error())
 		return
 	}
 
-	utils.SendSuccessResponse(c, levels)
+	utils.SendSuccessResponseWithPagination(c, levels, filter.Pagination)
 }
 
 func (h *InventoryHandler) PickupStock(c *gin.Context) {

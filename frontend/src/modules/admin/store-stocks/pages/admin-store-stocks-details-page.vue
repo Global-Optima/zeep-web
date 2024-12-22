@@ -9,9 +9,9 @@
 
 <script lang="ts" setup>
 import { getRouteName } from '@/core/config/routes.config'
-import AdminStoreStocksDetailsForm from '@/modules/admin/store-warehouse/components/details/admin-store-stocks-details-form.vue'
-import type { UpdateStoreStock } from '@/modules/admin/store-warehouse/models/store-stock.model'
-import { storeStocksService } from '@/modules/admin/store-warehouse/services/store-stocks.service'
+import AdminStoreStocksDetailsForm from '@/modules/admin/store-stocks/components/details/admin-store-stocks-details-form.vue'
+import type { UpdateStoreStock } from '@/modules/admin/store-stocks/models/store-stock.model'
+import { storeStocksService } from '@/modules/admin/store-stocks/services/store-stocks.service'
 import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue'

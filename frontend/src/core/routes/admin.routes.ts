@@ -32,7 +32,16 @@ export const ADMIN_CHILDREN_ROUTES = {
 			title: 'Склад Магазина',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/store-warehouse/pages/admin-store-stocks-page.vue'),
+		component: () => import('@/modules/admin/store-stocks/pages/admin-store-stocks-page.vue'),
+	},
+	ADMIN_WAREHOUSE_STOCKS: {
+		path: 'warehouse-stocks',
+		meta: {
+			title: 'Склад Магазина',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/warehouse-stocks/pages/admin-warehouse-stocks-page.vue'),
 	},
 	ADMIN_STORE_STOCKS_DETAILS: {
 		path: 'store-stocks/:id',
@@ -41,7 +50,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 			requiresAuth: true,
 		},
 		component: () =>
-			import('@/modules/admin/store-warehouse/pages/admin-store-stocks-details-page.vue'),
+			import('@/modules/admin/store-stocks/pages/admin-store-stocks-details-page.vue'),
 	},
 	ADMIN_CREATE_STORE_STOCKS: {
 		path: 'store-stocks/create',
@@ -50,7 +59,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 			requiresAuth: true,
 		},
 		component: () =>
-			import('@/modules/admin/store-warehouse/pages/admin-store-stocks-create-page.vue'),
+			import('@/modules/admin/store-stocks/pages/admin-store-stocks-create-page.vue'),
 	},
 	ADMIN_SUPPLIERS: {
 		path: 'suppliers',
@@ -207,6 +216,59 @@ export const ADMIN_CHILDREN_ROUTES = {
 		},
 		component: () =>
 			import('@/modules/admin/additive-categories/pages/admin-additive-categories-page.vue'),
+	},
+	ADMIN_STORE_STOCK_REQUESTS: {
+		path: 'store-stock-requests',
+		meta: {
+			title: 'Запросы на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/store-stock-requests/pages/admin-store-stock-requests-list-page.vue'),
+	},
+	ADMIN_STORE_STOCK_REQUESTS_CREATE: {
+		path: 'store-stock-requests/create',
+		meta: {
+			title: 'Создать запрос на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/store-stock-requests/pages/admin-store-stock-requests-create-page.vue'
+			),
+	},
+	ADMIN_STORE_STOCK_REQUESTS_DETAILS: {
+		path: 'store-stock-requests/:id',
+		meta: {
+			title: 'Детали запроса на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/store-stock-requests/pages/admin-store-stock-requests-details-page.vue'
+			),
+	},
+	ADMIN_WAREHOUSE_STOCK_REQUESTS: {
+		path: 'warehouse-stock-requests',
+		meta: {
+			title: 'Запросы на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/warehouse-stock-requests/pages/admin-warehouse-stock-requests-list-page.vue'
+			),
+	},
+	ADMIN_WAREHOUSE_STOCK_REQUESTS_DETAILS: {
+		path: 'warehouse-stock-requests/:id',
+		meta: {
+			title: 'Детали запроса на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/warehouse-stock-requests/pages/admin-warehouse-stock-requests-details-page.vue'
+			),
 	},
 } satisfies AppRouteRecord
 

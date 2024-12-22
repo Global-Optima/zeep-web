@@ -4,7 +4,6 @@ import {
 	EmployeeType,
 	type CreateEmployeeDto,
 	type Employee,
-	type EmployeeLoginDTO,
 	type EmployeesFilter,
 	type UpdateEmployeeDto,
 } from '../models/employees.models'
@@ -48,17 +47,6 @@ class EmployeesService {
 			throw error
 		}
 	}
-
-	async login(dto: EmployeeLoginDTO) {
-		try {
-			return apiClient.post(`${this.baseUrl}/login`, dto).then(res => res.data)
-		} catch (error) {
-			console.error(`Failed to login employee:`, error)
-			throw error
-		}
-	}
-
-	async logout() {}
 
 	async getCurrentEmployee() {
 		try {

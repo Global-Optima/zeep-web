@@ -4,7 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func ToStockRequestResponse(request data.StockRequest) StockRequestResponse {
+func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 	items := make([]StockRequestItemResponse, len(request.Ingredients))
 	for i, ingredient := range request.Ingredients {
 		items[i] = StockRequestItemResponse{

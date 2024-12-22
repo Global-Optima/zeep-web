@@ -7,6 +7,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,7 @@ type StockRequestRepository interface {
 	DeleteStockRequestIngredient(ingredientID uint) error
 	UpdateStockRequestIngredientDates(dates *types.UpdateIngredientDates) error
 
-	GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error)
+	GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error)
 	GetStockRequestByID(requestID uint) (*data.StockRequest, error)
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
 	GetMappingByIngredientID(ingredientID uint, mapping *data.IngredientStockMaterialMapping) error
@@ -54,12 +55,12 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientDates(dates *types.
 		Updates(dates).Error
 }
 
-func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error) {
+func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error) {
 	var requests []data.StockRequest
-	query := r.db.Preload("Ingredients.Ingredient.Unit").
-		Preload("Ingredients.Ingredient.Category").
-		Preload("Store.Name").
-		Preload("Warehouse.Name")
+	query := r.db.
+		Preload("Ingredients.Ingredient").
+		Preload("Store").
+		Preload("Warehouse")
 
 	if filter.StoreID != nil {
 		query = query.Where("store_id = ?", *filter.StoreID)
@@ -77,16 +78,23 @@ func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilte
 		query = query.Where("created_at <= ?", *filter.EndDate)
 	}
 
-	err := query.Find(&requests).Error
+	query = query.Order("created_at DESC")
+
+	var err error
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StockRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
+	}
+
+	err = query.Find(&requests).Error
 	return requests, err
 }
 
 func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.StockRequest, error) {
 	var request data.StockRequest
-	err := r.db.Preload("Ingredients.Ingredient.Unit").
-		Preload("Ingredients.Ingredient.Category").
-		Preload("Store.Name").
-		Preload("Warehouse.Name").
+	err := r.db.Preload("Ingredients.Ingredient").
+		Preload("Store").
+		Preload("Warehouse").
 		Where("id = ?", requestID).
 		First(&request).Error
 	if err != nil {

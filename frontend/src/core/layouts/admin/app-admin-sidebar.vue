@@ -37,6 +37,7 @@ import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { EmployeeRole } from '@/modules/employees/models/employees.models'
 import {
   Apple,
+  Blocks,
   ChartBar,
   FileBox,
   LayoutList,
@@ -44,6 +45,7 @@ import {
   Package,
   ShoppingCart,
   Store,
+  Truck,
   Users,
   Warehouse,
   type LucideIcon,
@@ -89,6 +91,9 @@ const navItems: NavItem[] = [
   { name: 'Поставщики', routeKey: 'ADMIN_SUPPLIERS', icon: FileBox, accessRoles: [EmployeeRole.WAREHOUSE, EmployeeRole.DIRECTOR] },
   { name: 'Категории товаров', routeKey: 'ADMIN_PRODUCT_CATEGORIES', icon: LayoutList, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Категории топпингов', routeKey: 'ADMIN_ADDITIVE_CATEGORIES', icon: LayoutList, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
+  { name: 'Запросы на склад', routeKey: "ADMIN_STORE_STOCK_REQUESTS", icon: Truck, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Запросы на склад', routeKey: "ADMIN_WAREHOUSE_STOCK_REQUESTS", icon: Truck, accessRoles: [EmployeeRole.WAREHOUSE] },
+  { name: 'Запасы', routeKey: "ADMIN_WAREHOUSE_STOCKS", icon: Blocks, accessRoles: [EmployeeRole.WAREHOUSE] },
 ];
 
 // Computed list of accessible navigation items

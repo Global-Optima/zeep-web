@@ -1,6 +1,10 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type ReceiveInventoryRequest struct {
 	SupplierID  uint            `json:"supplierId" binding:"required"`
@@ -19,7 +23,6 @@ type InventoryItem struct {
 	Category        *string  `json:"category,omitempty"`                // Optional for new SKUs
 	Expiration      *int     `json:"expiration,omitempty"`              // Optional; in days, overrides default expiration
 	Package         *Package `json:"package,omitempty"`                 // Required for new SKUs
-
 }
 
 type ExistingInventoryItem struct {
@@ -76,4 +79,10 @@ type DeliveryFilter struct {
 	WarehouseID *uint      `form:"warehouseID"`
 	StartDate   *time.Time `form:"startDate" time_format:"2006-01-02T15:04:05Z07:00"`
 	EndDate     *time.Time `form:"endDate" time_format:"2006-01-02T15:04:05Z07:00"`
+}
+
+type GetInventoryLevelsFilterQuery struct {
+	Search      *string `form:"search"`
+	WarehouseID *uint   `form:"warehouseId"`
+	Pagination  *utils.Pagination
 }
