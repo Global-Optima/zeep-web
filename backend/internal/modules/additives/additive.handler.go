@@ -19,12 +19,12 @@ func NewAdditiveHandler(service AdditiveService) *AdditiveHandler {
 
 func (h *AdditiveHandler) GetAdditiveCategories(c *gin.Context) {
 	var filter types.AdditiveCategoriesFilterQuery
-	if err := c.ShouldBindQuery(&filter); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.AdditiveCategory{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
-	additives, err := h.service.GetAdditiveCategories(filter)
+	additives, err := h.service.GetAdditiveCategories(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve additives")
 		return
@@ -103,7 +103,7 @@ func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 
 	filter.Pagination = utils.ParsePagination(c)
 
-	additives, err := h.service.GetAdditives(filter)
+	additives, err := h.service.GetAdditives(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch additives")
 		return

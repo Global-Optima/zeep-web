@@ -66,6 +66,10 @@ func (b *BaseFilter) GetSort() *Sort {
 
 func ParseQueryWithBaseFilter(c *gin.Context, filter FilterProvider, model interface{}) error {
 	if filter == nil {
+		return fmt.Errorf("filter cannot be nil")
+	}
+	
+	if reflect.ValueOf(filter).Kind() == reflect.Ptr && reflect.ValueOf(filter).IsNil() {
 		return fmt.Errorf("filter cannot be a nil pointer")
 	}
 

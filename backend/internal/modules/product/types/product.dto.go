@@ -39,50 +39,67 @@ type ProductSizeDTO struct {
 	Measure   string  `json:"measure"`
 }
 
-type CreateStoreProduct struct {
-	Name         string                 `json:"name" binding:"required"`
-	Description  string                 `json:"description"`
-	ImageURL     string                 `json:"imageUrl"`
-	CategoryID   *uint                  `json:"categoryId"`
-	ProductSizes []CreateProductSizeDTO `json:"productSizes"`
-	Additives    []SelectedAdditiveDTO  `json:"additives"`
+type CreateProductDTO struct {
+	Name             string `json:"name" binding:"required,min=2,max=100"` // Name is required, 2-100 chars
+	Description      string `json:"description" binding:"max=500"`         // Optional, max 500 chars
+	ImageURL         string `json:"imageUrl" binding:"omitempty,url"`      // Optional, must be a valid URL if provided
+	CategoryID       *uint  `json:"categoryId" binding:"omitempty"`
+	DefaultAdditives []uint `json:"defaultAdditives" binding:"omitempty,dive,gt=0"`
 }
 
-type UpdateStoreProduct struct {
-	ID           uint                   `json:"id" binding:"required"`
-	Name         string                 `json:"name"`
-	Description  string                 `json:"description"`
-	ImageURL     string                 `json:"imageUrl"`
-	CategoryID   *uint                  `json:"categoryId"`
-	ProductSizes []UpdateProductSizeDTO `json:"productSizes"`
-	Additives    []SelectedAdditiveDTO  `json:"additives"`
+type CreateProductWithAttachesDTO struct {
+	Product      CreateProductDTO           `json:"product" binding:"dive"`
+	ProductSizes []CreateProductSizeDTO     `json:"productSizes" binding:"dive"` // Validate each ProductSize
+	Additives    []SelectedAdditiveTypesDTO `json:"additives" binding:"dive"`    // Validate each Additive
+}
+
+type SelectedAdditiveTypesDTO struct {
+	AdditiveID uint `json:"additiveId" binding:"required"` // Required field
+	IsDefault  bool `json:"isDefault"`                     // Optional
 }
 
 type SelectedAdditiveDTO struct {
-	AdditiveID uint `json:"additiveId" binding:"required"`
-	IsDefault  bool `json:"isDefault"`
+	AdditiveID uint `json:"additiveId" binding:"required,gt=0"`
 }
 
 type CreateProductSizeDTO struct {
-	Name      string  `json:"name" binding:"required"`
-	Measure   string  `json:"measure"`
-	BasePrice float64 `json:"basePrice" binding:"required"`
-	Size      int     `json:"size"`
-	IsDefault bool    `json:"isDefault"`
+	ProductID   uint    `json:"productId" binding:"required,gt=0"`
+	Name        string  `json:"name" binding:"required,min=2,max=50"`
+	Measure     string  `json:"measure" binding:"required,max=20"`
+	BasePrice   float64 `json:"basePrice" binding:"required,gt=0"`
+	Size        int     `json:"size" binding:"required,gte=0"`
+	IsDefault   bool    `json:"isDefault"`
+	Additives   []uint  `json:"additives" binding:"omitempty,dive,gt=0"`
+	Ingredients []uint  `json:"ingredients" binding:"omitempty,dive,gt=0"`
+}
+
+type UpdateProductDTO struct {
+	Name             string `json:"name" binding:"omitempty,min=2,max=100"`
+	Description      string `json:"description" binding:"omitempty,max=500"`
+	ImageURL         string `json:"imageUrl" binding:"omitempty,url"`
+	CategoryID       *uint  `json:"categoryId" binding:"omitempty,gt=0"`
+	DefaultAdditives []uint `json:"defaultAdditives" binding:"omitempty,dive,gt=0"`
 }
 
 type UpdateProductSizeDTO struct {
-	ID        uint    `json:"id" binding:"required"`
-	Name      string  `json:"name"`
-	Measure   string  `json:"measure"`
-	BasePrice float64 `json:"basePrice"`
-	Size      int     `json:"size"`
-	IsDefault bool    `json:"isDefault"`
+	Name        *string  `json:"name" binding:"omitempty,max=100"`
+	Measure     *string  `json:"measure" binding:"omitempty,oneof=мл г"`
+	BasePrice   *float64 `json:"basePrice" binding:"omitempty,gt=0"`
+	Size        *int     `json:"size" binding:"omitempty,min=1,max=3"`
+	IsDefault   *bool    `json:"isDefault"`
+	Ingredients []uint   `json:"ingredients" binding:"omitempty,dive,gt=0"`
+	Additives   []uint   `json:"additives" binding:"omitempty,dive,gt=0"`
 }
 
 type ProductsFilterDto struct {
-	StoreID    *uint   `form:"storeId"`
-	CategoryID *uint   `form:"categoryId"`
+	StoreID    *uint   `form:"storeId" binding:"omitempty,gt=0"`
+	CategoryID *uint   `form:"categoryId" binding:"omitempty,gt=0"`
+	Search     *string `form:"search"`
+	utils.BaseFilter
+}
+
+type StoreProductsFilterDto struct {
+	CategoryID *uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Search     *string `form:"search"`
 	utils.BaseFilter
 }

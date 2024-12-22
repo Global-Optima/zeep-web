@@ -5,6 +5,7 @@ import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 type AdditiveCategoriesFilterQuery struct {
 	ProductSizeId *uint   `form:"productSizeId"`
 	Search        *string `form:"search"`
+	utils.BaseFilter
 }
 
 type AdditiveFilterQuery struct {

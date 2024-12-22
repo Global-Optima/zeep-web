@@ -12,12 +12,12 @@ import (
 
 type AdditiveRepository interface {
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
-	GetAdditives(filter types.AdditiveFilterQuery) ([]data.Additive, error)
+	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) error
 	UpdateAdditive(additive *data.Additive) error
 	DeleteAdditive(additiveID uint) error
 
-	GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
+	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	CreateAdditiveCategory(category *data.AdditiveCategory) error
 	UpdateAdditiveCategory(category *data.AdditiveCategory) error
 	DeleteAdditiveCategory(categoryID uint) error
@@ -32,7 +32,7 @@ func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
 }
 
-func (r *additiveRepository) GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
+func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
 	query := r.db.Preload("Additives")
@@ -56,7 +56,7 @@ func (r *additiveRepository) GetAdditiveCategories(filter types.AdditiveCategori
 	return categories, nil
 }
 
-func (r *additiveRepository) GetAdditives(filter types.AdditiveFilterQuery) ([]data.Additive, error) {
+func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error) {
 	var additives []data.Additive
 
 	query := r.db.

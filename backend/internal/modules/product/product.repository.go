@@ -3,24 +3,26 @@ package product
 import (
 	"errors"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
 type ProductRepository interface {
 	GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error)
-	GetStoreProducts(filter types.ProductsFilterDto) ([]data.Product, error)
+	GetStoreProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
 	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
+
+	CreateProduct(product *data.Product) (uint, error)
+	UpdateProduct(id uint, product *data.Product, defaultAdditiveIDs []uint) error
 	DeleteProduct(productID uint) error
 
-	UpdateProduct(product *data.Product) error
-	CreateProduct(product *data.Product) (uint, error)
-	CreateProductSizes(productID uint, sizes []data.ProductSize) error
-	AssignProductAdditives(productSizeID uint, additives []data.ProductAdditive) error
-	AssignDefaultAdditives(productID uint, additives []data.DefaultProductAdditive) error
+	//GetStoreProductSizeDetails(productSizeID uint) (*data.ProductSize, error)
+	//GetProductSizes(productID uint) (*data.ProductSize, error)
+	CreateProductSize(productSize *data.ProductSize) (uint, error)
+	UpdateProductSizeWithAssociations(id uint, productSize *data.ProductSize, additiveIDs, ingredientIDs []uint) error
+	DeleteProductSize(productID uint) error
 }
 
 type productRepository struct {
@@ -48,7 +50,7 @@ func (r *productRepository) GetProductSizeWithProduct(productSizeID uint) (*data
 	return &productSize, nil
 }
 
-func (r *productRepository) GetStoreProducts(filter types.ProductsFilterDto) ([]data.Product, error) {
+func (r *productRepository) GetStoreProducts(filter *types.ProductsFilterDto) ([]data.Product, error) {
 	var products []data.Product
 
 	query := r.db.
@@ -72,7 +74,7 @@ func (r *productRepository) GetStoreProducts(filter types.ProductsFilterDto) ([]
 	}
 
 	var err error
-	query, err = utils.ApplyPagination(query, filter.Pagination, &data.Product{})
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Product{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
@@ -136,7 +138,6 @@ func (r *productRepository) GetStoreProductDetails(storeID uint, productID uint)
 		return nil, err
 	}
 
-	// Map models to DTO
 	productDTO := types.MapToStoreProductDetailsDTO(&product, defaultAdditives)
 
 	return productDTO, nil
@@ -146,36 +147,210 @@ func (r *productRepository) CreateProduct(product *data.Product) (uint, error) {
 	if err := r.db.Create(product).Error; err != nil {
 		return 0, err
 	}
+
 	return product.ID, nil
 }
 
-func (r *productRepository) CreateProductSizes(productID uint, sizes []data.ProductSize) error {
-	for i := range sizes {
-		sizes[i].ProductID = productID
+/*func (r *productRepository) CreateProduct(product *data.Product, defaultAdditiveIDs []uint) (uint, error) {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(product).Error; err != nil {
+			return err
+		}
+
+		defaultAdditives := make([]data.DefaultProductAdditive, 0)
+		for _, id := range defaultAdditiveIDs {
+			defaultAdditives = append(defaultAdditives, data.DefaultProductAdditive{
+				ProductID:  product.ID,
+				AdditiveID: id,
+			})
+		}
+
+		if len(defaultAdditives) > 0 {
+			if err := tx.Create(&defaultAdditives).Error; err != nil {
+				return err
+			}
+		} else {
+			return errors.New("no default additives attached")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return 0, err
 	}
-	return r.db.Create(&sizes).Error
+
+	return product.ID, nil
+}*/
+
+func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (uint, error) {
+	if err := r.db.Create(productSize).Error; err != nil {
+		return 0, err
+	}
+	return productSize.ID, nil
 }
 
-func (r *productRepository) AssignProductAdditives(productSizeID uint, additives []data.ProductAdditive) error {
-	for i := range additives {
-		additives[i].ProductSizeID = productSizeID
-	}
-	return r.db.Create(&additives).Error
+func (r *productRepository) UpdateProductSizeWithAssociations(id uint,
+	productSize *data.ProductSize,
+	additiveIDs, ingredientIDs []uint,
+) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Update the ProductSize model
+		if productSize != nil {
+			if err := tx.Model(&data.ProductSize{}).Where("id = ?", id).Updates(productSize).Error; err != nil {
+				return fmt.Errorf("failed to update product size: %w", err)
+			}
+		}
+
+		// Update Additives
+		if additiveIDs != nil {
+			// Remove existing additives
+			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductAdditive{}).Error; err != nil {
+				return fmt.Errorf("failed to delete additives: %w", err)
+			}
+			// Add new additives
+			for _, additiveID := range additiveIDs {
+				newAdditive := data.ProductAdditive{
+					ProductSizeID: id,
+					AdditiveID:    additiveID,
+				}
+				if err := tx.Create(&newAdditive).Error; err != nil {
+					return fmt.Errorf("failed to create additive: %w", err)
+				}
+			}
+		}
+
+		// Update Ingredients
+		if ingredientIDs != nil {
+			// Remove existing ingredients
+			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductIngredient{}).Error; err != nil {
+				return fmt.Errorf("failed to delete ingredients: %w", err)
+			}
+			// Add new ingredients
+			for _, ingredientID := range ingredientIDs {
+				newIngredient := data.ProductIngredient{
+					ProductSizeID:    id,
+					ItemIngredientID: ingredientID,
+				}
+				if err := tx.Create(&newIngredient).Error; err != nil {
+					return fmt.Errorf("failed to create ingredient: %w", err)
+				}
+			}
+		}
+
+		return nil
+	})
 }
 
-func (r *productRepository) AssignDefaultAdditives(productID uint, additives []data.DefaultProductAdditive) error {
-	for i := range additives {
-		additives[i].ProductID = productID
+/*func (r *productRepository) CreateProductWithSizes(dto *types.CreateProductWithAttachesDTO) (uint, error) {
+	product := types.CreateToProductModel(dto)
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(product).Error; err != nil {
+			return err
+		}
+
+		productSizes := types.ToProductSizesModels(dto.ProductSizes, product.ID)
+		if err := r.createProductSizes(tx, productSizes, product.ID); err != nil {
+			return err
+		}
+
+		if err := r.handleAdditives(tx, dto.Additives, product.ID, productSizes); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to finish transaction for product creation: %w", err)
 	}
-	return r.db.Create(&additives).Error
+
+	return product.ID, nil
+}*/
+
+func (r *productRepository) createProduct(tx *gorm.DB, product *data.Product) (uint, error) {
+	if err := tx.Create(product).Error; err != nil {
+		return 0, err
+	}
+	return product.ID, nil
 }
 
-func (r *productRepository) UpdateProduct(product *data.Product) error {
-	return r.db.Save(product).Error
+func (r *productRepository) createProductSizes(tx *gorm.DB, productSizes []data.ProductSize, productID uint) error {
+	for i := range productSizes {
+		productSizes[i].ProductID = productID
+	}
+	return tx.Create(&productSizes).Error
+}
+
+func (r *productRepository) handleAdditives(tx *gorm.DB, additives []types.SelectedAdditiveTypesDTO, productID uint, productSizes []data.ProductSize) error {
+	var defaultAdditives []data.DefaultProductAdditive
+	productSizeAdditives := make(map[uint][]data.ProductAdditive)
+
+	for _, additive := range additives {
+		if additive.IsDefault {
+			defaultAdditives = append(defaultAdditives, data.DefaultProductAdditive{
+				ProductID:  productID,
+				AdditiveID: additive.AdditiveID,
+			})
+		} else {
+			for _, size := range productSizes {
+				productSizeAdditives[size.ID] = append(productSizeAdditives[size.ID], data.ProductAdditive{
+					ProductSizeID: size.ID,
+					AdditiveID:    additive.AdditiveID,
+				})
+			}
+		}
+	}
+
+	if len(defaultAdditives) > 0 {
+		if err := tx.Create(&defaultAdditives).Error; err != nil {
+			return err
+		}
+	}
+
+	for productSizeID, productAdditives := range productSizeAdditives {
+		if len(additives) > 0 {
+			for i := range additives {
+				productAdditives[i].ProductSizeID = productSizeID
+			}
+			if err := tx.Create(&productAdditives).Error; err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *productRepository) UpdateProduct(productID uint, product *data.Product, defaultAdditiveIDs []uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&data.Product{}).Where("id = ?", productID).Updates(product).Error
+		if err != nil {
+			return err
+		}
+
+		if defaultAdditiveIDs != nil {
+			if err := tx.Where("product_id = ?", productID).Delete(&data.DefaultProductAdditive{}).Error; err != nil {
+				return err
+			}
+
+			for _, additiveID := range defaultAdditiveIDs {
+				newAdditive := data.DefaultProductAdditive{
+					ProductID:  productID,
+					AdditiveID: additiveID,
+				}
+				if err := tx.Create(&newAdditive).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
 }
 
 func (r *productRepository) UpdateProductSize(productSize *data.ProductSize) error {
-	return r.db.Save(productSize).Error
+	return r.db.Updates(productSize).Error
 }
 
 func (r *productRepository) DeleteProduct(productID uint) error {

@@ -3,11 +3,14 @@ package categories
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
-	"github.com/gin-gonic/gin"
 )
 
 type CategoryService interface {
-	GetCategories(c *gin.Context) ([]types.CategoryDTO, error)
+	GetCategories(filter *types.CategoriesFilterDTO) ([]types.CategoryDTO, error)
+	GetCategoryByID(id uint) (*types.CategoryDTO, error)
+	CreateCategory(dto *types.CreateCategoryDTO) (uint, error)
+	UpdateCategory(id uint, dto *types.UpdateCategoryDTO) error
+	DeleteCategory(id uint) error
 }
 
 type categoryService struct {
@@ -20,24 +23,54 @@ func NewCategoryService(repo CategoryRepository) CategoryService {
 	}
 }
 
-func (s *categoryService) GetCategories(c *gin.Context) ([]types.CategoryDTO, error) {
-	categories, err := s.repo.GetCategories()
+func (s *categoryService) GetCategories(filter *types.CategoriesFilterDTO) ([]types.CategoryDTO, error) {
+	categories, err := s.repo.GetCategories(filter)
 	if err != nil {
 		return nil, err
 	}
 
 	dtos := make([]types.CategoryDTO, len(categories))
 	for i, category := range categories {
-		dtos[i] = MapCategoryToDTO(category)
+		dtos[i] = *types.MapCategoryToDTO(category)
 	}
 
 	return dtos, nil
 }
 
-func MapCategoryToDTO(category data.ProductCategory) types.CategoryDTO {
-	return types.CategoryDTO{
-		ID:          category.ID,
-		Name:        category.Name,
-		Description: category.Description,
+func (s *categoryService) GetCategoryByID(id uint) (*types.CategoryDTO, error) {
+	category, err := s.repo.GetCategoryByID(id)
+	if err != nil {
+		return nil, err
 	}
+
+	return types.MapCategoryToDTO(*category), nil
+}
+
+func (s *categoryService) CreateCategory(dto *types.CreateCategoryDTO) (uint, error) {
+	category := data.ProductCategory{
+		Name:        dto.Name,
+		Description: dto.Description,
+	}
+
+	id, err := s.repo.CreateCategory(&category)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (s *categoryService) UpdateCategory(id uint, dto *types.UpdateCategoryDTO) error {
+	category := types.UpdateToCategory(dto)
+
+	err := s.repo.UpdateCategory(id, category)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *categoryService) DeleteCategory(id uint) error {
+	return s.repo.DeleteCategory(id)
 }

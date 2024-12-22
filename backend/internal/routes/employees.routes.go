@@ -9,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
@@ -22,7 +23,25 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	router := r.EmployeeRoutes.Group("/products")
 	{
 		router.GET("", handler.GetProducts)
-		router.GET("/:productId", handler.GetProductDetails)
+		router.GET("/:id", handler.GetProductDetails)
+		router.GET("/:id/store", handler.GetStoreProductDetails)
+		router.POST("", handler.CreateProduct)
+		router.PUT("/:id", handler.UpdateProduct)
+		router.POST("/sizes", handler.CreateProductSize)
+		router.PUT("/sizes/:id", handler.UpdateProductSize)
+	}
+}
+
+func (r *Router) RegisterRecipeRoutes(handler *recipes.RecipeHandler) {
+	router := r.EmployeeRoutes.Group("/products/recipes")
+	{
+		router.GET("/:product-id/steps", handler.GetRecipeSteps)
+
+		router.GET("/steps/:id", handler.GetRecipeStepDetails)
+
+		router.POST("/steps", handler.CreateRecipeStep)
+		router.PUT("/steps/:id", handler.UpdateRecipeStep)
+		router.DELETE("/steps/:id", handler.DeleteRecipeStep)
 	}
 }
 
@@ -52,6 +71,10 @@ func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHan
 	router := r.EmployeeRoutes.Group("/product-categories")
 	{
 		router.GET("", handler.GetAllCategories)
+		router.GET("/:id", handler.GetCategoryByID)
+		router.POST("", handler.CreateCategory)
+		router.PUT("/:id", handler.UpdateCategory)
+		router.DELETE("/:id", handler.DeleteCategory)
 	}
 }
 

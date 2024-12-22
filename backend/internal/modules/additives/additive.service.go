@@ -9,13 +9,13 @@ import (
 )
 
 type AdditiveService interface {
-	GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error)
+	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error)
 	CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) error
 	UpdateAdditiveCategory(dto *types.UpdateAdditiveCategoryDTO) error
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryResponseDTO, error)
 
-	GetAdditives(filter types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
+	GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
 	GetAdditiveByID(additiveID uint) (*types.AdditiveDTO, error)
 	CreateAdditive(dto *types.CreateAdditiveDTO) error
 	UpdateAdditive(dto *types.UpdateAdditiveDTO) error
@@ -34,7 +34,7 @@ func NewAdditiveService(repo AdditiveRepository, logger *zap.SugaredLogger) Addi
 	}
 }
 
-func (s *additiveService) GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error) {
+func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error) {
 	// Fetch raw data from the repository
 	categories, err := s.repo.GetAdditiveCategories(filter)
 	if err != nil {
@@ -130,7 +130,7 @@ func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.Addit
 	return types.ConvertToAdditiveCategoryResponseDTO(category), nil
 }
 
-func (s *additiveService) GetAdditives(filter types.AdditiveFilterQuery) ([]types.AdditiveDTO, error) {
+func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error) {
 	additives, err := s.repo.GetAdditives(filter)
 	if err != nil {
 		return nil, err
