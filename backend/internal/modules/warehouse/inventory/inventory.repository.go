@@ -25,7 +25,6 @@ type InventoryRepository interface {
 	ExtendExpiration(deliveryID uint, newExpirationDate time.Time) error
 
 	ConvertInventoryItemsToStockRequest(items []types.ExistingInventoryItem) ([]data.StockRequestIngredient, error)
-	ResolveIngredientID(stockMaterialID uint) (uint, error)
 	SupplierMaterialExists(supplierID, stockMaterialID uint) (bool, error)
 	CreateSupplierMaterial(association *data.SupplierMaterial) error
 }
@@ -210,22 +209,16 @@ func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
-
 		var stockMaterial data.StockMaterial
-		if err := r.db.First(&stockMaterial, item.StockMaterialID).Error; err != nil {
+		if err := r.db.Preload("Ingredient").First(&stockMaterial, "id = ?", item.StockMaterialID).Error; err != nil {
 			return nil, fmt.Errorf("failed to retrieve stock material for StockMaterialID %d: %w", item.StockMaterialID, err)
-		}
-
-		var mapping data.IngredientStockMaterialMapping
-		if err := r.db.Where("stock_material_id = ?", stockMaterial.ID).First(&mapping).Error; err != nil {
-			return nil, fmt.Errorf("failed to retrieve ingredient mapping for StockMaterialID %d: %w", stockMaterial.ID, err)
 		}
 
 		deliveredDate := time.Now()
 		expirationDate := deliveredDate.AddDate(0, 0, stockMaterial.ExpirationPeriodInDays)
 
 		converted[i] = data.StockRequestIngredient{
-			IngredientID:   mapping.IngredientID,
+			IngredientID:   stockMaterial.IngredientID,
 			Quantity:       item.Quantity,
 			DeliveredDate:  deliveredDate,
 			ExpirationDate: expirationDate,
@@ -233,19 +226,6 @@ func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.
 	}
 
 	return converted, nil
-}
-
-func (r *inventoryRepository) ResolveIngredientID(stockMaterialID uint) (uint, error) {
-	var mapping data.IngredientStockMaterialMapping
-	err := r.db.Where("stock_material_id = ?", stockMaterialID).First(&mapping).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return 0, fmt.Errorf("no mapping found for stock material ID %d", stockMaterialID)
-		}
-		return 0, fmt.Errorf("failed to resolve ingredient ID for stock material ID %d: %w", stockMaterialID, err)
-	}
-
-	return mapping.IngredientID, nil
 }
 
 func (r *inventoryRepository) SupplierMaterialExists(supplierID, stockMaterialID uint) (bool, error) {

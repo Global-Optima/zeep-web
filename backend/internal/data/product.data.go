@@ -72,6 +72,7 @@ type Ingredient struct {
 	Unit                 Unit                `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 	IngredientCategoryID uint                `gorm:"not null"` // Link to IngredientCategory
 	IngredientCategory   IngredientCategory  `gorm:"foreignKey:IngredientCategoryID;constraint:OnDelete:SET NULL"`
+	StockMaterials       []StockMaterial     `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
 }
 
 type IngredientCategory struct {

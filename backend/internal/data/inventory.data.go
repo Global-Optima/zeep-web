@@ -50,21 +50,15 @@ type StockRequest struct {
 
 type StockRequestIngredient struct {
 	BaseEntity
-	StockRequestID uint         `gorm:"not null;index"`
-	StockRequest   StockRequest `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
-	IngredientID   uint         `gorm:"not null;index"`
-	Ingredient     Ingredient   `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
-	Quantity       float64      `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
-	DeliveredDate  time.Time    `gorm:"not null;default:CURRENT_TIMESTAMP"` // Delivery start date
-	ExpirationDate time.Time    `gorm:"not null"`                           // Calculated from DeliveredDate + ExpirationPeriodInDays
-}
-
-type IngredientStockMaterialMapping struct {
-	BaseEntity
+	StockRequestID  uint          `gorm:"not null;index"`
+	StockRequest    StockRequest  `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
 	IngredientID    uint          `gorm:"not null;index"`
 	Ingredient      Ingredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
-	StockMaterialID uint          `gorm:"not null;index"`
+	StockMaterialID uint          `gorm:"not null;index"` // Selected stock material
 	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
+	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
+	DeliveredDate   time.Time     `gorm:"not null;default:CURRENT_TIMESTAMP"` // Delivery start date
+	ExpirationDate  time.Time     `gorm:"not null"`                           // Calculated from DeliveredDate + ExpirationPeriodInDays
 }
 
 type Supplier struct {
@@ -88,6 +82,8 @@ type StockMaterial struct {
 	BaseEntity
 	Name                   string                `gorm:"size:255;not null"`
 	Description            string                `gorm:"type:text"`
+	IngredientID           uint                  `gorm:"not null;index"` // Link to the ingredient
+	Ingredient             Ingredient            `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	SafetyStock            float64               `gorm:"type:decimal(10,2);not null"`
 	ExpirationFlag         bool                  `gorm:"not null"`
 	UnitID                 uint                  `gorm:"not null"`

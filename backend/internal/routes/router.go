@@ -215,12 +215,12 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
 	router := r.Routes.Group("/stock-requests")
 	{
-		router.GET("", handler.GetStockRequests)                                                                                               // Get all stock requests with filtering
-		router.GET("/low-stock", handler.GetLowStockIngredients)                                                                               // Get low-stock ingredients
-		router.GET("/stock-materials", handler.GetAllStockMaterials)                                                                           // Get marketplace products
-		router.POST("", handler.CreateStockRequest)                                                                                            // Create a new stock request (cart creation)
-		router.PATCH("/:requestId/status", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStockRequestStatus)                // Update stock request status
-		router.POST("/:requestId/ingredients", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.AddStockRequestIngredient)         // Add ingredient to cart
-		router.DELETE("/ingredients/:ingredientId", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.DeleteStockRequestIngredient) // Delete ingredient from cart
+		router.GET("", handler.GetStockRequests)                                      // Get all stock requests with filtering
+		router.GET("/low-stock", handler.GetLowStockIngredients)                      // Get low-stock ingredients
+		router.GET("/stock-materials", handler.GetAllStockMaterials)                  // Get marketplace products
+		router.POST("", handler.CreateStockRequest)                                   // Create a new stock request (cart creation)
+		router.PATCH("/:requestId/status", handler.UpdateStockRequestStatus)          // Update stock request status
+		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)  // Update stock request ingredients
+		router.GET("/:ingredientId/materials", handler.GetStockMaterialsByIngredient) // Get available stock materials by ingredient
 	}
 }

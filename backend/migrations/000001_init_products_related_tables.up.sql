@@ -444,6 +444,7 @@ CREATE TABLE
 	IF NOT EXISTS stock_request_ingredients (
 		id SERIAL PRIMARY KEY,
 		stock_request_id INT NOT NULL REFERENCES stock_requests (id) ON DELETE CASCADE,
+		stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
 		delivered_date TIMESTAMPTZ,

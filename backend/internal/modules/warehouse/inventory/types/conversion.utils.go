@@ -11,14 +11,14 @@ func ConvertExistingItemsToStockRequest(items []ExistingInventoryItem, db *gorm.
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
-		var mapping data.IngredientStockMaterialMapping
-		err := db.Where("stock_material_id = ?", item.StockMaterialID).First(&mapping).Error
+		var stockMaterial data.StockMaterial
+		err := db.Preload("Ingredient").First(&stockMaterial, "id = ?", item.StockMaterialID).Error
 		if err != nil {
-			return nil, fmt.Errorf("failed to find ingredient mapping for StockMaterialID %d: %w", item.StockMaterialID, err)
+			return nil, fmt.Errorf("failed to find StockMaterial for ID %d: %w", item.StockMaterialID, err)
 		}
 
 		converted[i] = data.StockRequestIngredient{
-			IngredientID: mapping.IngredientID,
+			IngredientID: stockMaterial.IngredientID,
 			Quantity:     item.Quantity,
 		}
 	}

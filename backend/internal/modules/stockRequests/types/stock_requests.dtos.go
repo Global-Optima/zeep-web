@@ -73,6 +73,16 @@ type StockMaterialDTO struct {
 	AvailableQty    float64 `json:"availableQuantity"`
 }
 
+type StockMaterialAvailabilityDTO struct {
+	StockMaterialID uint    `json:"stockMaterialId"`
+	Name            string  `json:"name"`
+	Category        string  `json:"category"`
+	AvailableQty    float64 `json:"availableQty"`
+	WarehouseID     uint    `json:"warehouseId"`
+	WarehouseName   string  `json:"warehouseName"`
+	Unit            string  `json:"unit"`
+}
+
 type StockMaterialFilter struct {
 	Category *string `json:"category,omitempty"`
 	Search   *string `json:"search,omitempty"`
