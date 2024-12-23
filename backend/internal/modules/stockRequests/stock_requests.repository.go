@@ -15,19 +15,24 @@ type StockRequestRepository interface {
 	CreateStockRequest(stockRequest *data.StockRequest) error
 	AddIngredientsToStockRequest(ingredients []data.StockRequestIngredient) error
 	DeleteStockRequestIngredient(ingredientID uint) error
-	UpdateStockRequestIngredientDates(dates *types.UpdateIngredientDates) error
+	ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error
+	UpdateStockRequestIngredientDates(stockRequestIngredientID uint, dates *types.UpdateIngredientDates) error
 
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error)
 	GetStockRequestByID(requestID uint) (*data.StockRequest, error)
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
-	GetMappingByIngredientID(ingredientID uint, mapping *data.IngredientStockMaterialMapping) error
+
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) error
 	AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantity float64) error
-	GetLastStockRequestDate(storeWarehouseID uint) (*time.Time, error)
-	GetLowStockIngredients(storeWarehouseID uint) ([]data.StoreWarehouseStock, error)
-	GetAllStockMaterials(storeID uint, filters types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
+	GetLowStockIngredients(storeWarehouseID uint) ([]data.StoreWarehouseStock, error)
+
+	GetLastStockRequestDate(storeWarehouseID uint) (*time.Time, error)
+
+	GetAllStockMaterials(storeID uint, filters types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
+	GetStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]data.WarehouseStock, error)
+	GetStockMaterialByID(stockMaterialID uint, stockMaterial *data.StockMaterial) error
 }
 
 type stockRequestRepository struct {
@@ -50,8 +55,9 @@ func (r *stockRequestRepository) DeleteStockRequestIngredient(ingredientID uint)
 	return r.db.Delete(&data.StockRequestIngredient{}, ingredientID).Error
 }
 
-func (r *stockRequestRepository) UpdateStockRequestIngredientDates(dates *types.UpdateIngredientDates) error {
+func (r *stockRequestRepository) UpdateStockRequestIngredientDates(stockRequestIngredientID uint, dates *types.UpdateIngredientDates) error {
 	return r.db.Model(&data.StockRequestIngredient{}).
+		Where("id = ?", stockRequestIngredientID).
 		Updates(dates).Error
 }
 
@@ -68,8 +74,8 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 	if filter.WarehouseID != nil {
 		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
 	}
-	if filter.Status != nil {
-		query = query.Where("status = ?", *filter.Status)
+	if len(filter.Statuses) > 0 {
+		query = query.Where("status IN (?)", filter.Statuses)
 	}
 	if filter.StartDate != nil {
 		query = query.Where("created_at >= ?", *filter.StartDate)
@@ -105,10 +111,6 @@ func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.Stoc
 
 func (r *stockRequestRepository) UpdateStockRequestStatus(stockRequest *data.StockRequest) error {
 	return r.db.Model(stockRequest).Update("status", stockRequest.Status).Error
-}
-
-func (r *stockRequestRepository) GetMappingByIngredientID(ingredientID uint, mapping *data.IngredientStockMaterialMapping) error {
-	return r.db.Where("ingredient_id = ?", ingredientID).First(mapping).Error
 }
 
 func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) error {
@@ -147,41 +149,40 @@ func (r *stockRequestRepository) GetAllStockMaterials(storeID uint, filters type
 		return nil, fmt.Errorf("failed to retrieve store warehouse for store ID %d: %w", storeID, err)
 	}
 
-	var mappings []data.IngredientStockMaterialMapping
-	query := r.db.Preload("Ingredient.Unit").Preload("StockMaterial")
+	var stockMaterials []data.StockMaterial
+	query := r.db.Preload("Unit").Preload("Ingredient")
 
 	if filters.Category != nil {
-		query = query.Where("stock_materials.category = ?", *filters.Category)
+		query = query.Where("category = ?", *filters.Category)
 	}
 
 	if filters.Search != nil {
 		searchTerm := "%" + *filters.Search + "%"
-		query = query.Where("stock_materials.name ILIKE ? OR stock_materials.barcode ILIKE ?", searchTerm, searchTerm)
+		query = query.Where("name ILIKE ? OR barcode ILIKE ?", searchTerm, searchTerm)
 	}
 
-	if err := query.Find(&mappings).Error; err != nil {
-		return nil, fmt.Errorf("failed to retrieve ingredient mappings: %w", err)
+	if err := query.Find(&stockMaterials).Error; err != nil {
+		return nil, fmt.Errorf("failed to retrieve stock materials: %w", err)
 	}
 
 	products := []types.StockMaterialDTO{}
-	for _, mapping := range mappings {
-		quantity, err := r.GetWarehouseStockQuantity(storeWarehouse.WarehouseID, mapping.StockMaterialID)
+	for _, stockMaterial := range stockMaterials {
+		quantity, err := r.GetWarehouseStockQuantity(storeWarehouse.WarehouseID, stockMaterial.ID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve stock quantity for stock material ID %d: %w", mapping.StockMaterialID, err)
+			return nil, fmt.Errorf("failed to retrieve stock quantity for StockMaterialID %d: %w", stockMaterial.ID, err)
 		}
 
 		products = append(products, types.StockMaterialDTO{
-			StockMaterialID: mapping.StockMaterialID,
-			Name:            mapping.StockMaterial.Name,
-			Category:        mapping.StockMaterial.Category,
-			Unit:            mapping.Ingredient.Unit.Name,
+			StockMaterialID: stockMaterial.ID,
+			Name:            stockMaterial.Name,
+			Category:        stockMaterial.Category,
+			Unit:            stockMaterial.Unit.Name,
 			AvailableQty:    quantity,
 		})
 	}
 
 	return products, nil
 }
-
 func (r *stockRequestRepository) GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error) {
 	var stock data.WarehouseStock
 	err := r.db.Select("quantity").
@@ -189,7 +190,7 @@ func (r *stockRequestRepository) GetWarehouseStockQuantity(warehouseID, stockMat
 		First(&stock).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, nil // No stock found, return 0 quantity
+			return 0, nil
 		}
 		return 0, err
 	}
@@ -203,4 +204,43 @@ func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWar
 		return nil, err
 	}
 	return &storeWarehouse, nil
+}
+
+func (r *stockRequestRepository) GetStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]data.WarehouseStock, error) {
+	var stocks []data.WarehouseStock
+
+	query := r.db.Preload("StockMaterial.Unit").Preload("Warehouse").
+		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id").
+		Where("stock_materials.ingredient_id = ?", ingredientID)
+
+	if warehouseID != nil {
+		query = query.Where("warehouse_stocks.warehouse_id = ?", *warehouseID)
+	}
+
+	err := query.Find(&stocks).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve stock materials for ingredient ID %d: %w", ingredientID, err)
+	}
+
+	return stocks, nil
+}
+
+func (r *stockRequestRepository) GetStockMaterialByID(stockMaterialID uint, stockMaterial *data.StockMaterial) error {
+	return r.db.Preload("Ingredient").First(stockMaterial, "id = ?", stockMaterialID).Error
+}
+
+func (r *stockRequestRepository) ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("stock_request_id = ?", requestID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
+			return fmt.Errorf("failed to delete existing ingredients for stock request ID %d: %w", requestID, err)
+		}
+
+		if len(ingredients) > 0 {
+			if err := tx.Create(&ingredients).Error; err != nil {
+				return fmt.Errorf("failed to insert new ingredients for stock request ID %d: %w", requestID, err)
+			}
+		}
+
+		return nil
+	})
 }

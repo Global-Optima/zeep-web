@@ -61,15 +61,25 @@ type AdditiveIngredient struct {
 
 type Ingredient struct {
 	BaseEntity
-	Name      string              `gorm:"size:255;not null;index"`
-	Calories  float64             `gorm:"type:decimal(5,2);check:calories >= 0"`
-	Fat       float64             `gorm:"type:decimal(5,2);check:fat >= 0"`
-	Carbs     float64             `gorm:"type:decimal(5,2);check:carbs >= 0"`
-	Proteins  float64             `gorm:"type:decimal(5,2);check:proteins >= 0"`
-	ExpiresAt *time.Time          `gorm:"type:timestamp"`
-	Products  []ProductIngredient `gorm:"foreignKey:IngredientID"`
-	UnitID    uint                `gorm:"not null"` // Link to Unit
-	Unit      Unit                `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
+	Name                 string              `gorm:"size:255;not null;index"`
+	Calories             float64             `gorm:"type:decimal(5,2);check:calories >= 0"`
+	Fat                  float64             `gorm:"type:decimal(5,2);check:fat >= 0"`
+	Carbs                float64             `gorm:"type:decimal(5,2);check:carbs >= 0"`
+	Proteins             float64             `gorm:"type:decimal(5,2);check:proteins >= 0"`
+	ExpiresAt            *time.Time          `gorm:"type:timestamp"`
+	Products             []ProductIngredient `gorm:"foreignKey:IngredientID"`
+	UnitID               uint                `gorm:"not null"` // Link to Unit
+	Unit                 Unit                `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
+	IngredientCategoryID uint                `gorm:"not null"` // Link to IngredientCategory
+	IngredientCategory   IngredientCategory  `gorm:"foreignKey:IngredientCategoryID;constraint:OnDelete:SET NULL"`
+	StockMaterials       []StockMaterial     `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
+}
+
+type IngredientCategory struct {
+	ID          uint         `gorm:"primaryKey"`
+	Name        string       `gorm:"size:255;not null;uniqueIndex"`
+	Description string       `gorm:"type:text"`
+	Ingredients []Ingredient `gorm:"foreignKey:IngredientCategoryID"`
 }
 
 type ProductAdditive struct {

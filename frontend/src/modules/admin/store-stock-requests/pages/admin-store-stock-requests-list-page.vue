@@ -40,7 +40,7 @@ import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminStoreStockRequestsList from '@/modules/admin/store-stock-requests/components/list/admin-store-stock-requests-list.vue'
 import AdminStoreStockRequestsToolbar from '@/modules/admin/store-stock-requests/components/list/admin-store-stock-requests-toolbar.vue'
-import type { GetStoreStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import { ALL_STOCK_REQUEST_STATUSES, type GetStoreStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
 import { storeStockRequestService } from '@/modules/admin/store-stock-requests/services/store-stock-request.service'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { useQuery } from '@tanstack/vue-query'
@@ -48,7 +48,8 @@ import { computed, ref } from 'vue'
 
 const {currentEmployee} = useEmployeeAuthStore()
 const filter = ref<GetStoreStockRequestsFilter>({
-  storeId: currentEmployee?.storeDetails?.storeId
+  storeId: currentEmployee?.storeDetails?.storeId,
+  statuses: ALL_STOCK_REQUEST_STATUSES
 });
 
 const { data: stockRequestsResponse } = useQuery({

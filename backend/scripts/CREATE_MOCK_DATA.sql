@@ -278,6 +278,35 @@ VALUES
     false
   );
 
+-- Insert into IngredientCategories
+INSERT INTO
+  ingredient_categories (name, description)
+VALUES
+  (
+    'Молочные продукты',
+    'Категория для молока, сливок, и других молочных ингредиентов'
+  ),
+  (
+    'Фрукты',
+    'Категория для фруктов, таких как яблоки, бананы, апельсины'
+  ),
+  (
+    'Подсластители',
+    'Категория для сахара, мёда, сиропов'
+  ),
+  (
+    'Специи',
+    'Категория для специй, таких как корица, ваниль, мята, имбирь'
+  ),
+  (
+    'Орехи и семена',
+    'Категория для орехов, фисташек, и других семян'
+  ),
+  (
+    'Шоколад и какао',
+    'Категория для шоколада, какао-порошка, и других шоколадных продуктов'
+  );
+
 -- Insert into Products
 INSERT INTO
   products (
@@ -968,7 +997,8 @@ INSERT INTO
     carbs,
     proteins,
     expires_at,
-    unit_id
+    unit_id,
+    ingredient_category_id
   )
 VALUES
   (
@@ -978,8 +1008,9 @@ VALUES
     100,
     0,
     '2024-12-31 00:00:00+00',
-    2
-  ),
+    2,
+    3
+  ), -- Подсластители
   (
     'Молоко',
     42,
@@ -987,8 +1018,9 @@ VALUES
     5,
     3,
     '2024-01-15 00:00:00+00',
-    3
-  ),
+    3,
+    1
+  ), -- Молочные продукты
   (
     'Шоколад',
     546,
@@ -996,8 +1028,9 @@ VALUES
     61,
     7,
     '2024-06-30 00:00:00+00',
-    1
-  ),
+    1,
+    6
+  ), -- Шоколад и какао
   (
     'Корица',
     247,
@@ -1005,9 +1038,19 @@ VALUES
     81,
     4,
     '2024-09-15 00:00:00+00',
-    2
-  ),
-  ('Мед', 304, 0, 82, 0, '2024-10-20 00:00:00+00', 2),
+    2,
+    4
+  ), -- Специи
+  (
+    'Мед',
+    304,
+    0,
+    82,
+    0,
+    '2024-10-20 00:00:00+00',
+    2,
+    3
+  ), -- Подсластители
   (
     'Ваниль',
     288,
@@ -1015,8 +1058,9 @@ VALUES
     55,
     0,
     '2025-01-30 00:00:00+00',
-    2
-  ),
+    2,
+    4
+  ), -- Специи
   (
     'Орехи',
     607,
@@ -1024,8 +1068,9 @@ VALUES
     18,
     20,
     '2024-08-15 00:00:00+00',
-    2
-  ),
+    2,
+    5
+  ), -- Орехи и семена
   (
     'Кокосовое молоко',
     230,
@@ -1033,8 +1078,9 @@ VALUES
     6,
     2,
     '2024-05-01 00:00:00+00',
-    3
-  ),
+    3,
+    1
+  ), -- Молочные продукты
   (
     'Яблоки',
     52,
@@ -1042,8 +1088,9 @@ VALUES
     14,
     0.3,
     '2024-02-28 00:00:00+00',
-    1
-  ),
+    1,
+    2
+  ), -- Фрукты
   (
     'Бананы',
     96,
@@ -1051,8 +1098,9 @@ VALUES
     27,
     1.3,
     '2024-03-15 00:00:00+00',
-    1
-  ),
+    1,
+    2
+  ), -- Фрукты
   (
     'Сливки',
     195,
@@ -1060,8 +1108,9 @@ VALUES
     3,
     2,
     '2024-04-10 00:00:00+00',
+    1,
     1
-  ),
+  ), -- Молочные продукты
   (
     'Апельсины',
     47,
@@ -1069,8 +1118,9 @@ VALUES
     12,
     0.9,
     '2024-02-05 00:00:00+00',
-    1
-  ),
+    1,
+    2
+  ), -- Фрукты
   (
     'Мята',
     44,
@@ -1078,8 +1128,9 @@ VALUES
     8,
     3.3,
     '2024-06-01 00:00:00+00',
-    3
-  ),
+    3,
+    4
+  ), -- Специи
   (
     'Лимонный сок',
     123,
@@ -1087,8 +1138,9 @@ VALUES
     6,
     0.3,
     '2024-03-20 00:00:00+00',
+    2,
     2
-  ),
+  ), -- Фрукты
   (
     'Какао-порошок',
     228,
@@ -1096,8 +1148,9 @@ VALUES
     58,
     19,
     '2025-06-30 00:00:00+00',
-    2
-  ),
+    2,
+    6
+  ), -- Шоколад и какао
   (
     'Кленовый сироп',
     261,
@@ -1105,8 +1158,9 @@ VALUES
     67,
     0,
     '2024-12-15 00:00:00+00',
-    2
-  ),
+    2,
+    3
+  ), -- Подсластители
   (
     'Клубника',
     33,
@@ -1114,8 +1168,9 @@ VALUES
     8,
     0.7,
     '2024-05-05 00:00:00+00',
-    1
-  ),
+    1,
+    2
+  ), -- Фрукты
   (
     'Имбирь',
     80,
@@ -1123,9 +1178,19 @@ VALUES
     18,
     1.8,
     '2024-07-01 00:00:00+00',
-    2
-  ),
-  ('Соль', 0, 0, 0, 0, '2026-12-31 00:00:00+00', 2),
+    2,
+    4
+  ), -- Специи
+  (
+    'Соль',
+    0,
+    0,
+    0,
+    0,
+    '2026-12-31 00:00:00+00',
+    2,
+    4
+  ), -- Специи
   (
     'Фисташки',
     562,
@@ -1133,9 +1198,11 @@ VALUES
     28,
     20,
     '2024-09-15 00:00:00+00',
-    1
+    1,
+    5
   );
 
+-- Орехи и семена
 -- Insert into ProductIngredients
 INSERT INTO
   product_ingredients (ingredient_id, product_size_id, quantity)
@@ -1513,16 +1580,6 @@ VALUES
     CURRENT_TIMESTAMP
   );
 
-INSERT INTO
-  warehouses (facility_address_id, name)
-VALUES
-  (1, 'Central Warehouse - Moscow'),
-  (2, 'Central Warehouse - St. Petersburg'),
-  (3, 'Central Warehouse - Ekaterinburg'),
-  (4, 'Central Warehouse - Novosibirsk'),
-  (5, 'Central Warehouse - Kazan');
-
--- Store 5 linked to Central Warehouse in Kazan
 -- Insert into Suppliers
 INSERT INTO
   suppliers (name, contact_email, contact_phone, address)
@@ -1592,6 +1649,7 @@ INSERT INTO
   stock_materials (
     name,
     description,
+    ingredient_id,
     safety_stock,
     expiration_flag,
     unit_id,
@@ -1602,8 +1660,9 @@ INSERT INTO
   )
 VALUES
   (
-    'Молоко',
+    'Milk',
     '1L pack of milk',
+    2,
     50,
     TRUE,
     3,
@@ -1613,8 +1672,9 @@ VALUES
     TRUE
   ),
   (
-    'Сахар',
+    'Sugar',
     '1kg pack of sugar',
+    1,
     20,
     TRUE,
     2,
@@ -1624,8 +1684,9 @@ VALUES
     TRUE
   ),
   (
-    'Шоколад',
+    'Chocolate',
     '500g pack of chocolate',
+    3,
     15,
     TRUE,
     2,
@@ -1635,8 +1696,9 @@ VALUES
     TRUE
   ),
   (
-    'Корица',
+    'Cinnamon',
     '200g pack of cinnamon',
+    4,
     10,
     TRUE,
     2,
@@ -1646,8 +1708,9 @@ VALUES
     TRUE
   ),
   (
-    'Ваниль',
+    'Vanilla',
     '50ml vanilla extract bottle',
+    5,
     25,
     TRUE,
     4,
@@ -1657,9 +1720,8 @@ VALUES
     TRUE
   );
 
--- Vanilla linked to stock material
 INSERT INTO
-  stock_material_packages (stock_material_id, package_size, package_unit_id)
+  stock_material_packages (stock_material_id, size, unit_id)
 VALUES
   (1, 1.0, 3), -- 1L Milk
   (2, 1.0, 2), -- 1kg Sugar
@@ -1726,16 +1788,6 @@ VALUES
   );
 
 -- Vanilla Delivery
-INSERT INTO
-  warehouse_stocks (warehouse_id, stock_material_id, quantity)
-VALUES
-  (1, 1, 50), -- Milk in Warehouse 1
-  (1, 2, 30), -- Sugar in Warehouse 1
-  (1, 3, 40), -- Chocolate in Warehouse 1
-  (2, 4, 20), -- Cinnamon in Warehouse 2
-  (2, 5, 15);
-
--- Vanilla in Warehouse 2
 -- Insert into StockRequests (Initial Requests)
 INSERT INTO
   stock_requests (
@@ -1780,34 +1832,91 @@ VALUES
     CURRENT_TIMESTAMP
   );
 
--- Insert into StockRequestIngredients (Items for Stock Requests)
 INSERT INTO
   stock_request_ingredients (
     stock_request_id,
     ingredient_id,
+    stock_material_id,
     quantity,
     created_at,
     updated_at
   )
 VALUES
   -- StockRequest 1 (Store 1 -> Warehouse 1)
-  (1, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-  (1, 2, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+  (
+    1,
+    1,
+    2,
+    10.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Sugar
+  (
+    1,
+    2,
+    1,
+    20.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Milk
   -- StockRequest 2 (Store 2 -> Warehouse 2)
-  (2, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
-  (2, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
+  (
+    2,
+    3,
+    3,
+    5.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Chocolate
+  (
+    2,
+    4,
+    4,
+    2.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Cinnamon
   -- StockRequest 3 (Store 3 -> Warehouse 3)
-  (3, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
-  (3, 1, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+  (
+    3,
+    5,
+    5,
+    1.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Vanilla
+  (
+    3,
+    1,
+    2,
+    15.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Sugar
   -- StockRequest 4 (Store 4 -> Warehouse 4)
-  (4, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-  (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (
+    4,
+    2,
+    1,
+    10.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Milk
+  (
+    4,
+    3,
+    3,
+    8.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
+-- Chocolate
 INSERT INTO
-  ingredient_stock_material_mappings (ingredient_id, stock_material_id)
+  warehouse_stocks (warehouse_id, stock_material_id, quantity)
 VALUES
-  (2, 1), -- Milk linked to stock material
-  (1, 2), -- Sugar linked to stock material
-  (3, 3), -- Chocolate linked to stock material
-  (4, 4), -- Cinnamon linked to stock material
-  (6, 5);
+  (1, 1, 50), -- Milk in Warehouse 1
+  (1, 2, 30), -- Sugar in Warehouse 1
+  (1, 3, 40), -- Chocolate in Warehouse 1
+  (2, 4, 20), -- Cinnamon in Warehouse 2
+  (2, 5, 15);

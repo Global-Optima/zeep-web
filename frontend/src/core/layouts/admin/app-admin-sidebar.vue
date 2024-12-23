@@ -79,12 +79,12 @@ const canAccessRoute = (accessRoles: EmployeeRole[]) => {
 // Navigation items
 const navItems: NavItem[] = [
   { name: 'Аналитика', routeKey: 'ADMIN_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
-  { name: 'Аналитика магазина', routeKey: 'ADMIN_STORE_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRole.MANAGER] },
-  { name: 'Заказы магазина', routeKey: 'ADMIN_STORE_ORDERS', icon: ShoppingCart, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Аналитика', routeKey: 'ADMIN_STORE_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRole.MANAGER] },
+  { name: 'Заказы', routeKey: 'ADMIN_STORE_ORDERS', icon: ShoppingCart, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
   { name: 'Товары', routeKey: 'ADMIN_PRODUCTS', icon: Package, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Топпинги', routeKey: 'ADMIN_ADDITIVES', icon: ListPlus, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
-  { name: 'Товары магазина', routeKey: 'ADMIN_STORE_PRODUCTS', icon: Package, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
-  { name: 'Склад магазина', routeKey: 'ADMIN_STORE_STOCKS', icon: Warehouse, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Товары', routeKey: 'ADMIN_STORE_PRODUCTS', icon: Package, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Склад', routeKey: 'ADMIN_STORE_STOCKS', icon: Warehouse, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
   { name: 'Сотрудники', routeKey: 'ADMIN_EMPLOYEES', icon: Users, accessRoles: [EmployeeRole.MANAGER] },
   { name: 'Ингредиенты', routeKey: 'ADMIN_INGREDIENTS', icon: Apple, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Магазины', routeKey: 'ADMIN_STORES', icon: Store, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },

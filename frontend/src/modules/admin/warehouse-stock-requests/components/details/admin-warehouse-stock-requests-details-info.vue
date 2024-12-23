@@ -94,7 +94,7 @@ const emit = defineEmits<{ (e: 'update:status', newStatus: StoreStockRequestStat
 // Helper to format status
 const statusLabels: Record<StoreStockRequestStatus, string> = {
   CREATED: 'Создана',
-  PROCESSED: 'Обработана',
+  PROCESSED: 'Запрос отправлен',
   IN_DELIVERY: 'В доставке',
   COMPLETED: 'Завершена',
   REJECTED: 'Отклонена',

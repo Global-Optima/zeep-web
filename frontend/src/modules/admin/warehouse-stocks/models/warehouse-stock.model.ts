@@ -13,6 +13,17 @@ export interface WarehouseStocks {
 	package: Package
 }
 
+export interface InventoryLevel {
+	stockMaterialId: number
+	name: string
+	quantity: number
+}
+
+export interface InventoryLevelsResponse {
+	warehouseId: number
+	levels: InventoryLevel[]
+}
+
 export interface Package {
 	packageSize: number
 	packageUnitId: number

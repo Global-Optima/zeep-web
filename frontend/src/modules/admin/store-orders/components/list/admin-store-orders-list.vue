@@ -79,7 +79,7 @@ const { orders } = defineProps<{ orders: OrderDTO[] }>();
 const router = useRouter();
 
 const onOrderClick = (stockId: number) => {
-  router.push(`/admin/store-orders/${stockId}`);
+  // router.push(`/admin/store-orders/${stockId}`);
 };
 
 const formatDate = (dateString: string) => {

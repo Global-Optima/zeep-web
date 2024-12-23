@@ -24,6 +24,11 @@ func (h *InventoryHandler) ReceiveInventory(c *gin.Context) {
 		return
 	}
 
+	if len(req.NewItems) == 0 && len(req.ExistingItems) == 0 {
+		utils.SendBadRequestError(c, "No items provided in the request")
+		return
+	}
+
 	if err := h.service.ReceiveInventory(req); err != nil {
 		utils.SendInternalServerError(c, "Failed to receive inventory: "+err.Error())
 		return
@@ -36,6 +41,11 @@ func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 	var req types.TransferInventoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if len(req.Items) == 0 {
+		utils.SendBadRequestError(c, "No items provided in the request")
 		return
 	}
 

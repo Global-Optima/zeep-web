@@ -49,7 +49,7 @@ import {
 } from '@/core/components/ui/table'
 import type { StoreStockRequestItemResponse } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
 
- defineProps<{
+defineProps<{
   items: StoreStockRequestItemResponse[]
 }>()
 </script>

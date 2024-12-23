@@ -164,13 +164,20 @@ func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
 func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
 	router := r.Routes.Group("/warehouse-stocks")
 	{
-		router.POST("/receive", handler.ReceiveInventory)
-		router.GET("", handler.GetInventoryLevels)
-		router.POST("/pickup", handler.PickupStock)
-		router.POST("/transfer", handler.TransferInventory)
-		router.GET("/expiration/upcoming/:warehouseID", handler.GetExpiringItems)
-		router.POST("/expiration/extend", handler.ExtendExpiration)
-		router.GET("/deliveries", handler.GetDeliveries)
+		stockRoutes := router.Group("/stock")
+		{
+			stockRoutes.GET("", handler.GetInventoryLevels)
+			stockRoutes.POST("/receive", handler.ReceiveInventory)
+			stockRoutes.POST("/pickup", handler.PickupStock)
+			stockRoutes.POST("/transfer", handler.TransferInventory)
+			stockRoutes.GET("/deliveries", handler.GetDeliveries)
+		}
+
+		expirationRoutes := router.Group("/expiration")
+		{
+			expirationRoutes.GET("/:warehouseID", handler.GetExpiringItems)
+			expirationRoutes.POST("/extend", handler.ExtendExpiration)
+		}
 	}
 }
 
@@ -192,6 +199,14 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 			storeRoutes.PUT("/:storeId", handler.ReassignStore)               // Reassign a store to another warehouse
 			storeRoutes.GET("/:warehouseId", handler.GetAllStoresByWarehouse) // Get all stores assigned to a specific warehouse
 		}
+
+		stockRoutes := router.Group("/stock")
+		{
+			stockRoutes.POST("/add", handler.AddToStock)
+			stockRoutes.POST("/deduct", handler.DeductFromStock)
+			stockRoutes.GET("", handler.GetStock)
+			stockRoutes.POST("/reset", handler.ResetStock)
+		}
 	}
 }
 
@@ -204,7 +219,6 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 		router.GET("/marketplace-products", handler.GetAllStockMaterials)
 		router.POST("", handler.CreateStockRequest)
 		router.PUT("/:requestId/status", handler.UpdateStockRequestStatus)
-		router.POST("/:requestId/ingredients", handler.AddStockRequestIngredient)
-		router.DELETE("/ingredients/:ingredientId", handler.DeleteStockRequestIngredient)
+		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)
 	}
 }

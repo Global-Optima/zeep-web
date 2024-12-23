@@ -83,7 +83,7 @@
 				<DialogHeader>
 					<DialogTitle>Выберите ингредиент</DialogTitle>
 				</DialogHeader>
-				<DialogBody>
+				<div>
 					<!-- Search Input -->
 					<Input
 						v-model="searchTerm"
@@ -105,7 +105,7 @@
 							</li>
 						</ul>
 					</div>
-				</DialogBody>
+				</div>
 				<DialogFooter>
 					<Button
 						variant="outline"

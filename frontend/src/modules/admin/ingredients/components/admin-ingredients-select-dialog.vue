@@ -7,7 +7,8 @@
 			<DialogHeader>
 				<DialogTitle>Выберите материал</DialogTitle>
 			</DialogHeader>
-			<DialogBody>
+
+			<div>
 				<!-- Search Input -->
 				<Input
 					v-model="searchTerm"
@@ -49,7 +50,7 @@
 				>
 					Еще
 				</Button>
-			</DialogBody>
+			</div>
 			<DialogFooter>
 				<Button
 					variant="outline"

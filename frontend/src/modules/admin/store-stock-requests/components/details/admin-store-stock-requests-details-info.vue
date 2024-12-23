@@ -82,7 +82,7 @@ const emit = defineEmits<{ (e: 'update:status', newStatus: StoreStockRequestStat
 
 const statusLabels: Record<StoreStockRequestStatus, string> = {
   CREATED: 'Создана',
-  PROCESSED: 'Обработана',
+  PROCESSED: 'Запрос отправлен',
   IN_DELIVERY: 'В доставке',
   COMPLETED: 'Завершена',
   REJECTED: 'Отклонена',
@@ -108,15 +108,15 @@ const getButtonLabel = computed(() => {
 });
 
 const isActionAllowed = computed(() => {
-  return props.request.status === 'CREATED' || props.request.status === 'IN_DELIVERY';
+  return props.request.status === StoreStockRequestStatus.CREATED || props.request.status === StoreStockRequestStatus.IN_DELIVERY;
 });
 
 function handleStatusChange() {
   let newStatus: StoreStockRequestStatus | null = null;
 
-  if (props.request.status === 'CREATED') {
+  if (props.request.status === StoreStockRequestStatus.CREATED) {
     newStatus = StoreStockRequestStatus.PROCESSED;
-  } else if (props.request.status === 'IN_DELIVERY') {
+  } else if (props.request.status === StoreStockRequestStatus.IN_DELIVERY) {
     newStatus = StoreStockRequestStatus.COMPLETED;
   }
 

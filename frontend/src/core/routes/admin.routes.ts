@@ -237,6 +237,17 @@ export const ADMIN_CHILDREN_ROUTES = {
 				'@/modules/admin/store-stock-requests/pages/admin-store-stock-requests-create-page.vue'
 			),
 	},
+	ADMIN_STORE_STOCK_REQUESTS_UPDATE: {
+		path: 'store-stock-requests/:id/update',
+		meta: {
+			title: 'Обновить запрос на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/store-stock-requests/pages/admin-store-stock-requests-update-page.vue'
+			),
+	},
 	ADMIN_STORE_STOCK_REQUESTS_DETAILS: {
 		path: 'store-stock-requests/:id',
 		meta: {

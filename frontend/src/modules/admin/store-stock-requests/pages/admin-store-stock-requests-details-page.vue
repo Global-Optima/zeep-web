@@ -4,7 +4,7 @@
 			<div class="col-span-2">
 				<AdminStoreStockRequestsDetailsMaterialsTable
 					v-if="stockRequest"
-					:items="stockRequest.items"
+					:stockRequest="stockRequest"
 				/>
 			</div>
 

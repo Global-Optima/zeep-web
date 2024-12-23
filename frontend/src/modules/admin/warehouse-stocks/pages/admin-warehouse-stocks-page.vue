@@ -7,7 +7,7 @@
 	<Card>
 		<CardContent class="mt-4">
 			<p
-				v-if="!warehouseStocksResponse || warehouseStocksResponse.data.length === 0"
+				v-if="!warehouseStocksResponse || warehouseStocksResponse.data.levels.length === 0"
 				class="text-muted-foreground"
 			>
 				Складские запасы не найдены
@@ -15,7 +15,7 @@
 
 			<AdminWarehouseStocksList
 				v-else
-				:stocks="warehouseStocksResponse.data"
+				:stocks="warehouseStocksResponse.data.levels"
 			/>
 		</CardContent>
 		<CardFooter class="flex justify-end">

@@ -70,7 +70,7 @@ const STATUS_COLOR: Record<StoreStockRequestStatus, string> = {
 const STATUS_FORMATTED: Record<StoreStockRequestStatus, string> = {
   [StoreStockRequestStatus.CREATED]: 'Создан',
   [StoreStockRequestStatus.IN_DELIVERY]: 'В доставке',
-  [StoreStockRequestStatus.PROCESSED]: 'Обработан',
+  [StoreStockRequestStatus.PROCESSED]: 'Запрос отправлен',
 [  StoreStockRequestStatus.COMPLETED]: 'Завершён',
   [StoreStockRequestStatus.REJECTED]: 'Отклонён',
 };

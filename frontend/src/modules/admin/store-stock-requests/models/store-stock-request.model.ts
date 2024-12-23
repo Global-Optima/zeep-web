@@ -8,10 +8,25 @@ export enum StoreStockRequestStatus {
 	REJECTED = 'REJECTED',
 }
 
+export const ALL_STOCK_REQUEST_STATUSES: StoreStockRequestStatus[] = [
+	StoreStockRequestStatus.CREATED,
+	StoreStockRequestStatus.PROCESSED,
+	StoreStockRequestStatus.IN_DELIVERY,
+	StoreStockRequestStatus.COMPLETED,
+	StoreStockRequestStatus.REJECTED,
+]
+
+export const WAREHOUSE_STOCK_REQUEST_STATUSES: StoreStockRequestStatus[] = [
+	StoreStockRequestStatus.PROCESSED,
+	StoreStockRequestStatus.IN_DELIVERY,
+	StoreStockRequestStatus.COMPLETED,
+	StoreStockRequestStatus.REJECTED,
+]
+
 export interface GetStoreStockRequestsFilter extends PaginationParams {
 	storeId?: number
 	warehouseId?: number
-	status?: StoreStockRequestStatus
+	statuses?: StoreStockRequestStatus[]
 	startDate?: string
 	endDate?: string
 }

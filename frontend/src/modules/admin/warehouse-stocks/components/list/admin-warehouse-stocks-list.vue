@@ -4,8 +4,8 @@
 			<TableRow>
 				<TableHead>Название</TableHead>
 				<TableHead>Количество</TableHead>
-				<TableHead>Мин. запас</TableHead>
-				<TableHead class="hidden md:table-cell">Статус</TableHead>
+				<!-- <TableHead>Мин. запас</TableHead>
+				<TableHead class="hidden md:table-cell">Статус</TableHead> -->
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -21,7 +21,7 @@
 				<TableCell>
 					{{ stock.quantity }}
 				</TableCell>
-				<TableCell>
+				<!-- <TableCell>
 					{{ stock.safetyStock }}
 				</TableCell>
 				<TableCell class="hidden md:table-cell">
@@ -33,7 +33,7 @@
 					>
 						{{ INGREDIENT_STATUS_FORMATTED[getStockStatus(stock)] }}
 					</p>
-				</TableCell>
+				</TableCell> -->
 			</TableRow>
 		</TableBody>
 	</Table>
@@ -41,18 +41,18 @@
 
 <script setup lang="ts">
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/core/components/ui/table';
-import type { WarehouseStocks } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model';
-import { useRouter } from 'vue-router';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/core/components/ui/table'
+import type { InventoryLevel, WarehouseStocks } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
+import { useRouter } from 'vue-router'
 
 // Props
-const { stocks } = defineProps<{ stocks: WarehouseStocks[] }>();
+const { stocks } = defineProps<{ stocks: InventoryLevel[] }>();
 
 // Router for details navigation
 const router = useRouter();

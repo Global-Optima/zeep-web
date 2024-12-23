@@ -38,7 +38,7 @@ import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWi
 import { Card, CardContent } from '@/core/components/ui/card'
 import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import type { GetStoreStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import { WAREHOUSE_STOCK_REQUEST_STATUSES, type GetStoreStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
 import { storeStockRequestService } from '@/modules/admin/store-stock-requests/services/store-stock-request.service'
 import AdminWarehouseStockRequestsList from '@/modules/admin/warehouse-stock-requests/components/list/admin-warehouse-stock-requests-list.vue'
 import AdminWarehouseStockRequestsToolbar from '@/modules/admin/warehouse-stock-requests/components/list/admin-warehouse-stock-requests-toolbar.vue'
@@ -48,7 +48,8 @@ import { computed, ref } from 'vue'
 
 const {currentEmployee} = useEmployeeAuthStore()
 const filter = ref<GetStoreStockRequestsFilter>({
-  warehouseId: currentEmployee?.warehouseDetails?.warehouseId
+  warehouseId: currentEmployee?.warehouseDetails?.warehouseId,
+  statuses: WAREHOUSE_STOCK_REQUEST_STATUSES
 });
 
 const { data: stockRequestsResponse } = useQuery({

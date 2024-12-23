@@ -75,22 +75,12 @@ class StoreStockRequestService {
 		}
 	}
 
-	async addStockRequestIngredient(requestId: number, item: CreateStoreStockRequestItemDTO) {
+	async updateStockRequestIngredients(requestId: number, data: CreateStoreStockRequestItemDTO[]) {
 		try {
-			const response = await apiClient.post(`/stock-requests/${requestId}/ingredients`, item)
+			const response = await apiClient.put(`/stock-requests/${requestId}/ingredients`, data)
 			return response.data
 		} catch (error) {
-			console.error('Failed to add ingredient to stock request:', error)
-			throw error
-		}
-	}
-
-	async deleteStockRequestIngredient(ingredientId: number) {
-		try {
-			const response = await apiClient.delete(`/stock-requests/ingredients/${ingredientId}`)
-			return response.data
-		} catch (error) {
-			console.error('Failed to delete stock request ingredient:', error)
+			console.error('Failed to update stock request ingredients:', error)
 			throw error
 		}
 	}

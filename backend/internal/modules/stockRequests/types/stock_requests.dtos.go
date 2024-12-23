@@ -28,14 +28,18 @@ type UpdateIngredientDates struct {
 
 type StockRequestResponse struct {
 	RequestID     uint                       `json:"requestId"`
-	StoreID       uint                       `json:"storeId"`
-	StoreName     string                     `json:"storeName"`
+	Store         StoreDTO                   `json:"store"`
 	WarehouseID   uint                       `json:"warehouseId"`
 	WarehouseName string                     `json:"warehouseName"`
 	Status        data.StockRequestStatus    `json:"status"`
 	Items         []StockRequestItemResponse `json:"items"`
 	CreatedAt     time.Time                  `json:"createdAt"`
 	UpdatedAt     time.Time                  `json:"updatedAt"`
+}
+
+type StoreDTO struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 type StockRequestItemResponse struct {
@@ -56,11 +60,12 @@ type LowStockIngredientResponse struct {
 
 type GetStockRequestsFilter struct {
 	Pagination  *utils.Pagination
-	StoreID     *uint      `form:"storeId,omitempty"`
-	WarehouseID *uint      `form:"warehouseId,omitempty"`
-	Status      *string    `form:"status,omitempty"`
-	StartDate   *time.Time `form:"startDate,omitempty"`
-	EndDate     *time.Time `form:"endDate,omitempty"`
+	StoreID     *uint      `form:"storeId"`
+	WarehouseID *uint      `form:"warehouseId"`
+	StartDate   *time.Time `form:"startDate"`
+	EndDate     *time.Time `form:"endDate"`
+
+	Statuses []data.StockRequestStatus `form:"statuses[]"`
 }
 
 type StockMaterialDTO struct {
@@ -69,6 +74,16 @@ type StockMaterialDTO struct {
 	Category        string  `json:"category"`
 	Unit            string  `json:"unit"`
 	AvailableQty    float64 `json:"availableQuantity"`
+}
+
+type StockMaterialAvailabilityDTO struct {
+	StockMaterialID uint    `json:"stockMaterialId"`
+	Name            string  `json:"name"`
+	Category        string  `json:"category"`
+	AvailableQty    float64 `json:"availableQty"`
+	WarehouseID     uint    `json:"warehouseId"`
+	WarehouseName   string  `json:"warehouseName"`
+	Unit            string  `json:"unit"`
 }
 
 type StockMaterialFilter struct {
