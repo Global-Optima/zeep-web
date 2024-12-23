@@ -439,6 +439,24 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+-- StockMaterials Table
+CREATE TABLE IF NOT EXISTS stock_materials (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+	ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
+    safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
+    expiration_flag BOOLEAN NOT NULL,
+    unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
+    category VARCHAR(255),
+    barcode VARCHAR(255) UNIQUE,
+    expiration_period_in_days INT NOT NULL DEFAULT 1095, -- Default 3 years
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
 -- StockRequestIngredients Table
 CREATE TABLE
 	IF NOT EXISTS stock_request_ingredients (
@@ -467,22 +485,7 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
--- StockMaterials Table
-CREATE TABLE IF NOT EXISTS stock_materials (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
-    expiration_flag BOOLEAN NOT NULL,
-    unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
-    category VARCHAR(255),
-    barcode VARCHAR(255) UNIQUE,
-    expiration_period_in_days INT NOT NULL DEFAULT 1095, -- Default 3 years
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-);
+
 
 -- Packages Table
 CREATE TABLE IF NOT EXISTS stock_material_packages (
@@ -490,16 +493,6 @@ CREATE TABLE IF NOT EXISTS stock_material_packages (
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     size DECIMAL(10,2) NOT NULL,
     unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-);
-
--- Ingredients Mapping Table
-CREATE TABLE IF NOT EXISTS ingredient_stock_material_mappings (
-    id SERIAL PRIMARY KEY,
-    ingredient_id INT NOT NULL REFERENCES ingredients(id) ON DELETE CASCADE,
-    stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ

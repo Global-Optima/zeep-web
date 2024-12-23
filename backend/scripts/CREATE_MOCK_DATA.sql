@@ -1385,23 +1385,13 @@ VALUES
     ('General Mills', 'support@generalmills.com', '+1 800 248 7310', '1 General Mills Blvd, Minneapolis, MN 55426, USA');
 
 
-INSERT INTO stock_materials (name, description, safety_stock, expiration_flag, unit_id, category, barcode, expiration_period_in_days, is_active)
+INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, expiration_flag, unit_id, category, barcode, expiration_period_in_days, is_active)
 VALUES
-    ('Milk', '1L pack of milk', 50, TRUE, 3, 'Dairy', '111111111111', 1095, TRUE),
-    ('Sugar', '1kg pack of sugar', 20, TRUE, 2, 'Sweeteners', '222222222222', 1095, TRUE),
-    ('Chocolate', '500g pack of chocolate', 15, TRUE, 2, 'Confectionery', '333333333333', 730, TRUE),
-    ('Cinnamon', '200g pack of cinnamon', 10, TRUE, 2, 'Spices', '444444444444', 1460, TRUE),
-    ('Vanilla', '50ml vanilla extract bottle', 25, TRUE, 4, 'Flavorings', '555555555555', 1460, TRUE);
-
-
-INSERT INTO ingredient_stock_material_mapping (ingredient_id, stock_material_id)
-VALUES
-    (2, 1), -- Milk linked to stock material
-    (1, 2), -- Sugar linked to stock material
-    (3, 3), -- Chocolate linked to stock material
-    (4, 4), -- Cinnamon linked to stock material
-    (6, 5); -- Vanilla linked to stock material
-
+    ('Milk', '1L pack of milk', 2, 50, TRUE, 3, 'Dairy', '111111111111', 1095, TRUE),
+    ('Sugar', '1kg pack of sugar', 1, 20, TRUE, 2, 'Sweeteners', '222222222222', 1095, TRUE),
+    ('Chocolate', '500g pack of chocolate', 3, 15, TRUE, 2, 'Confectionery', '333333333333', 730, TRUE),
+    ('Cinnamon', '200g pack of cinnamon', 4, 10, TRUE, 2, 'Spices', '444444444444', 1460, TRUE),
+    ('Vanilla', '50ml vanilla extract bottle', 5, 25, TRUE, 4, 'Flavorings', '555555555555', 1460, TRUE);
 
 
 INSERT INTO stock_material_packages (stock_material_id, package_size, package_unit_id)
@@ -1440,24 +1430,24 @@ VALUES
     (3, 3, 'IN_DELIVERY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (4, 4, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Insert into StockRequestIngredients (Items for Stock Requests)
-INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, quantity, created_at, updated_at)
+INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, stock_material_id, quantity, created_at, updated_at)
 VALUES
     -- StockRequest 1 (Store 1 -> Warehouse 1)
-    (1, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (1, 2, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (1, 1, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    (1, 2, 1, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
 
     -- StockRequest 2 (Store 2 -> Warehouse 2)
-    (2, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Chocolate
-    (2, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Cinnamon
+    (2, 3, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Chocolate
+    (2, 4, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Cinnamon
 
     -- StockRequest 3 (Store 3 -> Warehouse 3)
-    (3, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Vanilla
-    (3, 1, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    (3, 5, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Vanilla
+    (3, 1, 2, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
 
     -- StockRequest 4 (Store 4 -> Warehouse 4)
-    (4, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);  -- Chocolate
+    (4, 2, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (4, 3, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);  -- Chocolate
+
 
 -- Insert into Suppliers
 INSERT INTO
