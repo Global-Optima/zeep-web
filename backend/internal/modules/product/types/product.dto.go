@@ -5,11 +5,15 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-type StoreProductDTO struct {
-	ID          uint                   `json:"id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	ImageURL    string                 `json:"imageUrl"`
+type BaseProductDTO struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageURL    string `json:"imageUrl"`
+}
+
+type ProductDTO struct {
+	BaseProductDTO
 	BasePrice   float64                `json:"basePrice"`
 	Ingredients []ProductIngredientDTO `json:"ingredients"`
 }
@@ -23,39 +27,36 @@ type ProductIngredientDTO struct {
 	Proteins float64 `json:"proteins"`
 }
 
-type StoreProductDetailsDTO struct {
-	ID               uint                                    `json:"id"`
-	Name             string                                  `json:"name"`
-	Description      string                                  `json:"description"`
-	ImageURL         string                                  `json:"imageUrl"`
+type ProductDetailsDTO struct {
+	BaseProductDTO
 	Sizes            []ProductSizeDTO                        `json:"sizes"`
 	DefaultAdditives []additiveTypes.AdditiveCategoryItemDTO `json:"defaultAdditives"`
 }
 
 type ProductSizeDTO struct {
-	ID        uint    `json:"id"`
-	Name      string  `json:"name"`
-	BasePrice float64 `json:"basePrice"`
-	Measure   string  `json:"measure"`
+	ID      uint    `json:"id"`
+	Name    string  `json:"name"`
+	Price   float64 `json:"basePrice"`
+	Measure string  `json:"measure"`
 }
 
 type CreateProductDTO struct {
-	Name             string `json:"name" binding:"required,min=2,max=100"` // Name is required, 2-100 chars
-	Description      string `json:"description" binding:"max=500"`         // Optional, max 500 chars
-	ImageURL         string `json:"imageUrl" binding:"omitempty,url"`      // Optional, must be a valid URL if provided
+	Name             string `json:"name" binding:"required,min=2,max=100"`
+	Description      string `json:"description" binding:"max=500"`
+	ImageURL         string `json:"imageUrl" binding:"omitempty,url"`
 	CategoryID       *uint  `json:"categoryId" binding:"omitempty"`
 	DefaultAdditives []uint `json:"defaultAdditives" binding:"omitempty,dive,gt=0"`
 }
 
 type CreateProductWithAttachesDTO struct {
 	Product      CreateProductDTO           `json:"product" binding:"dive"`
-	ProductSizes []CreateProductSizeDTO     `json:"productSizes" binding:"dive"` // Validate each ProductSize
-	Additives    []SelectedAdditiveTypesDTO `json:"additives" binding:"dive"`    // Validate each Additive
+	ProductSizes []CreateProductSizeDTO     `json:"productSizes" binding:"dive"`
+	Additives    []SelectedAdditiveTypesDTO `json:"additives" binding:"dive"`
 }
 
 type SelectedAdditiveTypesDTO struct {
-	AdditiveID uint `json:"additiveId" binding:"required"` // Required field
-	IsDefault  bool `json:"isDefault"`                     // Optional
+	AdditiveID uint `json:"additiveId" binding:"required"`
+	IsDefault  bool `json:"isDefault"`
 }
 
 type SelectedAdditiveDTO struct {
@@ -92,13 +93,6 @@ type UpdateProductSizeDTO struct {
 }
 
 type ProductsFilterDto struct {
-	StoreID    *uint   `form:"storeId" binding:"omitempty,gt=0"`
-	CategoryID *uint   `form:"categoryId" binding:"omitempty,gt=0"`
-	Search     *string `form:"search"`
-	utils.BaseFilter
-}
-
-type StoreProductsFilterDto struct {
 	CategoryID *uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Search     *string `form:"search"`
 	utils.BaseFilter

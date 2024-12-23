@@ -3,8 +3,6 @@ package product
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"net/http"
 	"strconv"
 	"time"
@@ -31,28 +29,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		return
 	}
 
-	if filter.StoreID != nil {
-		storeID, err := strconv.ParseUint(c.Query("storeId"), 10, 64)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid storeId")
-			return
-		}
-		temp := uint(storeID)
-		filter.StoreID = &temp
-	}
-
-	if filter.CategoryID != nil {
-		categoryID, err := strconv.ParseUint(c.Query("categoryId"), 10, 64)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid categoryId")
-			return
-		}
-		temp := uint(categoryID)
-		filter.CategoryID = &temp
-	}
-
-	cacheKey := utils.BuildCacheKey("storeProducts", map[string]string{
-		"storeId":    c.DefaultQuery("storeId", ""),
+	cacheKey := utils.BuildCacheKey("products", map[string]string{
 		"categoryId": c.DefaultQuery("categoryId", ""),
 		"search":     c.DefaultQuery("search", ""),
 		"page":       strconv.Itoa(filter.Pagination.Page),
@@ -63,7 +40,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 
 	cacheUtil := utils.GetCacheInstance()
 
-	var cachedProducts []types.StoreProductDTO
+	var cachedProducts []types.ProductDTO
 	if err := cacheUtil.Get(cacheKey, &cachedProducts); err == nil {
 		if !utils.IsEmpty(cachedProducts) {
 			utils.SendSuccessResponseWithPagination(c, cachedProducts, filter.Pagination)
@@ -86,14 +63,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetProductDetails(c *gin.Context) {
-	storeIDParam := c.Query("storeId")
 	productIDParam := c.Param("id")
-
-	storeID, err := strconv.ParseUint(storeIDParam, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store ID")
-		return
-	}
 
 	productID, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
@@ -102,13 +72,12 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 	}
 
 	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
-		"storeId":   storeIDParam,
 		"productId": productIDParam,
 	})
 
 	cacheUtil := utils.GetCacheInstance()
 
-	var cachedProductDetails *types.StoreProductDetailsDTO
+	var cachedProductDetails *types.ProductDetailsDTO
 	if err := cacheUtil.Get(cacheKey, &cachedProductDetails); err == nil {
 		if !utils.IsEmpty(cachedProductDetails) {
 			utils.SendSuccessResponse(c, cachedProductDetails)
@@ -116,7 +85,7 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 		}
 	}
 
-	productDetails, err := h.service.GetStoreProductDetails(uint(storeID), uint(productID))
+	productDetails, err := h.service.GetProductDetails(uint(productID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
@@ -175,12 +144,7 @@ func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := getStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-	}
-
-	productDetails, err := h.service.GetStoreProductDetails(storeID, uint(productID))
+	productDetails, err := h.service.GetProductDetails(uint(productID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
@@ -223,25 +187,4 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 	}
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
-}
-
-// getStoreId returns the retrieved id and HandlerError
-func getStoreId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
-	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
-	if err != nil {
-		return 0, types.ErrUnauthorizedAccess
-	}
-
-	var storeID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleDirector {
-		storeID = claims.WorkplaceID
-	} else {
-		id, err := strconv.ParseUint(c.Query("storeId"), 10, 64)
-		if err != nil {
-			return 0, types.ErrInvalidStoreID
-		}
-		storeID = uint(id)
-	}
-
-	return storeID, nil
 }

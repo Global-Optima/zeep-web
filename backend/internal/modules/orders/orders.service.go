@@ -264,7 +264,7 @@ func ValidateProductSizes(productSizeIDs []uint, repo product.ProductRepository)
 	prices := make(map[uint]float64)
 	productNames := make(map[uint]string)
 	for _, id := range productSizeIDs {
-		productSize, err := repo.GetProductSizeWithProduct(id)
+		productSize, err := repo.GetProductSizeById(id)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid product size ID: %d", id)
 		}

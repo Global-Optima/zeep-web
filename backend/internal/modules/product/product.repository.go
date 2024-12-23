@@ -10,17 +10,16 @@ import (
 )
 
 type ProductRepository interface {
-	GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error)
-	GetStoreProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
-	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
-
 	CreateProduct(product *data.Product) (uint, error)
+	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
+	//GetProductDetails(productID uint) (*data.Product, error)
+	GetProductDetails(productID uint) (*types.ProductDetailsDTO, error)
 	UpdateProduct(id uint, product *data.Product, defaultAdditiveIDs []uint) error
 	DeleteProduct(productID uint) error
 
-	//GetStoreProductSizeDetails(productSizeID uint) (*data.ProductSize, error)
-	//GetProductSizes(productID uint) (*data.ProductSize, error)
+	//GetProductSizes(productID uint) ([]data.ProductSize, error)
 	CreateProductSize(productSize *data.ProductSize) (uint, error)
+	GetProductSizeById(productSizeID uint) (*data.ProductSize, error)
 	UpdateProductSizeWithAssociations(id uint, productSize *data.ProductSize, additiveIDs, ingredientIDs []uint) error
 	DeleteProductSize(productID uint) error
 }
@@ -33,7 +32,7 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
 }
 
-func (r *productRepository) GetProductSizeWithProduct(productSizeID uint) (*data.ProductSize, error) {
+func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.ProductSize, error) {
 	var productSize data.ProductSize
 	err := r.db.Preload("Product").First(&productSize, productSizeID).Error
 	if err != nil {
@@ -50,7 +49,7 @@ func (r *productRepository) GetProductSizeWithProduct(productSizeID uint) (*data
 	return &productSize, nil
 }
 
-func (r *productRepository) GetStoreProducts(filter *types.ProductsFilterDto) ([]data.Product, error) {
+func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error) {
 	var products []data.Product
 
 	query := r.db.
@@ -59,10 +58,6 @@ func (r *productRepository) GetStoreProducts(filter *types.ProductsFilterDto) ([
 		Preload("ProductSizes", "is_default = TRUE").
 		Preload("ProductSizes.ProductIngredients").
 		Preload("ProductSizes.ProductIngredients.Ingredient")
-
-	if filter.StoreID != nil {
-		query = query.Where("store_products.store_id = ? AND store_products.is_available = TRUE", filter.StoreID)
-	}
 
 	if filter.CategoryID != nil {
 		query = query.Where("products.category_id = ?", *filter.CategoryID)
@@ -93,30 +88,15 @@ func (r *productRepository) GetStoreProducts(filter *types.ProductsFilterDto) ([
 	return products, nil
 }
 
-func (r *productRepository) GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error) {
+func (r *productRepository) GetProductDetails(productID uint) (*types.ProductDetailsDTO, error) {
 	var product data.Product
 
-	// Preload only ProductSizes and DefaultAdditives, exclude additive categories and their additives
 	err := r.db.
 		Preload("ProductSizes").
 		Preload("DefaultAdditives.Additive").
 		Preload("Category").
 		Where("id = ?", productID).
 		First(&product).
-		Error
-
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, gorm.ErrRecordNotFound
-		}
-		return nil, err
-	}
-
-	// Verify that the product is available in the specified store
-	var storeProduct data.StoreProduct
-	err = r.db.
-		Where("product_id = ? AND store_id = ? AND is_available = ?", productID, storeID, true).
-		First(&storeProduct).
 		Error
 
 	if err != nil {
@@ -138,7 +118,7 @@ func (r *productRepository) GetStoreProductDetails(storeID uint, productID uint)
 		return nil, err
 	}
 
-	productDTO := types.MapToStoreProductDetailsDTO(&product, defaultAdditives)
+	productDTO := types.MapToProductDetailsDTO(&product, defaultAdditives)
 
 	return productDTO, nil
 }

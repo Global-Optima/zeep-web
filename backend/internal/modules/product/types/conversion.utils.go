@@ -6,20 +6,26 @@ import (
 	"strings"
 )
 
-func MapToStoreProductDetailsDTO(product *data.Product, defaultAdditives []data.DefaultProductAdditive) *StoreProductDetailsDTO {
-	dto := &StoreProductDetailsDTO{
+func MapBaseProductDTO(product *data.Product) BaseProductDTO {
+	return BaseProductDTO{
 		ID:          product.ID,
 		Name:        product.Name,
 		Description: product.Description,
 		ImageURL:    product.ImageURL,
 	}
+}
+
+func MapToProductDetailsDTO(product *data.Product, defaultAdditives []data.DefaultProductAdditive) *ProductDetailsDTO {
+	dto := &ProductDetailsDTO{
+		BaseProductDTO: MapBaseProductDTO(product),
+	}
 
 	for _, size := range product.ProductSizes {
 		sizeDTO := ProductSizeDTO{
-			ID:        size.ID,
-			Name:      size.Name,
-			BasePrice: size.BasePrice,
-			Measure:   size.Measure,
+			ID:      size.ID,
+			Name:    size.Name,
+			Price:   size.BasePrice,
+			Measure: size.Measure,
 		}
 
 		additiveCategoryMap := make(map[uint]*additiveTypes.AdditiveCategoryDTO)
@@ -49,6 +55,13 @@ func MapToStoreProductDetailsDTO(product *data.Product, defaultAdditives []data.
 		dto.Sizes = append(dto.Sizes, sizeDTO)
 	}
 
+	dto.DefaultAdditives = MapToDefaultAdditives(defaultAdditives)
+
+	return dto
+}
+
+func MapToDefaultAdditives(defaultAdditives []data.DefaultProductAdditive) []additiveTypes.AdditiveCategoryItemDTO {
+	var result []additiveTypes.AdditiveCategoryItemDTO
 	for _, da := range defaultAdditives {
 		additive := da.Additive
 		additiveDTO := additiveTypes.AdditiveCategoryItemDTO{
@@ -58,20 +71,29 @@ func MapToStoreProductDetailsDTO(product *data.Product, defaultAdditives []data.
 			Price:       additive.BasePrice,
 			ImageURL:    additive.ImageURL,
 		}
-		dto.DefaultAdditives = append(dto.DefaultAdditives, additiveDTO)
+		result = append(result, additiveDTO)
 	}
-
-	return dto
+	return result
 }
 
-func MapToStoreProductDTO(product data.Product) StoreProductDTO {
+func MapToProductDTO(product data.Product) ProductDTO {
 	var basePrice float64 = 0
 	if len(product.ProductSizes) > 0 {
 		basePrice = product.ProductSizes[0].BasePrice
 	}
 
+	ingredients := MapToIngredients(product.ProductSizes)
+
+	return ProductDTO{
+		BaseProductDTO: MapBaseProductDTO(&product),
+		BasePrice:      basePrice,
+		Ingredients:    ingredients,
+	}
+}
+
+func MapToIngredients(sizes []data.ProductSize) []ProductIngredientDTO {
 	var ingredients []ProductIngredientDTO
-	for _, size := range product.ProductSizes {
+	for _, size := range sizes {
 		for _, productIngredient := range size.ProductIngredients {
 			ingredient := productIngredient.Ingredient
 			ingredients = append(ingredients, ProductIngredientDTO{
@@ -95,14 +117,7 @@ func MapToStoreProductDTO(product data.Product) StoreProductDTO {
 		ingredients = append(ingredients, ingredient)
 	}
 
-	return StoreProductDTO{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		ImageURL:    product.ImageURL,
-		BasePrice:   basePrice,
-		Ingredients: ingredients,
-	}
+	return ingredients
 }
 
 func CreateToProductModel(dto *CreateProductDTO) *data.Product {

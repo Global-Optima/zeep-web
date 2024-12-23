@@ -4,6 +4,26 @@ import (
 	"time"
 )
 
+type Size string
+
+const (
+	S Size = "S"
+	M Size = "M"
+	L Size = "L"
+)
+
+func (s Size) ToString() string {
+	return string(s)
+}
+
+func IsValidSize(size Size) bool {
+	switch size {
+	case S, M, L:
+		return true
+	}
+	return false
+}
+
 type Product struct {
 	BaseEntity
 	Name             string                   `gorm:"size:100;not null" sort:"name"`
@@ -21,19 +41,19 @@ type RecipeStep struct {
 	BaseEntity
 	ProductID   uint    `gorm:"index;not null"`
 	Product     Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	Step        int     `gorm:"not null"`
-	Name        string  `gorm:"size:100"`
+	Step        int     `gorm:"not null" sort:"step"`
+	Name        string  `gorm:"size:100" sort:"name"`
 	Description string  `gorm:"type:text"`
 	ImageURL    string  `gorm:"size:2048"`
 }
 
 type ProductSize struct {
 	BaseEntity
-	Name               string  `gorm:"size:100;not null"`
-	Measure            string  `gorm:"size:50"`
-	BasePrice          float64 `gorm:"not null"`
-	Size               int     `gorm:"not null"`
-	IsDefault          bool    `gorm:"default:false"`
+	Name               string  `gorm:"size:100;not null" sort:"name"`
+	Measure            string  `gorm:"size:50" sort:"measure"`
+	BasePrice          float64 `gorm:"not null" sort:"price"`
+	Size               int     `gorm:"not null" sort:"size"`
+	IsDefault          bool    `gorm:"default:false" sort:"is_default"`
 	ProductID          uint    `gorm:"index;not null"`
 	Product            Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 	DiscountID         uint

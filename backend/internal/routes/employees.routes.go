@@ -10,6 +10,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
@@ -24,11 +25,22 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	{
 		router.GET("", handler.GetProducts)
 		router.GET("/:id", handler.GetProductDetails)
-		router.GET("/:id/store", handler.GetStoreProductDetails)
 		router.POST("", handler.CreateProduct)
 		router.PUT("/:id", handler.UpdateProduct)
 		router.POST("/sizes", handler.CreateProductSize)
 		router.PUT("/sizes/:id", handler.UpdateProductSize)
+	}
+}
+
+func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductHandler) {
+	router := r.EmployeeRoutes.Group("/store-products")
+	{
+		router.GET("", handler.GetStoreProducts)
+		router.GET("/:id", handler.GetStoreProduct)
+		router.POST("", handler.CreateStoreProduct)
+		//router.PUT("/:id", handler.UpdateStoreProduct)
+		///router.POST("/sizes", handler.CreateStoreProductSize)
+		//router.PUT("/sizes/:id", handler.UpdateStoreProductSize)
 	}
 }
 

@@ -8,9 +8,9 @@ import (
 )
 
 type ProductService interface {
-	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
+	GetProductDetails(productID uint) (*types.ProductDetailsDTO, error)
 
-	GetProducts(filter *types.ProductsFilterDto) ([]types.StoreProductDTO, error)
+	GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDTO, error)
 	CreateProduct(product *types.CreateProductDTO) (uint, error)
 	UpdateProduct(productID uint, dto *types.UpdateProductDTO) error
 	//DeleteProduct(productID uint) error
@@ -32,26 +32,26 @@ func NewProductService(repo ProductRepository, logger *zap.SugaredLogger) Produc
 	}
 }
 
-func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.StoreProductDTO, error) {
-	products, err := s.repo.GetStoreProducts(filter)
+func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDTO, error) {
+	products, err := s.repo.GetProducts(filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve products", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	productDTOs := make([]types.StoreProductDTO, len(products))
+	productDTOs := make([]types.ProductDTO, len(products))
 	for i, product := range products {
-		productDTOs[i] = types.MapToStoreProductDTO(product)
+		productDTOs[i] = types.MapToProductDTO(product)
 	}
 
 	return productDTOs, nil
 }
 
-func (s *productService) GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error) {
-	productDetails, err := s.repo.GetStoreProductDetails(storeID, productID)
+func (s *productService) GetProductDetails(productID uint) (*types.ProductDetailsDTO, error) {
+	productDetails, err := s.repo.GetProductDetails(productID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to retrieve product for storeID = %d, productID = %d: %w", storeID, productID, err)
+		wrappedErr := fmt.Errorf("failed to retrieve product for productID = %d: %w", productID, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}

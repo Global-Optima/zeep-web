@@ -39,7 +39,7 @@ type StoreProduct struct {
 	StoreID     uint    `gorm:"index;not null"`
 	IsAvailable bool    `gorm:"default:true"`
 	Store       Store   `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
-	Product     Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	Product     Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"products"`
 }
 
 type FacilityAddress struct {
