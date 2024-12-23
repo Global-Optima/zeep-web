@@ -1,5 +1,7 @@
 package types
 
+import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+
 type AssignStoreToWarehouseRequest struct {
 	StoreID     uint `json:"storeId" binding:"required"`
 	WarehouseID uint `json:"warehouseId" binding:"required"`
@@ -35,4 +37,47 @@ type WarehouseResponse struct {
 	FacilityAddress FacilityAddressDTO `json:"facilityAddress"`
 	CreatedAt       string             `json:"createdAt"`
 	UpdatedAt       string             `json:"updatedAt"`
+}
+
+// stock related dtos
+type AdjustWarehouseStockRequest struct {
+	WarehouseID     uint    `json:"warehouseId" binding:"required"`
+	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
+	Quantity        float64 `json:"quantity" binding:"required,gte=0"`
+}
+
+type WarehouseStockResponse struct {
+	WarehouseID   uint                  `json:"warehouseId"`
+	StockMaterial StockMaterialResponse `json:"stockMaterial"`
+	Quantity      float64               `json:"quantity"`
+}
+
+type StockMaterialResponse struct {
+	ID          uint    `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Category    string  `json:"category"`
+	SafetyStock float64 `json:"safetyStock"`
+	Unit        string  `json:"unit"`
+	Barcode     string  `json:"barcode"`
+}
+
+type ResetWarehouseStockRequest struct {
+	WarehouseID uint    `json:"warehouseId" binding:"required"`
+	Stocks      []Stock `json:"stocks" binding:"required"`
+}
+
+type Stock struct {
+	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
+	Quantity        float64 `json:"quantity" binding:"required,gte=0"`
+}
+
+type GetWarehouseStockFilterQuery struct {
+	WarehouseID     *uint   `form:"warehouseId"`
+	StockMaterialID *uint   `form:"stockMaterialId"`
+	LowStockOnly    *bool   `form:"lowStockOnly"`
+	Category        *string `form:"category"`
+	ExpirationDays  *int    `form:"expirationDays"` // Number of days to expiration
+	Search          *string `form:"search"`         // Search by stock material name
+	Pagination      *utils.Pagination
 }

@@ -156,3 +156,64 @@ func (h *WarehouseHandler) DeleteWarehouse(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+
+func (h *WarehouseHandler) AddToStock(c *gin.Context) {
+	var req types.AdjustWarehouseStockRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if err := h.service.AddToStock(req); err != nil {
+		utils.SendInternalServerError(c, "Failed to add stock: "+err.Error())
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "Stock added successfully", http.StatusOK)
+}
+
+func (h *WarehouseHandler) DeductFromStock(c *gin.Context) {
+	var req types.AdjustWarehouseStockRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if err := h.service.DeductFromStock(req); err != nil {
+		utils.SendInternalServerError(c, "Failed to deduct stock: "+err.Error())
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "Stock deducted successfully", http.StatusOK)
+}
+
+func (h *WarehouseHandler) GetStock(c *gin.Context) {
+	queryParams, err := types.ParseStockFilterParamsWithPagination(c)
+	if err != nil {
+		utils.SendBadRequestError(c, err.Error())
+		return
+	}
+
+	stocks, err := h.service.GetStock(queryParams)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch stock: "+err.Error())
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, stocks, queryParams.Pagination)
+}
+
+func (h *WarehouseHandler) ResetStock(c *gin.Context) {
+	var req types.ResetWarehouseStockRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if err := h.service.ResetStock(req); err != nil {
+		utils.SendInternalServerError(c, "Failed to reset stock: "+err.Error())
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "Stock reset successfully", http.StatusOK)
+}
