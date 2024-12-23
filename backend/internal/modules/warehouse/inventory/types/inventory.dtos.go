@@ -19,11 +19,13 @@ type NewInventoryItem struct {
 	Category         string  `json:"category" binding:"required"`
 	ExpirationInDays *int    `json:"expirationInDays,omitempty"` // Optional override
 	Package          Package `json:"package" binding:"required"`
+	IngredientID     uint    `json:"ingredientId" binding:"required"` // New field for ingredient linkage
 }
 
 type ExistingInventoryItem struct {
 	StockMaterialID uint    `json:"stockMaterialId"`                   // For existing SKUs
 	Quantity        float64 `json:"quantity" binding:"required,gte=0"` // Quantity to log
+	IngredientID    uint    `json:"ingredientId" binding:"required"`   // Link to ingredient
 }
 
 type Package struct {

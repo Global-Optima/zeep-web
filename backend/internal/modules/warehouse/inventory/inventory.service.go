@@ -204,6 +204,7 @@ func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, i
 			UnitID:                 item.UnitID,
 			Category:               item.Category,
 			ExpirationPeriodInDays: expirationPeriod,
+			IngredientID:           item.IngredientID, // Linking to ingredient
 			IsActive:               true,
 		}
 
@@ -215,7 +216,12 @@ func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, i
 			return nil, fmt.Errorf("failed to associate supplier %d with stock material %d: %w", supplierID, newStockMaterial.ID, err)
 		}
 
-		packageData := types.ValidatePackage(newStockMaterial)
+		pkg := data.StockMaterialPackage{
+			Size:   item.Package.Size,
+			UnitID: item.Package.UnitID,
+		}
+
+		packageData := types.ValidatePackage(newStockMaterial.ID, pkg)
 		if packageData == nil {
 			return nil, fmt.Errorf("invalid package data for stock material %s", item.Name)
 		}
