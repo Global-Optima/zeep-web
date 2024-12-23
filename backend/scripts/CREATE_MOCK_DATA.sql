@@ -1394,7 +1394,7 @@ VALUES
     ('Vanilla', '50ml vanilla extract bottle', 5, 25, TRUE, 4, 'Flavorings', '555555555555', 1460, TRUE);
 
 
-INSERT INTO stock_material_packages (stock_material_id, package_size, package_unit_id)
+INSERT INTO stock_material_packages (stock_material_id, size, unit_id)
 VALUES
     (1, 1.0, 3), -- 1L Milk
     (2, 1.0, 2), -- 1kg Sugar

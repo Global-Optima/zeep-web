@@ -107,7 +107,7 @@ type StockMaterialPackage struct {
 	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
 	Size            float64       `gorm:"type:decimal(10,2);not null"`
 	UnitID          uint          `gorm:"not null"`
-	Unit            Unit          `gorm:"foreignKey:PackageUnitID;constraint:OnDelete:SET NULL"`
+	Unit            Unit          `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 }
 
 type SupplierMaterial struct {

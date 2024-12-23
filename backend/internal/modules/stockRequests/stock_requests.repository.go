@@ -15,7 +15,7 @@ type StockRequestRepository interface {
 	AddIngredientsToStockRequest(ingredients []data.StockRequestIngredient) error
 	DeleteStockRequestIngredient(ingredientID uint) error
 	ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error
-	UpdateStockRequestIngredientDates(dates *types.UpdateIngredientDates) error
+	UpdateStockRequestIngredientDates(stockRequestIngredientID uint, dates *types.UpdateIngredientDates) error
 
 	GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error)
 	GetStockRequestByID(requestID uint) (*data.StockRequest, error)
@@ -54,8 +54,9 @@ func (r *stockRequestRepository) DeleteStockRequestIngredient(ingredientID uint)
 	return r.db.Delete(&data.StockRequestIngredient{}, ingredientID).Error
 }
 
-func (r *stockRequestRepository) UpdateStockRequestIngredientDates(dates *types.UpdateIngredientDates) error {
+func (r *stockRequestRepository) UpdateStockRequestIngredientDates(stockRequestIngredientID uint, dates *types.UpdateIngredientDates) error {
 	return r.db.Model(&data.StockRequestIngredient{}).
+		Where("id = ?", stockRequestIngredientID).
 		Updates(dates).Error
 }
 

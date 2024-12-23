@@ -112,7 +112,7 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 				ExpirationDate: time.Now().AddDate(0, 0, ingredient.StockMaterial.ExpirationPeriodInDays),
 			}
 
-			if err := s.repo.UpdateStockRequestIngredientDates(&dates); err != nil {
+			if err := s.repo.UpdateStockRequestIngredientDates(ingredient.ID, &dates); err != nil {
 				return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
 			}
 
