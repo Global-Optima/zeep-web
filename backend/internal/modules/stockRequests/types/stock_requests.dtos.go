@@ -27,14 +27,18 @@ type UpdateIngredientDates struct {
 
 type StockRequestResponse struct {
 	RequestID     uint                       `json:"requestId"`
-	StoreID       uint                       `json:"storeId"`
-	StoreName     string                     `json:"storeName"`
+	Store         StoreDTO                   `json:"store"`
 	WarehouseID   uint                       `json:"warehouseId"`
 	WarehouseName string                     `json:"warehouseName"`
 	Status        data.StockRequestStatus    `json:"status"`
 	Items         []StockRequestItemResponse `json:"items"`
 	CreatedAt     time.Time                  `json:"createdAt"`
 	UpdatedAt     time.Time                  `json:"updatedAt"`
+}
+
+type StoreDTO struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 type StockRequestItemResponse struct {

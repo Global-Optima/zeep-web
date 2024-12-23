@@ -165,15 +165,21 @@ func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
 func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
 	router := r.Routes.Group("/inventory")
 	{
-		router.POST("/receive", handler.ReceiveInventory)
-		router.GET("/levels/:warehouseID", handler.GetInventoryLevels)
-		router.POST("/pickup", handler.PickupStock) // store
-		router.POST("/transfer", handler.TransferInventory)
+		stockRoutes := router.Group("/stock")
+		{
+			stockRoutes.POST("/receive", handler.ReceiveInventory)
+			stockRoutes.GET("/levels/:warehouseID", handler.GetInventoryLevels)
+			stockRoutes.POST("/pickup", handler.PickupStock) // store
+			stockRoutes.POST("/transfer", handler.TransferInventory)
+			stockRoutes.GET("/deliveries", handler.GetDeliveries)
+		}
 
-		router.GET("/expiration/upcoming/:warehouseID", handler.GetExpiringItems)
-		router.POST("/expiration/extend", handler.ExtendExpiration)
+		expirationRoutes := router.Group("/expiration")
+		{
+			expirationRoutes.GET("/:warehouseID", handler.GetExpiringItems)
+			expirationRoutes.POST("/extend", handler.ExtendExpiration)
+		}
 
-		router.GET("/deliveries", handler.GetDeliveries)
 	}
 }
 
@@ -195,6 +201,14 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 			storeRoutes.PUT("/:storeId", handler.ReassignStore)               // Reassign a store to another warehouse
 			storeRoutes.GET("/:warehouseId", handler.GetAllStoresByWarehouse) // Get all stores assigned to a specific warehouse
 		}
+
+		stockRoutes := router.Group("/stock")
+		{
+			stockRoutes.POST("/add", handler.AddToStock)
+			stockRoutes.POST("/deduct", handler.DeductFromStock)
+			stockRoutes.GET("", handler.GetStock)
+			stockRoutes.POST("/reset", handler.ResetStock)
+		}
 	}
 }
 
@@ -203,8 +217,8 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 	{
 		router.GET("", handler.GetStockRequests)                                                                                               // Get all stock requests with filtering
 		router.GET("/low-stock", handler.GetLowStockIngredients)                                                                               // Get low-stock ingredients
-		router.GET("/marketplace-products", handler.GetAllStockMaterials)                                                                      // Get marketplace products
-		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.CreateStockRequest)                                       // Create a new stock request (cart creation)
+		router.GET("/stock-materials", handler.GetAllStockMaterials)                                                                           // Get marketplace products
+		router.POST("", handler.CreateStockRequest)                                                                                            // Create a new stock request (cart creation)
 		router.PATCH("/:requestId/status", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStockRequestStatus)                // Update stock request status
 		router.POST("/:requestId/ingredients", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.AddStockRequestIngredient)         // Add ingredient to cart
 		router.DELETE("/ingredients/:ingredientId", middleware.EmployeeRoleMiddleware(data.RoleManager), handler.DeleteStockRequestIngredient) // Delete ingredient from cart

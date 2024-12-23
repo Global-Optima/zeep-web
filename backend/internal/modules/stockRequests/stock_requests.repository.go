@@ -57,9 +57,9 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientDates(dates *types.
 func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error) {
 	var requests []data.StockRequest
 	query := r.db.Preload("Ingredients.Ingredient.Unit").
-		Preload("Ingredients.Ingredient.Category").
-		Preload("Store.Name").
-		Preload("Warehouse.Name")
+		Preload("Ingredients.Ingredient.IngredientCategory").
+		Preload("Store").
+		Preload("Warehouse")
 
 	if filter.StoreID != nil {
 		query = query.Where("store_id = ?", *filter.StoreID)
@@ -84,9 +84,9 @@ func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilte
 func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.StockRequest, error) {
 	var request data.StockRequest
 	err := r.db.Preload("Ingredients.Ingredient.Unit").
-		Preload("Ingredients.Ingredient.Category").
-		Preload("Store.Name").
-		Preload("Warehouse.Name").
+		Preload("Ingredients.Ingredient.IngredientCategory").
+		Preload("Store").
+		Preload("Warehouse").
 		Where("id = ?", requestID).
 		First(&request).Error
 	if err != nil {

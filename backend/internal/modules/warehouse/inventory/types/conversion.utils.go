@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func ConvertInventoryItemsToStockRequest(items []InventoryItem, db *gorm.DB) ([]data.StockRequestIngredient, error) {
+func ConvertExistingItemsToStockRequest(items []ExistingInventoryItem, db *gorm.DB) ([]data.StockRequestIngredient, error) {
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
@@ -43,16 +43,20 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 	return response
 }
 
-func StocksToInventoryItems(stocks []data.WarehouseStock) []InventoryItem {
-	response := make([]InventoryItem, len(stocks))
+func StocksToInventoryItems(stocks []data.WarehouseStock) *InventoryLevelsResponse {
+	levels := make([]InventoryLevel, len(stocks))
 	for i, stock := range stocks {
-		response[i] = InventoryItem{
+		levels[i] = InventoryLevel{
 			StockMaterialID: stock.StockMaterialID,
-			Name:            &stock.StockMaterial.Name,
+			Name:            stock.StockMaterial.Name,
 			Quantity:        stock.Quantity,
 		}
 	}
-	return response
+
+	return &InventoryLevelsResponse{
+		WarehouseID: stocks[0].WarehouseID,
+		Levels:      levels,
+	}
 }
 
 func ExpiringItemsToResponses(deliveries []data.SupplierWarehouseDelivery) []UpcomingExpirationResponse {

@@ -24,7 +24,7 @@ type InventoryRepository interface {
 	GetExpiringItems(warehouseID uint, thresholdDays int) ([]data.SupplierWarehouseDelivery, error)
 	ExtendExpiration(deliveryID uint, newExpirationDate time.Time) error
 
-	ConvertInventoryItemsToStockRequest(items []types.InventoryItem) ([]data.StockRequestIngredient, error)
+	ConvertInventoryItemsToStockRequest(items []types.ExistingInventoryItem) ([]data.StockRequestIngredient, error)
 	ResolveIngredientID(stockMaterialID uint) (uint, error)
 	SupplierMaterialExists(supplierID, stockMaterialID uint) (bool, error)
 	CreateSupplierMaterial(association *data.SupplierMaterial) error
@@ -206,7 +206,7 @@ func (r *inventoryRepository) GetDeliveries(warehouseID *uint, startDate, endDat
 	return deliveries, err
 }
 
-func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.InventoryItem) ([]data.StockRequestIngredient, error) {
+func (r *inventoryRepository) ConvertInventoryItemsToStockRequest(items []types.ExistingInventoryItem) ([]data.StockRequestIngredient, error) {
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
