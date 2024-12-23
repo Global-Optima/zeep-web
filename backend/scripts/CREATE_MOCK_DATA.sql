@@ -49,16 +49,16 @@ VALUES
   ('Улица Кирова, 2, Уфа', 56.0367, 54.7352);
 
 -- Insert into Units
-INSERT INTO units (name, conversion_factor)
+INSERT INTO
+  units (name, conversion_factor)
 VALUES
-    ('kg', 1.0),
-    ('g', 0.001),
-    ('L', 1.0),
-    ('ml', 0.001);
+  ('kg', 1.0),
+  ('g', 0.001),
+  ('L', 1.0),
+  ('ml', 0.001);
 
 -- Insert into CityWarehouses
 INSERT INTO
-  warehouses (facility_address_id, name)
   warehouses (facility_address_id, name)
 VALUES
   (
@@ -276,6 +276,35 @@ VALUES
     'Кубики льда',
     'Лед для охлаждения напитков',
     false
+  );
+
+-- Insert into IngredientCategories
+INSERT INTO
+  ingredient_categories (name, description)
+VALUES
+  (
+    'Молочные продукты',
+    'Категория для молока, сливок, и других молочных ингредиентов'
+  ),
+  (
+    'Фрукты',
+    'Категория для фруктов, таких как яблоки, бананы, апельсины'
+  ),
+  (
+    'Подсластители',
+    'Категория для сахара, мёда, сиропов'
+  ),
+  (
+    'Специи',
+    'Категория для специй, таких как корица, ваниль, мята, имбирь'
+  ),
+  (
+    'Орехи и семена',
+    'Категория для орехов, фисташек, и других семян'
+  ),
+  (
+    'Шоколад и какао',
+    'Категория для шоколада, какао-порошка, и других шоколадных продуктов'
   );
 
 -- Insert into Products
@@ -713,7 +742,7 @@ VALUES
     CURRENT_TIMESTAMP
   ),
   (
-   'Кафе на проспекте',
+    'Кафе на проспекте',
     7,
     false,
     'ACTIVE',
@@ -961,29 +990,219 @@ VALUES
 
 -- Insert into Ingredients
 INSERT INTO
-  ingredients (name, calories, fat, carbs, proteins, expires_at, unit_id)
+  ingredients (
+    name,
+    calories,
+    fat,
+    carbs,
+    proteins,
+    expires_at,
+    unit_id,
+    ingredient_category_id
+  )
 VALUES
-  ('Сахар', 387, 0, 100, 0, '2024-12-31 00:00:00+00', 2),
-  ('Молоко', 42, 1, 5, 3, '2024-01-15 00:00:00+00', 3),
-  ('Шоколад',546,30,61,7,'2024-06-30 00:00:00+00', 1),
-  ('Корица',247,1.2,81,4,'2024-09-15 00:00:00+00', 2),
-  ('Мед', 304, 0, 82, 0, '2024-10-20 00:00:00+00', 2),
-  ('Ваниль',288, 12, 55, 0, '2025-01-30 00:00:00+00', 2),
-  ('Орехи',607,54,18,20,'2024-08-15 00:00:00+00', 2),
-  ('Кокосовое молоко',230,23,6,2,'2024-05-01 00:00:00+00', 3),
-  ('Яблоки',52, 0.2,14,0.3,'2024-02-28 00:00:00+00', 1),
-  ('Бананы',96,0.3,27,1.3,'2024-03-15 00:00:00+00', 1),
-  ('Сливки', 195, 20, 3, 2, '2024-04-10 00:00:00+00',1),
-  ('Апельсины',47,0.1,12,0.9,'2024-02-05 00:00:00+00',1),
-  ('Мята', 44, 0.7, 8, 3.3, '2024-06-01 00:00:00+00',3),
-  ('Лимонный сок', 123,0.2,6,0.3,'2024-03-20 00:00:00+00',2),
-  ('Какао-порошок',228,13,58,19,'2025-06-30 00:00:00+00',2),
-  ('Кленовый сироп',261,0,67,0,'2024-12-15 00:00:00+00',2),
-  ('Клубника',33,0.3,8,0.7,'2024-05-05 00:00:00+00',1),
-  ('Имбирь',80,0.8,18,1.8,'2024-07-01 00:00:00+00',2),
-  ('Соль', 0, 0, 0, 0, '2026-12-31 00:00:00+00',2),
-  ('Фисташки',562,45,28,20,'2024-09-15 00:00:00+00',1);
+  (
+    'Сахар',
+    387,
+    0,
+    100,
+    0,
+    '2024-12-31 00:00:00+00',
+    2,
+    3
+  ), -- Подсластители
+  (
+    'Молоко',
+    42,
+    1,
+    5,
+    3,
+    '2024-01-15 00:00:00+00',
+    3,
+    1
+  ), -- Молочные продукты
+  (
+    'Шоколад',
+    546,
+    30,
+    61,
+    7,
+    '2024-06-30 00:00:00+00',
+    1,
+    6
+  ), -- Шоколад и какао
+  (
+    'Корица',
+    247,
+    1.2,
+    81,
+    4,
+    '2024-09-15 00:00:00+00',
+    2,
+    4
+  ), -- Специи
+  (
+    'Мед',
+    304,
+    0,
+    82,
+    0,
+    '2024-10-20 00:00:00+00',
+    2,
+    3
+  ), -- Подсластители
+  (
+    'Ваниль',
+    288,
+    12,
+    55,
+    0,
+    '2025-01-30 00:00:00+00',
+    2,
+    4
+  ), -- Специи
+  (
+    'Орехи',
+    607,
+    54,
+    18,
+    20,
+    '2024-08-15 00:00:00+00',
+    2,
+    5
+  ), -- Орехи и семена
+  (
+    'Кокосовое молоко',
+    230,
+    23,
+    6,
+    2,
+    '2024-05-01 00:00:00+00',
+    3,
+    1
+  ), -- Молочные продукты
+  (
+    'Яблоки',
+    52,
+    0.2,
+    14,
+    0.3,
+    '2024-02-28 00:00:00+00',
+    1,
+    2
+  ), -- Фрукты
+  (
+    'Бананы',
+    96,
+    0.3,
+    27,
+    1.3,
+    '2024-03-15 00:00:00+00',
+    1,
+    2
+  ), -- Фрукты
+  (
+    'Сливки',
+    195,
+    20,
+    3,
+    2,
+    '2024-04-10 00:00:00+00',
+    1,
+    1
+  ), -- Молочные продукты
+  (
+    'Апельсины',
+    47,
+    0.1,
+    12,
+    0.9,
+    '2024-02-05 00:00:00+00',
+    1,
+    2
+  ), -- Фрукты
+  (
+    'Мята',
+    44,
+    0.7,
+    8,
+    3.3,
+    '2024-06-01 00:00:00+00',
+    3,
+    4
+  ), -- Специи
+  (
+    'Лимонный сок',
+    123,
+    0.2,
+    6,
+    0.3,
+    '2024-03-20 00:00:00+00',
+    2,
+    2
+  ), -- Фрукты
+  (
+    'Какао-порошок',
+    228,
+    13,
+    58,
+    19,
+    '2025-06-30 00:00:00+00',
+    2,
+    6
+  ), -- Шоколад и какао
+  (
+    'Кленовый сироп',
+    261,
+    0,
+    67,
+    0,
+    '2024-12-15 00:00:00+00',
+    2,
+    3
+  ), -- Подсластители
+  (
+    'Клубника',
+    33,
+    0.3,
+    8,
+    0.7,
+    '2024-05-05 00:00:00+00',
+    1,
+    2
+  ), -- Фрукты
+  (
+    'Имбирь',
+    80,
+    0.8,
+    18,
+    1.8,
+    '2024-07-01 00:00:00+00',
+    2,
+    4
+  ), -- Специи
+  (
+    'Соль',
+    0,
+    0,
+    0,
+    0,
+    '2026-12-31 00:00:00+00',
+    2,
+    4
+  ), -- Специи
+  (
+    'Фисташки',
+    562,
+    45,
+    28,
+    20,
+    '2024-09-15 00:00:00+00',
+    1,
+    5
+  );
 
+-- Орехи и семена
 -- Insert into ProductIngredients
 INSERT INTO
   product_ingredients (ingredient_id, product_size_id, quantity)
@@ -1043,7 +1262,7 @@ VALUES
   -- Product Size 14 (M, Product 5)
   (20, 14, 1), -- Фисташки
   (3, 14, 1), -- Шоколад
-  (6, 14), -- Ваниль
+  (6, 14, 1), -- Ваниль
   -- Product Size 15 (L, Product 5)
   (7, 15, 1), -- Орехи
   (1, 15, 1), -- Сахар
@@ -1060,7 +1279,7 @@ VALUES
   (18, 18, 1), -- Имбирь
   (12, 18, 1), -- Апельсины
   (20, 18, 1);
-  
+
 -- Фисташки
 -- Insert into Customer
 INSERT INTO
@@ -1139,7 +1358,7 @@ VALUES
     'Иван Иванов',
     '79161234567',
     'ivan@example.com',
-    'BARISTA',
+    'MANAGER',
     'STORE',
     true,
     '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
@@ -1223,56 +1442,16 @@ INSERT INTO
     updated_at
   )
 VALUES
-  (
-    1,
-    1,
-    false,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    2,
-    2,
-    true,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    3,
-    3,
-    false,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    4,
-    1,
-    true,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    5,
-    2,
-    false,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  );
+  (1, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (2, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (3, 3, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (4, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (5, 2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into WarehouseEmployee
 INSERT INTO
-  warehouse_employees (
-    employee_id,
-    warehouse_id,
-    created_at,
-    updated_at
-  )
+  warehouse_employees (employee_id, warehouse_id, created_at, updated_at)
 VALUES
-  (6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
   (6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   (8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -1333,14 +1512,13 @@ VALUES
   (25.00, 3, '2024-04-30 23:59:59+00');
 
 INSERT INTO
-    store_warehouses (store_id, warehouse_id, created_at, updated_at)
+  store_warehouses (store_id, warehouse_id)
 VALUES
-  (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (3, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (4, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (5, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (6, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (1, 1), -- Store 1 linked to Central Warehouse in Moscow
+  (2, 2), -- Store 2 linked to Central Warehouse in St. Petersburg
+  (3, 3), -- Store 3 linked to Central Warehouse in Ekaterinburg
+  (4, 4), -- Store 4 linked to Central Warehouse in Novosibirsk
+  (5, 5);
 
 INSERT INTO
   store_warehouse_stocks (
@@ -1352,141 +1530,56 @@ INSERT INTO
     updated_at
   )
 VALUES
-    (1, 1, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (1, 2, 50, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 1, 20, 30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 30, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 1, 40, 80, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 1, 10000, 1000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 120, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (1, 1, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (
+    1,
+    2,
+    50,
+    500,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    1,
+    20,
+    30,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    2,
+    30,
+    100,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    1,
+    40,
+    80,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    3,
+    1,
+    10000,
+    1000,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    3,
+    3,
+    120,
+    500,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
-
-
-INSERT INTO warehouses (facility_address_id, name)
-VALUES
-    (1, 'Central Warehouse - Moscow'),
-    (2, 'Central Warehouse - St. Petersburg'),
-    (3, 'Central Warehouse - Ekaterinburg'),
-    (4, 'Central Warehouse - Novosibirsk'),
-    (5, 'Central Warehouse - Kazan');
-
-INSERT INTO store_warehouses (store_id, warehouse_id)
-VALUES
-    (1, 1), -- Store 1 linked to Central Warehouse in Moscow
-    (2, 2), -- Store 2 linked to Central Warehouse in St. Petersburg
-    (3, 3), -- Store 3 linked to Central Warehouse in Ekaterinburg
-    (4, 4), -- Store 4 linked to Central Warehouse in Novosibirsk
-    (5, 5); -- Store 5 linked to Central Warehouse in Kazan
-
-
--- Insert into Suppliers
-INSERT INTO suppliers (name, contact_email, contact_phone, address)
-VALUES
-    ('Nestlé', 'contact@nestle.com', '+1 800 225 2270', 'Avenue Nestlé 55, 1800 Vevey, Switzerland'),
-    ('Coca-Cola', 'info@coca-cola.com', '+1 800 438 2653', '1 Coca-Cola Plaza, Atlanta, GA 30313, USA'),
-    ('PepsiCo', 'support@pepsico.com', '+1 914 253 2000', '700 Anderson Hill Rd, Purchase, NY 10577, USA'),
-    ('Lipton', 'info@lipton.com', '+44 800 776 647', 'Unilever House, Springfield Dr, Leatherhead KT22 7GR, UK'),
-    ('Starbucks', 'help@starbucks.com', '+1 800 782 7282', '2401 Utah Ave S, Seattle, WA 98134, USA'),
-    ('Mondelez', 'support@mondelez.com', '+1 855 535 5648', '100 Deforest Ave, East Hanover, NJ 07936, USA'),
-    ('Danone', 'contact@danone.com', '+33 1 44 35 20 20', '17 Boulevard Haussmann, 75009 Paris, France'),
-    ('Mars', 'support@mars.com', '+1 703 821 4900', '6885 Elm St, McLean, VA 22101, USA'),
-    ('Unilever', 'contact@unilever.com', '+44 20 7822 5252', '100 Victoria Embankment, London EC4Y 0DY, UK'),
-    ('General Mills', 'support@generalmills.com', '+1 800 248 7310', '1 General Mills Blvd, Minneapolis, MN 55426, USA');
-
-
-INSERT INTO stock_materials (name, description, safety_stock, expiration_flag, unit_id, category, barcode, expiration_period_in_days, is_active)
-VALUES
-    ('Milk', '1L pack of milk', 50, TRUE, 3, 'Dairy', '111111111111', 1095, TRUE),
-    ('Sugar', '1kg pack of sugar', 20, TRUE, 2, 'Sweeteners', '222222222222', 1095, TRUE),
-    ('Chocolate', '500g pack of chocolate', 15, TRUE, 2, 'Confectionery', '333333333333', 730, TRUE),
-    ('Cinnamon', '200g pack of cinnamon', 10, TRUE, 2, 'Spices', '444444444444', 1460, TRUE),
-    ('Vanilla', '50ml vanilla extract bottle', 25, TRUE, 4, 'Flavorings', '555555555555', 1460, TRUE);
-
-
-INSERT INTO ingredient_stock_material_mapping (ingredient_id, stock_material_id)
-VALUES
-    (2, 1), -- Milk linked to stock material
-    (1, 2), -- Sugar linked to stock material
-    (3, 3), -- Chocolate linked to stock material
-    (4, 4), -- Cinnamon linked to stock material
-    (6, 5); -- Vanilla linked to stock material
-
-
-
-INSERT INTO stock_material_packages (stock_material_id, package_size, package_unit_id)
-VALUES
-    (1, 1.0, 3), -- 1L Milk
-    (2, 1.0, 2), -- 1kg Sugar
-    (3, 0.5, 2), -- 500g Chocolate
-    (4, 0.2, 2), -- 200g Cinnamon
-    (5, 0.05, 4); -- 50ml Vanilla
-
-
-INSERT INTO supplier_warehouse_deliveries (stock_material_id, supplier_id, warehouse_id, barcode, quantity, delivery_date, expiration_date)
-VALUES
-    (1, 1, 1, '111111111111', 50, '2024-12-01', '2026-12-01'), -- Milk Delivery
-    (2, 2, 1, '222222222222', 30, '2024-12-05', '2025-06-05'), -- Sugar Delivery
-    (3, 1, 1, '333333333333', 40, '2024-11-20', '2025-11-20'), -- Chocolate Delivery
-    (4, 2, 2, '444444444444', 20, '2024-12-10', '2026-06-10'), -- Cinnamon Delivery
-    (5, 1, 2, '555555555555', 15, '2024-12-15', '2027-12-15'); -- Vanilla Delivery
-
-
-
-INSERT INTO warehouse_stocks (warehouse_id, stock_material_id, quantity)
-VALUES
-    (1, 1, 50), -- Milk in Warehouse 1
-    (1, 2, 30), -- Sugar in Warehouse 1
-    (1, 3, 40), -- Chocolate in Warehouse 1
-    (2, 4, 20), -- Cinnamon in Warehouse 2
-    (2, 5, 15); -- Vanilla in Warehouse 2
-
-
--- Insert into StockRequests (Initial Requests)
-INSERT INTO stock_requests (store_id, warehouse_id, status, request_date, created_at, updated_at)
-VALUES
-    (1, 1, 'CREATED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 'PROCESSED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 'IN_DELIVERY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 4, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
--- Insert into StockRequestIngredients (Items for Stock Requests)
-INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, quantity, created_at, updated_at)
-VALUES
-    -- StockRequest 1 (Store 1 -> Warehouse 1)
-    (1, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (1, 2, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-
-    -- StockRequest 2 (Store 2 -> Warehouse 2)
-    (2, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Chocolate
-    (2, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Cinnamon
-
-    -- StockRequest 3 (Store 3 -> Warehouse 3)
-    (3, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Vanilla
-    (3, 1, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-
-    -- StockRequest 4 (Store 4 -> Warehouse 4)
-    (4, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);  -- Chocolate
-
-INSERT INTO
-  warehouses (facility_address_id, name)
-VALUES
-  (1, 'Central Warehouse - Moscow'),
-  (2, 'Central Warehouse - St. Petersburg'),
-  (3, 'Central Warehouse - Ekaterinburg'),
-  (4, 'Central Warehouse - Novosibirsk'),
-  (5, 'Central Warehouse - Kazan');
-
-INSERT INTO
-  store_warehouses (store_id, warehouse_id)
-VALUES
-  (1, 1), -- Store 1 linked to Central Warehouse in Moscow
-  (2, 2), -- Store 2 linked to Central Warehouse in St. Petersburg
-  (3, 3), -- Store 3 linked to Central Warehouse in Ekaterinburg
-  (4, 4), -- Store 4 linked to Central Warehouse in Novosibirsk
-  (5, 5);
-
--- Store 5 linked to Central Warehouse in Kazan
 -- Insert into Suppliers
 INSERT INTO
   suppliers (name, contact_email, contact_phone, address)
@@ -1552,19 +1645,11 @@ VALUES
     '1 General Mills Blvd, Minneapolis, MN 55426, USA'
   );
 
--- Insert into Units
-INSERT INTO
-  units (name, conversion_factor)
-VALUES
-  ('kg', 1.0),
-  ('g', 0.001),
-  ('L', 1.0),
-  ('ml', 0.001);
-
 INSERT INTO
   stock_materials (
     name,
     description,
+    ingredient_id,
     safety_stock,
     expiration_flag,
     unit_id,
@@ -1577,6 +1662,7 @@ VALUES
   (
     'Milk',
     '1L pack of milk',
+    2,
     50,
     TRUE,
     3,
@@ -1588,6 +1674,7 @@ VALUES
   (
     'Sugar',
     '1kg pack of sugar',
+    1,
     20,
     TRUE,
     2,
@@ -1599,6 +1686,7 @@ VALUES
   (
     'Chocolate',
     '500g pack of chocolate',
+    3,
     15,
     TRUE,
     2,
@@ -1610,6 +1698,7 @@ VALUES
   (
     'Cinnamon',
     '200g pack of cinnamon',
+    4,
     10,
     TRUE,
     2,
@@ -1621,6 +1710,7 @@ VALUES
   (
     'Vanilla',
     '50ml vanilla extract bottle',
+    5,
     25,
     TRUE,
     4,
@@ -1631,17 +1721,7 @@ VALUES
   );
 
 INSERT INTO
-  ingredients_mapping (ingredient_id, stock_material_id)
-VALUES
-  (2, 1), -- Milk linked to stock material
-  (1, 2), -- Sugar linked to stock material
-  (3, 3), -- Chocolate linked to stock material
-  (4, 4), -- Cinnamon linked to stock material
-  (6, 5);
-
--- Vanilla linked to stock material
-INSERT INTO
-  packages (stock_material_id, package_size, package_unit_id)
+  stock_material_packages (stock_material_id, size, unit_id)
 VALUES
   (1, 1.0, 3), -- 1L Milk
   (2, 1.0, 2), -- 1kg Sugar
@@ -1651,7 +1731,7 @@ VALUES
 
 -- 50ml Vanilla
 INSERT INTO
-  deliveries (
+  supplier_warehouse_deliveries (
     stock_material_id,
     supplier_id,
     warehouse_id,
@@ -1708,6 +1788,130 @@ VALUES
   );
 
 -- Vanilla Delivery
+-- Insert into StockRequests (Initial Requests)
+INSERT INTO
+  stock_requests (
+    store_id,
+    warehouse_id,
+    status,
+    request_date,
+    created_at,
+    updated_at
+  )
+VALUES
+  (
+    1,
+    1,
+    'CREATED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    2,
+    'PROCESSED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    3,
+    3,
+    'IN_DELIVERY',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    4,
+    4,
+    'COMPLETED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
+
+INSERT INTO
+  stock_request_ingredients (
+    stock_request_id,
+    ingredient_id,
+    stock_material_id,
+    quantity,
+    created_at,
+    updated_at
+  )
+VALUES
+  -- StockRequest 1 (Store 1 -> Warehouse 1)
+  (
+    1,
+    1,
+    2,
+    10.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Sugar
+  (
+    1,
+    2,
+    1,
+    20.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Milk
+  -- StockRequest 2 (Store 2 -> Warehouse 2)
+  (
+    2,
+    3,
+    3,
+    5.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Chocolate
+  (
+    2,
+    4,
+    4,
+    2.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Cinnamon
+  -- StockRequest 3 (Store 3 -> Warehouse 3)
+  (
+    3,
+    5,
+    5,
+    1.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Vanilla
+  (
+    3,
+    1,
+    2,
+    15.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Sugar
+  -- StockRequest 4 (Store 4 -> Warehouse 4)
+  (
+    4,
+    2,
+    1,
+    10.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Milk
+  (
+    4,
+    3,
+    3,
+    8.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
+
+-- Chocolate
 INSERT INTO
   warehouse_stocks (warehouse_id, stock_material_id, quantity)
 VALUES
@@ -1716,5 +1920,3 @@ VALUES
   (1, 3, 40), -- Chocolate in Warehouse 1
   (2, 4, 20), -- Cinnamon in Warehouse 2
   (2, 5, 15);
-
--- Vanilla in Warehouse 2

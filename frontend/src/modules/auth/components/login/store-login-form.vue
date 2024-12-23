@@ -158,18 +158,19 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import { getRouteName } from '@/core/config/routes.config'
-import { toastError, toastSuccess } from '@/core/config/toast.config'
 import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
 import { employeesService } from '@/modules/employees/services/employees.service'
 import { storesService } from "@/modules/stores/services/stores.service"
 import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
-import { useMutation, useQuery } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { watch } from 'vue'
-import { useRouter } from "vue-router"
 import * as z from 'zod'
+
+const emits = defineEmits<{
+  'login': [payload: EmployeeLoginDTO]
+}>()
 
 const formSchema = toTypedSchema(
   z.object({
@@ -181,17 +182,6 @@ const formSchema = toTypedSchema(
 
 const { values, isSubmitting, handleSubmit } = useForm({
   validationSchema: formSchema,
-})
-
-const {mutate: loginEmployee} = useMutation({
-		mutationFn: (dto: EmployeeLoginDTO) => employeesService.login(dto),
-		onSuccess: () => {
-			toastSuccess("Вы вошли в систему")
-			router.push({name: getRouteName("ADMIN_DASHBOARD")})
-		},
-		onError: () => {
-			toastError("Произошла ошибка при входе")
-		},
 })
 
 const {setCurrentStore} = useCurrentStoreStore()
@@ -213,10 +203,14 @@ watch(() => values.selectedStoreId, (newStore) => {
   if (newStore) refetchEmployees()
 })
 
-const router = useRouter()
 const onSubmit = handleSubmit((values) => {
   setCurrentStore(values.selectedStoreId)
-  loginEmployee({email: values.selectedEmployeeEmail, password: values.password})
+  const dto: EmployeeLoginDTO = {
+    email: values.selectedEmployeeEmail,
+    password: values.password,
+  }
+
+  emits("login", dto)
 })
 </script>
 

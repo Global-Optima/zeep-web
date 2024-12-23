@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { CheckCircle, Clock, DollarSign } from 'lucide-vue-next'
-import { computed, defineProps } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   title: string;

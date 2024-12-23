@@ -23,7 +23,7 @@ func ValidateEmployee(input CreateEmployeeDTO) error {
 		return fmt.Errorf("password validation failed: %v", err)
 	}
 
-	if data.IsValidEmployeeRole(input.Role) {
+	if !data.IsValidEmployeeRole(input.Role) {
 		return errors.New("invalid role specified")
 	}
 

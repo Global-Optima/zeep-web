@@ -4,7 +4,6 @@ import {
 	EmployeeType,
 	type CreateEmployeeDto,
 	type Employee,
-	type EmployeeLoginDTO,
 	type EmployeesFilter,
 	type UpdateEmployeeDto,
 } from '../models/employees.models'
@@ -15,7 +14,7 @@ class EmployeesService {
 	async getStoreEmployees(storeID: number, filter?: EmployeesFilter) {
 		try {
 			return this.getEmployees({
-				type: EmployeeType.Store,
+				type: EmployeeType.STORE,
 				storeId: storeID,
 				...buildRequestFilter(filter),
 			})
@@ -40,7 +39,7 @@ class EmployeesService {
 	async getWarehouseEmployees(warehouseId: number): Promise<Employee[]> {
 		try {
 			const response = await apiClient.get<Employee[]>(this.baseUrl, {
-				params: { type: EmployeeType.Warehouse, warehouseId: warehouseId },
+				params: { type: EmployeeType.WAREHOUSE, warehouseId: warehouseId },
 			})
 			return response.data
 		} catch (error) {
@@ -48,17 +47,6 @@ class EmployeesService {
 			throw error
 		}
 	}
-
-	async login(dto: EmployeeLoginDTO) {
-		try {
-			return apiClient.post(`${this.baseUrl}/login`, dto).then(res => res.data)
-		} catch (error) {
-			console.error(`Failed to login employee:`, error)
-			throw error
-		}
-	}
-
-	async logout() {}
 
 	async getCurrentEmployee() {
 		try {

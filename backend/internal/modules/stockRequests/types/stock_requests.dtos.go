@@ -4,14 +4,15 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type CreateStockRequestDTO struct {
-	StoreID uint                  `json:"storeId" binding:"required"`
-	Items   []StockRequestItemDTO `json:"items" binding:"required"`
+	StoreID uint                        `json:"storeId" binding:"required"`
+	Items   []CreateStockRequestItemDTO `json:"items" binding:"required"`
 }
 
-type StockRequestItemDTO struct {
+type CreateStockRequestItemDTO struct {
 	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
 	Quantity        float64 `json:"quantity" binding:"required,gt=0"`
 }
@@ -27,14 +28,18 @@ type UpdateIngredientDates struct {
 
 type StockRequestResponse struct {
 	RequestID     uint                       `json:"requestId"`
-	StoreID       uint                       `json:"storeId"`
-	StoreName     string                     `json:"storeName"`
+	Store         StoreDTO                   `json:"store"`
 	WarehouseID   uint                       `json:"warehouseId"`
 	WarehouseName string                     `json:"warehouseName"`
 	Status        data.StockRequestStatus    `json:"status"`
 	Items         []StockRequestItemResponse `json:"items"`
 	CreatedAt     time.Time                  `json:"createdAt"`
 	UpdatedAt     time.Time                  `json:"updatedAt"`
+}
+
+type StoreDTO struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 type StockRequestItemResponse struct {
@@ -53,12 +58,14 @@ type LowStockIngredientResponse struct {
 	LowStockThreshold float64 `json:"lowStockThreshold"`
 }
 
-type StockRequestFilter struct {
-	StoreID     *uint      `json:"storeId,omitempty"`
-	WarehouseID *uint      `json:"warehouseId,omitempty"`
-	Status      *string    `json:"status,omitempty"`
-	StartDate   *time.Time `json:"startDate,omitempty"`
-	EndDate     *time.Time `json:"endDate,omitempty"`
+type GetStockRequestsFilter struct {
+	Pagination  *utils.Pagination
+	StoreID     *uint      `form:"storeId"`
+	WarehouseID *uint      `form:"warehouseId"`
+	StartDate   *time.Time `form:"startDate"`
+	EndDate     *time.Time `form:"endDate"`
+
+	Statuses []data.StockRequestStatus `form:"statuses[]"`
 }
 
 type StockMaterialDTO struct {
@@ -67,6 +74,16 @@ type StockMaterialDTO struct {
 	Category        string  `json:"category"`
 	Unit            string  `json:"unit"`
 	AvailableQty    float64 `json:"availableQuantity"`
+}
+
+type StockMaterialAvailabilityDTO struct {
+	StockMaterialID uint    `json:"stockMaterialId"`
+	Name            string  `json:"name"`
+	Category        string  `json:"category"`
+	AvailableQty    float64 `json:"availableQty"`
+	WarehouseID     uint    `json:"warehouseId"`
+	WarehouseName   string  `json:"warehouseName"`
+	Unit            string  `json:"unit"`
 }
 
 type StockMaterialFilter struct {

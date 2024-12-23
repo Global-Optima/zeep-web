@@ -7,8 +7,8 @@ export enum EmployeeRole {
 }
 
 export enum EmployeeType {
-	Store = 'STORE',
-	Warehouse = 'WAREHOUSE',
+	STORE = 'STORE',
+	WAREHOUSE = 'WAREHOUSE',
 }
 
 export interface Employee {
@@ -20,6 +20,13 @@ export interface Employee {
 	isActive: boolean
 	type: EmployeeType
 	imageUrl?: string
+
+	storeDetails?: {
+		storeId: number
+	}
+	warehouseDetails?: {
+		warehouseId: number
+	}
 }
 
 export interface EmployeeLoginDTO {
@@ -50,6 +57,13 @@ export interface CreateEmployeeDto {
 	email: string
 	role: EmployeeRole
 	password: string
+	type: EmployeeType
+	storeDetails?: {
+		storeId: number
+	}
+	warehouseDetails?: {
+		warehouseId: number
+	}
 }
 
 export interface UpdateEmployeeDto {

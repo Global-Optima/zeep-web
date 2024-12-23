@@ -10,12 +10,13 @@ import (
 
 type StockRequestService interface {
 	CreateStockRequest(req types.CreateStockRequestDTO) (uint, error)
-	GetStockRequests(filter types.StockRequestFilter) ([]types.StockRequestResponse, error)
+	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
+	GetStockRequestByID(id uint) (types.StockRequestResponse, error)
 	UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error
 	GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error)
 	GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
-	AddStockRequestIngredient(requestID uint, item types.StockRequestItemDTO) error
-	DeleteStockRequestIngredient(ingredientID uint) error
+	UpdateStockRequestIngredients(requestID uint, items []types.CreateStockRequestItemDTO) error
+	GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error)
 }
 
 type stockRequestService struct {
@@ -53,15 +54,16 @@ func (s *stockRequestService) CreateStockRequest(req types.CreateStockRequestDTO
 
 	ingredients := []data.StockRequestIngredient{}
 	for _, item := range req.Items {
-		var mapping data.IngredientStockMaterialMapping
-		if err := s.repo.GetMappingByIngredientID(item.StockMaterialID, &mapping); err != nil {
-			return 0, fmt.Errorf("failed to map ingredient for stock material ID %d: %w", item.StockMaterialID, err)
+		var stockMaterial data.StockMaterial
+		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+			return 0, fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 
 		ingredients = append(ingredients, data.StockRequestIngredient{
-			StockRequestID: stockRequest.ID,
-			IngredientID:   mapping.IngredientID,
-			Quantity:       item.Quantity,
+			StockRequestID:  stockRequest.ID,
+			IngredientID:    stockMaterial.IngredientID,
+			StockMaterialID: item.StockMaterialID,
+			Quantity:        item.Quantity,
 		})
 	}
 
@@ -72,7 +74,7 @@ func (s *stockRequestService) CreateStockRequest(req types.CreateStockRequestDTO
 	return stockRequest.ID, nil
 }
 
-func (s *stockRequestService) GetStockRequests(filter types.StockRequestFilter) ([]types.StockRequestResponse, error) {
+func (s *stockRequestService) GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error) {
 	requests, err := s.repo.GetStockRequests(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stock requests: %w", err)
@@ -80,9 +82,18 @@ func (s *stockRequestService) GetStockRequests(filter types.StockRequestFilter) 
 
 	responses := []types.StockRequestResponse{}
 	for _, request := range requests {
-		responses = append(responses, types.ToStockRequestResponse(request))
+		responses = append(responses, types.ToStockRequestResponse(&request))
 	}
 	return responses, nil
+}
+
+func (s *stockRequestService) GetStockRequestByID(id uint) (types.StockRequestResponse, error) {
+	request, err := s.repo.GetStockRequestByID(id)
+	if err != nil {
+		return types.StockRequestResponse{}, fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	return types.ToStockRequestResponse(request), nil
 }
 
 func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error {
@@ -96,39 +107,32 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 		return fmt.Errorf("failed to fetch store warehouse: %w", err)
 	}
 
-	if status.Status == data.StockRequestInDelivery {
+	switch status.Status {
+	case data.StockRequestInDelivery:
 		for _, ingredient := range request.Ingredients {
-			var mapping data.IngredientStockMaterialMapping
-			if err := s.repo.GetMappingByIngredientID(ingredient.IngredientID, &mapping); err != nil {
-				return fmt.Errorf("failed to map ingredient for stock material ID %d: %w", ingredient.IngredientID, err)
-			}
-
-			if err := s.repo.DeductWarehouseStock(mapping.StockMaterialID, request.WarehouseID, ingredient.Quantity); err != nil {
-				return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", mapping.StockMaterialID, err)
+			if err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity); err != nil {
+				return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 			}
 		}
-	}
 
-	if status.Status == data.StockRequestCompleted {
+	case data.StockRequestCompleted:
 		for _, ingredient := range request.Ingredients {
-			var mapping data.IngredientStockMaterialMapping
-			if err := s.repo.GetMappingByIngredientID(ingredient.IngredientID, &mapping); err != nil {
-				return fmt.Errorf("failed to map ingredient for stock material ID %d: %w", ingredient.IngredientID, err)
-			}
-
 			dates := types.UpdateIngredientDates{
 				DeliveredDate:  time.Now(),
-				ExpirationDate: time.Now().AddDate(0, 0, mapping.StockMaterial.ExpirationPeriodInDays),
+				ExpirationDate: time.Now().AddDate(0, 0, ingredient.StockMaterial.ExpirationPeriodInDays),
 			}
 
-			if err := s.repo.UpdateStockRequestIngredientDates(&dates); err != nil {
-				return fmt.Errorf("failed to update ingredient dates for ingredient ID %d: %w", ingredient.IngredientID, err)
+			if err := s.repo.UpdateStockRequestIngredientDates(ingredient.ID, &dates); err != nil {
+				return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
 			}
 
-			if err := s.repo.AddToStoreWarehouseStock(storeWarehouse.ID, ingredient.IngredientID, ingredient.Quantity); err != nil {
-				return fmt.Errorf("failed to update store warehouse stock for ingredient ID %d: %w", ingredient.IngredientID, err)
+			if err := s.repo.AddToStoreWarehouseStock(storeWarehouse.ID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
+				return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 			}
 		}
+
+	case data.StockRequestRejected:
+		fmt.Printf("Stock request rejected, ID: %d\n", requestID)
 	}
 
 	request.Status = status.Status
@@ -161,33 +165,52 @@ func (s *stockRequestService) GetAllStockMaterials(storeID uint, filter types.St
 	return s.repo.GetAllStockMaterials(storeID, filter)
 }
 
-func (s *stockRequestService) AddStockRequestIngredient(requestID uint, item types.StockRequestItemDTO) error {
+func (s *stockRequestService) UpdateStockRequestIngredients(requestID uint, items []types.CreateStockRequestItemDTO) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
 	}
 
-	var mapping data.IngredientStockMaterialMapping
-	if err := s.repo.GetMappingByIngredientID(item.StockMaterialID, &mapping); err != nil {
-		return fmt.Errorf("failed to map ingredient for stock material ID %d: %w", item.StockMaterialID, err)
+	ingredients := []data.StockRequestIngredient{}
+	for _, item := range items {
+		var stockMaterial data.StockMaterial
+		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
+		}
+
+		ingredients = append(ingredients, data.StockRequestIngredient{
+			StockRequestID:  request.ID,
+			IngredientID:    stockMaterial.IngredientID,
+			StockMaterialID: item.StockMaterialID,
+			Quantity:        item.Quantity,
+		})
 	}
 
-	ingredient := data.StockRequestIngredient{
-		StockRequestID: request.ID,
-		IngredientID:   mapping.IngredientID,
-		Quantity:       item.Quantity,
-	}
-
-	if err := s.repo.AddIngredientsToStockRequest([]data.StockRequestIngredient{ingredient}); err != nil {
-		return fmt.Errorf("failed to add ingredient to stock request ID %d: %w", requestID, err)
+	if err := s.repo.ReplaceStockRequestIngredients(requestID, ingredients); err != nil {
+		return fmt.Errorf("failed to update stock request ingredients: %w", err)
 	}
 
 	return nil
 }
 
-func (s *stockRequestService) DeleteStockRequestIngredient(ingredientID uint) error {
-	if err := s.repo.DeleteStockRequestIngredient(ingredientID); err != nil {
-		return fmt.Errorf("failed to delete stock request ingredient ID %d: %w", ingredientID, err)
+func (s *stockRequestService) GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error) {
+	stocks, err := s.repo.GetStockMaterialsByIngredient(ingredientID, warehouseID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch stock materials: %w", err)
 	}
-	return nil
+
+	availability := make([]types.StockMaterialAvailabilityDTO, len(stocks))
+	for i, stock := range stocks {
+		availability[i] = types.StockMaterialAvailabilityDTO{
+			StockMaterialID: stock.StockMaterialID,
+			Name:            stock.StockMaterial.Name,
+			Category:        stock.StockMaterial.Category,
+			AvailableQty:    stock.Quantity,
+			WarehouseID:     stock.WarehouseID,
+			WarehouseName:   stock.Warehouse.Name,
+			Unit:            stock.StockMaterial.Unit.Name,
+		}
+	}
+
+	return availability, nil
 }

@@ -1,35 +1,3 @@
-<script setup lang="ts">
-import { Button } from '@/core/components/ui/button'
-import type { PaginationMeta } from '@/core/utils/pagination.utils'
-import { DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue'
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
-
-// Props: Accepts PaginationMeta and sibling count
-const props = defineProps<{
-  meta: PaginationMeta,
-}>();
-
-const emit = defineEmits<{
-  (e: 'update:page', page: number): void,
-  (e: 'update:pageSize', pageSize: number): void
-}>();
-
-const pageSizeOptions = [10, 20, 30, 40, 50];
-const selectedPageSize = ref(props.meta.pageSize);
-
-const totalPages = computed(() => props.meta.totalPages);
-const currentPage = computed(() => props.meta.page);
-
-watch(selectedPageSize, (newPageSize) => {
-  emit('update:pageSize', Number(newPageSize));
-});
-
-const handlePageChange = (newPage: number) => {
-  emit('update:page', newPage);
-};
-</script>
-
 <template>
 	<div class="flex items-center space-x-6 lg:space-x-8">
 		<!-- Rows per page dropdown -->
@@ -51,7 +19,8 @@ const handlePageChange = (newPage: number) => {
 
 		<!-- Page count display -->
 		<div class="flex justify-center items-center w-[100px] font-medium text-nowrap text-sm">
-			Страница {{ currentPage }} из {{ totalPages }}
+			<span v-if="totalPages > 0">Страница {{ currentPage }} из {{ totalPages }}</span>
+			<span v-else>Нет данных</span>
 		</div>
 
 		<!-- Navigation buttons -->
@@ -60,7 +29,7 @@ const handlePageChange = (newPage: number) => {
 			<Button
 				variant="outline"
 				class="lg:flex hidden p-0 w-8 h-8"
-				:disabled="currentPage === 1"
+				:disabled="totalPages === 0 || currentPage === 1"
 				@click="handlePageChange(1)"
 			>
 				<span class="sr-only">Go to first page</span>
@@ -71,7 +40,7 @@ const handlePageChange = (newPage: number) => {
 			<Button
 				variant="outline"
 				class="p-0 w-8 h-8"
-				:disabled="currentPage === 1"
+				:disabled="totalPages === 0 || currentPage === 1"
 				@click="handlePageChange(currentPage - 1)"
 			>
 				<span class="sr-only">Go to previous page</span>
@@ -82,7 +51,7 @@ const handlePageChange = (newPage: number) => {
 			<Button
 				variant="outline"
 				class="p-0 w-8 h-8"
-				:disabled="currentPage === totalPages"
+				:disabled="totalPages === 0 || currentPage === totalPages"
 				@click="handlePageChange(currentPage + 1)"
 			>
 				<span class="sr-only">Go to next page</span>
@@ -93,7 +62,7 @@ const handlePageChange = (newPage: number) => {
 			<Button
 				variant="outline"
 				class="lg:flex hidden p-0 w-8 h-8"
-				:disabled="currentPage === totalPages"
+				:disabled="totalPages === 0 || currentPage === totalPages"
 				@click="handlePageChange(totalPages)"
 			>
 				<span class="sr-only">Go to last page</span>
@@ -102,3 +71,36 @@ const handlePageChange = (newPage: number) => {
 		</div>
 	</div>
 </template>
+<script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
+import type { PaginationMeta } from '@/core/utils/pagination.utils'
+import { DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-icons/vue'
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
+
+// Props: Accepts PaginationMeta
+const props = defineProps<{
+  meta: PaginationMeta,
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:page', page: number): void,
+  (e: 'update:pageSize', pageSize: number): void
+}>();
+
+const pageSizeOptions = [10, 20, 30, 40, 50];
+const selectedPageSize = ref(props.meta.pageSize);
+
+const totalPages = computed(() => props.meta.totalPages || 0); // Ensure totalPages is at least 0
+const currentPage = computed(() => Math.min(props.meta.page, totalPages.value)); // Prevent out-of-range pages
+
+watch(selectedPageSize, (newPageSize) => {
+  emit('update:pageSize', Number(newPageSize));
+});
+
+const handlePageChange = (newPage: number) => {
+  if (newPage >= 1 && newPage <= totalPages.value) {
+    emit('update:page', newPage);
+  }
+};
+</script>

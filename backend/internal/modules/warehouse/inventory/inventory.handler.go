@@ -24,6 +24,11 @@ func (h *InventoryHandler) ReceiveInventory(c *gin.Context) {
 		return
 	}
 
+	if len(req.NewItems) == 0 && len(req.ExistingItems) == 0 {
+		utils.SendBadRequestError(c, "No items provided in the request")
+		return
+	}
+
 	if err := h.service.ReceiveInventory(req); err != nil {
 		utils.SendInternalServerError(c, "Failed to receive inventory: "+err.Error())
 		return
@@ -39,6 +44,11 @@ func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 		return
 	}
 
+	if len(req.Items) == 0 {
+		utils.SendBadRequestError(c, "No items provided in the request")
+		return
+	}
+
 	if err := h.service.TransferInventory(req); err != nil {
 		utils.SendInternalServerError(c, "Failed to transfer inventory: "+err.Error())
 		return
@@ -48,20 +58,21 @@ func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 }
 
 func (h *InventoryHandler) GetInventoryLevels(c *gin.Context) {
-	warehouseIDStr := c.Param("warehouseID")
-	warehouseID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid warehouse ID")
+	var filter types.GetInventoryLevelsFilterQuery
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
 
-	levels, err := h.service.GetInventoryLevels(uint(warehouseID))
+	filter.Pagination = utils.ParsePagination(c)
+
+	levels, err := h.service.GetInventoryLevels(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch inventory levels: "+err.Error())
 		return
 	}
 
-	utils.SendSuccessResponse(c, levels)
+	utils.SendSuccessResponseWithPagination(c, levels, filter.Pagination)
 }
 
 func (h *InventoryHandler) PickupStock(c *gin.Context) {
