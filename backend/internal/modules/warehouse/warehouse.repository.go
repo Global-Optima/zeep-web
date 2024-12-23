@@ -24,7 +24,7 @@ type WarehouseRepository interface {
 
 	AddToWarehouseStock(warehouseID, stockMaterialID uint, quantity float64) error
 	DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantity float64) error
-	GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.WarehouseStock, error)
+	GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error)
 	ResetWarehouseStock(warehouseID uint, stocks []data.WarehouseStock) error
 }
 
@@ -141,8 +141,8 @@ func (r *warehouseRepository) DeductFromWarehouseStock(warehouseID, stockMateria
 	return r.db.Model(stock).Update("quantity", gorm.Expr("quantity - ?", quantity)).Error
 }
 
-func (r *warehouseRepository) GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.WarehouseStock, error) {
-	var stocks []data.WarehouseStock
+func (r *warehouseRepository) GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error) {
+	var stocks []data.AggregatedWarehouseStock
 
 	query := r.db.Model(&data.WarehouseStock{}).
 		Select(`
@@ -152,49 +152,43 @@ func (r *warehouseRepository) GetWarehouseStock(filter *types.GetWarehouseStockF
 			MIN(supplier_warehouse_deliveries.expiration_date) AS earliest_expiration_date
 		`).
 		Joins("LEFT JOIN supplier_warehouse_deliveries ON warehouse_stocks.stock_material_id = supplier_warehouse_deliveries.stock_material_id").
-		Preload("Warehouse").
+		Joins("LEFT JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id").
 		Preload("StockMaterial.Unit").
-		Group("warehouse_stocks.warehouse_id, warehouse_stocks.stock_material_id")
+		Group("warehouse_stocks.warehouse_id, warehouse_stocks.stock_material_id, stock_materials.id")
 
-	// Filter by Warehouse ID
 	if filter.WarehouseID != nil {
 		query = query.Where("warehouse_stocks.warehouse_id = ?", *filter.WarehouseID)
 	}
 
-	// Filter by Stock Material ID
 	if filter.StockMaterialID != nil {
 		query = query.Where("warehouse_stocks.stock_material_id = ?", *filter.StockMaterialID)
 	}
 
-	// Filter by low stock
 	if filter.LowStockOnly != nil && *filter.LowStockOnly {
 		query = query.Where("SUM(supplier_warehouse_deliveries.quantity) < stock_materials.safety_stock")
 	}
 
-	// Filter by category
 	if filter.Category != nil && *filter.Category != "" {
 		query = query.Where("LOWER(stock_materials.category) LIKE ?", "%"+strings.ToLower(*filter.Category)+"%")
 	}
 
-	// Filter by expiration threshold
 	if filter.ExpirationDays != nil && *filter.ExpirationDays > 0 {
 		expirationThreshold := time.Now().AddDate(0, 0, *filter.ExpirationDays)
 		query = query.Where("MIN(supplier_warehouse_deliveries.expiration_date) <= ?", expirationThreshold)
 	}
 
-	// Search by stock material name
 	if filter.Search != nil && *filter.Search != "" {
 		query = query.Where("LOWER(stock_materials.name) LIKE ?", "%"+strings.ToLower(*filter.Search)+"%")
 	}
 
 	// Apply pagination
 	var err error
-	query, err = utils.ApplyPagination(query, filter.Pagination, &data.WarehouseStock{})
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.AggregatedWarehouseStock{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
 
-	if err := query.Find(&stocks).Error; err != nil {
+	if err := query.Scan(&stocks).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch stocks: %w", err)
 	}
 

@@ -133,3 +133,11 @@ type SupplierWarehouseDelivery struct {
 	DeliveryDate    time.Time     `gorm:"not null"`
 	ExpirationDate  time.Time     `gorm:"not null"`
 }
+
+type AggregatedWarehouseStock struct {
+	WarehouseID            uint `json:"warehouseId"`
+	StockMaterialID        uint `json:"stockMaterialId"`
+	StockMaterial          StockMaterial
+	TotalQuantity          float64    `json:"totalQuantity"`
+	EarliestExpirationDate *time.Time `json:"earliestExpirationDate"`
+}
