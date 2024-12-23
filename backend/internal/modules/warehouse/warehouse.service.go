@@ -154,7 +154,8 @@ func (s *warehouseService) GetStock(query *types.GetWarehouseStockFilterQuery) (
 				Unit:        stock.StockMaterial.Unit.Name,
 				Barcode:     stock.StockMaterial.Barcode,
 			},
-			Quantity: stock.Quantity,
+			TotalQuantity:          stock.TotalQuantity,
+			EarliestExpirationDate: stock.EarliestExpirationDate,
 		}
 	}
 

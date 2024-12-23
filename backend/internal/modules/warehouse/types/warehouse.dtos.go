@@ -1,6 +1,10 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type AssignStoreToWarehouseRequest struct {
 	StoreID     uint `json:"storeId" binding:"required"`
@@ -47,9 +51,10 @@ type AdjustWarehouseStockRequest struct {
 }
 
 type WarehouseStockResponse struct {
-	WarehouseID   uint                  `json:"warehouseId"`
-	StockMaterial StockMaterialResponse `json:"stockMaterial"`
-	Quantity      float64               `json:"quantity"`
+	WarehouseID            uint                  `json:"warehouseId"`
+	StockMaterial          StockMaterialResponse `json:"stockMaterial"`
+	TotalQuantity          float64               `json:"totalQuantity"`
+	EarliestExpirationDate *time.Time            `json:"earliestExpirationDate,omitempty"`
 }
 
 type StockMaterialResponse struct {
