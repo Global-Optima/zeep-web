@@ -46,7 +46,7 @@ class StoreStocksService {
 
 	async createMultipleStoreStock(storeId: number, dto: CreateMultipleStoreStock) {
 		try {
-			const response = await apiClient.post<void>(`/store-stock/${storeId}`, dto)
+			const response = await apiClient.post<void>(`/store-stock/${storeId}/multiple`, dto)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to create store stock:`, error)

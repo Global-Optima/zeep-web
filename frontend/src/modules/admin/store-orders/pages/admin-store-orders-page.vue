@@ -21,7 +21,7 @@
 		<CardFooter class="flex justify-end">
 			<PaginationWithMeta
 				v-if="storeOrders"
-				:meta="storeOrders.pagination"
+      :meta="storeOrders.pagination"
 				@update:page="updatePage"
 				@update:pageSize="updatePageSize"
 			/>

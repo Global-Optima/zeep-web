@@ -1,5 +1,5 @@
 <template>
-	<AdminEmployeesCreateForm
+	<AdminEmployeesCreateFormStore
 		@onSubmit="handleCreate"
 		@onCancel="handleCancel"
 	/>
@@ -7,8 +7,8 @@
 
 <script lang="ts" setup>
 import { getRouteName } from '@/core/config/routes.config'
-import AdminEmployeesCreateForm from '@/modules/admin/employees/components/create/admin-employees-create-form.vue'
-import type { CreateEmployeeDto } from '@/modules/employees/models/employees.models'
+import AdminEmployeesCreateFormStore from '@/modules/admin/employees/components/create/admin-employees-create-form-store.vue'
+import { EmployeeType, type CreateEmployeeDto } from '@/modules/employees/models/employees.models'
 import { employeesService } from '@/modules/employees/services/employees.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
@@ -25,6 +25,7 @@ const createMutation = useMutation({
 })
 
 function handleCreate(dto: CreateEmployeeDto) {
+  dto.type = EmployeeType.STORE
 	createMutation.mutate(dto)
 }
 

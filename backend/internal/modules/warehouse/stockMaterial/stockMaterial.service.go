@@ -33,7 +33,7 @@ func (s *stockMaterialService) GetAllStockMaterials(filter *types.StockMaterialF
 		return nil, err
 	}
 
-	var stockMaterialResponses []types.StockMaterialsDTO
+	stockMaterialResponses := make([]types.StockMaterialsDTO, 0)
 	for _, stockMaterial := range stockMaterials {
 		stockMaterialResponses = append(stockMaterialResponses, *types.ConvertStockMaterialToStockMaterialResponse(&stockMaterial))
 	}

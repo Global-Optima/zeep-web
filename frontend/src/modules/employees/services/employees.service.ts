@@ -14,7 +14,7 @@ class EmployeesService {
 	async getStoreEmployees(storeID: number, filter?: EmployeesFilter) {
 		try {
 			return this.getEmployees({
-				type: EmployeeType.Store,
+				type: EmployeeType.STORE,
 				storeId: storeID,
 				...buildRequestFilter(filter),
 			})
@@ -39,7 +39,7 @@ class EmployeesService {
 	async getWarehouseEmployees(warehouseId: number): Promise<Employee[]> {
 		try {
 			const response = await apiClient.get<Employee[]>(this.baseUrl, {
-				params: { type: EmployeeType.Warehouse, warehouseId: warehouseId },
+				params: { type: EmployeeType.WAREHOUSE, warehouseId: warehouseId },
 			})
 			return response.data
 		} catch (error) {
