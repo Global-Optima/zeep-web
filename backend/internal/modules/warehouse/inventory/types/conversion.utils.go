@@ -54,8 +54,7 @@ func StocksToInventoryItems(stocks []data.WarehouseStock) *InventoryLevelsRespon
 	}
 
 	return &InventoryLevelsResponse{
-		WarehouseID: stocks[0].WarehouseID,
-		Levels:      levels,
+		Levels: levels,
 	}
 }
 

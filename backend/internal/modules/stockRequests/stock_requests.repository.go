@@ -20,6 +20,7 @@ type StockRequestRepository interface {
 	GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error)
 	GetStockRequestByID(requestID uint) (*data.StockRequest, error)
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
+	AddRejectionComment(requestID uint, comment string) error
 
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) error
 	AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantity float64) error
@@ -236,4 +237,10 @@ func (r *stockRequestRepository) ReplaceStockRequestIngredients(requestID uint, 
 
 		return nil
 	})
+}
+
+func (r *stockRequestRepository) AddRejectionComment(requestID uint, comment string) error {
+	return r.db.Model(&data.StockRequest{}).
+		Where("id = ?", requestID).
+		Update("comment", comment).Error
 }

@@ -51,8 +51,7 @@ type InventoryLevel struct {
 }
 
 type InventoryLevelsResponse struct {
-	WarehouseID uint             `json:"warehouseId"`
-	Levels      []InventoryLevel `json:"levels"`
+	Levels []InventoryLevel `json:"levels"`
 }
 
 type UpcomingExpirationResponse struct {

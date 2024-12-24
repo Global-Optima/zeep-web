@@ -44,6 +44,7 @@ type StockRequest struct {
 	WarehouseID uint                     `gorm:"not null;index"` // Central warehouse fulfilling the request
 	Warehouse   Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
 	Status      StockRequestStatus       `gorm:"size:50;not null"`
+	Comment     *string                  `gorm:"type:text"` // Optional field for comments
 	RequestDate *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
 	Ingredients []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
 }
@@ -71,11 +72,12 @@ type Supplier struct {
 
 type WarehouseStock struct {
 	BaseEntity
-	WarehouseID     uint          `gorm:"not null;index"`
-	Warehouse       Warehouse     `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
-	StockMaterialID uint          `gorm:"index"`
-	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
-	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity >= 0"`
+	WarehouseID        uint                        `gorm:"not null;index"`
+	Warehouse          Warehouse                   `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
+	StockMaterialID    uint                        `gorm:"index"`
+	StockMaterial      StockMaterial               `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
+	Quantity           float64                     `gorm:"type:decimal(10,2);not null;check:quantity >= 0"`
+	SupplierDeliveries []SupplierWarehouseDelivery `gorm:"foreignKey:StockMaterialID;references:StockMaterial" json:"supplierDeliveries"`
 }
 
 type StockMaterial struct {
@@ -131,9 +133,9 @@ type SupplierWarehouseDelivery struct {
 }
 
 type AggregatedWarehouseStock struct {
-	WarehouseID            uint `json:"warehouseId"`
-	StockMaterialID        uint `json:"stockMaterialId"`
-	StockMaterial          StockMaterial
-	TotalQuantity          float64    `json:"totalQuantity"`
-	EarliestExpirationDate *time.Time `json:"earliestExpirationDate"`
+	WarehouseID            uint          `json:"warehouseId"`
+	StockMaterialID        uint          `json:"stockMaterialId"`
+	StockMaterial          StockMaterial `gorm:"foreignKey:StockMaterialID;references:ID;preload:true" json:"stockMaterial"`
+	TotalQuantity          float64       `json:"totalQuantity"`
+	EarliestExpirationDate *time.Time    `json:"earliestExpirationDate"`
 }

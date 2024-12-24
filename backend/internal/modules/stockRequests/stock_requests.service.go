@@ -6,6 +6,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type StockRequestService interface {
@@ -99,30 +100,22 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 
 	switch status.Status {
 	case data.StockRequestInDelivery:
-		for _, ingredient := range request.Ingredients {
-			if err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity); err != nil {
-				return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
-			}
+		if err := s.handleInDeliveryStatus(request); err != nil {
+			return err
 		}
 
 	case data.StockRequestCompleted:
-		for _, ingredient := range request.Ingredients {
-			dates := types.UpdateIngredientDates{
-				DeliveredDate:  time.Now(),
-				ExpirationDate: time.Now().AddDate(0, 0, ingredient.StockMaterial.ExpirationPeriodInDays),
-			}
-
-			if err := s.repo.UpdateStockRequestIngredientDates(ingredient.ID, &dates); err != nil {
-				return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
-			}
-
-			if err := s.repo.AddToStoreWarehouseStock(storeWarehouse.ID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
-				return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
-			}
+		if err := s.handleCompletedStatus(request, storeWarehouse.ID); err != nil {
+			return err
 		}
 
 	case data.StockRequestRejected:
-		fmt.Printf("Stock request rejected, ID: %d\n", requestID)
+		if err := s.handleRejectedStatus(request, status.Comment); err != nil {
+			return err
+		}
+
+	default:
+		return fmt.Errorf("unsupported status: %s", status.Status)
 	}
 
 	request.Status = status.Status
@@ -130,6 +123,43 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 		return fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
+	return nil
+}
+
+func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest) error {
+	for _, ingredient := range request.Ingredients {
+		if err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity); err != nil {
+			return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+	}
+	return nil
+}
+
+func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, storeWarehouseID uint) error {
+	for _, ingredient := range request.Ingredients {
+		dates := types.UpdateIngredientDates{
+			DeliveredDate:  time.Now(),
+			ExpirationDate: time.Now().AddDate(0, 0, ingredient.StockMaterial.ExpirationPeriodInDays),
+		}
+
+		if err := s.repo.UpdateStockRequestIngredientDates(ingredient.ID, &dates); err != nil {
+			return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+
+		if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
+			return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+	}
+	return nil
+}
+
+func (s *stockRequestService) handleRejectedStatus(request *data.StockRequest, comment *string) error {
+	if comment != nil {
+		if err := s.repo.AddRejectionComment(request.ID, *comment); err != nil {
+			return fmt.Errorf("failed to add rejection comment for request ID %d: %w", request.ID, err)
+		}
+	}
+	fmt.Printf("Stock request rejected, ID: %d, Comment: %s\n", request.ID, utils.StringOrEmpty(comment))
 	return nil
 }
 

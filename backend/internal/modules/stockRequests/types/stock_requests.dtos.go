@@ -17,7 +17,8 @@ type StockRequestItemDTO struct {
 }
 
 type UpdateStockRequestStatusDTO struct {
-	Status data.StockRequestStatus `json:"status" binding:"required,oneof=CREATED IN_DELIVERY PROCESSED COMPLETED REJECTED"`
+	Status  data.StockRequestStatus `json:"status" binding:"required,oneof=CREATED IN_DELIVERY PROCESSED COMPLETED REJECTED"`
+	Comment *string                 `json:"comment,omitempty"`
 }
 
 type UpdateIngredientDates struct {

@@ -51,7 +51,6 @@ type AdjustWarehouseStockRequest struct {
 }
 
 type WarehouseStockResponse struct {
-	WarehouseID            uint                  `json:"warehouseId"`
 	StockMaterial          StockMaterialResponse `json:"stockMaterial"`
 	TotalQuantity          float64               `json:"totalQuantity"`
 	EarliestExpirationDate *time.Time            `json:"earliestExpirationDate,omitempty"`
