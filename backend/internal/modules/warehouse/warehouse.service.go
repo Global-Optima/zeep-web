@@ -144,7 +144,6 @@ func (s *warehouseService) GetStock(query *types.GetWarehouseStockFilterQuery) (
 	responses := make([]types.WarehouseStockResponse, len(stocks))
 	for i, stock := range stocks {
 		responses[i] = types.WarehouseStockResponse{
-			WarehouseID: stock.WarehouseID,
 			StockMaterial: types.StockMaterialResponse{
 				ID:          stock.StockMaterialID,
 				Name:        stock.StockMaterial.Name,
