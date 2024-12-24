@@ -1,64 +1,53 @@
 package types
 
 import (
-	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
+// StoreProductDTO for sending array of Products
 type StoreProductDTO struct {
 	productTypes.ProductDTO
-	IsAvailable bool    `json:"isAvailable"`
-	Price       float64 `json:"price"`
+	StoreProductID        uint    `json:"storeProductId"`
+	StorePrice            float64 `json:"storePrice"`
+	StoreProductSizeCount int     `json:"StoreProductSizeCount"`
+	IsAvailable           bool    `json:"isAvailable"`
 }
 
+// StoreProductDetailsDTO for sending single product with detailed info
 type StoreProductDetailsDTO struct {
-	productTypes.BaseProductDTO
-	Sizes            []StoreProductSizeDTO `json:"sizes"`
-	DefaultAdditives []additiveTypes.AdditiveCategoryItemDTO
-	IsAvailable      bool    `json:"isAvailable"`
-	Price            float64 `json:"price"`
-}
-
-type StoreProductWithSizesDTO struct {
-	productTypes.BaseProductDTO
-	IsAvailable       bool                  `json:"isAvailable"`
-	Price             float64               `json:"price"`
-	StoreProductSizes []StoreProductSizeDTO `json:"storeProductSizes"`
+	StoreProductDTO
+	Sizes []StoreProductSizeDTO `json:"sizes"`
 }
 
 type StoreProductSizeDTO struct {
-	ID         uint    `json:"id"`
-	Name       string  `json:"name"`
-	Measure    string  `json:"measure"`
-	StorePrice float64 `json:"storePrice"`
-	BasePrice  float64 `json:"basePrice"`
-	Size       int     `json:"size"`
-	IsDefault  bool    `json:"isDefault"`
+	productTypes.ProductSizeDTO
+	StoreProductSizeID uint    `json:"storeProductSizeId"`
+	StorePrice         float64 `json:"storePrice"`
 }
 
 type CreateStoreProductDTO struct {
-	StoreID     uint `json:"storeId" binding:"required,gt=0"`
-	ProductID   uint `json:"productId" binding:"required,gt=0"`
-	IsAvailable bool `json:"isAvailable" binding:"required"`
+	ProductID    uint                        `json:"productId" binding:"required,gt=0"`
+	IsAvailable  bool                        `json:"isAvailable" binding:"required"`
+	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,gt=0"`
 }
 
 type CreateStoreProductSizeDTO struct {
-	StoreID       uint     `json:"storeId" binding:"required,gt=0"`
 	ProductSizeID uint     `json:"productSizeID" binding:"required,gt=0"`
 	Price         *float64 `json:"price" binding:"omitempty,gt=0"`
 }
 
 type UpdateStoreProductDTO struct {
-	IsAvailable *bool `json:"isAvailable" binding:"omitempty,gt=0"`
+	IsAvailable  *bool                       `json:"isAvailable" binding:"omitempty,gt=0"`
+	ProductSizes []UpdateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,gt=0"`
 }
 
 type UpdateStoreProductSizeDTO struct {
-	Price *float64 `json:"price" binding:"required,gt=0"`
+	ProductSizeID uint     `json:"productSizeID" binding:"required,gt=0"`
+	Price         *float64 `json:"price" binding:"omitempty,gt=0"`
 }
 
 type StoreProductsFilterDTO struct {
-	Name        *string `form:"name" binding:"omitempty"`
 	CategoryID  *uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	IsAvailable *bool   `form:"isAvailable" binding:"omitempty"`
 	Search      *string `form:"search" binding:"omitempty,max=50"`

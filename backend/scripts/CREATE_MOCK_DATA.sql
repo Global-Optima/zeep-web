@@ -227,7 +227,7 @@ VALUES
   ),
   ('Фраппе', 'Кофейные напитки со льдом'),
   ('Травяные чаи', 'Настои и чаи на травах'),
-  ('Круассаны', 'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе');;
+  ('Круассаны', 'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе');
 
 -- Insert into AdditiveCategory
 INSERT INTO
@@ -646,162 +646,162 @@ INSERT INTO
     updated_at
   )
 VALUES
-  (
-    'Центральное кафе',
-    1,
-    false,
-    'ACTIVE',
-    '79001112233',
-    'central@example.com',
-    '8:00-20:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Кофейня на углу',
-    2,
-    true,
-    'ACTIVE',
-    '79002223344',
-    'corner@example.com',
-    '9:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Маленький магазин на Советской',
-    3,
-    true,
-    'ACTIVE',
-    '79003334455',
-    'smallstore@example.com',
-    '8:00-18:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Кофейня у вокзала',
-    4,
-    false,
-    'DISABLED',
-    '79004445566',
-    'station@example.com',
-    '10:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Городской кофе',
-    5,
-    true,
-    'ACTIVE',
-    '79005556677',
-    'citycoffee@example.com',
-    '7:00-23:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Летняя терраса',
-    6,
-    true,
-    'ACTIVE',
-    '79006667788',
-    'terrace@example.com',
-    '10:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Кафе на проспекте',
-    7,
-    false,
-    'ACTIVE',
-    '79007778899',
-    'avenuecafe@example.com',
-    '9:00-21:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Заведение у реки',
-    8,
-    true,
-    'ACTIVE',
-    '79008889900',
-    'riverside@example.com',
-    '10:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Чайный дом',
-    9,
-    false,
-    'DISABLED',
-    '79009990011',
-    'teahouse@example.com',
-    '8:00-20:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Кофе и компании',
-    10,
-    true,
-    'ACTIVE',
-    '79010001122',
-    'coffeeandco@example.com',
-    '8:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Парк-кафе',
-    11,
-    false,
-    'ACTIVE',
-    '79011002233',
-    'parkcafe@example.com',
-    '10:00-21:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Восточный уголок',
-    12,
-    true,
-    'ACTIVE',
-    '79012003344',
-    'easterncorner@example.com',
-    '10:00-23:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  ),
-  (
-    'Семейная кофейня',
-    13,
-    false,
-    'ACTIVE',
-    '79013004455',
-    'familycafe@example.com',
-    '9:00-22:00',
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-  );
+    (
+        'Центральное кафе',
+        1,
+        false,
+        'ACTIVE',
+        '+79001112233',
+        'central@example.com',
+        '8:00-20:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Кофейня на углу',
+        2,
+        true,
+        'ACTIVE',
+        '+79002223344',
+        'corner@example.com',
+        '9:00-22:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Маленький магазин на Советской',
+        3,
+        true,
+        'ACTIVE',
+        '+79003334455',
+        'smallstore@example.com',
+        '8:00-18:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Кофейня у вокзала',
+        4,
+        false,
+        'DISABLED',
+        '+79004445566',
+        'station@example.com',
+        '10:00-22:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Городской кофе',
+        5,
+        true,
+        'ACTIVE',
+        '+79005556677',
+        'citycoffee@example.com',
+        '7:00-23:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Летняя терраса',
+        6,
+        true,
+        'ACTIVE',
+        '+79006667788',
+        'terrace@example.com',
+        '10:00-22:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Кафе на проспекте',
+        7,
+        false,
+        'ACTIVE',
+        '+79007778899',
+        'avenuecafe@example.com',
+        '9:00-21:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Заведение у реки',
+        8,
+        true,
+        'ACTIVE',
+        '+79008889900',
+        'riverside@example.com',
+        '10:00-22:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Чайный дом',
+        9,
+        false,
+        'DISABLED',
+        '+79009990011',
+        'teahouse@example.com',
+        '8:00-20:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Кофе и компании',
+        10,
+        true,
+        'ACTIVE',
+        '+79010001122',
+        'coffeeandco@example.com',
+        '8:00-22:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Парк-кафе',
+        11,
+        false,
+        'ACTIVE',
+        '+79011002233',
+        'parkcafe@example.com',
+        '10:00-21:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Восточный уголок',
+        12,
+        true,
+        'ACTIVE',
+        '+79012003344',
+        'easterncorner@example.com',
+        '10:00-23:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        'Семейная кофейня',
+        13,
+        false,
+        'ACTIVE',
+        '+79013004455',
+        'familycafe@example.com',
+        '9:00-22:00',
+        NULL,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
 -- Insert into StoreAdditives
 INSERT INTO
@@ -902,68 +902,37 @@ VALUES
 
 -- Insert into ProductAdditive
 INSERT INTO
-  product_additives (product_size_id, additive_id)
+  product_size_additives (product_size_id, additive_id, is_default)
 VALUES
-  (1, 1),
-  (1, 2),
-  (2, 3),
-  (3, 1),
-  (4, 2),
-  (5, 4),
-  (6, 5),
-  (7, 3),
-  (8, 6),
-  (9, 7),
-  (10, 2),
-  (11, 8),
-  (12, 9),
-  (13, 10),
-  (14, 11),
-  (15, 12),
-  (16, 13),
-  (17, 14),
-  (18, 1),
-  (19, 3),
-  (20, 6),
-  (3, 8),
-  (4, 10),
-  (5, 12),
-  (6, 14),
-  (7, 1),
-  (8, 4),
-  (9, 5),
-  (10, 9);
-
--- Insert into DefaultProductAdditive
-INSERT INTO
-  default_product_additives (product_id, additive_id)
-VALUES
-  (1, 1),
-  (1, 2),
-  (2, 3),
-  (2, 4),
-  (3, 5),
-  (3, 1),
-  (4, 2),
-  (4, 6),
-  (5, 7),
-  (5, 8),
-  (6, 9),
-  (6, 3),
-  (7, 2),
-  (8, 4),
-  (9, 10),
-  (10, 11),
-  (11, 5),
-  (12, 12),
-  (13, 6),
-  (14, 13),
-  (15, 7),
-  (16, 1),
-  (17, 9),
-  (18, 8),
-  (19, 14),
-  (20, 10);
+    (1, 1, true),
+    (1, 2, true),
+    (2, 3, true),
+    (3, 1, true),
+    (4, 2, true),
+    (5, 4, false),
+    (6, 5, false),
+    (7, 3, false),
+    (8, 6, false),
+    (9, 7, true),
+    (10, 2, true),
+    (11, 8, false),
+    (12, 9, true),
+    (13, 10, true),
+    (14, 11, false),
+    (15, 12, false),
+    (16, 13, true),
+    (17, 14, false),
+    (18, 1, false),
+    (19, 3, true),
+    (20, 6, false),
+    (3, 8, false),
+    (4, 10, false),
+    (5, 12, true),
+    (6, 14, false),
+    (7, 1, false),
+    (8, 4, false),
+    (9, 5, false),
+    (10, 9, false);
 
 -- Insert into Ingredients
 INSERT INTO
@@ -1174,7 +1143,7 @@ VALUES
         'Иван',
         'Иванов',
         'hashed_password_123',
-        '79031234567',
+        '+79031234567',
         true,
         false
     ),
@@ -1182,7 +1151,7 @@ VALUES
         'Мария',
         'Смирнова',
         'hashed_password_456',
-        '79876543210',
+        '+79876543210',
         false,
         false
     ),
@@ -1190,7 +1159,7 @@ VALUES
         'Алексей',
         'Петров',
         'hashed_password_789',
-        '79998887766',
+        '+79998887766',
         true,
         false
     );
@@ -1214,7 +1183,7 @@ VALUES
     (
         'Елена',
         'Соколова',
-        '79551234567',
+        '+79551234567',
         'elena@example.com',
         'ADMIN',
         'STORE',
@@ -1226,7 +1195,7 @@ VALUES
     (
         'Сергей',
         'Павлов',
-        '79667778899',
+        '+79667778899',
         'sergey@example.com',
         'DIRECTOR',
         'STORE',
@@ -1238,7 +1207,7 @@ VALUES
     (
         'Анна',
         'Федорова',
-        '79223334455',
+        '+79223334455',
         'anna@example.com',
         'MANAGER',
         'STORE',
@@ -1250,7 +1219,7 @@ VALUES
     (
         'Иван',
         'Иванов',
-        '79161234567',
+        '+79161234567',
         'ivan@example.com',
         'BARISTA',
         'STORE',
@@ -1262,7 +1231,7 @@ VALUES
     (
         'Мария',
         'Смирнова',
-        '79345566778',
+        '+79345566778',
         'maria@example.com',
         'WAREHOUSE_EMPLOYEE',
         'WAREHOUSE',
@@ -1274,7 +1243,7 @@ VALUES
     (
         'Олег',
         'Кузнецов',
-        '79991234567',
+        '+79991234567',
         'oleg@example.com',
         'WAREHOUSE_EMPLOYEE',
         'WAREHOUSE',
@@ -1286,7 +1255,7 @@ VALUES
     (
         'Татьяна',
         'Орлова',
-        '79882233445',
+        '+79882233445',
         'tatiana@example.com',
         'WAREHOUSE_EMPLOYEE',
         'WAREHOUSE',
@@ -1298,7 +1267,7 @@ VALUES
     (
         'Алексей',
         'Попов',
-        '79002221133',
+        '+79002221133',
         'alexei@example.com',
         'WAREHOUSE_EMPLOYEE',
         'WAREHOUSE',
@@ -1310,7 +1279,7 @@ VALUES
     (
         'Юлия',
         'Петрова',
-        '79115555666',
+        '+79115555666',
         'yulia@example.com',
         'WAREHOUSE_EMPLOYEE',
         'WAREHOUSE',
@@ -1322,7 +1291,7 @@ VALUES
     (
         'Дмитрий',
         'Фролов',
-        '79553334456',
+        '+79553334456',
         'dmitry@example.com',
         'WAREHOUSE_EMPLOYEE',
         'WAREHOUSE',
@@ -1503,68 +1472,69 @@ VALUES
 -- Store 5 linked to Central Warehouse in Kazan
 -- Insert into Suppliers
 INSERT INTO
-  suppliers (name, contact_email, contact_phone, address)
+    suppliers (name, contact_email, contact_phone, address)
 VALUES
-  (
-    'Nestlé',
-    'contact@nestle.com',
-    '+1 800 225 2270',
-    'Avenue Nestlé 55, 1800 Vevey, Switzerland'
-  ),
-  (
-    'Coca-Cola',
-    'info@coca-cola.com',
-    '+1 800 438 2653',
-    '1 Coca-Cola Plaza, Atlanta, GA 30313, USA'
-  ),
-  (
-    'PepsiCo',
-    'support@pepsico.com',
-    '+1 914 253 2000',
-    '700 Anderson Hill Rd, Purchase, NY 10577, USA'
-  ),
-  (
-    'Lipton',
-    'info@lipton.com',
-    '+44 800 776 647',
-    'Unilever House, Springfield Dr, Leatherhead KT22 7GR, UK'
-  ),
-  (
-    'Starbucks',
-    'help@starbucks.com',
-    '+1 800 782 7282',
-    '2401 Utah Ave S, Seattle, WA 98134, USA'
-  ),
-  (
-    'Mondelez',
-    'support@mondelez.com',
-    '+1 855 535 5648',
-    '100 Deforest Ave, East Hanover, NJ 07936, USA'
-  ),
-  (
-    'Danone',
-    'contact@danone.com',
-    '+33 1 44 35 20 20',
-    '17 Boulevard Haussmann, 75009 Paris, France'
-  ),
-  (
-    'Mars',
-    'support@mars.com',
-    '+1 703 821 4900',
-    '6885 Elm St, McLean, VA 22101, USA'
-  ),
-  (
-    'Unilever',
-    'contact@unilever.com',
-    '+44 20 7822 5252',
-    '100 Victoria Embankment, London EC4Y 0DY, UK'
-  ),
-  (
-    'General Mills',
-    'support@generalmills.com',
-    '+1 800 248 7310',
-    '1 General Mills Blvd, Minneapolis, MN 55426, USA'
-  );
+    (
+        'Nestlé',
+        'contact@nestle.com',
+        '+18002252270',
+        'Avenue Nestlé 55, 1800 Vevey, Switzerland'
+    ),
+    (
+        'Coca-Cola',
+        'info@coca-cola.com',
+        '+18004382653',
+        '1 Coca-Cola Plaza, Atlanta, GA 30313, USA'
+    ),
+    (
+        'PepsiCo',
+        'support@pepsico.com',
+        '+19142532000',
+        '700 Anderson Hill Rd, Purchase, NY 10577, USA'
+    ),
+    (
+        'Lipton',
+        'info@lipton.com',
+        '+44800776647',
+        'Unilever House, Springfield Dr, Leatherhead KT22 7GR, UK'
+    ),
+    (
+        'Starbucks',
+        'help@starbucks.com',
+        '+18007827282',
+        '2401 Utah Ave S, Seattle, WA 98134, USA'
+    ),
+    (
+        'Mondelez',
+        'support@mondelez.com',
+        '+18555355648',
+        '100 Deforest Ave, East Hanover, NJ 07936, USA'
+    ),
+    (
+        'Danone',
+        'contact@danone.com',
+        '+33144352020',
+        '17 Boulevard Haussmann, 75009 Paris, France'
+    ),
+    (
+        'Mars',
+        'support@mars.com',
+        '+17038214900',
+        '6885 Elm St, McLean, VA 22101, USA'
+    ),
+    (
+        'Unilever',
+        'contact@unilever.com',
+        '+442078225252',
+        '100 Victoria Embankment, London EC4Y 0DY, UK'
+    ),
+    (
+        'General Mills',
+        'support@generalmills.com',
+        '+18002487310',
+        '1 General Mills Blvd, Minneapolis, MN 55426, USA'
+    );
+
 
 -- Insert into Units
 INSERT INTO

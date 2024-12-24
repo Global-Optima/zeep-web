@@ -3,6 +3,7 @@ package storeProducts
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -11,6 +12,7 @@ type StoreProductRepository interface {
 	GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	CreateStoreProduct(storeProduct *data.StoreProduct) (uint, error)
+	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
 	UpdateStoreProduct(storeID, storeProductID uint, product *data.StoreProduct) error
 	DeleteStoreProduct(storeID, storeProductID uint) error
 
@@ -29,7 +31,6 @@ func NewStoreProductRepository(db *gorm.DB) StoreProductRepository {
 	return &storeProductRepository{db: db}
 }
 
-// GetStoreProductById retrieves a specific store product by ID and store ID
 func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
 	var storeProduct data.StoreProduct
 	err := r.db.
@@ -47,55 +48,43 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 		return nil, err
 	}
 
-	var defaultAdditives []data.DefaultProductAdditive
-	err = r.db.
-		Preload("Additive").
-		Where("product_id = ?", storeProduct.Product.ID).
-		Find(&defaultAdditives).
-		Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	dto := types.MapToStoreProductDetailsDTO(&storeProduct, defaultAdditives)
+	dto := types.MapToStoreProductDetailsDTO(&storeProduct)
 	return &dto, nil
 }
 
-// GetStoreProducts retrieves all store products for a given store with optional filters
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {
 	var storeProducts []data.StoreProduct
-	query := r.db.Model(&data.StoreProduct{}).Where("store_id = ?", storeID)
-
-	// Apply filters if provided
-	if filter != nil {
-		if filter.Name != nil {
-			query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
-		}
-		if filter.IsAvailable != nil {
-			query = query.Where("is_available = ?", *filter.IsAvailable)
-		}
-	}
-
-	if err := query.
+	query := r.db.Model(&data.StoreProduct{}).Where("store_id = ?", storeID).
 		Preload("Store").
 		Preload("Store.ProductSizes").
 		Preload("Product").
 		Preload("Store.ProductSizes", "store_id = ?", storeID).
-		Preload("Store.ProductSizes.ProductSize", "is_default = TRUE").
-		Preload("Store.ProductSizes.ProductSize.ProductIngredients").
-		Preload("Store.ProductSizes.ProductSize.ProductIngredients.Ingredient").
-		Where("store_id = ?", storeID).
-		Find(&storeProducts).Error; err != nil {
+		Preload("Store.ProductSizes.ProductSize", "is_default = TRUE")
+
+	if filter != nil {
+		if filter.Search != nil {
+			query = query.Where("products.name ILIKE ? OR products.description ILIKE ?", "%"+*filter.Search+"%", "%"+*filter.Search+"%")
+		}
+		if filter.IsAvailable != nil {
+			query = query.Where("is_available = ?", *filter.IsAvailable)
+		}
+		if filter.CategoryID != nil {
+			query = query.Where("products.category_id = ?", *filter.CategoryID)
+		}
+	}
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreProduct{})
+	if err != nil {
 		return nil, err
 	}
 
-	// Map results to DTOs
+	if err := query.Find(&storeProducts).Error; err != nil {
+		return nil, err
+	}
 
 	return storeProducts, nil
 }
 
-// CreateStoreProduct creates a new store product
 func (r *storeProductRepository) CreateStoreProduct(storeProduct *data.StoreProduct) (uint, error) {
 	if err := r.db.Create(storeProduct).Error; err != nil {
 		return 0, err
@@ -103,7 +92,19 @@ func (r *storeProductRepository) CreateStoreProduct(storeProduct *data.StoreProd
 	return storeProduct.ID, nil
 }
 
-// UpdateStoreProduct updates an existing store product
+func (r *storeProductRepository) CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error) {
+	if err := r.db.Create(storeProducts).Error; err != nil {
+		return nil, err
+	}
+
+	var ids []uint
+	for _, storeProduct := range storeProducts {
+		ids = append(ids, storeProduct.ID)
+	}
+
+	return ids, nil
+}
+
 func (r *storeProductRepository) UpdateStoreProduct(storeID, productID uint, storeProduct *data.StoreProduct) error {
 	result := r.db.Model(&data.StoreProduct{}).
 		Where("store_id = ? AND id = ?", storeID, productID).
@@ -117,7 +118,6 @@ func (r *storeProductRepository) UpdateStoreProduct(storeID, productID uint, sto
 	return nil
 }
 
-// DeleteStoreProduct deletes a store product
 func (r *storeProductRepository) DeleteStoreProduct(storeID, storeProductID uint) error {
 	result := r.db.
 		Where("store_id = ? AND id = ?", storeID, storeProductID).
@@ -131,7 +131,6 @@ func (r *storeProductRepository) DeleteStoreProduct(storeID, storeProductID uint
 	return nil
 }
 
-// GetStoreProductSizeById retrieves a store product size by ID
 func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error) {
 	var storeProductSize data.StoreProductSize
 	if err := r.db.
@@ -145,7 +144,6 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 	return &storeProductSize, nil
 }
 
-// CreateStoreProductSize creates a new store product size
 func (r *storeProductRepository) CreateStoreProductSize(storeProductSize *data.StoreProductSize) (uint, error) {
 	if err := r.db.Create(storeProductSize).Error; err != nil {
 		return 0, err
@@ -153,7 +151,6 @@ func (r *storeProductRepository) CreateStoreProductSize(storeProductSize *data.S
 	return storeProductSize.ID, nil
 }
 
-// UpdateProductSize updates an existing store product size
 func (r *storeProductRepository) UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error {
 	result := r.db.Model(&data.StoreProductSize{}).
 		Where("store_id = ? AND id = ?", storeID, productSizeID).
@@ -167,7 +164,6 @@ func (r *storeProductRepository) UpdateProductSize(storeID, productSizeID uint, 
 	return nil
 }
 
-// DeleteStoreProductSize deletes a store product size
 func (r *storeProductRepository) DeleteStoreProductSize(storeID, productSizeID uint) error {
 	result := r.db.
 		Where("store_id = ? AND id = ?", storeID, productSizeID).

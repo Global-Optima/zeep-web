@@ -1,6 +1,8 @@
 package storeProducts
 
 import (
+	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -9,15 +11,16 @@ import (
 type StoreProductService interface {
 	GetStoreProductById(storeID, storeProductID uint) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDTO, error)
-	CreateStoreProduct(storeID uint, product *types.CreateStoreProductDTO) (uint, error)
+	CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error)
+	CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error)
 	UpdateStoreProduct(storeID, storeProductID uint, dto *types.UpdateStoreProductDTO) error
 	DeleteStoreProduct(storeID, storeProductID uint) error
 
-	GetStoreProductSizeById(storeID uint, storeProductSizeID uint) (*types.StoreProductSizeDTO, error)
+	//GetStoreProductSizeById(storeID uint, storeProductSizeID uint) (*types.StoreProductSizeDTO, error)
 	//GetStoreProductSizes(storeID uint, filter *types.StoreProductSizesFilterDTO) ([]types.StoreProductSizeDTO, error)
 	//CreateStoreProductSize(storeID uint, dto *types.CreateStoreProductSizeDTO) (uint, error)
-	UpdateStoreProductSize(storeID, storeProductSizeID uint, dto *types.UpdateStoreProductSizeDTO) error
-	DeleteStoreProductSize(storeID, storeProductSizeID uint) error
+	//UpdateStoreProductSize(storeID, storeProductSizeID uint, dto *types.UpdateStoreProductSizeDTO) error
+	//DeleteStoreProductSize(storeID, storeProductSizeID uint) error
 }
 
 type storeProductService struct {
@@ -55,6 +58,7 @@ func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.Store
 	for i, product := range products {
 		dtos[i] = *types.MapToStoreProductDTO(&product)
 	}
+
 	return dtos, nil
 }
 
@@ -68,6 +72,23 @@ func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.Create
 		return 0, wrappedErr
 	}
 	return id, nil
+}
+
+func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error) {
+
+	products := make([]data.StoreProduct, len(dtos))
+	for i, dto := range dtos {
+		products[i] = *types.CreateToStoreProduct(&dto)
+		products[i].StoreID = storeID
+	}
+
+	ids, err := s.repo.CreateMultipleStoreProducts(products)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to create %d store product: %w", len(dtos), err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	return ids, nil
 }
 
 func (s *storeProductService) UpdateStoreProduct(productID, storeProductID uint, dto *types.UpdateStoreProductDTO) error {

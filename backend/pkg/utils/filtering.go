@@ -68,7 +68,7 @@ func ParseQueryWithBaseFilter(c *gin.Context, filter FilterProvider, model inter
 	if filter == nil {
 		return fmt.Errorf("filter cannot be nil")
 	}
-	
+
 	if reflect.ValueOf(filter).Kind() == reflect.Ptr && reflect.ValueOf(filter).IsNil() {
 		return fmt.Errorf("filter cannot be a nil pointer")
 	}
@@ -96,11 +96,18 @@ func ApplySortedPaginationForModel[T any](query *gorm.DB, pagination *Pagination
 		return nil, err
 	}
 
+	if sort == nil {
+		return query, fmt.Errorf("sort is not binded")
+	}
+
 	return query.Scopes(sort.SortGorm()), nil
 }
 
 func ApplyPagination[T any](query *gorm.DB, pagination *Pagination, model T) (*gorm.DB, error) {
 	var totalCount int64
+	if pagination == nil {
+		return nil, fmt.Errorf("pagination is not binded")
+	}
 
 	if err := query.Model(model).Count(&totalCount).Error; err != nil {
 		return nil, err

@@ -106,9 +106,9 @@ CREATE TABLE
 		admin_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-        CONSTRAINT valid_phone CHECK (contact_phone ~ '^\+[1-9]\d{1,14}$'
-);
+		deleted_at TIMESTAMPTZ,
+        CONSTRAINT valid_phone CHECK (contact_phone ~ '^\+[1-9]\d{1,14}$')
+    );
 
 -- StoreAdditive Table
 CREATE TABLE
@@ -148,21 +148,11 @@ CREATE TABLE
 
 -- ProductAdditive Table
 CREATE TABLE
-	IF NOT EXISTS product_additives (
+	IF NOT EXISTS product_size_additives (
 		id SERIAL PRIMARY KEY,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
-
--- DefaultProductAdditive Table
-CREATE TABLE
-	IF NOT EXISTS default_product_additives (
-		id SERIAL PRIMARY KEY,
-		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
-		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
+        is_default BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -277,8 +267,8 @@ CREATE TABLE
 		is_banned BOOLEAN DEFAULT FALSE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-        CONSTRAINT valid_phone CHECK (phone ~ '^\+[1-9]\d{1,14}$'
+		deleted_at TIMESTAMPTZ,
+        CONSTRAINT valid_phone CHECK (phone ~ '^\+[1-9]\d{1,14}$')
 	);
 
 -- Employee Table
@@ -295,8 +285,8 @@ CREATE TABLE
 		is_active BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-        CONSTRAINT valid_phone CHECK (phone ~ '^\+[1-9]\d{1,14}$'
+		deleted_at TIMESTAMPTZ,
+        CONSTRAINT valid_phone CHECK (phone ~ '^\+[1-9]\d{1,14}$')
 	);
 
 -- StoreEmployee Table
@@ -505,8 +495,8 @@ CREATE TABLE
 		address VARCHAR(255),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-        CONSTRAINT valid_phone CHECK (contact_phone ~ '^\+[1-9]\d{1,14}$'
+		deleted_at TIMESTAMPTZ,
+        CONSTRAINT valid_phone CHECK (contact_phone ~ '^\+[1-9]\d{1,14}$')
 	);
 
 -- Units Table

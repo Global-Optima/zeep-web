@@ -26,15 +26,14 @@ func IsValidSize(size Size) bool {
 
 type Product struct {
 	BaseEntity
-	Name             string                   `gorm:"size:100;not null" sort:"name"`
-	Description      string                   `gorm:"type:text"`
-	ImageURL         string                   `gorm:"size:2048"`
-	VideoURL         string                   `gorm:"size:2048"`
-	CategoryID       *uint                    `gorm:"index;not null"`
-	Category         *ProductCategory         `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"categories"`
-	RecipeSteps      []RecipeStep             `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	ProductSizes     []ProductSize            `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	DefaultAdditives []DefaultProductAdditive `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	Name         string           `gorm:"size:100;not null" sort:"name"`
+	Description  string           `gorm:"type:text"`
+	ImageURL     string           `gorm:"size:2048"`
+	VideoURL     string           `gorm:"size:2048"`
+	CategoryID   *uint            `gorm:"index;not null"`
+	Category     *ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"categories"`
+	RecipeSteps  []RecipeStep     `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	ProductSizes []ProductSize    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 }
 
 type RecipeStep struct {
@@ -57,8 +56,8 @@ type ProductSize struct {
 	ProductID          uint    `gorm:"index;not null"`
 	Product            Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 	DiscountID         uint
-	Additives          []ProductAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
-	ProductIngredients []ProductIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
+	Additives          []ProductSizeAdditive `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
+	ProductIngredients []ProductIngredient   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 }
 
 type ProductIngredient struct {
@@ -99,20 +98,13 @@ type Ingredient struct {
 	Products  []ProductIngredient `gorm:"foreignKey:ItemIngredientID"`
 }
 
-type ProductAdditive struct {
+type ProductSizeAdditive struct {
 	BaseEntity
 	ProductSizeID uint        `gorm:"index;not null"`
 	AdditiveID    uint        `gorm:"index;not null"`
-	Additive      Additive    `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
+	IsDefault     bool        `gorm:"default:true" sort:"is_default"`
 	ProductSize   ProductSize `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
-}
-
-type DefaultProductAdditive struct {
-	BaseEntity
-	ProductID  uint     `gorm:"index;not null"`
-	AdditiveID uint     `gorm:"index;not null"`
-	Product    Product  `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	Additive   Additive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
+	Additive      Additive    `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 }
 
 type ProductCategory struct {

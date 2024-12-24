@@ -49,22 +49,19 @@ func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.P
 }
 
 func (s *productService) GetProductDetails(productID uint) (*types.ProductDetailsDTO, error) {
-	productDetails, err := s.repo.GetProductDetails(productID)
+	product, err := s.repo.GetProductDetails(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to retrieve product for productID = %d: %w", productID, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	return productDetails, nil
+	return types.MapToProductDetailsDTO(product), nil
 }
 
 func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error) {
 	product := types.CreateToProductModel(dto)
 
-	ids := product.DefaultAdditives
-
-	s.logger.Warn(ids)
 	productID, err := s.repo.CreateProduct(product)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to create product: %w", err)
@@ -91,7 +88,7 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) error {
 	product := types.UpdateProductToModel(dto)
 
-	err := s.repo.UpdateProduct(productID, product, dto.DefaultAdditives)
+	err := s.repo.UpdateProduct(productID, product)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to update product additives: %w", err)
 		s.logger.Error(wrappedErr)
@@ -102,9 +99,9 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 }
 
 func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
-	productSize := types.UpdateProductSizeToModel(dto)
+	updateModels := types.UpdateProductSizeToModels(dto)
 
-	err := s.repo.UpdateProductSizeWithAssociations(productSizeID, productSize, dto.Additives, dto.Ingredients)
+	err := s.repo.UpdateProductSizeWithAssociations(productSizeID, updateModels)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to update product additives: %w", err)
 		s.logger.Error(wrappedErr)
