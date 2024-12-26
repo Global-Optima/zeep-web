@@ -1,6 +1,7 @@
 package ingredients
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -85,18 +86,16 @@ func (h *IngredientHandler) GetIngredientByID(c *gin.Context) {
 
 func (h *IngredientHandler) GetIngredients(c *gin.Context) {
 	var filter types.IngredientFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Ingredient{}); err != nil {
 		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
 
-	pagination := utils.ParsePagination(c)
-
-	ingredients, pagination, err := h.service.GetIngredients(filter, pagination)
+	ingredients, err := h.service.GetIngredients(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch ingredients")
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, ingredients, pagination)
+	utils.SendSuccessResponseWithPagination(c, ingredients, filter.Pagination)
 }

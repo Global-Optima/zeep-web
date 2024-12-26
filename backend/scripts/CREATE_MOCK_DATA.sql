@@ -828,77 +828,105 @@ VALUES
   (5, 8, 95.00),
   (2, 9, 70.00);
 
--- Insert into StoreProductSizes
-INSERT INTO
-  store_product_sizes (product_size_id, store_id, price)
-VALUES
-  (1, 1, 210.00),
-  (2, 1, 260.00),
-  (3, 2, 310.00),
-  (1, 3, 220.00),
-  (2, 4, 270.00),
-  (3, 5, 330.00),
-  (1, 6, 215.00),
-  (2, 7, 265.00),
-  (3, 8, 320.00),
-  (1, 9, 225.00),
-  (2, 10, 275.00),
-  (3, 11, 315.00),
-  (1, 12, 230.00),
-  (2, 13, 280.00),
-  (3, 1, 300.00),
-  (1, 2, 210.00),
-  (2, 3, 270.00),
-  (3, 4, 325.00),
-  (1, 5, 250.00),
-  (2, 6, 290.00);
-
 -- Insert into StoreProduct
 INSERT INTO
-  store_products (product_id, store_id, is_available)
+    store_products (product_id, store_id, is_available)
 VALUES
-  -- All products available in the first store
-  (1, 1, true),
-  (2, 1, true),
-  (3, 1, true),
-  (4, 1, true),
-  (5, 1, true),
-  (6, 1, true),
-  (7, 1, true),
-  (8, 1, true),
-  (9, 1, true),
-  (10, 1, true),
-  (11, 1, true),
-  (12, 1, true),
-  (13, 1, true),
-  (14, 1, true),
-  (15, 1, true),
-  (16, 1, true),
-  (17, 1, true),
-  (18, 1, true),
-  (19, 1, true),
-  (20, 1, true),
-  -- Products in other stores with varied availability
-  (1, 2, true),
-  (2, 2, false),
-  (3, 2, true),
-  (4, 2, true),
-  (5, 3, false),
-  (6, 3, true),
-  (7, 3, false),
-  (8, 3, true),
-  (9, 4, true),
-  (10, 4, true),
-  (11, 4, false),
-  (12, 4, true),
-  (13, 5, true),
-  (14, 5, true),
-  (15, 5, false),
-  (16, 5, true),
-  (17, 6, true),
-  (18, 6, false),
-  (19, 6, true),
-  (20, 6, true);
+    -- All products available in the first store
+    (1, 1, true),
+    (2, 1, true),
+    (3, 1, true),
+    (4, 1, true),
+    (5, 1, true),
+    (6, 1, true),
+    (7, 1, true),
+    (8, 1, true),
+    (9, 1, true),
+    (10, 1, true),
+    (11, 1, true),
+    (12, 1, true),
+    (13, 1, true),
+    (14, 1, true),
+    (15, 1, true),
+    (16, 1, true),
+    (17, 1, true),
+    (18, 1, true),
+    (19, 1, true),
+    (20, 1, true),
+    -- Products in other stores with varied availability
+    (1, 2, true),
+    (2, 2, false),
+    (3, 2, true),
+    (4, 2, true),
+    (5, 3, false),
+    (6, 3, true),
+    (7, 3, false),
+    (8, 3, true),
+    (9, 4, true),
+    (10, 4, true),
+    (11, 4, false),
+    (12, 4, true),
+    (13, 5, true),
+    (14, 5, true),
+    (15, 5, false),
+    (16, 5, true),
+    (17, 6, true),
+    (18, 6, false),
+    (19, 6, true),
+    (20, 6, true);
+
+
+-- Insert into StoreProductSizes
+INSERT INTO
+    store_product_sizes (product_size_id, store_product_id, price)
+VALUES
+    -- Store 1 Products (All sizes included)
+    (1, 1, 1000.00), -- S size for Product 1
+    (2, 1, 1250.00), -- M size for Product 1
+    (3, 1, 1500.00), -- L size for Product 1
+
+    -- Store 2 Products (Only M and L sizes included)
+    -- S size excluded intentionally
+    (2, 2, 1100.00), -- M size for Product 2
+    (3, 2, 1350.00), -- L size for Product 2
+
+    -- Store 3 Products (Only S and M sizes included)
+    -- L size excluded intentionally
+    (4, 3, 750.00),  -- S size for Product 3
+    (5, 3, 900.00),  -- M size for Product 3
+
+    -- Store 4 Products (All sizes included)
+    (6, 4, 600.00),  -- S size for Product 4
+    (7, 4, 850.00),  -- M size for Product 4
+    (8, 4, 1100.00), -- L size for Product 4
+
+    -- Store 5 Products (Only S size included)
+    -- M and L sizes excluded intentionally
+    (9, 5, 900.00),  -- S size for Product 5
+
+    -- Store 6 Products (All sizes included)
+    (10, 6, 1500.00), -- S size for Product 6
+    (11, 6, 1750.00), -- L size for Product 6
+
+    -- Store 7 Products (Only M size included)
+    -- S and L sizes excluded intentionally
+    (12, 7, 750.00),  -- M size for Product 7
+
+    -- Store 8 Products (All sizes included)
+    (13, 8, 600.00),  -- S size for Product 8
+    (14, 8, 750.00),  -- L size for Product 8
+
+    -- Store 9 Products (All sizes included)
+    (15, 9, 800.00),  -- M size for Product 9
+    (16, 9, 1000.00), -- L size for Product 9
+
+    -- Store 10 Products (Only S size included)
+    -- M and L sizes excluded intentionally
+    (17, 10, 500.00), -- S size for Product 10
+
+    -- Store 11 Products (Only L size included)
+    -- S and M sizes excluded intentionally
+    (18, 11, 1200.00); -- L size for Product 11;
 
 -- Insert into ProductAdditive
 INSERT INTO

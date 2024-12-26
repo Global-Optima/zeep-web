@@ -38,22 +38,20 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 		router.GET("", handler.GetStoreProducts)
 		router.GET("/:id", handler.GetStoreProduct)
 		router.POST("", handler.CreateStoreProduct)
-		//router.PUT("/:id", handler.UpdateStoreProduct)
-		///router.POST("/sizes", handler.CreateStoreProductSize)
-		//router.PUT("/sizes/:id", handler.UpdateStoreProductSize)
+		router.POST("/multiple", handler.CreateMultipleStoreProducts)
+		router.PUT("/:id", handler.UpdateStoreProduct)
+		router.DELETE("/:id", handler.DeleteStoreProduct)
 	}
 }
 
 func (r *Router) RegisterRecipeRoutes(handler *recipes.RecipeHandler) {
-	router := r.EmployeeRoutes.Group("/products/recipes")
+	router := r.EmployeeRoutes.Group("/products/recipe-steps")
 	{
-		router.GET("/:product-id/steps", handler.GetRecipeSteps)
-
-		router.GET("/steps/:id", handler.GetRecipeStepDetails)
-
-		router.POST("/steps", handler.CreateRecipeStep)
-		router.PUT("/steps/:id", handler.UpdateRecipeStep)
-		router.DELETE("/steps/:id", handler.DeleteRecipeStep)
+		router.GET("/product/:product-id", handler.GetRecipeSteps)
+		router.GET("/step/:id", handler.GetRecipeStepDetails)
+		router.POST("/product/:product-id", handler.CreateRecipeSteps)
+		router.PUT("/step/:id", handler.UpdateRecipeSteps)
+		router.DELETE("/step/:id", handler.DeleteRecipeSteps)
 	}
 }
 

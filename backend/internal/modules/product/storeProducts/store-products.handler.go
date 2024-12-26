@@ -52,7 +52,7 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 
 	productDetails, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		utils.SendInternalServerError(c, "Failed to retrieve store product details")
 		return
 	}
 
@@ -79,6 +79,7 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 	storeID, errH := getStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
 	}
 
 	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
@@ -128,6 +129,7 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 	storeID, errH := getStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
 	}
 
 	_, err := h.service.CreateStoreProduct(storeID, &dto)
@@ -136,6 +138,30 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		return
 	}
 	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
+}
+
+func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
+	var dto []types.CreateStoreProductDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	dtoLength := len(dto)
+	storeID, errH := getStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	_, err := h.service.CreateMultipleStoreProducts(storeID, dto)
+	if err != nil {
+		msg := fmt.Sprintf("failed to create %d store products", dtoLength)
+		utils.SendInternalServerError(c, msg)
+		return
+	}
+	msg := fmt.Sprintf("%d store product created successfully", dtoLength)
+	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
 }
 
 func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
@@ -155,18 +181,19 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 	storeID, errH := getStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
 	}
 
 	err = h.service.UpdateStoreProduct(storeID, uint(storeProductID), &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product")
+		utils.SendInternalServerError(c, "failed to update store product")
 		return
 	}
-	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
 }
 
 func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
-	storeProductID, err := strconv.ParseUint(c.Param("store-product-id"), 10, 64)
+	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, types.ErrInvalidStoreProductID.Error())
 		return
@@ -175,14 +202,15 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 	storeID, errH := getStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
 	}
 
 	err = h.service.DeleteStoreProduct(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product")
+		utils.SendInternalServerError(c, "failed to delete store product")
 		return
 	}
-	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)
 }
 
 // getStoreId returns the retrieved id and HandlerError

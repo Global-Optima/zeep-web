@@ -4,17 +4,22 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func CreateToRecipeStepModel(dto *CreateRecipeStepDTO) *data.RecipeStep {
-	return &data.RecipeStep{
-		ProductID:   dto.ProductID,
-		Step:        dto.Step,
-		Name:        dto.Name,
-		Description: dto.Description,
-		ImageURL:    dto.ImageURL,
+func CreateToRecipeStepModel(productID uint, dto []CreateOrReplaceRecipeStepDTO) []data.RecipeStep {
+	recipeSteps := make([]data.RecipeStep, len(dto))
+	for i, step := range dto {
+		recipeStep := &data.RecipeStep{
+			ProductID: productID,
+		}
+		recipeStep.Step = step.Step
+		recipeStep.Name = step.Name
+		recipeStep.Description = step.Description
+		recipeStep.ImageURL = step.ImageURL
+		recipeSteps[i] = *recipeStep
 	}
+	return recipeSteps
 }
 
-func UpdateToRecipeStepModel(dto *UpdateRecipeStepDTO) *data.RecipeStep {
+func UpdateToRecipeStepModel(dto *CreateOrReplaceRecipeStepDTO) *data.RecipeStep {
 	recipeStep := &data.RecipeStep{}
 
 	if dto.Step != 0 {

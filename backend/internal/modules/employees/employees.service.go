@@ -56,21 +56,9 @@ func (s *employeeService) CreateStoreEmployee(input *types.CreateStoreEmployeeDT
 		return nil, wrappedErr
 	}
 
-	employee := &data.Employee{
-		FirstName:      input.FirstName,
-		LastName:       input.LastName,
-		Phone:          input.Phone,
-		Email:          input.Email,
-		Role:           input.Role,
-		HashedPassword: hashedPassword,
-		IsActive:       true,
-		StoreEmployee: &data.StoreEmployee{
-			StoreID:     input.StoreID,
-			IsFranchise: input.IsFranchise,
-		},
-	}
+	employee := types.CreateToStoreEmployee(input, hashedPassword)
 
-	if err := s.repo.CreateStoreEmployee(employee); err != nil {
+	if err := s.repo.CreateEmployee(employee); err != nil {
 		wrappedErr := utils.WrapError("failed to create store employee", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
@@ -87,23 +75,13 @@ func (s *employeeService) CreateWarehouseEmployee(input *types.CreateWarehouseEm
 	hashedPassword, err := s.createNewEmployeePassword(&input.CreateEmployeeDTO)
 	if err != nil {
 		wrappedErr := utils.WrapError("error creating employee", err)
+		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	employee := &data.Employee{
-		FirstName:      input.FirstName,
-		LastName:       input.LastName,
-		Phone:          input.Phone,
-		Email:          input.Email,
-		Role:           input.Role,
-		HashedPassword: hashedPassword,
-		IsActive:       true,
-		WarehouseEmployee: &data.WarehouseEmployee{
-			WarehouseID: input.WarehouseID,
-		},
-	}
+	employee := types.CreateToWarehouseEmployee(input, hashedPassword)
 
-	if err := s.repo.CreateWarehouseEmployee(employee); err != nil {
+	if err := s.repo.CreateEmployee(employee); err != nil {
 		wrappedErr := utils.WrapError("failed to create warehouse employee", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
@@ -116,6 +94,7 @@ func (s *employeeService) createNewEmployeePassword(input *types.CreateEmployeeD
 	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(input.Email, input.Phone)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
+		s.logger.Error(wrappedErr)
 		return "", wrappedErr
 	}
 	if existingEmployee != nil {
@@ -305,33 +284,28 @@ func (s *employeeService) GetAllRoles() ([]types.RoleDTO, error) {
 }
 
 func (s *employeeService) CreateEmployeeWorkDay(dto *types.CreateEmployeeWorkdayDTO) (uint, error) {
-	if err := types.ValidateEmployeeWorkday(dto); err != nil {
-		return 0, utils.WrapError("invalid employee work day", err)
-	}
+	errMsg := "failed to create employee work day"
 
-	existingWorkday, err := s.repo.GetEmployeeWorkdayByEmployeeAndDay(dto.EmployeeID, dto.Day)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		wrappedErr := utils.WrapError("failed to check existing workday", err)
+	workday, err := types.ValidateEmployeeWorkday(dto)
+	if err != nil {
+		wrappedErr := utils.WrapError(errMsg, err)
 		s.logger.Error(wrappedErr)
-		return 0, wrappedErr
+		return 0, err
 	}
 
-	// If workday exists, return an error
+	existingWorkday, err := s.repo.GetEmployeeWorkdayByEmployeeAndDay(workday.EmployeeID, workday.Day)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		wrappedErr := utils.WrapError(errMsg, err)
+		s.logger.Error(wrappedErr)
+		return 0, err
+	}
 	if existingWorkday != nil {
-		errMsg := "workday already exists for this employee on the given day"
-		s.logger.Error(errMsg)
-		return 0, fmt.Errorf(errMsg)
+		err = fmt.Errorf("%w: not unique workday for employeeID %d in %v ", types.ErrWorkdayAlreadyExists, dto.EmployeeID, dto.Day)
+		wrappedErr := utils.WrapError(errMsg, err)
+		s.logger.Error(wrappedErr)
+		return 0, err
 	}
 
-	// If no existing workday, create a new one
-	workday := &data.EmployeeWorkday{
-		Day:        dto.Day,
-		StartAt:    dto.StartAt,
-		EndAt:      dto.EndAt,
-		EmployeeID: dto.EmployeeID,
-	}
-
-	// Create the new workday
 	id, err := s.repo.CreateEmployeeWorkday(workday)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to create employee workday", err)
@@ -349,7 +323,7 @@ func (s *employeeService) GetEmployeeWorkday(workdayID uint) (*types.EmployeeWor
 		return nil, wrappedErr
 	}
 
-	dto := types.MapToEmployeeWorkday(workday)
+	dto := types.MapToEmployeeWorkdayDTO(workday)
 	return dto, nil
 }
 
@@ -362,7 +336,7 @@ func (s *employeeService) GetEmployeeWorkdays(employeeID uint) ([]types.Employee
 	}
 	dtos := make([]types.EmployeeWorkdayDTO, len(workdays))
 	for i, workday := range workdays {
-		dtos[i] = *types.MapToEmployeeWorkday(&workday)
+		dtos[i] = *types.MapToEmployeeWorkdayDTO(&workday)
 	}
 
 	return dtos, nil
@@ -386,7 +360,6 @@ func (s *employeeService) UpdateEmployeeWorkday(workdayID uint, dto *types.Updat
 }
 
 func (s *employeeService) DeleteEmployeeWorkday(workdayID uint) error {
-	// Delete the workday by ID
 	err := s.repo.DeleteEmployeeWorkday(workdayID)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to delete employee workday", err)

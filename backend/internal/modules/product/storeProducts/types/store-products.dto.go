@@ -22,39 +22,41 @@ type StoreProductDetailsDTO struct {
 
 type StoreProductSizeDTO struct {
 	productTypes.ProductSizeDTO
-	StoreProductSizeID uint    `json:"storeProductSizeId"`
-	StorePrice         float64 `json:"storePrice"`
+	StorePrice float64 `json:"storePrice"`
 }
 
 type CreateStoreProductDTO struct {
 	ProductID    uint                        `json:"productId" binding:"required,gt=0"`
 	IsAvailable  bool                        `json:"isAvailable" binding:"required"`
-	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,gt=0"`
+	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,dive"`
 }
 
 type CreateStoreProductSizeDTO struct {
 	ProductSizeID uint     `json:"productSizeID" binding:"required,gt=0"`
-	Price         *float64 `json:"price" binding:"omitempty,gt=0"`
+	StorePrice    *float64 `json:"storePrice" binding:"omitempty,gt=0"`
 }
 
 type UpdateStoreProductDTO struct {
-	IsAvailable  *bool                       `json:"isAvailable" binding:"omitempty,gt=0"`
-	ProductSizes []UpdateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,gt=0"`
+	IsAvailable  *bool                       `json:"isAvailable"`
+	ProductSizes []UpdateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,dive"`
 }
 
 type UpdateStoreProductSizeDTO struct {
 	ProductSizeID uint     `json:"productSizeID" binding:"required,gt=0"`
-	Price         *float64 `json:"price" binding:"omitempty,gt=0"`
+	StorePrice    *float64 `json:"storePrice" binding:"omitempty,gt=0"`
 }
 
 type StoreProductsFilterDTO struct {
-	CategoryID  *uint   `form:"categoryId" binding:"omitempty,gt=0"`
-	IsAvailable *bool   `form:"isAvailable" binding:"omitempty"`
-	Search      *string `form:"search" binding:"omitempty,max=50"`
 	utils.BaseFilter
+	CategoryID  *uint    `form:"categoryId" binding:"omitempty,gt=0"`
+	IsAvailable *bool    `form:"isAvailable" binding:"omitempty"`
+	Search      *string  `form:"search" binding:"omitempty,max=50"`
+	MaxPrice    *float64 `form:"maxPrice" binding:"omitempty,gt=0"`
+	MinPrice    *float64 `form:"minPrice" binding:"omitempty,gt=0"`
 }
 
 type StoreProductSizesFilterDTO struct {
+	utils.BaseFilter
 	CategoryID *uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Name       *string `form:"price" binding:"omitempty,max=1"`
 	Measure    *string `form:"measure" binding:"omitempty,max=1"`
@@ -62,5 +64,4 @@ type StoreProductSizesFilterDTO struct {
 	IsDefault  *bool   `form:"isDefault" binding:"omitempty"`
 	MinSize    *int    `form:"minSize" binding:"omitempty,gt=0"`
 	MaxSize    *int    `form:"maxSize" binding:"omitempty,gt=0"`
-	utils.BaseFilter
 }

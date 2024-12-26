@@ -1,6 +1,8 @@
 package data
 
 import (
+	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -42,8 +44,34 @@ const (
 	Sunday    Weekday = "SUNDAY"
 )
 
+var weekdayMapping = map[string]Weekday{
+	"MONDAY":    Monday,
+	"TUESDAY":   Tuesday,
+	"WEDNESDAY": Wednesday,
+	"THURSDAY":  Thursday,
+	"FRIDAY":    Friday,
+	"SATURDAY":  Saturday,
+	"SUNDAY":    Sunday,
+}
+
+func ToWeekday(s string) (Weekday, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	if weekday, exists := weekdayMapping[s]; exists {
+		return weekday, nil
+	}
+	return "", errors.New("invalid weekday")
+}
+
+func (w Weekday) ToString() string {
+	str := string(w)
+	if len(str) == 0 {
+		return ""
+	}
+	return str
+}
+
 func IsValidWeekday(weekday Weekday) bool {
-	switch Weekday(weekday) {
+	switch weekday {
 	case Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday:
 		return true
 	}

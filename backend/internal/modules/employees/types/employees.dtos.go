@@ -12,6 +12,7 @@ type CreateEmployeeDTO struct {
 	Email     string            `json:"email" binding:"required"`
 	Role      data.EmployeeRole `json:"role" binding:"required"`
 	Password  string            `json:"password" binding:"required"`
+	IsActive  bool              `json:"isActive" binding:"required"`
 }
 
 type CreateStoreEmployeeDTO struct {
@@ -40,6 +41,7 @@ type UpdateEmployeeDTO struct {
 	Phone     *string            `json:"phone,omitempty"`
 	Email     *string            `json:"email,omitempty"`
 	Role      *data.EmployeeRole `json:"role,omitempty"`
+	IsActive  *bool              `json:"isActive"`
 }
 
 type UpdateStoreEmployeeDTO struct {
@@ -98,34 +100,34 @@ type RoleDTO struct {
 }
 
 type GetStoreEmployeesFilter struct {
+	utils.BaseFilter
 	StoreID  uint    `form:"storeId" binding:"required"`
 	Role     *string `form:"role,omitempty"`
 	IsActive *bool   `form:"isActive,omitempty"`
 	Search   *string `form:"search,omitempty"`
-	utils.BaseFilter
 }
 
 type GetWarehouseEmployeesFilter struct {
+	utils.BaseFilter
 	WarehouseID uint    `form:"warehouseId" binding:"required"`
 	Role        *string `form:"role,omitempty"`
 	IsActive    *bool   `form:"isActive,omitempty"`
 	Search      *string `form:"search,omitempty"`
-	utils.BaseFilter
 }
 
 type CreateEmployeeWorkdayDTO struct {
-	Day        data.Weekday `json:"day" binding:"required"`
-	StartAt    string       `json:"startAt"`
-	EndAt      string       `json:"endAt"`
-	EmployeeID uint         `json:"employeeId"`
+	Day        string `json:"day" binding:"required"`
+	StartAt    string `json:"startAt"`
+	EndAt      string `json:"endAt"`
+	EmployeeID uint   `json:"employeeId"`
 }
 
 type EmployeeWorkdayDTO struct {
-	ID         uint         `json:"id"`
-	Day        data.Weekday `json:"day"`
-	StartAt    string       `json:"startAt"`
-	EndAt      string       `json:"endAt"`
-	EmployeeID uint         `json:"employeeId"`
+	ID         uint   `json:"id"`
+	Day        string `json:"day"`
+	StartAt    string `json:"startAt"`
+	EndAt      string `json:"endAt"`
+	EmployeeID uint   `json:"employeeId"`
 }
 
 type UpdateEmployeeWorkdayDTO struct {

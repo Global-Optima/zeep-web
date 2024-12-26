@@ -17,6 +17,7 @@ type ProductRepository interface {
 	DeleteProduct(productID uint) error
 
 	CreateProductSize(createModels *data.ProductSize) (uint, error)
+	GetProductSizesByProductID(productID uint) ([]data.ProductSize, error)
 	GetProductSizeById(productSizeID uint) (*data.ProductSize, error)
 	UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error
 	DeleteProductSize(productID uint) error
@@ -144,7 +145,9 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 	return r.db.Transaction(func(tx *gorm.DB) error {
 
 		if updateModels != nil {
-			if err := tx.Model(&data.ProductSize{}).Where("id = ?", id).Updates(updateModels.ProductSize).Error; err != nil {
+			if err := tx.Model(&data.ProductSize{}).
+				Where("id = ?", id).
+				Updates(updateModels.ProductSize).Error; err != nil {
 				return fmt.Errorf("failed to update product size: %w", err)
 			}
 		}
@@ -194,6 +197,17 @@ func (r *productRepository) UpdateProduct(productID uint, product *data.Product)
 
 func (r *productRepository) DeleteProduct(productID uint) error {
 	return r.db.Where("id = ?", productID).Delete(&data.Product{}).Error
+}
+
+func (r *productRepository) GetProductSizesByProductID(productID uint) ([]data.ProductSize, error) {
+	var productSizes []data.ProductSize
+
+	err := r.db.Where("product_id = ?", productID).Find(&productSizes).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch product sizes: %w", err)
+	}
+
+	return productSizes, nil
 }
 
 func (r *productRepository) DeleteProductSize(productSizeID uint) error {

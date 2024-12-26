@@ -13,11 +13,12 @@ type ProductService interface {
 	GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDTO, error)
 	CreateProduct(product *types.CreateProductDTO) (uint, error)
 	UpdateProduct(productID uint, dto *types.UpdateProductDTO) error
-	//DeleteProduct(productID uint) error
+	DeleteProduct(productID uint) error
 
+	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error)
 	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
 	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
-	//DeleteProductSize(productSizeID uint) error
+	DeleteProductSize(productSizeID uint) error
 }
 
 type productService struct {
@@ -111,6 +112,22 @@ func (s *productService) UpdateProductSize(productSizeID uint, dto *types.Update
 	return nil
 }
 
+func (s *productService) GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error) {
+	productSizes, err := s.repo.GetProductSizesByProductID(productID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to get product sizes: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]types.ProductSizeDTO, len(productSizes))
+	for i, productSize := range productSizes {
+		dtos[i] = types.MapToProductSizeDTO(productSize)
+	}
+
+	return dtos, nil
+}
+
 /*func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
 	additiveIDs := dto.AdditiveIDList
 
@@ -136,5 +153,21 @@ func (s *productService) CreateProductWithSizes(dto *types.CreateProductWithAtta
 }*/
 
 func (s *productService) DeleteProduct(productID uint) error {
-	return s.repo.DeleteProduct(productID)
+	err := s.repo.DeleteProduct(productID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to delete product: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+	return nil
+}
+
+func (s *productService) DeleteProductSize(productSizeID uint) error {
+	err := s.repo.DeleteProductSize(productSizeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to delete product size: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+	return nil
 }

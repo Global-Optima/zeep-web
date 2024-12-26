@@ -2,15 +2,17 @@ package recipes
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes/types"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 type RecipeRepository interface {
-	CreateRecipeStep(recipeStep *data.RecipeStep) (uint, error)
-	UpdateRecipeStep(id uint, recipeStep *data.RecipeStep) error
+	CreateOrReplaceRecipeStepsByProductID(productID uint, recipeSteps []data.RecipeStep) ([]uint, error)
 	GetRecipeStepByID(id uint) (*data.RecipeStep, error)
 	GetRecipeStepsByProductID(productID uint) ([]data.RecipeStep, error)
-	DeleteRecipeStep(recipeStep *data.RecipeStep) error
+	DeleteRecipeStepsByProductID(productID uint) error
+	HasRecipes(productID uint) (bool, error)
 }
 
 type recipeRepository struct {
@@ -21,23 +23,36 @@ func NewRecipeRepository(db *gorm.DB) RecipeRepository {
 	return &recipeRepository{db: db}
 }
 
-func (r *recipeRepository) CreateRecipeStep(recipeStep *data.RecipeStep) (uint, error) {
-	if err := r.db.Create(&recipeStep).Error; err != nil {
-		return 0, err
+func (r *recipeRepository) CreateOrReplaceRecipeStepsByProductID(productID uint, recipeSteps []data.RecipeStep) ([]uint, error) {
+	if recipeSteps == nil || len(recipeSteps) == 0 {
+		return nil, types.ErrNothingToUpdate
 	}
-	return recipeStep.ID, nil
-}
 
-func (r *recipeRepository) UpdateRecipeStep(id uint, recipeStep *data.RecipeStep) error {
-	err := r.db.Model(&data.RecipeStep{}).
-		Where("id = ?", id).
-		Updates(&recipeStep).Error
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&data.RecipeStep{}).
+			Where("product_id = ?", productID).
+			Delete(&recipeSteps).Error
+
+		if err != nil {
+			return err
+		}
+
+		if err := tx.Create(&recipeSteps).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	ids := make([]uint, len(recipeSteps))
+	for i, recipeStep := range recipeSteps {
+		ids[i] = recipeStep.ID
+	}
+	return ids, nil
 }
 
 func (r *recipeRepository) GetRecipeStepByID(id uint) (*data.RecipeStep, error) {
@@ -62,9 +77,26 @@ func (r *recipeRepository) GetRecipeStepsByProductID(productID uint) ([]data.Rec
 	return recipeSteps, nil
 }
 
-func (r *recipeRepository) DeleteRecipeStep(recipeStep *data.RecipeStep) error {
-	if err := r.db.Delete(recipeStep).Error; err != nil {
+func (r *recipeRepository) DeleteRecipeStepsByProductID(productID uint) error {
+	if err := r.db.Where("product_id = ?", productID).
+		Delete(&data.RecipeStep{}).
+		Error; err != nil {
 		return err
 	}
 	return nil
+}
+
+func (r *recipeRepository) HasRecipes(productID uint) (bool, error) {
+	var recipeStep data.RecipeStep
+	err := r.db.Model(&data.RecipeStep{}).
+		Where("product_id = ?", productID).
+		First(&recipeStep).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }

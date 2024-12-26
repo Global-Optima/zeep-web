@@ -3,18 +3,18 @@ package types
 import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type AdditiveCategoriesFilterQuery struct {
+	utils.BaseFilter
 	ProductSizeId *uint   `form:"productSizeId"`
 	Search        *string `form:"search"`
-	utils.BaseFilter
 }
 
 type AdditiveFilterQuery struct {
+	utils.BaseFilter
 	Search        *string  `form:"search"`
 	MinPrice      *float64 `form:"minPrice"`
 	MaxPrice      *float64 `form:"maxPrice"`
 	CategoryID    *uint    `form:"categoryId"`
 	ProductSizeID *uint    `form:"productSizeId"`
-	utils.BaseFilter
 }
 
 type AdditiveDTO struct {

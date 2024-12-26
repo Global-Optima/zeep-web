@@ -11,9 +11,9 @@ import (
 type StoreProductRepository interface {
 	GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
-	CreateStoreProduct(storeProduct *data.StoreProduct) (uint, error)
+	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
-	UpdateStoreProduct(storeID, storeProductID uint, product *data.StoreProduct) error
+	UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error
 	DeleteStoreProduct(storeID, storeProductID uint) error
 
 	GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
@@ -33,17 +33,15 @@ func NewStoreProductRepository(db *gorm.DB) StoreProductRepository {
 
 func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
 	var storeProduct data.StoreProduct
-	err := r.db.
-		Preload("Product").
-		Preload("Store").
-		Preload("Store.ProductSizes", "store_id = ?", storeID).
-		Preload("Store.ProductSizes.ProductSize").
+	err := r.db.Model(&data.StoreProduct{}).
 		Where("store_id = ? AND id = ?", storeID, storeProductID).
-		Find(&storeProduct).Error
+		Preload("Product.ProductSizes").
+		Preload("StoreProductSizes.ProductSize").
+		First(&storeProduct).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, types.ErrStoreProductNotFound
 		}
 		return nil, err
 	}
@@ -55,11 +53,8 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {
 	var storeProducts []data.StoreProduct
 	query := r.db.Model(&data.StoreProduct{}).Where("store_id = ?", storeID).
-		Preload("Store").
-		Preload("Store.ProductSizes").
-		Preload("Product").
-		Preload("Store.ProductSizes", "store_id = ?", storeID).
-		Preload("Store.ProductSizes.ProductSize", "is_default = TRUE")
+		Preload("StoreProductSizes").
+		Preload("Product.ProductSizes")
 
 	if filter != nil {
 		if filter.Search != nil {
@@ -70,6 +65,12 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 		}
 		if filter.CategoryID != nil {
 			query = query.Where("products.category_id = ?", *filter.CategoryID)
+		}
+		if filter.MinPrice != nil {
+			query = query.Where("store_product_sizes.price >= ", *filter.MinPrice)
+		}
+		if filter.MaxPrice != nil {
+			query = query.Where("store_product_sizes.price >= ", *filter.MaxPrice)
 		}
 	}
 
@@ -85,15 +86,17 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	return storeProducts, nil
 }
 
-func (r *storeProductRepository) CreateStoreProduct(storeProduct *data.StoreProduct) (uint, error) {
-	if err := r.db.Create(storeProduct).Error; err != nil {
+func (r *storeProductRepository) CreateStoreProduct(product *data.StoreProduct) (uint, error) {
+	err := r.db.Create(product).Error
+	if err != nil {
 		return 0, err
 	}
-	return storeProduct.ID, nil
+
+	return product.ID, nil
 }
 
 func (r *storeProductRepository) CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error) {
-	if err := r.db.Create(storeProducts).Error; err != nil {
+	if err := r.db.Create(&storeProducts).Error; err != nil {
 		return nil, err
 	}
 
@@ -105,17 +108,36 @@ func (r *storeProductRepository) CreateMultipleStoreProducts(storeProducts []dat
 	return ids, nil
 }
 
-func (r *storeProductRepository) UpdateStoreProduct(storeID, productID uint, storeProduct *data.StoreProduct) error {
-	result := r.db.Model(&data.StoreProduct{}).
-		Where("store_id = ? AND id = ?", storeID, productID).
-		Updates(storeProduct)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
+func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&data.StoreProduct{}).
+			Where("store_id = ? AND id = ?", storeID, storeProductID).
+			Updates(updateModels.StoreProduct).Error
+
+		if err != nil {
+			return err
+		}
+
+		if updateModels.StoreProductSizes != nil && len(updateModels.StoreProductSizes) > 0 {
+			err = tx.Where("store_product_id = ?", storeProductID).
+				Delete(&data.StoreProductSize{}).Error
+			if err != nil {
+				return err
+			}
+
+			for i := range updateModels.StoreProductSizes {
+				updateModels.StoreProductSizes[i].StoreProductID = storeProductID
+			}
+
+			if err := tx.Create(&updateModels.StoreProductSizes).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	return err
 }
 
 func (r *storeProductRepository) DeleteStoreProduct(storeID, storeProductID uint) error {

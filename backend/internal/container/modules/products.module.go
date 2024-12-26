@@ -22,7 +22,7 @@ func NewProductsModule(base *common.BaseModule) *ProductsModule {
 	handler := product.NewProductHandler(service)
 
 	recipeModule := NewRecipeModule(base)
-	storeProductsModule := NewStoreProductsModule(base)
+	storeProductsModule := NewStoreProductsModule(base, repo)
 
 	base.Router.RegisterProductRoutes(handler)
 
@@ -60,14 +60,15 @@ func NewRecipeModule(base *common.BaseModule) *RecipeModule {
 
 type StoreProductsModule struct {
 	*common.BaseModule
-	Repo    storeProducts.StoreProductRepository
-	Service storeProducts.StoreProductService
-	Handler *storeProducts.StoreProductHandler
+	Repo        storeProducts.StoreProductRepository
+	ProductRepo product.ProductRepository
+	Service     storeProducts.StoreProductService
+	Handler     *storeProducts.StoreProductHandler
 }
 
-func NewStoreProductsModule(base *common.BaseModule) *StoreProductsModule {
+func NewStoreProductsModule(base *common.BaseModule, productRepo product.ProductRepository) *StoreProductsModule {
 	repo := storeProducts.NewStoreProductRepository(base.DB)
-	service := storeProducts.NewStoreProductService(repo, base.Logger)
+	service := storeProducts.NewStoreProductService(repo, productRepo, base.Logger)
 	handler := storeProducts.NewStoreProductHandler(service)
 
 	base.Router.RegisterStoreProductRoutes(handler)

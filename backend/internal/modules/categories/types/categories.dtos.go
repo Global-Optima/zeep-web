@@ -9,8 +9,8 @@ type CategoryDTO struct {
 }
 
 type CategoriesFilterDTO struct {
-	Search string `form:"search" binding:"omitempty,max=50"`
 	utils.BaseFilter
+	Search string `form:"search" binding:"omitempty,max=50"`
 }
 
 type CreateCategoryDTO struct {

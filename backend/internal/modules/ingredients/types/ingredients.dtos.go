@@ -1,5 +1,7 @@
 package types
 
+import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+
 type CreateIngredientDTO struct {
 	Name      string  `json:"name" binding:"required"`
 	Calories  float64 `json:"calories" binding:"required,gte=0"`
@@ -30,7 +32,9 @@ type IngredientResponseDTO struct {
 }
 
 type IngredientFilter struct {
-	Name        *string  `form:"name"`
-	MinCalories *float64 `form:"minCalories"`
-	MaxCalories *float64 `form:"maxCalories"`
+	utils.BaseFilter
+	ProductSizeID *uint    `form:"productSizeId" binding:"omitempty,gt=0"`
+	Name          *string  `form:"name"`
+	MinCalories   *float64 `form:"minCalories"`
+	MaxCalories   *float64 `form:"maxCalories"`
 }

@@ -51,8 +51,8 @@ type StockRequestIngredient struct {
 	IngredientID   uint         `gorm:"not null;index"`
 	Ingredient     Ingredient   `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	Quantity       float64      `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
-	DeliveredDate  time.Time    `gorm:"not null;default:CURRENT_TIMESTAMP" sort:"delivery_date"` // Delivery start date
-	ExpirationDate time.Time    `gorm:"not null" sort:"expirationDate"`                          // Calculated from DeliveredDate + ExpirationPeriod
+	DeliveredDate  time.Time    `gorm:"not null;default:CURRENT_TIMESTAMP" sort:"deliveryDate"` // Delivery start date
+	ExpirationDate time.Time    `gorm:"not null" sort:"expirationDate"`                         // Calculated from DeliveredDate + ExpirationPeriod
 }
 
 type IngredientsMapping struct {

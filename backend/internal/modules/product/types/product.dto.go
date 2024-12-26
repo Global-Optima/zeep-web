@@ -1,8 +1,6 @@
 package types
 
-import (
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-)
+import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type BaseProductDTO struct {
 	ID          uint   `json:"id"`
@@ -55,7 +53,7 @@ type SelectedAdditiveTypesDTO struct {
 
 type CreateProductSizeDTO struct {
 	ProductID   uint                       `json:"productId" binding:"required,gt=0"`
-	Name        string                     `json:"name" binding:"required,min=2,max=50"`
+	Name        string                     `json:"name" binding:"required,oneof=S M L"`
 	Measure     string                     `json:"measure" binding:"required,max=20"`
 	BasePrice   float64                    `json:"basePrice" binding:"required,gt=0"`
 	Size        int                        `json:"size" binding:"required,gte=0"`
@@ -82,7 +80,7 @@ type UpdateProductSizeDTO struct {
 }
 
 type ProductsFilterDto struct {
+	utils.BaseFilter
 	CategoryID *uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Search     *string `form:"search"`
-	utils.BaseFilter
 }

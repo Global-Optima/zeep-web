@@ -3,7 +3,6 @@ package ingredients
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
@@ -12,7 +11,7 @@ type IngredientService interface {
 	UpdateIngredient(ingredientID uint, dto *types.UpdateIngredientDTO) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
-	GetIngredients(filter types.IngredientFilter, pagination *utils.Pagination) ([]data.Ingredient, *utils.Pagination, error)
+	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
 }
 
 type ingredientService struct {
@@ -75,11 +74,11 @@ func (s *ingredientService) GetIngredientByID(ingredientID uint) (*data.Ingredie
 	return ingredient, nil
 }
 
-func (s *ingredientService) GetIngredients(filter types.IngredientFilter, pagination *utils.Pagination) ([]data.Ingredient, *utils.Pagination, error) {
-	ingredients, err := s.repo.GetIngredients(filter, pagination)
+func (s *ingredientService) GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error) {
+	ingredients, err := s.repo.GetIngredients(filter)
 	if err != nil {
 		s.logger.Error("Failed to fetch ingredients:", err)
-		return nil, nil, err
+		return nil, err
 	}
-	return ingredients, pagination, nil
+	return ingredients, nil
 }

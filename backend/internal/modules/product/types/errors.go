@@ -6,5 +6,6 @@ import (
 )
 
 var (
-	ErrProductNotFound = moduleErrors.NewModuleError(errors.New("product not found"))
+	ErrProductNotFound     = moduleErrors.NewModuleError(errors.New("product not found"))
+	ErrProductSizeNotFound = moduleErrors.NewModuleError(errors.New("product size not found"))
 )

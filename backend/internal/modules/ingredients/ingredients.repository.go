@@ -12,7 +12,7 @@ type IngredientRepository interface {
 	UpdateIngredient(ingredient *data.Ingredient) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
-	GetIngredients(filter types.IngredientFilter, pagination *utils.Pagination) ([]data.Ingredient, error)
+	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
 }
 
 type ingredientRepository struct {
@@ -43,7 +43,7 @@ func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingre
 	return &ingredient, nil
 }
 
-func (r *ingredientRepository) GetIngredients(filter types.IngredientFilter, pagination *utils.Pagination) ([]data.Ingredient, error) {
+func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
 	query := r.db.Model(&data.Ingredient{})
 
@@ -59,7 +59,7 @@ func (r *ingredientRepository) GetIngredients(filter types.IngredientFilter, pag
 	}
 
 	// Apply pagination
-	query, err := utils.ApplyPagination(query, pagination, data.Ingredient{})
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Ingredient{})
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,7 +22,7 @@ func NewOrderHandler(service OrderService) *OrderHandler {
 
 func (h *OrderHandler) GetOrders(c *gin.Context) {
 	var filter types.OrdersFilterQuery
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Order{}); err != nil {
 		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
@@ -51,7 +52,7 @@ func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, orders)
+	utils.SendSuccessResponse(c, orders)
 }
 
 // Get all suborders for a specific order
@@ -70,7 +71,7 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, subOrders)
+	utils.SendSuccessResponse(c, subOrders)
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
@@ -94,7 +95,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	BroadcastOrderCreated(orderDTO.StoreID, createdOrderWithPreloads)
 
-	c.JSON(http.StatusCreated, createdOrderWithPreloads)
+	utils.SendSuccessResponse(c, createdOrder)
 }
 
 // Complete a suborder
@@ -122,7 +123,7 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 
 	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 
-	c.Status(http.StatusOK)
+	utils.SendMessageWithStatus(c, "Sub order completed", http.StatusOK)
 }
 
 // Generate a PDF receipt for a specific order
@@ -163,7 +164,7 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, statusesWithCounts)
+	utils.SendSuccessResponse(c, statusesWithCounts)
 }
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
