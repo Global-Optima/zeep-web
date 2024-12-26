@@ -7,6 +7,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -22,8 +23,8 @@ type StockRequestRepository interface {
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
 	AddRejectionComment(requestID uint, comment string) error
 
-	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) error
-	AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantity float64) error
+	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) error
+	AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantityInPackages float64, ingredient data.StockRequestIngredient) error
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
 	GetLowStockIngredients(storeWarehouseID uint) ([]data.StoreWarehouseStock, error)
@@ -63,9 +64,14 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientDates(stockRequestI
 
 func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error) {
 	var requests []data.StockRequest
-	query := r.db.Preload("Ingredients.Ingredient.Unit").
+	query := r.db.Preload("Ingredients.StockMaterial").
+		Preload("Ingredients.StockMaterial.StockMaterialCategory").
+		Preload("Ingredients.StockMaterial.Package").
+		Preload("Ingredients.StockMaterial.Package.Unit").
 		Preload("Ingredients.Ingredient.IngredientCategory").
+		Preload("Ingredients.Ingredient.Unit").
 		Preload("Store").
+		Preload("Store.FacilityAddress").
 		Preload("Warehouse")
 
 	if filter.StoreID != nil {
@@ -91,9 +97,11 @@ func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilte
 func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.StockRequest, error) {
 	var request data.StockRequest
 	err := r.db.Preload("Ingredients.Ingredient.Unit").
-		Preload("Ingredients.Ingredient.IngredientCategory").
-		Preload("Ingredients.Ingredient.StockMaterials").
-		Preload("Ingredients.Ingredient.StockMaterials.Unit").
+		Preload("Ingredients.IngredientCategory").
+		Preload("Ingredients.StockMaterial").
+		Preload("Ingredients.StockMaterial.Unit").
+		Preload("Ingredients.StockMaterial.Package").
+		Preload("Ingredients.StockMaterial.Package.Unit").
 		Preload("Store").
 		Preload("Warehouse").
 		Where("id = ?", requestID).
@@ -114,10 +122,12 @@ func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouse
 		Update("quantity", gorm.Expr("quantity - ?", quantity)).Error
 }
 
-func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantity float64) error {
+func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantityInPackages float64, ingredient data.StockRequestIngredient) error {
+	quantityInUnits := utils.ConvertPackagesToUnits(ingredient, quantityInPackages)
+
 	return r.db.Model(&data.StoreWarehouseStock{}).
 		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouseID, ingredientID).
-		Update("quantity", gorm.Expr("quantity + ?", quantity)).Error
+		Update("quantity", gorm.Expr("quantity + ?", quantityInUnits)).Error
 }
 
 func (r *stockRequestRepository) GetLastStockRequestDate(storeID uint) (*time.Time, error) {
@@ -145,7 +155,7 @@ func (r *stockRequestRepository) GetAllStockMaterials(storeID uint, filters type
 	}
 
 	var stockMaterials []data.StockMaterial
-	query := r.db.Preload("Unit").Preload("Ingredient")
+	query := r.db.Preload("Unit").Preload("Ingredient").Preload("StockMaterialCategory")
 
 	if filters.Category != nil {
 		query = query.Where("category = ?", *filters.Category)
@@ -170,7 +180,7 @@ func (r *stockRequestRepository) GetAllStockMaterials(storeID uint, filters type
 		products = append(products, types.StockMaterialDTO{
 			StockMaterialID: stockMaterial.ID,
 			Name:            stockMaterial.Name,
-			Category:        stockMaterial.Category,
+			Category:        stockMaterial.StockMaterialCategory.Name,
 			Unit:            stockMaterial.Unit.Name,
 			AvailableQty:    quantity,
 		})
@@ -204,7 +214,9 @@ func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWar
 func (r *stockRequestRepository) GetStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]data.WarehouseStock, error) {
 	var stocks []data.WarehouseStock
 
-	query := r.db.Preload("StockMaterial.Unit").Preload("Warehouse").
+	query := r.db.Preload("StockMaterial.Unit").
+		Preload("StockMaterial.StockMaterialCategory").
+		Preload("Warehouse").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id").
 		Where("stock_materials.ingredient_id = ?", ingredientID)
 
@@ -221,7 +233,7 @@ func (r *stockRequestRepository) GetStockMaterialsByIngredient(ingredientID uint
 }
 
 func (r *stockRequestRepository) GetStockMaterialByID(stockMaterialID uint, stockMaterial *data.StockMaterial) error {
-	return r.db.Preload("Ingredient").First(stockMaterial, "id = ?", stockMaterialID).Error
+	return r.db.Preload("Ingredient").Preload("StockMaterialCategory").First(stockMaterial, "id = ?", stockMaterialID).Error
 }
 
 func (r *stockRequestRepository) ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error {

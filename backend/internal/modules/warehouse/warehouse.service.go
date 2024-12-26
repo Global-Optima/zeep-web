@@ -148,7 +148,7 @@ func (s *warehouseService) GetStock(query *types.GetWarehouseStockFilterQuery) (
 				ID:          stock.StockMaterialID,
 				Name:        stock.StockMaterial.Name,
 				Description: stock.StockMaterial.Description,
-				Category:    stock.StockMaterial.Category,
+				Category:    stock.StockMaterial.StockMaterialCategory.Name,
 				SafetyStock: stock.StockMaterial.SafetyStock,
 				Unit:        stock.StockMaterial.Unit.Name,
 				Barcode:     stock.StockMaterial.Barcode,

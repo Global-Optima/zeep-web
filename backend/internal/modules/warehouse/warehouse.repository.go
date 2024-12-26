@@ -21,8 +21,8 @@ type WarehouseRepository interface {
 	UpdateWarehouse(warehouse *data.Warehouse) error
 	DeleteWarehouse(id uint) error
 
-	AddToWarehouseStock(warehouseID, stockMaterialID uint, quantity float64) error
-	DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantity float64) error
+	AddToWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error
+	DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error
 	GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error)
 	ResetWarehouseStock(warehouseID uint, stocks []data.WarehouseStock) error
 }
@@ -107,38 +107,37 @@ func (r *warehouseRepository) DeleteWarehouse(id uint) error {
 	return r.db.Delete(&data.Warehouse{}, id).Error
 }
 
-func (r *warehouseRepository) AddToWarehouseStock(warehouseID, stockMaterialID uint, quantity float64) error {
+func (r *warehouseRepository) AddToWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error {
 	stock := &data.WarehouseStock{}
 	if err := r.db.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).First(stock).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			stock = &data.WarehouseStock{
 				WarehouseID:     warehouseID,
 				StockMaterialID: stockMaterialID,
-				Quantity:        quantity,
+				Quantity:        quantityInPackages,
 			}
 			return r.db.Create(stock).Error
 		}
 		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
 	}
 
-	return r.db.Model(stock).Update("quantity", gorm.Expr("quantity + ?", quantity)).Error
+	return r.db.Model(stock).Update("quantity", gorm.Expr("quantity + ?", quantityInPackages)).Error
 }
 
-func (r *warehouseRepository) DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantity float64) error {
+func (r *warehouseRepository) DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error {
 	stock := &data.WarehouseStock{}
 	if err := r.db.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).First(stock).Error; err != nil {
 		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
 	}
 
-	if stock.Quantity < quantity {
+	if stock.Quantity < quantityInPackages {
 		return fmt.Errorf("insufficient stock for StockMaterialID %d in WarehouseID %d", stockMaterialID, warehouseID)
 	}
 
-	return r.db.Model(stock).Update("quantity", gorm.Expr("quantity - ?", quantity)).Error
+	return r.db.Model(stock).Update("quantity", gorm.Expr("quantity - ?", quantityInPackages)).Error
 }
 
 func (r *warehouseRepository) GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error) {
-
 	warehouseStocks, totalCount, err := r.getWarehouseStocksWithPagination(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
@@ -183,6 +182,7 @@ func (r *warehouseRepository) ResetWarehouseStock(warehouseID uint, stocks []dat
 	})
 }
 
+// helper functions
 func (r *warehouseRepository) calculateTotalQuantity(deliveries []data.SupplierWarehouseDelivery) float64 {
 	total := 0.0
 	for _, delivery := range deliveries {
@@ -250,6 +250,7 @@ func (r *warehouseRepository) getWarehouseStocksWithPagination(filter *types.Get
 	var totalCount int64
 
 	query := r.db.Model(&data.WarehouseStock{}).
+		Preload("StockMaterial.StockMaterialCategory").
 		Preload("StockMaterial.Unit").
 		Preload("StockMaterial")
 

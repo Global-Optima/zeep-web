@@ -24,7 +24,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	if len(req.Items) == 0 {
+	if len(req.StockMaterials) == 0 {
 		utils.SendBadRequestError(c, "The cart cannot be empty")
 		return
 	}
@@ -83,7 +83,7 @@ func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
 		return
 	}
 
-	var req []types.StockRequestItemDTO
+	var req []types.StockRequestStockMaterialDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
 		return

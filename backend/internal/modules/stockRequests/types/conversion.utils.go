@@ -2,32 +2,41 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 func ToStockRequestResponse(request data.StockRequest) StockRequestResponse {
-	items := make([]StockRequestItemResponse, len(request.Ingredients))
+	items := make([]StockRequestStockMaterialResponse, len(request.Ingredients))
 	for i, ingredient := range request.Ingredients {
-		items[i] = StockRequestItemResponse{
-			StockMaterialID: ingredient.IngredientID,
-			Name:            ingredient.Ingredient.Name,
-			Category:        ingredient.Ingredient.IngredientCategory.Name,
-			Unit:            ingredient.Ingredient.Unit.Name,
-			Quantity:        ingredient.Quantity,
+		var packageMeasures utils.PackageMeasure
+
+		if ingredient.StockMaterial.Package != nil {
+			packageMeasures = utils.ReturnPackageMeasure(ingredient, ingredient.Quantity)
+		}
+
+		items[i] = StockRequestStockMaterialResponse{
+			StockMaterialID: ingredient.StockMaterialID,
+			Name:            ingredient.StockMaterial.Name,
+			Category:        ingredient.StockMaterial.StockMaterialCategory.Name,
+			PackageMeasure:  packageMeasures,
 		}
 	}
 
 	return StockRequestResponse{
 		RequestID: request.ID,
 		Store: StoreDTO{
-			ID:   request.StoreID,
-			Name: request.Store.Name,
+			ID:      request.StoreID,
+			Name:    request.Store.Name,
+			Address: request.Store.FacilityAddress.Address,
 		},
-		WarehouseID:   request.WarehouseID,
-		WarehouseName: request.Warehouse.Name,
-		Status:        request.Status,
-		Items:         items,
-		CreatedAt:     request.CreatedAt,
-		UpdatedAt:     request.UpdatedAt,
+		Warehouse: WarehouseDTO{
+			ID:   request.WarehouseID,
+			Name: request.Warehouse.Name,
+		},
+		Status:         request.Status,
+		StockMaterials: items,
+		CreatedAt:      request.CreatedAt,
+		UpdatedAt:      request.UpdatedAt,
 	}
 }
 

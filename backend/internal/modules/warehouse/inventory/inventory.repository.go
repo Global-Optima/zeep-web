@@ -148,7 +148,7 @@ func (r *inventoryRepository) TransferStock(sourceWarehouseID, targetWarehouseID
 
 func (r *inventoryRepository) GetInventoryLevels(warehouseID uint) ([]data.WarehouseStock, error) {
 	var stocks []data.WarehouseStock
-	err := r.db.Preload("StockMaterial.Unit").Preload("Warehouse").
+	err := r.db.Preload("StockMaterial.Unit").Preload("StockMaterial.StockMaterialCategory").Preload("Warehouse").
 		Where("warehouse_id = ?", warehouseID).
 		Find(&stocks).Error
 	return stocks, err
