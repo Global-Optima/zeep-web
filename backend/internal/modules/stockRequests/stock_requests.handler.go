@@ -60,7 +60,7 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("requestId")
 	stockRequestID, err := strconv.Atoi(idParam)
 	if err != nil || stockRequestID <= 0 {
 		utils.SendBadRequestError(c, "Invalid stock request ID")

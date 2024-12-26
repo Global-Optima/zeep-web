@@ -209,13 +209,14 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
 	router := r.Routes.Group("/stock-requests")
 	{
+		router.POST("", handler.CreateStockRequest) // Create a new stock request (cart creation)
 		router.GET("", handler.GetStockRequests)
-		router.GET("/:id", handler.GetStockRequestByID)
-		router.GET("/low-stock", handler.GetLowStockIngredients)                      // Get low-stock ingredients
-		router.GET("/stock-materials", handler.GetAllStockMaterials)                  // Get marketplace products
-		router.POST("", handler.CreateStockRequest)                                   // Create a new stock request (cart creation)
-		router.PATCH("/:requestId/status", handler.UpdateStockRequestStatus)          // Update stock request status
-		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)  // Update stock request ingredients
-		router.GET("/:ingredientId/materials", handler.GetStockMaterialsByIngredient) // Get available stock materials by ingredient
+		router.GET("/:requestId", handler.GetStockRequestByID)
+		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)              // Update stock request ingredients
+		router.PATCH("/:requestId/status", handler.UpdateStockRequestStatus)                      // Update stock request status
+		router.GET("/low-stock", handler.GetLowStockIngredients)                                  // Get low-stock ingredients
+		router.GET("/stock-materials", handler.GetAllStockMaterials)                              // Get marketplace products
+		router.GET("/ingredients/:ingredientId/materials", handler.GetStockMaterialsByIngredient) // Get available stock materials by ingredient
+
 	}
 }

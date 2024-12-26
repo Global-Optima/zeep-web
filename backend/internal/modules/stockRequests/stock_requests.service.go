@@ -147,7 +147,7 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 
 func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, storeWarehouseID uint) error {
 	for _, ingredient := range request.Ingredients {
-		if ingredient.StockMaterial.Package != nil {
+		if ingredient.StockMaterial.Package == nil {
 			return utils.WrapError("package is not presenent for stock material", fmt.Errorf("stock material ID %d", ingredient.StockMaterialID))
 		}
 
@@ -211,13 +211,6 @@ func (s *stockRequestService) UpdateStockRequestIngredients(requestID uint, item
 		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
 			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
-	ingredients := []data.StockRequestIngredient{}
-	for _, item := range items {
-		var stockMaterial data.StockMaterial
-		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
-			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
-		}
-
 		ingredients = append(ingredients, data.StockRequestIngredient{
 			StockRequestID:  request.ID,
 			IngredientID:    stockMaterial.IngredientID,
@@ -229,8 +222,8 @@ func (s *stockRequestService) UpdateStockRequestIngredients(requestID uint, item
 	if err := s.repo.ReplaceStockRequestIngredients(request.ID, ingredients); err != nil {
 		return fmt.Errorf("failed to replace ingredients for stock request ID %d: %w", requestID, err)
 	}
-
 	return nil
+
 }
 
 func (s *stockRequestService) GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error) {
@@ -242,13 +235,15 @@ func (s *stockRequestService) GetAvailableStockMaterialsByIngredient(ingredientI
 	availability := make([]types.StockMaterialAvailabilityDTO, len(stocks))
 	for i, stock := range stocks {
 		availability[i] = types.StockMaterialAvailabilityDTO{
-			StockMaterialID: stock.StockMaterialID,
-			Name:            stock.StockMaterial.Name,
-			Category:        stock.StockMaterial.StockMaterialCategory.Name,
-			AvailableQty:    stock.Quantity,
-			WarehouseID:     stock.WarehouseID,
-			WarehouseName:   stock.Warehouse.Name,
-			Unit:            stock.StockMaterial.Unit.Name,
+			StockMaterialID:   stock.StockMaterialID,
+			Name:              stock.StockMaterial.Name,
+			Category:          stock.StockMaterial.StockMaterialCategory.Name,
+			AvailableQuantity: stock.Quantity,
+			Unit:              stock.StockMaterial.Unit.Name,
+			Warehouse: types.WarehouseDTO{
+				ID:   stock.WarehouseID,
+				Name: stock.Warehouse.Name,
+			},
 		}
 	}
 

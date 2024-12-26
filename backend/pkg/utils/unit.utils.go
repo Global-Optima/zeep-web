@@ -11,18 +11,18 @@ func ConvertPackagesToUnits(ingredient data.StockRequestIngredient, quantityInPa
 }
 
 type PackageMeasure struct {
-	QuantityInPackages float64 `json:"quantity"`        // Quantity of the packages
-	UnitsPerPackage    float64 `json:"unitsPerPackage"` // Number of units contained in a package
-	Unit               string  `json:"unit"`            // Name of the unit
-	TotalUnits         float64 `json:"totalUnits"`      // Total number of units
+	Quantity        float64 `json:"quantity"`        // Quantity of the packages
+	UnitsPerPackage float64 `json:"unitsPerPackage"` // Number of units contained in a package
+	Unit            string  `json:"unit"`            // Name of the unit
+	TotalUnits      float64 `json:"totalUnits"`      // Total number of units
 
 }
 
 func ReturnPackageMeasure(ingredient data.StockRequestIngredient, quantityInPackages float64) PackageMeasure {
 	return PackageMeasure{
-		QuantityInPackages: quantityInPackages,
-		UnitsPerPackage:    ingredient.StockMaterial.Package.Size,
-		Unit:               ingredient.StockMaterial.Package.Unit.Name,
-		TotalUnits:         ConvertPackagesToUnits(ingredient, quantityInPackages),
+		Quantity:        quantityInPackages,
+		UnitsPerPackage: ingredient.StockMaterial.Package.Size,
+		Unit:            ingredient.StockMaterial.Package.Unit.Name,
+		TotalUnits:      ConvertPackagesToUnits(ingredient, quantityInPackages),
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-func ToStockRequestResponse(request data.StockRequest) StockRequestResponse {
+func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 	items := make([]StockRequestStockMaterialResponse, len(request.Ingredients))
 	for i, ingredient := range request.Ingredients {
 		var packageMeasures utils.PackageMeasure

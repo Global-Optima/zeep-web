@@ -105,7 +105,7 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.StockRequest, error) {
 	var request data.StockRequest
 	err := r.db.Preload("Ingredients.Ingredient.Unit").
-		Preload("Ingredients.IngredientCategory").
+		Preload("Ingredients.Ingredient.IngredientCategory").
 		Preload("Ingredients.StockMaterial").
 		Preload("Ingredients.StockMaterial.Unit").
 		Preload("Ingredients.StockMaterial.Package").
