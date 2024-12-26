@@ -1210,7 +1210,7 @@ VALUES
   (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   (8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   (9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into EmployeeAudit
 INSERT INTO
@@ -1371,66 +1371,3 @@ VALUES
     (4, 2, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
     (4, 3, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);  -- Chocolate
 
-
-INSERT INTO
-  stock_material_packages (stock_material_id, size, unit_id)
-VALUES
-  (1, 1.0, 3), -- 1L Milk
-  (2, 1.0, 2), -- 1kg Sugar
-  (3, 0.5, 2), -- 500g Chocolate
-  (4, 0.2, 2), -- 200g Cinnamon
-  (5, 0.05, 4);
-
--- 50ml Vanilla
-INSERT INTO
-  supplier_warehouse_deliveries (
-    stock_material_id,
-    supplier_id,
-    warehouse_id,
-    barcode,
-    quantity,
-    delivery_date,
-    expiration_date
-  )
-VALUES
-  (1,1,1,'111111111111',50,'2024-12-01','2026-12-01'), -- Milk Delivery
-  (2,2,1,'222222222222',30,'2024-12-05','2025-06-05'), -- Sugar Delivery
-  (3,1,1,'333333333333',40,'2024-11-20','2025-11-20'), -- Chocolate Delivery
-  (4,2,2,'444444444444',20,'2024-12-10','2026-06-10'), -- Cinnamon Delivery
-  (5,1,2,'555555555555',15,'2024-12-15','2027-12-15');-- Vanilla Delivery
-
--- Insert into StockRequests
-INSERT INTO
-  stock_requests (store_id,warehouse_id,status,request_date,created_at,updated)
-VALUES
-  (1,1,'CREATED',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-  (2,2,'PROCESSED',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-  (3,3,'IN_DELIVERY',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-  (4,4,'COMPLETED',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-
-INSERT INTO
-  stock_request_ingredients (stock_request_id,ingredient_id,stock_material_id,quantity,created_at,updated_at
-  )
-VALUES
-  -- StockRequest 1 (Store 1 -> Warehouse 1)
-  (1,1,2,10.0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP), -- Sugar
-  (1,2,1,20.0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP), -- Milk 
-  -- StockRequest 2 (Store 2 -> Warehouse 2)
-  (2,3,3,5.0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP), -- Chocolate
-  (2,4,4,2.0,CURRENT_TIMESTAMP,CURRENT_TIMESTA), -- Cinnamon 
-  -- StockRequest 3 (Store 3 -> Warehouse
-  (3,5,5,1.0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP), -- Vanilla
-  (3,1,2,15.0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP), -- Sugar 
-  -- StockRequest 4 (Store 4 -> Warehouse 4)
-  (4,2,1,10.0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP), -- Milk
-  (4,3,3,8.0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-
--- Chocolate
-INSERT INTO
-  warehouse_stocks (warehouse_id, stock_material_id, quantity)
-VALUES
-  (1, 1, 50), -- Milk in Warehouse 1
-  (1, 2, 30), -- Sugar in Warehouse 1
-  (1, 3, 40), -- Chocolate in Warehouse 1
-  (2, 4, 20), -- Cinnamon in Warehouse 2
-  (2, 5, 15);
