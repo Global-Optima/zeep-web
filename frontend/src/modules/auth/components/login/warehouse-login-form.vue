@@ -1,7 +1,7 @@
 <template>
 	<Card class="">
 		<CardHeader>
-			<CardTitle class="text-xl sm:text-2xl">Вход для сотрудников склада</CardTitle>
+			<CardTitle class="text-lg sm:text-xl">Вход для сотрудников склада</CardTitle>
 			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
 		</CardHeader>
 		<CardContent>
@@ -11,7 +11,7 @@
 			>
 				<FormField
 					v-slot="{ componentField }"
-					name="selectedwarehouseId"
+					name="selectedWarehouseId"
 				>
 					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Склад</FormLabel>
@@ -91,7 +91,7 @@
 									<SelectItem
 										v-for="employee in employees"
 										:key="employee.id"
-										:value="employee.id.toString()"
+										:value="employee.email"
 										class="text-sm sm:text-base"
 									>
 										{{ employee.name }}
@@ -135,6 +135,7 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
 import {
   Card,
   CardContent,
@@ -142,7 +143,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
-import { Button } from '@/core/components/ui/button'
 import {
   FormControl,
   FormField,
@@ -158,17 +158,18 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import { getRouteName } from '@/core/config/routes.config'
-import { toastError, toastSuccess } from '@/core/config/toast.config'
 import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
 import { employeesService } from '@/modules/employees/services/employees.service'
-import { useMutation, useQuery } from '@tanstack/vue-query'
+import { warehouseService } from "@/modules/warehouse/services/warehouse.service"
+import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { watch } from 'vue'
-import { useRouter } from "vue-router"
 import * as z from 'zod'
-import { warehouseService } from "@/modules/warehouse/services/warehouse.service"
+
+const emits = defineEmits<{
+  'login': [payload: EmployeeLoginDTO]
+}>()
 
 const formSchema = toTypedSchema(
   z.object({
@@ -182,20 +183,9 @@ const { values, isSubmitting, handleSubmit } = useForm({
   validationSchema: formSchema,
 })
 
-const {mutate: loginEmployee} = useMutation({
-		mutationFn: (dto: EmployeeLoginDTO) => employeesService.login(dto),
-		onSuccess: () => {
-			toastSuccess("Вы вошли в систему")
-			router.push({name: getRouteName("ADMIN_DASHBOARD")})
-		},
-		onError: () => {
-			toastError("Произошла ошибка при входе")
-		},
-})
-
 const { data: warehouses, isLoading: warehousesLoading, isError: warehousesError } = useQuery({
   queryKey: ['warehouses'],
-  queryFn: warehouseService.getWarehouses,
+  queryFn: () => warehouseService.getWarehouses(),
   initialData: [],
 })
 
@@ -210,9 +200,13 @@ watch(() => values.selectedWarehouseId, (newWarehouse) => {
   if (newWarehouse) refetchEmployees()
 })
 
-const router = useRouter()
 const onSubmit = handleSubmit((values) => {
-  loginEmployee({email: values.selectedEmployeeEmail, password: values.password})
+  const dto: EmployeeLoginDTO = {
+    email: values.selectedEmployeeEmail,
+    password: values.password,
+  }
+
+  emits("login", dto)
 })
 </script>
 

@@ -25,7 +25,7 @@ const (
 
 func IsValidEmployeeRole(role EmployeeRole) bool {
 	switch EmployeeRole(role) {
-	case RoleAdmin, RoleDirector, RoleManager, RoleBarista:
+	case RoleAdmin, RoleDirector, RoleManager, RoleBarista, RoleWarehouse:
 		return true
 	default:
 		return false

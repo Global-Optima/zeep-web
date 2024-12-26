@@ -13,22 +13,13 @@ func ValidateExpirationDays(addDays int) error {
 	return nil
 }
 
-func ValidatePackage(item InventoryItem) *data.Package {
-	if item.Package == nil {
+func ValidatePackage(stockMaterialID uint, pkg data.StockMaterialPackage) *data.StockMaterialPackage {
+	if pkg.Size <= 0 || pkg.UnitID == 0 {
 		return nil
 	}
-	if item.StockMaterialID == 0 {
-		return nil
-	}
-	if item.Package.PackageSize == 0 {
-		return nil
-	}
-	if item.Package.PackageUnitID == 0 {
-		return nil
-	}
-	return &data.Package{
-		StockMaterialID: item.StockMaterialID,
-		PackageSize:     item.Package.PackageSize,
-		PackageUnitID:   item.Package.PackageUnitID,
+	return &data.StockMaterialPackage{
+		StockMaterialID: stockMaterialID,
+		Size:            pkg.Size,
+		UnitID:          pkg.UnitID,
 	}
 }

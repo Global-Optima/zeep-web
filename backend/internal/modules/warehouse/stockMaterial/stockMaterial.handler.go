@@ -19,31 +19,12 @@ func NewStockMaterialHandler(service StockMaterialService) *StockMaterialHandler
 
 func (h *StockMaterialHandler) GetAllStockMaterials(c *gin.Context) {
 	var filter types.StockMaterialFilter
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
+		return
+	}
 
-	if name := c.Query("name"); name != "" {
-		filter.Name = &name
-	}
-	if category := c.Query("category"); category != "" {
-		filter.Category = &category
-	}
-	if lowStock := c.Query("lowStock"); lowStock != "" {
-		value, err := strconv.ParseBool(lowStock)
-		if err == nil {
-			filter.LowStock = &value
-		}
-	}
-	if expirationFlag := c.Query("expirationFlag"); expirationFlag != "" {
-		value, err := strconv.ParseBool(expirationFlag)
-		if err == nil {
-			filter.ExpirationFlag = &value
-		}
-	}
-	if isActive := c.Query("isActive"); isActive != "" {
-		value, err := strconv.ParseBool(isActive)
-		if err == nil {
-			filter.IsActive = &value
-		}
-	}
+	filter.Pagination = utils.ParsePagination(c)
 
 	stockMaterialResponses, err := h.service.GetAllStockMaterials(&filter)
 	if err != nil {
@@ -51,7 +32,7 @@ func (h *StockMaterialHandler) GetAllStockMaterials(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponse(c, stockMaterialResponses)
+	utils.SendSuccessResponseWithPagination(c, stockMaterialResponses, filter.Pagination)
 }
 
 func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
@@ -76,7 +57,7 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 }
 
 func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
-	var req types.CreateStockMaterialRequest
+	var req types.CreateStockMaterialDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
@@ -99,7 +80,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		return
 	}
 
-	var req types.UpdateStockMaterialRequest
+	var req types.UpdateStockMaterialDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return

@@ -7,18 +7,18 @@ import (
 	"gorm.io/gorm"
 )
 
-func ConvertInventoryItemsToStockRequest(items []InventoryItem, db *gorm.DB) ([]data.StockRequestIngredient, error) {
+func ConvertExistingItemsToStockRequest(items []ExistingInventoryItem, db *gorm.DB) ([]data.StockRequestIngredient, error) {
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
-		var mapping data.IngredientsMapping
-		err := db.Where("stock_material_id = ?", item.StockMaterialID).First(&mapping).Error
+		var stockMaterial data.StockMaterial
+		err := db.Preload("Ingredient").First(&stockMaterial, "id = ?", item.StockMaterialID).Error
 		if err != nil {
-			return nil, fmt.Errorf("failed to find ingredient mapping for StockMaterialID %d: %w", item.StockMaterialID, err)
+			return nil, fmt.Errorf("failed to find StockMaterial for ID %d: %w", item.StockMaterialID, err)
 		}
 
 		converted[i] = data.StockRequestIngredient{
-			IngredientID: mapping.IngredientID,
+			IngredientID: stockMaterial.IngredientID,
 			Quantity:     item.Quantity,
 		}
 	}
@@ -26,7 +26,7 @@ func ConvertInventoryItemsToStockRequest(items []InventoryItem, db *gorm.DB) ([]
 	return converted, nil
 }
 
-func DeliveriesToDeliveryResponses(deliveries []data.Delivery) []DeliveryResponse {
+func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) []DeliveryResponse {
 	response := make([]DeliveryResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = DeliveryResponse{
@@ -43,19 +43,23 @@ func DeliveriesToDeliveryResponses(deliveries []data.Delivery) []DeliveryRespons
 	return response
 }
 
-func StocksToInventoryItems(stocks []data.WarehouseStock) []InventoryItem {
-	response := make([]InventoryItem, len(stocks))
+func StocksToInventoryItems(stocks []data.WarehouseStock) *InventoryLevelsResponse {
+	levels := make([]InventoryLevel, len(stocks))
 	for i, stock := range stocks {
-		response[i] = InventoryItem{
+		levels[i] = InventoryLevel{
 			StockMaterialID: stock.StockMaterialID,
-			Name:            &stock.StockMaterial.Name,
+			Name:            stock.StockMaterial.Name,
 			Quantity:        stock.Quantity,
 		}
 	}
-	return response
+
+	return &InventoryLevelsResponse{
+		WarehouseID: stocks[0].WarehouseID,
+		Levels:      levels,
+	}
 }
 
-func ExpiringItemsToResponses(deliveries []data.Delivery) []UpcomingExpirationResponse {
+func ExpiringItemsToResponses(deliveries []data.SupplierWarehouseDelivery) []UpcomingExpirationResponse {
 	response := make([]UpcomingExpirationResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = UpcomingExpirationResponse{

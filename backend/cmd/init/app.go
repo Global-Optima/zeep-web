@@ -10,6 +10,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
@@ -107,6 +108,15 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
 	appContainer.MustInitModules()
+
+	InitializeModule(
+		dbHandler,
+		func(dbHandler *database.DBHandler) (stockRequests.StockRequestService, error) {
+			return stockRequests.NewStockRequestService(stockRequests.NewStockRequestRepository(dbHandler.DB)), nil
+		},
+		stockRequests.NewStockRequestHandler,
+		apiRouter.RegisterStockRequestRoutes,
+	)
 
 	return router
 }

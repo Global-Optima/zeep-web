@@ -3,7 +3,6 @@ package inventory
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -25,6 +24,11 @@ func (h *InventoryHandler) ReceiveInventory(c *gin.Context) {
 		return
 	}
 
+	if len(req.NewItems) == 0 && len(req.ExistingItems) == 0 {
+		utils.SendBadRequestError(c, "No items provided in the request")
+		return
+	}
+
 	if err := h.service.ReceiveInventory(req); err != nil {
 		utils.SendInternalServerError(c, "failed to receive inventory")
 		return
@@ -40,6 +44,11 @@ func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 		return
 	}
 
+	if len(req.Items) == 0 {
+		utils.SendBadRequestError(c, "No items provided in the request")
+		return
+	}
+
 	if err := h.service.TransferInventory(req); err != nil {
 		utils.SendInternalServerError(c, "failed to transfer inventory")
 		return
@@ -49,20 +58,21 @@ func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 }
 
 func (h *InventoryHandler) GetInventoryLevels(c *gin.Context) {
-	warehouseIDStr := c.Param("warehouseID")
-	warehouseID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid warehouse ID")
+	var filter types.GetInventoryLevelsFilterQuery
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
 
-	levels, err := h.service.GetInventoryLevels(uint(warehouseID))
+	filter.Pagination = utils.ParsePagination(c)
+
+	levels, err := h.service.GetInventoryLevels(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch inventory levels")
 		return
 	}
 
-	utils.SendSuccessResponse(c, levels)
+	utils.SendSuccessResponseWithPagination(c, levels, filter.Pagination)
 }
 
 func (h *InventoryHandler) PickupStock(c *gin.Context) {
@@ -121,40 +131,13 @@ func (h *InventoryHandler) ExtendExpiration(c *gin.Context) {
 }
 
 func (h *InventoryHandler) GetDeliveries(c *gin.Context) {
-	warehouseIDStr := c.Query("warehouseID")
-	startDateStr := c.Query("startDate")
-	endDateStr := c.Query("endDate")
-
-	var warehouseID *uint
-	if warehouseIDStr != "" {
-		parsedID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid warehouse ID")
-			return
-		}
-		id := uint(parsedID)
-		warehouseID = &id
+	var filter types.DeliveryFilter
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters: "+err.Error())
+		return
 	}
 
-	var startDate, endDate *time.Time
-	if startDateStr != "" {
-		parsedStartDate, err := time.Parse(time.RFC3339, startDateStr)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid start date format, use RFC3339")
-			return
-		}
-		startDate = &parsedStartDate
-	}
-	if endDateStr != "" {
-		parsedEndDate, err := time.Parse(time.RFC3339, endDateStr)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid end date format, use RFC3339")
-			return
-		}
-		endDate = &parsedEndDate
-	}
-
-	deliveries, err := h.service.GetDeliveries(warehouseID, startDate, endDate)
+	deliveries, err := h.service.GetDeliveries(filter.WarehouseID, filter.StartDate, filter.EndDate)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch deliveries")
 		return

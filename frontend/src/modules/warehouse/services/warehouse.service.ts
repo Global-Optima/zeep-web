@@ -7,7 +7,7 @@ class WarehouseService {
 			const response = await apiClient.get<Warehouse[]>('/warehouses')
 			return response.data
 		} catch (error) {
-			console.error('Failed to fetch stores:', error)
+			console.error('Failed to fetch warehouses:', error)
 			throw error
 		}
 	}

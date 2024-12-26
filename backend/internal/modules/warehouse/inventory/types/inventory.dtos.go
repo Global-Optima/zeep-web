@@ -1,46 +1,62 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type ReceiveInventoryRequest struct {
-	SupplierID  uint            `json:"supplierId" binding:"required"`
-	WarehouseID uint            `json:"warehouseId" binding:"required"`
-	Items       []InventoryItem `json:"items" binding:"required"`
+	SupplierID    uint                    `json:"supplierId" binding:"required"`
+	WarehouseID   uint                    `json:"warehouseId" binding:"required"`
+	NewItems      []NewInventoryItem      `json:"newItems,omitempty"`      // For new SKUs
+	ExistingItems []ExistingInventoryItem `json:"existingItems,omitempty"` // For existing SKUs
 }
 
-type InventoryItem struct {
-	StockMaterialID uint     `json:"stockMaterialId"`                   // For existing SKUs
-	Name            *string  `json:"name"`                              // Required for new SKUs
-	Description     *string  `json:"description,omitempty"`             // Optional for new SKUs
-	SafetyStock     *float64 `json:"safetyStock,omitempty"`             // Required for new SKUs
-	ExpirationFlag  *bool    `json:"expirationFlag,omitempty"`          // Required for new SKUs
-	Quantity        float64  `json:"quantity" binding:"required,gte=0"` // Quantity to log
-	UnitID          *uint    `json:"unitId,omitempty"`                  // Required for new SKUs
-	Category        *string  `json:"category,omitempty"`                // Optional for new SKUs
-	Expiration      *int     `json:"expiration,omitempty"`              // Optional; in days, overrides default expiration
-	Package         *Package `json:"package,omitempty"`                 // Required for new SKUs
+type NewInventoryItem struct {
+	Name             string  `json:"name" binding:"required"`
+	Description      *string `json:"description,omitempty"` // Optional
+	SafetyStock      float64 `json:"safetyStock" binding:"required"`
+	ExpirationFlag   bool    `json:"expirationFlag" binding:"required"`
+	Quantity         float64 `json:"quantity" binding:"required,gte=0"`
+	UnitID           uint    `json:"unitId" binding:"required"`
+	Category         string  `json:"category" binding:"required"`
+	ExpirationInDays *int    `json:"expirationInDays,omitempty"` // Optional override
+	Package          Package `json:"package" binding:"required"`
+	IngredientID     uint    `json:"ingredientId" binding:"required"` // New field for ingredient linkage
+}
 
+type ExistingInventoryItem struct {
+	StockMaterialID uint    `json:"stockMaterialId"`                   // For existing SKUs
+	Quantity        float64 `json:"quantity" binding:"required,gte=0"` // Quantity to log
+	IngredientID    uint    `json:"ingredientId" binding:"required"`   // Link to ingredient
 }
 
 type Package struct {
-	PackageSize   float64 `json:"packageSize" binding:"required,gte=0"`
-	PackageUnitID uint    `json:"packageUnitId" binding:"required"`
+	Size   float64 `json:"size" binding:"required,gte=0"`
+	UnitID uint    `json:"unitId" binding:"required"`
 }
 
 type TransferInventoryRequest struct {
-	SourceWarehouseID uint            `json:"sourceWarehouseId" binding:"required"`
-	TargetWarehouseID uint            `json:"targetWarehouseId" binding:"required"`
-	Items             []InventoryItem `json:"items" binding:"required"`
+	SourceWarehouseID uint                    `json:"sourceWarehouseId" binding:"required"`
+	TargetWarehouseID uint                    `json:"targetWarehouseId" binding:"required"`
+	Items             []ExistingInventoryItem `json:"items" binding:"required"`
 }
 
 type PickupRequest struct {
-	StoreWarehouseID uint            `json:"storeWarehouseId" binding:"required"`
-	Items            []InventoryItem `json:"items" binding:"required"`
+	StoreWarehouseID uint                    `json:"storeWarehouseId" binding:"required"`
+	Items            []ExistingInventoryItem `json:"items" binding:"required"`
+}
+
+type InventoryLevel struct {
+	StockMaterialID uint    `json:"stockMaterialId"`
+	Name            string  `json:"name"`
+	Quantity        float64 `json:"quantity"`
 }
 
 type InventoryLevelsResponse struct {
-	WarehouseID uint            `json:"warehouseId"`
-	Levels      []InventoryItem `json:"levels"`
+	WarehouseID uint             `json:"warehouseId"`
+	Levels      []InventoryLevel `json:"levels"`
 }
 
 type UpcomingExpirationResponse struct {
@@ -65,4 +81,16 @@ type DeliveryResponse struct {
 	Quantity        float64   `json:"quantity"`
 	DeliveryDate    time.Time `json:"deliveryDate"`
 	ExpirationDate  time.Time `json:"expirationDate"`
+}
+
+type DeliveryFilter struct {
+	WarehouseID *uint      `form:"warehouseID"`
+	StartDate   *time.Time `form:"startDate" time_format:"2006-01-02T15:04:05Z07:00"`
+	EndDate     *time.Time `form:"endDate" time_format:"2006-01-02T15:04:05Z07:00"`
+}
+
+type GetInventoryLevelsFilterQuery struct {
+	Search      *string `form:"search"`
+	WarehouseID *uint   `form:"warehouseId"`
+	Pagination  *utils.Pagination
 }

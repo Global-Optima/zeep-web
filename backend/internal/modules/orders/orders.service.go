@@ -55,7 +55,7 @@ func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderD
 		return nil, err
 	}
 
-	var orderDTOs []types.OrderDTO
+	orderDTOs := make([]types.OrderDTO, 0)
 	for _, order := range orders {
 		orderDTOs = append(orderDTOs, types.ConvertOrderToDTO(&order))
 	}

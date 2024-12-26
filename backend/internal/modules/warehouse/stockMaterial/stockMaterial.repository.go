@@ -5,6 +5,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,7 @@ type StockMaterialRepository interface {
 	CreateStockMaterials(stockMaterials []data.StockMaterial) error
 	CreateSupplierMaterial(supplierMaterial *data.SupplierMaterial) error
 	UpdateStockMaterial(stockMaterial *data.StockMaterial) error
-	UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialRequest) (*data.StockMaterial, error)
+	UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error)
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
 }
@@ -31,33 +32,38 @@ func NewStockMaterialRepository(db *gorm.DB) StockMaterialRepository {
 
 func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMaterialFilter) ([]data.StockMaterial, error) {
 	var stockMaterials []data.StockMaterial
-	query := r.db.Preload("Unit").Preload("Package")
+	query := r.db.Model(&data.StockMaterial{}).
+		Preload("Unit").
+		Preload("Package")
+
+	query = query.Where("is_active = ?", true)
 
 	if filter != nil {
-		if filter.Name != nil && *filter.Name != "" {
-			query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
+		if filter.Search != nil && *filter.Search != "" {
+			search := "%" + *filter.Search + "%"
+			query = query.Where("(name ILIKE ? OR category ILIKE ?)", search, search)
 		}
-		if filter.Category != nil && *filter.Category != "" {
-			query = query.Where("category = ?", *filter.Category)
+
+		if filter.LowStock != nil && *filter.LowStock {
+			query = query.Where("quantity < safety_stock")
 		}
-		if filter.LowStock != nil {
-			if *filter.LowStock {
-				query = query.Where("quantity < safety_stock")
-			}
-		}
+
 		if filter.ExpirationFlag != nil {
 			query = query.Where("expiration_flag = ?", *filter.ExpirationFlag)
 		}
+
 		if filter.IsActive != nil {
 			query = query.Where("is_active = ?", *filter.IsActive)
 		}
-	} else {
-
-		query = query.Where("is_active = ?", true)
 	}
 
-	err := query.Find(&stockMaterials).Error
+	var err error
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StockMaterial{})
 	if err != nil {
+		return nil, err
+	}
+
+	if err := query.Find(&stockMaterials).Error; err != nil {
 		return nil, err
 	}
 
@@ -103,7 +109,7 @@ func (r *stockMaterialRepository) UpdateStockMaterial(stockMaterial *data.StockM
 	return r.db.Save(stockMaterial).Error
 }
 
-func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialRequest) (*data.StockMaterial, error) {
+func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
 
 	if err := r.db.Preload("Unit").First(&stockMaterial, stockMaterialID).Error; err != nil {
