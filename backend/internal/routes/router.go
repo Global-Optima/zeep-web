@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
@@ -68,9 +67,9 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	{
 		router.GET("", handler.GetAllStores)
 		router.GET("/:id", handler.GetStoreByID)
-		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateStore)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStore)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeleteStore)
+		router.POST("", handler.CreateStore)
+		router.PUT("/:id", handler.UpdateStore)
+		router.DELETE("/:id", handler.DeleteStore)
 	}
 }
 
@@ -129,7 +128,7 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 }
 
 func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
-	router := r.Routes.Group("/store-warehouse-stock/:store_id")
+	router := r.Routes.Group("/store-stock/:store_id")
 	router.Use(middleware.EmployeeAuth(), middleware.MatchesStore())
 	{
 		router.GET("", handler.GetStoreWarehouseStockList)
@@ -142,19 +141,19 @@ func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWare
 }
 
 func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMaterialHandler) {
-	router := r.Routes.Group("/stock-material")
+	router := r.Routes.Group("/stock-materials")
 	{
 		router.GET("", handler.GetAllStockMaterials)
 		router.GET("/:id", handler.GetStockMaterialByID)
-		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateStockMaterial)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStockMaterial)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeleteStockMaterial)
-		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeactivateStockMaterial)
+		router.POST("", handler.CreateStockMaterial)
+		router.PUT("/:id", handler.UpdateStockMaterial)
+		router.DELETE("/:id", handler.DeleteStockMaterial)
+		router.PATCH("/:id/deactivate", handler.DeactivateStockMaterial)
 	}
 }
 
 func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
-	router := r.Routes.Group("/barcode")
+	router := r.Routes.Group("/barcodes")
 	{
 		router.POST("/generate", handler.GenerateBarcode)
 		router.GET("/:barcode", handler.RetrieveStockMaterialByBarcode)
@@ -163,28 +162,23 @@ func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
 }
 
 func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
-	router := r.Routes.Group("/inventory")
+	router := r.Routes.Group("/warehouse-stocks")
 	{
-		stockRoutes := router.Group("/stock")
-		{
-			stockRoutes.POST("/receive", handler.ReceiveInventory)
-			stockRoutes.GET("/levels/:warehouseID", handler.GetInventoryLevels)
-			stockRoutes.POST("/pickup", handler.PickupStock) // store
-			stockRoutes.POST("/transfer", handler.TransferInventory)
-			stockRoutes.GET("/deliveries", handler.GetDeliveries)
-		}
-
-		expirationRoutes := router.Group("/expiration")
+		router.POST("/receive", handler.ReceiveInventory)
+		router.GET("/levels/:warehouseID", handler.GetInventoryLevels)
+		router.POST("/pickup", handler.PickupStock) // store
+		router.POST("/transfer", handler.TransferInventory)
+		router.GET("/deliveries", handler.GetDeliveries)
+		expirationRoutes := router.Group("/expirations")
 		{
 			expirationRoutes.GET("/:warehouseID", handler.GetExpiringItems)
 			expirationRoutes.POST("/extend", handler.ExtendExpiration)
 		}
-
 	}
 }
 
 func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
-	router := r.Routes.Group("/warehouse")
+	router := r.Routes.Group("/warehouses")
 	{
 		warehouseRoutes := router.Group("")
 		{
@@ -215,7 +209,8 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
 	router := r.Routes.Group("/stock-requests")
 	{
-		router.GET("", handler.GetStockRequests)                                      // Get all stock requests with filtering
+		router.GET("", handler.GetStockRequests)
+		router.GET("/:id", handler.GetStockRequestByID)
 		router.GET("/low-stock", handler.GetLowStockIngredients)                      // Get low-stock ingredients
 		router.GET("/stock-materials", handler.GetAllStockMaterials)                  // Get marketplace products
 		router.POST("", handler.CreateStockRequest)                                   // Create a new stock request (cart creation)

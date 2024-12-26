@@ -1,12 +1,14 @@
 package stockRequests
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type StockRequestHandler struct {
@@ -39,12 +41,14 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
-	var filter types.StockRequestFilter
+	var filter types.GetStockRequestsFilter
 
 	if err := c.ShouldBindQuery(&filter); err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
+
+	filter.Pagination = utils.ParsePagination(c)
 
 	requests, err := h.service.GetStockRequests(filter)
 	if err != nil {
@@ -52,7 +56,28 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, requests, nil)
+	utils.SendSuccessResponseWithPagination(c, requests, filter.Pagination)
+}
+
+func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
+	idParam := c.Param("id")
+	stockRequestID, err := strconv.Atoi(idParam)
+	if err != nil || stockRequestID <= 0 {
+		utils.SendBadRequestError(c, "Invalid stock request ID")
+		return
+	}
+
+	request, err := h.service.GetStockRequestByID(uint(stockRequestID))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.SendNotFoundError(c, "Stock request not found")
+		} else {
+			utils.SendInternalServerError(c, err.Error())
+		}
+		return
+	}
+
+	utils.SendSuccessResponse(c, request)
 }
 
 func (h *StockRequestHandler) UpdateStockRequestStatus(c *gin.Context) {

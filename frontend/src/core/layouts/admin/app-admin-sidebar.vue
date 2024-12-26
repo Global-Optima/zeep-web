@@ -37,6 +37,7 @@ import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { EmployeeRole } from '@/modules/employees/models/employees.models'
 import {
   Apple,
+  Blocks,
   ChartBar,
   FileBox,
   LayoutList,
@@ -44,6 +45,7 @@ import {
   Package,
   ShoppingCart,
   Store,
+  Truck,
   Users,
   Warehouse,
   type LucideIcon,
@@ -77,18 +79,21 @@ const canAccessRoute = (accessRoles: EmployeeRole[]) => {
 // Navigation items
 const navItems: NavItem[] = [
   { name: 'Аналитика', routeKey: 'ADMIN_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
-  { name: 'Аналитика магазина', routeKey: 'ADMIN_STORE_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRole.MANAGER] },
-  { name: 'Заказы магазина', routeKey: 'ADMIN_STORE_ORDERS', icon: ShoppingCart, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Аналитика', routeKey: 'ADMIN_STORE_DASHBOARD', icon: ChartBar, accessRoles: [EmployeeRole.MANAGER] },
+  { name: 'Заказы', routeKey: 'ADMIN_STORE_ORDERS', icon: ShoppingCart, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
   { name: 'Товары', routeKey: 'ADMIN_PRODUCTS', icon: Package, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Топпинги', routeKey: 'ADMIN_ADDITIVES', icon: ListPlus, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
-  { name: 'Товары магазина', routeKey: 'ADMIN_STORE_PRODUCTS', icon: Package, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
-  { name: 'Склад магазина', routeKey: 'ADMIN_STORE_STOCKS', icon: Warehouse, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Товары', routeKey: 'ADMIN_STORE_PRODUCTS', icon: Package, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Склад', routeKey: 'ADMIN_STORE_STOCKS', icon: Warehouse, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
   { name: 'Сотрудники', routeKey: 'ADMIN_EMPLOYEES', icon: Users, accessRoles: [EmployeeRole.MANAGER] },
   { name: 'Ингредиенты', routeKey: 'ADMIN_INGREDIENTS', icon: Apple, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Магазины', routeKey: 'ADMIN_STORES', icon: Store, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Поставщики', routeKey: 'ADMIN_SUPPLIERS', icon: FileBox, accessRoles: [EmployeeRole.WAREHOUSE, EmployeeRole.DIRECTOR] },
   { name: 'Категории товаров', routeKey: 'ADMIN_PRODUCT_CATEGORIES', icon: LayoutList, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Категории топпингов', routeKey: 'ADMIN_ADDITIVE_CATEGORIES', icon: LayoutList, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
+  { name: 'Запросы на склад', routeKey: "ADMIN_STORE_STOCK_REQUESTS", icon: Truck, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
+  { name: 'Запросы на склад', routeKey: "ADMIN_WAREHOUSE_STOCK_REQUESTS", icon: Truck, accessRoles: [EmployeeRole.WAREHOUSE] },
+  { name: 'Запасы', routeKey: "ADMIN_WAREHOUSE_STOCKS", icon: Blocks, accessRoles: [EmployeeRole.WAREHOUSE] },
 ];
 
 // Computed list of accessible navigation items

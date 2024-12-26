@@ -63,12 +63,14 @@ type LowStockIngredientResponse struct {
 	LowStockThreshold float64 `json:"lowStockThreshold"`
 }
 
-type StockRequestFilter struct {
-	StoreID     *uint      `json:"storeId,omitempty"`
-	WarehouseID *uint      `json:"warehouseId,omitempty"`
-	Status      *string    `json:"status,omitempty"`
-	StartDate   *time.Time `json:"startDate,omitempty"`
-	EndDate     *time.Time `json:"endDate,omitempty"`
+type GetStockRequestsFilter struct {
+	Pagination  *utils.Pagination
+	StoreID     *uint      `form:"storeId"`
+	WarehouseID *uint      `form:"warehouseId"`
+	StartDate   *time.Time `form:"startDate"`
+	EndDate     *time.Time `form:"endDate"`
+
+	Statuses []data.StockRequestStatus `form:"statuses[]"`
 }
 
 type StockMaterialDTO struct {

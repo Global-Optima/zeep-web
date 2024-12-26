@@ -18,7 +18,7 @@ type StockRequestRepository interface {
 	ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error
 	UpdateStockRequestIngredientDates(stockRequestIngredientID uint, dates *types.UpdateIngredientDates) error
 
-	GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error)
+	GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error)
 	GetStockRequestByID(requestID uint) (*data.StockRequest, error)
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
 	AddRejectionComment(requestID uint, comment string) error
@@ -62,7 +62,7 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientDates(stockRequestI
 		Updates(dates).Error
 }
 
-func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilter) ([]data.StockRequest, error) {
+func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error) {
 	var requests []data.StockRequest
 	query := r.db.Preload("Ingredients.StockMaterial").
 		Preload("Ingredients.StockMaterial.StockMaterialCategory").
@@ -80,8 +80,8 @@ func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilte
 	if filter.WarehouseID != nil {
 		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
 	}
-	if filter.Status != nil {
-		query = query.Where("status = ?", *filter.Status)
+	if len(filter.Statuses) > 0 {
+		query = query.Where("status IN (?)", filter.Statuses)
 	}
 	if filter.StartDate != nil {
 		query = query.Where("created_at >= ?", *filter.StartDate)
@@ -90,7 +90,15 @@ func (r *stockRequestRepository) GetStockRequests(filter types.StockRequestFilte
 		query = query.Where("created_at <= ?", *filter.EndDate)
 	}
 
-	err := query.Find(&requests).Error
+	query = query.Order("created_at DESC")
+
+	var err error
+	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StockRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
+	}
+
+	err = query.Find(&requests).Error
 	return requests, err
 }
 

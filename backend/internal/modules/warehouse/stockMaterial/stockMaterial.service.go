@@ -9,10 +9,10 @@ import (
 )
 
 type StockMaterialService interface {
-	GetAllStockMaterials(filter *types.StockMaterialFilter) ([]types.StockMaterialResponse, error)
-	GetStockMaterialByID(stockMaterialID uint) (*types.StockMaterialResponse, error)
-	CreateStockMaterial(req *types.CreateStockMaterialRequest) (*types.StockMaterialResponse, error)
-	UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialRequest) (*types.StockMaterialResponse, error)
+	GetAllStockMaterials(filter *types.StockMaterialFilter) ([]types.StockMaterialsDTO, error)
+	GetStockMaterialByID(stockMaterialID uint) (*types.StockMaterialsDTO, error)
+	CreateStockMaterial(req *types.CreateStockMaterialDTO) (*types.StockMaterialsDTO, error)
+	UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialDTO) (*types.StockMaterialsDTO, error)
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
 }
@@ -27,13 +27,13 @@ func NewStockMaterialService(repo StockMaterialRepository) StockMaterialService 
 	}
 }
 
-func (s *stockMaterialService) GetAllStockMaterials(filter *types.StockMaterialFilter) ([]types.StockMaterialResponse, error) {
+func (s *stockMaterialService) GetAllStockMaterials(filter *types.StockMaterialFilter) ([]types.StockMaterialsDTO, error) {
 	stockMaterials, err := s.repo.GetAllStockMaterials(filter)
 	if err != nil {
 		return nil, err
 	}
 
-	var stockMaterialResponses []types.StockMaterialResponse
+	stockMaterialResponses := make([]types.StockMaterialsDTO, 0)
 	for _, stockMaterial := range stockMaterials {
 		stockMaterialResponses = append(stockMaterialResponses, *types.ConvertStockMaterialToStockMaterialResponse(&stockMaterial))
 	}
@@ -41,7 +41,7 @@ func (s *stockMaterialService) GetAllStockMaterials(filter *types.StockMaterialF
 	return stockMaterialResponses, nil
 }
 
-func (s *stockMaterialService) GetStockMaterialByID(stockMaterialID uint) (*types.StockMaterialResponse, error) {
+func (s *stockMaterialService) GetStockMaterialByID(stockMaterialID uint) (*types.StockMaterialsDTO, error) {
 	stockMaterial, err := s.repo.GetStockMaterialByID(stockMaterialID)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (s *stockMaterialService) GetStockMaterialByID(stockMaterialID uint) (*type
 	return stockMaterialResponse, nil
 }
 
-func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMaterialRequest) (*types.StockMaterialResponse, error) {
+func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMaterialDTO) (*types.StockMaterialsDTO, error) {
 	stockMaterial := types.ConvertCreateStockMaterialRequestToStockMaterial(req)
 
 	err := s.repo.CreateStockMaterial(stockMaterial)
@@ -77,7 +77,7 @@ func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMateria
 	return stockMaterialResponse, nil
 }
 
-func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialRequest) (*types.StockMaterialResponse, error) {
+func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialDTO) (*types.StockMaterialsDTO, error) {
 	updated, err := s.repo.UpdateStockMaterialFields(stockMaterialID, *req)
 	if err != nil {
 		return nil, err

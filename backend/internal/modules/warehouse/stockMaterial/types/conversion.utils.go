@@ -6,7 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialRequest) *data.StockMaterial {
+func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDTO) *data.StockMaterial {
 	return &data.StockMaterial{
 		Name:                   req.Name,
 		Description:            req.Description,
@@ -20,8 +20,8 @@ func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialRe
 	}
 }
 
-func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMaterial) *StockMaterialResponse {
-	return &StockMaterialResponse{
+func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMaterial) *StockMaterialsDTO {
+	return &StockMaterialsDTO{
 		ID:                     stockMaterial.ID,
 		Name:                   stockMaterial.Name,
 		Description:            stockMaterial.Description,
@@ -38,6 +38,6 @@ func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMateri
 	}
 }
 
-func ConvertUpdateStockMaterialRequestToStockMaterial(stockMaterial *data.StockMaterial, req *UpdateStockMaterialRequest) error {
+func ConvertUpdateStockMaterialRequestToStockMaterial(stockMaterial *data.StockMaterial, req *UpdateStockMaterialDTO) error {
 	return ValidateAndApplyUpdate(stockMaterial, req)
 }

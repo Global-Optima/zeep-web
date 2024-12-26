@@ -7,7 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockMaterialRequest) error {
+func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockMaterialDTO) error {
 	if req.Name != nil {
 		if *req.Name == "" {
 			return errors.New("stockMaterial name cannot be empty")

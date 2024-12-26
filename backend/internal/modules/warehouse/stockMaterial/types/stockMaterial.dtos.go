@@ -1,6 +1,8 @@
 package types
 
-type CreateStockMaterialRequest struct {
+import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+
+type CreateStockMaterialDTO struct {
 	Name                   string  `json:"name" binding:"required"`
 	Description            string  `json:"description"`
 	SafetyStock            float64 `json:"safetyStock" binding:"required,gt=0"`
@@ -9,10 +11,10 @@ type CreateStockMaterialRequest struct {
 	SupplierID             uint    `json:"supplierId" binding:"required"`
 	CategoryID             uint    `json:"categoryId" binding:"required"`
 	Barcode                string  `json:"barcode"`
-	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"` // in days, default is 1095 (3 years)
+	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
 }
 
-type UpdateStockMaterialRequest struct {
+type UpdateStockMaterialDTO struct {
 	Name                   *string  `json:"name"`
 	Description            *string  `json:"description"`
 	SafetyStock            *float64 `json:"safetyStock" binding:"omitempty,gt=0"`
@@ -20,11 +22,11 @@ type UpdateStockMaterialRequest struct {
 	UnitID                 *uint    `json:"unitId"`
 	CategoryID             *uint    `json:"categoryId" binding:"required"`
 	Barcode                *string  `json:"barcode"`
-	ExpirationPeriodInDays *int     `json:"expirationPeriodInDays"` // in days
+	ExpirationPeriodInDays *int     `json:"expirationPeriodInDays"`
 	IsActive               *bool    `json:"isActive"`
 }
 
-type StockMaterialResponse struct {
+type StockMaterialsDTO struct {
 	ID                     uint    `json:"id"`
 	Name                   string  `json:"name"`
 	Description            string  `json:"description"`
@@ -34,17 +36,17 @@ type StockMaterialResponse struct {
 	UnitName               string  `json:"unitName,omitempty"`
 	Category               string  `json:"category"`
 	Barcode                string  `json:"barcode"`
-	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"` // in days
+	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
 	IsActive               bool    `json:"isActive"`
 	CreatedAt              string  `json:"createdAt"`
 	UpdatedAt              string  `json:"updatedAt"`
 }
 
 type StockMaterialFilter struct {
-	Name           *string
-	Category       *string
-	LowStock       *bool
-	ExpirationFlag *bool
-	IsActive       *bool
-	SupplierID     *uint
+	Search         *string `form:"search"`
+	LowStock       *bool   `form:"lowStock"`
+	ExpirationFlag *bool   `form:"expirationFlag"`
+	IsActive       *bool   `form:"isActive"`
+	SupplierID     *uint   `form:"supplierId"`
+	Pagination     *utils.Pagination
 }
