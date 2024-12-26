@@ -84,3 +84,10 @@ func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 		},
 	}
 }
+
+func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
+	return &StoreAdditiveDTO{
+		AdditiveDTO: *ConvertToAdditiveDTO(&storeAdditive.Additive),
+		StorePrice:  storeAdditive.Price,
+	}
+}

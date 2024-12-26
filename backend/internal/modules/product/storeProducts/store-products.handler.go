@@ -3,7 +3,6 @@ package storeProducts
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -24,7 +23,7 @@ func NewStoreProductHandler(service StoreProductService) *StoreProductHandler {
 }
 
 func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
-	storeID, errH := getStoreId(c)
+	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -76,7 +75,7 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := getStoreId(c)
+	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -126,7 +125,7 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := getStoreId(c)
+	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -148,7 +147,7 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 	}
 
 	dtoLength := len(dto)
-	storeID, errH := getStoreId(c)
+	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -178,7 +177,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := getStoreId(c)
+	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -199,7 +198,7 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := getStoreId(c)
+	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -211,25 +210,4 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		return
 	}
 	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)
-}
-
-// getStoreId returns the retrieved id and HandlerError
-func getStoreId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
-	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
-	if err != nil {
-		return 0, types.ErrUnauthorizedAccess
-	}
-
-	var storeID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleDirector {
-		storeID = claims.WorkplaceID
-	} else {
-		id, err := strconv.ParseUint(c.Query("storeId"), 10, 64)
-		if err != nil {
-			return 0, types.ErrInvalidStoreID
-		}
-		storeID = uint(id)
-	}
-
-	return storeID, nil
 }

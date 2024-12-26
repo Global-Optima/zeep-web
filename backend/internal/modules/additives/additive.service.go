@@ -17,6 +17,7 @@ type AdditiveService interface {
 
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
 	GetAdditiveByID(additiveID uint) (*types.AdditiveDTO, error)
+	GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]types.StoreAdditiveDTO, error)
 	CreateAdditive(dto *types.CreateAdditiveDTO) error
 	UpdateAdditive(dto *types.UpdateAdditiveDTO) error
 	DeleteAdditive(additiveID uint) error
@@ -83,8 +84,9 @@ func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategories
 func (s *additiveService) CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) error {
 	category := types.ConvertToAdditiveCategoryModel(dto)
 	if err := s.repo.CreateAdditiveCategory(category); err != nil {
-		s.logger.Error("Failed to create additive category:", err)
-		return err
+		wrappedErr := utils.WrapError("failed to create additive category", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 	return nil
 }
@@ -92,8 +94,9 @@ func (s *additiveService) CreateAdditiveCategory(dto *types.CreateAdditiveCatego
 func (s *additiveService) UpdateAdditiveCategory(dto *types.UpdateAdditiveCategoryDTO) error {
 	existingCategory, err := s.repo.GetAdditiveCategoryByID(dto.ID)
 	if err != nil {
-		s.logger.Error("Failed to fetch existing additive category:", err)
-		return err
+		wrappedErr := utils.WrapError("failed to fetch existing additive categor", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	if existingCategory == nil {
@@ -102,16 +105,18 @@ func (s *additiveService) UpdateAdditiveCategory(dto *types.UpdateAdditiveCatego
 
 	updatedCategory := types.ConvertToUpdatedAdditiveCategoryModel(dto, existingCategory)
 	if err := s.repo.UpdateAdditiveCategory(updatedCategory); err != nil {
-		s.logger.Error("Failed to update additive category:", err)
-		return err
+		wrappedErr := utils.WrapError("failed to update additive category", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 	return nil
 }
 
 func (s *additiveService) DeleteAdditiveCategory(categoryID uint) error {
 	if err := s.repo.DeleteAdditiveCategory(categoryID); err != nil {
-		s.logger.Error("Failed to delete additive category:", err)
-		return err
+		wrappedErr := utils.WrapError("failed to delete additive category", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 	return nil
 }
@@ -119,8 +124,9 @@ func (s *additiveService) DeleteAdditiveCategory(categoryID uint) error {
 func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryResponseDTO, error) {
 	category, err := s.repo.GetAdditiveCategoryByID(categoryID)
 	if err != nil {
-		s.logger.Error("Failed to fetch additive category:", err)
-		return nil, err
+		wrappedErr := utils.WrapError("failed to fetch additive category", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	if category == nil {
@@ -133,38 +139,41 @@ func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.Addit
 func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error) {
 	additives, err := s.repo.GetAdditives(filter)
 	if err != nil {
-		return nil, err
+		wrappedError := utils.WrapError("failed to retrieve additives", err)
+		s.logger.Error(wrappedError)
+		return nil, wrappedError
 	}
 
 	var additiveDTOs []types.AdditiveDTO
 	for _, additive := range additives {
-		additiveDTOs = append(additiveDTOs, types.AdditiveDTO{
-			ID:          additive.ID,
-			Name:        additive.Name,
-			Description: additive.Description,
-			Price:       additive.BasePrice,
-			ImageURL:    additive.ImageURL,
-			Size:        additive.Size,
-			Category: struct {
-				ID               uint   `json:"id"`
-				Name             string `json:"name"`
-				IsMultipleSelect bool   `json:"isMultipleSelect"`
-			}{
-				ID:               additive.Category.ID,
-				Name:             additive.Category.Name,
-				IsMultipleSelect: additive.Category.IsMultipleSelect,
-			},
-		})
+		additiveDTOs = append(additiveDTOs, *types.ConvertToAdditiveDTO(&additive))
 	}
 
 	return additiveDTOs, nil
 }
 
+func (s *additiveService) GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]types.StoreAdditiveDTO, error) {
+	additives, err := s.repo.GetStoreAdditives(storeID, filter)
+	if err != nil {
+		wrappedError := utils.WrapError("failed to retrieve additives", err)
+		s.logger.Error(wrappedError)
+		return nil, wrappedError
+	}
+
+	storeAdditiveDTOs := make([]types.StoreAdditiveDTO, len(additives))
+	for i, additive := range additives {
+		storeAdditiveDTOs[i] = *types.ConvertToStoreAdditiveDTO(&additive)
+	}
+
+	return storeAdditiveDTOs, nil
+}
+
 func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) error {
 	additive := types.ConvertToAdditiveModel(dto)
 	if err := s.repo.CreateAdditive(additive); err != nil {
-		s.logger.Error("Failed to create additive:", err)
-		return err
+		wrappedErr := utils.WrapError("failed to add additive", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 	return nil
 }
@@ -172,8 +181,9 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) error {
 func (s *additiveService) UpdateAdditive(dto *types.UpdateAdditiveDTO) error {
 	existingAdditive, err := s.repo.GetAdditiveByID(dto.ID)
 	if err != nil {
-		s.logger.Error("Failed to fetch existing additive:", err)
-		return err
+		wrappedErr := utils.WrapError("failed to update additive", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	if existingAdditive == nil {
@@ -190,8 +200,9 @@ func (s *additiveService) UpdateAdditive(dto *types.UpdateAdditiveDTO) error {
 
 func (s *additiveService) DeleteAdditive(additiveID uint) error {
 	if err := s.repo.DeleteAdditive(additiveID); err != nil {
-		s.logger.Error("Failed to delete additive:", err)
-		return err
+		wrappedErr := utils.WrapError("failed to delete additive", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 	return nil
 }
@@ -199,8 +210,9 @@ func (s *additiveService) DeleteAdditive(additiveID uint) error {
 func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDTO, error) {
 	additive, err := s.repo.GetAdditiveByID(additiveID)
 	if err != nil {
-		s.logger.Error("Failed to fetch additive:", err)
-		return nil, err
+		wrappedErr := utils.WrapError("failed to fetch additive by ID", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	if additive == nil {

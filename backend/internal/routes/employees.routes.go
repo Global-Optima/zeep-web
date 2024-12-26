@@ -11,6 +11,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
@@ -32,6 +33,17 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	}
 }
 
+func (r *Router) RegisterRecipeRoutes(handler *recipes.RecipeHandler) {
+	router := r.EmployeeRoutes.Group("/products/recipe-steps")
+	{
+		router.GET("/product/:product-id", handler.GetRecipeSteps)
+		router.GET("/step/:id", handler.GetRecipeStepDetails)
+		router.POST("/product/:product-id", handler.CreateRecipeSteps)
+		router.PUT("/step/:id", handler.UpdateRecipeSteps)
+		router.DELETE("/step/:id", handler.DeleteRecipeSteps)
+	}
+}
+
 func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductHandler) {
 	router := r.EmployeeRoutes.Group("/store-products")
 	{
@@ -41,17 +53,6 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 		router.POST("/multiple", handler.CreateMultipleStoreProducts)
 		router.PUT("/:id", handler.UpdateStoreProduct)
 		router.DELETE("/:id", handler.DeleteStoreProduct)
-	}
-}
-
-func (r *Router) RegisterRecipeRoutes(handler *recipes.RecipeHandler) {
-	router := r.EmployeeRoutes.Group("/products/recipe-steps")
-	{
-		router.GET("/product/:product-id", handler.GetRecipeSteps)
-		router.GET("/step/:id", handler.GetRecipeStepDetails)
-		router.POST("/product/:product-id", handler.CreateRecipeSteps)
-		router.PUT("/step/:id", handler.UpdateRecipeSteps)
-		router.DELETE("/step/:id", handler.DeleteRecipeSteps)
 	}
 }
 
@@ -92,6 +93,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.EmployeeRoutes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditives)
+		router.GET("/store/:id", handler.GetStoreAdditives)
 		router.POST("", handler.CreateAdditive)
 		router.PUT("", handler.UpdateAdditive)
 		router.DELETE("/:id", handler.DeleteAdditive)
@@ -170,7 +172,6 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 
 func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
 	router := r.EmployeeRoutes.Group("/store-warehouse-stock")
-	router.Use(middleware.EmployeeAuth())
 	{
 		router.GET("", handler.GetStoreWarehouseStockList)
 		router.GET("/:id", handler.GetStoreWarehouseStockById)
@@ -203,25 +204,63 @@ func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
 }
 
 func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
-	router := r.EmployeeRoutes.Group("/inventory")
+	router := r.EmployeeRoutes.Group("/warehouse-stocks")
 	{
-		router.POST("/receive", handler.ReceiveInventory)
-		router.GET("/levels/:warehouseID", handler.GetInventoryLevels)
-		router.POST("/pickup", handler.PickupStock) // store
-		router.POST("/transfer", handler.TransferInventory)
+		stockRoutes := router.Group("/stock")
+		{
+			stockRoutes.GET("", handler.GetInventoryLevels)
+			stockRoutes.POST("/receive", handler.ReceiveInventory)
+			stockRoutes.POST("/pickup", handler.PickupStock)
+			stockRoutes.POST("/transfer", handler.TransferInventory)
+			stockRoutes.GET("/deliveries", handler.GetDeliveries)
+		}
 
-		router.GET("/expiration/upcoming/:warehouseID", handler.GetExpiringItems)
-		router.POST("/expiration/extend", handler.ExtendExpiration)
-
-		router.GET("/deliveries", handler.GetDeliveries)
+		expirationRoutes := router.Group("/expiration")
+		{
+			expirationRoutes.GET("/:warehouseID", handler.GetExpiringItems)
+			expirationRoutes.POST("/extend", handler.ExtendExpiration)
+		}
 	}
 }
 
 func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
-	router := r.EmployeeRoutes.Group("/warehouse") // store
+	router := r.EmployeeRoutes.Group("/warehouses")
 	{
-		router.POST("/stores", handler.AssignStoreToWarehouse)              // store
-		router.PUT("/stores/:storeId", handler.ReassignStore)               // store
-		router.GET("/:warehouseId/stores", handler.GetAllStoresByWarehouse) // store
+		warehouseRoutes := router.Group("")
+		{
+			warehouseRoutes.POST("", handler.CreateWarehouse)                // Create a new warehouse
+			warehouseRoutes.GET("", handler.GetAllWarehouses)                // Get all warehouses
+			warehouseRoutes.GET("/:warehouseId", handler.GetWarehouseByID)   // Get a specific warehouse by ID
+			warehouseRoutes.PUT("/:warehouseId", handler.UpdateWarehouse)    // Update warehouse details
+			warehouseRoutes.DELETE("/:warehouseId", handler.DeleteWarehouse) // Delete a warehouse
+		}
+
+		storeRoutes := router.Group("/stores")
+		{
+			storeRoutes.POST("", handler.AssignStoreToWarehouse)              // Assign a store to a warehouse
+			storeRoutes.PUT("/:storeId", handler.ReassignStore)               // Reassign a store to another warehouse
+			storeRoutes.GET("/:warehouseId", handler.GetAllStoresByWarehouse) // Get all stores assigned to a specific warehouse
+		}
+
+		stockRoutes := router.Group("/stock")
+		{
+			stockRoutes.POST("/add", handler.AddToStock)
+			stockRoutes.POST("/deduct", handler.DeductFromStock)
+			stockRoutes.GET("", handler.GetStock)
+			stockRoutes.POST("/reset", handler.ResetStock)
+		}
+	}
+}
+
+func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
+	router := r.EmployeeRoutes.Group("/stock-requests")
+	{
+		router.GET("", handler.GetStockRequests)
+		router.GET("/:id", handler.GetStockRequestByID)
+		router.GET("/low-stock", handler.GetLowStockIngredients)
+		router.GET("/marketplace-products", handler.GetAllStockMaterials)
+		router.POST("", handler.CreateStockRequest)
+		router.PUT("/:requestId/status", handler.UpdateStockRequestStatus)
+		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)
 	}
 }

@@ -1,7 +1,6 @@
 package ingredients
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"go.uber.org/zap"
 )
@@ -10,8 +9,8 @@ type IngredientService interface {
 	CreateIngredient(dto *types.CreateIngredientDTO) error
 	UpdateIngredient(ingredientID uint, dto *types.UpdateIngredientDTO) error
 	DeleteIngredient(ingredientID uint) error
-	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
-	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
+	GetIngredientByID(ingredientID uint) (*types.IngredientResponseDTO, error)
+	GetIngredients(filter *types.IngredientFilter) ([]types.IngredientResponseDTO, error)
 }
 
 type ingredientService struct {
@@ -65,20 +64,22 @@ func (s *ingredientService) DeleteIngredient(ingredientID uint) error {
 	return nil
 }
 
-func (s *ingredientService) GetIngredientByID(ingredientID uint) (*data.Ingredient, error) {
+func (s *ingredientService) GetIngredientByID(ingredientID uint) (*types.IngredientResponseDTO, error) {
 	ingredient, err := s.repo.GetIngredientByID(ingredientID)
 	if err != nil {
 		s.logger.Error("Failed to fetch ingredient by ID:", err)
 		return nil, err
 	}
-	return ingredient, nil
+
+	return types.ConvertToIngredientResponseDTO(ingredient), nil
 }
 
-func (s *ingredientService) GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error) {
+func (s *ingredientService) GetIngredients(filter *types.IngredientFilter) ([]types.IngredientResponseDTO, error) {
 	ingredients, err := s.repo.GetIngredients(filter)
 	if err != nil {
 		s.logger.Error("Failed to fetch ingredients:", err)
 		return nil, err
 	}
-	return ingredients, nil
+
+	return types.ConvertToIngredientResponseDTOs(ingredients), nil
 }

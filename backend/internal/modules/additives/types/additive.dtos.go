@@ -31,6 +31,11 @@ type AdditiveDTO struct {
 	} `json:"category"`
 }
 
+type StoreAdditiveDTO struct {
+	AdditiveDTO
+	StorePrice float64 `json:"storePrice"`
+}
+
 type AdditiveCategoryItemDTO struct {
 	ID          uint    `json:"id"`
 	Name        string  `json:"name"`

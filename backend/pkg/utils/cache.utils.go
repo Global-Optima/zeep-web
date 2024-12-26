@@ -109,8 +109,6 @@ func BuildCacheKeyFromFilter(module string, filter FilterProvider) string {
 	if pagination := filter.GetPagination(); pagination != nil {
 		filters["page"] = strconv.Itoa(pagination.Page)
 		filters["pageSize"] = strconv.Itoa(pagination.PageSize)
-		filters["totalCount"] = strconv.Itoa(pagination.TotalCount)
-		filters["totalPages"] = strconv.Itoa(pagination.TotalPages)
 	}
 
 	// Extract sort fields

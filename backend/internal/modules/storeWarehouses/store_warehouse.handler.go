@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
@@ -23,9 +22,9 @@ func NewStoreWarehouseHandler(service StoreWarehouseService) *StoreWarehouseHand
 func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 	var dto types.AddStockDTO
 
-	storeID, err := fetchStoreId(c)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse store id")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -48,9 +47,9 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 	var dto types.AddMultipleStockDTO
 
-	storeID, err := fetchStoreId(c)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse store id")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -59,7 +58,7 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	err = h.service.AddMultipleStock(storeID, &dto)
+	err := h.service.AddMultipleStock(storeID, &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to add new multiple stocks")
 		return
@@ -71,9 +70,9 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
-	storeID, err := fetchStoreId(c)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse store id")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -93,9 +92,9 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
-	storeID, err := fetchStoreId(c)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse store id")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -117,9 +116,9 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 	var input types.UpdateStockDTO
 
-	storeID, err := fetchStoreId(c)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse store id")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -144,9 +143,9 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
-	storeID, err := fetchStoreId(c)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse store id")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -163,30 +162,4 @@ func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "stock deleted successfully"})
-}
-
-func fetchStoreId(c *gin.Context) (uint, error) {
-	employeeClaims, err := contexts.GetEmployeeClaimsFromCtx(c)
-	if err != nil {
-		return 0, err
-	}
-
-	if employeeClaims.Role == data.RoleAdmin || employeeClaims.Role == data.RoleDirector {
-		storeId, err := strconv.ParseUint(c.Query("store_id"), 10, 64)
-		if err != nil {
-			return 0, err
-		}
-		if storeId == 0 {
-			return 0, errors.New("invalid store id: id cannot be 0")
-		}
-		return uint(storeId), nil
-	}
-
-	if employeeClaims.EmployeeType == data.StoreEmployeeType {
-		if employeeClaims.WorkplaceID == 0 {
-			return 0, errors.New("invalid store id: id cannot be 0")
-		}
-		return employeeClaims.WorkplaceID, nil
-	}
-	return 0, fmt.Errorf("invalid employee type: forbidden for %s", data.StoreEmployeeType)
 }

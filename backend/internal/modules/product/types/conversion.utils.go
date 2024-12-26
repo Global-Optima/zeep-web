@@ -142,7 +142,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 
 	for _, ingredientID := range dto.Ingredients {
 		productSize.ProductIngredients = append(productSize.ProductIngredients, data.ProductIngredient{
-			ItemIngredientID: ingredientID,
+			IngredientID: ingredientID,
 		})
 	}
 	return productSize
@@ -199,7 +199,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	for _, ingredientID := range dto.Ingredients {
 		var temp data.ProductIngredient
 		temp = data.ProductIngredient{
-			ItemIngredientID: ingredientID,
+			IngredientID: ingredientID,
 		}
 		ingredients = append(ingredients, temp)
 	}
@@ -209,19 +209,4 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 		Additives:   additives,
 		Ingredients: ingredients,
 	}
-}
-
-func ToProductSizesModels(dtoSizes []CreateProductSizeDTO, productID uint) []data.ProductSize {
-	var sizes []data.ProductSize
-	for _, size := range dtoSizes {
-		sizes = append(sizes, data.ProductSize{
-			ProductID: productID,
-			Name:      size.Name,
-			Measure:   size.Measure,
-			BasePrice: size.BasePrice,
-			Size:      size.Size,
-			IsDefault: size.IsDefault,
-		})
-	}
-	return sizes
 }
