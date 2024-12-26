@@ -17,7 +17,6 @@ type StoreProductRepository interface {
 	DeleteStoreProduct(storeID, storeProductID uint) error
 
 	GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
-	//GetStoreProductSizes(storeID, storeProductSizeID uint, filter *types.StoreProductSizesFilterDTO) ([]data.StoreProductSize, error)
 	CreateStoreProductSize(storeProductSize *data.StoreProductSize) (uint, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
@@ -109,6 +108,10 @@ func (r *storeProductRepository) CreateMultipleStoreProducts(storeProducts []dat
 }
 
 func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error {
+	if updateModels == nil {
+		return types.ErrNoUpdateContext
+	}
+
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&data.StoreProduct{}).
 			Where("store_id = ? AND id = ?", storeID, storeProductID).
@@ -118,7 +121,7 @@ func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID 
 			return err
 		}
 
-		if updateModels.StoreProductSizes != nil && len(updateModels.StoreProductSizes) > 0 {
+		if len(updateModels.StoreProductSizes) > 0 {
 			err = tx.Where("store_product_id = ?", storeProductID).
 				Delete(&data.StoreProductSize{}).Error
 			if err != nil {

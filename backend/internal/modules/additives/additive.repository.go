@@ -137,35 +137,6 @@ func (r *additiveRepository) GetStoreAdditives(storeID uint, filter *types.Addit
 	return storeAdditives, nil
 }
 
-func filterAdditives(query *gorm.DB, filter *types.AdditiveFilterQuery, model interface{}) (*gorm.DB, error) {
-	if filter.Search != nil && *filter.Search != "" {
-		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
-	}
-
-	if filter.MinPrice != nil {
-		query = query.Where("additives.base_price >= ?", *filter.MinPrice)
-	}
-	if filter.MaxPrice != nil {
-		query = query.Where("additives.base_price <= ?", *filter.MaxPrice)
-	}
-
-	if filter.CategoryID != nil {
-		query = query.Where("additive_categories.id = ?", *filter.CategoryID)
-	}
-	if filter.ProductSizeID != nil {
-		query = query.Where("product_additives.product_size_id = ?", *filter.ProductSizeID)
-	}
-
-	var err error
-	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &model)
-	if err != nil {
-		return nil, err
-	}
-
-	return query, nil
-}
-
 func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
 	err := r.db.Where("id = ?", additiveID).First(&additive).Error

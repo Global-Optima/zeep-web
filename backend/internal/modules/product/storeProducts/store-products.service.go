@@ -67,7 +67,7 @@ func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.Store
 
 func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error) {
 
-	if dto.ProductSizes != nil && len(dto.ProductSizes) > 0 {
+	if len(dto.ProductSizes) > 0 {
 		inputSizeIDs := make([]uint, len(dto.ProductSizes))
 		for i, productSize := range dto.ProductSizes {
 			inputSizeIDs[i] = productSize.ProductSizeID
@@ -96,7 +96,7 @@ func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []t
 		storeProducts[i] = *types.CreateToStoreProduct(&dto)
 		storeProducts[i].StoreID = storeID
 
-		if dto.ProductSizes != nil && len(dto.ProductSizes) > 0 {
+		if len(dto.ProductSizes) > 0 {
 			inputSizeIDs := make([]uint, len(dto.ProductSizes))
 			for j, productSize := range dto.ProductSizes {
 				inputSizeIDs[j] = productSize.ProductSizeID
@@ -118,7 +118,7 @@ func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []t
 }
 
 func (s *storeProductService) UpdateStoreProduct(productID, storeProductID uint, dto *types.UpdateStoreProductDTO) error {
-	if dto.ProductSizes != nil && len(dto.ProductSizes) > 0 {
+	if len(dto.ProductSizes) > 0 {
 		inputSizeIDs := make([]uint, len(dto.ProductSizes))
 		for i, productSize := range dto.ProductSizes {
 			inputSizeIDs[i] = productSize.ProductSizeID

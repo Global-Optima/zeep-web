@@ -12,4 +12,5 @@ var (
 	ErrStoreProductAlreadyExists  = moduleErrors.NewModuleError(errors.New("store product already exists"))
 	ErrInappropriateProductSizeID = moduleErrors.NewModuleError(errors.New("product size ID does not match the product given"))
 	ErrValidationFailed           = moduleErrors.NewModuleError(errors.New("validation failed"))
+	ErrNoUpdateContext            = moduleErrors.NewModuleError(errors.New("no update context found"))
 )

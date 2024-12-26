@@ -24,7 +24,7 @@ func NewRecipeRepository(db *gorm.DB) RecipeRepository {
 }
 
 func (r *recipeRepository) CreateOrReplaceRecipeStepsByProductID(productID uint, recipeSteps []data.RecipeStep) ([]uint, error) {
-	if recipeSteps == nil || len(recipeSteps) == 0 {
+	if len(recipeSteps) == 0 {
 		return nil, types.ErrNothingToUpdate
 	}
 

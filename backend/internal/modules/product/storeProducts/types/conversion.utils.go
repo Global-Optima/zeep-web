@@ -12,7 +12,6 @@ type StoreProductModels struct {
 }
 
 func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
-	var productSizes []data.ProductSize
 	var spsPrices []float64
 	var spsMinPrice float64 = 0
 	var spsCount = len(sp.StoreProductSizes)
@@ -20,7 +19,6 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 	if sp.StoreProductSizes != nil && spsCount > 0 {
 		for _, storeProductSize := range sp.StoreProductSizes {
 			spsPrices = append(spsPrices, storeProductSize.Price)
-			productSizes = append(productSizes, storeProductSize.ProductSize)
 		}
 
 		sort.Float64s(spsPrices)

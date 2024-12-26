@@ -2,7 +2,6 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"sort"
 	"strings"
 )
@@ -35,22 +34,6 @@ func MapToProductDetailsDTO(product *data.Product) *ProductDetailsDTO {
 	}
 }
 
-func MapToProductSizeAdditives(productSizeAdditives []data.ProductSizeAdditive) []additiveTypes.AdditiveCategoryItemDTO {
-	var result []additiveTypes.AdditiveCategoryItemDTO
-	for _, psa := range productSizeAdditives {
-		additive := psa.Additive
-		additiveDTO := additiveTypes.AdditiveCategoryItemDTO{
-			ID:          additive.ID,
-			Name:        additive.Name,
-			Description: additive.Description,
-			Price:       additive.BasePrice,
-			ImageURL:    additive.ImageURL,
-		}
-		result = append(result, additiveDTO)
-	}
-	return result
-}
-
 func MapToProductDTO(product data.Product) ProductDTO {
 	var basePrice float64 = 0
 	var productSizesPrices []float64
@@ -81,35 +64,6 @@ func MapToProductSizeDTO(productSize data.ProductSize) ProductSizeDTO {
 		Size:      productSize.Size,
 		BasePrice: productSize.BasePrice,
 	}
-}
-
-func MapToIngredients(sizes []data.ProductSize) []ProductSizeIngredientDTO {
-	var ingredients []ProductSizeIngredientDTO
-	for _, size := range sizes {
-		for _, productIngredient := range size.ProductIngredients {
-			ingredient := productIngredient.Ingredient
-			ingredients = append(ingredients, ProductSizeIngredientDTO{
-				ID:       ingredient.ID,
-				Name:     ingredient.Name,
-				Calories: ingredient.Calories,
-				Fat:      ingredient.Fat,
-				Carbs:    ingredient.Carbs,
-				Proteins: ingredient.Proteins,
-			})
-		}
-	}
-
-	// Remove duplicate ingredients (if necessary)
-	uniqueIngredients := make(map[uint]ProductSizeIngredientDTO)
-	for _, ingredient := range ingredients {
-		uniqueIngredients[ingredient.ID] = ingredient
-	}
-	ingredients = nil
-	for _, ingredient := range uniqueIngredients {
-		ingredients = append(ingredients, ingredient)
-	}
-
-	return ingredients
 }
 
 func CreateToProductModel(dto *CreateProductDTO) *data.Product {
@@ -188,8 +142,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	var ingredients []data.ProductIngredient
 
 	for _, additive := range dto.Additives {
-		var temp data.ProductSizeAdditive
-		temp = data.ProductSizeAdditive{
+		temp := data.ProductSizeAdditive{
 			AdditiveID: additive.AdditiveID,
 			IsDefault:  additive.IsDefault,
 		}
@@ -197,8 +150,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 
 	for _, ingredientID := range dto.Ingredients {
-		var temp data.ProductIngredient
-		temp = data.ProductIngredient{
+		temp := data.ProductIngredient{
 			IngredientID: ingredientID,
 		}
 		ingredients = append(ingredients, temp)
