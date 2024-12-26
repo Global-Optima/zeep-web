@@ -64,7 +64,7 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientDates(stockRequestI
 
 func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error) {
 	var requests []data.StockRequest
-	query := r.db.Preload("Ingredients.StockMaterial").
+	query := r.db.Preload("Ingredients.StockMaterial").Preload("Ingredients.StockMaterial.Unit").
 		Preload("Ingredients.StockMaterial.StockMaterialCategory").
 		Preload("Ingredients.StockMaterial.Package").
 		Preload("Ingredients.StockMaterial.Package.Unit").

@@ -1298,7 +1298,7 @@ VALUES
 INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, expiration_flag, unit_id, category_id, barcode, expiration_period_in_days, is_active) 
 VALUES 
     ('Простоквашино Молоко 3.2%', 'Молоко пастеризованное 1л', 2, 50, TRUE, 3, 1, '111111111111', 1095, TRUE),
-    ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, TRUE, 2, 2, '222222222222', 1095, TRUE),
+    ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, TRUE, 1, 2, '222222222222', 1095, TRUE),
     ('Бабаевский горький шоколад 75%', 'Темный шоколад 500г', 3, 15, TRUE, 2, 3, '333333333333', 730, TRUE),
     ('Индийская корица молотая премиум', 'Корица молотая 200г', 4, 10, TRUE, 2, 4, '444444444444', 1460, TRUE),
     ('Dr.Oetker Ванильный экстракт', 'Натуральный экстракт ванили 50мл', 5, 25, TRUE, 4, 5, '555555555555', 1460, TRUE);
@@ -1320,10 +1320,10 @@ VALUES
 INSERT INTO stock_material_packages (stock_material_id, size, unit_id)
 VALUES
     (1, 1.0, 3), -- 1L Milk
-    (2, 1.0, 2), -- 1kg Sugar
-    (3, 0.5, 2), -- 500g Chocolate
-    (4, 0.2, 2), -- 200g Cinnamon
-    (5, 0.05, 4); -- 50ml Vanilla
+    (2, 1.0, 1), -- 1kg Sugar
+    (3, 500, 2), -- 500g Chocolate
+    (4, 200, 2), -- 200g Cinnamon
+    (5, 50, 4); -- 50ml Vanilla
 
 
 INSERT INTO supplier_warehouse_deliveries (stock_material_id, supplier_id, warehouse_id, barcode, quantity, delivery_date, expiration_date)
