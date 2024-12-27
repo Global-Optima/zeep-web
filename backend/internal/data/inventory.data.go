@@ -133,6 +133,7 @@ type SupplierWarehouseDelivery struct {
 	StockMaterialID uint          `gorm:"not null;index"`
 	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
 	SupplierID      uint          `gorm:"not null"`
+	Supplier        Supplier      `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
 	WarehouseID     uint          `gorm:"not null"`
 	Barcode         string        `gorm:"size:255;not null"`
 	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
