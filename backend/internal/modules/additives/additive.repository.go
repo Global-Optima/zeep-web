@@ -3,10 +3,10 @@ package additives
 import (
 	"errors"
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -19,6 +19,7 @@ type AdditiveRepository interface {
 	DeleteAdditive(additiveID uint) error
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
+	GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	CreateAdditiveCategory(category *data.AdditiveCategory) error
 	UpdateAdditiveCategory(category *data.AdditiveCategory) error
 	DeleteAdditiveCategory(categoryID uint) error
@@ -33,21 +34,75 @@ func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
 }
 
-func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
+func (r *additiveRepository) GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
-	query := r.db.Preload("Additives")
+	subquery := r.db.Model(&data.Additive{}).
+		Select("additive_category_id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
+		Where("store_additives.store_id = ?", storeID).
+		Group("additive_category_id").
+		Having("COUNT(additives.id) > 0")
+
+	logrus.Info("Asd")
+
+	if filter.ProductSizeId != nil {
+		logrus.Info(*filter.ProductSizeId)
+		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
+	}
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where(
-			"additive_categories.name LIKE ? OR additive_categories.description LIKE ?",
+		subquery = subquery.Where(
+			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
 			searchTerm, searchTerm,
 		)
 	}
 
+	query := r.db.Model(&data.AdditiveCategory{}).
+		Preload("Additives.StoreAdditives").
+		Where("id IN (?)", subquery)
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := query.Find(&categories).Error; err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
+func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
+	var categories []data.AdditiveCategory
+
+	subquery := r.db.Model(&data.Additive{}).
+		Select("additive_category_id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
+		Group("additive_category_id").
+		Having("COUNT(additives.id) > 0")
+
 	if filter.ProductSizeId != nil {
-		query = query.Preload("Additives", "EXISTS (SELECT 1 FROM product_additives WHERE product_additives.additive_id = additives.id AND product_additives.product_size_id = ?)", *filter.ProductSizeId)
+		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		subquery = subquery.Where(
+			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
+			searchTerm, searchTerm,
+		)
+	}
+
+	query := r.db.Model(&data.AdditiveCategory{}).
+		Preload("Additives").
+		Where("id IN (?)", subquery)
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
+	if err != nil {
+		return nil, err
 	}
 
 	if err := query.Find(&categories).Error; err != nil {

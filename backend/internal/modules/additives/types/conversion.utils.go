@@ -91,3 +91,64 @@ func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditive
 		StorePrice:  storeAdditive.Price,
 	}
 }
+
+func ConvertToAdditiveCategoryDTO(category *data.AdditiveCategory) *AdditiveCategoryDTO {
+	additives := ConvertToAdditiveCategoryItemDTOs(category)
+
+	return &AdditiveCategoryDTO{
+		ID:               category.ID,
+		Name:             category.Name,
+		Description:      category.Description,
+		IsMultipleSelect: category.IsMultipleSelect,
+		Additives:        additives, // Always initialized as a slice
+	}
+}
+
+func ConvertToStoreAdditiveCategoryDTO(category *data.AdditiveCategory) *StoreAdditiveCategoryDTO {
+	storeAdditives := ConvertToStoreAdditiveCategoryItemDTOs(category)
+
+	return &StoreAdditiveCategoryDTO{
+		ID:               category.ID,
+		Name:             category.Name,
+		Description:      category.Description,
+		IsMultipleSelect: category.IsMultipleSelect,
+		Additives:        storeAdditives, // Always initialized as a slice
+	}
+}
+
+func ConvertToAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []AdditiveCategoryItemDTO {
+	additives := make([]AdditiveCategoryItemDTO, 0)
+
+	// Populate additives if present
+	for _, additive := range category.Additives {
+		additives = append(additives, *convertToAdditiveCategoryItem(&additive, category.ID))
+	}
+
+	return additives
+}
+
+func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []StoreAdditiveCategoryItemDTO {
+	storeAdditives := make([]StoreAdditiveCategoryItemDTO, len(category.Additives))
+
+	// Populate additives if present
+	for i, additive := range category.Additives {
+		storeAdditives[i] = StoreAdditiveCategoryItemDTO{
+			AdditiveCategoryItemDTO: *convertToAdditiveCategoryItem(&additive, category.ID),
+			StorePrice:              additive.StoreAdditives[0].Price,
+		}
+	}
+
+	return storeAdditives
+}
+
+func convertToAdditiveCategoryItem(additive *data.Additive, categoryID uint) *AdditiveCategoryItemDTO {
+	return &AdditiveCategoryItemDTO{
+		ID:          additive.ID,
+		Name:        additive.Name,
+		Description: additive.Description,
+		Price:       additive.BasePrice,
+		ImageURL:    additive.ImageURL,
+		Size:        additive.Size,
+		CategoryID:  categoryID,
+	}
+}

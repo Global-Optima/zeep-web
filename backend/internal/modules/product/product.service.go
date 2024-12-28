@@ -128,30 +128,6 @@ func (s *productService) GetProductSizesByProductID(productID uint) ([]types.Pro
 	return dtos, nil
 }
 
-/*func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
-	additiveIDs := dto.AdditiveIDList
-
-	err := s.repo.UpdateProductSizeAdditives(productSizeID, additiveIDs)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to update product additives: %w", err)
-		s.logger.Error(wrappedErr)
-		return wrappedErr
-	}
-
-	return nil
-}
-
-func (s *productService) CreateProductWithSizes(dto *types.CreateProductWithAttachesDTO) (uint, error) {
-	productID, err := s.repo.CreateProductWithSizes(dto)
-	if err != nil {
-		wrappedError := utils.WrapError("failed to create product", err)
-		s.logger.Error(wrappedError)
-		return 0, wrappedError
-	}
-
-	return productID, nil
-}*/
-
 func (s *productService) DeleteProduct(productID uint) error {
 	err := s.repo.DeleteProduct(productID)
 	if err != nil {

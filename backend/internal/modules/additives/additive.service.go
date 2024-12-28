@@ -10,6 +10,7 @@ import (
 
 type AdditiveService interface {
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error)
+	GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]types.StoreAdditiveCategoryDTO, error)
 	CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) error
 	UpdateAdditiveCategory(dto *types.UpdateAdditiveCategoryDTO) error
 	DeleteAdditiveCategory(categoryID uint) error
@@ -52,30 +53,30 @@ func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategories
 	// Convert raw data into DTOs
 	var categoryDTOs []types.AdditiveCategoryDTO
 	for _, category := range categories {
-		// Initialize additives list explicitly as an empty slice
-		additives := make([]types.AdditiveCategoryItemDTO, 0)
+		categoryDTOs = append(categoryDTOs, *types.ConvertToAdditiveCategoryDTO(&category))
+	}
 
-		// Populate additives if present
-		for _, additive := range category.Additives {
-			additives = append(additives, types.AdditiveCategoryItemDTO{
-				ID:          additive.ID,
-				Name:        additive.Name,
-				Description: additive.Description,
-				Price:       additive.BasePrice,
-				ImageURL:    additive.ImageURL,
-				Size:        additive.Size,
-				CategoryID:  category.ID,
-			})
-		}
+	return categoryDTOs, nil
+}
 
-		// Append the category DTO with additives list (empty or populated)
-		categoryDTOs = append(categoryDTOs, types.AdditiveCategoryDTO{
-			ID:               category.ID,
-			Name:             category.Name,
-			Description:      category.Description,
-			IsMultipleSelect: category.IsMultipleSelect,
-			Additives:        additives, // Always initialized as a slice
-		})
+func (s *additiveService) GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]types.StoreAdditiveCategoryDTO, error) {
+	// Fetch raw data from the repository
+	categories, err := s.repo.GetStoreAdditiveCategories(storeID, filter)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve store additives", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	// Handle case where no categories are found
+	if len(categories) == 0 {
+		return []types.StoreAdditiveCategoryDTO{}, nil
+	}
+
+	// Convert raw data into DTOs
+	var categoryDTOs []types.StoreAdditiveCategoryDTO
+	for _, category := range categories {
+		categoryDTOs = append(categoryDTOs, *types.ConvertToStoreAdditiveCategoryDTO(&category))
 	}
 
 	return categoryDTOs, nil

@@ -93,7 +93,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.EmployeeRoutes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditives)
-		router.GET("/store/:id", handler.GetStoreAdditives)
+		router.GET("/store", handler.GetStoreAdditives)
 		router.POST("", handler.CreateAdditive)
 		router.PUT("", handler.UpdateAdditive)
 		router.DELETE("/:id", handler.DeleteAdditive)
@@ -102,6 +102,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 		additiveCategories := router.Group("/categories")
 		{
 			additiveCategories.GET("", handler.GetAdditiveCategories)
+			additiveCategories.GET("/store", handler.GetStoreAdditiveCategories)
 			additiveCategories.POST("", handler.CreateAdditiveCategory)
 			additiveCategories.PUT("", handler.UpdateAdditiveCategory)
 			additiveCategories.DELETE("/:id", handler.DeleteAdditiveCategory)

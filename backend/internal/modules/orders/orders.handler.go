@@ -27,8 +27,6 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 		return
 	}
 
-	filter.Pagination = utils.ParsePagination(c)
-
 	orders, err := h.service.GetOrders(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch orders")

@@ -101,7 +101,7 @@ type RoleDTO struct {
 
 type GetStoreEmployeesFilter struct {
 	utils.BaseFilter
-	StoreID  uint    `form:"storeId" binding:"required"`
+	StoreID  uint    `form:"storeId"`
 	Role     *string `form:"role,omitempty"`
 	IsActive *bool   `form:"isActive,omitempty"`
 	Search   *string `form:"search,omitempty"`
@@ -109,7 +109,7 @@ type GetStoreEmployeesFilter struct {
 
 type GetWarehouseEmployeesFilter struct {
 	utils.BaseFilter
-	WarehouseID uint    `form:"warehouseId" binding:"required"`
+	WarehouseID *uint   `form:"warehouseId"`
 	Role        *string `form:"role,omitempty"`
 	IsActive    *bool   `form:"isActive,omitempty"`
 	Search      *string `form:"search,omitempty"`

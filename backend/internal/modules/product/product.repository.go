@@ -118,26 +118,6 @@ func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (ui
 		return 0, err
 	}
 
-	/*for _, additive := range createModels.Additives {
-			additive.ProductSizeID = createModels.ProductSize.ID
-		}
-		if err := tx.Create(createModels.Additives).Error; err != nil {
-			return err
-		}
-
-		for _, ingredient := range createModels.Ingredients {
-			ingredient.ProductSizeID = createModels.ProductSize.ID
-		}
-		if err := tx.Create(createModels.Ingredients).Error; err != nil {
-			return err
-		}
-		return nil
-	})
-
-	if err != nil {
-		return 0, err
-	}*/
-
 	return productSize.ID, nil
 }
 
