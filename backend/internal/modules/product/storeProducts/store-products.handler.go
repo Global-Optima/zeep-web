@@ -82,12 +82,14 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 	}
 
 	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
-		"storeId":     strconv.FormatUint(uint64(storeID), 10),
-		"categoryId":  c.DefaultQuery("categoryId", ""),
-		"isAvailable": c.DefaultQuery("isAvailable", ""),
-		"search":      c.DefaultQuery("search", ""),
-		"page":        strconv.Itoa(filter.Pagination.Page),
-		"pageSize":    strconv.Itoa(filter.Pagination.PageSize),
+		"storeId":       strconv.FormatUint(uint64(storeID), 10),
+		"categoryId":    c.DefaultQuery("categoryId", ""),
+		"isAvailable":   c.DefaultQuery("isAvailable", ""),
+		"search":        c.DefaultQuery("search", ""),
+		"page":          strconv.Itoa(filter.Pagination.Page),
+		"pageSize":      strconv.Itoa(filter.Pagination.PageSize),
+		"sortField":     filter.Sort.Field,
+		"sortDirection": filter.Sort.Direction,
 	})
 
 	cacheUtil := utils.GetCacheInstance()
