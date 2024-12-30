@@ -448,7 +448,8 @@ CREATE TABLE
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		status VARCHAR(50) NOT NULL,
-		comment TEXT, -- New column for optional comments
+		store_comment TEXT,
+		warehouse_comment TEXT,
 		request_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

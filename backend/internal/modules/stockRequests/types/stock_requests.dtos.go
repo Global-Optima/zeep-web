@@ -18,8 +18,9 @@ type StockRequestStockMaterialDTO struct {
 }
 
 type UpdateStockRequestStatusDTO struct {
-	Status  data.StockRequestStatus `json:"status" binding:"required,oneof=CREATED IN_DELIVERY PROCESSED COMPLETED REJECTED"`
-	Comment *string                 `json:"comment,omitempty"`
+	Status  data.StockRequestStatus        `json:"status" binding:"required,oneof=CREATED IN_DELIVERY PROCESSED COMPLETED REJECTED_BY_STORE REJECTED_BY_WAREHOUSE ACCEPTED_WITH_CHANGE"`
+	Comment *string                        `json:"comment,omitempty"`
+	Items   []StockRequestStockMaterialDTO `json:"items,omitempty"` // Only used for "accept with changes"
 }
 
 type UpdateIngredientDates struct {

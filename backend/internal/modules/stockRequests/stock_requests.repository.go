@@ -21,10 +21,11 @@ type StockRequestRepository interface {
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error)
 	GetStockRequestByID(requestID uint) (*data.StockRequest, error)
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
-	AddRejectionComment(requestID uint, comment string) error
+	AddStoreComment(requestID uint, comment string) error
+	AddWarehouseComment(requestID uint, comment string) error
 
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) error
-	AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantityInPackages float64, ingredient data.StockRequestIngredient) error
+	AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
 	GetLowStockIngredients(storeWarehouseID uint) ([]data.StoreWarehouseStock, error)
@@ -130,11 +131,17 @@ func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouse
 		Update("quantity", gorm.Expr("quantity - ?", quantity)).Error
 }
 
-func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, ingredientID uint, quantityInPackages float64, ingredient data.StockRequestIngredient) error {
-	quantityInUnits := utils.ConvertPackagesToUnits(ingredient, quantityInPackages)
+func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error {
+	var stockMaterial data.StockMaterial
+	if err := r.db.Preload("Package.Unit").Preload("Ingredient.Unit").
+		Where("id = ?", stockMaterialID).First(&stockMaterial).Error; err != nil {
+		return fmt.Errorf("failed to fetch stock material details for ID %d: %w", stockMaterialID, err)
+	}
+
+	quantityInUnits := utils.ConvertPackagesToUnits(stockMaterial, quantityInPackages)
 
 	return r.db.Model(&data.StoreWarehouseStock{}).
-		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouseID, ingredientID).
+		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouseID, stockMaterial.IngredientID).
 		Update("quantity", gorm.Expr("quantity + ?", quantityInUnits)).Error
 }
 
@@ -259,8 +266,14 @@ func (r *stockRequestRepository) ReplaceStockRequestIngredients(requestID uint, 
 	})
 }
 
-func (r *stockRequestRepository) AddRejectionComment(requestID uint, comment string) error {
+func (r *stockRequestRepository) AddStoreComment(requestID uint, comment string) error {
 	return r.db.Model(&data.StockRequest{}).
 		Where("id = ?", requestID).
-		Update("comment", comment).Error
+		Update("store_comment", comment).Error
+}
+
+func (r *stockRequestRepository) AddWarehouseComment(requestID uint, comment string) error {
+	return r.db.Model(&data.StockRequest{}).
+		Where("id = ?", requestID).
+		Update("warehouse_comment", comment).Error
 }

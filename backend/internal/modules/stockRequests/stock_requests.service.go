@@ -119,8 +119,18 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 			return err
 		}
 
-	case data.StockRequestRejected:
-		if err := s.handleRejectedStatus(request, status.Comment); err != nil {
+	case data.StockRequestRejectedByStore:
+		if err := s.handleRejectedByStoreStatus(request, status.Comment); err != nil {
+			return err
+		}
+
+	case data.StockRequestRejectedByWarehouse:
+		if err := s.handleRejectedByWarehouseStatus(request, status.Comment); err != nil {
+			return err
+		}
+
+	case data.StockRequestAcceptedWithChange:
+		if err := s.handleAcceptedWithChange(request, storeWarehouse.ID, status.Items, status.Comment); err != nil {
 			return err
 		}
 
@@ -160,16 +170,81 @@ func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, 
 			return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 
-		if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity, ingredient); err != nil {
+		if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
 			return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 	}
 	return nil
 }
 
-func (s *stockRequestService) handleRejectedStatus(request *data.StockRequest, comment *string) error {
+func (s *stockRequestService) handleAcceptedWithChange(request *data.StockRequest, storeWarehouseID uint, items []types.StockRequestStockMaterialDTO, comment *string) error {
+	updatedIngredients := []data.StockRequestIngredient{}
+
+	for _, item := range items {
+		var stockMaterial data.StockMaterial
+		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
+		}
+
+		// Find the original ingredient in the request
+		originalIngredient := findOriginalIngredient(request.Ingredients, item.StockMaterialID)
+
+		if originalIngredient != nil && originalIngredient.Quantity > 0 {
+			if err := s.repo.DeductWarehouseStock(originalIngredient.StockMaterialID, request.WarehouseID, originalIngredient.Quantity); err != nil {
+				return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", originalIngredient.StockMaterialID, err)
+			}
+		}
+
+		if item.Quantity > 0 {
+			if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
+				return fmt.Errorf("failed to add stock to store warehouse for stock material ID %d: %w", item.StockMaterialID, err)
+			}
+		}
+
+		updatedIngredients = append(updatedIngredients, data.StockRequestIngredient{
+			StockRequestID:  request.ID,
+			IngredientID:    stockMaterial.IngredientID,
+			StockMaterialID: item.StockMaterialID,
+			Quantity:        item.Quantity,
+		})
+	}
+
+	if err := s.repo.ReplaceStockRequestIngredients(request.ID, updatedIngredients); err != nil {
+		return fmt.Errorf("failed to replace ingredients for stock request ID %d: %w", request.ID, err)
+	}
+
 	if comment != nil {
-		if err := s.repo.AddRejectionComment(request.ID, *comment); err != nil {
+		if err := s.repo.AddStoreComment(request.ID, *comment); err != nil {
+			return fmt.Errorf("failed to add store comment for request ID %d: %w", request.ID, err)
+		}
+	}
+
+	return nil
+}
+
+// Helper function to find the original ingredient in the stock request by StockMaterialID
+func findOriginalIngredient(ingredients []data.StockRequestIngredient, stockMaterialID uint) *data.StockRequestIngredient {
+	for _, ingredient := range ingredients {
+		if ingredient.StockMaterialID == stockMaterialID {
+			return &ingredient
+		}
+	}
+	return nil
+}
+
+func (s *stockRequestService) handleRejectedByWarehouseStatus(request *data.StockRequest, comment *string) error {
+	if comment != nil {
+		if err := s.repo.AddWarehouseComment(request.ID, *comment); err != nil {
+			return fmt.Errorf("failed to add rejection comment for request ID %d: %w", request.ID, err)
+		}
+	}
+	fmt.Printf("Stock request rejected, ID: %d, Comment: %s\n", request.ID, utils.StringOrEmpty(comment))
+	return nil
+}
+
+func (s *stockRequestService) handleRejectedByStoreStatus(request *data.StockRequest, comment *string) error {
+	if comment != nil {
+		if err := s.repo.AddStoreComment(request.ID, *comment); err != nil {
 			return fmt.Errorf("failed to add rejection comment for request ID %d: %w", request.ID, err)
 		}
 	}

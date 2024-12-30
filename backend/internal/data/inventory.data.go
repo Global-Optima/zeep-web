@@ -5,11 +5,13 @@ import "time"
 type StockRequestStatus string
 
 var (
-	StockRequestCreated    StockRequestStatus = "CREATED"
-	StockRequestProcessed  StockRequestStatus = "PROCESSED"
-	StockRequestInDelivery StockRequestStatus = "IN_DELIVERY"
-	StockRequestCompleted  StockRequestStatus = "COMPLETED"
-	StockRequestRejected   StockRequestStatus = "REJECTED"
+	StockRequestCreated             StockRequestStatus = "CREATED"
+	StockRequestProcessed           StockRequestStatus = "PROCESSED"
+	StockRequestInDelivery          StockRequestStatus = "IN_DELIVERY"
+	StockRequestCompleted           StockRequestStatus = "COMPLETED"
+	StockRequestRejectedByStore     StockRequestStatus = "REJECTED_BY_STORE"
+	StockRequestRejectedByWarehouse StockRequestStatus = "REJECTED_BY_WAREHOUSE"
+	StockRequestAcceptedWithChange  StockRequestStatus = "ACCEPTED_WITH_CHANGE"
 )
 
 type Warehouse struct {
@@ -39,14 +41,15 @@ type StoreWarehouseStock struct {
 
 type StockRequest struct {
 	BaseEntity
-	StoreID     uint                     `gorm:"not null;index"` // Links to Store
-	Store       Store                    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
-	WarehouseID uint                     `gorm:"not null;index"` // Central warehouse fulfilling the request
-	Warehouse   Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
-	Status      StockRequestStatus       `gorm:"size:50;not null"`
-	Comment     *string                  `gorm:"type:text"` // Optional field for comments
-	RequestDate *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
-	Ingredients []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
+	StoreID          uint                     `gorm:"not null;index"` // Links to Store
+	Store            Store                    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	WarehouseID      uint                     `gorm:"not null;index"` // Central warehouse fulfilling the request
+	Warehouse        Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
+	Status           StockRequestStatus       `gorm:"size:50;not null"`
+	StoreComment     *string                  `gorm:"type:text"` // Store-specific comments
+	WarehouseComment *string                  `gorm:"type:text"` // Warehouse-specific comments
+	RequestDate      *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
+	Ingredients      []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
 }
 
 type StockRequestIngredient struct {
