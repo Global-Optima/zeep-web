@@ -34,16 +34,14 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		"search":     c.DefaultQuery("search", ""),
 		"page":       strconv.Itoa(filter.Pagination.Page),
 		"pageSize":   strconv.Itoa(filter.Pagination.PageSize),
-		"totalCount": strconv.Itoa(filter.Pagination.TotalCount),
-		"totalPages": strconv.Itoa(filter.Pagination.TotalPages),
 	})
 
 	cacheUtil := utils.GetCacheInstance()
 
-	var cachedProducts []types.ProductDTO
-	if err := cacheUtil.Get(cacheKey, &cachedProducts); err == nil {
-		if !utils.IsEmpty(cachedProducts) {
-			utils.SendSuccessResponseWithPagination(c, cachedProducts, filter.Pagination)
+	var cachedData utils.PaginatedData
+	if err := cacheUtil.Get(cacheKey, &cachedData); err == nil {
+		if !utils.IsEmpty(cachedData.Data) {
+			utils.SendSuccessResponse(c, cachedData)
 			return
 		}
 	}
@@ -55,7 +53,8 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		return
 	}
 
-	if err := cacheUtil.Set(cacheKey, products, 5*time.Minute); err != nil {
+	cachedData.Data, cachedData.Pagination = products, *filter.Pagination
+	if err := cacheUtil.Set(cacheKey, cachedData, 5*time.Minute); err != nil {
 		fmt.Printf("Failed to cache products: %v\n", err)
 	}
 
@@ -120,6 +119,24 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
 
+func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
+	productIDParam := c.Param("id")
+
+	productID, err := strconv.ParseUint(productIDParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid product ID")
+		return
+	}
+
+	productSizes, err := h.service.GetProductSizesByProductID(uint(productID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve product sizes")
+		return
+	}
+
+	utils.SendSuccessResponse(c, productSizes)
+}
+
 func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 	var input types.CreateProductSizeDTO
 
@@ -182,9 +199,25 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 
 	err = h.service.UpdateProductSize(uint(productID), input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		utils.SendInternalServerError(c, "Failed to update product")
 		return
 	}
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
+}
+
+func (h *ProductHandler) DeleteProduct(c *gin.Context) {
+	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid product ID")
+		return
+	}
+
+	err = h.service.DeleteProduct(uint(productID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to delete product")
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "product deleted successfully", http.StatusOK)
 }

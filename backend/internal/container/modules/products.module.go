@@ -2,9 +2,11 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 )
 
 type ProductsModule struct {
@@ -16,13 +18,13 @@ type ProductsModule struct {
 	StoreProducts *StoreProductsModule
 }
 
-func NewProductsModule(base *common.BaseModule) *ProductsModule {
+func NewProductsModule(base *common.BaseModule, ingredientRepo ingredients.IngredientRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository) *ProductsModule {
 	repo := product.NewProductRepository(base.DB)
 	service := product.NewProductService(repo, base.Logger)
 	handler := product.NewProductHandler(service)
 
 	recipeModule := NewRecipeModule(base)
-	storeProductsModule := NewStoreProductsModule(base, repo)
+	storeProductsModule := NewStoreProductsModule(base, repo, ingredientRepo, storeWarehouseRepo)
 
 	base.Router.RegisterProductRoutes(handler)
 
@@ -66,9 +68,19 @@ type StoreProductsModule struct {
 	Handler     *storeProducts.StoreProductHandler
 }
 
-func NewStoreProductsModule(base *common.BaseModule, productRepo product.ProductRepository) *StoreProductsModule {
+func NewStoreProductsModule(
+	base *common.BaseModule,
+	productRepo product.ProductRepository,
+	ingredientRepo ingredients.IngredientRepository,
+	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository,
+) *StoreProductsModule {
 	repo := storeProducts.NewStoreProductRepository(base.DB)
-	service := storeProducts.NewStoreProductService(repo, productRepo, base.Logger)
+	service := storeProducts.NewStoreProductService(
+		repo,
+		productRepo,
+		ingredientRepo,
+		storeProducts.NewTransactionManager(base.DB, repo, storeWarehouseRepo),
+		base.Logger)
 	handler := storeProducts.NewStoreProductHandler(service)
 
 	base.Router.RegisterStoreProductRoutes(handler)

@@ -48,19 +48,19 @@ type RecipeStep struct {
 
 type ProductSize struct {
 	BaseEntity
-	Name               string  `gorm:"size:100;not null" sort:"name"`
-	Measure            string  `gorm:"size:50" sort:"measure"`
-	BasePrice          float64 `gorm:"not null" sort:"price"`
-	Size               int     `gorm:"not null" sort:"size"`
-	IsDefault          bool    `gorm:"default:false" sort:"isDefault"`
-	ProductID          uint    `gorm:"index;not null"`
-	Product            Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	DiscountID         uint
-	Additives          []ProductSizeAdditive `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
-	ProductIngredients []ProductIngredient   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
+	Name                   string  `gorm:"size:100;not null" sort:"name"`
+	Measure                string  `gorm:"size:50" sort:"measure"`
+	BasePrice              float64 `gorm:"not null" sort:"price"`
+	Size                   int     `gorm:"not null" sort:"size"`
+	IsDefault              bool    `gorm:"default:false" sort:"isDefault"`
+	ProductID              uint    `gorm:"index;not null"`
+	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	DiscountID             uint
+	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
+	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 }
 
-type ProductIngredient struct {
+type ProductSizeIngredient struct {
 	BaseEntity
 	IngredientID  uint        `gorm:"index;not null"`
 	Ingredient    Ingredient  `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
@@ -80,18 +80,18 @@ type AdditiveIngredient struct {
 
 type Ingredient struct {
 	BaseEntity
-	Name                 string              `gorm:"size:255;not null;index" sort:"name"`
-	Calories             float64             `gorm:"type:decimal(5,2);check:calories >= 0" sort:"calories"`
-	Fat                  float64             `gorm:"type:decimal(5,2);check:fat >= 0" sort:"fat"`
-	Carbs                float64             `gorm:"type:decimal(5,2);check:carbs >= 0" sort:"carbs"`
-	Proteins             float64             `gorm:"type:decimal(5,2);check:proteins >= 0" sort:"proteins"`
-	ExpiresAt            *time.Time          `gorm:"type:timestamp" sort:"expiresAt"`
-	Products             []ProductIngredient `gorm:"foreignKey:IngredientID"`
-	UnitID               uint                `gorm:"not null"` // Link to Unit
-	Unit                 Unit                `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
-	IngredientCategoryID uint                `gorm:"not null"` // Link to IngredientCategory
-	IngredientCategory   IngredientCategory  `gorm:"foreignKey:IngredientCategoryID;constraint:OnDelete:SET NULL"`
-	StockMaterials       []StockMaterial     `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
+	Name                   string                  `gorm:"size:255;not null;index" sort:"name"`
+	Calories               float64                 `gorm:"type:decimal(5,2);check:calories >= 0" sort:"calories"`
+	Fat                    float64                 `gorm:"type:decimal(5,2);check:fat >= 0" sort:"fat"`
+	Carbs                  float64                 `gorm:"type:decimal(5,2);check:carbs >= 0" sort:"carbs"`
+	Proteins               float64                 `gorm:"type:decimal(5,2);check:proteins >= 0" sort:"proteins"`
+	ExpiresAt              *time.Time              `gorm:"type:timestamp" sort:"expiresAt"`
+	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID"`
+	UnitID                 uint                    `gorm:"not null"` // Link to Unit
+	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
+	IngredientCategoryID   uint                    `gorm:"not null"` // Link to IngredientCategory
+	IngredientCategory     IngredientCategory      `gorm:"foreignKey:IngredientCategoryID;constraint:OnDelete:SET NULL"`
+	StockMaterials         []StockMaterial         `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
 }
 
 type IngredientCategory struct {

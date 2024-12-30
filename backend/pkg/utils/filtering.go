@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/sirupsen/logrus"
 	"math"
 	"reflect"
@@ -12,15 +13,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
-)
-
-const (
-	DEFAULT_PAGE      = 1
-	DEFAULT_PAGE_SIZE = 10
-	MAX_PAGE_SIZE     = 100
-
-	DEFAULT_SORT_PARAMETER = "createdAt"
-	DEFAULT_SORT_DIRECTION = "DESC"
 )
 
 // Pagination struct can be included into a DTO as a pointer
@@ -34,6 +26,12 @@ type Pagination struct {
 type Sort struct {
 	Field     string `json:"field"`
 	Direction string `json:"direction"`
+}
+
+// PaginatedData must be used for caching paginated responses
+type PaginatedData struct {
+	Data       interface{} `json:"data"`
+	Pagination Pagination  `json:"pagination"`
 }
 
 type FilterProvider interface {
@@ -120,12 +118,14 @@ func ApplyPagination[T any](query *gorm.DB, pagination *Pagination, model T) (*g
 
 // PaginateGorm must be attached to the gorm query in form of query.Scopes(Pagination.PaginateGorm())
 func (p *Pagination) PaginateGorm() func(db *gorm.DB) *gorm.DB {
+	cfg := config.GetConfig()
+
 	if p.Page < 1 {
-		p.Page = DEFAULT_PAGE
+		p.Page = cfg.Filtering.DefaultPage
 	}
 
-	if p.PageSize < 1 || p.PageSize > MAX_PAGE_SIZE {
-		p.PageSize = DEFAULT_PAGE_SIZE
+	if p.PageSize < 1 || p.PageSize > cfg.Filtering.MaxPageSize {
+		p.PageSize = cfg.Filtering.DefaultPageSize
 	}
 
 	return func(db *gorm.DB) *gorm.DB {
@@ -144,12 +144,14 @@ func (p *Pagination) SetTotal(totalCount int64) {
 }
 
 func ParsePagination(c *gin.Context) *Pagination {
-	page, _ := parsePositiveInt(c.DefaultQuery("page", strconv.Itoa(DEFAULT_PAGE)), DEFAULT_PAGE)
-	pageSize, _ := parsePositiveInt(c.DefaultQuery("pageSize", strconv.Itoa(DEFAULT_PAGE_SIZE)), DEFAULT_PAGE_SIZE)
+	cfg := config.GetConfig()
+
+	page, _ := parsePositiveInt(c.DefaultQuery("page", strconv.Itoa(cfg.Filtering.DefaultPage)), cfg.Filtering.DefaultPage)
+	pageSize, _ := parsePositiveInt(c.DefaultQuery("pageSize", strconv.Itoa(cfg.Filtering.DefaultPageSize)), cfg.Filtering.DefaultPageSize)
 
 	// Enforce maximum page size
-	if pageSize > MAX_PAGE_SIZE {
-		pageSize = MAX_PAGE_SIZE
+	if pageSize > cfg.Filtering.MaxPageSize {
+		pageSize = cfg.Filtering.MaxPageSize
 	}
 
 	return &Pagination{
@@ -193,16 +195,19 @@ func (s *Sort) SortGorm() func(db *gorm.DB) *gorm.DB {
 }
 
 func defaultGormSort(db *gorm.DB) *gorm.DB {
+	cfg := config.GetConfig()
+
 	orderClause := fmt.Sprintf("%s %s",
-		camelToSnake(DEFAULT_SORT_PARAMETER), DEFAULT_SORT_DIRECTION)
+		camelToSnake(cfg.Filtering.DefaultSortParameter), cfg.Filtering.DefaultSortDirection)
 	return db.Order(orderClause)
 }
 
 func ParseSortParamsForModel(c *gin.Context, model interface{}) (*Sort, error) {
+	cfg := config.GetConfig()
 	var field, order string
 
 	defaultQuery := fmt.Sprintf("%s,%s",
-		DEFAULT_SORT_PARAMETER, DEFAULT_SORT_DIRECTION)
+		cfg.Filtering.DefaultSortParameter, cfg.Filtering.DefaultSortDirection)
 	sortBy := c.DefaultQuery("sortBy", defaultQuery)
 
 	parts := strings.Split(sortBy, ",")

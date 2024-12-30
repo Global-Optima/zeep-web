@@ -87,7 +87,7 @@ func CreateToStoreProductSize(dto *CreateStoreProductSizeDTO) *data.StoreProduct
 	return model
 }
 
-func UpdateToStoreProduct(dto *UpdateStoreProductDTO) *StoreProductModels {
+func UpdateToStoreProductModels(dto *UpdateStoreProductDTO) *StoreProductModels {
 	storeProduct := &data.StoreProduct{}
 
 	if dto.IsAvailable != nil {

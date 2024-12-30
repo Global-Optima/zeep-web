@@ -13,6 +13,7 @@ type IngredientRepository interface {
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
+	GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error)
 }
 
 type ingredientRepository struct {
@@ -48,6 +49,11 @@ func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([
 	query := r.db.Model(&data.Ingredient{})
 
 	// Apply filtering
+	if filter.ProductSizeID != nil {
+		query = query.Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
+			Where("psi.product_size_id = ?", *filter.ProductSizeID)
+	}
+
 	if filter.Name != nil {
 		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
 	}
@@ -65,6 +71,21 @@ func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([
 	}
 
 	// Execute query
+	if err := query.Find(&ingredients).Error; err != nil {
+		return nil, err
+	}
+
+	return ingredients, nil
+}
+
+func (r *ingredientRepository) GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error) {
+	var ingredients []data.Ingredient
+	query := r.db.Model(&data.Ingredient{}).
+		Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
+		Joins("JOIN product_sizes ps ON psi.product_size_id = ps.id").
+		Where("ps.id IN ?", productSizeIDs).
+		Group("ingredients.id")
+
 	if err := query.Find(&ingredients).Error; err != nil {
 		return nil, err
 	}

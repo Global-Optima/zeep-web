@@ -29,5 +29,5 @@ type AddMultipleStockDTO struct {
 type AddStockDTO struct {
 	IngredientID      uint    `json:"ingredientId" binding:"required,gt=0"`
 	Quantity          float64 `json:"quantity" binding:"required,gte=0"`
-	LowStockThreshold float64 `json:"lowStockThreshold" binding:"required,gte=0"`
+	LowStockThreshold float64 `json:"lowStockThreshold" binding:"required,gt=0"`
 }

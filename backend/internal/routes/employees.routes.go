@@ -28,6 +28,8 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.GET("/:id", handler.GetProductDetails)
 		router.POST("", handler.CreateProduct)
 		router.PUT("/:id", handler.UpdateProduct)
+		router.DELETE("/:id", handler.DeleteProduct)
+		router.GET(":id/sizes", handler.GetProductSizesByProductID)
 		router.POST("/sizes", handler.CreateProductSize)
 		router.PUT("/sizes/:id", handler.UpdateProductSize)
 	}

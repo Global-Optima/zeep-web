@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ProductRepository interface {
@@ -147,7 +148,7 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 
 		if updateModels.Ingredients != nil {
 			// Remove existing ingredients
-			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductIngredient{}).Error; err != nil {
+			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
 				return fmt.Errorf("failed to delete ingredients: %w", err)
 			}
 
@@ -176,7 +177,35 @@ func (r *productRepository) UpdateProduct(productID uint, product *data.Product)
 }
 
 func (r *productRepository) DeleteProduct(productID uint) error {
-	return r.db.Where("id = ?", productID).Delete(&data.Product{}).Error
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("id = ?", productID).
+			Delete(&data.Product{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("product_id = ?", productID).
+			Delete(&data.ProductSize{}).Error; err != nil {
+			return err
+		}
+
+		var storeProduct data.StoreProduct
+		if err := tx.Clauses(clause.Returning{}).
+			Where("product_id = ?", productID).
+			Delete(&storeProduct).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("store_product_id = ?", storeProduct.ID).
+			Delete(&data.StoreProductSize{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *productRepository) GetProductSizesByProductID(productID uint) ([]data.ProductSize, error) {

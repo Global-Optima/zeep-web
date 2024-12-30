@@ -17,12 +17,13 @@ type Config struct {
 	IsDevelopment bool
 	IsTest        bool
 
-	Database DatabaseConfig `mapstructure:",squash"`
-	Server   ServerConfig   `mapstructure:",squash"`
-	JWT      JWTConfig      `mapstructure:",squash"`
-	S3       S3Config       `mapstructure:",squash"`
-	Redis    RedisConfig    `mapstructure:",squash"`
-	Kafka    KafkaConfig    `mapstructure:",squash"`
+	Database  DatabaseConfig  `mapstructure:",squash"`
+	Server    ServerConfig    `mapstructure:",squash"`
+	JWT       JWTConfig       `mapstructure:",squash"`
+	S3        S3Config        `mapstructure:",squash"`
+	Redis     RedisConfig     `mapstructure:",squash"`
+	Kafka     KafkaConfig     `mapstructure:",squash"`
+	Filtering FilteringConfig `mapstructure:",squash"`
 }
 
 var cfg *Config

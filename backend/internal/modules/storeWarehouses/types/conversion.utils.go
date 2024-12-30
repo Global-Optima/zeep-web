@@ -12,3 +12,12 @@ func MapToStockDTO(stock data.StoreWarehouseStock) StockDTO {
 		LowStockAlert:     stock.Quantity < stock.LowStockThreshold,
 	}
 }
+
+func AddToStock(dto AddStockDTO, storeWarehouseID uint) *data.StoreWarehouseStock {
+	return &data.StoreWarehouseStock{
+		StoreWarehouseID:  storeWarehouseID,
+		Quantity:          dto.Quantity,
+		LowStockThreshold: dto.LowStockThreshold,
+		IngredientID:      dto.IngredientID,
+	}
+}

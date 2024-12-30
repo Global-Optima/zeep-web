@@ -1217,7 +1217,7 @@ VALUES
 -- Орехи и семена
 -- Insert into ProductIngredients
 INSERT INTO
-  product_ingredients (ingredient_id, product_size_id, quantity)
+  product_size_ingredients (ingredient_id, product_size_id, quantity)
 VALUES
   -- Product Size 1 (S, Product 1)
   (1, 1, 1), -- Сахар
@@ -1546,7 +1546,8 @@ VALUES
   (2, 2), -- Store 2 linked to Central Warehouse in St. Petersburg
   (3, 3), -- Store 3 linked to Central Warehouse in Ekaterinburg
   (4, 4), -- Store 4 linked to Central Warehouse in Novosibirsk
-  (5, 5);
+  (5, 5),
+  (6, 6);
 
 INSERT INTO
   store_warehouse_stocks (

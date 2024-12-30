@@ -9,7 +9,7 @@ import (
 type ProductSizeModels struct {
 	ProductSize *data.ProductSize
 	Additives   []data.ProductSizeAdditive
-	Ingredients []data.ProductIngredient
+	Ingredients []data.ProductSizeIngredient
 }
 
 func MapBaseProductDTO(product *data.Product) BaseProductDTO {
@@ -95,7 +95,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	}
 
 	for _, ingredientID := range dto.Ingredients {
-		productSize.ProductIngredients = append(productSize.ProductIngredients, data.ProductIngredient{
+		productSize.ProductSizeIngredients = append(productSize.ProductSizeIngredients, data.ProductSizeIngredient{
 			IngredientID: ingredientID,
 		})
 	}
@@ -139,7 +139,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 
 	var additives []data.ProductSizeAdditive
-	var ingredients []data.ProductIngredient
+	var ingredients []data.ProductSizeIngredient
 
 	for _, additive := range dto.Additives {
 		temp := data.ProductSizeAdditive{
@@ -150,7 +150,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 
 	for _, ingredientID := range dto.Ingredients {
-		temp := data.ProductIngredient{
+		temp := data.ProductSizeIngredient{
 			IngredientID: ingredientID,
 		}
 		ingredients = append(ingredients, temp)

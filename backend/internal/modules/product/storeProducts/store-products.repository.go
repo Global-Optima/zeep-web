@@ -1,6 +1,7 @@
 package storeProducts
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -14,12 +15,13 @@ type StoreProductRepository interface {
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
 	UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error
-	DeleteStoreProduct(storeID, storeProductID uint) error
+	DeleteStoreProductWithSizes(storeID, storeProductID uint) error
 
 	GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
 	CreateStoreProductSize(storeProductSize *data.StoreProductSize) (uint, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
+	CloneWithTransaction(tx *gorm.DB) StoreProductRepository
 }
 
 type storeProductRepository struct {
@@ -28,6 +30,12 @@ type storeProductRepository struct {
 
 func NewStoreProductRepository(db *gorm.DB) StoreProductRepository {
 	return &storeProductRepository{db: db}
+}
+
+func (r *storeProductRepository) CloneWithTransaction(tx *gorm.DB) StoreProductRepository {
+	return &storeProductRepository{
+		db: tx,
+	}
 }
 
 func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
@@ -122,9 +130,8 @@ func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID 
 		}
 
 		if len(updateModels.StoreProductSizes) > 0 {
-			err = tx.Where("store_product_id = ?", storeProductID).
-				Delete(&data.StoreProductSize{}).Error
-			if err != nil {
+			if err := tx.Where("store_product_id = ?", storeProductID).
+				Delete(&data.StoreProductSize{}).Error; err != nil {
 				return err
 			}
 
@@ -143,17 +150,29 @@ func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID 
 	return err
 }
 
-func (r *storeProductRepository) DeleteStoreProduct(storeID, storeProductID uint) error {
-	result := r.db.
-		Where("store_id = ? AND id = ?", storeID, storeProductID).
-		Delete(&data.StoreProduct{})
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
+func (r *storeProductRepository) DeleteStoreProductWithSizes(storeID, storeProductID uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var storeProduct data.StoreProduct
+
+		if err := tx.Where("id = ? AND store_id = ?", storeProductID, storeID).
+			First(&storeProduct).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("%w: no storeProduct %d in store %d", types.ErrStoreProductNotFound, storeProductID, storeID)
+			}
+			return err
+		}
+
+		if err := tx.Where("store_product_id = ?", storeProductID).
+			Delete(&data.StoreProductSize{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&data.StoreProduct{}, storeProductID).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error) {

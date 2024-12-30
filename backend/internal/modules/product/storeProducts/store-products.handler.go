@@ -31,23 +31,23 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 
 	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		utils.SendBadRequestError(c, "Invalid StoreProductID")
 		return
 	}
 
-	/*cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
+	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
 		"storeProductId": strconv.FormatUint(storeProductID, 10),
 	})
 
 	cacheUtil := utils.GetCacheInstance()
 
-	var cachedProductDetails *types.StoreProductDTO
-	if err := cacheUtil.Get(cacheKey, &cachedProductDetails); err == nil {
-		if !utils.IsEmpty(cachedProductDetails) {
-			utils.SendSuccessResponse(c, cachedProductDetails)
+	var cachedStoreProductDetails *types.StoreProductDetailsDTO
+	if err := cacheUtil.Get(cacheKey, &cachedStoreProductDetails); err == nil {
+		if !utils.IsEmpty(cachedStoreProductDetails) {
+			utils.SendSuccessResponse(c, cachedStoreProductDetails)
 			return
 		}
-	}*/
+	}
 
 	productDetails, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
@@ -60,9 +60,9 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 		return
 	}
 
-	/*if err := cacheUtil.Set(cacheKey, productDetails, 10*time.Minute); err != nil {
+	if err := cacheUtil.Set(cacheKey, productDetails, 10*time.Minute); err != nil {
 		fmt.Printf("Failed to cache product details: %v\n", err)
-	}*/
+	}
 
 	utils.SendSuccessResponse(c, productDetails)
 }
@@ -92,10 +92,10 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 
 	cacheUtil := utils.GetCacheInstance()
 
-	var cachedProductDetails []types.StoreProductDTO
-	if err := cacheUtil.Get(cacheKey, &cachedProductDetails); err == nil {
-		if !utils.IsEmpty(cachedProductDetails) {
-			utils.SendSuccessResponse(c, cachedProductDetails)
+	var cachedData utils.PaginatedData
+	if err := cacheUtil.Get(cacheKey, &cachedData); err == nil {
+		if !utils.IsEmpty(cachedData.Data) {
+			utils.SendSuccessResponse(c, cachedData)
 			return
 		}
 	}
@@ -111,7 +111,8 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 		return
 	}
 
-	if err := cacheUtil.Set(cacheKey, productDetails, 10*time.Minute); err != nil {
+	cachedData.Data, cachedData.Pagination = productDetails, *filter.Pagination
+	if err := cacheUtil.Set(cacheKey, cachedData, 10*time.Minute); err != nil {
 		fmt.Printf("Failed to cache product details: %v\n", err)
 	}
 
@@ -168,7 +169,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 
 	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		utils.SendBadRequestError(c, "Invalid StoreProductID")
 		return
 	}
 
@@ -188,6 +189,16 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to update store product")
 		return
 	}
+
+	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
+		"storeProductId": strconv.FormatUint(storeProductID, 10),
+	})
+
+	cacheUtil := utils.GetCacheInstance()
+	if err := cacheUtil.Delete(cacheKey); err != nil {
+		fmt.Printf("Failed to clear cache product details: %v\n", err)
+	}
+
 	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
 }
 
@@ -209,5 +220,15 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to delete store product")
 		return
 	}
+
+	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
+		"storeProductId": strconv.FormatUint(storeProductID, 10),
+	})
+
+	cacheUtil := utils.GetCacheInstance()
+	if err := cacheUtil.Delete(cacheKey); err != nil {
+		fmt.Printf("Failed to clear cache product details: %v\n", err)
+	}
+
 	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)
 }

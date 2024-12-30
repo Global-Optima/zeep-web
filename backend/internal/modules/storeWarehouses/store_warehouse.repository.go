@@ -18,6 +18,7 @@ type StoreWarehouseRepository interface {
 	UpdateStock(storeId, stockId uint, dto *types.UpdateStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
 	WithTransaction(txFunc func(txRepo storeWarehouseRepository) error) error
+	CloneWithTransaction(tx *gorm.DB) storeWarehouseRepository
 }
 
 type storeWarehouseRepository struct {
@@ -35,7 +36,7 @@ func (r *storeWarehouseRepository) WithTransaction(txFunc func(txRepo storeWareh
 	}
 
 	// Clone the repository with the transaction instance
-	txRepo := r.cloneWithTransaction(tx)
+	txRepo := r.CloneWithTransaction(tx)
 
 	// Execute the transaction logic
 	if err := txFunc(txRepo); err != nil {
@@ -51,7 +52,7 @@ func (r *storeWarehouseRepository) WithTransaction(txFunc func(txRepo storeWareh
 	return nil
 }
 
-func (r *storeWarehouseRepository) cloneWithTransaction(tx *gorm.DB) storeWarehouseRepository {
+func (r *storeWarehouseRepository) CloneWithTransaction(tx *gorm.DB) storeWarehouseRepository {
 	return storeWarehouseRepository{
 		db: tx,
 	}
@@ -109,15 +110,9 @@ func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.Add
 
 func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStockDTO) (uint, error) {
 	// Fetch the StoreWarehouse for the given storeID
-	var storeWarehouse data.StoreWarehouse
-	err := r.db.
-		Where("store_id = ?", storeID).
-		First(&storeWarehouse).Error
+	storeWarehouse, err := r.getStoreWarehouseByStoreId(storeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, fmt.Errorf("store warehouse not found for store ID %d", storeID)
-		}
-		return 0, fmt.Errorf("failed to fetch store warehouse: %w", err)
+		return 0, err
 	}
 
 	// Check if a stock with the given IngredientID already exists for the StoreWarehouse
@@ -126,7 +121,8 @@ func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStockDTO
 		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouse.ID, dto.IngredientID).
 		First(&existingStock).Error
 	if err == nil {
-		return 0, fmt.Errorf("stock with ingredient ID %d already exists for store warehouse ID %d", dto.IngredientID, storeWarehouse.ID)
+		return 0, fmt.Errorf("%w: stock with ingredient ID %d already exists for store warehouse ID %d",
+			types.ErrStockAlreadyExists, dto.IngredientID, storeWarehouse.ID)
 	}
 
 	// Fetch the Ingredient for the given IngredientID from the DTO
@@ -141,12 +137,7 @@ func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStockDTO
 		return 0, fmt.Errorf("failed to fetch ingredient: %w", err)
 	}
 
-	storeWarehouseStock := data.StoreWarehouseStock{
-		StoreWarehouseID:  storeWarehouse.ID,
-		IngredientID:      ingredient.ID,
-		LowStockThreshold: dto.LowStockThreshold,
-		Quantity:          dto.Quantity,
-	}
+	storeWarehouseStock := types.AddToStock(*dto, storeWarehouse.ID)
 
 	err = r.db.Create(&storeWarehouseStock).Error
 	if err != nil {
@@ -154,6 +145,20 @@ func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStockDTO
 	}
 
 	return storeWarehouseStock.ID, nil
+}
+
+func (r *storeWarehouseRepository) getStoreWarehouseByStoreId(storeID uint) (*data.StoreWarehouse, error) {
+	var storeWarehouse data.StoreWarehouse
+	err := r.db.
+		Where("store_id = ?", storeID).
+		First(&storeWarehouse).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("store warehouse not found for store ID %d", storeID)
+		}
+		return nil, fmt.Errorf("failed to fetch store warehouse: %w", err)
+	}
+	return &storeWarehouse, nil
 }
 
 func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error) {

@@ -61,23 +61,6 @@ func InitializeRedis(cfg *config.Config) *database.RedisClient {
 // 	return kafkaManager
 // }
 
-func InitializeModule[T any, H any](
-	dbHandler *database.DBHandler,
-	initService func(dbHandler *database.DBHandler) (T, error),
-	createHandler func(T) H,
-	registerRoutes func(H)) {
-
-	service, err := initService(dbHandler)
-	if err != nil {
-		log.Fatalf("Error initializing service: %v", err)
-		return
-	}
-
-	handler := createHandler(service)
-
-	registerRoutes(handler)
-}
-
 func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo storage.StorageRepository) *gin.Engine {
 	cfg := config.GetConfig()
 

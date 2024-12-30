@@ -204,7 +204,7 @@ CREATE TABLE
 
 -- ProductIngredient Table
 CREATE TABLE
-	IF NOT EXISTS product_ingredients (
+	IF NOT EXISTS product_size_ingredients (
 		id SERIAL PRIMARY KEY,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
@@ -254,7 +254,7 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		store_warehouse_id INT NOT NULL REFERENCES store_warehouses (id) ON DELETE CASCADE,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-		low_stock_threshold DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+		low_stock_threshold DECIMAL(10, 2) NOT NULL CHECK (low_stock_threshold > 0),
 		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

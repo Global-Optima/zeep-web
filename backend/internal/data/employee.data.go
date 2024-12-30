@@ -71,11 +71,8 @@ func (w Weekday) ToString() string {
 }
 
 func IsValidWeekday(weekday Weekday) bool {
-	switch weekday {
-	case Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday:
-		return true
-	}
-	return false
+	_, exists := weekdayMapping[string(weekday)]
+	return exists
 }
 
 type Employee struct {

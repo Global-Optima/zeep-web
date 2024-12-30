@@ -33,7 +33,7 @@ type StoreWarehouseStock struct {
 	StoreWarehouse    StoreWarehouse `gorm:"foreignKey:StoreWarehouseID;constraint:OnDelete:CASCADE"`
 	IngredientID      uint           `gorm:"not null;index"`
 	Ingredient        Ingredient     `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE" sort:"ingredients"`
-	LowStockThreshold float64        `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"lowStockThreshold"`
+	LowStockThreshold float64        `gorm:"type:decimal(10,2);not null;check:low_stock_threshold > 0" sort:"lowStockThreshold"`
 	Quantity          float64        `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"quantity"`
 }
 
