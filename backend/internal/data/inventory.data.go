@@ -140,7 +140,7 @@ type SupplierWarehouseDelivery struct {
 	WarehouseID     uint          `gorm:"not null"`
 	Barcode         string        `gorm:"size:255;not null"`
 	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
-	DeliveryDate    time.Time     `gorm:"not null"`
+	DeliveryDate    time.Time     `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	ExpirationDate  time.Time     `gorm:"not null"`
 }
 
