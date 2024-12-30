@@ -10,6 +10,7 @@ func ToSupplierResponse(supplier data.Supplier) SupplierResponse {
 		Name:         supplier.Name,
 		ContactEmail: supplier.ContactEmail,
 		ContactPhone: supplier.ContactPhone,
+		City:         supplier.City,
 		Address:      supplier.Address,
 		CreatedAt:    supplier.CreatedAt,
 		UpdatedAt:    supplier.UpdatedAt,
@@ -21,6 +22,7 @@ func ToSupplier(dto CreateSupplierDTO) data.Supplier {
 		Name:         dto.Name,
 		ContactEmail: dto.ContactEmail,
 		ContactPhone: dto.ContactPhone,
+		City:         dto.City,
 		Address:      dto.Address,
 	}
 }

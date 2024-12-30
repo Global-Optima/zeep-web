@@ -1,13 +1,15 @@
 package supplier
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
 )
 
 type SupplierService interface {
-	CreateSupplier(dto types.CreateSupplierDTO) (types.SupplierResponse, error)
+	CreateSupplier(dto types.CreateSupplierDTO) (*types.SupplierResponse, error)
 	GetSupplierByID(id uint) (types.SupplierResponse, error)
 	UpdateSupplier(id uint, dto types.UpdateSupplierDTO) error
 	DeleteSupplier(id uint) error
@@ -22,12 +24,22 @@ func NewSupplierService(repo SupplierRepository) SupplierService {
 	return &supplierService{repo}
 }
 
-func (s *supplierService) CreateSupplier(dto types.CreateSupplierDTO) (types.SupplierResponse, error) {
+func (s *supplierService) CreateSupplier(dto types.CreateSupplierDTO) (*types.SupplierResponse, error) {
+	exists, err := s.repo.ExistsByContactPhone(dto.ContactPhone)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check supplier existence: %w", err)
+	}
+	if exists {
+		return nil, errors.New("a supplier with this contact phone already exists")
+	}
+
 	supplier := types.ToSupplier(dto)
 	if err := s.repo.CreateSupplier(&supplier); err != nil {
-		return types.SupplierResponse{}, err
+		return nil, err
 	}
-	return types.ToSupplierResponse(supplier), nil
+
+	response := types.ToSupplierResponse(supplier)
+	return &response, nil
 }
 
 func (s *supplierService) GetSupplierByID(id uint) (types.SupplierResponse, error) {
@@ -39,11 +51,7 @@ func (s *supplierService) GetSupplierByID(id uint) (types.SupplierResponse, erro
 }
 
 func (s *supplierService) UpdateSupplier(id uint, dto types.UpdateSupplierDTO) error {
-	supplier, err := s.repo.GetSupplierByID(id)
-	if err != nil {
-		return fmt.Errorf("failed to fetch supplier with ID %d: %w", id, err)
-	}
-
+	supplier := &data.Supplier{}
 	if dto.Name != nil {
 		supplier.Name = *dto.Name
 	}
@@ -52,6 +60,9 @@ func (s *supplierService) UpdateSupplier(id uint, dto types.UpdateSupplierDTO) e
 	}
 	if dto.ContactPhone != nil {
 		supplier.ContactPhone = *dto.ContactPhone
+	}
+	if dto.City != nil {
+		supplier.City = *dto.City
 	}
 	if dto.Address != nil {
 		supplier.Address = *dto.Address

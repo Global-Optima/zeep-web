@@ -2,9 +2,10 @@ package init
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"log"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/container"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"

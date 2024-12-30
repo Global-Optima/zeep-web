@@ -69,7 +69,8 @@ type Supplier struct {
 	BaseEntity
 	Name         string `gorm:"size:255;not null" sort:"name"`
 	ContactEmail string `gorm:"size:255"`
-	ContactPhone string `gorm:"size:16"`
+	ContactPhone string `gorm:"size:16;uniqueIndex"`
+	City         string `gorm:"size:100;not null"`
 	Address      string `gorm:"size:255"`
 }
 

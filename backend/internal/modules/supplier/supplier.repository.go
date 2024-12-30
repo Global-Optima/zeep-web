@@ -13,6 +13,7 @@ type SupplierRepository interface {
 	UpdateSupplier(id uint, fields *data.Supplier) error
 	DeleteSupplier(id uint) error
 	GetAllSuppliers() ([]data.Supplier, error)
+	ExistsByContactPhone(phone string) (bool, error)
 }
 
 type supplierRepository struct {
@@ -52,4 +53,13 @@ func (r *supplierRepository) GetAllSuppliers() ([]data.Supplier, error) {
 	var suppliers []data.Supplier
 	err := r.db.Find(&suppliers).Error
 	return suppliers, err
+}
+
+func (r *supplierRepository) ExistsByContactPhone(phone string) (bool, error) {
+	var count int64
+	err := r.db.Model(&data.Supplier{}).Where("contact_phone = ?", phone).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
