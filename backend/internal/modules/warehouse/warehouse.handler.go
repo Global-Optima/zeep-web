@@ -20,12 +20,12 @@ func NewWarehouseHandler(service WarehouseService) *WarehouseHandler {
 func (h *WarehouseHandler) AssignStoreToWarehouse(c *gin.Context) {
 	var req types.AssignStoreToWarehouseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	if err := h.service.AssignStoreToWarehouse(req); err != nil {
-		utils.SendInternalServerError(c, "Failed to assign store to warehouse: "+err.Error())
+		utils.SendInternalServerError(c, "failed to assign store to warehouse")
 		return
 	}
 
@@ -42,12 +42,12 @@ func (h *WarehouseHandler) ReassignStore(c *gin.Context) {
 
 	var req types.ReassignStoreRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	if err := h.service.ReassignStore(uint(storeID), req); err != nil {
-		utils.SendInternalServerError(c, "Failed to reassign store: "+err.Error())
+		utils.SendInternalServerError(c, "failed to reassign store")
 		return
 	}
 
@@ -65,7 +65,7 @@ func (h *WarehouseHandler) GetAllStoresByWarehouse(c *gin.Context) {
 
 	stores, err := h.service.GetAllStoresByWarehouse(uint(warehouseID), pagination)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to list stores: "+err.Error())
+		utils.SendInternalServerError(c, "failed to list stores")
 		return
 	}
 

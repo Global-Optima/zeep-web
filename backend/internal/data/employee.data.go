@@ -1,6 +1,8 @@
 package data
 
 import (
+	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -30,15 +32,59 @@ func IsValidEmployeeRole(role EmployeeRole) bool {
 	}
 }
 
+type Weekday string
+
+const (
+	Monday    Weekday = "MONDAY"
+	Tuesday   Weekday = "TUESDAY"
+	Wednesday Weekday = "WEDNESDAY"
+	Thursday  Weekday = "THURSDAY"
+	Friday    Weekday = "FRIDAY"
+	Saturday  Weekday = "SATURDAY"
+	Sunday    Weekday = "SUNDAY"
+)
+
+var weekdayMapping = map[string]Weekday{
+	"MONDAY":    Monday,
+	"TUESDAY":   Tuesday,
+	"WEDNESDAY": Wednesday,
+	"THURSDAY":  Thursday,
+	"FRIDAY":    Friday,
+	"SATURDAY":  Saturday,
+	"SUNDAY":    Sunday,
+}
+
+func ToWeekday(s string) (Weekday, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	if weekday, exists := weekdayMapping[s]; exists {
+		return weekday, nil
+	}
+	return "", errors.New("invalid weekday")
+}
+
+func (w Weekday) ToString() string {
+	str := string(w)
+	if len(str) == 0 {
+		return ""
+	}
+	return str
+}
+
+func IsValidWeekday(weekday Weekday) bool {
+	_, exists := weekdayMapping[string(weekday)]
+	return exists
+}
+
 type Employee struct {
 	BaseEntity
-	Name              string             `gorm:"size:255;not null"`
-	Phone             string             `gorm:"size:15;unique"`
-	Email             string             `gorm:"size:255;unique"`
+	FirstName         string             `gorm:"size:255;not null" sort:"firstName"`
+	LastName          string             `gorm:"size:255;not null" sort:"lastName"`
+	Phone             string             `gorm:"size:16;unique"`
+	Email             string             `gorm:"size:255;unique" sort:"email"`
 	HashedPassword    string             `gorm:"size:255;not null"`
-	Role              EmployeeRole       `gorm:"size:50;not null"`
-	Type              EmployeeType       `gorm:"size:50;not null"`
-	IsActive          bool               `gorm:"default:true"`
+	Role              EmployeeRole       `gorm:"size:50;not null" sort:"role"`
+	Type              EmployeeType       `gorm:"size:50;not null" sort:"type"`
+	IsActive          bool               `gorm:"default:true" sort:"isActive"`
 	StoreEmployee     *StoreEmployee     `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee *WarehouseEmployee `gorm:"foreignKey:EmployeeID"`
 }
@@ -47,7 +93,7 @@ type StoreEmployee struct {
 	BaseEntity
 	EmployeeID  uint `gorm:"not null;uniqueIndex"`
 	StoreID     uint `gorm:"not null"`
-	IsFranchise bool `gorm:"default:false"`
+	IsFranchise bool `gorm:"default:false" sort:"isFranchise"`
 }
 
 type WarehouseEmployee struct {
@@ -61,14 +107,14 @@ type EmployeeAudit struct {
 	StartWorkAt *time.Time `gorm:"type:timestamp"`
 	EndWorkAt   *time.Time `gorm:"type:timestamp"`
 	EmployeeID  uint       `gorm:"index;not null"`
-	Employee    Employee   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+	Employee    Employee   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employees"`
 }
 
 type EmployeeWorkday struct {
 	BaseEntity
-	Day        string   `gorm:"size:15;not null"`
-	StartAt    string   `gorm:"type:time;not null"`
-	EndAt      string   `gorm:"type:time;not null"`
+	Day        Weekday  `gorm:"size:15;not null" sort:"day"`
+	StartAt    string   `gorm:"type:time;not null" sort:"startAt"`
+	EndAt      string   `gorm:"type:time;not null" sort:"endAt"`
 	EmployeeID uint     `gorm:"index;not null"`
-	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employees"`
 }

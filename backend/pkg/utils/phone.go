@@ -1,9 +1,36 @@
 package utils
 
-import "regexp"
+import (
+	"github.com/nyaruka/phonenumbers"
+)
 
-func IsValidPhone(phone string) bool {
-	regex := `^\+?[1-9]\d{1,14}$`
-	re := regexp.MustCompile(regex)
-	return re.MatchString(phone)
+const (
+	DEFAULT_PHONE_NUMBER_REGION               = "KZ"
+	INTERNATIONAL_COMPACT_PHONE_NUMBER_FORMAT = phonenumbers.E164
+)
+
+func IsValidPhone(rawNumber, region string) bool {
+	//if region is unknown set to ""
+	phoneNumber, err := phonenumbers.Parse(rawNumber, region)
+	if err != nil {
+		return false
+	}
+
+	return phonenumbers.IsValidNumber(phoneNumber)
+}
+
+func FormatPhoneInput(rawNumber string) string {
+	phoneNumber, err := phonenumbers.Parse(rawNumber, "")
+	if err != nil {
+		return ""
+	}
+	return phonenumbers.Format(phoneNumber, INTERNATIONAL_COMPACT_PHONE_NUMBER_FORMAT)
+}
+
+func FormatPhoneOutput(rawNumber string) string {
+	phoneNumber, err := phonenumbers.Parse(rawNumber, "")
+	if err != nil {
+		return ""
+	}
+	return phonenumbers.Format(phoneNumber, phonenumbers.INTERNATIONAL)
 }

@@ -20,7 +20,7 @@ func NewInventoryHandler(service InventoryService) *InventoryHandler {
 func (h *InventoryHandler) ReceiveInventory(c *gin.Context) {
 	var req types.ReceiveInventoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
@@ -30,17 +30,17 @@ func (h *InventoryHandler) ReceiveInventory(c *gin.Context) {
 	}
 
 	if err := h.service.ReceiveInventory(req); err != nil {
-		utils.SendInternalServerError(c, "Failed to receive inventory: "+err.Error())
+		utils.SendInternalServerError(c, "failed to receive inventory")
 		return
 	}
 
-	utils.SendMessageWithStatus(c, "Inventory received successfully", http.StatusOK)
+	utils.SendMessageWithStatus(c, "inventory received successfully", http.StatusOK)
 }
 
 func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 	var req types.TransferInventoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
@@ -50,11 +50,11 @@ func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 	}
 
 	if err := h.service.TransferInventory(req); err != nil {
-		utils.SendInternalServerError(c, "Failed to transfer inventory: "+err.Error())
+		utils.SendInternalServerError(c, "failed to transfer inventory")
 		return
 	}
 
-	utils.SendMessageWithStatus(c, "Inventory transferred successfully", http.StatusOK)
+	utils.SendMessageWithStatus(c, "inventory transferred successfully", http.StatusOK)
 }
 
 func (h *InventoryHandler) GetInventoryLevels(c *gin.Context) {
@@ -68,7 +68,7 @@ func (h *InventoryHandler) GetInventoryLevels(c *gin.Context) {
 
 	levels, err := h.service.GetInventoryLevels(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch inventory levels: "+err.Error())
+		utils.SendInternalServerError(c, "failed to fetch inventory levels")
 		return
 	}
 
@@ -78,12 +78,12 @@ func (h *InventoryHandler) GetInventoryLevels(c *gin.Context) {
 func (h *InventoryHandler) PickupStock(c *gin.Context) {
 	var req types.PickupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	if err := h.service.PickupStock(req); err != nil {
-		utils.SendInternalServerError(c, "Failed to handle store pickup: "+err.Error())
+		utils.SendInternalServerError(c, "failed to handle store pickup")
 		return
 	}
 
@@ -108,7 +108,7 @@ func (h *InventoryHandler) GetExpiringItems(c *gin.Context) {
 
 	items, err := h.service.GetExpiringItems(uint(warehouseID), thresholdDays)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch expiring items: "+err.Error())
+		utils.SendInternalServerError(c, "failed to fetch expiring items")
 		return
 	}
 
@@ -118,12 +118,12 @@ func (h *InventoryHandler) GetExpiringItems(c *gin.Context) {
 func (h *InventoryHandler) ExtendExpiration(c *gin.Context) {
 	var req types.ExtendExpirationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	if err := h.service.ExtendExpiration(req); err != nil {
-		utils.SendInternalServerError(c, "Failed to extend expiration date: "+err.Error())
+		utils.SendInternalServerError(c, "failed to extend expiration date")
 		return
 	}
 
@@ -139,7 +139,7 @@ func (h *InventoryHandler) GetDeliveries(c *gin.Context) {
 
 	deliveries, err := h.service.GetDeliveries(filter.WarehouseID, filter.StartDate, filter.EndDate)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch deliveries: "+err.Error())
+		utils.SendInternalServerError(c, "failed to fetch deliveries")
 		return
 	}
 

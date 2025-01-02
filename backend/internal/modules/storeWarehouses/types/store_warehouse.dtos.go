@@ -12,9 +12,9 @@ type StockDTO struct {
 }
 
 type GetStockFilterQuery struct {
+	utils.BaseFilter
 	Search       *string `form:"search"`
 	LowStockOnly *bool   `form:"lowStockOnly"`
-	Pagination   *utils.Pagination
 }
 
 type UpdateStockDTO struct {
@@ -29,5 +29,5 @@ type AddMultipleStockDTO struct {
 type AddStockDTO struct {
 	IngredientID      uint    `json:"ingredientId" binding:"required,gt=0"`
 	Quantity          float64 `json:"quantity" binding:"required,gte=0"`
-	LowStockThreshold float64 `json:"lowStockThreshold" binding:"required,gte=0"`
+	LowStockThreshold float64 `json:"lowStockThreshold" binding:"required,gt=0"`
 }

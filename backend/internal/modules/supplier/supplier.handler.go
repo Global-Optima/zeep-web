@@ -20,34 +20,34 @@ func NewSupplierHandler(service SupplierService) *SupplierHandler {
 func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
 	var createDTO types.CreateSupplierDTO
 	if err := c.ShouldBindJSON(&createDTO); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	if err := types.ValidateCreateSupplierDTO(createDTO); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"validation_error": err.Error()})
+		utils.SendBadRequestError(c, "invalid request")
 		return
 	}
 
 	response, err := h.service.CreateSupplier(createDTO)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.SendInternalServerError(c, "fail to create supplier")
 		return
 	}
 
-	c.JSON(http.StatusCreated, response)
+	utils.SendResponseWithStatus(c, response, http.StatusCreated)
 }
 
 func (h *SupplierHandler) GetSupplierByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
+		utils.SendBadRequestError(c, "invalid ID")
 		return
 	}
 
 	response, err := h.service.GetSupplierByID(uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "supplier not found"})
+		utils.SendInternalServerError(c, "failed to retrieve supplier")
 		return
 	}
 
@@ -63,46 +63,46 @@ func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
 
 	var updateDTO types.UpdateSupplierDTO
 	if err := c.ShouldBindJSON(&updateDTO); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
 	}
 
 	if err := types.ValidateUpdateSupplierDTO(updateDTO); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "invalid request")
 		return
 	}
 
 	err = h.service.UpdateSupplier(uint(id), updateDTO)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to update supplier")
 		return
 	}
 
-	utils.SendSuccessResponse(c, gin.H{"message": "supplier updated successfully"})
+	utils.SendMessageWithStatus(c, "supplier updated successfully", http.StatusOK)
 }
 
 func (h *SupplierHandler) DeleteSupplier(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
+		utils.SendBadRequestError(c, "invalid ID")
 		return
 	}
 
 	err = h.service.DeleteSupplier(uint(id))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.SendInternalServerError(c, "failed to delete supplier")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "supplier deleted successfully"})
+	utils.SendMessageWithStatus(c, "supplier deleted successfully", http.StatusOK)
 }
 
 func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
 	suppliers, err := h.service.GetSuppliers()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.SendInternalServerError(c, "failed to retrieve suppliers")
 		return
 	}
 
-	c.JSON(http.StatusOK, suppliers)
+	utils.SendSuccessResponse(c, suppliers)
 }

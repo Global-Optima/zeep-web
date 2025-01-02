@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -94,6 +96,83 @@ func BuildCacheKey(module string, filters map[string]string) string {
 		key = fmt.Sprintf("%s:%s:%s", key, k, v)
 	}
 	return key
+}
+
+func BuildCacheKeyFromFilter(module string, filter FilterProvider) string {
+	if module == "" || filter == nil {
+		return ""
+	}
+
+	filters := make(map[string]string)
+
+	// Extract pagination fields
+	if pagination := filter.GetPagination(); pagination != nil {
+		filters["page"] = strconv.Itoa(pagination.Page)
+		filters["pageSize"] = strconv.Itoa(pagination.PageSize)
+	}
+
+	// Extract sort fields
+	if sort := filter.GetSort(); sort != nil {
+		filters["sortField"] = sort.Field
+		filters["sortDirection"] = sort.Direction
+	}
+
+	// Extract other fields using reflection
+	extractFields(filters, reflect.ValueOf(filter))
+
+	// Use BuildCacheKey to generate the key
+	return BuildCacheKey(module, filters)
+}
+
+func extractFields(filters map[string]string, value reflect.Value) {
+	if value.Kind() == reflect.Ptr {
+		if value.IsNil() {
+			return // Ignore nil pointers
+		}
+		value = value.Elem() // Dereference pointer
+	}
+
+	if value.Kind() != reflect.Struct {
+		return // Only process structs
+	}
+
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Field(i)
+		fieldType := value.Type().Field(i)
+		tag := fieldType.Tag.Get("form")
+
+		// Skip untagged or empty fields
+		if tag == "" || !field.IsValid() {
+			continue
+		}
+
+		switch field.Kind() {
+		case reflect.Ptr:
+			if !field.IsNil() {
+				filters[tag] = fmt.Sprintf("%v", field.Elem())
+			}
+		case reflect.Struct:
+			// Handle nested structs
+			extractFields(filters, field)
+		case reflect.Slice, reflect.Array:
+			// Handle slices/arrays by joining elements
+			var elements []string
+			for j := 0; j < field.Len(); j++ {
+				elements = append(elements, fmt.Sprintf("%v", field.Index(j).Interface()))
+			}
+			filters[tag] = strings.Join(elements, ",")
+		case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Float32, reflect.Float64, reflect.String:
+			filters[tag] = fmt.Sprintf("%v", field.Interface())
+		default:
+			if fieldType.Type.Kind() == reflect.String {
+				filters[tag] = fmt.Sprintf("%v", field.Interface())
+			} else {
+				filters[tag] = fmt.Sprintf("%v", field.Interface())
+			}
+		}
+	}
 }
 
 func IsEmpty(value interface{}) bool {

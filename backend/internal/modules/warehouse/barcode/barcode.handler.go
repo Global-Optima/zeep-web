@@ -17,13 +17,13 @@ func NewBarcodeHandler(service BarcodeService) *BarcodeHandler {
 func (h *BarcodeHandler) GenerateBarcode(c *gin.Context) {
 	var req types.GenerateBarcodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	response, err := h.service.GenerateBarcode(&req)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to generate barcode")
 		return
 	}
 
@@ -44,9 +44,9 @@ func (h *BarcodeHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
 	response, err := h.service.RetrieveStockMaterialByBarcode(&req)
 	if err != nil {
 		if err.Error() == "StockMaterial not found with the provided barcode" {
-			utils.SendNotFoundError(c, err.Error())
+			utils.SendNotFoundError(c, "StockMaterial not found with the provided barcode")
 		} else {
-			utils.SendInternalServerError(c, err.Error())
+			utils.SendInternalServerError(c, "failed to retrieve stockMaterial barcode")
 		}
 		return
 	}
@@ -57,13 +57,13 @@ func (h *BarcodeHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
 func (h *BarcodeHandler) PrintAdditionalBarcodes(c *gin.Context) {
 	var req types.PrintAdditionalBarcodesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	response, err := h.service.PrintAdditionalBarcodes(&req)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "failed to print additional barcodes")
 		return
 	}
 

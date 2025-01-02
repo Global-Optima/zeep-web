@@ -1,138 +1,174 @@
 package types
 
 import (
-	"errors"
 	"fmt"
-	"net/url"
-	"strconv"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 func ValidateEmployee(input CreateEmployeeDTO) error {
-	if input.Name == "" {
-		return errors.New("employee name cannot be empty")
+	if input.LastName == "" || input.FirstName == "" {
+		return fmt.Errorf("%w: employee name cannot contain empty values", ErrValidation)
 	}
 
 	if !utils.IsValidEmail(input.Email) {
-		return errors.New("invalid email format")
+		return fmt.Errorf("%w: invalid email format", ErrValidation)
+	}
+
+	if input.Phone != "" {
+		if !utils.IsValidPhone(input.Phone, "") {
+			return fmt.Errorf("%w: invalid phone number format", ErrValidation)
+		}
 	}
 
 	if err := utils.IsValidPassword(input.Password); err != nil {
-		return fmt.Errorf("password validation failed: %v", err)
+		return fmt.Errorf("%w: password validation failed: %v", ErrValidation, err)
 	}
 
 	if !data.IsValidEmployeeRole(input.Role) {
-		return errors.New("invalid role specified")
-	}
-
-	if input.Type == data.StoreEmployeeType && input.StoreDetails == nil {
-		return errors.New("store details are required for store employees")
-	}
-	if input.Type == data.WarehouseEmployeeType && input.WarehouseDetails == nil {
-		return errors.New("warehouse details are required for warehouse employees")
+		return fmt.Errorf("%w: invalid role specified: %s", ErrValidation, input.Role)
 	}
 
 	return nil
 }
 
-func PrepareUpdateFields(input UpdateEmployeeDTO) (map[string]interface{}, error) {
-	updateFields := map[string]interface{}{}
+func ValidateStoreEmployee(input *CreateStoreEmployeeDTO) error {
+	if err := ValidateEmployee(input.CreateEmployeeDTO); err != nil {
+		return err
+	}
 
-	if input.Name != nil {
-		updateFields["name"] = *input.Name
+	if input.StoreID == 0 {
+		return fmt.Errorf("%w: store details are required for store employees", ErrValidation)
+	}
+
+	return nil
+}
+
+func ValidateWarehouseEmployee(input *CreateWarehouseEmployeeDTO) error {
+	if err := ValidateEmployee(input.CreateEmployeeDTO); err != nil {
+		return err
+	}
+
+	if input.WarehouseID == 0 {
+		return fmt.Errorf("%w: warehouse details are required for warehouse employees", ErrValidation)
+	}
+
+	return nil
+}
+
+func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
+	employee := &data.Employee{}
+
+	if input.FirstName != nil {
+		employee.FirstName = *input.FirstName
+	}
+	if input.LastName != nil {
+		employee.LastName = *input.LastName
+	}
+	if input.IsActive != nil {
+		employee.IsActive = *input.IsActive
 	}
 	if input.Phone != nil {
-		updateFields["phone"] = *input.Phone
+		if utils.IsValidPhone(*input.Phone, "") {
+			employee.Phone = utils.FormatPhoneInput(*input.Phone)
+		} else {
+			return nil, fmt.Errorf("%w: invalid phone number format: %s", ErrValidation, *input.Phone)
+		}
 	}
 	if input.Email != nil {
 		if !utils.IsValidEmail(*input.Email) {
-			return nil, errors.New("invalid email format")
+			return employee, fmt.Errorf("%w: invalid email format", ErrValidation)
 		}
-		updateFields["email"] = *input.Email
+		employee.Email = *input.Email
 	}
 	if input.Role != nil {
 		if !data.IsValidEmployeeRole(*input.Role) {
-			return nil, fmt.Errorf("invalid role: %v", *input.Role)
+			return employee, fmt.Errorf("%w: invalid role: %v", ErrValidation, *input.Role)
 		}
-		updateFields["role"] = *input.Role
+		employee.Role = *input.Role
 	}
 
-	if input.StoreDetails != nil {
-		if input.StoreDetails.StoreID != nil {
-			updateFields["store_employee.store_id"] = *input.StoreDetails.StoreID
-		}
-		if input.StoreDetails.IsFranchise != nil {
-			updateFields["store_employee.is_franchise"] = *input.StoreDetails.IsFranchise
-		}
-	}
-
-	if input.WarehouseDetails != nil {
-		if input.WarehouseDetails.WarehouseID != nil {
-			updateFields["warehouse_employee.warehouse_id"] = *input.WarehouseDetails.WarehouseID
-		}
-	}
-
-	return updateFields, nil
+	return employee, nil
 }
 
-func ParseEmployeeQueryParams(query url.Values) (*GetEmployeesQuery, error) {
-	params := &GetEmployeesQuery{}
-
-	// Parse `type`
-	if query.Get("type") != "" {
-		employeeType := query.Get("type")
-		params.Type = &employeeType
+func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*data.Employee, error) {
+	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
+	if err != nil {
+		return employee, err
 	}
 
-	// Parse `role`
-	if query.Get("role") != "" {
-		role := query.Get("role")
-		params.Role = &role
-	}
-
-	// Parse `store_id`
-	if query.Get("storeId") != "" {
-		storeID, err := strconv.ParseUint(query.Get("storeId"), 10, 64)
-		if err != nil {
-			return nil, errors.New("invalid store ID")
+	if input.StoreID != nil {
+		employee.StoreEmployee = &data.StoreEmployee{
+			StoreID: *input.StoreID,
 		}
-		storeIDUint := uint(storeID)
-		params.StoreID = &storeIDUint
 	}
-
-	// Parse `warehouse_id`
-	if query.Get("warehouseId") != "" {
-		warehouseID, err := strconv.ParseUint(query.Get("warehouseId"), 10, 64)
-		if err != nil {
-			return nil, errors.New("invalid warehouse ID")
+	if input.IsFranchise != nil {
+		if employee.StoreEmployee == nil {
+			employee.StoreEmployee = &data.StoreEmployee{}
 		}
-		warehouseIDUint := uint(warehouseID)
-		params.WarehouseID = &warehouseIDUint
+		employee.StoreEmployee.IsFranchise = *input.IsFranchise
 	}
 
-	// Parse `limit`
-	if query.Get("limit") != "" {
-		limit, err := strconv.Atoi(query.Get("limit"))
-		if err != nil || limit < 0 {
-			return nil, errors.New("invalid limit value")
+	return employee, nil
+}
+
+func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.Employee, error) {
+	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
+	if err != nil {
+		return employee, err
+	}
+
+	if input.WarehouseID != nil {
+		employee.WarehouseEmployee = &data.WarehouseEmployee{
+			WarehouseID: *input.WarehouseID,
 		}
-		params.Limit = limit
-	} else {
-		params.Limit = 10 // Default value
 	}
 
-	// Parse `offset`
-	if query.Get("offset") != "" {
-		offset, err := strconv.Atoi(query.Get("offset"))
-		if err != nil || offset < 0 {
-			return nil, errors.New("invalid offset value")
+	return employee, nil
+}
+
+func ValidateEmployeeWorkday(input *CreateEmployeeWorkdayDTO) (*data.EmployeeWorkday, error) {
+	var workday data.EmployeeWorkday
+	weekday, err := data.ToWeekday(input.Day)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w: %s", ErrValidation, ErrInvalidWeekdayFormat, input.Day)
+	}
+	workday.Day = weekday
+
+	if err := utils.ValidateTime(input.StartAt); err != nil {
+		return nil, fmt.Errorf("%w: start at validation failed: %v", ErrValidation, err)
+	}
+	workday.StartAt = input.StartAt
+
+	if err := utils.ValidateTime(input.EndAt); err != nil {
+		return nil, fmt.Errorf("%w: end at validation failed: %v", ErrValidation, err)
+	}
+	workday.EndAt = input.EndAt
+
+	if input.EmployeeID == 0 {
+		return nil, fmt.Errorf("%w: employee ID cannot be zero", ErrValidation)
+	}
+	workday.EmployeeID = input.EmployeeID
+
+	return &workday, nil
+}
+
+func WorkdaysUpdateFields(input *UpdateEmployeeWorkdayDTO) (*data.EmployeeWorkday, error) {
+	workday := &data.EmployeeWorkday{}
+
+	if input.StartAt != nil {
+		if err := utils.ValidateTime(*input.StartAt); err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrValidation, err)
 		}
-		params.Offset = offset
-	} else {
-		params.Offset = 0 // Default value
+		workday.StartAt = *input.StartAt
 	}
 
-	return params, nil
+	if input.EndAt != nil {
+		if err := utils.ValidateTime(*input.EndAt); err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrValidation, err)
+		}
+		workday.EndAt = *input.EndAt
+	}
+
+	return workday, nil
 }

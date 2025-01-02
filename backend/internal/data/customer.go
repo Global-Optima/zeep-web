@@ -6,11 +6,12 @@ import (
 
 type Customer struct {
 	BaseEntity
-	Name       string            `gorm:"size:255;not null"`
+	FirstName  string            `gorm:"size:255;not null" sort:"firstName"`
+	LastName   string            `gorm:"size:255;not null" sort:"lastName"`
 	Password   string            `gorm:"size:255;not null"`
-	Phone      string            `gorm:"size:15;unique"`
-	IsVerified bool              `gorm:"default:false"`
-	IsBanned   bool              `gorm:"default:false"`
+	Phone      string            `gorm:"size:16;unique"`
+	IsVerified bool              `gorm:"default:false" sort:"isVerified"`
+	IsBanned   bool              `gorm:"default:false" sort:"isBanned"`
 	Addresses  []CustomerAddress `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
 	Bonuses    []Bonus           `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
 	Referrals  []Referral        `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
@@ -20,8 +21,8 @@ type Referral struct {
 	BaseEntity
 	CustomerID uint     `gorm:"index;not null"`
 	RefereeID  uint     `gorm:"index;not null"`
-	Customer   Customer `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
-	Referee    Customer `gorm:"foreignKey:RefereeID;constraint:OnDelete:CASCADE"`
+	Customer   Customer `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE" sort:"customers"`
+	Referee    Customer `gorm:"foreignKey:RefereeID;constraint:OnDelete:CASCADE" sort:"referees"`
 }
 
 type VerificationCode struct {
@@ -35,7 +36,7 @@ type VerificationCode struct {
 type CustomerAddress struct {
 	BaseEntity
 	CustomerID uint     `gorm:"index;not null"`
-	Customer   Customer `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
+	Customer   Customer `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE" sort:"customers"`
 	Address    string   `gorm:"size:255;not null"`
 	Longitude  string   `gorm:"size:20"`
 	Latitude   string   `gorm:"size:20"`
@@ -43,8 +44,8 @@ type CustomerAddress struct {
 
 type Bonus struct {
 	BaseEntity
-	Bonuses    float64  `gorm:"type:decimal(10,2);check:bonuses >= 0"`
-	CustomerID uint     `gorm:"index;not null"`
-	Customer   Customer `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
-	ExpiresAt  *time.Time
+	Bonuses    float64    `gorm:"type:decimal(10,2);check:bonuses >= 0"`
+	CustomerID uint       `gorm:"index;not null"`
+	Customer   Customer   `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE" sort:"customers"`
+	ExpiresAt  *time.Time `sort:"expiresAt"`
 }

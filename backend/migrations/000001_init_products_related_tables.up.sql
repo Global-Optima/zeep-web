@@ -1,3 +1,6 @@
+CREATE DOMAIN valid_phone AS VARCHAR(16)
+    CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
+
 -- FacilityAddress Table
 CREATE TABLE
 	IF NOT EXISTS facility_addresses (
@@ -117,32 +120,20 @@ CREATE TABLE
 		facility_address_id INT REFERENCES facility_addresses (id),
 		is_franchise BOOLEAN DEFAULT FALSE,
 		status VARCHAR(20) DEFAULT 'ACTIVE',
-		contact_phone VARCHAR(20) UNIQUE,
+		contact_phone valid_phone UNIQUE,
 		contact_email VARCHAR(255) UNIQUE,
 		store_hours VARCHAR(255),
 		admin_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
-	);
+    );
 
 -- StoreAdditive Table
 CREATE TABLE
 	IF NOT EXISTS store_additives (
 		id SERIAL PRIMARY KEY,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
-		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-		price DECIMAL(10, 2) DEFAULT 0,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
-
--- StoreProductSize Table
-CREATE TABLE
-	IF NOT EXISTS store_product_sizes (
-		id SERIAL PRIMARY KEY,
-		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		price DECIMAL(10, 2) DEFAULT 0,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -162,23 +153,33 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_store_product
+    ON store_products (store_id, product_id)
+    WHERE deleted_at IS NULL;
+
+-- StoreProductSize Table
+CREATE TABLE
+    IF NOT EXISTS store_product_sizes (
+    id SERIAL PRIMARY KEY,
+    product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
+    store_product_id INT NOT NULL REFERENCES store_products (id),
+    price DECIMAL(10, 2) DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
+CREATE UNIQUE INDEX unique_store_product_size
+    ON store_product_sizes (store_product_id, product_size_id)
+    WHERE deleted_at IS NULL;
+
 -- ProductAdditive Table
 CREATE TABLE
-	IF NOT EXISTS product_additives (
+	IF NOT EXISTS product_size_additives (
 		id SERIAL PRIMARY KEY,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
-
--- DefaultProductAdditive Table
-CREATE TABLE
-	IF NOT EXISTS default_product_additives (
-		id SERIAL PRIMARY KEY,
-		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
-		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
+        is_default BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -203,7 +204,7 @@ CREATE TABLE
 
 -- ProductIngredient Table
 CREATE TABLE
-	IF NOT EXISTS product_ingredients (
+	IF NOT EXISTS product_size_ingredients (
 		id SERIAL PRIMARY KEY,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
@@ -253,7 +254,7 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		store_warehouse_id INT NOT NULL REFERENCES store_warehouses (id) ON DELETE CASCADE,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-		low_stock_threshold DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+		low_stock_threshold DECIMAL(10, 2) NOT NULL CHECK (low_stock_threshold > 0),
 		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -264,9 +265,10 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS customers (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
+        first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
 		password VARCHAR(255) NOT NULL,
-		phone VARCHAR(15) UNIQUE,
+		phone valid_phone UNIQUE,
 		is_verified BOOLEAN DEFAULT FALSE,
 		is_banned BOOLEAN DEFAULT FALSE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -278,8 +280,9 @@ CREATE TABLE
 CREATE TABLE
 	IF NOT EXISTS employees (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
-		phone VARCHAR(15) UNIQUE,
+		first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
+		phone valid_phone UNIQUE,
 		email VARCHAR(255) UNIQUE,
 		hashed_password VARCHAR(255) NOT NULL,
 		role VARCHAR(50) NOT NULL,
@@ -479,7 +482,7 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		contact_email VARCHAR(255),
-		contact_phone VARCHAR(20),
+		contact_phone valid_phone,
 		address VARCHAR(255),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
