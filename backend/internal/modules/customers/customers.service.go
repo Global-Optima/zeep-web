@@ -15,7 +15,7 @@ type customerService struct {
 	logger *zap.SugaredLogger
 }
 
-func NewEmployeeService(repo CustomerRepository, logger *zap.SugaredLogger) CustomerService {
+func NewCustomerService(repo CustomerRepository, logger *zap.SugaredLogger) CustomerService {
 	return &customerService{
 		repo:   repo,
 		logger: logger,

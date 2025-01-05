@@ -2,18 +2,23 @@ package product
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
 type ProductService interface {
-	GetProducts(filter types.ProductsFilterDto) ([]types.StoreProductDTO, error)
-	GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error)
-	CreateProduct(product *types.CreateStoreProduct) error
-	UpdateProduct(product *types.UpdateStoreProduct) error
+	GetProductDetails(productID uint) (*types.ProductDetailsDTO, error)
+
+	GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDTO, error)
+	CreateProduct(product *types.CreateProductDTO) (uint, error)
+	UpdateProduct(productID uint, dto *types.UpdateProductDTO) error
 	DeleteProduct(productID uint) error
+
+	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error)
+	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
+	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
+	DeleteProductSize(productSizeID uint) error
 }
 
 type productService struct {
@@ -28,114 +33,117 @@ func NewProductService(repo ProductRepository, logger *zap.SugaredLogger) Produc
 	}
 }
 
-func (s *productService) GetProducts(filter types.ProductsFilterDto) ([]types.StoreProductDTO, error) {
-	products, err := s.repo.GetStoreProducts(filter)
+func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDTO, error) {
+	products, err := s.repo.GetProducts(filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve products", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	productDTOs := make([]types.StoreProductDTO, len(products))
+	productDTOs := make([]types.ProductDTO, len(products))
 	for i, product := range products {
-		productDTOs[i] = types.MapToStoreProductDTO(product)
+		productDTOs[i] = types.MapToProductDTO(product)
 	}
 
 	return productDTOs, nil
 }
 
-func (s *productService) GetStoreProductDetails(storeID uint, productID uint) (*types.StoreProductDetailsDTO, error) {
-	productDetails, err := s.repo.GetStoreProductDetails(storeID, productID)
+func (s *productService) GetProductDetails(productID uint) (*types.ProductDetailsDTO, error) {
+	product, err := s.repo.GetProductDetails(productID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to retrieve product for storeID = %d, productID = %d: %w", storeID, productID, err)
+		wrappedErr := fmt.Errorf("failed to retrieve product for productID = %d: %w", productID, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
-	if productDetails == nil {
-		return nil, nil
-	}
 
-	return productDetails, nil
+	return types.MapToProductDetailsDTO(product), nil
 }
 
-func (s *productService) CreateProduct(dto *types.CreateStoreProduct) error {
+func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error) {
 	product := types.CreateToProductModel(dto)
 
 	productID, err := s.repo.CreateProduct(product)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to create product", err)
+		wrappedErr := fmt.Errorf("failed to create product: %w", err)
 		s.logger.Error(wrappedErr)
-		return wrappedErr
+		return 0, wrappedErr
 	}
 
-	productSizes := types.ToProductSizesModels(dto.ProductSizes, productID)
-	if err := s.repo.CreateProductSizes(productID, productSizes); err != nil {
-		wrappedErr := utils.WrapError("failed to create product sizes", err)
+	return productID, nil
+}
+
+func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error) {
+	productSize := types.CreateToProductSizeModel(dto)
+
+	productSizeID, err := s.repo.CreateProductSize(productSize)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to create product size: %w", err)
 		s.logger.Error(wrappedErr)
-		return wrappedErr
+		return 0, wrappedErr
 	}
 
-	if err := AssignAdditives(productID, productSizes, dto.Additives, s.repo); err != nil {
-		return err
+	return productSizeID, nil
+}
+
+func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) error {
+	product := types.UpdateProductToModel(dto)
+
+	err := s.repo.UpdateProduct(productID, product)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to update product additives: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
 	return nil
 }
 
-func (s *productService) UpdateProduct(dto *types.UpdateStoreProduct) error {
-	product := types.UpdateToProductModel(dto)
+func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
+	updateModels := types.UpdateProductSizeToModels(dto)
 
-	if err := s.repo.UpdateProduct(product); err != nil {
-		wrappedErr := fmt.Errorf("failed to update product for productID = %d: %w", dto.ID, err)
+	err := s.repo.UpdateProductSizeWithAssociations(productSizeID, updateModels)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to update product additives: %w", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
 
 	return nil
+}
+
+func (s *productService) GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error) {
+	productSizes, err := s.repo.GetProductSizesByProductID(productID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to get product sizes: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]types.ProductSizeDTO, len(productSizes))
+	for i, productSize := range productSizes {
+		dtos[i] = types.MapToProductSizeDTO(productSize)
+	}
+
+	return dtos, nil
 }
 
 func (s *productService) DeleteProduct(productID uint) error {
-	return s.repo.DeleteProduct(productID)
+	err := s.repo.DeleteProduct(productID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to delete product: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+	return nil
 }
 
-func AssignAdditives(
-	productID uint,
-	productSizes []data.ProductSize,
-	additives []types.SelectedAdditiveDTO,
-	repo ProductRepository,
-) error {
-	var defaultAdditives []data.DefaultProductAdditive
-	productAdditives := make(map[uint][]data.ProductAdditive)
-
-	for _, additive := range additives {
-		if additive.IsDefault {
-			defaultAdditives = append(defaultAdditives, data.DefaultProductAdditive{
-				ProductID:  productID,
-				AdditiveID: additive.AdditiveID,
-			})
-		} else {
-			for _, size := range productSizes {
-				productAdditives[size.ID] = append(productAdditives[size.ID], data.ProductAdditive{
-					ProductSizeID: size.ID,
-					AdditiveID:    additive.AdditiveID,
-				})
-			}
-		}
+func (s *productService) DeleteProductSize(productSizeID uint) error {
+	err := s.repo.DeleteProductSize(productSizeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to delete product size: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
-
-	if len(defaultAdditives) > 0 {
-		if err := repo.AssignDefaultAdditives(productID, defaultAdditives); err != nil {
-			return err
-		}
-	}
-
-	for sizeID, additives := range productAdditives {
-		if len(additives) > 0 {
-			if err := repo.AssignProductAdditives(sizeID, additives); err != nil {
-				return err
-			}
-		}
-	}
-
 	return nil
 }

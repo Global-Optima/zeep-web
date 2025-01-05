@@ -11,11 +11,11 @@ import (
 )
 
 func ValidateCustomer(input CustomerRegisterDTO) error {
-	if input.Name == "" {
-		return errors.New("customer name cannot be empty")
+	if input.FirstName == "" && input.LastName == "" {
+		return errors.New("customer first name cannot contain empty values")
 	}
 
-	if !utils.IsValidPhone(input.Phone) {
+	if !utils.IsValidPhone(input.Phone, "") {
 		return errors.New("invalid email format")
 	}
 

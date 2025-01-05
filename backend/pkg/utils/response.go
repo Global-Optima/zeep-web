@@ -6,8 +6,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	ERROR_MESSAGE_BINDING_JSON  = "invalid input: failed to bind json body"
+	ERROR_MESSAGE_BINDING_QUERY = "failed to bind query parameters"
+)
+
 func SendSuccessResponse(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, data)
+}
+
+func SendResponseWithStatus(c *gin.Context, data interface{}, status int) {
+	c.JSON(status, data)
 }
 
 func SendSuccessResponseWithPagination(c *gin.Context, data interface{}, pagination *Pagination) {

@@ -106,3 +106,65 @@ func ConvertSuborderAdditiveToDTO(additive *data.SuborderAdditive) SuborderAddit
 		UpdatedAt: additive.UpdatedAt,
 	}
 }
+
+func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
+	if order == nil {
+		return nil
+	}
+
+	suborders := make([]SuborderDetailsDTO, len(order.Suborders))
+	for i, sub := range order.Suborders {
+		additives := make([]AdditiveDetailsDTO, len(sub.Additives))
+		for j, additive := range sub.Additives {
+			additives[j] = AdditiveDetailsDTO{
+				ID:          additive.Additive.ID,
+				Name:        additive.Additive.Name,
+				Description: additive.Additive.Description,
+				BasePrice:   additive.Additive.BasePrice,
+			}
+		}
+
+		suborders[i] = SuborderDetailsDTO{
+			ID:     sub.ID,
+			Price:  sub.Price,
+			Status: string(sub.Status),
+			ProductSize: ProductSizeDetailsDTO{
+				ID:        sub.ProductSize.ID,
+				Name:      sub.ProductSize.Name,
+				Measure:   sub.ProductSize.Measure,
+				BasePrice: sub.ProductSize.BasePrice,
+				Product: ProductDetailsDTO{
+					ID:          sub.ProductSize.Product.ID,
+					Name:        sub.ProductSize.Product.Name,
+					Description: sub.ProductSize.Product.Description,
+					ImageURL:    sub.ProductSize.Product.ImageURL,
+				},
+			},
+			Additives: additives,
+		}
+	}
+
+	var deliveryAddress *DeliveryAddressDTO
+	if order.DeliveryAddressID != nil {
+		deliveryAddress = &DeliveryAddressDTO{
+			ID:        order.DeliveryAddress.ID,
+			Address:   order.DeliveryAddress.Address,
+			Longitude: order.DeliveryAddress.Longitude,
+			Latitude:  order.DeliveryAddress.Latitude,
+		}
+	}
+
+	var customerName *string
+	if order.CustomerName != "" {
+		customerName = &order.CustomerName
+	}
+
+	return &OrderDetailsDTO{
+		ID:              order.ID,
+		CustomerName:    customerName, // Optional
+		Status:          string(order.Status),
+		Total:           order.Total,
+		Suborders:       suborders,
+		DeliveryAddress: deliveryAddress, // Optional
+	}
+}

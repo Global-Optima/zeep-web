@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,20 +22,18 @@ func NewOrderHandler(service OrderService) *OrderHandler {
 
 func (h *OrderHandler) GetOrders(c *gin.Context) {
 	var filter types.OrdersFilterQuery
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Order{}); err != nil {
 		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
 
-	filter.Pagination = utils.ParsePagination(c)
-
-	additives, err := h.service.GetOrders(filter)
+	orders, err := h.service.GetOrders(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch orders")
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
+	utils.SendSuccessResponseWithPagination(c, orders, filter.Pagination)
 }
 
 func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
@@ -51,7 +50,7 @@ func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, orders)
+	utils.SendSuccessResponse(c, orders)
 }
 
 // Get all suborders for a specific order
@@ -70,7 +69,7 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, subOrders)
+	utils.SendSuccessResponse(c, subOrders)
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
@@ -94,7 +93,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	BroadcastOrderCreated(orderDTO.StoreID, createdOrderWithPreloads)
 
-	c.JSON(http.StatusCreated, createdOrderWithPreloads)
+	utils.SendSuccessResponse(c, createdOrder)
 }
 
 // Complete a suborder
@@ -122,7 +121,7 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 
 	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 
-	c.Status(http.StatusOK)
+	utils.SendMessageWithStatus(c, "Sub order completed", http.StatusOK)
 }
 
 // Generate a PDF receipt for a specific order
@@ -163,7 +162,7 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, statusesWithCounts)
+	utils.SendSuccessResponse(c, statusesWithCounts)
 }
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
@@ -189,4 +188,25 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 	}
 
 	HandleClient(uint(storeID), conn, initialOrders)
+}
+
+func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
+	orderID, err := strconv.ParseUint(c.Param("orderId"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid order ID")
+		return
+	}
+
+	orderDetails, err := h.service.GetOrderDetails(uint(orderID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch order details")
+		return
+	}
+
+	if orderDetails == nil {
+		utils.SendNotFoundError(c, "Order not found")
+		return
+	}
+
+	utils.SendSuccessResponse(c, orderDetails)
 }

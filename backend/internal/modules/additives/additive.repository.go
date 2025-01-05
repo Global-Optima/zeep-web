@@ -3,17 +3,27 @@ package additives
 import (
 	"errors"
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type AdditiveRepository interface {
-	GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
-	GetAdditives(filter types.AdditiveFilterQuery) ([]data.Additive, error)
+	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
+	GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]data.StoreAdditive, error)
+	CreateAdditive(additive *data.Additive) error
+	UpdateAdditive(additive *data.Additive) error
+	DeleteAdditive(additiveID uint) error
+
+	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
+	GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
+	CreateAdditiveCategory(category *data.AdditiveCategory) error
+	UpdateAdditiveCategory(category *data.AdditiveCategory) error
+	DeleteAdditiveCategory(categoryID uint) error
+	GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error)
 }
 
 type additiveRepository struct {
@@ -24,21 +34,38 @@ func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
 }
 
-func (r *additiveRepository) GetAdditiveCategories(filter types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
+func (r *additiveRepository) GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
-	query := r.db.Preload("Additives")
+	subquery := r.db.Model(&data.Additive{}).
+		Select("additive_category_id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
+		Where("store_additives.store_id = ?", storeID).
+		Group("additive_category_id").
+		Having("COUNT(additives.id) > 0")
+
+	logrus.Info("Asd")
+
+	if filter.ProductSizeId != nil {
+		logrus.Info(*filter.ProductSizeId)
+		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
+	}
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where(
-			"additive_categories.name LIKE ? OR additive_categories.description LIKE ?",
+		subquery = subquery.Where(
+			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
 			searchTerm, searchTerm,
 		)
 	}
 
-	if filter.ProductSizeId != nil {
-		query = query.Preload("Additives", "EXISTS (SELECT 1 FROM product_additives WHERE product_additives.additive_id = additives.id AND product_additives.product_size_id = ?)", *filter.ProductSizeId)
+	query := r.db.Model(&data.AdditiveCategory{}).
+		Preload("Additives.StoreAdditives").
+		Where("id IN (?)", subquery)
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
+	if err != nil {
+		return nil, err
 	}
 
 	if err := query.Find(&categories).Error; err != nil {
@@ -48,12 +75,51 @@ func (r *additiveRepository) GetAdditiveCategories(filter types.AdditiveCategori
 	return categories, nil
 }
 
-func (r *additiveRepository) GetAdditives(filter types.AdditiveFilterQuery) ([]data.Additive, error) {
+func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
+	var categories []data.AdditiveCategory
+
+	subquery := r.db.Model(&data.Additive{}).
+		Select("additive_category_id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
+		Group("additive_category_id").
+		Having("COUNT(additives.id) > 0")
+
+	if filter.ProductSizeId != nil {
+		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		subquery = subquery.Where(
+			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
+			searchTerm, searchTerm,
+		)
+	}
+
+	query := r.db.Model(&data.AdditiveCategory{}).
+		Preload("Additives").
+		Where("id IN (?)", subquery)
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := query.Find(&categories).Error; err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
+func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error) {
 	var additives []data.Additive
 
 	query := r.db.
 		Preload("Category").
 		Joins("JOIN additive_categories ON additives.additive_category_id = additive_categories.id")
+
+	var err error
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
@@ -74,8 +140,7 @@ func (r *additiveRepository) GetAdditives(filter types.AdditiveFilterQuery) ([]d
 		query = query.Where("product_additives.product_size_id = ?", *filter.ProductSizeID)
 	}
 
-	var err error
-	query, err = utils.ApplyPagination(query, filter.Pagination, &data.Additive{})
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Additive{})
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +150,46 @@ func (r *additiveRepository) GetAdditives(filter types.AdditiveFilterQuery) ([]d
 	}
 
 	return additives, nil
+}
+
+func (r *additiveRepository) GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]data.StoreAdditive, error) {
+	var storeAdditives []data.StoreAdditive
+
+	query := r.db.Model(&data.StoreAdditive{}).
+		Where("store_id = ?", storeID).
+		Preload("Additive.Category")
+
+	var err error
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
+	}
+
+	if filter.MinPrice != nil {
+		query = query.Where("store_additives.price >= ?", *filter.MinPrice)
+	}
+	if filter.MaxPrice != nil {
+		query = query.Where("store_additives.price <= ?", *filter.MaxPrice)
+	}
+
+	if filter.CategoryID != nil {
+		query = query.Where("additive_categories.id = ?", *filter.CategoryID)
+	}
+	if filter.ProductSizeID != nil {
+		query = query.Where("product_additives.product_size_id = ?", *filter.ProductSizeID)
+	}
+
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreAdditive{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := query.Find(&storeAdditives).Error; err != nil {
+		return nil, err
+	}
+
+	return storeAdditives, nil
 }
 
 func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
@@ -97,4 +202,40 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
 	return &additive, nil
+}
+
+func (r *additiveRepository) CreateAdditive(additive *data.Additive) error {
+	return r.db.Create(additive).Error
+}
+
+func (r *additiveRepository) UpdateAdditive(additive *data.Additive) error {
+	return r.db.Save(additive).Error
+}
+
+func (r *additiveRepository) DeleteAdditive(additiveID uint) error {
+	return r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error
+}
+
+func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCategory) error {
+	return r.db.Create(category).Error
+}
+
+func (r *additiveRepository) UpdateAdditiveCategory(category *data.AdditiveCategory) error {
+	return r.db.Save(category).Error
+}
+
+func (r *additiveRepository) DeleteAdditiveCategory(categoryID uint) error {
+	return r.db.Where("id = ?", categoryID).Delete(&data.AdditiveCategory{}).Error
+}
+
+func (r *additiveRepository) GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error) {
+	var category data.AdditiveCategory
+	err := r.db.Preload("Additives").First(&category, categoryID).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &category, nil
 }

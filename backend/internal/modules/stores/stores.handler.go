@@ -54,13 +54,13 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 	var storeDTO types.CreateStoreDTO
 
 	if err := c.ShouldBindJSON(&storeDTO); err != nil {
-		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	createdStore, err := h.service.CreateStore(storeDTO)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create store: "+err.Error())
+		utils.SendInternalServerError(c, "failed to create store")
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *StoreHandler) GetStoreByID(c *gin.Context) {
 
 	store, err := h.service.GetStoreByID(uint(storeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store: "+err.Error())
+		utils.SendInternalServerError(c, "failed to retrieve store")
 		return
 	}
 
@@ -88,19 +88,19 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 	var dto types.UpdateStoreDTO
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	storeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store ID")
+		utils.SendBadRequestError(c, "invalid store ID")
 		return
 	}
 
 	updatedStore, err := h.service.UpdateStore(uint(storeID), dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update store: "+err.Error())
+		utils.SendInternalServerError(c, "failed to update store")
 		return
 	}
 
@@ -111,16 +111,16 @@ func (h *StoreHandler) DeleteStore(c *gin.Context) {
 
 	storeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store ID")
+		utils.SendBadRequestError(c, "invalid store ID")
 		return
 	}
 
 	hardDelete := c.Query("hardDelete") == "true"
 
 	if err := h.service.DeleteStore(uint(storeID), hardDelete); err != nil {
-		utils.SendInternalServerError(c, "Failed to delete store: "+err.Error())
+		utils.SendInternalServerError(c, "failed to delete store")
 		return
 	}
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Store deleted successfully"})
+	utils.SendSuccessResponse(c, gin.H{"message": "store deleted successfully"})
 }
