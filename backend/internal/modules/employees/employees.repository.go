@@ -173,7 +173,34 @@ func (r *employeeRepository) PartialUpdateEmployee(employeeID uint, employeeType
 }
 
 func (r *employeeRepository) DeleteEmployeeById(employeeID uint, employeeType data.EmployeeType) error {
-	return r.db.Model(&data.Employee{}).Where("id = ? AND type = ?", employeeID, employeeType).Update("is_active", false).Error
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("id = ? AND type = ?", employeeID, employeeType).Delete(&data.Employee{}).Error; err != nil {
+			return err
+		}
+
+		switch employeeType {
+		case data.StoreEmployeeType:
+			if err := tx.Where("employee_id = ?", employeeID).Delete(&data.StoreEmployee{}).Error; err != nil {
+				return err
+			}
+		case data.WarehouseEmployeeType:
+			if err := tx.Where("employee_id = ?", employeeID).Delete(&data.WarehouseEmployee{}).Error; err != nil {
+				return err
+			}
+		default:
+			return types.ErrUnsupportedEmployeeType
+		}
+
+		if err := tx.Where("employee_id = ?", employeeID).Delete(&data.EmployeeWorkday{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *employeeRepository) GetAllRoles() ([]data.EmployeeRole, error) {

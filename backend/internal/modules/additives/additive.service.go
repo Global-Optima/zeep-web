@@ -10,7 +10,6 @@ import (
 
 type AdditiveService interface {
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error)
-	GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]types.StoreAdditiveCategoryDTO, error)
 	CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) error
 	UpdateAdditiveCategory(dto *types.UpdateAdditiveCategoryDTO) error
 	DeleteAdditiveCategory(categoryID uint) error
@@ -18,7 +17,6 @@ type AdditiveService interface {
 
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
 	GetAdditiveByID(additiveID uint) (*types.AdditiveDTO, error)
-	GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]types.StoreAdditiveDTO, error)
 	CreateAdditive(dto *types.CreateAdditiveDTO) error
 	UpdateAdditive(dto *types.UpdateAdditiveDTO) error
 	DeleteAdditive(additiveID uint) error
@@ -54,29 +52,6 @@ func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategories
 	var categoryDTOs []types.AdditiveCategoryDTO
 	for _, category := range categories {
 		categoryDTOs = append(categoryDTOs, *types.ConvertToAdditiveCategoryDTO(&category))
-	}
-
-	return categoryDTOs, nil
-}
-
-func (s *additiveService) GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]types.StoreAdditiveCategoryDTO, error) {
-	// Fetch raw data from the repository
-	categories, err := s.repo.GetStoreAdditiveCategories(storeID, filter)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve store additives", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	// Handle case where no categories are found
-	if len(categories) == 0 {
-		return []types.StoreAdditiveCategoryDTO{}, nil
-	}
-
-	// Convert raw data into DTOs
-	var categoryDTOs []types.StoreAdditiveCategoryDTO
-	for _, category := range categories {
-		categoryDTOs = append(categoryDTOs, *types.ConvertToStoreAdditiveCategoryDTO(&category))
 	}
 
 	return categoryDTOs, nil
@@ -151,22 +126,6 @@ func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]typ
 	}
 
 	return additiveDTOs, nil
-}
-
-func (s *additiveService) GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]types.StoreAdditiveDTO, error) {
-	additives, err := s.repo.GetStoreAdditives(storeID, filter)
-	if err != nil {
-		wrappedError := utils.WrapError("failed to retrieve additives", err)
-		s.logger.Error(wrappedError)
-		return nil, wrappedError
-	}
-
-	storeAdditiveDTOs := make([]types.StoreAdditiveDTO, len(additives))
-	for i, additive := range additives {
-		storeAdditiveDTOs[i] = *types.ConvertToStoreAdditiveDTO(&additive)
-	}
-
-	return storeAdditiveDTOs, nil
 }
 
 func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) error {

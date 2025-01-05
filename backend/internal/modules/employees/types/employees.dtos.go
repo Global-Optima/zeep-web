@@ -6,13 +6,14 @@ import (
 )
 
 type CreateEmployeeDTO struct {
-	FirstName string            `json:"firstName" binding:"required"`
-	LastName  string            `json:"lastName" binding:"required"`
-	Phone     string            `json:"phone"`
-	Email     string            `json:"email" binding:"required"`
-	Role      data.EmployeeRole `json:"role" binding:"required"`
-	Password  string            `json:"password" binding:"required"`
-	IsActive  bool              `json:"isActive" binding:"required"`
+	FirstName string             `json:"firstName" binding:"required"`
+	LastName  string             `json:"lastName" binding:"required"`
+	Phone     string             `json:"phone"`
+	Email     string             `json:"email" binding:"required"`
+	Role      data.EmployeeRole  `json:"role" binding:"required"`
+	Password  string             `json:"password" binding:"required"`
+	IsActive  bool               `json:"isActive" binding:"required"`
+	Workdays  []CreateWorkdayDTO `json:"workdays" binding:"dive"`
 }
 
 type CreateStoreEmployeeDTO struct {
@@ -24,6 +25,12 @@ type CreateStoreEmployeeDTO struct {
 type CreateWarehouseEmployeeDTO struct {
 	CreateEmployeeDTO
 	WarehouseID uint `json:"warehouseId" binding:"required"`
+}
+
+type CreateWorkdayDTO struct {
+	Day     string `json:"day" binding:"required"`
+	StartAt string `json:"startAt" binding:"required"`
+	EndAt   string `json:"endAt" binding:"required"`
 }
 
 type StoreDetailsDTO struct {
@@ -116,10 +123,8 @@ type GetWarehouseEmployeesFilter struct {
 }
 
 type CreateEmployeeWorkdayDTO struct {
-	Day        string `json:"day" binding:"required"`
-	StartAt    string `json:"startAt"`
-	EndAt      string `json:"endAt"`
-	EmployeeID uint   `json:"employeeId"`
+	CreateWorkdayDTO
+	EmployeeID uint `json:"employeeId"`
 }
 
 type EmployeeWorkdayDTO struct {

@@ -45,6 +45,7 @@ const (
 )
 
 var weekdayMapping = map[string]Weekday{
+	// English
 	"MONDAY":    Monday,
 	"TUESDAY":   Tuesday,
 	"WEDNESDAY": Wednesday,
@@ -52,6 +53,24 @@ var weekdayMapping = map[string]Weekday{
 	"FRIDAY":    Friday,
 	"SATURDAY":  Saturday,
 	"SUNDAY":    Sunday,
+
+	// Russian
+	"ПОНЕДЕЛЬНИК": Monday,
+	"ВТОРНИК":     Tuesday,
+	"СРЕДА":       Wednesday,
+	"ЧЕТВЕРГ":     Thursday,
+	"ПЯТНИЦА":     Friday,
+	"СУББОТА":     Saturday,
+	"ВОСКРЕСЕНЬЕ": Sunday,
+
+	// Kazakh
+	"ДҮЙСЕНБІ": Monday,
+	"СЕЙСЕНБІ": Tuesday,
+	"СӘРСЕНБІ": Wednesday,
+	"БЕЙСЕНБІ": Thursday,
+	"ЖҰМА":     Friday,
+	"СЕНБІ":    Saturday,
+	"ЖЕКСЕНБІ": Sunday,
 }
 
 func ToWeekday(s string) (Weekday, error) {
@@ -87,6 +106,7 @@ type Employee struct {
 	IsActive          bool               `gorm:"default:true" sort:"isActive"`
 	StoreEmployee     *StoreEmployee     `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee *WarehouseEmployee `gorm:"foreignKey:EmployeeID"`
+	Workdays          []EmployeeWorkday  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 }
 
 type StoreEmployee struct {

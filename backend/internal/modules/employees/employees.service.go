@@ -44,19 +44,22 @@ func NewEmployeeService(repo EmployeeRepository, logger *zap.SugaredLogger) Empl
 }
 
 func (s *employeeService) CreateStoreEmployee(input *types.CreateStoreEmployeeDTO) (*types.StoreEmployeeDTO, error) {
-	if err := types.ValidateStoreEmployee(input); err != nil {
-		s.logger.Error(err)
-		return nil, err
-	}
-
-	hashedPassword, err := s.createNewEmployeePassword(&input.CreateEmployeeDTO)
+	employee, err := types.CreateToStoreEmployee(input)
 	if err != nil {
-		wrappedErr := utils.WrapError("error creating employee", err)
+		wrappedErr := utils.WrapError("failed to create store employee", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	employee := types.CreateToStoreEmployee(input, hashedPassword)
+	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	if existingEmployee != nil {
+		return nil, types.ErrEmployeeAlreadyExists
+	}
 
 	if err := s.repo.CreateEmployee(employee); err != nil {
 		wrappedErr := utils.WrapError("failed to create store employee", err)
@@ -68,18 +71,22 @@ func (s *employeeService) CreateStoreEmployee(input *types.CreateStoreEmployeeDT
 }
 
 func (s *employeeService) CreateWarehouseEmployee(input *types.CreateWarehouseEmployeeDTO) (*types.WarehouseEmployeeDTO, error) {
-	if err := types.ValidateWarehouseEmployee(input); err != nil {
-		return nil, err
-	}
-
-	hashedPassword, err := s.createNewEmployeePassword(&input.CreateEmployeeDTO)
+	employee, err := types.CreateToWarehouseEmployee(input)
 	if err != nil {
-		wrappedErr := utils.WrapError("error creating employee", err)
+		wrappedErr := utils.WrapError("failed to create warehouse employee", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	employee := types.CreateToWarehouseEmployee(input, hashedPassword)
+	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	if existingEmployee != nil {
+		return nil, types.ErrEmployeeAlreadyExists
+	}
 
 	if err := s.repo.CreateEmployee(employee); err != nil {
 		wrappedErr := utils.WrapError("failed to create warehouse employee", err)
@@ -88,24 +95,6 @@ func (s *employeeService) CreateWarehouseEmployee(input *types.CreateWarehouseEm
 	}
 
 	return types.MapToWarehouseEmployeeDTO(employee), nil
-}
-
-func (s *employeeService) createNewEmployeePassword(input *types.CreateEmployeeDTO) (string, error) {
-	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(input.Email, input.Phone)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-	if existingEmployee != nil {
-		return "", errors.New("an employee with the same email or phone already exists")
-	}
-
-	hashedPassword, err := utils.HashPassword(input.Password)
-	if err != nil {
-		return "", fmt.Errorf("failed to hash password: %v", err)
-	}
-	return hashedPassword, nil
 }
 
 func (s *employeeService) GetStoreEmployees(filter *types.GetStoreEmployeesFilter) ([]types.StoreEmployeeDTO, error) {
