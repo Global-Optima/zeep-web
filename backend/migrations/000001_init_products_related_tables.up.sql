@@ -1,5 +1,15 @@
-CREATE DOMAIN valid_phone AS VARCHAR(16)
-    CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_type
+        WHERE typname = 'valid_phone'
+    ) THEN
+        CREATE DOMAIN valid_phone AS VARCHAR(16)
+        CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
+    END IF;
+END $$;
+
 
 -- FacilityAddress Table
 CREATE TABLE
