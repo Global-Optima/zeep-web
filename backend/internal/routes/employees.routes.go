@@ -260,11 +260,11 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 	router := r.EmployeeRoutes.Group("/stock-requests")
 	{
 		router.GET("", handler.GetStockRequests)
-		router.GET("/:id", handler.GetStockRequestByID)
+		router.GET("/:requestId", handler.GetStockRequestByID)
 		router.GET("/low-stock", handler.GetLowStockIngredients)
 		router.GET("/marketplace-products", handler.GetAllStockMaterials)
 		router.POST("", handler.CreateStockRequest)
-		router.PUT("/:requestId/status", handler.UpdateStockRequestStatus)
+		router.PATCH("/:requestId/status", handler.UpdateStockRequestStatus)
 		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)
 	}
 }
