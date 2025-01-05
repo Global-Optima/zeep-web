@@ -282,10 +282,18 @@ func (r *warehouseRepository) getSupplierDeliveries(filter *types.GetWarehouseSt
 func (r *warehouseRepository) getWarehouseStock(stockMaterialID, warehouseID uint) (*data.WarehouseStock, error) {
 	var stock data.WarehouseStock
 	err := r.db.Model(&data.WarehouseStock{}).
-		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Unit").
-		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit").
+		Preload("StockMaterial", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name", "description", "barcode", "category_id", "safety_stock", "expiration_flag", "expiration_period_in_days")
+		}).
+		Preload("StockMaterial.StockMaterialCategory", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name")
+		}).
+		Preload("StockMaterial.Package", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "size", "unit_id", "stock_material_id")
+		}).
+		Preload("StockMaterial.Package.Unit", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name")
+		}).
 		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
 		First(&stock).Error
 	if err != nil {
@@ -299,11 +307,18 @@ func (r *warehouseRepository) getWarehouseStocksWithPagination(filter *types.Get
 	var totalCount int64
 
 	query := r.db.Model(&data.WarehouseStock{}).
-		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Unit").
-		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit").
-		Preload("StockMaterial")
+		Preload("StockMaterial", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name", "description", "barcode", "category_id", "safety_stock", "expiration_flag", "expiration_period_in_days")
+		}).
+		Preload("StockMaterial.StockMaterialCategory", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name")
+		}).
+		Preload("StockMaterial.Package", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "size", "unit_id", "stock_material_id")
+		}).
+		Preload("StockMaterial.Package.Unit", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name")
+		})
 
 	if filter.WarehouseID != nil {
 		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
