@@ -11,6 +11,13 @@ export enum EmployeeType {
 	WAREHOUSE = 'WAREHOUSE',
 }
 
+export interface EmployeeAccount {
+	firstName: string
+	lastName: string
+	email: string
+}
+
+
 export interface Employee {
 	id: number
 	firstName: string

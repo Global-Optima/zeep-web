@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
@@ -12,9 +14,9 @@ func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
 		LastName:  employee.LastName,
 		Phone:     utils.FormatPhoneOutput(employee.Phone),
 		Email:     employee.Email,
+		Type:      employee.Type,
 		Role:      employee.Role,
 		IsActive:  employee.IsActive,
-		Type:      employee.Type,
 	}
 
 	return dto
@@ -39,6 +41,14 @@ func MapToWarehouseEmployeeDTO(employee *data.Employee) *WarehouseEmployeeDTO {
 	return dto
 }
 
+func MapToEmployeeAccountDTO(employee *data.Employee) *EmployeeAccountDTO {
+	return &EmployeeAccountDTO{
+		FirstName: employee.FirstName,
+		LastName:  employee.LastName,
+		Email:     employee.Email,
+	}
+}
+
 func MapToEmployeeWorkdayDTO(workday *data.EmployeeWorkday) *EmployeeWorkdayDTO {
 	dto := &EmployeeWorkdayDTO{
 		ID:         workday.ID,
@@ -50,21 +60,26 @@ func MapToEmployeeWorkdayDTO(workday *data.EmployeeWorkday) *EmployeeWorkdayDTO 
 	return dto
 }
 
-func CreateToEmployee(dto *CreateEmployeeDTO, hashedPassword string) *data.Employee {
-	employee := &data.Employee{
-		FirstName:      dto.FirstName,
-		LastName:       dto.LastName,
-		Phone:          utils.FormatPhoneInput(dto.Phone),
-		Email:          dto.Email,
-		Role:           dto.Role,
-		HashedPassword: hashedPassword,
-		IsActive:       dto.IsActive,
+func CreateToEmployee(dto *CreateEmployeeDTO) (*data.Employee, error) {
+	employee, err := ValidateEmployee(dto)
+	if err != nil {
+		return nil, err
 	}
-	return employee
+
+	hashedPassword, err := utils.HashPassword(dto.Password)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %v", err)
+	}
+	employee.HashedPassword = hashedPassword
+
+	return employee, nil
 }
 
-func CreateToStoreEmployee(dto *CreateStoreEmployeeDTO, hashedPassword string) *data.Employee {
-	employee := CreateToEmployee(&dto.CreateEmployeeDTO, hashedPassword)
+func CreateToStoreEmployee(dto *CreateStoreEmployeeDTO) (*data.Employee, error) {
+	employee, err := CreateToEmployee(&dto.CreateEmployeeDTO)
+	if err != nil {
+		return nil, err
+	}
 
 	employee.Type = data.StoreEmployeeType
 	employee.StoreEmployee = &data.StoreEmployee{
@@ -72,15 +87,18 @@ func CreateToStoreEmployee(dto *CreateStoreEmployeeDTO, hashedPassword string) *
 		IsFranchise: dto.IsFranchise,
 	}
 
-	return employee
+	return employee, nil
 }
 
-func CreateToWarehouseEmployee(dto *CreateWarehouseEmployeeDTO, hashedPassword string) *data.Employee {
-	employee := CreateToEmployee(&dto.CreateEmployeeDTO, hashedPassword)
+func CreateToWarehouseEmployee(dto *CreateWarehouseEmployeeDTO) (*data.Employee, error) {
+	employee, err := CreateToEmployee(&dto.CreateEmployeeDTO)
+	if err != nil {
+		return nil, err
+	}
 
 	employee.Type = data.WarehouseEmployeeType
 	employee.WarehouseEmployee = &data.WarehouseEmployee{
 		WarehouseID: dto.WarehouseID,
 	}
-	return employee
+	return employee, nil
 }

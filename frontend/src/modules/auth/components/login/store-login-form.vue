@@ -60,10 +60,7 @@
 					<FormItem v-if="values.selectedStoreId">
 						<FormLabel class="text-sm sm:text-base">Выберите сотрудника</FormLabel>
 						<FormControl>
-							<Select
-								v-model="values.selectedEmployeeEmail"
-								v-bind="componentField"
-							>
+							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
 									<template v-if="employeesLoading">
 										<SelectValue
@@ -86,7 +83,7 @@
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="employee in employees?.data"
+										v-for="employee in employees"
 										:key="employee.email"
 										:value="employee.email"
 										class="text-sm sm:text-base"
@@ -155,8 +152,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
+import { authService } from '@/modules/auth/services/auth.service'
 import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
-import { employeesService } from '@/modules/employees/services/employees.service'
 import { storesService } from "@/modules/stores/services/stores.service"
 import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
@@ -191,8 +188,9 @@ const { data: stores, isLoading: storesLoading, isError: storesError } = useQuer
 
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
   queryKey: ['store-employees', values.selectedStoreId],
-  queryFn: () => employeesService.getStoreEmployees({storeId: values.selectedStoreId}),
+  queryFn: () => authService.getStoreAccounts(values.selectedStoreId!),
   enabled: computed(() => Boolean(values.selectedStoreId)),
+  initialData: [],
 })
 
 const onSubmit = handleSubmit((values) => {

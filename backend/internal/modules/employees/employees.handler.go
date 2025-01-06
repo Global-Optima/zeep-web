@@ -7,6 +7,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -195,6 +196,11 @@ func (h *EmployeeHandler) GetWarehouseEmployeeByID(c *gin.Context) {
 
 func (h *EmployeeHandler) GetStoreEmployees(c *gin.Context) {
 	var filter types.GetStoreEmployeesFilter
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil && !errors.Is(errH, contexts.ErrEmptyStoreID) {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Employee{})
 	if err != nil {
@@ -202,7 +208,7 @@ func (h *EmployeeHandler) GetStoreEmployees(c *gin.Context) {
 		return
 	}
 
-	employees, err := h.service.GetStoreEmployees(&filter)
+	employees, err := h.service.GetStoreEmployees(storeID, &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve store employees")
 		return
@@ -213,6 +219,11 @@ func (h *EmployeeHandler) GetStoreEmployees(c *gin.Context) {
 
 func (h *EmployeeHandler) GetWarehouseEmployees(c *gin.Context) {
 	var filter types.GetWarehouseEmployeesFilter
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil && !errors.Is(errH, contexts.ErrEmptyWarehouseID) {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Employee{})
 	if err != nil {
@@ -220,7 +231,7 @@ func (h *EmployeeHandler) GetWarehouseEmployees(c *gin.Context) {
 		return
 	}
 
-	employees, err := h.service.GetWarehouseEmployees(&filter)
+	employees, err := h.service.GetWarehouseEmployees(warehouseID, &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve warehouse employees")
 		return
@@ -381,4 +392,48 @@ func (h *EmployeeHandler) DeleteEmployeeWorkday(c *gin.Context) {
 	}
 
 	utils.SendMessageWithStatus(c, "workday deleted successfully", http.StatusOK)
+}
+
+func (h *EmployeeHandler) GetStoreAccounts(c *gin.Context) {
+	storeIdStr := c.Param("id")
+	storeID, err := strconv.ParseUint(storeIdStr, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid store ID")
+		return
+	}
+
+	employees, err := h.service.GetAllStoreEmployees(uint(storeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve store employees")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employees)
+}
+
+func (h *EmployeeHandler) GetWarehouseAccounts(c *gin.Context) {
+	warehouseIdStr := c.Param("id")
+	warehouseID, err := strconv.ParseUint(warehouseIdStr, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid warehouse ID")
+		return
+	}
+
+	employees, err := h.service.GetAllWarehouseEmployees(uint(warehouseID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve warehouse employees")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employees)
+}
+
+func (h *EmployeeHandler) GetAdminAccounts(c *gin.Context) {
+	employees, err := h.service.GetAllAdminEmployees()
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve admin employees")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employees)
 }

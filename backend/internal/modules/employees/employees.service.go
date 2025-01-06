@@ -13,8 +13,8 @@ import (
 type EmployeeService interface {
 	CreateStoreEmployee(input *types.CreateStoreEmployeeDTO) (*types.StoreEmployeeDTO, error)
 	CreateWarehouseEmployee(input *types.CreateWarehouseEmployeeDTO) (*types.WarehouseEmployeeDTO, error)
-	GetStoreEmployees(filter *types.GetStoreEmployeesFilter) ([]types.StoreEmployeeDTO, error)
-	GetWarehouseEmployees(filter *types.GetWarehouseEmployeesFilter) ([]types.WarehouseEmployeeDTO, error)
+	GetStoreEmployees(storeID uint, filter *types.GetStoreEmployeesFilter) ([]types.StoreEmployeeDTO, error)
+	GetWarehouseEmployees(warehouseID uint, filter *types.GetWarehouseEmployeesFilter) ([]types.WarehouseEmployeeDTO, error)
 	GetStoreEmployeeByID(employeeID uint) (*types.StoreEmployeeDTO, error)
 	GetWarehouseEmployeeByID(employeeID uint) (*types.WarehouseEmployeeDTO, error)
 	UpdateStoreEmployee(employeeID uint, input *types.UpdateStoreEmployeeDTO) error
@@ -29,6 +29,10 @@ type EmployeeService interface {
 	GetEmployeeWorkdays(employeeID uint) ([]types.EmployeeWorkdayDTO, error)
 	UpdateEmployeeWorkday(workdayID uint, dto *types.UpdateEmployeeWorkdayDTO) error
 	DeleteEmployeeWorkday(workdayID uint) error
+
+	GetAllStoreEmployees(storeID uint) ([]types.EmployeeAccountDTO, error)
+	GetAllWarehouseEmployees(warehouseID uint) ([]types.EmployeeAccountDTO, error)
+	GetAllAdminEmployees() ([]types.EmployeeAccountDTO, error)
 }
 
 type employeeService struct {
@@ -44,19 +48,22 @@ func NewEmployeeService(repo EmployeeRepository, logger *zap.SugaredLogger) Empl
 }
 
 func (s *employeeService) CreateStoreEmployee(input *types.CreateStoreEmployeeDTO) (*types.StoreEmployeeDTO, error) {
-	if err := types.ValidateStoreEmployee(input); err != nil {
-		s.logger.Error(err)
-		return nil, err
-	}
-
-	hashedPassword, err := s.createNewEmployeePassword(&input.CreateEmployeeDTO)
+	employee, err := types.CreateToStoreEmployee(input)
 	if err != nil {
-		wrappedErr := utils.WrapError("error creating employee", err)
+		wrappedErr := utils.WrapError("failed to create store employee", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	employee := types.CreateToStoreEmployee(input, hashedPassword)
+	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	if existingEmployee != nil {
+		return nil, types.ErrEmployeeAlreadyExists
+	}
 
 	if err := s.repo.CreateEmployee(employee); err != nil {
 		wrappedErr := utils.WrapError("failed to create store employee", err)
@@ -68,18 +75,22 @@ func (s *employeeService) CreateStoreEmployee(input *types.CreateStoreEmployeeDT
 }
 
 func (s *employeeService) CreateWarehouseEmployee(input *types.CreateWarehouseEmployeeDTO) (*types.WarehouseEmployeeDTO, error) {
-	if err := types.ValidateWarehouseEmployee(input); err != nil {
-		return nil, err
-	}
-
-	hashedPassword, err := s.createNewEmployeePassword(&input.CreateEmployeeDTO)
+	employee, err := types.CreateToWarehouseEmployee(input)
 	if err != nil {
-		wrappedErr := utils.WrapError("error creating employee", err)
+		wrappedErr := utils.WrapError("failed to create warehouse employee", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	employee := types.CreateToWarehouseEmployee(input, hashedPassword)
+	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	if existingEmployee != nil {
+		return nil, types.ErrEmployeeAlreadyExists
+	}
 
 	if err := s.repo.CreateEmployee(employee); err != nil {
 		wrappedErr := utils.WrapError("failed to create warehouse employee", err)
@@ -90,26 +101,8 @@ func (s *employeeService) CreateWarehouseEmployee(input *types.CreateWarehouseEm
 	return types.MapToWarehouseEmployeeDTO(employee), nil
 }
 
-func (s *employeeService) createNewEmployeePassword(input *types.CreateEmployeeDTO) (string, error) {
-	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(input.Email, input.Phone)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-	if existingEmployee != nil {
-		return "", errors.New("an employee with the same email or phone already exists")
-	}
-
-	hashedPassword, err := utils.HashPassword(input.Password)
-	if err != nil {
-		return "", fmt.Errorf("failed to hash password: %v", err)
-	}
-	return hashedPassword, nil
-}
-
-func (s *employeeService) GetStoreEmployees(filter *types.GetStoreEmployeesFilter) ([]types.StoreEmployeeDTO, error) {
-	employees, err := s.repo.GetStoreEmployees(filter)
+func (s *employeeService) GetStoreEmployees(storeID uint, filter *types.GetStoreEmployeesFilter) ([]types.StoreEmployeeDTO, error) {
+	employees, err := s.repo.GetStoreEmployees(storeID, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve store employees", err)
 		s.logger.Error(wrappedErr)
@@ -124,8 +117,8 @@ func (s *employeeService) GetStoreEmployees(filter *types.GetStoreEmployeesFilte
 	return dtos, nil
 }
 
-func (s *employeeService) GetWarehouseEmployees(filter *types.GetWarehouseEmployeesFilter) ([]types.WarehouseEmployeeDTO, error) {
-	employees, err := s.repo.GetWarehouseEmployees(filter)
+func (s *employeeService) GetWarehouseEmployees(warehouseID uint, filter *types.GetWarehouseEmployeesFilter) ([]types.WarehouseEmployeeDTO, error) {
+	employees, err := s.repo.GetWarehouseEmployees(warehouseID, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve store employees", err)
 		s.logger.Error(wrappedErr)
@@ -367,4 +360,59 @@ func (s *employeeService) DeleteEmployeeWorkday(workdayID uint) error {
 		return wrappedErr
 	}
 	return nil
+}
+
+func (s *employeeService) GetAllStoreEmployees(storeID uint) ([]types.EmployeeAccountDTO, error) {
+	if storeID == 0 {
+		return nil, utils.WrapError("invalid store ID", types.ErrValidation)
+	}
+
+	employees, err := s.repo.GetAllStoreEmployees(storeID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all store employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]types.EmployeeAccountDTO, len(employees))
+	for i, employee := range employees {
+		dtos[i] = *types.MapToEmployeeAccountDTO(&employee)
+	}
+
+	return dtos, nil
+}
+func (s *employeeService) GetAllWarehouseEmployees(warehouseID uint) ([]types.EmployeeAccountDTO, error) {
+	if warehouseID == 0 {
+		return nil, utils.WrapError("invalid warehouse ID", types.ErrValidation)
+	}
+
+	employees, err := s.repo.GetAllWarehouseEmployees(warehouseID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all warehouse employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]types.EmployeeAccountDTO, len(employees))
+	for i, employee := range employees {
+		dtos[i] = *types.MapToEmployeeAccountDTO(&employee)
+	}
+
+	return dtos, nil
+}
+
+func (s *employeeService) GetAllAdminEmployees() ([]types.EmployeeAccountDTO, error) {
+	employees, err := s.repo.GetAllAdminEmployees()
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all admin employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]types.EmployeeAccountDTO, len(employees))
+	for i, employee := range employees {
+		dtos[i] = *types.MapToEmployeeAccountDTO(&employee)
+	}
+
+	return dtos, nil
 }

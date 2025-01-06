@@ -1,8 +1,10 @@
 <template>
-	<Card class="">
+	<Card>
 		<CardHeader>
-			<CardTitle class="text-lg sm:text-xl">Вход для сотрудников склада</CardTitle>
-			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
+			<CardTitle class="text-lg sm:text-xl">Вход для администраторов и руководителей</CardTitle>
+			<CardDescription
+				>Введите ваши учетные данные для доступа к системе управления</CardDescription
+			>
 		</CardHeader>
 		<CardContent>
 			<form
@@ -11,73 +13,29 @@
 			>
 				<FormField
 					v-slot="{ componentField }"
-					name="selectedWarehouseId"
-				>
-					<FormItem>
-						<FormLabel class="text-sm sm:text-base">Склад</FormLabel>
-						<FormControl>
-							<Select v-bind="componentField">
-								<SelectTrigger class="w-full">
-									<template v-if="warehousesLoading">
-										<SelectValue
-											class="text-sm sm:text-base"
-											placeholder="Загрузка склада..."
-										/>
-									</template>
-									<template v-else-if="warehousesError">
-										<SelectValue
-											class="text-sm sm:text-base"
-											placeholder="Ошибка загрузки склада"
-										/>
-									</template>
-									<template v-else>
-										<SelectValue
-											class="text-sm sm:text-base"
-											placeholder="Выберите склад"
-										/>
-									</template>
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem
-										v-for="warehouse in warehouses"
-										:key="warehouse.id"
-										:value="warehouse.id.toString()"
-										class="text-sm sm:text-base"
-									>
-										{{ warehouse.name }}
-									</SelectItem>
-								</SelectContent>
-							</Select>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				</FormField>
-
-				<FormField
-					v-slot="{ componentField }"
 					name="selectedEmployeeEmail"
 				>
-					<FormItem v-if="values.selectedWarehouseId">
-						<FormLabel class="text-sm sm:text-base">Выберите сотрудника</FormLabel>
+					<FormItem>
+						<FormLabel class="text-sm sm:text-base">Выберите учетную запись</FormLabel>
 						<FormControl>
 							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
 									<template v-if="employeesLoading">
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Загрузка сотрудников..."
+											placeholder="Загрузка учетных записей..."
 										/>
 									</template>
 									<template v-else-if="employeesError">
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Ошибка загрузки сотрудников"
+											placeholder="Ошибка загрузки учетных записей"
 										/>
 									</template>
 									<template v-else>
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Сотрудники"
+											placeholder="Учетные записи"
 										/>
 									</template>
 								</SelectTrigger>
@@ -106,7 +64,7 @@
 						<FormControl>
 							<Input
 								type="password"
-								placeholder="Введите пароль сотрудника"
+								placeholder="Введите ваш пароль"
 								v-bind="componentField"
 								class="text-sm sm:text-base"
 								required
@@ -154,11 +112,9 @@ import {
 } from '@/core/components/ui/select'
 import { authService } from '@/modules/auth/services/auth.service'
 import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
-import { warehouseService } from "@/modules/warehouse/services/warehouse.service"
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { computed } from 'vue'
 import * as z from 'zod'
 
 const emits = defineEmits<{
@@ -167,27 +123,19 @@ const emits = defineEmits<{
 
 const formSchema = toTypedSchema(
   z.object({
-    selectedWarehouseId: z.coerce.number().min(1, {message: "Пожалуйста, выберите склад"}),
     selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
     password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
   })
 )
 
-const { values, isSubmitting, handleSubmit } = useForm({
+const { isSubmitting, handleSubmit } = useForm({
   validationSchema: formSchema,
 })
 
-const { data: warehouses, isLoading: warehousesLoading, isError: warehousesError } = useQuery({
-  queryKey: ['warehouses'],
-  queryFn: () => warehouseService.getWarehouses(),
-  initialData: [],
-})
-
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
-  queryKey: ['warehouse-employees', values.selectedWarehouseId],
-  queryFn: () => authService.getWarehouseAccounts(values.selectedWarehouseId!),
-  enabled: computed(() => Boolean(values.selectedWarehouseId)),
-  initialData: []
+  queryKey: ['admin-employees'],
+  queryFn: () => authService.getAdminsAccounts(),
+  initialData: [],
 })
 
 const onSubmit = handleSubmit((values) => {
