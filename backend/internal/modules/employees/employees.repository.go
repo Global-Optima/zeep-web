@@ -285,7 +285,8 @@ func (r *employeeRepository) GetAllStoreEmployees(storeID uint) ([]data.Employee
 	var employees []data.Employee
 
 	err := r.db.Model(&data.Employee{}).
-		Preload("StoreEmployee", "store_id = ?", storeID).
+		Joins("INNER JOIN store_employees ON store_employees.employee_id = employees.id").
+		Where("store_employees.store_id = ?", storeID).
 		Find(&employees).Error
 
 	if err != nil {
@@ -294,11 +295,13 @@ func (r *employeeRepository) GetAllStoreEmployees(storeID uint) ([]data.Employee
 
 	return employees, nil
 }
+
 func (r *employeeRepository) GetAllWarehouseEmployees(warehouseID uint) ([]data.Employee, error) {
 	var employees []data.Employee
 
 	err := r.db.Model(&data.Employee{}).
-		Preload("WarehouseEmployee", "warehouse_id = ?", warehouseID).
+		Joins("INNER JOIN warehouse_employees ON warehouse_employees.employee_id = employees.id").
+		Where("warehouse_employees.warehouse_id = ?", warehouseID).
 		Find(&employees).Error
 
 	if err != nil {
@@ -307,6 +310,7 @@ func (r *employeeRepository) GetAllWarehouseEmployees(warehouseID uint) ([]data.
 
 	return employees, nil
 }
+
 func (r *employeeRepository) GetAllAdminEmployees() ([]data.Employee, error) {
 	var employees []data.Employee
 	adminRoles := []data.EmployeeRole{data.RoleAdmin, data.RoleDirector}
