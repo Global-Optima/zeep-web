@@ -2,6 +2,8 @@ package container
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
@@ -9,27 +11,27 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"sync"
 )
 
 type Container struct {
-	once            sync.Once
-	DbHandler       *database.DBHandler
-	router          *routes.Router
-	logger          *zap.SugaredLogger
-	Additives       *modules.AdditivesModule
-	Auth            *modules.AuthModule
-	Categories      *modules.CategoriesModule
-	Customers       *modules.CustomersModule
-	Employees       *modules.EmployeesModule
-	Ingredients     *modules.IngredientsModule
-	Orders          *modules.OrdersModule
-	Products        *modules.ProductsModule
-	Stores          *modules.StoresModule
-	StoreWarehouses *modules.StoreWarehouseModule
-	Suppliers       *modules.SuppliersModule
-	StockRequests   *modules.StockRequestsModule
-	Warehouses      *modules.WarehousesModule
+	once                  sync.Once
+	DbHandler             *database.DBHandler
+	router                *routes.Router
+	logger                *zap.SugaredLogger
+	Additives             *modules.AdditivesModule
+	Auth                  *modules.AuthModule
+	Categories            *modules.CategoriesModule
+	Customers             *modules.CustomersModule
+	Employees             *modules.EmployeesModule
+	Ingredients           *modules.IngredientsModule
+	Orders                *modules.OrdersModule
+	Products              *modules.ProductsModule
+	Stores                *modules.StoresModule
+	StoreWarehouses       *modules.StoreWarehouseModule
+	Suppliers             *modules.SuppliersModule
+	StockRequests         *modules.StockRequestsModule
+	Warehouses            *modules.WarehousesModule
+	StockMaterialPackages *modules.StockMaterialPackagesModule
 }
 
 func NewContainer(dbHandler *database.DBHandler, router *routes.Router, logger *zap.SugaredLogger) *Container {
@@ -69,6 +71,7 @@ func (c *Container) mustInit() {
 	c.Stores = modules.NewStoresModule(baseModule)
 	c.Suppliers = modules.NewSuppliersModule(baseModule)
 	c.Warehouses = modules.NewWarehousesModule(baseModule)
+	c.StockMaterialPackages = modules.NewStockMaterialPackagesModule(baseModule)
 
 	c.Products = modules.NewProductsModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)
