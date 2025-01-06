@@ -16,10 +16,7 @@
 					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Склад</FormLabel>
 						<FormControl>
-							<Select
-								v-model="values.selectedWarehouseId"
-								v-bind="componentField"
-							>
+							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
 									<template v-if="warehousesLoading">
 										<SelectValue
@@ -89,12 +86,12 @@
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="employee in employees"
+										v-for="employee in employees?.data"
 										:key="employee.id"
 										:value="employee.email"
 										class="text-sm sm:text-base"
 									>
-										{{ employee.name }}
+										{{ employee.firstName }} {{ employee.lastName }}
 									</SelectItem>
 								</SelectContent>
 							</Select>
@@ -164,7 +161,7 @@ import { warehouseService } from "@/modules/warehouse/services/warehouse.service
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { watch } from 'vue'
+import { computed } from 'vue'
 import * as z from 'zod'
 
 const emits = defineEmits<{
@@ -173,7 +170,7 @@ const emits = defineEmits<{
 
 const formSchema = toTypedSchema(
   z.object({
-    selectedWarehouseId: z.string().min(1, {message: "Пожалуйста, выберите склад"}),
+    selectedWarehouseId: z.coerce.number().min(1, {message: "Пожалуйста, выберите склад"}),
     selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
     password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
   })
@@ -189,15 +186,10 @@ const { data: warehouses, isLoading: warehousesLoading, isError: warehousesError
   initialData: [],
 })
 
-const { data: employees, refetch: refetchEmployees, isLoading: employeesLoading, isError: employeesError } = useQuery({
+const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
   queryKey: ['warehouse-employees', values.selectedWarehouseId],
-  queryFn: () => employeesService.getWarehouseEmployees(Number(values.selectedWarehouseId)),
-  initialData: [],
-  enabled: false,
-})
-
-watch(() => values.selectedWarehouseId, (newWarehouse) => {
-  if (newWarehouse) refetchEmployees()
+  queryFn: () => employeesService.getWarehouseEmployees({warehouseId: values.selectedWarehouseId}),
+  enabled: computed(() => Boolean(values.selectedWarehouseId)),
 })
 
 const onSubmit = handleSubmit((values) => {

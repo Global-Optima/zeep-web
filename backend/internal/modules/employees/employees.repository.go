@@ -3,6 +3,7 @@ package employees
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -92,7 +93,6 @@ func (r *employeeRepository) GetWarehouseEmployees(filter *types.GetWarehouseEmp
 	}
 
 	if filter.Role != nil {
-		query = query.Where("employees.role = ?", *filter.Role)
 		query = query.Where("employees.role = ?", *filter.Role)
 	}
 

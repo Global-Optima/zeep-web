@@ -18,6 +18,7 @@ func NewEmployeesModule(base *common.BaseModule) *EmployeesModule {
 	handler := employees.NewEmployeeHandler(service)
 
 	base.Router.RegisterEmployeesRoutes(handler)
+	base.Router.RegisterCommonEmployeesRoutes(handler)
 
 	return &EmployeesModule{
 		BaseModule: base,

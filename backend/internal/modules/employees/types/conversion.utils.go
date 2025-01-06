@@ -14,6 +14,7 @@ func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
 		Email:     employee.Email,
 		Role:      employee.Role,
 		IsActive:  employee.IsActive,
+		Type:      employee.Type,
 	}
 
 	return dto

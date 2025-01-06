@@ -65,7 +65,9 @@
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuLabel>{{ currentEmployee.name }}</DropdownMenuLabel>
+				<DropdownMenuLabel>
+					{{ currentEmployee.firstName }} {{ currentEmployee.lastName }}
+				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem @click="onLogoutClick">Выйти</DropdownMenuItem>
 			</DropdownMenuContent>
@@ -89,6 +91,7 @@ import { useRouter } from 'vue-router'
 
 const {currentEmployee, setCurrentEmployee} = useEmployeeAuthStore()
 
+console.log(currentEmployee)
 
 const {mutate: logoutEmployee} = useMutation({
 		mutationFn: () => authService.logoutEmployee(),

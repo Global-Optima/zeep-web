@@ -39,20 +39,15 @@ import AdminWarehouseStocksList from '@/modules/admin/warehouse-stocks/component
 import AdminWarehouseStocksToolbar from '@/modules/admin/warehouse-stocks/components/list/admin-warehouse-stocks-toolbar.vue'
 import type { GetWarehouseStockFilter } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { warehouseStocksService } from '@/modules/admin/warehouse-stocks/services/warehouse-stocks.service'
-import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const {currentEmployee} = useEmployeeAuthStore()
-
 const filter = ref<GetWarehouseStockFilter>({
-  warehouseId: currentEmployee?.warehouseDetails?.warehouseId
 })
 
 const { data: warehouseStocksResponse } = useQuery({
   queryKey: computed(() => ['warehouse-stocks', filter.value]),
   queryFn: () => warehouseStocksService.getWarehouseStocks(filter.value),
-  enabled: computed(() => Boolean(currentEmployee?.warehouseDetails?.warehouseId)),
 })
 
 function updateFilter(updatedFilter: StoreStocksFilter) {

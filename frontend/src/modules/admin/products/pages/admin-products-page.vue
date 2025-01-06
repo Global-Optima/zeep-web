@@ -26,7 +26,7 @@ const filter = ref<SuppliersFilter>({
 })
 
 const { data: products } = useQuery({
-  queryKey: computed(() => ['suppliers', filter.value]),
+  queryKey: computed(() => ['admin-products', filter.value]),
   queryFn: () => productsService.getProducts(filter.value),
   initialData: []
 })

@@ -16,6 +16,7 @@ func NewRouter(engine *gin.Engine, prefix string, version string) *Router {
 	employeeRouter := engine.Group(prefix + version)
 	customerRouter := engine.Group(prefix + version)
 	commonRouter := engine.Group(prefix + version)
+
 	return &Router{
 		Prefix:         prefix,
 		Version:        version,

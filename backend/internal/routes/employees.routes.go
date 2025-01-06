@@ -72,7 +72,6 @@ func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler
 func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.EmployeeRoutes.Group("/stores")
 	{
-		router.GET("", handler.GetAllStores)
 		router.GET("/:id", handler.GetStoreByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateStore)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStore)
@@ -119,14 +118,12 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 		storeEmployees := router.Group("/store")
 		{
 			storeEmployees.POST("", handler.CreateStoreEmployee)
-			storeEmployees.GET("", handler.GetStoreEmployees)
 			storeEmployees.GET("/:id", handler.GetStoreEmployeeByID)
 			storeEmployees.PUT("/:id", handler.UpdateStoreEmployee)
 		}
 		warehouseEmployees := router.Group("/warehouse")
 		{
 			warehouseEmployees.POST("", handler.CreateWarehouseEmployee)
-			warehouseEmployees.GET("", handler.GetWarehouseEmployees)
 			warehouseEmployees.GET("/:id", handler.GetWarehouseEmployeeByID)
 			warehouseEmployees.PUT("/:id", handler.UpdateWarehouseEmployee)
 		}
@@ -232,7 +229,6 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 		warehouseRoutes := router.Group("")
 		{
 			warehouseRoutes.POST("", handler.CreateWarehouse)                // Create a new warehouse
-			warehouseRoutes.GET("", handler.GetAllWarehouses)                // Get all warehouses
 			warehouseRoutes.GET("/:warehouseId", handler.GetWarehouseByID)   // Get a specific warehouse by ID
 			warehouseRoutes.PUT("/:warehouseId", handler.UpdateWarehouse)    // Update warehouse details
 			warehouseRoutes.DELETE("/:warehouseId", handler.DeleteWarehouse) // Delete a warehouse
