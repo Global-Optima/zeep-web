@@ -85,13 +85,6 @@ func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 	}
 }
 
-func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
-	return &StoreAdditiveDTO{
-		AdditiveDTO: *ConvertToAdditiveDTO(&storeAdditive.Additive),
-		StorePrice:  storeAdditive.Price,
-	}
-}
-
 func ConvertToAdditiveCategoryDTO(category *data.AdditiveCategory) *AdditiveCategoryDTO {
 	additives := ConvertToAdditiveCategoryItemDTOs(category)
 
@@ -104,44 +97,18 @@ func ConvertToAdditiveCategoryDTO(category *data.AdditiveCategory) *AdditiveCate
 	}
 }
 
-func ConvertToStoreAdditiveCategoryDTO(category *data.AdditiveCategory) *StoreAdditiveCategoryDTO {
-	storeAdditives := ConvertToStoreAdditiveCategoryItemDTOs(category)
-
-	return &StoreAdditiveCategoryDTO{
-		ID:               category.ID,
-		Name:             category.Name,
-		Description:      category.Description,
-		IsMultipleSelect: category.IsMultipleSelect,
-		Additives:        storeAdditives, // Always initialized as a slice
-	}
-}
-
 func ConvertToAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []AdditiveCategoryItemDTO {
 	additives := make([]AdditiveCategoryItemDTO, 0)
 
 	// Populate additives if present
 	for _, additive := range category.Additives {
-		additives = append(additives, *convertToAdditiveCategoryItem(&additive, category.ID))
+		additives = append(additives, *ConvertToAdditiveCategoryItem(&additive, category.ID))
 	}
 
 	return additives
 }
 
-func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []StoreAdditiveCategoryItemDTO {
-	storeAdditives := make([]StoreAdditiveCategoryItemDTO, len(category.Additives))
-
-	// Populate additives if present
-	for i, additive := range category.Additives {
-		storeAdditives[i] = StoreAdditiveCategoryItemDTO{
-			AdditiveCategoryItemDTO: *convertToAdditiveCategoryItem(&additive, category.ID),
-			StorePrice:              additive.StoreAdditives[0].Price,
-		}
-	}
-
-	return storeAdditives
-}
-
-func convertToAdditiveCategoryItem(additive *data.Additive, categoryID uint) *AdditiveCategoryItemDTO {
+func ConvertToAdditiveCategoryItem(additive *data.Additive, categoryID uint) *AdditiveCategoryItemDTO {
 	return &AdditiveCategoryItemDTO{
 		ID:          additive.ID,
 		Name:        additive.Name,

@@ -31,11 +31,6 @@ type AdditiveDTO struct {
 	} `json:"category"`
 }
 
-type StoreAdditiveDTO struct {
-	AdditiveDTO
-	StorePrice float64 `json:"storePrice"`
-}
-
 type AdditiveCategoryItemDTO struct {
 	ID          uint    `json:"id"`
 	Name        string  `json:"name"`
@@ -46,25 +41,12 @@ type AdditiveCategoryItemDTO struct {
 	CategoryID  uint    `json:"categoryId"`
 }
 
-type StoreAdditiveCategoryItemDTO struct {
-	AdditiveCategoryItemDTO
-	StorePrice float64 `json:"storePrice"`
-}
-
 type AdditiveCategoryDTO struct {
 	ID               uint                      `json:"id"`
 	Name             string                    `json:"name"`
 	Description      string                    `json:"description"`
 	Additives        []AdditiveCategoryItemDTO `json:"additives"`
 	IsMultipleSelect bool                      `json:"isMultipleSelect"`
-}
-
-type StoreAdditiveCategoryDTO struct {
-	ID               uint                           `json:"id"`
-	Name             string                         `json:"name"`
-	Description      string                         `json:"description"`
-	Additives        []StoreAdditiveCategoryItemDTO `json:"additives"`
-	IsMultipleSelect bool                           `json:"isMultipleSelect"`
 }
 
 type CreateAdditiveCategoryDTO struct {
