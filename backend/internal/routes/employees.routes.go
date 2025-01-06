@@ -15,6 +15,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/units"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
@@ -218,6 +219,17 @@ func (r *Router) RegisterStockMaterialCategoryRoutes(handler *stockMaterialCateg
 		router.POST("", handler.Create)
 		router.PUT("/:id", handler.Update)
 		router.DELETE("/:id", handler.Delete)
+	}
+}
+
+func (r *Router) RegisterUnitRoutes(handler *units.UnitHandler) {
+	router := r.EmployeeRoutes.Group("/units")
+	{
+		router.GET("", handler.GetAllUnits)
+		router.GET("/:id", handler.GetUnitByID)
+		router.POST("", handler.CreateUnit)
+		router.PUT("/:id", handler.UpdateUnit)
+		router.DELETE("/:id", handler.DeleteUnit)
 	}
 }
 
