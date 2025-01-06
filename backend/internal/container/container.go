@@ -31,7 +31,9 @@ type Container struct {
 	Suppliers             *modules.SuppliersModule
 	StockRequests         *modules.StockRequestsModule
 	Warehouses            *modules.WarehousesModule
+	StockMaterials        *modules.StockMaterialsModule
 	StockMaterialPackages *modules.StockMaterialPackagesModule
+	Barcodes              *modules.BarcodeModule
 }
 
 func NewContainer(dbHandler *database.DBHandler, router *routes.Router, logger *zap.SugaredLogger) *Container {
@@ -71,7 +73,9 @@ func (c *Container) mustInit() {
 	c.Stores = modules.NewStoresModule(baseModule)
 	c.Suppliers = modules.NewSuppliersModule(baseModule)
 	c.Warehouses = modules.NewWarehousesModule(baseModule)
+	c.StockMaterials = modules.NewStockMaterialsModule(baseModule)
 	c.StockMaterialPackages = modules.NewStockMaterialPackagesModule(baseModule)
+	c.Barcodes = modules.NewBarcodeModule(baseModule, *c.StockMaterials)
 
 	c.Products = modules.NewProductsModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)

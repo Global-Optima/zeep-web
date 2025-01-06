@@ -209,7 +209,7 @@ func (r *Router) RegisterStockMaterialPackageRoutes(handler *stockMaterialPackag
 	}
 }
 
-func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
+func (r *Router) RegisterBarcodeRoutes(handler *barcode.BarcodeHandler) {
 	router := r.EmployeeRoutes.Group("/barcode")
 	{
 		router.POST("/generate", handler.GenerateBarcode)
