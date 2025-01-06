@@ -11,8 +11,8 @@ import (
 
 type EmployeeRepository interface {
 	CreateEmployee(employee *data.Employee) error
-	GetStoreEmployees(filter *types.GetStoreEmployeesFilter) ([]data.Employee, error)
-	GetWarehouseEmployees(filter *types.GetWarehouseEmployeesFilter) ([]data.Employee, error)
+	GetStoreEmployees(storeID uint, filter *types.GetStoreEmployeesFilter) ([]data.Employee, error)
+	GetWarehouseEmployees(warehouseID uint, filter *types.GetWarehouseEmployeesFilter) ([]data.Employee, error)
 	GetTypedEmployeeByID(employeeID uint, employeeType data.EmployeeType) (*data.Employee, error)
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
 	UpdateEmployee(employeeType data.EmployeeType, employee *data.Employee) error
@@ -28,6 +28,10 @@ type EmployeeRepository interface {
 	GetEmployeeWorkdaysByEmployeeID(employeeID uint) ([]data.EmployeeWorkday, error)
 	UpdateEmployeeWorkdayById(workdayID uint, workday *data.EmployeeWorkday) error
 	DeleteEmployeeWorkday(workdayID uint) error
+
+	GetAllStoreEmployees(storeID uint) ([]data.Employee, error)
+	GetAllWarehouseEmployees(warehouseID uint) ([]data.Employee, error)
+	GetAllAdminEmployees() ([]data.Employee, error)
 }
 
 type employeeRepository struct {
@@ -42,11 +46,15 @@ func (r *employeeRepository) CreateEmployee(employee *data.Employee) error {
 	return r.db.Create(employee).Error
 }
 
-func (r *employeeRepository) GetStoreEmployees(filter *types.GetStoreEmployeesFilter) ([]data.Employee, error) {
+func (r *employeeRepository) GetStoreEmployees(storeID uint, filter *types.GetStoreEmployeesFilter) ([]data.Employee, error) {
 	var employees []data.Employee
-	query := r.db.Preload("StoreEmployee").Where("is_active = TRUE").
+	query := r.db.Model(&data.Employee{}).
 		Joins("JOIN store_employees ON employees.id = store_employees.employee_id").
-		Where("store_employees.store_id = ?", filter.StoreID)
+		Preload("StoreEmployee")
+
+	if storeID != 0 {
+		query = query.Where("store_employees.store_id = ?", storeID)
+	}
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)
@@ -76,12 +84,19 @@ func (r *employeeRepository) GetStoreEmployees(filter *types.GetStoreEmployeesFi
 	return employees, err
 }
 
-func (r *employeeRepository) GetWarehouseEmployees(filter *types.GetWarehouseEmployeesFilter) ([]data.Employee, error) {
+func (r *employeeRepository) GetWarehouseEmployees(warehouseID uint, filter *types.GetWarehouseEmployeesFilter) ([]data.Employee, error) {
 	var employees []data.Employee
-	query := r.db.Preload("WarehouseEmployee").Where("is_active = TRUE").
-		Joins("JOIN warehouse_employees ON employees.id = warehouse_employees.employee_id").
-		Where("warehouse_employees.warehouse_id = ?", filter.WarehouseID).
-		Where("is_active = ?", filter.IsActive != nil && *filter.IsActive)
+	query := r.db.Model(&data.Employee{}).
+		Joins("JOIN warehouse_employees ON warehouse_employees.employee_id = employees.id").
+		Preload("WarehouseEmployee")
+
+	if warehouseID != 0 {
+		query = query.Where("warehouse_employees.warehouse_id = ?", warehouseID)
+	}
+
+	if filter.IsActive != nil {
+		query = query.Where("is_active = ?", *filter.IsActive)
+	}
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
@@ -92,7 +107,6 @@ func (r *employeeRepository) GetWarehouseEmployees(filter *types.GetWarehouseEmp
 	}
 
 	if filter.Role != nil {
-		query = query.Where("employees.role = ?", *filter.Role)
 		query = query.Where("employees.role = ?", *filter.Role)
 	}
 
@@ -265,4 +279,44 @@ func (r *employeeRepository) UpdateEmployeeWorkdayById(workdayID uint, workday *
 
 func (r *employeeRepository) DeleteEmployeeWorkday(workdayID uint) error {
 	return r.db.Where("id = ?", workdayID).Delete(&data.EmployeeWorkday{}).Error
+}
+
+func (r *employeeRepository) GetAllStoreEmployees(storeID uint) ([]data.Employee, error) {
+	var employees []data.Employee
+
+	err := r.db.Model(&data.Employee{}).
+		Preload("StoreEmployee", "store_id = ?", storeID).
+		Find(&employees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
+}
+func (r *employeeRepository) GetAllWarehouseEmployees(warehouseID uint) ([]data.Employee, error) {
+	var employees []data.Employee
+
+	err := r.db.Model(&data.Employee{}).
+		Preload("WarehouseEmployee", "warehouse_id = ?", warehouseID).
+		Find(&employees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
+}
+func (r *employeeRepository) GetAllAdminEmployees() ([]data.Employee, error) {
+	var employees []data.Employee
+	adminRoles := []data.EmployeeRole{data.RoleAdmin, data.RoleDirector}
+	err := r.db.Model(&data.Employee{}).
+		Where("role IN (?)", adminRoles).
+		Find(&employees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
 }

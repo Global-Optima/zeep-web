@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"strings"
 )
 
 func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
-	if input.LastName == "" || input.FirstName == "" {
+	if strings.TrimSpace(input.LastName) == "" || strings.TrimSpace(input.FirstName) == "" {
 		return nil, fmt.Errorf("%w: employee name cannot contain empty values", ErrValidation)
 	}
 

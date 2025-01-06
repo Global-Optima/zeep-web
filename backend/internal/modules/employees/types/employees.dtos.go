@@ -68,6 +68,7 @@ type EmployeeDTO struct {
 	LastName  string            `json:"lastName"`
 	Phone     string            `json:"phone"`
 	Email     string            `json:"email"`
+	Type      data.EmployeeType `json:"type"`
 	Role      data.EmployeeRole `json:"role"`
 	IsActive  bool              `json:"isActive"`
 }
@@ -83,23 +84,15 @@ type WarehouseEmployeeDTO struct {
 	WarehouseID uint `json:"warehouseId"`
 }
 
-type StoreEmployeeDetailsDTO struct {
-	StoreID     uint `json:"storeId"`
-	IsFranchise bool `json:"isFranchise"`
-}
-
-type WarehouseEmployeeDetailsDTO struct {
-	WarehouseID uint `json:"warehouseId"`
+type EmployeeAccountDTO struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
 }
 
 type UpdatePasswordDTO struct {
 	OldPassword string `json:"oldPassword" binding:"required"`
 	NewPassword string `json:"newPassword" binding:"required"`
-}
-
-type LoginDTO struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
 }
 
 type RoleDTO struct {
@@ -108,7 +101,6 @@ type RoleDTO struct {
 
 type GetStoreEmployeesFilter struct {
 	utils.BaseFilter
-	StoreID  uint    `form:"storeId"`
 	Role     *string `form:"role,omitempty"`
 	IsActive *bool   `form:"isActive,omitempty"`
 	Search   *string `form:"search,omitempty"`
@@ -116,10 +108,9 @@ type GetStoreEmployeesFilter struct {
 
 type GetWarehouseEmployeesFilter struct {
 	utils.BaseFilter
-	WarehouseID *uint   `form:"warehouseId"`
-	Role        *string `form:"role,omitempty"`
-	IsActive    *bool   `form:"isActive,omitempty"`
-	Search      *string `form:"search,omitempty"`
+	Role     *string `form:"role,omitempty"`
+	IsActive *bool   `form:"isActive,omitempty"`
+	Search   *string `form:"search,omitempty"`
 }
 
 type CreateEmployeeWorkdayDTO struct {

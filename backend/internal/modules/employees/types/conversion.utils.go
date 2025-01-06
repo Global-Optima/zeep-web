@@ -13,6 +13,7 @@ func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
 		LastName:  employee.LastName,
 		Phone:     utils.FormatPhoneOutput(employee.Phone),
 		Email:     employee.Email,
+		Type:      employee.Type,
 		Role:      employee.Role,
 		IsActive:  employee.IsActive,
 	}
@@ -37,6 +38,14 @@ func MapToWarehouseEmployeeDTO(employee *data.Employee) *WarehouseEmployeeDTO {
 	}
 
 	return dto
+}
+
+func MapToEmployeeAccountDTO(employee *data.Employee) *EmployeeAccountDTO {
+	return &EmployeeAccountDTO{
+		FirstName: employee.FirstName,
+		LastName:  employee.LastName,
+		Email:     employee.Email,
+	}
 }
 
 func MapToEmployeeWorkdayDTO(workday *data.EmployeeWorkday) *EmployeeWorkdayDTO {
