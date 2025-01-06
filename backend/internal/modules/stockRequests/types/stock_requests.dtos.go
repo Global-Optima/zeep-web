@@ -17,10 +17,13 @@ type StockRequestStockMaterialDTO struct {
 	Quantity        float64 `json:"quantity" binding:"required,gt=0"`
 }
 
-type UpdateStockRequestStatusDTO struct {
-	Status  data.StockRequestStatus        `json:"status" binding:"required,oneof=CREATED IN_DELIVERY PROCESSED COMPLETED REJECTED_BY_STORE REJECTED_BY_WAREHOUSE ACCEPTED_WITH_CHANGE"`
-	Comment *string                        `json:"comment,omitempty"`
-	Items   []StockRequestStockMaterialDTO `json:"items,omitempty"` // Only used for "accept with changes"
+type RejectStockRequestStatusDTO struct {
+	Comment *string `json:"comment" binding:"required"`
+}
+
+type AcceptWithChangeRequestStatusDTO struct {
+	Comment *string                        `json:"comment" binding:"required"`
+	Items   []StockRequestStockMaterialDTO `json:"items" binding:"required"`
 }
 
 type UpdateIngredientDates struct {

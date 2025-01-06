@@ -14,7 +14,11 @@ type StockRequestService interface {
 	CreateStockRequest(req types.CreateStockRequestDTO) (uint, error)
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
 	GetStockRequestByID(id uint) (types.StockRequestResponse, error)
-	UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error
+
+	UpdateStockRequestStatus(requestID uint, status string) error
+	AcceptStockRequestWithChange(requestID uint, status string, dto types.AcceptWithChangeRequestStatusDTO) error
+	RejectStockRequest(requestID uint, status string, dto types.RejectStockRequestStatusDTO) error
+
 	GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error)
 	GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
 	UpdateStockRequestIngredients(requestID uint, items []types.StockRequestStockMaterialDTO) error
@@ -98,7 +102,34 @@ func (s *stockRequestService) GetStockRequestByID(id uint) (types.StockRequestRe
 	return types.ToStockRequestResponse(request), nil
 }
 
-func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error {
+func (s *stockRequestService) RejectStockRequest(requestID uint, status string, dto types.RejectStockRequestStatusDTO) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	requestStatus := data.StockRequestStatus(status)
+	switch requestStatus {
+	case data.StockRequestRejectedByWarehouse:
+		if err := s.handleRejectedByWarehouseStatus(request, dto.Comment); err != nil {
+			return err
+		}
+
+	case data.StockRequestRejectedByStore:
+		if err := s.handleRejectedByStoreStatus(request, dto.Comment); err != nil {
+			return err
+		}
+	}
+
+	request.Status = requestStatus
+	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
+		return fmt.Errorf("failed to update stock request status: %w", err)
+	}
+
+	return nil
+}
+
+func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status string) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
@@ -109,7 +140,9 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 		return fmt.Errorf("failed to fetch store warehouse: %w", err)
 	}
 
-	switch status.Status {
+	requestStatus := data.StockRequestStatus(status)
+
+	switch requestStatus {
 	case data.StockRequestInDelivery:
 		if err := s.handleInDeliveryStatus(request); err != nil {
 			return err
@@ -119,27 +152,32 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 		if err := s.handleCompletedStatus(request, storeWarehouse.ID); err != nil {
 			return err
 		}
-
-	case data.StockRequestRejectedByStore:
-		if err := s.handleRejectedByStoreStatus(request, status.Comment); err != nil {
-			return err
-		}
-
-	case data.StockRequestRejectedByWarehouse:
-		if err := s.handleRejectedByWarehouseStatus(request, status.Comment); err != nil {
-			return err
-		}
-
-	case data.StockRequestAcceptedWithChange:
-		if err := s.handleAcceptedWithChange(request, storeWarehouse.ID, status.Items, status.Comment); err != nil {
-			return err
-		}
-
-	default:
-		return fmt.Errorf("unsupported status: %s", status.Status)
 	}
 
-	request.Status = status.Status
+	request.Status = requestStatus
+	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
+		return fmt.Errorf("failed to update stock request status: %w", err)
+	}
+
+	return nil
+}
+
+func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, status string, dto types.AcceptWithChangeRequestStatusDTO) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	storeWarehouse, err := s.repo.GetStoreWarehouse(request.StoreID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch store warehouse: %w", err)
+	}
+
+	if err := s.handleAcceptedWithChange(request, storeWarehouse.ID, dto.Items, dto.Comment); err != nil {
+		return err
+	}
+
+	request.Status = data.StockRequestStatus(status)
 	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
 		return fmt.Errorf("failed to update stock request status: %w", err)
 	}
