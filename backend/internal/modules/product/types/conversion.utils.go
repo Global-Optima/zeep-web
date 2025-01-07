@@ -4,6 +4,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -20,11 +22,12 @@ type ProductSizeModels struct {
 
 func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 	return BaseProductDTO{
-		Name:        product.Name,
-		Description: product.Description,
-		ImageURL:    product.ImageURL,
-		VideoURL:    product.VideoURL,
-		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
+		ID:           product.ID,
+		Name:         product.Name,
+		Description:  product.Description,
+		ImageURL:     product.ImageURL,
+		CategoryName: product.Category.Name,
+		CategoryID:   product.CategoryID,
 	}
 }
 
