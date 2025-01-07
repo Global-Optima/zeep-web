@@ -10,6 +10,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"strconv"
 )
 
 type StoreProductHandler struct {
