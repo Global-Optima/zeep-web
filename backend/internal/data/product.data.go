@@ -89,16 +89,16 @@ type Ingredient struct {
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID"`
 	UnitID                 uint                    `gorm:"not null"` // Link to Unit
 	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
-	IngredientCategoryID   uint                    `gorm:"not null"` // Link to IngredientCategory
-	IngredientCategory     IngredientCategory      `gorm:"foreignKey:IngredientCategoryID;constraint:OnDelete:SET NULL"`
+	CategoryID             uint                    `gorm:"not null"` // Link to IngredientCategory
+	IngredientCategory     IngredientCategory      `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
 	StockMaterials         []StockMaterial         `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
 }
 
 type IngredientCategory struct {
-	ID          uint         `gorm:"primaryKey"`
+	BaseEntity
 	Name        string       `gorm:"size:255;not null;uniqueIndex"`
 	Description string       `gorm:"type:text"`
-	Ingredients []Ingredient `gorm:"foreignKey:IngredientCategoryID"`
+	Ingredients []Ingredient `gorm:"foreignKey:CategoryID"`
 }
 
 type ProductSizeAdditive struct {

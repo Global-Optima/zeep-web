@@ -1,5 +1,15 @@
-CREATE DOMAIN valid_phone AS VARCHAR(16)
-    CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_type
+        WHERE typname = 'valid_phone'
+    ) THEN
+        CREATE DOMAIN valid_phone AS VARCHAR(16)
+        CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
+    END IF;
+END $$;
+
 
 -- FacilityAddress Table
 CREATE TABLE
@@ -45,12 +55,26 @@ CREATE TABLE
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
-	);
+);
+
 -- IngredientCategory Table
 CREATE TABLE IF NOT EXISTS ingredient_categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
-    description TEXT
+    description TEXT,
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	deleted_at TIMESTAMPTZ
+);
+
+-- StockMaterialCategory Table
+CREATE TABLE IF NOT EXISTS stock_material_categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT,
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	deleted_at TIMESTAMPTZ
 );
 
 -- Product Table
@@ -200,7 +224,7 @@ CREATE TABLE
 		proteins DECIMAL(5, 2) CHECK (proteins >= 0),
 		expires_at TIMESTAMPTZ,
     	unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
-		ingredient_category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE SET NULL,
+		category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE SET NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -441,6 +465,8 @@ CREATE TABLE
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		status VARCHAR(50) NOT NULL,
+		store_comment TEXT,
+		warehouse_comment TEXT,
 		request_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -456,7 +482,7 @@ CREATE TABLE IF NOT EXISTS stock_materials (
     safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
     expiration_flag BOOLEAN NOT NULL,
     unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
-    category VARCHAR(255),
+	category_id INT NOT NULL REFERENCES stock_material_categories(id) ON DELETE SET NULL,
     barcode VARCHAR(255) UNIQUE,
     expiration_period_in_days INT NOT NULL DEFAULT 1095, -- Default 3 years
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -515,7 +541,7 @@ CREATE TABLE
 		warehouse_id INT NOT NULL,
 		barcode VARCHAR(255) NOT NULL,
 		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-		delivery_date TIMESTAMPTZ NOT NULL,
+		delivery_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		expiration_date TIMESTAMPTZ NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

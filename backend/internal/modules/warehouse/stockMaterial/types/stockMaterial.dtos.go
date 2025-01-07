@@ -9,7 +9,7 @@ type CreateStockMaterialDTO struct {
 	ExpirationFlag         bool    `json:"expirationFlag"`
 	UnitID                 uint    `json:"unitId" binding:"required"`
 	SupplierID             uint    `json:"supplierId" binding:"required"`
-	Category               string  `json:"category"`
+	CategoryID             uint    `json:"categoryId" binding:"required"`
 	Barcode                string  `json:"barcode"`
 	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
 }
@@ -20,7 +20,7 @@ type UpdateStockMaterialDTO struct {
 	SafetyStock            *float64 `json:"safetyStock" binding:"omitempty,gt=0"`
 	ExpirationFlag         *bool    `json:"expirationFlag"`
 	UnitID                 *uint    `json:"unitId"`
-	Category               *string  `json:"category"`
+	CategoryID             *uint    `json:"categoryId" binding:"required"`
 	Barcode                *string  `json:"barcode"`
 	ExpirationPeriodInDays *int     `json:"expirationPeriodInDays"`
 	IsActive               *bool    `json:"isActive"`

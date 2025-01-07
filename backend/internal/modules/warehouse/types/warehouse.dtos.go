@@ -51,20 +51,19 @@ type AdjustWarehouseStockRequest struct {
 }
 
 type WarehouseStockResponse struct {
-	WarehouseID            uint                  `json:"warehouseId"`
 	StockMaterial          StockMaterialResponse `json:"stockMaterial"`
 	TotalQuantity          float64               `json:"totalQuantity"`
 	EarliestExpirationDate *time.Time            `json:"earliestExpirationDate,omitempty"`
 }
 
 type StockMaterialResponse struct {
-	ID          uint    `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Category    string  `json:"category"`
-	SafetyStock float64 `json:"safetyStock"`
-	Unit        string  `json:"unit"`
-	Barcode     string  `json:"barcode"`
+	ID                   uint    `json:"id"`
+	Name                 string  `json:"name"`
+	Description          string  `json:"description"`
+	Category             string  `json:"category"`
+	SafetyStock          float64 `json:"safetyStock"`
+	Barcode              string  `json:"barcode"`
+	utils.PackageMeasure `json:"packageMeasures"`
 }
 
 type ResetWarehouseStockRequest struct {
@@ -85,4 +84,25 @@ type GetWarehouseStockFilterQuery struct {
 	ExpirationDays  *int    `form:"expirationDays"` // Number of days to expiration
 	Search          *string `form:"search"`         // Search by stock material name
 	Pagination      *utils.Pagination
+}
+
+type StockMaterialDetailsDTO struct {
+	ID                     uint                       `json:"id"`
+	Name                   string                     `json:"name"`
+	Description            string                     `json:"description"`
+	Category               string                     `json:"category"`
+	SafetyStock            float64                    `json:"safetyStock"`
+	ExpirationFlag         bool                       `json:"expirationFlag"`
+	ExpirationInDays       int                        `json:"expirationInDays"`
+	PackageMeasure         utils.PackageMeasure       `json:"packageMeasure"`
+	TotalQuantity          float64                    `json:"totalQuantity"`
+	EarliestExpirationDate *time.Time                 `json:"earliestExpirationDate,omitempty"`
+	Deliveries             []StockMaterialDeliveryDTO `json:"deliveries"`
+}
+
+type StockMaterialDeliveryDTO struct {
+	Supplier     string    `json:"supplierName"`
+	Quantity     float64   `json:"quantity"`
+	DeliveryDate time.Time `json:"deliveryDate"`
+	ExpiresOn    time.Time `json:"expirationDate"`
 }
