@@ -24,12 +24,20 @@ type ProductSizeModels struct {
 
 func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 	return BaseProductDTO{
-		ID:           product.ID,
-		Name:         product.Name,
-		Description:  product.Description,
-		ImageURL:     product.ImageURL,
-		CategoryName: product.Category.Name,
-		CategoryID:   product.CategoryID,
+		ID:          product.ID,
+		Name:        product.Name,
+		Description: product.Description,
+		ImageURL:    product.ImageURL,
+		VideoURL:    product.VideoURL,
+		Category:    MapToProductCategoryDTO(&product.Category),
+	}
+}
+
+func MapToProductCategoryDTO(productCategory *data.ProductCategory) ProductCategoryDTO {
+	return ProductCategoryDTO{
+		ID:          productCategory.ID,
+		Name:        productCategory.Name,
+		Description: productCategory.Description,
 	}
 }
 
@@ -118,12 +126,19 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 	}
 }
 
+func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditive) ProductSizeAdditiveDTO {
+	return ProductSizeAdditiveDTO{
+		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive),
+		IsDefault:   productSizeAdditive.IsDefault,
+	}
+}
+
 func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
-	var additives = make([]additiveTypes.AdditiveDTO, len(productSize.Additives))
+	var additives = make([]ProductSizeAdditiveDTO, len(productSize.Additives))
 	var ingredients = make([]ingredientTypes.IngredientDetailsDTO, len(productSize.ProductSizeIngredients))
 
 	for i, productSizeAdditive := range productSize.Additives {
-		additives[i] = *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive)
+		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
