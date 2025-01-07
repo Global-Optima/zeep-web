@@ -9,6 +9,7 @@ import type {
 	ProductDTO,
 	ProductDetailsDTO,
 	ProductSizeDTO,
+	ProductSizeDetailsDTO,
 	ProductsFilter,
 	UpdateProductCategoryDTO,
 	UpdateProductDTO,
@@ -74,6 +75,16 @@ class ProductsService {
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch sizes for product ID ${id}: `, error)
+			throw error
+		}
+	}
+
+	async getProductSizeById(id: number) {
+		try {
+			const response = await apiClient.get<ProductSizeDetailsDTO>(`/products/sizes/${id}`)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to fetch size by product ${id}: `, error)
 			throw error
 		}
 	}

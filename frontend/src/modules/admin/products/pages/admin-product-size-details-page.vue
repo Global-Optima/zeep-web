@@ -1,5 +1,9 @@
 <template>
+	<p v-if="!productSizeDetails">Размер не найден</p>
+
 	<AdminProductSizeUpdateForm
+		v-else
+		:productSize="productSizeDetails"
 		@onSubmit="handleCreate"
 		@onCancel="handleCancel"
 	/>
@@ -20,11 +24,12 @@ const route = useRoute()
 const productSizeId = route.params.id as string
 const productId = route.query.productId as string
 
-// TODO: add endppoint for product size details
+console.log(productSizeId)
+
 const { data: productSizeDetails } = useQuery({
-  queryKey: ['admin-product-details', productId],
-	queryFn: () => productsService.getProductSizesByProductID(Number(productId)),
-  enabled: !isNaN(Number(productId)),
+  queryKey: ['admin-product-size-details', productSizeId],
+	queryFn: () => productsService.getProductSizeById(Number(productSizeId)),
+  enabled: !isNaN(Number(productSizeId)),
 })
 
 const updateMutation = useMutation({
@@ -45,8 +50,7 @@ function handleCreate(data: CreateProductSizeFormSchema) {
     measure: data.measure,
     basePrice: data.basePrice,
     size: data.size,
-    isDefault: false,
-    additives: data.additives.map(a => ({additiveId: a.additiveId, isDefault: a.isDefault})),
+    additives: data.additives.map(a => ({additiveId: a.additiveId, isDefault: a.isDefault ?? false})),
   }
 
 	updateMutation.mutate({sizeId: Number(productSizeId), dto})

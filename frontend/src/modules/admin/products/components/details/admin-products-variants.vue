@@ -40,8 +40,8 @@
 						<TableRow
 							v-for="variant in productSizes"
 							:key="variant.id"
-							@click="onVariantClick(variant.id)"
-							class="hover:bg-slate-50"
+							@click="onVariantClick(variant)"
+							class="hover:bg-slate-50 cursor-pointer"
 						>
 							<TableCell class="py-4 font-medium">{{ variant.name }}</TableCell>
 							<TableCell>{{ variant.size }} {{ variant.measure }}</TableCell>
@@ -116,8 +116,8 @@ const setDefaultVariant = (e: MouseEvent, size: ProductSizeDTO) => {
   updateSize({productSizeId: size.id, dto: {isDefault: !size.isDefault}})
 };
 
-const onVariantClick = (variantId: number) => {
-	router.push(`../product-sizes/${variantId}`)
+const onVariantClick = (variant: ProductSizeDTO) => {
+	router.push(`../product-sizes/${variant.id}?productId=${productDetails.id}`)
 }
 
 function onCancel() {

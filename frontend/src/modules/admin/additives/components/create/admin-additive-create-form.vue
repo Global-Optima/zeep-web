@@ -30,6 +30,7 @@ const createAdditiveSchema = toTypedSchema(
     description: z.string().optional(),
     price: z.number().min(0, 'Введите корректную цену'),
     size: z.string().min(1, 'Введите размер добавки'),
+    imageUrl: z.string().min(1, 'Вставьте картинку добавки'),
     additiveCategoryId: z.coerce.number().min(1, 'Выберите категорию добавки'),
   })
 )

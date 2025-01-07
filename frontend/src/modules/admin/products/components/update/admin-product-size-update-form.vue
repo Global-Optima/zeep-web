@@ -32,10 +32,8 @@ import {
 } from '@/core/components/ui/table'
 import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
-import { ProductSizeMeasures, ProductSizeNames } from '@/modules/kiosk/products/models/product.model'
+import { ProductSizeMeasures, ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
-
-
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
@@ -45,7 +43,7 @@ interface SelectedAdditiveTypesDTO {
   imageUrl: string
 }
 
-export interface CreateProductSizeFormSchema {
+export interface UpdateProductSizeFormSchema {
   name: ProductSizeNames
   measure: ProductSizeMeasures
   basePrice: number
@@ -53,11 +51,10 @@ export interface CreateProductSizeFormSchema {
   additives: SelectedAdditiveTypesDTO[]
 }
 
-/**
- * 3. Setup emits
- */
+const {productSize} = defineProps<{productSize: ProductSizeDetailsDTO}>()
+
 const emits = defineEmits<{
-  onSubmit: [dto: CreateProductSizeFormSchema]
+  onSubmit: [dto: UpdateProductSizeFormSchema]
   onCancel: []
 }>()
 
@@ -86,14 +83,34 @@ const validateAdditives = (additives: SelectedAdditiveTypesDTO[]) => {
 /**
  * 6. Form Setup
  */
-const { handleSubmit, isSubmitting } = useForm<CreateProductSizeFormSchema>({
+const { handleSubmit, isSubmitting } = useForm<UpdateProductSizeFormSchema>({
   validationSchema: createProductSizeSchema,
+  initialValues: {
+    name: productSize.name as ProductSizeNames ,
+    measure: productSize.measure as ProductSizeMeasures,
+    basePrice: productSize.basePrice,
+    size: productSize.size,
+    additives: productSize.additives.map(a => ({
+      additiveId: a.id,
+      isDefault: a.isDefault,
+      name: a.name,
+      categoryName: a.category.name,
+      imageUrl: a.imageUrl
+    })),
+  }
 })
 
 /**
  * 7. Manage Additives
  */
-const additives = ref<SelectedAdditiveTypesDTO[]>([])
+const additives = ref<SelectedAdditiveTypesDTO[]>(productSize.additives.map(a => ({
+      additiveId: a.id,
+      isDefault: a.isDefault,
+      name: a.name,
+      categoryName: a.category.name,
+      imageUrl: a.imageUrl
+    }))
+  )
 const additivesError = ref<string | null>(null)
 const openAdditiveDialog = ref(false)
 
@@ -129,7 +146,7 @@ const onSubmit = handleSubmit((formValues) => {
   if (additivesError.value) {
     return
   }
-  const finalDTO: CreateProductSizeFormSchema = {
+  const finalDTO: UpdateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
   }
