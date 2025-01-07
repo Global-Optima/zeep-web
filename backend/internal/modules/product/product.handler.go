@@ -218,12 +218,7 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 
 	var input *types.UpdateProductSizeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON+err.Error())
 		return
 	}
 

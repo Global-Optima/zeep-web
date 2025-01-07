@@ -7,13 +7,18 @@ import (
 )
 
 type BaseProductDTO struct {
-	ID           uint   `json:"id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	ImageURL     string `json:"imageUrl"`
-	VideoURL     string `json:"videoUrl"`
-	CategoryName string `json:"categoryName"`
-	CategoryID   uint   `json:"categoryId"`
+	ID          uint               `json:"id"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	ImageURL    string             `json:"imageUrl"`
+	VideoURL    string             `json:"videoUrl"`
+	Category    ProductCategoryDTO `json:"category"`
+}
+
+type ProductCategoryDTO struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type ProductDTO struct {
@@ -48,8 +53,13 @@ type ProductSizeDTO struct {
 type ProductSizeDetailsDTO struct {
 	ProductSizeDTO
 	ProductID   uint                                   `json:"productId"`
-	Additives   []additiveTypes.AdditiveDTO            `json:"additives"`
+	Additives   []ProductSizeAdditiveDTO               `json:"additives"`
 	Ingredients []ingredientTypes.IngredientDetailsDTO `json:"ingredients"`
+}
+
+type ProductSizeAdditiveDTO struct {
+	additiveTypes.AdditiveDTO
+	IsDefault bool `json:"isDefault"`
 }
 
 type CreateProductDTO struct {
@@ -61,7 +71,7 @@ type CreateProductDTO struct {
 
 type SelectedAdditiveTypesDTO struct {
 	AdditiveID uint `json:"additiveId" binding:"required"`
-	IsDefault  bool `json:"isDefault" binding:"required"`
+	IsDefault  bool `json:"isDefault"`
 }
 
 type CreateProductSizeDTO struct {
@@ -86,10 +96,10 @@ type UpdateProductSizeDTO struct {
 	Name          *string                    `json:"name" binding:"omitempty,max=100"`
 	Measure       *string                    `json:"measure" binding:"omitempty,oneof=мл г"`
 	BasePrice     *float64                   `json:"basePrice" binding:"omitempty,gt=0"`
-	Size          *int                       `json:"size" binding:"omitempty,min=1,max=3"`
+	Size          *int                       `json:"size" binding:"omitempty,gt=0"`
 	IsDefault     *bool                      `json:"isDefault"`
-	Additives     []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty,dive,gt=0"`
-	IngredientIDs []uint                     `json:"ingredientIds" binding:"omitempty,dive,gt=0"`
+	Additives     []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty,dive"`
+	IngredientIDs []uint                     `json:"ingredientIds" binding:"omitempty,dive"`
 }
 
 type ProductsFilterDto struct {
