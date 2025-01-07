@@ -18,7 +18,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
-const route = useRoute()
+const route = useRoute() 
 
 const additiveId = route.params.id as string
 
@@ -29,7 +29,7 @@ const { data: additiveDetails } = useQuery({
 })
 
 const updateMutation = useMutation({
-	mutationFn: (dto: UpdateAdditiveDTO) => additivesService.updateAdditive(dto),
+	mutationFn: ({id, dto}:{id: number, dto: UpdateAdditiveDTO}) => additivesService.updateAdditive(id, dto),
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-additives'] })
     queryClient.invalidateQueries({ queryKey: ['admin-additive-details', additiveId] })
@@ -41,7 +41,6 @@ function handleCreate(data: UpdateAdditiveFormSchema) {
   if (isNaN(Number(additiveId))) return router.back()
 
   const dto: UpdateAdditiveDTO = {
-    id: Number(additiveId),
     name: data.name,
     description: data.description,
     price: data.price,
@@ -50,7 +49,7 @@ function handleCreate(data: UpdateAdditiveFormSchema) {
     additiveCategoryId: data.additiveCategoryId,
   }
 
-	updateMutation.mutate(dto)
+	updateMutation.mutate({id: Number(additiveId), dto})
 }
 
 function handleCancel() {

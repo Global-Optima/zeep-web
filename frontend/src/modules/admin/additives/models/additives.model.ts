@@ -67,7 +67,6 @@ export interface CreateAdditiveCategoryDTO {
 
 // Update DTOs
 export interface UpdateAdditiveDTO {
-	id: number
 	name?: string
 	description?: string
 	price?: number

@@ -14,7 +14,7 @@ type AdditiveRepository interface {
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) error
-	UpdateAdditive(additive *data.Additive) error
+	UpdateAdditive(additiveID uint, additive *data.Additive) error
 	DeleteAdditive(additiveID uint) error
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
@@ -111,7 +111,10 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 
 func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
-	err := r.db.Preload("Category").Where("id = ?", additiveID).First(&additive).Error
+	err := r.db.Model(&data.Additive{}).
+		Preload("Category").
+		Where("id = ?", additiveID).
+		First(&additive).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -127,8 +130,10 @@ func (r *additiveRepository) CreateAdditive(additive *data.Additive) error {
 	return r.db.Create(additive).Error
 }
 
-func (r *additiveRepository) UpdateAdditive(additive *data.Additive) error {
-	return r.db.Save(additive).Error
+func (r *additiveRepository) UpdateAdditive(additiveID uint, additive *data.Additive) error {
+	return r.db.Model(&data.Additive{}).
+		Where("id = ?", additiveID).
+		Updates(additive).Error
 }
 
 func (r *additiveRepository) DeleteAdditive(additiveID uint) error {

@@ -30,8 +30,8 @@ class AdditiveService {
 		return response.data
 	}
 
-	async updateAdditive(dto: UpdateAdditiveDTO) {
-		const response = await apiClient.put<void>('/additives', dto)
+	async updateAdditive(id: number, dto: UpdateAdditiveDTO) {
+		const response = await apiClient.put<void>(`/additives/${id}`, dto)
 		return response.data
 	}
 

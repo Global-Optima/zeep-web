@@ -1,7 +1,6 @@
 package product
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -29,36 +28,12 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		return
 	}
 
-	// cacheKey := utils.BuildCacheKey("products", map[string]string{
-	// 	"categoryId":    c.DefaultQuery("categoryId", ""),
-	// 	"search":        c.DefaultQuery("search", ""),
-	// 	"page":          strconv.Itoa(filter.Pagination.Page),
-	// 	"pageSize":      strconv.Itoa(filter.Pagination.PageSize),
-	// 	"sortField":     filter.Sort.Field,
-	// 	"sortDirection": filter.Sort.Direction,
-	// })
-
-	// cacheUtil := utils.GetCacheInstance()
-
-	// var cachedData utils.PaginatedData
-	// if err := cacheUtil.Get(cacheKey, &cachedData); err == nil {
-	// 	if !utils.IsEmpty(cachedData.Data) {
-	// 		utils.SendSuccessResponse(c, cachedData)
-	// 		return
-	// 	}
-	// }
-
 	products, err := h.service.GetProducts(&filter)
 
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve products")
 		return
 	}
-
-	// cachedData.Data, cachedData.Pagination = products, *filter.Pagination
-	// if err := cacheUtil.Set(cacheKey, cachedData, 5*time.Minute); err != nil {
-	// 	fmt.Printf("Failed to cache products: %v\n", err)
-	// }
 
 	utils.SendSuccessResponseWithPagination(c, products, filter.Pagination)
 }
@@ -72,20 +47,6 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 		return
 	}
 
-	// cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
-	// 	"productId": productIDParam,
-	// })
-
-	// cacheUtil := utils.GetCacheInstance()
-
-	// var cachedProductDetails *types.ProductDetailsDTO
-	// if err := cacheUtil.Get(cacheKey, &cachedProductDetails); err == nil {
-	// 	if !utils.IsEmpty(cachedProductDetails) {
-	// 		utils.SendSuccessResponse(c, cachedProductDetails)
-	// 		return
-	// 	}
-	// }
-
 	productDetails, err := h.service.GetProductDetails(uint(productID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
@@ -96,10 +57,6 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 		utils.SendNotFoundError(c, "Product not found")
 		return
 	}
-
-	// if err := cacheUtil.Set(cacheKey, productDetails, 10*time.Minute); err != nil {
-	// 	fmt.Printf("Failed to cache product details: %v\n", err)
-	// }
 
 	utils.SendSuccessResponse(c, productDetails)
 }
@@ -139,6 +96,24 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 	utils.SendSuccessResponse(c, productSizes)
 }
 
+func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
+	productIDParam := c.Param("id")
+
+	productID, err := strconv.ParseUint(productIDParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid product ID")
+		return
+	}
+
+	productSize, err := h.service.GetProductSizeDetailsByID(uint(productID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve product sizes")
+		return
+	}
+
+	utils.SendSuccessResponse(c, productSize)
+}
+
 func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 	var input types.CreateProductSizeDTO
 
@@ -169,19 +144,15 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
 	err = h.service.UpdateProduct(uint(productID), input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
-	}
-
-	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
-		"productId": strconv.FormatUint(productID, 10),
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-	if err := cacheUtil.Delete(cacheKey); err != nil {
-		fmt.Printf("Failed to clear cache product details: %v\n", err)
 	}
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
@@ -195,6 +166,11 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 	}
 
 	var input *types.UpdateProductSizeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
@@ -220,15 +196,6 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to delete product")
 		return
-	}
-
-	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
-		"productId": strconv.FormatUint(productID, 10),
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-	if err := cacheUtil.Delete(cacheKey); err != nil {
-		fmt.Printf("Failed to clear cache product details: %v\n", err)
 	}
 
 	utils.SendMessageWithStatus(c, "product deleted successfully", http.StatusOK)

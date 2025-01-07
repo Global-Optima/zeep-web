@@ -21,6 +21,7 @@ type ProductRepository interface {
 	CreateProductSize(createModels *data.ProductSize) (uint, error)
 	GetProductSizesByProductID(productID uint) ([]data.ProductSize, error)
 	GetProductSizeById(productSizeID uint) (*data.ProductSize, error)
+	GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error)
 	UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error
 	DeleteProductSize(productID uint) error
 }
@@ -45,6 +46,24 @@ func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.Produc
 
 	if productSize.Product.ID == 0 || productSize.Product.Name == "" {
 		return nil, fmt.Errorf("product size with ID %d has no valid associated product", productSizeID)
+	}
+
+	return &productSize, nil
+}
+
+func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error) {
+	var productSize data.ProductSize
+
+	err := r.db.Model(&data.ProductSize{}).
+		Preload("Additives.Additive.Category").
+		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
+		First(&productSize, productSizeID).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to fetch ProductSize ID %d: %w", productSizeID, err)
 	}
 
 	return &productSize, nil

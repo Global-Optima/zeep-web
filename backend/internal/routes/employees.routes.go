@@ -33,6 +33,7 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.GET(":id/sizes", handler.GetProductSizesByProductID)
 		router.POST("/sizes", handler.CreateProductSize)
 		router.PUT("/sizes/:id", handler.UpdateProductSize)
+		router.GET("/sizes/:id", handler.GetProductSizeByID)
 	}
 }
 
@@ -96,7 +97,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	{
 		router.GET("", handler.GetAdditives)
 		router.POST("", handler.CreateAdditive)
-		router.PUT("", handler.UpdateAdditive)
+		router.PUT("/:id", handler.UpdateAdditive)
 		router.DELETE("/:id", handler.DeleteAdditive)
 		router.GET("/:id", handler.GetAdditiveByID)
 
