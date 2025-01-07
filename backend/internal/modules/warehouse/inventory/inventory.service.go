@@ -202,7 +202,7 @@ func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, i
 			SafetyStock:            item.SafetyStock,
 			ExpirationFlag:         item.ExpirationFlag,
 			UnitID:                 item.UnitID,
-			Category:               item.Category,
+			CategoryID:             item.CategoryID,
 			ExpirationPeriodInDays: expirationPeriod,
 			IngredientID:           item.IngredientID, // Linking to ingredient
 			IsActive:               true,

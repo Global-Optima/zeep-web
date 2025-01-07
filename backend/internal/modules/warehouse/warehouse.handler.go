@@ -106,13 +106,15 @@ func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
 }
 
 func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
-	warehouses, err := h.service.GetAllWarehouses()
+	pagination := utils.ParsePagination(c)
+
+	warehouses, err := h.service.GetAllWarehouses(pagination)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	utils.SendSuccessResponse(c, warehouses)
+	utils.SendSuccessResponseWithPagination(c, warehouses, pagination)
 }
 
 func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {
@@ -199,6 +201,28 @@ func (h *WarehouseHandler) GetStock(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponseWithPagination(c, stocks, queryParams.Pagination)
+}
+
+func (h *WarehouseHandler) GetStockMaterialDetails(c *gin.Context) {
+	stockMaterialID, err := strconv.ParseUint(c.Param("stockMaterialId"), 10, 32)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid stock material ID")
+		return
+	}
+
+	warehouseID, err := strconv.ParseUint(c.Query("warehouseId"), 10, 32)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid warehouse ID")
+		return
+	}
+
+	details, err := h.service.GetStockMaterialDetails(uint(stockMaterialID), uint(warehouseID))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SendSuccessResponse(c, details)
 }
 
 func (h *WarehouseHandler) ResetStock(c *gin.Context) {

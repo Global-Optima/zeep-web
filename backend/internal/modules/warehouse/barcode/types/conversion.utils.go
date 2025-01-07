@@ -20,7 +20,7 @@ func ToRetrieveStockMaterialByBarcodeResponse(stockMaterial data.StockMaterial) 
 		StockMaterialID: stockMaterial.ID,
 		Name:            stockMaterial.Name,
 		Unit:            stockMaterial.Unit.Name,
-		Category:        stockMaterial.Category,
+		Category:        stockMaterial.StockMaterialCategory.Name,
 		Barcode:         stockMaterial.Barcode,
 		CreatedAt:       stockMaterial.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:       stockMaterial.UpdatedAt.Format(time.RFC3339),

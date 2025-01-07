@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	if len(req.Items) == 0 {
+	if len(req.StockMaterials) == 0 {
 		utils.SendBadRequestError(c, "The cart cannot be empty")
 		return
 	}
@@ -60,7 +61,7 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("requestId")
 	stockRequestID, err := strconv.Atoi(idParam)
 	if err != nil || stockRequestID <= 0 {
 		utils.SendBadRequestError(c, "Invalid stock request ID")
@@ -87,15 +88,46 @@ func (h *StockRequestHandler) UpdateStockRequestStatus(c *gin.Context) {
 		return
 	}
 
-	var status types.UpdateStockRequestStatusDTO
-	if err := c.ShouldBindJSON(&status); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+	status := c.Query("status")
+	if status == "" {
+		utils.SendBadRequestError(c, "Status query parameter is required")
 		return
 	}
 
-	if err := h.service.UpdateStockRequestStatus(uint(requestID), status); err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
+	switch status {
+	case string(data.StockRequestAcceptedWithChange):
+		var dto types.AcceptWithChangeRequestStatusDTO
+		if err := c.ShouldBindJSON(&dto); err != nil {
+			utils.SendBadRequestError(c, "Invalid payload for acceptance with change")
+			return
+		}
+
+		if len(dto.Items) == 0 {
+			utils.SendBadRequestError(c, "The cart cannot be empty")
+			return
+		}
+
+		if err := h.service.AcceptStockRequestWithChange(uint(requestID), status, dto); err != nil {
+			utils.SendInternalServerError(c, err.Error())
+			return
+		}
+
+	case string(data.StockRequestRejectedByStore), string(data.StockRequestRejectedByWarehouse):
+		var dto types.RejectStockRequestStatusDTO
+		if err := c.ShouldBindJSON(&dto); err != nil {
+			utils.SendBadRequestError(c, "Invalid payload for rejection")
+			return
+		}
+		if err := h.service.RejectStockRequest(uint(requestID), status, dto); err != nil {
+			utils.SendInternalServerError(c, err.Error())
+			return
+		}
+
+	default:
+		if err := h.service.UpdateStockRequestStatus(uint(requestID), status); err != nil {
+			utils.SendInternalServerError(c, err.Error())
+			return
+		}
 	}
 
 	c.Status(http.StatusOK)
@@ -108,7 +140,7 @@ func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
 		return
 	}
 
-	var req []types.CreateStockRequestItemDTO
+	var req []types.StockRequestStockMaterialDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
 		return

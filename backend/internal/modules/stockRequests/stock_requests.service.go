@@ -2,20 +2,26 @@ package stockRequests
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type StockRequestService interface {
 	CreateStockRequest(req types.CreateStockRequestDTO) (uint, error)
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
 	GetStockRequestByID(id uint) (types.StockRequestResponse, error)
-	UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error
+
+	UpdateStockRequestStatus(requestID uint, status string) error
+	AcceptStockRequestWithChange(requestID uint, status string, dto types.AcceptWithChangeRequestStatusDTO) error
+	RejectStockRequest(requestID uint, status string, dto types.RejectStockRequestStatusDTO) error
+
 	GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error)
 	GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
-	UpdateStockRequestIngredients(requestID uint, items []types.CreateStockRequestItemDTO) error
+	UpdateStockRequestIngredients(requestID uint, items []types.StockRequestStockMaterialDTO) error
 	GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error)
 }
 
@@ -53,7 +59,7 @@ func (s *stockRequestService) CreateStockRequest(req types.CreateStockRequestDTO
 	}
 
 	ingredients := []data.StockRequestIngredient{}
-	for _, item := range req.Items {
+	for _, item := range req.StockMaterials {
 		var stockMaterial data.StockMaterial
 		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
 			return 0, fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
@@ -96,7 +102,34 @@ func (s *stockRequestService) GetStockRequestByID(id uint) (types.StockRequestRe
 	return types.ToStockRequestResponse(request), nil
 }
 
-func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status types.UpdateStockRequestStatusDTO) error {
+func (s *stockRequestService) RejectStockRequest(requestID uint, status string, dto types.RejectStockRequestStatusDTO) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	requestStatus := data.StockRequestStatus(status)
+	switch requestStatus {
+	case data.StockRequestRejectedByWarehouse:
+		if err := s.handleRejectedByWarehouseStatus(request, dto.Comment); err != nil {
+			return err
+		}
+
+	case data.StockRequestRejectedByStore:
+		if err := s.handleRejectedByStoreStatus(request, dto.Comment); err != nil {
+			return err
+		}
+	}
+
+	request.Status = requestStatus
+	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
+		return fmt.Errorf("failed to update stock request status: %w", err)
+	}
+
+	return nil
+}
+
+func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status string) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
@@ -107,39 +140,181 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status ty
 		return fmt.Errorf("failed to fetch store warehouse: %w", err)
 	}
 
-	switch status.Status {
+	requestStatus := data.StockRequestStatus(status)
+
+	switch requestStatus {
 	case data.StockRequestInDelivery:
-		for _, ingredient := range request.Ingredients {
-			if err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity); err != nil {
-				return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
-			}
+		if err := s.handleInDeliveryStatus(request); err != nil {
+			return err
 		}
 
 	case data.StockRequestCompleted:
-		for _, ingredient := range request.Ingredients {
-			dates := types.UpdateIngredientDates{
-				DeliveredDate:  time.Now(),
-				ExpirationDate: time.Now().AddDate(0, 0, ingredient.StockMaterial.ExpirationPeriodInDays),
-			}
-
-			if err := s.repo.UpdateStockRequestIngredientDates(ingredient.ID, &dates); err != nil {
-				return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
-			}
-
-			if err := s.repo.AddToStoreWarehouseStock(storeWarehouse.ID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
-				return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
-			}
+		if err := s.handleCompletedStatus(request, storeWarehouse.ID); err != nil {
+			return err
 		}
-
-	case data.StockRequestRejected:
-		fmt.Printf("Stock request rejected, ID: %d\n", requestID)
 	}
 
-	request.Status = status.Status
+	request.Status = requestStatus
 	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
 		return fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
+	return nil
+}
+
+func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, status string, dto types.AcceptWithChangeRequestStatusDTO) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	storeWarehouse, err := s.repo.GetStoreWarehouse(request.StoreID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch store warehouse: %w", err)
+	}
+
+	if err := s.handleAcceptedWithChange(request, storeWarehouse.ID, dto.Items, dto.Comment); err != nil {
+		return err
+	}
+
+	request.Status = data.StockRequestStatus(status)
+	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
+		return fmt.Errorf("failed to update stock request status: %w", err)
+	}
+
+	return nil
+}
+
+func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest) error {
+	for _, ingredient := range request.Ingredients {
+		if err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity); err != nil {
+			return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+	}
+	return nil
+}
+
+func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, storeWarehouseID uint) error {
+	for _, ingredient := range request.Ingredients {
+		if ingredient.StockMaterial.Package == nil {
+			return utils.WrapError("package is not presenent for stock material", fmt.Errorf("stock material ID %d", ingredient.StockMaterialID))
+		}
+
+		dates := types.UpdateIngredientDates{
+			DeliveredDate:  time.Now(),
+			ExpirationDate: time.Now().AddDate(0, 0, ingredient.StockMaterial.ExpirationPeriodInDays),
+		}
+
+		if err := s.repo.UpdateStockRequestIngredientDates(ingredient.ID, &dates); err != nil {
+			return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+
+		if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
+			return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+	}
+	return nil
+}
+
+func (s *stockRequestService) handleAcceptedWithChange(request *data.StockRequest, storeWarehouseID uint, items []types.StockRequestStockMaterialDTO, comment *string) error {
+	var autoGeneratedComments []string
+	updatedIngredients := []data.StockRequestIngredient{}
+
+	for _, item := range items {
+		var stockMaterial data.StockMaterial
+		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
+		}
+
+		// Find the original ingredient in the request
+		originalIngredient := findOriginalIngredient(request.Ingredients, item.StockMaterialID)
+
+		if originalIngredient != nil {
+			if originalIngredient.Quantity != item.Quantity {
+				autoGeneratedComments = append(autoGeneratedComments, fmt.Sprintf(
+					"Material '%s' (ID %d): Expected %.2f, Received %.2f",
+					stockMaterial.Name,
+					originalIngredient.StockMaterialID,
+					originalIngredient.Quantity,
+					item.Quantity,
+				))
+			}
+		} else {
+			autoGeneratedComments = append(autoGeneratedComments, fmt.Sprintf(
+				"Material '%s' (ID %d): Unexpected material received with quantity %.2f",
+				stockMaterial.Name,
+				item.StockMaterialID,
+				item.Quantity,
+			))
+		}
+
+		if originalIngredient != nil && originalIngredient.Quantity > 0 {
+			if err := s.repo.DeductWarehouseStock(originalIngredient.StockMaterialID, request.WarehouseID, originalIngredient.Quantity); err != nil {
+				return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", originalIngredient.StockMaterialID, err)
+			}
+		}
+
+		if item.Quantity > 0 {
+			if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
+				return fmt.Errorf("failed to add stock to store warehouse for stock material ID %d: %w", item.StockMaterialID, err)
+			}
+		}
+
+		updatedIngredients = append(updatedIngredients, data.StockRequestIngredient{
+			StockRequestID:  request.ID,
+			IngredientID:    stockMaterial.IngredientID,
+			StockMaterialID: item.StockMaterialID,
+			Quantity:        item.Quantity,
+		})
+	}
+
+	if err := s.repo.ReplaceStockRequestIngredients(request.ID, updatedIngredients); err != nil {
+		return fmt.Errorf("failed to replace ingredients for stock request ID %d: %w", request.ID, err)
+	}
+
+	if comment != nil {
+		storeComment := fmt.Sprintf("Comment from store: %s", *comment)
+		autoGeneratedComments = append(autoGeneratedComments, storeComment)
+	}
+
+	// Save auto-generated comments
+	if len(autoGeneratedComments) > 0 {
+		combinedComments := strings.Join(autoGeneratedComments, "\n")
+		if err := s.repo.AddStoreComment(request.ID, combinedComments); err != nil {
+			return fmt.Errorf("failed to add store comment for request ID %d: %w", request.ID, err)
+		}
+	}
+
+	return nil
+}
+
+// Helper function to find the original ingredient in the stock request by StockMaterialID
+func findOriginalIngredient(ingredients []data.StockRequestIngredient, stockMaterialID uint) *data.StockRequestIngredient {
+	for _, ingredient := range ingredients {
+		if ingredient.StockMaterialID == stockMaterialID {
+			return &ingredient
+		}
+	}
+	return nil
+}
+
+func (s *stockRequestService) handleRejectedByWarehouseStatus(request *data.StockRequest, comment *string) error {
+	if comment != nil {
+		if err := s.repo.AddWarehouseComment(request.ID, *comment); err != nil {
+			return fmt.Errorf("failed to add rejection comment for request ID %d: %w", request.ID, err)
+		}
+	}
+	fmt.Printf("Stock request rejected, ID: %d, Comment: %s\n", request.ID, utils.StringOrEmpty(comment))
+	return nil
+}
+
+func (s *stockRequestService) handleRejectedByStoreStatus(request *data.StockRequest, comment *string) error {
+	if comment != nil {
+		if err := s.repo.AddStoreComment(request.ID, *comment); err != nil {
+			return fmt.Errorf("failed to add rejection comment for request ID %d: %w", request.ID, err)
+		}
+	}
+	fmt.Printf("Stock request rejected, ID: %d, Comment: %s\n", request.ID, utils.StringOrEmpty(comment))
 	return nil
 }
 
@@ -165,7 +340,7 @@ func (s *stockRequestService) GetAllStockMaterials(storeID uint, filter types.St
 	return s.repo.GetAllStockMaterials(storeID, filter)
 }
 
-func (s *stockRequestService) UpdateStockRequestIngredients(requestID uint, items []types.CreateStockRequestItemDTO) error {
+func (s *stockRequestService) UpdateStockRequestIngredients(requestID uint, items []types.StockRequestStockMaterialDTO) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
@@ -177,7 +352,6 @@ func (s *stockRequestService) UpdateStockRequestIngredients(requestID uint, item
 		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
 			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
-
 		ingredients = append(ingredients, data.StockRequestIngredient{
 			StockRequestID:  request.ID,
 			IngredientID:    stockMaterial.IngredientID,
@@ -186,11 +360,11 @@ func (s *stockRequestService) UpdateStockRequestIngredients(requestID uint, item
 		})
 	}
 
-	if err := s.repo.ReplaceStockRequestIngredients(requestID, ingredients); err != nil {
-		return fmt.Errorf("failed to update stock request ingredients: %w", err)
+	if err := s.repo.ReplaceStockRequestIngredients(request.ID, ingredients); err != nil {
+		return fmt.Errorf("failed to replace ingredients for stock request ID %d: %w", requestID, err)
 	}
-
 	return nil
+
 }
 
 func (s *stockRequestService) GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error) {
@@ -202,13 +376,15 @@ func (s *stockRequestService) GetAvailableStockMaterialsByIngredient(ingredientI
 	availability := make([]types.StockMaterialAvailabilityDTO, len(stocks))
 	for i, stock := range stocks {
 		availability[i] = types.StockMaterialAvailabilityDTO{
-			StockMaterialID: stock.StockMaterialID,
-			Name:            stock.StockMaterial.Name,
-			Category:        stock.StockMaterial.Category,
-			AvailableQty:    stock.Quantity,
-			WarehouseID:     stock.WarehouseID,
-			WarehouseName:   stock.Warehouse.Name,
-			Unit:            stock.StockMaterial.Unit.Name,
+			StockMaterialID:   stock.StockMaterialID,
+			Name:              stock.StockMaterial.Name,
+			Category:          stock.StockMaterial.StockMaterialCategory.Name,
+			AvailableQuantity: stock.Quantity,
+			Unit:              stock.StockMaterial.Unit.Name,
+			Warehouse: types.WarehouseDTO{
+				ID:   stock.WarehouseID,
+				Name: stock.Warehouse.Name,
+			},
 		}
 	}
 

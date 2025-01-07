@@ -13,7 +13,9 @@ func ValidateStatus(status string) error {
 		string(data.StockRequestProcessed),
 		string(data.StockRequestInDelivery),
 		string(data.StockRequestCompleted),
-		string(data.StockRequestRejected),
+		string(data.StockRequestRejectedByStore),
+		string(data.StockRequestRejectedByWarehouse),
+		string(data.StockRequestAcceptedWithChange),
 	}
 	for _, validStatus := range validStatuses {
 		if status == validStatus {
