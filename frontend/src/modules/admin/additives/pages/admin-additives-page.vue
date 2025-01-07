@@ -43,7 +43,7 @@ const filter = ref<AdditiveFilterQuery>({
 })
 
 const { data: additivesResponse } = useQuery({
-  queryKey: computed(() => ['additives', filter.value]),
+  queryKey: computed(() => ['admin-additives', filter.value]),
   queryFn: () => additivesService.getAdditives(filter.value),
 })
 

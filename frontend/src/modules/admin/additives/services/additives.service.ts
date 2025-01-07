@@ -12,7 +12,7 @@ import type {
 } from '../models/additives.model'
 import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
-export class AdditiveService {
+class AdditiveService {
 	async getAdditives(filter?: AdditiveFilterQuery) {
 		const response = await apiClient.get<PaginatedResponse<AdditiveDTO[]>>('/additives', {
 			params: buildRequestFilter(filter),

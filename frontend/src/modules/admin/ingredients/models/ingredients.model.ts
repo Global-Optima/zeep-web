@@ -11,7 +11,7 @@ export interface CreateIngredientDTO {
 	fat: number
 	carbs: number
 	proteins: number
-	expiresAt?: string // ISO-8601 formatted string (e.g., "2024-12-18T00:00:00Z")
+	expiresAt?: string 
 }
 
 /**

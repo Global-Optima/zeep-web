@@ -39,10 +39,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import type { AdditiveCategories } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { useRouter } from 'vue-router'
 
-const {additiveCategories} = defineProps<{additiveCategories: AdditiveCategories[]}>()
+const {additiveCategories} = defineProps<{additiveCategories: AdditiveCategoryDTO[]}>()
 
 const router = useRouter();
 
