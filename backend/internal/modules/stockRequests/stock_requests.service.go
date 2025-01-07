@@ -1,6 +1,7 @@
 package stockRequests
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -8,21 +9,27 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"gorm.io/gorm"
 )
 
 type StockRequestService interface {
-	CreateStockRequest(req types.CreateStockRequestDTO) (uint, error)
+	CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, error)
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
 	GetStockRequestByID(id uint) (types.StockRequestResponse, error)
 
-	UpdateStockRequestStatus(requestID uint, status string) error
-	AcceptStockRequestWithChange(requestID uint, status string, dto types.AcceptWithChangeRequestStatusDTO) error
-	RejectStockRequest(requestID uint, status string, dto types.RejectStockRequestStatusDTO) error
+	RejectStockRequestByStore(requestID uint, dto types.RejectStockRequestStatusDTO) error
+	RejectStockRequestByWarehouse(requestID uint, dto types.RejectStockRequestStatusDTO) error
+	SetInDeliveryStatus(requestID uint) error
+	SetCompletedStatus(requestID uint) error
+	AcceptStockRequestWithChange(requestID uint, dto types.AcceptWithChangeRequestStatusDTO) error
 
 	GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error)
 	GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
 	UpdateStockRequestIngredients(requestID uint, items []types.StockRequestStockMaterialDTO) error
 	GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error)
+
+	DeleteStockRequest(requestID uint) error
+	GetLastCreatedStockRequest(storeID uint) (*types.StockRequestResponse, error)
 }
 
 type stockRequestService struct {
@@ -33,8 +40,16 @@ func NewStockRequestService(repo StockRequestRepository) StockRequestService {
 	return &stockRequestService{repo: repo}
 }
 
-func (s *stockRequestService) CreateStockRequest(req types.CreateStockRequestDTO) (uint, error) {
-	lastRequestDate, err := s.repo.GetLastStockRequestDate(req.StoreID)
+func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, error) {
+	existingRequest, err := s.repo.GetOpenCartByStoreID(storeID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, fmt.Errorf("failed to check for open cart: %w", err)
+	}
+	if existingRequest != nil {
+		return 0, fmt.Errorf("an open cart already exists for this store")
+	}
+
+	lastRequestDate, err := s.repo.GetLastStockRequestDate(storeID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to fetch last stock request date: %w", err)
 	}
@@ -43,13 +58,13 @@ func (s *stockRequestService) CreateStockRequest(req types.CreateStockRequestDTO
 		return 0, err
 	}
 
-	storeWarehouse, err := s.repo.GetStoreWarehouse(req.StoreID)
+	storeWarehouse, err := s.repo.GetStoreWarehouse(storeID)
 	if err != nil {
-		return 0, fmt.Errorf("failed to fetch store warehouse for store ID %d: %w", req.StoreID, err)
+		return 0, fmt.Errorf("failed to fetch store warehouse for store ID %d: %w", storeID, err)
 	}
 
 	stockRequest := &data.StockRequest{
-		StoreID:     req.StoreID,
+		StoreID:     storeID,
 		WarehouseID: storeWarehouse.WarehouseID,
 		Status:      data.StockRequestCreated,
 	}
@@ -102,34 +117,58 @@ func (s *stockRequestService) GetStockRequestByID(id uint) (types.StockRequestRe
 	return types.ToStockRequestResponse(request), nil
 }
 
-func (s *stockRequestService) RejectStockRequest(requestID uint, status string, dto types.RejectStockRequestStatusDTO) error {
+func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto types.RejectStockRequestStatusDTO) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
 	}
 
-	requestStatus := data.StockRequestStatus(status)
-	switch requestStatus {
-	case data.StockRequestRejectedByWarehouse:
-		if err := s.handleRejectedByWarehouseStatus(request, dto.Comment); err != nil {
-			return err
-		}
-
-	case data.StockRequestRejectedByStore:
-		if err := s.handleRejectedByStoreStatus(request, dto.Comment); err != nil {
-			return err
-		}
+	if err := s.handleRejectedByStoreStatus(request, dto.Comment); err != nil {
+		return err
 	}
 
-	request.Status = requestStatus
+	request.Status = data.StockRequestRejectedByStore
 	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
 		return fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
 	return nil
 }
+func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto types.RejectStockRequestStatusDTO) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
 
-func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status string) error {
+	if err := s.handleRejectedByWarehouseStatus(request, dto.Comment); err != nil {
+		return err
+	}
+
+	request.Status = data.StockRequestRejectedByWarehouse
+	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
+		return fmt.Errorf("failed to update stock request status: %w", err)
+	}
+
+	return nil
+}
+func (s *stockRequestService) SetInDeliveryStatus(requestID uint) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	if err := s.handleInDeliveryStatus(request); err != nil {
+		return err
+	}
+
+	request.Status = data.StockRequestInDelivery
+	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
+		return fmt.Errorf("failed to update stock request status: %w", err)
+	}
+
+	return nil
+}
+func (s *stockRequestService) SetCompletedStatus(requestID uint) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
@@ -140,21 +179,11 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status st
 		return fmt.Errorf("failed to fetch store warehouse: %w", err)
 	}
 
-	requestStatus := data.StockRequestStatus(status)
-
-	switch requestStatus {
-	case data.StockRequestInDelivery:
-		if err := s.handleInDeliveryStatus(request); err != nil {
-			return err
-		}
-
-	case data.StockRequestCompleted:
-		if err := s.handleCompletedStatus(request, storeWarehouse.ID); err != nil {
-			return err
-		}
+	if err := s.handleCompletedStatus(request, storeWarehouse.ID); err != nil {
+		return err
 	}
 
-	request.Status = requestStatus
+	request.Status = data.StockRequestCompleted
 	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
 		return fmt.Errorf("failed to update stock request status: %w", err)
 	}
@@ -162,7 +191,7 @@ func (s *stockRequestService) UpdateStockRequestStatus(requestID uint, status st
 	return nil
 }
 
-func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, status string, dto types.AcceptWithChangeRequestStatusDTO) error {
+func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto types.AcceptWithChangeRequestStatusDTO) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
@@ -177,7 +206,7 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, statu
 		return err
 	}
 
-	request.Status = data.StockRequestStatus(status)
+	request.Status = data.StockRequestAcceptedWithChange
 	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
 		return fmt.Errorf("failed to update stock request status: %w", err)
 	}
@@ -389,4 +418,37 @@ func (s *stockRequestService) GetAvailableStockMaterialsByIngredient(ingredientI
 	}
 
 	return availability, nil
+}
+
+func (s *stockRequestService) DeleteStockRequest(requestID uint) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("stock request not found")
+		}
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	if request.Status != data.StockRequestCreated {
+		return fmt.Errorf("only stock requests in 'CREATED' status can be deleted")
+	}
+
+	if err := s.repo.DeleteStockRequest(requestID); err != nil {
+		return fmt.Errorf("failed to delete stock request: %w", err)
+	}
+
+	return nil
+}
+
+func (s *stockRequestService) GetLastCreatedStockRequest(storeID uint) (*types.StockRequestResponse, error) {
+	request, err := s.repo.GetOpenCartByStoreID(storeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("no open cart exists for store ID %d", storeID)
+		}
+		return nil, fmt.Errorf("failed to fetch last created stock request: %w", err)
+	}
+
+	response := types.ToStockRequestResponse(request)
+	return &response, nil
 }

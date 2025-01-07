@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -32,7 +32,13 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	requestID, err := h.service.CreateStockRequest(req)
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	requestID, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
@@ -43,6 +49,13 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.GetStockRequestsFilter
+
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+	filter.StoreID = &storeID
 
 	if err := c.ShouldBindQuery(&filter); err != nil {
 		utils.SendBadRequestError(c, err.Error())
@@ -81,53 +94,99 @@ func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
 	utils.SendSuccessResponse(c, request)
 }
 
-func (h *StockRequestHandler) UpdateStockRequestStatus(c *gin.Context) {
+func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 	requestID, err := strconv.Atoi(c.Param("requestId"))
 	if err != nil {
 		utils.SendBadRequestError(c, "Invalid request ID")
 		return
 	}
 
-	status := c.Query("status")
-	if status == "" {
-		utils.SendBadRequestError(c, "Status query parameter is required")
+	var dto types.AcceptWithChangeRequestStatusDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, "Invalid payload for acceptance with change")
 		return
 	}
 
-	switch status {
-	case string(data.StockRequestAcceptedWithChange):
-		var dto types.AcceptWithChangeRequestStatusDTO
-		if err := c.ShouldBindJSON(&dto); err != nil {
-			utils.SendBadRequestError(c, "Invalid payload for acceptance with change")
-			return
-		}
+	if len(dto.Items) == 0 {
+		utils.SendBadRequestError(c, "The cart cannot be empty")
+		return
+	}
 
-		if len(dto.Items) == 0 {
-			utils.SendBadRequestError(c, "The cart cannot be empty")
-			return
-		}
+	if err := h.service.AcceptStockRequestWithChange(uint(requestID), dto); err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
 
-		if err := h.service.AcceptStockRequestWithChange(uint(requestID), status, dto); err != nil {
-			utils.SendInternalServerError(c, err.Error())
-			return
-		}
+	c.Status(http.StatusOK)
+}
 
-	case string(data.StockRequestRejectedByStore), string(data.StockRequestRejectedByWarehouse):
-		var dto types.RejectStockRequestStatusDTO
-		if err := c.ShouldBindJSON(&dto); err != nil {
-			utils.SendBadRequestError(c, "Invalid payload for rejection")
-			return
-		}
-		if err := h.service.RejectStockRequest(uint(requestID), status, dto); err != nil {
-			utils.SendInternalServerError(c, err.Error())
-			return
-		}
+func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
+	requestID, err := strconv.Atoi(c.Param("requestId"))
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid request ID")
+		return
+	}
 
-	default:
-		if err := h.service.UpdateStockRequestStatus(uint(requestID), status); err != nil {
-			utils.SendInternalServerError(c, err.Error())
-			return
-		}
+	var dto types.RejectStockRequestStatusDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, "Invalid payload for rejection by store")
+		return
+	}
+
+	if err := h.service.RejectStockRequestByStore(uint(requestID), dto); err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
+	requestID, err := strconv.Atoi(c.Param("requestId"))
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid request ID")
+		return
+	}
+
+	var dto types.RejectStockRequestStatusDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, "Invalid payload for rejection by warehouse")
+		return
+	}
+
+	if err := h.service.RejectStockRequestByWarehouse(uint(requestID), dto); err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
+	requestID, err := strconv.Atoi(c.Param("requestId"))
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid request ID")
+		return
+	}
+
+	if err := h.service.SetInDeliveryStatus(uint(requestID)); err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
+	requestID, err := strconv.Atoi(c.Param("requestId"))
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid request ID")
+		return
+	}
+
+	if err := h.service.SetCompletedStatus(uint(requestID)); err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
 	}
 
 	c.Status(http.StatusOK)
@@ -160,9 +219,9 @@ func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) GetLowStockIngredients(c *gin.Context) {
-	storeID, err := strconv.Atoi(c.Query("storeId"))
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store ID")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -176,14 +235,14 @@ func (h *StockRequestHandler) GetLowStockIngredients(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) GetAllStockMaterials(c *gin.Context) {
-	storeID, err := strconv.Atoi(c.Query("storeId"))
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store ID")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
 	var filter types.StockMaterialFilter
-	if err = c.ShouldBindQuery(&filter); err != nil {
+	if err := c.ShouldBindQuery(&filter); err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
@@ -204,22 +263,50 @@ func (h *StockRequestHandler) GetStockMaterialsByIngredient(c *gin.Context) {
 		return
 	}
 
-	var warehouseID *uint
-	if warehouseParam := c.Query("warehouseId"); warehouseParam != "" {
-		id, err := strconv.ParseUint(warehouseParam, 10, 64)
-		if err != nil {
-			utils.SendBadRequestError(c, "Invalid warehouse ID")
-			return
-		}
-		wID := uint(id)
-		warehouseID = &wID
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
 	}
 
-	availability, err := h.service.GetAvailableStockMaterialsByIngredient(uint(ingredientID), warehouseID)
+	wID := &warehouseID
+	availability, err := h.service.GetAvailableStockMaterialsByIngredient(uint(ingredientID), wID)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
 	utils.SendSuccessResponse(c, availability)
+}
+
+func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
+	requestID, err := strconv.Atoi(c.Param("requestId"))
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid request ID")
+		return
+	}
+
+	err = h.service.DeleteStockRequest(uint(requestID))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *StockRequestHandler) GetLastCreatedStockRequest(c *gin.Context) {
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	request, err := h.service.GetLastCreatedStockRequest(uint(storeID))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SendSuccessResponse(c, request)
 }

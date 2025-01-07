@@ -261,10 +261,25 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 	{
 		router.GET("", handler.GetStockRequests)
 		router.GET("/:requestId", handler.GetStockRequestByID)
-		router.GET("/low-stock", handler.GetLowStockIngredients)
-		router.GET("/marketplace-products", handler.GetAllStockMaterials)
 		router.POST("", handler.CreateStockRequest)
-		router.PATCH("/:requestId/status", handler.UpdateStockRequestStatus)
+		router.GET("/current", handler.GetLastCreatedStockRequest)
 		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)
+		router.DELETE("/:requestId", handler.DeleteStockRequest)
+
+		statusGroup := router.Group("/status/:requestId")
+		{
+			statusGroup.PATCH("/accept-with-change", handler.AcceptWithChangeStatus)
+			statusGroup.PATCH("/reject-store", handler.RejectStoreStatus)
+			statusGroup.PATCH("/reject-warehouse", handler.RejectWarehouseStatus)
+			statusGroup.PATCH("/in-delivery", handler.SetInDeliveryStatus)
+			statusGroup.PATCH("/completed", handler.SetCompletedStatus)
+		}
+
+		router.GET("/low-stock", handler.GetLowStockIngredients)
+		materialsRouter := router.Group("/materials")
+		{
+			materialsRouter.GET("", handler.GetAllStockMaterials)
+			materialsRouter.GET("/:ingredientId", handler.GetStockMaterialsByIngredient)
+		}
 	}
 }
