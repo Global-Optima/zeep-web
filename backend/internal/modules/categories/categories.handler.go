@@ -1,14 +1,12 @@
 package categories
 
 import (
-	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type CategoryHandler struct {
@@ -29,7 +27,7 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 		return
 	}
 
-	cacheKey := utils.BuildCacheKey("productCategories", map[string]string{
+	/*cacheKey := utils.BuildCacheKey("productCategories", map[string]string{
 		"search":     filter.Search,
 		"page":       strconv.Itoa(filter.Pagination.Page),
 		"pageSize":   strconv.Itoa(filter.Pagination.PageSize),
@@ -45,7 +43,7 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 			utils.SendSuccessResponseWithPagination(c, cachedCategories, filter.Pagination)
 			return
 		}
-	}
+	}*/
 
 	categories, err := h.service.GetCategories(&filter)
 	if err != nil {
@@ -53,9 +51,9 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 		return
 	}
 
-	if err := cacheUtil.Set(cacheKey, categories, 30*time.Minute); err != nil {
+	/*if err := cacheUtil.Set(cacheKey, categories, 30*time.Minute); err != nil {
 		fmt.Printf("Failed to cache categories: %v\n", err)
-	}
+	}*/
 
 	utils.SendSuccessResponseWithPagination(c, categories, filter.Pagination)
 }
