@@ -63,7 +63,6 @@ type UpdateAdditiveCategoryDTO struct {
 }
 
 type UpdateAdditiveDTO struct {
-	ID                 uint     `json:"id" binding:"required"`
 	Name               string   `json:"name" binding:"omitempty"`
 	Description        string   `json:"description" binding:"omitempty"`
 	Price              *float64 `json:"price" binding:"omitempty,gte=0"`

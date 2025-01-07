@@ -16,6 +16,7 @@ type ProductService interface {
 	DeleteProduct(productID uint) error
 
 	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error)
+	GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error)
 	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
 	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
 	DeleteProductSize(productSizeID uint) error
@@ -126,6 +127,18 @@ func (s *productService) GetProductSizesByProductID(productID uint) ([]types.Pro
 	}
 
 	return dtos, nil
+}
+
+func (s *productService) GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error) {
+	productSize, err := s.repo.GetProductSizeDetailsByID(productID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to get product sizes: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	dto := types.MapToProductSizeDetails(*productSize)
+
+	return &dto, nil
 }
 
 func (s *productService) DeleteProduct(productID uint) error {

@@ -1,6 +1,10 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type BaseProductDTO struct {
 	ID           uint   `json:"id"`
@@ -39,6 +43,13 @@ type ProductSizeDTO struct {
 	Measure   string  `json:"measure"`
 	Size      int     `json:"size"`
 	IsDefault bool    `json:"isDefault"`
+}
+
+type ProductSizeDetailsDTO struct {
+	ProductSizeDTO
+	ProductID   uint                                   `json:"productId"`
+	Additives   []additiveTypes.AdditiveDTO            `json:"additives"`
+	Ingredients []ingredientTypes.IngredientDetailsDTO `json:"ingredients"`
 }
 
 type CreateProductDTO struct {

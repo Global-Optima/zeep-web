@@ -128,13 +128,19 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 }
 
 func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
+	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid additive ID")
+		return
+	}
+
 	var dto types.UpdateAdditiveDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, "Invalid input data")
 		return
 	}
 
-	if err := h.service.UpdateAdditive(&dto); err != nil {
+	if err := h.service.UpdateAdditive(uint(additiveID), &dto); err != nil {
 		utils.SendInternalServerError(c, "Failed to update additive")
 		return
 	}

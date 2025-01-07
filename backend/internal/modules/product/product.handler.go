@@ -138,6 +138,24 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 	utils.SendSuccessResponse(c, productSizes)
 }
 
+func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
+	productIDParam := c.Param("id")
+
+	productID, err := strconv.ParseUint(productIDParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid product ID")
+		return
+	}
+
+	productSize, err := h.service.GetProductSizeDetailsByID(uint(productID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve product sizes")
+		return
+	}
+
+	utils.SendSuccessResponse(c, productSize)
+}
+
 func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 	var input types.CreateProductSizeDTO
 
