@@ -1,9 +1,10 @@
 package types
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"sort"
 	"strings"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
 type ProductSizeModels struct {
@@ -14,10 +15,12 @@ type ProductSizeModels struct {
 
 func MapBaseProductDTO(product *data.Product) BaseProductDTO {
 	return BaseProductDTO{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		ImageURL:    product.ImageURL,
+		ID:           product.ID,
+		Name:         product.Name,
+		Description:  product.Description,
+		ImageURL:     product.ImageURL,
+		CategoryName: product.Category.Name,
+		CategoryID:   product.CategoryID,
 	}
 }
 
@@ -94,7 +97,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 		})
 	}
 
-	for _, ingredientID := range dto.Ingredients {
+	for _, ingredientID := range dto.IngredientIDs {
 		productSize.ProductSizeIngredients = append(productSize.ProductSizeIngredients, data.ProductSizeIngredient{
 			IngredientID: ingredientID,
 		})
@@ -113,7 +116,7 @@ func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
 	if strings.TrimSpace(dto.Description) != "" {
 		product.ImageURL = dto.ImageURL
 	}
-	if dto.CategoryID != nil {
+	if dto.CategoryID != 0 {
 		product.CategoryID = dto.CategoryID
 	}
 	return product
@@ -149,7 +152,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 		additives = append(additives, temp)
 	}
 
-	for _, ingredientID := range dto.Ingredients {
+	for _, ingredientID := range dto.IngredientIDs {
 		temp := data.ProductSizeIngredient{
 			IngredientID: ingredientID,
 		}

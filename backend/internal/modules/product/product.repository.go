@@ -3,6 +3,7 @@ package product
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -54,6 +55,7 @@ func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data
 
 	query := r.db.
 		Model(&data.Product{}).
+		Preload("Category").
 		Joins("JOIN store_products ON store_products.product_id = products.id").
 		Preload("ProductSizes")
 
@@ -91,6 +93,7 @@ func (r *productRepository) GetProductDetails(productID uint) (*data.Product, er
 
 	err := r.db.
 		Preload("ProductSizes").
+		Preload("Category").
 		Where("id = ?", productID).
 		First(&product).
 		Error

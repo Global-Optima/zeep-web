@@ -13,6 +13,6 @@
 	],
 	"compilerOptions": {
 		"module": "NodeNext",
-		"types": ["vue3-toastify/global"]
+		"types": []
 	}
 }

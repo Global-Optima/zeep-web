@@ -42,27 +42,27 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/core/components/ui/tabs'
+import { useToast } from '@/core/components/ui/toast'
+import { getRouteName } from '@/core/config/routes.config'
+import AdminLoginForm from '@/modules/auth/components/login/admin-login-form.vue'
 import StoreLoginForm from '@/modules/auth/components/login/store-login-form.vue'
 import WarehouseLoginForm from '@/modules/auth/components/login/warehouse-login-form.vue'
-
-import { getRouteName } from '@/core/config/routes.config'
-import { toastError, toastSuccess } from '@/core/config/toast.config'
-import AdminLoginForm from '@/modules/auth/components/login/admin-login-form.vue'
 import { authService } from '@/modules/auth/services/auth.service'
 import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
 import { useMutation } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const { toast } = useToast()
 
 const {mutate: loginEmployee} = useMutation({
 		mutationFn: (dto: EmployeeLoginDTO) => authService.loginEmployee(dto),
 		onSuccess: () => {
-			toastSuccess("Вы вошли в систему")
+			toast({title: "Вы вошли в систему"})
 			router.push({name: getRouteName("ADMIN_DASHBOARD")})
 		},
 		onError: () => {
-			toastError("Произошла ошибка при входе")
+			toast({title: "Произошла ошибка при входе"})
 		},
 })
 

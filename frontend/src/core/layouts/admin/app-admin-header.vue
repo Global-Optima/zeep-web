@@ -80,8 +80,8 @@ import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/core/components/ui/sheet'
+import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
-import { toastError, toastSuccess } from '@/core/config/toast.config'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
 import { authService } from '@/modules/auth/services/auth.service'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
@@ -90,18 +90,17 @@ import { CircleUser, Menu, Search, Store } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const {currentEmployee, setCurrentEmployee} = useEmployeeAuthStore()
-
-console.log(currentEmployee)
+const { toast } = useToast()
 
 const {mutate: logoutEmployee} = useMutation({
 		mutationFn: () => authService.logoutEmployee(),
 		onSuccess: () => {
-			toastSuccess("Вы вышли из системы")
+			toast({title: "Вы вышли из системы"})
       setCurrentEmployee(null)
 			router.push({name: getRouteName("LOGIN")})
 		},
 		onError: () => {
-			toastError("Произошла ошибка при выходе")
+      toast({title: "Произошла ошибка при выходе"})
 		},
 })
 

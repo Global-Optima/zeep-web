@@ -3,11 +3,13 @@ package types
 import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type BaseProductDTO struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	ImageURL    string `json:"imageUrl"`
-	VideoURL    string `json:"videoUrl"`
+	ID           uint   `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	ImageURL     string `json:"imageUrl"`
+	VideoURL     string `json:"videoUrl"`
+	CategoryName string `json:"categoryName"`
+	CategoryID   uint   `json:"categoryId"`
 }
 
 type ProductDTO struct {
@@ -43,7 +45,7 @@ type CreateProductDTO struct {
 	Name        string `json:"name" binding:"required,min=2,max=100"`
 	Description string `json:"description" binding:"max=500"`
 	ImageURL    string `json:"imageUrl" binding:"omitempty,url"`
-	CategoryID  *uint  `json:"categoryId" binding:"omitempty"`
+	CategoryID  uint   `json:"categoryId" binding:"omitempty"`
 }
 
 type SelectedAdditiveTypesDTO struct {
@@ -52,31 +54,31 @@ type SelectedAdditiveTypesDTO struct {
 }
 
 type CreateProductSizeDTO struct {
-	ProductID   uint                       `json:"productId" binding:"required,gt=0"`
-	Name        string                     `json:"name" binding:"required,oneof=S M L"`
-	Measure     string                     `json:"measure" binding:"required,max=20"`
-	BasePrice   float64                    `json:"basePrice" binding:"required,gt=0"`
-	Size        int                        `json:"size" binding:"required,gte=0"`
-	IsDefault   bool                       `json:"isDefault"`
-	Additives   []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty,dive,gt=0"`
-	Ingredients []uint                     `json:"ingredients" binding:"omitempty,dive,gt=0"`
+	ProductID     uint                       `json:"productId" binding:"required,gt=0"`
+	Name          string                     `json:"name" binding:"required,oneof=S M L"`
+	Measure       string                     `json:"measure" binding:"required,max=20"`
+	BasePrice     float64                    `json:"basePrice" binding:"required,gt=0"`
+	Size          int                        `json:"size" binding:"required,gte=0"`
+	IsDefault     bool                       `json:"isDefault"`
+	Additives     []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty,dive,gt=0"`
+	IngredientIDs []uint                     `json:"ingredientIds" binding:"omitempty,dive,gt=0"`
 }
 
 type UpdateProductDTO struct {
 	Name        string `json:"name" binding:"omitempty,min=2,max=100"`
 	Description string `json:"description" binding:"omitempty,max=500"`
 	ImageURL    string `json:"imageUrl" binding:"omitempty,url"`
-	CategoryID  *uint  `json:"categoryId" binding:"omitempty,gt=0"`
+	CategoryID  uint   `json:"categoryId" binding:"omitempty,gt=0"`
 }
 
 type UpdateProductSizeDTO struct {
-	Name        *string                    `json:"name" binding:"omitempty,max=100"`
-	Measure     *string                    `json:"measure" binding:"omitempty,oneof=мл г"`
-	BasePrice   *float64                   `json:"basePrice" binding:"omitempty,gt=0"`
-	Size        *int                       `json:"size" binding:"omitempty,min=1,max=3"`
-	IsDefault   *bool                      `json:"isDefault"`
-	Additives   []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty,dive,gt=0"`
-	Ingredients []uint                     `json:"ingredients" binding:"omitempty,dive,gt=0"`
+	Name          *string                    `json:"name" binding:"omitempty,max=100"`
+	Measure       *string                    `json:"measure" binding:"omitempty,oneof=мл г"`
+	BasePrice     *float64                   `json:"basePrice" binding:"omitempty,gt=0"`
+	Size          *int                       `json:"size" binding:"omitempty,min=1,max=3"`
+	IsDefault     *bool                      `json:"isDefault"`
+	Additives     []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty,dive,gt=0"`
+	IngredientIDs []uint                     `json:"ingredientIds" binding:"omitempty,dive,gt=0"`
 }
 
 type ProductsFilterDto struct {

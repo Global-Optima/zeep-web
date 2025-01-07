@@ -26,14 +26,14 @@ func IsValidSize(size Size) bool {
 
 type Product struct {
 	BaseEntity
-	Name         string           `gorm:"size:100;not null" sort:"name"`
-	Description  string           `gorm:"type:text"`
-	ImageURL     string           `gorm:"size:2048"`
-	VideoURL     string           `gorm:"size:2048"`
-	CategoryID   *uint            `gorm:"index;not null"`
-	Category     *ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"categories"`
-	RecipeSteps  []RecipeStep     `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	ProductSizes []ProductSize    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	Name         string          `gorm:"size:100;not null" sort:"name"`
+	Description  string          `gorm:"type:text"`
+	ImageURL     string          `gorm:"size:2048"`
+	VideoURL     string          `gorm:"size:2048"`
+	CategoryID   uint            `gorm:"index;not null"`
+	Category     ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"categories"`
+	RecipeSteps  []RecipeStep    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	ProductSizes []ProductSize   `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 }
 
 type RecipeStep struct {

@@ -6,33 +6,57 @@
 
 	<Card>
 		<CardContent class="mt-4">
-			<AdminProductsList :products="products" />
+			<p
+				v-if="!productsResponse || productsResponse.data.length === 0"
+				class="text-muted-foreground"
+			>
+				Товары не найдены
+			</p>
+			<AdminProductsList
+				v-else
+				:products="productsResponse.data"
+			/>
 		</CardContent>
+		<CardFooter class="flex justify-end">
+			<PaginationWithMeta
+				v-if="productsResponse"
+				:meta="productsResponse.pagination"
+				@update:page="updatePage"
+				@update:pageSize="updatePageSize"
+			/>
+		</CardFooter>
 	</Card>
 </template>
 
 <script setup lang="ts">
-import { Card, CardContent } from '@/core/components/ui/card'
+import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
+import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminProductsList from '@/modules/admin/products/components/list/admin-products-list.vue'
 import AdminProductsToolbar from '@/modules/admin/products/components/list/admin-products-toolbar.vue'
-import type { SuppliersFilter } from '@/modules/admin/suppliers/models/suppliers.model'
+import type { ProductsFilter } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
-import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<SuppliersFilter>({
-  searchTerm: '',
-})
+const filter = ref<ProductsFilter>({})
 
-const { data: products } = useQuery({
+const { data: productsResponse } = useQuery({
   queryKey: computed(() => ['admin-products', filter.value]),
   queryFn: () => productsService.getProducts(filter.value),
-  initialData: []
 })
 
-function updateFilter(updatedFilter: Partial<StoresFilter>) {
+function updateFilter(updatedFilter: ProductsFilter) {
   filter.value = {...filter.value, ...updatedFilter}
+}
+
+function updatePage(page: number) {
+  updateFilter({ pageSize: DEFAULT_PAGINATION_META.pageSize, page: page})
+
+}
+
+function updatePageSize(pageSize: number) {
+  updateFilter({ pageSize: pageSize, page: DEFAULT_PAGINATION_META.page})
 }
 </script>
 

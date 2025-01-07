@@ -1,35 +1,45 @@
-import type { AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+import type { PaginationParams } from '@/core/utils/pagination.utils'
 
-export interface ProductsFilter {
-	storeId?: number
-	categoryId?: number
-	searchTerm?: string
-	limit?: number
-	offset?: number
+export enum ProductSizeNames {
+	S = 'S',
+	M = 'M',
+	L = 'L',
+	XL = 'XL',
 }
 
-export interface Products {
+export enum ProductSizeMeasures {
+	ML = 'мл',
+	G = 'г',
+	PIECE = 'шт',
+}
+
+export interface ProductsFilter extends PaginationParams {
+	categoryId?: number
+	search?: string
+}
+
+export interface BaseProductDTO {
 	id: number
 	name: string
 	description: string
 	imageUrl: string
-	category: string
+	videoUrl: string
+	categoryId: number
+	categoryName: string
+}
+
+export interface ProductDTO extends BaseProductDTO {
+	productSizeCount: number
 	basePrice: number
 }
 
-export interface ProductCategory {
+export interface ProductSizeIngredientDTO {
 	id: number
 	name: string
-	description: string
-}
-
-export interface StoreProductDetailsDTO {
-	id: number
-	name: string
-	description: string
-	imageUrl: string
-	sizes: ProductSizeDTO[]
-	defaultAdditives: AdditiveCategoryItem[]
+	calories: number
+	fat: number
+	carbs: number
+	proteins: number
 }
 
 export interface ProductSizeDTO {
@@ -37,4 +47,50 @@ export interface ProductSizeDTO {
 	name: string
 	basePrice: number
 	measure: string
+	size: number
+	isDefault: boolean
+}
+
+export interface ProductDetailsDTO extends BaseProductDTO {
+	sizes: ProductSizeDTO[]
+}
+
+export interface CreateProductDTO {
+	name: string
+	description: string
+	imageUrl: string
+	categoryId: number
+}
+
+export interface SelectedAdditiveTypesDTO {
+	additiveId: number
+	isDefault: boolean
+}
+
+export interface CreateProductSizeDTO {
+	productId: number
+	name: string
+	measure: string
+	basePrice: number
+	size: number
+	isDefault?: boolean
+	additives?: SelectedAdditiveTypesDTO[]
+	ingredientIds?: number[]
+}
+
+export interface UpdateProductDTO {
+	name?: string
+	description?: string
+	imageUrl?: string
+	categoryId?: number
+}
+
+export interface UpdateProductSizeDTO {
+	name?: string
+	measure?: string
+	basePrice?: number
+	size?: number
+	isDefault?: boolean
+	additives?: SelectedAdditiveTypesDTO[]
+	ingredientIds?: number[]
 }
