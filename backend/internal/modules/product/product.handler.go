@@ -2,10 +2,9 @@ package product
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"net/http"
 	"strconv"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
