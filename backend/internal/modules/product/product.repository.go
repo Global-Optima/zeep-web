@@ -3,7 +3,6 @@ package product
 import (
 	"errors"
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -155,14 +154,21 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 		}
 
 		if updateModels.Additives != nil {
+			// Remove existing ingredients
 			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
 				return fmt.Errorf("failed to delete additives: %w", err)
 			}
 			// Add new additives
-			for _, additive := range updateModels.Additives {
-				additive.ProductSizeID = id
+			additives := make([]data.ProductSizeAdditive, len(updateModels.Additives))
+			for i, additive := range updateModels.Additives {
+				additives[i] = data.ProductSizeAdditive{
+					ProductSizeID: id,
+					AdditiveID:    additive.AdditiveID,
+					IsDefault:     additive.IsDefault,
+				}
 			}
-			if err := tx.Create(updateModels.Additives).Error; err != nil {
+
+			if err := tx.Create(additives).Error; err != nil {
 				return fmt.Errorf("failed to create additive: %w", err)
 			}
 		}

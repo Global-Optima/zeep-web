@@ -60,6 +60,7 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {
 	var storeProducts []data.StoreProduct
 	query := r.db.Model(&data.StoreProduct{}).Where("store_id = ?", storeID).
+		Joins("JOIN products ON store_products.product_id = products.id").
 		Preload("StoreProductSizes").
 		Preload("Product.ProductSizes")
 

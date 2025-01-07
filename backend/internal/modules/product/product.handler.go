@@ -171,11 +171,6 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
 	err = h.service.UpdateProductSize(uint(productSizeID), input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to update product")
