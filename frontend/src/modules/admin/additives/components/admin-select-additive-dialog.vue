@@ -12,15 +12,15 @@
 				<!-- Search Input -->
 				<Input
 					v-model="searchTerm"
-					placeholder="Поиск материала"
+					placeholder="Поиск"
 					type="search"
 					class="mt-2 mb-4 w-full"
 				/>
 
 				<!-- Material List -->
-				<div class="max-h-64 overflow-y-auto">
+				<div class="max-h-[50vh] overflow-y-auto">
 					<p
-						v-if="materials.length === 0"
+						v-if="!additives || additives.data.length === 0"
 						class="text-muted-foreground"
 					>
 						Топпинги не найдены
@@ -28,14 +28,20 @@
 
 					<ul v-else>
 						<li
-							v-for="material in materials"
-							:key="material.id"
+							v-for="additive in additives.data"
+							:key="additive.id"
 							class="flex justify-between items-center hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
-							@click="selectMaterial(material)"
+							@click="selectMaterial(additive)"
 						>
-							<span>{{ material.name }}</span>
-							<span>
-								{{ material.category }}
+							<div class="flex items-center gap-2">
+								<img
+									:src="additive.imageUrl"
+									class="bg-gray-100 p-1 rounded-md w-16 h-16 object-contain"
+								/>
+								<span>{{ additive.name }}</span>
+							</div>
+							<span class="text-gray-500 text-sm">
+								{{ additive.category.name }}
 							</span>
 						</li>
 					</ul>
@@ -43,8 +49,8 @@
 
 				<!-- Load More Button -->
 				<Button
-					v-if="pagination.page < pagination.totalPages"
-					variant="outline"
+					v-if="additives && additives.pagination.page < additives.pagination.totalPages"
+					variant="ghost"
 					class="mt-4 w-full"
 					@click="loadMore"
 				>
@@ -72,7 +78,6 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
-import type { PaginationMeta } from '@/core/utils/pagination.utils'
 import type { AdditiveDTO, AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
 
@@ -97,15 +102,6 @@ const filter = ref<AdditiveFilterQuery>({
   search: ''
 })
 
-const materials = ref<AdditiveDTO[]>([])
-
-const pagination = ref<PaginationMeta>({
-  page: 0,
-  pageSize: 0,
-  totalCount: 0,
-  totalPages: 0
-})
-
 
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1
@@ -113,8 +109,7 @@ watch(debouncedSearchTerm, (newValue) => {
   refetch()
 })
 
-
-const { data: queryData, refetch } = useQuery({
+const { data: additives, refetch } = useQuery({
   queryKey: computed(() => [
   'admin-additives',
   filter.value
@@ -123,22 +118,12 @@ const { data: queryData, refetch } = useQuery({
 })
 
 
-watch(queryData, (newData) => {
-  if (!newData) return
-
-  pagination.value = newData.pagination
-
-  if (pagination.value.page === 1) {
-    materials.value = newData.data
-  } else {
-    materials.value = materials.value.concat(newData.data)
-  }
-})
-
 function loadMore() {
-  if (pagination.value.page < pagination.value.totalPages) {
-    if(filter.value.page) filter.value.page += 1
-    refetch()
+  if (!additives.value) return
+  const pagination = additives.value.pagination
+
+  if (pagination.pageSize < pagination.totalCount) {
+    if(filter.value.pageSize) filter.value.pageSize += 10
   }
 }
 
@@ -152,13 +137,6 @@ function onClose() {
     page: 1,
     pageSize: 10,
     search: ''
-  }
-
-  pagination.value = {
-    page: 0,
-    pageSize: 0,
-    totalCount: 0,
-    totalPages: 0
   }
 
   emit('close')
