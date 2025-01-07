@@ -1,4 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
+import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 
 export enum ProductSizeNames {
 	S = 'S',
@@ -51,6 +53,16 @@ export interface ProductSizeDTO {
 	isDefault: boolean
 }
 
+export interface ProductSizeDetailsDTO extends ProductSizeDTO {
+	productId: number
+	additives: ProductSizeDetailsAdditiveDTO[]
+	ingredients: IngredientsDTO[]
+}
+
+export interface ProductSizeDetailsAdditiveDTO extends AdditiveDTO {
+	isDefault: boolean
+}
+
 export interface ProductDetailsDTO extends BaseProductDTO {
 	sizes: ProductSizeDTO[]
 }
@@ -93,4 +105,26 @@ export interface UpdateProductSizeDTO {
 	isDefault?: boolean
 	additives?: SelectedAdditiveTypesDTO[]
 	ingredientIds?: number[]
+}
+
+export interface ProductCategoryDTO {
+	id: number
+	name: string
+	description: string
+}
+
+export interface ProductCategoriesFilterDTO {
+	search?: string
+	page?: number
+	pageSize?: number
+}
+
+export interface CreateProductCategoryDTO {
+	name: string
+	description: string
+}
+
+export interface UpdateProductCategoryDTO {
+	name?: string
+	description?: string
 }

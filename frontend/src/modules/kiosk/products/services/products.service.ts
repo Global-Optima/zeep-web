@@ -1,18 +1,23 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
+	CreateProductCategoryDTO,
 	CreateProductDTO,
 	CreateProductSizeDTO,
+	ProductCategoriesFilterDTO,
+	ProductCategoryDTO,
 	ProductDTO,
 	ProductDetailsDTO,
 	ProductSizeDTO,
+	ProductSizeDetailsDTO,
 	ProductsFilter,
+	UpdateProductCategoryDTO,
 	UpdateProductDTO,
 	UpdateProductSizeDTO,
 } from '../models/product.model'
 import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
-export class ProductsService {
+class ProductsService {
 	async getProducts(filter?: ProductsFilter) {
 		try {
 			const response = await apiClient.get<PaginatedResponse<ProductDTO[]>>(`/products`, {
@@ -74,6 +79,16 @@ export class ProductsService {
 		}
 	}
 
+	async getProductSizeById(id: number) {
+		try {
+			const response = await apiClient.get<ProductSizeDetailsDTO>(`/products/sizes/${id}`)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to fetch size by product ${id}: `, error)
+			throw error
+		}
+	}
+
 	async createProductSize(data: CreateProductSizeDTO) {
 		try {
 			const response = await apiClient.post<void>(`/products/sizes`, data)
@@ -92,6 +107,33 @@ export class ProductsService {
 			console.error(`Failed to update product size with ID ${id}: `, error)
 			throw error
 		}
+	}
+
+	async getAllProductCategories(filter?: ProductCategoriesFilterDTO) {
+		const response = await apiClient.get<PaginatedResponse<ProductCategoryDTO[]>>(
+			'/product-categories',
+			{ params: buildRequestFilter(filter) },
+		)
+		return response.data
+	}
+
+	async getProductCategoryByID(id: number) {
+		const response = await apiClient.get<ProductCategoryDTO>(`/product-categories/${id}`)
+		return response.data
+	}
+
+	async updateProductCategory(id: number, dto: UpdateProductCategoryDTO) {
+		const response = await apiClient.put(`/product-categories/${id}`, dto)
+		return response.data
+	}
+
+	async createProductCategory(dto: CreateProductCategoryDTO) {
+		const response = await apiClient.post<void>('/product-categories', dto)
+		return response.data
+	}
+
+	async deleteProductCategory(id: number) {
+		return (await apiClient.delete<void>(`/product-categories/${id}`)).data
 	}
 }
 

@@ -2,13 +2,18 @@
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import * as z from 'zod'
 
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import {
   Select,
@@ -25,89 +30,113 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-
-// Icons
+import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
+import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import { ProductSizeMeasures, ProductSizeNames } from '@/modules/kiosk/products/models/product.model'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, Trash } from 'lucide-vue-next'
 
-// DTO
-interface CreateProductSizeDTO {
-  productId: number
-  name: string
-  measure: string
-  basePrice: number
-  size: number
-  isDefault?: boolean
-  additives?: SelectedAdditiveTypesDTO[]
-  ingredientIds?: number[]
-}
+
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
   isDefault: boolean
+  name: string
+  categoryName: string
+  imageUrl: string
 }
 
-// Emits
+export interface CreateProductSizeFormSchema {
+  name: ProductSizeNames
+  measure: ProductSizeMeasures
+  basePrice: number
+  size: number
+  additives: SelectedAdditiveTypesDTO[]
+}
+
+/**
+ * 3. Setup emits
+ */
 const emits = defineEmits<{
-  onSubmit: [dto: CreateProductSizeDTO]
+  onSubmit: [dto: CreateProductSizeFormSchema]
   onCancel: []
 }>()
 
-// Router
-const router = useRouter()
-
-// Default Additives (Mock Data)
-const defaultAdditives = ref([
-  { id: 1, name: 'Карамельный сироп', size: '500 мл', imageUrl: 'caramel.jpg' },
-  { id: 2, name: 'Ванильный сироп', size: '500 мл', imageUrl: 'vanilla.jpg' },
-])
-
-// Technical Card Ingredients (Mock Data)
-const technicalCardIngredients = ref([
-  { id: 1, imageUrl: 'ingredient1.jpg', name: 'Кофе', unit: 'грамм', weight: 30 },
-  { id: 2, imageUrl: 'ingredient2.jpg', name: 'Молоко', unit: 'мл', weight: 100 },
-])
-
-// Zod Schema for Validation
+/**
+ * 4. Create Zod schema using the enums
+ */
 const createProductSizeSchema = toTypedSchema(
   z.object({
-    productId: z.number().min(1, 'ID продукта обязателен'),
-    name: z.enum([ProductSizeNames.S, ProductSizeNames.M, ProductSizeNames.L, ProductSizeNames.XL], {message: 'Выберите корректное название варианта'}),
-    size: z.number().min(1, 'Размер должен быть положительным'),
-    measure: z.enum([ProductSizeMeasures.G, ProductSizeMeasures.ML, ProductSizeMeasures.PIECE], {message:'Выберите корректную единицу измерения'}),
-    basePrice: z.number().min(0, 'Цена должна быть положительным числом'),
-    isDefault: z.boolean().optional(),
-    additives: z.array(
-      z.object({
-        additiveId: z.number().min(1),
-        isDefault: z.boolean(),
-      })
-    ).optional(),
-    ingredientIds: z.array(z.number()).optional(),
+    name: z.nativeEnum(ProductSizeNames).describe('Выберите корректный вариант'),
+    measure: z.nativeEnum(ProductSizeMeasures).describe('Выберите корректную единицу'),
+    basePrice: z.number().min(0, 'Введите корректную цену'),
+    size: z.number().min(1, 'Введите корректный размер'),
   })
 )
 
-// Form Setup
-const { handleSubmit, resetForm, isSubmitting } = useForm<CreateProductSizeDTO>({
+/**
+ * 5. Additional validation for additives
+ */
+const validateAdditives = (additives: SelectedAdditiveTypesDTO[]) => {
+  if (!additives.length) {
+    return 'Необходимо добавить хотя бы одну добавку.'
+  }
+  return null
+}
+
+/**
+ * 6. Form Setup
+ */
+const { handleSubmit, isSubmitting } = useForm<CreateProductSizeFormSchema>({
   validationSchema: createProductSizeSchema,
-  initialValues: {
-    name: '',
-    measure: '',
-    basePrice: 0,
-    size: 0,
-    isDefault: false,
-    additives: [],
-    ingredientIds: [],
-  },
 })
 
-// Handlers
-const onSubmit = handleSubmit((values) => {
-  emits('onSubmit', values)
+/**
+ * 7. Manage Additives
+ */
+const additives = ref<SelectedAdditiveTypesDTO[]>([])
+const additivesError = ref<string | null>(null)
+const openAdditiveDialog = ref(false)
+
+function addAdditive(additive: AdditiveDTO) {
+  if (!additives.value.some((item) => item.additiveId === additive.id)) {
+    additives.value.push({
+      additiveId: additive.id,
+      isDefault: false,
+      name: additive.name,
+      categoryName: additive.category.name,
+      imageUrl: additive.imageUrl,
+    })
+  }
+}
+
+function removeAdditive(index: number) {
+  additives.value.splice(index, 1)
+}
+
+function toggleDefault(index: number) {
+  additives.value[index].isDefault = !additives.value[index].isDefault
+}
+
+function sortAdditives() {
+  return [...additives.value].sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
+}
+
+/**
+ * 8. Submit & Cancel
+ */
+const onSubmit = handleSubmit((formValues) => {
+  additivesError.value = validateAdditives(additives.value)
+  if (additivesError.value) {
+    return
+  }
+  const finalDTO: CreateProductSizeFormSchema = {
+    ...formValues,
+    additives: additives.value,
+  }
+  emits('onSubmit', finalDTO)
 })
 
 const onCancel = () => {
-  resetForm()
   emits('onCancel')
 }
 </script>
@@ -131,7 +160,6 @@ const onCancel = () => {
 					Детали варианта
 				</h1>
 			</div>
-
 			<div class="flex items-center gap-2">
 				<Button
 					variant="outline"
@@ -151,7 +179,7 @@ const onCancel = () => {
 		</div>
 
 		<!-- Main Content -->
-		<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max mt-6">
+		<div class="mt-6">
 			<!-- Variant Details -->
 			<Card>
 				<CardHeader>
@@ -160,7 +188,7 @@ const onCancel = () => {
 				</CardHeader>
 				<CardContent>
 					<div class="gap-6 grid">
-						<!-- Name Selector -->
+						<!-- Name -->
 						<FormField
 							name="name"
 							v-slot="{ componentField }"
@@ -168,15 +196,20 @@ const onCancel = () => {
 							<FormItem>
 								<FormLabel>Название</FormLabel>
 								<FormControl>
+									<!-- This Select uses our VariantName enum -->
 									<Select v-bind="componentField">
 										<SelectTrigger>
 											<SelectValue placeholder="Выберите название" />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="S">S</SelectItem>
-											<SelectItem value="M">M</SelectItem>
-											<SelectItem value="L">L</SelectItem>
-											<SelectItem value="XL">XL</SelectItem>
+											<!-- Iterate over VariantName enum -->
+											<SelectItem
+												v-for="(value, key) in ProductSizeNames"
+												:key="key"
+												:value="value"
+											>
+												{{ value }}
+											</SelectItem>
 										</SelectContent>
 									</Select>
 								</FormControl>
@@ -184,19 +217,19 @@ const onCancel = () => {
 							</FormItem>
 						</FormField>
 
-						<!-- Measure and Unit -->
-						<div class="flex items-start gap-4">
+						<!-- Measure and Size -->
+						<div class="flex gap-4">
 							<FormField
 								name="size"
 								v-slot="{ componentField }"
 							>
-								<FormItem>
-									<FormLabel>Размер (число)</FormLabel>
+								<FormItem class="flex-1">
+									<FormLabel>Размер</FormLabel>
 									<FormControl>
 										<Input
 											type="number"
-											placeholder="Например, 250"
 											v-bind="componentField"
+											placeholder="Введите размер"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -207,16 +240,23 @@ const onCancel = () => {
 								name="measure"
 								v-slot="{ componentField }"
 							>
-								<FormItem>
+								<FormItem class="flex-1">
 									<FormLabel>Единица измерения</FormLabel>
 									<FormControl>
+										<!-- This Select uses our VariantMeasure enum (in Russian) -->
 										<Select v-bind="componentField">
 											<SelectTrigger>
 												<SelectValue placeholder="Выберите единицу" />
 											</SelectTrigger>
 											<SelectContent>
-												<SelectItem value="грамм">Грамм</SelectItem>
-												<SelectItem value="мл">Миллилитры</SelectItem>
+												<!-- Iterate over VariantMeasure enum -->
+												<SelectItem
+													v-for="(value, key) in ProductSizeMeasures"
+													:key="key"
+													:value="value"
+												>
+													{{ value }}
+												</SelectItem>
 											</SelectContent>
 										</Select>
 									</FormControl>
@@ -235,8 +275,8 @@ const onCancel = () => {
 								<FormControl>
 									<Input
 										type="number"
-										placeholder="Введите начальную цену"
 										v-bind="componentField"
+										placeholder="Введите цену"
 									/>
 								</FormControl>
 								<FormMessage />
@@ -246,44 +286,81 @@ const onCancel = () => {
 				</CardContent>
 			</Card>
 
-			<!-- Default Toppings -->
-			<Card>
+			<!-- Additives -->
+			<Card class="mt-4">
 				<CardHeader>
-					<CardTitle>Топпинги по умолчанию</CardTitle>
-					<CardDescription>
-						Добавьте топпинги, которые идут по умолчанию с этим вариантом.
-					</CardDescription>
+					<div class="flex justify-between items-start">
+						<div>
+							<CardTitle>Добавки</CardTitle>
+							<CardDescription class="mt-2"> Выберите добавки для варианта. </CardDescription>
+						</div>
+						<Button
+							variant="outline"
+							@click="openAdditiveDialog = true"
+						>
+							Добавить
+						</Button>
+					</div>
 				</CardHeader>
 				<CardContent>
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead class="hidden w-[100px] sm:table-cell"> </TableHead>
+								<TableHead></TableHead>
 								<TableHead>Название</TableHead>
-								<TableHead>Размер</TableHead>
+								<TableHead>Категория</TableHead>
+								<TableHead>По умолчанию</TableHead>
+								<TableHead></TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
 							<TableRow
-								v-for="additive in defaultAdditives"
-								:key="additive.id"
+								v-for="(additive, index) in sortAdditives()"
+								:key="additive.additiveId"
 							>
-								<TableCell class="hidden sm:table-cell">
+								<TableCell>
 									<img
 										:src="additive.imageUrl"
-										alt="Изображение"
-										class="bg-gray-100 rounded-md aspect-square object-contain"
-										height="64"
-										width="64"
+										class="bg-gray-100 p-1 rounded-md w-16 h-16 object-contain"
 									/>
 								</TableCell>
-								<TableCell class="font-medium">{{ additive.name }}</TableCell>
-								<TableCell>{{ additive.size }}</TableCell>
+								<TableCell>{{ additive.name }}</TableCell>
+								<TableCell>{{ additive.categoryName }}</TableCell>
+								<TableCell class="text-center">
+									<Input
+										type="checkbox"
+										class="shadow-none h-5"
+										:checked="additive.isDefault"
+										@change="toggleDefault(index)"
+									/>
+								</TableCell>
+								<TableCell class="text-center">
+									<Button
+										variant="ghost"
+										size="icon"
+										@click="removeAdditive(index)"
+									>
+										<Trash class="w-6 h-6 text-red-500" />
+									</Button>
+								</TableCell>
 							</TableRow>
 						</TableBody>
 					</Table>
+					<div
+						v-if="additivesError"
+						class="mt-2 text-red-500 text-sm"
+					>
+						{{ additivesError }}
+					</div>
 				</CardContent>
 			</Card>
 		</div>
+
+		<!-- Additive Dialog -->
+		<AdminSelectAdditiveDialog
+			:open="openAdditiveDialog"
+			@close="openAdditiveDialog = false"
+			@select="addAdditive"
+		/>
 	</div>
 </template>

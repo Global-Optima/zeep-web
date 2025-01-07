@@ -5,46 +5,39 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите топпинг</DialogTitle>
+				<DialogTitle>Выберите категорию топпинга</DialogTitle>
 			</DialogHeader>
-
 			<div>
 				<!-- Search Input -->
 				<Input
 					v-model="searchTerm"
-					placeholder="Поиск материала"
+					placeholder="Поиск"
 					type="search"
 					class="mt-2 mb-4 w-full"
 				/>
-
 				<!-- Material List -->
-				<div class="max-h-64 overflow-y-auto">
+				<div class="max-h-[50vh] overflow-y-auto">
 					<p
-						v-if="materials.length === 0"
+						v-if="!additiveCategories || additiveCategories.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Топпинги не найдены
+						Категории топпингов не найдены
 					</p>
-
 					<ul v-else>
 						<li
-							v-for="material in materials"
-							:key="material.id"
+							v-for="additiveCategory in additiveCategories.data"
+							:key="additiveCategory.id"
 							class="flex justify-between items-center hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
-							@click="selectMaterial(material)"
+							@click="selectAdditiveCategory(additiveCategory)"
 						>
-							<span>{{ material.name }}</span>
-							<span>
-								{{ material.category }}
-							</span>
+							<span>{{ additiveCategory.name }}</span>
 						</li>
 					</ul>
 				</div>
-
 				<!-- Load More Button -->
 				<Button
-					v-if="pagination.page < pagination.totalPages"
-					variant="outline"
+					v-if="additiveCategories && additiveCategories.pagination.page < additiveCategories.pagination.totalPages"
+					variant="ghost"
 					class="mt-4 w-full"
 					@click="loadMore"
 				>
@@ -62,107 +55,62 @@
 		</DialogContent>
 	</Dialog>
 </template>
-
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
-
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
-
-import type { PaginationMeta } from '@/core/utils/pagination.utils'
-import type { AdditiveDTO, AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDTO, AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
-
 const {open} = defineProps<{
   open: boolean;
 }>()
-
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', additive: AdditiveDTO): void;
+  (e: 'select', additiveCategory: AdditiveCategoryDTO): void;
 }>()
-
 const searchTerm = ref('')
 const debouncedSearchTerm = useDebounce(
   computed(() => searchTerm.value),
   500
 )
-
 const filter = ref<AdditiveFilterQuery>({
   page: 1,
   pageSize: 10,
   search: ''
 })
-
-const materials = ref<AdditiveDTO[]>([])
-
-const pagination = ref<PaginationMeta>({
-  page: 0,
-  pageSize: 0,
-  totalCount: 0,
-  totalPages: 0
-})
-
-
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1
   filter.value.search = newValue.trim()
   refetch()
 })
-
-
-const { data: queryData, refetch } = useQuery({
+const { data: additiveCategories, refetch } = useQuery({
   queryKey: computed(() => [
-  'admin-additives',
+  'admin-additive-categories',
   filter.value
 ]),
-  queryFn: () => additivesService.getAdditives(filter.value),
+  queryFn: () => additivesService.getAdditiveCategories(filter.value),
 })
-
-
-watch(queryData, (newData) => {
-  if (!newData) return
-
-  pagination.value = newData.pagination
-
-  if (pagination.value.page === 1) {
-    materials.value = newData.data
-  } else {
-    materials.value = materials.value.concat(newData.data)
-  }
-})
-
 function loadMore() {
-  if (pagination.value.page < pagination.value.totalPages) {
-    if(filter.value.page) filter.value.page += 1
-    refetch()
+  if (!additiveCategories.value) return
+  const pagination = additiveCategories.value.pagination
+  if (pagination.pageSize < pagination.totalCount) {
+    if(filter.value.pageSize) filter.value.pageSize += 10
   }
 }
-
-function selectMaterial(additive: AdditiveDTO) {
+function selectAdditiveCategory(additive: AdditiveCategoryDTO) {
   emit('select', additive)
   onClose()
 }
-
 function onClose() {
   filter.value = {
     page: 1,
     pageSize: 10,
     search: ''
   }
-
-  pagination.value = {
-    page: 0,
-    pageSize: 0,
-    totalCount: 0,
-    totalPages: 0
-  }
-
   emit('close')
 }
 </script>
-
 <style scoped></style>

@@ -76,13 +76,13 @@ type SelectedAdditiveTypesDTO struct {
 
 type CreateProductSizeDTO struct {
 	ProductID     uint                       `json:"productId" binding:"required,gt=0"`
-	Name          string                     `json:"name" binding:"required,oneof=S M L"`
+	Name          string                     `json:"name" binding:"required,oneof=S M L XL"`
 	Measure       string                     `json:"measure" binding:"required,max=20"`
 	BasePrice     float64                    `json:"basePrice" binding:"required,gt=0"`
 	Size          int                        `json:"size" binding:"required,gte=0"`
 	IsDefault     bool                       `json:"isDefault"`
-	Additives     []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty,dive,gt=0"`
-	IngredientIDs []uint                     `json:"ingredientIds" binding:"omitempty,dive,gt=0"`
+	Additives     []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty"`
+	IngredientIDs []uint                     `json:"ingredientIds" binding:"omitempty"`
 }
 
 type UpdateProductDTO struct {

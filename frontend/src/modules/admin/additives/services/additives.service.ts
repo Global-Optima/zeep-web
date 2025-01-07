@@ -12,7 +12,7 @@ import type {
 } from '../models/additives.model'
 import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
-export class AdditiveService {
+class AdditiveService {
 	async getAdditives(filter?: AdditiveFilterQuery) {
 		const response = await apiClient.get<PaginatedResponse<AdditiveDTO[]>>('/additives', {
 			params: buildRequestFilter(filter),
@@ -30,8 +30,8 @@ export class AdditiveService {
 		return response.data
 	}
 
-	async updateAdditive(dto: UpdateAdditiveDTO) {
-		const response = await apiClient.put<void>('/additives', dto)
+	async updateAdditive(id: number, dto: UpdateAdditiveDTO) {
+		const response = await apiClient.put<void>(`/additives/${id}`, dto)
 		return response.data
 	}
 
@@ -62,8 +62,8 @@ export class AdditiveService {
 	}
 
 	// Update an existing additive category
-	async updateAdditiveCategory(dto: UpdateAdditiveCategoryDTO) {
-		const response = await apiClient.put<void>('/additives/categories', dto)
+	async updateAdditiveCategory(id: number, dto: UpdateAdditiveCategoryDTO) {
+		const response = await apiClient.put<void>(`/additives/categories/${id}`, dto)
 		return response.data
 	}
 

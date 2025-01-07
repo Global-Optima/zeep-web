@@ -67,7 +67,6 @@ export interface CreateAdditiveCategoryDTO {
 
 // Update DTOs
 export interface UpdateAdditiveDTO {
-	id: number
 	name?: string
 	description?: string
 	price?: number
@@ -77,7 +76,6 @@ export interface UpdateAdditiveDTO {
 }
 
 export interface UpdateAdditiveCategoryDTO {
-	id: number
 	name?: string
 	description?: string
 	isMultipleSelect?: boolean
