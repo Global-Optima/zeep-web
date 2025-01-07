@@ -40,6 +40,15 @@ type IngredientDTO struct {
 	Category         ingredientCategoriesType.IngredientCategoryResponse `json:"category"`
 }
 
+type IngredientDetailsDTO struct {
+	IngredientResponseDTO
+	Category struct {
+		ID          uint   `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	} `json:"category"`
+}
+
 type IngredientFilter struct {
 	utils.BaseFilter
 	ProductSizeID *uint    `form:"productSizeId" binding:"omitempty,gt=0"`

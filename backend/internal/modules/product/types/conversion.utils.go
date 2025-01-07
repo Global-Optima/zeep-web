@@ -1,6 +1,8 @@
 package types
 
 import (
+	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"sort"
 	"strings"
 
@@ -111,6 +113,26 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 
 	return ProductSizeDetailsDTO{
 		ProductSizeDTO: MapToProductSizeDTO(productSize),
+		Additives:      additives,
+		Ingredients:    ingredients,
+	}
+}
+
+func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
+	var additives = make([]additiveTypes.AdditiveDTO, len(productSize.Additives))
+	var ingredients = make([]ingredientTypes.IngredientDetailsDTO, len(productSize.ProductSizeIngredients))
+
+	for i, productSizeAdditive := range productSize.Additives {
+		additives[i] = *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive)
+	}
+
+	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
+		ingredients[i] = ingredientTypes.ConvertToIngredientDetailsDTO(&productSizeIngredient.Ingredient)
+	}
+
+	return ProductSizeDetailsDTO{
+		ProductSizeDTO: MapToProductSizeDTO(productSize),
+		ProductID:      productSize.ProductID,
 		Additives:      additives,
 		Ingredients:    ingredients,
 	}

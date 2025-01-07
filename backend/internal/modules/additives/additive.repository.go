@@ -134,6 +134,11 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 		Preload("Ingredients.Ingredient.IngredientCategory").
 		First(&additive).Error
 
+	err := r.db.Model(&data.Additive{}).
+		Preload("Category").
+		Where("id = ?", additiveID).
+		First(&additive).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("additive with ID %d not found", additiveID)
