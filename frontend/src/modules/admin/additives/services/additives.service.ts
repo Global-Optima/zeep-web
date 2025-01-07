@@ -62,8 +62,8 @@ class AdditiveService {
 	}
 
 	// Update an existing additive category
-	async updateAdditiveCategory(dto: UpdateAdditiveCategoryDTO) {
-		const response = await apiClient.put<void>('/additives/categories', dto)
+	async updateAdditiveCategory(id: number, dto: UpdateAdditiveCategoryDTO) {
+		const response = await apiClient.put<void>(`/additives/categories/${id}`, dto)
 		return response.data
 	}
 

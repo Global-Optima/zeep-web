@@ -76,7 +76,6 @@ export interface UpdateAdditiveDTO {
 }
 
 export interface UpdateAdditiveCategoryDTO {
-	id: number
 	name?: string
 	description?: string
 	isMultipleSelect?: boolean

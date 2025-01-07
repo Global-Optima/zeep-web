@@ -7,7 +7,7 @@ import type {
 } from '../models/ingredients.model'
 import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
-export class IngredientsService {
+class IngredientsService {
 	async getIngredients(filter?: IngredientFilter) {
 		const response = await apiClient.get<PaginatedResponse<IngredientsDTO[]>>('/ingredients', {
 			params: filter,

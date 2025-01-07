@@ -58,4 +58,22 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/product-categories/pages/admin-product-categories-page.vue'),
 	},
+	ADMIN_PRODUCT_CATEGORY_DETAILS: {
+		path: 'product-categories/:id',
+		meta: {
+			title: 'Детали категории товара',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/product-categories/pages/admin-product-category-details-page.vue'),
+	},
+	ADMIN_PRODUCT_CATEGORY_CREATE: {
+		path: 'product-categories/create',
+		meta: {
+			title: 'Cоздать категорию товара',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/product-categories/pages/admin-product-category-create-page.vue'),
+	},
 } satisfies AppRouteRecord

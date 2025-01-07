@@ -94,3 +94,26 @@ export interface UpdateProductSizeDTO {
 	additives?: SelectedAdditiveTypesDTO[]
 	ingredientIds?: number[]
 }
+
+
+export interface ProductCategoryDTO {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface ProductCategoriesFilterDTO {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateProductCategoryDTO {
+  name: string;
+  description: string;
+}
+
+export interface UpdateProductCategoryDTO {
+  name?: string;
+  description?: string;
+}

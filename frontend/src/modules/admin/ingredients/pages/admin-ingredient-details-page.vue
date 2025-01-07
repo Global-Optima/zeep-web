@@ -1,6 +1,8 @@
 <template>
+	<p v-if="!ingredientDetails">Ингредиент не найден</p>
+
 	<AdminIngredientsDetailsForm
-		v-if="ingredientDetails"
+		v-else
 		:ingredient="ingredientDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"

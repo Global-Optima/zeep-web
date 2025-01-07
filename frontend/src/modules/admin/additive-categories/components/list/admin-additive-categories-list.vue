@@ -4,27 +4,19 @@
 			<TableRow>
 				<TableHead class="p-4">Название</TableHead>
 				<TableHead class="p-4">Описание</TableHead>
-				<TableHead class="p-4">Топпингов</TableHead>
+				<TableHead class="p-4">Кол-во топпингов</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
 			<TableRow
-				v-for="additiveCategory in additiveCategories"
-				:key="additiveCategory.id"
+				v-for="category in categories"
+				:key="category.id"
 				class="h-12 cursor-pointer"
-				@click="goToSupplierDetails(additiveCategory.id)"
+				@click="goToSupplierDetails(category.id)"
 			>
-				<TableCell class="p-4">
-					<span class="font-medium">{{ additiveCategory.name }}</span>
-				</TableCell>
-
-				<TableCell class="p-4">
-					<span>{{ additiveCategory.description }}</span>
-				</TableCell>
-
-				<TableCell class="p-4">
-					<span>{{ additiveCategory.additives.length }}</span>
-				</TableCell>
+				<TableCell class="p-4 font-medium"> {{ category.name }} </TableCell>
+				<TableCell> {{ category.description }} </TableCell>
+				<TableCell> {{ category.additives.length }} </TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>
@@ -42,7 +34,7 @@ import {
 import type { AdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { useRouter } from 'vue-router'
 
-const {additiveCategories} = defineProps<{additiveCategories: AdditiveCategoryDTO[]}>()
+const {categories} = defineProps<{categories: AdditiveCategoryDTO[]}>()
 
 const router = useRouter();
 

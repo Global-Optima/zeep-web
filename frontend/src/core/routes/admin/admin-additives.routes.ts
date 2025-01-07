@@ -18,7 +18,7 @@ export const ADMIN_ADDITIVES_CHILDREN_ROUTES = {
 		component: () => import('@/modules/admin/additives/pages/admin-additive-details-page.vue'),
 	},
 	ADMIN_ADDITIVE_CREATE: {
-		path: 'additives',
+		path: 'additives/create',
 		meta: {
 			title: 'Создать топпинг',
 			requiresAuth: true,
@@ -33,5 +33,23 @@ export const ADMIN_ADDITIVES_CHILDREN_ROUTES = {
 		},
 		component: () =>
 			import('@/modules/admin/additive-categories/pages/admin-additive-categories-page.vue'),
+	},
+	ADMIN_ADDITIVE_CATEGORY_CREATE: {
+		path: 'additive-categories/create',
+		meta: {
+			title: 'Создать категорию топпинга',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/additive-categories/pages/admin-additive-category-create-page.vue'),
+	},
+	ADMIN_ADDITIVE_CATEGORY_DETAILS: {
+		path: 'additive-categories/:id',
+		meta: {
+			title: 'Категория топпинга',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/additive-categories/pages/admin-additive-category-details-page.vue'),
 	},
 } satisfies AppRouteRecord
