@@ -9,7 +9,7 @@ import (
 
 type IngredientRepository interface {
 	CreateIngredient(ingredient *data.Ingredient) error
-	UpdateIngredient(ingredient *data.Ingredient) error
+	UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
@@ -28,8 +28,10 @@ func (r *ingredientRepository) CreateIngredient(ingredient *data.Ingredient) err
 	return r.db.Create(ingredient).Error
 }
 
-func (r *ingredientRepository) UpdateIngredient(ingredient *data.Ingredient) error {
-	return r.db.Save(ingredient).Error
+func (r *ingredientRepository) UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error {
+	return r.db.Model(&data.Ingredient{}).
+		Where("id = ?", ingredientID).
+		Updates(ingredient).Error
 }
 
 func (r *ingredientRepository) DeleteIngredient(ingredientID uint) error {

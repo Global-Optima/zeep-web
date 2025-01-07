@@ -3,21 +3,25 @@ package types
 import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type CreateIngredientDTO struct {
-	Name      string  `json:"name" binding:"required"`
-	Calories  float64 `json:"calories" binding:"required,gte=0"`
-	Fat       float64 `json:"fat" binding:"required,gte=0"`
-	Carbs     float64 `json:"carbs" binding:"required,gte=0"`
-	Proteins  float64 `json:"proteins" binding:"required,gte=0"`
-	ExpiresAt *string `json:"expiresAt,omitempty"` // ISO-8601 formatted string (e.g., "2024-12-18T00:00:00Z")
+	Name       string  `json:"name" binding:"required"`
+	Calories   float64 `json:"calories" binding:"gte=0"`
+	Fat        float64 `json:"fat" binding:"gte=0"`
+	Carbs      float64 `json:"carbs" binding:"gte=0"`
+	Proteins   float64 `json:"proteins" binding:"gte=0"`
+	CategoryID uint    `json:"categoryId" binding:"required,gt=0"`
+	UnitID     uint    `json:"unitId" binding:"required,gt=0"`
+	ExpiresAt  *string `json:"expiresAt,omitempty"` // ISO-8601 formatted string (e.g., "2024-12-18T00:00:00Z")
 }
 
 type UpdateIngredientDTO struct {
-	Name      *string   `json:"name,omitempty"`
-	Calories  *float64 `json:"calories,omitempty"` // Nullable fields for partial updates
-	Fat       *float64 `json:"fat,omitempty"`
-	Carbs     *float64 `json:"carbs,omitempty"`
-	Proteins  *float64 `json:"proteins,omitempty"`
-	ExpiresAt *string  `json:"expiresAt,omitempty"` // ISO-8601 formatted string
+	Name       string   `json:"name,omitempty"`
+	Calories   *float64 `json:"calories" binding:"omitempty,gte=0"` // Nullable fields for partial updates
+	Fat        *float64 `json:"fat" binding:"omitempty,gte=0"`
+	Carbs      *float64 `json:"carbs" binding:"omitempty,gte=0"`
+	Proteins   *float64 `json:"proteins" binding:"omitempty,gte=0"`
+	UnitID     *uint    `json:"unitId" binding:"omitempty,gt=0"`
+	CategoryID *uint    `json:"categoryId" binding:"omitempty,gt=0"`
+	ExpiresAt  *string  `json:"expiresAt,omitempty"` // ISO-8601 formatted string
 }
 
 type IngredientResponseDTO struct {

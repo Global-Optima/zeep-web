@@ -2,13 +2,14 @@ package storeProducts
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 type StoreProductHandler struct {
@@ -34,20 +35,6 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 		return
 	}
 
-	/*cacheKey := utils.BuildCacheKey("storeProductDetails", map[string]string{
-		"storeProductId": strconv.FormatUint(storeProductID, 10),
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-
-	var cachedStoreProductDetails *types.StoreProductDetailsDTO
-	if err := cacheUtil.Get(cacheKey, &cachedStoreProductDetails); err == nil {
-		if !utils.IsEmpty(cachedStoreProductDetails) {
-			utils.SendSuccessResponse(c, cachedStoreProductDetails)
-			return
-		}
-	}*/
-
 	productDetails, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve store product details")
@@ -58,10 +45,6 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 		utils.SendNotFoundError(c, "store product not found")
 		return
 	}
-
-	/*if err := cacheUtil.Set(cacheKey, productDetails, 10*time.Minute); err != nil {
-		fmt.Printf("Failed to cache store product details: %v\n", err)
-	}*/
 
 	utils.SendSuccessResponse(c, productDetails)
 }
@@ -80,27 +63,6 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 		return
 	}
 
-	/*cacheKey := utils.BuildCacheKey("storeProductDetails", map[string]string{
-		"storeId":       strconv.FormatUint(uint64(storeID), 10),
-		"categoryId":    c.DefaultQuery("categoryId", ""),
-		"isAvailable":   c.DefaultQuery("isAvailable", ""),
-		"search":        c.DefaultQuery("search", ""),
-		"page":          strconv.Itoa(filter.Pagination.Page),
-		"pageSize":      strconv.Itoa(filter.Pagination.PageSize),
-		"sortField":     filter.Sort.Field,
-		"sortDirection": filter.Sort.Direction,
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-
-	var cachedData utils.PaginatedData
-	if err := cacheUtil.Get(cacheKey, &cachedData); err == nil {
-		if !utils.IsEmpty(cachedData.Data) {
-			utils.SendSuccessResponse(c, cachedData)
-			return
-		}
-	}*/
-
 	productDetails, err := h.service.GetStoreProducts(storeID, &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve store product details")
@@ -111,11 +73,6 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 		utils.SendNotFoundError(c, "store product not found")
 		return
 	}
-
-	/*cachedData.Data, cachedData.Pagination = productDetails, *filter.Pagination
-	if err := cacheUtil.Set(cacheKey, cachedData, 10*time.Minute); err != nil {
-		fmt.Printf("Failed to cache store product details: %v\n", err)
-	}*/
 
 	utils.SendSuccessResponseWithPagination(c, productDetails, filter.Pagination)
 }

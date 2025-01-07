@@ -2,6 +2,7 @@ package ingredients
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
@@ -32,24 +33,20 @@ func (s *ingredientService) CreateIngredient(dto *types.CreateIngredientDTO) err
 	}
 
 	if err := s.repo.CreateIngredient(ingredient); err != nil {
-		s.logger.Error("Failed to create ingredient:", err)
+		wrappedErr := utils.WrapError("Failed to create ingredient:", err)
+		s.logger.Error(wrappedErr)
 		return err
 	}
 	return nil
 }
 
 func (s *ingredientService) UpdateIngredient(ingredientID uint, dto *types.UpdateIngredientDTO) error {
-	existing, err := s.repo.GetIngredientByID(ingredientID)
+	ingredient, err := types.ConvertToUpdateIngredientModel(dto)
 	if err != nil {
 		return err
 	}
 
-	ingredient, err := types.ConvertToUpdateIngredientModel(dto, existing)
-	if err != nil {
-		return err
-	}
-
-	if err := s.repo.UpdateIngredient(ingredient); err != nil {
+	if err := s.repo.UpdateIngredient(ingredientID, ingredient); err != nil {
 		s.logger.Error("Failed to update ingredient:", err)
 		return err
 	}
