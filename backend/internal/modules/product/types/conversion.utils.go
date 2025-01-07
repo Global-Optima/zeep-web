@@ -107,6 +107,10 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 
 func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
 	product := &data.Product{}
+	if dto == nil {
+		return product
+	}
+	
 	if strings.TrimSpace(dto.Name) != "" {
 		product.Name = dto.Name
 	}

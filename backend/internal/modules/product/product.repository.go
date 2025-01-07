@@ -56,7 +56,6 @@ func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data
 	query := r.db.
 		Model(&data.Product{}).
 		Preload("Category").
-		Joins("JOIN store_products ON store_products.product_id = products.id").
 		Preload("ProductSizes")
 
 	if filter.CategoryID != nil {

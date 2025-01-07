@@ -31,7 +31,7 @@ type Product struct {
 	ImageURL     string          `gorm:"size:2048"`
 	VideoURL     string          `gorm:"size:2048"`
 	CategoryID   uint            `gorm:"index;not null"`
-	Category     ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"categories"`
+	Category     ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
 	RecipeSteps  []RecipeStep    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 	ProductSizes []ProductSize   `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 }
