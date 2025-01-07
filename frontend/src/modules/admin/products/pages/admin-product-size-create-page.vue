@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import AdminProductSizeCreateForm from '@/modules/admin/products/components/create/admin-product-size-create-form.vue'
+import AdminProductSizeCreateForm, { type CreateProductSizeFormSchema } from '@/modules/admin/products/components/create/admin-product-size-create-form.vue'
 import type { CreateProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -27,8 +27,21 @@ const createMutation = useMutation({
 	},
 })
 
-function handleCreate(dto: CreateProductSizeDTO) {
-	createMutation.mutate(dto)
+function handleCreate(data: CreateProductSizeFormSchema) {
+  if (isNaN(Number(productId))) return router.back()
+
+  const dto: CreateProductSizeDTO = {
+    productId: Number(productId),
+    name: data.name,
+    measure: data.measure,
+    basePrice: data.basePrice,
+    size: data.size,
+    isDefault: false,
+    additives: data.additives.map(a => ({additiveId: a.additiveId, isDefault: a.isDefault})),
+    ingredientIds: [],
+  }
+
+	createMutation.mutate({...dto, })
 }
 
 function handleCancel() {

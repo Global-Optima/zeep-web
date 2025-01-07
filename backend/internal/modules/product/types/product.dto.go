@@ -60,8 +60,8 @@ type CreateProductSizeDTO struct {
 	BasePrice     float64                    `json:"basePrice" binding:"required,gt=0"`
 	Size          int                        `json:"size" binding:"required,gte=0"`
 	IsDefault     bool                       `json:"isDefault"`
-	Additives     []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty,dive,gt=0"`
-	IngredientIDs []uint                     `json:"ingredientIds" binding:"omitempty,dive,gt=0"`
+	Additives     []SelectedAdditiveTypesDTO `json:"additives" binding:"omitempty"`
+	IngredientIDs []uint                     `json:"ingredientIds" binding:"omitempty"`
 }
 
 type UpdateProductDTO struct {
