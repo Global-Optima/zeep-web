@@ -56,9 +56,8 @@ type CreateAdditiveCategoryDTO struct {
 }
 
 type UpdateAdditiveCategoryDTO struct {
-	ID               uint   `json:"id" binding:"required"`
-	Name             string `json:"name" binding:"omitempty"`
-	Description      string `json:"description" binding:"omitempty"`
+	Name             *string `json:"name" binding:"omitempty"`
+	Description      *string `json:"description" binding:"omitempty"`
 	IsMultipleSelect *bool  `json:"isMultipleSelect"`
 }
 

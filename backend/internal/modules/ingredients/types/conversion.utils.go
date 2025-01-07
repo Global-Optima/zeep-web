@@ -19,13 +19,13 @@ func ConvertToIngredientModel(dto *CreateIngredientDTO) (*data.Ingredient, error
 	}
 
 	ingredient := &data.Ingredient{
-		Name:                 dto.Name,
-		IngredientCategoryID: dto.CategoryID,
-		UnitID:               dto.UnitID,
-		Calories:             dto.Calories,
-		Fat:                  dto.Fat,
-		Carbs:                dto.Carbs,
-		Proteins:             dto.Proteins,
+		Name:       dto.Name,
+		CategoryID: dto.CategoryID,
+		UnitID:     dto.UnitID,
+		Calories:   dto.Calories,
+		Fat:        dto.Fat,
+		Carbs:      dto.Carbs,
+		Proteins:   dto.Proteins,
 	}
 
 	if dto.ExpiresAt != nil {
@@ -78,7 +78,7 @@ func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient,
 		if *dto.CategoryID == 0 {
 			return nil, fmt.Errorf("%w: CategoryID must be greater than 0", ErrValidation)
 		}
-		ingredient.IngredientCategoryID = *dto.CategoryID
+		ingredient.CategoryID = *dto.CategoryID
 	}
 
 	if dto.ExpiresAt != nil {

@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"strings"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
 func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
@@ -53,11 +54,11 @@ func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.Additi
 }
 
 func ConvertToUpdatedAdditiveCategoryModel(dto *UpdateAdditiveCategoryDTO, existing *data.AdditiveCategory) *data.AdditiveCategory {
-	if dto.Name != "" {
-		existing.Name = dto.Name
+	if dto.Name != nil {
+		existing.Name = *dto.Name
 	}
-	if dto.Description != "" {
-		existing.Description = dto.Description
+	if dto.Description != nil {
+		existing.Description = *dto.Description
 	}
 	if dto.IsMultipleSelect != nil {
 		existing.IsMultipleSelect = *dto.IsMultipleSelect

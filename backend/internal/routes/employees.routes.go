@@ -108,7 +108,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 		{
 			additiveCategories.GET("", handler.GetAdditiveCategories)
 			additiveCategories.POST("", handler.CreateAdditiveCategory)
-			additiveCategories.PUT("", handler.UpdateAdditiveCategory)
+			additiveCategories.PUT("/:id", handler.UpdateAdditiveCategory)
 			additiveCategories.DELETE("/:id", handler.DeleteAdditiveCategory)
 			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
 		}

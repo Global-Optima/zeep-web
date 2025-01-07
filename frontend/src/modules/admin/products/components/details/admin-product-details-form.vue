@@ -10,10 +10,10 @@ import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
 import AdminSelectProductCategory from '@/modules/admin/product-categories/components/admin-select-product-category.vue'
-import type { CreateProductDTO, ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
+import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { ref } from 'vue'
 
-const {productDetails} = defineProps<{
+const { productDetails } = defineProps<{
   productDetails: ProductDetailsDTO
 }>()
 
@@ -36,13 +36,13 @@ const createProductSchema = toTypedSchema(
   })
 )
 
-const { handleSubmit, isSubmitting, isFieldDirty, setFieldValue } = useForm<CreateProductDTO>({
+const { handleSubmit, isSubmitting, isFieldDirty, setFieldValue } = useForm<UpdateProductDTO>({
   validationSchema: createProductSchema,
   initialValues: {
     name: productDetails.name,
     description: productDetails.description,
     imageUrl: productDetails.imageUrl,
-    categoryId: productDetails.categoryId
+    categoryId: productDetails.category.id
   }
 })
 
@@ -55,7 +55,7 @@ function onCancel() {
 }
 
 const openCategoryDialog = ref(false)
-const selectedCategory = ref<{name: string, id: number} | null>({name: productDetails.name, id: productDetails.id})
+const selectedCategory = ref<ProductCategoryDTO | null>(productDetails.category)
 
 function selectCategory(category: ProductCategoryDTO) {
   selectedCategory.value = category
@@ -66,12 +66,11 @@ function selectCategory(category: ProductCategoryDTO) {
 
 <template>
 	<form
-		@submit.prevent="onSubmit"
+		@submit="onSubmit"
 		class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-6xl"
 	>
-		<!-- ========== Header ========== -->
+		<!-- Header -->
 		<div class="flex items-center gap-4">
-			<!-- Back / Cancel button -->
 			<Button
 				variant="outline"
 				size="icon"
@@ -82,12 +81,10 @@ function selectCategory(category: ProductCategoryDTO) {
 				<span class="sr-only">Назад</span>
 			</Button>
 
-			<!-- Title -->
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
 				{{ productDetails.name }}
 			</h1>
 
-			<!-- Desktop action buttons -->
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
 				<Button
 					variant="outline"
@@ -105,9 +102,8 @@ function selectCategory(category: ProductCategoryDTO) {
 			</div>
 		</div>
 
-		<!-- ========== Main Content ========== -->
+		<!-- Main Content -->
 		<div class="gap-4 grid md:grid-cols-[1fr_250px] lg:grid-cols-3">
-			<!-- LEFT side: Product Details (Name, Description) -->
 			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
 				<Card>
 					<CardHeader>
@@ -118,7 +114,6 @@ function selectCategory(category: ProductCategoryDTO) {
 					</CardHeader>
 					<CardContent>
 						<div class="gap-6 grid">
-							<!-- Название -->
 							<FormField
 								v-slot="{ componentField }"
 								name="name"
@@ -137,7 +132,6 @@ function selectCategory(category: ProductCategoryDTO) {
 								</FormItem>
 							</FormField>
 
-							<!-- Описание -->
 							<FormField
 								v-slot="{ componentField }"
 								name="description"
@@ -160,9 +154,7 @@ function selectCategory(category: ProductCategoryDTO) {
 				</Card>
 			</div>
 
-			<!-- RIGHT side: Media & Category -->
 			<div class="items-start gap-4 grid auto-rows-max">
-				<!-- Media Card -->
 				<Card>
 					<CardHeader>
 						<CardTitle>Медиа</CardTitle>
@@ -172,7 +164,6 @@ function selectCategory(category: ProductCategoryDTO) {
 					</CardHeader>
 					<CardContent>
 						<div class="gap-4 grid">
-							<!-- Ссылка на изображение -->
 							<FormField
 								v-slot="{ componentField }"
 								name="imageUrl"
@@ -194,7 +185,6 @@ function selectCategory(category: ProductCategoryDTO) {
 					</CardContent>
 				</Card>
 
-				<!-- Category Card -->
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
@@ -205,6 +195,7 @@ function selectCategory(category: ProductCategoryDTO) {
 							<Button
 								variant="link"
 								class="mt-0 p-0 h-fit text-blue-600 underline"
+								type="button"
 								@click="openCategoryDialog = true"
 							>
 								{{ selectedCategory?.name || 'Категория не выбрана' }}
@@ -215,7 +206,6 @@ function selectCategory(category: ProductCategoryDTO) {
 			</div>
 		</div>
 
-		<!-- Mobile action buttons (only visible on small screens) -->
 		<div class="flex justify-center items-center gap-2 md:hidden">
 			<Button
 				variant="outline"

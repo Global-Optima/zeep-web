@@ -144,11 +144,6 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
 	err = h.service.UpdateProduct(uint(productID), input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")

@@ -8,6 +8,7 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { Switch } from '@/core/components/ui/switch'
 import type { CreateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
@@ -124,13 +125,16 @@ const onCancel = () => {
 						v-slot="{ value, handleChange }"
 						name="isMultipleSelect"
 					>
-						<FormItem class="flex flex-row justify-between items-center p-4 border rounded-lg">
-							<div class="space-y-0.5">
-								<FormLabel class="text-base"> Множественный выбор </FormLabel>
-								<FormDescription>
+						<FormItem
+							class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
+						>
+							<div class="flex flex-col space-y-0.5">
+								<FormLabel class="font-medium text-base"> Множественный выбор </FormLabel>
+								<FormDescription class="text-sm">
 									Укажите можно ли выбрать несколько топпингов в этой категории при заказе
 								</FormDescription>
 							</div>
+
 							<FormControl>
 								<Switch
 									:checked="value"

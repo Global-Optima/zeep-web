@@ -148,15 +148,6 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	cacheKey := utils.BuildCacheKey("storeProductDetails", map[string]string{
-		"storeProductId": strconv.FormatUint(storeProductID, 10),
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-	if err := cacheUtil.Delete(cacheKey); err != nil {
-		fmt.Printf("Failed to clear cache store product details: %v\n", err)
-	}
-
 	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
 }
 
@@ -177,15 +168,6 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to delete store product")
 		return
-	}
-
-	cacheKey := utils.BuildCacheKey("storeProductDetails", map[string]string{
-		"storeProductId": strconv.FormatUint(storeProductID, 10),
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-	if err := cacheUtil.Delete(cacheKey); err != nil {
-		fmt.Printf("Failed to clear cache store product details: %v\n", err)
 	}
 
 	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)

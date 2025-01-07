@@ -10,7 +10,7 @@
 				v-if="!categoriesResponse || categoriesResponse.data.length === 0"
 				class="text-muted-foreground"
 			>
-				Категории товаров не найдены
+				Категории топпингов не найдены
 			</p>
 			<AdminAdditiveCategoriesList
 				v-else

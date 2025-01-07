@@ -8,8 +8,10 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import { Select, SelectTrigger, SelectValue } from '@/core/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import type { CreateIngredientDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import { unitsService } from '@/modules/admin/units/services/units.service'
+import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
 
 const emits = defineEmits<{
@@ -17,7 +19,10 @@ const emits = defineEmits<{
   onCancel: []
 }>()
 
-const units: {name: string, id: number}[] = []
+const { data: units } = useQuery({
+  queryKey:  ['admin-units'],
+	queryFn: () => unitsService.getAllUnits(),
+})
 
 // Validation Schema
 const updateIngredientSchema = toTypedSchema(

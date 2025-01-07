@@ -38,7 +38,7 @@
 
 				<!-- Load More Button -->
 				<Button
-					v-if="ingredients && ingredients.pagination.page < ingredients.pagination.totalPages"
+					v-if="ingredients && ingredients.pagination.pageSize < ingredients.pagination.totalCount"
 					variant="ghost"
 					class="mt-4 w-full"
 					@click="loadMore"

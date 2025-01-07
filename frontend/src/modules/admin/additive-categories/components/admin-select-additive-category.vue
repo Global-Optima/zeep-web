@@ -56,14 +56,14 @@
 	</Dialog>
 </template>
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query'
-import { useDebounce } from '@vueuse/core'
-import { computed, ref, watch } from 'vue'
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 import type { AdditiveCategoryDTO, AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
+import { useQuery } from '@tanstack/vue-query'
+import { useDebounce } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
 const {open} = defineProps<{
   open: boolean;
 }>()
@@ -76,16 +76,14 @@ const debouncedSearchTerm = useDebounce(
   computed(() => searchTerm.value),
   500
 )
-const filter = ref<AdditiveFilterQuery>({
-  page: 1,
-  pageSize: 10,
-  search: ''
-})
+const filter = ref<AdditiveFilterQuery>({})
+
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1
   filter.value.search = newValue.trim()
   refetch()
 })
+
 const { data: additiveCategories, refetch } = useQuery({
   queryKey: computed(() => [
   'admin-additive-categories',
@@ -93,6 +91,7 @@ const { data: additiveCategories, refetch } = useQuery({
 ]),
   queryFn: () => additivesService.getAdditiveCategories(filter.value),
 })
+
 function loadMore() {
   if (!additiveCategories.value) return
   const pagination = additiveCategories.value.pagination
@@ -100,6 +99,7 @@ function loadMore() {
     if(filter.value.pageSize) filter.value.pageSize += 10
   }
 }
+
 function selectAdditiveCategory(additive: AdditiveCategoryDTO) {
   emit('select', additive)
   onClose()

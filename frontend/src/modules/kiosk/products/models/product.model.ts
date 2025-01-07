@@ -26,8 +26,7 @@ export interface BaseProductDTO {
 	description: string
 	imageUrl: string
 	videoUrl: string
-	categoryId: number
-	categoryName: string
+	category: ProductCategoryDTO
 }
 
 export interface ProductDTO extends BaseProductDTO {

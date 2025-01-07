@@ -26,7 +26,7 @@
 					/>
 				</TableCell>
 				<TableCell class="font-medium">{{ product.name }}</TableCell>
-				<TableCell>{{ product.categoryName }}</TableCell>
+				<TableCell>{{ product.category.name }}</TableCell>
 				<TableCell>{{ formatPrice(product.basePrice) }}</TableCell>
 				<TableCell>{{ product.productSizeCount }}</TableCell>
 			</TableRow>

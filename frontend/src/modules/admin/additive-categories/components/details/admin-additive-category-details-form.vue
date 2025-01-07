@@ -6,10 +6,11 @@ import * as z from 'zod'
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
-import { Checkbox } from '@/core/components/ui/checkbox'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import Switch from '@/core/components/ui/switch/Switch.vue'
 import type { UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
+import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Emits
@@ -18,7 +19,7 @@ const emits = defineEmits<{
   onCancel: []
 }>()
 
-
+const {category} = defineProps<{category: ProductCategoryDTO}>()
 
 // Validation Schema
 const createAdditiveCategorySchema = toTypedSchema(
@@ -32,6 +33,7 @@ const createAdditiveCategorySchema = toTypedSchema(
 // Form Setup
 const { handleSubmit, resetForm } = useForm<UpdateAdditiveCategoryDTO>({
   validationSchema: createAdditiveCategorySchema,
+  initialValues: category
 })
 
 // Handlers
@@ -124,23 +126,25 @@ const onCancel = () => {
 
 					<!-- Is Multiple Select -->
 					<FormField
+						v-slot="{ value, handleChange }"
 						name="isMultipleSelect"
-						v-slot="{ componentField }"
 					>
-						<FormItem class="flex items-center gap-4">
+						<FormItem
+							class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
+						>
+							<div class="flex flex-col space-y-0.5">
+								<FormLabel class="font-medium text-base"> Множественный выбор </FormLabel>
+								<FormDescription class="text-sm">
+									Укажите можно ли выбрать несколько топпингов в этой категории при заказе
+								</FormDescription>
+							</div>
+
 							<FormControl>
-								<Checkbox
-									id="isMultipleSelect"
-									v-bind="componentField"
+								<Switch
+									:checked="value"
+									@update:checked="handleChange"
 								/>
 							</FormControl>
-							<FormLabel
-								for="isMultipleSelect"
-								class="mt-0"
-							>
-								Множественный выбор
-							</FormLabel>
-							<FormMessage />
 						</FormItem>
 					</FormField>
 				</div>
