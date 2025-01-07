@@ -2,9 +2,10 @@ package product
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"net/http"
 	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -168,11 +169,6 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
 	err = h.service.UpdateProduct(uint(productID), input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
@@ -199,11 +195,6 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 	}
 
 	var input *types.UpdateProductSizeDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return

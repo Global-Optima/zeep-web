@@ -131,7 +131,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 			title: 'Детали размера товара',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/products/pages/admin-product-sizes-details-page.vue'),
+		component: () => import('@/modules/admin/products/pages/admin-product-size-details-page.vue'),
 	},
 	ADMIN_PRODUCT_SIZE_CREATE: {
 		path: 'product-sizes/create',
