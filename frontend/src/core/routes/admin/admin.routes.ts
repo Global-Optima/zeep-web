@@ -1,12 +1,13 @@
 import AppAdminLayout from '@/core/layouts/admin/app-admin-layout.vue'
 import { ADMIN_ADDITIVES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-additives.routes'
+import { ADMIN_INGREDIENTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-ingredients.routes'
 import { ADMIN_PRODUCTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-products.routes'
 import type { AppRouteRecord, ParentRoutePage } from '../../config/routes.config'
 
 export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_ADDITIVES_CHILDREN_ROUTES,
 	...ADMIN_PRODUCTS_CHILDREN_ROUTES,
-
+	...ADMIN_INGREDIENTS_CHILDREN_ROUTES,
 	ADMIN_DASHBOARD: {
 		path: '',
 		meta: {
@@ -89,22 +90,6 @@ export const ADMIN_CHILDREN_ROUTES = {
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/suppliers/pages/admin-suppliers-details-page.vue'),
-	},
-	ADMIN_INGREDIENTS_DETAILS: {
-		path: 'ingredients/:id',
-		meta: {
-			title: 'Детали ингредиента',
-			requiresAuth: true,
-		},
-		component: () => import('@/modules/admin/ingredients/pages/admin-ingredients-details-page.vue'),
-	},
-	ADMIN_INGREDIENTS: {
-		path: 'ingredients',
-		meta: {
-			title: 'Ингредиенты',
-			requiresAuth: true,
-		},
-		component: () => import('@/modules/admin/ingredients/pages/admin-ingredients-page.vue'),
 	},
 	ADMIN_CREATE_EMPLOYEE: {
 		path: 'employees/create',

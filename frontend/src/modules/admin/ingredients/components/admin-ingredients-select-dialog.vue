@@ -67,7 +67,7 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
-import type { IngredientFilter, IngredientResponseDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { IngredientFilter, IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
 
 const {open} = defineProps<{
@@ -76,7 +76,7 @@ const {open} = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', additive: IngredientResponseDTO): void;
+  (e: 'select', additive: IngredientsDTO): void;
 }>()
 
 const searchTerm = ref('')
@@ -116,7 +116,7 @@ function loadMore() {
   }
 }
 
-function selectMaterial(ing: IngredientResponseDTO) {
+function selectMaterial(ing: IngredientsDTO) {
   emit('select', ing)
   onClose()
 }

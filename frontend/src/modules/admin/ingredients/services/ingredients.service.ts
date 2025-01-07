@@ -2,24 +2,21 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import type {
 	CreateIngredientDTO,
 	IngredientFilter,
-	IngredientResponseDTO,
+	IngredientsDTO,
 	UpdateIngredientDTO,
 } from '../models/ingredients.model'
 import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
 export class IngredientsService {
 	async getIngredients(filter?: IngredientFilter) {
-		const response = await apiClient.get<PaginatedResponse<IngredientResponseDTO[]>>(
-			'/ingredients',
-			{
-				params: filter,
-			},
-		)
+		const response = await apiClient.get<PaginatedResponse<IngredientsDTO[]>>('/ingredients', {
+			params: filter,
+		})
 		return response.data
 	}
 
 	async getIngredientById(id: number) {
-		const response = await apiClient.get<IngredientResponseDTO>(`/ingredients/${id}`)
+		const response = await apiClient.get<IngredientsDTO>(`/ingredients/${id}`)
 		return response.data
 	}
 

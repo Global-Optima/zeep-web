@@ -11,7 +11,7 @@ export interface CreateIngredientDTO {
 	fat: number
 	carbs: number
 	proteins: number
-	expiresAt?: string 
+	expiresAt?: string
 }
 
 /**
@@ -30,7 +30,7 @@ export interface UpdateIngredientDTO {
 /**
  * DTO for the ingredient response.
  */
-export interface IngredientResponseDTO {
+export interface IngredientsDTO {
 	id: number
 	name: string
 	calories: number

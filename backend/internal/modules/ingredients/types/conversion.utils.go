@@ -29,8 +29,8 @@ func ConvertToIngredientModel(dto *CreateIngredientDTO) (*data.Ingredient, error
 
 // Converts UpdateIngredientDTO to Ingredient model
 func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO, existing *data.Ingredient) (*data.Ingredient, error) {
-	if dto.Name != "" {
-		existing.Name = dto.Name
+	if dto.Name != nil && *dto.Name != "" {
+		existing.Name = *dto.Name
 	}
 	if dto.Calories != nil {
 		existing.Calories = *dto.Calories

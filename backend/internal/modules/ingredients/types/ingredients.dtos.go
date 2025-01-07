@@ -12,8 +12,7 @@ type CreateIngredientDTO struct {
 }
 
 type UpdateIngredientDTO struct {
-	ID        uint     `json:"id" binding:"required"`
-	Name      string   `json:"name,omitempty"`
+	Name      *string   `json:"name,omitempty"`
 	Calories  *float64 `json:"calories,omitempty"` // Nullable fields for partial updates
 	Fat       *float64 `json:"fat,omitempty"`
 	Carbs     *float64 `json:"carbs,omitempty"`
