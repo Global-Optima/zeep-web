@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -62,7 +63,8 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	query := r.db.Model(&data.StoreProduct{}).Where("store_id = ?", storeID).
 		Joins("JOIN products ON store_products.product_id = products.id").
 		Preload("StoreProductSizes").
-		Preload("Product.ProductSizes")
+		Preload("Product.ProductSizes").
+		Preload("Product.Category")
 
 	if filter != nil {
 		if filter.Search != nil {

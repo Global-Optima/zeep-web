@@ -20,7 +20,7 @@
 					<img
 						:src="product.imageUrl"
 						alt="Изображение товара"
-						class="bg-gray-100 rounded-md aspect-square object-contain"
+						class="bg-gray-100 p-1 rounded-md aspect-square object-contain"
 						height="64"
 						width="64"
 					/>

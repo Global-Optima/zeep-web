@@ -52,11 +52,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/core/components/ui/table';
-import type { StoreStocks } from '@/modules/admin/store-stocks/models/store-stock.model';
+import type { StoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
 import { useRouter } from 'vue-router';
 
 // Props
-const { stocks } = defineProps<{ stocks: StoreStocks[] }>();
+const { stocks } = defineProps<{ stocks: StoreWarehouseStockDTO[] }>();
 
 // Router for details navigation
 const router = useRouter();
@@ -79,7 +79,7 @@ const INGREDIENT_STATUS_FORMATTED: Record<string, string> = {
 };
 
 // Function to determine the stock status
-const getStockStatus = (stock: StoreStocks): string => {
+const getStockStatus = (stock: StoreWarehouseStockDTO): string => {
   if (stock.quantity === 0) {
     return 'out_of_stock';
   }

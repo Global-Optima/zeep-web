@@ -78,7 +78,8 @@
 		</div>
 
 		<!-- Suggested Products -->
-		<section
+		<!-- TODO: add food here for suggestions -->
+		<!-- <section
 			class="mt-6 sm:mt-8"
 			v-if="suggestedProducts.length"
 		>
@@ -90,16 +91,15 @@
 					:product="product"
 				/>
 			</div>
-		</section>
+		</section> -->
 	</div>
 </template>
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
 import KioskCartCheckout from '@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout.vue'
 import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
-import KioskCartSuggestProduct from '@/modules/kiosk/cart/components/kiosk-cart-suggest-product.vue'
 import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
 import type { ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
 import { Icon } from '@iconify/vue'
@@ -155,7 +155,7 @@ const closeUpdateDialog = () => {
   selectedCartItem.value = null;
 };
 
-const handleUpdate = (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveCategoryItem[]) => {
+const handleUpdate = (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveCategoryItemDTO[]) => {
   if (!selectedCartItem.value) return;
   cartStore.updateCartItem(selectedCartItem.value.key, {
     size: updatedSize,

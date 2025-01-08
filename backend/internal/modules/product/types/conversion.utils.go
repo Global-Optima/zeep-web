@@ -29,7 +29,7 @@ func MapBaseProductDTO(product *data.Product) BaseProductDTO {
 }
 
 func MapToProductDetailsDTO(product *data.Product) *ProductDetailsDTO {
-	var sizes []ProductSizeDTO
+	var sizes = make([]ProductSizeDTO, 0)
 
 	for _, size := range product.ProductSizes {
 		sizes = append(sizes, MapToProductSizeDTO(size))
@@ -55,10 +55,17 @@ func MapToProductDTO(product data.Product) ProductDTO {
 		basePrice = productSizesPrices[0]
 	}
 
+	var sizes = make([]ProductSizeDTO, 0)
+
+	for _, size := range product.ProductSizes {
+		sizes = append(sizes, MapToProductSizeDTO(size))
+	}
+
 	return ProductDTO{
 		BaseProductDTO:   MapBaseProductDTO(&product),
 		BasePrice:        basePrice,
 		ProductSizeCount: productSizeCount,
+		Sizes:            sizes,
 	}
 }
 

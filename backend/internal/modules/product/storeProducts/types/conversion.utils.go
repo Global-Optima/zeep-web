@@ -1,9 +1,10 @@
 package types
 
 import (
+	"sort"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-	"sort"
 )
 
 type StoreProductModels struct {
@@ -36,9 +37,9 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 }
 
 func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
-	sizes := make([]StoreProductSizeDTO, len(sp.StoreProductSizes))
+	sizes := make([]StoreProductSizeDetailsDTO, len(sp.StoreProductSizes))
 	for i, size := range sp.StoreProductSizes {
-		sizes[i] = MapToStoreProductSizeDTO(size)
+		sizes[i] = MapToStoreProductSizeDetailsDTO(size)
 	}
 
 	return StoreProductDetailsDTO{
@@ -47,10 +48,10 @@ func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
 	}
 }
 
-func MapToStoreProductSizeDTO(sps data.StoreProductSize) StoreProductSizeDTO {
-	return StoreProductSizeDTO{
-		ProductSizeDTO: productTypes.MapToProductSizeDTO(sps.ProductSize),
-		StorePrice:     sps.Price,
+func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSizeDetailsDTO {
+	return StoreProductSizeDetailsDTO{
+		ProductSizeDetailsDTO: productTypes.MapToProductSizeDetails(sps.ProductSize),
+		StorePrice:            sps.Price,
 	}
 }
 

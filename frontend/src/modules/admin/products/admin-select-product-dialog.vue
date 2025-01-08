@@ -20,28 +20,28 @@
 				<!-- Material List -->
 				<div class="max-h-[50vh] overflow-y-auto">
 					<p
-						v-if="!additives || additives.data.length === 0"
+						v-if="!products || products.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Топпинги не найдены
+						Товары не найдены
 					</p>
 
 					<ul v-else>
 						<li
-							v-for="additive in additives.data"
-							:key="additive.id"
+							v-for="product in products.data"
+							:key="product.id"
 							class="flex justify-between items-center hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
-							@click="selectMaterial(additive)"
+							@click="selectProducts(product)"
 						>
 							<div class="flex items-center gap-2">
 								<img
-									:src="additive.imageUrl"
+									:src="product.imageUrl"
 									class="bg-gray-100 p-1 rounded-md w-16 h-16 object-contain"
 								/>
-								<span>{{ additive.name }}</span>
+								<span>{{ product.name }}</span>
 							</div>
 							<span class="text-gray-500 text-sm">
-								{{ additive.category.name }}
+								{{ product.category.name }}
 							</span>
 						</li>
 					</ul>
@@ -49,7 +49,7 @@
 
 				<!-- Load More Button -->
 				<Button
-					v-if="additives && additives.pagination.pageSize < additives.pagination.totalCount"
+					v-if="products && products.pagination.pageSize < products.pagination.totalCount"
 					variant="ghost"
 					class="mt-4 w-full"
 					@click="loadMore"
@@ -78,8 +78,8 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
-import type { AdditiveDTO, AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
-import { additivesService } from '@/modules/admin/additives/services/additives.service'
+import type { ProductDTO, ProductsFilter } from '@/modules/kiosk/products/models/product.model'
+import { productsService } from '@/modules/kiosk/products/services/products.service'
 
 const {open} = defineProps<{
   open: boolean;
@@ -87,7 +87,7 @@ const {open} = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', additive: AdditiveDTO): void;
+  (e: 'select', additive: ProductDTO): void;
 }>()
 
 const searchTerm = ref('')
@@ -96,7 +96,7 @@ const debouncedSearchTerm = useDebounce(
   500
 )
 
-const filter = ref<AdditiveFilterQuery>({
+const filter = ref<ProductsFilter>({
   page: 1,
   pageSize: 10,
   search: ''
@@ -106,29 +106,28 @@ const filter = ref<AdditiveFilterQuery>({
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1
   filter.value.search = newValue.trim()
-  refetch()
 })
 
-const { data: additives, refetch } = useQuery({
+const { data: products } = useQuery({
   queryKey: computed(() => [
-  'admin-additives',
+  'admin-products',
   filter.value
 ]),
-  queryFn: () => additivesService.getAdditives(filter.value),
+  queryFn: () => productsService.getProducts(filter.value),
 })
 
 
 function loadMore() {
-  if (!additives.value) return
-  const pagination = additives.value.pagination
+  if (!products.value) return
+  const pagination = products.value.pagination
 
   if (pagination.pageSize < pagination.totalCount) {
     if(filter.value.pageSize) filter.value.pageSize += 10
   }
 }
 
-function selectMaterial(additive: AdditiveDTO) {
-  emit('select', additive)
+function selectProducts(product: ProductDTO) {
+  emit('select', product)
   onClose()
 }
 

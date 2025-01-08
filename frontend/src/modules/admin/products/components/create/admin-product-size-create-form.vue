@@ -157,7 +157,7 @@ const onCancel = () => {
 				<h1
 					class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0"
 				>
-					Детали варианта
+					Создать вариант
 				</h1>
 			</div>
 			<div class="flex items-center gap-2">

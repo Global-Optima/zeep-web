@@ -17,11 +17,11 @@ type StoreProductDTO struct {
 // StoreProductDetailsDTO for sending single product with detailed info
 type StoreProductDetailsDTO struct {
 	StoreProductDTO
-	Sizes []StoreProductSizeDTO `json:"sizes"`
+	Sizes []StoreProductSizeDetailsDTO `json:"sizes"`
 }
 
-type StoreProductSizeDTO struct {
-	productTypes.ProductSizeDTO
+type StoreProductSizeDetailsDTO struct {
+	productTypes.ProductSizeDetailsDTO
 	StorePrice float64 `json:"storePrice"`
 }
 

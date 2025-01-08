@@ -3,7 +3,8 @@ import {
   Dialog,
   DialogContent
 } from '@/core/components/ui/dialog'
-import type { AdditiveCategories, AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDTO, AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import { additivesService } from '@/modules/admin/additives/services/additives.service'
 import type { CartItem } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
 import KioskDetailsBottomBar from '@/modules/kiosk/products/components/details/kiosk-details-bottom-bar.vue'
@@ -12,7 +13,6 @@ import KioskDetailsProductInfo from '@/modules/kiosk/products/components/details
 import type {
   ProductSizeDTO
 } from '@/modules/kiosk/products/models/product.model'
-import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -20,7 +20,7 @@ interface UpdateCartDialogProps {
   isOpen: boolean;
   cartItem: CartItem;
   onClose: () => void;
-  onUpdate: (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveCategoryItem[]) => void;
+  onUpdate: (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveCategoryItemDTO[]) => void;
 }
 
 const { isOpen, cartItem, onClose, onUpdate } = defineProps<UpdateCartDialogProps>();
@@ -29,13 +29,13 @@ const { isOpen, cartItem, onClose, onUpdate } = defineProps<UpdateCartDialogProp
 const productDetails = ref(cartItem.product);
 const selectedSize = ref(cartItem.size);
 const selectedAdditives = ref(
-  cartItem.additives.reduce<Record<number, AdditiveCategoryItem[]>>((acc, additive) => {
+  cartItem.additives.reduce<Record<number, AdditiveCategoryItemDTO[]>>((acc, additive) => {
     acc[additive.categoryId] = acc[additive.categoryId] || [];
     acc[additive.categoryId].push(additive);
     return acc;
   }, {})
 );
-const additivesCategories = ref<AdditiveCategories[]>([]);
+const additivesCategories = ref<AdditiveCategoryDTO[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 
@@ -43,10 +43,10 @@ const error = ref<string | null>(null);
 const fetchAdditives = async () => {
   try {
     isLoading.value = true;
-    const fetchedCategories = await productsService.getAdditiveCategories(selectedSize.value.id);
+    const fetchedCategories = await additivesService.getAdditiveCategories({productSizeId: selectedSize.value.id});
 
     // Merge fetched additives with pre-selected ones
-    additivesCategories.value = fetchedCategories.map((category) => ({
+    additivesCategories.value = fetchedCategories.data.map((category) => ({
       ...category,
       additives: category.additives.map((additive) => ({
         ...additive,
@@ -63,7 +63,7 @@ const fetchAdditives = async () => {
 // Reset dialog state and fetch additives
 const resetAndFetchAdditives = async () => {
   selectedSize.value = cartItem.size;
-  selectedAdditives.value = cartItem.additives.reduce<Record<number, AdditiveCategoryItem[]>>((acc, additive) => {
+  selectedAdditives.value = cartItem.additives.reduce<Record<number, AdditiveCategoryItemDTO[]>>((acc, additive) => {
     acc[additive.categoryId] = acc[additive.categoryId] || [];
     acc[additive.categoryId].push(additive);
     return acc;
@@ -91,8 +91,10 @@ const onSizeSelect = async (size: ProductSizeDTO) => {
   preserveSelectedAdditives();
 };
 
-const isAdditiveDefault = (additiveId: number) =>
-  productDetails.value?.defaultAdditives.some((add) => add.id === additiveId) || false;
+// const isAdditiveDefault = (additiveId: number) =>
+//   productDetails.value?.defaultAdditives.some((add) => add.id === additiveId) || false;
+
+const isAdditiveDefault = (additiveId: number) => false;
 
 // Computed total price
 const totalPrice = computed(() => {
@@ -131,7 +133,7 @@ const isAdditiveSelected = (categoryId: number, additiveId: number) =>
   selectedAdditives.value[categoryId]?.some((a) => a.id === additiveId) || false;
 
 // Handle additive selection
-const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItem) => {
+const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[categoryId] || [];
   const isSelected = current.some((a) => a.id === additive.id);
   selectedAdditives.value[categoryId] = isSelected
