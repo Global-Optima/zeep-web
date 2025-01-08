@@ -165,6 +165,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_store_additive
+    ON store_additives (store_id, additive_id)
+    WHERE deleted_at IS NULL;
+
 -- StoreProduct Table
 CREATE TABLE
 	IF NOT EXISTS store_products (

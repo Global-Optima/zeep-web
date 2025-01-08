@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	ErrValidation            = moduleErrors.NewModuleError(errors.New("validation error"))
-	ErrInvalidWeekdayFormat  = moduleErrors.NewModuleError(errors.New("invalid weekday format"))
-	ErrEmployeeAlreadyExists = moduleErrors.NewModuleError(errors.New("employee already exists"))
-	ErrWorkdayAlreadyExists  = moduleErrors.NewModuleError(errors.New("workday already exists"))
+	ErrValidation              = moduleErrors.NewModuleError(errors.New("validation error"))
+	ErrInvalidWeekdayFormat    = moduleErrors.NewModuleError(errors.New("invalid weekday format"))
+	ErrEmployeeAlreadyExists   = moduleErrors.NewModuleError(errors.New("employee already exists"))
+	ErrWorkdayAlreadyExists    = moduleErrors.NewModuleError(errors.New("workday already exists"))
+	ErrUnsupportedEmployeeType = moduleErrors.NewModuleError(errors.New("unsupported employee type"))
 )

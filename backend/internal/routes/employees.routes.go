@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
+	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
@@ -95,7 +96,6 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.EmployeeRoutes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditives)
-		router.GET("/store", handler.GetStoreAdditives)
 		router.POST("", handler.CreateAdditive)
 		router.PUT("", handler.UpdateAdditive)
 		router.DELETE("/:id", handler.DeleteAdditive)
@@ -104,12 +104,23 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 		additiveCategories := router.Group("/categories")
 		{
 			additiveCategories.GET("", handler.GetAdditiveCategories)
-			additiveCategories.GET("/store", handler.GetStoreAdditiveCategories)
 			additiveCategories.POST("", handler.CreateAdditiveCategory)
 			additiveCategories.PUT("", handler.UpdateAdditiveCategory)
 			additiveCategories.DELETE("/:id", handler.DeleteAdditiveCategory)
 			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
 		}
+	}
+}
+
+func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAdditiveHandler) {
+	router := r.EmployeeRoutes.Group("/store-additives")
+	{
+		router.GET("", handler.GetStoreAdditives)
+		router.GET("/categories", handler.GetStoreAdditiveCategories)
+		router.POST("", handler.CreateStoreAdditives)
+		router.PUT("/:id", handler.UpdateStoreAdditive)
+		router.DELETE("/:id", handler.DeleteStoreAdditive)
+		router.GET("/:id", handler.GetStoreAdditiveByID)
 	}
 }
 
