@@ -27,8 +27,9 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 	}
 
 	return &StoreProductDTO{
+		ID:                    sp.ID,
 		ProductDTO:            productTypes.MapToProductDTO(sp.Product),
-		StoreProductID:        sp.ID,
+		ProductID:             sp.ProductID,
 		StoreProductSizeCount: spsCount,
 		IsAvailable:           sp.IsAvailable,
 		StorePrice:            spsMinPrice,
@@ -49,8 +50,10 @@ func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
 
 func MapToStoreProductSizeDTO(sps data.StoreProductSize) StoreProductSizeDTO {
 	return StoreProductSizeDTO{
-		ProductSizeDTO: productTypes.MapToProductSizeDTO(sps.ProductSize),
-		StorePrice:     sps.Price,
+		ID:                 sps.ID,
+		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(sps.ProductSize),
+		ProductSizeID:      sps.ProductSizeID,
+		StorePrice:         sps.Price,
 	}
 }
 

@@ -110,7 +110,7 @@ CREATE TABLE
 	IF NOT EXISTS product_sizes (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
-		measure VARCHAR(50),
+		unit_id INT NOT NULL REFERENCES units (id) ON DELETE CASCADE,
 		base_price DECIMAL(10, 2) NOT NULL,
 		size INT NOT NULL,
 		is_default BOOLEAN DEFAULT FALSE,
@@ -231,8 +231,8 @@ CREATE TABLE
 		carbs DECIMAL(5, 2) CHECK (carbs >= 0),
 		proteins DECIMAL(5, 2) CHECK (proteins >= 0),
 		expires_at TIMESTAMPTZ,
-    	unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
-		category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE SET NULL,
+        unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
+        category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE RESTRICT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -595,6 +595,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_warehouse_stock
+    ON warehouse_stocks (warehouse_id, stock_material_id)
+    WHERE deleted_at IS NULL;
+
 CREATE TABLE
 	IF NOT EXISTS supplier_materials (
 		id SERIAL PRIMARY KEY,
@@ -604,3 +608,7 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_supplier_material
+    ON supplier_materials (supplier_id, stock_material_id)
+    WHERE deleted_at IS NULL;

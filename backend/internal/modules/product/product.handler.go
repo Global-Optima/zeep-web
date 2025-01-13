@@ -85,7 +85,7 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 	// 	}
 	// }
 
-	productDetails, err := h.service.GetProductDetails(uint(productID))
+	productDetails, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
@@ -160,7 +160,7 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 	var input types.CreateProductSizeDTO
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON+err.Error())
 		return
 	}
 

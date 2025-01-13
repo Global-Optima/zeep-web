@@ -49,7 +49,8 @@ type RecipeStep struct {
 type ProductSize struct {
 	BaseEntity
 	Name                   string  `gorm:"size:100;not null" sort:"name"`
-	Measure                string  `gorm:"size:50" sort:"measure"`
+	UnitID                 uint    `gorm:"index,not null"`
+	Unit                   Unit    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
 	BasePrice              float64 `gorm:"not null" sort:"price"`
 	Size                   int     `gorm:"not null" sort:"size"`
 	IsDefault              bool    `gorm:"default:false" sort:"isDefault"`

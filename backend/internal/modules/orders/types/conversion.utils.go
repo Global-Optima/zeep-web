@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 )
 
 func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices map[uint]float64, additivePrices map[uint]float64) (data.Order, float64) {
@@ -76,6 +77,7 @@ func ConvertSuborderToDTO(suborder *data.Suborder) SuborderDTO {
 			SizeName:    suborder.ProductSize.Name,
 			ProductName: suborder.ProductSize.Product.Name,
 			Size:        suborder.ProductSize.Size,
+			Unit:        unitTypes.ToUnitResponse(suborder.ProductSize.Unit),
 		},
 		Price:     suborder.Price,
 		Status:    suborder.Status,
@@ -131,7 +133,7 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 			ProductSize: ProductSizeDetailsDTO{
 				ID:        sub.ProductSize.ID,
 				Name:      sub.ProductSize.Name,
-				Measure:   sub.ProductSize.Measure,
+				Unit:      unitTypes.ToUnitResponse(sub.ProductSize.Unit),
 				BasePrice: sub.ProductSize.BasePrice,
 				Product: ProductDetailsDTO{
 					ID:          sub.ProductSize.Product.ID,

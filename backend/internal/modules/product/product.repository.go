@@ -13,7 +13,7 @@ import (
 type ProductRepository interface {
 	CreateProduct(product *data.Product) (uint, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
-	GetProductDetails(productID uint) (*data.Product, error)
+	GetProductByID(productID uint) (*data.Product, error)
 	UpdateProduct(id uint, product *data.Product) error
 	DeleteProduct(productID uint) error
 
@@ -35,7 +35,10 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 
 func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.ProductSize, error) {
 	var productSize data.ProductSize
-	err := r.db.Preload("Product").First(&productSize, productSizeID).Error
+	err := r.db.Preload("Product").
+		Preload("Unit").
+		First(&productSize, productSizeID).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -54,6 +57,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 	var productSize data.ProductSize
 
 	err := r.db.Model(&data.ProductSize{}).
+		Preload("Unit").
 		Preload("Additives.Additive.Category").
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
 		First(&productSize, productSizeID).Error
@@ -74,7 +78,7 @@ func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data
 	query := r.db.
 		Model(&data.Product{}).
 		Preload("Category").
-		Preload("ProductSizes")
+		Preload("ProductSizes.Unit")
 
 	if filter.CategoryID != nil {
 		query = query.Where("products.category_id = ?", *filter.CategoryID)
@@ -105,11 +109,11 @@ func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data
 	return products, nil
 }
 
-func (r *productRepository) GetProductDetails(productID uint) (*data.Product, error) {
+func (r *productRepository) GetProductByID(productID uint) (*data.Product, error) {
 	var product data.Product
 
 	err := r.db.
-		Preload("ProductSizes").
+		Preload("ProductSizes.Unit").
 		Preload("Category").
 		Where("id = ?", productID).
 		First(&product).
@@ -238,7 +242,10 @@ func (r *productRepository) DeleteProduct(productID uint) error {
 func (r *productRepository) GetProductSizesByProductID(productID uint) ([]data.ProductSize, error) {
 	var productSizes []data.ProductSize
 
-	err := r.db.Where("product_id = ?", productID).Find(&productSizes).Error
+	err := r.db.
+		Preload("Unit").
+		Where("product_id = ?", productID).
+		Find(&productSizes).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch product sizes: %w", err)
 	}

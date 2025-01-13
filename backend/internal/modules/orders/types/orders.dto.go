@@ -1,6 +1,7 @@
 package types
 
 import (
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -64,10 +65,11 @@ type SuborderDTO struct {
 }
 
 type ProductSizeDTO struct {
-	ID          uint   `json:"id"`
-	SizeName    string `json:"sizeName"`
-	ProductName string `json:"productName"`
-	Size        int    `json:"size"`
+	ID          uint                   `json:"id"`
+	SizeName    string                 `json:"sizeName"`
+	ProductName string                 `json:"productName"`
+	Size        int                    `json:"size"`
+	Unit        unitTypes.UnitResponse `json:"unit"`
 }
 
 type AdditiveDTO struct {
@@ -104,11 +106,11 @@ type SuborderDetailsDTO struct {
 }
 
 type ProductSizeDetailsDTO struct {
-	ID        uint              `json:"id"`
-	Name      string            `json:"name"`
-	Measure   string            `json:"measure"`
-	BasePrice float64           `json:"basePrice"`
-	Product   ProductDetailsDTO `json:"product"`
+	ID        uint                   `json:"id"`
+	Name      string                 `json:"name"`
+	Unit      unitTypes.UnitResponse `json:"unit"`
+	BasePrice float64                `json:"basePrice"`
+	Product   ProductDetailsDTO      `json:"product"`
 }
 
 type ProductDetailsDTO struct {
