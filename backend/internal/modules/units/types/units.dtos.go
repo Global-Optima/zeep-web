@@ -8,8 +8,8 @@ type CreateUnitDTO struct {
 }
 
 type UpdateUnitDTO struct {
-	Name             *string  `json:"name,omitempty"`             // Optional field
-	ConversionFactor *float64 `json:"conversionFactor,omitempty"` // Optional field
+	Name             *string  `json:"name,omitempty"`
+	ConversionFactor *float64 `json:"conversionFactor,omitempty"`
 }
 
 type UnitResponse struct {
@@ -20,5 +20,5 @@ type UnitResponse struct {
 
 type UnitFilter struct {
 	utils.BaseFilter
-	Search *string `form:"search"` // Search by name
+	Search *string `form:"search"`
 }

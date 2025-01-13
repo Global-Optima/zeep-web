@@ -8,12 +8,10 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import AdminSelectIngredientCategory from '@/modules/admin/ingredient-categories/components/admin-select-ingredient-category.vue'
 import type { CreateIngredientDTO, IngredientCategoryDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
-import { unitsService } from '@/modules/admin/units/services/units.service'
-import { useQuery } from '@tanstack/vue-query'
+import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronLeft } from 'lucide-vue-next'
 import { ref } from 'vue'
 
@@ -22,15 +20,6 @@ const emits = defineEmits<{
   onCancel: []
 }>()
 
-const { data: units } = useQuery({
-  queryKey:  ['admin-units'],
-	queryFn: () => unitsService.getAllUnits(),
-})
-
-const { data: ingredientCategories } = useQuery({
-  queryKey:  ['admin-ingredient-categories'],
-	queryFn: () => ingredientsService.getIngredientCategories(),
-})
 
 // Validation Schema
 const updateIngredientSchema = toTypedSchema(
@@ -79,6 +68,15 @@ function selectCategory(category: IngredientCategoryDTO) {
   selectedCategory.value = category
   openCategoryDialog.value = false
   setFieldValue('categoryId', category.id)
+}
+
+const openUnitDialog = ref(false)
+const selectedUnit = ref<UnitDTO | null>(null)
+
+function selectUnit(unit: UnitDTO) {
+  selectedUnit.value = unit
+  openUnitDialog.value = false
+  setFieldValue('unitId', unit.id)
 }
 </script>
 
@@ -250,30 +248,15 @@ function selectCategory(category: IngredientCategoryDTO) {
 						<CardDescription>Выберите размер ингредиента</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<FormField
-							name="unitId"
-							v-slot="{ componentField }"
-						>
+						<FormField name="categoryId">
 							<FormItem>
-								<FormControl>
-									<Select v-bind="componentField">
-										<SelectTrigger class="w-full">
-											<SelectValue
-												class="text-sm sm:text-base"
-												placeholder="Выберите размер"
-											/>
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem
-												v-for="unit in units"
-												:key="unit.id"
-												:value="unit.id.toString()"
-											>
-												{{ unit.name }}
-											</SelectItem>
-										</SelectContent>
-									</Select>
-								</FormControl>
+								<Button
+									variant="link"
+									class="mt-0 p-0 h-fit text-blue-600 underline"
+									@click="openUnitDialog = true"
+								>
+									{{ selectedUnit?.name || 'Размер не выбран' }}
+								</Button>
 								<FormMessage />
 							</FormItem>
 						</FormField>
@@ -308,6 +291,12 @@ function selectCategory(category: IngredientCategoryDTO) {
 			:open="openCategoryDialog"
 			@close="openCategoryDialog = false"
 			@select="selectCategory"
+		/>
+
+		<AdminSelectUnit
+			:open="openUnitDialog"
+			@close="openUnitDialog = false"
+			@select="selectUnit"
 		/>
 
 		<!-- Footer -->

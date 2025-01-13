@@ -1,13 +1,17 @@
 import { apiClient } from '@/core/config/axios-instance.config'
-import type { CreateUnitDTO, UnitDTO, UpdateUnitDTO } from '../models/units.model'
+import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import type { CreateUnitDTO, UnitDTO, UnitsFilterDTO, UpdateUnitDTO } from '../models/units.model'
+import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
 class UnitsService {
 	/**
 	 * Fetch all units with optional filters
 	 */
-	async getAllUnits() {
+	async getAllUnits(filter?: UnitsFilterDTO) {
 		try {
-			const response = await apiClient.get<UnitDTO[]>(`/units`)
+			const response = await apiClient.get<PaginatedResponse<UnitDTO[]>>(`/units`, {
+				params: buildRequestFilter(filter),
+			})
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch units: ', error)

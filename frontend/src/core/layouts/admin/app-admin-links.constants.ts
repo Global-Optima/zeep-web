@@ -8,6 +8,7 @@ import {
 	LayoutList,
 	ListPlus,
 	Package,
+	Ruler,
 	ShoppingCart,
 	Store,
 	Truck,
@@ -88,6 +89,12 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Магазины',
 		routeKey: 'ADMIN_STORES',
 		icon: Store,
+		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
+	},
+	{
+		name: 'Размеры',
+		routeKey: 'ADMIN_UNITS',
+		icon: Ruler,
 		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
 	},
 	{

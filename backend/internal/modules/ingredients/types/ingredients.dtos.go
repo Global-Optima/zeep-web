@@ -1,7 +1,8 @@
 package types
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
+	ingredientCategoriesType "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -28,20 +29,15 @@ type UpdateIngredientDTO struct {
 }
 
 type IngredientDTO struct {
-	ID               uint                             `json:"id"`
-	Name             string                           `json:"name"`
-	Calories         float64                          `json:"calories"`
-	Fat              float64                          `json:"fat"`
-	Carbs            float64                          `json:"carbs"`
-	Proteins         float64                          `json:"proteins"`
-	ExpirationInDays int                              `json:"expirationInDays"`
-	Unit             Unit                             `json:"unit"`
-	Category         types.IngredientCategoryResponse `json:"category"`
-}
-
-type Unit struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	ID               uint                                                `json:"id"`
+	Name             string                                              `json:"name"`
+	Calories         float64                                             `json:"calories"`
+	Fat              float64                                             `json:"fat"`
+	Carbs            float64                                             `json:"carbs"`
+	Proteins         float64                                             `json:"proteins"`
+	ExpirationInDays int                                                 `json:"expirationInDays"`
+	Unit             unitTypes.UnitDTO                                       `json:"unit"`
+	Category         ingredientCategoriesType.IngredientCategoryResponse `json:"category"`
 }
 
 type IngredientFilter struct {

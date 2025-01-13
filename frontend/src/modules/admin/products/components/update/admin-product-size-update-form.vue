@@ -253,6 +253,8 @@ const onCancel = () => {
 								name="measure"
 								v-slot="{ componentField }"
 							>
+								<!-- TODO: Change to units dialog -->
+
 								<FormItem class="flex-1">
 									<FormLabel>Единица измерения</FormLabel>
 									<FormControl>

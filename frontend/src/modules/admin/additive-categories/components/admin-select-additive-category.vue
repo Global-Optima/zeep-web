@@ -36,7 +36,7 @@
 				</div>
 				<!-- Load More Button -->
 				<Button
-					v-if="additiveCategories && additiveCategories.pagination.page < additiveCategories.pagination.totalPages"
+					v-if="additiveCategories && additiveCategories.pagination.pageSize < additiveCategories.pagination.totalPages"
 					variant="ghost"
 					class="mt-4 w-full"
 					@click="loadMore"
@@ -81,10 +81,9 @@ const filter = ref<AdditiveFilterQuery>({})
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1
   filter.value.search = newValue.trim()
-  refetch()
 })
 
-const { data: additiveCategories, refetch } = useQuery({
+const { data: additiveCategories } = useQuery({
   queryKey: computed(() => [
   'admin-additive-categories',
   filter.value

@@ -1,6 +1,7 @@
 // ingredient.dtos.ts
 
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { UnitDTO } from '../../units/models/units.model'
 
 /**
  * DTO for creating a new ingredient.
@@ -41,7 +42,7 @@ export interface IngredientsDTO {
 	carbs: number
 	proteins: number
 	expirationInDays: number
-	unit: { id: number; name: string }
+	unit: UnitDTO
 	category: IngredientCategoryDTO
 }
 

@@ -1,115 +1,43 @@
-<script setup lang="ts">
-import { Button } from '@/core/components/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
-import { Input } from '@/core/components/ui/input'
-import type { IngredientCategoryFilter } from '@/modules/admin/ingredients/models/ingredients.model'
-import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import { unitsService } from '@/modules/admin/units/services/units.service'
-import { useQuery } from '@tanstack/vue-query'
-import { useDebounce } from '@vueuse/core'
-import { computed, ref, watch } from 'vue'
-
-const { open } = defineProps<{
-  open: boolean;
-}>()
-
-const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'select', category: UnitDTO): void;
-}>()
-
-const searchTerm = ref('')
-const debouncedSearchTerm = useDebounce(
-  computed(() => searchTerm.value),
-  500
-)
-
-const filter = ref<IngredientCategoryFilter>({
-  page: 1,
-  pageSize: 10,
-  search: ''
-})
-
-watch(debouncedSearchTerm, (newValue) => {
-  filter.value.page = 1
-  filter.value.search = newValue.trim()
-  refetch()
-})
-
-const { data: categories, refetch } = useQuery({
-  queryKey: computed(() => [
-    'admin-ingredient-categories',
-    filter.value
-  ]),
-  queryFn: () => unitsService.getAllUnits(),
-})
-
-function loadMore() {
-  if (!categories.value) return
-  const pagination = categories.value.pagination
-  if (filter.value.pageSize && pagination.pageSize < pagination.totalCount) {
-    filter.value.pageSize += 10
-  }
-}
-
-function selectCategory(unit: UnitDTO) {
-  emit('select', unit)
-  onClose()
-}
-
-function handleDialogState(newState: boolean) {
-  if (!newState) onClose()
-}
-
-function onClose() {
-  filter.value = {
-    page: 1,
-    pageSize: 10,
-    search: ''
-  }
-  emit('close')
-}
-</script>
-
 <template>
 	<Dialog
 		:open="open"
-		@update:open="handleDialogState"
+		@update:open="onClose"
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите категорию ингредиента</DialogTitle>
+				<DialogTitle>Выберите размер</DialogTitle>
 			</DialogHeader>
 			<div>
+				<!-- Search Input -->
 				<Input
 					v-model="searchTerm"
 					placeholder="Поиск"
 					type="search"
 					class="mt-2 mb-4 w-full"
 				/>
+				<!-- Material List -->
 				<div class="max-h-[50vh] overflow-y-auto">
 					<p
-						v-if="!categories || categories.data.length === 0"
+						v-if="!additiveCategories || additiveCategories.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Категории ингредиента не найдены
+						Размер не найден
 					</p>
 					<ul v-else>
 						<li
-							v-for="category in categories.data"
-							:key="category.id"
+							v-for="additiveCategory in additiveCategories.data"
+							:key="additiveCategory.id"
 							class="flex justify-between items-center hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
-							@click="selectCategory(category)"
+							@click="selectAdditiveCategory(additiveCategory)"
 						>
-							<span>{{ category.name }}</span>
+							<span>{{ additiveCategory.name }}</span>
 						</li>
 					</ul>
 				</div>
-
+				<!-- Load More Button -->
 				<Button
-					v-if="categories && categories.pagination.pageSize < categories.pagination.totalCount"
+					v-if="additiveCategories && additiveCategories.pagination.pageSize < additiveCategories.pagination.totalCount"
 					variant="ghost"
-					type="button"
 					class="mt-4 w-full"
 					@click="loadMore"
 				>
@@ -120,7 +48,6 @@ function onClose() {
 				<Button
 					variant="outline"
 					@click="onClose"
-					type="button"
 				>
 					Закрыть
 				</Button>
@@ -128,3 +55,61 @@ function onClose() {
 		</DialogContent>
 	</Dialog>
 </template>
+<script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
+import { Input } from '@/core/components/ui/input'
+import type { UnitDTO, UnitsFilterDTO } from '@/modules/admin/units/models/units.model'
+import { unitsService } from '@/modules/admin/units/services/units.service'
+import { useQuery } from '@tanstack/vue-query'
+import { useDebounce } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
+const {open} = defineProps<{
+  open: boolean;
+}>()
+const emit = defineEmits<{
+  (e: 'close'): void;
+  (e: 'select', unit: UnitDTO): void;
+}>()
+const searchTerm = ref('')
+const debouncedSearchTerm = useDebounce(
+  computed(() => searchTerm.value),
+  500
+)
+const filter = ref<UnitsFilterDTO>({})
+
+watch(debouncedSearchTerm, (newValue) => {
+  filter.value.page = 1
+  filter.value.search = newValue.trim()
+})
+
+const { data: additiveCategories } = useQuery({
+  queryKey: computed(() => [
+  'admin-units',
+  filter.value
+]),
+  queryFn: () => unitsService.getAllUnits(filter.value),
+})
+
+function loadMore() {
+  if (!additiveCategories.value) return
+  const pagination = additiveCategories.value.pagination
+  if (pagination.pageSize < pagination.totalCount) {
+    if(filter.value.pageSize) filter.value.pageSize += 10
+  }
+}
+
+function selectAdditiveCategory(unit: UnitDTO) {
+  emit('select', unit)
+  onClose()
+}
+function onClose() {
+  filter.value = {
+    page: 1,
+    pageSize: 10,
+    search: ''
+  }
+  emit('close')
+}
+</script>
+<style scoped></style>
