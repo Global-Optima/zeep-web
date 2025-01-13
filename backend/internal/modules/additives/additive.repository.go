@@ -36,12 +36,16 @@ func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategor
 
 	subquery := r.db.Model(&data.Additive{}).
 		Select("additive_category_id").
-		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
+		Joins("LEFT JOIN store_additives ON store_additives.additive_id = additives.id").
 		Group("additive_category_id").
 		Having("COUNT(additives.id) > 0")
 
 	if filter.ProductSizeId != nil {
 		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
+	}
+
+	if filter.IsMultipleSelect != nil {
+		subquery = subquery.Where("is_multiple_select = ?", *filter.IsMultipleSelect)
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
@@ -53,8 +57,14 @@ func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategor
 	}
 
 	query := r.db.Model(&data.AdditiveCategory{}).
-		Preload("Additives").
-		Where("id IN (?)", subquery)
+		Preload("Additives")
+
+	if filter.ShowAll != nil && *filter.ShowAll {
+		query = query.Where("id IN (?) OR NOT EXISTS (SELECT 1 FROM additives WHERE additives.additive_category_id = additive_categories.id)", subquery)
+
+	} else {
+		query = query.Where("id IN (?)", subquery)
+	}
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
 	if err != nil {

@@ -1,6 +1,9 @@
 package types
 
-import additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+import (
+	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type CreateStoreAdditiveDTO struct {
 	AdditiveID uint    `json:"additiveId" binding:"required,gt=0"`
@@ -17,10 +20,17 @@ type StoreAdditiveDTO struct {
 	StorePrice      float64 `json:"storePrice"`
 }
 
+type StoreAdditiveCategoriesFilter struct {
+	utils.BaseFilter
+	Search           *string `form:"search"`
+	IsMultipleSelect *bool   `form:"isMultipleSelect"`
+}
+
 type StoreAdditiveCategoryItemDTO struct {
 	additiveTypes.AdditiveCategoryItemDTO
 	StoreAdditiveID uint    `json:"storeAdditiveId"`
 	StorePrice      float64 `json:"storePrice"`
+	IsDefault       bool    `json:"isDefault"`
 }
 
 type StoreAdditiveCategoryDTO struct {

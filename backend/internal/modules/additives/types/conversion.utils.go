@@ -79,7 +79,7 @@ func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 		ID:          additive.ID,
 		Name:        additive.Name,
 		Description: additive.Description,
-		Price:       additive.BasePrice,
+		BasePrice:   additive.BasePrice,
 		ImageURL:    additive.ImageURL,
 		Size:        additive.Size,
 		Category: struct {

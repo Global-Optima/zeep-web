@@ -26,13 +26,19 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	var filter additiveTypes.AdditiveCategoriesFilterQuery
+	productSizeID, err := strconv.ParseUint(c.Param("productSizeId"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid productSizeID")
+		return
+	}
+
+	var filter types.StoreAdditiveCategoriesFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.AdditiveCategory{}); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
-	additives, err := h.service.GetStoreAdditiveCategories(storeID, &filter)
+	additives, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(productSizeID), &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve store additives")
 		return

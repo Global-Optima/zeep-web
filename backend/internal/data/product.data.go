@@ -120,14 +120,15 @@ type ProductCategory struct {
 
 type Additive struct {
 	BaseEntity
-	Name               string            `gorm:"size:255;not null;index" sort:"name"`
-	Description        string            `gorm:"type:text"`
-	BasePrice          float64           `gorm:"type:decimal(10,2);default:0"`
-	Size               string            `gorm:"size:200"`
-	AdditiveCategoryID uint              `gorm:"index"`
-	Category           *AdditiveCategory `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL"`
-	ImageURL           string            `gorm:"size:2048"`
-	StoreAdditives     []StoreAdditive   `gorm:"foreignKey:AdditiveID"`
+	Name                 string                `gorm:"size:255;not null;index" sort:"name"`
+	Description          string                `gorm:"type:text"`
+	BasePrice            float64               `gorm:"type:decimal(10,2);default:0"`
+	Size                 string                `gorm:"size:200"`
+	AdditiveCategoryID   uint                  `gorm:"index"`
+	Category             *AdditiveCategory     `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL"`
+	ImageURL             string                `gorm:"size:2048"`
+	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
+	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`
 }
 
 type AdditiveCategory struct {
