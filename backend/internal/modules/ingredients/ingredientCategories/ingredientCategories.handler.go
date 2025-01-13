@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -86,11 +87,17 @@ func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 }
 
 func (h *IngredientCategoryHandler) GetAll(c *gin.Context) {
-	categories, err := h.service.GetAll()
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+	var filter types.IngredientCategoryFilter
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.IngredientCategory{}); err != nil {
+		utils.SendBadRequestError(c, "Failed to parse pagination or filtering parameters")
 		return
 	}
 
-	utils.SendSuccessResponse(c, categories)
+	categories, err := h.service.GetAll(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch ingredient categories")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, categories, filter.GetPagination())
 }

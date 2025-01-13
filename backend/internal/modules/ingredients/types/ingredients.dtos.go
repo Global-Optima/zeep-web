@@ -25,22 +25,30 @@ type UpdateIngredientDTO struct {
 }
 
 type IngredientResponseDTO struct {
-	ID               uint    `json:"id"`
-	Name             string  `json:"name"`
-	Calories         float64 `json:"calories"`
-	Fat              float64 `json:"fat"`
-	Carbs            float64 `json:"carbs"`
-	Proteins         float64 `json:"proteins"`
-	ExpirationInDays int     `json:"expirationInDays"`
+	ID               uint               `json:"id"`
+	Name             string             `json:"name"`
+	Calories         float64            `json:"calories"`
+	Fat              float64            `json:"fat"`
+	Carbs            float64            `json:"carbs"`
+	Proteins         float64            `json:"proteins"`
+	ExpirationInDays int                `json:"expirationInDays"`
+	Unit             Unit               `json:"unit"`
+	Category         IngredientCategory `json:"category"`
 }
 
 type IngredientDetailsDTO struct {
 	IngredientResponseDTO
-	Category struct {
-		ID          uint   `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"category"`
+}
+
+type Unit struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+type IngredientCategory struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type IngredientFilter struct {
