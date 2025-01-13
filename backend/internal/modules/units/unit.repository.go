@@ -1,13 +1,17 @@
 package units
 
 import (
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
 type UnitRepository interface {
 	Create(unit *data.Unit) error
-	GetAll() ([]data.Unit, error)
+	GetAll(filter *types.UnitFilter) ([]data.Unit, error)
 	GetByID(id uint) (*data.Unit, error)
 	Update(id uint, updates data.Unit) error
 	Delete(id uint) error
@@ -25,10 +29,24 @@ func (r *unitRepository) Create(unit *data.Unit) error {
 	return r.db.Create(unit).Error
 }
 
-func (r *unitRepository) GetAll() ([]data.Unit, error) {
+func (r *unitRepository) GetAll(filter *types.UnitFilter) ([]data.Unit, error) {
 	var units []data.Unit
-	err := r.db.Find(&units).Error
-	return units, err
+	query := r.db.Model(&data.Unit{})
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &units)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch units: %w", err)
+	}
+
+	if filter.Search != nil {
+		query = query.Where("name ILIKE ?", "%"+*filter.Search+"%")
+	}
+
+	if err := query.Find(&units).Error; err != nil {
+		return nil, err
+	}
+
+	return units, nil
 }
 
 func (r *unitRepository) GetByID(id uint) (*data.Unit, error) {
