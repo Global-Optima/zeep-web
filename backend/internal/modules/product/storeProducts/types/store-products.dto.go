@@ -10,7 +10,7 @@ type StoreProductDTO struct {
 	productTypes.ProductDTO
 	ProductID             uint    `json:"productId"`
 	StorePrice            float64 `json:"storePrice"`
-	StoreProductSizeCount int     `json:"StoreProductSizeCount"`
+	StoreProductSizeCount int     `json:"storeProductSizeCount"`
 	IsAvailable           bool    `json:"isAvailable"`
 }
 

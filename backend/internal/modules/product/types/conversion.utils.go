@@ -28,16 +28,15 @@ func MapBaseProductDTO(product *data.Product) BaseProductDTO {
 }
 
 func MapToProductDetailsDTO(product *data.Product) *ProductDetailsDTO {
-	var sizes []BaseProductSizeDTO
+	var sizes []ProductSizeDTO
 
 	for _, size := range product.ProductSizes {
-		sizes = append(sizes, MapToBaseProductSizeDTO(size))
+		sizes = append(sizes, MapToProductSizeDTO(size))
 	}
 
 	return &ProductDetailsDTO{
-		ID:             product.ID,
-		BaseProductDTO: MapBaseProductDTO(product),
-		Sizes:          sizes,
+		ProductDTO: MapToProductDTO(*product),
+		Sizes:      sizes,
 	}
 }
 
@@ -68,8 +67,16 @@ func MapToBaseProductSizeDTO(productSize data.ProductSize) BaseProductSizeDTO {
 		Name:      productSize.Name,
 		IsDefault: productSize.IsDefault,
 		Unit:      unitTypes.ToUnitResponse(productSize.Unit),
+		ProductID: productSize.ProductID,
 		Size:      productSize.Size,
 		BasePrice: productSize.BasePrice,
+	}
+}
+
+func MapToProductSizeDTO(productSize data.ProductSize) ProductSizeDTO {
+	return ProductSizeDTO{
+		ID:                 productSize.ID,
+		BaseProductSizeDTO: MapToBaseProductSizeDTO(productSize),
 	}
 }
 
@@ -93,11 +100,9 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 	}
 
 	return ProductSizeDetailsDTO{
-		ID:                 productSize.ID,
-		BaseProductSizeDTO: MapToBaseProductSizeDTO(productSize),
-		ProductID:          productSize.ProductID,
-		Additives:          additives,
-		Ingredients:        ingredients,
+		ProductSizeDTO: MapToProductSizeDTO(productSize),
+		Additives:      additives,
+		Ingredients:    ingredients,
 	}
 }
 

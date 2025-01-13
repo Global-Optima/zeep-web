@@ -53,9 +53,9 @@ func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, 
 		return nil, wrappedErr
 	}
 
-	/*if len(categories) == 0 {
-		return []types.StoreAdditiveCategoryDTO{}, nil
-	}*/
+	if len(categories) == 0 {
+		return nil, types.ErrStoreAdditiveCategoriesNotFound
+	}
 
 	var categoryDTOs []types.StoreAdditiveCategoryDTO
 	for _, category := range categories {

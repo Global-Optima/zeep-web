@@ -14,7 +14,7 @@ type ProductService interface {
 	UpdateProduct(productID uint, dto *types.UpdateProductDTO) error
 	DeleteProduct(productID uint) error
 
-	GetProductSizesByProductID(productID uint) ([]types.BaseProductSizeDTO, error)
+	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error)
 	GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error)
 	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
 	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
@@ -112,7 +112,7 @@ func (s *productService) UpdateProductSize(productSizeID uint, dto *types.Update
 	return nil
 }
 
-func (s *productService) GetProductSizesByProductID(productID uint) ([]types.BaseProductSizeDTO, error) {
+func (s *productService) GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error) {
 	productSizes, err := s.repo.GetProductSizesByProductID(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to get product sizes: %w", err)
@@ -120,9 +120,9 @@ func (s *productService) GetProductSizesByProductID(productID uint) ([]types.Bas
 		return nil, wrappedErr
 	}
 
-	dtos := make([]types.BaseProductSizeDTO, len(productSizes))
+	dtos := make([]types.ProductSizeDTO, len(productSizes))
 	for i, productSize := range productSizes {
-		dtos[i] = types.MapToBaseProductSizeDTO(productSize)
+		dtos[i] = types.MapToProductSizeDTO(productSize)
 	}
 
 	return dtos, nil

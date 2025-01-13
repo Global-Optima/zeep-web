@@ -2,7 +2,6 @@ package storeProducts
 
 import (
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -11,7 +10,7 @@ import (
 )
 
 type StoreProductRepository interface {
-	GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error)
+	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
@@ -38,12 +37,12 @@ func (r *storeProductRepository) CloneWithTransaction(tx *gorm.DB) StoreProductR
 	}
 }
 
-func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
+func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error) {
 	var storeProduct data.StoreProduct
 	err := r.db.Model(&data.StoreProduct{}).
 		Where("store_id = ? AND id = ?", storeID, storeProductID).
 		Preload("Product.ProductSizes").
-		Preload("StoreProductSizes.ProductSize").
+		Preload("StoreProductSizes.ProductSize.Unit").
 		Preload("Product.Category").
 		First(&storeProduct).Error
 
@@ -54,16 +53,16 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 		return nil, err
 	}
 
-	dto := types.MapToStoreProductDetailsDTO(&storeProduct)
-	return &dto, nil
+	return &storeProduct, nil
 }
 
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {
 	var storeProducts []data.StoreProduct
-	query := r.db.Model(&data.StoreProduct{}).Where("store_id = ?", storeID).
+	query := r.db.Model(&data.StoreProduct{}).
+		Where("store_id = ?", storeID).
 		Joins("JOIN products ON store_products.product_id = products.id").
-		Preload("StoreProductSizes").
 		Preload("Product.ProductSizes").
+		Preload("StoreProductSizes.ProductSize.Unit").
 		Preload("Product.Category")
 
 	if filter != nil {

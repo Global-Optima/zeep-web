@@ -33,23 +33,26 @@ type ProductSizeIngredientDTO struct {
 }
 
 type ProductDetailsDTO struct {
-	ID uint `json:"id"`
-	BaseProductDTO
-	Sizes []BaseProductSizeDTO `json:"sizes"`
+	ProductDTO
+	Sizes []ProductSizeDTO `json:"sizes"`
 }
 
 type BaseProductSizeDTO struct {
 	Name      string                 `json:"name"`
 	BasePrice float64                `json:"basePrice"`
-	Unit      unitTypes.UnitResponse `json:"Unit"`
+	ProductID uint                   `json:"productId"`
+	Unit      unitTypes.UnitResponse `json:"unit"`
 	Size      int                    `json:"size"`
 	IsDefault bool                   `json:"isDefault"`
 }
 
-type ProductSizeDetailsDTO struct {
+type ProductSizeDTO struct {
 	ID uint `json:"id"`
 	BaseProductSizeDTO
-	ProductID   uint                            `json:"productId"`
+}
+
+type ProductSizeDetailsDTO struct {
+	ProductSizeDTO
 	Additives   []ProductSizeAdditiveDTO        `json:"additives"`
 	Ingredients []ingredientTypes.IngredientDTO `json:"ingredients"`
 }
