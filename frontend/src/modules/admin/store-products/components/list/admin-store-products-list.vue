@@ -44,7 +44,7 @@
 						{{ product.isAvailable ? 'Доступен' : 'Недоступен' }}
 					</div>
 				</TableCell>
-				<TableCell>
+				<TableCell class="flex justify-end">
 					<Button
 						variant="ghost"
 						size="icon"
