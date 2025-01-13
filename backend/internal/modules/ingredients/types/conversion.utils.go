@@ -92,6 +92,15 @@ func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientResp
 		Carbs:            ingredient.Carbs,
 		Proteins:         ingredient.Proteins,
 		ExpirationInDays: ingredient.ExpirationInDays,
+		Unit: Unit{
+			ID:   ingredient.Unit.ID,
+			Name: ingredient.Unit.Name,
+		},
+		Category: IngredientCategory{
+			ID:          ingredient.IngredientCategory.ID,
+			Name:        ingredient.IngredientCategory.Name,
+			Description: ingredient.IngredientCategory.Description,
+		},
 	}
 }
 
@@ -107,10 +116,5 @@ func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []Ingredient
 func ConvertToIngredientDetailsDTO(ingredient *data.Ingredient) IngredientDetailsDTO {
 	return IngredientDetailsDTO{
 		IngredientResponseDTO: *ConvertToIngredientResponseDTO(ingredient),
-		Category: struct {
-			ID          uint   `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-		}{ID: ingredient.IngredientCategory.ID, Name: ingredient.IngredientCategory.Name, Description: ingredient.IngredientCategory.Description},
 	}
 }

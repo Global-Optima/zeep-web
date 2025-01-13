@@ -40,15 +40,20 @@ func (r *ingredientRepository) DeleteIngredient(ingredientID uint) error {
 
 func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingredient, error) {
 	var ingredient data.Ingredient
-	if err := r.db.First(&ingredient, ingredientID).Error; err != nil {
+	err := r.db.Preload("Unit").
+		Preload("IngredientCategory").
+		First(&ingredient, ingredientID).Error
+
+	if err != nil {
 		return nil, err
 	}
+
 	return &ingredient, nil
 }
 
 func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
-	query := r.db.Model(&data.Ingredient{})
+	query := r.db.Model(&data.Ingredient{}).Preload("Unit").Preload("IngredientCategory")
 
 	// Apply filtering
 	if filter.ProductSizeID != nil {
@@ -82,7 +87,7 @@ func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([
 
 func (r *ingredientRepository) GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
-	query := r.db.Model(&data.Ingredient{}).
+	query := r.db.Model(&data.Ingredient{}).Preload("Unit").Preload("IngredientCategory").
 		Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
 		Joins("JOIN product_sizes ps ON psi.product_size_id = ps.id").
 		Where("ps.id IN ?", productSizeIDs).
