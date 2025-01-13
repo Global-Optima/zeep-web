@@ -119,10 +119,5 @@ func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []Ingredient
 func ConvertToIngredientDetailsDTO(ingredient *data.Ingredient) IngredientDetailsDTO {
 	return IngredientDetailsDTO{
 		IngredientResponseDTO: *ConvertToIngredientResponseDTO(ingredient),
-		Category: struct {
-			ID          uint   `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-		}{ID: ingredient.IngredientCategory.ID, Name: ingredient.IngredientCategory.Name, Description: ingredient.IngredientCategory.Description},
 	}
 }
