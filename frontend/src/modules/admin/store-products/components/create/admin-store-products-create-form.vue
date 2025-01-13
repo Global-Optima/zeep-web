@@ -42,6 +42,7 @@ interface ProductSizeLocal {
   id: number
   name: string
   storePrice: number
+  basePrice: number
   selected: boolean
 }
 
@@ -113,6 +114,7 @@ function selectProduct(product: ProductDTO) {
     sizes: product.sizes.map(s => ({
       id: s.id,
       name: s.name,
+      basePrice: s.basePrice,
       storePrice: s.basePrice,
       selected: true,
     }))
@@ -193,6 +195,7 @@ function removeProduct(index: number) {
 								<TableRow>
 									<TableHead>Размер</TableHead>
 									<TableHead>Включён</TableHead>
+									<TableHead>Базовая цена</TableHead>
 									<TableHead>Цена в магазине</TableHead>
 								</TableRow>
 							</TableHeader>
@@ -209,6 +212,7 @@ function removeProduct(index: number) {
 												class="mr-2"
 											/>
 										</TableCell>
+										<TableCell>{{ size.basePrice }}</TableCell>
 										<TableCell>
 											<Input
 												type="number"
@@ -238,7 +242,7 @@ function removeProduct(index: number) {
 			<!-- Optional: If no products are selected yet -->
 			<div
 				v-if="productsList.length === 0"
-				class="mt-4 text-center text-gray-500 italic"
+				class="mt-4 text-center text-gray-500"
 			>
 				Нет добавленных товаров
 			</div>

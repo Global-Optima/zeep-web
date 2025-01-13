@@ -134,10 +134,6 @@ function toggleDefault(index: number) {
   additives.value[index].isDefault = !additives.value[index].isDefault
 }
 
-function sortAdditives() {
-  return [...additives.value].sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
-}
-
 /**
  * 8. Submit & Cancel
  */
@@ -332,7 +328,7 @@ const onCancel = () => {
 						</TableHeader>
 						<TableBody>
 							<TableRow
-								v-for="(additive, index) in sortAdditives()"
+								v-for="(additive, index) in additives"
 								:key="additive.additiveId"
 							>
 								<TableCell>

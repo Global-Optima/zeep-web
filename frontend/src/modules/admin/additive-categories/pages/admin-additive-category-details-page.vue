@@ -26,7 +26,7 @@ const categoryId = route.params.id as string
 const queryClient = useQueryClient()
 
 const { data: categoryDetails } = useQuery({
-  queryKey: computed(() => ['admin-additive-ingredient-details', categoryId]),
+  queryKey: computed(() => ['admin-additive-categories-details', categoryId]),
 	queryFn: () => additivesService.getAdditiveCategoryById(Number(categoryId)),
   enabled: !isNaN(Number(categoryId)),
 })
@@ -37,7 +37,7 @@ const updateMutation = useMutation({
   },
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-additive-categories'] })
-		queryClient.invalidateQueries({ queryKey: ['admin-additive-ingredient-details', categoryId] })
+		queryClient.invalidateQueries({ queryKey: ['admin-additive-categories-details', categoryId] })
 		router.push({ name: getRouteName("ADMIN_ADDITIVE_CATEGORIES") })
 	},
 })
