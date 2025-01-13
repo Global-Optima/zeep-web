@@ -35,7 +35,7 @@ const onBaristaClick = () => {
 							<span class="font-normal text-base">|</span>
 							<span
 								class="font-normal"
-								>{{ currentEmployee?.type === EmployeeType.STORE ? "Store" : "Warehouse" }}</span
+								>{{ currentEmployee?.type === EmployeeType.STORE ? "Кафе" : "Склад" }}</span
 							>
 						</div>
 					</a>

@@ -91,6 +91,7 @@ const navItems: NavItem[] = [
   { name: 'Поставщики', routeKey: 'ADMIN_SUPPLIERS', icon: FileBox, accessRoles: [EmployeeRole.WAREHOUSE, EmployeeRole.DIRECTOR] },
   { name: 'Категории товаров', routeKey: 'ADMIN_PRODUCT_CATEGORIES', icon: LayoutList, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Категории топпингов', routeKey: 'ADMIN_ADDITIVE_CATEGORIES', icon: LayoutList, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
+  { name: 'Категории ингредиентов', routeKey: 'ADMIN_INGREDIENT_CATEGORIES', icon: LayoutList, accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR] },
   { name: 'Запросы на склад', routeKey: "ADMIN_STORE_STOCK_REQUESTS", icon: Truck, accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA] },
   { name: 'Запросы на склад', routeKey: "ADMIN_WAREHOUSE_STOCK_REQUESTS", icon: Truck, accessRoles: [EmployeeRole.WAREHOUSE] },
   { name: 'Запасы', routeKey: "ADMIN_WAREHOUSE_STOCKS", icon: Blocks, accessRoles: [EmployeeRole.WAREHOUSE] },

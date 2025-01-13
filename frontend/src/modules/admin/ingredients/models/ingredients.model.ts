@@ -11,20 +11,23 @@ export interface CreateIngredientDTO {
 	fat: number
 	carbs: number
 	proteins: number
-	expiresAt?: string
+	categoryId: number
+	unitId: number
+	expirationInDays: number
 }
 
 /**
  * DTO for updating an existing ingredient.
  */
 export interface UpdateIngredientDTO {
-	id: number
 	name?: string
 	calories?: number
 	fat?: number
 	carbs?: number
 	proteins?: number
-	expiresAt?: string
+	categoryId?: number
+	unitId?: number
+	expirationInDays?: number
 }
 
 /**
@@ -37,7 +40,15 @@ export interface IngredientsDTO {
 	fat: number
 	carbs: number
 	proteins: number
-	expiresAt?: string
+	expirationInDays: number
+}
+
+export interface IngredientDetailsDTO extends IngredientsDTO {
+	category: {
+		id: string
+		name: string
+		description: string
+	}
 }
 
 /**
@@ -48,4 +59,24 @@ export interface IngredientFilter extends PaginationParams {
 	name?: string
 	minCalories?: number
 	maxCalories?: number
+}
+
+export interface CreateIngredientCategoryDTO {
+	name: string
+	description: string
+}
+
+export interface UpdateIngredientCategoryDTO {
+	name?: string
+	description?: string
+}
+
+export interface IngredientCategoryDTO {
+	id: number
+	name: string
+	description: string
+}
+
+export interface IngredientCategoryFilter extends PaginationParams {
+	search?: string
 }

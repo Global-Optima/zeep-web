@@ -7,7 +7,7 @@
 				<TableHead>Белков (гр)</TableHead>
 				<TableHead>Жиров (гр)</TableHead>
 				<TableHead>Углеводов (гр)</TableHead>
-				<TableHead>Срок годности</TableHead>
+				<TableHead>Срок годности (дни)</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -23,7 +23,7 @@
 				<TableCell>{{ ingredient.fat }}</TableCell>
 				<TableCell>{{ ingredient.carbs }}</TableCell>
 				<TableCell
-					>{{ ingredient.expiresAt ? format(Date.parse(ingredient.expiresAt), "MM.dd.yy") : "Не указано" }}</TableCell
+					>{{ ingredient.expirationInDays ?? "Не указано" }}</TableCell
 				>
 			</TableRow>
 		</TableBody>

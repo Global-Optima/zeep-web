@@ -10,6 +10,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core
 import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import type { CreateIngredientDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
 import { unitsService } from '@/modules/admin/units/services/units.service'
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
@@ -24,6 +25,11 @@ const { data: units } = useQuery({
 	queryFn: () => unitsService.getAllUnits(),
 })
 
+const { data: ingredientCategories } = useQuery({
+  queryKey:  ['admin-ingredient-categories'],
+	queryFn: () => ingredientsService.getIngredientCategories(),
+})
+
 // Validation Schema
 const updateIngredientSchema = toTypedSchema(
   z.object({
@@ -32,18 +38,31 @@ const updateIngredientSchema = toTypedSchema(
     fat: z.number().min(0, 'Введите корректное значение жиров'),
     carbs: z.number().min(0, 'Введите корректное значение углеводов'),
     proteins: z.number().min(0, 'Введите корректное значение белков'),
-    expiresAt: z.string().optional(),
+    expirationInDays: z.number().min(0, 'Введите корректные дни хранения'),
+    unitId: z.coerce.number().min(1, 'Выберите корректный размер'),
+    categoryId: z.coerce.number().min(1, 'Выберите корректную категорию')
   })
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm<CreateIngredientDTO>({
+const { handleSubmit, resetForm } = useForm({
   validationSchema: updateIngredientSchema,
 })
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
-  emits('onSubmit', formValues)
+  const dto: CreateIngredientDTO = {
+    name: formValues.name,
+    calories: formValues.calories,
+    fat: formValues.fat,
+    carbs: formValues.carbs,
+    proteins: formValues.proteins,
+    categoryId: formValues.categoryId,
+    unitId: formValues.unitId,
+    expirationInDays: formValues.expirationInDays
+  }
+
+  emits('onSubmit', dto)
 })
 
 const onCancel = () => {
@@ -190,17 +209,17 @@ const onCancel = () => {
 
 							<!-- Expiration Date -->
 							<FormField
-								name="expiresAt"
+								name="expirationInDays"
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Срок годности</FormLabel>
+									<FormLabel>Срок годности (дни)</FormLabel>
 									<FormControl>
 										<Input
-											id="expiresAt"
-											type="date"
+											id="expirationInDays"
+											type="number"
 											v-bind="componentField"
-											placeholder="Введите срок годности"
+											placeholder="Введите дни хранения"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -221,7 +240,7 @@ const onCancel = () => {
 					</CardHeader>
 					<CardContent>
 						<FormField
-							name="storeDetails.storeId"
+							name="unitId"
 							v-slot="{ componentField }"
 						>
 							<FormItem>
@@ -250,23 +269,42 @@ const onCancel = () => {
 					</CardContent>
 				</Card>
 
-				<!-- <Card>
+				<Card>
+					<!-- Category Card -->
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
 						<CardDescription>Выберите категорию ингредиента</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div>
-							<Button
-								variant="link"
-								class="mt-0 p-0 h-fit text-blue-600 underline"
-								@click="openCategoryDialog = true"
-							>
-								{{ selectedCategory?.name || 'Категория не выбрана' }}
-							</Button>
-						</div>
+						<FormField
+							name="categoryId"
+							v-slot="{ componentField }"
+						>
+							<FormItem>
+								<FormControl>
+									<Select v-bind="componentField">
+										<SelectTrigger class="w-full">
+											<SelectValue
+												class="text-sm sm:text-base"
+												placeholder="Выберите категорию"
+											/>
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem
+												v-for="category in ingredientCategories"
+												:key="category.id"
+												:value="category.id.toString()"
+											>
+												{{ category.name }}
+											</SelectItem>
+										</SelectContent>
+									</Select>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
 					</CardContent>
-				</Card> -->
+				</Card>
 			</div>
 		</div>
 
@@ -275,13 +313,15 @@ const onCancel = () => {
 			<Button
 				variant="outline"
 				@click="onCancel"
-				>Отменить</Button
 			>
+				Отменить
+			</Button>
 			<Button
 				type="submit"
 				@click="onSubmit"
-				>Сохранить</Button
 			>
+				Сохранить
+			</Button>
 		</div>
 	</div>
 </template>

@@ -95,10 +95,9 @@ const filter = ref<IngredientFilter>({
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1
   filter.value.name = newValue.trim()
-  refetch()
 })
 
-const { data: ingredients, refetch } = useQuery({
+const { data: ingredients } = useQuery({
   queryKey: computed(() => [
   'admin-ingredients',
   filter.value

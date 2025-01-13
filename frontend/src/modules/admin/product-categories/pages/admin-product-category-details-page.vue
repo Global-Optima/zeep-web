@@ -26,7 +26,7 @@ const categoryId = route.params.id as string
 const queryClient = useQueryClient()
 
 const { data: categoryDetails } = useQuery({
-  queryKey: computed(() => ['admin-product-ingredient-details', categoryId]),
+  queryKey: computed(() => ['admin-product-categories-details', categoryId]),
 	queryFn: () => productsService.getProductCategoryByID(Number(categoryId)),
   enabled: !isNaN(Number(categoryId)),
 })
@@ -37,7 +37,7 @@ const updateMutation = useMutation({
   },
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-product-categories'] })
-		queryClient.invalidateQueries({ queryKey: ['admin-product-ingredient-details', categoryId] })
+		queryClient.invalidateQueries({ queryKey: ['admin-product-categories-details', categoryId] })
 		router.push({ name: getRouteName("ADMIN_PRODUCT_CATEGORIES") })
 	},
 })

@@ -8,20 +8,29 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import type { IngredientsDTO, UpdateIngredientDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
+import { unitsService } from '@/modules/admin/units/services/units.service'
+import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
 
-// Props
-const props = defineProps<{
-  ingredient: IngredientsDTO
-}>()
+const {ingredient} = defineProps<{ingredient: IngredientsDTO}>()
 
 const emits = defineEmits<{
   onSubmit: [dto: UpdateIngredientDTO]
   onCancel: []
 }>()
 
+const { data: units } = useQuery({
+  queryKey:  ['admin-units'],
+	queryFn: () => unitsService.getAllUnits(),
+})
 
+const { data: ingredientCategories } = useQuery({
+  queryKey:  ['admin-ingredient-categories'],
+	queryFn: () => ingredientsService.getIngredientCategories(),
+})
 
 // Validation Schema
 const updateIngredientSchema = toTypedSchema(
@@ -31,26 +40,42 @@ const updateIngredientSchema = toTypedSchema(
     fat: z.number().min(0, 'Введите корректное значение жиров'),
     carbs: z.number().min(0, 'Введите корректное значение углеводов'),
     proteins: z.number().min(0, 'Введите корректное значение белков'),
-    expiresAt: z.string().optional(),
+    expirationInDays: z.number().min(0, 'Введите корректные дни хранения'),
+    unitId: z.coerce.number().min(1, 'Выберите корректный размер'),
+    categoryId: z.coerce.number().min(1, 'Выберите корректную категорию')
   })
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm<UpdateIngredientDTO>({
+const { handleSubmit, resetForm } = useForm({
   validationSchema: updateIngredientSchema,
   initialValues: {
-    name: props.ingredient.name || '',
-    calories: props.ingredient.calories || 0,
-    fat: props.ingredient.fat || 0,
-    carbs: props.ingredient.carbs || 0,
-    proteins: props.ingredient.proteins || 0,
-    expiresAt: props.ingredient.expiresAt || '',
-  },
+    name: ingredient.name,
+    calories: ingredient.calories,
+    fat: ingredient.fat,
+    carbs: ingredient.carbs,
+    proteins: ingredient.proteins,
+    //TODO: Add these fields
+    // categoryId: ingredient.categoryId,
+    // unitId: ingredient.unitId,
+    expirationInDays: ingredient.expirationInDays,
+  }
 })
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
-  emits('onSubmit', formValues)
+  const dto: UpdateIngredientDTO = {
+    name: formValues.name,
+    calories: formValues.calories,
+    fat: formValues.fat,
+    carbs: formValues.carbs,
+    proteins: formValues.proteins,
+    categoryId: formValues.categoryId,
+    unitId: formValues.unitId,
+    expirationInDays: formValues.expirationInDays,
+  }
+
+  emits('onSubmit', dto)
 })
 
 const onCancel = () => {
@@ -91,141 +116,225 @@ const onCancel = () => {
 		</div>
 
 		<!-- Main Content -->
-		<Card>
-			<CardHeader>
-				<CardTitle>Детали ингредиента</CardTitle>
-				<CardDescription>Заполните информацию об ингредиенте.</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<div class="gap-6 grid">
-					<!-- Name -->
-					<FormField
-						name="name"
-						v-slot="{ componentField }"
-					>
-						<FormItem>
-							<FormLabel>Название</FormLabel>
-							<FormControl>
-								<Input
-									id="name"
-									type="text"
-									v-bind="componentField"
-									placeholder="Введите название ингредиента"
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					</FormField>
+		<div class="gap-4 grid md:grid-cols-[1fr_250px] lg:grid-cols-3">
+			<!-- LEFT side: Product Details (Name, Description) -->
+			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
+				<Card>
+					<CardHeader>
+						<CardTitle>Детали ингредиента</CardTitle>
+						<CardDescription>Заполните информацию об ингредиенте.</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div class="gap-6 grid">
+							<!-- Name -->
+							<FormField
+								name="name"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Название</FormLabel>
+									<FormControl>
+										<Input
+											id="name"
+											type="text"
+											v-bind="componentField"
+											placeholder="Введите название ингредиента"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
 
-					<!-- Calories, Fat, Carbs, Proteins -->
-					<div class="flex gap-4">
-						<FormField
-							name="calories"
-							v-slot="{ componentField }"
-						>
-							<FormItem class="flex-1">
-								<FormLabel>Калории (ккал)</FormLabel>
-								<FormControl>
-									<Input
-										id="calories"
-										type="number"
-										v-bind="componentField"
-										placeholder="Введите калории"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-						<FormField
-							name="fat"
-							v-slot="{ componentField }"
-						>
-							<FormItem class="flex-1">
-								<FormLabel>Жиры (грамм)</FormLabel>
-								<FormControl>
-									<Input
-										id="fat"
-										type="number"
-										v-bind="componentField"
-										placeholder="Введите жиры"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-					</div>
+							<!-- Calories, Fat, Carbs, Proteins -->
+							<div class="flex gap-4">
+								<FormField
+									name="calories"
+									v-slot="{ componentField }"
+								>
+									<FormItem class="flex-1">
+										<FormLabel>Калории (ккал)</FormLabel>
+										<FormControl>
+											<Input
+												id="calories"
+												type="number"
+												v-bind="componentField"
+												placeholder="Введите калории"
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								</FormField>
+								<FormField
+									name="fat"
+									v-slot="{ componentField }"
+								>
+									<FormItem class="flex-1">
+										<FormLabel>Жиры (грамм)</FormLabel>
+										<FormControl>
+											<Input
+												id="fat"
+												type="number"
+												v-bind="componentField"
+												placeholder="Введите жиры"
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								</FormField>
+							</div>
 
-					<div class="flex gap-4">
-						<FormField
-							name="carbs"
-							v-slot="{ componentField }"
-						>
-							<FormItem class="flex-1">
-								<FormLabel>Углеводы (грамм)</FormLabel>
-								<FormControl>
-									<Input
-										id="carbs"
-										type="number"
-										v-bind="componentField"
-										placeholder="Введите углеводы"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-						<FormField
-							name="proteins"
-							v-slot="{ componentField }"
-						>
-							<FormItem class="flex-1">
-								<FormLabel>Белки (грамм)</FormLabel>
-								<FormControl>
-									<Input
-										id="proteins"
-										type="number"
-										v-bind="componentField"
-										placeholder="Введите белки"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-					</div>
+							<div class="flex gap-4">
+								<FormField
+									name="carbs"
+									v-slot="{ componentField }"
+								>
+									<FormItem class="flex-1">
+										<FormLabel>Углеводы (грамм)</FormLabel>
+										<FormControl>
+											<Input
+												id="carbs"
+												type="number"
+												v-bind="componentField"
+												placeholder="Введите углеводы"
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								</FormField>
+								<FormField
+									name="proteins"
+									v-slot="{ componentField }"
+								>
+									<FormItem class="flex-1">
+										<FormLabel>Белки (грамм)</FormLabel>
+										<FormControl>
+											<Input
+												id="proteins"
+												type="number"
+												v-bind="componentField"
+												placeholder="Введите белки"
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								</FormField>
+							</div>
 
-					<!-- Expiration Date -->
-					<FormField
-						name="expiresAt"
-						v-slot="{ componentField }"
-					>
-						<FormItem>
-							<FormLabel>Срок годности</FormLabel>
-							<FormControl>
-								<Input
-									id="expiresAt"
-									type="date"
-									v-bind="componentField"
-									placeholder="Введите срок годности"
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					</FormField>
-				</div>
-			</CardContent>
-		</Card>
+							<!-- Expiration Date -->
+							<FormField
+								name="expirationInDays"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Срок годности (дни)</FormLabel>
+									<FormControl>
+										<Input
+											id="expirationInDays"
+											type="number"
+											v-bind="componentField"
+											placeholder="Введите дни хранения"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+
+			<!-- RIGHT side: Media & Category -->
+			<div class="items-start gap-4 grid auto-rows-max">
+				<Card>
+					<!-- Category Card -->
+					<CardHeader>
+						<CardTitle>Размер</CardTitle>
+						<CardDescription>Выберите размер ингредиента</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<FormField
+							name="unitId"
+							v-slot="{ componentField }"
+						>
+							<FormItem>
+								<FormControl>
+									<Select v-bind="componentField">
+										<SelectTrigger class="w-full">
+											<SelectValue
+												class="text-sm sm:text-base"
+												placeholder="Выберите размер"
+											/>
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem
+												v-for="unit in units"
+												:key="unit.id"
+												:value="unit.id.toString()"
+											>
+												{{ unit.name }}
+											</SelectItem>
+										</SelectContent>
+									</Select>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<!-- Category Card -->
+					<CardHeader>
+						<CardTitle>Категория</CardTitle>
+						<CardDescription>Выберите категорию ингредиента</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<FormField
+							name="categoryId"
+							v-slot="{ componentField }"
+						>
+							<FormItem>
+								<FormControl>
+									<Select v-bind="componentField">
+										<SelectTrigger class="w-full">
+											<SelectValue
+												class="text-sm sm:text-base"
+												placeholder="Выберите категорию"
+											/>
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem
+												v-for="category in ingredientCategories"
+												:key="category.id"
+												:value="category.id.toString()"
+											>
+												{{ category.name }}
+											</SelectItem>
+										</SelectContent>
+									</Select>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+					</CardContent>
+				</Card>
+			</div>
+		</div>
 
 		<!-- Footer -->
 		<div class="flex justify-center items-center gap-2 md:hidden">
 			<Button
 				variant="outline"
 				@click="onCancel"
-				>Отменить</Button
 			>
+				Отменить
+			</Button>
 			<Button
 				type="submit"
 				@click="onSubmit"
-				>Сохранить</Button
 			>
+				Сохранить
+			</Button>
 		</div>
 	</div>
 </template>

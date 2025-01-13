@@ -8,16 +8,15 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import type { ProductCategoryDTO, UpdateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
+import type { CreateIngredientCategoryDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Props and Emits
-const {productCategory} = defineProps<{productCategory: ProductCategoryDTO}>()
-
 const emits = defineEmits<{
-  onSubmit: [dto: UpdateProductCategoryDTO]
+  onSubmit: [dto: CreateIngredientCategoryDTO]
   onCancel: []
 }>()
+
 
 // Validation Schema
 const createCategorySchema = toTypedSchema(
@@ -28,14 +27,18 @@ const createCategorySchema = toTypedSchema(
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm<UpdateProductCategoryDTO>({
+const { handleSubmit, resetForm } = useForm({
   validationSchema: createCategorySchema,
-  initialValues: productCategory
 })
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
-  emits('onSubmit', formValues)
+  const dto: CreateIngredientCategoryDTO = {
+    name: formValues.name,
+    description: formValues.description
+  }
+
+  emits('onSubmit', dto)
 })
 
 const onCancel = () => {
@@ -57,7 +60,7 @@ const onCancel = () => {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				{{ productCategory.name }}
+				Создать категорию ингредиента
 			</h1>
 
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
@@ -131,15 +134,13 @@ const onCancel = () => {
 			<Button
 				variant="outline"
 				@click="onCancel"
+				>Отменить</Button
 			>
-				Отменить
-			</Button>
 			<Button
 				type="submit"
 				@click="onSubmit"
+				>Сохранить</Button
 			>
-				Сохранить
-			</Button>
 		</div>
 	</div>
 </template>
