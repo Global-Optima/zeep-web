@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/sirupsen/logrus"
 	"sort"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -39,6 +40,7 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 
 func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
 	sizes := make([]StoreProductSizeDTO, len(sp.StoreProductSizes))
+	logrus.Info(len(sp.StoreProductSizes))
 	for i, size := range sp.StoreProductSizes {
 		sizes[i] = MapToStoreProductSizeDTO(size)
 	}

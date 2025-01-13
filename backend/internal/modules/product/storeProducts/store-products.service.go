@@ -47,14 +47,16 @@ func NewStoreProductService(
 }
 
 func (s *storeProductService) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
-	dto, err := s.repo.GetStoreProductById(storeID, storeProductID)
+	storeProduct, err := s.repo.GetStoreProductById(storeID, storeProductID)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to get store product by ID", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	return dto, nil
+	dto := types.MapToStoreProductDetailsDTO(storeProduct)
+
+	return &dto, nil
 }
 
 func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error) {
