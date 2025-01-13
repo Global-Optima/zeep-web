@@ -2,7 +2,6 @@ package types
 
 import (
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type CreateStoreAdditiveDTO struct {
@@ -21,7 +20,6 @@ type StoreAdditiveDTO struct {
 }
 
 type StoreAdditiveCategoriesFilter struct {
-	utils.BaseFilter
 	Search           *string `form:"search"`
 	IsMultipleSelect *bool   `form:"isMultipleSelect"`
 }

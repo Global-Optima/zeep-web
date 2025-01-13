@@ -47,7 +47,7 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 		return
 	}
 
-	productDetails, err := h.service.GetProductDetails(uint(productID))
+	productDetails, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return

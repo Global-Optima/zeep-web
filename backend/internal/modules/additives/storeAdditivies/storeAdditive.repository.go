@@ -50,17 +50,9 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSiz
 		Select("additive_category_id").
 		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
 		Where("store_additives.store_id = ?", storeID).
+		Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", productSizeID).
 		Group("additive_category_id").
-		Having("COUNT(additives.id) > 0").
-		Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", productSizeID)
-
-	if filter.Search != nil && *filter.Search != "" {
-		searchTerm := "%" + *filter.Search + "%"
-		subquery = subquery.Where(
-			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
-			searchTerm, searchTerm,
-		)
-	}
+		Having("COUNT(additives.id) > 0")
 
 	query := r.db.Model(&data.AdditiveCategory{}).
 		Preload("Additives", "id IN (SELECT additive_id FROM store_additives WHERE store_id = ?)", storeID).
@@ -68,9 +60,16 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSiz
 		Preload("Additives.ProductSizeAdditives", "product_size_id = ?", productSizeID).
 		Where("id IN (?)", subquery)
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
-	if err != nil {
-		return nil, err
+	if filter.IsMultipleSelect != nil && *filter.IsMultipleSelect {
+		query = query.Where("product_size_additives.is_default = ?", *filter.IsMultipleSelect)
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where(
+			"name ILIKE ? OR description ILIKE ?",
+			searchTerm, searchTerm,
+		)
 	}
 
 	if err := query.Find(&categories).Error; err != nil {

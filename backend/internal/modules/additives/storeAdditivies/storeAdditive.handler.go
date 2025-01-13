@@ -33,8 +33,8 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 	}
 
 	var filter types.StoreAdditiveCategoriesFilter
-	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.AdditiveCategory{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON+err.Error())
 		return
 	}
 
@@ -44,7 +44,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
+	utils.SendSuccessResponse(c, additives)
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
