@@ -12,7 +12,7 @@ type IngredientCategoryService interface {
 	GetByID(id uint) (*types.IngredientCategoryResponse, error)
 	Update(id uint, dto types.UpdateIngredientCategoryDTO) error
 	Delete(id uint) error
-	GetAll() ([]types.IngredientCategoryResponse, error)
+	GetAll(filter *types.IngredientCategoryFilter) ([]types.IngredientCategoryResponse, error)
 }
 
 type ingredientCategoryService struct {
@@ -61,8 +61,8 @@ func (s *ingredientCategoryService) Delete(id uint) error {
 	return s.repo.Delete(id)
 }
 
-func (s *ingredientCategoryService) GetAll() ([]types.IngredientCategoryResponse, error) {
-	categories, err := s.repo.GetAll()
+func (s *ingredientCategoryService) GetAll(filter *types.IngredientCategoryFilter) ([]types.IngredientCategoryResponse, error) {
+	categories, err := s.repo.GetAll(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch ingredient categories: %w", err)
 	}
