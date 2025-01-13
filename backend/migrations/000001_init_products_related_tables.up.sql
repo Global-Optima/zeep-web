@@ -215,20 +215,20 @@ CREATE TABLE
 
 -- Ingredient Table
 CREATE TABLE
-	IF NOT EXISTS ingredients (
-		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) UNIQUE NOT NULL,
-		calories DECIMAL(5, 2) CHECK (calories >= 0),
-		fat DECIMAL(5, 2) CHECK (fat >= 0),
-		carbs DECIMAL(5, 2) CHECK (carbs >= 0),
-		proteins DECIMAL(5, 2) CHECK (proteins >= 0),
-		expires_at TIMESTAMPTZ,
-    	unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
-		category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE SET NULL,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
+    IF NOT EXISTS ingredients (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        calories DECIMAL(5, 2) CHECK (calories >= 0),
+        fat DECIMAL(5, 2) CHECK (fat >= 0),
+        carbs DECIMAL(5, 2) CHECK (carbs >= 0),
+        proteins DECIMAL(5, 2) CHECK (proteins >= 0),
+        expiration_in_days INT CHECK (expiration_in_days >= 0),
+        unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
+        category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMPTZ
+    );
 
 -- ProductIngredient Table
 CREATE TABLE

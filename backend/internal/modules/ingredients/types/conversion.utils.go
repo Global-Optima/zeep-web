@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
@@ -19,21 +18,14 @@ func ConvertToIngredientModel(dto *CreateIngredientDTO) (*data.Ingredient, error
 	}
 
 	ingredient := &data.Ingredient{
-		Name:       dto.Name,
-		CategoryID: dto.CategoryID,
-		UnitID:     dto.UnitID,
-		Calories:   dto.Calories,
-		Fat:        dto.Fat,
-		Carbs:      dto.Carbs,
-		Proteins:   dto.Proteins,
-	}
-
-	if dto.ExpiresAt != nil {
-		parsedTime, err := time.Parse(time.RFC3339, *dto.ExpiresAt)
-		if err != nil {
-			return nil, err
-		}
-		ingredient.ExpiresAt = &parsedTime
+		Name:             dto.Name,
+		CategoryID:       dto.CategoryID,
+		UnitID:           dto.UnitID,
+		Calories:         dto.Calories,
+		Fat:              dto.Fat,
+		Carbs:            dto.Carbs,
+		Proteins:         dto.Proteins,
+		ExpirationInDays: dto.ExpirationInDays,
 	}
 
 	return ingredient, nil
@@ -81,32 +73,25 @@ func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient,
 		ingredient.CategoryID = *dto.CategoryID
 	}
 
-	if dto.ExpiresAt != nil {
-		parsedTime, err := time.Parse(time.RFC3339, *dto.ExpiresAt)
-		if err != nil {
-			return nil, err
+	if dto.ExpirationInDays != nil {
+		if *dto.ExpirationInDays == 0 {
+			return nil, fmt.Errorf("%w: Expiration days can not be 0", ErrValidation)
 		}
-		ingredient.ExpiresAt = &parsedTime
+		ingredient.ExpirationInDays = *dto.ExpirationInDays
 	}
 	return ingredient, nil
 }
 
 // Converts Ingredient model to IngredientResponseDTO
 func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientResponseDTO {
-	var expiresAt *string
-	if ingredient.ExpiresAt != nil {
-		formattedTime := ingredient.ExpiresAt.Format(time.RFC3339)
-		expiresAt = &formattedTime
-	}
-
 	return &IngredientResponseDTO{
-		ID:        ingredient.ID,
-		Name:      ingredient.Name,
-		Calories:  ingredient.Calories,
-		Fat:       ingredient.Fat,
-		Carbs:     ingredient.Carbs,
-		Proteins:  ingredient.Proteins,
-		ExpiresAt: expiresAt,
+		ID:               ingredient.ID,
+		Name:             ingredient.Name,
+		Calories:         ingredient.Calories,
+		Fat:              ingredient.Fat,
+		Carbs:            ingredient.Carbs,
+		Proteins:         ingredient.Proteins,
+		ExpirationInDays: ingredient.ExpirationInDays,
 	}
 }
 

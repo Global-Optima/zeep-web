@@ -1,9 +1,5 @@
 package data
 
-import (
-	"time"
-)
-
 type Size string
 
 const (
@@ -85,7 +81,7 @@ type Ingredient struct {
 	Fat                    float64                 `gorm:"type:decimal(5,2);check:fat >= 0" sort:"fat"`
 	Carbs                  float64                 `gorm:"type:decimal(5,2);check:carbs >= 0" sort:"carbs"`
 	Proteins               float64                 `gorm:"type:decimal(5,2);check:proteins >= 0" sort:"proteins"`
-	ExpiresAt              *time.Time              `gorm:"type:timestamp" sort:"expiresAt"`
+	ExpirationInDays       int                     `gorm:"not null;default:0" sort:"expirationInDays"` // Changed to int
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID"`
 	UnitID                 uint                    `gorm:"not null"` // Link to Unit
 	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
