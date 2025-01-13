@@ -1,5 +1,35 @@
 <template>
-	<div class="flex flex-col gap-6 mx-auto w-full md:w-2/3">
+	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-4xl">
+		<!-- Header -->
+		<div class="flex items-center gap-4">
+			<Button
+				variant="outline"
+				size="icon"
+				@click="onCancel"
+			>
+				<ChevronLeft class="w-5 h-5" />
+				<span class="sr-only">Назад</span>
+			</Button>
+			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
+				{{ initialData.name }}
+			</h1>
+
+			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+				<Button
+					variant="outline"
+					type="button"
+					@click="onCancel"
+					>Отменить</Button
+				>
+				<Button
+					type="submit"
+					@click="onSubmit"
+					>Сохранить</Button
+				>
+			</div>
+		</div>
+
+		<!-- Main Content -->
 		<Card>
 			<CardHeader>
 				<CardTitle>Обновить складские запасы</CardTitle>
@@ -7,9 +37,10 @@
 					Заполните форму ниже, чтобы обновить информацию о складских запасах.
 				</CardDescription>
 			</CardHeader>
+
 			<CardContent>
 				<form
-					@submit="submitForm"
+					@submit="onSubmit"
 					class="gap-6 grid"
 				>
 					<!-- Quantity -->
@@ -47,26 +78,23 @@
 							<FormMessage />
 						</FormItem>
 					</FormField>
-
-					<!-- Action Buttons -->
-					<div class="flex gap-4 mt-6">
-						<Button
-							type="submit"
-							class="flex-1"
-						>
-							Обновить
-						</Button>
-						<Button
-							variant="outline"
-							class="flex-1"
-							@click="handleCancel"
-						>
-							Отмена
-						</Button>
-					</div>
 				</form>
 			</CardContent>
 		</Card>
+
+		<!-- Footer -->
+		<div class="flex justify-center items-center gap-2 md:hidden">
+			<Button
+				variant="outline"
+				@click="onCancel"
+				>Отменить</Button
+			>
+			<Button
+				type="submit"
+				@click="onSubmit"
+				>Сохранить</Button
+			>
+		</div>
 	</div>
 </template>
 
@@ -89,6 +117,7 @@ import {
 import { Input } from '@/core/components/ui/input'
 import type { StoreWarehouseStockDTO, UpdateStoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
 import { toTypedSchema } from '@vee-validate/zod'
+import { ChevronLeft } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
@@ -123,12 +152,12 @@ const { handleSubmit } = useForm<UpdateStoreWarehouseStockDTO>({
 })
 
 // Submit form
-const submitForm = handleSubmit((formValues) => {
+const onSubmit = handleSubmit((formValues) => {
 	emit('onSubmit', formValues)
 })
 
 // Handle cancel
-const handleCancel = () => {
+const onCancel = () => {
 	emit('onCancel')
 }
 </script>
