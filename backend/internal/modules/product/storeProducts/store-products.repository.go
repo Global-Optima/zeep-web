@@ -18,7 +18,6 @@ type StoreProductRepository interface {
 	DeleteStoreProductWithSizes(storeID, storeProductID uint) error
 
 	GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
-	CreateStoreProductSize(storeProductSize *data.StoreProductSize) (uint, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
 	CloneWithTransaction(tx *gorm.DB) StoreProductRepository
@@ -44,6 +43,7 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 		Where("store_id = ? AND id = ?", storeID, storeProductID).
 		Preload("Product.ProductSizes").
 		Preload("StoreProductSizes.ProductSize").
+		Preload("Product.Category").
 		First(&storeProduct).Error
 
 	if err != nil {
@@ -62,7 +62,8 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	query := r.db.Model(&data.StoreProduct{}).Where("store_id = ?", storeID).
 		Joins("JOIN products ON store_products.product_id = products.id").
 		Preload("StoreProductSizes").
-		Preload("Product.ProductSizes")
+		Preload("Product.ProductSizes").
+		Preload("Product.Category")
 
 	if filter != nil {
 		if filter.Search != nil {
@@ -82,7 +83,12 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 		}
 	}
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreProduct{})
+	if filter == nil {
+		return nil, fmt.Errorf("filter is not binded")
+	}
+
+	var err error
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreProduct{})
 	if err != nil {
 		return nil, err
 	}
@@ -187,13 +193,6 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 		return nil, err
 	}
 	return &storeProductSize, nil
-}
-
-func (r *storeProductRepository) CreateStoreProductSize(storeProductSize *data.StoreProductSize) (uint, error) {
-	if err := r.db.Create(storeProductSize).Error; err != nil {
-		return 0, err
-	}
-	return storeProductSize.ID, nil
 }
 
 func (r *storeProductRepository) UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error {

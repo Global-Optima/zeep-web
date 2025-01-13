@@ -2,6 +2,7 @@ package types
 
 import (
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"sort"
 	"strings"
@@ -22,15 +23,7 @@ func MapBaseProductDTO(product *data.Product) BaseProductDTO {
 		Description: product.Description,
 		ImageURL:    product.ImageURL,
 		VideoURL:    product.VideoURL,
-		Category:    MapToProductCategoryDTO(&product.Category),
-	}
-}
-
-func MapToProductCategoryDTO(productCategory *data.ProductCategory) ProductCategoryDTO {
-	return ProductCategoryDTO{
-		ID:          productCategory.ID,
-		Name:        productCategory.Name,
-		Description: productCategory.Description,
+		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
 

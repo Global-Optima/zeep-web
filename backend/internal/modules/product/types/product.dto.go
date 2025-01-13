@@ -2,23 +2,18 @@ package types
 
 import (
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type BaseProductDTO struct {
-	ID          uint               `json:"id"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	ImageURL    string             `json:"imageUrl"`
-	VideoURL    string             `json:"videoUrl"`
-	Category    ProductCategoryDTO `json:"category"`
-}
-
-type ProductCategoryDTO struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          uint                        `json:"id"`
+	Name        string                      `json:"name"`
+	Description string                      `json:"description"`
+	ImageURL    string                      `json:"imageUrl"`
+	VideoURL    string                      `json:"videoUrl"`
+	Category    categoriesTypes.CategoryDTO `json:"category"`
 }
 
 type ProductDTO struct {

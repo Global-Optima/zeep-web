@@ -121,6 +121,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_default_product_size
+    ON product_sizes (product_id)
+    WHERE is_default = true AND deleted_at IS NULL;
+
 -- Additive Table
 CREATE TABLE
 	IF NOT EXISTS additives (
@@ -213,6 +217,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_product_size_additive
+    ON product_size_additives (product_size_id, additive_id)
+    WHERE deleted_at IS NULL;
+
 -- Ingredient Table
 CREATE TABLE
 	IF NOT EXISTS ingredients (
@@ -242,6 +250,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_product_size_ingredient
+    ON product_size_ingredients (product_size_id, ingredient_id)
+    WHERE deleted_at IS NULL;
+
 -- AdditiveIngredients Table 
 CREATE TABLE
 	IF NOT EXISTS additive_ingredients (
@@ -253,6 +265,10 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_additive_ingredient
+    ON additive_ingredients (ingredient_id, additive_id)
+    WHERE deleted_at IS NULL;
 
 -- Warehouses Table
 CREATE TABLE
@@ -276,6 +292,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_store_warehouse
+    ON store_warehouses (store_id, warehouse_id)
+    WHERE deleted_at IS NULL;
+
 -- StoreWarehouseStock Table
 CREATE TABLE
 	IF NOT EXISTS store_warehouse_stocks (
@@ -288,6 +308,10 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_store_warehouse_stock
+    ON store_warehouse_stocks (store_warehouse_id, ingredient_id)
+    WHERE deleted_at IS NULL;
 
 -- Customer Table
 CREATE TABLE
@@ -333,6 +357,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_store_employee
+    ON store_employees (employee_id, store_id)
+    WHERE deleted_at IS NULL;
+
 -- WarehouseEmployee Table
 CREATE TABLE
 	IF NOT EXISTS warehouse_employees (
@@ -343,6 +371,10 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_warehouse_employee
+    ON warehouse_employees (employee_id, warehouse_id)
+    WHERE deleted_at IS NULL;
 
 -- EmployeeAudit Table
 CREATE TABLE
@@ -368,6 +400,10 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_employee_workday
+    ON employee_workdays (employee_id, day)
+    WHERE deleted_at IS NULL;
 
 -- Referral Table
 CREATE TABLE
