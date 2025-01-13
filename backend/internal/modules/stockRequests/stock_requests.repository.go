@@ -188,7 +188,10 @@ func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, stoc
 		return fmt.Errorf("failed to fetch stock material details for ID %d: %w", stockMaterialID, err)
 	}
 
-	quantityInUnits := utils.ConvertPackagesToUnits(stockMaterial, quantityInPackages)
+	quantityInUnits, err := utils.ConvertPackagesToUnits(stockMaterial, quantityInPackages)
+	if err != nil {
+		return err
+	}
 
 	return r.db.Model(&data.StoreWarehouseStock{}).
 		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouseID, stockMaterial.IngredientID).

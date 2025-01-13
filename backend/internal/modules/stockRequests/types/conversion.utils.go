@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
@@ -10,8 +12,9 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 	for i, ingredient := range request.Ingredients {
 		var packageMeasures utils.PackageMeasure
 
-		if ingredient.StockMaterial.Package != nil {
-			packageMeasures = utils.ReturnPackageMeasure(ingredient, ingredient.Quantity)
+		packageMeasures, err := utils.ReturnPackageMeasure(ingredient, ingredient.Quantity)
+		if err != nil {
+			panic(fmt.Sprintf("Critical error: %v", err))
 		}
 
 		items[i] = StockRequestStockMaterialResponse{

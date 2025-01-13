@@ -74,10 +74,8 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
-	idParam := c.Param("requestId")
-	stockRequestID, err := strconv.Atoi(idParam)
-	if err != nil || stockRequestID <= 0 {
-		utils.SendBadRequestError(c, "Invalid stock request ID")
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
 	}
 
@@ -95,9 +93,8 @@ func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
-	requestID, err := strconv.Atoi(c.Param("requestId"))
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid request ID")
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
 	}
 
@@ -112,7 +109,7 @@ func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AcceptStockRequestWithChange(uint(requestID), dto); err != nil {
+	if err := h.service.AcceptStockRequestWithChange(uint(stockRequestID), dto); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
@@ -121,9 +118,8 @@ func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
-	requestID, err := strconv.Atoi(c.Param("requestId"))
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid request ID")
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
 	}
 
@@ -133,7 +129,7 @@ func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RejectStockRequestByStore(uint(requestID), dto); err != nil {
+	if err := h.service.RejectStockRequestByStore(uint(stockRequestID), dto); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
@@ -142,9 +138,8 @@ func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
-	requestID, err := strconv.Atoi(c.Param("requestId"))
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid request ID")
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
 	}
 
@@ -154,7 +149,7 @@ func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RejectStockRequestByWarehouse(uint(requestID), dto); err != nil {
+	if err := h.service.RejectStockRequestByWarehouse(uint(stockRequestID), dto); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
@@ -163,13 +158,12 @@ func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
-	requestID, err := strconv.Atoi(c.Param("requestId"))
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid request ID")
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
 	}
 
-	if err := h.service.SetInDeliveryStatus(uint(requestID)); err != nil {
+	if err := h.service.SetInDeliveryStatus(uint(stockRequestID)); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
@@ -178,13 +172,12 @@ func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
-	requestID, err := strconv.Atoi(c.Param("requestId"))
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid request ID")
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
 	}
 
-	if err := h.service.SetCompletedStatus(uint(requestID)); err != nil {
+	if err := h.service.SetCompletedStatus(uint(stockRequestID)); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
@@ -193,9 +186,8 @@ func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
-	requestID, err := strconv.ParseUint(c.Param("requestId"), 10, 32)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid request ID")
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
 	}
 
@@ -210,7 +202,7 @@ func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateStockRequestIngredients(uint(requestID), req); err != nil {
+	if err := h.service.UpdateStockRequestIngredients(uint(stockRequestID), req); err != nil {
 		utils.SendInternalServerError(c, "Failed to update stock request ingredients: "+err.Error())
 		return
 	}
@@ -280,13 +272,12 @@ func (h *StockRequestHandler) GetStockMaterialsByIngredient(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
-	requestID, err := strconv.Atoi(c.Param("requestId"))
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid request ID")
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
 	}
 
-	err = h.service.DeleteStockRequest(uint(requestID))
+	err = h.service.DeleteStockRequest(uint(stockRequestID))
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
