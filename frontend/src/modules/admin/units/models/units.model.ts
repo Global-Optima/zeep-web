@@ -10,7 +10,7 @@ export interface UpdateUnitDTO {
 	conversionFactor?: number
 }
 
-export interface UnitResponse {
+export interface UnitDTO {
 	id: number
 	name: string
 	conversionFactor: number

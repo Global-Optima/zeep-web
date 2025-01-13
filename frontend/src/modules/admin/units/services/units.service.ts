@@ -1,5 +1,5 @@
 import { apiClient } from '@/core/config/axios-instance.config'
-import type { CreateUnitDTO, UnitResponse, UpdateUnitDTO } from '../models/units.model'
+import type { CreateUnitDTO, UnitDTO, UpdateUnitDTO } from '../models/units.model'
 
 class UnitsService {
 	/**
@@ -7,7 +7,7 @@ class UnitsService {
 	 */
 	async getAllUnits() {
 		try {
-			const response = await apiClient.get<UnitResponse[]>(`/units`)
+			const response = await apiClient.get<UnitDTO[]>(`/units`)
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch units: ', error)
@@ -20,7 +20,7 @@ class UnitsService {
 	 */
 	async getUnitByID(id: number) {
 		try {
-			const response = await apiClient.get<UnitResponse>(`/units/${id}`)
+			const response = await apiClient.get<UnitDTO>(`/units/${id}`)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch unit details for ID ${id}: `, error)

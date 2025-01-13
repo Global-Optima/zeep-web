@@ -9,11 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
-import type { IngredientsDTO, UpdateIngredientDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
+import AdminSelectIngredientCategory from '@/modules/admin/ingredient-categories/components/admin-select-ingredient-category.vue'
+import type { IngredientCategoryDTO, IngredientsDTO, UpdateIngredientDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import { unitsService } from '@/modules/admin/units/services/units.service'
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
+import { ref } from 'vue'
 
 const {ingredient} = defineProps<{ingredient: IngredientsDTO}>()
 
@@ -25,11 +26,6 @@ const emits = defineEmits<{
 const { data: units } = useQuery({
   queryKey:  ['admin-units'],
 	queryFn: () => unitsService.getAllUnits(),
-})
-
-const { data: ingredientCategories } = useQuery({
-  queryKey:  ['admin-ingredient-categories'],
-	queryFn: () => ingredientsService.getIngredientCategories(),
 })
 
 // Validation Schema
@@ -47,19 +43,9 @@ const updateIngredientSchema = toTypedSchema(
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm({
+const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: updateIngredientSchema,
-  initialValues: {
-    name: ingredient.name,
-    calories: ingredient.calories,
-    fat: ingredient.fat,
-    carbs: ingredient.carbs,
-    proteins: ingredient.proteins,
-    //TODO: Add these fields
-    // categoryId: ingredient.categoryId,
-    // unitId: ingredient.unitId,
-    expirationInDays: ingredient.expirationInDays,
-  }
+  initialValues:ingredient
 })
 
 // Handlers
@@ -72,7 +58,7 @@ const onSubmit = handleSubmit((formValues) => {
     proteins: formValues.proteins,
     categoryId: formValues.categoryId,
     unitId: formValues.unitId,
-    expirationInDays: formValues.expirationInDays,
+    expirationInDays: formValues.expirationInDays
   }
 
   emits('onSubmit', dto)
@@ -81,6 +67,15 @@ const onSubmit = handleSubmit((formValues) => {
 const onCancel = () => {
   resetForm()
   emits('onCancel')
+}
+
+const openCategoryDialog = ref(false)
+const selectedCategory = ref<IngredientCategoryDTO | null>(ingredient.category)
+
+function selectCategory(category: IngredientCategoryDTO) {
+  selectedCategory.value = category
+  openCategoryDialog.value = false
+  setFieldValue('categoryId', category.id)
 }
 </script>
 
@@ -289,30 +284,15 @@ const onCancel = () => {
 						<CardDescription>Выберите категорию ингредиента</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<FormField
-							name="categoryId"
-							v-slot="{ componentField }"
-						>
+						<FormField name="categoryId">
 							<FormItem>
-								<FormControl>
-									<Select v-bind="componentField">
-										<SelectTrigger class="w-full">
-											<SelectValue
-												class="text-sm sm:text-base"
-												placeholder="Выберите категорию"
-											/>
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem
-												v-for="category in ingredientCategories"
-												:key="category.id"
-												:value="category.id.toString()"
-											>
-												{{ category.name }}
-											</SelectItem>
-										</SelectContent>
-									</Select>
-								</FormControl>
+								<Button
+									variant="link"
+									class="mt-0 p-0 h-fit text-blue-600 underline"
+									@click="openCategoryDialog = true"
+								>
+									{{ selectedCategory?.name || 'Категория не выбрана' }}
+								</Button>
 								<FormMessage />
 							</FormItem>
 						</FormField>
@@ -320,6 +300,12 @@ const onCancel = () => {
 				</Card>
 			</div>
 		</div>
+
+		<AdminSelectIngredientCategory
+			:open="openCategoryDialog"
+			@close="openCategoryDialog = false"
+			@select="selectCategory"
+		/>
 
 		<!-- Footer -->
 		<div class="flex justify-center items-center gap-2 md:hidden">

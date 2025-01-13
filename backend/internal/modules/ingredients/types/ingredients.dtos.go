@@ -1,6 +1,9 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type CreateIngredientDTO struct {
 	Name             string  `json:"name" binding:"required"`
@@ -24,31 +27,21 @@ type UpdateIngredientDTO struct {
 	ExpirationInDays *int     `json:"expirationInDays,omitempty"` // ISO-8601 formatted string
 }
 
-type IngredientResponseDTO struct {
-	ID               uint               `json:"id"`
-	Name             string             `json:"name"`
-	Calories         float64            `json:"calories"`
-	Fat              float64            `json:"fat"`
-	Carbs            float64            `json:"carbs"`
-	Proteins         float64            `json:"proteins"`
-	ExpirationInDays int                `json:"expirationInDays"`
-	Unit             Unit               `json:"unit"`
-	Category         IngredientCategory `json:"category"`
-}
-
-type IngredientDetailsDTO struct {
-	IngredientResponseDTO
+type IngredientDTO struct {
+	ID               uint                             `json:"id"`
+	Name             string                           `json:"name"`
+	Calories         float64                          `json:"calories"`
+	Fat              float64                          `json:"fat"`
+	Carbs            float64                          `json:"carbs"`
+	Proteins         float64                          `json:"proteins"`
+	ExpirationInDays int                              `json:"expirationInDays"`
+	Unit             Unit                             `json:"unit"`
+	Category         types.IngredientCategoryResponse `json:"category"`
 }
 
 type Unit struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
-}
-
-type IngredientCategory struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
 }
 
 type IngredientFilter struct {

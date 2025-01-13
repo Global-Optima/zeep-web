@@ -48,9 +48,9 @@ type ProductSizeDTO struct {
 
 type ProductSizeDetailsDTO struct {
 	ProductSizeDTO
-	ProductID   uint                                   `json:"productId"`
-	Additives   []ProductSizeAdditiveDTO               `json:"additives"`
-	Ingredients []ingredientTypes.IngredientDetailsDTO `json:"ingredients"`
+	ProductID   uint                            `json:"productId"`
+	Additives   []ProductSizeAdditiveDTO        `json:"additives"`
+	Ingredients []ingredientTypes.IngredientDTO `json:"ingredients"`
 }
 
 type ProductSizeAdditiveDTO struct {

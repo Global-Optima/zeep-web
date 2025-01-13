@@ -10,8 +10,8 @@ type IngredientService interface {
 	CreateIngredient(dto *types.CreateIngredientDTO) error
 	UpdateIngredient(ingredientID uint, dto *types.UpdateIngredientDTO) error
 	DeleteIngredient(ingredientID uint) error
-	GetIngredientByID(ingredientID uint) (*types.IngredientResponseDTO, error)
-	GetIngredients(filter *types.IngredientFilter) ([]types.IngredientResponseDTO, error)
+	GetIngredientByID(ingredientID uint) (*types.IngredientDTO, error)
+	GetIngredients(filter *types.IngredientFilter) ([]types.IngredientDTO, error)
 }
 
 type ingredientService struct {
@@ -61,7 +61,7 @@ func (s *ingredientService) DeleteIngredient(ingredientID uint) error {
 	return nil
 }
 
-func (s *ingredientService) GetIngredientByID(ingredientID uint) (*types.IngredientResponseDTO, error) {
+func (s *ingredientService) GetIngredientByID(ingredientID uint) (*types.IngredientDTO, error) {
 	ingredient, err := s.repo.GetIngredientByID(ingredientID)
 	if err != nil {
 		s.logger.Error("Failed to fetch ingredient by ID:", err)
@@ -71,7 +71,7 @@ func (s *ingredientService) GetIngredientByID(ingredientID uint) (*types.Ingredi
 	return types.ConvertToIngredientResponseDTO(ingredient), nil
 }
 
-func (s *ingredientService) GetIngredients(filter *types.IngredientFilter) ([]types.IngredientResponseDTO, error) {
+func (s *ingredientService) GetIngredients(filter *types.IngredientFilter) ([]types.IngredientDTO, error) {
 	ingredients, err := s.repo.GetIngredients(filter)
 	if err != nil {
 		s.logger.Error("Failed to fetch ingredients:", err)

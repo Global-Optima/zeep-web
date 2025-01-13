@@ -41,14 +41,8 @@ export interface IngredientsDTO {
 	carbs: number
 	proteins: number
 	expirationInDays: number
-}
-
-export interface IngredientDetailsDTO extends IngredientsDTO {
-	category: {
-		id: string
-		name: string
-		description: string
-	}
+	unit: { id: number; name: string }
+	category: IngredientCategoryDTO
 }
 
 /**

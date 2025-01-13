@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
 )
 
 // Converts CreateIngredientDTO to Ingredient model
@@ -83,8 +84,8 @@ func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient,
 }
 
 // Converts Ingredient model to IngredientResponseDTO
-func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientResponseDTO {
-	return &IngredientResponseDTO{
+func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientDTO {
+	return &IngredientDTO{
 		ID:               ingredient.ID,
 		Name:             ingredient.Name,
 		Calories:         ingredient.Calories,
@@ -96,7 +97,7 @@ func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientResp
 			ID:   ingredient.Unit.ID,
 			Name: ingredient.Unit.Name,
 		},
-		Category: IngredientCategory{
+		Category: types.IngredientCategoryResponse{
 			ID:          ingredient.IngredientCategory.ID,
 			Name:        ingredient.IngredientCategory.Name,
 			Description: ingredient.IngredientCategory.Description,
@@ -105,16 +106,10 @@ func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientResp
 }
 
 // Converts list of Ingredient models to list of IngredientResponseDTOs
-func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []IngredientResponseDTO {
-	dtos := make([]IngredientResponseDTO, len(ingredients))
+func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []IngredientDTO {
+	dtos := make([]IngredientDTO, len(ingredients))
 	for i, ingredient := range ingredients {
 		dtos[i] = *ConvertToIngredientResponseDTO(&ingredient)
 	}
 	return dtos
-}
-
-func ConvertToIngredientDetailsDTO(ingredient *data.Ingredient) IngredientDetailsDTO {
-	return IngredientDetailsDTO{
-		IngredientResponseDTO: *ConvertToIngredientResponseDTO(ingredient),
-	}
 }
