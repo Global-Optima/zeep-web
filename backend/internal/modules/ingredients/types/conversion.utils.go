@@ -3,9 +3,10 @@ package types
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	ingredientCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
+	unitType "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 )
 
 // Converts CreateIngredientDTO to Ingredient model
@@ -19,21 +20,14 @@ func ConvertToIngredientModel(dto *CreateIngredientDTO) (*data.Ingredient, error
 	}
 
 	ingredient := &data.Ingredient{
-		Name:       dto.Name,
-		CategoryID: dto.CategoryID,
-		UnitID:     dto.UnitID,
-		Calories:   dto.Calories,
-		Fat:        dto.Fat,
-		Carbs:      dto.Carbs,
-		Proteins:   dto.Proteins,
-	}
-
-	if dto.ExpiresAt != nil {
-		parsedTime, err := time.Parse(time.RFC3339, *dto.ExpiresAt)
-		if err != nil {
-			return nil, err
-		}
-		ingredient.ExpiresAt = &parsedTime
+		Name:             dto.Name,
+		CategoryID:       dto.CategoryID,
+		UnitID:           dto.UnitID,
+		Calories:         dto.Calories,
+		Fat:              dto.Fat,
+		Carbs:            dto.Carbs,
+		Proteins:         dto.Proteins,
+		ExpirationInDays: dto.ExpirationInDays,
 	}
 
 	return ingredient, nil
@@ -81,51 +75,43 @@ func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient,
 		ingredient.CategoryID = *dto.CategoryID
 	}
 
-	if dto.ExpiresAt != nil {
-		parsedTime, err := time.Parse(time.RFC3339, *dto.ExpiresAt)
-		if err != nil {
-			return nil, err
+	if dto.ExpirationInDays != nil {
+		if *dto.ExpirationInDays == 0 {
+			return nil, fmt.Errorf("%w: Expiration days can not be 0", ErrValidation)
 		}
-		ingredient.ExpiresAt = &parsedTime
+		ingredient.ExpirationInDays = *dto.ExpirationInDays
 	}
 	return ingredient, nil
 }
 
 // Converts Ingredient model to IngredientResponseDTO
-func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientResponseDTO {
-	var expiresAt *string
-	if ingredient.ExpiresAt != nil {
-		formattedTime := ingredient.ExpiresAt.Format(time.RFC3339)
-		expiresAt = &formattedTime
-	}
-
-	return &IngredientResponseDTO{
-		ID:        ingredient.ID,
-		Name:      ingredient.Name,
-		Calories:  ingredient.Calories,
-		Fat:       ingredient.Fat,
-		Carbs:     ingredient.Carbs,
-		Proteins:  ingredient.Proteins,
-		ExpiresAt: expiresAt,
+func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientDTO {
+	return &IngredientDTO{
+		ID:               ingredient.ID,
+		Name:             ingredient.Name,
+		Calories:         ingredient.Calories,
+		Fat:              ingredient.Fat,
+		Carbs:            ingredient.Carbs,
+		Proteins:         ingredient.Proteins,
+		ExpirationInDays: ingredient.ExpirationInDays,
+		Unit: unitType.UnitDTO{
+			ID:               ingredient.Unit.ID,
+			Name:             ingredient.Unit.Name,
+			ConversionFactor: ingredient.Unit.ConversionFactor,
+		},
+		Category: ingredientCategoryTypes.IngredientCategoryResponse{
+			ID:          ingredient.IngredientCategory.ID,
+			Name:        ingredient.IngredientCategory.Name,
+			Description: ingredient.IngredientCategory.Description,
+		},
 	}
 }
 
 // Converts list of Ingredient models to list of IngredientResponseDTOs
-func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []IngredientResponseDTO {
-	dtos := make([]IngredientResponseDTO, len(ingredients))
+func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []IngredientDTO {
+	dtos := make([]IngredientDTO, len(ingredients))
 	for i, ingredient := range ingredients {
 		dtos[i] = *ConvertToIngredientResponseDTO(&ingredient)
 	}
 	return dtos
-}
-
-func ConvertToIngredientDetailsDTO(ingredient *data.Ingredient) IngredientDetailsDTO {
-	return IngredientDetailsDTO{
-		IngredientResponseDTO: *ConvertToIngredientResponseDTO(ingredient),
-		Category: struct {
-			ID          uint   `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-		}{ID: ingredient.IngredientCategory.ID, Name: ingredient.IngredientCategory.Name, Description: ingredient.IngredientCategory.Description},
-	}
 }

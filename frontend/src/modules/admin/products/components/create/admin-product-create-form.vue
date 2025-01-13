@@ -1,29 +1,21 @@
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
-// Shadcn / UI wrappers
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import { Textarea } from '@/core/components/ui/textarea'
 
 // Icons
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Services / Models
-import { productCategoriesService } from '@/modules/admin/product-categories/services/product-categories.service'
-import type { CreateProductDTO } from '@/modules/kiosk/products/models/product.model'
-
-// 1. Fetch categories via Vue Query
-const { data: categories, isLoading: categoriesLoading, isError: categoriesError } = useQuery({
-  queryKey: ['categories'],
-  queryFn: () => productCategoriesService.getProductCategories(),
-})
+import AdminSelectProductCategory from '@/modules/admin/product-categories/components/admin-select-product-category.vue'
+import type { CreateProductDTO, ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
+import { ref } from 'vue'
 
 // 2. Define emits
 const emits = defineEmits<{
@@ -48,7 +40,7 @@ const createProductSchema = toTypedSchema(
 )
 
 // 4. Setup form with vee-validate
-const { handleSubmit, isSubmitting, isFieldDirty } = useForm<CreateProductDTO>({
+const { handleSubmit, isSubmitting, isFieldDirty, setFieldValue } = useForm<CreateProductDTO>({
   validationSchema: createProductSchema,
 })
 
@@ -60,13 +52,18 @@ const onSubmit = handleSubmit((values) => {
 function onCancel() {
   emits('onCancel')
 }
+
+const openCategoryDialog = ref(false)
+const selectedCategory = ref<ProductCategoryDTO | null>(null)
+
+function selectCategory(category: ProductCategoryDTO) {
+  selectedCategory.value = category
+  openCategoryDialog.value = false
+  setFieldValue('categoryId', category.id)
+}
 </script>
 
 <template>
-	<!-- 
-    The entire layout is wrapped in a <form> so that 
-    the "Сохранить" buttons can submit the validated data.
-  -->
 	<form
 		@submit.prevent="onSubmit"
 		class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-6xl"
@@ -107,7 +104,6 @@ function onCancel() {
 			</div>
 		</div>
 
-		<!-- ========== Main Content ========== -->
 		<div class="gap-4 grid md:grid-cols-[1fr_250px] lg:grid-cols-3">
 			<!-- LEFT side: Product Details (Name, Description) -->
 			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
@@ -200,45 +196,18 @@ function onCancel() {
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription> Выберите подходящую категорию для товара. </CardDescription>
+						<CardDescription>Выберите категорию товара</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<FormField
-							v-slot="{ componentField }"
-							name="categoryId"
-							:validate-on-blur="!isFieldDirty"
-						>
-							<FormItem>
-								<FormLabel>Категория</FormLabel>
-								<FormControl>
-									<Select v-bind="componentField">
-										<SelectTrigger class="w-full">
-											<template v-if="categoriesLoading">
-												<SelectValue placeholder="Загрузка категорий..." />
-											</template>
-											<template v-else-if="categoriesError">
-												<SelectValue placeholder="Ошибка при загрузке категорий" />
-											</template>
-											<template v-else>
-												<SelectValue placeholder="Выберите категорию" />
-											</template>
-										</SelectTrigger>
-										<SelectContent>
-											<template v-if="!categoriesLoading && !categoriesError">
-												<SelectItem
-													v-for="cat in categories?.data"
-													:key="cat.id"
-													:value="cat.id.toString()"
-												>
-													{{ cat.name }}
-												</SelectItem>
-											</template>
-										</SelectContent>
-									</Select>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
+						<div>
+							<Button
+								variant="link"
+								class="mt-0 p-0 h-fit text-blue-600 underline"
+								@click="openCategoryDialog = true"
+							>
+								{{ selectedCategory?.name || 'Категория не выбрана' }}
+							</Button>
+						</div>
 					</CardContent>
 				</Card>
 			</div>
@@ -261,4 +230,10 @@ function onCancel() {
 			</Button>
 		</div>
 	</form>
+
+	<AdminSelectProductCategory
+		:open="openCategoryDialog"
+		@close="openCategoryDialog = false"
+		@select="selectCategory"
+	/>
 </template>

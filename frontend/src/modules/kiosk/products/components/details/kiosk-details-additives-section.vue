@@ -24,21 +24,21 @@
 
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
-import type { AdditiveCategories, AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDTO, AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
 import KioskDetailsAdditivesCard from '@/modules/kiosk/products/components/details/kiosk-details-additives-card.vue'
 
 defineProps<{
-  categories: AdditiveCategories[]
+  categories: AdditiveCategoryDTO[]
   isAdditiveDefault: (additiveId: number) => boolean
   isAdditiveSelected: (categoryId: number, additiveId: number) => boolean
   containerClass?: string
 }>()
 
 const emits = defineEmits<{
-  (e: 'toggleAdditive', categoryId: number, additive: AdditiveCategoryItem): void
+  (e: 'toggleAdditive', categoryId: number, additive: AdditiveCategoryItemDTO): void
 }>()
 
-const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItem) => {
+const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItemDTO) => {
   emits('toggleAdditive', categoryId, additive)
 }
 </script>

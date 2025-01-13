@@ -1,9 +1,10 @@
 package types
 
 import (
+	"sort"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-	"sort"
 )
 
 type StoreProductModels struct {

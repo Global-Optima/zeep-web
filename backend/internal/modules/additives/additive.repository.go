@@ -3,6 +3,7 @@ package additives
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -131,6 +132,7 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 		}
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
+
 	return &additive, nil
 }
 

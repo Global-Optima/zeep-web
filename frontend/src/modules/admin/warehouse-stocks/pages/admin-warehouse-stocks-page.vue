@@ -34,7 +34,6 @@ import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWi
 import { Card, CardContent } from '@/core/components/ui/card'
 import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import type { StoreStocksFilter } from '@/modules/admin/store-stocks/models/store-stock.model'
 import AdminWarehouseStocksList from '@/modules/admin/warehouse-stocks/components/list/admin-warehouse-stocks-list.vue'
 import AdminWarehouseStocksToolbar from '@/modules/admin/warehouse-stocks/components/list/admin-warehouse-stocks-toolbar.vue'
 import type { GetWarehouseStockFilter } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
@@ -50,7 +49,7 @@ const { data: warehouseStocksResponse } = useQuery({
   queryFn: () => warehouseStocksService.getWarehouseStocks(filter.value),
 })
 
-function updateFilter(updatedFilter: StoreStocksFilter) {
+function updateFilter(updatedFilter: GetWarehouseStockFilter) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 

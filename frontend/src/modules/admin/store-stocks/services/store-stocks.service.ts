@@ -2,57 +2,96 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
-	CreateMultipleStoreStock,
-	StoreStocks,
-	StoreStocksFilter,
-	UpdateStoreStock,
-} from '@/modules/admin/store-stocks/models/store-stock.model'
+	AddMultipleStoreWarehouseStockDTO,
+	AddStoreWarehouseStockDTO,
+	GetStoreWarehouseStockFilterQuery,
+	StoreWarehouseStockDTO,
+	UpdateStoreWarehouseStockDTO,
+} from '../models/store-stock.model'
 
-class StoreStocksService {
-	async getStoreStocks(storeId: number, filter?: StoreStocksFilter) {
+class StoreStockService {
+	/**
+	 * Get a paginated list of store stocks with optional filters.
+	 */
+	async getStoreWarehouseStockList(filter?: GetStoreWarehouseStockFilterQuery) {
 		try {
-			const response = await apiClient.get<PaginatedResponse<StoreStocks[]>>(
-				`/store-stock/${storeId}`,
+			const response = await apiClient.get<PaginatedResponse<StoreWarehouseStockDTO[]>>(
+				'/store-warehouse-stock',
 				{
 					params: buildRequestFilter(filter),
 				},
 			)
 			return response.data
 		} catch (error) {
-			console.error('Failed to fetch store stocks:', error)
+			console.error('Failed to fetch store warehouse stock list: ', error)
 			throw error
 		}
 	}
 
-	async getStoreStock(storeId: number, id: number) {
+	/**
+	 * Get a single store warehouse stock by ID.
+	 */
+	async getStoreWarehouseStockById(id: number) {
 		try {
-			const response = await apiClient.get<StoreStocks>(`/store-stock/${storeId}/${id}`)
+			const response = await apiClient.get<StoreWarehouseStockDTO>(`/store-warehouse-stock/${id}`)
 			return response.data
 		} catch (error) {
-			console.error(`Failed to fetch store stock by id ${id}:`, error)
+			console.error(`Failed to fetch store warehouse stock with ID ${id}: `, error)
 			throw error
 		}
 	}
 
-	async updateStoreStock(storeId: number, id: number, dto: UpdateStoreStock) {
+	/**
+	 * Add a new store warehouse stock item.
+	 */
+	async addStoreWarehouseStock(data: AddStoreWarehouseStockDTO) {
 		try {
-			const response = await apiClient.put<void>(`/store-stock/${storeId}/${id}`, dto)
+			const response = await apiClient.post<void>('/store-warehouse-stock', data)
 			return response.data
 		} catch (error) {
-			console.error(`Failed to update store stock by id ${id}:`, error)
+			console.error('Failed to add store warehouse stock: ', error)
 			throw error
 		}
 	}
 
-	async createMultipleStoreStock(storeId: number, dto: CreateMultipleStoreStock) {
+	/**
+	 * Add multiple store warehouse stock items.
+	 */
+	async addMultipleStoreWarehouseStock(data: AddMultipleStoreWarehouseStockDTO) {
 		try {
-			const response = await apiClient.post<void>(`/store-stock/${storeId}/multiple`, dto)
+			const response = await apiClient.post<void>('/store-warehouse-stock/multiple', data)
 			return response.data
 		} catch (error) {
-			console.error(`Failed to create store stock:`, error)
+			console.error('Failed to add multiple store warehouse stock items: ', error)
+			throw error
+		}
+	}
+
+	/**
+	 * Update a store warehouse stock item by ID.
+	 */
+	async updateStoreWarehouseStockById(id: number, data: UpdateStoreWarehouseStockDTO) {
+		try {
+			const response = await apiClient.put<void>(`/store-warehouse-stock/${id}`, data)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to update store warehouse stock with ID ${id}: `, error)
+			throw error
+		}
+	}
+
+	/**
+	 * Delete a store warehouse stock item by ID.
+	 */
+	async deleteStoreWarehouseStockById(id: number) {
+		try {
+			const response = await apiClient.delete<void>(`/store-warehouse-stock/${id}`)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to delete store warehouse stock with ID ${id}: `, error)
 			throw error
 		}
 	}
 }
 
-export const storeStocksService = new StoreStocksService()
+export const storeStocksService = new StoreStockService()

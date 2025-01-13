@@ -230,7 +230,7 @@ CREATE TABLE
 		fat DECIMAL(5, 2) CHECK (fat >= 0),
 		carbs DECIMAL(5, 2) CHECK (carbs >= 0),
 		proteins DECIMAL(5, 2) CHECK (proteins >= 0),
-		expires_at TIMESTAMPTZ,
+        expiration_in_days INT CHECK (expiration_in_days >= 0),
         unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
         category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE RESTRICT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -254,7 +254,7 @@ CREATE UNIQUE INDEX unique_product_size_ingredient
     ON product_size_ingredients (product_size_id, ingredient_id)
     WHERE deleted_at IS NULL;
 
--- AdditiveIngredients Table 
+-- AdditiveIngredients Table
 CREATE TABLE
 	IF NOT EXISTS additive_ingredients (
 		id SERIAL PRIMARY KEY,

@@ -44,10 +44,10 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { formatPrice } from '@/core/utils/price.utils'
-import type { Additives } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import { useRouter } from 'vue-router'
 
-const {additives} = defineProps<{additives: Additives[]}>()
+const {additives} = defineProps<{additives: AdditiveDTO[]}>()
 
 const router = useRouter();
 

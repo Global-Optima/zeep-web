@@ -18,7 +18,6 @@
 				</div>
 			</CardHeader>
 			<CardContent>
-				<!-- Table for Batch Ingredient Input -->
 				<Table>
 					<TableHeader>
 						<TableRow>
@@ -29,16 +28,25 @@
 						</TableRow>
 					</TableHeader>
 					<TableBody>
+						<TableRow v-if="selectedIngredients.length === 0">
+							<TableCell
+								colspan="4"
+								class="text-center"
+							>
+								Нет добавленных ингредиентов
+							</TableCell>
+						</TableRow>
 						<TableRow
 							v-for="(ingredient, index) in selectedIngredients"
-							:key="index"
+							:key="ingredient.ingredientId"
 						>
 							<TableCell>{{ ingredient.name }}</TableCell>
 							<TableCell>
 								<Input
 									type="number"
 									v-model.number="ingredient.quantity"
-									class="p-1 w-full"
+									:min="0"
+									:class="{ 'border-red-500': hasError(ingredient, 'quantity') }"
 									placeholder="Введите количество"
 								/>
 							</TableCell>
@@ -46,7 +54,8 @@
 								<Input
 									type="number"
 									v-model.number="ingredient.lowStockThreshold"
-									class="p-1 w-full"
+									:min="0"
+									:class="{ 'border-red-500': hasError(ingredient, 'lowStockThreshold') }"
 									placeholder="Введите порог"
 								/>
 							</TableCell>
@@ -65,11 +74,11 @@
 					variant="outline"
 					class="mr-2"
 					@click="cancelForm"
+					>Отмена</Button
 				>
-					Отмена
-				</Button>
 				<Button
 					variant="default"
+					:disabled="!canSubmit"
 					@click="submitForm"
 				>
 					Сохранить
@@ -77,44 +86,11 @@
 			</CardFooter>
 		</Card>
 
-		<!-- Ingredient Selection Dialog -->
-		<Dialog v-model:open="openDialog">
-			<DialogContent :includeCloseButton="false">
-				<DialogHeader>
-					<DialogTitle>Выберите ингредиент</DialogTitle>
-				</DialogHeader>
-				<div>
-					<!-- Search Input -->
-					<Input
-						v-model="searchTerm"
-						placeholder="Поиск ингредиента"
-						type="search"
-						class="mt-2 mb-4 w-full"
-					/>
-
-					<!-- Ingredient List -->
-					<div class="max-h-64 overflow-y-auto">
-						<ul>
-							<li
-								v-for="ingredient in filteredIngredients"
-								:key="ingredient.id"
-								class="flex justify-between items-center hover:bg-gray-100 p-2 border-b cursor-pointer"
-								@click="addIngredient(ingredient)"
-							>
-								<span>{{ ingredient.name }}</span>
-							</li>
-						</ul>
-					</div>
-				</div>
-				<DialogFooter>
-					<Button
-						variant="outline"
-						@click="openDialog = false"
-						>Закрыть</Button
-					>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
+		<AdminIngredientsSelectDialog
+			:open="openDialog"
+			@close="openDialog = false"
+			@select="addSelectedIngredient"
+		/>
 	</div>
 </template>
 
@@ -128,7 +104,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 import {
   Table,
@@ -138,78 +113,74 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
+import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { AddMultipleStoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
 import { Trash } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 interface CreateStoreStockItem {
+	name: string
 	ingredientId: number
 	quantity: number
 	lowStockThreshold: number
 }
 
-export interface CreateMultipleStoreStock {
-	ingredientStocks: CreateStoreStockItem[]
-}
-
-interface Ingredient {
-	id: number
-	name: string
-}
-
-interface SelectedIngredient extends CreateStoreStockItem {
-	name: string
-}
-
-// Props for parent component
+// Props
 const emit = defineEmits<{
-	(e: 'onSubmit', payload: CreateMultipleStoreStock): void
+	(e: 'onSubmit', payload: AddMultipleStoreWarehouseStockDTO): void
 	(e: 'onCancel'): void
 }>()
 
 // State for selected ingredients
-const selectedIngredients = ref<SelectedIngredient[]>([])
+const selectedIngredients = ref<CreateStoreStockItem[]>([])
 
 // Dialog open state
 const openDialog = ref(false)
 
-// Ingredient list (mocked for now, should come from an API)
-const allIngredients = ref<Ingredient[]>([
-	{ id: 1, name: 'Сахар' },
-	{ id: 2, name: 'Мука' },
-	{ id: 3, name: 'Соль' },
-])
-
-// Search term for filtering ingredients
-const searchTerm = ref('')
-
-// Filtered ingredient list based on search term
-const filteredIngredients = computed(() =>
-	allIngredients.value.filter((ingredient) =>
-		ingredient.name.toLowerCase().includes(searchTerm.value.toLowerCase())
+// Add selected ingredients to the table
+function addSelectedIngredient(ingredient: IngredientsDTO) {
+	const exists = selectedIngredients.value.some(
+		(existingItem) => existingItem.ingredientId === ingredient.id
 	)
-)
 
-// Add ingredient to the selected list
-function addIngredient(ingredient: Ingredient) {
-	if (!selectedIngredients.value.some((i) => i.ingredientId === ingredient.id)) {
+	if (!exists) {
 		selectedIngredients.value.push({
-			ingredientId: ingredient.id,
 			name: ingredient.name,
+			ingredientId: ingredient.id,
 			quantity: 0,
 			lowStockThreshold: 0,
 		})
+		openDialog.value = false
 	}
-	openDialog.value = false
 }
 
-// Remove ingredient from the selected list
+// Remove an ingredient from the table
 function removeIngredient(index: number) {
 	selectedIngredients.value.splice(index, 1)
 }
 
+// Check for validation errors
+function hasError(ingredient: CreateStoreStockItem, field: 'quantity' | 'lowStockThreshold'): boolean {
+	return ingredient[field] === undefined || ingredient[field] <= 0
+}
+
+// Computed: Can submit form
+const canSubmit = computed(() => {
+	return (
+		selectedIngredients.value.length > 0 &&
+		selectedIngredients.value.every((item) => !hasError(item, 'quantity') && !hasError(item, 'lowStockThreshold'))
+	)
+})
+
 // Submit form
 function submitForm() {
-	const payload: CreateMultipleStoreStock = {
+	if (!canSubmit.value) {
+		console.error('Validation errors detected.')
+		return
+	}
+
+	const payload: AddMultipleStoreWarehouseStockDTO = {
 		ingredientStocks: selectedIngredients.value.map((item) => ({
 			ingredientId: item.ingredientId,
 			quantity: item.quantity,

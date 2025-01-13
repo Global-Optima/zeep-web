@@ -31,11 +31,11 @@ const onBaristaClick = () => {
 						class="flex items-center gap-3 font-semibold"
 					>
 						<div class="flex items-center gap-2">
-							<span class="text-xl">Zeep</span>
+							<span class="font-bold text-xl">Zeep</span>
 							<span class="font-normal text-base">|</span>
 							<span
-								class="font-normal text-sm"
-								>{{ currentEmployee?.type === EmployeeType.STORE ? "Store" : "Warehouse" }}</span
+								class="font-normal"
+								>{{ currentEmployee?.type === EmployeeType.STORE ? "Кафе" : "Склад" }}</span
 							>
 						</div>
 					</a>

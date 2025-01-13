@@ -55,7 +55,13 @@ func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateAdditiveCategory(&dto); err != nil {
+	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid category ID")
+		return
+	}
+
+	if err := h.service.UpdateAdditiveCategory(uint(categoryID), &dto); err != nil {
 		utils.SendInternalServerError(c, "Failed to update additive category")
 		return
 	}

@@ -2,46 +2,56 @@
 	<Table>
 		<TableHeader>
 			<TableRow>
+				<TableHead class="hidden w-[100px] sm:table-cell"> </TableHead>
 				<TableHead>Название</TableHead>
-				<TableHead>Категория</TableHead>
+				<TableHead class="hidden md:table-cell">Категория</TableHead>
 				<TableHead>Цена</TableHead>
 				<TableHead class="hidden md:table-cell">Доступно</TableHead>
-				<TableHead class="hidden md:table-cell">Статус</TableHead>
+				<TableHead></TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
 			<TableRow
-				v-for="product in products"
+				v-for="product in storeProducts"
 				:key="product.id"
 				class="hover:bg-gray-50 h-12 cursor-pointer"
+				@click="onProductClick(product.id)"
 			>
+				<TableCell class="hidden sm:table-cell">
+					<img
+						:src="product.imageUrl"
+						alt="Изображение товара"
+						class="bg-gray-100 p-1 rounded-md aspect-square object-contain"
+						height="64"
+						width="64"
+					/>
+				</TableCell>
 				<TableCell class="font-medium">
 					{{ product.name }}
 				</TableCell>
-				<TableCell>
-					{{ product.category }}
+				<TableCell class="hidden md:table-cell">
+					{{ product.category.name }}
 				</TableCell>
 				<TableCell>
-					{{ formatPrice(product.price) }}
+					{{ formatPrice(product.storePrice) }}
 				</TableCell>
 				<TableCell class="hidden md:table-cell">
 					<div
 						:class="[
-								product.isAvailable ? 'text-green-500' : 'text-red-500',
+								product.isAvailable ? 'text-green-600' : 'text-red-500',
 							]"
 					>
-						{{ product.isAvailable ? 'В наличии' : 'Нет в наличии' }}
+						{{ product.isAvailable ? 'Доступен' : 'Недоступен' }}
 					</div>
 				</TableCell>
-				<TableCell class="hidden md:table-cell">
-					<p
-						:class="[
-								'inline-flex w-fit items-center rounded-md px-2.5 py-1 text-xs',
-								PRODUCT_STATUS_COLOR[product.status]
-							]"
+				<TableCell>
+					<Button
+						variant="ghost"
+						size="icon"
+						@click="e => onDeleteProductClick(e, product.id)"
 					>
-						{{ PRODUCT_STATUS_FORMATTED[product.status] }}
-					</p>
+						<Trash class="w-6 h-6 text-red-400" />
+					</Button>
 				</TableCell>
 			</TableRow>
 		</TableBody>
@@ -49,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+import Button from '@/core/components/ui/button/Button.vue'
 import {
   Table,
   TableBody,
@@ -57,68 +68,37 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { toast } from '@/core/components/ui/toast'
 import { formatPrice } from '@/core/utils/price.utils'
-import { ref } from 'vue'
+import type { StoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
+import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
+import { Trash } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 
-const products = ref([
-    {
-      id: 1,
-      name: 'Латте',
-      category: 'Кофе',
-      price: 150.0,
-      isAvailable: true,
-      status: 'active',
-    },
-    {
-      id: 2,
-      name: 'Американо',
-      category: 'Кофе',
-      price: 100.0,
-      isAvailable: false,
-      status: 'inactive',
-    },
-    {
-      id: 3,
-      name: 'Чай зеленый',
-      category: 'Чай',
-      price: 80.0,
-      isAvailable: true,
-      status: 'active',
-    },
-    {
-      id: 4,
-      name: 'Смузи клубничный',
-      category: 'Напитки',
-      price: 250.0,
-      isAvailable: true,
-      status: 'active',
-    },
-    {
-      id: 5,
-      name: 'Круассан с сыром',
-      category: 'Выпечка',
-      price: 120.0,
-      isAvailable: false,
-      status: 'inactive',
-    },
-    {
-      id: 6,
-      name: 'Молочный коктейль',
-      category: 'Напитки',
-      price: 200.0,
-      isAvailable: true,
-      status: 'active',
-    },
-])
+const router = useRouter()
+const queryClient = useQueryClient()
 
-const PRODUCT_STATUS_COLOR: Record<string, string> = {
-  active: 'bg-green-100 text-green-800',
-  inactive: 'bg-gray-100 text-gray-800',
-}
+const {storeProducts} = defineProps<{storeProducts: StoreProductDTO[]}>()
 
-const PRODUCT_STATUS_FORMATTED: Record<string, string> = {
-  active: 'Активен',
-  inactive: 'Неактивен',
+const {mutate: deleteStoreProduct} = useMutation({
+		mutationFn: (id: number) => storeProductsService.deleteStoreProduct(id),
+		onSuccess: () => {
+			toast({title: "Товар удален из магазина"})
+			queryClient.invalidateQueries({queryKey: ['admin-store-products']})
+		},
+		onError: () => {
+      toast({title: "Произошла ошибка при удалении товара"})
+		},
+})
+
+const onProductClick = (productId: number) => {
+  router.push(`/admin/store-products/${productId}`);
+};
+
+const onDeleteProductClick = (e: Event, id: number) => {
+  e.stopPropagation()
+  deleteStoreProduct(id)
 }
 </script>
 

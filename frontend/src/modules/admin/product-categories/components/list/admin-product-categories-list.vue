@@ -34,10 +34,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import type { ProductCategories } from '@/modules/admin/product-categories/models/product-categories.model'
+import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { useRouter } from 'vue-router'
 
-const {productCategories} = defineProps<{productCategories: ProductCategories[]}>()
+const {productCategories} = defineProps<{productCategories: ProductCategoryDTO[]}>()
 
 const router = useRouter();
 

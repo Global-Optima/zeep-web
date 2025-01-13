@@ -11,7 +11,7 @@ import (
 type AdditiveService interface {
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error)
 	CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) error
-	UpdateAdditiveCategory(dto *types.UpdateAdditiveCategoryDTO) error
+	UpdateAdditiveCategory(id uint, dto *types.UpdateAdditiveCategoryDTO) error
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryResponseDTO, error)
 
@@ -67,8 +67,8 @@ func (s *additiveService) CreateAdditiveCategory(dto *types.CreateAdditiveCatego
 	return nil
 }
 
-func (s *additiveService) UpdateAdditiveCategory(dto *types.UpdateAdditiveCategoryDTO) error {
-	existingCategory, err := s.repo.GetAdditiveCategoryByID(dto.ID)
+func (s *additiveService) UpdateAdditiveCategory(id uint, dto *types.UpdateAdditiveCategoryDTO) error {
+	existingCategory, err := s.repo.GetAdditiveCategoryByID(id)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to fetch existing additive categor", err)
 		s.logger.Error(wrappedErr)
@@ -76,7 +76,7 @@ func (s *additiveService) UpdateAdditiveCategory(dto *types.UpdateAdditiveCatego
 	}
 
 	if existingCategory == nil {
-		return fmt.Errorf("additive category with ID %d not found", dto.ID)
+		return fmt.Errorf("additive category with ID %d not found", id)
 	}
 
 	updatedCategory := types.ConvertToUpdatedAdditiveCategoryModel(dto, existingCategory)
