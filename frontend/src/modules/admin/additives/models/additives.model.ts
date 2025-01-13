@@ -1,5 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 
+// TODO: change the price to base price
 export interface AdditiveDTO {
 	id: number
 	name: string

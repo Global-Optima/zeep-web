@@ -59,7 +59,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 			import('@/modules/admin/store-products/pages/admin-store-product-details-page.vue'),
 	},
 	ADMIN_STORE_PRODUCT_CREATE: {
-		path: 'store-products',
+		path: 'store-products/create',
 		meta: {
 			title: 'Добавить товар в магазин',
 			requiresAuth: true,

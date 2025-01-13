@@ -6,7 +6,7 @@ import * as z from 'zod'
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Switch } from '@/core/components/ui/switch'
 import type { CreateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'

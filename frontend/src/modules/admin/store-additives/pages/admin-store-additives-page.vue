@@ -1,5 +1,5 @@
 <template>
-	<AdminStoreProductsToolbar
+	<AdminStoreAdditivesToolbar
 		:filter="filter"
 		@update:filter="updateFilter"
 	/>
@@ -7,21 +7,21 @@
 	<Card>
 		<CardContent class="mt-4">
 			<p
-				v-if="!storeProductsResponse || storeProductsResponse.data.length === 0"
+				v-if="!storeAdditivesResponse || storeAdditivesResponse.data.length === 0"
 				class="text-muted-foreground"
 			>
-				Товары магазина не найдены
+				Топпинги магазина не найдены
 			</p>
 
-			<AdminStoreProductsList
+			<AdminStoreAdditivesList
 				v-else
-				:storeProducts="storeProductsResponse.data"
+				:additives="storeAdditivesResponse.data"
 			/>
 		</CardContent>
 		<CardFooter class="flex justify-end">
 			<PaginationWithMeta
-				v-if="storeProductsResponse"
-				:meta="storeProductsResponse.pagination"
+				v-if="storeAdditivesResponse"
+				:meta="storeAdditivesResponse.pagination"
 				@update:page="updatePage"
 				@update:pageSize="updatePageSize"
 			/>
@@ -34,21 +34,21 @@ import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWi
 import { Card, CardContent } from '@/core/components/ui/card'
 import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import AdminStoreProductsList from '@/modules/admin/store-products/components/list/admin-store-products-list.vue'
-import AdminStoreProductsToolbar from '@/modules/admin/store-products/components/list/admin-store-products-toolbar.vue'
-import type { StoreProductsFilterDTO } from '@/modules/admin/store-products/models/store-products.model'
-import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
+import AdminStoreAdditivesList from '@/modules/admin/store-additives/components/list/admin-store-additives-list.vue'
+import AdminStoreAdditivesToolbar from '@/modules/admin/store-additives/components/list/admin-store-additives-toolbar.vue'
+import type { StoreAdditivesFilterDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<StoreProductsFilterDTO>({})
+const filter = ref<StoreAdditivesFilterDTO>({})
 
-const { data: storeProductsResponse } = useQuery({
-  queryKey: computed(() => ['admin-store-products', filter.value]),
-  queryFn: () => storeProductsService.getStoreProducts(filter.value),
+const { data: storeAdditivesResponse } = useQuery({
+  queryKey: computed(() => ['admin-store-additives', filter.value]),
+  queryFn: () => storeAdditivesService.getStoreAdditives(filter.value),
 })
 
-function updateFilter(updatedFilter: StoreProductsFilterDTO) {
+function updateFilter(updatedFilter: StoreAdditivesFilterDTO) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 

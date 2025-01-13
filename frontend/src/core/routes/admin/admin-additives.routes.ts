@@ -52,4 +52,30 @@ export const ADMIN_ADDITIVES_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/additive-categories/pages/admin-additive-category-details-page.vue'),
 	},
+	ADMIN_STORE_ADDITIVES: {
+		path: 'store-additives',
+		meta: {
+			title: 'Топпинги Магазина',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/store-additives/pages/admin-store-additives-page.vue'),
+	},
+	ADMIN_STORE_ADDITIVE_DETAILS: {
+		path: 'store-additives/:id',
+		meta: {
+			title: 'Детали топпинга магазина',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/store-additives/pages/admin-store-additive-details-page.vue'),
+	},
+	ADMIN_STORE_ADDITIVE_CREATE: {
+		path: 'store-additives/create',
+		meta: {
+			title: 'Добавить топпинг в магазин',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/store-additives/pages/admin-store-additive-create-page.vue'),
+	},
 } satisfies AppRouteRecord

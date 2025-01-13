@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { useToast } from '@/core/components/ui/toast'
+import { computed, onMounted, reactive, watch } from 'vue'
 
-// UI Components (shadcn or custom)
 import { Button } from '@/core/components/ui/button'
 import {
   Card,
@@ -10,52 +10,30 @@ import {
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
-import { Checkbox } from '@/core/components/ui/checkbox'
 import { Input } from '@/core/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/core/components/ui/table'
+import { Switch } from '@/core/components/ui/switch'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 
-// Icons
+import { Label } from '@/core/components/ui/label'
 import type { StoreProductDetailsDTO, UpdateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { ProductDetailsDTO } from '@/modules/kiosk/products/models/product.model'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, Trash } from 'lucide-vue-next'
 
-
-
-
-/**
- * Props define:
- * 1. `initialStoreProduct` - existing store product data to update
- * 2. `product` - the full product definition (with sizes, basePrices, etc.)
- */
 const props = defineProps<{
   initialStoreProduct: StoreProductDetailsDTO
   product: ProductDetailsDTO
 }>()
-
 
 const emits = defineEmits<{
   onSubmit: [dto: UpdateStoreProductDTO]
   onCancel: []
 }>()
 
-// ----- Local State -----------------------------------
-/**
- * Local reactive state to manage store-product updates.
- * We'll merge `initialStoreProduct` with product's full info.
- */
 interface ProductSizeLocal {
   id: number
   name: string
   basePrice: number
   storePrice: number
-  selected: boolean
 }
 
 interface StoreProductLocal {
@@ -63,61 +41,77 @@ interface StoreProductLocal {
   sizes: ProductSizeLocal[]
 }
 
-// Initialize local reactive data
 const storeProductLocal = reactive<StoreProductLocal>({
-  isAvailable: props.initialStoreProduct.isAvailable,
+  isAvailable: false,
   sizes: [],
 })
 
-/**
- * Set up the local `sizes` array by merging:
- * - The product’s full size list
- * - The store’s existing `storePrice` (if present)
- */
-function initializeSizes() {
-  // Map all possible sizes from the product
-  // If store has a matching size, use its storePrice; otherwise default to product basePrice
-  storeProductLocal.sizes = props.product.sizes.map((sz) => {
-    const existingSize = props.initialStoreProduct.sizes.find(
-      (ps) => ps.id === sz.id
-    )
+const {toast} = useToast()
+
+onMounted(() => {
+  initStoreProductLocal()
+})
+
+watch(
+  () => [props.initialStoreProduct, props.product],
+  () => {
+    initStoreProductLocal()
+  }
+)
+
+function initStoreProductLocal() {
+  storeProductLocal.isAvailable = props.initialStoreProduct.isAvailable
+
+  storeProductLocal.sizes = props.initialStoreProduct.sizes.map((storeSz) => {
+    const productSize = props.product.sizes.find((pSz) => pSz.id === storeSz.id)
+    const basePrice = productSize ? productSize.basePrice : storeSz.storePrice
+
     return {
-      id: sz.id,
-      name: sz.name,
-      basePrice: sz.basePrice,
-      storePrice: existingSize?.storePrice ?? sz.basePrice,
-      selected: !!existingSize, // If it's in the store product, mark as selected
+      id: storeSz.id,
+      name: storeSz.name,
+      basePrice,
+      storePrice: storeSz.storePrice,
     }
   })
 }
 
-// Call once on mount
-initializeSizes()
-
-// ----- Computed ---------------------------------------
-
-// Check if there are any sizes at all
 const hasSizes = computed(() => storeProductLocal.sizes.length > 0)
 
-// Submit updated data
-function onSubmit() {
-  const updateDTO: UpdateStoreProductDTO = {
-    isAvailable: storeProductLocal.isAvailable,
-    productSizes: storeProductLocal.sizes
-      .filter((sz) => sz.selected)
-      .map((sz) => ({
-        productSizeID: sz.id,
-        storePrice: sz.storePrice,
-      })),
-  }
-  emits('onSubmit', updateDTO)
+function removeSize(index: number) {
+  storeProductLocal.sizes.splice(index, 1)
 }
 
 function onResetSizes() {
-  initializeSizes()
+  const existingIDs = storeProductLocal.sizes.map((sz) => sz.id)
+
+  props.product.sizes.forEach((pSz) => {
+    if (!existingIDs.includes(pSz.id)) {
+      storeProductLocal.sizes.push({
+        id: pSz.id,
+        name: pSz.name,
+        basePrice: pSz.basePrice,
+        storePrice: pSz.basePrice,
+      })
+    }
+  })
 }
 
-// Cancel
+function onSubmit() {
+  if (!storeProductLocal.sizes.length) {
+    toast({description:'Вы должны добавить хотя бы один размер для сохранения.'})
+    return
+  }
+
+  const payload: UpdateStoreProductDTO = {
+    isAvailable: storeProductLocal.isAvailable,
+    productSizes: storeProductLocal.sizes.map((sz) => ({
+      productSizeID: sz.id,
+      storePrice: sz.storePrice,
+    })),
+  }
+  emits('onSubmit', payload)
+}
+
 function onCancel() {
   emits('onCancel')
 }
@@ -125,12 +119,10 @@ function onCancel() {
 
 <template>
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-4xl">
-		<!-- Header -->
 		<div class="flex items-center gap-4">
 			<Button
 				variant="outline"
 				size="icon"
-				type="button"
 				@click="onCancel"
 			>
 				<ChevronLeft class="w-5 h-5" />
@@ -142,11 +134,9 @@ function onCancel() {
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
 				<Button
 					variant="outline"
-					type="button"
 					@click="onCancel"
+					>Отменить</Button
 				>
-					Отменить
-				</Button>
 				<Button
 					type="submit"
 					@click="onSubmit"
@@ -155,59 +145,68 @@ function onCancel() {
 			</div>
 		</div>
 
-		<!-- Product Card -->
 		<Card>
 			<CardHeader>
 				<div class="flex justify-between">
 					<div>
-						<CardTitle>{{ product.name }}</CardTitle>
-						<CardDescription class="mt-1">{{ product.category.name }}</CardDescription>
+						<CardTitle>{{ props.product.name }}</CardTitle>
+						<CardDescription class="mt-1">{{ props.product.category.name }}</CardDescription>
 					</div>
-
 					<Button
 						variant="outline"
-						type="button"
 						@click="onResetSizes"
+						>Сбросить размеры к исходным</Button
 					>
-						Сбросить размеры к исходным
-					</Button>
 				</div>
 			</CardHeader>
 
 			<CardContent class="space-y-4">
-				<!-- Availability checkbox -->
-				<div class="flex items-center gap-2">
-					<Checkbox v-model="storeProductLocal.isAvailable" />
-					<span>Товар доступен к продаже</span>
+				<div class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg">
+					<div class="flex flex-col space-y-0.5">
+						<Label class="font-medium text-base"> Товар доступен к продаже </Label>
+						<p class="text-gray-500 text-sm">
+							Укажите доступен ли этот товар для продажи в магазине
+						</p>
+					</div>
+
+					<Switch
+						:checked="storeProductLocal.isAvailable"
+						@update:checked="c => storeProductLocal.isAvailable = c"
+					/>
 				</div>
 
-				<!-- Table of sizes -->
-				<Table>
+				<Table class="mt-5">
 					<TableHeader>
 						<TableRow>
 							<TableHead>Размер</TableHead>
-							<TableHead>Включён</TableHead>
 							<TableHead>Базовая цена</TableHead>
 							<TableHead>Цена в магазине</TableHead>
+							<TableHead>Удалить</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						<template v-if="hasSizes">
 							<TableRow
-								v-for="(size) in storeProductLocal.sizes"
+								v-for="(size, i) in storeProductLocal.sizes"
 								:key="size.id"
 							>
 								<TableCell>{{ size.name }}</TableCell>
-								<TableCell>
-									<Checkbox v-model="size.selected" />
-								</TableCell>
 								<TableCell>{{ size.basePrice }}</TableCell>
 								<TableCell>
 									<Input
 										type="number"
-										v-model.number="size.storePrice"
 										class="w-24"
+										v-model.number="size.storePrice"
 									/>
+								</TableCell>
+								<TableCell>
+									<Button
+										variant="ghost"
+										size="icon"
+										@click="removeSize(i)"
+									>
+										<Trash class="w-5 h-5 text-red-500 hover:text-red-700" />
+									</Button>
 								</TableCell>
 							</TableRow>
 						</template>
@@ -226,21 +225,17 @@ function onCancel() {
 			</CardContent>
 		</Card>
 
-		<!-- Footer (mobile only) -->
 		<div class="flex justify-center items-center gap-2 md:hidden mt-4">
 			<Button
 				variant="outline"
-				type="button"
 				@click="onCancel"
+				>Отменить</Button
 			>
-				Отменить
-			</Button>
 			<Button
 				type="submit"
 				@click="onSubmit"
+				>Сохранить</Button
 			>
-				Сохранить
-			</Button>
 		</div>
 	</div>
 </template>

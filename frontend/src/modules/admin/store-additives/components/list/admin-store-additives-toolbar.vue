@@ -25,13 +25,13 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { StoreProductsFilterDTO } from '@/modules/admin/store-products/models/store-products.model'
+import type { StoreAdditivesFilterDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Props and Emit
-const props = defineProps<{ filter: StoreProductsFilterDTO }>()
+const props = defineProps<{ filter: StoreAdditivesFilterDTO }>()
 const emit = defineEmits(['update:filter'])
 
 // Local Filter
@@ -50,6 +50,6 @@ watch(debouncedSearchTerm, (newValue) => {
 // Add Store Navigation
 const router = useRouter()
 const addStore = () => {
-	router.push({ name: getRouteName('ADMIN_STORE_PRODUCT_CREATE') })
+	router.push({ name: getRouteName('ADMIN_STORE_ADDITIVE_CREATE') })
 }
 </script>
