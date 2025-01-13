@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/sirupsen/logrus"
 )
 
 func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
@@ -14,14 +15,12 @@ func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditive
 }
 
 func ConvertToStoreAdditiveCategoryDTO(category *data.AdditiveCategory) *StoreAdditiveCategoryDTO {
-	storeAdditives := ConvertToStoreAdditiveCategoryItemDTOs(category)
-
 	return &StoreAdditiveCategoryDTO{
 		ID:               category.ID,
 		Name:             category.Name,
 		Description:      category.Description,
 		IsMultipleSelect: category.IsMultipleSelect,
-		Additives:        storeAdditives, // Always initialized as a slice
+		Additives:        ConvertToStoreAdditiveCategoryItemDTOs(category), // Always initialized as a slice
 	}
 }
 
@@ -30,14 +29,17 @@ func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []S
 
 	// Populate additives if present
 	for _, additive := range category.Additives {
-		if len(additive.StoreAdditives) > 0 {
+		if len(additive.StoreAdditives) > 0 && len(additive.ProductSizeAdditives) > 0 {
 			storeAdditives = append(storeAdditives, StoreAdditiveCategoryItemDTO{
 				AdditiveCategoryItemDTO: *additiveTypes.ConvertToAdditiveCategoryItem(&additive, category.ID),
 				StoreAdditiveID:         additive.StoreAdditives[0].ID,
 				StorePrice:              additive.StoreAdditives[0].Price,
+				IsDefault:               additive.ProductSizeAdditives[0].IsDefault,
 			})
 		}
 	}
+
+	logrus.Info(storeAdditives)
 
 	return storeAdditives
 }

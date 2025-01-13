@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 	"path/filepath"
 	"time"
@@ -63,7 +64,7 @@ func applyMigrations(db *gorm.DB, migrationsPath string) error {
 	}
 
 	log.Println("Starting migrations...")
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("migration error: %w", err)
 	}
 	log.Println("Migrations completed successfully.")

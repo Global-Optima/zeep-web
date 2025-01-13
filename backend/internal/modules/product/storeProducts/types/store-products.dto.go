@@ -5,24 +5,25 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-// StoreProductDTO for sending array of Products
 type StoreProductDTO struct {
+	ID uint `json:"id"`
 	productTypes.ProductDTO
-	StoreProductID        uint    `json:"storeProductId"`
+	ProductID             uint    `json:"productId"`
 	StorePrice            float64 `json:"storePrice"`
 	StoreProductSizeCount int     `json:"StoreProductSizeCount"`
 	IsAvailable           bool    `json:"isAvailable"`
 }
 
-// StoreProductDetailsDTO for sending single product with detailed info
 type StoreProductDetailsDTO struct {
 	StoreProductDTO
-	Sizes []StoreProductSizeDetailsDTO `json:"sizes"`
+	Sizes []StoreProductSizeDTO `json:"sizes"`
 }
 
-type StoreProductSizeDetailsDTO struct {
-	productTypes.ProductSizeDetailsDTO
-	StorePrice float64 `json:"storePrice"`
+type StoreProductSizeDTO struct {
+	ID uint `json:"id"`
+	productTypes.BaseProductSizeDTO
+	ProductSizeID uint    `json:"productSizeId"`
+	StorePrice    float64 `json:"storePrice"`
 }
 
 type CreateStoreProductDTO struct {

@@ -3,7 +3,8 @@ package storeAdditives
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
+	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
@@ -11,8 +12,8 @@ import (
 type StoreAdditiveRepository interface {
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*data.StoreAdditive, error)
-	GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]data.StoreAdditive, error)
-	GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
+	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
+	GetStoreAdditiveCategories(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, input *data.StoreAdditive) error
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
 }
@@ -42,36 +43,33 @@ func (r *storeAdditiveRepository) CreateStoreAdditives(storeAdditives []data.Sto
 	return ids, nil
 }
 
-func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
+func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
 	subquery := r.db.Model(&data.Additive{}).
 		Select("additive_category_id").
 		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
 		Where("store_additives.store_id = ?", storeID).
+		Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", productSizeID).
 		Group("additive_category_id").
 		Having("COUNT(additives.id) > 0")
-
-	if filter.ProductSizeId != nil {
-		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
-	}
-
-	if filter.Search != nil && *filter.Search != "" {
-		searchTerm := "%" + *filter.Search + "%"
-		subquery = subquery.Where(
-			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
-			searchTerm, searchTerm,
-		)
-	}
 
 	query := r.db.Model(&data.AdditiveCategory{}).
 		Preload("Additives", "id IN (SELECT additive_id FROM store_additives WHERE store_id = ?)", storeID).
 		Preload("Additives.StoreAdditives", "store_id = ?", storeID).
+		Preload("Additives.ProductSizeAdditives", "product_size_id = ?", productSizeID).
 		Where("id IN (?)", subquery)
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
-	if err != nil {
-		return nil, err
+	if filter.IsMultipleSelect != nil && *filter.IsMultipleSelect {
+		query = query.Where("product_size_additives.is_default = ?", *filter.IsMultipleSelect)
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where(
+			"name ILIKE ? OR description ILIKE ?",
+			searchTerm, searchTerm,
+		)
 	}
 
 	if err := query.Find(&categories).Error; err != nil {
@@ -97,7 +95,7 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeID, storeAdditiveID 
 	return storeAdditive, nil
 }
 
-func (r *storeAdditiveRepository) GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]data.StoreAdditive, error) {
+func (r *storeAdditiveRepository) GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error) {
 	var storeAdditives []data.StoreAdditive
 
 	query := r.db.Model(&data.StoreAdditive{}).
