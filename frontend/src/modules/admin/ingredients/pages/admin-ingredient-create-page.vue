@@ -24,9 +24,7 @@ const createMutation = useMutation({
 })
 
 function handleCreate(dto: CreateIngredientDTO) {
-  const formattedDateDTO = {...dto, expiresAt: dto.expiresAt ? new Date(dto.expiresAt).toISOString() : new Date().toISOString()}
-
-	createMutation.mutate(formattedDateDTO)
+	createMutation.mutate(dto)
 }
 
 function handleCancel() {
