@@ -8,14 +8,15 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import type { ProductCategoryDTO, UpdateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
+import type { IngredientCategoryDTO, UpdateIngredientCategoryDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { CreateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Props and Emits
-const {productCategory} = defineProps<{productCategory: ProductCategoryDTO}>()
+const {ingredientCategory} = defineProps<{ingredientCategory: IngredientCategoryDTO}>()
 
 const emits = defineEmits<{
-  onSubmit: [dto: UpdateProductCategoryDTO]
+  onSubmit: [dto: UpdateIngredientCategoryDTO]
   onCancel: []
 }>()
 
@@ -28,9 +29,9 @@ const createCategorySchema = toTypedSchema(
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm<UpdateProductCategoryDTO>({
+const { handleSubmit, resetForm } = useForm<CreateProductCategoryDTO>({
   validationSchema: createCategorySchema,
-  initialValues: productCategory
+  initialValues: ingredientCategory
 })
 
 // Handlers
@@ -57,7 +58,7 @@ const onCancel = () => {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				{{ productCategory.name }}
+				{{ ingredientCategory.name }}
 			</h1>
 
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
