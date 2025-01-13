@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -34,13 +35,19 @@ func (h *UnitHandler) CreateUnit(c *gin.Context) {
 }
 
 func (h *UnitHandler) GetAllUnits(c *gin.Context) {
-	units, err := h.service.GetAll()
+	var filter types.UnitFilter
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Unit{}); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
+		return
+	}
+
+	units, err := h.service.GetAll(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	utils.SendSuccessResponse(c, units)
+	utils.SendSuccessResponseWithPagination(c, units, filter.GetPagination())
 }
 
 func (h *UnitHandler) GetUnitByID(c *gin.Context) {

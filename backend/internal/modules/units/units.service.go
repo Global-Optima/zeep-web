@@ -11,7 +11,7 @@ import (
 
 type UnitService interface {
 	Create(dto types.CreateUnitDTO) (uint, error)
-	GetAll() ([]types.UnitResponse, error)
+	GetAll(filter *types.UnitFilter) ([]types.UnitResponse, error)
 	GetByID(id uint) (*types.UnitResponse, error)
 	Update(id uint, dto types.UpdateUnitDTO) error
 	Delete(id uint) error
@@ -38,8 +38,8 @@ func (s *unitService) Create(dto types.CreateUnitDTO) (uint, error) {
 	return unit.ID, nil
 }
 
-func (s *unitService) GetAll() ([]types.UnitResponse, error) {
-	units, err := s.repo.GetAll()
+func (s *unitService) GetAll(filter *types.UnitFilter) ([]types.UnitResponse, error) {
+	units, err := s.repo.GetAll(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch units: %w", err)
 	}
