@@ -2,6 +2,7 @@ package product
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -14,7 +15,7 @@ type ProductService interface {
 	UpdateProduct(productID uint, dto *types.UpdateProductDTO) error
 	DeleteProduct(productID uint) error
 
-	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error)
+	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDetailsDTO, error)
 	GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error)
 	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
 	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
@@ -112,7 +113,7 @@ func (s *productService) UpdateProductSize(productSizeID uint, dto *types.Update
 	return nil
 }
 
-func (s *productService) GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error) {
+func (s *productService) GetProductSizesByProductID(productID uint) ([]types.ProductSizeDetailsDTO, error) {
 	productSizes, err := s.repo.GetProductSizesByProductID(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to get product sizes: %w", err)
@@ -120,9 +121,9 @@ func (s *productService) GetProductSizesByProductID(productID uint) ([]types.Pro
 		return nil, wrappedErr
 	}
 
-	dtos := make([]types.ProductSizeDTO, len(productSizes))
+	dtos := make([]types.ProductSizeDetailsDTO, len(productSizes))
 	for i, productSize := range productSizes {
-		dtos[i] = types.MapToProductSizeDTO(productSize)
+		dtos[i] = types.MapToProductSizeDetails(productSize)
 	}
 
 	return dtos, nil

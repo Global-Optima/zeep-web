@@ -34,9 +34,9 @@ const { data: storeProductDetails } = useQuery({
 })
 
 const { data: productDetails } = useQuery({
-  queryKey: computed(() => ['admin-product-details', 1]),
-	queryFn: () => productsService.getProductDetails(Number(1)),
-  enabled: !isNaN(Number(1)),
+  queryKey: computed(() => ['admin-product-details', storeProductDetails.value?.productId]),
+	queryFn: () => productsService.getProductDetails(Number(storeProductDetails.value?.productId)),
+  enabled: computed(() => Boolean(storeProductDetails.value?.productId)),
 })
 
 
@@ -52,7 +52,7 @@ const updateMutation = useMutation({
 })
 
 function handleUpdate(updatedData: UpdateStoreProductDTO) {
-  if (isNaN(Number(storeProductId))) return router.back()
+  if (storeProductDetails.value?.productId) return router.back()
 
 	updateMutation.mutate({id: Number(storeProductId), dto: updatedData})
 }

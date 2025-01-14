@@ -39,7 +39,9 @@ import { additivesService } from '@/modules/admin/additives/services/additives.s
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<AdditiveCategoriesFilterQuery>({})
+const filter = ref<AdditiveCategoriesFilterQuery>({
+  showAll: true
+})
 
 const { data: categoriesResponse } = useQuery({
   queryKey: computed(() => ['admin-additive-categories', filter.value]),

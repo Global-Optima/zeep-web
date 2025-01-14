@@ -1,22 +1,29 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type {
+	BaseProductSizeDTO,
 	ProductDTO,
-	ProductSizeDetailsDTO,
+	ProductSizeAdditiveDTO,
 } from '@/modules/kiosk/products/models/product.model'
+import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
 
 export interface StoreProductDTO extends ProductDTO {
-	storeProductId: number
+	id: number
+	productId: number
 	storePrice: number
 	storeProductSizeCount: number
 	isAvailable: boolean
 }
 
 export interface StoreProductDetailsDTO extends StoreProductDTO {
-	sizes: StoreProductSizeDetailsDTO[]
+	sizes: StoreProductSizeDTO[]
 }
 
-export interface StoreProductSizeDetailsDTO extends ProductSizeDetailsDTO {
+export interface StoreProductSizeDTO extends BaseProductSizeDTO {
+	id: number
+	productSizeId: number
 	storePrice: number
+	additives: ProductSizeAdditiveDTO[]
+	ingredients: IngredientsDTO[]
 }
 
 export interface CreateStoreProductDTO {
@@ -31,7 +38,7 @@ export interface CreateStoreProductSizeDTO {
 }
 
 export interface UpdateStoreProductDTO {
-	isAvailable?: boolean
+	isAvailable?: boolean | null
 	productSizes?: UpdateStoreProductSizeDTO[]
 }
 

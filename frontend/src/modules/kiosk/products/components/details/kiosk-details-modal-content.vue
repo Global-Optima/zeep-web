@@ -33,8 +33,7 @@
 
 			<!-- Additives Selection -->
 			<KioskDetailsAdditivesSection
-				:categories="sortedAdditiveCategories"
-				:isAdditiveDefault="isAdditiveDefault"
+				:categories="additives"
 				:isAdditiveSelected="isAdditiveSelected"
 				@toggle-additive="onAdditiveToggle"
 			/>
@@ -62,9 +61,10 @@ import KioskDetailsLoading from '@/modules/kiosk/products/components/details/kio
 import KioskDetailsProductImage from '@/modules/kiosk/products/components/details/kiosk-details-product-image.vue'
 import KioskDetailsProductInfo, { type KioskDetailsEnergyDTO } from '@/modules/kiosk/products/components/details/kiosk-details-product-info.vue'
 
-import type { AdditiveCategoryDTO, AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
-import { additivesService } from '@/modules/admin/additives/services/additives.service'
-import type { StoreProductDetailsDTO, StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
+import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import type { StoreAdditiveCategoryDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
+import type { StoreProductDetailsDTO, StoreProductSizeDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 
@@ -82,8 +82,8 @@ const cartStore = useCartStore();
 
 // Reactive state
 const productDetails = ref<StoreProductDetailsDTO | null>(null);
-const additives = ref<AdditiveCategoryDTO[]>([]);
-const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null);
+const additives = ref<StoreAdditiveCategoryDTO[]>([]);
+const selectedSize = ref<StoreProductSizeDTO | null>(null);
 const selectedAdditives = ref<Record<number, AdditiveCategoryItemDTO[]>>({});
 const quantity = ref<number>(1);
 const isLoading = ref<boolean>(true);
@@ -116,9 +116,8 @@ const fetchProductDetails = async () => {
 // Fetch additives based on selected size
 const fetchAdditives = async (sizeId: number) => {
   try {
-    //TODO: remove paginate or create more button
-    const fetchedAdditives = await additivesService.getAdditiveCategories({productSizeId: sizeId, pageSize: 1000});
-    additives.value = fetchedAdditives.data;
+    const fetchedAdditives = await storeAdditivesService.getStoreAdditiveCategories(sizeId);
+    additives.value = fetchedAdditives;
   } catch (err) {
     console.error('Error fetching additives:', err);
     error.value = 'Failed to fetch additives.';
@@ -158,19 +157,9 @@ const calculatedEnergy: Ref<KioskDetailsEnergyDTO> = computed(() => {
 });
 
 
-// Sort additives categories with memoization
-const sortedAdditiveCategories = computed(() =>
-  additives.value.map((category) => ({
-    ...category,
-    additives: [
-      ...category.additives.filter((a) => isAdditiveDefault(a.id)),
-      ...category.additives.filter((a) => !isAdditiveDefault(a.id)),
-    ],
-  }))
-);
 
 // Handle size selection
-const onSizeSelect = async (size: StoreProductSizeDetailsDTO) => {
+const onSizeSelect = async (size: StoreProductSizeDTO) => {
   if (selectedSize.value?.id === size.id) return;
   selectedSize.value = size;
   selectedAdditives.value = {};
@@ -192,10 +181,6 @@ const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItemDTO)
 const isAdditiveSelected = (categoryId: number, additiveId: number): boolean =>
   selectedAdditives.value[categoryId]?.some((a) => a.id === additiveId) || false;
 
-// Check if additive is default
-const isAdditiveDefault = (additiveId: number): boolean => {
-  return selectedSize.value?.additives.some((add) => add.isDefault && add.id === additiveId) ?? false
-}
 
 // Handle add to cart action
 const handleAddToCart = () => {

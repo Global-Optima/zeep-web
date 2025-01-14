@@ -3,16 +3,15 @@ import {
   Dialog,
   DialogContent
 } from '@/core/components/ui/dialog'
-import type { AdditiveCategoryDTO, AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
-import { additivesService } from '@/modules/admin/additives/services/additives.service'
+import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import type { StoreAdditiveCategoryDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
+import type { StoreProductSizeDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { CartItem } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
 import KioskDetailsBottomBar from '@/modules/kiosk/products/components/details/kiosk-details-bottom-bar.vue'
 import KioskDetailsProductImage from '@/modules/kiosk/products/components/details/kiosk-details-product-image.vue'
 import KioskDetailsProductInfo from '@/modules/kiosk/products/components/details/kiosk-details-product-info.vue'
-import type {
-  ProductSizeDTO
-} from '@/modules/kiosk/products/models/product.model'
 import { X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -20,7 +19,7 @@ interface UpdateCartDialogProps {
   isOpen: boolean;
   cartItem: CartItem;
   onClose: () => void;
-  onUpdate: (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveCategoryItemDTO[]) => void;
+  onUpdate: (updatedSize: StoreProductSizeDTO, updatedAdditives: AdditiveCategoryItemDTO[]) => void;
 }
 
 const { isOpen, cartItem, onClose, onUpdate } = defineProps<UpdateCartDialogProps>();
@@ -35,7 +34,7 @@ const selectedAdditives = ref(
     return acc;
   }, {})
 );
-const additivesCategories = ref<AdditiveCategoryDTO[]>([]);
+const additivesCategories = ref<StoreAdditiveCategoryDTO[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 
@@ -43,10 +42,10 @@ const error = ref<string | null>(null);
 const fetchAdditives = async () => {
   try {
     isLoading.value = true;
-    const fetchedCategories = await additivesService.getAdditiveCategories({productSizeId: selectedSize.value.id});
+    const fetchedCategories = await storeAdditivesService.getStoreAdditiveCategories(selectedSize.value.id);
 
     // Merge fetched additives with pre-selected ones
-    additivesCategories.value = fetchedCategories.data.map((category) => ({
+    additivesCategories.value = fetchedCategories.map((category) => ({
       ...category,
       additives: category.additives.map((additive) => ({
         ...additive,
@@ -83,7 +82,7 @@ const preserveSelectedAdditives = () => {
 };
 
 // Handle size selection
-const onSizeSelect = async (size: ProductSizeDTO) => {
+const onSizeSelect = async (size: StoreProductSizeDTO) => {
   if (selectedSize.value?.id === size.id) return;
   selectedSize.value = size;
   selectedAdditives.value = []
@@ -91,10 +90,6 @@ const onSizeSelect = async (size: ProductSizeDTO) => {
   preserveSelectedAdditives();
 };
 
-// const isAdditiveDefault = (additiveId: number) =>
-//   productDetails.value?.defaultAdditives.some((add) => add.id === additiveId) || false;
-
-const isAdditiveDefault = (additiveId: number) => false;
 
 // Computed total price
 const totalPrice = computed(() => {
@@ -193,16 +188,17 @@ const handleUpdate = () => {
 
 				<!-- Product Information -->
 				<KioskDetailsProductInfo
+					v-if="selectedSize"
 					:name="productDetails.name"
 					:description="productDetails.description"
 					:energy="calculatedEnergy"
+					:ingredients="selectedSize?.ingredients"
 				/>
 
 				<!-- Additives Selection -->
 				<KioskDetailsAdditivesSection
 					:categories="additivesCategories"
 					:isAdditiveSelected="isAdditiveSelected"
-					:is-additive-default="isAdditiveDefault"
 					@toggle-additive="onAdditiveToggle"
 				/>
 

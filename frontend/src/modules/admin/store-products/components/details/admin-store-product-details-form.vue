@@ -67,7 +67,7 @@ function initStoreProductLocal() {
     const basePrice = productSize ? productSize.basePrice : storeSz.storePrice
 
     return {
-      id: storeSz.id,
+      id: storeSz.productSizeId,
       name: storeSz.name,
       basePrice,
       storePrice: storeSz.storePrice,

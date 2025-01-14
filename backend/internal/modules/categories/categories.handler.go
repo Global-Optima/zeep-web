@@ -20,7 +20,7 @@ func NewCategoryHandler(service CategoryService) *CategoryHandler {
 
 func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 
-	var filter types.CategoriesFilterDTO
+	var filter types.ProductCategoriesFilterDTO
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.ProductCategory{})
 	if err != nil {
@@ -54,7 +54,7 @@ func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
 }
 
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
-	var dto types.CreateCategoryDTO
+	var dto types.CreateProductCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
@@ -76,7 +76,7 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	var dto types.UpdateCategoryDTO
+	var dto types.UpdateProductCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return

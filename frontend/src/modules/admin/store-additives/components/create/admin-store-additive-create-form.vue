@@ -70,7 +70,7 @@ function selectAdditive(additive: AdditiveDTO) {
   }
 
   // Add the selected additive with the default storePrice as the basePrice
-  additivesList.value.push({ ...additive, storePrice: additive.price })
+  additivesList.value.push({ ...additive, storePrice: additive.basePrice })
   openAdditiveDialog.value = false
 }
 
@@ -144,7 +144,7 @@ function removeAdditive(index: number) {
 								:key="additive.id"
 							>
 								<TableCell>{{ additive.name }}</TableCell>
-								<TableCell>{{ additive.price }}</TableCell>
+								<TableCell>{{ additive.basePrice }}</TableCell>
 								<TableCell>
 									<Input
 										type="number"

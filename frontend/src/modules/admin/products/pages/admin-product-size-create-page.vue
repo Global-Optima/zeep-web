@@ -33,12 +33,12 @@ function handleCreate(data: CreateProductSizeFormSchema) {
   const dto: CreateProductSizeDTO = {
     productId: Number(productId),
     name: data.name,
-    measure: data.measure,
+    unitId: data.unitId,
     basePrice: data.basePrice,
     size: data.size,
     isDefault: false,
     additives: data.additives.map(a => ({additiveId: a.additiveId, isDefault: a.isDefault})),
-    ingredientIds: [],
+    ingredients: data.ingredients.map(a => ({ingredientId: a.ingredientId, quantity: a.quantity})),
   }
 
 	createMutation.mutate({...dto, })

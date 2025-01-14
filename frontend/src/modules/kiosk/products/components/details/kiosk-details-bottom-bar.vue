@@ -39,24 +39,24 @@
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
+import type { StoreProductSizeDTO } from '@/modules/admin/store-products/models/store-products.model'
 import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
 import { Pencil, Plus } from 'lucide-vue-next'
 import { computed } from "vue"
 
 const {sizes, selectedSizeId, totalPrice, displayIcon = "add" } = defineProps<{
-  sizes: StoreProductSizeDetailsDTO[]
+  sizes: StoreProductSizeDTO[]
   selectedSizeId: number | undefined
   totalPrice: number,
   displayIcon?: "add" | "update",
 }>()
 
 const emits = defineEmits<{
-  (e: 'selectSize', size: StoreProductSizeDetailsDTO): void
+  (e: 'selectSize', size: StoreProductSizeDTO): void
   (e: 'addToCart'): void
 }>()
 
-const onSizeSelect = (size: StoreProductSizeDetailsDTO) => {
+const onSizeSelect = (size: StoreProductSizeDTO) => {
   emits('selectSize', size)
 }
 
@@ -71,6 +71,4 @@ const isSelected = (sizeId: number) => {
 }
 </script>
 
-<style scoped>
-/* Add any specific styles if needed */
-</style>
+<style scoped></style>

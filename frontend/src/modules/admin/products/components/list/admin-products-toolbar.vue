@@ -25,12 +25,12 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { ProductsFilter } from '@/modules/kiosk/products/models/product.model'
+import type { ProductsFilterDTO } from '@/modules/kiosk/products/models/product.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-const props = defineProps<{ filter: ProductsFilter }>()
+const props = defineProps<{ filter: ProductsFilterDTO }>()
 const emit = defineEmits(['update:filter'])
 
 const localFilter = ref({ ...props.filter })

@@ -1,5 +1,8 @@
 import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
-import type { StoreProductDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
+import type {
+	StoreProductDetailsDTO,
+	StoreProductSizeDTO,
+} from '@/modules/admin/store-products/models/store-products.model'
 import md5 from 'md5'
 import { defineStore } from 'pinia'
 import type { ProductSizeDTO } from '../../products/models/product.model'
@@ -7,7 +10,7 @@ import type { ProductSizeDTO } from '../../products/models/product.model'
 export interface CartItem {
 	key: string
 	product: StoreProductDetailsDTO
-	size: ProductSizeDTO
+	size: StoreProductSizeDTO
 	additives: AdditiveCategoryItemDTO[]
 	quantity: number
 }
@@ -51,7 +54,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 
 		addToCart(
 			product: StoreProductDetailsDTO,
-			size: ProductSizeDTO,
+			size: StoreProductSizeDTO,
 			additives: AdditiveCategoryItemDTO[],
 			quantity: number = 1,
 		) {
@@ -104,7 +107,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		updateCartItem(
 			key: string,
 			updates: {
-				size?: ProductSizeDTO
+				size?: StoreProductSizeDTO
 				additives?: AdditiveCategoryItemDTO[]
 				quantity?: number
 			},

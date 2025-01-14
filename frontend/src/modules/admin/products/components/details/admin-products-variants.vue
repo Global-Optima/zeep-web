@@ -44,7 +44,7 @@
 							class="hover:bg-slate-50 cursor-pointer"
 						>
 							<TableCell class="py-4 font-medium">{{ variant.name }}</TableCell>
-							<TableCell>{{ variant.size }} {{ variant.measure }}</TableCell>
+							<TableCell>{{ variant.size }} {{ variant.unit.name }}</TableCell>
 							<TableCell>
 								{{ formatPrice(variant.basePrice) }}
 							</TableCell>

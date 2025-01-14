@@ -59,7 +59,7 @@
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
-import type { AdditiveCategoryDTO, AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoriesFilterQuery, AdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounce } from '@vueuse/core'
@@ -76,7 +76,7 @@ const debouncedSearchTerm = useDebounce(
   computed(() => searchTerm.value),
   500
 )
-const filter = ref<AdditiveFilterQuery>({})
+const filter = ref<AdditiveCategoriesFilterQuery>({showAll: true})
 
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1

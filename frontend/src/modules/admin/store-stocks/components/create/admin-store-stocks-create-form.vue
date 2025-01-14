@@ -1,5 +1,35 @@
 <template>
-	<div>
+	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-6xl">
+		<!-- Header -->
+		<div class="flex items-center gap-4">
+			<Button
+				variant="outline"
+				size="icon"
+				@click="onCancel"
+			>
+				<ChevronLeft class="w-5 h-5" />
+				<span class="sr-only">Назад</span>
+			</Button>
+			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
+				Добавить на склад
+			</h1>
+
+			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+				<Button
+					variant="outline"
+					type="button"
+					@click="onCancel"
+					>Отменить</Button
+				>
+				<Button
+					type="submit"
+					@click="onSubmit"
+					>Сохранить</Button
+				>
+			</div>
+		</div>
+
+		<!-- Main Content -->
 		<Card>
 			<CardHeader>
 				<div class="flex justify-between items-start gap-4">
@@ -21,7 +51,8 @@
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead>Ингредиент</TableHead>
+							<TableHead>Название</TableHead>
+							<TableHead>Категория</TableHead>
 							<TableHead>Количество</TableHead>
 							<TableHead>Порог малого запаса</TableHead>
 							<TableHead class="text-center">Действия</TableHead>
@@ -31,7 +62,7 @@
 						<TableRow v-if="selectedIngredients.length === 0">
 							<TableCell
 								colspan="4"
-								class="text-center"
+								class="py-5 text-center text-gray-500"
 							>
 								Нет добавленных ингредиентов
 							</TableCell>
@@ -41,6 +72,7 @@
 							:key="ingredient.ingredientId"
 						>
 							<TableCell>{{ ingredient.name }}</TableCell>
+							<TableCell>{{ ingredient.category.name }}</TableCell>
 							<TableCell>
 								<Input
 									type="number"
@@ -69,29 +101,28 @@
 					</TableBody>
 				</Table>
 			</CardContent>
-			<CardFooter class="flex justify-end">
-				<Button
-					variant="outline"
-					class="mr-2"
-					@click="cancelForm"
-					>Отмена</Button
-				>
-				<Button
-					variant="default"
-					:disabled="!canSubmit"
-					@click="submitForm"
-				>
-					Сохранить
-				</Button>
-			</CardFooter>
 		</Card>
 
-		<AdminIngredientsSelectDialog
-			:open="openDialog"
-			@close="openDialog = false"
-			@select="addSelectedIngredient"
-		/>
+		<!-- Footer -->
+		<div class="flex justify-center items-center gap-2 md:hidden">
+			<Button
+				variant="outline"
+				@click="onCancel"
+				>Отменить</Button
+			>
+			<Button
+				type="submit"
+				@click="onSubmit"
+				>Сохранить</Button
+			>
+		</div>
 	</div>
+
+	<AdminIngredientsSelectDialog
+		:open="openDialog"
+		@close="openDialog = false"
+		@select="addSelectedIngredient"
+	/>
 </template>
 
 <script setup lang="ts">
@@ -100,9 +131,8 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from '@/core/components/ui/card'
 import { Input } from '@/core/components/ui/input'
 import {
@@ -114,16 +144,18 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
-import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { IngredientCategoryDTO, IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { AddMultipleStoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
-import { Trash } from 'lucide-vue-next'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
+import { ChevronLeft, Trash } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
-
 interface CreateStoreStockItem {
 	name: string
 	ingredientId: number
 	quantity: number
 	lowStockThreshold: number
+  unit: UnitDTO
+  category: IngredientCategoryDTO
 }
 
 // Props
@@ -150,6 +182,8 @@ function addSelectedIngredient(ingredient: IngredientsDTO) {
 			ingredientId: ingredient.id,
 			quantity: 0,
 			lowStockThreshold: 0,
+      unit: ingredient.unit,
+      category: ingredient.category
 		})
 		openDialog.value = false
 	}
@@ -174,7 +208,7 @@ const canSubmit = computed(() => {
 })
 
 // Submit form
-function submitForm() {
+function onSubmit() {
 	if (!canSubmit.value) {
 		console.error('Validation errors detected.')
 		return
@@ -191,7 +225,7 @@ function submitForm() {
 }
 
 // Cancel form
-function cancelForm() {
+function onCancel() {
 	emit('onCancel')
 }
 </script>

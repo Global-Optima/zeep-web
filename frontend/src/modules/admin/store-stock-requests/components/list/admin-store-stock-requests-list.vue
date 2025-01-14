@@ -19,7 +19,7 @@
 					{{ request.requestId }}
 				</TableCell>
 				<TableCell>
-					{{ request.warehouseName }}
+					{{ request.warehouse.name }}
 				</TableCell>
 				<TableCell>
 					<p

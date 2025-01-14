@@ -25,13 +25,13 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { StoreAdditivesFilterDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import type { AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Props and Emit
-const props = defineProps<{ filter: StoreAdditivesFilterDTO }>()
+const props = defineProps<{ filter: AdditiveFilterQuery }>()
 const emit = defineEmits(['update:filter'])
 
 // Local Filter
