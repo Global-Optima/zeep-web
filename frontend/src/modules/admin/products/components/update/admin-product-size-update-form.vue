@@ -32,8 +32,12 @@ import {
 } from '@/core/components/ui/table'
 import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
-import { ProductSizeMeasures, ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
-import { ChevronLeft, Trash } from 'lucide-vue-next'
+import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
+import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
+import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
+import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
@@ -43,12 +47,21 @@ interface SelectedAdditiveTypesDTO {
   imageUrl: string
 }
 
+interface SelectedIngredientsTypesDTO {
+  ingredientId: number
+  name: string
+  unit: string
+  category: string
+  quantity: number
+}
+
 export interface UpdateProductSizeFormSchema {
   name: ProductSizeNames
-  measure: ProductSizeMeasures
+  unitId: number
   basePrice: number
   size: number
   additives: SelectedAdditiveTypesDTO[]
+  ingredients: SelectedIngredientsTypesDTO[]
 }
 
 const {productSize} = defineProps<{productSize: ProductSizeDetailsDTO}>()
@@ -58,21 +71,17 @@ const emits = defineEmits<{
   onCancel: []
 }>()
 
-/**
- * 4. Create Zod schema using the enums
- */
+
 const createProductSizeSchema = toTypedSchema(
   z.object({
     name: z.nativeEnum(ProductSizeNames).describe('Выберите корректный вариант'),
-    measure: z.nativeEnum(ProductSizeMeasures).describe('Выберите корректную единицу'),
     basePrice: z.number().min(0, 'Введите корректную цену'),
     size: z.number().min(1, 'Введите корректный размер'),
+    unitId: z.number().min(1, 'Введите корректную единицу измерения'),
   })
 )
 
-/**
- * 5. Additional validation for additives
- */
+
 const validateAdditives = (additives: SelectedAdditiveTypesDTO[]) => {
   if (!additives.length) {
     return 'Необходимо добавить хотя бы одну добавку.'
@@ -80,29 +89,17 @@ const validateAdditives = (additives: SelectedAdditiveTypesDTO[]) => {
   return null
 }
 
-/**
- * 6. Form Setup
- */
-const { handleSubmit, isSubmitting } = useForm<UpdateProductSizeFormSchema>({
+const { handleSubmit, isSubmitting, setFieldValue } = useForm({
   validationSchema: createProductSizeSchema,
   initialValues: {
     name: productSize.name as ProductSizeNames ,
-    measure: productSize.measure as ProductSizeMeasures,
+    unitId: productSize.unit.id,
     basePrice: productSize.basePrice,
     size: productSize.size,
-    additives: productSize.additives.map(a => ({
-      additiveId: a.id,
-      isDefault: a.isDefault,
-      name: a.name,
-      categoryName: a.category.name,
-      imageUrl: a.imageUrl
-    })),
   }
 })
 
-/**
- * 7. Manage Additives
- */
+
 const additives = ref<SelectedAdditiveTypesDTO[]>(productSize.additives.map(a => ({
       additiveId: a.id,
       isDefault: a.isDefault,
@@ -113,6 +110,17 @@ const additives = ref<SelectedAdditiveTypesDTO[]>(productSize.additives.map(a =>
   )
 const additivesError = ref<string | null>(null)
 const openAdditiveDialog = ref(false)
+
+const ingredients = ref<SelectedIngredientsTypesDTO[]>(productSize.ingredients.map(i => (
+  {
+    ingredientId: i.id,
+    name: i.name,
+    unit: i.unit.name,
+    category: i.category.name,
+    quantity: 0,
+  }))
+  )
+const openIngredientsDialog = ref(false)
 
 function addAdditive(additive: AdditiveDTO) {
   if (!additives.value.some((item) => item.additiveId === additive.id)) {
@@ -126,17 +134,31 @@ function addAdditive(additive: AdditiveDTO) {
   }
 }
 
+function addIngredient(ingredient: IngredientsDTO) {
+  if (!ingredients.value.some((item) => item.ingredientId === ingredient.id)) {
+    ingredients.value.push({
+      ingredientId: ingredient.id,
+      name: ingredient.name,
+      unit: ingredient.unit.name,
+      category: ingredient.category.name,
+      quantity: 0
+    })
+  }
+}
+
 function removeAdditive(index: number) {
   additives.value.splice(index, 1)
+}
+
+function removeIngredient(index: number) {
+  ingredients.value.splice(index, 1)
 }
 
 function toggleDefault(index: number) {
   additives.value[index].isDefault = !additives.value[index].isDefault
 }
 
-/**
- * 8. Submit & Cancel
- */
+
 const onSubmit = handleSubmit((formValues) => {
   additivesError.value = validateAdditives(additives.value)
   if (additivesError.value) {
@@ -145,12 +167,22 @@ const onSubmit = handleSubmit((formValues) => {
   const finalDTO: UpdateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
+    ingredients: [] //TODO: remove it to ingredients.value,
   }
   emits('onSubmit', finalDTO)
 })
 
 const onCancel = () => {
   emits('onCancel')
+}
+
+const openUnitDialog = ref(false)
+const selectedUnit = ref<UnitDTO | null>(productSize.unit)
+
+function selectUnit(unit: UnitDTO) {
+  selectedUnit.value = unit
+  openUnitDialog.value = false
+  setFieldValue('unitId', unit.id)
 }
 </script>
 
@@ -230,55 +262,23 @@ const onCancel = () => {
 							</FormItem>
 						</FormField>
 
-						<!-- Measure and Size -->
-						<div class="flex gap-4">
-							<FormField
-								name="size"
-								v-slot="{ componentField }"
-							>
-								<FormItem class="flex-1">
-									<FormLabel>Размер</FormLabel>
-									<FormControl>
-										<Input
-											type="number"
-											v-bind="componentField"
-											placeholder="Введите размер"
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							</FormField>
-
-							<FormField
-								name="measure"
-								v-slot="{ componentField }"
-							>
-								<!-- TODO: Change to units dialog -->
-
-								<FormItem class="flex-1">
-									<FormLabel>Единица измерения</FormLabel>
-									<FormControl>
-										<!-- This Select uses our VariantMeasure enum (in Russian) -->
-										<Select v-bind="componentField">
-											<SelectTrigger>
-												<SelectValue placeholder="Выберите единицу" />
-											</SelectTrigger>
-											<SelectContent>
-												<!-- Iterate over VariantMeasure enum -->
-												<SelectItem
-													v-for="(value, key) in ProductSizeMeasures"
-													:key="key"
-													:value="value"
-												>
-													{{ value }}
-												</SelectItem>
-											</SelectContent>
-										</Select>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							</FormField>
-						</div>
+						<!-- Size -->
+						<FormField
+							name="size"
+							v-slot="{ componentField }"
+						>
+							<FormItem class="flex-1">
+								<FormLabel>Размер</FormLabel>
+								<FormControl>
+									<Input
+										type="number"
+										v-bind="componentField"
+										placeholder="Введите размер"
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
 
 						<!-- Price -->
 						<FormField
@@ -294,6 +294,24 @@ const onCancel = () => {
 										placeholder="Введите цену"
 									/>
 								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+
+						<FormField name="unitId">
+							<FormItem class="flex flex-col gap-1">
+								<FormLabel>Единица измерения</FormLabel>
+								<FormControl>
+									<div
+										@click="openUnitDialog = true"
+										class="flex justify-between items-center gap-4 px-4 py-2 border rounded-md text-sm"
+									>
+										{{ selectedUnit?.name || 'Размер не выбран' }}
+
+										<ChevronDown class="w-5 h-5 text-gray-500" />
+									</div>
+								</FormControl>
+
 								<FormMessage />
 							</FormItem>
 						</FormField>
@@ -369,6 +387,74 @@ const onCancel = () => {
 					</div>
 				</CardContent>
 			</Card>
+
+			<Card class="mt-4">
+				<CardHeader>
+					<div class="flex justify-between items-start">
+						<div>
+							<CardTitle>Техническая карта</CardTitle>
+							<CardDescription class="mt-2">
+								Выберите инргредиент и его количество
+							</CardDescription>
+						</div>
+						<Button
+							variant="outline"
+							@click="openIngredientsDialog = true"
+						>
+							Добавить
+						</Button>
+					</div>
+				</CardHeader>
+				<CardContent>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Название</TableHead>
+								<TableHead>Категория</TableHead>
+								<TableHead>Количество</TableHead>
+								<TableHead>Размер</TableHead>
+								<TableHead></TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							<TableRow
+								v-for="(ingredient, index) in ingredients"
+								:key="ingredient.ingredientId"
+							>
+								<TableCell>{{ ingredient.name }}</TableCell>
+								<TableCell>{{ ingredient.category }}</TableCell>
+
+								<TableCell class="flex items-center gap-2">
+									<Input
+										type="number"
+										v-model.number="ingredient.quantity"
+										:min="0"
+										placeholder="Введите количество"
+									/>
+								</TableCell>
+
+								<TableCell>{{ ingredient.unit }}</TableCell>
+
+								<TableCell class="text-center">
+									<Button
+										variant="ghost"
+										size="icon"
+										@click="removeIngredient(index)"
+									>
+										<Trash class="w-6 h-6 text-red-500" />
+									</Button>
+								</TableCell>
+							</TableRow>
+						</TableBody>
+					</Table>
+					<div
+						v-if="additivesError"
+						class="mt-2 text-red-500 text-sm"
+					>
+						{{ additivesError }}
+					</div>
+				</CardContent>
+			</Card>
 		</div>
 
 		<!-- Additive Dialog -->
@@ -376,6 +462,18 @@ const onCancel = () => {
 			:open="openAdditiveDialog"
 			@close="openAdditiveDialog = false"
 			@select="addAdditive"
+		/>
+
+		<AdminIngredientsSelectDialog
+			:open="openIngredientsDialog"
+			@close="openIngredientsDialog = false"
+			@select="addIngredient"
+		/>
+
+		<AdminSelectUnit
+			:open="openUnitDialog"
+			@close="openUnitDialog = false"
+			@select="selectUnit"
 		/>
 	</div>
 </template>

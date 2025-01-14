@@ -28,7 +28,7 @@
 				</TableCell>
 				<TableCell class="font-medium">{{ additive.name }}</TableCell>
 				<TableCell>{{ additive.category.name }}</TableCell>
-				<TableCell>{{ formatPrice(additive.price) }}</TableCell>
+				<TableCell>{{ formatPrice(additive.basePrice) }}</TableCell>
 				<TableCell>{{ additive.size }}</TableCell>
 				<TableCell class="flex justify-end">
 					<Button

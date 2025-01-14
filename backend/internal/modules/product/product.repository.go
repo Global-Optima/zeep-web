@@ -3,6 +3,7 @@ package product
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -60,6 +61,9 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		Preload("Unit").
 		Preload("Additives.Additive.Category").
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
+		Preload("Additives").
+		Preload("ProductSizeIngredients.Ingredient").
+		Preload("ProductSizeIngredients.Ingredient.Unit").
 		First(&productSize, productSizeID).Error
 
 	if err != nil {
@@ -242,8 +246,14 @@ func (r *productRepository) DeleteProduct(productID uint) error {
 func (r *productRepository) GetProductSizesByProductID(productID uint) ([]data.ProductSize, error) {
 	var productSizes []data.ProductSize
 
+	// Optimize this
 	err := r.db.
 		Preload("Unit").
+		Preload("Additives").
+		Preload("Additives.Additive.Category").
+		Preload("ProductSizeIngredients.Ingredient").
+		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
+		Preload("ProductSizeIngredients.Ingredient.Unit").
 		Where("product_id = ?", productID).
 		Find(&productSizes).Error
 	if err != nil {

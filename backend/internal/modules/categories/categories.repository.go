@@ -8,7 +8,7 @@ import (
 )
 
 type CategoryRepository interface {
-	GetCategories(filter *types.CategoriesFilterDTO) ([]data.ProductCategory, error)
+	GetCategories(filter *types.ProductCategoriesFilterDTO) ([]data.ProductCategory, error)
 	GetCategoryByID(id uint) (*data.ProductCategory, error)
 	CreateCategory(category *data.ProductCategory) (uint, error)
 	UpdateCategory(id uint, category *data.ProductCategory) error
@@ -23,7 +23,7 @@ func NewCategoryRepository(db *gorm.DB) CategoryRepository {
 	return &categoryRepository{db: db}
 }
 
-func (r *categoryRepository) GetCategories(filter *types.CategoriesFilterDTO) ([]data.ProductCategory, error) {
+func (r *categoryRepository) GetCategories(filter *types.ProductCategoriesFilterDTO) ([]data.ProductCategory, error) {
 	var categories []data.ProductCategory
 	query := r.db.Model(&data.ProductCategory{})
 

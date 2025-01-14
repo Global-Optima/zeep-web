@@ -86,19 +86,19 @@
 </template>
 
 <script setup lang="ts">
-import type { SubOrderDTO } from '@/modules/orders/models/orders.models'
+import type { SuborderDTO } from '@/modules/orders/models/orders.models'
 import { Plus, Printer } from 'lucide-vue-next'
 
 const props = defineProps<{
-  suborder: SubOrderDTO | null;
+  suborder: SuborderDTO | null;
 }>();
 
 const emits = defineEmits<{
-  (e: 'toggleSuborderStatus', suborder: SubOrderDTO): void;
-  (e: 'printQrCode', suborder: SubOrderDTO): void;
+  (e: 'toggleSuborderStatus', suborder: SuborderDTO): void;
+  (e: 'printQrCode', suborder: SuborderDTO): void;
 }>();
 
-const toggleSuborderStatus = (suborder: SubOrderDTO) => {
+const toggleSuborderStatus = (suborder: SuborderDTO) => {
   emits('toggleSuborderStatus', suborder);
 };
 

@@ -6,11 +6,10 @@ import type {
 	CreateProductSizeDTO,
 	ProductCategoriesFilterDTO,
 	ProductCategoryDTO,
-	ProductDTO,
 	ProductDetailsDTO,
 	ProductSizeDTO,
 	ProductSizeDetailsDTO,
-	ProductsFilter,
+	ProductsFilterDTO,
 	UpdateProductCategoryDTO,
 	UpdateProductDTO,
 	UpdateProductSizeDTO,
@@ -18,9 +17,9 @@ import type {
 import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
 class ProductsService {
-	async getProducts(filter?: ProductsFilter) {
+	async getProducts(filter?: ProductsFilterDTO) {
 		try {
-			const response = await apiClient.get<PaginatedResponse<ProductDTO[]>>(`/products`, {
+			const response = await apiClient.get<PaginatedResponse<ProductDetailsDTO[]>>(`/products`, {
 				params: buildRequestFilter(filter),
 			})
 			return response.data

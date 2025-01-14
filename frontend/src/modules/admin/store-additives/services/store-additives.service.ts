@@ -1,11 +1,11 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import type { AdditiveFilterQuery } from '../../additives/models/additives.model'
 import type {
 	CreateStoreAdditiveDTO,
 	StoreAdditiveCategoryDTO,
 	StoreAdditiveDTO,
-	StoreAdditivesFilterDTO,
 	UpdateStoreAdditiveDTO,
 } from '../models/store-additves.model'
 
@@ -13,7 +13,7 @@ class StoreAdditivesService {
 	/**
 	 * Fetch all store additives with optional filters
 	 */
-	async getStoreAdditives(filter?: StoreAdditivesFilterDTO) {
+	async getStoreAdditives(filter?: AdditiveFilterQuery) {
 		try {
 			const response = await apiClient.get<PaginatedResponse<StoreAdditiveDTO[]>>(
 				'/store-additives',
@@ -44,10 +44,10 @@ class StoreAdditivesService {
 	/**
 	 * Fetch all store additive categories
 	 */
-	async getStoreAdditiveCategories() {
+	async getStoreAdditiveCategories(productSizeId: number) {
 		try {
 			const response = await apiClient.get<StoreAdditiveCategoryDTO[]>(
-				'/store-additives/categories',
+				`/store-additives/categories/${productSizeId}`,
 			)
 			return response.data
 		} catch (error) {

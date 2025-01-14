@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -44,6 +45,10 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 		Preload("Product.ProductSizes").
 		Preload("StoreProductSizes.ProductSize.Unit").
 		Preload("Product.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
+
 		First(&storeProduct).Error
 
 	if err != nil {

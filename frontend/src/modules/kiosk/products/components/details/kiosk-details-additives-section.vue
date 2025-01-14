@@ -12,7 +12,7 @@
 						v-for="additive in category.additives"
 						:key="additive.id"
 						:additive="additive"
-						:is-default="isAdditiveDefault(additive.id)"
+						:is-default="additive.isDefault"
 						:is-selected="isAdditiveSelected(category.id, additive.id)"
 						@click:additive="() => onAdditiveToggle(category.id, additive)"
 					/>
@@ -24,12 +24,12 @@
 
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
-import type { AdditiveCategoryDTO, AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import type { StoreAdditiveCategoryDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import KioskDetailsAdditivesCard from '@/modules/kiosk/products/components/details/kiosk-details-additives-card.vue'
 
 defineProps<{
-  categories: AdditiveCategoryDTO[]
-  isAdditiveDefault: (additiveId: number) => boolean
+  categories: StoreAdditiveCategoryDTO[]
   isAdditiveSelected: (categoryId: number, additiveId: number) => boolean
   containerClass?: string
 }>()

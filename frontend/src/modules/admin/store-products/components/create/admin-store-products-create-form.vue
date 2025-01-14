@@ -29,7 +29,7 @@ import AdminSelectProductDialog from '@/modules/admin/products/admin-select-prod
 
 // Types
 import type { CreateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
-import type { ProductDTO } from '@/modules/kiosk/products/models/product.model'
+import type { ProductDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 
 // Props & Emits
 const emits = defineEmits<{
@@ -95,7 +95,7 @@ function onCancel() {
  * Called when a product is selected in the dialog.
  * If the product already exists in the list, ignore it.
  */
-function selectProduct(product: ProductDTO) {
+function selectProduct(product: ProductDetailsDTO) {
   const exists = productsList.value.some(p => p.id === product.id)
   if (exists) {
     // You might optionally show a notification or toast here

@@ -46,9 +46,7 @@ const updateMutation = useMutation({
 function handleUpdate(updatedData: UpdateIngredientDTO) {
   if (isNaN(Number(ingredientId))) return router.back()
 
-  const dto: UpdateIngredientDTO = {...updatedData, expiresAt: updatedData.expiresAt ? new Date(updatedData.expiresAt).toISOString() : new Date().toISOString()}
-
-	updateMutation.mutate({id: Number(ingredientId), dto})
+	updateMutation.mutate({id: Number(ingredientId), dto: updatedData})
 }
 
 function handleCancel() {

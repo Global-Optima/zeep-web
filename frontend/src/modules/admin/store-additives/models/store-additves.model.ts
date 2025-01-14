@@ -1,5 +1,4 @@
-import type { PaginationParams } from '@/core/utils/pagination.utils'
-import type { AdditiveDTO } from '../../additives/models/additives.model'
+import type { AdditiveCategoryItemDTO, AdditiveDTO } from '../../additives/models/additives.model'
 
 export interface CreateStoreAdditiveDTO {
 	additiveId: number
@@ -13,16 +12,17 @@ export interface UpdateStoreAdditiveDTO {
 export interface StoreAdditiveDTO extends AdditiveDTO {
 	storeAdditiveId: number
 	storePrice: number
-	id: number
-	name: string
-	description: string
 }
 
-export interface StoreAdditiveCategoryItemDTO {
+export interface StoreAdditiveCategoriesFilter {
+	search?: string
+	isMultipleSelect?: boolean
+}
+
+export interface StoreAdditiveCategoryItemDTO extends AdditiveCategoryItemDTO {
 	storeAdditiveId: number
 	storePrice: number
-	id: number
-	name: string
+	isDefault: boolean
 }
 
 export interface StoreAdditiveCategoryDTO {
@@ -31,8 +31,4 @@ export interface StoreAdditiveCategoryDTO {
 	description: string
 	additives: StoreAdditiveCategoryItemDTO[]
 	isMultipleSelect: boolean
-}
-
-export interface StoreAdditivesFilterDTO extends PaginationParams {
-	search?: string
 }

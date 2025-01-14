@@ -34,21 +34,21 @@ import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWi
 import { Card, CardContent } from '@/core/components/ui/card'
 import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
+import type { AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
 import AdminStoreAdditivesList from '@/modules/admin/store-additives/components/list/admin-store-additives-list.vue'
 import AdminStoreAdditivesToolbar from '@/modules/admin/store-additives/components/list/admin-store-additives-toolbar.vue'
-import type { StoreAdditivesFilterDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<StoreAdditivesFilterDTO>({})
+const filter = ref<AdditiveFilterQuery>({})
 
 const { data: storeAdditivesResponse } = useQuery({
   queryKey: computed(() => ['admin-store-additives', filter.value]),
   queryFn: () => storeAdditivesService.getStoreAdditives(filter.value),
 })
 
-function updateFilter(updatedFilter: StoreAdditivesFilterDTO) {
+function updateFilter(updatedFilter: AdditiveFilterQuery) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 

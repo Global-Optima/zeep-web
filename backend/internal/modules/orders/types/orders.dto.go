@@ -1,8 +1,9 @@
 package types
 
 import (
-	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"time"
+
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -56,7 +57,7 @@ type OrderDTO struct {
 type SuborderDTO struct {
 	ID          uint                  `json:"id"`
 	OrderID     uint                  `json:"orderId"`
-	ProductSize ProductSizeDTO        `json:"productSize"`
+	ProductSize OrderProductSizeDTO   `json:"productSize"`
 	Price       float64               `json:"price"`
 	Status      data.SubOrderStatus   `json:"status"`
 	Additives   []SuborderAdditiveDTO `json:"additives"`
@@ -64,7 +65,7 @@ type SuborderDTO struct {
 	UpdatedAt   time.Time             `json:"updatedAt"`
 }
 
-type ProductSizeDTO struct {
+type OrderProductSizeDTO struct {
 	ID          uint                   `json:"id"`
 	SizeName    string                 `json:"sizeName"`
 	ProductName string                 `json:"productName"`
@@ -72,7 +73,7 @@ type ProductSizeDTO struct {
 	Unit        unitTypes.UnitResponse `json:"unit"`
 }
 
-type AdditiveDTO struct {
+type OrderAdditiveDTO struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -80,54 +81,54 @@ type AdditiveDTO struct {
 }
 
 type SuborderAdditiveDTO struct {
-	ID         uint        `json:"id"`
-	SuborderID uint        `json:"subOrderId"`
-	Additive   AdditiveDTO `json:"additive"`
-	Price      float64     `json:"price"`
-	CreatedAt  time.Time   `json:"createdAt"`
-	UpdatedAt  time.Time   `json:"updatedAt"`
+	ID         uint             `json:"id"`
+	SuborderID uint             `json:"subOrderId"`
+	Additive   OrderAdditiveDTO `json:"additive"`
+	Price      float64          `json:"price"`
+	CreatedAt  time.Time        `json:"createdAt"`
+	UpdatedAt  time.Time        `json:"updatedAt"`
 }
 
 type OrderDetailsDTO struct {
-	ID              uint                 `json:"id"`
-	CustomerName    *string              `json:"customerName,omitempty"` // Optional
-	Status          string               `json:"status"`
-	Total           float64              `json:"total"`
-	Suborders       []SuborderDetailsDTO `json:"suborders"`
-	DeliveryAddress *DeliveryAddressDTO  `json:"deliveryAddress,omitempty"` // Optional
+	ID              uint                     `json:"id"`
+	CustomerName    *string                  `json:"customerName,omitempty"` // Optional
+	Status          string                   `json:"status"`
+	Total           float64                  `json:"total"`
+	Suborders       []SuborderDetailsDTO     `json:"suborders"`
+	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"` // Optional
 }
 
 type SuborderDetailsDTO struct {
-	ID          uint                  `json:"id"`
-	Price       float64               `json:"price"`
-	Status      string                `json:"status"`
-	ProductSize ProductSizeDetailsDTO `json:"productSize"`
-	Additives   []AdditiveDetailsDTO  `json:"additives"`
+	ID          uint                       `json:"id"`
+	Price       float64                    `json:"price"`
+	Status      string                     `json:"status"`
+	ProductSize OrderProductSizeDetailsDTO `json:"productSize"`
+	Additives   []OrderAdditiveDetailsDTO  `json:"additives"`
 }
 
-type ProductSizeDetailsDTO struct {
+type OrderProductSizeDetailsDTO struct {
 	ID        uint                   `json:"id"`
 	Name      string                 `json:"name"`
 	Unit      unitTypes.UnitResponse `json:"unit"`
 	BasePrice float64                `json:"basePrice"`
-	Product   ProductDetailsDTO      `json:"product"`
+	Product   OrderProductDetailsDTO `json:"product"`
 }
 
-type ProductDetailsDTO struct {
+type OrderProductDetailsDTO struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	ImageURL    string `json:"imageUrl"`
 }
 
-type AdditiveDetailsDTO struct {
+type OrderAdditiveDetailsDTO struct {
 	ID          uint    `json:"id"`
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	BasePrice   float64 `json:"basePrice"`
 }
 
-type DeliveryAddressDTO struct {
+type OrderDeliveryAddressDTO struct {
 	ID        uint   `json:"id"`
 	Address   string `json:"address"`
 	Longitude string `json:"longitude"`

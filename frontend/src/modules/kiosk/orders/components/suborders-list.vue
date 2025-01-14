@@ -49,20 +49,20 @@
 </template>
 
 <script setup lang="ts">
-import { SubOrderStatus, type SubOrderDTO } from '@/modules/orders/models/orders.models'
+import { SubOrderStatus, type SuborderDTO } from '@/modules/orders/models/orders.models'
 import { Check } from 'lucide-vue-next'
 
 
 defineProps<{
-  suborders: SubOrderDTO[] | null;
-  selectedSuborder: SubOrderDTO | null;
+  suborders: SuborderDTO[] | null;
+  selectedSuborder: SuborderDTO | null;
 }>();
 
 const emits = defineEmits<{
-  (e: 'selectSuborder', suborder: SubOrderDTO): void;
+  (e: 'selectSuborder', suborder: SuborderDTO): void;
 }>();
 
-const selectSuborder = (suborder: SubOrderDTO) => {
+const selectSuborder = (suborder: SuborderDTO) => {
   emits('selectSuborder', suborder);
 };
 </script>

@@ -6,10 +6,10 @@ import (
 )
 
 type CategoryService interface {
-	GetCategories(filter *types.CategoriesFilterDTO) ([]types.CategoryDTO, error)
-	GetCategoryByID(id uint) (*types.CategoryDTO, error)
-	CreateCategory(dto *types.CreateCategoryDTO) (uint, error)
-	UpdateCategory(id uint, dto *types.UpdateCategoryDTO) error
+	GetCategories(filter *types.ProductCategoriesFilterDTO) ([]types.ProductCategoryDTO, error)
+	GetCategoryByID(id uint) (*types.ProductCategoryDTO, error)
+	CreateCategory(dto *types.CreateProductCategoryDTO) (uint, error)
+	UpdateCategory(id uint, dto *types.UpdateProductCategoryDTO) error
 	DeleteCategory(id uint) error
 }
 
@@ -23,13 +23,13 @@ func NewCategoryService(repo CategoryRepository) CategoryService {
 	}
 }
 
-func (s *categoryService) GetCategories(filter *types.CategoriesFilterDTO) ([]types.CategoryDTO, error) {
+func (s *categoryService) GetCategories(filter *types.ProductCategoriesFilterDTO) ([]types.ProductCategoryDTO, error) {
 	categories, err := s.repo.GetCategories(filter)
 	if err != nil {
 		return nil, err
 	}
 
-	dtos := make([]types.CategoryDTO, len(categories))
+	dtos := make([]types.ProductCategoryDTO, len(categories))
 	for i, category := range categories {
 		dtos[i] = *types.MapCategoryToDTO(category)
 	}
@@ -37,7 +37,7 @@ func (s *categoryService) GetCategories(filter *types.CategoriesFilterDTO) ([]ty
 	return dtos, nil
 }
 
-func (s *categoryService) GetCategoryByID(id uint) (*types.CategoryDTO, error) {
+func (s *categoryService) GetCategoryByID(id uint) (*types.ProductCategoryDTO, error) {
 	category, err := s.repo.GetCategoryByID(id)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (s *categoryService) GetCategoryByID(id uint) (*types.CategoryDTO, error) {
 	return types.MapCategoryToDTO(*category), nil
 }
 
-func (s *categoryService) CreateCategory(dto *types.CreateCategoryDTO) (uint, error) {
+func (s *categoryService) CreateCategory(dto *types.CreateProductCategoryDTO) (uint, error) {
 	category := data.ProductCategory{
 		Name:        dto.Name,
 		Description: dto.Description,
@@ -60,7 +60,7 @@ func (s *categoryService) CreateCategory(dto *types.CreateCategoryDTO) (uint, er
 	return id, nil
 }
 
-func (s *categoryService) UpdateCategory(id uint, dto *types.UpdateCategoryDTO) error {
+func (s *categoryService) UpdateCategory(id uint, dto *types.UpdateProductCategoryDTO) error {
 	category := types.UpdateToCategory(dto)
 
 	err := s.repo.UpdateCategory(id, category)

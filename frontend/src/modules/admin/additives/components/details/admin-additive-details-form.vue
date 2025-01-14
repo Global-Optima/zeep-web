@@ -56,7 +56,7 @@ const { handleSubmit, resetForm, setFieldValue } = useForm<UpdateAdditiveFormSch
   initialValues: {
     name: props.additive.name || '',
     description: props.additive.description || '',
-    price: props.additive.price || 0,
+    price: props.additive.basePrice || 0,
     imageUrl: props.additive.imageUrl || '',
     size: props.additive.size || '',
     additiveCategoryId: props.additive.category.id || undefined,

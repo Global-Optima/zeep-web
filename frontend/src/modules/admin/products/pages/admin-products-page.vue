@@ -34,19 +34,19 @@ import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminProductsList from '@/modules/admin/products/components/list/admin-products-list.vue'
 import AdminProductsToolbar from '@/modules/admin/products/components/list/admin-products-toolbar.vue'
-import type { ProductsFilter } from '@/modules/kiosk/products/models/product.model'
+import type { ProductsFilterDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<ProductsFilter>({})
+const filter = ref<ProductsFilterDTO>({})
 
 const { data: productsResponse } = useQuery({
   queryKey: computed(() => ['admin-products', filter.value]),
   queryFn: () => productsService.getProducts(filter.value),
 })
 
-function updateFilter(updatedFilter: ProductsFilter) {
+function updateFilter(updatedFilter: ProductsFilterDTO) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 
