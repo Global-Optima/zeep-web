@@ -46,7 +46,6 @@ func (r *storeAdditiveRepository) CreateStoreAdditives(storeAdditives []data.Sto
 func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
-	//TODO simplify and return error if not found
 	subquery := r.db.Model(&data.Additive{}).
 		Select("additive_category_id").
 		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
@@ -61,8 +60,8 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSiz
 		Preload("Additives.ProductSizeAdditives", "product_size_id = ?", productSizeID).
 		Where("id IN (?)", subquery)
 
-	if filter.IsMultipleSelect != nil && *filter.IsMultipleSelect {
-		query = query.Where("product_size_additives.is_default = ?", *filter.IsMultipleSelect)
+	if filter.IsMultipleSelect != nil {
+		query = query.Where("is_multiple_select = ?", *filter.IsMultipleSelect)
 	}
 
 	if filter.Search != nil && *filter.Search != "" {

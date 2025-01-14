@@ -54,7 +54,9 @@ func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, 
 	}
 
 	if len(categories) == 0 {
-		return nil, types.ErrStoreAdditiveCategoriesNotFound
+		wrappedErr := utils.WrapError("failed to retrieve store additives", types.ErrStoreAdditiveCategoriesNotFound)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	var categoryDTOs []types.StoreAdditiveCategoryDTO

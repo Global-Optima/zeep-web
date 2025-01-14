@@ -130,7 +130,7 @@ func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&data.StoreProduct{}).
 			Where("store_id = ? AND id = ?", storeID, storeProductID).
-			Updates(updateModels.StoreProduct).Error
+			Update("is_available", &updateModels.StoreProduct.IsAvailable).Error
 
 		if err != nil {
 			return err
@@ -184,13 +184,18 @@ func (r *storeProductRepository) DeleteStoreProductWithSizes(storeID, storeProdu
 
 func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error) {
 	var storeProductSize data.StoreProductSize
-	if err := r.db.
-		Where("store_id = ? AND id = ?", storeID, storeProductSizeID).
-		Find(&storeProductSize).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
+
+	err := r.db.Model(&data.StoreProductSize{}).
+		Joins("JOIN store_products sp ON store_product_sizes.store_product_id = sp.id").
+		Where("sp.store_id = ? AND store_product_sizes.id = ?", storeID, storeProductSizeID).
+		Preload("ProductSize.Unit").
+		Preload("ProductSize.Additives.Additive.Category").
+		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
+		First(&storeProductSize).Error
+
+	if err != nil {
+		return &storeProductSize, err
 	}
 	return &storeProductSize, nil
 }

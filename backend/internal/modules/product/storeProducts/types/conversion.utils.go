@@ -1,6 +1,7 @@
 package types
 
 import (
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"github.com/sirupsen/logrus"
 	"sort"
 
@@ -57,6 +58,25 @@ func MapToStoreProductSizeDTO(sps data.StoreProductSize) StoreProductSizeDTO {
 		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(sps.ProductSize),
 		ProductSizeID:      sps.ProductSizeID,
 		StorePrice:         sps.Price,
+	}
+}
+
+func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSizeDetailsDTO {
+	var additives = make([]productTypes.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
+	var ingredients = make([]ingredientTypes.IngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
+
+	for i, productSizeAdditive := range sps.ProductSize.Additives {
+		additives[i] = productTypes.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
+	}
+
+	for i, productSizeIngredient := range sps.ProductSize.ProductSizeIngredients {
+		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+	}
+
+	return StoreProductSizeDetailsDTO{
+		StoreProductSizeDTO: MapToStoreProductSizeDTO(sps),
+		Additives:           additives,
+		Ingredients:         ingredients,
 	}
 }
 

@@ -83,15 +83,15 @@ func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 		BasePrice:   additive.BasePrice,
 		ImageURL:    additive.ImageURL,
 		Size:        additive.Size,
-		Category: struct {
-			ID               uint   `json:"id"`
-			Name             string `json:"name"`
-			IsMultipleSelect bool   `json:"isMultipleSelect"`
-		}{
-			ID:               additive.Category.ID,
-			Name:             additive.Category.Name,
-			IsMultipleSelect: additive.Category.IsMultipleSelect,
-		},
+		Category:    *ConvertToCategoryDTO(additive.Category),
+	}
+}
+
+func ConvertToCategoryDTO(category *data.AdditiveCategory) *CategoryDTO {
+	return &CategoryDTO{
+		ID:               category.ID,
+		Name:             category.Name,
+		IsMultipleSelect: category.IsMultipleSelect,
 	}
 }
 

@@ -18,19 +18,20 @@ type AdditiveFilterQuery struct {
 	CategoryID    *uint    `form:"categoryId"`
 	ProductSizeID *uint    `form:"productSizeId"`
 }
+type CategoryDTO struct {
+	ID               uint   `json:"id"`
+	Name             string `json:"name"`
+	IsMultipleSelect bool   `json:"isMultipleSelect"`
+}
 
 type AdditiveDTO struct {
-	ID          uint    `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	BasePrice   float64 `json:"basePrice"`
-	ImageURL    string  `json:"imageUrl"`
-	Size        string  `json:"size"`
-	Category    struct {
-		ID               uint   `json:"id"`
-		Name             string `json:"name"`
-		IsMultipleSelect bool   `json:"isMultipleSelect"`
-	} `json:"category"`
+	ID          uint        `json:"id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	BasePrice   float64     `json:"basePrice"`
+	ImageURL    string      `json:"imageUrl"`
+	Size        string      `json:"size"`
+	Category    CategoryDTO `json:"category"`
 }
 
 type AdditiveCategoryItemDTO struct {
@@ -60,7 +61,7 @@ type CreateAdditiveCategoryDTO struct {
 type UpdateAdditiveCategoryDTO struct {
 	Name             *string `json:"name" binding:"omitempty"`
 	Description      *string `json:"description" binding:"omitempty"`
-	IsMultipleSelect *bool  `json:"isMultipleSelect"`
+	IsMultipleSelect *bool   `json:"isMultipleSelect"`
 }
 
 type UpdateAdditiveDTO struct {

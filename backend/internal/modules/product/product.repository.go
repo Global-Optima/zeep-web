@@ -60,6 +60,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		Preload("Unit").
 		Preload("Additives.Additive.Category").
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
+		Preload("ProductSizeIngredients.Ingredient.Unit").
 		First(&productSize, productSizeID).Error
 
 	if err != nil {
@@ -184,10 +185,15 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 			}
 
 			// Add new ingredients
-			for _, ingredient := range updateModels.Ingredients {
-				ingredient.ProductSizeID = id
+			ingredients := make([]data.ProductSizeIngredient, len(updateModels.Ingredients))
+			for i, ingredient := range updateModels.Ingredients {
+				ingredients[i] = data.ProductSizeIngredient{
+					ProductSizeID: id,
+					IngredientID:  ingredient.IngredientID,
+					Quantity:      ingredient.Quantity,
+				}
 			}
-			if err := tx.Create(updateModels.Ingredients).Error; err != nil {
+			if err := tx.Create(ingredients).Error; err != nil {
 				return fmt.Errorf("failed to create ingredients: %w", err)
 			}
 		}

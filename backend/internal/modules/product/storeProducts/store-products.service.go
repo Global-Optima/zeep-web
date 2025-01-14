@@ -16,6 +16,7 @@ const DEFAULT_LOW_STOCK_THRESHOLD = 50
 type StoreProductService interface {
 	GetStoreProductById(storeID, storeProductID uint) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
+	GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error)
 	CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error)
 	CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error)
 	UpdateStoreProduct(storeID, storeProductID uint, dto *types.UpdateStoreProductDTO) error
@@ -73,6 +74,18 @@ func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.Store
 	}
 
 	return dtos, nil
+}
+
+func (s *storeProductService) GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error) {
+	storeProduct, err := s.repo.GetStoreProductSizeById(storeID, storeProductSizeID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get store product size by ID", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dto := types.MapToStoreProductSizeDetailsDTO(*storeProduct)
+	return &dto, nil
 }
 
 func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error) {
