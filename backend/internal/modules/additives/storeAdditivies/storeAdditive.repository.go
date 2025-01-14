@@ -16,6 +16,8 @@ type StoreAdditiveRepository interface {
 	GetStoreAdditiveCategories(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, input *data.StoreAdditive) error
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
+
+	CloneWithTransaction(tx *gorm.DB) StoreAdditiveRepository
 }
 
 type storeAdditiveRepository struct {
@@ -24,6 +26,10 @@ type storeAdditiveRepository struct {
 
 func NewStoreAdditiveRepository(db *gorm.DB) StoreAdditiveRepository {
 	return &storeAdditiveRepository{db: db}
+}
+
+func (r *storeAdditiveRepository) CloneWithTransaction(tx *gorm.DB) StoreAdditiveRepository {
+	return &storeAdditiveRepository{db: tx}
 }
 
 func (r *storeAdditiveRepository) CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error) {
@@ -56,6 +62,7 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSiz
 
 	query := r.db.Model(&data.AdditiveCategory{}).
 		Preload("Additives", "id IN (SELECT additive_id FROM store_additives WHERE store_id = ?)", storeID).
+		Preload("Additives.Unit").
 		Preload("Additives.StoreAdditives", "store_id = ?", storeID).
 		Preload("Additives.ProductSizeAdditives", "product_size_id = ?", productSizeID).
 		Where("id IN (?)", subquery)
@@ -86,6 +93,9 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeID, storeAdditiveID 
 		Where("store_id = ?", storeID).
 		Where("id = ?", storeAdditiveID).
 		Preload("Additive.Category").
+		Preload("Additive.Unit").
+		Preload("Additive.Ingredients.Ingredient.Unit").
+		Preload("Additive.Ingredients.Ingredient.IngredientCategory").
 		First(&storeAdditive).Error
 
 	if err != nil {
@@ -100,18 +110,20 @@ func (r *storeAdditiveRepository) GetStoreAdditives(storeID uint, filter *additi
 
 	query := r.db.Model(&data.StoreAdditive{}).
 		Where("store_id = ?", storeID).
-		Preload("Additive.Category")
+		Preload("Additive.Category").
+		Preload("Additive.Unit")
 
 	var err error
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
+		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ? OR additives.size ILIKE ?", searchTerm, searchTerm, searchTerm)
 	}
 
 	if filter.MinPrice != nil {
 		query = query.Where("store_additives.price >= ?", *filter.MinPrice)
 	}
+
 	if filter.MaxPrice != nil {
 		query = query.Where("store_additives.price <= ?", *filter.MaxPrice)
 	}
@@ -140,11 +152,18 @@ func (r *storeAdditiveRepository) UpdateStoreAdditive(storeID, storeAdditiveID u
 		return fmt.Errorf("input cannot be nil")
 	}
 
-	err := r.db.Model(&data.StoreAdditive{}).
+	res := r.db.Model(&data.StoreAdditive{}).
 		Where("store_id = ? AND id = ?", storeID, storeAdditiveID).
-		Updates(input).Error
+		Updates(input)
 
-	return err
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return types.ErrStoreAdditiveNotFound
+	}
+
+	return nil
 }
 
 func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {

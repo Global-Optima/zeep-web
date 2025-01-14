@@ -6,7 +6,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -42,9 +41,9 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 		}
 
 		sw := m.storeWarehouseRepo.CloneWithTransaction(tx)
-		logrus.Info(dtos)
+
 		for _, dto := range dtos {
-			logrus.Info(dto)
+
 			_, err := sw.AddStock(storeID, &dto)
 
 			if err != nil {

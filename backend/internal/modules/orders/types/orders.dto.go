@@ -76,7 +76,7 @@ type AdditiveDTO struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Size        string `json:"size"`
+	Size        int    `json:"size"`
 }
 
 type SuborderAdditiveDTO struct {

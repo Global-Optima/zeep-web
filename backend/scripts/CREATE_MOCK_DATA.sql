@@ -495,6 +495,7 @@ INSERT INTO
     description,
     base_price,
     size,
+    unit_id,
     additive_category_id,
     image_url
   )
@@ -503,7 +504,8 @@ VALUES
     'Ванильный сироп',
     'Сладкий аромат ванили',
     50.00,
-    'мл',
+    20,
+    1,
     1,
     'https://monin.us/cdn/shop/files/750mL-Vanilla.png?v=1724939521&width=1946'
   ),
@@ -511,7 +513,8 @@ VALUES
     'Карамельный сироп',
     'Сладкий вкус карамели',
     70.00,
-    'мл',
+    40,
+    3,
     1,
     'https://www.giffard.com/327-large_default/karamell-sirup.jpg'
   ),
@@ -519,7 +522,8 @@ VALUES
     'Взбитые сливки',
     'Сливки для украшения напитков',
     80.00,
-    'г',
+    500,
+    2,
     3,
     'https://static.vecteezy.com/system/resources/previews/033/888/680/non_2x/white-whipped-cream-with-ai-generated-free-png.png'
   ),
@@ -527,7 +531,8 @@ VALUES
     'Корица',
     'Пряная корица для добавления аромата',
     30.00,
-    'г',
+    20,
+    1,
     2,
     'https://png.pngtree.com/png-vector/20240803/ourmid/pngtree-cinnamon-isolated-on-white-background-png-image_13361859.png'
   ),
@@ -535,7 +540,8 @@ VALUES
     'Шоколадная крошка',
     'Крошка из шоколада для украшения',
     90.00,
-    'г',
+    20,
+    1,
     3,
     'https://mlfwajaoc5gr.i.optimole.com/w:1080/h:1080/q:mauto/ig:avif/http://icecreambakery.in/wp-content/uploads/2024/03/Chocolate-Chips-Manufacturer-RPG-Industries-2.png'
   ),
@@ -543,7 +549,8 @@ VALUES
     'Мед',
     'Натуральный мед для подслащивания',
     60.00,
-    'мл',
+    20,
+    1,
     2,
     'https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-3d-bowl-of-honey-with-a-driper-on-transparent-background-png-image_13330438.png'
   ),
@@ -551,7 +558,8 @@ VALUES
     'Кокосовое молоко',
     'Молоко с ароматом кокоса',
     100.00,
-    'мл',
+    20,
+    1,
     4,
     'https://static.vecteezy.com/system/resources/previews/049/642/396/non_2x/coconut-milk-in-a-coconut-shell-with-a-transparent-background-png.png'
   ),
@@ -559,7 +567,8 @@ VALUES
     'Клубничный сироп',
     'Сироп с ароматом клубники',
     65.00,
-    'мл',
+    20,
+    1,
     1,
     'https://monin.ca/cdn/shop/files/750mL-Strawberry.png?v=1727882931&width=1445'
   ),
@@ -567,7 +576,8 @@ VALUES
     'Мята',
     'Свежие листья мяты для аромата',
     40.00,
-    'г',
+    20,
+    1,
     5,
     'https://static.vecteezy.com/system/resources/thumbnails/047/732/281/small/basil-leaves-in-a-glass-bowl-transparent-background-png.png'
   ),
@@ -575,7 +585,8 @@ VALUES
     'Сахар',
     'Белый сахар для подслащивания',
     10.00,
-    'г',
+    20,
+    1,
     6,
     'https://static.vecteezy.com/system/resources/thumbnails/044/902/343/small_2x/sweet-delight-enhance-your-recipes-with-sugar-in-bowl-free-png.png'
   ),
@@ -583,7 +594,8 @@ VALUES
     'Кубики льда',
     'Лед для охлаждения напитков',
     5.00,
-    'г',
+    20,
+    1,
     7,
     'https://img.pikbest.com/origin/09/14/36/70CpIkbEsTeTk.png!sw800'
   ),
@@ -591,7 +603,8 @@ VALUES
     'Сироп из клена',
     'Ароматный сироп из клена',
     80.00,
-    'мл',
+    20,
+    1,
     1,
     'https://png.pngtree.com/png-vector/20240812/ourmid/pngtree-sweet-syrup-drizzling-over-breakfast-treats-png-image_13462282.png'
   ),
@@ -599,7 +612,8 @@ VALUES
     'Лимонный сок',
     'Свежий лимонный сок для аромата',
     45.00,
-    'мл',
+    20,
+    2,
     2,
     'https://www.bestlobster.com/test/wp-content/uploads/2021/02/Lemon-PNG-Image.png'
   ),
@@ -607,7 +621,8 @@ VALUES
     'Какао-порошок',
     'Порошок какао для украшения напитков',
     35.00,
-    'г',
+    15,
+    2,
     3,
     'https://static.vecteezy.com/system/resources/previews/041/042/862/non_2x/ai-generated-heaping-spoonful-of-cocoa-powder-free-png.png'
   );
@@ -967,6 +982,23 @@ VALUES
   ('Имбирь', 80, 0.8, 18, 1.8, 180, 1, 4), -- Специи
   ('Соль', 0, 0, 0, 0, 1095, 1, 4), -- Специи
   ('Фисташки', 562, 45, 28, 20, 365, 1, 5); -- Орехи и семена
+
+
+-- Insert into AdditiveIngredients
+INSERT INTO
+    additive_ingredients (additive_id, ingredient_id, quantity)
+VALUES
+    (1, 1, 60.00),
+    (2, 1, 75.00),
+    (3, 2, 85.00),
+    (1, 3, 65.00),
+    (4, 1, 50.00),
+    (5, 4, 90.00),
+    (6, 5, 70.00),
+    (3, 4, 75.00),
+    (6, 6, 85.00),
+    (5, 1, 95.00),
+    (2, 2, 70.00);
 
 -- Орехи и семена
 -- Insert into ProductIngredients

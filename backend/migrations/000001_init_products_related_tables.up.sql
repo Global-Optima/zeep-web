@@ -23,6 +23,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_facility_coordinates
+    ON facility_addresses (longitude, latitude)
+    WHERE deleted_at IS NULL AND longitude IS NOT NULL AND latitude IS NOT NULL;
+
 -- Units Table
 CREATE TABLE
 	IF NOT EXISTS units (
@@ -105,6 +109,11 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+-- Prevent duplicate step numbers for the same product
+CREATE UNIQUE INDEX unique_recipe_step_number
+    ON recipe_steps (product_id, step)
+    WHERE deleted_at IS NULL;
+
 -- ProductSize Table
 CREATE TABLE
 	IF NOT EXISTS product_sizes (
@@ -132,7 +141,8 @@ CREATE TABLE
 		name VARCHAR(255) UNIQUE NOT NULL,
 		description TEXT,
 		base_price DECIMAL(10, 2) DEFAULT 0,
-		size VARCHAR(200),
+        size INT NOT NULL,
+        unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
 		additive_category_id INT REFERENCES additive_categories (id),
 		image_url VARCHAR(2048),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -416,6 +426,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_referrals
+    ON referrals (customer_id, referee_id)
+    WHERE deleted_at IS NULL;
+
 -- VerificationCode Table
 CREATE TABLE
 	IF NOT EXISTS verification_codes (
@@ -440,6 +454,11 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+-- Prevent duplicate addresses for the same customer
+CREATE UNIQUE INDEX unique_customer_address
+    ON customer_addresses (customer_id, LOWER(address))
+    WHERE deleted_at IS NULL;
 
 -- Bonus Table
 CREATE TABLE
@@ -542,6 +561,11 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+-- Prevent duplicate ingredients in the same stock request
+CREATE UNIQUE INDEX unique_stock_request_ingredient
+    ON stock_request_ingredients (stock_request_id, ingredient_id)
+    WHERE deleted_at IS NULL;
+
 -- Suppliers Table
 CREATE TABLE
 	IF NOT EXISTS suppliers (
@@ -555,8 +579,6 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
-
-
 -- Packages Table
 CREATE TABLE IF NOT EXISTS stock_material_packages (
     id SERIAL PRIMARY KEY,
@@ -567,6 +589,11 @@ CREATE TABLE IF NOT EXISTS stock_material_packages (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
 );
+
+-- Prevent duplicate package sizes for the same material and unit
+CREATE UNIQUE INDEX unique_stock_material_package
+    ON stock_material_packages (stock_material_id, unit_id, size)
+    WHERE deleted_at IS NULL;
 
 -- Deliveries Table
 CREATE TABLE
