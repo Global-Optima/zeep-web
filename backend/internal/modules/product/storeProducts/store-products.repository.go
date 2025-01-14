@@ -190,6 +190,7 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 		Where("sp.store_id = ? AND store_product_sizes.id = ?", storeID, storeProductSizeID).
 		Preload("ProductSize.Unit").
 		Preload("ProductSize.Additives.Additive.Category").
+		Preload("ProductSize.Additives.Additive.Unit").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
 		First(&storeProductSize).Error
