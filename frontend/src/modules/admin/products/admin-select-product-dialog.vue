@@ -78,7 +78,7 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
-import type { ProductDTO, ProductsFilter } from '@/modules/kiosk/products/models/product.model'
+import type { ProductDetailsDTO, ProductsFilterDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 
 const {open} = defineProps<{
@@ -87,7 +87,7 @@ const {open} = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', additive: ProductDTO): void;
+  (e: 'select', product: ProductDetailsDTO): void;
 }>()
 
 const searchTerm = ref('')
@@ -96,7 +96,7 @@ const debouncedSearchTerm = useDebounce(
   500
 )
 
-const filter = ref<ProductsFilter>({
+const filter = ref<ProductsFilterDTO>({
   page: 1,
   pageSize: 10,
   search: ''
@@ -126,7 +126,7 @@ function loadMore() {
   }
 }
 
-function selectProducts(product: ProductDTO) {
+function selectProducts(product: ProductDetailsDTO) {
   emit('select', product)
   onClose()
 }
