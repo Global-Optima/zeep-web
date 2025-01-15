@@ -4,8 +4,10 @@ import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type AdditiveCategoriesFilterQuery struct {
 	utils.BaseFilter
-	ProductSizeId *uint   `form:"productSizeId"`
-	Search        *string `form:"search"`
+	ShowAll          *bool   `form:"showAll"`
+	ProductSizeId    *uint   `form:"productSizeId"`
+	IsMultipleSelect *bool   `form:"isMultipleSelect"`
+	Search           *string `form:"search"`
 }
 
 type AdditiveFilterQuery struct {
@@ -21,7 +23,7 @@ type AdditiveDTO struct {
 	ID          uint    `json:"id"`
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
-	Price       float64 `json:"price"`
+	BasePrice   float64 `json:"basePrice"`
 	ImageURL    string  `json:"imageUrl"`
 	Size        string  `json:"size"`
 	Category    struct {
@@ -56,14 +58,12 @@ type CreateAdditiveCategoryDTO struct {
 }
 
 type UpdateAdditiveCategoryDTO struct {
-	ID               uint   `json:"id" binding:"required"`
-	Name             string `json:"name" binding:"omitempty"`
-	Description      string `json:"description" binding:"omitempty"`
+	Name             *string `json:"name" binding:"omitempty"`
+	Description      *string `json:"description" binding:"omitempty"`
 	IsMultipleSelect *bool  `json:"isMultipleSelect"`
 }
 
 type UpdateAdditiveDTO struct {
-	ID                 uint     `json:"id" binding:"required"`
 	Name               string   `json:"name" binding:"omitempty"`
 	Description        string   `json:"description" binding:"omitempty"`
 	Price              *float64 `json:"price" binding:"omitempty,gte=0"`

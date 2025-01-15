@@ -51,6 +51,10 @@ export interface StoreStockRequestResponse {
 	storeName: string
 	warehouseId: number
 	warehouseName: string
+	'warehouse': {
+		'id': number
+		'name': string
+	}
 	status: StoreStockRequestStatus
 	items: StoreStockRequestItemResponse[]
 	createdAt: string

@@ -7,7 +7,7 @@
 	<Card>
 		<CardContent class="mt-4">
 			<p
-				v-if="!storeStocksResponse || storeStocksResponse.data.length === 0"
+				v-if="!storeProductsResponse || storeProductsResponse.data.length === 0"
 				class="text-muted-foreground"
 			>
 				Товары магазина не найдены
@@ -15,13 +15,13 @@
 
 			<AdminStoreProductsList
 				v-else
-				:stocks="storeStocksResponse.data"
+				:storeProducts="storeProductsResponse.data"
 			/>
 		</CardContent>
 		<CardFooter class="flex justify-end">
 			<PaginationWithMeta
-				v-if="storeStocksResponse"
-				:meta="storeStocksResponse.pagination"
+				v-if="storeProductsResponse"
+				:meta="storeProductsResponse.pagination"
 				@update:page="updatePage"
 				@update:pageSize="updatePageSize"
 			/>
@@ -36,29 +36,19 @@ import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminStoreProductsList from '@/modules/admin/store-products/components/list/admin-store-products-list.vue'
 import AdminStoreProductsToolbar from '@/modules/admin/store-products/components/list/admin-store-products-toolbar.vue'
-import type { StoreStocksFilter } from '@/modules/admin/store-stocks/models/store-stock.model'
-import { storeStocksService } from '@/modules/admin/store-stocks/services/store-stocks.service'
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
+import type { StoreProductsFilterDTO } from '@/modules/admin/store-products/models/store-products.model'
+import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<StoreStocksFilter>({
-  page: 1,
-  pageSize: 10,
+const filter = ref<StoreProductsFilterDTO>({})
+
+const { data: storeProductsResponse } = useQuery({
+  queryKey: computed(() => ['admin-store-products', filter.value]),
+  queryFn: () => storeProductsService.getStoreProducts(filter.value),
 })
 
-const { currentStoreId } = useCurrentStoreStore()
-
-const { data: storeStocksResponse } = useQuery({
-  queryKey: computed(() => ['store-stocks', { storeId: currentStoreId, ...filter.value }]),
-  queryFn: () => {
-    if (!currentStoreId) throw new Error('No store ID available')
-    return storeStocksService.getStoreStocks(currentStoreId, filter.value)
-  },
-  enabled: computed(() => !!currentStoreId),
-})
-
-function updateFilter(updatedFilter: StoreStocksFilter) {
+function updateFilter(updatedFilter: StoreProductsFilterDTO) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 

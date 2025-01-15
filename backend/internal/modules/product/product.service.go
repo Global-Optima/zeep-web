@@ -2,20 +2,21 @@ package product
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
 type ProductService interface {
-	GetProductDetails(productID uint) (*types.ProductDetailsDTO, error)
-
-	GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDTO, error)
+	GetProductByID(productID uint) (*types.ProductDetailsDTO, error)
+	GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDetailsDTO, error)
 	CreateProduct(product *types.CreateProductDTO) (uint, error)
 	UpdateProduct(productID uint, dto *types.UpdateProductDTO) error
 	DeleteProduct(productID uint) error
 
-	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error)
+	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDetailsDTO, error)
+	GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error)
 	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
 	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
 	DeleteProductSize(productSizeID uint) error
@@ -33,7 +34,7 @@ func NewProductService(repo ProductRepository, logger *zap.SugaredLogger) Produc
 	}
 }
 
-func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDTO, error) {
+func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDetailsDTO, error) {
 	products, err := s.repo.GetProducts(filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve products", err)
@@ -41,16 +42,16 @@ func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.P
 		return nil, wrappedErr
 	}
 
-	productDTOs := make([]types.ProductDTO, len(products))
+	productDTOs := make([]types.ProductDetailsDTO, len(products))
 	for i, product := range products {
-		productDTOs[i] = types.MapToProductDTO(product)
+		productDTOs[i] = *types.MapToProductDetailsDTO(&product)
 	}
 
 	return productDTOs, nil
 }
 
-func (s *productService) GetProductDetails(productID uint) (*types.ProductDetailsDTO, error) {
-	product, err := s.repo.GetProductDetails(productID)
+func (s *productService) GetProductByID(productID uint) (*types.ProductDetailsDTO, error) {
+	product, err := s.repo.GetProductByID(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to retrieve product for productID = %d: %w", productID, err)
 		s.logger.Error(wrappedErr)
@@ -112,7 +113,7 @@ func (s *productService) UpdateProductSize(productSizeID uint, dto *types.Update
 	return nil
 }
 
-func (s *productService) GetProductSizesByProductID(productID uint) ([]types.ProductSizeDTO, error) {
+func (s *productService) GetProductSizesByProductID(productID uint) ([]types.ProductSizeDetailsDTO, error) {
 	productSizes, err := s.repo.GetProductSizesByProductID(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to get product sizes: %w", err)
@@ -120,12 +121,24 @@ func (s *productService) GetProductSizesByProductID(productID uint) ([]types.Pro
 		return nil, wrappedErr
 	}
 
-	dtos := make([]types.ProductSizeDTO, len(productSizes))
+	dtos := make([]types.ProductSizeDetailsDTO, len(productSizes))
 	for i, productSize := range productSizes {
-		dtos[i] = types.MapToProductSizeDTO(productSize)
+		dtos[i] = types.MapToProductSizeDetails(productSize)
 	}
 
 	return dtos, nil
+}
+
+func (s *productService) GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error) {
+	productSize, err := s.repo.GetProductSizeDetailsByID(productID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to get product sizes: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	dto := types.MapToProductSizeDetails(*productSize)
+
+	return &dto, nil
 }
 
 func (s *productService) DeleteProduct(productID uint) error {

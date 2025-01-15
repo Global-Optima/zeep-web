@@ -34,28 +34,22 @@ import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWi
 import { Card, CardContent } from '@/core/components/ui/card'
 import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import type { StoreStocksFilter } from '@/modules/admin/store-stocks/models/store-stock.model'
 import AdminWarehouseStocksList from '@/modules/admin/warehouse-stocks/components/list/admin-warehouse-stocks-list.vue'
 import AdminWarehouseStocksToolbar from '@/modules/admin/warehouse-stocks/components/list/admin-warehouse-stocks-toolbar.vue'
 import type { GetWarehouseStockFilter } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { warehouseStocksService } from '@/modules/admin/warehouse-stocks/services/warehouse-stocks.service'
-import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const {currentEmployee} = useEmployeeAuthStore()
-
 const filter = ref<GetWarehouseStockFilter>({
-  warehouseId: currentEmployee?.warehouseDetails?.warehouseId
 })
 
 const { data: warehouseStocksResponse } = useQuery({
   queryKey: computed(() => ['warehouse-stocks', filter.value]),
   queryFn: () => warehouseStocksService.getWarehouseStocks(filter.value),
-  enabled: computed(() => Boolean(currentEmployee?.warehouseDetails?.warehouseId)),
 })
 
-function updateFilter(updatedFilter: StoreStocksFilter) {
+function updateFilter(updatedFilter: GetWarehouseStockFilter) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 

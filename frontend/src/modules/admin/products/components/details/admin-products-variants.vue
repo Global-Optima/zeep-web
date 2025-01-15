@@ -1,33 +1,27 @@
 <template>
-	<main class="flex-1 items-start gap-4 grid">
+	<div class="flex-1 items-start gap-4 grid mx-auto max-w-6xl">
 		<div class="flex justify-between items-center gap-2">
-			<div class="flex items-center gap-2">
-				<Input
-					placeholder="Поиск вариантов"
-					class="bg-white w-full md:w-64"
-				/>
-				<DropdownMenu>
-					<DropdownMenuTrigger as-child>
-						<Button
-							variant="outline"
-							class="gap-2"
-						>
-							<ListFilter class="w-4 h-4" />
-							<span class="sr-only sm:not-sr-only sm:whitespace-nowrap">Фильтр</span>
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						<DropdownMenuLabel>Фильтровать по</DropdownMenuLabel>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem checked>Активные</DropdownMenuItem>
-						<DropdownMenuItem>Черновики</DropdownMenuItem>
-						<DropdownMenuItem>Архив</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
+			<div class="flex justify-between items-center gap-4">
+				<Button
+					variant="outline"
+					size="icon"
+					type="button"
+					@click="onCancel"
+				>
+					<ChevronLeft class="w-5 h-5" />
+					<span class="sr-only">Назад</span>
+				</Button>
+
+				<!-- Title -->
+				<h1
+					class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0"
+				>
+					Варианты {{ productDetails.name }}
+				</h1>
 			</div>
 
-			<Button>
-				<span class="sr-only sm:not-sr-only sm:whitespace-nowrap">Добавить</span>
+			<Button @click="onAddNewVariantClick">
+				<span class="sm:whitespace-nowrap sm:not-sr-only sr-only">Добавить</span>
 			</Button>
 		</div>
 
@@ -44,22 +38,22 @@
 					</TableHeader>
 					<TableBody>
 						<TableRow
-							v-for="variant in variants"
+							v-for="variant in productSizes"
 							:key="variant.id"
-							@click="onVariantClick(variant.id)"
-							class="hover:bg-slate-50"
+							@click="onVariantClick(variant)"
+							class="hover:bg-slate-50 cursor-pointer"
 						>
 							<TableCell class="py-4 font-medium">{{ variant.name }}</TableCell>
-							<TableCell>{{ variant.size }}</TableCell>
+							<TableCell>{{ variant.size }} {{ variant.unit.name }}</TableCell>
 							<TableCell>
-								{{ variant.basePrice }}
+								{{ formatPrice(variant.basePrice) }}
 							</TableCell>
 							<TableCell>
 								<input
 									type="checkbox"
 									:checked="variant.isDefault"
 									class="w-4 h-4"
-									@click="e => setDefaultVariant(e, variant.id)"
+									@click="e => setDefaultVariant(e, variant)"
 								/>
 							</TableCell>
 						</TableRow>
@@ -67,21 +61,12 @@
 				</Table>
 			</CardContent>
 		</Card>
-	</main>
+	</div>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent } from '@/core/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/core/components/ui/dropdown-menu"
-import { Input } from '@/core/components/ui/input'
 import {
   Table,
   TableBody,
@@ -90,35 +75,58 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import { ListFilter } from "lucide-vue-next"
-import { ref } from 'vue'
+import { useToast } from '@/core/components/ui/toast'
+import { formatPrice } from '@/core/utils/price.utils'
+import type { ProductDetailsDTO, ProductSizeDTO, UpdateProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
+import { productsService } from '@/modules/kiosk/products/services/products.service'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { ChevronLeft } from 'lucide-vue-next'
 import { useRouter } from "vue-router"
 
+const {productDetails} = defineProps<{
+  productDetails: ProductDetailsDTO
+}>()
+
+const emits = defineEmits<{
+  onCancel: []
+}>()
+
 const router = useRouter()
+const queryClient = useQueryClient()
+const {toast} = useToast()
 
-// Variants array
-const variants = ref([
-	{ id: 1, name: 'S', size: '250 мл', basePrice: 120, isDefault: false },
-	{ id: 2, name: 'M', size: '350 мл', basePrice: 150, isDefault: true },
-	{ id: 3, name: 'L', size: '500 мл', basePrice: 180, isDefault: false },
-	{ id: 4, name: 'XL', size: '700 мл', basePrice: 220, isDefault: false },
-]);
+const { data: productSizes } = useQuery({
+  queryKey: ['admin-product-sizes', productDetails.id],
+	queryFn: () => productsService.getProductSizesByProductID(productDetails.id),
+  enabled: Boolean(productDetails.id),
+})
 
-// Set default variant
-const setDefaultVariant = (e: MouseEvent, id: number) => {
+const {mutate: updateSize} = useMutation({
+	mutationFn: (props: {productSizeId: number, dto: UpdateProductSizeDTO}) => productsService.updateProductSize(props.productSizeId, props.dto),
+	onSuccess: () => {
+		queryClient.invalidateQueries({ queryKey: ['admin-product-sizes', productDetails.id] })
+	},
+  onError: () => {
+    toast({title: "Ошибка при обновлении размера"})
+  }
+})
+
+const setDefaultVariant = (e: MouseEvent, size: ProductSizeDTO) => {
   e.stopPropagation()
-
-	variants.value = variants.value.map((variant) => ({
-		...variant,
-		isDefault: variant.id === id, // Mark only the selected variant as default
-	}));
+  updateSize({productSizeId: size.id, dto: {isDefault: !size.isDefault}})
 };
 
-const onVariantClick = (variantId: number) => {
-	router.push(`../product-sizes/${variantId}`)
+const onVariantClick = (variant: ProductSizeDTO) => {
+	router.push(`../product-sizes/${variant.id}?productId=${productDetails.id}`)
+}
+
+function onCancel() {
+  emits('onCancel')
+}
+
+const onAddNewVariantClick = () => {
+  router.push(`../product-sizes/create?productId=${productDetails.id}`)
 }
 </script>
 
-<style scoped>
-/* Add custom styles if needed */
-</style>
+<style scoped></style>

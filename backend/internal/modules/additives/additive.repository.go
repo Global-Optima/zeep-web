@@ -3,6 +3,7 @@ package additives
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -13,7 +14,7 @@ type AdditiveRepository interface {
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) error
-	UpdateAdditive(additive *data.Additive) error
+	UpdateAdditive(additiveID uint, additive *data.Additive) error
 	DeleteAdditive(additiveID uint) error
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
@@ -36,12 +37,16 @@ func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategor
 
 	subquery := r.db.Model(&data.Additive{}).
 		Select("additive_category_id").
-		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
+		Joins("LEFT JOIN store_additives ON store_additives.additive_id = additives.id").
 		Group("additive_category_id").
 		Having("COUNT(additives.id) > 0")
 
 	if filter.ProductSizeId != nil {
 		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
+	}
+
+	if filter.IsMultipleSelect != nil {
+		subquery = subquery.Where("is_multiple_select = ?", *filter.IsMultipleSelect)
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
@@ -53,8 +58,14 @@ func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategor
 	}
 
 	query := r.db.Model(&data.AdditiveCategory{}).
-		Preload("Additives").
-		Where("id IN (?)", subquery)
+		Preload("Additives")
+
+	if filter.ShowAll != nil && *filter.ShowAll {
+		query = query.Where("id IN (?) OR NOT EXISTS (SELECT 1 FROM additives WHERE additives.additive_category_id = additive_categories.id)", subquery)
+
+	} else {
+		query = query.Where("id IN (?)", subquery)
+	}
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
 	if err != nil {
@@ -110,13 +121,18 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 
 func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
-	err := r.db.Where("id = ?", additiveID).First(&additive).Error
+	err := r.db.Model(&data.Additive{}).
+		Preload("Category").
+		Where("id = ?", additiveID).
+		First(&additive).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("additive with ID %d not found", additiveID)
 		}
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
+
 	return &additive, nil
 }
 
@@ -124,8 +140,10 @@ func (r *additiveRepository) CreateAdditive(additive *data.Additive) error {
 	return r.db.Create(additive).Error
 }
 
-func (r *additiveRepository) UpdateAdditive(additive *data.Additive) error {
-	return r.db.Save(additive).Error
+func (r *additiveRepository) UpdateAdditive(additiveID uint, additive *data.Additive) error {
+	return r.db.Model(&data.Additive{}).
+		Where("id = ?", additiveID).
+		Updates(additive).Error
 }
 
 func (r *additiveRepository) DeleteAdditive(additiveID uint) error {

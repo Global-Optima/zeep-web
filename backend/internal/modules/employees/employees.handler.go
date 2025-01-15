@@ -2,11 +2,12 @@ package employees
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/pkg/errors"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -94,6 +95,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 			return
 		}
 		utils.SendSuccessResponse(c, storeEmployee)
+		return
 	case data.WarehouseEmployeeType:
 		warehouseEmployee, err = h.service.GetWarehouseEmployeeByID(claims.EmployeeClaimsData.ID)
 		if err != nil {
@@ -102,6 +104,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 			return
 		}
 		utils.SendSuccessResponse(c, warehouseEmployee)
+		return
 	}
 
 	utils.SendBadRequestError(c, fmt.Sprintf("invalid employee type: %v", claims.EmployeeType))

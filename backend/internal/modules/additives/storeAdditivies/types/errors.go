@@ -6,5 +6,6 @@ import (
 )
 
 var (
-	ErrStoreAdditiveAlreadyExists = moduleErrors.NewModuleError(errors.New("Store additive already exists"))
+	ErrStoreAdditiveAlreadyExists      = moduleErrors.NewModuleError(errors.New("Store additive already exists"))
+	ErrStoreAdditiveCategoriesNotFound = moduleErrors.NewModuleError(errors.New("Store additive categories not found"))
 )

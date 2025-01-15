@@ -5,7 +5,7 @@
 				<TableHead class="p-4">Создано</TableHead>
 				<TableHead class="p-4">Заказчик</TableHead>
 				<TableHead class="p-4">Сумма</TableHead>
-				<TableHead class="hidden p-4 md:table-cell">Оплата</TableHead>
+				<!-- <TableHead class="hidden p-4 md:table-cell">Оплата</TableHead> -->
 				<TableHead class="hidden p-4 md:table-cell">Статус</TableHead>
 			</TableRow>
 		</TableHeader>
@@ -25,7 +25,9 @@
 				<TableCell class="p-4 font-medium">
 					{{ formatPrice(order.total) }}
 				</TableCell>
-				<TableCell class="hidden p-4 md:table-cell">
+
+				<!-- TODO: add paid cell back -->
+				<!-- <TableCell class="hidden p-4 md:table-cell">
 					<div
 						v-if="order?.isPaid"
 						class="flex items-center gap-2 text-green-500"
@@ -40,7 +42,8 @@
 						<X class="w-4 h-4" />
 						Не оплачено
 					</div>
-				</TableCell>
+				</TableCell> -->
+
 				<TableCell class="hidden p-4 md:table-cell">
 					<p
 						:class="[
@@ -69,7 +72,6 @@ import { formatPrice } from '@/core/utils/price.utils'
 import { OrderStatus, type OrderDTO } from '@/modules/orders/models/orders.models'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import { Check, X } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 // Props

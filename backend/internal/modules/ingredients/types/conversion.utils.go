@@ -1,81 +1,115 @@
 package types
 
 import (
-	"time"
+	"fmt"
+	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	ingredientCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
+	unitType "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 )
 
 // Converts CreateIngredientDTO to Ingredient model
 func ConvertToIngredientModel(dto *CreateIngredientDTO) (*data.Ingredient, error) {
-	var expiresAt *time.Time
-	if dto.ExpiresAt != nil {
-		parsedTime, err := time.Parse(time.RFC3339, *dto.ExpiresAt)
-		if err != nil {
-			return nil, err
-		}
-		expiresAt = &parsedTime
+	if dto == nil {
+		return nil, fmt.Errorf("%w: DTO cannot be nil", ErrValidation)
 	}
 
-	return &data.Ingredient{
-		Name:      dto.Name,
-		Calories:  dto.Calories,
-		Fat:       dto.Fat,
-		Carbs:     dto.Carbs,
-		Proteins:  dto.Proteins,
-		ExpiresAt: expiresAt,
-	}, nil
+	if strings.TrimSpace(dto.Name) == "" {
+		return nil, fmt.Errorf("%w: Ingredient name is required", ErrValidation)
+	}
+
+	ingredient := &data.Ingredient{
+		Name:             dto.Name,
+		CategoryID:       dto.CategoryID,
+		UnitID:           dto.UnitID,
+		Calories:         dto.Calories,
+		Fat:              dto.Fat,
+		Carbs:            dto.Carbs,
+		Proteins:         dto.Proteins,
+		ExpirationInDays: dto.ExpirationInDays,
+	}
+
+	return ingredient, nil
 }
 
 // Converts UpdateIngredientDTO to Ingredient model
-func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO, existing *data.Ingredient) (*data.Ingredient, error) {
-	if dto.Name != "" {
-		existing.Name = dto.Name
+func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient, error) {
+	if dto == nil {
+		return nil, fmt.Errorf("%w: DTO cannot be nil", ErrValidation)
 	}
+
+	ingredient := &data.Ingredient{}
+
+	if strings.TrimSpace(dto.Name) != "" {
+		ingredient.Name = dto.Name
+	}
+
 	if dto.Calories != nil {
-		existing.Calories = *dto.Calories
+		ingredient.Calories = *dto.Calories
 	}
+
 	if dto.Fat != nil {
-		existing.Fat = *dto.Fat
+		ingredient.Fat = *dto.Fat
 	}
+
 	if dto.Carbs != nil {
-		existing.Carbs = *dto.Carbs
+		ingredient.Carbs = *dto.Carbs
 	}
+
 	if dto.Proteins != nil {
-		existing.Proteins = *dto.Proteins
+		ingredient.Proteins = *dto.Proteins
 	}
-	if dto.ExpiresAt != nil {
-		parsedTime, err := time.Parse(time.RFC3339, *dto.ExpiresAt)
-		if err != nil {
-			return nil, err
+
+	if dto.UnitID != nil {
+		if *dto.UnitID == 0 {
+			return nil, fmt.Errorf("%w: UnitID must be greater than 0", ErrValidation)
 		}
-		existing.ExpiresAt = &parsedTime
+		ingredient.UnitID = *dto.UnitID
 	}
-	return existing, nil
+
+	if dto.CategoryID != nil {
+		if *dto.CategoryID == 0 {
+			return nil, fmt.Errorf("%w: CategoryID must be greater than 0", ErrValidation)
+		}
+		ingredient.CategoryID = *dto.CategoryID
+	}
+
+	if dto.ExpirationInDays != nil {
+		if *dto.ExpirationInDays == 0 {
+			return nil, fmt.Errorf("%w: Expiration days can not be 0", ErrValidation)
+		}
+		ingredient.ExpirationInDays = *dto.ExpirationInDays
+	}
+	return ingredient, nil
 }
 
 // Converts Ingredient model to IngredientResponseDTO
-func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientResponseDTO {
-	var expiresAt *string
-	if ingredient.ExpiresAt != nil {
-		formattedTime := ingredient.ExpiresAt.Format(time.RFC3339)
-		expiresAt = &formattedTime
-	}
-
-	return &IngredientResponseDTO{
-		ID:        ingredient.ID,
-		Name:      ingredient.Name,
-		Calories:  ingredient.Calories,
-		Fat:       ingredient.Fat,
-		Carbs:     ingredient.Carbs,
-		Proteins:  ingredient.Proteins,
-		ExpiresAt: expiresAt,
+func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientDTO {
+	return &IngredientDTO{
+		ID:               ingredient.ID,
+		Name:             ingredient.Name,
+		Calories:         ingredient.Calories,
+		Fat:              ingredient.Fat,
+		Carbs:            ingredient.Carbs,
+		Proteins:         ingredient.Proteins,
+		ExpirationInDays: ingredient.ExpirationInDays,
+		Unit: unitType.UnitResponse{
+			ID:               ingredient.Unit.ID,
+			Name:             ingredient.Unit.Name,
+			ConversionFactor: ingredient.Unit.ConversionFactor,
+		},
+		Category: ingredientCategoryTypes.IngredientCategoryResponse{
+			ID:          ingredient.IngredientCategory.ID,
+			Name:        ingredient.IngredientCategory.Name,
+			Description: ingredient.IngredientCategory.Description,
+		},
 	}
 }
 
 // Converts list of Ingredient models to list of IngredientResponseDTOs
-func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []IngredientResponseDTO {
-	dtos := make([]IngredientResponseDTO, len(ingredients))
+func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []IngredientDTO {
+	dtos := make([]IngredientDTO, len(ingredients))
 	for i, ingredient := range ingredients {
 		dtos[i] = *ConvertToIngredientResponseDTO(&ingredient)
 	}

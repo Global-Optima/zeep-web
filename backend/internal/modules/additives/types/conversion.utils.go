@@ -1,6 +1,10 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"strings"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+)
 
 func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 	return &data.Additive{
@@ -13,26 +17,32 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 	}
 }
 
-func ConvertToUpdatedAdditiveModel(dto *UpdateAdditiveDTO, existing *data.Additive) *data.Additive {
-	if dto.Name != "" {
-		existing.Name = dto.Name
+func ConvertToUpdatedAdditiveModel(dto *UpdateAdditiveDTO) *data.Additive {
+	additive := &data.Additive{}
+	if dto == nil {
+		return additive
 	}
-	if dto.Description != "" {
-		existing.Description = dto.Description
+
+	if strings.TrimSpace(dto.Name) != "" {
+		additive.Name = dto.Name
+	}
+	if strings.TrimSpace(dto.Description) != "" {
+		additive.Description = dto.Description
 	}
 	if dto.Price != nil {
-		existing.BasePrice = *dto.Price
+		additive.BasePrice = *dto.Price
 	}
 	if dto.ImageURL != nil {
-		existing.ImageURL = *dto.ImageURL
+		additive.ImageURL = *dto.ImageURL
 	}
 	if dto.Size != nil {
-		existing.Size = *dto.Size
+		additive.Size = *dto.Size
 	}
 	if dto.AdditiveCategoryID != nil {
-		existing.AdditiveCategoryID = *dto.AdditiveCategoryID
+		additive.AdditiveCategoryID = *dto.AdditiveCategoryID
 	}
-	return existing
+
+	return additive
 }
 
 func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.AdditiveCategory {
@@ -44,11 +54,11 @@ func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.Additi
 }
 
 func ConvertToUpdatedAdditiveCategoryModel(dto *UpdateAdditiveCategoryDTO, existing *data.AdditiveCategory) *data.AdditiveCategory {
-	if dto.Name != "" {
-		existing.Name = dto.Name
+	if dto.Name != nil {
+		existing.Name = *dto.Name
 	}
-	if dto.Description != "" {
-		existing.Description = dto.Description
+	if dto.Description != nil {
+		existing.Description = *dto.Description
 	}
 	if dto.IsMultipleSelect != nil {
 		existing.IsMultipleSelect = *dto.IsMultipleSelect
@@ -70,7 +80,7 @@ func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 		ID:          additive.ID,
 		Name:        additive.Name,
 		Description: additive.Description,
-		Price:       additive.BasePrice,
+		BasePrice:   additive.BasePrice,
 		ImageURL:    additive.ImageURL,
 		Size:        additive.Size,
 		Category: struct {

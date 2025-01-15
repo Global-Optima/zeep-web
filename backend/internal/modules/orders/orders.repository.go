@@ -43,6 +43,7 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 
 	query := r.db.
 		Preload("Suborders.ProductSize").
+		Preload("Suborders.ProductSize.Unit").
 		Preload("Suborders.ProductSize.Product").
 		Preload("Suborders.Additives.Additive").
 		Order("created_at DESC")
@@ -86,6 +87,7 @@ func (r *orderRepository) GetAllBaristaOrders(storeID uint) ([]data.Order, error
 
 	query := r.db.Preload("Suborders.ProductSize").
 		Preload("Suborders.ProductSize.Product").
+		Preload("Suborders.ProductSize.Unit").
 		Preload("Suborders.Additives.Additive").
 		Where("store_id = ?", storeID).
 		Where("created_at >= ? AND created_at <= ?", startOfToday, endOfToday)
@@ -140,6 +142,7 @@ func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 	err := r.db.Preload("Suborders.ProductSize").
 		Preload("Suborders.ProductSize.Product").
 		Preload("Suborders.Additives.Additive").
+		Preload("Suborders.ProductSize.Unit").
 		Where("id = ?", orderId).
 		First(&order).Error
 
@@ -218,6 +221,7 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 		Where("suborders.id = ?", subOrderID).
 		Preload("Suborders.ProductSize").
 		Preload("Suborders.ProductSize.Product").
+		Preload("Suborders.ProductSize.Unit").
 		Preload("Suborders.Additives.Additive").
 		First(&order).Error
 
@@ -234,6 +238,7 @@ func (r *orderRepository) GetOrderDetails(orderID uint) (*data.Order, error) {
 	err := r.db.Preload("Suborders.Additives.Additive").
 		Preload("Suborders.ProductSize.Product").
 		Preload("Suborders.ProductSize.Additives.Additive").
+		Preload("Suborders.ProductSize.Unit").
 		Preload("DeliveryAddress").
 		Where("id = ?", orderID).
 		First(&order).Error

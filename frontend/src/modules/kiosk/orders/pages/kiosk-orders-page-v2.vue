@@ -35,7 +35,7 @@ import OrdersList from '@/modules/kiosk/orders/components/orders-list.vue'
 import SubOrderDetails from '@/modules/kiosk/orders/components/sub-order-details.vue'
 import SubordersList from '@/modules/kiosk/orders/components/suborders-list.vue'
 import { useOrderEventsService } from '@/modules/kiosk/orders/services/orders-event.service'
-import { OrderStatus, SubOrderStatus, type OrderDTO, type SubOrderDTO } from '@/modules/orders/models/orders.models'
+import { OrderStatus, SubOrderStatus, type OrderDTO, type SuborderDTO } from '@/modules/orders/models/orders.models'
 import { orderService } from '@/modules/orders/services/orders.service'
 import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
@@ -55,7 +55,7 @@ const onBackClick = () => {
 }
 
 const selectedOrder = ref<OrderDTO | null>(null)
-const selectedSuborder = ref<SubOrderDTO | null>(null)
+const selectedSuborder = ref<SuborderDTO | null>(null)
 const selectedStatus = ref<Status>({ label: 'Все', count: 0 })
 
 const statusMap: Record<string, OrderStatus | null> = {
@@ -110,7 +110,7 @@ function selectOrder(order: OrderDTO) {
 	selectedSuborder.value = null
 }
 
-function selectSuborder(suborder: SubOrderDTO) {
+function selectSuborder(suborder: SuborderDTO) {
 	if (selectedSuborder.value?.id === suborder.id) return
 	selectedSuborder.value = suborder
 }
@@ -128,7 +128,7 @@ const scrollToTop = async () => {
   }
 };
 
-async function toggleSuborderStatus(suborder: SubOrderDTO) {
+async function toggleSuborderStatus(suborder: SuborderDTO) {
 	if (suborder.status === SubOrderStatus.COMPLETED) return
 
 	if (!selectedOrder.value) return

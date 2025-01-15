@@ -11,22 +11,31 @@ export enum EmployeeType {
 	WAREHOUSE = 'WAREHOUSE',
 }
 
+export interface EmployeeAccount {
+	firstName: string
+	lastName: string
+	email: string
+}
+
+
 export interface Employee {
 	id: number
-	name: string
+	firstName: string
+	lastName: string
 	phone: string
 	email: string
 	role: EmployeeRole
 	isActive: boolean
 	type: EmployeeType
-	imageUrl?: string
+}
 
-	storeDetails?: {
-		storeId: number
-	}
-	warehouseDetails?: {
-		warehouseId: number
-	}
+export interface StoreEmployee extends Employee {
+	storeId: number
+	isFranchise: boolean
+}
+
+export interface WarehouseEmployee extends Employee {
+	warehouseId: number
 }
 
 export interface EmployeeLoginDTO {
@@ -34,12 +43,17 @@ export interface EmployeeLoginDTO {
 	password: string
 }
 
-export interface EmployeesFilter {
+export interface StoreEmployeesFilter {
 	search?: string
-	type?: EmployeeType
 	role?: EmployeeRole
 	storeId?: number
-	warehouseId?: string
+	isActive?: boolean
+}
+
+export interface WarehouseEmployeesFilter {
+	search?: string
+	role?: EmployeeRole
+	warehouseId?: number
 	isActive?: boolean
 }
 
