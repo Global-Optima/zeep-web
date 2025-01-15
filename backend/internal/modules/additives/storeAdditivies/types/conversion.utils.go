@@ -4,7 +4,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-	"github.com/sirupsen/logrus"
 )
 
 func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
@@ -45,7 +44,6 @@ func ConvertToStoreAdditiveCategoryDTO(category *data.AdditiveCategory) *StoreAd
 
 func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []StoreAdditiveCategoryItemDTO {
 	var storeAdditives []StoreAdditiveCategoryItemDTO
-	logrus.Info(category.Additives[0].Unit, category.Additives[1].Unit)
 	// Populate additives if present
 	for _, additive := range category.Additives {
 
