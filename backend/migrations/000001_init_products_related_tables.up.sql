@@ -562,7 +562,7 @@ CREATE TABLE IF NOT EXISTS stock_materials (
     safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
     expiration_flag BOOLEAN NOT NULL,
     unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
-	category_id INT NOT NULL REFERENCES stock_material_categories(id) ON DELETE SET NULL,
+	category_id INT NOT NULL REFERENCES stock_material_categories(id) ON DELETE RESTRICT,
     barcode VARCHAR(255),
     expiration_period_in_days INT NOT NULL DEFAULT 1095, -- Default 3 years
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
