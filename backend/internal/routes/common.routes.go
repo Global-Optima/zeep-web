@@ -1,6 +1,11 @@
 package routes
 
-import "github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
+)
 
 func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandler) {
 	router := r.CommonRoutes.Group("/auth")
@@ -19,5 +24,28 @@ func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandle
 			employeesRoutes.POST("/refresh", handler.EmployeeRefresh)
 			employeesRoutes.POST("/logout", handler.EmployeeLogout)
 		}
+	}
+}
+
+func (r *Router) RegisterEmployeeAccountRoutes(handler *employees.EmployeeHandler) {
+	router := r.CommonRoutes.Group("/auth/employees")
+	{
+		router.GET("/store/:id", handler.GetStoreAccounts)
+		router.GET("/warehouse/:id", handler.GetWarehouseAccounts)
+		router.GET("/admins", handler.GetAdminAccounts)
+	}
+}
+
+func (r *Router) RegisterCommonStoresRoutes(handler *stores.StoreHandler) {
+	router := r.CommonRoutes.Group("/stores")
+	{
+		router.GET("", handler.GetAllStores)
+	}
+}
+
+func (r *Router) RegisterCommonWarehousesRoutes(handler *warehouse.WarehouseHandler) {
+	router := r.CommonRoutes.Group("/warehouses")
+	{
+		router.GET("", handler.GetAllWarehouses)
 	}
 }

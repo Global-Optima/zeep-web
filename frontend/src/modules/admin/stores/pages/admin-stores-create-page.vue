@@ -40,7 +40,6 @@ const createMutation = useMutation({
 })
 
 function handleCreate(newStoreData: CreateStoreDTO) {
-  console.log("HEREEEE")
 	createMutation.mutate(newStoreData)
 }
 

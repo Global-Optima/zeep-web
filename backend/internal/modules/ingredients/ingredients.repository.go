@@ -9,7 +9,7 @@ import (
 
 type IngredientRepository interface {
 	CreateIngredient(ingredient *data.Ingredient) error
-	UpdateIngredient(ingredient *data.Ingredient) error
+	UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
@@ -28,8 +28,10 @@ func (r *ingredientRepository) CreateIngredient(ingredient *data.Ingredient) err
 	return r.db.Create(ingredient).Error
 }
 
-func (r *ingredientRepository) UpdateIngredient(ingredient *data.Ingredient) error {
-	return r.db.Save(ingredient).Error
+func (r *ingredientRepository) UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error {
+	return r.db.Model(&data.Ingredient{}).
+		Where("id = ?", ingredientID).
+		Updates(ingredient).Error
 }
 
 func (r *ingredientRepository) DeleteIngredient(ingredientID uint) error {
@@ -38,15 +40,20 @@ func (r *ingredientRepository) DeleteIngredient(ingredientID uint) error {
 
 func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingredient, error) {
 	var ingredient data.Ingredient
-	if err := r.db.First(&ingredient, ingredientID).Error; err != nil {
+	err := r.db.Preload("Unit").
+		Preload("IngredientCategory").
+		First(&ingredient, ingredientID).Error
+
+	if err != nil {
 		return nil, err
 	}
+
 	return &ingredient, nil
 }
 
 func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
-	query := r.db.Model(&data.Ingredient{})
+	query := r.db.Model(&data.Ingredient{}).Preload("Unit").Preload("IngredientCategory")
 
 	// Apply filtering
 	if filter.ProductSizeID != nil {
@@ -81,10 +88,12 @@ func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([
 func (r *ingredientRepository) GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
 	query := r.db.Model(&data.Ingredient{}).
+		Select("DISTINCT ingredients.*").
+		Preload("Unit").
+		Preload("IngredientCategory").
 		Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
 		Joins("JOIN product_sizes ps ON psi.product_size_id = ps.id").
-		Where("ps.id IN ?", productSizeIDs).
-		Group("ingredients.id")
+		Where("ps.id IN ?", productSizeIDs)
 
 	if err := query.Find(&ingredients).Error; err != nil {
 		return nil, err

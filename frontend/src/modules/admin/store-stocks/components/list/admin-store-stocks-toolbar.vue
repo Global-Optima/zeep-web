@@ -44,14 +44,14 @@ import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { StoreStocksFilter } from '@/modules/admin/store-stocks/models/store-stock.model'
+import type { GetStoreWarehouseStockFilterQuery } from '@/modules/admin/store-stocks/models/store-stock.model'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Props and Emit
-const props = defineProps<{ filter: StoreStocksFilter }>()
+const props = defineProps<{ filter: GetStoreWarehouseStockFilterQuery }>()
 const emit = defineEmits(['update:filter'])
 
 // Local Filter

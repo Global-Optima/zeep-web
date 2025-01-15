@@ -53,12 +53,12 @@
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
 
 const {additive, isSelected, isDefault} = defineProps<{
-  additive: AdditiveCategoryItem;
+  additive: AdditiveCategoryItemDTO;
   isSelected: boolean;
-  isDefault:boolean;
+  isDefault: boolean;
 }>()
 
 const emit = defineEmits(['click:additive'])

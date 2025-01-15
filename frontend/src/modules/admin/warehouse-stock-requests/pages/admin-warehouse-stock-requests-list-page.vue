@@ -42,20 +42,16 @@ import { WAREHOUSE_STOCK_REQUEST_STATUSES, type GetStoreStockRequestsFilter } fr
 import { storeStockRequestService } from '@/modules/admin/store-stock-requests/services/store-stock-request.service'
 import AdminWarehouseStockRequestsList from '@/modules/admin/warehouse-stock-requests/components/list/admin-warehouse-stock-requests-list.vue'
 import AdminWarehouseStockRequestsToolbar from '@/modules/admin/warehouse-stock-requests/components/list/admin-warehouse-stock-requests-toolbar.vue'
-import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const {currentEmployee} = useEmployeeAuthStore()
 const filter = ref<GetStoreStockRequestsFilter>({
-  warehouseId: currentEmployee?.warehouseDetails?.warehouseId,
   statuses: WAREHOUSE_STOCK_REQUEST_STATUSES
 });
 
 const { data: stockRequestsResponse } = useQuery({
   queryKey: computed(() => ['warehouse-stock-requests', filter.value]),
   queryFn: () => storeStockRequestService.getStockRequests(filter.value),
-  enabled: computed(() => Boolean(currentEmployee?.warehouseDetails?.warehouseId))
 });
 
 function updateFilter(updatedFilter: GetStoreStockRequestsFilter) {

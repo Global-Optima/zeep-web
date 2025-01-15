@@ -18,6 +18,7 @@ func NewWarehousesModule(base *common.BaseModule) *WarehousesModule {
 	handler := warehouse.NewWarehouseHandler(service)
 
 	base.Router.RegisterWarehouseRoutes(handler)
+	base.Router.RegisterCommonWarehousesRoutes(handler)
 
 	return &WarehousesModule{
 		BaseModule: base,

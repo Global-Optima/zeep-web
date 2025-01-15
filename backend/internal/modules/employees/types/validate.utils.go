@@ -4,56 +4,58 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"strings"
 )
 
-func ValidateEmployee(input CreateEmployeeDTO) error {
-	if input.LastName == "" || input.FirstName == "" {
-		return fmt.Errorf("%w: employee name cannot contain empty values", ErrValidation)
+func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
+	if strings.TrimSpace(input.LastName) == "" || strings.TrimSpace(input.FirstName) == "" {
+		return nil, fmt.Errorf("%w: employee name cannot contain empty values", ErrValidation)
 	}
 
 	if !utils.IsValidEmail(input.Email) {
-		return fmt.Errorf("%w: invalid email format", ErrValidation)
+		return nil, fmt.Errorf("%w: invalid email format", ErrValidation)
 	}
 
 	if input.Phone != "" {
 		if !utils.IsValidPhone(input.Phone, "") {
-			return fmt.Errorf("%w: invalid phone number format", ErrValidation)
+			return nil, fmt.Errorf("%w: invalid phone number format", ErrValidation)
 		}
 	}
 
 	if err := utils.IsValidPassword(input.Password); err != nil {
-		return fmt.Errorf("%w: password validation failed: %v", ErrValidation, err)
+		return nil, fmt.Errorf("%w: password validation failed: %v", ErrValidation, err)
+	}
+	hashedPassword, err := utils.HashPassword(input.Password)
+	if err != nil {
+		return nil, fmt.Errorf("hashing password failed: %w", err)
 	}
 
 	if !data.IsValidEmployeeRole(input.Role) {
-		return fmt.Errorf("%w: invalid role specified: %s", ErrValidation, input.Role)
+		return nil, fmt.Errorf("%w: invalid role specified: %s", ErrValidation, input.Role)
 	}
 
-	return nil
-}
+	var workdays = make([]data.EmployeeWorkday, len(input.Workdays))
 
-func ValidateStoreEmployee(input *CreateStoreEmployeeDTO) error {
-	if err := ValidateEmployee(input.CreateEmployeeDTO); err != nil {
-		return err
+	for i, workday := range input.Workdays {
+		validatedWorkday, err := ValidateWorkday(&workday)
+		if err != nil {
+			return nil, err
+		}
+		workdays[i] = *validatedWorkday
 	}
 
-	if input.StoreID == 0 {
-		return fmt.Errorf("%w: store details are required for store employees", ErrValidation)
+	employee := &data.Employee{
+		FirstName:      input.FirstName,
+		LastName:       input.LastName,
+		Email:          input.Email,
+		Phone:          utils.FormatPhoneInput(input.Phone),
+		HashedPassword: hashedPassword,
+		Role:           input.Role,
+		IsActive:       input.IsActive,
+		Workdays:       workdays,
 	}
 
-	return nil
-}
-
-func ValidateWarehouseEmployee(input *CreateWarehouseEmployeeDTO) error {
-	if err := ValidateEmployee(input.CreateEmployeeDTO); err != nil {
-		return err
-	}
-
-	if input.WarehouseID == 0 {
-		return fmt.Errorf("%w: warehouse details are required for warehouse employees", ErrValidation)
-	}
-
-	return nil
+	return employee, nil
 }
 
 func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
@@ -127,30 +129,43 @@ func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.Emp
 	return employee, nil
 }
 
-func ValidateEmployeeWorkday(input *CreateEmployeeWorkdayDTO) (*data.EmployeeWorkday, error) {
+func ValidateWorkday(dto *CreateWorkdayDTO) (*data.EmployeeWorkday, error) {
 	var workday data.EmployeeWorkday
-	weekday, err := data.ToWeekday(input.Day)
+	weekday, err := data.ToWeekday(dto.Day)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w: %s", ErrValidation, ErrInvalidWeekdayFormat, input.Day)
+		return nil, fmt.Errorf("%w: %w: %s", ErrValidation, ErrInvalidWeekdayFormat, dto.Day)
 	}
 	workday.Day = weekday
 
-	if err := utils.ValidateTime(input.StartAt); err != nil {
+	if err := utils.ValidateTime(dto.StartAt); err != nil {
 		return nil, fmt.Errorf("%w: start at validation failed: %v", ErrValidation, err)
 	}
-	workday.StartAt = input.StartAt
+	workday.StartAt = dto.StartAt
 
-	if err := utils.ValidateTime(input.EndAt); err != nil {
+	if err := utils.ValidateTime(dto.EndAt); err != nil {
 		return nil, fmt.Errorf("%w: end at validation failed: %v", ErrValidation, err)
 	}
-	workday.EndAt = input.EndAt
+	workday.EndAt = dto.EndAt
+
+	return &workday, nil
+}
+
+func ValidateEmployeeWorkday(input *CreateEmployeeWorkdayDTO) (*data.EmployeeWorkday, error) {
+	workday, err := ValidateWorkday(&CreateWorkdayDTO{
+		Day:     input.Day,
+		StartAt: input.StartAt,
+		EndAt:   input.EndAt,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	if input.EmployeeID == 0 {
 		return nil, fmt.Errorf("%w: employee ID cannot be zero", ErrValidation)
 	}
 	workday.EmployeeID = input.EmployeeID
 
-	return &workday, nil
+	return workday, nil
 }
 
 func WorkdaysUpdateFields(input *UpdateEmployeeWorkdayDTO) (*data.EmployeeWorkday, error) {

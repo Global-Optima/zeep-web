@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts" setup>
-import { toastError, toastSuccess } from '@/core/config/toast.config'
+import { useToast } from '@/core/components/ui/toast'
 import AdminStoreStockRequestsDetailsInfo from '@/modules/admin/store-stock-requests/components/details/admin-store-stock-requests-details-info.vue'
 import AdminStoreStockRequestsDetailsMaterialsTable from '@/modules/admin/store-stock-requests/components/details/admin-store-stock-requests-details-materials-table.vue'
 import type { StoreStockRequestStatus, UpdateStoreStockRequestStatusDTO } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
@@ -31,6 +31,7 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const queryClient = useQueryClient()
+const {toast} = useToast()
 
 const storeStockRequestId = route.params.id as string
 
@@ -43,13 +44,13 @@ const { data: stockRequest } = useQuery({
 const {mutate: updateStatusMutation} = useMutation({
 		mutationFn: (data: {id: number, dto: UpdateStoreStockRequestStatusDTO}) => storeStockRequestService.updateStockRequestStatus(data.id, data.dto),
 		onSuccess: () => {
-      toastSuccess("Статус успешно обновлен")
+      toast({title: "Статус успешно обновлен"})
       queryClient.invalidateQueries({ queryKey: ['stock-requests'] })
       queryClient.invalidateQueries({ queryKey: ['stock-request', storeStockRequestId] })
 
 		},
 		onError: () => {
-			toastError("Произошла ошибка при обновлении")
+			toast({title: "Произошла ошибка при обновлении"})
 		},
 })
 

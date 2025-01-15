@@ -1,9 +1,7 @@
 package stores
 
 import (
-	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -20,31 +18,11 @@ func NewStoreHandler(service StoreService) *StoreHandler {
 
 func (h *StoreHandler) GetAllStores(c *gin.Context) {
 	searchTerm := c.Query("searchTerm")
-	cacheKey := "stores:all"
-
-	if searchTerm != "" {
-		cacheKey = "stores:" + searchTerm
-	}
-
-	cacheUtil := utils.GetCacheInstance()
-
-	var cachedStores []types.StoreDTO
-	if err := cacheUtil.Get(cacheKey, &cachedStores); err == nil {
-		if !utils.IsEmpty(cachedStores) {
-			utils.SendSuccessResponse(c, cachedStores)
-			return
-		}
-	}
 
 	stores, err := h.service.GetAllStores(searchTerm)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve stores")
 		return
-	}
-
-	// Cache the fresh data
-	if err := cacheUtil.Set(cacheKey, stores, 30*time.Minute); err != nil {
-		fmt.Printf("Failed to cache stores: %v\n", err)
 	}
 
 	utils.SendSuccessResponse(c, stores)

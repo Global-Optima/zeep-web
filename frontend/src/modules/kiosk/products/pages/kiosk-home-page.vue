@@ -4,7 +4,7 @@
 		<div class="sm:block hidden py-4 pl-4">
 			<KioskHomeSidebarTablet
 				@update:category="onUpdateCategory"
-				:categories="categories"
+				:categories="categories?.data ?? []"
 				:selected-category-id="selectedCategoryId"
 			/>
 		</div>
@@ -15,7 +15,7 @@
 			<KioskHomeToolbarMobile
 				v-if="!categoriesLoading"
 				class="block sm:hidden"
-				:categories="categories"
+				:categories="categories?.data ?? []"
 				:selected-category-id="selectedCategoryId"
 				:search-term="searchTerm"
 				@update:category="onUpdateCategory"
@@ -33,7 +33,7 @@
 			<!-- Products Grid -->
 			<section class="flex-1 pt-3 pr-4 pb-4 pl-3 overflow-y-auto no-scrollbar">
 				<div
-					v-if="products.length === 0"
+					v-if="products?.data.length === 0"
 					class="flex justify-center items-center h-20 text-gray-500"
 				>
 					<p class="text-lg">Ничего не найдено</p>
@@ -44,7 +44,7 @@
 					class="gap-2 sm:gap-2 grid grid-cols-2 sm:grid-cols-3"
 				>
 					<KioskHomeProductCard
-						v-for="product in products"
+						v-for="product in products?.data ?? []"
 						:key="product.id"
 						:product="product"
 					/>
@@ -63,13 +63,12 @@
 </template>
 
 <script setup lang="ts">
+import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeSidebarTablet from '@/modules/kiosk/products/components/home/kiosk-home-sidebar-tablet.vue'
 import KioskHomeToolbarTablet from '@/modules/kiosk/products/components/home/kiosk-home-toolbar-tablet.vue'
-import type { ProductCategory, Products } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
@@ -99,35 +98,33 @@ const productsQueryKey = computed(() => [
 const categoriesQueryKey = ['categories']
 
 // Fetch Categories
-const { data: categories, isLoading: categoriesLoading } = useQuery<ProductCategory[]>({
+// TODO: Make it more button or unpaged
+const { data: categories, isLoading: categoriesLoading } = useQuery({
   queryKey: categoriesQueryKey,
-  queryFn: () => productsService.getStoreCategories(),
-  initialData: []
+  queryFn: () => productsService.getAllProductCategories({pageSize: 1000}),
 })
 
 // Watch Categories to Set Default Selection
 watch(
   categories,
   (newCategories) => {
-    if (newCategories && newCategories.length > 0 && selectedCategoryId.value === null && searchTerm.value === '') {
-      selectedCategoryId.value = newCategories[0].id
+    if (newCategories && newCategories.data.length > 0 && selectedCategoryId.value === null && searchTerm.value === '') {
+      selectedCategoryId.value = newCategories.data[0].id
     }
   },
   { immediate: true }
 )
 
-const {currentStoreId} = useCurrentStoreStore()
 
 // Fetch Products
-const { data: products } = useQuery<Products[]>({
+const { data: products } = useQuery({
   queryKey: productsQueryKey,
   queryFn: () =>
-    productsService.getProducts({
-      storeId: currentStoreId!, categoryId: selectedCategoryId.value!, searchTerm: searchTerm.value,
+    storeProductsService.getStoreProducts({
+       categoryId: selectedCategoryId.value!, search: searchTerm.value,
 
     }),
   enabled: computed(() => Boolean(selectedCategoryId.value) || searchTerm.value.trim() !== ''),
-  initialData: []
 })
 
 // Handle Category Update

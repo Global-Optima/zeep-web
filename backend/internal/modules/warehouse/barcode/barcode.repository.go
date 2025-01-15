@@ -90,7 +90,7 @@ func (r *barcodeRepository) AssignBarcode(barcode string, stockMaterialID uint) 
 
 func (r *barcodeRepository) GetStockMaterialByBarcode(barcode string) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
-	err := r.db.Preload("Unit").Preload("Package").Where("barcode = ?", barcode).First(&stockMaterial).Error
+	err := r.db.Preload("Unit").Preload("StockMaterialCategory").Preload("Package").Where("barcode = ?", barcode).First(&stockMaterial).Error
 	if err != nil {
 		return nil, err
 	}

@@ -1,49 +1,45 @@
 import { apiClient } from '@/core/config/axios-instance.config'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import {
-	EmployeeType,
 	type CreateEmployeeDto,
 	type Employee,
-	type EmployeesFilter,
+	type StoreEmployee,
+	type StoreEmployeesFilter,
 	type UpdateEmployeeDto,
+	type WarehouseEmployee,
+	type WarehouseEmployeesFilter,
 } from '../models/employees.models'
 
 class EmployeesService {
 	private readonly baseUrl = '/employees'
 
-	async getStoreEmployees(storeID: number, filter?: EmployeesFilter) {
+	async getStoreEmployees(filter?: StoreEmployeesFilter) {
 		try {
-			return this.getEmployees({
-				type: EmployeeType.STORE,
-				storeId: storeID,
-				...buildRequestFilter(filter),
-			})
+			const response = await apiClient.get<PaginatedResponse<StoreEmployee[]>>(
+				`${this.baseUrl}/store`,
+				{
+					params: buildRequestFilter(filter),
+				},
+			)
+			return response.data
 		} catch (error) {
-			console.error(`Failed to fetch employees for store ID ${storeID}:`, error)
+			console.error(`Failed to fetch store employees: `, error)
 			throw error
 		}
 	}
 
-	async getEmployees(filter?: EmployeesFilter): Promise<Employee[]> {
+	async getWarehouseEmployees(filter?: WarehouseEmployeesFilter) {
 		try {
-			const response = await apiClient.get<Employee[]>(this.baseUrl, {
-				params: buildRequestFilter(filter),
-			})
+			const response = await apiClient.get<PaginatedResponse<WarehouseEmployee[]>>(
+				`${this.baseUrl}/warehouse`,
+				{
+					params: buildRequestFilter(filter),
+				},
+			)
 			return response.data
 		} catch (error) {
-			console.error(`Failed to fetch employees:`, error)
-			throw error
-		}
-	}
-
-	async getWarehouseEmployees(warehouseId: number): Promise<Employee[]> {
-		try {
-			const response = await apiClient.get<Employee[]>(this.baseUrl, {
-				params: { type: EmployeeType.WAREHOUSE, warehouseId: warehouseId },
-			})
-			return response.data
-		} catch (error) {
-			console.error(`Failed to fetch employees for warehouse ID ${warehouseId}:`, error)
+			console.error(`Failed to fetch warehouse employees: `, error)
 			throw error
 		}
 	}
