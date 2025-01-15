@@ -41,19 +41,10 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			return err
 		}
 
-		sw := m.storeWarehouseRepo.CloneWithTransaction(tx)
+		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
 
-		for _, dto := range dtos {
-
-			_, err := sw.AddStock(storeID, &dto)
-
-			if err != nil {
-				switch {
-				case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
-					continue
-				}
-				return err
-			}
+		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+			return err
 		}
 
 		return nil
@@ -70,22 +61,31 @@ func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditi
 		if err := sp.UpdateStoreAdditive(storeID, storeAdditiveID, updateStoreAdditive); err != nil {
 			return err
 		}
-		sw := m.storeWarehouseRepo.CloneWithTransaction(tx)
-		for _, dto := range dtos {
-			_, err := sw.AddStock(storeID, &dto)
-			if err != nil {
-				switch {
-				case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
-					continue
-				}
-				return err
-			}
+
+		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
+
+		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+			return err
 		}
 
 		return nil
 	})
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (m *transactionManager) addStocks(storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, storeID uint, dtos []storeWarehousesTypes.AddStockDTO) error {
+	for _, dto := range dtos {
+		_, err := storeWarehouseRepo.AddStock(storeID, &dto)
+		if err != nil {
+			switch {
+			case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
+				continue
+			}
+			return err
+		}
 	}
 	return nil
 }

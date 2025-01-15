@@ -46,9 +46,9 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 		Preload("StoreProductSizes.ProductSize.Unit").
 		Preload("Product.Category").
 		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
-
 		First(&storeProduct).Error
 
 	if err != nil {
@@ -67,8 +67,12 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 		Where("store_id = ?", storeID).
 		Joins("JOIN products ON store_products.product_id = products.id").
 		Preload("Product.ProductSizes").
+		Preload("Product.Category").
 		Preload("StoreProductSizes.ProductSize.Unit").
-		Preload("Product.Category")
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
 
 	if filter != nil {
 		if filter.Search != nil {

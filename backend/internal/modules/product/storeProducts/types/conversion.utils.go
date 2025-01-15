@@ -2,7 +2,6 @@ package types
 
 import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-	"github.com/sirupsen/logrus"
 	"sort"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -15,6 +14,39 @@ type StoreProductModels struct {
 }
 
 func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
+	basePrice, productSizeCount := productTypes.ProductAdditionalInfo(sp.Product)
+	storePrice, storeProductSizeCount := StoreProductAdditionalInfo(*sp)
+
+	if storePrice == 0 {
+		storePrice = basePrice
+	}
+
+	return &StoreProductDTO{
+		ID:                    sp.ID,
+		BaseProductDTO:        productTypes.MapToBaseProductDTO(&sp.Product),
+		ProductID:             sp.ProductID,
+		ProductSizeCount:      productSizeCount,
+		BasePrice:             basePrice,
+		StoreProductSizeCount: storeProductSizeCount,
+		StorePrice:            storePrice,
+		IsAvailable:           sp.IsAvailable,
+	}
+}
+
+func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
+	sizes := make([]StoreProductSizeDetailsDTO, len(sp.StoreProductSizes))
+
+	for i, size := range sp.StoreProductSizes {
+		sizes[i] = MapToStoreProductSizeDetailsDTO(size)
+	}
+
+	return StoreProductDetailsDTO{
+		StoreProductDTO: *MapToStoreProductDTO(sp),
+		Sizes:           sizes,
+	}
+}
+
+func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 	var spsPrices []float64
 	var spsMinPrice float64 = 0
 	var spsCount = len(sp.StoreProductSizes)
@@ -29,27 +61,7 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 		spsMinPrice = spsPrices[0]
 	}
 
-	return &StoreProductDTO{
-		ID:                    sp.ID,
-		ProductDTO:            productTypes.MapToProductDTO(sp.Product),
-		ProductID:             sp.ProductID,
-		StoreProductSizeCount: spsCount,
-		IsAvailable:           sp.IsAvailable,
-		StorePrice:            spsMinPrice,
-	}
-}
-
-func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
-	sizes := make([]StoreProductSizeDTO, len(sp.StoreProductSizes))
-	logrus.Info(len(sp.StoreProductSizes))
-	for i, size := range sp.StoreProductSizes {
-		sizes[i] = MapToStoreProductSizeDTO(size)
-	}
-
-	return StoreProductDetailsDTO{
-		StoreProductDTO: *MapToStoreProductDTO(sp),
-		Sizes:           sizes,
-	}
+	return spsMinPrice, spsCount
 }
 
 func MapToStoreProductSizeDTO(sps data.StoreProductSize) StoreProductSizeDTO {

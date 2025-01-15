@@ -135,7 +135,7 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 		ImageURL:    additive.ImageURL,
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
-		Category:    *ConvertToCategoryDTO(additive.Category),
+		Category:    *ConvertToCategoryDTO(&additive.Category),
 	}
 }
 

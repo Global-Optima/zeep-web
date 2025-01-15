@@ -98,8 +98,8 @@ type Employee struct {
 	BaseEntity
 	FirstName         string             `gorm:"size:255;not null" sort:"firstName"`
 	LastName          string             `gorm:"size:255;not null" sort:"lastName"`
-	Phone             string             `gorm:"size:16"`
-	Email             string             `gorm:"size:255" sort:"email"`
+	Phone             string             `gorm:"size:16;not null"`
+	Email             string             `gorm:"size:255;not null" sort:"email"`
 	HashedPassword    string             `gorm:"size:255;not null"`
 	Role              EmployeeRole       `gorm:"size:50;not null" sort:"role"`
 	Type              EmployeeType       `gorm:"size:50;not null" sort:"type"`

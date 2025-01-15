@@ -99,7 +99,7 @@ CREATE TABLE
 		description TEXT,
 		image_url VARCHAR(2048),
 		video_url VARCHAR(2048),
-		category_id INT REFERENCES product_categories (id) ON UPDATE CASCADE ON DELETE SET NULL,
+		category_id INT NOT NULL REFERENCES product_categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -155,7 +155,7 @@ CREATE TABLE
 		base_price DECIMAL(10, 2) DEFAULT 0,
         size INT NOT NULL,
         unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
-		additive_category_id INT REFERENCES additive_categories (id),
+		additive_category_id INT NOT NULL REFERENCES additive_categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		image_url VARCHAR(2048),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -518,7 +518,7 @@ CREATE TABLE
 	IF NOT EXISTS suborders (
 		id SERIAL PRIMARY KEY,
 		order_id INT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE SET NULL,
+		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE RESTRICT,
 		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
 		status VARCHAR(50) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -561,7 +561,7 @@ CREATE TABLE IF NOT EXISTS stock_materials (
 	ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
     safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
     expiration_flag BOOLEAN NOT NULL,
-    unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
+    unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
 	category_id INT NOT NULL REFERENCES stock_material_categories(id) ON DELETE SET NULL,
     barcode VARCHAR(255),
     expiration_period_in_days INT NOT NULL DEFAULT 1095, -- Default 3 years
@@ -611,7 +611,7 @@ CREATE TABLE IF NOT EXISTS stock_material_packages (
     id SERIAL PRIMARY KEY,
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     size DECIMAL(10,2) NOT NULL,
-    unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
+    unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ

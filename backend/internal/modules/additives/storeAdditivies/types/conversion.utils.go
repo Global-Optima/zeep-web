@@ -8,11 +8,16 @@ import (
 )
 
 func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
+	storePrice := storeAdditive.Price
+	if storePrice == 0 {
+		storePrice = storeAdditive.Additive.BasePrice
+	}
+
 	return &StoreAdditiveDTO{
 		ID:              storeAdditive.ID,
 		BaseAdditiveDTO: *additiveTypes.ConvertToBaseAdditiveDTO(&storeAdditive.Additive),
 		AdditiveID:      storeAdditive.AdditiveID,
-		StorePrice:      storeAdditive.Price,
+		StorePrice:      storePrice,
 	}
 }
 

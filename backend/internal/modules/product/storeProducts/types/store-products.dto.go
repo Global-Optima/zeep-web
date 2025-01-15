@@ -8,25 +8,25 @@ import (
 
 type StoreProductDTO struct {
 	ID uint `json:"id"`
-	productTypes.ProductDTO
+	productTypes.BaseProductDTO
 	ProductID             uint    `json:"productId"`
+	BasePrice             float64 `json:"basePrice"`
 	StorePrice            float64 `json:"storePrice"`
+	ProductSizeCount      int     `json:"productSizeCount"`
 	StoreProductSizeCount int     `json:"storeProductSizeCount"`
 	IsAvailable           bool    `json:"isAvailable"`
 }
 
 type StoreProductDetailsDTO struct {
 	StoreProductDTO
-	Sizes []StoreProductSizeDTO `json:"sizes"`
+	Sizes []StoreProductSizeDetailsDTO `json:"sizes"`
 }
 
 type StoreProductSizeDTO struct {
 	ID uint `json:"id"`
 	productTypes.BaseProductSizeDTO
-	ProductSizeID uint                                  `json:"productSizeId"`
-	StorePrice    float64                               `json:"storePrice"`
-	Additives     []productTypes.ProductSizeAdditiveDTO `json:"additives"`
-	Ingredients   []ingredientTypes.IngredientDTO       `json:"ingredients"`
+	ProductSizeID uint    `json:"productSizeId"`
+	StorePrice    float64 `json:"storePrice"`
 }
 
 type StoreProductSizeDetailsDTO struct {
@@ -38,7 +38,7 @@ type StoreProductSizeDetailsDTO struct {
 type CreateStoreProductDTO struct {
 	ProductID    uint                        `json:"productId" binding:"required,gt=0"`
 	IsAvailable  bool                        `json:"isAvailable" binding:"required"`
-	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,dive"`
+	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"required,dive"`
 }
 
 type CreateStoreProductSizeDTO struct {

@@ -17,7 +17,7 @@ type ProductSizeModels struct {
 	Ingredients []data.ProductSizeIngredient
 }
 
-func MapBaseProductDTO(product *data.Product) BaseProductDTO {
+func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 	return BaseProductDTO{
 		Name:        product.Name,
 		Description: product.Description,
@@ -41,6 +41,17 @@ func MapToProductDetailsDTO(product *data.Product) *ProductDetailsDTO {
 }
 
 func MapToProductDTO(product data.Product) ProductDTO {
+	basePrice, productSizeCount := ProductAdditionalInfo(product)
+
+	return ProductDTO{
+		ID:               product.ID,
+		BaseProductDTO:   MapToBaseProductDTO(&product),
+		BasePrice:        basePrice,
+		ProductSizeCount: productSizeCount,
+	}
+}
+
+func ProductAdditionalInfo(product data.Product) (float64, int) {
 	var basePrice float64 = 0
 	var productSizesPrices []float64
 	var productSizeCount = len(product.ProductSizes)
@@ -54,12 +65,7 @@ func MapToProductDTO(product data.Product) ProductDTO {
 		basePrice = productSizesPrices[0]
 	}
 
-	return ProductDTO{
-		ID:               product.ID,
-		BaseProductDTO:   MapBaseProductDTO(&product),
-		BasePrice:        basePrice,
-		ProductSizeCount: productSizeCount,
-	}
+	return basePrice, productSizeCount
 }
 
 func MapToBaseProductSizeDTO(productSize data.ProductSize) BaseProductSizeDTO {
