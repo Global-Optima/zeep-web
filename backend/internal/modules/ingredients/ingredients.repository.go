@@ -14,6 +14,7 @@ type IngredientRepository interface {
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
 	GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error)
+	GetIngredientsForAdditives(additiveIDs []uint) ([]data.Ingredient, error)
 }
 
 type ingredientRepository struct {
@@ -94,6 +95,23 @@ func (r *ingredientRepository) GetIngredientsForProductSizes(productSizeIDs []ui
 		Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
 		Joins("JOIN product_sizes ps ON psi.product_size_id = ps.id").
 		Where("ps.id IN ?", productSizeIDs)
+
+	if err := query.Find(&ingredients).Error; err != nil {
+		return nil, err
+	}
+
+	return ingredients, nil
+}
+
+func (r *ingredientRepository) GetIngredientsForAdditives(additiveIDs []uint) ([]data.Ingredient, error) {
+	var ingredients []data.Ingredient
+	query := r.db.Model(&data.Ingredient{}).
+		Select("DISTINCT ingredients.*").
+		Preload("Unit").
+		Preload("IngredientCategory").
+		Joins("JOIN additive_ingredients ai ON ai.ingredient_id = ingredients.id").
+		Joins("JOIN additives a ON ai.additive_id = a.id").
+		Where("a.id IN ?", additiveIDs)
 
 	if err := query.Find(&ingredients).Error; err != nil {
 		return nil, err

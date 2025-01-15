@@ -60,9 +60,8 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 	err := r.db.Model(&data.ProductSize{}).
 		Preload("Unit").
 		Preload("Additives.Additive.Category").
+		Preload("Additives.Additive.Unit").
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
-		Preload("Additives").
-		Preload("ProductSizeIngredients.Ingredient").
 		Preload("ProductSizeIngredients.Ingredient.Unit").
 		First(&productSize, productSizeID).Error
 
@@ -154,6 +153,21 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 	return r.db.Transaction(func(tx *gorm.DB) error {
 
 		if updateModels != nil {
+			// If is_default is being set to true, first set all other sizes to false
+			if updateModels.ProductSize.IsDefault {
+				var productSize data.ProductSize
+				if err := tx.Select("product_id").First(&productSize, id).Error; err != nil {
+					return fmt.Errorf("failed to get product size: %w", err)
+				}
+
+				// Set all other sizes for this product to non-default
+				if err := tx.Model(&data.ProductSize{}).
+					Where("product_id = ? AND id != ?", productSize.ProductID, id).
+					Update("is_default", false).Error; err != nil {
+					return fmt.Errorf("failed to update other product sizes: %w", err)
+				}
+			}
+
 			if err := tx.Model(&data.ProductSize{}).
 				Where("id = ?", id).
 				Updates(updateModels.ProductSize).Error; err != nil {
@@ -188,16 +202,25 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 			}
 
 			// Add new ingredients
-			for _, ingredient := range updateModels.Ingredients {
-				ingredient.ProductSizeID = id
+			ingredients := make([]data.ProductSizeIngredient, len(updateModels.Ingredients))
+			for i, ingredient := range updateModels.Ingredients {
+				ingredients[i] = data.ProductSizeIngredient{
+					ProductSizeID: id,
+					IngredientID:  ingredient.IngredientID,
+					Quantity:      ingredient.Quantity,
+				}
 			}
-			if err := tx.Create(updateModels.Ingredients).Error; err != nil {
+			if err := tx.Create(ingredients).Error; err != nil {
 				return fmt.Errorf("failed to create ingredients: %w", err)
 			}
 		}
 
 		return nil
 	})
+}
+
+func (r *productRepository) setNewDefaultProductSize(productSizeID, productID uint) error {
+	return nil
 }
 
 func (r *productRepository) UpdateProduct(productID uint, product *data.Product) error {

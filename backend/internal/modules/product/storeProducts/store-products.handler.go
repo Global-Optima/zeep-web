@@ -77,6 +77,33 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 	utils.SendSuccessResponseWithPagination(c, productDetails, filter.Pagination)
 }
 
+func (h *StoreProductHandler) GetStoreProductSizeByID(c *gin.Context) {
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	storeProductSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid StoreProductSizeID")
+		return
+	}
+
+	storeProductSize, err := h.service.GetStoreProductSizeByID(storeID, uint(storeProductSizeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve store product size details")
+		return
+	}
+
+	if storeProductSize == nil {
+		utils.SendNotFoundError(c, "store product size not found")
+		return
+	}
+
+	utils.SendSuccessResponse(c, storeProductSize)
+}
+
 func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 	var dto types.CreateStoreProductDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
