@@ -8,7 +8,6 @@ import (
 )
 
 type CreateStockRequestDTO struct {
-	StoreID        uint                           `json:"storeId" binding:"required"`
 	StockMaterials []StockRequestStockMaterialDTO `json:"items" binding:"required"`
 }
 
