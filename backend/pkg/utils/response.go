@@ -3,6 +3,7 @@ package utils
 import (
 	"net/http"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,4 +53,24 @@ func SendNotFoundError(c *gin.Context, message string) {
 
 func SuccessCreatedResponse(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusCreated, data)
+}
+
+func SendDetailedError(c *gin.Context, err error, details ...string) {
+	if handlerErr, ok := err.(handlerErrors.HandlerErrorInterface); ok {
+		extendedError := handlerErr
+		if len(details) > 0 {
+			extendedError = handlerErr.WithDetails(details...)
+		}
+		response := gin.H{
+			"error": extendedError.Error(),
+		}
+		if len(extendedError.Details()) > 0 {
+			response["details"] = extendedError.Details()
+		}
+		c.JSON(handlerErr.Status(), response)
+	} else {
+		c.JSON(500, gin.H{
+			"error": "Internal Server Error",
+		})
+	}
 }

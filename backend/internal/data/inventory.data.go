@@ -126,10 +126,19 @@ type StockMaterialPackage struct {
 
 type SupplierMaterial struct {
 	BaseEntity
-	StockMaterialID uint          `gorm:"not null;index"`
-	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
-	SupplierID      uint          `gorm:"not null;index"`
-	Supplier        Supplier      `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
+	StockMaterialID uint            `gorm:"not null;index"`
+	StockMaterial   StockMaterial   `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
+	SupplierID      uint            `gorm:"not null;index"`
+	Supplier        Supplier        `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
+	SupplierPrices  []SupplierPrice `gorm:"foreignKey:SupplierMaterialID;constraint:OnDelete:CASCADE"`
+}
+
+type SupplierPrice struct {
+	BaseEntity
+	SupplierMaterialID uint             `gorm:"not null;index"`
+	SupplierMaterial   SupplierMaterial `gorm:"foreignKey:SupplierMaterialID;constraint:OnDelete:CASCADE"`
+	BasePrice          float64          `gorm:"type:decimal(10,2);not null"`
+	EffectiveDate      time.Time        `gorm:"not null"`
 }
 
 type SupplierWarehouseDelivery struct {

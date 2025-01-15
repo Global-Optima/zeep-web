@@ -106,3 +106,41 @@ func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
 
 	utils.SendSuccessResponse(c, suppliers)
 }
+
+func (h *SupplierHandler) AssociateMaterialToSupplier(c *gin.Context) {
+	supplierID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || supplierID <= 0 {
+		utils.SendBadRequestError(c, "Invalid supplier ID")
+		return
+	}
+
+	var dto types.CreateSupplierMaterialDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, "Invalid request body")
+		return
+	}
+
+	err = h.service.AddMaterialToSupplier(uint(supplierID), dto)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to associate material to supplier")
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "Material associated with supplier successfully", http.StatusCreated)
+}
+
+func (h *SupplierHandler) GetMaterialsBySupplier(c *gin.Context) {
+	supplierID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || supplierID <= 0 {
+		utils.SendBadRequestError(c, "Invalid supplier ID")
+		return
+	}
+
+	materials, err := h.service.GetMaterialsBySupplier(uint(supplierID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve materials for the supplier")
+		return
+	}
+
+	utils.SendSuccessResponse(c, materials)
+}

@@ -1,6 +1,10 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type CreateSupplierDTO struct {
 	Name         string `json:"name" validate:"required"`
@@ -27,4 +31,35 @@ type SupplierResponse struct {
 	Address      string    `json:"address"`
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
+// SupplierMaterial
+type CreateSupplierMaterialDTO struct {
+	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
+	BasePrice       float64 `json:"basePrice" binding:"required,gt=0"`
+}
+
+type SupplierMaterialResponse struct {
+	StockMaterial StockMaterialDTO `json:"stockMaterial"`
+	BasePrice     float64          `json:"basePrice"`
+	EffectiveDate time.Time        `json:"effectiveDate"`
+}
+
+type SupplierDTO struct {
+	ID           uint   `json:"id"`
+	Name         string `json:"name"`
+	ContactEmail string `json:"contactEmail"`
+	ContactPhone string `json:"contactPhone"`
+	City         string `json:"city"`
+	Address      string `json:"address"`
+}
+
+type StockMaterialDTO struct {
+	ID                   uint    `json:"id"`
+	Name                 string  `json:"name"`
+	Description          string  `json:"description"`
+	Category             string  `json:"category"`
+	SafetyStock          float64 `json:"safetyStock"`
+	Barcode              string  `json:"barcode"`
+	utils.PackageMeasure `json:"packageMeasures"`
 }

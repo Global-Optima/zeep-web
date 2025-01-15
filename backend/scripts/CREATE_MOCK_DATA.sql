@@ -1364,7 +1364,6 @@ VALUES
     (5, 1, 2, '555555555555', 15, '2024-12-15', '2027-12-15'); -- Vanilla Delivery
 
 
-
 INSERT INTO warehouse_stocks (warehouse_id, stock_material_id, quantity)
 VALUES
     (1, 1, 50), -- Milk in Warehouse 1
@@ -1400,3 +1399,44 @@ VALUES
     (4, 2, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
     (4, 3, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);  -- Chocolate
 
+-- Insert mock data into supplier_materials
+INSERT INTO supplier_materials (supplier_id, stock_material_id, created_at, updated_at)
+VALUES
+    -- Nestlé supplies Milk and Sugar
+    (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    
+    -- Coca-Cola supplies Sugar
+    (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    
+    -- PepsiCo supplies Chocolate and Cinnamon
+    (3, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
+    (3, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
+    
+    -- Unilever supplies Vanilla
+    (4, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
+    (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate
+
+
+-- Insert mock data into supplier_prices
+INSERT INTO supplier_prices (supplier_material_id, base_price, effective_date)
+VALUES
+    -- Prices for supplier_material_id 1
+    (1, 50.00, '2024-01-01T00:00:00Z'),
+    (1, 48.00, '2024-06-01T00:00:00Z'),
+    
+    -- Prices for supplier_material_id 2
+    (2, 25.00, '2024-01-01T00:00:00Z'),
+    (2, 24.50, '2024-07-01T00:00:00Z'),
+    
+    -- Prices for supplier_material_id 3
+    (3, 100.00, '2024-01-01T00:00:00Z'),
+    (3, 98.00, '2024-06-01T00:00:00Z'),
+    
+    -- Prices for supplier_material_id 4
+    (4, 30.00, '2024-01-01T00:00:00Z'),
+    (4, 28.00, '2024-05-01T00:00:00Z'),
+    
+    -- Prices for supplier_material_id 5
+    (5, 75.00, '2024-01-01T00:00:00Z'),
+    (5, 72.50, '2024-06-01T00:00:00Z');

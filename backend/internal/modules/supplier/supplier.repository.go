@@ -14,6 +14,10 @@ type SupplierRepository interface {
 	DeleteSupplier(id uint) error
 	GetAllSuppliers() ([]data.Supplier, error)
 	ExistsByContactPhone(phone string) (bool, error)
+
+	CreateSupplierMaterial(material *data.SupplierMaterial) error
+	CreateSupplierPrice(price *data.SupplierPrice) error
+	GetMaterialsBySupplier(supplierID uint) ([]data.SupplierMaterial, error)
 }
 
 type supplierRepository struct {
@@ -62,4 +66,24 @@ func (r *supplierRepository) ExistsByContactPhone(phone string) (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (r *supplierRepository) CreateSupplierMaterial(material *data.SupplierMaterial) error {
+	return r.db.Create(material).Error
+}
+
+func (r *supplierRepository) CreateSupplierPrice(price *data.SupplierPrice) error {
+	return r.db.Create(price).Error
+}
+
+func (r *supplierRepository) GetMaterialsBySupplier(supplierID uint) ([]data.SupplierMaterial, error) {
+	var materials []data.SupplierMaterial
+	err := r.db.Preload("StockMaterial").
+		Preload("StockMaterial.StockMaterialCategory").
+		Preload("StockMaterial.Package").
+		Preload("StockMaterial.Package.Unit").
+		Preload("SupplierPrices").
+		Where("supplier_id = ?", supplierID).
+		Find(&materials).Error
+	return materials, err
 }
