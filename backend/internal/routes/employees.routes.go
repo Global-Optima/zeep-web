@@ -264,27 +264,7 @@ func (r *Router) RegisterBarcodeRoutes(handler *barcode.BarcodeHandler) {
 	}
 }
 
-func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
-	router := r.EmployeeRoutes.Group("/warehouse-stocks")
-	{
-		stockRoutes := router.Group("/stock")
-		{
-			stockRoutes.GET("", handler.GetInventoryLevels)
-			stockRoutes.POST("/receive", handler.ReceiveInventory)
-			stockRoutes.POST("/pickup", handler.PickupStock)
-			stockRoutes.POST("/transfer", handler.TransferInventory)
-			stockRoutes.GET("/deliveries", handler.GetDeliveries)
-		}
-
-		expirationRoutes := router.Group("/expiration")
-		{
-			expirationRoutes.GET("/:warehouseID", handler.GetExpiringItems)
-			expirationRoutes.POST("/extend", handler.ExtendExpiration)
-		}
-	}
-}
-
-func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
+func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, inventoryHandler *inventory.InventoryHandler) {
 	router := r.EmployeeRoutes.Group("/warehouses")
 	{
 		warehouseRoutes := router.Group("")
@@ -302,13 +282,23 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 			storeRoutes.GET("/:warehouseId", handler.GetAllStoresByWarehouse) // Get all stores assigned to a specific warehouse
 		}
 
-		stockRoutes := router.Group("/stock")
+		stockRoutes := router.Group("/stocks")
 		{
 			stockRoutes.POST("/add", handler.AddToStock)
 			stockRoutes.POST("/deduct", handler.DeductFromStock)
 			stockRoutes.GET("", handler.GetStock)
 			stockRoutes.GET("/:stockMaterialId", handler.GetStockMaterialDetails)
 			stockRoutes.POST("/reset", handler.ResetStock)
+
+			stockRoutes.POST("/receive", inventoryHandler.ReceiveInventory)
+			stockRoutes.POST("/transfer", inventoryHandler.TransferInventory)
+			stockRoutes.GET("/deliveries", inventoryHandler.GetDeliveries)
+		}
+
+		expirationRoutes := router.Group("/expirations")
+		{
+			expirationRoutes.GET("/:warehouseID", inventoryHandler.GetExpiringItems)
+			expirationRoutes.POST("/extend", inventoryHandler.ExtendExpiration)
 		}
 	}
 }

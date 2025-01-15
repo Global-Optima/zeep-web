@@ -57,39 +57,6 @@ func (h *InventoryHandler) TransferInventory(c *gin.Context) {
 	utils.SendMessageWithStatus(c, "inventory transferred successfully", http.StatusOK)
 }
 
-func (h *InventoryHandler) GetInventoryLevels(c *gin.Context) {
-	var filter types.GetInventoryLevelsFilterQuery
-	if err := c.ShouldBindQuery(&filter); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
-		return
-	}
-
-	filter.Pagination = utils.ParsePagination(c)
-
-	levels, err := h.service.GetInventoryLevels(&filter)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to fetch inventory levels")
-		return
-	}
-
-	utils.SendSuccessResponseWithPagination(c, levels, filter.Pagination)
-}
-
-func (h *InventoryHandler) PickupStock(c *gin.Context) {
-	var req types.PickupRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
-	if err := h.service.PickupStock(req); err != nil {
-		utils.SendInternalServerError(c, "failed to handle store pickup")
-		return
-	}
-
-	utils.SendMessageWithStatus(c, "Store pickup completed successfully", http.StatusOK)
-}
-
 func (h *InventoryHandler) GetExpiringItems(c *gin.Context) {
 	warehouseIDStr := c.Param("warehouseID")
 	thresholdDaysStr := c.Query("thresholdDays")
