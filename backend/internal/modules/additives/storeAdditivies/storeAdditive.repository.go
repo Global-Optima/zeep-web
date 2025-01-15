@@ -53,7 +53,6 @@ func (r *storeAdditiveRepository) CreateStoreAdditives(storeAdditives []data.Sto
 func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
-	//TODO simplify and return error if not found
 	subquery := r.db.Model(&data.Additive{}).
 		Select("additive_category_id").
 		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").

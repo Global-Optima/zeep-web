@@ -80,6 +80,7 @@ func (c *Container) mustInit() {
 	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule)
 	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Barcodes.Repo)
 
+	c.Additives = modules.NewAdditivesModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
 	c.Products = modules.NewProductsModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
 	c.Additives = modules.NewAdditivesModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)

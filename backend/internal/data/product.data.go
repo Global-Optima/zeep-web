@@ -93,7 +93,7 @@ type Ingredient struct {
 
 type IngredientCategory struct {
 	BaseEntity
-	Name        string       `gorm:"size:255;not null;uniqueIndex"`
+	Name        string       `gorm:"size:255;not null"`
 	Description string       `gorm:"type:text"`
 	Ingredients []Ingredient `gorm:"foreignKey:CategoryID"`
 }
