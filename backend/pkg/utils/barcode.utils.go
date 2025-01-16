@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"strconv"
 
@@ -10,9 +8,9 @@ import (
 )
 
 func GenerateUPCBarcode(sku data.StockMaterial, supplierID uint) (string, error) {
-	manufacturerCode := GenerateManufacturerCodeFromSupplierID(supplierID)
+	manufacturerCode := fmt.Sprintf("%05d", supplierID%100000)
 
-	productCode := fmt.Sprintf("%05d", sku.ID)
+	productCode := fmt.Sprintf("%05d", sku.ID%100000)
 
 	baseCode := fmt.Sprintf("0%s%s", manufacturerCode, productCode)
 
@@ -20,16 +18,11 @@ func GenerateUPCBarcode(sku data.StockMaterial, supplierID uint) (string, error)
 
 	fullBarcode := baseCode + strconv.Itoa(checkDigit)
 
+	if len(fullBarcode) != 12 {
+		return "", fmt.Errorf("invalid barcode length: %s", fullBarcode)
+	}
+
 	return fullBarcode, nil
-}
-
-func GenerateManufacturerCodeFromSupplierID(supplierID uint) string {
-	hasher := md5.New()
-	hasher.Write([]byte(fmt.Sprintf("%d", supplierID)))
-	hash := hex.EncodeToString(hasher.Sum(nil))
-
-	numericCode, _ := strconv.Atoi(hash[:5])
-	return fmt.Sprintf("%05d", numericCode%100000)
 }
 
 func CalculateUPCCheckDigit(code string) int {
@@ -41,14 +34,11 @@ func CalculateUPCCheckDigit(code string) int {
 	for i, r := range code {
 		digit := int(r - '0')
 		if i%2 == 0 {
-
 			total += digit * 3
 		} else {
-
 			total += digit
 		}
 	}
 
-	checkDigit := (10 - (total % 10)) % 10
-	return checkDigit
+	return (10 - (total % 10)) % 10
 }

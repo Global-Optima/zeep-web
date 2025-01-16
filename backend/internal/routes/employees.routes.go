@@ -261,6 +261,9 @@ func (r *Router) RegisterBarcodeRoutes(handler *barcode.BarcodeHandler) {
 		router.POST("/generate", handler.GenerateBarcode)
 		router.GET("/:barcode", handler.RetrieveStockMaterialByBarcode)
 		router.POST("/print", handler.PrintAdditionalBarcodes)
+
+		router.POST("/by-material", handler.GetBarcodesForStockMaterials)  // Retrieve multiple barcodes
+		router.GET("/by-material/:id", handler.GetBarcodeForStockMaterial) // Retrieve a single barcode by ID
 	}
 }
 

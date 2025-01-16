@@ -69,3 +69,35 @@ func (h *BarcodeHandler) PrintAdditionalBarcodes(c *gin.Context) {
 
 	utils.SendSuccessResponse(c, response)
 }
+
+func (h *BarcodeHandler) GetBarcodesForStockMaterials(c *gin.Context) {
+	var req types.GetBarcodesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendBadRequestError(c, "Invalid request payload")
+		return
+	}
+
+	barcodes, err := h.service.GetBarcodesForStockMaterials(req.IDs)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch barcodes for stock materials")
+		return
+	}
+
+	utils.SendSuccessResponse(c, barcodes)
+}
+
+func (h *BarcodeHandler) GetBarcodeForStockMaterial(c *gin.Context) {
+	id, err := utils.ParseParam(c, "id")
+	if err != nil || id <= 0 {
+		utils.SendBadRequestError(c, "Invalid stock material ID")
+		return
+	}
+
+	barcode, err := h.service.GetBarcodeForStockMaterial(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch barcode for stock material")
+		return
+	}
+
+	utils.SendSuccessResponse(c, barcode)
+}
