@@ -66,7 +66,6 @@ func (c *Container) mustInit() {
 
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
 
-	c.Additives = modules.NewAdditivesModule(baseModule)
 	c.Categories = modules.NewCategoriesModule(baseModule)
 	c.Customers = modules.NewCustomersModule(baseModule)
 	c.Employees = modules.NewEmployeesModule(baseModule)

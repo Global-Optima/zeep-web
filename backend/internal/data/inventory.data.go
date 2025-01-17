@@ -110,7 +110,7 @@ type StockMaterialCategory struct {
 
 type Unit struct {
 	BaseEntity
-	Name             string  `gorm:"size:50;not null;unique"`
+	Name             string  `gorm:"size:50;not null"`
 	ConversionFactor float64 `gorm:"type:decimal(10,4);not null"` // To base unit
 }
 

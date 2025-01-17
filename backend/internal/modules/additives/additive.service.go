@@ -16,7 +16,7 @@ type AdditiveService interface {
 	GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryResponseDTO, error)
 
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
-	GetAdditiveByID(additiveID uint) (*types.AdditiveDTO, error)
+	GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error)
 	CreateAdditive(dto *types.CreateAdditiveDTO) error
 	UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) error
 	DeleteAdditive(additiveID uint) error
@@ -130,19 +130,22 @@ func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]typ
 
 func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) error {
 	additive := types.ConvertToAdditiveModel(dto)
+
 	if err := s.repo.CreateAdditive(additive); err != nil {
 		wrappedErr := utils.WrapError("failed to add additive", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
+
 	return nil
 }
 
 func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) error {
-	updatedAdditive := types.ConvertToUpdatedAdditiveModel(dto)
+	updateModels := types.ConvertToUpdatedAdditiveModels(dto)
 
-	if err := s.repo.UpdateAdditive(additiveID, updatedAdditive); err != nil {
-		s.logger.Error("Failed to update additive:", err)
+	if err := s.repo.UpdateAdditiveWithAssociations(additiveID, updateModels); err != nil {
+		wrappedErr := utils.WrapError("failed to update additive with associations", err)
+		s.logger.Error(wrappedErr)
 		return err
 	}
 	return nil
@@ -157,7 +160,7 @@ func (s *additiveService) DeleteAdditive(additiveID uint) error {
 	return nil
 }
 
-func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDTO, error) {
+func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error) {
 	additive, err := s.repo.GetAdditiveByID(additiveID)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to fetch additive by ID", err)
@@ -169,5 +172,5 @@ func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDTO, 
 		return nil, fmt.Errorf("additive with ID %d not found", additiveID)
 	}
 
-	return types.ConvertToAdditiveDTO(additive), nil
+	return types.ConvertToAdditiveDetailsDTO(additive), nil
 }

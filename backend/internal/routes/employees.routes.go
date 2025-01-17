@@ -61,6 +61,8 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 		router.POST("/multiple", handler.CreateMultipleStoreProducts)
 		router.PUT("/:id", handler.UpdateStoreProduct)
 		router.DELETE("/:id", handler.DeleteStoreProduct)
+
+		router.GET("/sizes/:id", handler.GetStoreProductSizeByID)
 	}
 }
 

@@ -101,7 +101,7 @@ type UpdateProductSizeDTO struct {
 	Name        *string                 `json:"name" binding:"omitempty,max=100"`
 	BasePrice   *float64                `json:"basePrice" binding:"omitempty,gt=0"`
 	Size        *int                    `json:"size" binding:"omitempty,gt=0"`
-	UnitID      *uint                   `json:"unitId" binding:"required,gt=0"`
+	UnitID      *uint                   `json:"unitId" binding:"omitempty,gt=0"`
 	IsDefault   *bool                   `json:"isDefault"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`

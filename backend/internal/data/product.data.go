@@ -46,12 +46,12 @@ type ProductSize struct {
 	BaseEntity
 	Name                   string  `gorm:"size:100;not null" sort:"name"`
 	UnitID                 uint    `gorm:"index,not null"`
-	Unit                   Unit    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
+	Unit                   Unit    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE" sort:"unit"`
 	BasePrice              float64 `gorm:"not null" sort:"price"`
-	Size                   int     `gorm:"not null" sort:"size"`
+	Size                   int     `gorm:"not null"`
 	IsDefault              bool    `gorm:"default:false" sort:"isDefault"`
 	ProductID              uint    `gorm:"index;not null"`
-	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
 	DiscountID             uint
 	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
@@ -93,7 +93,7 @@ type Ingredient struct {
 
 type IngredientCategory struct {
 	BaseEntity
-	Name        string       `gorm:"size:255;not null;uniqueIndex"`
+	Name        string       `gorm:"size:255;not null"`
 	Description string       `gorm:"type:text"`
 	Ingredients []Ingredient `gorm:"foreignKey:CategoryID"`
 }
@@ -109,7 +109,7 @@ type ProductSizeAdditive struct {
 
 type ProductCategory struct {
 	BaseEntity
-	Name        string    `gorm:"size:100;not null"`
+	Name        string    `gorm:"size:100;not null" sort:"name"`
 	Description string    `gorm:"type:text"`
 	Products    []Product `gorm:"foreignKey:CategoryID"`
 }
@@ -118,19 +118,22 @@ type Additive struct {
 	BaseEntity
 	Name                 string                `gorm:"size:255;not null;index" sort:"name"`
 	Description          string                `gorm:"type:text"`
-	BasePrice            float64               `gorm:"type:decimal(10,2);default:0"`
-	Size                 string                `gorm:"size:200"`
+	BasePrice            float64               `gorm:"type:decimal(10,2);default:0" sort:"basePrice"`
+	Size                 int                   `gorm:"not null"`
+	UnitID               uint                  `gorm:"index,not null"`
+	Unit                 Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL" sort:"unit"`
 	AdditiveCategoryID   uint                  `gorm:"index"`
-	Category             *AdditiveCategory     `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL"`
+	Category             AdditiveCategory      `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL" sort:"category"`
 	ImageURL             string                `gorm:"size:2048"`
 	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`
+	Ingredients          []AdditiveIngredient  `gorm:"foreignKey:AdditiveID"`
 }
 
 type AdditiveCategory struct {
 	BaseEntity
-	Name             string     `gorm:"size:100;not null"`
+	Name             string     `gorm:"size:100;not null" sort:"name"`
 	Description      string     `gorm:"type:text"`
 	Additives        []Additive `gorm:"foreignKey:AdditiveCategoryID"`
-	IsMultipleSelect bool       `gorm:"default:true" json:"is_multiple_select"`
+	IsMultipleSelect bool       `gorm:"default:true" sort:"isMultipleSelect"`
 }
