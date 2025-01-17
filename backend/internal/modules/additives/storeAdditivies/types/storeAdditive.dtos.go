@@ -2,6 +2,7 @@ package types
 
 import (
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 )
 
 type CreateStoreAdditiveDTO struct {
@@ -14,9 +15,15 @@ type UpdateStoreAdditiveDTO struct {
 }
 
 type StoreAdditiveDTO struct {
-	additiveTypes.AdditiveDTO
-	StoreAdditiveID uint    `json:"storeAdditiveId"`
-	StorePrice      float64 `json:"storePrice"`
+	ID uint `json:"id"`
+	additiveTypes.BaseAdditiveDTO
+	AdditiveID uint    `json:"additiveId"`
+	StorePrice float64 `json:"storePrice"`
+}
+
+type StoreAdditiveDetailsDTO struct {
+	StoreAdditiveDTO
+	Ingredients []ingredientTypes.IngredientDTO `json:"ingredients"`
 }
 
 type StoreAdditiveCategoriesFilter struct {
@@ -25,10 +32,11 @@ type StoreAdditiveCategoriesFilter struct {
 }
 
 type StoreAdditiveCategoryItemDTO struct {
-	additiveTypes.AdditiveCategoryItemDTO
-	StoreAdditiveID uint    `json:"storeAdditiveId"`
-	StorePrice      float64 `json:"storePrice"`
-	IsDefault       bool    `json:"isDefault"`
+	ID uint `json:"id"`
+	additiveTypes.BaseAdditiveCategoryItemDTO
+	AdditiveID uint    `json:"additiveId"`
+	StorePrice float64 `json:"storePrice"`
+	IsDefault  bool    `json:"isDefault"`
 }
 
 type StoreAdditiveCategoryDTO struct {

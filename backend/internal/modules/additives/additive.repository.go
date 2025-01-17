@@ -45,7 +45,20 @@ func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategor
 		Joins("LEFT JOIN store_additives ON store_additives.additive_id = additives.id")
 
 	if filter.ProductSizeId != nil {
-		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
+		query = query.Where(
+			"EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)",
+			*filter.ProductSizeId,
+		)
+	}
+
+	if filter.IsMultipleSelect != nil {
+		query = query.Where("additives.is_multiple_select = ?", *filter.IsMultipleSelect)
+	}
+
+	if filter.IncludeEmpty != nil && *filter.IncludeEmpty {
+		query = query.Where(hasAdditivesCondition + " OR NOT " + hasAdditivesCondition)
+	} else {
+		query = query.Where(hasAdditivesCondition)
 	}
 
 	if filter.Search != nil && *filter.Search != "" {

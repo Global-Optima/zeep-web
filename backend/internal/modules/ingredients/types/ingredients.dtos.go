@@ -2,7 +2,7 @@ package types
 
 import (
 	ingredientCategoriesType "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
-	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -36,7 +36,7 @@ type IngredientDTO struct {
 	Carbs            float64                                             `json:"carbs"`
 	Proteins         float64                                             `json:"proteins"`
 	ExpirationInDays int                                                 `json:"expirationInDays"`
-	Unit             unitTypes.UnitDTO                                   `json:"unit"`
+	Unit             unitTypes.UnitResponse                              `json:"unit"`
 	Category         ingredientCategoriesType.IngredientCategoryResponse `json:"category"`
 }
 
