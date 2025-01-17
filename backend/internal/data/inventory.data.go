@@ -5,11 +5,13 @@ import "time"
 type StockRequestStatus string
 
 var (
-	StockRequestCreated    StockRequestStatus = "CREATED"
-	StockRequestProcessed  StockRequestStatus = "PROCESSED"
-	StockRequestInDelivery StockRequestStatus = "IN_DELIVERY"
-	StockRequestCompleted  StockRequestStatus = "COMPLETED"
-	StockRequestRejected   StockRequestStatus = "REJECTED"
+	StockRequestCreated             StockRequestStatus = "CREATED"
+	StockRequestProcessed           StockRequestStatus = "PROCESSED"
+	StockRequestInDelivery          StockRequestStatus = "IN_DELIVERY"
+	StockRequestCompleted           StockRequestStatus = "COMPLETED"
+	StockRequestRejectedByStore     StockRequestStatus = "REJECTED_BY_STORE"
+	StockRequestRejectedByWarehouse StockRequestStatus = "REJECTED_BY_WAREHOUSE"
+	StockRequestAcceptedWithChange  StockRequestStatus = "ACCEPTED_WITH_CHANGE"
 )
 
 type Warehouse struct {
@@ -39,13 +41,15 @@ type StoreWarehouseStock struct {
 
 type StockRequest struct {
 	BaseEntity
-	StoreID     uint                     `gorm:"not null;index"` // Links to Store
-	Store       Store                    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
-	WarehouseID uint                     `gorm:"not null;index"` // Central warehouse fulfilling the request
-	Warehouse   Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
-	Status      StockRequestStatus       `gorm:"size:50;not null" sort:"status"`
-	RequestDate *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
-	Ingredients []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
+	StoreID          uint                     `gorm:"not null;index"` // Links to Store
+	Store            Store                    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	WarehouseID      uint                     `gorm:"not null;index"` // Central warehouse fulfilling the request
+	Warehouse        Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
+	Status           StockRequestStatus       `gorm:"size:50;not null" sort:"status"`
+	StoreComment     *string                  `gorm:"type:text"` // Store-specific comments
+	WarehouseComment *string                  `gorm:"type:text"` // Warehouse-specific comments
+	RequestDate      *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
+	Ingredients      []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
 }
 
 type StockRequestIngredient struct {
@@ -71,11 +75,12 @@ type Supplier struct {
 
 type WarehouseStock struct {
 	BaseEntity
-	WarehouseID     uint          `gorm:"not null;index"`
-	Warehouse       Warehouse     `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
-	StockMaterialID uint          `gorm:"index"`
-	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE" sort:"stockMaterials"`
-	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"name"`
+	WarehouseID        uint                        `gorm:"not null;index"`
+	Warehouse          Warehouse                   `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
+	StockMaterialID    uint                        `gorm:"index"`
+	StockMaterial      StockMaterial               `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE" sort:"stockMaterials"`
+	Quantity           float64                     `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"name"`
+	SupplierDeliveries []SupplierWarehouseDelivery `gorm:"foreignKey:StockMaterialID;references:StockMaterial" json:"supplierDeliveries"`
 }
 
 type StockMaterial struct {
@@ -88,16 +93,24 @@ type StockMaterial struct {
 	ExpirationFlag         bool                  `gorm:"not null" sort:"expirationFlag"`
 	UnitID                 uint                  `gorm:"not null"`
 	Unit                   Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
-	Category               string                `gorm:"size:255" sort:"category"`
-	Barcode                string                `gorm:"unique;size:255"`
+	CategoryID             uint                  `gorm:"not null"` // Link to IngredientCategory
+	StockMaterialCategory  StockMaterialCategory `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
+	Barcode                string                `gorm:"size:255"`
 	ExpirationPeriodInDays int                   `gorm:"not null;default:1095" sort:"expirationPeriodInDays"` // 3 years in days
 	IsActive               bool                  `gorm:"not null;default:true" sort:"isActive"`
 	Package                *StockMaterialPackage `gorm:"foreignKey:StockMaterialID"`
 }
 
+type StockMaterialCategory struct {
+	BaseEntity
+	Name           string          `gorm:"size:255;not null"`
+	Description    string          `gorm:"type:text"`
+	StockMaterials []StockMaterial `gorm:"foreignKey:CategoryID"`
+}
+
 type Unit struct {
 	BaseEntity
-	Name             string  `gorm:"size:50;not null;unique"`
+	Name             string  `gorm:"size:50;not null"`
 	ConversionFactor float64 `gorm:"type:decimal(10,4);not null"` // To base unit
 }
 
@@ -123,17 +136,18 @@ type SupplierWarehouseDelivery struct {
 	StockMaterialID uint          `gorm:"not null;index"`
 	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
 	SupplierID      uint          `gorm:"not null"`
+	Supplier        Supplier      `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
 	WarehouseID     uint          `gorm:"not null"`
 	Barcode         string        `gorm:"size:255;not null"`
 	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
-	DeliveryDate    time.Time     `gorm:"not null" sort:"deliveryDate"`
+	DeliveryDate    time.Time     `gorm:"not null;default:CURRENT_TIMESTAMP" sort:"deliveryDate"`
 	ExpirationDate  time.Time     `gorm:"not null" sort:"expirationDate"`
 }
 
 type AggregatedWarehouseStock struct {
-	WarehouseID            uint `json:"warehouseId"`
-	StockMaterialID        uint `json:"stockMaterialId"`
-	StockMaterial          StockMaterial
-	TotalQuantity          float64    `json:"totalQuantity"`
-	EarliestExpirationDate *time.Time `json:"earliestExpirationDate"`
+	WarehouseID            uint          `json:"warehouseId"`
+	StockMaterialID        uint          `json:"stockMaterialId"`
+	StockMaterial          StockMaterial `gorm:"foreignKey:StockMaterialID;references:ID;preload:true" json:"stockMaterial"`
+	TotalQuantity          float64       `json:"totalQuantity"`
+	EarliestExpirationDate *time.Time    `json:"earliestExpirationDate"`
 }

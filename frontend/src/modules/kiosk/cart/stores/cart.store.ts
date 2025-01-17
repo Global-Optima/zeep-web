@@ -1,13 +1,17 @@
-import type { AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import type {
+	StoreProductDetailsDTO,
+	StoreProductSizeDTO,
+} from '@/modules/admin/store-products/models/store-products.model'
 import md5 from 'md5'
 import { defineStore } from 'pinia'
-import type { ProductSizeDTO, StoreProductDetailsDTO } from '../../products/models/product.model'
+import type { ProductSizeDTO } from '../../products/models/product.model'
 
 export interface CartItem {
 	key: string
 	product: StoreProductDetailsDTO
-	size: ProductSizeDTO
-	additives: AdditiveCategoryItem[]
+	size: StoreProductSizeDTO
+	additives: AdditiveCategoryItemDTO[]
 	quantity: number
 }
 
@@ -39,7 +43,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		generateCartItemKey(
 			product: StoreProductDetailsDTO,
 			size: ProductSizeDTO,
-			additives: AdditiveCategoryItem[],
+			additives: AdditiveCategoryItemDTO[],
 		): string {
 			const additiveIds = additives
 				.map(a => a.id)
@@ -50,8 +54,8 @@ export const useCartStore = defineStore('ZEEP_CART', {
 
 		addToCart(
 			product: StoreProductDetailsDTO,
-			size: ProductSizeDTO,
-			additives: AdditiveCategoryItem[],
+			size: StoreProductSizeDTO,
+			additives: AdditiveCategoryItemDTO[],
 			quantity: number = 1,
 		) {
 			const key = this.generateCartItemKey(product, size, additives)
@@ -71,7 +75,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		removeFromCart(
 			product: StoreProductDetailsDTO,
 			size: ProductSizeDTO,
-			additives: AdditiveCategoryItem[],
+			additives: AdditiveCategoryItemDTO[],
 		) {
 			const key = this.generateCartItemKey(product, size, additives)
 			delete this.cartItems[key]
@@ -103,8 +107,8 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		updateCartItem(
 			key: string,
 			updates: {
-				size?: ProductSizeDTO
-				additives?: AdditiveCategoryItem[]
+				size?: StoreProductSizeDTO
+				additives?: AdditiveCategoryItemDTO[]
 				quantity?: number
 			},
 		) {

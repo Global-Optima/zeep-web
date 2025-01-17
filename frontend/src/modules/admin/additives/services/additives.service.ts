@@ -1,37 +1,76 @@
 import { apiClient } from '@/core/config/axios-instance.config'
-import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
-	AdditiveCategories,
 	AdditiveCategoriesFilterQuery,
+	AdditiveCategoryDTO,
+	AdditiveDTO,
 	AdditiveFilterQuery,
-	Additives,
+	CreateAdditiveCategoryDTO,
+	CreateAdditiveDTO,
+	UpdateAdditiveCategoryDTO,
+	UpdateAdditiveDTO,
 } from '../models/additives.model'
+import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
-class AdditivesService {
-	async getAdditiveCategories(filter?: AdditiveCategoriesFilterQuery) {
-		try {
-			const response = await apiClient.get<AdditiveCategories[]>('/additives/categories', {
-				params: buildRequestFilter(filter),
-			})
-			return response.data
-		} catch (error) {
-			console.error('Failed to fetch additive categories:', error)
-			throw error
-		}
+class AdditiveService {
+	async getAdditives(filter?: AdditiveFilterQuery) {
+		const response = await apiClient.get<PaginatedResponse<AdditiveDTO[]>>('/additives', {
+			params: buildRequestFilter(filter),
+		})
+		return response.data
 	}
 
-	async getAdditives(filter?: AdditiveFilterQuery) {
-		try {
-			const response = await apiClient.get<PaginatedResponse<Additives[]>>('/additives', {
+	async getAdditiveById(id: number) {
+		const response = await apiClient.get<AdditiveDTO>(`/additives/${id}`)
+		return response.data
+	}
+
+	async createAdditive(dto: CreateAdditiveDTO) {
+		const response = await apiClient.post<void>('/additives', dto)
+		return response.data
+	}
+
+	async updateAdditive(id: number, dto: UpdateAdditiveDTO) {
+		const response = await apiClient.put<void>(`/additives/${id}`, dto)
+		return response.data
+	}
+
+	async deleteAdditive(id: number) {
+		await apiClient.delete(`/additives/${id}`)
+	}
+
+	async getAdditiveCategories(filter?: AdditiveCategoriesFilterQuery) {
+		const response = await apiClient.get<PaginatedResponse<AdditiveCategoryDTO[]>>(
+			'/additives/categories',
+			{
 				params: buildRequestFilter(filter),
-			})
-			return response.data
-		} catch (error) {
-			console.error('Failed to fetch additives:', error)
-			throw error
-		}
+			},
+		)
+		return response.data
+	}
+
+	// Fetch a single additive category by ID
+	async getAdditiveCategoryById(id: number) {
+		const response = await apiClient.get<AdditiveCategoryDTO>(`/additives/categories/${id}`)
+		return response.data
+	}
+
+	// Create a new additive category
+	async createAdditiveCategory(dto: CreateAdditiveCategoryDTO) {
+		const response = await apiClient.post<void>('/additives/categories', dto)
+		return response.data
+	}
+
+	// Update an existing additive category
+	async updateAdditiveCategory(id: number, dto: UpdateAdditiveCategoryDTO) {
+		const response = await apiClient.put<void>(`/additives/categories/${id}`, dto)
+		return response.data
+	}
+
+	// Delete an additive category by ID
+	async deleteAdditiveCategory(id: number) {
+		await apiClient.delete(`/additives/categories/${id}`)
 	}
 }
 
-export const additivesService = new AdditivesService()
+export const additivesService = new AdditiveService()

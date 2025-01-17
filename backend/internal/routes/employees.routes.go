@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
@@ -16,10 +17,13 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/units"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 )
 
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
@@ -33,6 +37,7 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.GET(":id/sizes", handler.GetProductSizesByProductID)
 		router.POST("/sizes", handler.CreateProductSize)
 		router.PUT("/sizes/:id", handler.UpdateProductSize)
+		router.GET("/sizes/:id", handler.GetProductSizeByID)
 	}
 }
 
@@ -56,6 +61,8 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 		router.POST("/multiple", handler.CreateMultipleStoreProducts)
 		router.PUT("/:id", handler.UpdateStoreProduct)
 		router.DELETE("/:id", handler.DeleteStoreProduct)
+
+		router.GET("/sizes/:id", handler.GetStoreProductSizeByID)
 	}
 }
 
@@ -70,10 +77,21 @@ func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler
 	}
 }
 
+func (r *Router) RegisterIngredientCategoriesRoutes(handler *ingredientCategories.IngredientCategoryHandler) {
+	router := r.EmployeeRoutes.Group("/ingredient-categories")
+	{
+		router.GET("", handler.GetAll)
+		router.GET("/:id", handler.GetByID)
+		router.POST("", handler.Create)
+		router.PUT("/:id", handler.Update)
+		router.DELETE("/:id", handler.Delete)
+
+	}
+}
+
 func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.EmployeeRoutes.Group("/stores")
 	{
-		router.GET("", handler.GetAllStores)
 		router.GET("/:id", handler.GetStoreByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateStore)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStore)
@@ -97,7 +115,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	{
 		router.GET("", handler.GetAdditives)
 		router.POST("", handler.CreateAdditive)
-		router.PUT("", handler.UpdateAdditive)
+		router.PUT("/:id", handler.UpdateAdditive)
 		router.DELETE("/:id", handler.DeleteAdditive)
 		router.GET("/:id", handler.GetAdditiveByID)
 
@@ -105,7 +123,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 		{
 			additiveCategories.GET("", handler.GetAdditiveCategories)
 			additiveCategories.POST("", handler.CreateAdditiveCategory)
-			additiveCategories.PUT("", handler.UpdateAdditiveCategory)
+			additiveCategories.PUT("/:id", handler.UpdateAdditiveCategory)
 			additiveCategories.DELETE("/:id", handler.DeleteAdditiveCategory)
 			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
 		}
@@ -116,7 +134,7 @@ func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAddit
 	router := r.EmployeeRoutes.Group("/store-additives")
 	{
 		router.GET("", handler.GetStoreAdditives)
-		router.GET("/categories", handler.GetStoreAdditiveCategories)
+		router.GET("/categories/:productSizeId", handler.GetStoreAdditiveCategories)
 		router.POST("", handler.CreateStoreAdditives)
 		router.PUT("/:id", handler.UpdateStoreAdditive)
 		router.DELETE("/:id", handler.DeleteStoreAdditive)
@@ -130,14 +148,12 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 		storeEmployees := router.Group("/store")
 		{
 			storeEmployees.POST("", handler.CreateStoreEmployee)
-			storeEmployees.GET("", handler.GetStoreEmployees)
 			storeEmployees.GET("/:id", handler.GetStoreEmployeeByID)
 			storeEmployees.PUT("/:id", handler.UpdateStoreEmployee)
 		}
 		warehouseEmployees := router.Group("/warehouse")
 		{
 			warehouseEmployees.POST("", handler.CreateWarehouseEmployee)
-			warehouseEmployees.GET("", handler.GetWarehouseEmployees)
 			warehouseEmployees.GET("/:id", handler.GetWarehouseEmployeeByID)
 			warehouseEmployees.PUT("/:id", handler.UpdateWarehouseEmployee)
 		}
@@ -208,7 +224,40 @@ func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMateria
 	}
 }
 
-func (r *Router) RegisterBarcodeRouter(handler *barcode.BarcodeHandler) {
+func (r *Router) RegisterStockMaterialPackageRoutes(handler *stockMaterialPackage.StockMaterialPackageHandler) {
+	router := r.EmployeeRoutes.Group("/stock-material-packages")
+	{
+		router.GET("", handler.GetAll)
+		router.GET("/:id", handler.GetByID)
+		router.POST("", handler.Create)
+		router.PUT("/:id", handler.Update)
+		router.DELETE("/:id", handler.Delete)
+	}
+}
+
+func (r *Router) RegisterStockMaterialCategoryRoutes(handler *stockMaterialCategory.StockMaterialCategoryHandler) {
+	router := r.EmployeeRoutes.Group("/stock-material-categories")
+	{
+		router.GET("", handler.GetAll)
+		router.GET("/:id", handler.GetByID)
+		router.POST("", handler.Create)
+		router.PUT("/:id", handler.Update)
+		router.DELETE("/:id", handler.Delete)
+	}
+}
+
+func (r *Router) RegisterUnitRoutes(handler *units.UnitHandler) {
+	router := r.EmployeeRoutes.Group("/units")
+	{
+		router.GET("", handler.GetAllUnits)
+		router.GET("/:id", handler.GetUnitByID)
+		router.POST("", handler.CreateUnit)
+		router.PUT("/:id", handler.UpdateUnit)
+		router.DELETE("/:id", handler.DeleteUnit)
+	}
+}
+
+func (r *Router) RegisterBarcodeRoutes(handler *barcode.BarcodeHandler) {
 	router := r.EmployeeRoutes.Group("/barcode")
 	{
 		router.POST("/generate", handler.GenerateBarcode)
@@ -243,7 +292,6 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 		warehouseRoutes := router.Group("")
 		{
 			warehouseRoutes.POST("", handler.CreateWarehouse)                // Create a new warehouse
-			warehouseRoutes.GET("", handler.GetAllWarehouses)                // Get all warehouses
 			warehouseRoutes.GET("/:warehouseId", handler.GetWarehouseByID)   // Get a specific warehouse by ID
 			warehouseRoutes.PUT("/:warehouseId", handler.UpdateWarehouse)    // Update warehouse details
 			warehouseRoutes.DELETE("/:warehouseId", handler.DeleteWarehouse) // Delete a warehouse
@@ -261,6 +309,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 			stockRoutes.POST("/add", handler.AddToStock)
 			stockRoutes.POST("/deduct", handler.DeductFromStock)
 			stockRoutes.GET("", handler.GetStock)
+			stockRoutes.GET("/:stockMaterialId", handler.GetStockMaterialDetails)
 			stockRoutes.POST("/reset", handler.ResetStock)
 		}
 	}
@@ -270,11 +319,11 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 	router := r.EmployeeRoutes.Group("/stock-requests")
 	{
 		router.GET("", handler.GetStockRequests)
-		router.GET("/:id", handler.GetStockRequestByID)
+		router.GET("/:requestId", handler.GetStockRequestByID)
 		router.GET("/low-stock", handler.GetLowStockIngredients)
 		router.GET("/marketplace-products", handler.GetAllStockMaterials)
 		router.POST("", handler.CreateStockRequest)
-		router.PUT("/:requestId/status", handler.UpdateStockRequestStatus)
+		router.PATCH("/:requestId/status", handler.UpdateStockRequestStatus)
 		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)
 	}
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
-import { toastError } from '@/core/config/toast.config'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { useResetKioskState } from '@/modules/kiosk/hooks/use-reset-kiosk.hook'
 import type { CreateOrderDTO } from '@/modules/orders/models/orders.models'
@@ -26,6 +26,7 @@ const stepState = ref<StepState>({
 });
 
 const router = useRouter();
+const {toast} = useToast()
 const resetKioskState = useResetKioskState();
 const { cartItems, clearCart } = useCartStore();
 const {currentStoreId} = useCurrentStoreStore()
@@ -37,9 +38,8 @@ const createOrderMutation = useMutation({
     stepState.value.orderId = response.orderId;
     stepState.value.qrCodeUrl = `/api/v1/orders/${response.orderId}/receipt`;
   },
-  onError: (error) => {
-    console.error('Failed to create order:', error);
-    toastError('An error occurred while creating the order. Please try again.');
+  onError: () => {
+    toast({title: "Ошибка при создании заказа"});
   },
 });
 

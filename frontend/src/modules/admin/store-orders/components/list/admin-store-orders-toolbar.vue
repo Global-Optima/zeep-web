@@ -23,12 +23,12 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
-import type { StoreStocksFilter } from '@/modules/admin/store-stocks/models/store-stock.model'
+import type { OrdersFilterQuery } from '@/modules/orders/models/orders.models'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
 // Props and Emit
-const props = defineProps<{ filter: StoreStocksFilter }>()
+const props = defineProps<{ filter: OrdersFilterQuery }>()
 const emit = defineEmits(['update:filter'])
 
 // Local Filter

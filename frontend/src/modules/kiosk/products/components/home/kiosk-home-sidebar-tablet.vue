@@ -19,9 +19,10 @@
 </template>
 
 <script setup lang="ts">
-import type { ProductCategory } from '@/modules/kiosk/products/models/product.model'
+import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 
-const {selectedCategoryId, categories}= defineProps<{selectedCategoryId: number | null, categories: ProductCategory[]}>()
+
+const {selectedCategoryId, categories}= defineProps<{selectedCategoryId: number | null, categories: ProductCategoryDTO[]}>()
 
 const emit= defineEmits({
   "update:category": null

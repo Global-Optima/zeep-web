@@ -1,9 +1,10 @@
 <template>
 	<div class="relative bg-white p-6 border rounded-xl">
 		<!-- Employee Image -->
+		<!-- TODO: Add image url here -->
 		<img
 			class="mb-6 rounded-full w-48 h-48 object-cover"
-			:src="employee.imageUrl"
+			src=""
 			alt="Employee Image"
 		/>
 		<!-- Employee Attributes -->
@@ -38,7 +39,7 @@ import { computed } from 'vue'
 const {employee} = defineProps<{employee: Employee}>()
 
 const attributes = computed(() => [
-  { label: 'Имя', value: employee.name },
+  { label: 'Имя', value: `${employee.firstName} ${employee.lastName}` },
   { label: 'Должность', value: EMPLOYEE_ROLES_FORMATTED[employee.role] },
   { label: 'Email', value: employee.email },
   { label: 'Телефон', value: employee.phone },

@@ -17,7 +17,7 @@
 			>
 				<!-- Employee Name and Image -->
 				<TableCell class="p-4">
-					<span class="font-medium"> {{ employee.name }} </span>
+					<span class="font-medium"> {{ employee.firstName }} {{ employee.lastName }}</span>
 				</TableCell>
 				<!-- Role -->
 				<TableCell class="p-4">

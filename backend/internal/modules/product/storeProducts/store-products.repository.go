@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -10,7 +11,7 @@ import (
 )
 
 type StoreProductRepository interface {
-	GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error)
+	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
@@ -18,7 +19,6 @@ type StoreProductRepository interface {
 	DeleteStoreProductWithSizes(storeID, storeProductID uint) error
 
 	GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
-	CreateStoreProductSize(storeProductSize *data.StoreProductSize) (uint, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
 	CloneWithTransaction(tx *gorm.DB) StoreProductRepository
@@ -38,12 +38,17 @@ func (r *storeProductRepository) CloneWithTransaction(tx *gorm.DB) StoreProductR
 	}
 }
 
-func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
+func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error) {
 	var storeProduct data.StoreProduct
 	err := r.db.Model(&data.StoreProduct{}).
 		Where("store_id = ? AND id = ?", storeID, storeProductID).
 		Preload("Product.ProductSizes").
-		Preload("StoreProductSizes.ProductSize").
+		Preload("StoreProductSizes.ProductSize.Unit").
+		Preload("Product.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
 		First(&storeProduct).Error
 
 	if err != nil {
@@ -53,15 +58,21 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 		return nil, err
 	}
 
-	dto := types.MapToStoreProductDetailsDTO(&storeProduct)
-	return &dto, nil
+	return &storeProduct, nil
 }
 
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {
 	var storeProducts []data.StoreProduct
-	query := r.db.Model(&data.StoreProduct{}).Where("store_id = ?", storeID).
-		Preload("StoreProductSizes").
-		Preload("Product.ProductSizes")
+	query := r.db.Model(&data.StoreProduct{}).
+		Where("store_id = ?", storeID).
+		Joins("JOIN products ON store_products.product_id = products.id").
+		Preload("Product.ProductSizes").
+		Preload("Product.Category").
+		Preload("StoreProductSizes.ProductSize.Unit").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
 
 	if filter != nil {
 		if filter.Search != nil {
@@ -81,7 +92,12 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 		}
 	}
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreProduct{})
+	if filter == nil {
+		return nil, fmt.Errorf("filter is not binded")
+	}
+
+	var err error
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreProduct{})
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +139,7 @@ func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&data.StoreProduct{}).
 			Where("store_id = ? AND id = ?", storeID, storeProductID).
-			Updates(updateModels.StoreProduct).Error
+			Update("is_available", &updateModels.StoreProduct.IsAvailable).Error
 
 		if err != nil {
 			return err
@@ -177,22 +193,21 @@ func (r *storeProductRepository) DeleteStoreProductWithSizes(storeID, storeProdu
 
 func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error) {
 	var storeProductSize data.StoreProductSize
-	if err := r.db.
-		Where("store_id = ? AND id = ?", storeID, storeProductSizeID).
-		Find(&storeProductSize).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
+
+	err := r.db.Model(&data.StoreProductSize{}).
+		Joins("JOIN store_products sp ON store_product_sizes.store_product_id = sp.id").
+		Where("sp.store_id = ? AND store_product_sizes.id = ?", storeID, storeProductSizeID).
+		Preload("ProductSize.Unit").
+		Preload("ProductSize.Additives.Additive.Category").
+		Preload("ProductSize.Additives.Additive.Unit").
+		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
+		First(&storeProductSize).Error
+
+	if err != nil {
+		return &storeProductSize, err
 	}
 	return &storeProductSize, nil
-}
-
-func (r *storeProductRepository) CreateStoreProductSize(storeProductSize *data.StoreProductSize) (uint, error) {
-	if err := r.db.Create(storeProductSize).Error; err != nil {
-		return 0, err
-	}
-	return storeProductSize.ID, nil
 }
 
 func (r *storeProductRepository) UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error {

@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 )
 
 func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices map[uint]float64, additivePrices map[uint]float64) (data.Order, float64) {
@@ -71,11 +72,12 @@ func ConvertSuborderToDTO(suborder *data.Suborder) SuborderDTO {
 	suborderDTO := SuborderDTO{
 		ID:      suborder.ID,
 		OrderID: suborder.OrderID,
-		ProductSize: ProductSizeDTO{
+		ProductSize: OrderProductSizeDTO{
 			ID:          suborder.ProductSize.ID,
 			SizeName:    suborder.ProductSize.Name,
 			ProductName: suborder.ProductSize.Product.Name,
 			Size:        suborder.ProductSize.Size,
+			Unit:        unitTypes.ToUnitResponse(suborder.ProductSize.Unit),
 		},
 		Price:     suborder.Price,
 		Status:    suborder.Status,
@@ -95,7 +97,7 @@ func ConvertSuborderAdditiveToDTO(additive *data.SuborderAdditive) SuborderAddit
 	return SuborderAdditiveDTO{
 		ID:         additive.ID,
 		SuborderID: additive.SuborderID,
-		Additive: AdditiveDTO{
+		Additive: OrderAdditiveDTO{
 			ID:          additive.Additive.ID,
 			Name:        additive.Additive.Name,
 			Description: additive.Additive.Description,
@@ -114,9 +116,9 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 
 	suborders := make([]SuborderDetailsDTO, len(order.Suborders))
 	for i, sub := range order.Suborders {
-		additives := make([]AdditiveDetailsDTO, len(sub.Additives))
+		additives := make([]OrderAdditiveDetailsDTO, len(sub.Additives))
 		for j, additive := range sub.Additives {
-			additives[j] = AdditiveDetailsDTO{
+			additives[j] = OrderAdditiveDetailsDTO{
 				ID:          additive.Additive.ID,
 				Name:        additive.Additive.Name,
 				Description: additive.Additive.Description,
@@ -128,12 +130,12 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 			ID:     sub.ID,
 			Price:  sub.Price,
 			Status: string(sub.Status),
-			ProductSize: ProductSizeDetailsDTO{
+			ProductSize: OrderProductSizeDetailsDTO{
 				ID:        sub.ProductSize.ID,
 				Name:      sub.ProductSize.Name,
-				Measure:   sub.ProductSize.Measure,
+				Unit:      unitTypes.ToUnitResponse(sub.ProductSize.Unit),
 				BasePrice: sub.ProductSize.BasePrice,
-				Product: ProductDetailsDTO{
+				Product: OrderProductDetailsDTO{
 					ID:          sub.ProductSize.Product.ID,
 					Name:        sub.ProductSize.Product.Name,
 					Description: sub.ProductSize.Product.Description,
@@ -144,9 +146,9 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 		}
 	}
 
-	var deliveryAddress *DeliveryAddressDTO
+	var deliveryAddress *OrderDeliveryAddressDTO
 	if order.DeliveryAddressID != nil {
-		deliveryAddress = &DeliveryAddressDTO{
+		deliveryAddress = &OrderDeliveryAddressDTO{
 			ID:        order.DeliveryAddress.ID,
 			Address:   order.DeliveryAddress.Address,
 			Longitude: order.DeliveryAddress.Longitude,

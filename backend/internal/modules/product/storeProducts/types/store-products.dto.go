@@ -1,34 +1,44 @@
 package types
 
 import (
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-// StoreProductDTO for sending array of Products
 type StoreProductDTO struct {
-	productTypes.ProductDTO
-	StoreProductID        uint    `json:"storeProductId"`
+	ID uint `json:"id"`
+	productTypes.BaseProductDTO
+	ProductID             uint    `json:"productId"`
+	BasePrice             float64 `json:"basePrice"`
 	StorePrice            float64 `json:"storePrice"`
-	StoreProductSizeCount int     `json:"StoreProductSizeCount"`
+	ProductSizeCount      int     `json:"productSizeCount"`
+	StoreProductSizeCount int     `json:"storeProductSizeCount"`
 	IsAvailable           bool    `json:"isAvailable"`
 }
 
-// StoreProductDetailsDTO for sending single product with detailed info
 type StoreProductDetailsDTO struct {
 	StoreProductDTO
-	Sizes []StoreProductSizeDTO `json:"sizes"`
+	Sizes []StoreProductSizeDetailsDTO `json:"sizes"`
 }
 
 type StoreProductSizeDTO struct {
-	productTypes.ProductSizeDTO
-	StorePrice float64 `json:"storePrice"`
+	ID uint `json:"id"`
+	productTypes.BaseProductSizeDTO
+	ProductSizeID uint    `json:"productSizeId"`
+	StorePrice    float64 `json:"storePrice"`
+}
+
+type StoreProductSizeDetailsDTO struct {
+	StoreProductSizeDTO
+	Additives   []productTypes.ProductSizeAdditiveDTO `json:"additives"`
+	Ingredients []ingredientTypes.IngredientDTO       `json:"ingredients"`
 }
 
 type CreateStoreProductDTO struct {
 	ProductID    uint                        `json:"productId" binding:"required,gt=0"`
 	IsAvailable  bool                        `json:"isAvailable" binding:"required"`
-	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,dive"`
+	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"required,dive"`
 }
 
 type CreateStoreProductSizeDTO struct {

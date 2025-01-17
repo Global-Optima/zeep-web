@@ -7,12 +7,16 @@
 	<Card>
 		<CardContent class="mt-4">
 			<p
-				v-if="!employees || employees.length === 0"
+				v-if="!employees || employees.data.length === 0"
 				class="text-muted-foreground"
 			>
 				Сотрудники не найдены
 			</p>
-			<AdminStoreEmployeesList :employees="employees" />
+			<!-- TODO: add pagination here -->
+			<AdminStoreEmployeesList
+				v-else
+				:employees="employees.data"
+			/>
 		</CardContent>
 	</Card>
 </template>
@@ -22,17 +26,17 @@
 import { Card, CardContent } from '@/core/components/ui/card'
 import AdminStoreEmployeesList from '@/modules/admin/employees/components/list/admin-store-employees-list.vue'
 import AdminStoreEmployeesToolbar from '@/modules/admin/employees/components/list/admin-store-employees-toolbar.vue'
-import type { EmployeesFilter } from '@/modules/employees/models/employees.models'
+import type { StoreEmployeesFilter } from '@/modules/employees/models/employees.models'
 import { employeesService } from '@/modules/employees/services/employees.service'
 import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<EmployeesFilter>({
+const {currentStoreId} = useCurrentStoreStore()
+
+const filter = ref<StoreEmployeesFilter>({
   search: '',
 })
-
-const {currentStoreId} = useCurrentStoreStore()
 
 const queryKey = computed(() => (['employees', filter.value]))
 
@@ -40,13 +44,12 @@ const { data: employees } = useQuery({
   queryKey: queryKey,
   queryFn: () => {
     if (!currentStoreId) throw new Error('No store ID available')
-    return employeesService.getStoreEmployees(currentStoreId, filter.value)
+    return employeesService.getStoreEmployees({...filter.value, storeId: currentStoreId})
   },
-  initialData: [],
   enabled: computed(() => !!currentStoreId),
 })
 
-function updateFilter(updatedFilter: EmployeesFilter) {
+function updateFilter(updatedFilter: StoreEmployeesFilter) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 </script>

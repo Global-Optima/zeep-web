@@ -1,9 +1,11 @@
 package types
 
 import (
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	"sort"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-	"sort"
 )
 
 type StoreProductModels struct {
@@ -12,6 +14,39 @@ type StoreProductModels struct {
 }
 
 func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
+	basePrice, productSizeCount := productTypes.ProductAdditionalInfo(sp.Product)
+	storePrice, storeProductSizeCount := StoreProductAdditionalInfo(*sp)
+
+	if storePrice == 0 {
+		storePrice = basePrice
+	}
+
+	return &StoreProductDTO{
+		ID:                    sp.ID,
+		BaseProductDTO:        productTypes.MapToBaseProductDTO(&sp.Product),
+		ProductID:             sp.ProductID,
+		ProductSizeCount:      productSizeCount,
+		BasePrice:             basePrice,
+		StoreProductSizeCount: storeProductSizeCount,
+		StorePrice:            storePrice,
+		IsAvailable:           sp.IsAvailable,
+	}
+}
+
+func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
+	sizes := make([]StoreProductSizeDetailsDTO, len(sp.StoreProductSizes))
+
+	for i, size := range sp.StoreProductSizes {
+		sizes[i] = MapToStoreProductSizeDetailsDTO(size)
+	}
+
+	return StoreProductDetailsDTO{
+		StoreProductDTO: *MapToStoreProductDTO(sp),
+		Sizes:           sizes,
+	}
+}
+
+func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 	var spsPrices []float64
 	var spsMinPrice float64 = 0
 	var spsCount = len(sp.StoreProductSizes)
@@ -26,31 +61,34 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 		spsMinPrice = spsPrices[0]
 	}
 
-	return &StoreProductDTO{
-		ProductDTO:            productTypes.MapToProductDTO(sp.Product),
-		StoreProductID:        sp.ID,
-		StoreProductSizeCount: spsCount,
-		IsAvailable:           sp.IsAvailable,
-		StorePrice:            spsMinPrice,
-	}
-}
-
-func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
-	sizes := make([]StoreProductSizeDTO, len(sp.StoreProductSizes))
-	for i, size := range sp.StoreProductSizes {
-		sizes[i] = MapToStoreProductSizeDTO(size)
-	}
-
-	return StoreProductDetailsDTO{
-		StoreProductDTO: *MapToStoreProductDTO(sp),
-		Sizes:           sizes,
-	}
+	return spsMinPrice, spsCount
 }
 
 func MapToStoreProductSizeDTO(sps data.StoreProductSize) StoreProductSizeDTO {
 	return StoreProductSizeDTO{
-		ProductSizeDTO: productTypes.MapToProductSizeDTO(sps.ProductSize),
-		StorePrice:     sps.Price,
+		ID:                 sps.ID,
+		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(sps.ProductSize),
+		ProductSizeID:      sps.ProductSizeID,
+		StorePrice:         sps.Price,
+	}
+}
+
+func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSizeDetailsDTO {
+	var additives = make([]productTypes.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
+	var ingredients = make([]ingredientTypes.IngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
+
+	for i, productSizeAdditive := range sps.ProductSize.Additives {
+		additives[i] = productTypes.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
+	}
+
+	for i, productSizeIngredient := range sps.ProductSize.ProductSizeIngredients {
+		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+	}
+
+	return StoreProductSizeDetailsDTO{
+		StoreProductSizeDTO: MapToStoreProductSizeDTO(sps),
+		Additives:           additives,
+		Ingredients:         ingredients,
 	}
 }
 

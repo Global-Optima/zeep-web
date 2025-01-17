@@ -1,6 +1,6 @@
 <template>
 	<section
-		class="w-full py-4 sm:py-6 px-4 flex items-center gap-2 overflow-x-auto no-scrollbar sticky top-0 z-10"
+		class="top-0 z-10 sticky flex items-center gap-2 px-4 py-4 sm:py-6 w-full overflow-x-auto no-scrollbar"
 		data-testid="search-section"
 	>
 		<div
@@ -27,18 +27,18 @@
 			<button
 				v-if="searchTerm"
 				@click="clearSearchTerm"
-				class="absolute right-5 top-5 sm:right-8 sm:top-6 transform"
+				class="top-5 sm:top-6 right-5 sm:right-8 absolute transform"
 				data-testid="clear-button"
 			>
 				<Icon
 					icon="mingcute:close-fill"
-					class="text-primary text-2xl"
+					class="text-2xl text-primary"
 				/>
 			</button>
 		</div>
 
 		<div
-			class="flex min-w-min rounded-full overflow-x-auto bg-white"
+			class="flex bg-white rounded-full min-w-min overflow-x-auto"
 			data-testid="category-buttons"
 		>
 			<button
@@ -58,16 +58,16 @@
 </template>
 
 <script setup lang="ts">
+import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
 
-import type { ProductCategory } from '@/modules/kiosk/products/models/product.model'
 
 const emit = defineEmits(['update:category', 'update:searchTerm']);
 const { selectedCategoryId, searchTerm, categories } = defineProps<{
   selectedCategoryId: number | null;
   searchTerm: string;
-  categories: ProductCategory[];
+  categories: ProductCategoryDTO[];
 }>();
 
 const isInputFocused = ref(false);

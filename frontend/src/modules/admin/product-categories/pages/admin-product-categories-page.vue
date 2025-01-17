@@ -7,40 +7,56 @@
 	<Card>
 		<CardContent class="mt-4">
 			<p
-				v-if="!productCategories || productCategories.length === 0"
+				v-if="!productCategoriesResponse || productCategoriesResponse.data.length === 0"
 				class="text-muted-foreground"
 			>
-				Категории не найдены
+				Категории товаров не найдены
 			</p>
 			<AdminProductCategoriesList
 				v-else
-				:productCategories="productCategories"
+				:productCategories="productCategoriesResponse.data"
 			/>
 		</CardContent>
+		<CardFooter class="flex justify-end">
+			<PaginationWithMeta
+				v-if="productCategoriesResponse"
+				:meta="productCategoriesResponse.pagination"
+				@update:page="updatePage"
+				@update:pageSize="updatePageSize"
+			/>
+		</CardFooter>
 	</Card>
 </template>
 
 <script setup lang="ts">
-import { Card, CardContent } from '@/core/components/ui/card'
+import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
+import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminProductCategoriesList from '@/modules/admin/product-categories/components/list/admin-product-categories-list.vue'
 import AdminProductCategoriesToolbar from '@/modules/admin/product-categories/components/list/admin-product-categories-toolbar.vue'
-import type { ProductCategoriesFilter } from '@/modules/admin/product-categories/models/product-categories.model'
-import { productCategoriesService } from '@/modules/admin/product-categories/services/product-categories.service'
+import type { ProductCategoriesFilterDTO } from '@/modules/kiosk/products/models/product.model'
+import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<ProductCategoriesFilter>({
-  search: '',
+const filter = ref<ProductCategoriesFilterDTO>({})
+
+const { data: productCategoriesResponse } = useQuery({
+  queryKey: computed(() => ['admin-product-categories', filter.value]),
+  queryFn: () => productsService.getAllProductCategories(filter.value),
 })
 
-const { data: productCategories } = useQuery({
-  queryKey: computed(() => ['product-categories', filter.value]),
-  queryFn: () => productCategoriesService.getProductCategories(filter.value),
-  initialData: []
-})
-
-function updateFilter(updatedFilter: ProductCategoriesFilter) {
+function updateFilter(updatedFilter: ProductCategoriesFilterDTO) {
   filter.value = {...filter.value, ...updatedFilter}
+}
+
+function updatePage(page: number) {
+  updateFilter({ pageSize: DEFAULT_PAGINATION_META.pageSize, page: page})
+
+}
+
+function updatePageSize(pageSize: number) {
+  updateFilter({ pageSize: pageSize, page: DEFAULT_PAGINATION_META.page})
 }
 </script>
 

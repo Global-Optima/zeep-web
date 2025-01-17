@@ -20,7 +20,7 @@ type NewInventoryItem struct {
 	ExpirationFlag   bool    `json:"expirationFlag" binding:"required"`
 	Quantity         float64 `json:"quantity" binding:"required,gte=0"`
 	UnitID           uint    `json:"unitId" binding:"required"`
-	Category         string  `json:"category" binding:"required"`
+	CategoryID       uint    `json:"categoryId" binding:"required"`
 	ExpirationInDays *int    `json:"expirationInDays,omitempty"` // Optional override
 	Package          Package `json:"package" binding:"required"`
 	IngredientID     uint    `json:"ingredientId" binding:"required"` // New field for ingredient linkage
@@ -55,8 +55,7 @@ type InventoryLevel struct {
 }
 
 type InventoryLevelsResponse struct {
-	WarehouseID uint             `json:"warehouseId"`
-	Levels      []InventoryLevel `json:"levels"`
+	Levels []InventoryLevel `json:"levels"`
 }
 
 type UpcomingExpirationResponse struct {

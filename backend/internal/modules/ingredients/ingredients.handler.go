@@ -20,7 +20,7 @@ func NewIngredientHandler(service IngredientService) *IngredientHandler {
 func (h *IngredientHandler) CreateIngredient(c *gin.Context) {
 	var dto types.CreateIngredientDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid input data")
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
@@ -41,7 +41,7 @@ func (h *IngredientHandler) UpdateIngredient(c *gin.Context) {
 
 	var dto types.UpdateIngredientDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid input data")
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 

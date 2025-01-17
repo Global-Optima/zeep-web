@@ -43,14 +43,14 @@ import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { EmployeesFilter } from '@/modules/employees/models/employees.models'
+import type { StoreEmployeesFilter } from '@/modules/employees/models/employees.models'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Props and Emit
-const props = defineProps<{ filter: EmployeesFilter }>()
+const props = defineProps<{ filter: StoreEmployeesFilter }>()
 const emit = defineEmits(['update:filter'])
 
 // Local Filter

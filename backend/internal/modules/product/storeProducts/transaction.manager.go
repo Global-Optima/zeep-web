@@ -6,7 +6,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -41,19 +40,10 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		sw := m.storeWarehouseRepo.CloneWithTransaction(tx)
-		logrus.Info(dtos)
-		for _, dto := range dtos {
-			logrus.Info(dto)
-			_, err := sw.AddStock(storeID, &dto)
+		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
 
-			if err != nil {
-				switch {
-				case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
-					continue
-				}
-				return err
-			}
+		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+			return err
 		}
 
 		return nil
@@ -79,17 +69,9 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 			return err
 		}
 
-		sw := m.storeWarehouseRepo.CloneWithTransaction(tx)
-		for _, dto := range dtos {
-			_, err := sw.AddStock(storeID, &dto)
-
-			if err != nil {
-				switch {
-				case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
-					continue
-				}
-				return err
-			}
+		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
+		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+			return err
 		}
 
 		return nil
@@ -106,22 +88,30 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 		if err := sp.UpdateStoreProductByID(storeID, storeProductID, updateModels); err != nil {
 			return err
 		}
-		sw := m.storeWarehouseRepo.CloneWithTransaction(tx)
-		for _, dto := range dtos {
-			_, err := sw.AddStock(storeID, &dto)
-			if err != nil {
-				switch {
-				case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
-					continue
-				}
-				return err
-			}
+		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
+
+		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+			return err
 		}
 
 		return nil
 	})
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (m *transactionManager) addStocks(storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, storeID uint, dtos []storeWarehousesTypes.AddStockDTO) error {
+	for _, dto := range dtos {
+		_, err := storeWarehouseRepo.AddStock(storeID, &dto)
+		if err != nil {
+			switch {
+			case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
+				continue
+			}
+			return err
+		}
 	}
 	return nil
 }

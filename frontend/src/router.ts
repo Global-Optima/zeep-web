@@ -1,9 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import {
-	CURRENT_STORE_STORAGE_KEY,
-	useCurrentStoreStore,
-} from '@/modules/stores/store/current-store.store'
 import { getRouteName, ROUTES } from './core/config/routes.config'
 import { DEFAULT_TITLE, TITLE_TEMPLATE } from './core/constants/seo.constants'
 import { useEmployeeAuthStore } from './modules/auth/store/employee-auth.store'
@@ -19,18 +15,10 @@ export const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
 	const { setCurrentEmployee } = useEmployeeAuthStore()
-	const { currentStoreId } = useCurrentStoreStore()
-
-	localStorage.getItem(CURRENT_STORE_STORAGE_KEY)
 
 	// Check for login page access
 	if (to.name === getRouteName('LOGIN')) {
 		return next()
-	}
-
-	// Check for store ID in localStorage
-	if (!currentStoreId) {
-		return next({ name: getRouteName('LOGIN') })
 	}
 
 	// If route requires authentication

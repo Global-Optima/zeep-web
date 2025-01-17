@@ -1,5 +1,15 @@
-CREATE DOMAIN valid_phone AS VARCHAR(16)
-    CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_type
+        WHERE typname = 'valid_phone'
+    ) THEN
+        CREATE DOMAIN valid_phone AS VARCHAR(16)
+        CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
+    END IF;
+END $$;
+
 
 -- FacilityAddress Table
 CREATE TABLE
@@ -13,59 +23,89 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_facility_coordinates
+    ON facility_addresses (longitude, latitude)
+    WHERE deleted_at IS NULL AND longitude IS NOT NULL AND latitude IS NOT NULL;
+
 -- Units Table
 CREATE TABLE
 	IF NOT EXISTS units (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(50) NOT NULL UNIQUE,
+		name VARCHAR(50) NOT NULL,
 		conversion_factor DECIMAL(10, 4) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_unit_name ON units (name) WHERE deleted_at IS NULL;
+
 -- ProductCategory Table
 CREATE TABLE
 	IF NOT EXISTS product_categories (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(100) UNIQUE NOT NULL,
+		name VARCHAR(100) NOT NULL,
 		description TEXT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_product_category_name ON product_categories (name) WHERE deleted_at IS NULL;
 
 -- AdditiveCategory Table
 CREATE TABLE
 	IF NOT EXISTS additive_categories (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(100) UNIQUE NOT NULL,
+		name VARCHAR(100) NOT NULL,
 		description TEXT,
 		is_multiple_select BOOLEAN NOT NULL DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
-	);
+);
+
+CREATE UNIQUE INDEX unique_additive_category_name ON additive_categories (name) WHERE deleted_at IS NULL;
+
 -- IngredientCategory Table
 CREATE TABLE IF NOT EXISTS ingredient_categories (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    description TEXT
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	deleted_at TIMESTAMPTZ
 );
+
+CREATE UNIQUE INDEX unique_ingredient_category_name ON ingredient_categories (name) WHERE deleted_at IS NULL;
+
+-- StockMaterialCategory Table
+CREATE TABLE IF NOT EXISTS stock_material_categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	deleted_at TIMESTAMPTZ
+);
+
+CREATE UNIQUE INDEX unique_stock_material_category_name ON stock_material_categories (name) WHERE deleted_at IS NULL;
 
 -- Product Table
 CREATE TABLE
 	IF NOT EXISTS products (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(100) UNIQUE NOT NULL,
+		name VARCHAR(100) NOT NULL,
 		description TEXT,
 		image_url VARCHAR(2048),
 		video_url VARCHAR(2048),
-		category_id INT REFERENCES product_categories (id) ON UPDATE CASCADE ON DELETE SET NULL,
+		category_id INT NOT NULL REFERENCES product_categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_product_name ON products (name) WHERE deleted_at IS NULL;
 
 -- RecipeStep Table
 CREATE TABLE
@@ -81,12 +121,17 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+-- Prevent duplicate step numbers for the same product
+CREATE UNIQUE INDEX unique_recipe_step_number
+    ON recipe_steps (product_id, step)
+    WHERE deleted_at IS NULL;
+
 -- ProductSize Table
 CREATE TABLE
 	IF NOT EXISTS product_sizes (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
-		measure VARCHAR(50),
+		unit_id INT NOT NULL REFERENCES units (id) ON DELETE CASCADE,
 		base_price DECIMAL(10, 2) NOT NULL,
 		size INT NOT NULL,
 		is_default BOOLEAN DEFAULT FALSE,
@@ -97,37 +142,48 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_default_product_size
+    ON product_sizes (product_id)
+    WHERE is_default = true AND deleted_at IS NULL;
+
 -- Additive Table
 CREATE TABLE
 	IF NOT EXISTS additives (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) UNIQUE NOT NULL,
+		name VARCHAR(255) NOT NULL,
 		description TEXT,
 		base_price DECIMAL(10, 2) DEFAULT 0,
-		size VARCHAR(200),
-		additive_category_id INT REFERENCES additive_categories (id),
+        size INT NOT NULL,
+        unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
+		additive_category_id INT NOT NULL REFERENCES additive_categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		image_url VARCHAR(2048),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_additive_name ON additives (name) WHERE deleted_at IS NULL;
+
 -- Store Table
 CREATE TABLE
 	IF NOT EXISTS stores (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) UNIQUE NOT NULL,
+		name VARCHAR(255) NOT NULL,
 		facility_address_id INT REFERENCES facility_addresses (id),
 		is_franchise BOOLEAN DEFAULT FALSE,
 		status VARCHAR(20) DEFAULT 'ACTIVE',
-		contact_phone valid_phone UNIQUE,
-		contact_email VARCHAR(255) UNIQUE,
+		contact_phone valid_phone,
+		contact_email VARCHAR(255),
 		store_hours VARCHAR(255),
 		admin_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
     );
+
+CREATE UNIQUE INDEX unique_store_name ON stores (name) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_store_contact_phone ON stores (contact_phone) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_store_contact_email ON stores (contact_email) WHERE deleted_at IS NULL;
 
 -- StoreAdditive Table
 CREATE TABLE
@@ -189,22 +245,28 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_product_size_additive
+    ON product_size_additives (product_size_id, additive_id)
+    WHERE deleted_at IS NULL;
+
 -- Ingredient Table
 CREATE TABLE
 	IF NOT EXISTS ingredients (
 		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) UNIQUE NOT NULL,
+		name VARCHAR(255) NOT NULL,
 		calories DECIMAL(5, 2) CHECK (calories >= 0),
 		fat DECIMAL(5, 2) CHECK (fat >= 0),
 		carbs DECIMAL(5, 2) CHECK (carbs >= 0),
 		proteins DECIMAL(5, 2) CHECK (proteins >= 0),
-		expires_at TIMESTAMPTZ,
-    	unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
-		ingredient_category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE SET NULL,
+        expiration_in_days INT CHECK (expiration_in_days >= 0),
+        unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
+        category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE RESTRICT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_ingredient_name ON ingredients (name) WHERE deleted_at IS NULL;
 
 -- ProductIngredient Table
 CREATE TABLE
@@ -218,7 +280,11 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
--- AdditiveIngredients Table 
+CREATE UNIQUE INDEX unique_product_size_ingredient
+    ON product_size_ingredients (product_size_id, ingredient_id)
+    WHERE deleted_at IS NULL;
+
+-- AdditiveIngredients Table
 CREATE TABLE
 	IF NOT EXISTS additive_ingredients (
 		id SERIAL PRIMARY KEY,
@@ -229,6 +295,10 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_additive_ingredient
+    ON additive_ingredients (ingredient_id, additive_id)
+    WHERE deleted_at IS NULL;
 
 -- Warehouses Table
 CREATE TABLE
@@ -252,6 +322,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_store_warehouse
+    ON store_warehouses (store_id, warehouse_id)
+    WHERE deleted_at IS NULL;
+
 -- StoreWarehouseStock Table
 CREATE TABLE
 	IF NOT EXISTS store_warehouse_stocks (
@@ -265,6 +339,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_store_warehouse_stock
+    ON store_warehouse_stocks (store_warehouse_id, ingredient_id)
+    WHERE deleted_at IS NULL;
+
 -- Customer Table
 CREATE TABLE
 	IF NOT EXISTS customers (
@@ -272,7 +350,7 @@ CREATE TABLE
         first_name VARCHAR(255) NOT NULL,
         last_name VARCHAR(255) NOT NULL,
 		password VARCHAR(255) NOT NULL,
-		phone valid_phone UNIQUE,
+		phone valid_phone,
 		is_verified BOOLEAN DEFAULT FALSE,
 		is_banned BOOLEAN DEFAULT FALSE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -280,14 +358,16 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_customer_phone ON customers (phone) WHERE deleted_at IS NULL;
+
 -- Employee Table
 CREATE TABLE
 	IF NOT EXISTS employees (
 		id SERIAL PRIMARY KEY,
 		first_name VARCHAR(255) NOT NULL,
         last_name VARCHAR(255) NOT NULL,
-		phone valid_phone UNIQUE,
-		email VARCHAR(255) UNIQUE,
+		phone valid_phone,
+		email VARCHAR(255),
 		hashed_password VARCHAR(255) NOT NULL,
 		role VARCHAR(50) NOT NULL,
 		type VARCHAR(50) NOT NULL,
@@ -296,6 +376,9 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_employee_phone ON employees (phone) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_employee_email ON employees (email) WHERE deleted_at IS NULL;
 
 -- StoreEmployee Table
 CREATE TABLE
@@ -309,6 +392,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_store_employee
+    ON store_employees (employee_id, store_id)
+    WHERE deleted_at IS NULL;
+
 -- WarehouseEmployee Table
 CREATE TABLE
 	IF NOT EXISTS warehouse_employees (
@@ -319,6 +406,10 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_warehouse_employee
+    ON warehouse_employees (employee_id, warehouse_id)
+    WHERE deleted_at IS NULL;
 
 -- EmployeeAudit Table
 CREATE TABLE
@@ -345,6 +436,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_employee_workday
+    ON employee_workdays (employee_id, day)
+    WHERE deleted_at IS NULL;
+
 -- Referral Table
 CREATE TABLE
 	IF NOT EXISTS referrals (
@@ -355,6 +450,10 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_referrals
+    ON referrals (customer_id, referee_id)
+    WHERE deleted_at IS NULL;
 
 -- VerificationCode Table
 CREATE TABLE
@@ -380,6 +479,11 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+-- Prevent duplicate addresses for the same customer
+CREATE UNIQUE INDEX unique_customer_address
+    ON customer_addresses (customer_id, LOWER(address))
+    WHERE deleted_at IS NULL;
 
 -- Bonus Table
 CREATE TABLE
@@ -414,7 +518,7 @@ CREATE TABLE
 	IF NOT EXISTS suborders (
 		id SERIAL PRIMARY KEY,
 		order_id INT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE SET NULL,
+		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE RESTRICT,
 		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
 		status VARCHAR(50) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -441,6 +545,8 @@ CREATE TABLE
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		status VARCHAR(50) NOT NULL,
+		store_comment TEXT,
+		warehouse_comment TEXT,
 		request_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -455,15 +561,17 @@ CREATE TABLE IF NOT EXISTS stock_materials (
 	ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
     safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
     expiration_flag BOOLEAN NOT NULL,
-    unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
-    category VARCHAR(255),
-    barcode VARCHAR(255) UNIQUE,
+    unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
+	category_id INT NOT NULL REFERENCES stock_material_categories(id) ON DELETE RESTRICT,
+    barcode VARCHAR(255),
     expiration_period_in_days INT NOT NULL DEFAULT 1095, -- Default 3 years
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
 );
+
+CREATE UNIQUE INDEX unique_stock_material_barcode ON stock_materials (barcode) WHERE deleted_at IS NULL;
 
 -- StockRequestIngredients Table
 CREATE TABLE
@@ -480,6 +588,11 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+-- Prevent duplicate ingredients in the same stock request
+CREATE UNIQUE INDEX unique_stock_request_ingredient
+    ON stock_request_ingredients (stock_request_id, ingredient_id)
+    WHERE deleted_at IS NULL;
+
 -- Suppliers Table
 CREATE TABLE
 	IF NOT EXISTS suppliers (
@@ -493,18 +606,21 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
-
-
 -- Packages Table
 CREATE TABLE IF NOT EXISTS stock_material_packages (
     id SERIAL PRIMARY KEY,
     stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
     size DECIMAL(10,2) NOT NULL,
-    unit_id INT NOT NULL REFERENCES units(id) ON DELETE SET NULL,
+    unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
 );
+
+-- Prevent duplicate package sizes for the same material and unit
+CREATE UNIQUE INDEX unique_stock_material_package
+    ON stock_material_packages (stock_material_id, unit_id, size)
+    WHERE deleted_at IS NULL;
 
 -- Deliveries Table
 CREATE TABLE
@@ -515,7 +631,7 @@ CREATE TABLE
 		warehouse_id INT NOT NULL,
 		barcode VARCHAR(255) NOT NULL,
 		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-		delivery_date TIMESTAMPTZ NOT NULL,
+		delivery_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		expiration_date TIMESTAMPTZ NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -533,6 +649,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_warehouse_stock
+    ON warehouse_stocks (warehouse_id, stock_material_id)
+    WHERE deleted_at IS NULL;
+
 CREATE TABLE
 	IF NOT EXISTS supplier_materials (
 		id SERIAL PRIMARY KEY,
@@ -542,3 +662,7 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE UNIQUE INDEX unique_supplier_material
+    ON supplier_materials (supplier_id, stock_material_id)
+    WHERE deleted_at IS NULL;

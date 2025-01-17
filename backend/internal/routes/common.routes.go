@@ -3,6 +3,8 @@ package routes
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 )
 
 func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandler) {
@@ -31,5 +33,19 @@ func (r *Router) RegisterEmployeeAccountRoutes(handler *employees.EmployeeHandle
 		router.GET("/store/:id", handler.GetStoreAccounts)
 		router.GET("/warehouse/:id", handler.GetWarehouseAccounts)
 		router.GET("/admins", handler.GetAdminAccounts)
+	}
+}
+
+func (r *Router) RegisterCommonStoresRoutes(handler *stores.StoreHandler) {
+	router := r.CommonRoutes.Group("/stores")
+	{
+		router.GET("", handler.GetAllStores)
+	}
+}
+
+func (r *Router) RegisterCommonWarehousesRoutes(handler *warehouse.WarehouseHandler) {
+	router := r.CommonRoutes.Group("/warehouses")
+	{
+		router.GET("", handler.GetAllWarehouses)
 	}
 }

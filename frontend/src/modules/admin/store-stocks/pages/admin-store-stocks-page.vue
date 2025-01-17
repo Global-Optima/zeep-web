@@ -36,29 +36,20 @@ import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminStoreStocksList from '@/modules/admin/store-stocks/components/list/admin-store-stocks-list.vue'
 import AdminStoreStocksToolbar from '@/modules/admin/store-stocks/components/list/admin-store-stocks-toolbar.vue'
-import type { StoreStocksFilter } from '@/modules/admin/store-stocks/models/store-stock.model'
+import type { GetStoreWarehouseStockFilterQuery } from '@/modules/admin/store-stocks/models/store-stock.model'
 import { storeStocksService } from '@/modules/admin/store-stocks/services/store-stocks.service'
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<StoreStocksFilter>({
-  page: 1,
-  pageSize: 10,
-})
+const filter = ref<GetStoreWarehouseStockFilterQuery>({})
 
-const { currentStoreId } = useCurrentStoreStore()
 
 const { data: storeStocksResponse } = useQuery({
-  queryKey: computed(() => ['store-stocks', { storeId: currentStoreId, ...filter.value }]),
-  queryFn: () => {
-    if (!currentStoreId) throw new Error('No store ID available')
-    return storeStocksService.getStoreStocks(currentStoreId, filter.value)
-  },
-  enabled: computed(() => !!currentStoreId),
+  queryKey: computed(() => ['store-stocks', filter.value]),
+  queryFn: () => storeStocksService.getStoreWarehouseStockList(filter.value)
 })
 
-function updateFilter(updatedFilter: StoreStocksFilter) {
+function updateFilter(updatedFilter: GetStoreWarehouseStockFilterQuery) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 

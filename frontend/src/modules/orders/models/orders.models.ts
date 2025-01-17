@@ -1,4 +1,5 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 export enum OrderStatus {
 	PREPARING = 'PREPARING',
@@ -13,6 +14,21 @@ export enum SubOrderStatus {
 	COMPLETED = 'COMPLETED',
 }
 
+export interface OrdersFilterQuery extends PaginationParams {
+	search?: string
+	status?: OrderStatus
+	storeId?: number
+}
+
+export interface CreateOrderDTO {
+	customerId?: number
+	customerName: string
+	employeeId?: number
+	storeId: number
+	deliveryAddressId?: number
+	subOrders: CreateSubOrderDTO[]
+}
+
 export interface OrderStatusesCountDTO {
 	ALL: number
 	PREPARING: number
@@ -22,43 +38,16 @@ export interface OrderStatusesCountDTO {
 	CANCELLED: number
 }
 
-export interface CreateSubOrderDTO {
+interface CreateSubOrderDTO {
 	productSizeId: number
 	quantity: number
 	additivesIds: number[]
 }
 
-export interface CreateOrderDTO {
-	customerName: string
-	storeId: number
-	deliveryAddressId?: number
-	subOrders: CreateSubOrderDTO[]
-}
-
-export interface SubOrderAdditiveDTO {
-	id: number
-	subOrderId: number
-	additive: OrderAdditiveDTO
-	price: number
-	createdAt: string
-	updatedAt: string
-}
-
-export interface SubOrderDTO {
-	id: number
-	orderId: number
-	productSize: OrderProductSizeDTO
-	price: number
-	status: SubOrderStatus
-	additives: SubOrderAdditiveDTO[]
-	createdAt: string
-	updatedAt: string
-}
-
 export interface OrderDTO {
 	id: number
 	customerId?: number
-	customerName: string
+	customerName?: string
 	employeeId?: number
 	storeId: number
 	deliveryAddressId?: number
@@ -66,15 +55,26 @@ export interface OrderDTO {
 	createdAt: string
 	total: number
 	subOrdersQuantity: number
-	subOrders: SubOrderDTO[]
-	isPaid?: boolean
+	subOrders: SuborderDTO[]
+}
+
+export interface SuborderDTO {
+	id: number
+	orderId: number
+	productSize: OrderProductSizeDTO
+	price: number
+	status: SubOrderStatus
+	additives: SuborderAdditiveDTO[]
+	createdAt: string
+	updatedAt: string
 }
 
 export interface OrderProductSizeDTO {
 	id: number
 	sizeName: string
 	productName: string
-	size: string
+	size: number
+	unit: UnitDTO
 }
 
 export interface OrderAdditiveDTO {
@@ -84,8 +84,57 @@ export interface OrderAdditiveDTO {
 	size: string
 }
 
-export interface OrdersFilterQuery extends PaginationParams {
-	search?: string
-	status?: OrderStatus
-	storeId?: number
+export interface SuborderAdditiveDTO {
+	id: number
+	subOrderId: number
+	additive: OrderAdditiveDTO
+	price: number
+	createdAt: string
+	updatedAt: string
+}
+
+export interface OrderDetailsDTO {
+	id: number
+	customerName?: string
+	status: string
+	total: number
+	suborders: SuborderDetailsDTO[]
+	deliveryAddress?: OrderDeliveryAddressDTO
+}
+
+export interface SuborderDetailsDTO {
+	id: number
+	price: number
+	status: string
+	productSize: OrderProductSizeDetailsDTO
+	additives: OrderAdditiveDetailsDTO[]
+}
+
+export interface OrderProductSizeDetailsDTO {
+	id: number
+	name: string
+	unit: UnitDTO
+	basePrice: number
+	product: OrderProductDetailsDTO
+}
+
+export interface OrderProductDetailsDTO {
+	id: number
+	name: string
+	description: string
+	imageUrl: string
+}
+
+export interface OrderAdditiveDetailsDTO {
+	id: number
+	name: string
+	description: string
+	basePrice: number
+}
+
+export interface OrderDeliveryAddressDTO {
+	id: number
+	address: string
+	longitude: string
+	latitude: string
 }
