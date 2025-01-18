@@ -5,7 +5,7 @@
 			<div class="col-span-2">
 				<AdminWarehouseStockRequestsDetailsMaterialsTable
 					v-if="stockRequest"
-					:items="stockRequest.items"
+					:items="stockRequest.stockMaterials"
 				/>
 			</div>
 
@@ -23,11 +23,11 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast'
-import type { StoreStockRequestStatus, UpdateStoreStockRequestStatusDTO } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
-import { storeStockRequestService } from '@/modules/admin/store-stock-requests/services/store-stock-request.service'
+import type { StockRequestStatus } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import { stockRequestsService } from '@/modules/admin/store-stock-requests/services/stock-requests.service'
 import AdminWarehouseStockRequestsDetailsInfo from '@/modules/admin/warehouse-stock-requests/components/details/admin-warehouse-stock-requests-details-info.vue'
 import AdminWarehouseStockRequestsDetailsMaterialsTable from '@/modules/admin/warehouse-stock-requests/components/details/admin-warehouse-stock-requests-details-materials-table.vue'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -39,24 +39,23 @@ const storeStockRequestId = route.params.id as string
 
 const { data: stockRequest } = useQuery({
   queryKey: computed(() => ['warehouse-stock-request', storeStockRequestId]),
-	queryFn: () => storeStockRequestService.getStockRequestById(Number(storeStockRequestId)),
+	queryFn: () => stockRequestsService.getStockRequestById(Number(storeStockRequestId)),
   enabled: !isNaN(Number(storeStockRequestId)),
 })
 
-const {mutate: updateStatusMutation} = useMutation({
-		mutationFn: (data: {id: number, dto: UpdateStoreStockRequestStatusDTO}) => storeStockRequestService.updateStockRequestStatus(data.id, data.dto),
-		onSuccess: () => {
-      toast({title: "Статус успешно обновлен"})
-      queryClient.invalidateQueries({ queryKey: ['warehouse-stock-requests'] })
-      queryClient.invalidateQueries({ queryKey: ['warehouse-stock-request', storeStockRequestId] })
+// const {mutate: updateStatusMutation} = useMutation({
+// 		mutationFn: (data: {id: number, dto: UpdateStockRequestStatusDTO}) => stockRequestService.updateStockRequestStatus(data.id, data.dto),
+// 		onSuccess: () => {
+//       toast({title: "Статус успешно обновлен"})
+//       queryClient.invalidateQueries({ queryKey: ['warehouse-stock-requests'] })
+//       queryClient.invalidateQueries({ queryKey: ['warehouse-stock-request', storeStockRequestId] })
 
-		},
-		onError: () => {
-			toast({title: "Произошла ошибка при обновлении"})
-		},
-})
+// 		},
+// 		onError: () => {
+// 			toast({title: "Произошла ошибка при обновлении"})
+// 		},
+// })
 
-const onUpdateStatus = (status: StoreStockRequestStatus) => {
-  updateStatusMutation({id: Number(storeStockRequestId), dto: {status }})
+const onUpdateStatus = (status: StockRequestStatus) => {
 }
 </script>

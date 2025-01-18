@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineEmits, defineProps, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { Button } from '@/core/components/ui/button'
 import {
@@ -102,26 +102,27 @@ import {
 import { Trash } from 'lucide-vue-next'
 
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
-import type { CreateStoreStockRequestItemDTO } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import type { StockRequestStockMaterialDTO, StockRequestStockMaterialResponse } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 
-export interface StoreStockRequestItemForm extends CreateStoreStockRequestItemDTO {
+export interface StockRequestItemForm extends StockRequestStockMaterialDTO {
   name: string
 }
 
 const props = defineProps<{
-  initialData: StoreStockRequestItemForm[]
+  initialData: StockRequestStockMaterialResponse[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'submit', payload: StoreStockRequestItemForm[]): void
+  (e: 'submit', payload: StockRequestItemForm[]): void
   (e: 'cancel'): void
 }>()
 
-const stockRequestItemsForm = ref<StoreStockRequestItemForm[]>([])
+const stockRequestItemsForm = ref<StockRequestItemForm[]>([])
 const openDialog = ref(false)
 
 onMounted(() => {
-  stockRequestItemsForm.value = props.initialData.map(item => ({ ...item }))
+  stockRequestItemsForm.value = props.initialData.map(item => ({ stockMaterialId: item.stockMaterialId,
+    quantity:item.packageMeasures.quantity, name: item.name  }))
 })
 
 function addMaterial(material: { id: number; name: string }) {

@@ -8,8 +8,8 @@
 <script lang="ts" setup>
 import { getRouteName } from '@/core/config/routes.config'
 import AdminStoreStockRequestsCreateForm from '@/modules/admin/store-stock-requests/components/create/admin-store-stock-requests-create-form.vue'
-import type { CreateStoreStockRequestDTO, CreateStoreStockRequestItemDTO } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
-import { storeStockRequestService } from '@/modules/admin/store-stock-requests/services/store-stock-request.service'
+import type { CreateStockRequestDTO, StockRequestStockMaterialDTO } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import { stockRequestsService } from '@/modules/admin/store-stock-requests/services/stock-requests.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
 
@@ -18,8 +18,8 @@ const queryClient = useQueryClient()
 
 
 const createMutation = useMutation({
-	mutationFn: (dto: CreateStoreStockRequestDTO) => {
-    return storeStockRequestService.createStockRequest(dto)
+	mutationFn: (dto: CreateStockRequestDTO) => {
+    return stockRequestsService.createStockRequest(dto)
   },
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['stock-requests'] })
@@ -27,8 +27,8 @@ const createMutation = useMutation({
 	},
 })
 
-function handleCreate(items: CreateStoreStockRequestItemDTO[]) {
-  const dto: CreateStoreStockRequestDTO = {
+function handleCreate(items: StockRequestStockMaterialDTO[]) {
+  const dto: CreateStockRequestDTO = {
     items: items
   }
 

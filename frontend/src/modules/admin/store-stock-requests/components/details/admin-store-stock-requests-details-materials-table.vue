@@ -30,11 +30,11 @@
 				</TableHeader>
 				<TableBody>
 					<TableRow
-						v-for="(item, index) in stockRequest.items"
+						v-for="(item, index) in stockRequest.stockMaterials"
 						:key="index"
 					>
 						<TableCell>{{ item.name }}</TableCell>
-						<TableCell>{{ item.quantity }}</TableCell>
+						<TableCell>{{ item.packageMeasures.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>
 			</Table>
@@ -59,15 +59,15 @@ import {
   TableHeader,
   TableRow
 } from '@/core/components/ui/table'
-import { type StoreStockRequestResponse, StoreStockRequestStatus } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import { type StockRequestResponse, StockRequestStatus } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-const showEditButtonStatuses: StoreStockRequestStatus[] = [StoreStockRequestStatus.CREATED]
+const showEditButtonStatuses: StockRequestStatus[] = [StockRequestStatus.CREATED]
 
 const {stockRequest} = defineProps<{
-  stockRequest: StoreStockRequestResponse
+  stockRequest: StockRequestResponse
 }>()
 
 const isEditable = computed(() => showEditButtonStatuses.includes(stockRequest.status))
