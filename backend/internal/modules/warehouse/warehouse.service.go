@@ -148,7 +148,10 @@ func (s *warehouseService) GetStock(query *types.GetWarehouseStockFilterQuery) (
 			return nil, fmt.Errorf("package measures not found for StockMaterialID %d", stock.StockMaterialID)
 		}
 
-		packageMeasures := utils.ReturnPackageMeasureForStockMaterial(stock.StockMaterial, stock.TotalQuantity)
+		packageMeasures, err := utils.ReturnPackageMeasureForStockMaterial(stock.StockMaterial, stock.TotalQuantity)
+		if err != nil {
+			return nil, err
+		}
 
 		responses[i] = types.WarehouseStockResponse{
 			StockMaterial: types.StockMaterialResponse{
@@ -184,10 +187,13 @@ func (s *warehouseService) GetStockMaterialDetails(stockMaterialID, warehouseID 
 		}
 	}
 
-	packageMeasure := utils.ReturnPackageMeasureForStockMaterial(
+	packageMeasure, err := utils.ReturnPackageMeasureForStockMaterial(
 		aggregatedStock.StockMaterial,
 		aggregatedStock.TotalQuantity,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	details := &types.StockMaterialDetailsDTO{
 		ID:                     aggregatedStock.StockMaterial.ID,

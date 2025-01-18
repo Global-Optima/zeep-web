@@ -15,7 +15,7 @@ type ReceiveInventoryRequest struct {
 
 type NewInventoryItem struct {
 	Name             string  `json:"name" binding:"required"`
-	Description      *string `json:"description,omitempty"` // Optional
+	Description      string  `json:"description,omitempty"` // Optional
 	SafetyStock      float64 `json:"safetyStock" binding:"required"`
 	ExpirationFlag   bool    `json:"expirationFlag" binding:"required"`
 	Quantity         float64 `json:"quantity" binding:"required,gte=0"`
@@ -41,21 +41,6 @@ type TransferInventoryRequest struct {
 	SourceWarehouseID uint                    `json:"sourceWarehouseId" binding:"required"`
 	TargetWarehouseID uint                    `json:"targetWarehouseId" binding:"required"`
 	Items             []ExistingInventoryItem `json:"items" binding:"required"`
-}
-
-type PickupRequest struct {
-	StoreWarehouseID uint                    `json:"storeWarehouseId" binding:"required"`
-	Items            []ExistingInventoryItem `json:"items" binding:"required"`
-}
-
-type InventoryLevel struct {
-	StockMaterialID uint    `json:"stockMaterialId"`
-	Name            string  `json:"name"`
-	Quantity        float64 `json:"quantity"`
-}
-
-type InventoryLevelsResponse struct {
-	Levels []InventoryLevel `json:"levels"`
 }
 
 type UpcomingExpirationResponse struct {
@@ -92,4 +77,19 @@ type GetInventoryLevelsFilterQuery struct {
 	Search      *string `form:"search"`
 	WarehouseID *uint   `form:"warehouseId"`
 	Pagination  *utils.Pagination
+}
+
+type PickupRequest struct {
+	StoreWarehouseID uint                    `json:"storeWarehouseId" binding:"required"`
+	Items            []ExistingInventoryItem `json:"items" binding:"required"`
+}
+
+type InventoryLevel struct {
+	StockMaterialID uint    `json:"stockMaterialId"`
+	Name            string  `json:"name"`
+	Quantity        float64 `json:"quantity"`
+}
+
+type InventoryLevelsResponse struct {
+	Levels []InventoryLevel `json:"levels"`
 }

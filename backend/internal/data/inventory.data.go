@@ -95,7 +95,7 @@ type StockMaterial struct {
 	Unit                   Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 	CategoryID             uint                  `gorm:"not null"` // Link to IngredientCategory
 	StockMaterialCategory  StockMaterialCategory `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
-	Barcode                string                `gorm:"size:255"`
+	Barcode                string                `gorm:"unique;size:255"`
 	ExpirationPeriodInDays int                   `gorm:"not null;default:1095" sort:"expirationPeriodInDays"` // 3 years in days
 	IsActive               bool                  `gorm:"not null;default:true" sort:"isActive"`
 	Package                *StockMaterialPackage `gorm:"foreignKey:StockMaterialID"`
@@ -103,7 +103,7 @@ type StockMaterial struct {
 
 type StockMaterialCategory struct {
 	BaseEntity
-	Name           string          `gorm:"size:255;not null"`
+	Name           string          `gorm:"size:255;not null;uniqueIndex"`
 	Description    string          `gorm:"type:text"`
 	StockMaterials []StockMaterial `gorm:"foreignKey:CategoryID"`
 }

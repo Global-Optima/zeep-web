@@ -1,9 +1,10 @@
 package types
 
 import (
+	"strings"
+
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
-	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )

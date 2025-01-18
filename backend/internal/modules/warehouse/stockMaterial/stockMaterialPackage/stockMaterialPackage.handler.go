@@ -20,13 +20,13 @@ func NewStockMaterialPackageHandler(service StockMaterialPackageService) *StockM
 func (h *StockMaterialPackageHandler) Create(c *gin.Context) {
 	var dto types.CreateStockMaterialPackageDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "Invalid request body")
 		return
 	}
 
 	id, err := h.service.Create(dto)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to create stock material package")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (h *StockMaterialPackageHandler) GetByID(c *gin.Context) {
 
 	packageEntity, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to fetch stock material package")
 		return
 	}
 
@@ -58,12 +58,12 @@ func (h *StockMaterialPackageHandler) Update(c *gin.Context) {
 
 	var dto types.UpdateStockMaterialPackageDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "Invalid request body")
 		return
 	}
 
 	if err := h.service.Update(uint(id), dto); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to update stock material package")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *StockMaterialPackageHandler) Delete(c *gin.Context) {
 	}
 
 	if err := h.service.Delete(uint(id)); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to delete stock material package")
 		return
 	}
 
@@ -88,7 +88,7 @@ func (h *StockMaterialPackageHandler) Delete(c *gin.Context) {
 func (h *StockMaterialPackageHandler) GetAll(c *gin.Context) {
 	packages, err := h.service.GetAll()
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to fetch stock material packages")
 		return
 	}
 
