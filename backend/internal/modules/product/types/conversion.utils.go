@@ -1,12 +1,13 @@
 package types
 
 import (
+	"sort"
+	"strings"
+
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
-	"sort"
-	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )

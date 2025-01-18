@@ -6,7 +6,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
-	unitType "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
+	unitType "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 )
 
 // Converts CreateIngredientDTO to Ingredient model
@@ -94,7 +94,7 @@ func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientDTO 
 		Carbs:            ingredient.Carbs,
 		Proteins:         ingredient.Proteins,
 		ExpirationInDays: ingredient.ExpirationInDays,
-		Unit: unitType.UnitDTO{
+		Unit: unitType.UnitResponse{
 			ID:               ingredient.Unit.ID,
 			Name:             ingredient.Unit.Name,
 			ConversionFactor: ingredient.Unit.ConversionFactor,

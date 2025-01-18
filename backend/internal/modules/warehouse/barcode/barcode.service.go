@@ -13,6 +13,9 @@ type BarcodeService interface {
 	GenerateBarcode(req *types.GenerateBarcodeRequest) (*types.GenerateBarcodeResponse, error)
 	RetrieveStockMaterialByBarcode(req *types.RetrieveStockMaterialByBarcodeRequest) (*types.RetrieveStockMaterialByBarcodeResponse, error)
 	PrintAdditionalBarcodes(req *types.PrintAdditionalBarcodesRequest) (*types.PrintAdditionalBarcodesResponse, error)
+
+	GetBarcodesForStockMaterials(stockMaterialIDs []uint) ([]types.StockMaterialBarcodeResponse, error)
+	GetBarcodeForStockMaterial(stockMaterialID uint) (*types.StockMaterialBarcodeResponse, error)
 }
 
 type barcodeService struct {
@@ -103,4 +106,25 @@ func (s *barcodeService) PrintAdditionalBarcodes(req *types.PrintAdditionalBarco
 
 	response := types.ToPrintAdditionalBarcodesResponse(req.StockMaterialID, barcodes)
 	return &response, nil
+}
+
+func (s *barcodeService) GetBarcodesForStockMaterials(stockMaterialIDs []uint) ([]types.StockMaterialBarcodeResponse, error) {
+	stockMaterials, err := s.repo.GetBarcodesForStockMaterials(stockMaterialIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch barcodes for stock materials: %w", err)
+	}
+
+	return types.ToStockMaterialBarcodeResponses(stockMaterials), nil
+}
+
+func (s *barcodeService) GetBarcodeForStockMaterial(stockMaterialID uint) (*types.StockMaterialBarcodeResponse, error) {
+	stockMaterial, err := s.repo.GetBarcodeForStockMaterial(stockMaterialID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch barcode for stock material: %w", err)
+	}
+	if stockMaterial == nil {
+		return nil, errors.New("stock material not found")
+	}
+
+	return types.ToStockMaterialBarcodeResponse(stockMaterial), nil
 }

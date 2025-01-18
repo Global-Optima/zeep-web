@@ -26,12 +26,14 @@ func GetWarehouseId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
 		if claims.EmployeeType != data.WarehouseEmployeeType {
 			return 0, ErrInvalidEmployeeType
 		}
+    
 		warehouseID = claims.WorkplaceID
 	} else {
 		warehouseIdStr := c.Query("warehouseId")
 		if warehouseIdStr == "" {
 			return 0, ErrEmptyWarehouseID
 		}
+    
 		id, err := strconv.ParseUint(warehouseIdStr, 10, 64)
 		if err != nil {
 			return 0, ErrInvalidWarehouseID

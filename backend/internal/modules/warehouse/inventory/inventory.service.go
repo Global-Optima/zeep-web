@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 )
 
 type InventoryService interface {
@@ -24,10 +25,10 @@ type inventoryService struct {
 	repo              InventoryRepository
 	stockMaterialRepo stockMaterial.StockMaterialRepository
 	barcodeRepo       barcode.BarcodeRepository
-	packageRepo       PackageRepository
+	packageRepo       stockMaterialPackage.StockMaterialPackageRepository
 }
 
-func NewInventoryService(repo InventoryRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, packageRepo PackageRepository) InventoryService {
+func NewInventoryService(repo InventoryRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, packageRepo stockMaterialPackage.StockMaterialPackageRepository) InventoryService {
 	return &inventoryService{
 		repo:              repo,
 		stockMaterialRepo: stockMaterialRepo,
@@ -38,7 +39,7 @@ func NewInventoryService(repo InventoryRepository, stockMaterialRepo stockMateri
 
 func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) error {
 	var createdStockMaterials []data.StockMaterial
-	if len(req.NewItems) > 0 {
+	if len(req.NewItems) > 0 && req.NewItems != nil {
 		var err error
 		createdStockMaterials, err = s.createAndRegisterNewStockMaterials(req.SupplierID, req.NewItems)
 		if err != nil {
@@ -58,6 +59,144 @@ func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) e
 
 	if err := s.repo.RecordDeliveriesAndUpdateStock(deliveries, req.WarehouseID); err != nil {
 		return fmt.Errorf("failed to log incoming inventory: %w", err)
+	}
+
+	return nil
+}
+
+func (s *inventoryService) assembleDeliveries(
+	req types.ReceiveInventoryRequest,
+	existingStockMaterials map[uint]*data.StockMaterial,
+	newStockMaterials []data.StockMaterial,
+) ([]data.SupplierWarehouseDelivery, error) {
+	deliveries := []data.SupplierWarehouseDelivery{}
+	newStockMaterialMap := make(map[string]*data.StockMaterial)
+
+	for _, stockMaterial := range newStockMaterials {
+		newStockMaterialMap[stockMaterial.Name] = &stockMaterial
+	}
+
+	for _, item := range req.ExistingItems {
+		stockMaterial, found := existingStockMaterials[item.StockMaterialID]
+		if !found {
+			return nil, fmt.Errorf("existing stock material not found: ID %d", item.StockMaterialID)
+		}
+
+		delivery := data.SupplierWarehouseDelivery{
+			StockMaterialID: stockMaterial.ID,
+			SupplierID:      req.SupplierID,
+			WarehouseID:     req.WarehouseID,
+			Barcode:         stockMaterial.Barcode,
+			Quantity:        item.Quantity,
+			DeliveryDate:    time.Now(),
+			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
+		}
+		deliveries = append(deliveries, delivery)
+	}
+
+	for _, item := range req.NewItems {
+		stockMaterial, found := newStockMaterialMap[item.Name]
+		if !found {
+			return nil, fmt.Errorf("new stock material not found: Name %s", item.Name)
+		}
+
+		delivery := data.SupplierWarehouseDelivery{
+			StockMaterialID: stockMaterial.ID,
+			SupplierID:      req.SupplierID,
+			WarehouseID:     req.WarehouseID,
+			Barcode:         stockMaterial.Barcode,
+			Quantity:        item.Quantity,
+			DeliveryDate:    time.Now(),
+			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
+		}
+		deliveries = append(deliveries, delivery)
+	}
+
+	return deliveries, nil
+}
+
+func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, items []types.NewInventoryItem) ([]data.StockMaterial, error) {
+	newStockMaterials := []data.StockMaterial{}
+
+	for _, item := range items {
+		expirationPeriod := 1095
+		if item.ExpirationInDays != nil {
+			expirationPeriod = *item.ExpirationInDays
+		}
+
+		newStockMaterial := data.StockMaterial{
+			Name:                   item.Name,
+			Description:            item.Description,
+			SafetyStock:            item.SafetyStock,
+			ExpirationFlag:         item.ExpirationFlag,
+			UnitID:                 item.UnitID,
+			CategoryID:             item.CategoryID,
+			ExpirationPeriodInDays: expirationPeriod,
+			IngredientID:           item.IngredientID, // Linking to ingredient
+			IsActive:               true,
+		}
+
+		if err := s.stockMaterialRepo.CreateStockMaterial(&newStockMaterial); err != nil {
+			return nil, fmt.Errorf("failed to create stock material %s: %w", item.Name, err)
+		}
+
+		if err := s.ensureSupplierMaterialAssociation(supplierID, newStockMaterial.ID); err != nil {
+			return nil, fmt.Errorf("failed to associate supplier %d with stock material %d: %w", supplierID, newStockMaterial.ID, err)
+		}
+
+		pkg := data.StockMaterialPackage{
+			Size:   item.Package.Size,
+			UnitID: item.Package.UnitID,
+		}
+
+		packageData := types.ValidatePackage(newStockMaterial.ID, pkg)
+		if packageData == nil {
+			return nil, fmt.Errorf("invalid package data for stock material %s", item.Name)
+		}
+		if err := s.packageRepo.Create(packageData); err != nil {
+			return nil, fmt.Errorf("failed to create package for stock material %s: %w", item.Name, err)
+		}
+
+		newStockMaterials = append(newStockMaterials, newStockMaterial)
+	}
+
+	return newStockMaterials, nil
+}
+
+func (s *inventoryService) loadExistingStockMaterials(items []types.ExistingInventoryItem) (map[uint]*data.StockMaterial, error) {
+	stockMaterialIDs := []uint{}
+	for _, item := range items {
+		stockMaterialIDs = append(stockMaterialIDs, item.StockMaterialID)
+	}
+
+	stockMaterials, err := s.stockMaterialRepo.GetStockMaterialsByIDs(stockMaterialIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch stock materials: %w", err)
+	}
+
+	existingStockMaterials := make(map[uint]*data.StockMaterial)
+	for _, stockMaterial := range stockMaterials {
+		existingStockMaterials[stockMaterial.ID] = &stockMaterial
+	}
+
+	return existingStockMaterials, nil
+}
+
+func (s *inventoryService) ensureSupplierMaterialAssociation(supplierID, stockMaterialID uint) error {
+	exists, err := s.repo.SupplierMaterialExists(supplierID, stockMaterialID)
+	if err != nil {
+		return fmt.Errorf("failed to check supplier-material association: %w", err)
+	}
+
+	if !exists {
+		association := data.SupplierMaterial{
+			SupplierID:      supplierID,
+			StockMaterialID: stockMaterialID,
+		}
+
+		if err := s.repo.CreateSupplierMaterial(&association); err != nil {
+			return fmt.Errorf("failed to create supplier-material association: %w", err)
+		}
 	}
 
 	return nil
@@ -133,143 +272,4 @@ func (s *inventoryService) GetDeliveries(warehouseID *uint, startDate, endDate *
 	}
 
 	return types.DeliveriesToDeliveryResponses(deliveries), nil
-}
-
-func (s *inventoryService) assembleDeliveries(
-	req types.ReceiveInventoryRequest,
-	existingStockMaterials map[uint]*data.StockMaterial,
-	newStockMaterials []data.StockMaterial,
-) ([]data.SupplierWarehouseDelivery, error) {
-	deliveries := []data.SupplierWarehouseDelivery{}
-	newStockMaterialMap := make(map[string]*data.StockMaterial)
-
-	for _, stockMaterial := range newStockMaterials {
-		newStockMaterialMap[stockMaterial.Name] = &stockMaterial
-	}
-
-	for _, item := range req.ExistingItems {
-		stockMaterial, found := existingStockMaterials[item.StockMaterialID]
-		if !found {
-			return nil, fmt.Errorf("existing stock material not found: ID %d", item.StockMaterialID)
-		}
-
-		delivery := data.SupplierWarehouseDelivery{
-			StockMaterialID: stockMaterial.ID,
-			SupplierID:      req.SupplierID,
-			WarehouseID:     req.WarehouseID,
-			Barcode:         stockMaterial.Barcode,
-			Quantity:        item.Quantity,
-			DeliveryDate:    time.Now(),
-			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
-		}
-		deliveries = append(deliveries, delivery)
-	}
-
-	for _, item := range req.NewItems {
-		stockMaterial, found := newStockMaterialMap[item.Name]
-		if !found {
-			return nil, fmt.Errorf("new stock material not found: Name %s", item.Name)
-		}
-
-		delivery := data.SupplierWarehouseDelivery{
-			StockMaterialID: stockMaterial.ID,
-			SupplierID:      req.SupplierID,
-			WarehouseID:     req.WarehouseID,
-			Barcode:         stockMaterial.Barcode,
-			Quantity:        item.Quantity,
-			DeliveryDate:    time.Now(),
-			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
-		}
-		deliveries = append(deliveries, delivery)
-	}
-
-	return deliveries, nil
-}
-
-func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, items []types.NewInventoryItem) ([]data.StockMaterial, error) {
-	newStockMaterials := []data.StockMaterial{}
-
-	for _, item := range items {
-
-		expirationPeriod := 1095
-		if item.ExpirationInDays != nil {
-			expirationPeriod = *item.ExpirationInDays
-		}
-
-		newStockMaterial := data.StockMaterial{
-			Name:                   item.Name,
-			Description:            *item.Description,
-			SafetyStock:            item.SafetyStock,
-			ExpirationFlag:         item.ExpirationFlag,
-			UnitID:                 item.UnitID,
-			CategoryID:             item.CategoryID,
-			ExpirationPeriodInDays: expirationPeriod,
-			IngredientID:           item.IngredientID, // Linking to ingredient
-			IsActive:               true,
-		}
-
-		if err := s.stockMaterialRepo.CreateStockMaterial(&newStockMaterial); err != nil {
-			return nil, fmt.Errorf("failed to create stock material %s: %w", item.Name, err)
-		}
-
-		if err := s.ensureSupplierMaterialAssociation(supplierID, newStockMaterial.ID); err != nil {
-			return nil, fmt.Errorf("failed to associate supplier %d with stock material %d: %w", supplierID, newStockMaterial.ID, err)
-		}
-
-		pkg := data.StockMaterialPackage{
-			Size:   item.Package.Size,
-			UnitID: item.Package.UnitID,
-		}
-
-		packageData := types.ValidatePackage(newStockMaterial.ID, pkg)
-		if packageData == nil {
-			return nil, fmt.Errorf("invalid package data for stock material %s", item.Name)
-		}
-		if err := s.packageRepo.CreatePackage(packageData); err != nil {
-			return nil, fmt.Errorf("failed to create package for stock material %s: %w", item.Name, err)
-		}
-
-		newStockMaterials = append(newStockMaterials, newStockMaterial)
-	}
-
-	return newStockMaterials, nil
-}
-
-func (s *inventoryService) loadExistingStockMaterials(items []types.ExistingInventoryItem) (map[uint]*data.StockMaterial, error) {
-	stockMaterialIDs := []uint{}
-	for _, item := range items {
-		stockMaterialIDs = append(stockMaterialIDs, item.StockMaterialID)
-	}
-
-	stockMaterials, err := s.stockMaterialRepo.GetStockMaterialsByIDs(stockMaterialIDs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch stock materials: %w", err)
-	}
-
-	existingStockMaterials := make(map[uint]*data.StockMaterial)
-	for _, stockMaterial := range stockMaterials {
-		existingStockMaterials[stockMaterial.ID] = &stockMaterial
-	}
-
-	return existingStockMaterials, nil
-}
-
-func (s *inventoryService) ensureSupplierMaterialAssociation(supplierID, stockMaterialID uint) error {
-	exists, err := s.repo.SupplierMaterialExists(supplierID, stockMaterialID)
-	if err != nil {
-		return fmt.Errorf("failed to check supplier-material association: %w", err)
-	}
-
-	if !exists {
-		association := data.SupplierMaterial{
-			SupplierID:      supplierID,
-			StockMaterialID: stockMaterialID,
-		}
-
-		if err := s.repo.CreateSupplierMaterial(&association); err != nil {
-			return fmt.Errorf("failed to create supplier-material association: %w", err)
-		}
-	}
-
-	return nil
 }

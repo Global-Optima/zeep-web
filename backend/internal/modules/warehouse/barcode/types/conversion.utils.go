@@ -46,3 +46,18 @@ func ToBarcodeScanResponse(stockMaterial data.StockMaterial, deductedQty, remain
 		ScannedAt:       time.Now().Format(time.RFC3339),
 	}
 }
+
+func ToStockMaterialBarcodeResponse(stockMaterial *data.StockMaterial) *StockMaterialBarcodeResponse {
+	return &StockMaterialBarcodeResponse{
+		StockMaterialID: stockMaterial.ID,
+		Barcode:         stockMaterial.Barcode,
+	}
+}
+
+func ToStockMaterialBarcodeResponses(stockMaterials []data.StockMaterial) []StockMaterialBarcodeResponse {
+	responses := make([]StockMaterialBarcodeResponse, len(stockMaterials))
+	for i, material := range stockMaterials {
+		responses[i] = *ToStockMaterialBarcodeResponse(&material)
+	}
+	return responses
+}

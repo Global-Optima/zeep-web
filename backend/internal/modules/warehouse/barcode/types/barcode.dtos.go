@@ -50,3 +50,12 @@ type BarcodeScanResponse struct {
 	Message         string  `json:"message"`
 	ScannedAt       string  `json:"scannedAt"`
 }
+
+type StockMaterialBarcodeResponse struct {
+	StockMaterialID uint   `json:"stockMaterialId"`
+	Barcode         string `json:"barcode"`
+}
+
+type GetBarcodesRequest struct {
+	IDs []uint `json:"stockMaterialIDs"`
+}
