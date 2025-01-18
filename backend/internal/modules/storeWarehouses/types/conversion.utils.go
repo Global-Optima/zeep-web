@@ -1,16 +1,19 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+)
 
 func MapToStockDTO(stock data.StoreWarehouseStock) StoreStockDTO {
 	return StoreStockDTO{
 		ID:                stock.ID,
 		Name:              stock.Ingredient.Name,
 		Quantity:          stock.Quantity,
-		Unit:              stock.Ingredient.Unit.Name,
 		LowStockThreshold: stock.LowStockThreshold,
 		LowStockAlert:     stock.Quantity < stock.LowStockThreshold,
 		IngredientID:      stock.IngredientID,
+		Ingredient:        *ingredientTypes.ConvertToIngredientResponseDTO(&stock.Ingredient),
 	}
 }
 

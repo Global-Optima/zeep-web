@@ -1,15 +1,18 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type StoreStockDTO struct {
-	ID                uint    `json:"id"`
-	IngredientID      uint    `json:"ingredientId"`
-	Name              string  `json:"name"`
-	Quantity          float64 `json:"quantity"`
-	Unit              string  `json:"unit"`
-	LowStockAlert     bool    `json:"lowStockAlert"`
-	LowStockThreshold float64 `json:"lowStockThreshold"`
+	ID                uint                          `json:"id"`
+	IngredientID      uint                          `json:"ingredientId"`
+	Name              string                        `json:"name"`
+	Quantity          float64                       `json:"quantity"`
+	LowStockAlert     bool                          `json:"lowStockAlert"`
+	LowStockThreshold float64                       `json:"lowStockThreshold"`
+	Ingredient        ingredientTypes.IngredientDTO `json:"ingredient"`
 }
 
 type GetStockFilterQuery struct {
