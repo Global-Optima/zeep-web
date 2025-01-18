@@ -3,9 +3,7 @@
 		<CardHeader>
 			<div>
 				<CardTitle>Список материалов</CardTitle>
-				<CardDescription class="mt-2">
-					Ниже представлена таблица с материалами, переданная в компонент через props.
-				</CardDescription>
+				<CardDescription class="mt-2"> Материалы представленные в заказе </CardDescription>
 			</div>
 		</CardHeader>
 

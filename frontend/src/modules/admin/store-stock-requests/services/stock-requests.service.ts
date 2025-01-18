@@ -39,7 +39,7 @@ class StockRequestsService {
 	}
 
 	async updateStockRequestMaterials(requestId: number, items: StockRequestStockMaterialDTO[]) {
-		const response = await apiClient.put(`${this.baseUrl}/${requestId}/ingredients`, { items })
+		const response = await apiClient.put(`${this.baseUrl}/${requestId}`, items)
 		return response.data
 	}
 

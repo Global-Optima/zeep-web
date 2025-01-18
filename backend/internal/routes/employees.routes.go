@@ -315,7 +315,7 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 		router.GET("/:requestId", handler.GetStockRequestByID)
 		router.POST("", handler.CreateStockRequest)
 		router.GET("/current", handler.GetLastCreatedStockRequest)
-		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)
+		router.PUT("/:requestId", handler.UpdateStockRequest)
 		router.DELETE("/:requestId", handler.DeleteStockRequest)
 
 		statusGroup := router.Group("/status/:requestId")

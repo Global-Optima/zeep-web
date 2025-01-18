@@ -36,7 +36,7 @@ type IngredientDTO struct {
 	Carbs            float64                                             `json:"carbs"`
 	Proteins         float64                                             `json:"proteins"`
 	ExpirationInDays int                                                 `json:"expirationInDays"`
-	Unit             unitTypes.UnitResponse                              `json:"unit"`
+	Unit             unitTypes.UnitsDTO                                  `json:"unit"`
 	Category         ingredientCategoriesType.IngredientCategoryResponse `json:"category"`
 }
 

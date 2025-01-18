@@ -27,7 +27,7 @@
 					{{ stock.lowStockThreshold }}
 				</TableCell>
 				<TableCell class="hidden md:table-cell">
-					{{ stock.unit }}
+					{{ stock.ingredient.unit.name }}
 				</TableCell>
 				<TableCell class="hidden md:table-cell">
 					<p
@@ -43,7 +43,7 @@
 					<Button
 						size="icon"
 						variant="ghost"
-						@click="e => onAddToCartClick(e, stock.ingredientId)"
+						@click="e => onAddToCartClick(e, stock.ingredient.id)"
 					>
 						<TooltipProvider>
 							<Tooltip>

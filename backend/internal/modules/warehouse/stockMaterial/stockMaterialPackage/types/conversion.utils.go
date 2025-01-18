@@ -9,7 +9,7 @@ func ToStockMaterialPackageResponse(pkg *data.StockMaterialPackage) StockMateria
 	return StockMaterialPackageResponse{
 		ID:   pkg.ID,
 		Size: pkg.Size,
-		Unit: types.UnitResponse{
+		Unit: types.UnitsDTO{
 			ID:               pkg.Unit.ID,
 			Name:             pkg.Unit.Name,
 			ConversionFactor: pkg.Unit.ConversionFactor,

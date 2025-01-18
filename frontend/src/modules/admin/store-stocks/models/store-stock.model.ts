@@ -1,11 +1,12 @@
+import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
+
 export interface StoreWarehouseStockDTO {
 	id: number
 	name: string
 	quantity: number
-	unit: string
 	lowStockAlert: boolean
 	lowStockThreshold: number
-	ingredientId: number
+	ingredient: IngredientsDTO
 }
 
 export interface GetStoreWarehouseStockFilterQuery {

@@ -12,7 +12,7 @@ type UpdateUnitDTO struct {
 	ConversionFactor *float64 `json:"conversionFactor,omitempty"`
 }
 
-type UnitResponse struct {
+type UnitsDTO struct {
 	ID               uint    `json:"id"`
 	Name             string  `json:"name"`
 	ConversionFactor float64 `json:"conversionFactor"`

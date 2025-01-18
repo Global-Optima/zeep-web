@@ -7,7 +7,6 @@ import (
 
 type StoreStockDTO struct {
 	ID                uint                          `json:"id"`
-	IngredientID      uint                          `json:"ingredientId"`
 	Name              string                        `json:"name"`
 	Quantity          float64                       `json:"quantity"`
 	LowStockAlert     bool                          `json:"lowStockAlert"`

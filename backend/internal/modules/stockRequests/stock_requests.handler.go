@@ -185,7 +185,7 @@ func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
+func (h *StockRequestHandler) UpdateStockRequest(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
 	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
@@ -202,7 +202,7 @@ func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateStockRequestIngredients(uint(stockRequestID), req); err != nil {
+	if err := h.service.UpdateStockRequest(uint(stockRequestID), req); err != nil {
 		utils.SendInternalServerError(c, "Failed to update stock request ingredients: "+err.Error())
 		return
 	}

@@ -25,7 +25,7 @@ type StockRequestService interface {
 
 	GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error)
 	GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
-	UpdateStockRequestIngredients(requestID uint, items []types.StockRequestStockMaterialDTO) error
+	UpdateStockRequest(requestID uint, items []types.StockRequestStockMaterialDTO) error
 	GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error)
 
 	DeleteStockRequest(requestID uint) error
@@ -371,7 +371,7 @@ func (s *stockRequestService) GetAllStockMaterials(storeID uint, filter types.St
 	return s.repo.GetAllStockMaterials(storeID, filter)
 }
 
-func (s *stockRequestService) UpdateStockRequestIngredients(requestID uint, items []types.StockRequestStockMaterialDTO) error {
+func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.StockRequestStockMaterialDTO) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)

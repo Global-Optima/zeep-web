@@ -66,11 +66,11 @@ type SuborderDTO struct {
 }
 
 type OrderProductSizeDTO struct {
-	ID          uint                   `json:"id"`
-	SizeName    string                 `json:"sizeName"`
-	ProductName string                 `json:"productName"`
-	Size        int                    `json:"size"`
-	Unit        unitTypes.UnitResponse `json:"unit"`
+	ID          uint               `json:"id"`
+	SizeName    string             `json:"sizeName"`
+	ProductName string             `json:"productName"`
+	Size        int                `json:"size"`
+	Unit        unitTypes.UnitsDTO `json:"unit"`
 }
 
 type OrderAdditiveDTO struct {
@@ -109,7 +109,7 @@ type SuborderDetailsDTO struct {
 type OrderProductSizeDetailsDTO struct {
 	ID        uint                   `json:"id"`
 	Name      string                 `json:"name"`
-	Unit      unitTypes.UnitResponse `json:"unit"`
+	Unit      unitTypes.UnitsDTO     `json:"unit"`
 	BasePrice float64                `json:"basePrice"`
 	Product   OrderProductDetailsDTO `json:"product"`
 }

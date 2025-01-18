@@ -12,7 +12,6 @@ func MapToStockDTO(stock data.StoreWarehouseStock) StoreStockDTO {
 		Quantity:          stock.Quantity,
 		LowStockThreshold: stock.LowStockThreshold,
 		LowStockAlert:     stock.Quantity < stock.LowStockThreshold,
-		IngredientID:      stock.IngredientID,
 		Ingredient:        *ingredientTypes.ConvertToIngredientResponseDTO(&stock.Ingredient),
 	}
 }
