@@ -66,7 +66,6 @@ import type { StoreAdditiveCategoryDTO } from '@/modules/admin/store-additives/m
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import type { StoreProductDetailsDTO, StoreProductSizeDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 
 // Define props
 const props = defineProps<{
@@ -89,15 +88,12 @@ const quantity = ref<number>(1);
 const isLoading = ref<boolean>(true);
 const error = ref<string | null>(null);
 
-const {currentStoreId} = useCurrentStoreStore()
 
 // Fetch product details based on productId prop
 const fetchProductDetails = async () => {
   isLoading.value = true;
   error.value = null;
   try {
-    if (!currentStoreId) return
-
     const details = await storeProductsService.getStoreProduct(props.productId);
     productDetails.value = details;
 

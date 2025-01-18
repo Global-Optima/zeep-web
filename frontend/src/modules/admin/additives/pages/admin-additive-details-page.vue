@@ -18,7 +18,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
-const route = useRoute() 
+const route = useRoute()
 
 const additiveId = route.params.id as string
 

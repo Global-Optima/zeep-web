@@ -32,7 +32,6 @@ export interface GetStoreStockRequestsFilter extends PaginationParams {
 }
 
 export interface CreateStoreStockRequestDTO {
-	storeId: number
 	items: CreateStoreStockRequestItemDTO[]
 }
 

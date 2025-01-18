@@ -155,7 +155,6 @@ import {
 import { authService } from '@/modules/auth/services/auth.service'
 import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
 import { storesService } from "@/modules/stores/services/stores.service"
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
@@ -178,7 +177,6 @@ const { values, isSubmitting, handleSubmit } = useForm({
   validationSchema: formSchema,
 })
 
-const {setCurrentStore} = useCurrentStoreStore()
 
 const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
   queryKey: ['stores'],
@@ -194,7 +192,6 @@ const { data: employees, isLoading: employeesLoading, isError: employeesError } 
 })
 
 const onSubmit = handleSubmit((values) => {
-  setCurrentStore(values.selectedStoreId)
   const dto: EmployeeLoginDTO = {
     email: values.selectedEmployeeEmail,
     password: values.password,

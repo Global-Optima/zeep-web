@@ -30,13 +30,9 @@ class OrderService {
 		}
 	}
 
-	async completeSubOrder(storeId: number, orderId: number, subOrderId: number): Promise<void> {
+	async completeSubOrder(orderId: number, subOrderId: number): Promise<void> {
 		try {
-			await apiClient.put(
-				`/orders/${orderId}/suborders/${subOrderId}/complete`,
-				{},
-				{ params: { storeId } },
-			)
+			await apiClient.put(`/orders/${orderId}/suborders/${subOrderId}/complete`, {})
 		} catch (error) {
 			console.error('Failed to complete sub-order:', error)
 			throw error
@@ -55,11 +51,9 @@ class OrderService {
 		}
 	}
 
-	async getStatusesCount(storeId: number): Promise<OrderStatusesCountDTO> {
+	async getStatusesCount(): Promise<OrderStatusesCountDTO> {
 		try {
-			const response = await apiClient.get<OrderStatusesCountDTO>('/orders/statuses/count', {
-				params: { storeId },
-			})
+			const response = await apiClient.get<OrderStatusesCountDTO>('/orders/statuses/count', {})
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch statuses count:', error)

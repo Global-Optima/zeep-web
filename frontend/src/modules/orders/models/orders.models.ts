@@ -24,7 +24,6 @@ export interface CreateOrderDTO {
 	customerId?: number
 	customerName: string
 	employeeId?: number
-	storeId: number
 	deliveryAddressId?: number
 	subOrders: CreateSubOrderDTO[]
 }

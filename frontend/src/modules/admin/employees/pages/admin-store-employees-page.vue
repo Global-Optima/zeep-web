@@ -28,11 +28,9 @@ import AdminStoreEmployeesList from '@/modules/admin/employees/components/list/a
 import AdminStoreEmployeesToolbar from '@/modules/admin/employees/components/list/admin-store-employees-toolbar.vue'
 import type { StoreEmployeesFilter } from '@/modules/employees/models/employees.models'
 import { employeesService } from '@/modules/employees/services/employees.service'
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const {currentStoreId} = useCurrentStoreStore()
 
 const filter = ref<StoreEmployeesFilter>({
   search: '',
@@ -43,10 +41,8 @@ const queryKey = computed(() => (['employees', filter.value]))
 const { data: employees } = useQuery({
   queryKey: queryKey,
   queryFn: () => {
-    if (!currentStoreId) throw new Error('No store ID available')
-    return employeesService.getStoreEmployees({...filter.value, storeId: currentStoreId})
+    return employeesService.getStoreEmployees({...filter.value})
   },
-  enabled: computed(() => !!currentStoreId),
 })
 
 function updateFilter(updatedFilter: StoreEmployeesFilter) {

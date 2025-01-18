@@ -17,7 +17,6 @@ export interface EmployeeAccount {
 	email: string
 }
 
-
 export interface Employee {
 	id: number
 	firstName: string

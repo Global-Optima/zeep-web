@@ -7,8 +7,8 @@ const orders = ref<OrderDTO[]>([])
 
 const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'}`
 
-export function useOrderEventsService(storeId: number) {
-	const url = `${wsUrl}/orders/ws/${storeId}`
+export function useOrderEventsService() {
+	const url = `${wsUrl}/orders/ws`
 	const queryClient = useQueryClient()
 
 	const {
@@ -53,7 +53,7 @@ export function useOrderEventsService(storeId: number) {
 	})
 
 	function invalidateOrderStatuses() {
-		queryClient.invalidateQueries({ queryKey: ['statuses', storeId] })
+		queryClient.invalidateQueries({ queryKey: ['statuses'] })
 	}
 
 	// Handle initial data
