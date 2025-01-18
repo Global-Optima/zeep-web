@@ -151,67 +151,25 @@ func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (ui
 
 func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-
 		if updateModels != nil {
-			// If is_default is being set to true, first set all other sizes to false
-			if updateModels.ProductSize.IsDefault {
-				var productSize data.ProductSize
-				if err := tx.Select("product_id").First(&productSize, id).Error; err != nil {
-					return fmt.Errorf("failed to get product size: %w", err)
-				}
-
-				// Set all other sizes for this product to non-default
-				if err := tx.Model(&data.ProductSize{}).
-					Where("product_id = ? AND id != ?", productSize.ProductID, id).
-					Update("is_default", false).Error; err != nil {
-					return fmt.Errorf("failed to update other product sizes: %w", err)
-				}
+			if err := r.handleDefaultSizeUpdate(tx, id, updateModels.ProductSize.IsDefault); err != nil {
+				return err
 			}
 
-			if err := tx.Model(&data.ProductSize{}).
-				Where("id = ?", id).
-				Updates(updateModels.ProductSize).Error; err != nil {
-				return fmt.Errorf("failed to update product size: %w", err)
+			if err := r.updateProductSize(tx, id, *updateModels.ProductSize); err != nil {
+				return err
 			}
 		}
 
 		if updateModels.Additives != nil {
-			// Remove existing ingredients
-			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
-				return fmt.Errorf("failed to delete additives: %w", err)
-			}
-			// Add new additives
-			additives := make([]data.ProductSizeAdditive, len(updateModels.Additives))
-			for i, additive := range updateModels.Additives {
-				additives[i] = data.ProductSizeAdditive{
-					ProductSizeID: id,
-					AdditiveID:    additive.AdditiveID,
-					IsDefault:     additive.IsDefault,
-				}
-			}
-
-			if err := tx.Create(additives).Error; err != nil {
-				return fmt.Errorf("failed to create additive: %w", err)
+			if err := r.updateAdditives(tx, id, updateModels.Additives); err != nil {
+				return err
 			}
 		}
 
 		if updateModels.Ingredients != nil {
-			// Remove existing ingredients
-			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
-				return fmt.Errorf("failed to delete ingredients: %w", err)
-			}
-
-			// Add new ingredients
-			ingredients := make([]data.ProductSizeIngredient, len(updateModels.Ingredients))
-			for i, ingredient := range updateModels.Ingredients {
-				ingredients[i] = data.ProductSizeIngredient{
-					ProductSizeID: id,
-					IngredientID:  ingredient.IngredientID,
-					Quantity:      ingredient.Quantity,
-				}
-			}
-			if err := tx.Create(ingredients).Error; err != nil {
-				return fmt.Errorf("failed to create ingredients: %w", err)
+			if err := r.updateIngredients(tx, id, updateModels.Ingredients); err != nil {
+				return err
 			}
 		}
 
@@ -219,7 +177,73 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 	})
 }
 
-func (r *productRepository) setNewDefaultProductSize(productSizeID, productID uint) error {
+func (r *productRepository) handleDefaultSizeUpdate(tx *gorm.DB, id uint, isDefault bool) error {
+	if !isDefault {
+		return nil
+	}
+
+	var productSize data.ProductSize
+	if err := tx.Select("product_id").First(&productSize, id).Error; err != nil {
+		return fmt.Errorf("failed to get product size: %w", err)
+	}
+
+	if err := tx.Model(&data.ProductSize{}).
+		Where("product_id = ? AND id != ?", productSize.ProductID, id).
+		Update("is_default", false).Error; err != nil {
+		return fmt.Errorf("failed to update other product sizes: %w", err)
+	}
+
+	return nil
+}
+
+func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize data.ProductSize) error {
+	if err := tx.Model(&data.ProductSize{}).
+		Where("id = ?", id).
+		Updates(productSize).Error; err != nil {
+		return fmt.Errorf("failed to update product size: %w", err)
+	}
+	return nil
+}
+
+func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, additives []data.ProductSizeAdditive) error {
+	if err := tx.Where("product_size_id = ?", productSizeID).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
+		return fmt.Errorf("failed to delete additives: %w", err)
+	}
+
+	newAdditives := make([]data.ProductSizeAdditive, len(additives))
+	for i, additive := range additives {
+		newAdditives[i] = data.ProductSizeAdditive{
+			ProductSizeID: productSizeID,
+			AdditiveID:    additive.AdditiveID,
+			IsDefault:     additive.IsDefault,
+		}
+	}
+
+	if err := tx.Create(newAdditives).Error; err != nil {
+		return fmt.Errorf("failed to create additives: %w", err)
+	}
+
+	return nil
+}
+
+func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, ingredients []data.ProductSizeIngredient) error {
+	if err := tx.Where("product_size_id = ?", productSizeID).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
+		return fmt.Errorf("failed to delete ingredients: %w", err)
+	}
+
+	newIngredients := make([]data.ProductSizeIngredient, len(ingredients))
+	for i, ingredient := range ingredients {
+		newIngredients[i] = data.ProductSizeIngredient{
+			ProductSizeID: productSizeID,
+			IngredientID:  ingredient.IngredientID,
+			Quantity:      ingredient.Quantity,
+		}
+	}
+
+	if err := tx.Create(newIngredients).Error; err != nil {
+		return fmt.Errorf("failed to create ingredients: %w", err)
+	}
+
 	return nil
 }
 

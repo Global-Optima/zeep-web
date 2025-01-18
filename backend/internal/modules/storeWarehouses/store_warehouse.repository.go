@@ -170,6 +170,7 @@ func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetS
 
 	query := r.db.Model(&data.StoreWarehouseStock{}).
 		Preload("Ingredient.Unit").
+		Preload("Ingredient.IngredientCategory").
 		Preload("StoreWarehouse").
 		Joins("JOIN store_warehouses ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
 		Joins("JOIN ingredients ON store_warehouse_stocks.ingredient_id = ingredients.id").
@@ -209,6 +210,7 @@ func (r *storeWarehouseRepository) GetStockById(storeId, stockId uint) (*data.St
 	}
 
 	dbQuery := r.db.Preload("Ingredient.Unit").
+		Preload("Ingredient.IngredientCategory").
 		Preload("StoreWarehouse")
 
 	if err := dbQuery.
