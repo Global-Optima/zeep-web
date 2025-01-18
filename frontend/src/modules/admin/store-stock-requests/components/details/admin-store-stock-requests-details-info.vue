@@ -20,13 +20,13 @@
 				<!-- Store Name -->
 				<div>
 					<p class="text-muted-foreground text-sm">Магазин</p>
-					<p>{{ request.storeName }}</p>
+					<p>{{ request.store.name }}</p>
 				</div>
 
 				<!-- Warehouse Name -->
 				<div>
 					<p class="text-muted-foreground text-sm">Склад</p>
-					<p>{{ request.warehouseName }}</p>
+					<p>{{ request.warehouse.name }}</p>
 				</div>
 
 				<!-- Status -->
@@ -71,22 +71,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
-import {
-  StoreStockRequestStatus,
-  type StoreStockRequestResponse,
-} from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import { STOCK_REQUEST_STATUS_FORMATTED, type StockRequestResponse, StockRequestStatus } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+
 import { computed } from 'vue'
 
-const props = defineProps<{ request: StoreStockRequestResponse }>();
-const emit = defineEmits<{ (e: 'update:status', newStatus: StoreStockRequestStatus): void }>();
+const props = defineProps<{ request: StockRequestResponse }>();
+const emit = defineEmits<{ (e: 'update:status', newStatus: StockRequestStatus): void }>();
 
-const statusLabels: Record<StoreStockRequestStatus, string> = {
-  CREATED: 'Создана',
-  PROCESSED: 'Запрос отправлен',
-  IN_DELIVERY: 'В доставке',
-  COMPLETED: 'Завершена',
-  REJECTED: 'Отклонена',
-};
+const statusLabels: Record<StockRequestStatus, string> = STOCK_REQUEST_STATUS_FORMATTED
 
 const statusFormatted = computed(() => statusLabels[props.request.status]);
 
@@ -100,24 +92,22 @@ const getButtonLabel = computed(() => {
       return 'Заявка отправлена на склад';
     case 'COMPLETED':
       return 'Заявка завершена';
-    case 'REJECTED':
-      return 'Заявка отклонена';
     default:
       return '';
   }
 });
 
 const isActionAllowed = computed(() => {
-  return props.request.status === StoreStockRequestStatus.CREATED || props.request.status === StoreStockRequestStatus.IN_DELIVERY;
+  return props.request.status === StockRequestStatus.CREATED || props.request.status === StockRequestStatus.IN_DELIVERY;
 });
 
 function handleStatusChange() {
-  let newStatus: StoreStockRequestStatus | null = null;
+  let newStatus: StockRequestStatus | null = null;
 
-  if (props.request.status === StoreStockRequestStatus.CREATED) {
-    newStatus = StoreStockRequestStatus.PROCESSED;
-  } else if (props.request.status === StoreStockRequestStatus.IN_DELIVERY) {
-    newStatus = StoreStockRequestStatus.COMPLETED;
+  if (props.request.status === StockRequestStatus.CREATED) {
+    newStatus = StockRequestStatus.PROCESSED;
+  } else if (props.request.status === StockRequestStatus.IN_DELIVERY) {
+    newStatus = StockRequestStatus.COMPLETED;
   }
 
   if (newStatus) {

@@ -23,7 +23,7 @@
 						:key="index"
 					>
 						<TableCell>{{ item.name }}</TableCell>
-						<TableCell>{{ item.quantity }}</TableCell>
+						<TableCell>{{ item.packageMeasures.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>
 			</Table>
@@ -47,10 +47,10 @@ import {
   TableHeader,
   TableRow
 } from '@/core/components/ui/table'
-import type { StoreStockRequestItemResponse } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import type { StockRequestStockMaterialResponse } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 
 defineProps<{
-  items: StoreStockRequestItemResponse[]
+  items: StockRequestStockMaterialResponse[]
 }>()
 </script>
 

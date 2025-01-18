@@ -97,19 +97,16 @@ import {
 import { Trash } from 'lucide-vue-next'
 
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
-import type { CreateStoreStockRequestItemDTO } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import type { StockRequestItemForm } from '@/modules/admin/store-stock-requests/components/update/admin-store-stock-requests-update-form.vue'
+import type { StockRequestStockMaterialDTO } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { ref } from 'vue'
 
-interface StoreStockRequestItemForm extends CreateStoreStockRequestItemDTO {
-  name: string
-}
-
 const emit = defineEmits<{
-  (e: 'submit', payload: CreateStoreStockRequestItemDTO[]): void;
+  (e: 'submit', payload: StockRequestStockMaterialDTO[]): void;
   (e: 'cancel'): void;
 }>()
 
-const stockRequestItemsForm = ref<StoreStockRequestItemForm[]>([])
+const stockRequestItemsForm = ref<StockRequestItemForm[]>([])
 const openDialog = ref(false)
 
 function addMaterial(material: { id: number; name: string }) {

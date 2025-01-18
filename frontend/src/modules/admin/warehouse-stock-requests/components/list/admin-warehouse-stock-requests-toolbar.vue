@@ -4,35 +4,13 @@
 	>
 		<!-- Left Side: Filter Menu -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<DropdownMenu>
-				<DropdownMenuTrigger as-child>
-					<Button
-						variant="outline"
-						class="whitespace-nowrap"
-					>
-						Фильтр
-						<ChevronDown class="ml-2 w-4 h-4" />
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem @click="applyFilter(undefined)"> Все </DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter(StoreStockRequestStatus.CREATED)">
-						Созданные
-					</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter(StoreStockRequestStatus.IN_DELIVERY)">
-						В доставке
-					</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter(StoreStockRequestStatus.COMPLETED)">
-						Завершённые
-					</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter(StoreStockRequestStatus.REJECTED)">
-						Отклонённые
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
+			<MultiSelectFilter
+				title="Статусы"
+				:options="statusOptions"
+				v-model="selectedStatuses"
+			/>
 		</div>
 
-		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
 			<Button variant="outline">Экспорт</Button>
 		</div>
@@ -40,15 +18,31 @@
 </template>
 
 <script setup lang="ts">
+import MultiSelectFilter from '@/core/components/multi-select-filter/MultiSelectFilter.vue'
 import { Button } from '@/core/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
-import { type GetStoreStockRequestsFilter, StoreStockRequestStatus } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
-import { ChevronDown } from 'lucide-vue-next'
+import type { GetStockRequestsFilter, StockRequestStatus } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import { ref, watch } from 'vue'
 
-const props = defineProps<{ filter: GetStoreStockRequestsFilter }>();
-const emit = defineEmits(['update:filter']);
+const props = defineProps<{ filter?: GetStockRequestsFilter }>()
+const emit = defineEmits(['update:filter'])
 
-const applyFilter = (status: StoreStockRequestStatus | undefined) => {
-  emit('update:filter', { ...props.filter, status });
-};
+
+const selectedStatuses = ref<StockRequestStatus[]>(props.filter?.statuses ?? [])
+
+
+watch(selectedStatuses, (newStatuses) => {
+  emit('update:filter', {
+    ...props.filter,
+    statuses: newStatuses.length ? newStatuses : undefined,
+  })
+})
+
+const statusOptions = [
+  { label: 'Обработанные', value: 'PROCESSED' },
+  { label: 'В доставке', value: 'IN_DELIVERY' },
+  { label: 'Завершённые', value: 'COMPLETED' },
+  { label: 'Отклонённые магазином', value: 'REJECTED_BY_STORE' },
+  { label: 'Отклонённые складом', value: 'REJECTED_BY_WAREHOUSE' },
+  { label: 'Принятые с изменениями', value: 'ACCEPTED_WITH_CHANGE' },
+]
 </script>
