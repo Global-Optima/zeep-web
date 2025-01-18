@@ -2,8 +2,9 @@ package types
 
 import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
-type StockDTO struct {
+type StoreStockDTO struct {
 	ID                uint    `json:"id"`
+	IngredientID      uint    `json:"ingredientId"`
 	Name              string  `json:"name"`
 	Quantity          float64 `json:"quantity"`
 	Unit              string  `json:"unit"`
@@ -17,16 +18,16 @@ type GetStockFilterQuery struct {
 	LowStockOnly *bool   `form:"lowStockOnly"`
 }
 
-type UpdateStockDTO struct {
+type UpdateStoreStockDTO struct {
 	Quantity          *float64 `json:"quantity"`
 	LowStockThreshold *float64 `json:"lowStockThreshold"`
 }
 
-type AddMultipleStockDTO struct {
-	IngredientStocks []AddStockDTO `json:"ingredientStocks" binding:"required,dive"`
+type AddMultipleStoreStockDTO struct {
+	IngredientStocks []AddStoreStockDTO `json:"ingredientStocks" binding:"required,dive"`
 }
 
-type AddStockDTO struct {
+type AddStoreStockDTO struct {
 	IngredientID      uint    `json:"ingredientId" binding:"required,gt=0"`
 	Quantity          float64 `json:"quantity" binding:"required,gte=0"`
 	LowStockThreshold float64 `json:"lowStockThreshold" binding:"required,gt=0"`

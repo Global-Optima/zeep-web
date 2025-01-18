@@ -185,7 +185,7 @@ const { data: stores, isLoading: storesLoading, isError: storesError } = useQuer
 })
 
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
-  queryKey: ['store-employees', values.selectedStoreId],
+  queryKey: computed(() => ['store-employees', values.selectedStoreId]),
   queryFn: () => authService.getStoreAccounts(values.selectedStoreId!),
   enabled: computed(() => Boolean(values.selectedStoreId)),
   initialData: [],

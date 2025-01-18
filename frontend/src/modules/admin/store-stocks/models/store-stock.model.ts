@@ -5,6 +5,7 @@ export interface StoreWarehouseStockDTO {
 	unit: string
 	lowStockAlert: boolean
 	lowStockThreshold: number
+	ingredientId: number
 }
 
 export interface GetStoreWarehouseStockFilterQuery {

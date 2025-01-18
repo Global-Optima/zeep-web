@@ -7,46 +7,41 @@
 			<DialogHeader>
 				<DialogTitle>Выберите материал</DialogTitle>
 			</DialogHeader>
-			<Input
-				v-model="searchTerm"
-				placeholder="Поиск материала"
-				type="search"
-				class="mt-2 w-full"
-			/>
-			<p
-				v-if="isLoading"
-				class="text-muted-foreground"
-			>
-				Загрузка…
-			</p>
 
-			<!-- Success State -->
-			<div v-if="materials">
-				<!-- Material List -->
-				<div class="max-h-64 overflow-y-auto">
+			<div>
+				<Input
+					v-model="searchTerm"
+					placeholder="Поиск"
+					type="search"
+					class="mt-2 mb-4 w-full"
+				/>
+
+				<div class="max-h-[50vh] overflow-y-auto">
 					<p
-						v-if="materials.data.length === 0"
+						v-if="!stockMaterials || stockMaterials.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Товары не найдены
+						Материалы не найдены
 					</p>
 
 					<ul v-else>
 						<li
-							v-for="material in materials.data"
-							:key="material.id"
+							v-for="stockMaterial in stockMaterials.data"
+							:key="stockMaterial.id"
 							class="flex justify-between items-center hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
-							@click="selectMaterial(material)"
+							@click="selectMaterial(stockMaterial)"
 						>
-							<span>{{ material.name }}</span>
+							<span class="flex-1">{{ stockMaterial.name }}</span>
+							<span class="text-gray-500 text-sm">
+								{{ stockMaterial.category }}
+							</span>
 						</li>
 					</ul>
 				</div>
 
-				<!-- Load More Button -->
 				<Button
-					v-if="pagination.page < pagination.totalPages"
-					variant="outline"
+					v-if="showLoadMoreButton"
+					variant="ghost"
 					class="mt-4 w-full"
 					@click="loadMore"
 				>
@@ -67,91 +62,68 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query'
-import { useDebounce } from '@vueuse/core'
-import { computed, defineEmits, defineProps, ref, watch } from 'vue'
-
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
-
-import type { PaginationMeta } from '@/core/utils/pagination.utils'
 import type { StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
+import { useQuery } from '@tanstack/vue-query'
+import { useDebounce } from '@vueuse/core'
+import { computed, reactive, ref } from 'vue'
 
-defineProps<{
-  open: boolean
+const { open, initialFilter } = defineProps<{
+	open: boolean
+	initialFilter?: StockMaterialsFilter
 }>()
 
 const emit = defineEmits<{
-  (e: 'close'): void
-  (e: 'select', material: StockMaterialsDTO): void
+	(e: 'close'): void
+	(e: 'select', stockMaterial: StockMaterialsDTO): void
 }>()
 
-// Search and filter state
 const searchTerm = ref('')
-const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
+const debouncedSearchTerm = useDebounce(searchTerm, 500)
+const localFilter = reactive<Partial<StockMaterialsFilter>>({
+	page: 1,
+	pageSize: 10,
+})
+const mergedFilter = computed<StockMaterialsFilter>(() => ({
+	...(initialFilter ?? {}),
+	...localFilter,
+	search: debouncedSearchTerm.value.trim(),
+}))
 
-// The filter object passed to our service
-const filter = ref<StockMaterialsFilter>({
-  page: 1,
-  pageSize: 10,
-  search: ''
+const { data: stockMaterials } = useQuery({
+	queryKey: computed(() => ['stock-materials', mergedFilter.value]),
+	queryFn: () => stockMaterialsService.getAllStockMaterials(mergedFilter.value),
+	enabled: computed(() => open),
 })
 
-// Pagination metadata
-const pagination = ref<PaginationMeta>({
-  page: 0,
-  pageSize: 0,
-  totalCount: 0,
-  totalPages: 0
-})
-
-// Update filter when searchTerm changes, then refetch
-watch(debouncedSearchTerm, (val) => {
-  filter.value.page = 1
-  filter.value.search = val.trim()
-})
-
-// Main query
-const {
-  data: materials,
-  isLoading,
-} = useQuery({
-  queryKey: computed(() => ['stock-materials', filter.value]),
-  queryFn: () => stockMaterialsService.getAllStockMaterials(filter.value),
-})
-
-
-// Load more results
 function loadMore() {
-  if (pagination.value.page < pagination.value.totalPages) {
-    if (filter.value.page) filter.value.page += 1
-  }
+	if (!stockMaterials.value) return
+	const pagination = stockMaterials.value.pagination
+	if (pagination.pageSize < pagination.totalCount) {
+		localFilter.pageSize = (localFilter.pageSize ?? 10) + 10
+	}
 }
 
-// Emit the selected material and close
-function selectMaterial(material: StockMaterialsDTO) {
-  emit('select', material)
-  onClose()
+function selectMaterial(stockMaterial: StockMaterialsDTO) {
+	emit('select', stockMaterial)
+	onClose()
 }
 
-// Reset state and close the dialog
 function onClose() {
-  filter.value = {
-    page: 1,
-    pageSize: 10,
-    search: ''
-  }
-  pagination.value = {
-    page: 0,
-    pageSize: 0,
-    totalCount: 0,
-    totalPages: 0
-  }
-  searchTerm.value = ''
-  emit('close')
+	searchTerm.value = ''
+	localFilter.page = 1
+	localFilter.pageSize = 10
+	emit('close')
 }
+
+const showLoadMoreButton = computed(() => {
+	if (!stockMaterials.value) return false
+	const { pageSize, totalCount } = stockMaterials.value.pagination
+	return pageSize < totalCount
+})
 </script>
 
 <style scoped></style>

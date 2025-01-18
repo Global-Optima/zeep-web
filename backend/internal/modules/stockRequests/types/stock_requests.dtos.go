@@ -32,21 +32,21 @@ type UpdateIngredientDates struct {
 
 type StockRequestResponse struct {
 	RequestID      uint                                `json:"requestId"`
-	Store          StoreDTO                            `json:"store"`
-	Warehouse      WarehouseDTO                        `json:"warehouse"`
+	Store          StockRequestStoreDTO                `json:"store"`
+	Warehouse      StockRequestWarehouseDTO            `json:"warehouse"`
 	Status         data.StockRequestStatus             `json:"status"`
 	StockMaterials []StockRequestStockMaterialResponse `json:"stockMaterials"`
 	CreatedAt      time.Time                           `json:"createdAt"`
 	UpdatedAt      time.Time                           `json:"updatedAt"`
 }
 
-type StoreDTO struct {
+type StockRequestStoreDTO struct {
 	ID      uint   `json:"id"`
 	Name    string `json:"name"`
 	Address string `json:"address"`
 }
 
-type WarehouseDTO struct {
+type StockRequestWarehouseDTO struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
@@ -85,12 +85,12 @@ type StockMaterialDTO struct {
 }
 
 type StockMaterialAvailabilityDTO struct {
-	StockMaterialID   uint         `json:"stockMaterialId"`
-	Name              string       `json:"name"`
-	Category          string       `json:"category"`
-	Unit              string       `json:"unit"`
-	AvailableQuantity float64      `json:"availableQuantity"`
-	Warehouse         WarehouseDTO `json:"warehouse"`
+	StockMaterialID   uint                     `json:"stockMaterialId"`
+	Name              string                   `json:"name"`
+	Category          string                   `json:"category"`
+	Unit              string                   `json:"unit"`
+	AvailableQuantity float64                  `json:"availableQuantity"`
+	Warehouse         StockRequestWarehouseDTO `json:"warehouse"`
 }
 
 type StockMaterialFilter struct {

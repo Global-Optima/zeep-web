@@ -9,7 +9,7 @@ import (
 )
 
 type TransactionManager interface {
-	CreateStoreAdditivesWithStocks(storeID uint, storeAdditive []data.StoreAdditive, dtos []storeWarehousesTypes.AddStockDTO) ([]uint, error)
+	CreateStoreAdditivesWithStocks(storeID uint, storeAdditive []data.StoreAdditive, dtos []storeWarehousesTypes.AddStoreStockDTO) ([]uint, error)
 }
 
 type transactionManager struct {
@@ -26,7 +26,7 @@ func NewTransactionManager(db *gorm.DB, storeAdditiveRepo StoreAdditiveRepositor
 	}
 }
 
-func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeAdditives []data.StoreAdditive, dtos []storeWarehousesTypes.AddStockDTO) ([]uint, error) {
+func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeAdditives []data.StoreAdditive, dtos []storeWarehousesTypes.AddStoreStockDTO) ([]uint, error) {
 	var ids []uint
 	err := m.db.Transaction(func(tx *gorm.DB) error {
 		sa := m.storeAdditiveRepo.CloneWithTransaction(tx)
@@ -55,7 +55,7 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 	return ids, nil
 }
 
-func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditiveID uint, updateStoreAdditive *data.StoreAdditive, dtos []storeWarehousesTypes.AddStockDTO) error {
+func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditiveID uint, updateStoreAdditive *data.StoreAdditive, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
 	err := m.db.Transaction(func(tx *gorm.DB) error {
 		sp := m.storeAdditiveRepo.CloneWithTransaction(tx)
 		if err := sp.UpdateStoreAdditive(storeID, storeAdditiveID, updateStoreAdditive); err != nil {
@@ -76,7 +76,7 @@ func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditi
 	return nil
 }
 
-func (m *transactionManager) addStocks(storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, storeID uint, dtos []storeWarehousesTypes.AddStockDTO) error {
+func (m *transactionManager) addStocks(storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
 	for _, dto := range dtos {
 		_, err := storeWarehouseRepo.AddStock(storeID, &dto)
 		if err != nil {

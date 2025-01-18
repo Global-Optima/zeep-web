@@ -213,7 +213,7 @@ func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWare
 }
 
 func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMaterialHandler) {
-	router := r.EmployeeRoutes.Group("/stock-material")
+	router := r.EmployeeRoutes.Group("/stock-materials")
 	{
 		router.GET("", handler.GetAllStockMaterials)
 		router.GET("/:id", handler.GetStockMaterialByID)

@@ -7,6 +7,7 @@
 				<TableHead>Мин. запас</TableHead>
 				<TableHead class="hidden md:table-cell">Единица измерения</TableHead>
 				<TableHead class="hidden md:table-cell">Статус</TableHead>
+				<TableHead></TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -38,22 +39,56 @@
 						{{ INGREDIENT_STATUS_FORMATTED[getStockStatus(stock)] }}
 					</p>
 				</TableCell>
+				<TableCell>
+					<Button
+						size="icon"
+						variant="ghost"
+						@click="e => onAddToCartClick(e, stock.ingredientId)"
+					>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger> <PackagePlus class="w-6 h-6 text-gray-500" /> </TooltipTrigger>
+								<TooltipContent>
+									<p>Добавить ингредиент в заказ</p>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
+					</Button>
+				</TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>
+
+	<AdminStockMaterialsSelectDialog
+		:initial-filter="stockMaterialsFilter"
+		:open="openStockMaterialsDialog"
+		@close="openStockMaterialsDialog = false"
+		@select="onSelectStockMaterial"
+	/>
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/core/components/ui/table';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/core/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/core/components/ui/tooltip'
+import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
+import type { StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
-import { useRouter } from 'vue-router';
+import { PackagePlus } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Props
 const { stocks } = defineProps<{ stocks: StoreWarehouseStockDTO[] }>();
@@ -88,4 +123,17 @@ const getStockStatus = (stock: StoreWarehouseStockDTO): string => {
   }
   return 'in_stock';
 };
+
+const stockMaterialsFilter = ref<StockMaterialsFilter>({})
+const openStockMaterialsDialog = ref(false)
+
+const onAddToCartClick = (e: Event, ingredientId: number) => {
+  e.stopPropagation();
+  stockMaterialsFilter.value = { ...stockMaterialsFilter.value, ingredientId };
+  openStockMaterialsDialog.value = true;
+};
+
+const onSelectStockMaterial = (stockMaterial: StockMaterialsDTO) => {
+  console.log(stockMaterial)
+}
 </script>

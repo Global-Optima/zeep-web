@@ -76,6 +76,7 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 			query = query.Where("expiration_period_in_days <= ?", *filter.ExpirationInDays)
 		}
 	}
+	
 	var err error
 	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StockMaterial{})
 	if err != nil {

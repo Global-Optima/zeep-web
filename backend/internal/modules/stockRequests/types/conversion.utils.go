@@ -27,12 +27,12 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 
 	return StockRequestResponse{
 		RequestID: request.ID,
-		Store: StoreDTO{
+		Store: StockRequestStoreDTO{
 			ID:      request.StoreID,
 			Name:    request.Store.Name,
 			Address: request.Store.FacilityAddress.Address,
 		},
-		Warehouse: WarehouseDTO{
+		Warehouse: StockRequestWarehouseDTO{
 			ID:   request.WarehouseID,
 			Name: request.Warehouse.Name,
 		},

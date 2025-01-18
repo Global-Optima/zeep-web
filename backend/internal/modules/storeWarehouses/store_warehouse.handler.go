@@ -21,7 +21,7 @@ func NewStoreWarehouseHandler(service StoreWarehouseService) *StoreWarehouseHand
 }
 
 func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
-	var dto types.AddStockDTO
+	var dto types.AddStoreStockDTO
 
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
@@ -46,7 +46,7 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
-	var dto types.AddMultipleStockDTO
+	var dto types.AddMultipleStoreStockDTO
 
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
@@ -115,7 +115,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
-	var input types.UpdateStockDTO
+	var input types.UpdateStoreStockDTO
 
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {

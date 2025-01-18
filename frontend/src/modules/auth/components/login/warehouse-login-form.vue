@@ -39,7 +39,7 @@
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="warehouse in warehouses"
+										v-for="warehouse in warehouses?.data"
 										:key="warehouse.id"
 										:value="warehouse.id.toString()"
 										class="text-sm sm:text-base"
@@ -180,11 +180,10 @@ const { values, isSubmitting, handleSubmit } = useForm({
 const { data: warehouses, isLoading: warehousesLoading, isError: warehousesError } = useQuery({
   queryKey: ['warehouses'],
   queryFn: () => warehouseService.getWarehouses(),
-  initialData: [],
 })
 
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
-  queryKey: ['warehouse-employees', values.selectedWarehouseId],
+  queryKey: computed(() => ['warehouse-employees', values.selectedWarehouseId]),
   queryFn: () => authService.getWarehouseAccounts(values.selectedWarehouseId!),
   enabled: computed(() => Boolean(values.selectedWarehouseId)),
   initialData: []

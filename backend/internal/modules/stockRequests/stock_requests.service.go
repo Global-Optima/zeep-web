@@ -134,6 +134,7 @@ func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto type
 
 	return nil
 }
+
 func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto types.RejectStockRequestStatusDTO) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
@@ -151,6 +152,7 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 
 	return nil
 }
+
 func (s *stockRequestService) SetInDeliveryStatus(requestID uint) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
@@ -168,6 +170,7 @@ func (s *stockRequestService) SetInDeliveryStatus(requestID uint) error {
 
 	return nil
 }
+
 func (s *stockRequestService) SetCompletedStatus(requestID uint) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
@@ -317,7 +320,6 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 	return nil
 }
 
-// Helper function to find the original ingredient in the stock request by StockMaterialID
 func findOriginalIngredient(ingredients []data.StockRequestIngredient, stockMaterialID uint) *data.StockRequestIngredient {
 	for _, ingredient := range ingredients {
 		if ingredient.StockMaterialID == stockMaterialID {
@@ -410,7 +412,7 @@ func (s *stockRequestService) GetAvailableStockMaterialsByIngredient(ingredientI
 			Category:          stock.StockMaterial.StockMaterialCategory.Name,
 			AvailableQuantity: stock.Quantity,
 			Unit:              stock.StockMaterial.Unit.Name,
-			Warehouse: types.WarehouseDTO{
+			Warehouse: types.StockRequestWarehouseDTO{
 				ID:   stock.WarehouseID,
 				Name: stock.Warehouse.Name,
 			},
