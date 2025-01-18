@@ -1274,7 +1274,7 @@ VALUES
 
 -- Insert into EmployeeAudit
 INSERT INTO
-  employee_audits (start_work_at, end_work_at, employee_id)
+  employee_work_tracks (start_work_at, end_work_at, employee_id)
 VALUES
   ('2024-10-01 09:00:00+00','2024-10-01 17:00:00+00',1),
   ('2024-10-02 09:00:00+00','2024-10-02 17:00:00+00',2);

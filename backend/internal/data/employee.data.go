@@ -122,7 +122,7 @@ type WarehouseEmployee struct {
 	WarehouseID uint `gorm:"not null"`
 }
 
-type EmployeeAudit struct {
+type EmployeeWorkTrack struct {
 	BaseEntity
 	StartWorkAt *time.Time `gorm:"type:timestamp"`
 	EndWorkAt   *time.Time `gorm:"type:timestamp"`

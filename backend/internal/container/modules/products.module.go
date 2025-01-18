@@ -2,6 +2,7 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
@@ -18,13 +19,13 @@ type ProductsModule struct {
 	StoreProducts *StoreProductsModule
 }
 
-func NewProductsModule(base *common.BaseModule, ingredientRepo ingredients.IngredientRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository) *ProductsModule {
+func NewProductsModule(base *common.BaseModule, auditService audit.AuditService, ingredientRepo ingredients.IngredientRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository) *ProductsModule {
 	repo := product.NewProductRepository(base.DB)
 	service := product.NewProductService(repo, base.Logger)
-	handler := product.NewProductHandler(service)
+	handler := product.NewProductHandler(service, auditService)
 
 	recipeModule := NewRecipeModule(base)
-	storeProductsModule := NewStoreProductsModule(base, repo, ingredientRepo, storeWarehouseRepo)
+	storeProductsModule := NewStoreProductsModule(base, auditService, repo, ingredientRepo, storeWarehouseRepo)
 
 	base.Router.RegisterProductRoutes(handler)
 
@@ -70,6 +71,7 @@ type StoreProductsModule struct {
 
 func NewStoreProductsModule(
 	base *common.BaseModule,
+	auditService audit.AuditService,
 	productRepo product.ProductRepository,
 	ingredientRepo ingredients.IngredientRepository,
 	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository,
@@ -81,7 +83,7 @@ func NewStoreProductsModule(
 		ingredientRepo,
 		storeProducts.NewTransactionManager(base.DB, repo, storeWarehouseRepo),
 		base.Logger)
-	handler := storeProducts.NewStoreProductHandler(service)
+	handler := storeProducts.NewStoreProductHandler(service, auditService)
 
 	base.Router.RegisterStoreProductRoutes(handler)
 

@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
 
@@ -15,12 +16,14 @@ import (
 )
 
 type StoreProductHandler struct {
-	service StoreProductService
+	service      StoreProductService
+	auditService audit.AuditService
 }
 
-func NewStoreProductHandler(service StoreProductService) *StoreProductHandler {
+func NewStoreProductHandler(service StoreProductService, auditService audit.AuditService) *StoreProductHandler {
 	return &StoreProductHandler{
-		service: service,
+		service:      service,
+		auditService: auditService,
 	}
 }
 
@@ -119,12 +122,24 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateStoreProduct(storeID, &dto)
+	id, err := h.service.CreateStoreProduct(storeID, &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to create store product")
 		return
 	}
 	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
+
+	createDetails := types.CreateStoreProductAuditDTO{
+		StoreID: storeID,
+	}
+
+	_ = h.auditService.RecordEmployeeAction(c, data.CreateOperation, data.StoreProductComponent,
+		&data.ItemDetails[types.CreateStoreProductAuditDTO]{
+			BaseDetails:  data.BaseDetails{ID: id},
+			CustomFields: createDetails,
+		},
+	)
+
 }
 
 func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
@@ -141,12 +156,29 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateMultipleStoreProducts(storeID, dto)
+	ids, err := h.service.CreateMultipleStoreProducts(storeID, dto)
 	if err != nil {
 		msg := fmt.Sprintf("failed to create %d store products", dtoLength)
 		utils.SendInternalServerError(c, msg)
 		return
 	}
+
+	createDetails := types.CreateStoreProductAuditDTO{
+		StoreID: storeID,
+	}
+
+	baseDetails := make([]data.BaseDetails, len(ids))
+	for i, id := range ids {
+		baseDetails[i] = data.BaseDetails{ID: id}
+	}
+
+	_ = h.auditService.RecordEmployeeAction(c, data.CreateMultipleOperation, data.StoreProductComponent,
+		&data.MultipleCreationDetails[types.CreateStoreProductAuditDTO]{
+			BaseDetails:  baseDetails,
+			CustomFields: createDetails,
+		},
+	)
+
 	msg := fmt.Sprintf("%d store product created successfully", dtoLength)
 	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
 }
