@@ -13,6 +13,7 @@
 
 		<div class="flex items-center space-x-2 w-full md:w-auto">
 			<Button variant="outline">Экспорт</Button>
+			<Button @click="onCreateClick">Создать</Button>
 		</div>
 	</div>
 </template>
@@ -20,15 +21,16 @@
 <script setup lang="ts">
 import MultiSelectFilter from '@/core/components/multi-select-filter/MultiSelectFilter.vue'
 import { Button } from '@/core/components/ui/button'
+import { getRouteName } from '@/core/config/routes.config'
 import { StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{ filter?: GetStockRequestsFilter }>()
 const emit = defineEmits(['update:filter'])
-
+const router = useRouter()
 
 const selectedStatuses = ref<StockRequestStatus[]>(props.filter?.statuses ?? [])
-
 
 watch(selectedStatuses, (newStatuses) => {
   emit('update:filter', {
@@ -46,4 +48,8 @@ const statusOptions = [
   { label: 'Отклонённые складом', value: StockRequestStatus.REJECTED_BY_WAREHOUSE },
   { label: 'Принятые с изменениями', value: StockRequestStatus.ACCEPTED_WITH_CHANGE },
 ]
+
+const onCreateClick = () => {
+  router.push({name: getRouteName("ADMIN_STORE_STOCK_REQUESTS_CREATE")})
+}
 </script>

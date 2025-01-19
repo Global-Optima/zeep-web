@@ -1,16 +1,16 @@
 <template>
 	<Dialog
 		:open="open"
-		@close="$emit('close')"
+		@update:open="$emit('close')"
 	>
-		<DialogHeader>
-			<DialogTitle>Принять с изменениями</DialogTitle>
-			<DialogDescription>
-				Укажите итоговое количество для каждого материала и добавьте комментарий, если нужно.
-			</DialogDescription>
-		</DialogHeader>
+		<DialogContent :include-close-button="false">
+			<DialogHeader>
+				<DialogTitle>Принять с изменениями</DialogTitle>
+				<DialogDescription>
+					Укажите итоговое количество для каждого материала и добавьте комментарий, если нужно.
+				</DialogDescription>
+			</DialogHeader>
 
-		<DialogContent>
 			<!-- COMMENT INPUT -->
 			<div class="mb-4">
 				<Label for="comment">Комментарий</Label>
@@ -83,22 +83,22 @@
 					Добавить материал
 				</Button>
 			</div>
-		</DialogContent>
 
-		<DialogFooter>
-			<Button
-				variant="outline"
-				@click="$emit('close')"
-			>
-				Отмена
-			</Button>
-			<Button
-				variant="default"
-				@click="submitForm"
-			>
-				Принять
-			</Button>
-		</DialogFooter>
+			<DialogFooter>
+				<Button
+					variant="outline"
+					@click="$emit('close')"
+				>
+					Отмена
+				</Button>
+				<Button
+					variant="default"
+					@click="submitForm"
+				>
+					Принять
+				</Button>
+			</DialogFooter>
+		</DialogContent>
 
 		<!-- MATERIAL SELECT DIALOG (for choosing new materials to add) -->
 		<AdminStockMaterialsSelectDialog
