@@ -1,3 +1,5 @@
+<!-- TODO: TEST -->
+
 <template>
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-4xl">
 		<!-- Header -->
@@ -11,7 +13,7 @@
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				{{ initialData.name }}
+				{{ initialData.stockMaterial.name }}
 			</h1>
 
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
@@ -129,7 +131,7 @@ import {
 import { Input } from '@/core/components/ui/input'
 import type {
   UpdateWarehouseStockDTO,
-  WarehouseStockDetailsDTO
+  WarehouseStockMaterialDetailsDTO,
 } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
@@ -137,8 +139,8 @@ import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
 // Props
-const props = defineProps<{
-  initialData: WarehouseStockDetailsDTO
+const {initialData} = defineProps<{
+  initialData: WarehouseStockMaterialDetailsDTO
 }>()
 
 const emit = defineEmits<{
@@ -148,20 +150,20 @@ const emit = defineEmits<{
 
 // Predefined Material Info Array
 const materialInfo = [
-  { label: 'Категория', value: props.initialData.category.name },
-  { label: 'Единица измерения', value: props.initialData.unit?.name ?? "TODO" },
-  { label: 'Безопасный запас', value: props.initialData.safetyStock },
+  { label: 'Категория', value: initialData.stockMaterial.category.name },
+  { label: 'Единица измерения', value: initialData.stockMaterial.unit?.name ?? "TODO" },
+  { label: 'Безопасный запас', value: initialData.stockMaterial.safetyStock },
   {
     label: 'Срок годности',
-    value: props.initialData.expirationFlag
-      ? `${props.initialData.expirationPeriodInDays} дней`
+    value: initialData.stockMaterial.expirationFlag
+      ? `${initialData.stockMaterial.expirationPeriodInDays} дней`
       : 'Нет',
   },
-  { label: 'Штрихкод', value: props.initialData.barcode },
-  { label: 'Количество на складе', value: props.initialData.totalQuantity },
+  { label: 'Штрихкод', value: initialData.stockMaterial.barcode },
+  { label: 'Количество на складе', value: initialData.packageMeasure.quantity },
   {
     label: 'Ранняя дата истечения срока годности',
-    value: formatDate(new Date(props.initialData.earliestExpirationDate)),
+    value: formatDate(new Date(initialData.earliestExpirationDate)),
   },
 ]
 
@@ -189,8 +191,8 @@ const schema = toTypedSchema(
 const { handleSubmit } = useForm({
   validationSchema: schema,
   initialValues: {
-    quantity: props.initialData.totalQuantity,
-    expirationDate: props.initialData.earliestExpirationDate.split('T')[0],
+    quantity: initialData.packageMeasure.quantity,
+    expirationDate: initialData.earliestExpirationDate.split('T')[0],
   },
 })
 

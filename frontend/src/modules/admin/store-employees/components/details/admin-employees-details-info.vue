@@ -1,13 +1,11 @@
-<template>
+<!-- <template>
 	<div class="relative bg-white p-6 border rounded-xl">
-		<!-- Employee Image -->
-		<!-- TODO: Add image url here -->
+  TODO: add image url
 		<img
 			class="mb-6 rounded-full w-48 h-48 object-cover"
 			src=""
 			alt="Employee Image"
 		/>
-		<!-- Employee Attributes -->
 		<div
 			v-for="attribute in attributes"
 			:key="attribute.label"
@@ -18,7 +16,6 @@
 			</label>
 			<p class="mt-1 text-base text-gray-900">{{ attribute.value }}</p>
 		</div>
-		<!-- Action Buttons -->
 		<div class="top-6 right-6 absolute">
 			<Button
 				size="icon"
@@ -32,7 +29,7 @@
 
 <script setup lang="ts">
 import Button from '@/core/components/ui/button/Button.vue'
-import { EMPLOYEE_ROLES_FORMATTED, type Employee } from '@/modules/admin/employees/models/employees.models'
+import { EMPLOYEE_ROLES_FORMATTED, type Employee } from '@/modules/admin/store-employees/models/employees.models'
 import { Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 
@@ -47,4 +44,4 @@ const attributes = computed(() => [
 ]);
 </script>
 
-<style scoped></style>
+<style scoped></style> -->
