@@ -402,11 +402,11 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 
 	// Apply filters
 	if filter.WarehouseID != nil {
-		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
+		query = query.Where("warehouse_stocks.warehouse_id = ?", *filter.WarehouseID)
 	}
 
 	if filter.StockMaterialID != nil {
-		query = query.Where("stock_material_id = ?", *filter.StockMaterialID)
+		query = query.Where("stock_materials.stock_material_id = ?", *filter.StockMaterialID)
 	}
 
 	if filter.IngredientID != nil {

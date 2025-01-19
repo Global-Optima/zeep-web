@@ -106,12 +106,19 @@ func (h *WarehouseStockHandler) DeductFromStock(c *gin.Context) {
 }
 
 func (h *WarehouseStockHandler) GetStocks(c *gin.Context) {
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusUnauthorized)
+		return
+	}
+
 	var filter types.GetWarehouseStockFilterQuery
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.WarehouseStock{})
 	if err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
+	filter.WarehouseID = &warehouseID
 
 	stocks, err := h.service.GetStock(&filter)
 	if err != nil {

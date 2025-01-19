@@ -215,7 +215,7 @@ func (r *stockRequestRepository) AddWarehouseComment(requestID uint, comment str
 
 func (r *stockRequestRepository) DeleteStockRequest(requestID uint) error {
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("stock_request_id = ?", requestID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
+		if err := tx.Where("stock_request_id = ?", requestID).Delete(&data.StockRequestIngredient{}).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("failed to delete stock request ingredients: %w", err)
 		}
 
