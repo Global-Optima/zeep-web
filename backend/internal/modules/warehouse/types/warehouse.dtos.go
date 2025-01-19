@@ -1,11 +1,5 @@
 package types
 
-import (
-	"time"
-
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-)
-
 type AssignStoreToWarehouseRequest struct {
 	StoreID     uint `json:"storeId" binding:"required"`
 	WarehouseID uint `json:"warehouseId" binding:"required"`
@@ -41,68 +35,4 @@ type WarehouseResponse struct {
 	FacilityAddress FacilityAddressDTO `json:"facilityAddress"`
 	CreatedAt       string             `json:"createdAt"`
 	UpdatedAt       string             `json:"updatedAt"`
-}
-
-// stock related dtos
-type AdjustWarehouseStockRequest struct {
-	WarehouseID     uint    `json:"warehouseId" binding:"required"`
-	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
-	Quantity        float64 `json:"quantity" binding:"required,gte=0"`
-}
-
-type WarehouseStockResponse struct {
-	StockMaterial          StockMaterialResponse `json:"stockMaterial"`
-	TotalQuantity          float64               `json:"totalQuantity"`
-	EarliestExpirationDate *time.Time            `json:"earliestExpirationDate,omitempty"`
-}
-
-type StockMaterialResponse struct {
-	ID                   uint    `json:"id"`
-	Name                 string  `json:"name"`
-	Description          string  `json:"description"`
-	Category             string  `json:"category"`
-	SafetyStock          float64 `json:"safetyStock"`
-	Barcode              string  `json:"barcode"`
-	utils.PackageMeasure `json:"packageMeasures"`
-}
-
-type ResetWarehouseStockRequest struct {
-	WarehouseID uint    `json:"warehouseId" binding:"required"`
-	Stocks      []Stock `json:"stocks" binding:"required"`
-}
-
-type Stock struct {
-	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
-	Quantity        float64 `json:"quantity" binding:"required,gte=0"`
-}
-
-type GetWarehouseStockFilterQuery struct {
-	WarehouseID     *uint   `form:"warehouseId"`
-	StockMaterialID *uint   `form:"stockMaterialId"`
-	LowStockOnly    *bool   `form:"lowStockOnly"`
-	Category        *string `form:"category"`
-	ExpirationDays  *int    `form:"expirationDays"` // Number of days to expiration
-	Search          *string `form:"search"`         // Search by stock material name
-	Pagination      *utils.Pagination
-}
-
-type StockMaterialDetailsDTO struct {
-	ID                     uint                       `json:"id"`
-	Name                   string                     `json:"name"`
-	Description            string                     `json:"description"`
-	Category               string                     `json:"category"`
-	SafetyStock            float64                    `json:"safetyStock"`
-	ExpirationFlag         bool                       `json:"expirationFlag"`
-	ExpirationInDays       int                        `json:"expirationInDays"`
-	PackageMeasure         utils.PackageMeasure       `json:"packageMeasure"`
-	TotalQuantity          float64                    `json:"totalQuantity"`
-	EarliestExpirationDate *time.Time                 `json:"earliestExpirationDate,omitempty"`
-	Deliveries             []StockMaterialDeliveryDTO `json:"deliveries"`
-}
-
-type StockMaterialDeliveryDTO struct {
-	Supplier     string    `json:"supplierName"`
-	Quantity     float64   `json:"quantity"`
-	DeliveryDate time.Time `json:"deliveryDate"`
-	ExpiresOn    time.Time `json:"expirationDate"`
 }

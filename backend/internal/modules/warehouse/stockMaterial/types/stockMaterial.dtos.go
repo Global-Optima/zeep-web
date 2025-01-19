@@ -11,7 +11,6 @@ type CreateStockMaterialDTO struct {
 	Name                   string  `json:"name" binding:"required"`
 	Description            string  `json:"description"`
 	SafetyStock            float64 `json:"safetyStock" binding:"required,gt=0"`
-	ExpirationFlag         bool    `json:"expirationFlag"`
 	UnitID                 uint    `json:"unitId" binding:"required"`
 	SupplierID             uint    `json:"supplierId" binding:"required"`
 	CategoryID             uint    `json:"categoryId" binding:"required"`
@@ -50,13 +49,13 @@ type StockMaterialsDTO struct {
 }
 
 type StockMaterialFilter struct {
-	Search           *string           `form:"search"`           // Search by name, description, or category
-	LowStock         *bool             `form:"lowStock"`         // Filter for materials below safety stock
-	ExpirationFlag   *bool             `form:"expirationFlag"`   // Filter by expiration flag
-	IsActive         *bool             `form:"isActive"`         // Filter by active/inactive status
-	SupplierID       *uint             `form:"supplierId"`       // Filter by supplier
-	IngredientID     *uint             `form:"ingredientId"`     // Filter by ingredient
-	CategoryID       *uint             `form:"categoryId"`       // Filter by category
-	ExpirationInDays *int              `form:"expirationInDays"` // Filter by expiration period in days
-	Pagination       *utils.Pagination // Pagination information
+	Search           *string `form:"search"`           // Search by name, description, or category
+	LowStock         *bool   `form:"lowStock"`         // Filter for materials below safety stock
+	ExpirationFlag   *bool   `form:"expirationFlag"`   // Filter by expiration flag
+	IsActive         *bool   `form:"isActive"`         // Filter by active/inactive status
+	SupplierID       *uint   `form:"supplierId"`       // Filter by supplier
+	IngredientID     *uint   `form:"ingredientId"`     // Filter by ingredient
+	CategoryID       *uint   `form:"categoryId"`       // Filter by category
+	ExpirationInDays *int    `form:"expirationInDays"` // Filter by expiration period in days
+	utils.BaseFilter
 }

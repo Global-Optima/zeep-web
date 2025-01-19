@@ -1,4 +1,4 @@
-package inventory
+package warehouseStock
 
 import (
 	"fmt"
@@ -6,30 +6,33 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-type InventoryService interface {
+type WarehouseStockService interface {
 	ReceiveInventory(req types.ReceiveInventoryRequest) error
 	TransferInventory(req types.TransferInventoryRequest) error
-	GetInventoryLevels(filter *types.GetInventoryLevelsFilterQuery) (*types.InventoryLevelsResponse, error)
-	PickupStock(req types.PickupRequest) error
-	GetExpiringItems(warehouseID uint, thresholdDays int) ([]types.UpcomingExpirationResponse, error)
-	ExtendExpiration(req types.ExtendExpirationRequest) error
 	GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]types.DeliveryResponse, error)
+
+	AddToStock(req types.AdjustWarehouseStock) error
+	DeductFromStock(req types.AdjustWarehouseStock) error
+	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
+	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error)
+	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
 }
 
-type inventoryService struct {
-	repo              InventoryRepository
+type warehouseStockService struct {
+	repo              WarehouseStockRepository
 	stockMaterialRepo stockMaterial.StockMaterialRepository
 	barcodeRepo       barcode.BarcodeRepository
 	packageRepo       stockMaterialPackage.StockMaterialPackageRepository
 }
 
-func NewInventoryService(repo InventoryRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, packageRepo stockMaterialPackage.StockMaterialPackageRepository) InventoryService {
-	return &inventoryService{
+func NewWarehouseStockService(repo WarehouseStockRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, packageRepo stockMaterialPackage.StockMaterialPackageRepository) WarehouseStockService {
+	return &warehouseStockService{
 		repo:              repo,
 		stockMaterialRepo: stockMaterialRepo,
 		barcodeRepo:       barcodeRepo,
@@ -37,7 +40,7 @@ func NewInventoryService(repo InventoryRepository, stockMaterialRepo stockMateri
 	}
 }
 
-func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) error {
+func (s *warehouseStockService) ReceiveInventory(req types.ReceiveInventoryRequest) error {
 	var createdStockMaterials []data.StockMaterial
 	if len(req.NewItems) > 0 && req.NewItems != nil {
 		var err error
@@ -64,7 +67,7 @@ func (s *inventoryService) ReceiveInventory(req types.ReceiveInventoryRequest) e
 	return nil
 }
 
-func (s *inventoryService) assembleDeliveries(
+func (s *warehouseStockService) assembleDeliveries(
 	req types.ReceiveInventoryRequest,
 	existingStockMaterials map[uint]*data.StockMaterial,
 	newStockMaterials []data.StockMaterial,
@@ -115,7 +118,7 @@ func (s *inventoryService) assembleDeliveries(
 	return deliveries, nil
 }
 
-func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, items []types.NewInventoryItem) ([]data.StockMaterial, error) {
+func (s *warehouseStockService) createAndRegisterNewStockMaterials(supplierID uint, items []types.NewInventoryItem) ([]data.StockMaterial, error) {
 	newStockMaterials := []data.StockMaterial{}
 
 	for _, item := range items {
@@ -128,7 +131,6 @@ func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, i
 			Name:                   item.Name,
 			Description:            item.Description,
 			SafetyStock:            item.SafetyStock,
-			ExpirationFlag:         item.ExpirationFlag,
 			UnitID:                 item.UnitID,
 			CategoryID:             item.CategoryID,
 			ExpirationPeriodInDays: expirationPeriod,
@@ -163,7 +165,7 @@ func (s *inventoryService) createAndRegisterNewStockMaterials(supplierID uint, i
 	return newStockMaterials, nil
 }
 
-func (s *inventoryService) loadExistingStockMaterials(items []types.ExistingInventoryItem) (map[uint]*data.StockMaterial, error) {
+func (s *warehouseStockService) loadExistingStockMaterials(items []types.ExistingInventoryItem) (map[uint]*data.StockMaterial, error) {
 	stockMaterialIDs := []uint{}
 	for _, item := range items {
 		stockMaterialIDs = append(stockMaterialIDs, item.StockMaterialID)
@@ -182,7 +184,7 @@ func (s *inventoryService) loadExistingStockMaterials(items []types.ExistingInve
 	return existingStockMaterials, nil
 }
 
-func (s *inventoryService) ensureSupplierMaterialAssociation(supplierID, stockMaterialID uint) error {
+func (s *warehouseStockService) ensureSupplierMaterialAssociation(supplierID, stockMaterialID uint) error {
 	exists, err := s.repo.SupplierMaterialExists(supplierID, stockMaterialID)
 	if err != nil {
 		return fmt.Errorf("failed to check supplier-material association: %w", err)
@@ -202,7 +204,7 @@ func (s *inventoryService) ensureSupplierMaterialAssociation(supplierID, stockMa
 	return nil
 }
 
-func (s *inventoryService) TransferInventory(req types.TransferInventoryRequest) error {
+func (s *warehouseStockService) TransferInventory(req types.TransferInventoryRequest) error {
 	stockItems, err := s.repo.ConvertInventoryItemsToStockRequest(req.Items)
 	if err != nil {
 		return fmt.Errorf("failed to convert inventory items: %w", err)
@@ -215,61 +217,78 @@ func (s *inventoryService) TransferInventory(req types.TransferInventoryRequest)
 	return nil
 }
 
-func (s *inventoryService) GetInventoryLevels(filter *types.GetInventoryLevelsFilterQuery) (*types.InventoryLevelsResponse, error) {
-	stocks, err := s.repo.GetInventoryLevels(filter)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch inventory levels: %w", err)
-	}
-
-	return types.StocksToInventoryItems(stocks), nil
-}
-
-func (s *inventoryService) PickupStock(req types.PickupRequest) error {
-	stockItems, err := s.repo.ConvertInventoryItemsToStockRequest(req.Items)
-	if err != nil {
-		return fmt.Errorf("failed to convert inventory items: %w", err)
-	}
-
-	if err := s.repo.PickupStock(req.StoreWarehouseID, stockItems); err != nil {
-		return fmt.Errorf("failed to handle store pickup: %w", err)
-	}
-
-	return nil
-}
-
-func (s *inventoryService) GetExpiringItems(warehouseID uint, thresholdDays int) ([]types.UpcomingExpirationResponse, error) {
-	deliveries, err := s.repo.GetExpiringItems(warehouseID, thresholdDays)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch expiring items: %w", err)
-	}
-
-	return types.ExpiringItemsToResponses(deliveries), nil
-}
-
-func (s *inventoryService) ExtendExpiration(req types.ExtendExpirationRequest) error {
-	var delivery data.SupplierWarehouseDelivery
-	if err := s.repo.GetDeliveryByID(req.DeliveryID, &delivery); err != nil {
-		return fmt.Errorf("failed to fetch delivery: %w", err)
-	}
-
-	if err := types.ValidateExpirationDays(req.AddDays); err != nil {
-		return err
-	}
-
-	newExpirationDate := delivery.ExpirationDate.AddDate(0, 0, req.AddDays)
-
-	if err := s.repo.ExtendExpiration(req.DeliveryID, newExpirationDate); err != nil {
-		return fmt.Errorf("failed to extend expiration date: %w", err)
-	}
-
-	return nil
-}
-
-func (s *inventoryService) GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]types.DeliveryResponse, error) {
+func (s *warehouseStockService) GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]types.DeliveryResponse, error) {
 	deliveries, err := s.repo.GetDeliveries(warehouseID, startDate, endDate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch deliveries: %w", err)
 	}
 
 	return types.DeliveriesToDeliveryResponses(deliveries), nil
+}
+
+func (s *warehouseStockService) AddToStock(req types.AdjustWarehouseStock) error {
+	return s.repo.AddToWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
+}
+
+func (s *warehouseStockService) DeductFromStock(req types.AdjustWarehouseStock) error {
+	return s.repo.DeductFromWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
+}
+
+func (s *warehouseStockService) GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error) {
+	stocks, err := s.repo.GetWarehouseStock(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
+	}
+
+	responses := make([]types.WarehouseStockResponse, len(stocks))
+	for i, stock := range stocks {
+		if stock.StockMaterial.Package == nil {
+			return nil, fmt.Errorf("package measures not found for StockMaterialID %d", stock.StockMaterialID)
+		}
+
+		packageMeasures, err := utils.ReturnPackageMeasureForStockMaterial(stock.StockMaterial, stock.TotalQuantity)
+		if err != nil {
+			return nil, err
+		}
+
+		responses[i] = types.ToWarehouseStockResponse(stock, packageMeasures)
+	}
+
+	return responses, nil
+}
+
+func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error) {
+	aggregatedStock, deliveries, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)
+	}
+
+	packageMeasure, err := utils.ReturnPackageMeasureForStockMaterial(
+		aggregatedStock.StockMaterial,
+		aggregatedStock.TotalQuantity,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	details := types.ToStockMaterialDetails(*aggregatedStock, packageMeasure, deliveries)
+
+	return &details, nil
+}
+
+func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error {
+	stock, err := s.repo.GetWarehouseStockByID(warehouseID, stockMaterialID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
+	}
+
+	if err := s.repo.UpdateExpirationDate(stock.StockMaterialID, stock.WarehouseID, dto.ExpirationDate); err != nil {
+		return fmt.Errorf("failed to update expiration date: %w", err)
+	}
+
+	if err := s.repo.UpdateStockQuantity(stock.ID, dto.Quantity); err != nil {
+		return fmt.Errorf("failed to update stock quantity: %w", err)
+	}
+
+	return nil
 }

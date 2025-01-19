@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -19,12 +20,10 @@ func NewStockMaterialHandler(service StockMaterialService) *StockMaterialHandler
 
 func (h *StockMaterialHandler) GetAllStockMaterials(c *gin.Context) {
 	var filter types.StockMaterialFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockMaterial{}); err != nil {
 		utils.SendBadRequestError(c, "Invalid query parameters")
 		return
 	}
-
-	filter.Pagination = utils.ParsePagination(c)
 
 	stockMaterialResponses, err := h.service.GetAllStockMaterials(&filter)
 	if err != nil {

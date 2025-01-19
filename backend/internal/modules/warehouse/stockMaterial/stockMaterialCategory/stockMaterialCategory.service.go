@@ -12,7 +12,7 @@ import (
 type StockMaterialCategoryService interface {
 	Create(dto types.CreateStockMaterialCategoryDTO) (uint, error)
 	GetByID(id uint) (*types.StockMaterialCategoryResponse, error)
-	GetAll() ([]types.StockMaterialCategoryResponse, error)
+	GetAll(filter types.StockMaterialCategoryFilter) ([]types.StockMaterialCategoryResponse, error)
 	Update(id uint, dto types.UpdateStockMaterialCategoryDTO) error
 	Delete(id uint) error
 }
@@ -50,8 +50,8 @@ func (s *stockMaterialCategoryService) GetByID(id uint) (*types.StockMaterialCat
 	return &response, nil
 }
 
-func (s *stockMaterialCategoryService) GetAll() ([]types.StockMaterialCategoryResponse, error) {
-	categories, err := s.repo.GetAll()
+func (s *stockMaterialCategoryService) GetAll(filter types.StockMaterialCategoryFilter) ([]types.StockMaterialCategoryResponse, error) {
+	categories, err := s.repo.GetAll(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stock material categories: %w", err)
 	}

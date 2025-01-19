@@ -560,7 +560,6 @@ CREATE TABLE IF NOT EXISTS stock_materials (
     description TEXT,
 	ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
     safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
-    expiration_flag BOOLEAN NOT NULL,
     unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
 	category_id INT NOT NULL REFERENCES stock_material_categories(id) ON DELETE RESTRICT,
     barcode VARCHAR(255),

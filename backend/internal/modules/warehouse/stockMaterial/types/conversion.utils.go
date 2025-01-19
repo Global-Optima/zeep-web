@@ -14,7 +14,6 @@ func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDT
 		Name:                   req.Name,
 		Description:            req.Description,
 		SafetyStock:            req.SafetyStock,
-		ExpirationFlag:         req.ExpirationFlag,
 		UnitID:                 req.UnitID,
 		CategoryID:             req.CategoryID,
 		IngredientID:           req.IngredientID,
@@ -26,14 +25,14 @@ func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDT
 
 func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMaterial) *StockMaterialsDTO {
 	return &StockMaterialsDTO{
-		ID:             stockMaterial.ID,
-		Name:           stockMaterial.Name,
-		Description:    stockMaterial.Description,
-		SafetyStock:    stockMaterial.SafetyStock,
-		ExpirationFlag: stockMaterial.ExpirationFlag,
+		ID:          stockMaterial.ID,
+		Name:        stockMaterial.Name,
+		Description: stockMaterial.Description,
+		SafetyStock: stockMaterial.SafetyStock,
 		Unit: unitTypes.UnitsDTO{
-			ID:   stockMaterial.UnitID,
-			Name: stockMaterial.Unit.Name,
+			ID:               stockMaterial.UnitID,
+			Name:             stockMaterial.Unit.Name,
+			ConversionFactor: stockMaterial.Unit.ConversionFactor,
 		},
 		Category: stockMaterialCategoryTypes.StockMaterialCategoryResponse{
 			ID:          stockMaterial.CategoryID,
