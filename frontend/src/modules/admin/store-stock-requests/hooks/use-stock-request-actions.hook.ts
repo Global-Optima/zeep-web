@@ -1,11 +1,11 @@
 import type { ButtonVariants } from '@/core/components/ui/button'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import {
 	StockRequestStatus,
 	type AcceptWithChangeRequestStatusDTO,
 	type RejectStockRequestStatusDTO,
 } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { stockRequestsService } from '@/modules/admin/store-stock-requests/services/stock-requests.service'
-import { EmployeeRole } from '@/modules/employees/models/employees.models'
 
 interface Action {
 	label: string
@@ -52,7 +52,7 @@ export function getActions(status: StockRequestStatus, role: EmployeeRole): Stoc
 				return [
 					{
 						type: 'DIRECT',
-						label: 'Исправить и повторно отправить на склад',
+						label: 'Исправить и повторно отправить',
 						variant: 'default',
 						handler: id => stockRequestsService.setProcessedStatus(id),
 					},
@@ -98,6 +98,16 @@ export function getActions(status: StockRequestStatus, role: EmployeeRole): Stoc
 					{
 						type: 'DIRECT',
 						label: 'Перевести заявку в доставку',
+						variant: 'default',
+						handler: id => stockRequestsService.setInDeliveryStatus(id),
+					},
+				]
+
+			case StockRequestStatus.REJECTED_BY_STORE:
+				return [
+					{
+						type: 'DIRECT',
+						label: 'Исправить и повторно отправить',
 						variant: 'default',
 						handler: id => stockRequestsService.setInDeliveryStatus(id),
 					},

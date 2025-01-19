@@ -1,5 +1,5 @@
 import type { RouteKey } from '@/core/config/routes.config'
-import { EmployeeRole } from '@/modules/employees/models/employees.models'
+import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
 import {
 	Apple,
 	Blocks,
@@ -62,6 +62,12 @@ export const adminNavItems: SidebarNavItem[] = [
 		accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA],
 	},
 	{
+		name: 'Сотрудники',
+		routeKey: 'ADMIN_STORE_EMPLOYEES',
+		icon: Users,
+		accessRoles: [EmployeeRole.MANAGER],
+	},
+	{
 		name: 'Склад',
 		routeKey: 'ADMIN_STORE_STOCKS',
 		icon: Warehouse,
@@ -78,12 +84,6 @@ export const adminNavItems: SidebarNavItem[] = [
 		routeKey: 'ADMIN_STORE_ADDITIVES',
 		icon: ListPlus,
 		accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA],
-	},
-	{
-		name: 'Сотрудники',
-		routeKey: 'ADMIN_EMPLOYEES',
-		icon: Users,
-		accessRoles: [EmployeeRole.MANAGER],
 	},
 	{
 		name: 'Магазины',
@@ -141,6 +141,7 @@ export const adminNavItems: SidebarNavItem[] = [
 			},
 		],
 	},
+
 	{
 		label: 'Топпинги',
 		icon: ListPlus,
@@ -174,6 +175,25 @@ export const adminNavItems: SidebarNavItem[] = [
 			{
 				name: 'Категории',
 				routeKey: 'ADMIN_INGREDIENT_CATEGORIES',
+				icon: LayoutList,
+				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
+			},
+		],
+	},
+	{
+		label: 'Складские товары',
+		icon: Package,
+		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
+		items: [
+			{
+				name: 'Список',
+				routeKey: 'ADMIN_STOCK_MATERIALS',
+				icon: Package,
+				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
+			},
+			{
+				name: 'Категории',
+				routeKey: 'ADMIN_STOCK_MATERIAL_CATEGORIES',
 				icon: LayoutList,
 				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
 			},

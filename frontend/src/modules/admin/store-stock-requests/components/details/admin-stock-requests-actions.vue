@@ -51,7 +51,7 @@ import {
   type StockRequestResponse
 } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 
-import { EmployeeRole } from '@/modules/employees/models/employees.models'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 
 /** Props */
 const props = defineProps<{

@@ -118,14 +118,14 @@ import {
   FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import type { Suppliers, UpdateSupplierDTO } from '@/modules/admin/suppliers/models/suppliers.model'
+import type { SuppliersDTO, UpdateSupplierDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
 // Props
 const props = defineProps<{
-	initialData: Suppliers
+	initialData: SuppliersDTO
 }>()
 
 const emit = defineEmits<{

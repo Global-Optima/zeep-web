@@ -35,13 +35,15 @@ type UpdateIngredientDates struct {
 }
 
 type StockRequestResponse struct {
-	RequestID      uint                             `json:"requestId"`
-	Status         data.StockRequestStatus          `json:"status"`
-	Store          storeTypes.StoreDTO              `json:"store"`
-	Warehouse      warehouseTypes.WarehouseResponse `json:"warehouse"`
-	StockMaterials []StockRequestMaterial           `json:"stockMaterials"`
-	CreatedAt      time.Time                        `json:"createdAt"`
-	UpdatedAt      time.Time                        `json:"updatedAt"`
+	RequestID        uint                             `json:"requestId"`
+	Status           data.StockRequestStatus          `json:"status"`
+	StoreComment     *string                          `json:"storeComment,omitempty"`
+	WarehouseComment *string                          `json:"warehouseComment,omitempty"`
+	Store            storeTypes.StoreDTO              `json:"store"`
+	Warehouse        warehouseTypes.WarehouseResponse `json:"warehouse"`
+	StockMaterials   []StockRequestMaterial           `json:"stockMaterials"`
+	CreatedAt        time.Time                        `json:"createdAt"`
+	UpdatedAt        time.Time                        `json:"updatedAt"`
 }
 
 type StockRequestMaterial struct {
