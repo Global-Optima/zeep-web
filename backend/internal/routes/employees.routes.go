@@ -317,12 +317,14 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 		router.GET("/current", handler.GetLastCreatedStockRequest)
 		router.PUT("/:requestId", handler.UpdateStockRequest)
 		router.DELETE("/:requestId", handler.DeleteStockRequest)
+		router.PUT("/:requestId", handler.AddStockMaterialToCart)
 
 		statusGroup := router.Group("/status/:requestId")
 		{
 			statusGroup.PATCH("/accept-with-change", handler.AcceptWithChangeStatus) // DTO with different stock material
 			statusGroup.PATCH("/reject-store", handler.RejectStoreStatus)            // Comment
 			statusGroup.PATCH("/reject-warehouse", handler.RejectWarehouseStatus)    // Comment
+			statusGroup.PATCH("/processed", handler.SetProcessedStatus)
 			statusGroup.PATCH("/in-delivery", handler.SetInDeliveryStatus)
 			statusGroup.PATCH("/completed", handler.SetCompletedStatus)
 		}

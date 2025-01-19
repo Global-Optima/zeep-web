@@ -37,10 +37,10 @@ func IsValidTransition(currentStatus, targetStatus data.StockRequestStatus) bool
 		data.StockRequestCreated:             {data.StockRequestProcessed},
 		data.StockRequestProcessed:           {data.StockRequestInDelivery, data.StockRequestRejectedByWarehouse},
 		data.StockRequestInDelivery:          {data.StockRequestCompleted, data.StockRequestAcceptedWithChange, data.StockRequestRejectedByStore},
-		data.StockRequestRejectedByWarehouse: {}, // Terminal state
-		data.StockRequestRejectedByStore:     {}, // Terminal state
-		data.StockRequestCompleted:           {}, // Terminal state
-		data.StockRequestAcceptedWithChange:  {}, // Terminal state
+		data.StockRequestRejectedByWarehouse: {data.StockRequestProcessed}, // Terminal state, can reuse rejected cart
+		data.StockRequestRejectedByStore:     {data.StockRequestProcessed}, // Terminal state, can reuse rejected cart
+		data.StockRequestCompleted:           {},                           // Terminal state
+		data.StockRequestAcceptedWithChange:  {},                           // Terminal state
 	}
 
 	allowedTransitions, exists := validTransitions[currentStatus]

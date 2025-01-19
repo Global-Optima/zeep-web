@@ -34,6 +34,7 @@ type StockRequestRepository interface {
 
 	DeleteStockRequest(requestID uint) error
 	GetOpenCartByStoreID(storeID uint) (*data.StockRequest, error)
+	UpdateStockRequestIngredientQuantity(ingredientID uint, quantity float64) error
 }
 
 type stockRequestRepository struct {
@@ -293,4 +294,11 @@ func (r *stockRequestRepository) GetOpenCartByStoreID(storeID uint) (*data.Stock
 	}
 
 	return &request, nil
+}
+
+func (r *stockRequestRepository) UpdateStockRequestIngredientQuantity(ingredientID uint, quantity float64) error {
+	return r.db.Model(&data.StockRequestIngredient{}).
+		Where("id = ?", ingredientID).
+		Update("quantity", quantity).
+		Error
 }
