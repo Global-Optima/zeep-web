@@ -8,6 +8,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
@@ -33,11 +34,15 @@ type StockRequestService interface {
 }
 
 type stockRequestService struct {
-	repo StockRequestRepository
+	repo              StockRequestRepository
+	stockMaterialRepo stockMaterial.StockMaterialRepository
 }
 
-func NewStockRequestService(repo StockRequestRepository) StockRequestService {
-	return &stockRequestService{repo: repo}
+func NewStockRequestService(repo StockRequestRepository, stockMaterialRepo stockMaterial.StockMaterialRepository) StockRequestService {
+	return &stockRequestService{
+		repo:              repo,
+		stockMaterialRepo: stockMaterialRepo,
+	}
 }
 
 func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, error) {
@@ -76,7 +81,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 	ingredients := []data.StockRequestIngredient{}
 	for _, item := range req.StockMaterials {
 		var stockMaterial data.StockMaterial
-		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
 			return 0, fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 
@@ -315,7 +320,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 
 	for _, item := range items {
 		var stockMaterial data.StockMaterial
-		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
 			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 
@@ -419,7 +424,7 @@ func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.S
 	ingredients := []data.StockRequestIngredient{}
 	for _, item := range items {
 		var stockMaterial data.StockMaterial
-		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
 			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 		ingredients = append(ingredients, data.StockRequestIngredient{

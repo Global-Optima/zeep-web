@@ -30,7 +30,6 @@ type StockRequestRepository interface {
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
 
 	GetLastStockRequestDate(storeWarehouseID uint) (*time.Time, error)
-	GetStockMaterialByID(stockMaterialID uint, stockMaterial *data.StockMaterial) error
 
 	DeleteStockRequest(requestID uint) error
 	GetOpenCartByStoreID(storeID uint) (*data.StockRequest, error)
@@ -185,10 +184,6 @@ func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWar
 		return nil, err
 	}
 	return &storeWarehouse, nil
-}
-
-func (r *stockRequestRepository) GetStockMaterialByID(stockMaterialID uint, stockMaterial *data.StockMaterial) error {
-	return r.db.Preload("Ingredient").Preload("StockMaterialCategory").First(stockMaterial, "id = ?", stockMaterialID).Error
 }
 
 func (r *stockRequestRepository) ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error {
