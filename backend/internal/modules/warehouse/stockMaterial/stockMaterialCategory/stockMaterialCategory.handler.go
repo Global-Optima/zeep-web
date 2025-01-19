@@ -3,6 +3,7 @@ package stockMaterialCategory
 import (
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -49,13 +50,21 @@ func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
 }
 
 func (h *StockMaterialCategoryHandler) GetAll(c *gin.Context) {
-	categories, err := h.service.GetAll()
+	var filter types.StockMaterialCategoryFilter
+
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockMaterialCategory{})
+	if err != nil {
+		utils.SendBadRequestError(c, "Failed to parse queries")
+		return
+	}
+
+	categories, err := h.service.GetAll(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch categories")
 		return
 	}
 
-	utils.SendSuccessResponse(c, categories)
+	utils.SendSuccessResponseWithPagination(c, categories, filter.Pagination)
 }
 
 func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {

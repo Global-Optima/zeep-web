@@ -1355,13 +1355,13 @@ VALUES
     ('Ароматизаторы', 'Ванильный экстракт и другие ароматизаторы');
 
 -- Insert stock materials with Russian names and category references
-INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, expiration_flag, unit_id, category_id, barcode, expiration_period_in_days, is_active) 
+INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, category_id, barcode, expiration_period_in_days, is_active) 
 VALUES 
-    ('Простоквашино Молоко 3.2%', 'Молоко пастеризованное 1л', 2, 50, TRUE, 3, 1, '111111111111', 1095, TRUE),
-    ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, TRUE, 1, 2, '222222222222', 1095, TRUE),
-    ('Бабаевский горький шоколад 75%', 'Темный шоколад 500г', 3, 15, TRUE, 2, 3, '333333333333', 730, TRUE),
-    ('Индийская корица молотая премиум', 'Корица молотая 200г', 4, 10, TRUE, 2, 4, '444444444444', 1460, TRUE),
-    ('Dr.Oetker Ванильный экстракт', 'Натуральный экстракт ванили 50мл', 5, 25, TRUE, 4, 5, '555555555555', 1460, TRUE);
+    ('Простоквашино Молоко 3.2%', 'Молоко пастеризованное 1л', 2, 50, 3, 1, '111111111111', 1095, TRUE),
+    ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, 1, 2, '222222222222', 1095, TRUE),
+    ('Бабаевский горький шоколад 75%', 'Темный шоколад 500г', 3, 15, 2, 3, '333333333333', 730, TRUE),
+    ('Индийская корица молотая премиум', 'Корица молотая 200г', 4, 10, 2, 4, '444444444444', 1460, TRUE),
+    ('Dr.Oetker Ванильный экстракт', 'Натуральный экстракт ванили 50мл', 5, 25, 4, 5, '555555555555', 1460, TRUE);
 
 -- Insert into Suppliers
 INSERT INTO suppliers (name, contact_email, contact_phone, address)

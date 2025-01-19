@@ -81,8 +81,10 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		}
 	}
 
+	query = query.Order("created_at DESC")
+
 	var err error
-	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StockMaterial{})
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
 	if err != nil {
 		return nil, err
 	}

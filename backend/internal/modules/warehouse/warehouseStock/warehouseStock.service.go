@@ -20,7 +20,7 @@ type WarehouseStockService interface {
 	AddToStock(req types.AdjustWarehouseStock) error
 	DeductFromStock(req types.AdjustWarehouseStock) error
 	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
-	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.StockMaterialDetailsDTO, error)
+	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error)
 	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
 }
 
@@ -257,7 +257,7 @@ func (s *warehouseStockService) GetStock(query *types.GetWarehouseStockFilterQue
 	return responses, nil
 }
 
-func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.StockMaterialDetailsDTO, error) {
+func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error) {
 	aggregatedStock, deliveries, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)

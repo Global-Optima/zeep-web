@@ -106,7 +106,7 @@ type StockMaterialResponse struct {
 	utils.PackageMeasure `json:"packageMeasures"`
 }
 
-type StockMaterialDetailsDTO struct {
+type WarehouseStockMaterialDetailsDTO struct {
 	StockMaterial          stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
 	PackageMeasure         utils.PackageMeasure                 `json:"packageMeasure"`
 	TotalQuantity          float64                              `json:"totalQuantity"`
