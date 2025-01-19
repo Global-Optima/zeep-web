@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -50,23 +51,40 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.GetStockRequestsFilter
 
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+	storeID, storeErr := contexts.GetStoreId(c)
+	warehouseID, warehouseErr := contexts.GetWarehouseId(c)
+
+	if storeErr != nil && warehouseErr != nil {
+		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-	filter.StoreID = &storeID
 
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockRequest{}); err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
 	filter.Pagination = utils.ParsePagination(c)
 
-	requests, err := h.service.GetStockRequests(filter)
+	var requests []types.StockRequestResponse
+	var err error
+
+	if storeErr == nil {
+		filter.StoreID = &storeID
+		requests, err = h.service.GetStockRequests(filter)
+	}
+
+	if warehouseErr == nil {
+		filter.WarehouseID = &warehouseID
+		err = types.ValidateWarehouseStatuses(filter.Statuses)
+		if err != nil {
+			utils.SendBadRequestError(c, err.Error())
+		}
+		requests, err = h.service.GetStockRequests(filter)
+	}
+
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch requests")
+		utils.SendInternalServerError(c, "Failed to fetch stock requests")
 		return
 	}
 
