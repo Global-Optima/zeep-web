@@ -414,7 +414,7 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	}
 
 	if filter.LowStockOnly != nil && *filter.LowStockOnly {
-		query = query.Where("warehouse_stocks.quantity < stock_materials.safety_stock")
+		query = query.Where("warehouse_stocks.quantity <= stock_materials.safety_stock")
 	}
 
 	if filter.IsExpiring != nil && *filter.IsExpiring {
