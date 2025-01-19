@@ -8,6 +8,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
@@ -17,8 +18,10 @@ type StockRequestService interface {
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
 	GetStockRequestByID(id uint) (types.StockRequestResponse, error)
 
+	// statuses
 	RejectStockRequestByStore(requestID uint, dto types.RejectStockRequestStatusDTO) error
 	RejectStockRequestByWarehouse(requestID uint, dto types.RejectStockRequestStatusDTO) error
+	SetProcessedStatus(requestID uint) error
 	SetInDeliveryStatus(requestID uint) error
 	SetCompletedStatus(requestID uint) error
 	AcceptStockRequestWithChange(requestID uint, dto types.AcceptWithChangeRequestStatusDTO) error
@@ -27,14 +30,19 @@ type StockRequestService interface {
 
 	DeleteStockRequest(requestID uint) error
 	GetLastCreatedStockRequest(storeID uint) (*types.StockRequestResponse, error)
+	AddStockMaterialToCart(storeID uint, dto types.StockRequestStockMaterialDTO) error
 }
 
 type stockRequestService struct {
-	repo StockRequestRepository
+	repo              StockRequestRepository
+	stockMaterialRepo stockMaterial.StockMaterialRepository
 }
 
-func NewStockRequestService(repo StockRequestRepository) StockRequestService {
-	return &stockRequestService{repo: repo}
+func NewStockRequestService(repo StockRequestRepository, stockMaterialRepo stockMaterial.StockMaterialRepository) StockRequestService {
+	return &stockRequestService{
+		repo:              repo,
+		stockMaterialRepo: stockMaterialRepo,
+	}
 }
 
 func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, error) {
@@ -73,7 +81,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 	ingredients := []data.StockRequestIngredient{}
 	for _, item := range req.StockMaterials {
 		var stockMaterial data.StockMaterial
-		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
 			return 0, fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 
@@ -120,6 +128,10 @@ func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto type
 		return fmt.Errorf("failed to fetch stock request: %w", err)
 	}
 
+	if !types.IsValidTransition(request.Status, data.StockRequestRejectedByStore) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestRejectedByStore)
+	}
+
 	if err := s.handleRejectedByStoreStatus(request, dto.Comment); err != nil {
 		return err
 	}
@@ -138,6 +150,10 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 		return fmt.Errorf("failed to fetch stock request: %w", err)
 	}
 
+	if !types.IsValidTransition(request.Status, data.StockRequestRejectedByWarehouse) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestRejectedByWarehouse)
+	}
+
 	if err := s.handleRejectedByWarehouseStatus(request, dto.Comment); err != nil {
 		return err
 	}
@@ -150,10 +166,55 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 	return nil
 }
 
+func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	if !types.IsValidTransition(request.Status, data.StockRequestProcessed) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestProcessed)
+	}
+
+	if err := s.handleProcessedStatus(request); err != nil {
+		return err
+	}
+
+	request.Status = data.StockRequestProcessed
+	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
+		return fmt.Errorf("failed to update stock request status: %w", err)
+	}
+
+	return nil
+}
+
+func (s *stockRequestService) handleProcessedStatus(request *data.StockRequest) error {
+	for _, ingredient := range request.Ingredients {
+		stockQuantity, err := s.repo.GetWarehouseStockQuantity(request.WarehouseID, ingredient.StockMaterialID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+
+		if stockQuantity < ingredient.Quantity {
+			return fmt.Errorf("insufficient stock for material '%s' (ID: %d). Required: %.2f, Available: %.2f",
+				ingredient.StockMaterial.Name, ingredient.StockMaterialID, ingredient.Quantity, stockQuantity)
+		}
+	}
+
+	// TODO: Add notification logic for warehouse staff regarding the transition to PROCESSED
+	fmt.Printf("Stock request ID %d is now PROCESSED. Notifications will be added.\n", request.ID)
+
+	return nil
+}
+
 func (s *stockRequestService) SetInDeliveryStatus(requestID uint) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	if !types.IsValidTransition(request.Status, data.StockRequestInDelivery) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestInDelivery)
 	}
 
 	if err := s.handleInDeliveryStatus(request); err != nil {
@@ -172,6 +233,10 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	if !types.IsValidTransition(request.Status, data.StockRequestCompleted) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestCompleted)
 	}
 
 	storeWarehouse, err := s.repo.GetStoreWarehouse(request.StoreID)
@@ -200,6 +265,10 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 	storeWarehouse, err := s.repo.GetStoreWarehouse(request.StoreID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch store warehouse: %w", err)
+	}
+
+	if !types.IsValidTransition(request.Status, data.StockRequestAcceptedWithChange) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestAcceptedWithChange)
 	}
 
 	if err := s.handleAcceptedWithChange(request, storeWarehouse.ID, dto.Items, dto.Comment); err != nil {
@@ -251,7 +320,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 
 	for _, item := range items {
 		var stockMaterial data.StockMaterial
-		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
 			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 
@@ -261,7 +330,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 		if originalIngredient != nil {
 			if originalIngredient.Quantity != item.Quantity {
 				autoGeneratedComments = append(autoGeneratedComments, fmt.Sprintf(
-					"Material '%s' (ID %d): Expected %.2f, Received %.2f",
+					"Материал'%s' (ID %d): Ожидалось %.2f, Получено %.2f",
 					stockMaterial.Name,
 					originalIngredient.StockMaterialID,
 					originalIngredient.Quantity,
@@ -270,7 +339,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 			}
 		} else {
 			autoGeneratedComments = append(autoGeneratedComments, fmt.Sprintf(
-				"Material '%s' (ID %d): Unexpected material received with quantity %.2f",
+				"Материал '%s' (ID %d): Получен непредусмотренный материал с количеством %.2f",
 				stockMaterial.Name,
 				item.StockMaterialID,
 				item.Quantity,
@@ -302,7 +371,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 	}
 
 	if comment != nil {
-		storeComment := fmt.Sprintf("Comment from store: %s", *comment)
+		storeComment := fmt.Sprintf("Комментарий от магазина: %s", *comment)
 		autoGeneratedComments = append(autoGeneratedComments, storeComment)
 	}
 
@@ -355,7 +424,7 @@ func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.S
 	ingredients := []data.StockRequestIngredient{}
 	for _, item := range items {
 		var stockMaterial data.StockMaterial
-		if err := s.repo.GetStockMaterialByID(item.StockMaterialID, &stockMaterial); err != nil {
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
 			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 		ingredients = append(ingredients, data.StockRequestIngredient{
@@ -404,4 +473,55 @@ func (s *stockRequestService) GetLastCreatedStockRequest(storeID uint) (*types.S
 
 	response := types.ToStockRequestResponse(request)
 	return &response, nil
+}
+
+func (s *stockRequestService) AddStockMaterialToCart(storeID uint, dto types.StockRequestStockMaterialDTO) error {
+	cart, err := s.repo.GetOpenCartByStoreID(storeID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to fetch open cart: %w", err)
+	}
+
+	if cart == nil {
+		cart, err = s.createNewCart(storeID)
+		if err != nil {
+			return fmt.Errorf("failed to create new cart: %w", err)
+		}
+	}
+
+	for _, ingredient := range cart.Ingredients {
+		if ingredient.StockMaterialID == dto.StockMaterialID {
+			newQuantity := ingredient.Quantity + dto.Quantity
+			err := s.repo.UpdateStockRequestIngredientQuantity(ingredient.ID, newQuantity)
+			if err != nil {
+				return fmt.Errorf("failed to update stock material quantity in the cart: %w", err)
+			}
+			return nil
+		}
+	}
+
+	newIngredient := data.StockRequestIngredient{
+		StockRequestID:  cart.ID,
+		StockMaterialID: dto.StockMaterialID,
+		Quantity:        dto.Quantity,
+	}
+	err = s.repo.AddIngredientsToStockRequest([]data.StockRequestIngredient{newIngredient})
+	if err != nil {
+		return fmt.Errorf("failed to add stock material to cart: %w", err)
+	}
+
+	return nil
+}
+
+func (s *stockRequestService) createNewCart(storeID uint) (*data.StockRequest, error) {
+	newCart := &data.StockRequest{
+		StoreID: storeID,
+		Status:  data.StockRequestCreated,
+	}
+
+	err := s.repo.CreateStockRequest(newCart)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new cart: %w", err)
+	}
+
+	return newCart, nil
 }

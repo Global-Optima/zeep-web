@@ -31,3 +31,28 @@ func ValidateStockRequestRate(lastRequestDate *time.Time) error {
 	}
 	return nil
 }
+
+func IsValidTransition(currentStatus, targetStatus data.StockRequestStatus) bool {
+	validTransitions := map[data.StockRequestStatus][]data.StockRequestStatus{
+		data.StockRequestCreated:             {data.StockRequestProcessed},
+		data.StockRequestProcessed:           {data.StockRequestInDelivery, data.StockRequestRejectedByWarehouse},
+		data.StockRequestInDelivery:          {data.StockRequestCompleted, data.StockRequestAcceptedWithChange, data.StockRequestRejectedByStore},
+		data.StockRequestRejectedByWarehouse: {data.StockRequestProcessed}, // Terminal state, can reuse rejected cart
+		data.StockRequestRejectedByStore:     {data.StockRequestProcessed}, // Terminal state, can reuse rejected cart
+		data.StockRequestCompleted:           {},                           // Terminal state
+		data.StockRequestAcceptedWithChange:  {},                           // Terminal state
+	}
+
+	allowedTransitions, exists := validTransitions[currentStatus]
+	if !exists {
+		return false
+	}
+
+	for _, status := range allowedTransitions {
+		if status == targetStatus {
+			return true
+		}
+	}
+
+	return false
+}
