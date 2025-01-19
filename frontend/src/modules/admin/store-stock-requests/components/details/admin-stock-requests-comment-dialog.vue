@@ -1,31 +1,36 @@
 <template>
 	<Dialog
 		:open="open"
-		@close="$emit('close')"
+		@update:open="$emit('close')"
 	>
 		<DialogHeader>
 			<DialogTitle>Укажите причину</DialogTitle>
 		</DialogHeader>
-		<DialogContent>
+		<DialogContent :include-close-button="false">
+			<DialogHeader>
+				<DialogTitle>Укажите причину</DialogTitle>
+			</DialogHeader>
+
 			<Textarea
 				v-model="comment"
 				placeholder="Причина отклонения"
 				rows="3"
 			/>
+
+			<DialogFooter>
+				<Button
+					variant="outline"
+					@click="$emit('close')"
+					>Отмена</Button
+				>
+				<Button
+					variant="default"
+					@click="submitComment"
+				>
+					ОК
+				</Button>
+			</DialogFooter>
 		</DialogContent>
-		<DialogFooter>
-			<Button
-				variant="outline"
-				@click="$emit('close')"
-				>Отмена</Button
-			>
-			<Button
-				variant="default"
-				@click="submitComment"
-			>
-				ОК
-			</Button>
-		</DialogFooter>
 	</Dialog>
 </template>
 
