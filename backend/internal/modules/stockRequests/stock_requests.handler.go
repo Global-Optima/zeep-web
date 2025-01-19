@@ -156,6 +156,20 @@ func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+func (h *StockRequestHandler) SetProcessedStatus(c *gin.Context) {
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+		return
+	}
+
+	if err := h.service.SetProcessedStatus(uint(stockRequestID)); err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
 func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
 	if utils.SendBadRequestInvalidParam(c, "requestId", err) {

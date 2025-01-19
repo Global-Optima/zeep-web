@@ -17,8 +17,10 @@ type StockRequestService interface {
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
 	GetStockRequestByID(id uint) (types.StockRequestResponse, error)
 
+	// statuses
 	RejectStockRequestByStore(requestID uint, dto types.RejectStockRequestStatusDTO) error
 	RejectStockRequestByWarehouse(requestID uint, dto types.RejectStockRequestStatusDTO) error
+	SetProcessedStatus(requestID uint) error
 	SetInDeliveryStatus(requestID uint) error
 	SetCompletedStatus(requestID uint) error
 	AcceptStockRequestWithChange(requestID uint, dto types.AcceptWithChangeRequestStatusDTO) error
@@ -120,6 +122,10 @@ func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto type
 		return fmt.Errorf("failed to fetch stock request: %w", err)
 	}
 
+	if !types.IsValidTransition(request.Status, data.StockRequestRejectedByStore) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestRejectedByStore)
+	}
+
 	if err := s.handleRejectedByStoreStatus(request, dto.Comment); err != nil {
 		return err
 	}
@@ -138,6 +144,10 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 		return fmt.Errorf("failed to fetch stock request: %w", err)
 	}
 
+	if !types.IsValidTransition(request.Status, data.StockRequestRejectedByWarehouse) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestRejectedByWarehouse)
+	}
+
 	if err := s.handleRejectedByWarehouseStatus(request, dto.Comment); err != nil {
 		return err
 	}
@@ -150,10 +160,55 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 	return nil
 }
 
+func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
+	request, err := s.repo.GetStockRequestByID(requestID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	if !types.IsValidTransition(request.Status, data.StockRequestProcessed) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestProcessed)
+	}
+
+	if err := s.handleProcessedStatus(request); err != nil {
+		return err
+	}
+
+	request.Status = data.StockRequestProcessed
+	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
+		return fmt.Errorf("failed to update stock request status: %w", err)
+	}
+
+	return nil
+}
+
+func (s *stockRequestService) handleProcessedStatus(request *data.StockRequest) error {
+	for _, ingredient := range request.Ingredients {
+		stockQuantity, err := s.repo.GetWarehouseStockQuantity(request.WarehouseID, ingredient.StockMaterialID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+
+		if stockQuantity < ingredient.Quantity {
+			return fmt.Errorf("insufficient stock for material '%s' (ID: %d). Required: %.2f, Available: %.2f",
+				ingredient.StockMaterial.Name, ingredient.StockMaterialID, ingredient.Quantity, stockQuantity)
+		}
+	}
+
+	// TODO: Add notification logic for warehouse staff regarding the transition to PROCESSED
+	fmt.Printf("Stock request ID %d is now PROCESSED. Notifications will be added.\n", request.ID)
+
+	return nil
+}
+
 func (s *stockRequestService) SetInDeliveryStatus(requestID uint) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	if !types.IsValidTransition(request.Status, data.StockRequestInDelivery) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestInDelivery)
 	}
 
 	if err := s.handleInDeliveryStatus(request); err != nil {
@@ -172,6 +227,10 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch stock request: %w", err)
+	}
+
+	if !types.IsValidTransition(request.Status, data.StockRequestCompleted) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestCompleted)
 	}
 
 	storeWarehouse, err := s.repo.GetStoreWarehouse(request.StoreID)
@@ -200,6 +259,10 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 	storeWarehouse, err := s.repo.GetStoreWarehouse(request.StoreID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch store warehouse: %w", err)
+	}
+
+	if !types.IsValidTransition(request.Status, data.StockRequestAcceptedWithChange) {
+		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestAcceptedWithChange)
 	}
 
 	if err := s.handleAcceptedWithChange(request, storeWarehouse.ID, dto.Items, dto.Comment); err != nil {
