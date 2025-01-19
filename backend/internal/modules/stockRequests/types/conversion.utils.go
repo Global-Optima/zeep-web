@@ -28,7 +28,9 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 	}
 
 	return StockRequestResponse{
-		RequestID: request.ID,
+		RequestID:        request.ID,
+		StoreComment:     request.StoreComment,
+		WarehouseComment: request.WarehouseComment,
 		Store: storeTypes.StoreDTO{
 			ID:           request.StoreID,
 			Name:         request.Store.Name,
