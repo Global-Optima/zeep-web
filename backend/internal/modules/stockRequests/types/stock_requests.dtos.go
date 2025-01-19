@@ -58,11 +58,3 @@ type GetStockRequestsFilter struct {
 
 	Statuses []data.StockRequestStatus `form:"statuses[]"`
 }
-
-type StockMaterialDTO struct {
-	StockMaterialID uint    `json:"stockMaterialId"`
-	Name            string  `json:"name"`
-	Category        string  `json:"category"`
-	Unit            string  `json:"unit"`
-	AvailableQty    float64 `json:"availableQuantity"`
-}

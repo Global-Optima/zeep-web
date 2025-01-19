@@ -84,32 +84,32 @@ import { onMounted, ref } from 'vue'
 
 import { Button } from '@/core/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
 } from '@/core/components/ui/card'
 import { Input } from '@/core/components/ui/input'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
 } from '@/core/components/ui/table'
 import { Trash } from 'lucide-vue-next'
 
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
-import type { StockRequestStockMaterialDTO, StockRequestStockMaterialResponse } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import type { StockRequestMaterial, StockRequestStockMaterialDTO } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 
 export interface StockRequestItemForm extends StockRequestStockMaterialDTO {
   name: string
 }
 
 const props = defineProps<{
-  initialData: StockRequestStockMaterialResponse[]
+  initialData: StockRequestMaterial[]
 }>()
 
 const emit = defineEmits<{
@@ -121,8 +121,8 @@ const stockRequestItemsForm = ref<StockRequestItemForm[]>([])
 const openDialog = ref(false)
 
 onMounted(() => {
-  stockRequestItemsForm.value = props.initialData.map(item => ({ stockMaterialId: item.stockMaterialId,
-    quantity:item.packageMeasures.quantity, name: item.name  }))
+  stockRequestItemsForm.value = props.initialData.map(item => ({ stockMaterialId: item.stockMaterial.id,
+    quantity:item.packageMeasures.quantity, name: item.stockMaterial.name  }))
 })
 
 function addMaterial(material: { id: number; name: string }) {

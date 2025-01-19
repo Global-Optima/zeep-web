@@ -4,11 +4,7 @@ import type {
 	AcceptWithChangeRequestStatusDTO,
 	CreateStockRequestDTO,
 	GetStockRequestsFilter,
-	LowStockIngredientResponse,
 	RejectStockRequestStatusDTO,
-	StockMaterialAvailabilityDTO,
-	StockMaterialDTO,
-	StockMaterialFilter,
 	StockRequestResponse,
 	StockRequestStockMaterialDTO,
 } from '../models/stock-requests.model'
@@ -76,28 +72,6 @@ class StockRequestsService {
 
 	async setCompletedStatus(requestId: number) {
 		const response = await apiClient.patch(`${this.baseUrl}/status/${requestId}/completed`)
-		return response.data
-	}
-
-	async getLowStockIngredients() {
-		const response = await apiClient.get<LowStockIngredientResponse[]>(`${this.baseUrl}/low-stock`)
-		return response.data
-	}
-
-	async getAllStockMaterials(filter?: StockMaterialFilter) {
-		const response = await apiClient.get<PaginatedResponse<StockMaterialDTO[]>>(
-			`${this.baseUrl}/materials`,
-			{
-				params: filter,
-			},
-		)
-		return response.data
-	}
-
-	async getStockMaterialsByIngredient(ingredientId: number) {
-		const response = await apiClient.get<StockMaterialAvailabilityDTO>(
-			`${this.baseUrl}/materials/${ingredientId}`,
-		)
 		return response.data
 	}
 }

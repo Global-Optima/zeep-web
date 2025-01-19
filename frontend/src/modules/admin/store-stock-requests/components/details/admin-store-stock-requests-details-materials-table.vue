@@ -33,7 +33,7 @@
 						v-for="(item, index) in stockRequest.stockMaterials"
 						:key="index"
 					>
-						<TableCell>{{ item.name }}</TableCell>
+						<TableCell>{{ item.stockMaterial.name }}</TableCell>
 						<TableCell>{{ item.packageMeasures.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>

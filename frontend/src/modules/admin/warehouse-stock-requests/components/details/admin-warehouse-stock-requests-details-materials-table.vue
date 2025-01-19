@@ -20,7 +20,7 @@
 						v-for="(item, index) in items"
 						:key="index"
 					>
-						<TableCell>{{ item.name }}</TableCell>
+						<TableCell>{{ item.stockMaterial.name }}</TableCell>
 						<TableCell>{{ item.packageMeasures.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>
@@ -45,10 +45,10 @@ import {
   TableHeader,
   TableRow
 } from '@/core/components/ui/table'
-import type { StockRequestStockMaterialResponse } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import type { StockRequestMaterial } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 
 defineProps<{
-  items: StockRequestStockMaterialResponse[]
+  items: StockRequestMaterial[]
 }>()
 </script>
 

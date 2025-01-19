@@ -1,4 +1,4 @@
-export interface Store {
+export interface StoreDTO {
 	id: number
 	name: string
 	isFranchise: boolean

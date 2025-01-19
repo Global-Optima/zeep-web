@@ -139,31 +139,31 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/core/components/ui/card'
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Label } from '@/core/components/ui/label'
 import { Switch } from '@/core/components/ui/switch'
 import type { UpdateStoreDTO } from '@/modules/stores/models/stores-dto.model'
-import type { Store } from '@/modules/stores/models/stores.models'
+import type { StoreDTO } from '@/modules/stores/models/stores.models'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
 // Props
 const props = defineProps<{
-	initialData: Partial<Store>
+	initialData: Partial<StoreDTO>
 }>()
 
 const emit = defineEmits<{

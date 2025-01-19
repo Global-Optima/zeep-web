@@ -1,4 +1,7 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { StoreDTO } from '@/modules/stores/models/stores.models'
+import type { Warehouse } from '@/modules/warehouse/models/warehouse.model'
+import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
 
 export enum StockRequestStatus {
 	CREATED = 'CREATED',
@@ -75,42 +78,18 @@ export interface UpdateIngredientDates {
 // Stock request response object
 export interface StockRequestResponse {
 	requestId: number
-	store: StockRequestStoreDTO
-	warehouse: StockRequestWarehouseDTO
+	store: StoreDTO
+	warehouse: Warehouse
 	status: StockRequestStatus
-	stockMaterials: StockRequestStockMaterialResponse[]
+	stockMaterials: StockRequestMaterial[]
 	createdAt: string // ISO Date string
 	updatedAt: string // ISO Date string
 }
 
-// Store details in stock request
-export interface StockRequestStoreDTO {
-	id: number
-	name: string
-	address: string
-}
-
-// Warehouse details in stock request
-export interface StockRequestWarehouseDTO {
-	id: number
-	name: string
-}
-
 // Stock material response for a stock request
-export interface StockRequestStockMaterialResponse {
-	stockMaterialId: number
-	name: string
-	category: string
+export interface StockRequestMaterial {
+	stockMaterial: StockMaterialsDTO
 	packageMeasures: PackageMeasure
-}
-
-// Response for low-stock ingredients
-export interface LowStockIngredientResponse {
-	ingredientId: number
-	name: string
-	unit: string
-	quantity: number
-	lowStockThreshold: number
 }
 
 // Filters for fetching stock requests
@@ -120,29 +99,4 @@ export interface GetStockRequestsFilter extends PaginationParams {
 	startDate?: string // ISO Date string
 	endDate?: string // ISO Date string
 	statuses?: StockRequestStatus[] // Use a string enum for `data.StockRequestStatus`
-}
-
-// DTO for stock material details
-export interface StockMaterialDTO {
-	stockMaterialId: number
-	name: string
-	category: string
-	unit: string
-	availableQuantity: number
-}
-
-// Availability details for stock material
-export interface StockMaterialAvailabilityDTO {
-	stockMaterialId: number
-	name: string
-	category: string
-	unit: string
-	availableQuantity: number
-	warehouse: StockRequestWarehouseDTO
-}
-
-// Filters for fetching stock materials
-export interface StockMaterialFilter {
-	category?: string
-	search?: string
 }

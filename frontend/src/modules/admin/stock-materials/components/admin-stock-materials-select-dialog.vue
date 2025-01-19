@@ -33,7 +33,7 @@
 						>
 							<span class="flex-1">{{ stockMaterial.name }}</span>
 							<span class="text-gray-500 text-sm">
-								{{ stockMaterial.category }}
+								{{ stockMaterial.category.name }}
 							</span>
 						</li>
 					</ul>
