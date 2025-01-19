@@ -26,26 +26,30 @@ func ConvertToEmployeeAuditDTO(audit *data.EmployeeAudit) (*EmployeeAuditDTO, er
 	}, nil
 }
 
-func MapToEmployeeAudit(c *gin.Context, action data.AuditAction, details data.AuditDetails) (*data.EmployeeAudit, error) {
+func MapToEmployeeAudit(c *gin.Context, action AuditAction) (*data.EmployeeAudit, error) {
 	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
 	if err != nil {
 		return nil, err
 	}
+
+	core := action.GetActionCore()
+
+	action.GetActionDetails()
 
 	method, err := data.ToHTTPMethod(c.Request.Method)
 	if err != nil {
 		return nil, err
 	}
 
-	detailsJSONB, err := details.ToDetails()
+	detailsJSONB, err := action.GetActionDetails().ToDetails()
 	if err != nil {
 		return nil, err
 	}
 
 	return &data.EmployeeAudit{
 		EmployeeID:    claims.EmployeeClaimsData.ID,
-		OperationType: action.OperationType,
-		ComponentName: action.ComponentName,
+		OperationType: core.OperationType,
+		ComponentName: core.ComponentName,
 		Details:       detailsJSONB,
 		IPAddress:     c.ClientIP(),
 		ResourceUrl:   c.Request.URL.String(),

@@ -72,16 +72,11 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.CreateProduct(&input)
+	_, err := h.service.CreateProduct(&input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
 	}
-
-	_ = h.auditService.RecordEmployeeAction(c, data.CreateOperation, data.ProductComponent,
-		&data.BaseDetails{
-			ID: id,
-		})
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
@@ -130,15 +125,11 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.CreateProductSize(&input)
+	_, err := h.service.CreateProductSize(&input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
 	}
-
-	_ = h.auditService.RecordEmployeeAction(c, data.CreateOperation, data.ProductSizeComponent,
-		&data.BaseDetails{ID: id},
-	)
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
@@ -162,15 +153,6 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	_ = h.auditService.RecordEmployeeAction(c, data.UpdateOperation, data.ProductComponent,
-		&data.UpdateDetails[types.UpdateProductDTO]{
-			ItemDetails: data.ItemDetails[types.UpdateProductDTO]{
-				BaseDetails:  data.BaseDetails{ID: uint(productID)},
-				CustomFields: *input,
-			},
-		},
-	)
-
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
 }
 
@@ -193,15 +175,6 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		return
 	}
 
-	_ = h.auditService.RecordEmployeeAction(c, data.UpdateOperation, data.ProductComponent,
-		&data.UpdateDetails[types.UpdateProductSizeDTO]{
-			ItemDetails: data.ItemDetails[types.UpdateProductSizeDTO]{
-				BaseDetails:  data.BaseDetails{ID: uint(productSizeID)},
-				CustomFields: *input,
-			},
-		},
-	)
-
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
 }
 
@@ -217,10 +190,6 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		utils.SendInternalServerError(c, "Failed to delete product")
 		return
 	}
-
-	_ = h.auditService.RecordEmployeeAction(c, data.DeleteOperation, data.ProductComponent,
-		&data.BaseDetails{ID: uint(productID)},
-	)
 
 	utils.SendMessageWithStatus(c, "product deleted successfully", http.StatusOK)
 }

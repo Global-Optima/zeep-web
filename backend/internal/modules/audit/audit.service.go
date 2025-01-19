@@ -2,17 +2,14 @@ package audit
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-var AuditActionDetailsMap = map[data.AuditAction]func() data.AuditDetails{}
-
 type AuditService interface {
-	RecordEmployeeAction(c *gin.Context, operationType data.OperationType, componentName data.ComponentName, details data.AuditDetails) error
+	RecordEmployeeAction(c *gin.Context, action types.AuditAction) error
 	GetAuditRecords(filter *types.EmployeeAuditFilter) ([]types.EmployeeAuditDTO, error)
 	GetAuditRecordByID(id uint) (*types.EmployeeAuditDTO, error)
 }
@@ -29,11 +26,12 @@ func NewAuditService(repo AuditRepository, logger *zap.SugaredLogger) AuditServi
 	}
 }
 
-func (s *auditService) RecordEmployeeAction(c *gin.Context, operationType data.OperationType, componentName data.ComponentName, details data.AuditDetails) error {
-	audit, err := types.MapToEmployeeAudit(c, data.AuditAction{OperationType: operationType, ComponentName: componentName}, details)
+func (s *auditService) RecordEmployeeAction(c *gin.Context, action types.AuditAction) error {
+	audit, err := types.MapToEmployeeAudit(c, action)
+	core := action.GetActionCore()
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to map audit record for '%s %s' action: %w",
-			operationType, componentName, err)
+		wrappedErr := fmt.Errorf("failed to map audit record for '%v' action: %w",
+			core, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
@@ -41,7 +39,7 @@ func (s *auditService) RecordEmployeeAction(c *gin.Context, operationType data.O
 	_, err = s.repo.CreateAuditRecord(audit)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to save audit record for '%s %s' action: %w",
-			operationType, componentName, err)
+			core.OperationType, core.ComponentName, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}

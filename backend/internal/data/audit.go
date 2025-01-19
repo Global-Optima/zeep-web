@@ -1,14 +1,12 @@
 package data
 
 import (
-	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/audit"
 	"github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"net/http"
-	"reflect"
-	"strings"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -60,39 +58,26 @@ func (b *BaseDetails) ToDetails() ([]byte, error) {
 	return ToJSONB(b, false)
 }
 
-type ItemDetails[T CustomFields] struct {
-	BaseDetails
-	CustomFields T
-}
-
-type MultipleCreationDetails[T CustomFields] struct {
-	BaseDetails  []BaseDetails
-	CustomFields T
-}
-
-func (d *MultipleCreationDetails[T]) ToDetails() ([]byte, error) {
-	return ToJSONB(d, false)
-}
-
-type CustomFields interface {
+type DTO interface {
 	any
 }
 
-type UpdateDetails[T CustomFields] struct {
-	ItemDetails[T]
+type ExtendedDetails struct {
+	BaseDetails
+	DTO
 }
 
-func (d *UpdateDetails[T]) ToDetails() ([]byte, error) {
+func (d *ExtendedDetails) ToDetails() ([]byte, error) {
 	return ToJSONB(d, true)
 }
 
-type AuditAction struct {
-	OperationType OperationType
-	ComponentName ComponentName
+type MultipleItemDetails[T any] struct {
+	IDs []uint `json:"ids"`
+	DTO T
 }
 
-func (a AuditAction) ToString() string {
-	return a.OperationType.ToString() + " " + a.ComponentName.ToString()
+func (d *MultipleItemDetails[T]) ToDetails() ([]byte, error) {
+	return ToJSONB(d, false)
 }
 
 type HTTPMethod string
@@ -132,7 +117,7 @@ func ToJSONB(input interface{}, excludeEmptyFields bool) ([]byte, error) {
 	var err error
 
 	if excludeEmptyFields {
-		fields, err = ExcludeEmptyJSONFields(input)
+		fields, err = audit.ExcludeEmptyJSONFields(input)
 		if err != nil {
 			return nil, err
 		}
@@ -142,86 +127,4 @@ func ToJSONB(input interface{}, excludeEmptyFields bool) ([]byte, error) {
 	logrus.Info(fields)
 
 	return json.Marshal(fields)
-}
-
-func ExcludeEmptyJSONFields(input interface{}) (map[string]interface{}, error) {
-	if input == nil {
-		return nil, errors.New("input is nil")
-	}
-
-	val := reflect.ValueOf(input)
-
-	// Unwrap multiple pointer levels safely
-	for val.Kind() == reflect.Ptr {
-		if val.IsNil() {
-			return nil, errors.New("nil pointer encountered while unwrapping")
-		}
-		val = val.Elem()
-	}
-
-	// Ensure final value is a struct
-	if val.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("expected a struct or pointer-to-struct, got %s", val.Kind())
-	}
-
-	typ := val.Type()
-	changes := make(map[string]interface{})
-
-	for i := 0; i < val.NumField(); i++ {
-		fieldValue := val.Field(i)
-		fieldType := typ.Field(i)
-
-		// Skip unexported fields
-		if !fieldValue.CanInterface() {
-			continue
-		}
-
-		// Parse JSON tag
-		jsonTag := fieldType.Tag.Get("json")
-		jsonName := strings.Split(jsonTag, ",")[0]
-		// Use the field name if no JSON name is provided
-		if jsonName == "" || jsonName == "-" {
-			jsonName = fieldType.Name
-		}
-
-		// Handle embedded or anonymous fields and CustomFields
-		if fieldType.Anonymous || jsonName == "CustomFields" {
-			embeddedFields, err := ExcludeEmptyJSONFields(fieldValue.Interface())
-			if err != nil {
-				continue
-			}
-
-			// Merge embedded fields directly into the parent map
-			for key, value := range embeddedFields {
-				changes[key] = value
-			}
-			continue
-		}
-
-		// Handle nested structs or pointers to structs
-		if fieldValue.Kind() == reflect.Struct ||
-			(fieldValue.Kind() == reflect.Ptr && fieldValue.Elem().Kind() == reflect.Struct) {
-
-			nested, err := ExcludeEmptyJSONFields(fieldValue.Interface())
-			if err != nil {
-				continue
-			}
-
-			// Only add this field if the nested map is not empty
-			if len(nested) > 0 {
-				changes[jsonName] = nested
-			}
-			continue
-		}
-
-		// Non-struct field: do zero-check
-		zero := reflect.Zero(fieldValue.Type()).Interface()
-		current := fieldValue.Interface()
-
-		if !reflect.DeepEqual(current, zero) {
-			changes[jsonName] = current
-		}
-	}
-
-	return changes, nil
 }

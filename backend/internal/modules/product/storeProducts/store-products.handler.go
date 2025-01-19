@@ -122,23 +122,23 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.CreateStoreProduct(storeID, &dto)
+	_, err := h.service.CreateStoreProduct(storeID, &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to create store product")
 		return
 	}
 	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
 
-	createDetails := types.CreateStoreProductAuditDTO{
+	/*createDetails := types.AuditStoreProductDTO{
 		StoreID: storeID,
 	}
 
 	_ = h.auditService.RecordEmployeeAction(c, data.CreateOperation, data.StoreProductComponent,
-		&data.ItemDetails[types.CreateStoreProductAuditDTO]{
-			BaseDetails:  data.BaseDetails{ID: id},
-			CustomFields: createDetails,
+		&data.ExtendedDetails{
+			BaseDetails: data.BaseDetails{ID: id},
+			DTO:         createDetails,
 		},
-	)
+	)*/
 
 }
 
@@ -156,28 +156,23 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		return
 	}
 
-	ids, err := h.service.CreateMultipleStoreProducts(storeID, dto)
+	_, err := h.service.CreateMultipleStoreProducts(storeID, dto)
 	if err != nil {
 		msg := fmt.Sprintf("failed to create %d store products", dtoLength)
 		utils.SendInternalServerError(c, msg)
 		return
 	}
 
-	createDetails := types.CreateStoreProductAuditDTO{
+	/*createDetails := types.AuditStoreProductDTO{
 		StoreID: storeID,
 	}
 
-	baseDetails := make([]data.BaseDetails, len(ids))
-	for i, id := range ids {
-		baseDetails[i] = data.BaseDetails{ID: id}
-	}
-
 	_ = h.auditService.RecordEmployeeAction(c, data.CreateMultipleOperation, data.StoreProductComponent,
-		&data.MultipleCreationDetails[types.CreateStoreProductAuditDTO]{
-			BaseDetails:  baseDetails,
-			CustomFields: createDetails,
+		&data.MultipleItemDetails[types.AuditStoreProductDTO]{
+			IDs: ids,
+			DTO: createDetails,
 		},
-	)
+	)*/
 
 	msg := fmt.Sprintf("%d store product created successfully", dtoLength)
 	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
@@ -208,6 +203,12 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to update store product")
 		return
 	}
+
+	action := types.UpdateStoreProductAuditFactory(&data.BaseDetails{
+		ID: uint(storeProductID),
+	}, &dto)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
 }

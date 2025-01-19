@@ -82,6 +82,6 @@ type StoreProductSizesFilterDTO struct {
 	MaxSize    *int    `form:"maxSize" binding:"omitempty,gt=0"`
 }
 
-type CreateStoreProductAuditDTO struct {
+type AuditStoreProductDTO struct {
 	StoreID uint `json:"storeId"`
 }
