@@ -50,9 +50,11 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.GetStockRequestsFilter
 
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+	storeID, storeErr := contexts.GetStoreId(c)
+	warehouseID, warehouseErr := contexts.GetWarehouseId(c)
+
+	if storeErr != nil && warehouseErr != nil {
+		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 	filter.StoreID = &storeID
@@ -64,9 +66,22 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 
 	filter.Pagination = utils.ParsePagination(c)
 
-	requests, err := h.service.GetStockRequests(filter)
+	var requests []types.StockRequestResponse
+	var err error
+
+	if storeErr == nil {
+		filter.StoreID = &storeID
+		requests, err = h.service.GetStockRequests(filter)
+	}
+
+	if warehouseErr == nil {
+		filter.WarehouseID = &warehouseID
+		filter.Statuses = types.FilterWarehouseStatuses(filter.Statuses)
+		requests, err = h.service.GetStockRequests(filter)
+	}
+
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch requests")
+		utils.SendInternalServerError(c, "Failed to fetch stock requests")
 		return
 	}
 
