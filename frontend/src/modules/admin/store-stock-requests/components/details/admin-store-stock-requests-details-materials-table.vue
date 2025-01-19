@@ -4,9 +4,7 @@
 			<div class="flex justify-between items-start gap-4">
 				<div>
 					<CardTitle>Список материалов</CardTitle>
-					<CardDescription class="mt-2">
-						Материалы представленные в заказе
-					</CardDescription>
+					<CardDescription class="mt-2"> Материалы представленные в заказе </CardDescription>
 				</div>
 
 				<Button
@@ -64,7 +62,7 @@ import { Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-const showEditButtonStatuses: StockRequestStatus[] = [StockRequestStatus.CREATED]
+const showEditButtonStatuses: StockRequestStatus[] = [StockRequestStatus.CREATED, StockRequestStatus.REJECTED_BY_WAREHOUSE]
 
 const {stockRequest} = defineProps<{
   stockRequest: StockRequestResponse

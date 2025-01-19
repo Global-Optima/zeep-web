@@ -3,7 +3,10 @@
 		:open="open"
 		@update:open="$emit('close')"
 	>
-		<DialogContent :include-close-button="false">
+		<DialogContent
+			:include-close-button="false"
+			class="w-full max-w-3xl"
+		>
 			<DialogHeader>
 				<DialogTitle>Принять с изменениями</DialogTitle>
 				<DialogDescription>
@@ -17,8 +20,9 @@
 				<Textarea
 					id="comment"
 					v-model="comment"
-					placeholder="Например: Количество скорректировано из-за пересортицы..."
+					placeholder="Оставьте комменатрий"
 					rows="2"
+					class="mt-1"
 				/>
 			</div>
 
@@ -30,7 +34,7 @@
 							<TableHead>Материал</TableHead>
 							<TableHead>Ожидалось</TableHead>
 							<TableHead>Фактически</TableHead>
-							<TableHead class="text-center">Действия</TableHead>
+							<TableHead class="text-center"></TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -57,7 +61,7 @@
 									class="text-red-500 hover:text-red-700"
 									@click="removeItem(idx)"
 								>
-									<Trash class="w-4 h-4" />
+									<Trash class="w-5 h-5" />
 								</Button>
 							</TableCell>
 						</TableRow>
@@ -75,7 +79,7 @@
 			</div>
 
 			<!-- ADD MATERIAL BUTTON -->
-			<div class="flex justify-end mt-4">
+			<div class="flex justify-center mt-4">
 				<Button
 					variant="outline"
 					@click="openSelectDialog = true"
@@ -166,16 +170,11 @@ const editableItems = ref<EditableMaterialRow[]>([])
 /**
  * Convert the incoming StockRequestMaterial[] into simpler EditableMaterialRow[].
  */
-function toEditableRow(item: StockRequestMaterial): EditableMaterialRow {
-  return {
-    stockMaterialId: item.stockMaterial.id,
-    name: item.stockMaterial.name,
-    // We can treat `packageMeasures.quantity` as "expected" by default
-    expectedQuantity: item.packageMeasures.quantity,
-    // Start with the same quantity or 0, depending on your logic
-    quantity: item.packageMeasures.quantity
-  }
-}
+
+
+// The comment the user can provide
+const comment = ref('')
+const openSelectDialog = ref(false)
 
 /** Initialize / watch for changes in props.initialItems. */
 watch(
@@ -187,11 +186,16 @@ watch(
   { immediate: true, deep: true }
 )
 
-// The comment the user can provide
-const comment = ref('')
-
-// Whether to show the "select material" dialog
-const openSelectDialog = ref(false)
+function toEditableRow(item: StockRequestMaterial): EditableMaterialRow {
+  return {
+    stockMaterialId: item.stockMaterial.id,
+    name: item.stockMaterial.name,
+    // We can treat `packageMeasures.quantity` as "expected" by default
+    expectedQuantity: item.packageMeasures.quantity,
+    // Start with the same quantity or 0, depending on your logic
+    quantity: item.packageMeasures.quantity
+  }
+}
 
 /**
  * Called when the user picks a new material from AdminStockMaterialsSelectDialog.
@@ -199,6 +203,8 @@ const openSelectDialog = ref(false)
  */
 function addMaterial(material: { id: number; name: string }) {
   openSelectDialog.value = false
+  if (editableItems.value.some(item => item.stockMaterialId === material.id)) return
+  
   editableItems.value.push({
     stockMaterialId: material.id,
     name: material.name,

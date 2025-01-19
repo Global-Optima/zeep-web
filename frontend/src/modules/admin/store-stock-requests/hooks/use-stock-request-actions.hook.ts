@@ -52,7 +52,7 @@ export function getActions(status: StockRequestStatus, role: EmployeeRole): Stoc
 				return [
 					{
 						type: 'DIRECT',
-						label: 'Исправить и повторно отправить на склад',
+						label: 'Исправить и повторно отправить',
 						variant: 'default',
 						handler: id => stockRequestsService.setProcessedStatus(id),
 					},
