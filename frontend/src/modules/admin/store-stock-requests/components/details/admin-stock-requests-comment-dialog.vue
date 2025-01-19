@@ -3,9 +3,6 @@
 		:open="open"
 		@update:open="$emit('close')"
 	>
-		<DialogHeader>
-			<DialogTitle>Укажите причину</DialogTitle>
-		</DialogHeader>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
 				<DialogTitle>Укажите причину</DialogTitle>
