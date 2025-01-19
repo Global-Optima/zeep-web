@@ -103,6 +103,16 @@ export function getActions(status: StockRequestStatus, role: EmployeeRole): Stoc
 					},
 				]
 
+			case StockRequestStatus.REJECTED_BY_STORE:
+				return [
+					{
+						type: 'DIRECT',
+						label: 'Исправить и повторно отправить',
+						variant: 'default',
+						handler: id => stockRequestsService.setInDeliveryStatus(id),
+					},
+				]
+
 			default:
 				return []
 		}

@@ -84,6 +84,8 @@ export interface StockRequestResponse {
 	stockMaterials: StockRequestMaterial[]
 	createdAt: string // ISO Date string
 	updatedAt: string // ISO Date string
+	warehouseComment?: string
+	storeComment?: string
 }
 
 // Stock material response for a stock request

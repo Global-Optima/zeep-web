@@ -11,30 +11,16 @@
 
 		<CardContent>
 			<div class="space-y-4">
-				<!-- Request details remain the same -->
-				<div>
-					<p class="text-muted-foreground text-sm">Номер заявки</p>
-					<p>{{ request.requestId }}</p>
-				</div>
-				<div>
-					<p class="text-muted-foreground text-sm">Магазин</p>
-					<p>{{ request.store.name }}</p>
-				</div>
-				<div>
-					<p class="text-muted-foreground text-sm">Склад</p>
-					<p>{{ request.warehouse.name }}</p>
-				</div>
-				<div>
-					<p class="text-muted-foreground text-sm">Статус</p>
-					<p>{{ statusFormatted }}</p>
-				</div>
-				<div>
-					<p class="text-muted-foreground text-sm">Дата создания</p>
-					<p>{{ new Date(request.createdAt).toLocaleDateString() }}</p>
-				</div>
-				<div>
-					<p class="text-muted-foreground text-sm">Дата обновления</p>
-					<p>{{ new Date(request.updatedAt).toLocaleDateString() }}</p>
+				<!-- Iterate over predefined requestDetails array -->
+				<div
+					v-for="detail in requestDetails"
+					:key="detail.label"
+				>
+					<p class="mb-1 text-muted-foreground text-sm">{{ detail.label }}</p>
+					<p v-if="detail.value">
+						{{ detail.value }}
+					</p>
+					<p v-else>Отсутствует</p>
 				</div>
 			</div>
 		</CardContent>
@@ -68,14 +54,30 @@ import { type StockRequestResponse, STOCK_REQUEST_STATUS_FORMATTED } from '@/mod
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { computed } from 'vue'
 
+// Props
 const props = defineProps<{ request: StockRequestResponse }>()
 
-const {currentEmployee} = useEmployeeAuthStore()
+// Current user role
+const { currentEmployee } = useEmployeeAuthStore()
 const userRole = computed(() => currentEmployee?.role)
 
-const statusFormatted = computed(() => {
-  return STOCK_REQUEST_STATUS_FORMATTED[props.request.status]
-})
+// Predefined array for request details
+const requestDetails = computed(() => [
+  { label: 'Номер заявки', value: props.request.requestId },
+  { label: 'Магазин', value: props.request.store.name },
+  { label: 'Склад', value: props.request.warehouse.name },
+  { label: 'Статус', value: STOCK_REQUEST_STATUS_FORMATTED[props.request.status] },
+  {
+    label: 'Дата создания',
+    value: new Date(props.request.createdAt).toLocaleDateString('ru-RU'),
+  },
+  {
+    label: 'Дата обновления',
+    value: new Date(props.request.updatedAt).toLocaleDateString('ru-RU'),
+  },
+  { label: 'Комментарий от заказчика', value: props.request.storeComment },
+  { label: 'Комментарий от Склада', value: props.request.warehouseComment },
+])
 </script>
 
 <style scoped></style>
