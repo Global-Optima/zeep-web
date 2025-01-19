@@ -2,6 +2,7 @@ package stockRequests
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -39,7 +40,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 
 	requestID, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create stock requests")
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to create stock requests: %s", err.Error()))
 		return
 	}
 
@@ -109,7 +110,7 @@ func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 	}
 
 	if err := h.service.AcceptStockRequestWithChange(uint(stockRequestID), dto); err != nil {
-		utils.SendInternalServerError(c, "Failed to update status")
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -129,7 +130,7 @@ func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
 	}
 
 	if err := h.service.RejectStockRequestByStore(uint(stockRequestID), dto); err != nil {
-		utils.SendInternalServerError(c, "Failed to update status")
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -149,7 +150,7 @@ func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 	}
 
 	if err := h.service.RejectStockRequestByWarehouse(uint(stockRequestID), dto); err != nil {
-		utils.SendInternalServerError(c, "Failed to update status")
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -163,7 +164,7 @@ func (h *StockRequestHandler) SetProcessedStatus(c *gin.Context) {
 	}
 
 	if err := h.service.SetProcessedStatus(uint(stockRequestID)); err != nil {
-		utils.SendInternalServerError(c, "Failed to update status")
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -177,7 +178,7 @@ func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 	}
 
 	if err := h.service.SetInDeliveryStatus(uint(stockRequestID)); err != nil {
-		utils.SendInternalServerError(c, "Failed to update status")
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -191,7 +192,7 @@ func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
 	}
 
 	if err := h.service.SetCompletedStatus(uint(stockRequestID)); err != nil {
-		utils.SendInternalServerError(c, "Failed to update status")
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
