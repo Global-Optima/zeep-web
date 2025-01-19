@@ -22,7 +22,7 @@ const route = useRoute()
 const stockRequestId = route.params.id as string
 
 const { data: stockRequest } = useQuery({
-  queryKey: computed(() => ['stock-request', stockRequestId]),
+  queryKey: computed(() => ['stock-request', Number(stockRequestId)]),
 	queryFn: () => stockRequestsService.getStockRequestById(Number(stockRequestId)),
   enabled: !isNaN(Number(stockRequestId)),
 })
@@ -31,7 +31,7 @@ const updateMutation = useMutation({
 	mutationFn: (props: {id: number, dto: StockRequestStockMaterialDTO[]}) => stockRequestsService.updateStockRequestMaterials(props.id, props.dto),
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['stock-requests'] })
-    queryClient.invalidateQueries({ queryKey: ['stock-request', stockRequestId] })
+    queryClient.invalidateQueries({ queryKey: ['stock-request', Number(stockRequestId)] })
 		router.back()
 	},
 })

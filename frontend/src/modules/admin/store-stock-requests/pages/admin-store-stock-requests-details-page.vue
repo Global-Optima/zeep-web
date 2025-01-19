@@ -32,7 +32,7 @@ const storeStockRequestId = route.params.id as string
 const {
   data: stockRequest,
 } = useQuery({
-  queryKey: computed(() => ['stock-request', storeStockRequestId]),
+  queryKey: computed(() => ['stock-request', Number(storeStockRequestId)]),
   queryFn: () => stockRequestsService.getStockRequestById(Number(storeStockRequestId)),
   enabled: !isNaN(Number(storeStockRequestId)),
 })

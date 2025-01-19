@@ -291,7 +291,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, in
 		{
 			stockRoutes.POST("/add", handler.AddToStock)
 			stockRoutes.POST("/deduct", handler.DeductFromStock)
-			stockRoutes.GET("", handler.GetStock)
+			stockRoutes.GET("", handler.GetStocks)
 			stockRoutes.GET("/:stockMaterialId", handler.GetStockMaterialDetails)
 			stockRoutes.POST("/reset", handler.ResetStock)
 
