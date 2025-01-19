@@ -39,12 +39,17 @@ class StockRequestsService {
 		return response.data
 	}
 
+	async addStockMaterialToLatestCart(item: StockRequestStockMaterialDTO) {
+		const response = await apiClient.post(`${this.baseUrl}/add-material-to-latest-cart`, item)
+		return response.data
+	}
+
 	async deleteStockRequest(requestId: number) {
 		const response = await apiClient.delete(`${this.baseUrl}/${requestId}`)
 		return response.data
 	}
 
-	async acceptWithChange(requestId: number, data: AcceptWithChangeRequestStatusDTO) {
+	async acceptWithChanges(requestId: number, data: AcceptWithChangeRequestStatusDTO) {
 		const response = await apiClient.patch(
 			`${this.baseUrl}/status/${requestId}/accept-with-change`,
 			data,
@@ -72,6 +77,11 @@ class StockRequestsService {
 
 	async setCompletedStatus(requestId: number) {
 		const response = await apiClient.patch(`${this.baseUrl}/status/${requestId}/completed`)
+		return response.data
+	}
+
+	async setProcessedStatus(requestId: number) {
+		const response = await apiClient.patch(`${this.baseUrl}/status/${requestId}/processed`)
 		return response.data
 	}
 }

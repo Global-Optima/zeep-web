@@ -317,7 +317,7 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 		router.GET("/current", handler.GetLastCreatedStockRequest)
 		router.PUT("/:requestId", handler.UpdateStockRequest)
 		router.DELETE("/:requestId", handler.DeleteStockRequest)
-		router.PUT("/:requestId/add-material", handler.AddStockMaterialToCart)
+		router.POST("/add-material-to-latest-cart", handler.AddStockMaterialToCart)
 
 		statusGroup := router.Group("/status/:requestId")
 		{
