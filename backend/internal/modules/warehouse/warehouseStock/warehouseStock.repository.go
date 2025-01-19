@@ -396,7 +396,9 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
 		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit")
+		Preload("StockMaterial.Package.Unit").
+		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
+		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 
 	// Apply filters
 	if filter.WarehouseID != nil {
@@ -408,8 +410,7 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	}
 
 	if filter.IngredientID != nil {
-		query = query.Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id").
-			Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
+		query = query.Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
 	}
 
 	if filter.LowStockOnly != nil && *filter.LowStockOnly {
@@ -423,19 +424,16 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		}
 
 		expirationThreshold := time.Now().AddDate(0, 0, days)
-		query = query.Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
-			Where("supplier_warehouse_deliveries.expiration_date <= ?", expirationThreshold)
+		query = query.Where("supplier_warehouse_deliveries.expiration_date <= ?", expirationThreshold)
 	}
 
 	if filter.CategoryID != nil {
-		query = query.Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id").
-			Where("stock_materials.category_id = ?", *filter.CategoryID)
+		query = query.Where("stock_materials.category_id = ?", *filter.CategoryID)
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
 		search := "%" + *filter.Search + "%"
-		query = query.Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id").
-			Where("stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_materials.barcode ILIKE ?", search, search, search)
+		query = query.Where("stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_materials.barcode ILIKE ?", search, search, search)
 	}
 
 	if err := query.Count(&totalCount).Error; err != nil {
