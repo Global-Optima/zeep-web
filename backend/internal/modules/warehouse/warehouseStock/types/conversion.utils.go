@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func ConvertExistingItemsToStockRequest(items []ExistingInventoryItem, db *gorm.DB) ([]data.StockRequestIngredient, error) {
+func ConvertExistingItemsToStockRequest(items []ExistingWarehouseStockMaterial, db *gorm.DB) ([]data.StockRequestIngredient, error) {
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {

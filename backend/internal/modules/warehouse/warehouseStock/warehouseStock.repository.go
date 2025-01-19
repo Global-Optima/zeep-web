@@ -19,7 +19,7 @@ type WarehouseStockRepository interface {
 	GetDeliveryByID(deliveryID uint, delivery *data.SupplierWarehouseDelivery) error
 	GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]data.SupplierWarehouseDelivery, error)
 
-	ConvertInventoryItemsToStockRequest(items []types.ExistingInventoryItem) ([]data.StockRequestIngredient, error)
+	ConvertInventoryItemsToStockRequest(items []types.ExistingWarehouseStockMaterial) ([]data.StockRequestIngredient, error)
 	SupplierMaterialExists(supplierID, stockMaterialID uint) (bool, error)
 	CreateSupplierMaterial(association *data.SupplierMaterial) error
 
@@ -173,7 +173,7 @@ func (r *warehouseStockRepository) GetDeliveries(warehouseID *uint, startDate, e
 	return deliveries, err
 }
 
-func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []types.ExistingInventoryItem) ([]data.StockRequestIngredient, error) {
+func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []types.ExistingWarehouseStockMaterial) ([]data.StockRequestIngredient, error) {
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
