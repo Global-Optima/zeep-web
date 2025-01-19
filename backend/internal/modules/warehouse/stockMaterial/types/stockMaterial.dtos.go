@@ -1,6 +1,11 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
+	stockMaterialCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type CreateStockMaterialDTO struct {
 	Name                   string  `json:"name" binding:"required"`
@@ -29,20 +34,19 @@ type UpdateStockMaterialDTO struct {
 }
 
 type StockMaterialsDTO struct {
-	ID                     uint    `json:"id"`
-	Name                   string  `json:"name"`
-	Description            string  `json:"description"`
-	SafetyStock            float64 `json:"safetyStock"`
-	ExpirationFlag         bool    `json:"expirationFlag"`
-	UnitID                 uint    `json:"unitId"`
-	UnitName               string  `json:"unitName,omitempty"`
-	Category               string  `json:"category"`
-	Barcode                string  `json:"barcode"`
-	Ingredient             string  `json:"ingredient"`
-	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
-	IsActive               bool    `json:"isActive"`
-	CreatedAt              string  `json:"createdAt"`
-	UpdatedAt              string  `json:"updatedAt"`
+	ID                     uint                                                     `json:"id"`
+	Name                   string                                                   `json:"name"`
+	Description            string                                                   `json:"description"`
+	SafetyStock            float64                                                  `json:"safetyStock"`
+	ExpirationFlag         bool                                                     `json:"expirationFlag"`
+	Barcode                string                                                   `json:"barcode"`
+	IsActive               bool                                                     `json:"isActive"`
+	Unit                   unitTypes.UnitsDTO                                       `json:"unit"`
+	Category               stockMaterialCategoryTypes.StockMaterialCategoryResponse `json:"category"`
+	Ingredient             ingredientTypes.IngredientDTO                            `json:"ingredient"`
+	ExpirationPeriodInDays int                                                      `json:"expirationPeriodInDays"`
+	CreatedAt              string                                                   `json:"createdAt"`
+	UpdatedAt              string                                                   `json:"updatedAt"`
 }
 
 type StockMaterialFilter struct {

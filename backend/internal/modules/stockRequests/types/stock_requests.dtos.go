@@ -4,6 +4,10 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	storeTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
+
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -31,39 +35,18 @@ type UpdateIngredientDates struct {
 }
 
 type StockRequestResponse struct {
-	RequestID      uint                                `json:"requestId"`
-	Store          StockRequestStoreDTO                `json:"store"`
-	Warehouse      StockRequestWarehouseDTO            `json:"warehouse"`
-	Status         data.StockRequestStatus             `json:"status"`
-	StockMaterials []StockRequestStockMaterialResponse `json:"stockMaterials"`
-	CreatedAt      time.Time                           `json:"createdAt"`
-	UpdatedAt      time.Time                           `json:"updatedAt"`
+	RequestID      uint                             `json:"requestId"`
+	Status         data.StockRequestStatus          `json:"status"`
+	Store          storeTypes.StoreDTO              `json:"store"`
+	Warehouse      warehouseTypes.WarehouseResponse `json:"warehouse"`
+	StockMaterials []StockRequestMaterial           `json:"stockMaterials"`
+	CreatedAt      time.Time                        `json:"createdAt"`
+	UpdatedAt      time.Time                        `json:"updatedAt"`
 }
 
-type StockRequestStoreDTO struct {
-	ID      uint   `json:"id"`
-	Name    string `json:"name"`
-	Address string `json:"address"`
-}
-
-type StockRequestWarehouseDTO struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
-}
-
-type StockRequestStockMaterialResponse struct {
-	StockMaterialID      uint   `json:"stockMaterialId"`
-	Name                 string `json:"name"`
-	Category             string `json:"category"`
+type StockRequestMaterial struct {
+	StockMaterial        stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
 	utils.PackageMeasure `json:"packageMeasures"`
-}
-
-type LowStockIngredientResponse struct {
-	IngredientID      uint    `json:"ingredientId"`
-	Name              string  `json:"name"`
-	Unit              string  `json:"unit"`
-	Quantity          float64 `json:"quantity"`
-	LowStockThreshold float64 `json:"lowStockThreshold"`
 }
 
 type GetStockRequestsFilter struct {
@@ -82,18 +65,4 @@ type StockMaterialDTO struct {
 	Category        string  `json:"category"`
 	Unit            string  `json:"unit"`
 	AvailableQty    float64 `json:"availableQuantity"`
-}
-
-type StockMaterialAvailabilityDTO struct {
-	StockMaterialID   uint                     `json:"stockMaterialId"`
-	Name              string                   `json:"name"`
-	Category          string                   `json:"category"`
-	Unit              string                   `json:"unit"`
-	AvailableQuantity float64                  `json:"availableQuantity"`
-	Warehouse         StockRequestWarehouseDTO `json:"warehouse"`
-}
-
-type StockMaterialFilter struct {
-	Category *string `json:"category,omitempty"`
-	Search   *string `json:"search,omitempty"`
 }
