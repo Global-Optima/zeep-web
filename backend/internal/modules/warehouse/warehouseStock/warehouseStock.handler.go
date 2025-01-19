@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -105,19 +106,20 @@ func (h *WarehouseStockHandler) DeductFromStock(c *gin.Context) {
 }
 
 func (h *WarehouseStockHandler) GetStocks(c *gin.Context) {
-	queryParams, err := types.ParseStockFilterParamsWithPagination(c)
+	var filter types.GetWarehouseStockFilterQuery
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.WarehouseStock{})
 	if err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
-	stocks, err := h.service.GetStock(queryParams)
+	stocks, err := h.service.GetStock(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch stock: "+err.Error())
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, stocks, queryParams.Pagination)
+	utils.SendSuccessResponseWithPagination(c, stocks, filter.Pagination)
 }
 
 func (h *WarehouseStockHandler) GetStockMaterialDetails(c *gin.Context) {
