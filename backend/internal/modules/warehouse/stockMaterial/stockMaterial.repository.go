@@ -38,7 +38,9 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		Preload("Unit").
 		Preload("Package").
 		Preload("StockMaterialCategory").
-		Preload("Ingredient")
+		Preload("Ingredient").
+		Preload("Ingredient.IngredientCategory").
+		Preload("Ingredient.Unit")
 
 	query = query.Where("is_active = ?", true)
 
@@ -98,6 +100,8 @@ func (r *stockMaterialRepository) GetStockMaterialByID(stockMaterialID uint) (*d
 		Preload("Package").
 		Preload("StockMaterialCategory").
 		Preload("Ingredient").
+		Preload("Ingredient.IngredientCategory").
+		Preload("Ingredient.Unit").
 		First(&stockMaterial, stockMaterialID).Error
 	if err != nil {
 		return nil, err
