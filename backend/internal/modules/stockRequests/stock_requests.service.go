@@ -23,10 +23,7 @@ type StockRequestService interface {
 	SetCompletedStatus(requestID uint) error
 	AcceptStockRequestWithChange(requestID uint, dto types.AcceptWithChangeRequestStatusDTO) error
 
-	GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error)
-	GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
 	UpdateStockRequest(requestID uint, items []types.StockRequestStockMaterialDTO) error
-	GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error)
 
 	DeleteStockRequest(requestID uint) error
 	GetLastCreatedStockRequest(storeID uint) (*types.StockRequestResponse, error)
@@ -349,28 +346,6 @@ func (s *stockRequestService) handleRejectedByStoreStatus(request *data.StockReq
 	return nil
 }
 
-func (s *stockRequestService) GetLowStockIngredients(storeID uint) ([]types.LowStockIngredientResponse, error) {
-	storeWarehouse, err := s.repo.GetStoreWarehouse(storeID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch store warehouse for store ID %d: %w", storeID, err)
-	}
-
-	lowStockItems, err := s.repo.GetLowStockIngredients(storeWarehouse.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch low stock ingredients: %w", err)
-	}
-
-	responses := []types.LowStockIngredientResponse{}
-	for _, stock := range lowStockItems {
-		responses = append(responses, types.ToLowStockIngredientResponse(stock))
-	}
-	return responses, nil
-}
-
-func (s *stockRequestService) GetAllStockMaterials(storeID uint, filter types.StockMaterialFilter) ([]types.StockMaterialDTO, error) {
-	return s.repo.GetAllStockMaterials(storeID, filter)
-}
-
 func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.StockRequestStockMaterialDTO) error {
 	request, err := s.repo.GetStockRequestByID(requestID)
 	if err != nil {
@@ -396,30 +371,6 @@ func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.S
 	}
 	return nil
 
-}
-
-func (s *stockRequestService) GetAvailableStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]types.StockMaterialAvailabilityDTO, error) {
-	stocks, err := s.repo.GetStockMaterialsByIngredient(ingredientID, warehouseID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch stock materials: %w", err)
-	}
-
-	availability := make([]types.StockMaterialAvailabilityDTO, len(stocks))
-	for i, stock := range stocks {
-		availability[i] = types.StockMaterialAvailabilityDTO{
-			StockMaterialID:   stock.StockMaterialID,
-			Name:              stock.StockMaterial.Name,
-			Category:          stock.StockMaterial.StockMaterialCategory.Name,
-			AvailableQuantity: stock.Quantity,
-			Unit:              stock.StockMaterial.Unit.Name,
-			Warehouse: types.StockRequestWarehouseDTO{
-				ID:   stock.WarehouseID,
-				Name: stock.Warehouse.Name,
-			},
-		}
-	}
-
-	return availability, nil
 }
 
 func (s *stockRequestService) DeleteStockRequest(requestID uint) error {

@@ -3,7 +3,6 @@ package stockRequests
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
@@ -208,67 +207,6 @@ func (h *StockRequestHandler) UpdateStockRequest(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Stock request ingredients updated successfully"})
-}
-
-func (h *StockRequestHandler) GetLowStockIngredients(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	ingredients, err := h.service.GetLowStockIngredients(uint(storeID))
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	utils.SendSuccessResponseWithPagination(c, ingredients, nil)
-}
-
-func (h *StockRequestHandler) GetAllStockMaterials(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	var filter types.StockMaterialFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
-		utils.SendBadRequestError(c, err.Error())
-		return
-	}
-
-	products, err := h.service.GetAllStockMaterials(uint(storeID), filter)
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	utils.SendSuccessResponseWithPagination(c, products, nil)
-}
-
-func (h *StockRequestHandler) GetStockMaterialsByIngredient(c *gin.Context) {
-	ingredientID, err := strconv.ParseUint(c.Param("ingredientId"), 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ingredient ID")
-		return
-	}
-
-	warehouseID, errH := contexts.GetWarehouseId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	wID := &warehouseID
-	availability, err := h.service.GetAvailableStockMaterialsByIngredient(uint(ingredientID), wID)
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	utils.SendSuccessResponse(c, availability)
 }
 
 func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {

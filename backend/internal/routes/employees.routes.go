@@ -320,18 +320,11 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 
 		statusGroup := router.Group("/status/:requestId")
 		{
-			statusGroup.PATCH("/accept-with-change", handler.AcceptWithChangeStatus)
-			statusGroup.PATCH("/reject-store", handler.RejectStoreStatus)
-			statusGroup.PATCH("/reject-warehouse", handler.RejectWarehouseStatus)
+			statusGroup.PATCH("/accept-with-change", handler.AcceptWithChangeStatus) // DTO with different stock material
+			statusGroup.PATCH("/reject-store", handler.RejectStoreStatus)            // Comment
+			statusGroup.PATCH("/reject-warehouse", handler.RejectWarehouseStatus)    // Comment
 			statusGroup.PATCH("/in-delivery", handler.SetInDeliveryStatus)
 			statusGroup.PATCH("/completed", handler.SetCompletedStatus)
-		}
-
-		router.GET("/low-stock", handler.GetLowStockIngredients)
-		materialsRouter := router.Group("/materials")
-		{
-			materialsRouter.GET("", handler.GetAllStockMaterials)
-			materialsRouter.GET("/:ingredientId", handler.GetStockMaterialsByIngredient)
 		}
 	}
 }
