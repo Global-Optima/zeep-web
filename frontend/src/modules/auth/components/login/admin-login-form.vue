@@ -110,7 +110,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
+import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'

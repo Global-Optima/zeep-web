@@ -1,6 +1,5 @@
-<template>
+<!-- <template>
 	<div class="flex md:flex-row flex-col gap-6">
-		<!-- Left Side: Employee Details Form -->
 		<div class="w-full md:w-2/3">
 			<Card>
 				<CardHeader>
@@ -14,9 +13,7 @@
 						@submit="submitForm"
 						class="gap-6 grid"
 					>
-						<!-- Name and Surname -->
 						<div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
-							<!-- Name -->
 							<FormField
 								name="name"
 								v-slot="{ field, errorMessage }"
@@ -32,7 +29,6 @@
 									<FormMessage v-if="errorMessage">{{ errorMessage }}</FormMessage>
 								</FormItem>
 							</FormField>
-							<!-- Surname -->
 							<FormField
 								name="surname"
 								v-slot="{ field, errorMessage }"
@@ -49,9 +45,7 @@
 								</FormItem>
 							</FormField>
 						</div>
-						<!-- Email and Phone -->
 						<div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
-							<!-- Email -->
 							<FormField
 								name="email"
 								v-slot="{ field, errorMessage }"
@@ -68,7 +62,6 @@
 									<FormMessage v-if="errorMessage">{{ errorMessage }}</FormMessage>
 								</FormItem>
 							</FormField>
-							<!-- Phone -->
 							<FormField
 								name="phone"
 								v-slot="{ field, errorMessage }"
@@ -86,7 +79,6 @@
 							</FormField>
 						</div>
 
-						<!-- Roles Selector -->
 						<FormField
 							name="role"
 							v-slot="{ field, errorMessage }"
@@ -112,7 +104,6 @@
 								<FormMessage v-if="errorMessage">{{ errorMessage }}</FormMessage>
 							</FormItem>
 						</FormField>
-						<!-- Action Buttons -->
 						<div class="flex gap-4 mt-6">
 							<Button
 								type="submit"
@@ -133,9 +124,7 @@
 			</Card>
 		</div>
 
-		<!-- Right Side: Image Upload and Working Hours -->
 		<div class="flex flex-col gap-6 w-full md:w-1/3">
-			<!-- Image Upload -->
 			<Card>
 				<CardHeader>
 					<CardTitle>Изображение профиля</CardTitle>
@@ -145,7 +134,6 @@
 					<AdminEmployeesCreateImage v-model="employee.image" />
 				</CardContent>
 			</Card>
-			<!-- Working Hours -->
 			<Card>
 				<CardHeader>
 					<CardTitle>Рабочие часы</CardTitle>
@@ -186,7 +174,6 @@ import AdminEmployeesCreateImage from '@/modules/admin/employees/components/crea
 import AdminEmployeesCreateWorkHours from '@/modules/admin/employees/components/create/admin-employees-create-work-hours.vue'
 import { EmployeeRole, type Employee, type UpdateEmployeeDto } from '@/modules/admin/employees/models/employees.models'
 
-// Props
 const props = defineProps<{
 	initialData: Employee
 }>()
@@ -196,13 +183,11 @@ const emit = defineEmits<{
 	(e: 'onCancel'): void
 }>()
 
-// Roles
 const roles = ref([
 	{ value: EmployeeRole.MANAGER, label: 'Менеджер' },
 	{ value: EmployeeRole.BARISTA, label: 'Бариста' },
 ]);
 
-// Define the Zod schema for form validation
 const schema = toTypedSchema(
 	z.object({
 		name: z.string().min(2, 'Имя должно содержать минимум 2 символа').max(50, 'Имя должно содержать не более 50 символов'),
@@ -213,13 +198,11 @@ const schema = toTypedSchema(
 	})
 );
 
-// Initialize the form with initial data
 const { handleSubmit } = useForm<UpdateEmployeeDto>({
 	validationSchema: schema,
 	initialValues: props.initialData,
 })
 
-// Employee image and working hours state
 const employee = ref({
 	image: null,
 	workingHours: {},
@@ -232,4 +215,4 @@ const submitForm = handleSubmit((formValues) => {
 const handleCancel = () => {
 	emit('onCancel')
 }
-</script>
+</script> -->

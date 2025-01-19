@@ -12,7 +12,7 @@ import type {
 	UpdateStoreEmployeeDTO,
 	UpdateWarehouseEmployeeDTO,
 	WarehouseEmployeeDTO,
-} from '@/modules/admin/employees/models/employees.models'
+} from '@/modules/admin/store-employees/models/employees.models'
 import { type PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
 class EmployeeService {

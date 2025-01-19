@@ -1,3 +1,6 @@
+<template>TODO: Complete it</template>
+
+<!-- 
 <template>
 	<p
 		v-if="!employee"
@@ -10,14 +13,11 @@
 		v-else
 		class="flex md:flex-row flex-col gap-4"
 	>
-		<!-- Left Side: Employee Details Card -->
 		<div class="w-full md:w-1/3">
 			<AdminEmployeesDetailsInfo :employee="employee" />
 		</div>
 
-		<!-- Right Side: Main Content -->
 		<div class="flex flex-col gap-4 w-full md:w-2/3">
-			<!-- Statistics Cards -->
 			<div class="gap-6 grid grid-cols-1 sm:grid-cols-3">
 				<AdminEmployeesDetailsStats
 					title="Общие продажи"
@@ -36,7 +36,6 @@
 				/>
 			</div>
 
-			<!-- Activities Table -->
 			<Card>
 				<CardHeader>
 					<CardTitle class="font-medium text-lg"> Недавние активности</CardTitle>
@@ -47,7 +46,6 @@
 				</CardContent>
 			</Card>
 
-			<!-- Working Shifts Calendar Card -->
 			<Card>
 				<CardHeader>
 					<CardTitle class="font-medium text-lg"> График рабочих смен</CardTitle>
@@ -134,5 +132,4 @@ const employeeShifts = ref<Shift[]>([
 </script>
 
 <style scoped>
-/* Add any additional styles if needed */
-</style>
+</style> -->

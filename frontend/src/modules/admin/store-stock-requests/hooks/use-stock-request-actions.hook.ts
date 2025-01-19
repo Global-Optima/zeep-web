@@ -1,5 +1,5 @@
 import type { ButtonVariants } from '@/core/components/ui/button'
-import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
+import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
 import {
 	StockRequestStatus,
 	type AcceptWithChangeRequestStatusDTO,
