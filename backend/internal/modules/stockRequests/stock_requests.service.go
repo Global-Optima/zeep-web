@@ -499,9 +499,15 @@ func (s *stockRequestService) AddStockMaterialToCart(storeID uint, dto types.Sto
 		}
 	}
 
+	stockMaterial, err := s.stockMaterialRepo.GetStockMaterialByID(dto.StockMaterialID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch stock material for cart")
+	}
+
 	newIngredient := data.StockRequestIngredient{
 		StockRequestID:  cart.ID,
 		StockMaterialID: dto.StockMaterialID,
+		IngredientID:    stockMaterial.IngredientID,
 		Quantity:        dto.Quantity,
 	}
 	err = s.repo.AddIngredientsToStockRequest([]data.StockRequestIngredient{newIngredient})
