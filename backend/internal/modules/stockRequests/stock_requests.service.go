@@ -519,12 +519,17 @@ func (s *stockRequestService) AddStockMaterialToCart(storeID uint, dto types.Sto
 }
 
 func (s *stockRequestService) createNewCart(storeID uint) (*data.StockRequest, error) {
+	storeWarehouse, err := s.repo.GetStoreWarehouse(storeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch corresponding warehouse, %s", err.Error())
+	}
 	newCart := &data.StockRequest{
-		StoreID: storeID,
-		Status:  data.StockRequestCreated,
+		StoreID:     storeID,
+		WarehouseID: storeWarehouse.WarehouseID,
+		Status:      data.StockRequestCreated,
 	}
 
-	err := s.repo.CreateStockRequest(newCart)
+	err = s.repo.CreateStockRequest(newCart)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new cart: %w", err)
 	}
