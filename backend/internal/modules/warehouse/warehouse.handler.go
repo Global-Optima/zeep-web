@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -187,7 +188,7 @@ func (h *WarehouseHandler) DeductFromStock(c *gin.Context) {
 	utils.SendMessageWithStatus(c, "Stock deducted successfully", http.StatusOK)
 }
 
-func (h *WarehouseHandler) GetStock(c *gin.Context) {
+func (h *WarehouseHandler) GetStocks(c *gin.Context) {
 	queryParams, err := types.ParseStockFilterParamsWithPagination(c)
 	if err != nil {
 		utils.SendBadRequestError(c, err.Error())
@@ -210,13 +211,13 @@ func (h *WarehouseHandler) GetStockMaterialDetails(c *gin.Context) {
 		return
 	}
 
-	warehouseID, err := strconv.ParseUint(c.Query("warehouseId"), 10, 32)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid warehouse ID")
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	details, err := h.service.GetStockMaterialDetails(uint(stockMaterialID), uint(warehouseID))
+	details, err := h.service.GetStockMaterialDetails(uint(stockMaterialID), warehouseID)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return

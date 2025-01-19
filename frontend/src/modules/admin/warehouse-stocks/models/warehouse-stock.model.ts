@@ -1,35 +1,34 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
 
-export interface WarehouseStocks {
-	stockMaterialId: number
-	name: string
-	description: string
-	safetyStock: number
-	expirationFlag: boolean
+export interface WarehouseStocksDTO {
+	stockMaterial: StockMaterialsDTO
+	totalQuantity: number
+	earliestExpirationDate: string
+}
+
+export interface WarehouseStockDetailsDTO extends StockMaterialsDTO {
+	totalQuantity: number
+	earliestExpirationDate: string
+	deliveries: WarehouseStockMaterialDeliveryDTO[]
+}
+
+export interface WarehouseStockMaterialDeliveryDTO {
+	supplierName: string
 	quantity: number
-	unitId: number
-	category: string
-	expiration: number
-	package: Package
-}
-
-export interface InventoryLevel {
-	stockMaterialId: number
-	name: string
-	quantity: number
-}
-
-export interface InventoryLevelsResponse {
-	warehouseId: number
-	levels: InventoryLevel[]
-}
-
-export interface Package {
-	packageSize: number
-	packageUnitId: number
+	deliveryDate: Date
+	expirationDate: Date
 }
 
 export interface GetWarehouseStockFilter extends PaginationParams {
-	search?: string
 	warehouseId?: number
+	stockMaterialId?: number
+	lowStockOnly?: boolean
+	expirationDays?: number
+	search?: string
+}
+
+export interface UpdateWarehouseStockDTO {
+	quantity?: number
+	expirationDate: Date
 }
