@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -57,9 +58,8 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-	filter.StoreID = &storeID
 
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockRequest{}); err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
@@ -76,7 +76,10 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 
 	if warehouseErr == nil {
 		filter.WarehouseID = &warehouseID
-		filter.Statuses = types.FilterWarehouseStatuses(filter.Statuses)
+		err = types.ValidateWarehouseStatuses(filter.Statuses)
+		if err != nil {
+			utils.SendBadRequestError(c, err.Error())
+		}
 		requests, err = h.service.GetStockRequests(filter)
 	}
 

@@ -50,7 +50,7 @@ type StockRequestMaterial struct {
 }
 
 type GetStockRequestsFilter struct {
-	Pagination  *utils.Pagination
+	utils.BaseFilter
 	StoreID     *uint      `form:"storeId"`
 	WarehouseID *uint      `form:"warehouseId"`
 	StartDate   *time.Time `form:"startDate"`

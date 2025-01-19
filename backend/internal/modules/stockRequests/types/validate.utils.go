@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -57,21 +58,20 @@ func IsValidTransition(currentStatus, targetStatus data.StockRequestStatus) bool
 	return false
 }
 
-func FilterWarehouseStatuses(inputStatuses []data.StockRequestStatus) []data.StockRequestStatus {
-	allowedStatuses := map[data.StockRequestStatus]bool{
-		data.StockRequestProcessed:           true,
-		data.StockRequestInDelivery:          true,
-		data.StockRequestCompleted:           true,
-		data.StockRequestRejectedByStore:     true,
-		data.StockRequestRejectedByWarehouse: true,
-		data.StockRequestAcceptedWithChange:  true,
-	}
+var warehouseAllowedStatuses = map[data.StockRequestStatus]bool{
+	data.StockRequestProcessed:           true,
+	data.StockRequestInDelivery:          true,
+	data.StockRequestCompleted:           true,
+	data.StockRequestRejectedByStore:     true,
+	data.StockRequestRejectedByWarehouse: true,
+	data.StockRequestAcceptedWithChange:  true,
+}
 
-	var filteredStatuses []data.StockRequestStatus
+func ValidateWarehouseStatuses(inputStatuses []data.StockRequestStatus) error {
 	for _, status := range inputStatuses {
-		if allowedStatuses[status] {
-			filteredStatuses = append(filteredStatuses, status)
+		if !warehouseAllowedStatuses[status] {
+			return fmt.Errorf("invalid status for warehouse: %s", status)
 		}
 	}
-	return filteredStatuses
+	return nil
 }
