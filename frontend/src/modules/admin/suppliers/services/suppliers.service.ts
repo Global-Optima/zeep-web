@@ -2,15 +2,16 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	CreateSupplierDTO,
-	Suppliers,
+	SuppliersDTO,
 	SuppliersFilter,
 	UpdateSupplierDTO,
 } from '@/modules/admin/suppliers/models/suppliers.model'
+import { type PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
 class SuppliersService {
-	async getSuppliers(filter?: SuppliersFilter): Promise<Suppliers[]> {
+	async getSuppliers(filter?: SuppliersFilter) {
 		try {
-			const response = await apiClient.get<Suppliers[]>('/suppliers', {
+			const response = await apiClient.get<PaginatedResponse<SuppliersDTO[]>>('/suppliers', {
 				params: buildRequestFilter(filter),
 			})
 			return response.data
@@ -20,9 +21,9 @@ class SuppliersService {
 		}
 	}
 
-	async getSupplier(id: number): Promise<Suppliers> {
+	async getSupplier(id: number): Promise<SuppliersDTO> {
 		try {
-			const response = await apiClient.get<Suppliers>(`/suppliers/${id}`)
+			const response = await apiClient.get<SuppliersDTO>(`/suppliers/${id}`)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch supplier by id ${id}:`, error)

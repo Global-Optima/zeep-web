@@ -1,8 +1,10 @@
-export interface SuppliersFilter {
-	searchTerm: string
+import type { PaginationParams } from '@/core/utils/pagination.utils'
+
+export interface SuppliersFilter extends PaginationParams {
+	search?: string
 }
 
-export interface Suppliers {
+export interface SuppliersDTO {
 	id: number
 	name: string
 	contactEmail: string

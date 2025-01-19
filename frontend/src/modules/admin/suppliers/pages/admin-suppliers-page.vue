@@ -22,7 +22,7 @@ import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
 const filter = ref<SuppliersFilter>({
-  searchTerm: '',
+  search: '',
 })
 
 const { data: suppliers } = useQuery({

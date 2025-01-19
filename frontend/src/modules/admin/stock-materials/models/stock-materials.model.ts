@@ -1,14 +1,8 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { SuppliersDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
+import type { StockMaterialCategoryDTO } from '../../stock-material-categories/models/stock-material-categories.model'
 import type { UnitDTO } from '../../units/models/units.model'
-
-export interface StockMaterialCategoryResponse {
-	id: number
-	name: string
-	description: string
-	createdAt: Date
-	updatedAt: Date
-}
 
 export interface CreateStockMaterialDTO {
 	name: string
@@ -30,6 +24,7 @@ export interface UpdateStockMaterialDTO {
 	expirationFlag?: boolean
 	unitId?: number
 	categoryId?: number
+	supplierId: number
 	ingredientId?: number
 	barcode?: string
 	expirationPeriodInDays?: number
@@ -43,7 +38,8 @@ export interface StockMaterialsDTO {
 	safetyStock: number
 	expirationFlag: boolean
 	unit: UnitDTO
-	category: StockMaterialCategoryResponse
+	supplier: SuppliersDTO
+	category: StockMaterialCategoryDTO
 	barcode: string
 	ingredient: IngredientsDTO
 	expirationPeriodInDays: number

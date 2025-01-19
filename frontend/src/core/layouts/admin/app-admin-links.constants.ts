@@ -141,6 +141,7 @@ export const adminNavItems: SidebarNavItem[] = [
 			},
 		],
 	},
+
 	{
 		label: 'Топпинги',
 		icon: ListPlus,
@@ -174,6 +175,25 @@ export const adminNavItems: SidebarNavItem[] = [
 			{
 				name: 'Категории',
 				routeKey: 'ADMIN_INGREDIENT_CATEGORIES',
+				icon: LayoutList,
+				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
+			},
+		],
+	},
+	{
+		label: 'Складские товары',
+		icon: Package,
+		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
+		items: [
+			{
+				name: 'Список',
+				routeKey: 'ADMIN_STOCK_MATERIALS',
+				icon: Package,
+				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
+			},
+			{
+				name: 'Категории',
+				routeKey: 'ADMIN_STOCK_MATERIAL_CATEGORIES',
 				icon: LayoutList,
 				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
 			},

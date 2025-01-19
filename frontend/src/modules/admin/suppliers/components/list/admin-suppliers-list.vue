@@ -51,10 +51,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import type { Suppliers } from '@/modules/admin/suppliers/models/suppliers.model'
+import type { SuppliersDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import { useRouter } from 'vue-router'
 
-const {suppliers} = defineProps<{suppliers: Suppliers[]}>()
+const {suppliers} = defineProps<{suppliers: SuppliersDTO[]}>()
 
 const router = useRouter();
 

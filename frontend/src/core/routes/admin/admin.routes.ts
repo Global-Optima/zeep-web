@@ -2,6 +2,7 @@ import AppAdminLayout from '@/core/layouts/admin/app-admin-layout.vue'
 import { ADMIN_ADDITIVES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-additives.routes'
 import { ADMIN_INGREDIENTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-ingredients.routes'
 import { ADMIN_PRODUCTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-products.routes'
+import { ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-stock-materials.routes'
 import { ADMIN_UNITS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-units.routes'
 import type { AppRouteRecord, ParentRoutePage } from '../../config/routes.config'
 
@@ -10,6 +11,8 @@ export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_PRODUCTS_CHILDREN_ROUTES,
 	...ADMIN_INGREDIENTS_CHILDREN_ROUTES,
 	...ADMIN_UNITS_CHILDREN_ROUTES,
+	...ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES,
+
 	ADMIN_DASHBOARD: {
 		path: '',
 		meta: {
