@@ -291,8 +291,6 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 
 		stockRoutes := router.Group("/stocks")
 		{
-			stockRoutes.POST("/add", warehouseStockHandler.AddToStock)
-			stockRoutes.POST("/deduct", warehouseStockHandler.DeductFromStock)
 			stockRoutes.GET("", warehouseStockHandler.GetStocks)
 			stockRoutes.GET("/:stockMaterialId", warehouseStockHandler.GetStockMaterialDetails)
 			stockRoutes.PUT("/:stockMaterialId", warehouseStockHandler.UpdateStock)

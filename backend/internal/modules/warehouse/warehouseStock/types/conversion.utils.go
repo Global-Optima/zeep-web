@@ -51,7 +51,6 @@ func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock, pkgMeasure ut
 			*stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
 			pkgMeasure,
 		},
-		TotalQuantity:          stock.TotalQuantity,
 		EarliestExpirationDate: stock.EarliestExpirationDate,
 	}
 }
@@ -70,7 +69,6 @@ func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, pkgMeasure util
 	return WarehouseStockMaterialDetailsDTO{
 		StockMaterial:          *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
 		PackageMeasure:         pkgMeasure,
-		TotalQuantity:          stock.TotalQuantity,
 		EarliestExpirationDate: stock.EarliestExpirationDate,
 		Deliveries:             deliveriesDTO,
 	}

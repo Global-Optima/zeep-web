@@ -74,11 +74,6 @@ type GetWarehouseStockFilterQuery struct {
 	utils.BaseFilter
 }
 
-type ResetWarehouseStock struct {
-	WarehouseID uint    `json:"warehouseId" binding:"required"`
-	Stocks      []Stock `json:"stocks" binding:"required"`
-}
-
 type UpdateWarehouseStockDTO struct {
 	Quantity       float64   `json:"quantity" binding:"required,gt=0"`
 	ExpirationDate time.Time `json:"expirationDate" binding:"required"`
@@ -97,7 +92,6 @@ type AdjustWarehouseStock struct {
 
 type WarehouseStockResponse struct {
 	StockMaterial          StockMaterialResponse `json:"stockMaterial"`
-	TotalQuantity          float64               `json:"totalQuantity"`
 	EarliestExpirationDate *time.Time            `json:"earliestExpirationDate,omitempty"`
 }
 
@@ -109,7 +103,6 @@ type StockMaterialResponse struct {
 type WarehouseStockMaterialDetailsDTO struct {
 	StockMaterial          stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
 	PackageMeasure         utils.PackageMeasure                 `json:"packageMeasure"`
-	TotalQuantity          float64                              `json:"totalQuantity"`
 	EarliestExpirationDate *time.Time                           `json:"earliestExpirationDate,omitempty"`
 	Deliveries             []StockMaterialDeliveryDTO           `json:"deliveries"`
 }
