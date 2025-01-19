@@ -145,14 +145,16 @@ func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAddit
 func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.EmployeeRoutes.Group("/employees")
 	{
-		storeEmployees := router.Group("/store")
+		storeEmployees := router.Group("/stores")
 		{
+			storeEmployees.GET("", handler.GetStoreEmployees)
 			storeEmployees.POST("", handler.CreateStoreEmployee)
 			storeEmployees.GET("/:id", handler.GetStoreEmployeeByID)
 			storeEmployees.PUT("/:id", handler.UpdateStoreEmployee)
 		}
-		warehouseEmployees := router.Group("/warehouse")
+		warehouseEmployees := router.Group("/warehouses")
 		{
+			warehouseEmployees.GET("", handler.GetWarehouseEmployees)
 			warehouseEmployees.POST("", handler.CreateWarehouseEmployee)
 			warehouseEmployees.GET("/:id", handler.GetWarehouseEmployeeByID)
 			warehouseEmployees.PUT("/:id", handler.UpdateWarehouseEmployee)

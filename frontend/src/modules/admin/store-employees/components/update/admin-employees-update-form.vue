@@ -184,7 +184,7 @@ import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import AdminEmployeesCreateImage from '@/modules/admin/employees/components/create/admin-employees-create-image.vue'
 import AdminEmployeesCreateWorkHours from '@/modules/admin/employees/components/create/admin-employees-create-work-hours.vue'
-import { EmployeeRole, type Employee, type UpdateEmployeeDto } from '@/modules/employees/models/employees.models'
+import { EmployeeRole, type Employee, type UpdateEmployeeDto } from '@/modules/admin/employees/models/employees.models'
 
 // Props
 const props = defineProps<{

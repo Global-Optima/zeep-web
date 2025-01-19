@@ -1,11 +1,11 @@
 import type { ButtonVariants } from '@/core/components/ui/button'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import {
 	StockRequestStatus,
 	type AcceptWithChangeRequestStatusDTO,
 	type RejectStockRequestStatusDTO,
 } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { stockRequestsService } from '@/modules/admin/store-stock-requests/services/stock-requests.service'
-import { EmployeeRole } from '@/modules/employees/models/employees.models'
 
 interface Action {
 	label: string

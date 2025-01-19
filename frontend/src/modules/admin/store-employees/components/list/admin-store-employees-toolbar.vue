@@ -43,14 +43,14 @@ import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { StoreEmployeesFilter } from '@/modules/employees/models/employees.models'
+import type { GetStoreEmployeesFilter } from '@/modules/admin/store-employees/models/employees.models'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Props and Emit
-const props = defineProps<{ filter: StoreEmployeesFilter }>()
+const props = defineProps<{ filter: GetStoreEmployeesFilter }>()
 const emit = defineEmits(['update:filter'])
 
 // Local Filter
@@ -82,6 +82,6 @@ const applyFilter = (filterType: string) => {
 // Add Store Navigation
 const router = useRouter()
 const addStore = () => {
-	router.push({ name: getRouteName('ADMIN_CREATE_EMPLOYEE') })
+	router.push({ name: getRouteName('ADMIN_STORE_EMPLOYEE_CREATE') })
 }
 </script>

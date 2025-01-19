@@ -74,7 +74,7 @@ import AdminEmployeesDetailsActivities from '@/modules/admin/employees/component
 import AdminEmployeesDetailsInfo from '@/modules/admin/employees/components/details/admin-employees-details-info.vue'
 import AdminEmployeesDetailsShifts from '@/modules/admin/employees/components/details/admin-employees-details-shifts.vue'
 import AdminEmployeesDetailsStats from '@/modules/admin/employees/components/details/admin-employees-details-stats.vue'
-import { employeesService } from '@/modules/employees/services/employees.service'
+import { employeesService } from '@/modules/admin/employees/services/employees.service'
 import { useQuery } from '@tanstack/vue-query'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -101,7 +101,7 @@ const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
   queryKey: ['employee', employeeId],
-	queryFn: () => employeesService.getEmployeeById(Number(employeeId)),
+	queryFn: () => employeesService.getStoreEmployeeById(Number(employeeId)),
   enabled: !!employeeId,
 })
 

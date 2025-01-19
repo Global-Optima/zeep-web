@@ -54,10 +54,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import { EMPLOYEE_ROLES_FORMATTED, type Employee } from '@/modules/employees/models/employees.models'
+import { EMPLOYEE_ROLES_FORMATTED, type StoreEmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
 
-const {employees} = defineProps<{employees: Employee[]}>()
-
+const {employees} = defineProps<{employees: StoreEmployeeDTO[]}>()
 
 const router = useRouter()
 
@@ -68,7 +67,6 @@ const goToEmployee = (employeeId: number) => {
 
 // Format phone number for display
 const formatPhoneNumber = (phone: string) => {
-  // Simple formatting, adjust as needed
   return phone.replace(/(\+7)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 ($2) $3-$4-$5')
 }
 

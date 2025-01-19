@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import Button from '@/core/components/ui/button/Button.vue'
-import { EMPLOYEE_ROLES_FORMATTED, type Employee } from '@/modules/employees/models/employees.models'
+import { EMPLOYEE_ROLES_FORMATTED, type Employee } from '@/modules/admin/employees/models/employees.models'
 import { Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 
