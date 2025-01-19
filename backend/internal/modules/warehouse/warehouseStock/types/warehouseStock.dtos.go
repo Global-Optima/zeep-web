@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -43,19 +44,6 @@ type TransferInventoryRequest struct {
 	Items             []ExistingInventoryItem `json:"items" binding:"required"`
 }
 
-type UpcomingExpirationResponse struct {
-	DeliveryID      uint      `json:"deliveryId"`
-	StockMaterialID uint      `json:"stockMaterialId"`
-	Name            string    `json:"name"`
-	ExpirationDate  time.Time `json:"expirationDate"`
-	Quantity        float64   `json:"quantity"`
-}
-
-type ExtendExpirationRequest struct {
-	DeliveryID uint `json:"deliveryId" binding:"required"`
-	AddDays    int  `json:"addDays" binding:"required,gte=0"`
-}
-
 type DeliveryResponse struct {
 	ID              uint      `json:"id"`
 	StockMaterialID uint      `json:"stockMaterialId"`
@@ -73,23 +61,62 @@ type DeliveryFilter struct {
 	EndDate     *time.Time `form:"endDate" time_format:"2006-01-02T15:04:05Z07:00"`
 }
 
-type GetInventoryLevelsFilterQuery struct {
-	Search      *string `form:"search"`
-	WarehouseID *uint   `form:"warehouseId"`
-	Pagination  *utils.Pagination
+// stocks
+type GetWarehouseStockFilterQuery struct {
+	WarehouseID     *uint   `form:"warehouseId"`
+	StockMaterialID *uint   `form:"stockMaterialId"`
+	IngredientID    *uint   `form:"ingredientId"`
+	LowStockOnly    *bool   `form:"lowStockOnly"`
+	IsExpiring      *bool   `form:"isExpiring"`
+	CategoryID      *uint   `form:"categoryId"`
+	ExpirationDays  *int    `form:"daysToExpire"`
+	Search          *string `form:"search"`
+	utils.BaseFilter
 }
 
-type PickupRequest struct {
-	StoreWarehouseID uint                    `json:"storeWarehouseId" binding:"required"`
-	Items            []ExistingInventoryItem `json:"items" binding:"required"`
+type ResetWarehouseStock struct {
+	WarehouseID uint    `json:"warehouseId" binding:"required"`
+	Stocks      []Stock `json:"stocks" binding:"required"`
 }
 
-type InventoryLevel struct {
-	StockMaterialID uint    `json:"stockMaterialId"`
-	Name            string  `json:"name"`
-	Quantity        float64 `json:"quantity"`
+type UpdateWarehouseStockDTO struct {
+	Quantity       float64   `json:"quantity" binding:"required,gt=0"`
+	ExpirationDate time.Time `json:"expirationDate" binding:"required"`
 }
 
-type InventoryLevelsResponse struct {
-	Levels []InventoryLevel `json:"levels"`
+type Stock struct {
+	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
+	Quantity        float64 `json:"quantity" binding:"required,gte=0"`
+}
+
+type AdjustWarehouseStock struct {
+	WarehouseID     uint    `json:"warehouseId" binding:"required"`
+	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
+	Quantity        float64 `json:"quantity" binding:"required,gte=0"`
+}
+
+type WarehouseStockResponse struct {
+	StockMaterial          StockMaterialResponse `json:"stockMaterial"`
+	TotalQuantity          float64               `json:"totalQuantity"`
+	EarliestExpirationDate *time.Time            `json:"earliestExpirationDate,omitempty"`
+}
+
+type StockMaterialResponse struct {
+	stockMaterialTypes.StockMaterialsDTO
+	utils.PackageMeasure `json:"packageMeasures"`
+}
+
+type StockMaterialDetailsDTO struct {
+	StockMaterial          stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
+	PackageMeasure         utils.PackageMeasure                 `json:"packageMeasure"`
+	TotalQuantity          float64                              `json:"totalQuantity"`
+	EarliestExpirationDate *time.Time                           `json:"earliestExpirationDate,omitempty"`
+	Deliveries             []StockMaterialDeliveryDTO           `json:"deliveries"`
+}
+
+type StockMaterialDeliveryDTO struct {
+	Supplier       string    `json:"supplierName"`
+	Quantity       float64   `json:"quantity"`
+	DeliveryDate   time.Time `json:"deliveryDate"`
+	ExpirationDate time.Time `json:"expirationDate"`
 }

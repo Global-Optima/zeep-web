@@ -26,10 +26,6 @@ func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockM
 		stockMaterial.SafetyStock = *req.SafetyStock
 	}
 
-	if req.ExpirationFlag != nil {
-		stockMaterial.ExpirationFlag = *req.ExpirationFlag
-	}
-
 	if req.UnitID != nil {
 		stockMaterial.UnitID = *req.UnitID
 	}

@@ -20,10 +20,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
 )
 
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
@@ -269,7 +269,7 @@ func (r *Router) RegisterBarcodeRoutes(handler *barcode.BarcodeHandler) {
 	}
 }
 
-func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, inventoryHandler *inventory.InventoryHandler) {
+func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, warehouseStockHandler *warehouseStock.WarehouseStockHandler) {
 	router := r.EmployeeRoutes.Group("/warehouses")
 	{
 		warehouseRoutes := router.Group("")
@@ -289,21 +289,15 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, in
 
 		stockRoutes := router.Group("/stocks")
 		{
-			stockRoutes.POST("/add", handler.AddToStock)
-			stockRoutes.POST("/deduct", handler.DeductFromStock)
-			stockRoutes.GET("", handler.GetStocks)
-			stockRoutes.GET("/:stockMaterialId", handler.GetStockMaterialDetails)
-			stockRoutes.POST("/reset", handler.ResetStock)
+			stockRoutes.POST("/add", warehouseStockHandler.AddToStock)
+			stockRoutes.POST("/deduct", warehouseStockHandler.DeductFromStock)
+			stockRoutes.GET("", warehouseStockHandler.GetStocks)
+			stockRoutes.GET("/:stockMaterialId", warehouseStockHandler.GetStockMaterialDetails)
+			stockRoutes.PUT("/:stockMaterialId", warehouseStockHandler.UpdateStock)
 
-			stockRoutes.POST("/receive", inventoryHandler.ReceiveInventory)
-			stockRoutes.POST("/transfer", inventoryHandler.TransferInventory)
-			stockRoutes.GET("/deliveries", inventoryHandler.GetDeliveries)
-		}
-
-		expirationRoutes := router.Group("/expirations")
-		{
-			expirationRoutes.GET("/:warehouseID", inventoryHandler.GetExpiringItems)
-			expirationRoutes.POST("/extend", inventoryHandler.ExtendExpiration)
+			stockRoutes.POST("/receive", warehouseStockHandler.ReceiveInventory)
+			stockRoutes.POST("/transfer", warehouseStockHandler.TransferInventory)
+			stockRoutes.GET("/deliveries", warehouseStockHandler.GetDeliveries)
 		}
 	}
 }

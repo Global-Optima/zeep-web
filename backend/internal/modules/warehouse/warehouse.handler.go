@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -156,87 +155,4 @@ func (h *WarehouseHandler) DeleteWarehouse(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
-}
-
-func (h *WarehouseHandler) AddToStock(c *gin.Context) {
-	var req types.AdjustWarehouseStockRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
-		return
-	}
-
-	if err := h.service.AddToStock(req); err != nil {
-		utils.SendInternalServerError(c, "Failed to add stock: "+err.Error())
-		return
-	}
-
-	utils.SendMessageWithStatus(c, "Stock added successfully", http.StatusOK)
-}
-
-func (h *WarehouseHandler) DeductFromStock(c *gin.Context) {
-	var req types.AdjustWarehouseStockRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
-		return
-	}
-
-	if err := h.service.DeductFromStock(req); err != nil {
-		utils.SendInternalServerError(c, "Failed to deduct stock: "+err.Error())
-		return
-	}
-
-	utils.SendMessageWithStatus(c, "Stock deducted successfully", http.StatusOK)
-}
-
-func (h *WarehouseHandler) GetStocks(c *gin.Context) {
-	queryParams, err := types.ParseStockFilterParamsWithPagination(c)
-	if err != nil {
-		utils.SendBadRequestError(c, err.Error())
-		return
-	}
-
-	stocks, err := h.service.GetStock(queryParams)
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch stock: "+err.Error())
-		return
-	}
-
-	utils.SendSuccessResponseWithPagination(c, stocks, queryParams.Pagination)
-}
-
-func (h *WarehouseHandler) GetStockMaterialDetails(c *gin.Context) {
-	stockMaterialID, err := strconv.ParseUint(c.Param("stockMaterialId"), 10, 32)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid stock material ID")
-		return
-	}
-
-	warehouseID, errH := contexts.GetWarehouseId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	details, err := h.service.GetStockMaterialDetails(uint(stockMaterialID), warehouseID)
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	utils.SendSuccessResponse(c, details)
-}
-
-func (h *WarehouseHandler) ResetStock(c *gin.Context) {
-	var req types.ResetWarehouseStockRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
-		return
-	}
-
-	if err := h.service.ResetStock(req); err != nil {
-		utils.SendInternalServerError(c, "Failed to reset stock: "+err.Error())
-		return
-	}
-
-	utils.SendMessageWithStatus(c, "Stock reset successfully", http.StatusOK)
 }

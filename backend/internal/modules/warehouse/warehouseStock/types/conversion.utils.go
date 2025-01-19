@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -43,31 +45,33 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 	return response
 }
 
-func StocksToInventoryItems(stocks []data.WarehouseStock) *InventoryLevelsResponse {
-	levels := make([]InventoryLevel, len(stocks))
-	for i, stock := range stocks {
-		levels[i] = InventoryLevel{
-			StockMaterialID: stock.StockMaterialID,
-			Name:            stock.StockMaterial.Name,
-			Quantity:        stock.Quantity,
-		}
-	}
-
-	return &InventoryLevelsResponse{
-		Levels: levels,
+func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasure) WarehouseStockResponse {
+	return WarehouseStockResponse{
+		StockMaterial: StockMaterialResponse{
+			*stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
+			pkgMeasure,
+		},
+		TotalQuantity:          stock.TotalQuantity,
+		EarliestExpirationDate: stock.EarliestExpirationDate,
 	}
 }
 
-func ExpiringItemsToResponses(deliveries []data.SupplierWarehouseDelivery) []UpcomingExpirationResponse {
-	response := make([]UpcomingExpirationResponse, len(deliveries))
+func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasure, deliveries []data.SupplierWarehouseDelivery) StockMaterialDetailsDTO {
+	deliveriesDTO := make([]StockMaterialDeliveryDTO, len(deliveries))
 	for i, delivery := range deliveries {
-		response[i] = UpcomingExpirationResponse{
-			DeliveryID:      delivery.ID,
-			StockMaterialID: delivery.StockMaterialID,
-			Name:            delivery.StockMaterial.Name,
-			ExpirationDate:  delivery.ExpirationDate,
-			Quantity:        delivery.Quantity,
+		deliveriesDTO[i] = StockMaterialDeliveryDTO{
+			Supplier:       delivery.Supplier.Name,
+			Quantity:       delivery.Quantity,
+			DeliveryDate:   delivery.DeliveryDate,
+			ExpirationDate: delivery.ExpirationDate,
 		}
 	}
-	return response
+
+	return StockMaterialDetailsDTO{
+		StockMaterial:          *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
+		PackageMeasure:         pkgMeasure,
+		TotalQuantity:          stock.TotalQuantity,
+		EarliestExpirationDate: stock.EarliestExpirationDate,
+		Deliveries:             deliveriesDTO,
+	}
 }
