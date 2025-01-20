@@ -1,41 +1,25 @@
-export interface AdditiveCategoriesFilterQuery {
-	search?: string
+import type { PaginationParams } from '@/core/utils/pagination.utils'
+
+export interface AdditiveCategoriesFilterQuery extends PaginationParams {
+	showAll?: boolean
 	productSizeId?: number
+	isMultipleSelect?: boolean
+	search?: string
 }
 
-export interface AdditiveFilterQuery {
+export interface AdditiveFilterQuery extends PaginationParams {
 	search?: string
 	minPrice?: number
 	maxPrice?: number
 	categoryId?: number
 	productSizeId?: number
-	page?: number
-	pageSize?: number
 }
 
-export interface AdditiveCategoryItem {
+export interface AdditiveDTO {
 	id: number
 	name: string
 	description: string
-	price: number
-	size: string
-	imageUrl: string
-	categoryId: number
-}
-
-export interface AdditiveCategories {
-	id: number
-	name: string
-	description: string
-	additives: AdditiveCategoryItem[]
-	isMultipleSelect: boolean
-}
-
-export interface Additives {
-	id: number
-	name: string
-	description: string
-	price: number
+	basePrice: number
 	imageUrl: string
 	size: string
 	category: {
@@ -43,4 +27,59 @@ export interface Additives {
 		name: string
 		isMultipleSelect: boolean
 	}
+}
+
+export interface AdditiveCategoryItemDTO {
+	id: number
+	name: string
+	description: string
+	price: number
+	imageUrl: string
+	size: string
+	categoryId: number
+}
+
+export interface AdditiveCategoryDTO {
+	id: number
+	name: string
+	description: string
+	additives: AdditiveCategoryItemDTO[]
+	isMultipleSelect: boolean
+}
+
+export interface CreateAdditiveCategoryDTO {
+	name: string
+	description?: string
+	isMultipleSelect: boolean
+}
+
+export interface UpdateAdditiveCategoryDTO {
+	name?: string
+	description?: string
+	isMultipleSelect?: boolean
+}
+
+export interface UpdateAdditiveDTO {
+	name?: string
+	description?: string
+	price?: number
+	imageUrl?: string
+	size?: string
+	additiveCategoryId?: number
+}
+
+export interface AdditiveCategoryResponseDTO {
+	id: number
+	name: string
+	description: string
+	isMultipleSelect: boolean
+}
+
+export interface CreateAdditiveDTO {
+	name: string
+	description: string
+	price: number
+	imageUrl?: string
+	size: string
+	additiveCategoryId: number
 }

@@ -11,11 +11,11 @@ import (
 )
 
 type StoreWarehouseRepository interface {
-	AddStock(storeId uint, dto *types.AddStockDTO) (uint, error)
-	AddOrUpdateStock(storeId uint, dto *types.AddStockDTO) error
+	AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)
+	AddOrUpdateStock(storeId uint, dto *types.AddStoreStockDTO) error
 	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error)
 	GetStockById(storeId, stockId uint) (*data.StoreWarehouseStock, error)
-	UpdateStock(storeId, stockId uint, dto *types.UpdateStockDTO) error
+	UpdateStock(storeId, stockId uint, dto *types.UpdateStoreStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
 	WithTransaction(txFunc func(txRepo storeWarehouseRepository) error) error
 	CloneWithTransaction(tx *gorm.DB) storeWarehouseRepository
@@ -58,7 +58,7 @@ func (r *storeWarehouseRepository) CloneWithTransaction(tx *gorm.DB) storeWareho
 	}
 }
 
-func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.AddStockDTO) error {
+func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) error {
 	// Fetch the StoreWarehouse for the given storeID
 	var storeWarehouse data.StoreWarehouse
 	err := r.db.
@@ -108,7 +108,7 @@ func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.Add
 	return fmt.Errorf("failed to add or update stock: %w", err)
 }
 
-func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStockDTO) (uint, error) {
+func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error) {
 	// Fetch the StoreWarehouse for the given storeID
 	storeWarehouse, err := r.getStoreWarehouseByStoreId(storeID)
 	if err != nil {
@@ -170,6 +170,8 @@ func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetS
 
 	query := r.db.Model(&data.StoreWarehouseStock{}).
 		Preload("Ingredient.Unit").
+		Preload("Ingredient.IngredientCategory").
+		Preload("StoreWarehouse").
 		Joins("JOIN store_warehouses ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
 		Joins("JOIN ingredients ON store_warehouse_stocks.ingredient_id = ingredients.id").
 		Where("store_warehouses.store_id = ?", storeID)
@@ -181,9 +183,6 @@ func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetS
 	if filter.Search != nil && *filter.Search != "" {
 		query = query.Where("ingredients.name ILIKE ?", "%"+*filter.Search+"%")
 	}
-
-	query.Preload("Ingredient").
-		Preload("StoreWarehouse")
 
 	var err error
 	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreWarehouseStock{})
@@ -211,6 +210,7 @@ func (r *storeWarehouseRepository) GetStockById(storeId, stockId uint) (*data.St
 	}
 
 	dbQuery := r.db.Preload("Ingredient.Unit").
+		Preload("Ingredient.IngredientCategory").
 		Preload("StoreWarehouse")
 
 	if err := dbQuery.
@@ -224,7 +224,7 @@ func (r *storeWarehouseRepository) GetStockById(storeId, stockId uint) (*data.St
 	return &StoreWarehouseStock, nil
 }
 
-func (r *storeWarehouseRepository) UpdateStock(storeId, stockId uint, dto *types.UpdateStockDTO) error {
+func (r *storeWarehouseRepository) UpdateStock(storeId, stockId uint, dto *types.UpdateStoreStockDTO) error {
 
 	if storeId == 0 {
 		return fmt.Errorf("storeId cannot be 0")

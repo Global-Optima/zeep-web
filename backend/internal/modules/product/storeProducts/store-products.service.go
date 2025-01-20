@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
@@ -15,7 +16,8 @@ const DEFAULT_LOW_STOCK_THRESHOLD = 50
 
 type StoreProductService interface {
 	GetStoreProductById(storeID, storeProductID uint) (*types.StoreProductDetailsDTO, error)
-	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDTO, error)
+	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
+	GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error)
 	CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error)
 	CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error)
 	UpdateStoreProduct(storeID, storeProductID uint, dto *types.UpdateStoreProductDTO) error
@@ -47,17 +49,19 @@ func NewStoreProductService(
 }
 
 func (s *storeProductService) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
-	dto, err := s.repo.GetStoreProductById(storeID, storeProductID)
+	storeProduct, err := s.repo.GetStoreProductById(storeID, storeProductID)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to get store product by ID", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	return dto, nil
+	dto := types.MapToStoreProductDetailsDTO(storeProduct)
+
+	return &dto, nil
 }
 
-func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDTO, error) {
+func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error) {
 	storeProducts, err := s.repo.GetStoreProducts(storeID, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to get store products", err)
@@ -65,12 +69,24 @@ func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.Store
 		return nil, wrappedErr
 	}
 
-	dtos := make([]types.StoreProductDTO, len(storeProducts))
+	dtos := make([]types.StoreProductDetailsDTO, len(storeProducts))
 	for i, storeProduct := range storeProducts {
-		dtos[i] = *types.MapToStoreProductDTO(&storeProduct)
+		dtos[i] = types.MapToStoreProductDetailsDTO(&storeProduct)
 	}
 
 	return dtos, nil
+}
+
+func (s *storeProductService) GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error) {
+	storeProduct, err := s.repo.GetStoreProductSizeById(storeID, storeProductSizeID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get store product size by ID", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dto := types.MapToStoreProductSizeDetailsDTO(*storeProduct)
+	return &dto, nil
 }
 
 func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error) {
@@ -98,9 +114,9 @@ func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.Create
 		return 0, wrappedErr
 	}
 
-	addStockDTOs := make([]storeWarehousesTypes.AddStockDTO, len(ingredientsList))
+	addStockDTOs := make([]storeWarehousesTypes.AddStoreStockDTO, len(ingredientsList))
 	for i, ingredient := range ingredientsList {
-		addStockDTOs[i] = storeWarehousesTypes.AddStockDTO{
+		addStockDTOs[i] = storeWarehousesTypes.AddStoreStockDTO{
 			IngredientID:      ingredient.ID,
 			Quantity:          0,
 			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
@@ -201,15 +217,15 @@ func (s *storeProductService) DeleteStoreProduct(storeID, storeProductID uint) e
 	return nil
 }
 
-func (s *storeProductService) formAddStockDTOsFromIngredients(productSizeIDs []uint) ([]storeWarehousesTypes.AddStockDTO, error) {
+func (s *storeProductService) formAddStockDTOsFromIngredients(productSizeIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
 	ingredientsList, err := s.ingredientsRepo.GetIngredientsForProductSizes(productSizeIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)
 	}
 
-	addStockDTOs := make([]storeWarehousesTypes.AddStockDTO, len(ingredientsList))
+	addStockDTOs := make([]storeWarehousesTypes.AddStoreStockDTO, len(ingredientsList))
 	for i, ingredient := range ingredientsList {
-		addStockDTOs[i] = storeWarehousesTypes.AddStockDTO{
+		addStockDTOs[i] = storeWarehousesTypes.AddStoreStockDTO{
 			IngredientID:      ingredient.ID,
 			Quantity:          0,
 			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,

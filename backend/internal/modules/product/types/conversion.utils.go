@@ -1,9 +1,15 @@
 package types
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"sort"
 	"strings"
+
+	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
 type ProductSizeModels struct {
@@ -12,12 +18,13 @@ type ProductSizeModels struct {
 	Ingredients []data.ProductSizeIngredient
 }
 
-func MapBaseProductDTO(product *data.Product) BaseProductDTO {
+func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 	return BaseProductDTO{
-		ID:          product.ID,
 		Name:        product.Name,
 		Description: product.Description,
 		ImageURL:    product.ImageURL,
+		VideoURL:    product.VideoURL,
+		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
 
@@ -29,12 +36,23 @@ func MapToProductDetailsDTO(product *data.Product) *ProductDetailsDTO {
 	}
 
 	return &ProductDetailsDTO{
-		BaseProductDTO: MapBaseProductDTO(product),
-		Sizes:          sizes,
+		ProductDTO: MapToProductDTO(*product),
+		Sizes:      sizes,
 	}
 }
 
 func MapToProductDTO(product data.Product) ProductDTO {
+	basePrice, productSizeCount := ProductAdditionalInfo(product)
+
+	return ProductDTO{
+		ID:               product.ID,
+		BaseProductDTO:   MapToBaseProductDTO(&product),
+		BasePrice:        basePrice,
+		ProductSizeCount: productSizeCount,
+	}
+}
+
+func ProductAdditionalInfo(product data.Product) (float64, int) {
 	var basePrice float64 = 0
 	var productSizesPrices []float64
 	var productSizeCount = len(product.ProductSizes)
@@ -48,21 +66,50 @@ func MapToProductDTO(product data.Product) ProductDTO {
 		basePrice = productSizesPrices[0]
 	}
 
-	return ProductDTO{
-		BaseProductDTO:   MapBaseProductDTO(&product),
-		BasePrice:        basePrice,
-		ProductSizeCount: productSizeCount,
+	return basePrice, productSizeCount
+}
+
+func MapToBaseProductSizeDTO(productSize data.ProductSize) BaseProductSizeDTO {
+	return BaseProductSizeDTO{
+		Name:      productSize.Name,
+		IsDefault: productSize.IsDefault,
+		Unit:      unitTypes.ToUnitResponse(productSize.Unit),
+		ProductID: productSize.ProductID,
+		Size:      productSize.Size,
+		BasePrice: productSize.BasePrice,
 	}
 }
 
 func MapToProductSizeDTO(productSize data.ProductSize) ProductSizeDTO {
 	return ProductSizeDTO{
-		ID:        productSize.ID,
-		Name:      productSize.Name,
-		IsDefault: productSize.IsDefault,
-		Measure:   productSize.Measure,
-		Size:      productSize.Size,
-		BasePrice: productSize.BasePrice,
+		ID:                 productSize.ID,
+		BaseProductSizeDTO: MapToBaseProductSizeDTO(productSize),
+	}
+}
+
+func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditive) ProductSizeAdditiveDTO {
+	return ProductSizeAdditiveDTO{
+		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive),
+		IsDefault:   productSizeAdditive.IsDefault,
+	}
+}
+
+func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
+	var additives = make([]ProductSizeAdditiveDTO, len(productSize.Additives))
+	var ingredients = make([]ingredientTypes.IngredientDTO, len(productSize.ProductSizeIngredients))
+
+	for i, productSizeAdditive := range productSize.Additives {
+		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
+	}
+
+	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
+		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+	}
+
+	return ProductSizeDetailsDTO{
+		ProductSizeDTO: MapToProductSizeDTO(productSize),
+		Additives:      additives,
+		Ingredients:    ingredients,
 	}
 }
 
@@ -81,7 +128,6 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	productSize := &data.ProductSize{
 		ProductID: dto.ProductID,
 		Name:      dto.Name,
-		Measure:   dto.Measure,
 		BasePrice: dto.BasePrice,
 		Size:      dto.Size,
 		IsDefault: dto.IsDefault,
@@ -94,9 +140,10 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 		})
 	}
 
-	for _, ingredientID := range dto.Ingredients {
+	for _, ingredient := range dto.Ingredients {
 		productSize.ProductSizeIngredients = append(productSize.ProductSizeIngredients, data.ProductSizeIngredient{
-			IngredientID: ingredientID,
+			IngredientID: ingredient.IngredientID,
+			Quantity:     ingredient.Quantity,
 		})
 	}
 	return productSize
@@ -104,6 +151,10 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 
 func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
 	product := &data.Product{}
+	if dto == nil {
+		return product
+	}
+
 	if strings.TrimSpace(dto.Name) != "" {
 		product.Name = dto.Name
 	}
@@ -113,7 +164,7 @@ func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
 	if strings.TrimSpace(dto.Description) != "" {
 		product.ImageURL = dto.ImageURL
 	}
-	if dto.CategoryID != nil {
+	if dto.CategoryID != 0 {
 		product.CategoryID = dto.CategoryID
 	}
 	return product
@@ -125,8 +176,8 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	if dto.Name != nil {
 		productSize.Name = *dto.Name
 	}
-	if dto.Measure != nil {
-		productSize.Measure = *dto.Measure
+	if dto.UnitID != nil {
+		productSize.UnitID = *dto.UnitID
 	}
 	if dto.BasePrice != nil {
 		productSize.BasePrice = *dto.BasePrice
@@ -149,9 +200,10 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 		additives = append(additives, temp)
 	}
 
-	for _, ingredientID := range dto.Ingredients {
+	for _, ingredient := range dto.Ingredients {
 		temp := data.ProductSizeIngredient{
-			IngredientID: ingredientID,
+			IngredientID: ingredient.IngredientID,
+			Quantity:     ingredient.Quantity,
 		}
 		ingredients = append(ingredients, temp)
 	}

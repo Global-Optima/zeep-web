@@ -25,22 +25,22 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
+import type { SuppliersFilter } from '@/modules/admin/suppliers/models/suppliers.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-const props = defineProps<{ filter: StoresFilter }>()
+const props = defineProps<{ filter: SuppliersFilter }>()
 const emit = defineEmits(['update:filter'])
 
 const localFilter = ref({ ...props.filter })
 
-const searchTerm = ref(localFilter.value.searchTerm || '')
+const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.searchTerm = newValue
-	emit('update:filter', { searchTerm: newValue.trim() })
+	localFilter.value.search = newValue
+	emit('update:filter', { search: newValue.trim() })
 })
 
 const router = useRouter()

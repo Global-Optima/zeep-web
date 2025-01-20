@@ -3,6 +3,7 @@ package stockMaterialCategory
 import (
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -19,13 +20,13 @@ func NewStockMaterialCategoryHandler(service StockMaterialCategoryService) *Stoc
 func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
 	var dto types.CreateStockMaterialCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "Invalid request body")
 		return
 	}
 
 	id, err := h.service.Create(dto)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to create stock material category")
 		return
 	}
 
@@ -41,7 +42,7 @@ func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
 
 	response, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to fetch stock material category")
 		return
 	}
 
@@ -49,13 +50,21 @@ func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
 }
 
 func (h *StockMaterialCategoryHandler) GetAll(c *gin.Context) {
-	categories, err := h.service.GetAll()
+	var filter types.StockMaterialCategoryFilter
+
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockMaterialCategory{})
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendBadRequestError(c, "Failed to parse queries")
 		return
 	}
 
-	utils.SendSuccessResponse(c, categories)
+	categories, err := h.service.GetAll(filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch categories")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, categories, filter.Pagination)
 }
 
 func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
@@ -67,12 +76,12 @@ func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
 
 	var dto types.UpdateStockMaterialCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "Invalid body")
 		return
 	}
 
 	if err := h.service.Update(uint(id), dto); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to update stock material category")
 		return
 	}
 
@@ -87,7 +96,7 @@ func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
 	}
 
 	if err := h.service.Delete(uint(id)); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to delete stock material category")
 		return
 	}
 

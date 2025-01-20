@@ -72,7 +72,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{cfg.Server.ClientURL},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,

@@ -1,11 +1,17 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type AdditiveCategoriesFilterQuery struct {
 	utils.BaseFilter
-	ProductSizeId *uint   `form:"productSizeId"`
-	Search        *string `form:"search"`
+	IncludeEmpty     *bool   `form:"includeEmpty"`
+	ProductSizeId    *uint   `form:"productSizeId"`
+	IsMultipleSelect *bool   `form:"isMultipleSelect"`
+	Search           *string `form:"search"`
 }
 
 type AdditiveFilterQuery struct {
@@ -17,38 +23,47 @@ type AdditiveFilterQuery struct {
 	ProductSizeID *uint    `form:"productSizeId"`
 }
 
-type AdditiveDTO struct {
-	ID          uint    `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	ImageURL    string  `json:"imageUrl"`
-	Size        string  `json:"size"`
-	Category    struct {
-		ID               uint   `json:"id"`
-		Name             string `json:"name"`
-		IsMultipleSelect bool   `json:"isMultipleSelect"`
-	} `json:"category"`
+type CategoryDTO struct {
+	ID               uint   `json:"id"`
+	Name             string `json:"name"`
+	IsMultipleSelect bool   `json:"isMultipleSelect"`
 }
 
-type StoreAdditiveDTO struct {
+// BaseAdditiveDTO should not be returned directly as a response,
+// instead wrap it into another struct with more info like ID and etc
+type BaseAdditiveDTO struct {
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	BasePrice   float64            `json:"basePrice"`
+	ImageURL    string             `json:"imageUrl"`
+	Size        int                `json:"size"`
+	Unit        unitTypes.UnitsDTO `json:"unit"`
+	Category    CategoryDTO        `json:"category"`
+}
+
+type AdditiveDTO struct {
+	ID uint `json:"id"`
+	BaseAdditiveDTO
+}
+
+type AdditiveDetailsDTO struct {
 	AdditiveDTO
-	StorePrice float64 `json:"storePrice"`
+	Ingredients []ingredientTypes.IngredientDTO `json:"ingredients"`
+}
+
+type BaseAdditiveCategoryItemDTO struct {
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	BasePrice   float64            `json:"basePrice"`
+	ImageURL    string             `json:"imageUrl"`
+	Size        int                `json:"size"`
+	Unit        unitTypes.UnitsDTO `json:"unit"`
+	CategoryID  uint               `json:"categoryId"`
 }
 
 type AdditiveCategoryItemDTO struct {
-	ID          uint    `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	ImageURL    string  `json:"imageUrl"`
-	Size        string  `json:"size"`
-	CategoryID  uint    `json:"categoryId"`
-}
-
-type StoreAdditiveCategoryItemDTO struct {
-	AdditiveCategoryItemDTO
-	StorePrice float64 `json:"storePrice"`
+	ID uint `json:"id"`
+	BaseAdditiveCategoryItemDTO
 }
 
 type AdditiveCategoryDTO struct {
@@ -59,14 +74,6 @@ type AdditiveCategoryDTO struct {
 	IsMultipleSelect bool                      `json:"isMultipleSelect"`
 }
 
-type StoreAdditiveCategoryDTO struct {
-	ID               uint                           `json:"id"`
-	Name             string                         `json:"name"`
-	Description      string                         `json:"description"`
-	Additives        []StoreAdditiveCategoryItemDTO `json:"additives"`
-	IsMultipleSelect bool                           `json:"isMultipleSelect"`
-}
-
 type CreateAdditiveCategoryDTO struct {
 	Name             string `json:"name" binding:"required"`
 	Description      string `json:"description" binding:"omitempty"`
@@ -74,20 +81,20 @@ type CreateAdditiveCategoryDTO struct {
 }
 
 type UpdateAdditiveCategoryDTO struct {
-	ID               uint   `json:"id" binding:"required"`
-	Name             string `json:"name" binding:"omitempty"`
-	Description      string `json:"description" binding:"omitempty"`
-	IsMultipleSelect *bool  `json:"isMultipleSelect"`
+	Name             *string `json:"name" binding:"omitempty"`
+	Description      *string `json:"description" binding:"omitempty"`
+	IsMultipleSelect *bool   `json:"isMultipleSelect"`
 }
 
 type UpdateAdditiveDTO struct {
-	ID                 uint     `json:"id" binding:"required"`
-	Name               string   `json:"name" binding:"omitempty"`
-	Description        string   `json:"description" binding:"omitempty"`
-	Price              *float64 `json:"price" binding:"omitempty,gte=0"`
-	ImageURL           *string  `json:"imageUrl" binding:"omitempty"`
-	Size               *string  `json:"size" binding:"omitempty"`
-	AdditiveCategoryID *uint    `json:"additiveCategoryId" binding:"omitempty"`
+	Name               string                  `json:"name" binding:"omitempty"`
+	Description        string                  `json:"description" binding:"omitempty"`
+	BasePrice          *float64                `json:"basePrice" binding:"omitempty,gte=0"`
+	ImageURL           *string                 `json:"imageUrl" binding:"omitempty"`
+	Size               *int                    `json:"size" binding:"omitempty,gt=0"`
+	UnitID             *uint                   `json:"unitId" binding:"omitempty,gt=0"`
+	AdditiveCategoryID *uint                   `json:"additiveCategoryId" binding:"omitempty,gt=0"`
+	Ingredients        []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }
 
 type AdditiveCategoryResponseDTO struct {
@@ -98,10 +105,17 @@ type AdditiveCategoryResponseDTO struct {
 }
 
 type CreateAdditiveDTO struct {
-	Name               string  `json:"name" binding:"required"`
-	Description        string  `json:"description" binding:"required"`
-	Price              float64 `json:"price" binding:"required,gte=0"`
-	ImageURL           string  `json:"imageUrl" binding:"omitempty"`
-	Size               string  `json:"size" binding:"required"`
-	AdditiveCategoryID uint    `json:"additiveCategoryId" binding:"required"`
+	Name               string                  `json:"name" binding:"required"`
+	Description        string                  `json:"description" binding:"required"`
+	BasePrice          float64                 `json:"basePrice" binding:"required,gte=0"`
+	ImageURL           string                  `json:"imageUrl" binding:"omitempty"`
+	Size               int                     `json:"size" binding:"required,gt=0"`
+	UnitID             uint                    `json:"unitId" binding:"required,gt=0"`
+	AdditiveCategoryID uint                    `json:"additiveCategoryId" binding:"omitempty,gt=0"`
+	Ingredients        []SelectedIngredientDTO `json:"ingredients" binding:"required,dive"`
+}
+
+type SelectedIngredientDTO struct {
+	IngredientID uint    `json:"ingredientId" binding:"required,gt=0"`
+	Quantity     float64 `json:"quantity" binding:"required,gt=0"`
 }

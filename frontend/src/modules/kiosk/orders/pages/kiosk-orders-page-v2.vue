@@ -35,9 +35,8 @@ import OrdersList from '@/modules/kiosk/orders/components/orders-list.vue'
 import SubOrderDetails from '@/modules/kiosk/orders/components/sub-order-details.vue'
 import SubordersList from '@/modules/kiosk/orders/components/suborders-list.vue'
 import { useOrderEventsService } from '@/modules/kiosk/orders/services/orders-event.service'
-import { OrderStatus, SubOrderStatus, type OrderDTO, type SubOrderDTO } from '@/modules/orders/models/orders.models'
+import { OrderStatus, SubOrderStatus, type OrderDTO, type SuborderDTO } from '@/modules/orders/models/orders.models'
 import { orderService } from '@/modules/orders/services/orders.service'
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -48,14 +47,13 @@ interface Status {
 }
 
 const router = useRouter()
-const {currentStoreId} = useCurrentStoreStore()
 
 const onBackClick = () => {
 	router.push({ name: getRouteName('ADMIN_DASHBOARD') })
 }
 
 const selectedOrder = ref<OrderDTO | null>(null)
-const selectedSuborder = ref<SubOrderDTO | null>(null)
+const selectedSuborder = ref<SuborderDTO | null>(null)
 const selectedStatus = ref<Status>({ label: 'Все', count: 0 })
 
 const statusMap: Record<string, OrderStatus | null> = {
@@ -73,9 +71,8 @@ const statuses = ref<Status[]>([
 ])
 
 const fetchStatuses = async (): Promise<Status[]> => {
-  if (!currentStoreId) return []
 
-	const data = await orderService.getStatusesCount(currentStoreId)
+	const data = await orderService.getStatusesCount()
 	return [
 		{ label: 'Все', count: data.ALL },
 		{ label: 'Активные', count: data.PREPARING },
@@ -85,12 +82,12 @@ const fetchStatuses = async (): Promise<Status[]> => {
 }
 
 const {data: fetchedStatuses} = useQuery({
-  queryKey: ['statuses', currentStoreId],
+  queryKey: ['statuses'],
   queryFn: fetchStatuses ,
 })
 
 // Use the composable
-const { getOrdersRef } = useOrderEventsService(currentStoreId!)
+const { getOrdersRef } = useOrderEventsService()
 
 // Filtered orders based on selectedStatus
 const filteredOrders = computed(() => {
@@ -110,7 +107,7 @@ function selectOrder(order: OrderDTO) {
 	selectedSuborder.value = null
 }
 
-function selectSuborder(suborder: SubOrderDTO) {
+function selectSuborder(suborder: SuborderDTO) {
 	if (selectedSuborder.value?.id === suborder.id) return
 	selectedSuborder.value = suborder
 }
@@ -128,17 +125,16 @@ const scrollToTop = async () => {
   }
 };
 
-async function toggleSuborderStatus(suborder: SubOrderDTO) {
+async function toggleSuborderStatus(suborder: SuborderDTO) {
 	if (suborder.status === SubOrderStatus.COMPLETED) return
 
 	if (!selectedOrder.value) return
 
 	const orderId = selectedOrder.value.id
 	const suborderId = suborder.id
-  if (!currentStoreId) return
 
 	try {
-		await orderService.completeSubOrder(currentStoreId, orderId, suborderId)
+		await orderService.completeSubOrder(orderId, suborderId)
 		suborder.status = SubOrderStatus.COMPLETED
 
 		const allDone = selectedOrder.value?.subOrders.every((so) => so.status === SubOrderStatus.COMPLETED)

@@ -91,7 +91,6 @@ type StockMaterial struct {
 	IngredientID           uint                  `gorm:"not null;index"` // Link to the ingredient
 	Ingredient             Ingredient            `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	SafetyStock            float64               `gorm:"type:decimal(10,2);not null" sort:"safetyStock"`
-	ExpirationFlag         bool                  `gorm:"not null" sort:"expirationFlag"`
 	UnitID                 uint                  `gorm:"not null"`
 	Unit                   Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 	CategoryID             uint                  `gorm:"not null"` // Link to IngredientCategory
@@ -111,7 +110,7 @@ type StockMaterialCategory struct {
 
 type Unit struct {
 	BaseEntity
-	Name             string  `gorm:"size:50;not null;unique"`
+	Name             string  `gorm:"size:50;not null"`
 	ConversionFactor float64 `gorm:"type:decimal(10,4);not null"` // To base unit
 }
 

@@ -43,17 +43,17 @@
 
 <script setup lang="ts">
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/core/components/ui/table'
-import type { Store } from '@/modules/stores/models/stores.models'
-import { useRouter } from 'vue-router'
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/core/components/ui/table';
+import type { StoreDTO } from '@/modules/stores/models/stores.models';
+import { useRouter } from 'vue-router';
 
-const {stores} = defineProps<{stores: Store[]}>()
+const {stores} = defineProps<{stores: StoreDTO[]}>()
 
 const router = useRouter();
 

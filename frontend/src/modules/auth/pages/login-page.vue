@@ -1,21 +1,25 @@
 <template>
 	<div class="flex justify-center items-center bg-gray-200 w-full h-full">
-		<Tabs
-			default-value="cafe"
-			class="w-[400px]"
-		>
-			<TabsList class="grid grid-cols-2 w-full">
+		<Tabs default-value="cafe">
+			<TabsList class="grid grid-cols-3 w-full">
 				<TabsTrigger
 					value="cafe"
-					class="text-base"
+					class="p-2 text-base"
 				>
 					Кафе
 				</TabsTrigger>
 				<TabsTrigger
 					value="warehouse"
-					class="text-base"
+					class="p-2 text-base"
 				>
 					Склад
+				</TabsTrigger>
+
+				<TabsTrigger
+					value="admin"
+					class="p-2 text-base"
+				>
+					Администраторы
 				</TabsTrigger>
 			</TabsList>
 			<TabsContent value="cafe">
@@ -23,6 +27,9 @@
 			</TabsContent>
 			<TabsContent value="warehouse">
 				<WarehouseLoginForm @login="onLoginEmployee" />
+			</TabsContent>
+			<TabsContent value="admin">
+				<AdminLoginForm @login="onLoginEmployee" />
 			</TabsContent>
 		</Tabs>
 	</div>
@@ -35,26 +42,27 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/core/components/ui/tabs'
+import { useToast } from '@/core/components/ui/toast'
+import { getRouteName } from '@/core/config/routes.config'
+import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import AdminLoginForm from '@/modules/auth/components/login/admin-login-form.vue'
 import StoreLoginForm from '@/modules/auth/components/login/store-login-form.vue'
 import WarehouseLoginForm from '@/modules/auth/components/login/warehouse-login-form.vue'
-
-import { getRouteName } from '@/core/config/routes.config'
-import { toastError, toastSuccess } from '@/core/config/toast.config'
 import { authService } from '@/modules/auth/services/auth.service'
-import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
 import { useMutation } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const { toast } = useToast()
 
 const {mutate: loginEmployee} = useMutation({
 		mutationFn: (dto: EmployeeLoginDTO) => authService.loginEmployee(dto),
 		onSuccess: () => {
-			toastSuccess("Вы вошли в систему")
+			toast({title: "Вы вошли в систему"})
 			router.push({name: getRouteName("ADMIN_DASHBOARD")})
 		},
 		onError: () => {
-			toastError("Произошла ошибка при входе")
+			toast({title: "Произошла ошибка при входе"})
 		},
 })
 

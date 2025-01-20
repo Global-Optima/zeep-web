@@ -1,12 +1,8 @@
 <template>
 	<Card>
 		<CardHeader>
-			<div>
-				<CardTitle>Список материалов</CardTitle>
-				<CardDescription class="mt-2">
-					Ниже представлена таблица с материалами, переданная в компонент через props.
-				</CardDescription>
-			</div>
+			<CardTitle>Список материалов</CardTitle>
+			<CardDescription class="mt-2"> Материалы представленные в заказе </CardDescription>
 		</CardHeader>
 
 		<CardContent>
@@ -19,11 +15,11 @@
 				</TableHeader>
 				<TableBody>
 					<TableRow
-						v-for="(item, index) in items"
+						v-for="(item, index) in stockRequest.stockMaterials"
 						:key="index"
 					>
-						<TableCell>{{ item.name }}</TableCell>
-						<TableCell>{{ item.quantity }}</TableCell>
+						<TableCell>{{ item.stockMaterial.name }}</TableCell>
+						<TableCell>{{ item.packageMeasures.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>
 			</Table>
@@ -47,10 +43,11 @@ import {
   TableHeader,
   TableRow
 } from '@/core/components/ui/table'
-import type { StoreStockRequestItemResponse } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import { type StockRequestResponse } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 
-defineProps<{
-  items: StoreStockRequestItemResponse[]
+
+const {stockRequest} = defineProps<{
+  stockRequest: StockRequestResponse
 }>()
 </script>
 

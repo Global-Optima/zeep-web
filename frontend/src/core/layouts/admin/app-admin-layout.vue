@@ -4,11 +4,14 @@ import { Button } from '@/core/components/ui/button'
 import { getRouteName } from '@/core/config/routes.config'
 import AppAdminHeader from '@/core/layouts/admin/app-admin-header.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
-import { Coffee, Package2, Store } from 'lucide-vue-next'
+import { EmployeeType } from '@/modules/admin/store-employees/models/employees.models'
+import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
+import { Coffee, Store } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
-
 const router = useRouter()
+
+const {currentEmployee} = useEmployeeAuthStore()
 
 const onKioskClick = () => {
 	router.push({name: getRouteName('KIOSK_HOME')})
@@ -25,10 +28,16 @@ const onBaristaClick = () => {
 				<div class="flex items-center px-4 lg:px-6 border-b h-14 lg:h-[60px]">
 					<a
 						href="/admin"
-						class="flex items-center gap-2 font-semibold"
+						class="flex items-center gap-3 font-semibold"
 					>
-						<Package2 class="w-6 h-6" />
-						<span class="">Zeep</span>
+						<div class="flex items-center gap-2">
+							<span class="font-bold text-xl">Zeep</span>
+							<span class="font-normal text-base">|</span>
+							<span
+								class="font-normal"
+								>{{ currentEmployee?.type === EmployeeType.STORE ? "Кафе" : "Склад" }}</span
+							>
+						</div>
 					</a>
 				</div>
 

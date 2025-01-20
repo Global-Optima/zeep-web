@@ -1,38 +1,82 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"strings"
+
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+)
+
+type AdditiveModels struct {
+	Additive    *data.Additive
+	Ingredients []data.ProductSizeIngredient
+}
 
 func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
-	return &data.Additive{
+	additive := &data.Additive{
 		Name:               dto.Name,
 		Description:        dto.Description,
-		BasePrice:          dto.Price,
+		BasePrice:          dto.BasePrice,
 		ImageURL:           dto.ImageURL,
+		UnitID:             dto.UnitID,
 		Size:               dto.Size,
 		AdditiveCategoryID: dto.AdditiveCategoryID,
 	}
+
+	for _, ingredient := range dto.Ingredients {
+		additive.Ingredients = append(additive.Ingredients, data.AdditiveIngredient{
+			IngredientID: ingredient.IngredientID,
+			Quantity:     ingredient.Quantity,
+		})
+	}
+
+	return additive
 }
 
-func ConvertToUpdatedAdditiveModel(dto *UpdateAdditiveDTO, existing *data.Additive) *data.Additive {
-	if dto.Name != "" {
-		existing.Name = dto.Name
+func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) *AdditiveModels {
+	additive := &data.Additive{}
+	if dto == nil {
+		return nil
 	}
-	if dto.Description != "" {
-		existing.Description = dto.Description
+
+	if strings.TrimSpace(dto.Name) != "" {
+		additive.Name = dto.Name
 	}
-	if dto.Price != nil {
-		existing.BasePrice = *dto.Price
+	if strings.TrimSpace(dto.Description) != "" {
+		additive.Description = dto.Description
+	}
+	if dto.BasePrice != nil {
+		additive.BasePrice = *dto.BasePrice
 	}
 	if dto.ImageURL != nil {
-		existing.ImageURL = *dto.ImageURL
+		additive.ImageURL = *dto.ImageURL
 	}
 	if dto.Size != nil {
-		existing.Size = *dto.Size
+		additive.Size = *dto.Size
+	}
+	if dto.UnitID != nil {
+		additive.UnitID = *dto.UnitID
 	}
 	if dto.AdditiveCategoryID != nil {
-		existing.AdditiveCategoryID = *dto.AdditiveCategoryID
+		additive.AdditiveCategoryID = *dto.AdditiveCategoryID
 	}
-	return existing
+
+	var ingredients []data.ProductSizeIngredient
+
+	for _, ingredient := range dto.Ingredients {
+		temp := data.ProductSizeIngredient{
+			IngredientID: ingredient.IngredientID,
+			Quantity:     ingredient.Quantity,
+		}
+		ingredients = append(ingredients, temp)
+	}
+
+	return &AdditiveModels{
+		Additive:    additive,
+		Ingredients: ingredients,
+	}
 }
 
 func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.AdditiveCategory {
@@ -44,11 +88,11 @@ func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.Additi
 }
 
 func ConvertToUpdatedAdditiveCategoryModel(dto *UpdateAdditiveCategoryDTO, existing *data.AdditiveCategory) *data.AdditiveCategory {
-	if dto.Name != "" {
-		existing.Name = dto.Name
+	if dto.Name != nil {
+		existing.Name = *dto.Name
 	}
-	if dto.Description != "" {
-		existing.Description = dto.Description
+	if dto.Description != nil {
+		existing.Description = *dto.Description
 	}
 	if dto.IsMultipleSelect != nil {
 		existing.IsMultipleSelect = *dto.IsMultipleSelect
@@ -67,28 +111,40 @@ func ConvertToAdditiveCategoryResponseDTO(model *data.AdditiveCategory) *Additiv
 
 func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 	return &AdditiveDTO{
-		ID:          additive.ID,
-		Name:        additive.Name,
-		Description: additive.Description,
-		Price:       additive.BasePrice,
-		ImageURL:    additive.ImageURL,
-		Size:        additive.Size,
-		Category: struct {
-			ID               uint   `json:"id"`
-			Name             string `json:"name"`
-			IsMultipleSelect bool   `json:"isMultipleSelect"`
-		}{
-			ID:               additive.Category.ID,
-			Name:             additive.Category.Name,
-			IsMultipleSelect: additive.Category.IsMultipleSelect,
-		},
+		ID:              additive.ID,
+		BaseAdditiveDTO: *ConvertToBaseAdditiveDTO(additive),
 	}
 }
 
-func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
-	return &StoreAdditiveDTO{
-		AdditiveDTO: *ConvertToAdditiveDTO(&storeAdditive.Additive),
-		StorePrice:  storeAdditive.Price,
+func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
+	ingredients := make([]ingredientTypes.IngredientDTO, len(additive.Ingredients))
+	for i, additiveIngredient := range additive.Ingredients {
+		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
+	}
+
+	return &AdditiveDetailsDTO{
+		AdditiveDTO: *ConvertToAdditiveDTO(additive),
+		Ingredients: ingredients,
+	}
+}
+
+func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
+	return &BaseAdditiveDTO{
+		Name:        additive.Name,
+		Description: additive.Description,
+		BasePrice:   additive.BasePrice,
+		ImageURL:    additive.ImageURL,
+		Size:        additive.Size,
+		Unit:        unitTypes.ToUnitResponse(additive.Unit),
+		Category:    *ConvertToCategoryDTO(&additive.Category),
+	}
+}
+
+func ConvertToCategoryDTO(category *data.AdditiveCategory) *CategoryDTO {
+	return &CategoryDTO{
+		ID:               category.ID,
+		Name:             category.Name,
+		IsMultipleSelect: category.IsMultipleSelect,
 	}
 }
 
@@ -104,51 +160,32 @@ func ConvertToAdditiveCategoryDTO(category *data.AdditiveCategory) *AdditiveCate
 	}
 }
 
-func ConvertToStoreAdditiveCategoryDTO(category *data.AdditiveCategory) *StoreAdditiveCategoryDTO {
-	storeAdditives := ConvertToStoreAdditiveCategoryItemDTOs(category)
-
-	return &StoreAdditiveCategoryDTO{
-		ID:               category.ID,
-		Name:             category.Name,
-		Description:      category.Description,
-		IsMultipleSelect: category.IsMultipleSelect,
-		Additives:        storeAdditives, // Always initialized as a slice
-	}
-}
-
 func ConvertToAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []AdditiveCategoryItemDTO {
 	additives := make([]AdditiveCategoryItemDTO, 0)
 
 	// Populate additives if present
 	for _, additive := range category.Additives {
-		additives = append(additives, *convertToAdditiveCategoryItem(&additive, category.ID))
+		additives = append(additives, *ConvertToAdditiveCategoryItem(&additive, category.ID))
 	}
 
 	return additives
 }
 
-func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []StoreAdditiveCategoryItemDTO {
-	storeAdditives := make([]StoreAdditiveCategoryItemDTO, len(category.Additives))
-
-	// Populate additives if present
-	for i, additive := range category.Additives {
-		storeAdditives[i] = StoreAdditiveCategoryItemDTO{
-			AdditiveCategoryItemDTO: *convertToAdditiveCategoryItem(&additive, category.ID),
-			StorePrice:              additive.StoreAdditives[0].Price,
-		}
+func ConvertToAdditiveCategoryItem(additive *data.Additive, categoryID uint) *AdditiveCategoryItemDTO {
+	return &AdditiveCategoryItemDTO{
+		ID:                          additive.ID,
+		BaseAdditiveCategoryItemDTO: *ConvertToBaseAdditiveCategoryItem(additive, categoryID),
 	}
-
-	return storeAdditives
 }
 
-func convertToAdditiveCategoryItem(additive *data.Additive, categoryID uint) *AdditiveCategoryItemDTO {
-	return &AdditiveCategoryItemDTO{
-		ID:          additive.ID,
+func ConvertToBaseAdditiveCategoryItem(additive *data.Additive, categoryID uint) *BaseAdditiveCategoryItemDTO {
+	return &BaseAdditiveCategoryItemDTO{
 		Name:        additive.Name,
 		Description: additive.Description,
-		Price:       additive.BasePrice,
+		BasePrice:   additive.BasePrice,
 		ImageURL:    additive.ImageURL,
 		Size:        additive.Size,
+		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		CategoryID:  categoryID,
 	}
 }

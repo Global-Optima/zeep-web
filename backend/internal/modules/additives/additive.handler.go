@@ -2,7 +2,6 @@ package additives
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
@@ -16,28 +15,6 @@ type AdditiveHandler struct {
 
 func NewAdditiveHandler(service AdditiveService) *AdditiveHandler {
 	return &AdditiveHandler{service: service}
-}
-
-func (h *AdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	var filter types.AdditiveCategoriesFilterQuery
-	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.AdditiveCategory{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
-	additives, err := h.service.GetStoreAdditiveCategories(storeID, &filter)
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store additives")
-		return
-	}
-
-	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
 }
 
 func (h *AdditiveHandler) GetAdditiveCategories(c *gin.Context) {
@@ -78,7 +55,13 @@ func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateAdditiveCategory(&dto); err != nil {
+	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid category ID")
+		return
+	}
+
+	if err := h.service.UpdateAdditiveCategory(uint(categoryID), &dto); err != nil {
 		utils.SendInternalServerError(c, "Failed to update additive category")
 		return
 	}
@@ -135,29 +118,6 @@ func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
 }
 
-func (h *AdditiveHandler) GetStoreAdditives(c *gin.Context) {
-	var filter types.AdditiveFilterQuery
-
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Additive{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
-		return
-	}
-
-	additives, err := h.service.GetStoreAdditives(storeID, &filter)
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch additives")
-		return
-	}
-
-	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
-}
-
 func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	var dto types.CreateAdditiveDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -174,13 +134,19 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 }
 
 func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
+	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid additive ID")
+		return
+	}
+
 	var dto types.UpdateAdditiveDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, "Invalid input data")
 		return
 	}
 
-	if err := h.service.UpdateAdditive(&dto); err != nil {
+	if err := h.service.UpdateAdditive(uint(additiveID), &dto); err != nil {
 		utils.SendInternalServerError(c, "Failed to update additive")
 		return
 	}

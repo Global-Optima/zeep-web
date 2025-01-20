@@ -16,10 +16,7 @@
 					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Склад</FormLabel>
 						<FormControl>
-							<Select
-								v-model="values.selectedWarehouseId"
-								v-bind="componentField"
-							>
+							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
 									<template v-if="warehousesLoading">
 										<SelectValue
@@ -42,7 +39,7 @@
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="warehouse in warehouses"
+										v-for="warehouse in warehouses?.data"
 										:key="warehouse.id"
 										:value="warehouse.id.toString()"
 										class="text-sm sm:text-base"
@@ -63,10 +60,7 @@
 					<FormItem v-if="values.selectedWarehouseId">
 						<FormLabel class="text-sm sm:text-base">Выберите сотрудника</FormLabel>
 						<FormControl>
-							<Select
-								v-model="values.selectedEmployeeEmail"
-								v-bind="componentField"
-							>
+							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
 									<template v-if="employeesLoading">
 										<SelectValue
@@ -90,11 +84,11 @@
 								<SelectContent>
 									<SelectItem
 										v-for="employee in employees"
-										:key="employee.id"
+										:key="employee.email"
 										:value="employee.email"
 										class="text-sm sm:text-base"
 									>
-										{{ employee.name }}
+										{{ employee.firstName }} {{ employee.lastName }}
 									</SelectItem>
 								</SelectContent>
 							</Select>
@@ -158,13 +152,13 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
-import { employeesService } from '@/modules/employees/services/employees.service'
+import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import { authService } from '@/modules/auth/services/auth.service'
 import { warehouseService } from "@/modules/warehouse/services/warehouse.service"
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { watch } from 'vue'
+import { computed } from 'vue'
 import * as z from 'zod'
 
 const emits = defineEmits<{
@@ -173,7 +167,7 @@ const emits = defineEmits<{
 
 const formSchema = toTypedSchema(
   z.object({
-    selectedWarehouseId: z.string().min(1, {message: "Пожалуйста, выберите склад"}),
+    selectedWarehouseId: z.coerce.number().min(1, {message: "Пожалуйста, выберите склад"}),
     selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
     password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
   })
@@ -186,18 +180,13 @@ const { values, isSubmitting, handleSubmit } = useForm({
 const { data: warehouses, isLoading: warehousesLoading, isError: warehousesError } = useQuery({
   queryKey: ['warehouses'],
   queryFn: () => warehouseService.getWarehouses(),
-  initialData: [],
 })
 
-const { data: employees, refetch: refetchEmployees, isLoading: employeesLoading, isError: employeesError } = useQuery({
-  queryKey: ['warehouse-employees', values.selectedWarehouseId],
-  queryFn: () => employeesService.getWarehouseEmployees(Number(values.selectedWarehouseId)),
-  initialData: [],
-  enabled: false,
-})
-
-watch(() => values.selectedWarehouseId, (newWarehouse) => {
-  if (newWarehouse) refetchEmployees()
+const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
+  queryKey: computed(() => ['warehouse-employees', values.selectedWarehouseId]),
+  queryFn: () => authService.getWarehouseAccounts(values.selectedWarehouseId!),
+  enabled: computed(() => Boolean(values.selectedWarehouseId)),
+  initialData: []
 })
 
 const onSubmit = handleSubmit((values) => {

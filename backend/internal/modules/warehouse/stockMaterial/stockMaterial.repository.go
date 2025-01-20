@@ -20,6 +20,8 @@ type StockMaterialRepository interface {
 	UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error)
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
+
+	PopulateStockMaterial(stockMaterialID uint, stockMaterial *data.StockMaterial) error
 }
 
 type stockMaterialRepository struct {
@@ -34,31 +36,51 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 	var stockMaterials []data.StockMaterial
 	query := r.db.Model(&data.StockMaterial{}).
 		Preload("Unit").
-		Preload("Package")
+		Preload("Package").
+		Preload("StockMaterialCategory").
+		Preload("Ingredient").
+		Preload("Ingredient.IngredientCategory").
+		Preload("Ingredient.Unit")
 
 	query = query.Where("is_active = ?", true)
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
 			search := "%" + *filter.Search + "%"
-			query = query.Where("(name ILIKE ? OR category ILIKE ?)", search, search)
+			query = query.Joins("JOIN stock_material_categories ON stock_material_categories.id = stock_materials.category_id").
+				Where("(stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_material_categories.name ILIKE ?)", search, search, search)
 		}
 
 		if filter.LowStock != nil && *filter.LowStock {
 			query = query.Where("quantity < safety_stock")
 		}
 
-		if filter.ExpirationFlag != nil {
-			query = query.Where("expiration_flag = ?", *filter.ExpirationFlag)
-		}
-
 		if filter.IsActive != nil {
 			query = query.Where("is_active = ?", *filter.IsActive)
 		}
+
+		if filter.SupplierID != nil {
+			query = query.Joins("JOIN supplier_materials ON supplier_materials.stock_material_id = stock_materials.id").
+				Where("supplier_materials.supplier_id = ?", *filter.SupplierID)
+		}
+
+		if filter.IngredientID != nil {
+			query = query.Where("ingredient_id = ?", *filter.IngredientID)
+		}
+
+		if filter.CategoryID != nil {
+			query = query.Where("category_id = ?", *filter.CategoryID)
+		}
+
+		if filter.ExpirationInDays != nil {
+			query = query.Where("expiration_period_in_days <= ?", *filter.ExpirationInDays)
+		}
 	}
 
+	query = query.Order("created_at DESC")
+
 	var err error
-	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StockMaterial{})
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +94,13 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 
 func (r *stockMaterialRepository) GetStockMaterialByID(stockMaterialID uint) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
-	err := r.db.Preload("Unit").Preload("Package").First(&stockMaterial, stockMaterialID).Error
+	err := r.db.Preload("Unit").
+		Preload("Package").
+		Preload("StockMaterialCategory").
+		Preload("Ingredient").
+		Preload("Ingredient.IngredientCategory").
+		Preload("Ingredient.Unit").
+		First(&stockMaterial, stockMaterialID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -136,4 +164,8 @@ func (r *stockMaterialRepository) DeleteStockMaterial(stockMaterialID uint) erro
 
 func (r *stockMaterialRepository) DeactivateStockMaterial(stockMaterialID uint) error {
 	return r.db.Model(&data.StockMaterial{}).Where("id = ?", stockMaterialID).Update("is_active", false).Error
+}
+
+func (r *stockMaterialRepository) PopulateStockMaterial(stockMaterialID uint, stockMaterial *data.StockMaterial) error {
+	return r.db.Preload("Ingredient").Preload("StockMaterialCategory").First(stockMaterial, "id = ?", stockMaterialID).Error
 }

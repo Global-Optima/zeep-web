@@ -1,11 +1,10 @@
 <script setup lang="ts">
+import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
-import { toastError } from '@/core/config/toast.config'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { useResetKioskState } from '@/modules/kiosk/hooks/use-reset-kiosk.hook'
 import type { CreateOrderDTO } from '@/modules/orders/models/orders.models'
 import { orderService } from '@/modules/orders/services/orders.service'
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useMutation } from '@tanstack/vue-query'
 import { ChevronRight } from 'lucide-vue-next'
 import { defineAsyncComponent, ref } from 'vue'
@@ -26,9 +25,9 @@ const stepState = ref<StepState>({
 });
 
 const router = useRouter();
+const {toast} = useToast()
 const resetKioskState = useResetKioskState();
 const { cartItems, clearCart } = useCartStore();
-const {currentStoreId} = useCurrentStoreStore()
 
 // Mutation for creating the order
 const createOrderMutation = useMutation({
@@ -37,9 +36,8 @@ const createOrderMutation = useMutation({
     stepState.value.orderId = response.orderId;
     stepState.value.qrCodeUrl = `/api/v1/orders/${response.orderId}/receipt`;
   },
-  onError: (error) => {
-    console.error('Failed to create order:', error);
-    toastError('An error occurred while creating the order. Please try again.');
+  onError: () => {
+    toast({title: "Ошибка при создании заказа"});
   },
 });
 
@@ -71,11 +69,9 @@ const stepsConfig: StepConfig[] = [
       stepState.value.selectedPayment = data.selectedPayment;
       console.log("HERE", stepState.value.customerName)
       try {
-        if (!currentStoreId) return
 
         const orderDTO: CreateOrderDTO = {
           customerName: stepState.value.customerName,
-          storeId: currentStoreId,
           subOrders: Object.entries(cartItems).map(([_, item]) => ({
             productSizeId: item.size.id,
             quantity: item.quantity,

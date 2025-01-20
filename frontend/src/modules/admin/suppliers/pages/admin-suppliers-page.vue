@@ -1,3 +1,4 @@
+<!-- TODO: add pagination here -->
 <template>
 	<AdminSuppliersToolbar
 		:filter="filter"
@@ -6,7 +7,7 @@
 
 	<Card>
 		<CardContent class="mt-4">
-			<AdminSuppliersList :suppliers="suppliers" />
+			<AdminSuppliersList :suppliers="suppliers?.data ?? []" />
 		</CardContent>
 	</Card>
 </template>
@@ -21,14 +22,11 @@ import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<SuppliersFilter>({
-  searchTerm: '',
-})
+const filter = ref<SuppliersFilter>({})
 
 const { data: suppliers } = useQuery({
   queryKey: computed(() => ['suppliers', filter.value]),
   queryFn: () => suppliersService.getSuppliers(filter.value),
-  initialData: []
 })
 
 function updateFilter(updatedFilter: Partial<StoresFilter>) {

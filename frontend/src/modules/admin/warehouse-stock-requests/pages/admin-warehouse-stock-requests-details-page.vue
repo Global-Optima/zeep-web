@@ -1,20 +1,17 @@
 <template>
 	<div class="mx-auto max-w-6xl">
 		<div class="gap-4 grid grid-cols-2 md:grid-cols-3">
-			<!-- Product Details Section -->
 			<div class="col-span-2">
 				<AdminWarehouseStockRequestsDetailsMaterialsTable
 					v-if="stockRequest"
-					:items="stockRequest.items"
+					:stockRequest="stockRequest"
 				/>
 			</div>
 
-			<!-- Media and Category Blocks Section -->
 			<div class="col-span-full md:col-span-1">
 				<AdminWarehouseStockRequestsDetailsInfo
 					v-if="stockRequest"
 					:request="stockRequest"
-					@update:status="onUpdateStatus"
 				/>
 			</div>
 		</div>
@@ -22,40 +19,21 @@
 </template>
 
 <script lang="ts" setup>
-import { toastError, toastSuccess } from '@/core/config/toast.config'
-import type { StoreStockRequestStatus, UpdateStoreStockRequestStatusDTO } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
-import { storeStockRequestService } from '@/modules/admin/store-stock-requests/services/store-stock-request.service'
+import { stockRequestsService } from '@/modules/admin/store-stock-requests/services/stock-requests.service'
 import AdminWarehouseStockRequestsDetailsInfo from '@/modules/admin/warehouse-stock-requests/components/details/admin-warehouse-stock-requests-details-info.vue'
 import AdminWarehouseStockRequestsDetailsMaterialsTable from '@/modules/admin/warehouse-stock-requests/components/details/admin-warehouse-stock-requests-details-materials-table.vue'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const queryClient = useQueryClient()
+const stockRequestId = route.params.id as string
 
-const storeStockRequestId = route.params.id as string
-
-const { data: stockRequest } = useQuery({
-  queryKey: computed(() => ['warehouse-stock-request', storeStockRequestId]),
-	queryFn: () => storeStockRequestService.getStockRequestById(Number(storeStockRequestId)),
-  enabled: !isNaN(Number(storeStockRequestId)),
+const {
+  data: stockRequest,
+} = useQuery({
+  queryKey: computed(() => ['stock-request', Number(stockRequestId)]),
+  queryFn: () => stockRequestsService.getStockRequestById(Number(stockRequestId)),
+  enabled: !isNaN(Number(stockRequestId)),
 })
-
-const {mutate: updateStatusMutation} = useMutation({
-		mutationFn: (data: {id: number, dto: UpdateStoreStockRequestStatusDTO}) => storeStockRequestService.updateStockRequestStatus(data.id, data.dto),
-		onSuccess: () => {
-      toastSuccess("Статус успешно обновлен")
-      queryClient.invalidateQueries({ queryKey: ['warehouse-stock-requests'] })
-      queryClient.invalidateQueries({ queryKey: ['warehouse-stock-request', storeStockRequestId] })
-
-		},
-		onError: () => {
-			toastError("Произошла ошибка при обновлении")
-		},
-})
-
-const onUpdateStatus = (status: StoreStockRequestStatus) => {
-  updateStatusMutation({id: Number(storeStockRequestId), dto: {status }})
-}
 </script>

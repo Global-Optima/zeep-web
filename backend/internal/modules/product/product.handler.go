@@ -1,11 +1,10 @@
 package product
 
 import (
-	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"net/http"
 	"strconv"
-	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -25,27 +24,8 @@ func NewProductHandler(service ProductService) *ProductHandler {
 func (h *ProductHandler) GetProducts(c *gin.Context) {
 	var filter types.ProductsFilterDto
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
-	}
-
-	cacheKey := utils.BuildCacheKey("products", map[string]string{
-		"categoryId":    c.DefaultQuery("categoryId", ""),
-		"search":        c.DefaultQuery("search", ""),
-		"page":          strconv.Itoa(filter.Pagination.Page),
-		"pageSize":      strconv.Itoa(filter.Pagination.PageSize),
-		"sortField":     filter.Sort.Field,
-		"sortDirection": filter.Sort.Direction,
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-
-	var cachedData utils.PaginatedData
-	if err := cacheUtil.Get(cacheKey, &cachedData); err == nil {
-		if !utils.IsEmpty(cachedData.Data) {
-			utils.SendSuccessResponse(c, cachedData)
-			return
-		}
 	}
 
 	products, err := h.service.GetProducts(&filter)
@@ -53,11 +33,6 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve products")
 		return
-	}
-
-	cachedData.Data, cachedData.Pagination = products, *filter.Pagination
-	if err := cacheUtil.Set(cacheKey, cachedData, 5*time.Minute); err != nil {
-		fmt.Printf("Failed to cache products: %v\n", err)
 	}
 
 	utils.SendSuccessResponseWithPagination(c, products, filter.Pagination)
@@ -72,21 +47,7 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 		return
 	}
 
-	cacheKey := utils.BuildCacheKey("productDetails", map[string]string{
-		"productId": productIDParam,
-	})
-
-	cacheUtil := utils.GetCacheInstance()
-
-	var cachedProductDetails *types.ProductDetailsDTO
-	if err := cacheUtil.Get(cacheKey, &cachedProductDetails); err == nil {
-		if !utils.IsEmpty(cachedProductDetails) {
-			utils.SendSuccessResponse(c, cachedProductDetails)
-			return
-		}
-	}
-
-	productDetails, err := h.service.GetProductDetails(uint(productID))
+	productDetails, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
@@ -95,10 +56,6 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 	if productDetails == nil {
 		utils.SendNotFoundError(c, "Product not found")
 		return
-	}
-
-	if err := cacheUtil.Set(cacheKey, productDetails, 10*time.Minute); err != nil {
-		fmt.Printf("Failed to cache product details: %v\n", err)
 	}
 
 	utils.SendSuccessResponse(c, productDetails)
@@ -139,11 +96,29 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 	utils.SendSuccessResponse(c, productSizes)
 }
 
+func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
+	productIDParam := c.Param("id")
+
+	productID, err := strconv.ParseUint(productIDParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid product ID")
+		return
+	}
+
+	productSize, err := h.service.GetProductSizeDetailsByID(uint(productID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve product sizes")
+		return
+	}
+
+	utils.SendSuccessResponse(c, productSize)
+}
+
 func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 	var input types.CreateProductSizeDTO
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON+err.Error())
 		return
 	}
 
@@ -156,22 +131,6 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
 
-func (h *ProductHandler) GetStoreProductDetails(c *gin.Context) {
-	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
-		return
-	}
-
-	productDetails, err := h.service.GetProductDetails(uint(productID))
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
-		return
-	}
-
-	utils.SendSuccessResponse(c, productDetails)
-}
-
 func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -180,6 +139,10 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	}
 
 	var input *types.UpdateProductDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
 
 	err = h.service.UpdateProduct(uint(productID), input)
 	if err != nil {
@@ -191,15 +154,19 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 }
 
 func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
-	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "Invalid product ID")
 		return
 	}
 
 	var input *types.UpdateProductSizeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
 
-	err = h.service.UpdateProductSize(uint(productID), input)
+	err = h.service.UpdateProductSize(uint(productSizeID), input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to update product")
 		return

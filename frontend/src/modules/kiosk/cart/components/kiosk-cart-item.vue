@@ -9,7 +9,10 @@
 
 		<!-- Product Details -->
 		<div class="flex-1">
-			<p class="text-base sm:text-2xl">{{ item.product.name }}, {{ item.size.name }}</p>
+			<div class="flex justify-between items-start gap-4">
+				<p class="flex-1 text-base sm:text-2xl">{{ item.product.name }}, {{ item.size.name }}</p>
+				<Pencil class="w-7 h-7 text-gray-500" />
+			</div>
 
 			<div class="mt-2">
 				<div
@@ -62,6 +65,7 @@
 import { formatPrice } from '@/core/utils/price.utils'
 import { useCartStore, type CartItem } from "@/modules/kiosk/cart/stores/cart.store"
 import { Icon } from '@iconify/vue'
+import { Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 const props = defineProps<{

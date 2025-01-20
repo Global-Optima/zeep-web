@@ -16,10 +16,7 @@
 					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Заведение</FormLabel>
 						<FormControl>
-							<Select
-								v-model="values.selectedStoreId"
-								v-bind="componentField"
-							>
+							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
 									<template v-if="storesLoading">
 										<SelectValue
@@ -63,10 +60,7 @@
 					<FormItem v-if="values.selectedStoreId">
 						<FormLabel class="text-sm sm:text-base">Выберите сотрудника</FormLabel>
 						<FormControl>
-							<Select
-								v-model="values.selectedEmployeeEmail"
-								v-bind="componentField"
-							>
+							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
 									<template v-if="employeesLoading">
 										<SelectValue
@@ -94,7 +88,7 @@
 										:value="employee.email"
 										class="text-sm sm:text-base"
 									>
-										{{ employee.name }}
+										{{ employee.firstName }} {{ employee.lastName }}
 									</SelectItem>
 								</SelectContent>
 							</Select>
@@ -158,14 +152,13 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import type { EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
-import { employeesService } from '@/modules/employees/services/employees.service'
+import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import { authService } from '@/modules/auth/services/auth.service'
 import { storesService } from "@/modules/stores/services/stores.service"
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { watch } from 'vue'
+import { computed } from 'vue'
 import * as z from 'zod'
 
 const emits = defineEmits<{
@@ -184,7 +177,6 @@ const { values, isSubmitting, handleSubmit } = useForm({
   validationSchema: formSchema,
 })
 
-const {setCurrentStore} = useCurrentStoreStore()
 
 const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
   queryKey: ['stores'],
@@ -192,19 +184,14 @@ const { data: stores, isLoading: storesLoading, isError: storesError } = useQuer
   initialData: [],
 })
 
-const { data: employees, refetch: refetchEmployees, isLoading: employeesLoading, isError: employeesError } = useQuery({
-  queryKey: ['store-employees', values.selectedStoreId],
-  queryFn: () => employeesService.getStoreEmployees(Number(values.selectedStoreId)),
+const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
+  queryKey: computed(() => ['store-employees', values.selectedStoreId]),
+  queryFn: () => authService.getStoreAccounts(values.selectedStoreId!),
+  enabled: computed(() => Boolean(values.selectedStoreId)),
   initialData: [],
-  enabled: false,
-})
-
-watch(() => values.selectedStoreId, (newStore) => {
-  if (newStore) refetchEmployees()
 })
 
 const onSubmit = handleSubmit((values) => {
-  setCurrentStore(values.selectedStoreId)
   const dto: EmployeeLoginDTO = {
     email: values.selectedEmployeeEmail,
     password: values.password,

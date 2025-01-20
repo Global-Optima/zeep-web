@@ -4,9 +4,11 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
+	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
@@ -18,10 +20,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/inventory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
 )
 
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
@@ -35,6 +37,7 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.GET(":id/sizes", handler.GetProductSizesByProductID)
 		router.POST("/sizes", handler.CreateProductSize)
 		router.PUT("/sizes/:id", handler.UpdateProductSize)
+		router.GET("/sizes/:id", handler.GetProductSizeByID)
 	}
 }
 
@@ -58,6 +61,8 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 		router.POST("/multiple", handler.CreateMultipleStoreProducts)
 		router.PUT("/:id", handler.UpdateStoreProduct)
 		router.DELETE("/:id", handler.DeleteStoreProduct)
+
+		router.GET("/sizes/:id", handler.GetStoreProductSizeByID)
 	}
 }
 
@@ -72,10 +77,21 @@ func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler
 	}
 }
 
+func (r *Router) RegisterIngredientCategoriesRoutes(handler *ingredientCategories.IngredientCategoryHandler) {
+	router := r.EmployeeRoutes.Group("/ingredient-categories")
+	{
+		router.GET("", handler.GetAll)
+		router.GET("/:id", handler.GetByID)
+		router.POST("", handler.Create)
+		router.PUT("/:id", handler.Update)
+		router.DELETE("/:id", handler.Delete)
+
+	}
+}
+
 func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.EmployeeRoutes.Group("/stores")
 	{
-		router.GET("", handler.GetAllStores)
 		router.GET("/:id", handler.GetStoreByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.CreateStore)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStore)
@@ -98,38 +114,48 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.EmployeeRoutes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditives)
-		router.GET("/store", handler.GetStoreAdditives)
 		router.POST("", handler.CreateAdditive)
-		router.PUT("", handler.UpdateAdditive)
+		router.PUT("/:id", handler.UpdateAdditive)
 		router.DELETE("/:id", handler.DeleteAdditive)
 		router.GET("/:id", handler.GetAdditiveByID)
 
 		additiveCategories := router.Group("/categories")
 		{
 			additiveCategories.GET("", handler.GetAdditiveCategories)
-			additiveCategories.GET("/store", handler.GetStoreAdditiveCategories)
 			additiveCategories.POST("", handler.CreateAdditiveCategory)
-			additiveCategories.PUT("", handler.UpdateAdditiveCategory)
+			additiveCategories.PUT("/:id", handler.UpdateAdditiveCategory)
 			additiveCategories.DELETE("/:id", handler.DeleteAdditiveCategory)
 			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
 		}
 	}
 }
 
+func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAdditiveHandler) {
+	router := r.EmployeeRoutes.Group("/store-additives")
+	{
+		router.GET("", handler.GetStoreAdditives)
+		router.GET("/categories/:productSizeId", handler.GetStoreAdditiveCategories)
+		router.POST("", handler.CreateStoreAdditives)
+		router.PUT("/:id", handler.UpdateStoreAdditive)
+		router.DELETE("/:id", handler.DeleteStoreAdditive)
+		router.GET("/:id", handler.GetStoreAdditiveByID)
+	}
+}
+
 func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.EmployeeRoutes.Group("/employees")
 	{
-		storeEmployees := router.Group("/store")
+		storeEmployees := router.Group("/stores")
 		{
-			storeEmployees.POST("", handler.CreateStoreEmployee)
 			storeEmployees.GET("", handler.GetStoreEmployees)
+			storeEmployees.POST("", handler.CreateStoreEmployee)
 			storeEmployees.GET("/:id", handler.GetStoreEmployeeByID)
 			storeEmployees.PUT("/:id", handler.UpdateStoreEmployee)
 		}
-		warehouseEmployees := router.Group("/warehouse")
+		warehouseEmployees := router.Group("/warehouses")
 		{
-			warehouseEmployees.POST("", handler.CreateWarehouseEmployee)
 			warehouseEmployees.GET("", handler.GetWarehouseEmployees)
+			warehouseEmployees.POST("", handler.CreateWarehouseEmployee)
 			warehouseEmployees.GET("/:id", handler.GetWarehouseEmployeeByID)
 			warehouseEmployees.PUT("/:id", handler.UpdateWarehouseEmployee)
 		}
@@ -192,7 +218,7 @@ func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWare
 }
 
 func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMaterialHandler) {
-	router := r.EmployeeRoutes.Group("/stock-material")
+	router := r.EmployeeRoutes.Group("/stock-materials")
 	{
 		router.GET("", handler.GetAllStockMaterials)
 		router.GET("/:id", handler.GetStockMaterialByID)
@@ -242,36 +268,18 @@ func (r *Router) RegisterBarcodeRoutes(handler *barcode.BarcodeHandler) {
 		router.POST("/generate", handler.GenerateBarcode)
 		router.GET("/:barcode", handler.RetrieveStockMaterialByBarcode)
 		router.POST("/print", handler.PrintAdditionalBarcodes)
+
+		router.POST("/by-material", handler.GetBarcodesForStockMaterials)  // Retrieve multiple barcodes
+		router.GET("/by-material/:id", handler.GetBarcodeForStockMaterial) // Retrieve a single barcode by ID
 	}
 }
 
-func (r *Router) RegisterInventoryRoutes(handler *inventory.InventoryHandler) {
-	router := r.EmployeeRoutes.Group("/warehouse-stocks")
-	{
-		stockRoutes := router.Group("/stock")
-		{
-			stockRoutes.GET("", handler.GetInventoryLevels)
-			stockRoutes.POST("/receive", handler.ReceiveInventory)
-			stockRoutes.POST("/pickup", handler.PickupStock)
-			stockRoutes.POST("/transfer", handler.TransferInventory)
-			stockRoutes.GET("/deliveries", handler.GetDeliveries)
-		}
-
-		expirationRoutes := router.Group("/expiration")
-		{
-			expirationRoutes.GET("/:warehouseID", handler.GetExpiringItems)
-			expirationRoutes.POST("/extend", handler.ExtendExpiration)
-		}
-	}
-}
-
-func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
+func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, warehouseStockHandler *warehouseStock.WarehouseStockHandler) {
 	router := r.EmployeeRoutes.Group("/warehouses")
 	{
 		warehouseRoutes := router.Group("")
 		{
 			warehouseRoutes.POST("", handler.CreateWarehouse)                // Create a new warehouse
-			warehouseRoutes.GET("", handler.GetAllWarehouses)                // Get all warehouses
 			warehouseRoutes.GET("/:warehouseId", handler.GetWarehouseByID)   // Get a specific warehouse by ID
 			warehouseRoutes.PUT("/:warehouseId", handler.UpdateWarehouse)    // Update warehouse details
 			warehouseRoutes.DELETE("/:warehouseId", handler.DeleteWarehouse) // Delete a warehouse
@@ -284,13 +292,15 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler) {
 			storeRoutes.GET("/:warehouseId", handler.GetAllStoresByWarehouse) // Get all stores assigned to a specific warehouse
 		}
 
-		stockRoutes := router.Group("/stock")
+		stockRoutes := router.Group("/stocks")
 		{
-			stockRoutes.POST("/add", handler.AddToStock)
-			stockRoutes.POST("/deduct", handler.DeductFromStock)
-			stockRoutes.GET("", handler.GetStock)
-			stockRoutes.GET("/:stockMaterialId", handler.GetStockMaterialDetails)
-			stockRoutes.POST("/reset", handler.ResetStock)
+			stockRoutes.GET("", warehouseStockHandler.GetStocks)
+			stockRoutes.GET("/:stockMaterialId", warehouseStockHandler.GetStockMaterialDetails)
+			stockRoutes.PUT("/:stockMaterialId", warehouseStockHandler.UpdateStock)
+			stockRoutes.POST("/add", warehouseStockHandler.AddWarehouseStocks)
+			stockRoutes.POST("/receive", warehouseStockHandler.ReceiveInventory)
+			stockRoutes.POST("/transfer", warehouseStockHandler.TransferInventory)
+			stockRoutes.GET("/deliveries", warehouseStockHandler.GetDeliveries)
 		}
 	}
 }
@@ -300,10 +310,20 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 	{
 		router.GET("", handler.GetStockRequests)
 		router.GET("/:requestId", handler.GetStockRequestByID)
-		router.GET("/low-stock", handler.GetLowStockIngredients)
-		router.GET("/marketplace-products", handler.GetAllStockMaterials)
 		router.POST("", handler.CreateStockRequest)
-		router.PATCH("/:requestId/status", handler.UpdateStockRequestStatus)
-		router.PUT("/:requestId/ingredients", handler.UpdateStockRequestIngredients)
+		router.GET("/current", handler.GetLastCreatedStockRequest)
+		router.PUT("/:requestId", handler.UpdateStockRequest)
+		router.DELETE("/:requestId", handler.DeleteStockRequest)
+		router.POST("/add-material-to-latest-cart", handler.AddStockMaterialToCart)
+
+		statusGroup := router.Group("/status/:requestId")
+		{
+			statusGroup.PATCH("/accept-with-change", handler.AcceptWithChangeStatus) // DTO with different stock material
+			statusGroup.PATCH("/reject-store", handler.RejectStoreStatus)            // Comment
+			statusGroup.PATCH("/reject-warehouse", handler.RejectWarehouseStatus)    // Comment
+			statusGroup.PATCH("/processed", handler.SetProcessedStatus)
+			statusGroup.PATCH("/in-delivery", handler.SetInDeliveryStatus)
+			statusGroup.PATCH("/completed", handler.SetCompletedStatus)
+		}
 	}
 }

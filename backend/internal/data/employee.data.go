@@ -45,6 +45,7 @@ const (
 )
 
 var weekdayMapping = map[string]Weekday{
+	// English
 	"MONDAY":    Monday,
 	"TUESDAY":   Tuesday,
 	"WEDNESDAY": Wednesday,
@@ -52,6 +53,24 @@ var weekdayMapping = map[string]Weekday{
 	"FRIDAY":    Friday,
 	"SATURDAY":  Saturday,
 	"SUNDAY":    Sunday,
+
+	// Russian
+	"ПОНЕДЕЛЬНИК": Monday,
+	"ВТОРНИК":     Tuesday,
+	"СРЕДА":       Wednesday,
+	"ЧЕТВЕРГ":     Thursday,
+	"ПЯТНИЦА":     Friday,
+	"СУББОТА":     Saturday,
+	"ВОСКРЕСЕНЬЕ": Sunday,
+
+	// Kazakh
+	"ДҮЙСЕНБІ": Monday,
+	"СЕЙСЕНБІ": Tuesday,
+	"СӘРСЕНБІ": Wednesday,
+	"БЕЙСЕНБІ": Thursday,
+	"ЖҰМА":     Friday,
+	"СЕНБІ":    Saturday,
+	"ЖЕКСЕНБІ": Sunday,
 }
 
 func ToWeekday(s string) (Weekday, error) {
@@ -79,14 +98,15 @@ type Employee struct {
 	BaseEntity
 	FirstName         string             `gorm:"size:255;not null" sort:"firstName"`
 	LastName          string             `gorm:"size:255;not null" sort:"lastName"`
-	Phone             string             `gorm:"size:16;unique"`
-	Email             string             `gorm:"size:255;unique" sort:"email"`
+	Phone             string             `gorm:"size:16;not null"`
+	Email             string             `gorm:"size:255;not null" sort:"email"`
 	HashedPassword    string             `gorm:"size:255;not null"`
 	Role              EmployeeRole       `gorm:"size:50;not null" sort:"role"`
 	Type              EmployeeType       `gorm:"size:50;not null" sort:"type"`
 	IsActive          bool               `gorm:"default:true" sort:"isActive"`
 	StoreEmployee     *StoreEmployee     `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee *WarehouseEmployee `gorm:"foreignKey:EmployeeID"`
+	Workdays          []EmployeeWorkday  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 }
 
 type StoreEmployee struct {

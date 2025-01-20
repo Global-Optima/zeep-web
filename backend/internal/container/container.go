@@ -24,6 +24,7 @@ type Container struct {
 	Customers               *modules.CustomersModule
 	Employees               *modules.EmployeesModule
 	Ingredients             *modules.IngredientsModule
+	IngredientCategories    *modules.IngredientCategoriesModule
 	Orders                  *modules.OrdersModule
 	Products                *modules.ProductsModule
 	Stores                  *modules.StoresModule
@@ -65,25 +66,26 @@ func (c *Container) mustInit() {
 
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
 
-	c.Additives = modules.NewAdditivesModule(baseModule)
 	c.Categories = modules.NewCategoriesModule(baseModule)
 	c.Customers = modules.NewCustomersModule(baseModule)
 	c.Employees = modules.NewEmployeesModule(baseModule)
 	c.Ingredients = modules.NewIngredientsModule(baseModule)
-	c.StockRequests = modules.NewStockRequestsModule(baseModule)
 	c.StoreWarehouses = modules.NewStoreWarehouseModule(baseModule)
 	c.Stores = modules.NewStoresModule(baseModule)
 	c.Suppliers = modules.NewSuppliersModule(baseModule)
-	c.Warehouses = modules.NewWarehousesModule(baseModule)
 	c.StockMaterials = modules.NewStockMaterialsModule(baseModule)
 	c.StockMaterialPackages = modules.NewStockMaterialPackagesModule(baseModule)
 	c.StockMaterialCategories = modules.NewStockMaterialCategoriesModule(baseModule)
-	c.Barcodes = modules.NewBarcodeModule(baseModule, *c.StockMaterials)
+	c.Barcodes = modules.NewBarcodeModule(baseModule, c.StockMaterials.Repo)
 	c.Units = modules.NewUnitsModule(baseModule)
+	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule)
+	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Barcodes.Repo, c.StockMaterialPackages.Repo)
 
 	c.Products = modules.NewProductsModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
+	c.Additives = modules.NewAdditivesModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)
 	c.Orders = modules.NewOrdersModule(baseModule, c.Products.Repo, c.Additives.Repo)
+	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.StockMaterials.Repo)
 }
 
 func (c *Container) MustInitModules() {

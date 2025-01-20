@@ -1,0 +1,164 @@
+package storeAdditives
+
+import (
+	"fmt"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
+	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"go.uber.org/zap"
+)
+
+const (
+	DEFAULT_LOW_STOCK_THRESHOLD = 30
+)
+
+type StoreAdditiveService interface {
+	CreateStoreAdditives(storeID uint, dtos []types.CreateStoreAdditiveDTO) ([]uint, error)
+	UpdateStoreAdditive(storeID, storeAdditiveID uint, dto *types.UpdateStoreAdditiveDTO) error
+	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]types.StoreAdditiveDTO, error)
+	GetStoreAdditiveCategoriesByProductSize(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error)
+	GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*types.StoreAdditiveDetailsDTO, error)
+	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
+}
+
+type storeAdditiveService struct {
+	repo               StoreAdditiveRepository
+	ingredientsRepo    ingredients.IngredientRepository
+	transactionManager TransactionManager
+	logger             *zap.SugaredLogger
+}
+
+func NewStoreAdditiveService(
+	repo StoreAdditiveRepository,
+	ingredientsRepo ingredients.IngredientRepository,
+	transactionManager TransactionManager,
+	logger *zap.SugaredLogger,
+) StoreAdditiveService {
+	return &storeAdditiveService{
+		repo:               repo,
+		ingredientsRepo:    ingredientsRepo,
+		transactionManager: transactionManager,
+		logger:             logger,
+	}
+}
+
+func (s *storeAdditiveService) CreateStoreAdditives(storeID uint, dtos []types.CreateStoreAdditiveDTO) ([]uint, error) {
+	inputAdditiveIDs := make([]uint, len(dtos))
+	storeAdditives := make([]data.StoreAdditive, len(dtos))
+
+	for i, dto := range dtos {
+		storeAdditives[i] = *types.CreateToStoreAdditive(&dto, storeID)
+		storeAdditives[i].StoreID = storeID
+		inputAdditiveIDs[i] = storeAdditives[i].AdditiveID
+	}
+
+	addStockDTO, err := s.formAddStockDTOsFromIngredients(inputAdditiveIDs)
+	if err != nil {
+		wrappedErr := fmt.Errorf("error forming additional stock DTOs: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, err
+	}
+
+	ids, err := s.transactionManager.CreateStoreAdditivesWithStocks(storeID, storeAdditives, addStockDTO)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to create store additives: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, err
+	}
+
+	return ids, nil
+}
+
+func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error) {
+	categories, err := s.repo.GetStoreAdditiveCategories(storeID, productSizeID, filter)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve store additives", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if len(categories) == 0 {
+		wrappedErr := utils.WrapError("failed to retrieve store additives", types.ErrStoreAdditiveCategoriesNotFound)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	var categoryDTOs []types.StoreAdditiveCategoryDTO
+	for _, category := range categories {
+		categoryDTOs = append(categoryDTOs, *types.ConvertToStoreAdditiveCategoryDTO(&category))
+	}
+
+	return categoryDTOs, nil
+}
+
+func (s *storeAdditiveService) GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]types.StoreAdditiveDTO, error) {
+	storeAdditives, err := s.repo.GetStoreAdditives(storeID, filter)
+	if err != nil {
+		wrappedError := utils.WrapError("failed to retrieve store additives", err)
+		s.logger.Error(wrappedError)
+		return nil, wrappedError
+	}
+
+	storeAdditiveDTOs := make([]types.StoreAdditiveDTO, len(storeAdditives))
+	for i, additive := range storeAdditives {
+		storeAdditiveDTOs[i] = *types.ConvertToStoreAdditiveDTO(&additive)
+	}
+
+	return storeAdditiveDTOs, nil
+}
+
+func (s *storeAdditiveService) GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*types.StoreAdditiveDetailsDTO, error) {
+	storeAdditive, err := s.repo.GetStoreAdditiveByID(storeID, storeAdditiveID)
+	if err != nil {
+		wrappedError := utils.WrapError("failed to retrieve store additive", err)
+		s.logger.Error(wrappedError)
+		return nil, wrappedError
+	}
+
+	return types.ConvertToStoreAdditiveDetailsDTO(storeAdditive), nil
+}
+
+func (s *storeAdditiveService) UpdateStoreAdditive(storeID, storeAdditiveID uint, dto *types.UpdateStoreAdditiveDTO) error {
+	storeAdditive := types.UpdateToStoreAdditive(dto)
+
+	err := s.repo.UpdateStoreAdditive(storeID, storeAdditiveID, storeAdditive)
+	if err != nil {
+		wrappedError := utils.WrapError("failed to update store additive", err)
+		s.logger.Error(wrappedError)
+		return wrappedError
+	}
+
+	return nil
+}
+
+func (s *storeAdditiveService) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
+	err := s.repo.DeleteStoreAdditive(storeID, storeAdditiveID)
+	if err != nil {
+		wrappedError := utils.WrapError("failed to delete store additive", err)
+		s.logger.Error(wrappedError)
+		return wrappedError
+	}
+
+	return nil
+}
+
+func (s *storeAdditiveService) formAddStockDTOsFromIngredients(additiveIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
+	ingredientsList, err := s.ingredientsRepo.GetIngredientsForAdditives(additiveIDs)
+	if err != nil {
+		return nil, utils.WrapError("could not get ingredients", err)
+	}
+
+	addStockDTOs := make([]storeWarehousesTypes.AddStoreStockDTO, len(ingredientsList))
+	for i, ingredient := range ingredientsList {
+		addStockDTOs[i] = storeWarehousesTypes.AddStoreStockDTO{
+			IngredientID:      ingredient.ID,
+			Quantity:          0,
+			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
+		}
+	}
+	return addStockDTOs, nil
+}

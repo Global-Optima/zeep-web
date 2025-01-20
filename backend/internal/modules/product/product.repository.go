@@ -3,6 +3,7 @@ package product
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -13,13 +14,14 @@ import (
 type ProductRepository interface {
 	CreateProduct(product *data.Product) (uint, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
-	GetProductDetails(productID uint) (*data.Product, error)
+	GetProductByID(productID uint) (*data.Product, error)
 	UpdateProduct(id uint, product *data.Product) error
 	DeleteProduct(productID uint) error
 
 	CreateProductSize(createModels *data.ProductSize) (uint, error)
 	GetProductSizesByProductID(productID uint) ([]data.ProductSize, error)
 	GetProductSizeById(productSizeID uint) (*data.ProductSize, error)
+	GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error)
 	UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error
 	DeleteProductSize(productID uint) error
 }
@@ -34,7 +36,10 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 
 func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.ProductSize, error) {
 	var productSize data.ProductSize
-	err := r.db.Preload("Product").First(&productSize, productSizeID).Error
+	err := r.db.Preload("Product").
+		Preload("Unit").
+		First(&productSize, productSizeID).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -49,13 +54,34 @@ func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.Produc
 	return &productSize, nil
 }
 
+func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error) {
+	var productSize data.ProductSize
+
+	err := r.db.Model(&data.ProductSize{}).
+		Preload("Unit").
+		Preload("Additives.Additive.Category").
+		Preload("Additives.Additive.Unit").
+		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
+		Preload("ProductSizeIngredients.Ingredient.Unit").
+		First(&productSize, productSizeID).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to fetch ProductSize ID %d: %w", productSizeID, err)
+	}
+
+	return &productSize, nil
+}
+
 func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error) {
 	var products []data.Product
 
 	query := r.db.
 		Model(&data.Product{}).
-		Joins("JOIN store_products ON store_products.product_id = products.id").
-		Preload("ProductSizes")
+		Preload("Category").
+		Preload("ProductSizes.Unit")
 
 	if filter.CategoryID != nil {
 		query = query.Where("products.category_id = ?", *filter.CategoryID)
@@ -86,11 +112,12 @@ func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data
 	return products, nil
 }
 
-func (r *productRepository) GetProductDetails(productID uint) (*data.Product, error) {
+func (r *productRepository) GetProductByID(productID uint) (*data.Product, error) {
 	var product data.Product
 
 	err := r.db.
-		Preload("ProductSizes").
+		Preload("ProductSizes.Unit").
+		Preload("Category").
 		Where("id = ?", productID).
 		First(&product).
 		Error
@@ -124,45 +151,100 @@ func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (ui
 
 func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-
 		if updateModels != nil {
-			if err := tx.Model(&data.ProductSize{}).
-				Where("id = ?", id).
-				Updates(updateModels.ProductSize).Error; err != nil {
-				return fmt.Errorf("failed to update product size: %w", err)
+			if err := r.handleDefaultSizeUpdate(tx, id, updateModels.ProductSize.IsDefault); err != nil {
+				return err
+			}
+
+			if err := r.updateProductSize(tx, id, *updateModels.ProductSize); err != nil {
+				return err
 			}
 		}
 
 		if updateModels.Additives != nil {
-			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
-				return fmt.Errorf("failed to delete additives: %w", err)
-			}
-			// Add new additives
-			for _, additive := range updateModels.Additives {
-				additive.ProductSizeID = id
-			}
-			if err := tx.Create(updateModels.Additives).Error; err != nil {
-				return fmt.Errorf("failed to create additive: %w", err)
+			if err := r.updateAdditives(tx, id, updateModels.Additives); err != nil {
+				return err
 			}
 		}
 
 		if updateModels.Ingredients != nil {
-			// Remove existing ingredients
-			if err := tx.Where("product_size_id = ?", id).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
-				return fmt.Errorf("failed to delete ingredients: %w", err)
-			}
-
-			// Add new ingredients
-			for _, ingredient := range updateModels.Ingredients {
-				ingredient.ProductSizeID = id
-			}
-			if err := tx.Create(updateModels.Ingredients).Error; err != nil {
-				return fmt.Errorf("failed to create ingredients: %w", err)
+			if err := r.updateIngredients(tx, id, updateModels.Ingredients); err != nil {
+				return err
 			}
 		}
 
 		return nil
 	})
+}
+
+func (r *productRepository) handleDefaultSizeUpdate(tx *gorm.DB, id uint, isDefault bool) error {
+	if !isDefault {
+		return nil
+	}
+
+	var productSize data.ProductSize
+	if err := tx.Select("product_id").First(&productSize, id).Error; err != nil {
+		return fmt.Errorf("failed to get product size: %w", err)
+	}
+
+	if err := tx.Model(&data.ProductSize{}).
+		Where("product_id = ? AND id != ?", productSize.ProductID, id).
+		Update("is_default", false).Error; err != nil {
+		return fmt.Errorf("failed to update other product sizes: %w", err)
+	}
+
+	return nil
+}
+
+func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize data.ProductSize) error {
+	if err := tx.Model(&data.ProductSize{}).
+		Where("id = ?", id).
+		Updates(productSize).Error; err != nil {
+		return fmt.Errorf("failed to update product size: %w", err)
+	}
+	return nil
+}
+
+func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, additives []data.ProductSizeAdditive) error {
+	if err := tx.Where("product_size_id = ?", productSizeID).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
+		return fmt.Errorf("failed to delete additives: %w", err)
+	}
+
+	newAdditives := make([]data.ProductSizeAdditive, len(additives))
+	for i, additive := range additives {
+		newAdditives[i] = data.ProductSizeAdditive{
+			ProductSizeID: productSizeID,
+			AdditiveID:    additive.AdditiveID,
+			IsDefault:     additive.IsDefault,
+		}
+	}
+
+	if err := tx.Create(newAdditives).Error; err != nil {
+		return fmt.Errorf("failed to create additives: %w", err)
+	}
+
+	return nil
+}
+
+func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, ingredients []data.ProductSizeIngredient) error {
+	if err := tx.Where("product_size_id = ?", productSizeID).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
+		return fmt.Errorf("failed to delete ingredients: %w", err)
+	}
+
+	newIngredients := make([]data.ProductSizeIngredient, len(ingredients))
+	for i, ingredient := range ingredients {
+		newIngredients[i] = data.ProductSizeIngredient{
+			ProductSizeID: productSizeID,
+			IngredientID:  ingredient.IngredientID,
+			Quantity:      ingredient.Quantity,
+		}
+	}
+
+	if err := tx.Create(newIngredients).Error; err != nil {
+		return fmt.Errorf("failed to create ingredients: %w", err)
+	}
+
+	return nil
 }
 
 func (r *productRepository) UpdateProduct(productID uint, product *data.Product) error {
@@ -211,7 +293,16 @@ func (r *productRepository) DeleteProduct(productID uint) error {
 func (r *productRepository) GetProductSizesByProductID(productID uint) ([]data.ProductSize, error) {
 	var productSizes []data.ProductSize
 
-	err := r.db.Where("product_id = ?", productID).Find(&productSizes).Error
+	// Optimize this
+	err := r.db.
+		Preload("Unit").
+		Preload("Additives").
+		Preload("Additives.Additive.Category").
+		Preload("ProductSizeIngredients.Ingredient").
+		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
+		Preload("ProductSizeIngredients.Ingredient.Unit").
+		Where("product_id = ?", productID).
+		Find(&productSizes).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch product sizes: %w", err)
 	}

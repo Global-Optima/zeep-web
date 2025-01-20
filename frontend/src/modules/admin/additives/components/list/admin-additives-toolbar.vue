@@ -24,12 +24,16 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
+import { getRouteName } from '@/core/config/routes.config'
 import type { AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{ filter: AdditiveFilterQuery }>()
 const emit = defineEmits(['update:filter'])
+
+const router = useRouter()
 
 const localFilter = ref({ ...props.filter })
 
@@ -42,6 +46,6 @@ watch(debouncedSearchTerm, (newValue) => {
 })
 
 const addStore = () => {
-	// router.push({ name: getRouteName('ADMIN_CREATE_SUPPLIER') })
+	router.push({ name: getRouteName('ADMIN_ADDITIVE_CREATE') })
 }
 </script>

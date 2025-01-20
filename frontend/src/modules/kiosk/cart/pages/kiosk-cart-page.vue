@@ -78,7 +78,8 @@
 		</div>
 
 		<!-- Suggested Products -->
-		<section
+		<!-- TODO: add food here for suggestions -->
+		<!-- <section
 			class="mt-6 sm:mt-8"
 			v-if="suggestedProducts.length"
 		>
@@ -90,18 +91,17 @@
 					:product="product"
 				/>
 			</div>
-		</section>
+		</section> -->
 	</div>
 </template>
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import type { StoreProductSizeDTO } from '@/modules/admin/store-products/models/store-products.model'
 import KioskCartCheckout from '@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout.vue'
 import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
-import KioskCartSuggestProduct from '@/modules/kiosk/cart/components/kiosk-cart-suggest-product.vue'
 import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
-import type { ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
 import { Icon } from '@iconify/vue'
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -116,26 +116,6 @@ const KioskCartUpdateItem = defineAsyncComponent(() =>
 const cartItemsArray = computed(() => Object.values(cartStore.cartItems));
 const totalPrice = computed(() => cartStore.totalPrice);
 
-const suggestedProducts = ref([
-  {
-    id: 1000,
-    name: 'Круассан с шоколадом',
-    imageUrl:
-      'https://lamin8patisserie.com.au/cdn/shop/products/Chocolatecroissant_530x@2x.png?v=1611018458',
-    description: 'Круассан с шоколадом',
-    sizes: [],
-    defaultAdditives: [],
-  },
-  {
-    id: 2,
-    name: 'Круассан с курицей',
-    imageUrl:
-      'https://static.vecteezy.com/system/resources/previews/044/308/224/non_2x/croissant-sanwich-isolated-on-transparent-background-png.png',
-    description: 'Круассан с курицей',
-    sizes: [],
-    defaultAdditives: [],
-  },
-]);
 
 const selectedCartItem = ref<CartItem | null>(null);
 
@@ -155,7 +135,7 @@ const closeUpdateDialog = () => {
   selectedCartItem.value = null;
 };
 
-const handleUpdate = (updatedSize: ProductSizeDTO, updatedAdditives: AdditiveCategoryItem[]) => {
+const handleUpdate = (updatedSize: StoreProductSizeDTO, updatedAdditives: AdditiveCategoryItemDTO[]) => {
   if (!selectedCartItem.value) return;
   cartStore.updateCartItem(selectedCartItem.value.key, {
     size: updatedSize,

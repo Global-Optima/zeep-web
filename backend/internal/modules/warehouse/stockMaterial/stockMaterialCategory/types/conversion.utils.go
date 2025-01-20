@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
@@ -9,7 +11,7 @@ func ToStockMaterialCategoryResponse(category data.StockMaterialCategory) StockM
 		ID:          category.ID,
 		Name:        category.Name,
 		Description: category.Description,
-		CreatedAt:   category.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt:   category.UpdatedAt.Format("2006-01-02 15:04:05"),
+		CreatedAt:   category.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   category.UpdatedAt.Format(time.RFC3339),
 	}
 }

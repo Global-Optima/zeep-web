@@ -6,12 +6,11 @@ import type {
 	StockMaterialsDTO,
 	StockMaterialsFilter,
 	UpdateStockMaterialDTO,
-} from '@/modules/admin/stock-materials/models/stock-materials.model'
+} from '../models/stock-materials.model'
 
-class StockMaterialsService {
+class StockMaterialService {
 	private readonly baseUrl: string = '/stock-materials'
 
-	// Get all stock materials with filtering and pagination
 	async getAllStockMaterials(filter?: StockMaterialsFilter) {
 		try {
 			const response = await apiClient.get<PaginatedResponse<StockMaterialsDTO[]>>(this.baseUrl, {
@@ -24,7 +23,6 @@ class StockMaterialsService {
 		}
 	}
 
-	// Get a stock material by ID
 	async getStockMaterialById(id: number) {
 		try {
 			const response = await apiClient.get<StockMaterialsDTO>(`${this.baseUrl}/${id}`)
@@ -35,7 +33,6 @@ class StockMaterialsService {
 		}
 	}
 
-	// Create a new stock material
 	async createStockMaterial(data: CreateStockMaterialDTO) {
 		try {
 			const response = await apiClient.post(this.baseUrl, data)
@@ -46,7 +43,6 @@ class StockMaterialsService {
 		}
 	}
 
-	// Update a stock material
 	async updateStockMaterial(id: number, data: UpdateStockMaterialDTO) {
 		try {
 			const response = await apiClient.put(`${this.baseUrl}/${id}`, data)
@@ -57,7 +53,6 @@ class StockMaterialsService {
 		}
 	}
 
-	// Delete a stock material
 	async deleteStockMaterial(id: number) {
 		try {
 			const response = await apiClient.delete(`${this.baseUrl}/${id}`)
@@ -68,7 +63,6 @@ class StockMaterialsService {
 		}
 	}
 
-	// Deactivate a stock material
 	async deactivateStockMaterial(id: number) {
 		try {
 			const response = await apiClient.patch(`${this.baseUrl}/${id}/deactivate`)
@@ -80,4 +74,4 @@ class StockMaterialsService {
 	}
 }
 
-export const stockMaterialsService = new StockMaterialsService()
+export const stockMaterialsService = new StockMaterialService()

@@ -1,30 +1,32 @@
-export interface StoreStocks {
+import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
+
+export interface StoreWarehouseStockDTO {
 	id: number
 	name: string
 	quantity: number
-	unit: string
 	lowStockAlert: boolean
 	lowStockThreshold: number
+	ingredient: IngredientsDTO
 }
 
-export interface StoreStocksFilter {
+export interface GetStoreWarehouseStockFilterQuery {
 	search?: string
 	lowStockOnly?: boolean
 	page?: number
 	pageSize?: number
 }
 
-interface CreateStoreStockItem {
+export interface AddStoreWarehouseStockDTO {
 	ingredientId: number
 	quantity: number
 	lowStockThreshold: number
 }
 
-export interface CreateMultipleStoreStock {
-	ingredientStocks: CreateStoreStockItem[]
+export interface AddMultipleStoreWarehouseStockDTO {
+	ingredientStocks: AddStoreWarehouseStockDTO[]
 }
 
-export interface UpdateStoreStock {
-	quantity: number
-	lowStockThreshold: number
+export interface UpdateStoreWarehouseStockDTO {
+	quantity?: number
+	lowStockThreshold?: number
 }

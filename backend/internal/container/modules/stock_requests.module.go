@@ -3,6 +3,7 @@ package modules
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 )
 
 type StockRequestsModule struct {
@@ -12,9 +13,9 @@ type StockRequestsModule struct {
 	Handler *stockRequests.StockRequestHandler
 }
 
-func NewStockRequestsModule(base *common.BaseModule) *StockRequestsModule {
+func NewStockRequestsModule(base *common.BaseModule, stockMaterialRepo stockMaterial.StockMaterialRepository) *StockRequestsModule {
 	repo := stockRequests.NewStockRequestRepository(base.DB)
-	service := stockRequests.NewStockRequestService(repo)
+	service := stockRequests.NewStockRequestService(repo, stockMaterialRepo)
 	handler := stockRequests.NewStockRequestHandler(service)
 
 	base.Router.RegisterStockRequestRoutes(handler)

@@ -3,23 +3,21 @@ package additives
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type AdditiveRepository interface {
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
-	GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]data.StoreAdditive, error)
 	CreateAdditive(additive *data.Additive) error
-	UpdateAdditive(additive *data.Additive) error
+	UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
 	DeleteAdditive(additiveID uint) error
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
-	GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	CreateAdditiveCategory(category *data.AdditiveCategory) error
 	UpdateAdditiveCategory(category *data.AdditiveCategory) error
 	DeleteAdditiveCategory(categoryID uint) error
@@ -34,71 +32,44 @@ func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
 }
 
-func (r *additiveRepository) GetStoreAdditiveCategories(storeID uint, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
-	var categories []data.AdditiveCategory
-
-	subquery := r.db.Model(&data.Additive{}).
-		Select("additive_category_id").
-		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
-		Where("store_additives.store_id = ?", storeID).
-		Group("additive_category_id").
-		Having("COUNT(additives.id) > 0")
-
-	logrus.Info("Asd")
-
-	if filter.ProductSizeId != nil {
-		logrus.Info(*filter.ProductSizeId)
-		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
-	}
-
-	if filter.Search != nil && *filter.Search != "" {
-		searchTerm := "%" + *filter.Search + "%"
-		subquery = subquery.Where(
-			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
-			searchTerm, searchTerm,
-		)
-	}
-
-	query := r.db.Model(&data.AdditiveCategory{}).
-		Preload("Additives.StoreAdditives").
-		Where("id IN (?)", subquery)
-
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
-	if err != nil {
-		return nil, err
-	}
-
-	if err := query.Find(&categories).Error; err != nil {
-		return nil, err
-	}
-
-	return categories, nil
-}
-
 func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
-	subquery := r.db.Model(&data.Additive{}).
-		Select("additive_category_id").
-		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
-		Group("additive_category_id").
-		Having("COUNT(additives.id) > 0")
+	query := r.db.Model(&data.AdditiveCategory{}).
+		Preload("Additives").
+		Preload("Additives.Unit")
+
+	hasAdditivesCondition := "EXISTS (SELECT 1 FROM additives WHERE additives.additive_category_id = additive_categories.id)"
+
+	query = query.Joins("LEFT JOIN additives ON additives.additive_category_id = additive_categories.id").
+		Joins("LEFT JOIN store_additives ON store_additives.additive_id = additives.id")
 
 	if filter.ProductSizeId != nil {
-		subquery = subquery.Where("EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)", *filter.ProductSizeId)
+		query = query.Where(
+			"EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)",
+			*filter.ProductSizeId,
+		)
+	}
+
+	if filter.IsMultipleSelect != nil {
+		query = query.Where("additives.is_multiple_select = ?", *filter.IsMultipleSelect)
+	}
+
+	if filter.IncludeEmpty != nil && *filter.IncludeEmpty {
+		query = query.Where(hasAdditivesCondition + " OR NOT " + hasAdditivesCondition)
+	} else {
+		query = query.Where(hasAdditivesCondition)
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		subquery = subquery.Where(
+		query = query.Where(
 			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
 			searchTerm, searchTerm,
 		)
 	}
 
-	query := r.db.Model(&data.AdditiveCategory{}).
-		Preload("Additives").
-		Where("id IN (?)", subquery)
+	query = query.Group("additive_categories.id")
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
 	if err != nil {
@@ -117,6 +88,7 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 
 	query := r.db.
 		Preload("Category").
+		Preload("Unit").
 		Joins("JOIN additive_categories ON additives.additive_category_id = additive_categories.id")
 
 	var err error
@@ -152,55 +124,23 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 	return additives, nil
 }
 
-func (r *additiveRepository) GetStoreAdditives(storeID uint, filter *types.AdditiveFilterQuery) ([]data.StoreAdditive, error) {
-	var storeAdditives []data.StoreAdditive
-
-	query := r.db.Model(&data.StoreAdditive{}).
-		Where("store_id = ?", storeID).
-		Preload("Additive.Category")
-
-	var err error
-
-	if filter.Search != nil && *filter.Search != "" {
-		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
-	}
-
-	if filter.MinPrice != nil {
-		query = query.Where("store_additives.price >= ?", *filter.MinPrice)
-	}
-	if filter.MaxPrice != nil {
-		query = query.Where("store_additives.price <= ?", *filter.MaxPrice)
-	}
-
-	if filter.CategoryID != nil {
-		query = query.Where("additive_categories.id = ?", *filter.CategoryID)
-	}
-	if filter.ProductSizeID != nil {
-		query = query.Where("product_additives.product_size_id = ?", *filter.ProductSizeID)
-	}
-
-	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreAdditive{})
-	if err != nil {
-		return nil, err
-	}
-
-	if err := query.Find(&storeAdditives).Error; err != nil {
-		return nil, err
-	}
-
-	return storeAdditives, nil
-}
-
 func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
-	err := r.db.Where("id = ?", additiveID).First(&additive).Error
+	err := r.db.Model(&data.Additive{}).
+		Preload("Category").
+		Where("id = ?", additiveID).
+		Preload("Unit").
+		Preload("Ingredients.Ingredient.Unit").
+		Preload("Ingredients.Ingredient.IngredientCategory").
+		First(&additive).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("additive with ID %d not found", additiveID)
 		}
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
+
 	return &additive, nil
 }
 
@@ -208,8 +148,38 @@ func (r *additiveRepository) CreateAdditive(additive *data.Additive) error {
 	return r.db.Create(additive).Error
 }
 
-func (r *additiveRepository) UpdateAdditive(additive *data.Additive) error {
-	return r.db.Save(additive).Error
+func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if updateModels != nil {
+			if err := tx.Model(&data.Additive{}).
+				Where("id = ?", additiveID).
+				Updates(updateModels.Additive).Error; err != nil {
+				return fmt.Errorf("failed to update additive: %w", err)
+			}
+		}
+
+		if updateModels.Ingredients != nil {
+			// Remove existing ingredients
+			if err := tx.Where("additive_id = ?", additiveID).Delete(&data.AdditiveIngredient{}).Error; err != nil {
+				return fmt.Errorf("failed to delete ingredients: %w", err)
+			}
+
+			// Add new ingredients
+			ingredients := make([]data.AdditiveIngredient, len(updateModels.Ingredients))
+			for i, ingredient := range updateModels.Ingredients {
+				ingredients[i] = data.AdditiveIngredient{
+					AdditiveID:   additiveID,
+					IngredientID: ingredient.IngredientID,
+					Quantity:     ingredient.Quantity,
+				}
+			}
+			if err := tx.Create(ingredients).Error; err != nil {
+				return fmt.Errorf("failed to create ingredients: %w", err)
+			}
+		}
+
+		return nil
+	})
 }
 
 func (r *additiveRepository) DeleteAdditive(additiveID uint) error {
@@ -232,7 +202,7 @@ func (r *additiveRepository) GetAdditiveCategoryByID(categoryID uint) (*data.Add
 	var category data.AdditiveCategory
 	err := r.db.Preload("Additives").First(&category, categoryID).Error
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err

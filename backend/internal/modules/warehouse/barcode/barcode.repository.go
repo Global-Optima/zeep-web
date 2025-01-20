@@ -17,6 +17,9 @@ type BarcodeRepository interface {
 	UpdateStockMaterialBarcode(stockMaterial *data.StockMaterial) error
 
 	GetSupplierMaterialByStockMaterialID(stockMaterialID uint) (*data.SupplierMaterial, error)
+
+	GetBarcodesForStockMaterials(stockMaterialIDs []uint) ([]data.StockMaterial, error)
+	GetBarcodeForStockMaterial(stockMaterialID uint) (*data.StockMaterial, error)
 }
 
 type barcodeRepository struct {
@@ -132,4 +135,26 @@ func (r *barcodeRepository) GetSupplierMaterialByStockMaterialID(stockMaterialID
 		return nil, err
 	}
 	return &supplierMaterial, nil
+}
+
+func (r *barcodeRepository) GetBarcodesForStockMaterials(stockMaterialIDs []uint) ([]data.StockMaterial, error) {
+	var stockMaterials []data.StockMaterial
+	err := r.db.Select("id, barcode").
+		Where("id IN ?", stockMaterialIDs).
+		Find(&stockMaterials).Error
+	if err != nil {
+		return nil, err
+	}
+	return stockMaterials, nil
+}
+
+func (r *barcodeRepository) GetBarcodeForStockMaterial(stockMaterialID uint) (*data.StockMaterial, error) {
+	var stockMaterial data.StockMaterial
+	err := r.db.Select("id, barcode").
+		Where("id = ?", stockMaterialID).
+		First(&stockMaterial).Error
+	if err != nil {
+		return nil, err
+	}
+	return &stockMaterial, nil
 }

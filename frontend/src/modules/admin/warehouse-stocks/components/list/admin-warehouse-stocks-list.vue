@@ -4,91 +4,107 @@
 			<TableRow>
 				<TableHead>Название</TableHead>
 				<TableHead>Количество</TableHead>
-				<!-- <TableHead>Мин. запас</TableHead>
-				<TableHead class="hidden md:table-cell">Статус</TableHead> -->
+				<TableHead>Мин. запас</TableHead>
+				<TableHead class="hidden md:table-cell">Единица измерения</TableHead>
+				<TableHead class="hidden md:table-cell">Статус</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
+			<!-- If no stocks -->
+			<TableRow v-if="stocks.length === 0">
+				<TableCell
+					colspan="6"
+					class="py-6 text-center text-muted-foreground"
+				>
+					Нет данных
+				</TableCell>
+			</TableRow>
+
+			<!-- Otherwise, render each stock row -->
 			<TableRow
 				v-for="stock in stocks"
-				:key="stock.stockMaterialId"
-				class="hover:bg-gray-50 h-12 cursor-pointer"
-				@click="goToDetails(stock.stockMaterialId)"
+				:key="stock.stockMaterial.id"
+				class="hover:bg-gray-50 cursor-pointer"
+				@click="handleRowClick(stock.stockMaterial.id)"
 			>
-				<TableCell class="font-medium">
-					{{ stock.name }}
+				<TableCell class="py-4 font-medium">{{ stock.stockMaterial.name }}</TableCell>
+				<TableCell>{{ stock.stockMaterial.packageMeasures.quantity }}</TableCell>
+				<TableCell>{{ stock.stockMaterial.safetyStock }}</TableCell>
+
+				<!-- Unit name (hidden on small screens) -->
+				<TableCell class="hidden md:table-cell">
+					{{ stock.stockMaterial.unit.name }}
 				</TableCell>
-				<TableCell>
-					{{ stock.quantity }}
-				</TableCell>
-				<!-- <TableCell>
-					{{ stock.safetyStock }}
-				</TableCell>
+
+				<!-- Status badge (hidden on small screens) -->
 				<TableCell class="hidden md:table-cell">
 					<p
-						:class="[
-                    'inline-flex w-fit items-center rounded-md px-2.5 py-1 text-xs',
-                    INGREDIENT_STATUS_COLOR[getStockStatus(stock)]
-                  ]"
+						class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
+						:class="getStatusClass(stock)"
 					>
-						{{ INGREDIENT_STATUS_FORMATTED[getStockStatus(stock)] }}
+						{{ getStatusLabel(stock) }}
 					</p>
-				</TableCell> -->
+				</TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/core/components/ui/table'
-import type { InventoryLevel, WarehouseStocks } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
-import { useRouter } from 'vue-router'
+import type { WarehouseStocksDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 
-// Props
-const { stocks } = defineProps<{ stocks: InventoryLevel[] }>();
 
-// Router for details navigation
-const router = useRouter();
+defineProps<{
+  stocks: WarehouseStocksDTO[]
+}>()
 
-const goToDetails = (stockId: number) => {
-  router.push(`/admin/warehouse-stocks/${stockId}`);
-};
 
-// Status mapping
-const INGREDIENT_STATUS_COLOR: Record<string, string> = {
+const router = useRouter()
+function handleRowClick(stockId: number): void {
+  router.push(`/admin/warehouse-stocks/${stockId}`)
+}
+
+type IngredientStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
+
+const INGREDIENT_STATUS_COLOR: Record<IngredientStatus, string> = {
   in_stock: 'bg-green-100 text-green-800',
   low_stock: 'bg-yellow-100 text-yellow-800',
   out_of_stock: 'bg-red-100 text-red-800',
-  expiring: 'bg-orange-100 text-orange-800',
-};
+}
 
-const INGREDIENT_STATUS_FORMATTED: Record<string, string> = {
+const INGREDIENT_STATUS_FORMATTED: Record<IngredientStatus, string> = {
   in_stock: 'В наличии',
   low_stock: 'Заканчивается',
   out_of_stock: 'Нет в наличии',
-  expiring: 'Срок истекает',
-};
+}
 
-// Function to determine the stock status
-const getStockStatus = (stock: WarehouseStocks): string => {
-  if (stock.quantity === 0) {
-    return 'out_of_stock';
+function computeStatus(stock: WarehouseStocksDTO): IngredientStatus {
+  if (stock.stockMaterial.packageMeasures.quantity === 0) {
+    return 'out_of_stock'
   }
-  if (stock.quantity < stock.safetyStock) {
-    return 'low_stock';
+  if (stock.stockMaterial.packageMeasures.quantity <= stock.stockMaterial.safetyStock) {
+    return 'low_stock'
   }
-  if (stock.expirationFlag && stock.expiration <= 30) {
-    return 'expiring';
-  }
-  return 'in_stock';
-};
+  return 'in_stock'
+}
+
+function getStatusClass(stock: WarehouseStocksDTO): string {
+  return INGREDIENT_STATUS_COLOR[computeStatus(stock)]
+}
+
+function getStatusLabel(stock: WarehouseStocksDTO): string {
+  return INGREDIENT_STATUS_FORMATTED[computeStatus(stock)]
+}
 </script>
 
 <style scoped></style>

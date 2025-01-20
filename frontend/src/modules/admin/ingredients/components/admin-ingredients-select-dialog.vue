@@ -5,46 +5,41 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите материал</DialogTitle>
+				<DialogTitle>Выберите ингредиент</DialogTitle>
 			</DialogHeader>
 
 			<div>
-				<!-- Search Input -->
 				<Input
 					v-model="searchTerm"
-					placeholder="Поиск материала"
+					placeholder="Поиск"
 					type="search"
 					class="mt-2 mb-4 w-full"
 				/>
 
-				<!-- Material List -->
-				<div class="max-h-64 overflow-y-auto">
+				<div class="max-h-[50vh] overflow-y-auto">
 					<p
-						v-if="materials.length === 0"
+						v-if="!ingredients || ingredients.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Товары не найдены
+						Ингредиенты не найдены
 					</p>
 
 					<ul v-else>
 						<li
-							v-for="material in materials"
-							:key="material.id"
+							v-for="ingredient in ingredients.data"
+							:key="ingredient.id"
 							class="flex justify-between items-center hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
-							@click="selectMaterial(material)"
+							@click="selectMaterial(ingredient)"
 						>
-							<span>{{ material.name }}</span>
-							<span>
-								{{ material.safetyStock }}
-							</span>
+							<span>{{ ingredient.name }}</span>
 						</li>
 					</ul>
 				</div>
 
 				<!-- Load More Button -->
 				<Button
-					v-if="pagination.page < pagination.totalPages"
-					variant="outline"
+					v-if="ingredients && ingredients.pagination.pageSize < ingredients.pagination.totalCount"
+					variant="ghost"
 					class="mt-4 w-full"
 					@click="loadMore"
 				>
@@ -72,9 +67,8 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
-import type { PaginationMeta } from '@/core/utils/pagination.utils'
+import type { IngredientFilter, IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
-import type { StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 
 const {open} = defineProps<{
   open: boolean;
@@ -82,7 +76,7 @@ const {open} = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', material: StockMaterialsDTO): void;
+  (e: 'select', additive: IngredientsDTO): void;
 }>()
 
 const searchTerm = ref('')
@@ -91,59 +85,38 @@ const debouncedSearchTerm = useDebounce(
   500
 )
 
-const filter = ref<StockMaterialsFilter>({
+const filter = ref<IngredientFilter>({
   page: 1,
   pageSize: 10,
-  search: ''
-})
-
-const materials = ref<StockMaterialsDTO[]>([])
-
-const pagination = ref<PaginationMeta>({
-  page: 0,
-  pageSize: 0,
-  totalCount: 0,
-  totalPages: 0
+  name: ''
 })
 
 
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1
-  filter.value.search = newValue.trim()
-  refetch()
+  filter.value.name = newValue.trim()
 })
 
-
-const { data: queryData, refetch } = useQuery({
+const { data: ingredients } = useQuery({
   queryKey: computed(() => [
-  'ingredients',
+  'admin-ingredients',
   filter.value
 ]),
   queryFn: () => ingredientsService.getIngredients(filter.value),
 })
 
 
-watch(queryData, (newData) => {
-  if (!newData) return
-
-  pagination.value = newData.pagination
-
-  if (pagination.value.page === 1) {
-    materials.value = newData.data
-  } else {
-    materials.value = materials.value.concat(newData.data)
-  }
-})
-
 function loadMore() {
-  if (pagination.value.page < pagination.value.totalPages) {
-    if(filter.value.page) filter.value.page += 1
-    refetch()
+  if (!ingredients.value) return
+  const pagination = ingredients.value.pagination
+
+  if (pagination.pageSize < pagination.totalCount) {
+    if(filter.value.pageSize) filter.value.pageSize += 10
   }
 }
 
-function selectMaterial(material: StockMaterialsDTO) {
-  emit('select', material)
+function selectMaterial(ing: IngredientsDTO) {
+  emit('select', ing)
   onClose()
 }
 
@@ -151,14 +124,7 @@ function onClose() {
   filter.value = {
     page: 1,
     pageSize: 10,
-    search: ''
-  }
-
-  pagination.value = {
-    page: 0,
-    pageSize: 0,
-    totalCount: 0,
-    totalPages: 0
+    name: ''
   }
 
   emit('close')

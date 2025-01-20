@@ -1,40 +1,130 @@
-import type { AdditiveCategoryItem } from '@/modules/admin/additives/models/additives.model'
+import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
+import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
-export interface ProductsFilter {
-	storeId?: number
-	categoryId?: number
-	searchTerm?: string
-	limit?: number
-	offset?: number
+export enum ProductSizeNames {
+	S = 'S',
+	M = 'M',
+	L = 'L',
+	XL = 'XL',
 }
 
-export interface Products {
-	id: number
+export interface BaseProductDTO {
 	name: string
 	description: string
 	imageUrl: string
-	category: string
+	videoUrl: string
+	category: ProductCategoryDTO
+}
+
+export interface ProductDTO extends BaseProductDTO {
+	id: number
+	productSizeCount: number
 	basePrice: number
 }
 
-export interface ProductCategory {
+export interface ProductSizeIngredientDTO {
 	id: number
 	name: string
-	description: string
+	calories: number
+	fat: number
+	carbs: number
+	proteins: number
 }
 
-export interface StoreProductDetailsDTO {
-	id: number
-	name: string
-	description: string
-	imageUrl: string
+export interface ProductDetailsDTO extends ProductDTO {
 	sizes: ProductSizeDTO[]
-	defaultAdditives: AdditiveCategoryItem[]
 }
 
-export interface ProductSizeDTO {
-	id: number
+export interface BaseProductSizeDTO {
 	name: string
 	basePrice: number
-	measure: string
+	productId: number
+	unit: UnitDTO
+	size: number
+	isDefault: boolean
+}
+
+export interface ProductSizeDTO extends BaseProductSizeDTO {
+	id: number
+}
+
+export interface ProductSizeDetailsDTO extends ProductSizeDTO {
+	additives: ProductSizeAdditiveDTO[]
+	ingredients: IngredientsDTO[]
+}
+
+export interface ProductSizeAdditiveDTO extends AdditiveDTO {
+	isDefault: boolean
+}
+
+export interface CreateProductDTO {
+	name: string
+	description: string
+	imageUrl?: string
+	categoryId?: number
+}
+
+export interface SelectedAdditiveDTO {
+	additiveId: number
+	isDefault: boolean
+}
+
+export interface SelectedIngredientDTO {
+	ingredientId: number
+	quantity: number
+}
+
+export interface CreateProductSizeDTO {
+	productId: number
+	name: string
+	size: number
+	unitId: number
+	basePrice: number
+	isDefault: boolean
+	additives?: SelectedAdditiveDTO[]
+	ingredients: SelectedIngredientDTO[]
+}
+
+export interface UpdateProductDTO {
+	name?: string
+	description?: string
+	imageUrl?: string
+	categoryId?: number
+}
+
+export interface UpdateProductSizeDTO {
+	name?: string | null
+	basePrice?: number | null
+	size?: number | null
+	unitId?: number
+	isDefault?: boolean | null
+	additives?: SelectedAdditiveDTO[]
+	ingredients?: SelectedIngredientDTO[]
+}
+
+export interface ProductsFilterDTO extends PaginationParams {
+	categoryId?: number
+	search?: string
+}
+
+export interface ProductCategoryDTO {
+	id: number
+	name: string
+	description: string
+}
+
+export interface ProductCategoriesFilterDTO extends PaginationParams {
+	search?: string
+}
+
+export interface CreateProductCategoryDTO {
+	name: string
+	description: string
+}
+
+export interface UpdateProductCategoryDTO {
+	name?: string
+	description?: string
 }

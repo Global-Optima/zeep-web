@@ -1,4 +1,4 @@
-import { ADMIN_CHILDREN_ROUTES, ADMIN_ROUTES_CONFIG } from '@/core/routes/admin.routes'
+import { ADMIN_CHILDREN_ROUTES, ADMIN_ROUTES_CONFIG } from '@/core/routes/admin/admin.routes'
 import { KIOSK_CHILDREN_ROUTES, KIOSK_ROUTES_CONFIG } from '@/core/routes/kiosk.routes'
 import type { RouteComponent, RouteRecordRaw } from 'vue-router'
 import { AUTH_CHILDREN_ROUTES, AUTH_ROUTES_CONFIG } from '../routes/auth.routes'
