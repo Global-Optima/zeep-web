@@ -63,3 +63,8 @@ type StockMaterialDTO struct {
 	Barcode              string  `json:"barcode"`
 	utils.PackageMeasure `json:"packageMeasures"`
 }
+
+type SuppliersFilter struct {
+	Search *string `form:"search"`
+	utils.BaseFilter
+}

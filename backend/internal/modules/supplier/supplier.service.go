@@ -14,7 +14,7 @@ type SupplierService interface {
 	GetSupplierByID(id uint) (types.SupplierResponse, error)
 	UpdateSupplier(id uint, dto types.UpdateSupplierDTO) error
 	DeleteSupplier(id uint) error
-	GetSuppliers() ([]types.SupplierResponse, error)
+	GetSuppliers(filter types.SuppliersFilter) ([]types.SupplierResponse, error)
 
 	AddMaterialToSupplier(supplierID uint, dto types.CreateSupplierMaterialDTO) error
 	GetMaterialsBySupplier(supplierID uint) ([]types.SupplierMaterialResponse, error)
@@ -83,8 +83,8 @@ func (s *supplierService) DeleteSupplier(id uint) error {
 	return s.repo.DeleteSupplier(id)
 }
 
-func (s *supplierService) GetSuppliers() ([]types.SupplierResponse, error) {
-	suppliers, err := s.repo.GetAllSuppliers()
+func (s *supplierService) GetSuppliers(filter types.SuppliersFilter) ([]types.SupplierResponse, error) {
+	suppliers, err := s.repo.GetAllSuppliers(filter)
 	if err != nil {
 		return nil, err
 	}

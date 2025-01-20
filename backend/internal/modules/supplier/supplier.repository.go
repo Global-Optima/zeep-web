@@ -2,8 +2,11 @@ package supplier
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +15,7 @@ type SupplierRepository interface {
 	GetSupplierByID(id uint) (*data.Supplier, error)
 	UpdateSupplier(id uint, fields *data.Supplier) error
 	DeleteSupplier(id uint) error
-	GetAllSuppliers() ([]data.Supplier, error)
+	GetAllSuppliers(filter types.SuppliersFilter) ([]data.Supplier, error)
 	ExistsByContactPhone(phone string) (bool, error)
 
 	CreateSupplierMaterial(material *data.SupplierMaterial) error
@@ -53,9 +56,27 @@ func (r *supplierRepository) DeleteSupplier(id uint) error {
 	return r.db.Delete(&data.Supplier{}, id).Error
 }
 
-func (r *supplierRepository) GetAllSuppliers() ([]data.Supplier, error) {
+func (r *supplierRepository) GetAllSuppliers(filter types.SuppliersFilter) ([]data.Supplier, error) {
 	var suppliers []data.Supplier
-	err := r.db.Find(&suppliers).Error
+
+	query := r.db.Model(&data.Supplier{})
+
+	if filter.Search != nil && *filter.Search != "" {
+		search := "%" + strings.ToLower(*filter.Search) + "%"
+		query = query.Where(
+			"LOWER(name) ILIKE ? OR LOWER(city) ILIKE ? OR LOWER(address) ILIKE ?",
+			search,
+			search,
+			search,
+		)
+	}
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Supplier{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = query.Find(&suppliers).Error
 	return suppliers, err
 }
 
