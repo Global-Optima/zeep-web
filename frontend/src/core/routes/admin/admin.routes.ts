@@ -65,6 +65,15 @@ export const ADMIN_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/warehouse-stocks/pages/admin-warehouse-stock-details-page.vue'),
 	},
+	ADMIN_WAREHOUSE_STOCKS_CREATE: {
+		path: 'warehouse-stocks/create',
+		meta: {
+			title: 'Добавить материалы на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/warehouse-stocks/pages/admin-warehouse-stock-create-page.vue'),
+	},
 	ADMIN_STORE_STOCKS_DETAILS: {
 		path: 'store-stocks/:id',
 		meta: {
