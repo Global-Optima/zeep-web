@@ -2,7 +2,7 @@
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
-import type { SuppliersDTO, SuppliersFilter } from '@/modules/admin/suppliers/models/suppliers.model'
+import type { SupplierDTO, SuppliersFilter } from '@/modules/admin/suppliers/models/suppliers.model'
 import { suppliersService } from '@/modules/admin/suppliers/services/suppliers.service'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounce } from '@vueuse/core'
@@ -14,7 +14,7 @@ const { open } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', category: SuppliersDTO): void;
+  (e: 'select', category: SupplierDTO): void;
 }>()
 
 const searchTerm = ref('')
@@ -47,7 +47,7 @@ function loadMore() {
   }
 }
 
-function selectCategory(productCategory: SuppliersDTO) {
+function selectCategory(productCategory: SupplierDTO) {
   emit('select', productCategory)
   onClose()
 }

@@ -14,14 +14,12 @@ import { Textarea } from '@/core/components/ui/textarea'
 // Select Dialog Components
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import AdminSelectStockMaterialCategory from '@/modules/admin/stock-material-categories/components/admin-select-stock-material-category.vue'
-import AdminSelectSupplierDialog from '@/modules/admin/suppliers/components/admin-select-supplier-dialog.vue'
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 
 // Typings
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import type { StockMaterialsDTO, UpdateStockMaterialDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
-import type { SuppliersDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 import { ChevronLeft } from 'lucide-vue-next'
@@ -38,12 +36,10 @@ const emits = defineEmits<{
 }>()
 
 // Dialog States
-const selectedSupplier = ref<SuppliersDTO | null>(stockMaterial.supplier || null)
 const selectedUnit = ref<UnitDTO | null>(stockMaterial.unit || null)
 const selectedCategory = ref<StockMaterialCategoryDTO | null>(stockMaterial.category || null)
 const selectedIngredient = ref<IngredientsDTO | null>(stockMaterial.ingredient || null)
 
-const openSupplierDialog = ref(false)
 const openUnitDialog = ref(false)
 const openCategoryDialog = ref(false)
 const openIngredientDialog = ref(false)
@@ -55,7 +51,6 @@ const updateStockMaterialSchema = toTypedSchema(
     description: z.string().optional(),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас должен быть больше 0'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
-    supplierId: z.coerce.number().min(1, 'Выберите поставщика'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
     barcode: z.string().optional(),
@@ -71,7 +66,6 @@ const { handleSubmit, resetForm, setFieldValue } = useForm<UpdateStockMaterialDT
     description: stockMaterial.description,
     safetyStock: stockMaterial.safetyStock,
     unitId: stockMaterial.unit.id,
-    supplierId: stockMaterial?.supplier?.id ?? 1, // TODO: add proper supplier id
     categoryId: stockMaterial.category.id,
     ingredientId: stockMaterial.ingredient.id,
     barcode: stockMaterial.barcode,
@@ -87,13 +81,6 @@ const onSubmit = handleSubmit((formValues) => {
 const onCancel = () => {
   resetForm()
   emits('onCancel')
-}
-
-// Selection Handlers
-function selectSupplier(supplier: SuppliersDTO) {
-  selectedSupplier.value = supplier
-  openSupplierDialog.value = false
-  setFieldValue('supplierId', supplier.id)
 }
 
 function selectUnit(unit: UnitDTO) {
@@ -221,22 +208,6 @@ function selectIngredient(ingredient: IngredientsDTO) {
 			<div class="items-start gap-4 grid auto-rows-max">
 				<Card>
 					<CardHeader>
-						<CardTitle>Поставщик</CardTitle>
-						<CardDescription>Выберите поставщика.</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<Button
-							variant="link"
-							@click="openSupplierDialog = true"
-							class="mt-0 p-0 underline"
-						>
-							{{ selectedSupplier?.name || 'Не выбран' }}
-						</Button>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader>
 						<CardTitle>Единица измерения</CardTitle>
 						<CardDescription>Выберите единицу измерения.</CardDescription>
 					</CardHeader>
@@ -299,12 +270,6 @@ function selectIngredient(ingredient: IngredientsDTO) {
 			>
 		</div>
 
-		<!-- Select Dialog Components -->
-		<AdminSelectSupplierDialog
-			:open="openSupplierDialog"
-			@close="openSupplierDialog = false"
-			@select="selectSupplier"
-		/>
 		<AdminSelectUnit
 			:open="openUnitDialog"
 			@close="openUnitDialog = false"

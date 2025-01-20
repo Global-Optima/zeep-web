@@ -4,7 +4,7 @@
 			<TableRow>
 				<TableHead>Название</TableHead>
 				<TableHead>Город</TableHead>
-				<TableHead>Адресс</TableHead>
+				<TableHead>Адрес</TableHead>
 				<TableHead>Телефон</TableHead>
 			</TableRow>
 		</TableHeader>

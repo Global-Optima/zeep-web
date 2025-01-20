@@ -8,6 +8,7 @@ import type {
 	SupplierMaterialResponse,
 	SuppliersFilterDTO,
 	UpdateSupplierDTO,
+	UpdateSupplierMaterialDTO,
 } from '../models/suppliers.model'
 
 class SuppliersService {
@@ -53,6 +54,16 @@ class SuppliersService {
 		}
 	}
 
+	async updateSupplierMaterials(supplierId: number, data: UpdateSupplierMaterialDTO[]) {
+		try {
+			const response = await apiClient.put<void>(`/suppliers/${supplierId}/materials`, data)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to update supplier materials with ID ${supplierId}:`, error)
+			throw error
+		}
+	}
+
 	async deleteSupplier(id: number) {
 		try {
 			await apiClient.delete<void>(`/suppliers/${id}`)
@@ -64,7 +75,7 @@ class SuppliersService {
 
 	async getMaterialsBySupplier(id: number, filter?: GetMaterialsBySupplierFilterDTO) {
 		try {
-			const response = await apiClient.get<PaginatedResponse<SupplierMaterialResponse[]>>(
+			const response = await apiClient.get<SupplierMaterialResponse[]>(
 				`/suppliers/${id}/materials`,
 				{ params: buildRequestFilter(filter) },
 			)

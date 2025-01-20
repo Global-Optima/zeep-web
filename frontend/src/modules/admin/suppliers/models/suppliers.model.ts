@@ -6,7 +6,7 @@ export interface CreateSupplierDTO {
 	contactEmail: string
 	contactPhone: string
 	city: string
-	address?: string
+	address: string
 }
 
 export interface UpdateSupplierDTO {
@@ -39,5 +39,9 @@ export interface GetMaterialsBySupplierFilterDTO extends PaginationParams {
 export interface SupplierMaterialResponse {
 	stockMaterial: StockMaterialsDTO
 	basePrice: number
-	effectiveDate: string
+}
+
+export interface UpdateSupplierMaterialDTO {
+	stockMaterialId: number
+	basePrice: number
 }

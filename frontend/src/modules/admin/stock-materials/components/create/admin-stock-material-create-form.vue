@@ -22,8 +22,6 @@ import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredie
 import AdminSelectStockMaterialCategory from '@/modules/admin/stock-material-categories/components/admin-select-stock-material-category.vue'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import type { CreateStockMaterialDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
-import AdminSelectSupplierDialog from '@/modules/admin/suppliers/components/admin-select-supplier-dialog.vue'
-import type { SuppliersDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 // Emit Events
@@ -33,12 +31,10 @@ const emits = defineEmits<{
 }>()
 
 // Dialog States
-const selectedSupplier = ref<SuppliersDTO | null>(null)
 const selectedUnit = ref<UnitDTO | null>(null)
 const selectedCategory = ref<StockMaterialCategoryDTO | null>(null)
 const selectedIngredient = ref<IngredientsDTO | null>(null)
 
-const openSupplierDialog = ref(false)
 const openUnitDialog = ref(false)
 const openCategoryDialog = ref(false)
 const openIngredientDialog = ref(false)
@@ -50,7 +46,6 @@ const createStockMaterialSchema = toTypedSchema(
     description: z.string().optional(),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас должен быть больше 0'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
-    supplierId: z.coerce.number().min(1, 'Выберите поставщика'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
     barcode: z.string().optional(),
@@ -73,11 +68,7 @@ const onCancel = () => {
   emits('onCancel')
 }
 
-function selectSupplier(supplier: SuppliersDTO) {
-  selectedSupplier.value = supplier
-  openSupplierDialog.value = false
-  setFieldValue('supplierId', supplier.id)
-}
+
 
 function selectUnit(unit: UnitDTO) {
   selectedUnit.value = unit
@@ -204,22 +195,6 @@ function selectIngredient(ingredient: IngredientsDTO) {
 			<div class="items-start gap-4 grid auto-rows-max">
 				<Card>
 					<CardHeader>
-						<CardTitle>Поставщик</CardTitle>
-						<CardDescription>Выберите поставщика.</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<Button
-							variant="link"
-							@click="openSupplierDialog = true"
-							class="mt-0 p-0 underline"
-						>
-							{{ selectedSupplier?.name || 'Не выбран' }}
-						</Button>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader>
 						<CardTitle>Единица измерения</CardTitle>
 						<CardDescription>Выберите единицу измерения.</CardDescription>
 					</CardHeader>
@@ -282,12 +257,6 @@ function selectIngredient(ingredient: IngredientsDTO) {
 			>
 		</div>
 
-		<!-- Select Dialog Components -->
-		<AdminSelectSupplierDialog
-			:open="openSupplierDialog"
-			@close="openSupplierDialog = false"
-			@select="selectSupplier"
-		/>
 		<AdminSelectUnit
 			:open="openUnitDialog"
 			@close="openUnitDialog = false"
