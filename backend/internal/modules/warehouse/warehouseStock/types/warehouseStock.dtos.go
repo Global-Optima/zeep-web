@@ -8,17 +8,16 @@ import (
 )
 
 type ReceiveInventoryRequest struct {
-	SupplierID    uint                    `json:"supplierId" binding:"required"`
-	WarehouseID   uint                    `json:"warehouseId" binding:"required"`
-	NewItems      []NewInventoryItem      `json:"newItems,omitempty"`      // For new SKUs
-	ExistingItems []ExistingInventoryItem `json:"existingItems,omitempty"` // For existing SKUs
+	SupplierID    uint                             `json:"supplierId" binding:"required"`
+	WarehouseID   uint                             `json:"warehouseId" binding:"required"`
+	NewItems      []NewWarehouseStockMaterial      `json:"newWarehouseStockMaterial,omitempty"`      // For new SKUs
+	ExistingItems []ExistingWarehouseStockMaterial `json:"existingWarehouseStockMaterial,omitempty"` // For existing SKUs
 }
 
-type NewInventoryItem struct {
+type NewWarehouseStockMaterial struct {
 	Name             string  `json:"name" binding:"required"`
 	Description      string  `json:"description,omitempty"` // Optional
 	SafetyStock      float64 `json:"safetyStock" binding:"required"`
-	ExpirationFlag   bool    `json:"expirationFlag" binding:"required"`
 	Quantity         float64 `json:"quantity" binding:"required,gte=0"`
 	UnitID           uint    `json:"unitId" binding:"required"`
 	CategoryID       uint    `json:"categoryId" binding:"required"`
@@ -27,7 +26,7 @@ type NewInventoryItem struct {
 	IngredientID     uint    `json:"ingredientId" binding:"required"` // New field for ingredient linkage
 }
 
-type ExistingInventoryItem struct {
+type ExistingWarehouseStockMaterial struct {
 	StockMaterialID uint    `json:"stockMaterialId"`                   // For existing SKUs
 	Quantity        float64 `json:"quantity" binding:"required,gte=0"` // Quantity to log
 	IngredientID    uint    `json:"ingredientId" binding:"required"`   // Link to ingredient
@@ -39,9 +38,9 @@ type Package struct {
 }
 
 type TransferInventoryRequest struct {
-	SourceWarehouseID uint                    `json:"sourceWarehouseId" binding:"required"`
-	TargetWarehouseID uint                    `json:"targetWarehouseId" binding:"required"`
-	Items             []ExistingInventoryItem `json:"items" binding:"required"`
+	SourceWarehouseID uint                             `json:"sourceWarehouseId" binding:"required"`
+	TargetWarehouseID uint                             `json:"targetWarehouseId" binding:"required"`
+	Items             []ExistingWarehouseStockMaterial `json:"items" binding:"required"`
 }
 
 type DeliveryResponse struct {

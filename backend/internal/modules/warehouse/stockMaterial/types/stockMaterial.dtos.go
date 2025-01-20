@@ -23,7 +23,6 @@ type UpdateStockMaterialDTO struct {
 	Name                   *string  `json:"name"`
 	Description            *string  `json:"description"`
 	SafetyStock            *float64 `json:"safetyStock" binding:"omitempty,gt=0"`
-	ExpirationFlag         *bool    `json:"expirationFlag"`
 	UnitID                 *uint    `json:"unitId"`
 	CategoryID             *uint    `json:"categoryId"`
 	IngredientID           *uint    `json:"ingredientId"`
@@ -37,7 +36,6 @@ type StockMaterialsDTO struct {
 	Name                   string                                                   `json:"name"`
 	Description            string                                                   `json:"description"`
 	SafetyStock            float64                                                  `json:"safetyStock"`
-	ExpirationFlag         bool                                                     `json:"expirationFlag"`
 	Barcode                string                                                   `json:"barcode"`
 	IsActive               bool                                                     `json:"isActive"`
 	Unit                   unitTypes.UnitsDTO                                       `json:"unit"`
@@ -51,7 +49,6 @@ type StockMaterialsDTO struct {
 type StockMaterialFilter struct {
 	Search           *string `form:"search"`           // Search by name, description, or category
 	LowStock         *bool   `form:"lowStock"`         // Filter for materials below safety stock
-	ExpirationFlag   *bool   `form:"expirationFlag"`   // Filter by expiration flag
 	IsActive         *bool   `form:"isActive"`         // Filter by active/inactive status
 	SupplierID       *uint   `form:"supplierId"`       // Filter by supplier
 	IngredientID     *uint   `form:"ingredientId"`     // Filter by ingredient

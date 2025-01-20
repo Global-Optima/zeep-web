@@ -118,7 +118,7 @@ func (s *warehouseStockService) assembleDeliveries(
 	return deliveries, nil
 }
 
-func (s *warehouseStockService) createAndRegisterNewStockMaterials(supplierID uint, items []types.NewInventoryItem) ([]data.StockMaterial, error) {
+func (s *warehouseStockService) createAndRegisterNewStockMaterials(supplierID uint, items []types.NewWarehouseStockMaterial) ([]data.StockMaterial, error) {
 	newStockMaterials := []data.StockMaterial{}
 
 	for _, item := range items {
@@ -165,7 +165,7 @@ func (s *warehouseStockService) createAndRegisterNewStockMaterials(supplierID ui
 	return newStockMaterials, nil
 }
 
-func (s *warehouseStockService) loadExistingStockMaterials(items []types.ExistingInventoryItem) (map[uint]*data.StockMaterial, error) {
+func (s *warehouseStockService) loadExistingStockMaterials(items []types.ExistingWarehouseStockMaterial) (map[uint]*data.StockMaterial, error) {
 	stockMaterialIDs := []uint{}
 	for _, item := range items {
 		stockMaterialIDs = append(stockMaterialIDs, item.StockMaterialID)

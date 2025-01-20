@@ -19,7 +19,7 @@ type WarehouseStockRepository interface {
 	GetDeliveryByID(deliveryID uint, delivery *data.SupplierWarehouseDelivery) error
 	GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]data.SupplierWarehouseDelivery, error)
 
-	ConvertInventoryItemsToStockRequest(items []types.ExistingInventoryItem) ([]data.StockRequestIngredient, error)
+	ConvertInventoryItemsToStockRequest(items []types.ExistingWarehouseStockMaterial) ([]data.StockRequestIngredient, error)
 	SupplierMaterialExists(supplierID, stockMaterialID uint) (bool, error)
 	CreateSupplierMaterial(association *data.SupplierMaterial) error
 
@@ -173,7 +173,7 @@ func (r *warehouseStockRepository) GetDeliveries(warehouseID *uint, startDate, e
 	return deliveries, err
 }
 
-func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []types.ExistingInventoryItem) ([]data.StockRequestIngredient, error) {
+func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []types.ExistingWarehouseStockMaterial) ([]data.StockRequestIngredient, error) {
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
@@ -402,11 +402,11 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 
 	// Apply filters
 	if filter.WarehouseID != nil {
-		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
+		query = query.Where("warehouse_stocks.warehouse_id = ?", *filter.WarehouseID)
 	}
 
 	if filter.StockMaterialID != nil {
-		query = query.Where("stock_material_id = ?", *filter.StockMaterialID)
+		query = query.Where("stock_materials.stock_material_id = ?", *filter.StockMaterialID)
 	}
 
 	if filter.IngredientID != nil {
@@ -414,7 +414,7 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	}
 
 	if filter.LowStockOnly != nil && *filter.LowStockOnly {
-		query = query.Where("warehouse_stocks.quantity < stock_materials.safety_stock")
+		query = query.Where("warehouse_stocks.quantity <= stock_materials.safety_stock")
 	}
 
 	if filter.IsExpiring != nil && *filter.IsExpiring {

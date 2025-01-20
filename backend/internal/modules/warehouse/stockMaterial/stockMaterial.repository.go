@@ -55,10 +55,6 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 			query = query.Where("quantity < safety_stock")
 		}
 
-		if filter.ExpirationFlag != nil {
-			query = query.Where("expiration_flag = ?", *filter.ExpirationFlag)
-		}
-
 		if filter.IsActive != nil {
 			query = query.Where("is_active = ?", *filter.IsActive)
 		}
