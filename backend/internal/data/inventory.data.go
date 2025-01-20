@@ -69,7 +69,8 @@ type Supplier struct {
 	BaseEntity
 	Name         string `gorm:"size:255;not null" sort:"name"`
 	ContactEmail string `gorm:"size:255"`
-	ContactPhone string `gorm:"size:16"`
+	ContactPhone string `gorm:"size:16;uniqueIndex"`
+	City         string `gorm:"size:100;not null"`
 	Address      string `gorm:"size:255"`
 }
 
@@ -124,10 +125,19 @@ type StockMaterialPackage struct {
 
 type SupplierMaterial struct {
 	BaseEntity
-	StockMaterialID uint          `gorm:"not null;index"`
-	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
-	SupplierID      uint          `gorm:"not null;index"`
-	Supplier        Supplier      `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
+	StockMaterialID uint            `gorm:"not null;index"`
+	StockMaterial   StockMaterial   `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
+	SupplierID      uint            `gorm:"not null;index"`
+	Supplier        Supplier        `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
+	SupplierPrices  []SupplierPrice `gorm:"foreignKey:SupplierMaterialID;constraint:OnDelete:CASCADE"`
+}
+
+type SupplierPrice struct {
+	BaseEntity
+	SupplierMaterialID uint             `gorm:"not null;index"`
+	SupplierMaterial   SupplierMaterial `gorm:"foreignKey:SupplierMaterialID;constraint:OnDelete:CASCADE"`
+	BasePrice          float64          `gorm:"type:decimal(10,2);not null"`
+	EffectiveDate      time.Time        `gorm:"not null"`
 }
 
 type SupplierWarehouseDelivery struct {

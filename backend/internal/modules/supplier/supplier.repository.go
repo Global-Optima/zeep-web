@@ -2,8 +2,11 @@ package supplier
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +15,12 @@ type SupplierRepository interface {
 	GetSupplierByID(id uint) (*data.Supplier, error)
 	UpdateSupplier(id uint, fields *data.Supplier) error
 	DeleteSupplier(id uint) error
-	GetAllSuppliers() ([]data.Supplier, error)
+	GetAllSuppliers(filter types.SuppliersFilter) ([]data.Supplier, error)
+	ExistsByContactPhone(phone string) (bool, error)
+
+	CreateSupplierMaterial(material *data.SupplierMaterial) error
+	CreateSupplierPrice(price *data.SupplierPrice) error
+	GetMaterialsBySupplier(supplierID uint) ([]data.SupplierMaterial, error)
 }
 
 type supplierRepository struct {
@@ -48,8 +56,55 @@ func (r *supplierRepository) DeleteSupplier(id uint) error {
 	return r.db.Delete(&data.Supplier{}, id).Error
 }
 
-func (r *supplierRepository) GetAllSuppliers() ([]data.Supplier, error) {
+func (r *supplierRepository) GetAllSuppliers(filter types.SuppliersFilter) ([]data.Supplier, error) {
 	var suppliers []data.Supplier
-	err := r.db.Find(&suppliers).Error
+
+	query := r.db.Model(&data.Supplier{})
+
+	if filter.Search != nil && *filter.Search != "" {
+		search := "%" + strings.ToLower(*filter.Search) + "%"
+		query = query.Where(
+			"LOWER(name) ILIKE ? OR LOWER(city) ILIKE ? OR LOWER(address) ILIKE ?",
+			search,
+			search,
+			search,
+		)
+	}
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Supplier{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = query.Find(&suppliers).Error
 	return suppliers, err
+}
+
+func (r *supplierRepository) ExistsByContactPhone(phone string) (bool, error) {
+	var count int64
+	err := r.db.Model(&data.Supplier{}).Where("contact_phone = ?", phone).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *supplierRepository) CreateSupplierMaterial(material *data.SupplierMaterial) error {
+	return r.db.Create(material).Error
+}
+
+func (r *supplierRepository) CreateSupplierPrice(price *data.SupplierPrice) error {
+	return r.db.Create(price).Error
+}
+
+func (r *supplierRepository) GetMaterialsBySupplier(supplierID uint) ([]data.SupplierMaterial, error) {
+	var materials []data.SupplierMaterial
+	err := r.db.Preload("StockMaterial").
+		Preload("StockMaterial.StockMaterialCategory").
+		Preload("StockMaterial.Package").
+		Preload("StockMaterial.Package.Unit").
+		Preload("SupplierPrices").
+		Where("supplier_id = ?", supplierID).
+		Find(&materials).Error
+	return materials, err
 }

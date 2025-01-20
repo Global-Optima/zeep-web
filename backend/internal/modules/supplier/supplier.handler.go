@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -98,11 +99,57 @@ func (h *SupplierHandler) DeleteSupplier(c *gin.Context) {
 }
 
 func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
-	suppliers, err := h.service.GetSuppliers()
+	var filter types.SuppliersFilter
+
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Supplier{})
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to parse params")
+		return
+	}
+
+	suppliers, err := h.service.GetSuppliers(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve suppliers")
 		return
 	}
 
 	utils.SendSuccessResponse(c, suppliers)
+}
+
+func (h *SupplierHandler) AssociateMaterialToSupplier(c *gin.Context) {
+	supplierID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || supplierID <= 0 {
+		utils.SendBadRequestError(c, "Invalid supplier ID")
+		return
+	}
+
+	var dto types.CreateSupplierMaterialDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, "Invalid request body")
+		return
+	}
+
+	err = h.service.AddMaterialToSupplier(uint(supplierID), dto)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to associate material to supplier")
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "Material associated with supplier successfully", http.StatusCreated)
+}
+
+func (h *SupplierHandler) GetMaterialsBySupplier(c *gin.Context) {
+	supplierID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || supplierID <= 0 {
+		utils.SendBadRequestError(c, "Invalid supplier ID")
+		return
+	}
+
+	materials, err := h.service.GetMaterialsBySupplier(uint(supplierID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve materials for the supplier")
+		return
+	}
+
+	utils.SendSuccessResponse(c, materials)
 }

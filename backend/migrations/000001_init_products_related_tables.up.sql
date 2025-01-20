@@ -598,7 +598,8 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		contact_email VARCHAR(255),
-		contact_phone valid_phone,
+		contact_phone valid_phone UNIQUE,
+		city VARCHAR(100) NOT NULL,
 		address VARCHAR(255),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -665,3 +666,14 @@ CREATE TABLE
 CREATE UNIQUE INDEX unique_supplier_material
     ON supplier_materials (supplier_id, stock_material_id)
     WHERE deleted_at IS NULL;
+
+-- Create the supplier_prices table
+CREATE TABLE IF NOT EXISTS supplier_prices (
+    id SERIAL PRIMARY KEY,
+    supplier_material_id INT NOT NULL REFERENCES supplier_materials(id) ON DELETE CASCADE,
+    base_price DECIMAL(10, 2) NOT NULL CHECK (base_price >= 0),
+    effective_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);

@@ -1364,18 +1364,18 @@ VALUES
     ('Dr.Oetker Ванильный экстракт', 'Натуральный экстракт ванили 50мл', 5, 25, 4, 5, '555555555555', 1460, TRUE);
 
 -- Insert into Suppliers
-INSERT INTO suppliers (name, contact_email, contact_phone, address)
+INSERT INTO suppliers (name, contact_email, contact_phone, city, address)
 VALUES
-    ('ООО "Нестле Россия"', 'contact@nestle.ru', '+79005556677', 'Россия, 115054, Москва, Павелецкая площадь, д. 2, стр. 1'),
-    ('АО "Кока-Кола ЭйчБиСи Евразия"', 'info@coca-cola.ru', '+78002002222', 'Россия, 119633, Москва, ул. Новоорловская, д. 7'),
-    ('ООО "ПепсиКо Холдингс"', 'support@pepsico.ru', '+78007001000', 'Россия, 141580, Московская обл., г. Солнечногорск, территория свободной экономической зоны "Шерризон", стр. 1'),
-    ('ООО "Юнилевер Русь"', 'info@unilever.ru', '+78002001200', 'Россия, 123022, Москва, ул. Сергея Макеева, д. 13'),
-    ('ООО "Штарбакс"', 'help@starbucks.ru', '+78001008333', 'Россия, 127015, Москва, ул. Большая Новодмитровская, д. 23, стр. 1'),
-    ('ООО "Мон`дэлис Русь"', 'support@mdlz.ru', '+74959602424', 'Россия, 601123, Владимирская обл., Петушинский р-н, г. Покров, ул. Франца Штольверка, д. 10'),
-    ('АО "ДАНОН РОССИЯ"', 'contact@danone.ru', '+78002000201', 'Россия, 127015, Москва, ул. Вятская, д. 27, корп. 13-14'),
-    ('ООО "Марс"', 'support@mars.ru', '+74957212100', 'Россия, 142800, Московская обл., г. Ступино, ул. Ситенка, д. 12'),
-    ('ООО "Юнилевер Русь"', 'contact@unilever.ru', '+78002001200', 'Россия, 644031, г. Омск, ул. 10 лет Октября, д. 205'),
-    ('ООО "Дженерал Миллс Рус"', 'support@generalmills.ru', '+74959373400', 'Россия, 127015, Москва, ул. Большая Новодмитровская, д. 14, стр. 2');
+    ('ООО "Нестле Россия"', 'contact@nestle.ru', '+79005556677', 'Москва', 'Павелецкая площадь, д. 2, стр. 1'),
+    ('АО "Кока-Кола ЭйчБиСи Евразия"', 'info@coca-cola.ru', '+78002002222', 'Москва', 'ул. Новоорловская, д. 7'),
+    ('ООО "ПепсиКо Холдингс"', 'support@pepsico.ru', '+78007001000', 'Московская обл.', 'г. Солнечногорск, территория свободной экономической зоны "Шерризон", стр. 1'),
+    ('ООО "Юнилевер Русь"', 'info@unilever.ru', '+78002001200', 'Москва', 'ул. Сергея Макеева, д. 13'),
+    ('ООО "Штарбакс"', 'help@starbucks.ru', '+78001008333', 'Москва', 'ул. Большая Новодмитровская, д. 23, стр. 1'),
+    ('ООО "Мон`дэлис Русь"', 'support@mdlz.ru', '+74959602424', 'Владимирская обл.', 'г. Покров, ул. Франца Штольверка, д. 10'),
+    ('АО "ДАНОН РОССИЯ"', 'contact@danone.ru', '+78002000201', 'Москва', 'ул. Вятская, д. 27, корп. 13-14'),
+    ('ООО "Марс"', 'support@mars.ru', '+74957212100', 'Московская обл.', 'г. Ступино, ул. Ситенка, д. 12'),
+    ('ООО "Юнилевер Русь"', 'contact@unilever.ru', '+78002001201', 'Омск', 'ул. 10 лет Октября, д. 205'),
+    ('ООО "Дженерал Миллс Рус"', 'support@generalmills.ru', '+74959373400', 'Москва', 'ул. Большая Новодмитровская, д. 14, стр. 2');
 
 INSERT INTO stock_material_packages (stock_material_id, size, unit_id)
 VALUES
@@ -1394,6 +1394,48 @@ VALUES
     (4, 2, 2, '444444444444', 20, '2024-12-10', '2026-06-10'), -- Cinnamon Delivery
     (5, 1, 2, '555555555555', 15, '2024-12-15', '2027-12-15'); -- Vanilla Delivery
 
+
+-- Insert mock data into supplier_materials
+INSERT INTO supplier_materials (supplier_id, stock_material_id, created_at, updated_at)
+VALUES
+    -- Nestlé supplies Milk and Sugar
+    (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    
+    -- Coca-Cola supplies Sugar
+    (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    
+    -- PepsiCo supplies Chocolate and Cinnamon
+    (3, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
+    (3, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
+    
+    -- Unilever supplies Vanilla
+    (4, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
+    (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate
+
+
+-- Insert mock data into supplier_prices
+INSERT INTO supplier_prices (supplier_material_id, base_price, effective_date)
+VALUES
+    -- Prices for supplier_material_id 1
+    (1, 50.00, '2024-01-01T00:00:00Z'),
+    (1, 48.00, '2024-06-01T00:00:00Z'),
+    
+    -- Prices for supplier_material_id 2
+    (2, 25.00, '2024-01-01T00:00:00Z'),
+    (2, 24.50, '2024-07-01T00:00:00Z'),
+    
+    -- Prices for supplier_material_id 3
+    (3, 100.00, '2024-01-01T00:00:00Z'),
+    (3, 98.00, '2024-06-01T00:00:00Z'),
+    
+    -- Prices for supplier_material_id 4
+    (4, 30.00, '2024-01-01T00:00:00Z'),
+    (4, 28.00, '2024-05-01T00:00:00Z'),
+    
+    -- Prices for supplier_material_id 5
+    (5, 75.00, '2024-01-01T00:00:00Z'),
+    (5, 72.50, '2024-06-01T00:00:00Z');
 
 
 INSERT INTO warehouse_stocks (warehouse_id, stock_material_id, quantity)

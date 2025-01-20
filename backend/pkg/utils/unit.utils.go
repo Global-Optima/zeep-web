@@ -7,10 +7,10 @@ import (
 )
 
 type PackageMeasure struct {
-	Quantity          float64 `json:"quantity"`          // Quantity of the packages
-	UnitsPerPackage   float64 `json:"unitsPerPackage"`   // Number of units contained in a package
-	PackageUnit       string  `json:"packageUnit"`       // Name of the unit of the package
-	TotalUnitsInStock float64 `json:"totalUnitsInStock"` // Total number of units
+	Quantity          float64 `json:"quantity,omitempty"`          // Quantity of the packages
+	UnitsPerPackage   float64 `json:"unitsPerPackage"`             // Number of units contained in a package
+	PackageUnit       string  `json:"packageUnit"`                 // Name of the unit of the package
+	TotalUnitsInStock float64 `json:"totalUnitsInStock,omitempty"` // Total number of units
 }
 
 func ConvertPackagesToUnits(stockMaterial data.StockMaterial, quantityInPackages float64) (float64, error) {
