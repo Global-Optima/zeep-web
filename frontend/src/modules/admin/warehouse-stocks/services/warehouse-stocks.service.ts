@@ -2,6 +2,7 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
+	AddMultipleWarehouseStockDTO,
 	GetWarehouseStockFilter,
 	UpdateWarehouseStockDTO,
 	WarehouseStockMaterialDetailsDTO,
@@ -40,6 +41,16 @@ class WarehouseStocksService {
 			return response.data
 		} catch (error) {
 			console.error(`Failed to update warehouse stocks with ID ${id}: `, error)
+			throw error
+		}
+	}
+
+	async addMultipleWarehouseStock(dto: AddMultipleWarehouseStockDTO[]) {
+		try {
+			const response = await apiClient.post<void>(`/warehouses/stocks/add`, dto)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to add multiple warehouse stocks: `, error)
 			throw error
 		}
 	}

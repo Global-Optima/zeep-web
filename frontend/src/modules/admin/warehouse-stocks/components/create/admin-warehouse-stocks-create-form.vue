@@ -36,9 +36,9 @@
 			<CardHeader>
 				<div class="flex justify-between items-start gap-4">
 					<div>
-						<CardTitle>Добавить ингредиенты на склад</CardTitle>
+						<CardTitle>Добавить товары на склад</CardTitle>
 						<CardDescription class="mt-2">
-							Заполните таблицу ниже, чтобы добавить несколько ингредиентов на склад.
+							Заполните таблицу ниже, чтобы добавить несколько товаров на склад.
 						</CardDescription>
 					</div>
 					<Button
@@ -56,12 +56,12 @@
 							<TableHead>Название</TableHead>
 							<TableHead>Категория</TableHead>
 							<TableHead>Количество</TableHead>
-							<TableHead>Порог малого запаса</TableHead>
+							<TableHead>Единица измерения</TableHead>
 							<TableHead class="text-center"></TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						<TableRow v-if="selectedIngredients.length === 0">
+						<TableRow v-if="selectedStockMaterials.length === 0">
 							<TableCell
 								colspan="5"
 								class="py-5 text-center text-gray-500"
@@ -70,8 +70,8 @@
 							</TableCell>
 						</TableRow>
 						<TableRow
-							v-for="(ingredient, index) in selectedIngredients"
-							:key="ingredient.ingredientId"
+							v-for="(ingredient, index) in selectedStockMaterials"
+							:key="ingredient.stockMaterialId"
 						>
 							<TableCell>{{ ingredient.name }}</TableCell>
 							<TableCell>{{ ingredient.category.name }}</TableCell>
@@ -84,15 +84,7 @@
 									placeholder="Введите количество"
 								/>
 							</TableCell>
-							<TableCell>
-								<Input
-									type="number"
-									v-model.number="ingredient.lowStockThreshold"
-									:min="0"
-									:class="{ 'border-red-500': hasError(ingredient, 'lowStockThreshold') }"
-									placeholder="Введите порог"
-								/>
-							</TableCell>
+							<TableCell>{{ ingredient.unit.name }}</TableCell>
 							<TableCell class="flex justify-center text-center">
 								<Trash
 									class="text-red-500 hover:text-red-700 cursor-pointer"
@@ -120,13 +112,14 @@
 				Сохранить
 			</Button>
 		</div>
-	</div>
 
-	<AdminIngredientsSelectDialog
-		:open="openDialog"
-		@close="openDialog = false"
-		@select="addSelectedIngredient"
-	/>
+		<!-- Dialog -->
+		<AdminStockMaterialsSelectDialog
+			:open="openDialog"
+			@close="openDialog = false"
+			@select="addStockMaterial"
+		/>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -136,7 +129,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from '@/core/components/ui/card'
 import { Input } from '@/core/components/ui/input'
 import {
@@ -145,123 +138,122 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
-import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
+import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
+import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
+import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
-interface CreateStoreStockItem {
+// Interfaces
+interface CreateWarehouseStockItem {
 	name: string
-	ingredientId: number
+	stockMaterialId: number
 	quantity: number
-	lowStockThreshold: number
-	unit: { name: string }
-	category: { name: string }
+	unit: UnitDTO
+	category: StockMaterialCategoryDTO
+	ingredient: IngredientsDTO
 }
 
 const emit = defineEmits<{
-	(e: 'onSubmit', payload: { ingredientStocks: { ingredientId: number; quantity: number; lowStockThreshold: number }[] }): void
+	(e: 'onSubmit', payload: { stockMaterialId: number; quantity: number }[]): void
 	(e: 'onCancel'): void
 }>()
 
-const selectedIngredients = ref<CreateStoreStockItem[]>([])
+const selectedStockMaterials = ref<CreateWarehouseStockItem[]>([])
 const openDialog = ref(false)
 const { toast } = useToast()
 
-// Add selected ingredients to the table
-function addSelectedIngredient(ingredient: { id: number; name: string; unit: { name: string }; category: { name: string } }) {
-	const exists = selectedIngredients.value.some(
-		(existingItem) => existingItem.ingredientId === ingredient.id
+// Add Material
+function addStockMaterial(stockMaterial: StockMaterialsDTO) {
+	const exists = selectedStockMaterials.value.some(
+		(item) => item.stockMaterialId === stockMaterial.id
 	)
 
 	if (exists) {
 		toast({
 			title: 'Ошибка',
-			description: `Ингредиент "${ingredient.name}" уже добавлен.`,
-			variant: 'destructive'
+			description: `Материал "${stockMaterial.name}" уже добавлен.`,
+			variant: 'destructive',
 		})
 		return
 	}
 
-	selectedIngredients.value.push({
-		name: ingredient.name,
-		ingredientId: ingredient.id,
-		quantity: 0,
-		lowStockThreshold: 0,
-		unit: ingredient.unit,
-		category: ingredient.category
-	})
+	selectedStockMaterials.value.push({
+    quantity: 0,
+    name: stockMaterial.name,
+    stockMaterialId: stockMaterial.id,
+    unit: stockMaterial.unit,
+    category: stockMaterial.category,
+    ingredient: stockMaterial.ingredient
+  })
 
 	toast({
 		title: 'Успех',
-		description: `Ингредиент "${ingredient.name}" добавлен.`,
-		variant: 'default'
+		description: `Материал "${stockMaterial.name}" добавлен.`,
+		variant: 'default',
 	})
-
 	openDialog.value = false
 }
 
-// Remove ingredient from the table
+// Remove Material
 function removeIngredient(index: number) {
-	const removed = selectedIngredients.value.splice(index, 1)
+	const removed = selectedStockMaterials.value.splice(index, 1)
 	toast({
 		title: 'Удалено',
-		description: `Ингредиент "${removed[0].name}" удален.`,
-		variant: 'default'
+		description: `Материал "${removed[0].name}" удален.`,
+		variant: 'default',
 	})
 }
 
-// Validation checks
-function hasError(item: CreateStoreStockItem, field: 'quantity' | 'lowStockThreshold'): boolean {
+// Validation Checks
+function hasError(item: CreateWarehouseStockItem, field: 'quantity'): boolean {
 	return item[field] === undefined || item[field] <= 0
 }
 
-// Computed: Can submit form
+// Enable Submit
 const canSubmit = computed(() => {
 	return (
-		selectedIngredients.value.length > 0 &&
-		selectedIngredients.value.every(
-			(item) => !hasError(item, 'quantity') && !hasError(item, 'lowStockThreshold')
-		)
+		selectedStockMaterials.value.length > 0 &&
+		selectedStockMaterials.value.every((item) => !hasError(item, 'quantity'))
 	)
 })
 
-// Submit form
+// Submit Form
 function onSubmit() {
 	if (!canSubmit.value) {
 		toast({
 			title: 'Ошибка',
 			description: 'Убедитесь, что все поля заполнены корректно.',
-			variant: 'destructive'
+			variant: 'destructive',
 		})
 		return
 	}
 
-	const payload = {
-		ingredientStocks: selectedIngredients.value.map((item) => ({
-			ingredientId: item.ingredientId,
-			quantity: item.quantity,
-			lowStockThreshold: item.lowStockThreshold
-		}))
-	}
+	const payload = selectedStockMaterials.value.map((item) => ({
+		stockMaterialId: item.stockMaterialId,
+		quantity: item.quantity,
+	}))
 
 	toast({
 		title: 'Успех',
-		description: 'Ингредиенты успешно добавлены.',
-		variant: 'default'
+		description: 'Материалы успешно добавлены.',
+		variant: 'default',
 	})
 
 	emit('onSubmit', payload)
 }
 
-// Cancel form
+// Cancel
 function onCancel() {
 	toast({
 		title: 'Отмена',
 		description: 'Изменения отменены.',
-		variant: 'default'
+		variant: 'default',
 	})
 	emit('onCancel')
 }

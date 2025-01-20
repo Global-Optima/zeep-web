@@ -40,3 +40,8 @@ export interface UpdateWarehouseStockDTO {
 	quantity: number
 	expirationDate: Date
 }
+
+export interface AddMultipleWarehouseStockDTO {
+	stockMaterialId: number
+	quantity: number
+}

@@ -80,6 +80,6 @@ const applyFilter = (filterType: string) => {
 // Add Store Navigation
 const router = useRouter()
 const addStore = () => {
-	router.push({ name: getRouteName('ADMIN_CREATE_STORE_STOCKS') })
+	router.push({ name: getRouteName('ADMIN_WAREHOUSE_STOCKS_CREATE') })
 }
 </script>
