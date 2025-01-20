@@ -31,9 +31,7 @@
 								v-for="(item, index) in stockRequestItemsForm"
 								:key="index"
 							>
-								<TableCell>
-									{{ item.name }}
-								</TableCell>
+								<TableCell>{{ item.name }}</TableCell>
 								<TableCell>
 									<Input
 										type="number"
@@ -80,79 +78,125 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-
 import { Button } from '@/core/components/ui/button'
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/core/components/ui/card'
 import { Input } from '@/core/components/ui/input'
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/core/components/ui/table'
-import { Trash } from 'lucide-vue-next'
-
+import { useToast } from '@/core/components/ui/toast'
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
-import type { StockRequestMaterial, StockRequestStockMaterialDTO } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import { Trash } from 'lucide-vue-next'
+import { onMounted, ref } from 'vue'
 
-export interface StockRequestItemForm extends StockRequestStockMaterialDTO {
-  name: string
+export interface StockRequestItemForm {
+	stockMaterialId: number
+	name: string
+	quantity: number
 }
 
 const props = defineProps<{
-  initialData: StockRequestMaterial[]
+	initialData: {
+		stockMaterial: { id: number; name: string }
+		packageMeasures: { quantity: number }
+	}[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'submit', payload: StockRequestItemForm[]): void
-  (e: 'cancel'): void
+	(e: 'submit', payload: StockRequestItemForm[]): void
+	(e: 'cancel'): void
 }>()
 
 const stockRequestItemsForm = ref<StockRequestItemForm[]>([])
 const openDialog = ref(false)
+const { toast } = useToast()
 
 onMounted(() => {
-  stockRequestItemsForm.value = props.initialData.map(item => ({ stockMaterialId: item.stockMaterial.id,
-    quantity:item.packageMeasures.quantity, name: item.stockMaterial.name  }))
+	stockRequestItemsForm.value = props.initialData.map((item) => ({
+		stockMaterialId: item.stockMaterial.id,
+		name: item.stockMaterial.name,
+		quantity: item.packageMeasures.quantity,
+	}))
 })
 
 function addMaterial(material: { id: number; name: string }) {
-  const itemExists = stockRequestItemsForm.value.some(
-    item => item.stockMaterialId === material.id
-  )
-  if (!itemExists) {
-    stockRequestItemsForm.value.push({
-      stockMaterialId: material.id,
-      name: material.name,
-      quantity: 1
-    })
-  }
+	if (stockRequestItemsForm.value.some((item) => item.stockMaterialId === material.id)) {
+		toast({
+			title: 'Ошибка',
+			description: `Материал "${material.name}" уже добавлен.`,
+			variant: 'destructive',
+		})
+		return
+	}
+
+	stockRequestItemsForm.value.push({
+		stockMaterialId: material.id,
+		name: material.name,
+		quantity: 1,
+	})
+
+	toast({
+		title: 'Успех',
+		description: `Материал "${material.name}" добавлен.`,
+		variant: 'default',
+	})
 }
 
 function removeItem(index: number) {
-  stockRequestItemsForm.value.splice(index, 1)
+	const removedItem = stockRequestItemsForm.value.splice(index, 1)[0]
+	toast({
+		title: 'Удалено',
+		description: `Материал "${removedItem.name}" удален.`,
+		variant: 'default',
+	})
 }
 
 function submitForm() {
-  for (const item of stockRequestItemsForm.value) {
-    if (!item.quantity || item.quantity <= 0) {
-      alert(`Количество для "${item.name}" должно быть больше нуля!`)
-      return
-    }
-  }
-  emit('submit', stockRequestItemsForm.value)
+	if (stockRequestItemsForm.value.length === 0) {
+		toast({
+			title: 'Ошибка',
+			description: 'Добавьте хотя бы один материал перед сохранением.',
+			variant: 'destructive',
+		})
+		return
+	}
+
+	const invalidItems = stockRequestItemsForm.value.filter((item) => item.quantity <= 0)
+	if (invalidItems.length > 0) {
+		toast({
+			title: 'Ошибка',
+			description: 'Убедитесь, что все количества больше нуля.',
+			variant: 'destructive',
+		})
+		return
+	}
+
+	toast({
+		title: 'Успех',
+		description: 'Запрос успешно обновлен.',
+		variant: 'default',
+	})
+
+	emit('submit', stockRequestItemsForm.value)
 }
 
 function cancelForm() {
-  emit('cancel')
+	toast({
+		title: 'Отмена',
+		description: 'Изменения отменены.',
+		variant: 'default',
+	})
+	emit('cancel')
 }
 </script>

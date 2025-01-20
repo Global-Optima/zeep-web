@@ -51,7 +51,9 @@ import {
   type StockRequestResponse
 } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 
+import { getRouteName } from '@/core/config/routes.config'
 import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
+import { useRouter } from 'vue-router'
 
 /** Props */
 const props = defineProps<{
@@ -127,6 +129,8 @@ type MutationVariables =
       payload: AcceptWithChangeRequestStatusDTO
     }
 
+const router = useRouter()
+
 // Our single mutation for any action
 const {mutate, isPending} = useMutation({
   mutationFn: async (vars: MutationVariables) => {
@@ -140,9 +144,13 @@ const {mutate, isPending} = useMutation({
         return action.handler(props.request.requestId, vars.payload as AcceptWithChangeRequestStatusDTO)
     }
   },
-  onSuccess: () => {
+  onSuccess: (_, {action}) => {
     queryClient.invalidateQueries({ queryKey: ['stock-requests'] })
     queryClient.invalidateQueries({ queryKey: ['stock-request', props.request.requestId] })
+
+    if (action.redirectRouteKey) {
+      router.push({name: getRouteName(action.redirectRouteKey)})
+    }
   },
   onError: (error) => {
     console.error('Action failed:', error)

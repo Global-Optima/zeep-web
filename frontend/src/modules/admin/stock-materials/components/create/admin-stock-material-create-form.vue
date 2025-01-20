@@ -49,7 +49,6 @@ const createStockMaterialSchema = toTypedSchema(
     name: z.string().min(1, 'Введите название материала'),
     description: z.string().optional(),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас должен быть больше 0'),
-    expirationFlag: z.boolean(),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     supplierId: z.coerce.number().min(1, 'Выберите поставщика'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),

@@ -35,6 +35,7 @@
 		<Card>
 			<CardHeader>
 				<CardTitle>Информация о материале</CardTitle>
+				<CardDescription>Полная информация о материале</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<ul class="space-y-2">
@@ -42,7 +43,7 @@
 						v-for="info in materialInfo"
 						:key="info.label"
 					>
-						<span class="font-semibold">{{ info.label }}:</span> {{ info.value }}
+						<span>{{ info.label }}:</span> <span class="font-medium">{{ info.value }}</span>
 					</li>
 				</ul>
 			</CardContent>
@@ -137,7 +138,6 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
-
 // Props
 const {initialData} = defineProps<{
   initialData: WarehouseStockMaterialDetailsDTO
@@ -155,9 +155,7 @@ const materialInfo = [
   { label: 'Безопасный запас', value: initialData.stockMaterial.safetyStock },
   {
     label: 'Срок годности',
-    value: initialData.stockMaterial.expirationFlag
-      ? `${initialData.stockMaterial.expirationPeriodInDays} дней`
-      : 'Нет',
+    value: `${initialData.stockMaterial.expirationPeriodInDays} дней`
   },
   { label: 'Штрихкод', value: initialData.stockMaterial.barcode },
   { label: 'Количество на складе', value: initialData.packageMeasure.quantity },

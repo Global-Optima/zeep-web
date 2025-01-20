@@ -8,7 +8,6 @@ export interface CreateStockMaterialDTO {
 	name: string
 	description?: string
 	safetyStock: number
-	expirationFlag: boolean
 	unitId: number
 	supplierId: number
 	categoryId: number
@@ -21,7 +20,6 @@ export interface UpdateStockMaterialDTO {
 	name?: string
 	description?: string
 	safetyStock?: number
-	expirationFlag?: boolean
 	unitId?: number
 	categoryId?: number
 	supplierId: number
@@ -36,7 +34,6 @@ export interface StockMaterialsDTO {
 	name: string
 	description: string
 	safetyStock: number
-	expirationFlag: boolean
 	unit: UnitDTO
 	supplier: SuppliersDTO
 	category: StockMaterialCategoryDTO
@@ -51,7 +48,6 @@ export interface StockMaterialsDTO {
 export interface StockMaterialsFilter extends PaginationParams {
 	search?: string
 	lowStock?: boolean
-	expirationFlag?: boolean
 	isActive?: boolean
 	supplierId?: number
 	ingredientId?: number
