@@ -1,0 +1,5 @@
+{
+  "createAuditMessage": "{{.ComponentName}} {{.Name}} was created",
+  "updateAuditMessage": "{{.ComponentName}} {{.Name}} was updated",
+  "deleteAuditMessage": "{{.ComponentName}} {{.Name}} was deleted"
+}

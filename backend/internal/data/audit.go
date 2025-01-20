@@ -35,7 +35,6 @@ const (
 	WarehouseComponent           ComponentName = "WAREHOUSE"
 	StoreWarehouseStockComponent ComponentName = "STORE WAREHOUSE STOCK"
 	IngredientComponent          ComponentName = "INGREDIENT"
-	StoreProductSizesComponent   ComponentName = "STORE PRODUCT SIZES"
 )
 
 func (o OperationType) ToString() string {
@@ -48,14 +47,20 @@ func (c ComponentName) ToString() string {
 
 type AuditDetails interface {
 	ToDetails() ([]byte, error)
+	GetBaseDetails() *BaseDetails
 }
 
 type BaseDetails struct {
-	ID uint `json:"id"`
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 func (b *BaseDetails) ToDetails() ([]byte, error) {
 	return ToJSONB(b, false)
+}
+
+func (b *BaseDetails) GetBaseDetails() *BaseDetails {
+	return b
 }
 
 type DTO interface {
@@ -65,6 +70,10 @@ type DTO interface {
 type ExtendedDetails struct {
 	BaseDetails
 	DTO
+}
+
+func (d *ExtendedDetails) GetBaseDetails() *BaseDetails {
+	return &d.BaseDetails
 }
 
 func (d *ExtendedDetails) ToDetails() ([]byte, error) {

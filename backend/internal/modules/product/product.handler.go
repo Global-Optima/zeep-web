@@ -72,11 +72,19 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateProduct(&input)
+	id, err := h.service.CreateProduct(&input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
 	}
+
+	action := types.CreateProductAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: input.Name,
+		})
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }

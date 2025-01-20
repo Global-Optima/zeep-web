@@ -1,21 +1,27 @@
 package types
 
 import (
-	"encoding/json"
+	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"time"
 )
 
+type Messages struct {
+	En string `json:"en"`
+	Ru string `json:"ru"`
+	Kk string `json:"kk"`
+}
+
 type EmployeeAuditDTO struct {
-	ID            uint            `json:"id"`
-	Timestamp     time.Time       `json:"timestamp"`
-	EmployeeID    uint            `json:"employeeId"`
-	OperationType string          `json:"operationType"`
-	ComponentName string          `json:"componentName"`
-	Details       json.RawMessage `json:"details"`
-	IPAddress     string          `json:"ipAddress"`
-	ResourceURL   string          `json:"resourceUrl"`
-	Method        string          `json:"method"`
+	ID                         uint      `json:"id"`
+	Timestamp                  time.Time `json:"timestamp"`
+	OperationType              string    `json:"operationType"`
+	ComponentName              string    `json:"componentName"`
+	Messages                   Messages  `json:"messages"`
+	IPAddress                  string    `json:"ipAddress"`
+	ResourceURL                string    `json:"resourceUrl"`
+	Method                     string    `json:"method"`
+	employeesTypes.EmployeeDTO `json:"employee"`
 }
 
 type EmployeeAuditFilter struct {

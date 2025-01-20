@@ -2,16 +2,15 @@ package shared
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 )
 
-var auditActions = make(map[types.AuditActionCore]func() data.AuditDetails)
+var auditActions = make(map[AuditActionCore]func() data.AuditDetails)
 var defaultFactory = func() data.AuditDetails {
 	return &data.BaseDetails{}
 }
 
-func GetAuditActionDetailsFactory(core types.AuditActionCore) func() data.AuditDetails {
+func GetAuditActionDetailsFactory(core AuditActionCore) func() data.AuditDetails {
 	zapLogger := logger.GetZapSugaredLogger()
 	factory, ok := auditActions[core]
 
@@ -27,10 +26,10 @@ func NewAuditActionExtendedFactory[T any](
 	operationType data.OperationType,
 	componentName data.ComponentName,
 	dto T,
-) func(baseDetails *data.BaseDetails, dto T) types.AuditActionExtended {
+) func(baseDetails *data.BaseDetails, dto T) AuditActionExtended {
 	zapLogger := logger.GetZapSugaredLogger()
 
-	core := types.AuditActionCore{
+	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,
 	}
@@ -45,8 +44,8 @@ func NewAuditActionExtendedFactory[T any](
 		}
 	}
 
-	return func(baseDetails *data.BaseDetails, dto T) types.AuditActionExtended {
-		return types.AuditActionExtended{
+	return func(baseDetails *data.BaseDetails, dto T) AuditActionExtended {
+		return AuditActionExtended{
 			Core: core,
 			Details: &data.ExtendedDetails{
 				BaseDetails: *baseDetails,
@@ -59,10 +58,10 @@ func NewAuditActionExtendedFactory[T any](
 func NewAuditActionBaseFactory(
 	operationType data.OperationType,
 	componentName data.ComponentName,
-) func(details *data.BaseDetails) types.AuditActionBase {
+) func(details *data.BaseDetails) AuditActionBase {
 	zapLogger := logger.GetZapSugaredLogger()
 
-	core := types.AuditActionCore{
+	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,
 	}
@@ -75,8 +74,8 @@ func NewAuditActionBaseFactory(
 		return defaultFactory()
 	}
 
-	return func(baseDetails *data.BaseDetails) types.AuditActionBase {
-		return types.AuditActionBase{
+	return func(baseDetails *data.BaseDetails) AuditActionBase {
+		return AuditActionBase{
 			Core:    core,
 			Details: baseDetails,
 		}

@@ -128,18 +128,6 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		return
 	}
 	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
-
-	/*createDetails := types.AuditStoreProductDTO{
-		StoreID: storeID,
-	}
-
-	_ = h.auditService.RecordEmployeeAction(c, data.CreateOperation, data.StoreProductComponent,
-		&data.ExtendedDetails{
-			BaseDetails: data.BaseDetails{ID: id},
-			DTO:         createDetails,
-		},
-	)*/
-
 }
 
 func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {

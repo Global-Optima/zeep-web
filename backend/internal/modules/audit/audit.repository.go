@@ -32,7 +32,8 @@ func (r *auditRepository) CreateAuditRecord(audit *data.EmployeeAudit) (uint, er
 func (r *auditRepository) GetAuditRecords(filter *types.EmployeeAuditFilter) ([]data.EmployeeAudit, error) {
 	var audits []data.EmployeeAudit
 
-	query := r.db.Model(&data.EmployeeAudit{})
+	query := r.db.Model(&data.EmployeeAudit{}).
+		Preload("Employee")
 
 	if filter.MinTimestamp != nil {
 		query = query.Where("created_at >= ?", *filter.MinTimestamp)
@@ -84,6 +85,7 @@ func (r *auditRepository) GetAuditRecordByID(ID uint) (*data.EmployeeAudit, erro
 	var audit data.EmployeeAudit
 
 	err := r.db.Model(&data.EmployeeAudit{}).
+		Preload("Employee").
 		Where("id = ?", ID).
 		First(&audit).Error
 

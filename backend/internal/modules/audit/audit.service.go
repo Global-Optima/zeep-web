@@ -2,6 +2,7 @@ package audit
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,7 @@ import (
 )
 
 type AuditService interface {
-	RecordEmployeeAction(c *gin.Context, action types.AuditAction) error
+	RecordEmployeeAction(c *gin.Context, action shared.AuditAction) error
 	GetAuditRecords(filter *types.EmployeeAuditFilter) ([]types.EmployeeAuditDTO, error)
 	GetAuditRecordByID(id uint) (*types.EmployeeAuditDTO, error)
 }
@@ -26,7 +27,7 @@ func NewAuditService(repo AuditRepository, logger *zap.SugaredLogger) AuditServi
 	}
 }
 
-func (s *auditService) RecordEmployeeAction(c *gin.Context, action types.AuditAction) error {
+func (s *auditService) RecordEmployeeAction(c *gin.Context, action shared.AuditAction) error {
 	audit, err := types.MapToEmployeeAudit(c, action)
 	core := action.GetActionCore()
 	if err != nil {

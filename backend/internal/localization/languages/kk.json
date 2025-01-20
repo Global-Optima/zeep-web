@@ -1,0 +1,3 @@
+{
+  "createAuditMessage": "{{.ComponentName}} {{.Name}} арқылы жасалды"
+}
