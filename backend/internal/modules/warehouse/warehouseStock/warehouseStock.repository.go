@@ -359,7 +359,7 @@ func (r *warehouseStockRepository) getSupplierDeliveriesForStock(stockMaterialID
 func (r *warehouseStockRepository) getSupplierDeliveries(filter *types.GetWarehouseStockFilterQuery) ([]data.SupplierWarehouseDelivery, error) {
 	var deliveries []data.SupplierWarehouseDelivery
 
-	query := r.db.Model(&data.SupplierWarehouseDelivery{})
+	query := r.db.Model(&data.SupplierWarehouseDelivery{}).Preload("Supplier")
 
 	if filter.WarehouseID != nil {
 		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
@@ -408,7 +408,6 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.StockMaterialCategory").
 		Preload("StockMaterial.Package").
 		Preload("StockMaterial.Package.Unit").
-		Preload("SupplierWarehouseDelivery.Supplier").
 		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 

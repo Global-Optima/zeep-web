@@ -300,12 +300,19 @@ func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, d
 		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
 	}
 
-	if err := s.repo.UpdateExpirationDate(stock.StockMaterialID, stock.WarehouseID, dto.ExpirationDate); err != nil {
-		return fmt.Errorf("failed to update expiration date: %w", err)
+	if dto.ExpirationDate == nil && dto.Quantity == nil {
+		return fmt.Errorf("nothing to update")
 	}
 
-	if err := s.repo.UpdateStockQuantity(stock.ID, dto.Quantity); err != nil {
-		return fmt.Errorf("failed to update stock quantity: %w", err)
+	if dto.ExpirationDate != nil {
+		if err := s.repo.UpdateExpirationDate(stock.StockMaterialID, stock.WarehouseID, *dto.ExpirationDate); err != nil {
+			return fmt.Errorf("failed to update expiration date: %w", err)
+		}
+	}
+	if dto.Quantity != nil {
+		if err := s.repo.UpdateStockQuantity(stock.ID, *dto.Quantity); err != nil {
+			return fmt.Errorf("failed to update stock quantity: %w", err)
+		}
 	}
 
 	return nil
