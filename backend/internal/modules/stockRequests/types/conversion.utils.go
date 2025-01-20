@@ -43,6 +43,7 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 				Longitude: *request.Store.FacilityAddress.Longitude,
 				Latitude:  *request.Store.FacilityAddress.Latitude,
 			},
+			StoreHours: request.Store.StoreHours,
 		},
 		Warehouse:      *warehouseTypes.ToWarehouseResponse(request.Warehouse),
 		Status:         request.Status,
