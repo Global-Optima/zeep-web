@@ -4,7 +4,6 @@ import {
 	Apple,
 	Blocks,
 	ChartBar,
-	FileBox,
 	LayoutList,
 	ListPlus,
 	Package,
@@ -100,8 +99,8 @@ export const adminNavItems: SidebarNavItem[] = [
 	{
 		name: 'Поставщики',
 		routeKey: 'ADMIN_SUPPLIERS',
-		icon: FileBox,
-		accessRoles: [EmployeeRole.WAREHOUSE, EmployeeRole.DIRECTOR],
+		icon: Truck,
+		accessRoles: [EmployeeRole.ADMIN],
 	},
 	{
 		name: 'Запросы на склад',

@@ -1,4 +1,3 @@
-<!-- TODO: add pagination here -->
 <template>
 	<AdminSuppliersToolbar
 		:filter="filter"
@@ -7,30 +6,57 @@
 
 	<Card>
 		<CardContent class="mt-4">
-			<AdminSuppliersList :suppliers="suppliers?.data ?? []" />
+			<p
+				v-if="!suppliersResponse || suppliersResponse.data.length === 0"
+				class="text-muted-foreground"
+			>
+				Поставщики не найдены
+			</p>
+			<AdminSuppliersList
+				v-else
+				:suppliers="suppliersResponse.data"
+			/>
 		</CardContent>
+		<CardFooter class="flex justify-end">
+			<PaginationWithMeta
+				v-if="suppliersResponse"
+				:meta="suppliersResponse.pagination"
+				@update:page="updatePage"
+				@update:pageSize="updatePageSize"
+			/>
+		</CardFooter>
 	</Card>
 </template>
 
 <script setup lang="ts">
-import { Card, CardContent } from '@/core/components/ui/card'
+import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
+import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminSuppliersList from '@/modules/admin/suppliers/components/list/admin-suppliers-list.vue'
 import AdminSuppliersToolbar from '@/modules/admin/suppliers/components/list/admin-suppliers-toolbar.vue'
-import type { SuppliersFilter } from '@/modules/admin/suppliers/models/suppliers.model'
+import type { SuppliersFilterDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import { suppliersService } from '@/modules/admin/suppliers/services/suppliers.service'
-import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<SuppliersFilter>({})
+const filter = ref<SuppliersFilterDTO>({})
 
-const { data: suppliers } = useQuery({
-  queryKey: computed(() => ['suppliers', filter.value]),
+const { data: suppliersResponse } = useQuery({
+  queryKey: computed(() => ['admin-suppliers', filter.value]),
   queryFn: () => suppliersService.getSuppliers(filter.value),
 })
 
-function updateFilter(updatedFilter: Partial<StoresFilter>) {
+function updateFilter(updatedFilter: SuppliersFilterDTO) {
   filter.value = {...filter.value, ...updatedFilter}
+}
+
+function updatePage(page: number) {
+  updateFilter({ pageSize: DEFAULT_PAGINATION_META.pageSize, page: page})
+
+}
+
+function updatePageSize(pageSize: number) {
+  updateFilter({ pageSize: pageSize, page: DEFAULT_PAGINATION_META.page})
 }
 </script>
 
