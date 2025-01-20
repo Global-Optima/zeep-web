@@ -4,7 +4,6 @@ import type { PackageMeasure } from '../../store-stock-requests/models/stock-req
 
 export interface WarehouseStocksDTO {
 	stockMaterial: StockMaterialResponse
-	totalQuantity: number
 	earliestExpirationDate: string
 }
 

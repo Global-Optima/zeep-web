@@ -9,7 +9,6 @@
 
 <script lang="ts" setup>
 import { getRouteName } from '@/core/config/routes.config'
-import { storeStocksService } from '@/modules/admin/store-stocks/services/store-stocks.service'
 import AdminWarehouseStocksDetailsForm from '@/modules/admin/warehouse-stocks/components/details/admin-warehouse-stocks-details-form.vue'
 import type { UpdateWarehouseStockDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { warehouseStocksService } from '@/modules/admin/warehouse-stocks/services/warehouse-stocks.service'
@@ -31,7 +30,7 @@ const { data: stockData } = useQuery({
 })
 
 const updateMutation = useMutation({
-	mutationFn: ({id, dto}: {id:number, dto: UpdateWarehouseStockDTO}) => storeStocksService.updateStoreWarehouseStockById(id, dto),
+	mutationFn: ({id, dto}: {id:number, dto: UpdateWarehouseStockDTO}) => warehouseStocksService.updateWarehouseStocksById(id, dto),
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['warehouse-stocks'] })
 		queryClient.invalidateQueries({ queryKey: ['warehouse-stock', warehouseStockId] })

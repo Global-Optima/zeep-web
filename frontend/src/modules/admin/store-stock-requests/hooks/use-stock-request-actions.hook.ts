@@ -1,4 +1,5 @@
 import type { ButtonVariants } from '@/core/components/ui/button'
+import type { RouteKey } from '@/core/config/routes.config'
 import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
 import {
 	StockRequestStatus,
@@ -10,6 +11,7 @@ import { stockRequestsService } from '@/modules/admin/store-stock-requests/servi
 interface Action {
 	label: string
 	variant?: ButtonVariants['variant']
+	redirectRouteKey?: RouteKey
 }
 
 export interface DirectAction extends Action {
@@ -30,7 +32,7 @@ export interface AcceptWithChangesDialogAction extends Action {
 export type StockRequestAction = DirectAction | CommentDialogAction | AcceptWithChangesDialogAction
 
 export function getActions(status: StockRequestStatus, role: EmployeeRole): StockRequestAction[] {
-	if (role === EmployeeRole.BARISTA) {
+	if (role === EmployeeRole.BARISTA || role === EmployeeRole.MANAGER) {
 		switch (status) {
 			case StockRequestStatus.CREATED:
 				return [
@@ -39,6 +41,7 @@ export function getActions(status: StockRequestStatus, role: EmployeeRole): Stoc
 						label: 'Удалить',
 						variant: 'destructive', // highlight as destructive
 						handler: id => stockRequestsService.deleteStockRequest(id),
+						redirectRouteKey: 'ADMIN_STORE_STOCK_REQUESTS',
 					},
 					{
 						type: 'DIRECT',

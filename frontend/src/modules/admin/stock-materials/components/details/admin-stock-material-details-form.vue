@@ -54,7 +54,6 @@ const updateStockMaterialSchema = toTypedSchema(
     name: z.string().min(1, 'Введите название материала'),
     description: z.string().optional(),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас должен быть больше 0'),
-    expirationFlag: z.boolean(),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     supplierId: z.coerce.number().min(1, 'Выберите поставщика'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
@@ -71,7 +70,6 @@ const { handleSubmit, resetForm, setFieldValue } = useForm<UpdateStockMaterialDT
     name: stockMaterial.name,
     description: stockMaterial.description,
     safetyStock: stockMaterial.safetyStock,
-    expirationFlag: stockMaterial.expirationFlag,
     unitId: stockMaterial.unit.id,
     supplierId: stockMaterial?.supplier?.id ?? 1, // TODO: add proper supplier id
     categoryId: stockMaterial.category.id,
