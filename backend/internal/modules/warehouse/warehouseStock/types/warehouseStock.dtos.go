@@ -78,7 +78,7 @@ type UpdateWarehouseStockDTO struct {
 	ExpirationDate time.Time `json:"expirationDate" binding:"required"`
 }
 
-type Stock struct {
+type AddWarehouseStockMaterial struct {
 	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
 	Quantity        float64 `json:"quantity" binding:"required,gte=0"`
 }

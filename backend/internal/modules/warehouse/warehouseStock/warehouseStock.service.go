@@ -17,7 +17,8 @@ type WarehouseStockService interface {
 	TransferInventory(req types.TransferInventoryRequest) error
 	GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]types.DeliveryResponse, error)
 
-	AddToStock(req types.AdjustWarehouseStock) error
+	AddWarehouseStockMaterial(req types.AdjustWarehouseStock) error
+	AddWarehouseStocks(warehouseID uint, req []types.AddWarehouseStockMaterial) error
 	DeductFromStock(req types.AdjustWarehouseStock) error
 	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
 	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error)
@@ -226,7 +227,7 @@ func (s *warehouseStockService) GetDeliveries(warehouseID *uint, startDate, endD
 	return types.DeliveriesToDeliveryResponses(deliveries), nil
 }
 
-func (s *warehouseStockService) AddToStock(req types.AdjustWarehouseStock) error {
+func (s *warehouseStockService) AddWarehouseStockMaterial(req types.AdjustWarehouseStock) error {
 	return s.repo.AddToWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
 }
 
@@ -255,6 +256,23 @@ func (s *warehouseStockService) GetStock(query *types.GetWarehouseStockFilterQue
 	}
 
 	return responses, nil
+}
+
+func (s *warehouseStockService) AddWarehouseStocks(warehouseID uint, req []types.AddWarehouseStockMaterial) error {
+	if len(req) == 0 {
+		return fmt.Errorf("stocks cannot be empty")
+	}
+
+	var stocks []data.WarehouseStock
+	for _, dto := range req {
+		stocks = append(stocks, data.WarehouseStock{
+			WarehouseID:     warehouseID,
+			StockMaterialID: dto.StockMaterialID,
+			Quantity:        dto.Quantity,
+		})
+	}
+
+	return s.repo.AddWarehouseStocks(warehouseID, stocks)
 }
 
 func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error) {

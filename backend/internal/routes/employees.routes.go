@@ -294,7 +294,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 			stockRoutes.GET("", warehouseStockHandler.GetStocks)
 			stockRoutes.GET("/:stockMaterialId", warehouseStockHandler.GetStockMaterialDetails)
 			stockRoutes.PUT("/:stockMaterialId", warehouseStockHandler.UpdateStock)
-
+			stockRoutes.POST("/add", warehouseStockHandler.AddWarehouseStocks)
 			stockRoutes.POST("/receive", warehouseStockHandler.ReceiveInventory)
 			stockRoutes.POST("/transfer", warehouseStockHandler.TransferInventory)
 			stockRoutes.GET("/deliveries", warehouseStockHandler.GetDeliveries)
