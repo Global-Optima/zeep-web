@@ -147,6 +147,7 @@ type SupplierWarehouseDelivery struct {
 	SupplierID      uint          `gorm:"not null"`
 	Supplier        Supplier      `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
 	WarehouseID     uint          `gorm:"not null"`
+	Warehouse       Warehouse     `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
 	Barcode         string        `gorm:"size:255;not null"`
 	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
 	DeliveryDate    time.Time     `gorm:"not null;default:CURRENT_TIMESTAMP" sort:"deliveryDate"`
