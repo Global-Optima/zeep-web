@@ -12,7 +12,6 @@ type CreateStockMaterialDTO struct {
 	Description            string  `json:"description"`
 	SafetyStock            float64 `json:"safetyStock" binding:"required,gt=0"`
 	UnitID                 uint    `json:"unitId" binding:"required"`
-	SupplierID             uint    `json:"supplierId" binding:"required"`
 	CategoryID             uint    `json:"categoryId" binding:"required"`
 	IngredientID           uint    `json:"ingredientId" binding:"required"`
 	Barcode                string  `json:"barcode"`
@@ -50,7 +49,6 @@ type StockMaterialFilter struct {
 	Search           *string `form:"search"`           // Search by name, description, or category
 	LowStock         *bool   `form:"lowStock"`         // Filter for materials below safety stock
 	IsActive         *bool   `form:"isActive"`         // Filter by active/inactive status
-	SupplierID       *uint   `form:"supplierId"`       // Filter by supplier
 	IngredientID     *uint   `form:"ingredientId"`     // Filter by ingredient
 	CategoryID       *uint   `form:"categoryId"`       // Filter by category
 	ExpirationInDays *int    `form:"expirationInDays"` // Filter by expiration period in days

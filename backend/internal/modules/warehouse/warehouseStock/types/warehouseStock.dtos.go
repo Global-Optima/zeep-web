@@ -96,12 +96,12 @@ type WarehouseStockResponse struct {
 
 type StockMaterialResponse struct {
 	stockMaterialTypes.StockMaterialsDTO
-	utils.PackageMeasure `json:"packageMeasures"`
+	utils.PackageMeasureWithQuantity `json:"packageMeasures"`
 }
 
 type WarehouseStockMaterialDetailsDTO struct {
 	StockMaterial          stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
-	PackageMeasure         utils.PackageMeasure                 `json:"packageMeasure"`
+	PackageMeasure         utils.PackageMeasureWithQuantity     `json:"packageMeasure"`
 	EarliestExpirationDate *time.Time                           `json:"earliestExpirationDate,omitempty"`
 	Deliveries             []StockMaterialDeliveryDTO           `json:"deliveries"`
 }

@@ -45,7 +45,7 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 	return response
 }
 
-func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasure) WarehouseStockResponse {
+func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasureWithQuantity) WarehouseStockResponse {
 	return WarehouseStockResponse{
 		StockMaterial: StockMaterialResponse{
 			*stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
@@ -55,7 +55,7 @@ func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock, pkgMeasure ut
 	}
 }
 
-func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasure, deliveries []data.SupplierWarehouseDelivery) WarehouseStockMaterialDetailsDTO {
+func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasureWithQuantity, deliveries []data.SupplierWarehouseDelivery) WarehouseStockMaterialDetailsDTO {
 	deliveriesDTO := make([]StockMaterialDeliveryDTO, len(deliveries))
 	for i, delivery := range deliveries {
 		deliveriesDTO[i] = StockMaterialDeliveryDTO{

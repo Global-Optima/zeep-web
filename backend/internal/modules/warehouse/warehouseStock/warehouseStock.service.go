@@ -247,7 +247,7 @@ func (s *warehouseStockService) GetStock(query *types.GetWarehouseStockFilterQue
 			return nil, fmt.Errorf("package measures not found for StockMaterialID %d", stock.StockMaterialID)
 		}
 
-		packageMeasures, err := utils.ReturnPackageMeasureForStockMaterial(stock.StockMaterial, stock.TotalQuantity)
+		packageMeasures, err := utils.ReturnPackageMeasureForStockMaterialWithQuantity(stock.StockMaterial, stock.TotalQuantity)
 		if err != nil {
 			return nil, err
 		}
@@ -281,7 +281,7 @@ func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehou
 		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)
 	}
 
-	packageMeasure, err := utils.ReturnPackageMeasureForStockMaterial(
+	packageMeasure, err := utils.ReturnPackageMeasureForStockMaterialWithQuantity(
 		aggregatedStock.StockMaterial,
 		aggregatedStock.TotalQuantity,
 	)
