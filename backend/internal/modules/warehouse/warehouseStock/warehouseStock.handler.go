@@ -82,7 +82,7 @@ func (h *WarehouseStockHandler) AddToStock(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AddToStock(req); err != nil {
+	if err := h.service.AddWarehouseStockMaterial(req); err != nil {
 		utils.SendInternalServerError(c, "Failed to add stock: "+err.Error())
 		return
 	}
@@ -154,7 +154,7 @@ func (h *WarehouseStockHandler) GetStockMaterialDetails(c *gin.Context) {
 func (h *WarehouseStockHandler) UpdateStock(c *gin.Context) {
 	warehouseID, errH := contexts.GetWarehouseId(c)
 	if errH != nil {
-		utils.SendBadRequestError(c, errH.Error())
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 	}
 
 	stockMaterialID, err := utils.ParseParam(c, "stockMaterialId")
@@ -174,4 +174,25 @@ func (h *WarehouseStockHandler) UpdateStock(c *gin.Context) {
 	}
 
 	utils.SendMessageWithStatus(c, "Stock updated successfully", http.StatusOK)
+}
+
+func (h *WarehouseStockHandler) AddWarehouseStocks(c *gin.Context) {
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	var req []types.AddWarehouseStockMaterial
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendBadRequestError(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if err := h.service.AddWarehouseStocks(warehouseID, req); err != nil {
+		utils.SendInternalServerError(c, "Failed to add warehouse stocks: "+err.Error())
+		return
+	}
+
+	utils.SendMessageWithStatus(c, "Warehouse stocks added successfully", http.StatusCreated)
 }
