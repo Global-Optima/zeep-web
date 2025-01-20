@@ -2,9 +2,7 @@ package stockMaterial
 
 import (
 	"errors"
-	"fmt"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 )
 
@@ -62,15 +60,6 @@ func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMateria
 	err := s.repo.CreateStockMaterial(stockMaterial)
 	if err != nil {
 		return nil, err
-	}
-
-	supplierMaterial := &data.SupplierMaterial{
-		StockMaterialID: stockMaterial.ID,
-		SupplierID:      req.SupplierID,
-	}
-	err = s.repo.CreateSupplierMaterial(supplierMaterial)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create supplier-material association: %w", err)
 	}
 
 	stockMaterialResponse := types.ConvertStockMaterialToStockMaterialResponse(stockMaterial)

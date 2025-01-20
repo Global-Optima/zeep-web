@@ -158,7 +158,17 @@ func (r *warehouseStockRepository) GetDeliveryByID(deliveryID uint, delivery *da
 
 func (r *warehouseStockRepository) GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]data.SupplierWarehouseDelivery, error) {
 	var deliveries []data.SupplierWarehouseDelivery
-	query := r.db.Model(&data.SupplierWarehouseDelivery{})
+	query := r.db.Model(&data.SupplierWarehouseDelivery{}).
+		Preload("Supplier").
+		Preload("Warehouse").
+		Preload("StockMaterial").
+		Preload("StockMaterial.Unit").
+		Preload("StockMaterial.Ingredient").
+		Preload("StockMaterial.Ingredient.Unit").
+		Preload("StockMaterial.Ingredient.IngredientCategory").
+		Preload("StockMaterial.StockMaterialCategory").
+		Preload("StockMaterial.Package").
+		Preload("StockMaterial.Package.Unit")
 
 	if warehouseID != nil {
 		query = query.Where("warehouse_id = ?", *warehouseID)
@@ -398,6 +408,7 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.StockMaterialCategory").
 		Preload("StockMaterial.Package").
 		Preload("StockMaterial.Package.Unit").
+		Preload("SupplierWarehouseDelivery.Supplier").
 		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 

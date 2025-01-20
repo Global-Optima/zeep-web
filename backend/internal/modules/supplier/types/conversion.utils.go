@@ -1,9 +1,8 @@
 package types
 
 import (
-	"time"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -32,30 +31,24 @@ func ToSupplier(dto CreateSupplierDTO) data.Supplier {
 
 func ToSupplierMaterialResponse(material data.SupplierMaterial) SupplierMaterialResponse {
 	var basePrice float64
-	var effectiveDate time.Time
 
 	// Extract the most recent price
 	if len(material.SupplierPrices) > 0 {
 		latestPrice := material.SupplierPrices[len(material.SupplierPrices)-1]
 		basePrice = latestPrice.BasePrice
-		effectiveDate = latestPrice.EffectiveDate
+	}
+
+	pkgMeasure, err := utils.ReturnPackageMeasures(material.StockMaterial)
+	if err != nil {
+		panic(err.Error())
 	}
 
 	return SupplierMaterialResponse{
-		StockMaterial: StockMaterialDTO{
-			ID:          material.StockMaterial.ID,
-			Name:        material.StockMaterial.Name,
-			Description: material.StockMaterial.Description,
-			Category:    material.StockMaterial.StockMaterialCategory.Name,
-			SafetyStock: material.StockMaterial.SafetyStock,
-			Barcode:     material.StockMaterial.Barcode,
-			PackageMeasure: utils.PackageMeasure{
-				UnitsPerPackage: material.StockMaterial.Package.Size,
-				PackageUnit:     material.StockMaterial.Package.Unit.Name,
-			},
+		StockMaterial: SupplierStockMaterialDTO{
+			*stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
+			pkgMeasure,
 		},
-		BasePrice:     basePrice,
-		EffectiveDate: effectiveDate,
+		BasePrice: basePrice,
 	}
 }
 

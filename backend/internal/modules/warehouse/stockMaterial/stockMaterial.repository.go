@@ -15,7 +15,6 @@ type StockMaterialRepository interface {
 	GetStockMaterialsByIDs(stockMaterialIDs []uint) ([]data.StockMaterial, error)
 	CreateStockMaterial(stockMaterial *data.StockMaterial) error
 	CreateStockMaterials(stockMaterials []data.StockMaterial) error
-	CreateSupplierMaterial(supplierMaterial *data.SupplierMaterial) error
 	UpdateStockMaterial(stockMaterial *data.StockMaterial) error
 	UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error)
 	DeleteStockMaterial(stockMaterialID uint) error
@@ -57,11 +56,6 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 
 		if filter.IsActive != nil {
 			query = query.Where("is_active = ?", *filter.IsActive)
-		}
-
-		if filter.SupplierID != nil {
-			query = query.Joins("JOIN supplier_materials ON supplier_materials.stock_material_id = stock_materials.id").
-				Where("supplier_materials.supplier_id = ?", *filter.SupplierID)
 		}
 
 		if filter.IngredientID != nil {
@@ -127,10 +121,6 @@ func (r *stockMaterialRepository) CreateStockMaterial(stockMaterial *data.StockM
 
 func (r *stockMaterialRepository) CreateStockMaterials(stockMaterials []data.StockMaterial) error {
 	return r.db.Create(&stockMaterials).Error
-}
-
-func (r *stockMaterialRepository) CreateSupplierMaterial(supplierMaterial *data.SupplierMaterial) error {
-	return r.db.Create(supplierMaterial).Error
 }
 
 func (r *stockMaterialRepository) UpdateStockMaterial(stockMaterial *data.StockMaterial) error {

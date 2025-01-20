@@ -14,16 +14,16 @@ import (
 func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 	items := make([]StockRequestMaterial, len(request.Ingredients))
 	for i, ingredient := range request.Ingredients {
-		var packageMeasures utils.PackageMeasure
+		var packageMeasures utils.PackageMeasureWithQuantity
 
-		packageMeasures, err := utils.ReturnPackageMeasure(ingredient, ingredient.Quantity)
+		packageMeasures, err := utils.ReturnPackageMeasureWithQuantity(ingredient, ingredient.Quantity)
 		if err != nil {
 			panic(fmt.Sprintf("Critical error: %v", err))
 		}
 
 		items[i] = StockRequestMaterial{
-			StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&ingredient.StockMaterial),
-			PackageMeasure: packageMeasures,
+			StockMaterial:              *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&ingredient.StockMaterial),
+			PackageMeasureWithQuantity: packageMeasures,
 		}
 	}
 
@@ -43,6 +43,7 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 				Longitude: *request.Store.FacilityAddress.Longitude,
 				Latitude:  *request.Store.FacilityAddress.Latitude,
 			},
+			StoreHours: request.Store.StoreHours,
 		},
 		Warehouse:      *warehouseTypes.ToWarehouseResponse(request.Warehouse),
 		Status:         request.Status,
