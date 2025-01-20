@@ -94,7 +94,7 @@ func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientDTO 
 		Carbs:            ingredient.Carbs,
 		Proteins:         ingredient.Proteins,
 		ExpirationInDays: ingredient.ExpirationInDays,
-		Unit: unitType.UnitResponse{
+		Unit: unitType.UnitsDTO{
 			ID:               ingredient.Unit.ID,
 			Name:             ingredient.Unit.Name,
 			ConversionFactor: ingredient.Unit.ConversionFactor,

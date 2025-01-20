@@ -38,12 +38,12 @@ type ProductDetailsDTO struct {
 }
 
 type BaseProductSizeDTO struct {
-	Name      string                 `json:"name"`
-	BasePrice float64                `json:"basePrice"`
-	ProductID uint                   `json:"productId"`
-	Unit      unitTypes.UnitResponse `json:"unit"`
-	Size      int                    `json:"size"`
-	IsDefault bool                   `json:"isDefault"`
+	Name      string             `json:"name"`
+	BasePrice float64            `json:"basePrice"`
+	ProductID uint               `json:"productId"`
+	Unit      unitTypes.UnitsDTO `json:"unit"`
+	Size      int                `json:"size"`
+	IsDefault bool               `json:"isDefault"`
 }
 
 type ProductSizeDTO struct {

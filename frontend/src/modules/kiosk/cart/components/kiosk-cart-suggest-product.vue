@@ -35,12 +35,9 @@
 
 <script setup lang="ts">
 import type { StoreProductDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
-import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { Icon } from '@iconify/vue'
 
 const { product } = defineProps<{ product: StoreProductDetailsDTO }>()
-
-const cartStore = useCartStore()
 </script>
 
 <style scoped></style>

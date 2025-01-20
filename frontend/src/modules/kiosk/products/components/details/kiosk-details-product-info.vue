@@ -5,7 +5,10 @@
 		<p class="mt-3 text-base sm:text-2xl">{{ description }}</p>
 
 		<div class="mt-8">
-			<KioskDetailsIngredients :ingredients='ingredients' :energy='energy' />
+			<KioskDetailsIngredients
+				:ingredients="ingredients"
+				:energy="energy"
+			/>
 		</div>
 	</section>
 </template>

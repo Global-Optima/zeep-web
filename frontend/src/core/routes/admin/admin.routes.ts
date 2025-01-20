@@ -2,14 +2,19 @@ import AppAdminLayout from '@/core/layouts/admin/app-admin-layout.vue'
 import { ADMIN_ADDITIVES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-additives.routes'
 import { ADMIN_INGREDIENTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-ingredients.routes'
 import { ADMIN_PRODUCTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-products.routes'
+import { ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-stock-materials.routes'
 import { ADMIN_UNITS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-units.routes'
 import type { AppRouteRecord, ParentRoutePage } from '../../config/routes.config'
+import { ADMIN_EMPLOYEES_CHILDREN_ROUTES } from './admin-employees.routes'
 
 export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_ADDITIVES_CHILDREN_ROUTES,
 	...ADMIN_PRODUCTS_CHILDREN_ROUTES,
 	...ADMIN_INGREDIENTS_CHILDREN_ROUTES,
 	...ADMIN_UNITS_CHILDREN_ROUTES,
+	...ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES,
+	...ADMIN_EMPLOYEES_CHILDREN_ROUTES,
+
 	ADMIN_DASHBOARD: {
 		path: '',
 		meta: {
@@ -45,11 +50,29 @@ export const ADMIN_CHILDREN_ROUTES = {
 	ADMIN_WAREHOUSE_STOCKS: {
 		path: 'warehouse-stocks',
 		meta: {
-			title: 'Склад Магазина',
+			title: 'Запасы Склада',
 			requiresAuth: true,
 		},
 		component: () =>
 			import('@/modules/admin/warehouse-stocks/pages/admin-warehouse-stocks-page.vue'),
+	},
+	ADMIN_WAREHOUSE_STOCK_DETAILS: {
+		path: 'warehouse-stocks/:id',
+		meta: {
+			title: 'Детали материала склада',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/warehouse-stocks/pages/admin-warehouse-stock-details-page.vue'),
+	},
+	ADMIN_WAREHOUSE_STOCKS_CREATE: {
+		path: 'warehouse-stocks/create',
+		meta: {
+			title: 'Добавить материалы на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/warehouse-stocks/pages/admin-warehouse-stock-create-page.vue'),
 	},
 	ADMIN_STORE_STOCKS_DETAILS: {
 		path: 'store-stocks/:id',
@@ -92,32 +115,6 @@ export const ADMIN_CHILDREN_ROUTES = {
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/suppliers/pages/admin-suppliers-details-page.vue'),
-	},
-	ADMIN_CREATE_EMPLOYEE: {
-		path: 'employees/create',
-		meta: {
-			title: 'Добавить сотрудника',
-			requiresAuth: true,
-		},
-		component: () =>
-			import('@/modules/admin/employees/pages/admin-store-employees-create-page.vue'),
-	},
-	ADMIN_EMPLOYEES: {
-		path: 'employees',
-		meta: {
-			title: 'Сотрудники',
-			requiresAuth: true,
-		},
-		component: () => import('@/modules/admin/employees/pages/admin-store-employees-page.vue'),
-	},
-	ADMIN_EMPLOYEES_DETAILS: {
-		path: 'employees/:id',
-		meta: {
-			title: 'Сотрудник',
-			requiresAuth: true,
-		},
-		component: () =>
-			import('@/modules/admin/employees/pages/admin-store-employees-details-page.vue'),
 	},
 	ADMIN_STORES: {
 		path: 'stores',

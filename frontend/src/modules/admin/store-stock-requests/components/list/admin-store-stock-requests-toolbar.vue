@@ -4,62 +4,52 @@
 	>
 		<!-- Left Side: Filter Menu -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<DropdownMenu>
-				<DropdownMenuTrigger as-child>
-					<Button
-						variant="outline"
-						class="whitespace-nowrap"
-					>
-						Фильтр
-						<ChevronDown class="ml-2 w-4 h-4" />
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem @click="applyFilter(undefined)"> Все </DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter(StoreStockRequestStatus.CREATED)">
-						Созданные
-					</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter(StoreStockRequestStatus.IN_DELIVERY)">
-						В доставке
-					</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter(StoreStockRequestStatus.COMPLETED)">
-						Завершённые
-					</DropdownMenuItem>
-					<DropdownMenuItem @click="applyFilter(StoreStockRequestStatus.REJECTED)">
-						Отклонённые
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
+			<MultiSelectFilter
+				title="Статусы"
+				:options="statusOptions"
+				v-model="selectedStatuses"
+			/>
 		</div>
 
-		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
 			<Button variant="outline">Экспорт</Button>
-			<Button @click="addStore">Добавить</Button>
+			<Button @click="onCreateClick">Создать</Button>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
+import MultiSelectFilter from '@/core/components/multi-select-filter/MultiSelectFilter.vue'
 import { Button } from '@/core/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { getRouteName } from '@/core/config/routes.config'
-import { type GetStoreStockRequestsFilter, StoreStockRequestStatus } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
-import { ChevronDown } from 'lucide-vue-next'
+import { StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Props and Emit
-const props = defineProps<{ filter: GetStoreStockRequestsFilter }>();
-const emit = defineEmits(['update:filter']);
+const props = defineProps<{ filter?: GetStockRequestsFilter }>()
+const emit = defineEmits(['update:filter'])
+const router = useRouter()
 
-// Filter Selection
-const applyFilter = (status: StoreStockRequestStatus | undefined) => {
-  emit('update:filter', { ...props.filter, status });
-};
+const selectedStatuses = ref<StockRequestStatus[]>(props.filter?.statuses ?? [])
 
-// Add Store Navigation
-const router = useRouter();
-const addStore = () => {
-  router.push({ name: getRouteName('ADMIN_STORE_STOCK_REQUESTS_CREATE') });
-};
+watch(selectedStatuses, (newStatuses) => {
+  emit('update:filter', {
+    ...props.filter,
+    statuses: newStatuses.length ? newStatuses : undefined,
+  })
+})
+
+const statusOptions = [
+  { label: 'Созданные', value: StockRequestStatus.CREATED },
+  { label: 'Обработанные', value: StockRequestStatus.PROCESSED },
+  { label: 'В доставке', value: StockRequestStatus.IN_DELIVERY },
+  { label: 'Завершённые', value: StockRequestStatus.COMPLETED },
+  { label: 'Отклонённые магазином', value: StockRequestStatus.REJECTED_BY_STORE },
+  { label: 'Отклонённые складом', value: StockRequestStatus.REJECTED_BY_WAREHOUSE },
+  { label: 'Принятые с изменениями', value: StockRequestStatus.ACCEPTED_WITH_CHANGE },
+]
+
+const onCreateClick = () => {
+  router.push({name: getRouteName("ADMIN_STORE_STOCK_REQUESTS_CREATE")})
+}
 </script>

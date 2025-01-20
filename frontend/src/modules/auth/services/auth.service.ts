@@ -1,5 +1,8 @@
 import { apiClient } from '@/core/config/axios-instance.config'
-import type { EmployeeAccount, EmployeeLoginDTO } from '@/modules/employees/models/employees.models'
+import type {
+	EmployeeAccount,
+	EmployeeLoginDTO,
+} from '@/modules/admin/store-employees/models/employees.models'
 
 class AuthService {
 	private readonly baseUrl = '/auth'

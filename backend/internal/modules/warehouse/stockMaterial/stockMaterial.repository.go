@@ -20,6 +20,8 @@ type StockMaterialRepository interface {
 	UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error)
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
+
+	PopulateStockMaterial(stockMaterialID uint, stockMaterial *data.StockMaterial) error
 }
 
 type stockMaterialRepository struct {
@@ -36,7 +38,9 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		Preload("Unit").
 		Preload("Package").
 		Preload("StockMaterialCategory").
-		Preload("Ingredient")
+		Preload("Ingredient").
+		Preload("Ingredient.IngredientCategory").
+		Preload("Ingredient.Unit")
 
 	query = query.Where("is_active = ?", true)
 
@@ -49,10 +53,6 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 
 		if filter.LowStock != nil && *filter.LowStock {
 			query = query.Where("quantity < safety_stock")
-		}
-
-		if filter.ExpirationFlag != nil {
-			query = query.Where("expiration_flag = ?", *filter.ExpirationFlag)
 		}
 
 		if filter.IsActive != nil {
@@ -76,8 +76,11 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 			query = query.Where("expiration_period_in_days <= ?", *filter.ExpirationInDays)
 		}
 	}
+
+	query = query.Order("created_at DESC")
+
 	var err error
-	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StockMaterial{})
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +98,8 @@ func (r *stockMaterialRepository) GetStockMaterialByID(stockMaterialID uint) (*d
 		Preload("Package").
 		Preload("StockMaterialCategory").
 		Preload("Ingredient").
+		Preload("Ingredient.IngredientCategory").
+		Preload("Ingredient.Unit").
 		First(&stockMaterial, stockMaterialID).Error
 	if err != nil {
 		return nil, err
@@ -159,4 +164,8 @@ func (r *stockMaterialRepository) DeleteStockMaterial(stockMaterialID uint) erro
 
 func (r *stockMaterialRepository) DeactivateStockMaterial(stockMaterialID uint) error {
 	return r.db.Model(&data.StockMaterial{}).Where("id = ?", stockMaterialID).Update("is_active", false).Error
+}
+
+func (r *stockMaterialRepository) PopulateStockMaterial(stockMaterialID uint, stockMaterial *data.StockMaterial) error {
+	return r.db.Preload("Ingredient").Preload("StockMaterialCategory").First(stockMaterial, "id = ?", stockMaterialID).Error
 }

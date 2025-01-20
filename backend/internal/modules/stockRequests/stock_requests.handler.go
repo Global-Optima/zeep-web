@@ -2,9 +2,10 @@ package stockRequests
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
-	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -23,7 +24,7 @@ func NewStockRequestHandler(service StockRequestService) *StockRequestHandler {
 func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 	var req types.CreateStockRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "Invalid body")
 		return
 	}
 
@@ -40,7 +41,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 
 	requestID, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to create stock requests: %s", err.Error()))
 		return
 	}
 
@@ -50,23 +51,40 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.GetStockRequestsFilter
 
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+	storeID, storeErr := contexts.GetStoreId(c)
+	warehouseID, warehouseErr := contexts.GetWarehouseId(c)
+
+	if storeErr != nil && warehouseErr != nil {
+		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-	filter.StoreID = &storeID
 
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockRequest{}); err != nil {
 		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
 	filter.Pagination = utils.ParsePagination(c)
 
-	requests, err := h.service.GetStockRequests(filter)
+	var requests []types.StockRequestResponse
+	var err error
+
+	if storeErr == nil {
+		filter.StoreID = &storeID
+		requests, err = h.service.GetStockRequests(filter)
+	}
+
+	if warehouseErr == nil {
+		filter.WarehouseID = &warehouseID
+		err = types.ValidateWarehouseStatuses(filter.Statuses)
+		if err != nil {
+			utils.SendBadRequestError(c, err.Error())
+		}
+		requests, err = h.service.GetStockRequests(filter)
+	}
+
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to fetch stock requests")
 		return
 	}
 
@@ -84,7 +102,7 @@ func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.SendNotFoundError(c, "Stock request not found")
 		} else {
-			utils.SendInternalServerError(c, err.Error())
+			utils.SendInternalServerError(c, "Failed to fetch stock request")
 		}
 		return
 	}
@@ -110,7 +128,7 @@ func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 	}
 
 	if err := h.service.AcceptStockRequestWithChange(uint(stockRequestID), dto); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -130,7 +148,7 @@ func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
 	}
 
 	if err := h.service.RejectStockRequestByStore(uint(stockRequestID), dto); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -150,7 +168,21 @@ func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 	}
 
 	if err := h.service.RejectStockRequestByWarehouse(uint(stockRequestID), dto); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *StockRequestHandler) SetProcessedStatus(c *gin.Context) {
+	stockRequestID, err := utils.ParseParam(c, "requestId")
+	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+		return
+	}
+
+	if err := h.service.SetProcessedStatus(uint(stockRequestID)); err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -164,7 +196,7 @@ func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 	}
 
 	if err := h.service.SetInDeliveryStatus(uint(stockRequestID)); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
@@ -178,14 +210,14 @@ func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
 	}
 
 	if err := h.service.SetCompletedStatus(uint(stockRequestID)); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
 
 	c.Status(http.StatusOK)
 }
 
-func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
+func (h *StockRequestHandler) UpdateStockRequest(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
 	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
 		return
@@ -202,73 +234,12 @@ func (h *StockRequestHandler) UpdateStockRequestIngredients(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateStockRequestIngredients(uint(stockRequestID), req); err != nil {
+	if err := h.service.UpdateStockRequest(uint(stockRequestID), req); err != nil {
 		utils.SendInternalServerError(c, "Failed to update stock request ingredients: "+err.Error())
 		return
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Stock request ingredients updated successfully"})
-}
-
-func (h *StockRequestHandler) GetLowStockIngredients(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	ingredients, err := h.service.GetLowStockIngredients(uint(storeID))
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	utils.SendSuccessResponseWithPagination(c, ingredients, nil)
-}
-
-func (h *StockRequestHandler) GetAllStockMaterials(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	var filter types.StockMaterialFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
-		utils.SendBadRequestError(c, err.Error())
-		return
-	}
-
-	products, err := h.service.GetAllStockMaterials(uint(storeID), filter)
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	utils.SendSuccessResponseWithPagination(c, products, nil)
-}
-
-func (h *StockRequestHandler) GetStockMaterialsByIngredient(c *gin.Context) {
-	ingredientID, err := strconv.ParseUint(c.Param("ingredientId"), 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ingredient ID")
-		return
-	}
-
-	warehouseID, errH := contexts.GetWarehouseId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
-	wID := &warehouseID
-	availability, err := h.service.GetAvailableStockMaterialsByIngredient(uint(ingredientID), wID)
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	utils.SendSuccessResponse(c, availability)
 }
 
 func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
@@ -279,7 +250,7 @@ func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
 
 	err = h.service.DeleteStockRequest(uint(stockRequestID))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to delete stock request")
 		return
 	}
 
@@ -295,9 +266,31 @@ func (h *StockRequestHandler) GetLastCreatedStockRequest(c *gin.Context) {
 
 	request, err := h.service.GetLastCreatedStockRequest(uint(storeID))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		utils.SendInternalServerError(c, "Failed to fetch the last cart")
 		return
 	}
 
 	utils.SendSuccessResponse(c, request)
+}
+
+func (h *StockRequestHandler) AddStockMaterialToCart(c *gin.Context) {
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	var dto types.StockRequestStockMaterialDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		utils.SendBadRequestError(c, "Invalid payload")
+		return
+	}
+
+	err := h.service.AddStockMaterialToCart(uint(storeID), dto)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed too add to cart")
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

@@ -1,12 +1,12 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type { CreateStoreDTO, StoresFilter, UpdateStoreDTO } from '../models/stores-dto.model'
-import type { Store } from '../models/stores.models'
+import type { StoreDTO } from '../models/stores.models'
 
 class StoreService {
-	async getStores(filter?: StoresFilter): Promise<Store[]> {
+	async getStores(filter?: StoresFilter): Promise<StoreDTO[]> {
 		try {
-			const response = await apiClient.get<Store[]>('/stores', {
+			const response = await apiClient.get<StoreDTO[]>('/stores', {
 				params: buildRequestFilter(filter),
 			})
 			return response.data
@@ -16,9 +16,9 @@ class StoreService {
 		}
 	}
 
-	async getStore(id: number): Promise<Store> {
+	async getStore(id: number): Promise<StoreDTO> {
 		try {
-			const response = await apiClient.get<Store>(`/stores/${id}`)
+			const response = await apiClient.get<StoreDTO>(`/stores/${id}`)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch store by id ${id}:`, error)

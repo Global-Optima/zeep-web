@@ -19,13 +19,15 @@
 					variant="outline"
 					type="button"
 					@click="onCancel"
-					>Отменить</Button
 				>
+					Отменить
+				</Button>
 				<Button
 					type="submit"
 					@click="onSubmit"
-					>Сохранить</Button
 				>
+					Сохранить
+				</Button>
 			</div>
 		</div>
 
@@ -55,13 +57,13 @@
 							<TableHead>Категория</TableHead>
 							<TableHead>Количество</TableHead>
 							<TableHead>Порог малого запаса</TableHead>
-							<TableHead class="text-center">Действия</TableHead>
+							<TableHead class="text-center"></TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						<TableRow v-if="selectedIngredients.length === 0">
 							<TableCell
-								colspan="4"
+								colspan="5"
 								class="py-5 text-center text-gray-500"
 							>
 								Нет добавленных ингредиентов
@@ -108,13 +110,15 @@
 			<Button
 				variant="outline"
 				@click="onCancel"
-				>Отменить</Button
 			>
+				Отменить
+			</Button>
 			<Button
 				type="submit"
 				@click="onSubmit"
-				>Сохранить</Button
 			>
+				Сохранить
+			</Button>
 		</div>
 	</div>
 
@@ -141,91 +145,124 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/core/components/ui/table'
+import { useToast } from '@/core/components/ui/toast'
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
-import type { IngredientCategoryDTO, IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import type { AddMultipleStoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
-import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+
 interface CreateStoreStockItem {
 	name: string
 	ingredientId: number
 	quantity: number
 	lowStockThreshold: number
-  unit: UnitDTO
-  category: IngredientCategoryDTO
+	unit: { name: string }
+	category: { name: string }
 }
 
-// Props
 const emit = defineEmits<{
-	(e: 'onSubmit', payload: AddMultipleStoreWarehouseStockDTO): void
+	(e: 'onSubmit', payload: { ingredientStocks: { ingredientId: number; quantity: number; lowStockThreshold: number }[] }): void
 	(e: 'onCancel'): void
 }>()
 
-// State for selected ingredients
 const selectedIngredients = ref<CreateStoreStockItem[]>([])
-
-// Dialog open state
 const openDialog = ref(false)
+const { toast } = useToast()
 
 // Add selected ingredients to the table
-function addSelectedIngredient(ingredient: IngredientsDTO) {
+function addSelectedIngredient(ingredient: { id: number; name: string; unit: { name: string }; category: { name: string } }) {
 	const exists = selectedIngredients.value.some(
 		(existingItem) => existingItem.ingredientId === ingredient.id
 	)
 
-	if (!exists) {
-		selectedIngredients.value.push({
-			name: ingredient.name,
-			ingredientId: ingredient.id,
-			quantity: 0,
-			lowStockThreshold: 0,
-      unit: ingredient.unit,
-      category: ingredient.category
+	if (exists) {
+		toast({
+			title: 'Ошибка',
+			description: `Ингредиент "${ingredient.name}" уже добавлен.`,
+			variant: 'destructive'
 		})
-		openDialog.value = false
+		return
 	}
+
+	selectedIngredients.value.push({
+		name: ingredient.name,
+		ingredientId: ingredient.id,
+		quantity: 0,
+		lowStockThreshold: 0,
+		unit: ingredient.unit,
+		category: ingredient.category
+	})
+
+	toast({
+		title: 'Успех',
+		description: `Ингредиент "${ingredient.name}" добавлен.`,
+		variant: 'default'
+	})
+
+	openDialog.value = false
 }
 
-// Remove an ingredient from the table
+// Remove ingredient from the table
 function removeIngredient(index: number) {
-	selectedIngredients.value.splice(index, 1)
+	const removed = selectedIngredients.value.splice(index, 1)
+	toast({
+		title: 'Удалено',
+		description: `Ингредиент "${removed[0].name}" удален.`,
+		variant: 'default'
+	})
 }
 
-// Check for validation errors
-function hasError(ingredient: CreateStoreStockItem, field: 'quantity' | 'lowStockThreshold'): boolean {
-	return ingredient[field] === undefined || ingredient[field] <= 0
+// Validation checks
+function hasError(item: CreateStoreStockItem, field: 'quantity' | 'lowStockThreshold'): boolean {
+	return item[field] === undefined || item[field] <= 0
 }
 
 // Computed: Can submit form
 const canSubmit = computed(() => {
 	return (
 		selectedIngredients.value.length > 0 &&
-		selectedIngredients.value.every((item) => !hasError(item, 'quantity') && !hasError(item, 'lowStockThreshold'))
+		selectedIngredients.value.every(
+			(item) => !hasError(item, 'quantity') && !hasError(item, 'lowStockThreshold')
+		)
 	)
 })
 
 // Submit form
 function onSubmit() {
 	if (!canSubmit.value) {
-		console.error('Validation errors detected.')
+		toast({
+			title: 'Ошибка',
+			description: 'Убедитесь, что все поля заполнены корректно.',
+			variant: 'destructive'
+		})
 		return
 	}
 
-	const payload: AddMultipleStoreWarehouseStockDTO = {
+	const payload = {
 		ingredientStocks: selectedIngredients.value.map((item) => ({
 			ingredientId: item.ingredientId,
 			quantity: item.quantity,
-			lowStockThreshold: item.lowStockThreshold,
-		})),
+			lowStockThreshold: item.lowStockThreshold
+		}))
 	}
+
+	toast({
+		title: 'Успех',
+		description: 'Ингредиенты успешно добавлены.',
+		variant: 'default'
+	})
+
 	emit('onSubmit', payload)
 }
 
 // Cancel form
 function onCancel() {
+	toast({
+		title: 'Отмена',
+		description: 'Изменения отменены.',
+		variant: 'default'
+	})
 	emit('onCancel')
 }
 </script>

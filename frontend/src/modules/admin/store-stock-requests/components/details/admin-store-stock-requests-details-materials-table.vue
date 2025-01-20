@@ -4,9 +4,7 @@
 			<div class="flex justify-between items-start gap-4">
 				<div>
 					<CardTitle>Список материалов</CardTitle>
-					<CardDescription class="mt-2">
-						Ниже представлена таблица с материалами, переданная в компонент через props.
-					</CardDescription>
+					<CardDescription class="mt-2"> Материалы представленные в заказе </CardDescription>
 				</div>
 
 				<Button
@@ -30,11 +28,11 @@
 				</TableHeader>
 				<TableBody>
 					<TableRow
-						v-for="(item, index) in stockRequest.items"
+						v-for="(item, index) in stockRequest.stockMaterials"
 						:key="index"
 					>
-						<TableCell>{{ item.name }}</TableCell>
-						<TableCell>{{ item.quantity }}</TableCell>
+						<TableCell>{{ item.stockMaterial.name }}</TableCell>
+						<TableCell>{{ item.packageMeasures.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>
 			</Table>
@@ -59,15 +57,15 @@ import {
   TableHeader,
   TableRow
 } from '@/core/components/ui/table'
-import { type StoreStockRequestResponse, StoreStockRequestStatus } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
+import { type StockRequestResponse, StockRequestStatus } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-const showEditButtonStatuses: StoreStockRequestStatus[] = [StoreStockRequestStatus.CREATED]
+const showEditButtonStatuses: StockRequestStatus[] = [StockRequestStatus.CREATED, StockRequestStatus.REJECTED_BY_WAREHOUSE]
 
 const {stockRequest} = defineProps<{
-  stockRequest: StoreStockRequestResponse
+  stockRequest: StockRequestResponse
 }>()
 
 const isEditable = computed(() => showEditButtonStatuses.includes(stockRequest.status))

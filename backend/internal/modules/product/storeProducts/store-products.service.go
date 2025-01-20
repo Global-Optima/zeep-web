@@ -114,9 +114,9 @@ func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.Create
 		return 0, wrappedErr
 	}
 
-	addStockDTOs := make([]storeWarehousesTypes.AddStockDTO, len(ingredientsList))
+	addStockDTOs := make([]storeWarehousesTypes.AddStoreStockDTO, len(ingredientsList))
 	for i, ingredient := range ingredientsList {
-		addStockDTOs[i] = storeWarehousesTypes.AddStockDTO{
+		addStockDTOs[i] = storeWarehousesTypes.AddStoreStockDTO{
 			IngredientID:      ingredient.ID,
 			Quantity:          0,
 			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
@@ -217,15 +217,15 @@ func (s *storeProductService) DeleteStoreProduct(storeID, storeProductID uint) e
 	return nil
 }
 
-func (s *storeProductService) formAddStockDTOsFromIngredients(productSizeIDs []uint) ([]storeWarehousesTypes.AddStockDTO, error) {
+func (s *storeProductService) formAddStockDTOsFromIngredients(productSizeIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
 	ingredientsList, err := s.ingredientsRepo.GetIngredientsForProductSizes(productSizeIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)
 	}
 
-	addStockDTOs := make([]storeWarehousesTypes.AddStockDTO, len(ingredientsList))
+	addStockDTOs := make([]storeWarehousesTypes.AddStoreStockDTO, len(ingredientsList))
 	for i, ingredient := range ingredientsList {
-		addStockDTOs[i] = storeWarehousesTypes.AddStockDTO{
+		addStockDTOs[i] = storeWarehousesTypes.AddStoreStockDTO{
 			IngredientID:      ingredient.ID,
 			Quantity:          0,
 			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,

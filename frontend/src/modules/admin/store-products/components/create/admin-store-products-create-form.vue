@@ -25,7 +25,7 @@ import {
 import { ChevronLeft, Trash } from 'lucide-vue-next'
 
 // Dialog for selecting products
-import AdminSelectProductDialog from '@/modules/admin/products/admin-select-product-dialog.vue'
+import AdminSelectProductDialog from '@/modules/admin/products/components/admin-select-product-dialog.vue'
 
 // Types
 import type { CreateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'

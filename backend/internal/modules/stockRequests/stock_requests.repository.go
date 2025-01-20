@@ -28,16 +28,12 @@ type StockRequestRepository interface {
 	AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
-	GetLowStockIngredients(storeWarehouseID uint) ([]data.StoreWarehouseStock, error)
 
 	GetLastStockRequestDate(storeWarehouseID uint) (*time.Time, error)
 
-	GetAllStockMaterials(storeID uint, filters types.StockMaterialFilter) ([]types.StockMaterialDTO, error)
-	GetStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]data.WarehouseStock, error)
-	GetStockMaterialByID(stockMaterialID uint, stockMaterial *data.StockMaterial) error
-
 	DeleteStockRequest(requestID uint) error
 	GetOpenCartByStoreID(storeID uint) (*data.StockRequest, error)
+	UpdateStockRequestIngredientQuantity(ingredientID uint, quantity float64) error
 }
 
 type stockRequestRepository struct {
@@ -69,37 +65,15 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientDates(stockRequestI
 func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error) {
 	var requests []data.StockRequest
 	query := r.db.Model(&data.StockRequest{}).
-		Preload("Ingredients", func(db *gorm.DB) *gorm.DB {
-			return db.Preload("StockMaterial", func(db *gorm.DB) *gorm.DB {
-				return db.Select("id", "name", "category_id", "barcode").
-					Preload("StockMaterialCategory", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					}).
-					Preload("Package", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "size", "unit_id", "stock_material_id").
-							Preload("Unit", func(db *gorm.DB) *gorm.DB {
-								return db.Select("id", "name")
-							})
-					})
-			}).Preload("Ingredient", func(db *gorm.DB) *gorm.DB {
-				return db.Select("id", "name", "category_id", "unit_id").
-					Preload("IngredientCategory", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					}).
-					Preload("Unit", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					})
-			})
-		}).
-		Preload("Store", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "name", "facility_address_id").
-				Preload("FacilityAddress", func(db *gorm.DB) *gorm.DB {
-					return db.Select("id", "address")
-				})
-		}).
-		Preload("Warehouse", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "name")
-		})
+		Preload("Warehouse.FacilityAddress").
+		Preload("Store.FacilityAddress").
+		Preload("Ingredients.StockMaterial").
+		Preload("Ingredients.StockMaterial.StockMaterialCategory").
+		Preload("Ingredients.StockMaterial.Ingredient").
+		Preload("Ingredients.StockMaterial.Ingredient.Unit").
+		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
+		Preload("Ingredients.StockMaterial.Package.Unit").
+		Preload("Ingredients.StockMaterial.Unit")
 
 	if filter.StoreID != nil {
 		query = query.Where("store_id = ?", *filter.StoreID)
@@ -130,45 +104,26 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 }
 
 func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.StockRequest, error) {
-	var request data.StockRequest
+	var stockRequest data.StockRequest
+
 	err := r.db.Model(&data.StockRequest{}).
-		Preload("Ingredients", func(db *gorm.DB) *gorm.DB {
-			return db.Preload("StockMaterial", func(db *gorm.DB) *gorm.DB {
-				return db.Select("id", "name", "category_id", "barcode").
-					Preload("StockMaterialCategory", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					}).
-					Preload("Package", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "size", "unit_id", "stock_material_id").
-							Preload("Unit", func(db *gorm.DB) *gorm.DB {
-								return db.Select("id", "name")
-							})
-					})
-			}).Preload("Ingredient", func(db *gorm.DB) *gorm.DB {
-				return db.Select("id", "name", "category_id", "unit_id").
-					Preload("IngredientCategory", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					}).
-					Preload("Unit", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					})
-			})
-		}).
-		Preload("Store", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "name", "facility_address_id").
-				Preload("FacilityAddress", func(db *gorm.DB) *gorm.DB {
-					return db.Select("id", "address")
-				})
-		}).
-		Preload("Warehouse", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "name")
-		}).
-		Where("id = ?", requestID).
-		First(&request).Error
+		Preload("Warehouse.FacilityAddress").
+		Preload("Store.FacilityAddress").
+		Preload("Ingredients.StockMaterial").
+		Preload("Ingredients.StockMaterial.StockMaterialCategory").
+		Preload("Ingredients.StockMaterial.Ingredient").
+		Preload("Ingredients.StockMaterial.Ingredient.Unit").
+		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
+		Preload("Ingredients.StockMaterial.Package.Unit").
+		Preload("Ingredients.StockMaterial.Unit").
+		First(&stockRequest, requestID).
+		Error
+
 	if err != nil {
 		return nil, err
 	}
-	return &request, nil
+
+	return &stockRequest, nil
 }
 
 func (r *stockRequestRepository) UpdateStockRequestStatus(stockRequest *data.StockRequest) error {
@@ -208,54 +163,6 @@ func (r *stockRequestRepository) GetLastStockRequestDate(storeID uint) (*time.Ti
 	return lastRequest.RequestDate, err
 }
 
-func (r *stockRequestRepository) GetLowStockIngredients(storeWarehouseID uint) ([]data.StoreWarehouseStock, error) {
-	var stocks []data.StoreWarehouseStock
-	err := r.db.Preload("Ingredient.Unit").
-		Where("store_warehouse_id = ? AND quantity <= low_stock_threshold", storeWarehouseID).
-		Find(&stocks).Error
-	return stocks, err
-}
-
-func (r *stockRequestRepository) GetAllStockMaterials(storeID uint, filters types.StockMaterialFilter) ([]types.StockMaterialDTO, error) {
-	storeWarehouse, err := r.GetStoreWarehouse(storeID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve store warehouse for store ID %d: %w", storeID, err)
-	}
-
-	var stockMaterials []data.StockMaterial
-	query := r.db.Preload("Unit").Preload("Ingredient").Preload("StockMaterialCategory")
-
-	if filters.Category != nil {
-		query = query.Where("category = ?", *filters.Category)
-	}
-
-	if filters.Search != nil {
-		searchTerm := "%" + *filters.Search + "%"
-		query = query.Where("name ILIKE ? OR barcode ILIKE ?", searchTerm, searchTerm)
-	}
-
-	if err := query.Find(&stockMaterials).Error; err != nil {
-		return nil, fmt.Errorf("failed to retrieve stock materials: %w", err)
-	}
-
-	products := []types.StockMaterialDTO{}
-	for _, stockMaterial := range stockMaterials {
-		quantity, err := r.GetWarehouseStockQuantity(storeWarehouse.WarehouseID, stockMaterial.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve stock quantity for StockMaterialID %d: %w", stockMaterial.ID, err)
-		}
-
-		products = append(products, types.StockMaterialDTO{
-			StockMaterialID: stockMaterial.ID,
-			Name:            stockMaterial.Name,
-			Category:        stockMaterial.StockMaterialCategory.Name,
-			Unit:            stockMaterial.Unit.Name,
-			AvailableQty:    quantity,
-		})
-	}
-
-	return products, nil
-}
 func (r *stockRequestRepository) GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error) {
 	var stock data.WarehouseStock
 	err := r.db.Select("quantity").
@@ -277,31 +184,6 @@ func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWar
 		return nil, err
 	}
 	return &storeWarehouse, nil
-}
-
-func (r *stockRequestRepository) GetStockMaterialsByIngredient(ingredientID uint, warehouseID *uint) ([]data.WarehouseStock, error) {
-	var stocks []data.WarehouseStock
-
-	query := r.db.Preload("StockMaterial.Unit").
-		Preload("StockMaterial.StockMaterialCategory").
-		Preload("Warehouse").
-		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id").
-		Where("stock_materials.ingredient_id = ?", ingredientID)
-
-	if warehouseID != nil {
-		query = query.Where("warehouse_stocks.warehouse_id = ?", *warehouseID)
-	}
-
-	err := query.Find(&stocks).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve stock materials for ingredient ID %d: %w", ingredientID, err)
-	}
-
-	return stocks, nil
-}
-
-func (r *stockRequestRepository) GetStockMaterialByID(stockMaterialID uint, stockMaterial *data.StockMaterial) error {
-	return r.db.Preload("Ingredient").Preload("StockMaterialCategory").First(stockMaterial, "id = ?", stockMaterialID).Error
 }
 
 func (r *stockRequestRepository) ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error {
@@ -333,7 +215,7 @@ func (r *stockRequestRepository) AddWarehouseComment(requestID uint, comment str
 
 func (r *stockRequestRepository) DeleteStockRequest(requestID uint) error {
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("stock_request_id = ?", requestID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
+		if err := tx.Where("stock_request_id = ?", requestID).Delete(&data.StockRequestIngredient{}).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("failed to delete stock request ingredients: %w", err)
 		}
 
@@ -349,37 +231,15 @@ func (r *stockRequestRepository) DeleteStockRequest(requestID uint) error {
 func (r *stockRequestRepository) GetOpenCartByStoreID(storeID uint) (*data.StockRequest, error) {
 	var request data.StockRequest
 	err := r.db.Model(&data.StockRequest{}).
-		Preload("Ingredients", func(db *gorm.DB) *gorm.DB {
-			return db.Preload("StockMaterial", func(db *gorm.DB) *gorm.DB {
-				return db.Select("id", "name", "category_id", "barcode").
-					Preload("StockMaterialCategory", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					}).
-					Preload("Package", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "size", "unit_id", "stock_material_id").
-							Preload("Unit", func(db *gorm.DB) *gorm.DB {
-								return db.Select("id", "name")
-							})
-					})
-			}).Preload("Ingredient", func(db *gorm.DB) *gorm.DB {
-				return db.Select("id", "name", "category_id", "unit_id").
-					Preload("IngredientCategory", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					}).
-					Preload("Unit", func(db *gorm.DB) *gorm.DB {
-						return db.Select("id", "name")
-					})
-			})
-		}).
-		Preload("Store", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "name", "facility_address_id").
-				Preload("FacilityAddress", func(db *gorm.DB) *gorm.DB {
-					return db.Select("id", "address")
-				})
-		}).
-		Preload("Warehouse", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "name")
-		}).
+		Preload("Warehouse.FacilityAddress").
+		Preload("Store.FacilityAddress").
+		Preload("Ingredients.StockMaterial").
+		Preload("Ingredients.StockMaterial.StockMaterialCategory").
+		Preload("Ingredients.StockMaterial.Ingredient").
+		Preload("Ingredients.StockMaterial.Ingredient.Unit").
+		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
+		Preload("Ingredients.StockMaterial.Package.Unit").
+		Preload("Ingredients.StockMaterial.Unit").
 		Where("store_id = ? AND status = ?", storeID, data.StockRequestCreated).
 		First(&request).Error
 
@@ -388,4 +248,11 @@ func (r *stockRequestRepository) GetOpenCartByStoreID(storeID uint) (*data.Stock
 	}
 
 	return &request, nil
+}
+
+func (r *stockRequestRepository) UpdateStockRequestIngredientQuantity(ingredientID uint, quantity float64) error {
+	return r.db.Model(&data.StockRequestIngredient{}).
+		Where("id = ?", ingredientID).
+		Update("quantity", quantity).
+		Error
 }

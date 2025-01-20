@@ -32,13 +32,13 @@ type CategoryDTO struct {
 // BaseAdditiveDTO should not be returned directly as a response,
 // instead wrap it into another struct with more info like ID and etc
 type BaseAdditiveDTO struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	BasePrice   float64                `json:"basePrice"`
-	ImageURL    string                 `json:"imageUrl"`
-	Size        int                    `json:"size"`
-	Unit        unitTypes.UnitResponse `json:"unit"`
-	Category    CategoryDTO            `json:"category"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	BasePrice   float64            `json:"basePrice"`
+	ImageURL    string             `json:"imageUrl"`
+	Size        int                `json:"size"`
+	Unit        unitTypes.UnitsDTO `json:"unit"`
+	Category    CategoryDTO        `json:"category"`
 }
 
 type AdditiveDTO struct {
@@ -52,13 +52,13 @@ type AdditiveDetailsDTO struct {
 }
 
 type BaseAdditiveCategoryItemDTO struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	BasePrice   float64                `json:"basePrice"`
-	ImageURL    string                 `json:"imageUrl"`
-	Size        int                    `json:"size"`
-	Unit        unitTypes.UnitResponse `json:"unit"`
-	CategoryID  uint                   `json:"categoryId"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	BasePrice   float64            `json:"basePrice"`
+	ImageURL    string             `json:"imageUrl"`
+	Size        int                `json:"size"`
+	Unit        unitTypes.UnitsDTO `json:"unit"`
+	CategoryID  uint               `json:"categoryId"`
 }
 
 type AdditiveCategoryItemDTO struct {

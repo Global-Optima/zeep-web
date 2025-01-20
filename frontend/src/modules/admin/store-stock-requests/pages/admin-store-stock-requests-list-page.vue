@@ -40,21 +40,21 @@ import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminStoreStockRequestsList from '@/modules/admin/store-stock-requests/components/list/admin-store-stock-requests-list.vue'
 import AdminStoreStockRequestsToolbar from '@/modules/admin/store-stock-requests/components/list/admin-store-stock-requests-toolbar.vue'
-import { ALL_STOCK_REQUEST_STATUSES, type GetStoreStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/store-stock-request.model'
-import { storeStockRequestService } from '@/modules/admin/store-stock-requests/services/store-stock-request.service'
+import { ALL_STOCK_REQUESTS_STATUSES, type GetStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import { stockRequestsService } from '@/modules/admin/store-stock-requests/services/stock-requests.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<GetStoreStockRequestsFilter>({
-  statuses: ALL_STOCK_REQUEST_STATUSES
+const filter = ref<GetStockRequestsFilter>({
+  statuses: ALL_STOCK_REQUESTS_STATUSES
 });
 
 const { data: stockRequestsResponse } = useQuery({
   queryKey: computed(() => ['stock-requests', filter.value]),
-  queryFn: () => storeStockRequestService.getStockRequests(filter.value),
+  queryFn: () => stockRequestsService.getStockRequests(filter.value),
 });
 
-function updateFilter(updatedFilter: GetStoreStockRequestsFilter) {
+function updateFilter(updatedFilter: GetStockRequestsFilter) {
   filter.value = { ...filter.value, ...updatedFilter };
 }
 

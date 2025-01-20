@@ -37,7 +37,6 @@ import SubordersList from '@/modules/kiosk/orders/components/suborders-list.vue'
 import { useOrderEventsService } from '@/modules/kiosk/orders/services/orders-event.service'
 import { OrderStatus, SubOrderStatus, type OrderDTO, type SuborderDTO } from '@/modules/orders/models/orders.models'
 import { orderService } from '@/modules/orders/services/orders.service'
-import { useCurrentStoreStore } from '@/modules/stores/store/current-store.store'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -48,7 +47,6 @@ interface Status {
 }
 
 const router = useRouter()
-const {currentStoreId} = useCurrentStoreStore()
 
 const onBackClick = () => {
 	router.push({ name: getRouteName('ADMIN_DASHBOARD') })
@@ -73,9 +71,8 @@ const statuses = ref<Status[]>([
 ])
 
 const fetchStatuses = async (): Promise<Status[]> => {
-  if (!currentStoreId) return []
 
-	const data = await orderService.getStatusesCount(currentStoreId)
+	const data = await orderService.getStatusesCount()
 	return [
 		{ label: 'Все', count: data.ALL },
 		{ label: 'Активные', count: data.PREPARING },
@@ -85,12 +82,12 @@ const fetchStatuses = async (): Promise<Status[]> => {
 }
 
 const {data: fetchedStatuses} = useQuery({
-  queryKey: ['statuses', currentStoreId],
+  queryKey: ['statuses'],
   queryFn: fetchStatuses ,
 })
 
 // Use the composable
-const { getOrdersRef } = useOrderEventsService(currentStoreId!)
+const { getOrdersRef } = useOrderEventsService()
 
 // Filtered orders based on selectedStatus
 const filteredOrders = computed(() => {
@@ -135,10 +132,9 @@ async function toggleSuborderStatus(suborder: SuborderDTO) {
 
 	const orderId = selectedOrder.value.id
 	const suborderId = suborder.id
-  if (!currentStoreId) return
 
 	try {
-		await orderService.completeSubOrder(currentStoreId, orderId, suborderId)
+		await orderService.completeSubOrder(orderId, suborderId)
 		suborder.status = SubOrderStatus.COMPLETED
 
 		const allDone = selectedOrder.value?.subOrders.every((so) => so.status === SubOrderStatus.COMPLETED)

@@ -13,8 +13,7 @@
 			<TableRow
 				v-for="order in orders"
 				:key="order.id"
-				class="hover:bg-gray-50 h-12 cursor-pointer"
-				@click="onOrderClick(order.id)"
+				class="hover:bg-gray-50 h-12"
 			>
 				<TableCell class="p-4">
 					{{ formatDate(order.createdAt) }}
@@ -72,17 +71,9 @@ import { formatPrice } from '@/core/utils/price.utils'
 import { OrderStatus, type OrderDTO } from '@/modules/orders/models/orders.models'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import { useRouter } from 'vue-router'
 
 // Props
 const { orders } = defineProps<{ orders: OrderDTO[] }>();
-
-// Router for details navigation
-const router = useRouter();
-
-const onOrderClick = (stockId: number) => {
-  // router.push(`/admin/store-orders/${stockId}`);
-};
 
 const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'dd MMMM yyyy', { locale: ru })
