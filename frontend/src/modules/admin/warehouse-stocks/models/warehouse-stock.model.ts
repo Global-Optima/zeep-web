@@ -1,14 +1,20 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
+import type { PackageMeasure } from '../../store-stock-requests/models/stock-requests.model'
 
 export interface WarehouseStocksDTO {
-	stockMaterial: StockMaterialsDTO
+	stockMaterial: StockMaterialResponse
 	totalQuantity: number
 	earliestExpirationDate: string
 }
 
-export interface WarehouseStockDetailsDTO extends StockMaterialsDTO {
-	totalQuantity: number
+export interface StockMaterialResponse extends StockMaterialsDTO {
+	packageMeasures: PackageMeasure
+}
+
+export interface WarehouseStockMaterialDetailsDTO {
+	stockMaterial: StockMaterialsDTO
+	packageMeasure: PackageMeasure
 	earliestExpirationDate: string
 	deliveries: WarehouseStockMaterialDeliveryDTO[]
 }
@@ -23,12 +29,15 @@ export interface WarehouseStockMaterialDeliveryDTO {
 export interface GetWarehouseStockFilter extends PaginationParams {
 	warehouseId?: number
 	stockMaterialId?: number
+	ingredientId?: number
 	lowStockOnly?: boolean
-	expirationDays?: number
+	isExpiring?: boolean
+	categoryId?: number
+	daysToExpire?: number
 	search?: string
 }
 
 export interface UpdateWarehouseStockDTO {
-	quantity?: number
+	quantity: number
 	expirationDate: Date
 }

@@ -1,4 +1,6 @@
-<template>
+<template>TODO: Complete it</template>
+
+<!-- <template>
 	<AdminEmployeesUpdateForm
 		v-if="employee"
 		:initialData="employee"
@@ -9,9 +11,9 @@
 
 <script lang="ts" setup>
 import { getRouteName } from '@/core/config/routes.config'
-import AdminEmployeesUpdateForm from '@/modules/admin/employees/components/update/admin-employees-update-form.vue'
-import type { UpdateEmployeeDto } from '@/modules/admin/employees/models/employees.models'
-import { employeesService } from '@/modules/admin/employees/services/employees.service'
+import AdminEmployeesUpdateForm from '@/modules/admin/store-employees/components/update/admin-employees-update-form.vue'
+import type { UpdateEmployeeDto } from '@/modules/admin/store-employees/models/employees.models'
+import { employeesService } from '@/modules/admin/store-employees/services/employees.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -43,4 +45,4 @@ function handleCreate(dto: UpdateEmployeeDto) {
 function handleCancel() {
 	router.back()
 }
-</script>
+</script> -->

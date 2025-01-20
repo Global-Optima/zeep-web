@@ -4,7 +4,7 @@ import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	GetWarehouseStockFilter,
 	UpdateWarehouseStockDTO,
-	WarehouseStockDetailsDTO,
+	WarehouseStockMaterialDetailsDTO,
 	WarehouseStocksDTO,
 } from '../models/warehouse-stock.model'
 
@@ -24,7 +24,7 @@ class WarehouseStocksService {
 
 	async getWarehouseStockById(stockMaterialId: number) {
 		try {
-			const response = await apiClient.get<WarehouseStockDetailsDTO>(
+			const response = await apiClient.get<WarehouseStockMaterialDetailsDTO>(
 				`/warehouses/stocks/${stockMaterialId}`,
 			)
 			return response.data

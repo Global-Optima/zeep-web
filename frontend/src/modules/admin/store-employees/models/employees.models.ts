@@ -1,5 +1,16 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 
+export interface EmployeeLoginDTO {
+	email: string
+	password: string
+}
+
+export interface EmployeeAccount {
+	firstName: string
+	lastName: string
+	email: string
+}
+
 export enum EmployeeRole {
 	ADMIN = 'ADMIN',
 	DIRECTOR = 'DIRECTOR',
