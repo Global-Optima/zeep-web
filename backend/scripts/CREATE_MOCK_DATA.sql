@@ -1386,13 +1386,22 @@ VALUES
     (5, 50, 4); -- 50ml Vanilla
 
 
-INSERT INTO supplier_warehouse_deliveries (stock_material_id, package_id, supplier_id, warehouse_id, barcode, quantity, delivery_date, expiration_date)
+-- Insert into supplier_warehouse_deliveries
+INSERT INTO supplier_warehouse_deliveries (supplier_id, warehouse_id, created_at, updated_at)
 VALUES
-    (1,1, 1, 1, '111111111111', 50, '2024-12-01', '2026-12-01'), -- Milk Delivery
-    (2,2, 2, 1, '222222222222', 30, '2024-12-05', '2025-06-05'), -- Sugar Delivery
-    (3,3, 1, 1, '333333333333', 40, '2024-11-20', '2025-11-20'), -- Chocolate Delivery
-    (4,4, 2, 2, '444444444444', 20, '2024-12-10', '2026-06-10'), -- Cinnamon Delivery
-    (5,5, 1, 2, '555555555555', 15, '2024-12-15', '2027-12-15'); -- Vanilla Delivery
+    (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Delivery 1
+    (2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Delivery 2
+    (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Delivery 3
+
+-- Insert into supplier_warehouse_delivery_materials
+INSERT INTO supplier_warehouse_delivery_materials (delivery_id, stock_material_id, package_id, barcode, quantity, delivery_date, expiration_date)
+VALUES
+    (1, 1, 1, '111111111111', 50, '2024-12-01', '2026-12-01'), -- Milk Delivery
+    (1, 2, 2, '222222222222', 30, '2024-12-05', '2025-06-05'), -- Sugar Delivery
+    (2, 3, 3, '333333333333', 40, '2024-11-20', '2025-11-20'), -- Chocolate Delivery
+    (3, 4, 4, '444444444444', 20, '2024-12-10', '2026-06-10'), -- Cinnamon Delivery
+    (3, 5, 5, '555555555555', 15, '2024-12-15', '2027-12-15'); -- Vanilla Delivery
+
 
 
 -- Insert mock data into supplier_materials

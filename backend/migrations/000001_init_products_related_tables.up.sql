@@ -622,22 +622,30 @@ CREATE UNIQUE INDEX unique_stock_material_package
     ON stock_material_packages (stock_material_id, unit_id, size)
     WHERE deleted_at IS NULL;
 
--- Deliveries Table
-CREATE TABLE
-	IF NOT EXISTS supplier_warehouse_deliveries (
-		id SERIAL PRIMARY KEY,
-		stock_material_id INT NOT NULL REFERENCES stock_materials (id) ON DELETE CASCADE,
-		package_id INT NOT NULL REFERENCES stock_material_packages (id) ON DELETE CASCADE,
-		supplier_id INT NOT NULL,
-		warehouse_id INT NOT NULL,
-		barcode VARCHAR(255) NOT NULL,
-		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-		delivery_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		expiration_date TIMESTAMPTZ NOT NULL,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
+-- Create supplier_warehouse_deliveries Table
+CREATE TABLE IF NOT EXISTS supplier_warehouse_deliveries (
+    id SERIAL PRIMARY KEY,
+    supplier_id INT NOT NULL REFERENCES suppliers (id) ON DELETE CASCADE,
+    warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
+-- Create supplier_warehouse_delivery_materials Table
+CREATE TABLE IF NOT EXISTS supplier_warehouse_delivery_materials (
+    id SERIAL PRIMARY KEY,
+    delivery_id INT NOT NULL REFERENCES supplier_warehouse_deliveries (id) ON DELETE CASCADE,
+    stock_material_id INT NOT NULL REFERENCES stock_materials (id) ON DELETE CASCADE,
+    package_id INT NOT NULL REFERENCES stock_material_packages (id) ON DELETE CASCADE,
+    barcode VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
+    delivery_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration_date TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
 
 CREATE TABLE
 	IF NOT EXISTS warehouse_stocks (

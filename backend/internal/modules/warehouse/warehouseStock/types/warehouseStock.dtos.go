@@ -29,19 +29,19 @@ type TransferInventoryRequest struct {
 }
 
 type DeliveryResponse struct {
-	ID             uint                              `json:"id"`
-	Barcode        string                            `json:"barcode"`
-	Material       WarehouseDeliveryStockMaterialDTO `json:"materials"`
-	Supplier       supplierTypes.SupplierResponse    `json:"supplier"`
-	Warehouse      warehouseTypes.WarehouseResponse  `json:"warehouse"`
-	DeliveryDate   time.Time                         `json:"deliveryDate"`
-	ExpirationDate time.Time                         `json:"expirationDate"`
+	ID        uint                                `json:"id"`
+	Supplier  supplierTypes.SupplierResponse      `json:"supplier"`
+	Warehouse warehouseTypes.WarehouseResponse    `json:"warehouse"`
+	Materials []WarehouseDeliveryStockMaterialDTO `json:"materials"`
 }
 
 type WarehouseDeliveryStockMaterialDTO struct {
-	StockMaterial stockMaterialTypes.StockMaterialsDTO                   `json:"stockMaterial"`
-	Package       stockMaterialPackageTypes.StockMaterialPackageResponse `json:"package"`
-	Quantity      float64                                                `json:"quantity"`
+	StockMaterial  stockMaterialTypes.StockMaterialsDTO                   `json:"stockMaterial"`
+	Package        stockMaterialPackageTypes.StockMaterialPackageResponse `json:"package"`
+	Quantity       float64                                                `json:"quantity"`
+	Barcode        string                                                 `json:"barcode"`
+	DeliveryDate   time.Time                                              `json:"deliveryDate"`
+	ExpirationDate time.Time                                              `json:"expirationDate"`
 }
 
 type DeliveryFilter struct {
@@ -89,18 +89,4 @@ type WarehouseStockResponse struct {
 
 type StockMaterialResponse struct {
 	stockMaterialTypes.StockMaterialsDTO
-}
-
-type WarehouseStockMaterialDetailsDTO struct {
-	StockMaterial          stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
-	Quantity               float64                              `json:"quantity"`
-	EarliestExpirationDate *time.Time                           `json:"earliestExpirationDate,omitempty"`
-	Deliveries             []StockMaterialDeliveryDTO           `json:"deliveries"`
-}
-
-type StockMaterialDeliveryDTO struct {
-	Supplier       supplierTypes.SupplierResponse `json:"supplier"`
-	Quantity       float64                        `json:"quantity"`
-	DeliveryDate   time.Time                      `json:"deliveryDate"`
-	ExpirationDate time.Time                      `json:"expirationDate"`
 }
