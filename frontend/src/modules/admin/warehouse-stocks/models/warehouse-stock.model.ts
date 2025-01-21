@@ -14,7 +14,7 @@ export interface StockMaterialResponse extends StockMaterialsDTO {
 export interface WarehouseStockMaterialDetailsDTO {
 	stockMaterial: StockMaterialsDTO
 	packageMeasure: PackageMeasure
-	earliestExpirationDate: string
+	earliestExpirationDate?: string
 	deliveries: WarehouseStockMaterialDeliveryDTO[]
 }
 
@@ -38,7 +38,7 @@ export interface GetWarehouseStockFilter extends PaginationParams {
 
 export interface UpdateWarehouseStockDTO {
 	quantity: number
-	expirationDate: Date
+	expirationDate?: Date
 }
 
 export interface AddMultipleWarehouseStockDTO {
