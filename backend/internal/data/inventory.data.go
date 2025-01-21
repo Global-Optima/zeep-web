@@ -76,12 +76,12 @@ type Supplier struct {
 
 type WarehouseStock struct {
 	BaseEntity
-	WarehouseID        uint                        `gorm:"not null;index"`
-	Warehouse          Warehouse                   `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
-	StockMaterialID    uint                        `gorm:"index"`
-	StockMaterial      StockMaterial               `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE" sort:"stockMaterials"`
-	Quantity           float64                     `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"name"`
-	SupplierDeliveries []SupplierWarehouseDelivery `gorm:"foreignKey:StockMaterialID;references:StockMaterial" json:"supplierDeliveries"`
+	WarehouseID        uint                                `gorm:"not null;index"`
+	Warehouse          Warehouse                           `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
+	StockMaterialID    uint                                `gorm:"index"`
+	StockMaterial      StockMaterial                       `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE" sort:"stockMaterials"`
+	Quantity           float64                             `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"name"`
+	SupplierDeliveries []SupplierWarehouseDeliveryMaterial `gorm:"foreignKey:StockMaterialID;references:StockMaterial" json:"supplierDeliveries"`
 }
 
 type StockMaterial struct {

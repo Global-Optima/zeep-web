@@ -63,7 +63,7 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 
 	materials := make([]data.SupplierWarehouseDeliveryMaterial, len(req.Materials))
 
-	for _, material := range req.Materials {
+	for i, material := range req.Materials {
 		stockMaterial, exists := stockMaterialMap[material.StockMaterialID]
 		if !exists {
 			return fmt.Errorf("stock material with ID %d not found", material.StockMaterialID)
@@ -91,15 +91,13 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 			return fmt.Errorf("failed to retrieve package details for package ID %d", material.PackageID)
 		}
 
-		for _, material := range req.Materials {
-			materials = append(materials, data.SupplierWarehouseDeliveryMaterial{
-				StockMaterialID: material.StockMaterialID,
-				PackageID:       material.PackageID,
-				Barcode:         stockMaterial.Barcode,
-				Quantity:        material.Quantity,
-				DeliveryDate:    time.Now(),
-				ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
-			})
+		materials[i] = data.SupplierWarehouseDeliveryMaterial{
+			StockMaterialID: material.StockMaterialID,
+			PackageID:       material.PackageID,
+			Barcode:         stockMaterial.Barcode,
+			Quantity:        material.Quantity,
+			DeliveryDate:    time.Now(),
+			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
 		}
 	}
 
