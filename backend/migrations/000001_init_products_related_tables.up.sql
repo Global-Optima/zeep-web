@@ -1,3 +1,5 @@
+SET timezone TO 'UTC';
+
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -627,6 +629,7 @@ CREATE TABLE IF NOT EXISTS supplier_warehouse_deliveries (
     id SERIAL PRIMARY KEY,
     supplier_id INT NOT NULL REFERENCES suppliers (id) ON DELETE CASCADE,
     warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
+	delivery_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
@@ -640,7 +643,6 @@ CREATE TABLE IF NOT EXISTS supplier_warehouse_delivery_materials (
     package_id INT NOT NULL REFERENCES stock_material_packages (id) ON DELETE CASCADE,
     barcode VARCHAR(255) NOT NULL,
     quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
-    delivery_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expiration_date TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

@@ -19,16 +19,16 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 				Package:        stockMaterialPackageTypes.ToStockMaterialPackageResponse(&material.Package),
 				Quantity:       material.Quantity,
 				Barcode:        material.Barcode,
-				DeliveryDate:   material.DeliveryDate,
 				ExpirationDate: material.ExpirationDate,
 			}
 		}
 
 		response[i] = DeliveryResponse{
-			ID:        delivery.ID,
-			Supplier:  supplierTypes.ToSupplierResponse(delivery.Supplier),
-			Warehouse: *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
-			Materials: materials,
+			ID:           delivery.ID,
+			Supplier:     supplierTypes.ToSupplierResponse(delivery.Supplier),
+			Warehouse:    *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
+			Materials:    materials,
+			DeliveryDate: delivery.DeliveryDate,
 		}
 	}
 	return response
@@ -43,16 +43,16 @@ func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) DeliveryRespons
 			Package:        stockMaterialPackageTypes.ToStockMaterialPackageResponse(&material.Package),
 			Quantity:       material.Quantity,
 			Barcode:        material.Barcode,
-			DeliveryDate:   material.DeliveryDate,
 			ExpirationDate: material.ExpirationDate,
 		}
 	}
 
 	return DeliveryResponse{
-		ID:        delivery.ID,
-		Supplier:  supplierTypes.ToSupplierResponse(delivery.Supplier),
-		Warehouse: *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
-		Materials: materials,
+		ID:           delivery.ID,
+		Supplier:     supplierTypes.ToSupplierResponse(delivery.Supplier),
+		Warehouse:    *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
+		Materials:    materials,
+		DeliveryDate: delivery.DeliveryDate,
 	}
 }
 

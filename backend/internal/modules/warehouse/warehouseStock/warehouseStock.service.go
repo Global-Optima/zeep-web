@@ -57,8 +57,9 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 	}
 
 	delivery := data.SupplierWarehouseDelivery{
-		SupplierID:  req.SupplierID,
-		WarehouseID: warehouseID,
+		SupplierID:   req.SupplierID,
+		WarehouseID:  warehouseID,
+		DeliveryDate: time.Now(),
 	}
 
 	materials := make([]data.SupplierWarehouseDeliveryMaterial, len(req.Materials))
@@ -96,7 +97,6 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 			PackageID:       material.PackageID,
 			Barcode:         stockMaterial.Barcode,
 			Quantity:        material.Quantity,
-			DeliveryDate:    time.Now(),
 			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
 		}
 	}
