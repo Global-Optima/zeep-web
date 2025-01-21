@@ -2,6 +2,7 @@ package types
 
 type GenerateBarcodeRequest struct {
 	StockMaterialID uint `json:"stockMaterialId" binding:"required"`
+	SupplierID      uint `json:"supplierId" binding:"required"`
 }
 
 type GenerateBarcodeResponse struct {

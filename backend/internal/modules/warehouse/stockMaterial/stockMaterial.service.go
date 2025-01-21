@@ -3,6 +3,8 @@ package stockMaterial
 import (
 	"errors"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 )
 
@@ -16,12 +18,14 @@ type StockMaterialService interface {
 }
 
 type stockMaterialService struct {
-	repo StockMaterialRepository
+	repo        StockMaterialRepository
+	packageRepo stockMaterialPackage.StockMaterialPackageRepository
 }
 
-func NewStockMaterialService(repo StockMaterialRepository) StockMaterialService {
+func NewStockMaterialService(repo StockMaterialRepository, packageRepo stockMaterialPackage.StockMaterialPackageRepository) StockMaterialService {
 	return &stockMaterialService{
-		repo: repo,
+		repo:        repo,
+		packageRepo: packageRepo,
 	}
 }
 
@@ -60,6 +64,18 @@ func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMateria
 	err := s.repo.CreateStockMaterial(stockMaterial)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(req.Packages) != 0 {
+		packages := make([]data.StockMaterialPackage, len(req.Packages))
+		for i, pkg := range req.Packages {
+			packages[i] = *types.ConvertPackageDTOToModel(stockMaterial.ID, &pkg)
+		}
+
+		err = s.packageRepo.CreateMultiplePackages(packages)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	stockMaterialResponse := types.ConvertStockMaterialToStockMaterialResponse(stockMaterial)

@@ -7,6 +7,7 @@ import (
 
 type StockMaterialPackageRepository interface {
 	Create(packageEntity *data.StockMaterialPackage) error
+	CreateMultiplePackages(packages []data.StockMaterialPackage) error
 	GetByID(id uint) (*data.StockMaterialPackage, error)
 	Update(id uint, packageEntity data.StockMaterialPackage) error
 	Delete(id uint) error
@@ -23,6 +24,10 @@ func NewStockMaterialPackageRepository(db *gorm.DB) StockMaterialPackageReposito
 
 func (r *stockMaterialPackageRepository) Create(packageEntity *data.StockMaterialPackage) error {
 	return r.db.Create(packageEntity).Error
+}
+
+func (r *stockMaterialPackageRepository) CreateMultiplePackages(packages []data.StockMaterialPackage) error {
+	return r.db.Create(packages).Error
 }
 
 func (r *stockMaterialPackageRepository) GetByID(id uint) (*data.StockMaterialPackage, error) {
