@@ -64,6 +64,7 @@ func (r *warehouseStockRepository) RecordDeliveriesAndUpdateStock(delivery data.
 		return nil
 	})
 }
+
 func (r *warehouseStockRepository) recordDeliveryMaterials(tx *gorm.DB, materials []data.SupplierWarehouseDeliveryMaterial) error {
 	if err := tx.Create(&materials).Error; err != nil {
 		return fmt.Errorf("failed to log delivery materials: %w", err)
@@ -75,6 +76,14 @@ func (r *warehouseStockRepository) updateOrInsertStock(tx *gorm.DB, warehouseID 
 	stock := data.WarehouseStock{
 		WarehouseID:     warehouseID,
 		StockMaterialID: material.StockMaterialID,
+	}
+
+	if err := tx.Model(&material).
+		Preload("Package").
+		Preload("Package.Unit").
+		Preload("StockMaterial.Unit").
+		First(&material, "id = ?", material.ID).Error; err != nil {
+		return fmt.Errorf("failed to preload package and stock material for material ID %d: %w", material.ID, err)
 	}
 
 	var unitQuantity float64
@@ -280,7 +289,8 @@ func (r *warehouseStockRepository) findEarliestMaterialExpirationDate(materials 
 			earliest = &material.ExpirationDate
 		}
 	}
-	return earliest
+	UTCTime := utils.ToUTC(*earliest)
+	return &UTCTime
 }
 
 func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error) {
@@ -298,7 +308,8 @@ func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMater
 		return nil, fmt.Errorf("failed to fetch earliest expiration date for stock material ID %d: %w", stockMaterialID, err)
 	}
 
-	return &earliestExpirationDate, nil
+	UTCTime := utils.ToUTC(earliestExpirationDate)
+	return &UTCTime, nil
 }
 
 func (r *warehouseStockRepository) aggregateWarehouseStocks(
@@ -310,14 +321,14 @@ func (r *warehouseStockRepository) aggregateWarehouseStocks(
 	for _, stock := range warehouseStocks {
 		materials := materialMap[stock.StockMaterialID]
 
-		earliestExpirationDate := r.findEarliestMaterialExpirationDate(materials)
+		earliestExpirationDate := utils.ToUTC(*r.findEarliestMaterialExpirationDate(materials))
 
 		aggregatedStocks = append(aggregatedStocks, data.AggregatedWarehouseStock{
 			WarehouseID:            stock.WarehouseID,
 			StockMaterialID:        stock.StockMaterialID,
 			StockMaterial:          stock.StockMaterial,
 			TotalQuantity:          stock.Quantity,
-			EarliestExpirationDate: earliestExpirationDate,
+			EarliestExpirationDate: &earliestExpirationDate,
 		})
 	}
 
@@ -384,15 +395,15 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 
 	// Apply filters
 	if filter.WarehouseID != nil {
-		query = query.Where("warehouse_stocks.warehouse_id = ?", *filter.WarehouseID)
+		query = query.Where("warehouse_stocks.id = ?", *filter.WarehouseID)
 	}
 
 	if filter.StockMaterialID != nil {
-		query = query.Where("stock_materials.stock_material_id = ?", *filter.StockMaterialID)
+		query = query.Where("stock_materials.id = ?", *filter.StockMaterialID)
 	}
 
 	if filter.IngredientID != nil {
-		query = query.Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
+		query = query.Where("stock_materials.id = ?", *filter.IngredientID)
 	}
 
 	if filter.LowStockOnly != nil && *filter.LowStockOnly {
@@ -411,7 +422,7 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	}
 
 	if filter.CategoryID != nil {
-		query = query.Where("stock_materials.category_id = ?", *filter.CategoryID)
+		query = query.Where("stock_materials.id = ?", *filter.CategoryID)
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
