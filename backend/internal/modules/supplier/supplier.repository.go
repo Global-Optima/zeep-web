@@ -170,8 +170,8 @@ func (r *supplierRepository) GetMaterialsBySupplier(supplierID uint) ([]data.Sup
 	err := r.db.Preload("StockMaterial").
 		Preload("StockMaterial.Unit").
 		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit").
+		Preload("StockMaterial.Packages").
+		Preload("StockMaterial.Packages.Unit").
 		Preload("StockMaterial.Ingredient").
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").

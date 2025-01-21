@@ -19,7 +19,7 @@
 						:key="index"
 					>
 						<TableCell>{{ item.stockMaterial.name }}</TableCell>
-						<TableCell>{{ item.packageMeasures.quantity }}</TableCell>
+						<TableCell>{{ item.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>
 			</Table>

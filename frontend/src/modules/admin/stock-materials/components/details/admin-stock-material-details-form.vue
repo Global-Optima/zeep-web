@@ -61,6 +61,7 @@ const openIngredientDialog = ref(false)
  * - There's a `packages` field that includes array of { size, unit } if available
  */
 interface PackageRow {
+  id?: number
   size: number
   unitId: number
   unitName?: string
@@ -71,23 +72,17 @@ interface PackageRow {
  * to an editable "PackageRow" array.
  * If your stockMaterial doesn't have 'packages', provide an empty array or fallback.
  */
-const packages = ref<PackageRow[]>([])
+const packages = ref<PackageRow[]>(stockMaterial.packages.map((pkg) => ({
+    id: pkg.id,
+    size: pkg.size,
+    unitId: pkg.unit.id,
+    unitName: pkg.unit.name
+  })))
 
 /** For editing a package row's unit selection. */
 const openPackageUnitDialog = ref(false)
 const selectedPackageIndex = ref<number | null>(null)
 
-/**
- * On mounted or when prop changes, we populate `packages` from `stockMaterial.packages`.
- * We assume `stockMaterial.packages` is an array of { size, unit: UnitDTO }.
- */
-if (stockMaterial.packages) {
-  packages.value = stockMaterial.packages.map((pkg) => ({
-    size: pkg.size,
-    unitId: pkg.packageUnit.id,
-    unitName: pkg.packageUnit.name
-  }))
-}
 
 /**
  * Validation Schema
@@ -149,6 +144,7 @@ const onSubmit = handleSubmit((formValues) => {
 
   // Map to UpdateStockMaterialPackagesDTO
   const finalPackages: UpdateStockMaterialPackagesDTO[] = packages.value.map((p) => ({
+    id: p.id,
     size: p.size,
     unitId: p.unitId,
   }))

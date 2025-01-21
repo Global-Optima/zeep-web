@@ -1,7 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '../../stock-material-categories/models/stock-material-categories.model'
-import type { PackageMeasure } from '../../store-stock-requests/models/stock-requests.model'
 import type { UnitDTO } from '../../units/models/units.model'
 
 export interface CreateStockMaterialDTO {
@@ -23,6 +22,7 @@ export interface CreateStockMaterialPackagesDTO {
 }
 
 export interface UpdateStockMaterialPackagesDTO {
+	id?: number
 	size: number
 	unitId: number
 }
@@ -52,7 +52,7 @@ export interface StockMaterialsDTO {
 	isActive: boolean
 	createdAt: string
 	updatedAt: string
-	packages: PackageMeasure[]
+	packages: StockMaterialPackagesDTO[]
 }
 
 export interface StockMaterialsFilter extends PaginationParams {

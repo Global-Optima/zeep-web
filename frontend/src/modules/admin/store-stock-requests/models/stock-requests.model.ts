@@ -2,7 +2,6 @@ import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { StoreDTO } from '@/modules/stores/models/stores.models'
 import type { WarehouseDTO } from '@/modules/warehouse/models/warehouse.model'
 import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
-import type { UnitDTO } from '../../units/models/units.model'
 
 export enum StockRequestStatus {
 	CREATED = 'CREATED',
@@ -40,17 +39,6 @@ export const WAREHOUSE_STOCK_REQUEST_STATUSES: StockRequestStatus[] =
 	ALL_STOCK_REQUESTS_STATUSES.filter(status => ![StockRequestStatus.CREATED].includes(status))
 
 export const STORE_STOCK_REQUEST_STATUSES: StockRequestStatus[] = ALL_STOCK_REQUESTS_STATUSES
-
-export interface PackageMeasure {
-	size: number
-	unitsPerPackage: number
-	packageUnit: UnitDTO
-}
-
-export interface PackageMeasureWithQuantity extends PackageMeasure {
-	quantity: number
-	totalUnitsInStock: number
-}
 
 // DTO for creating a stock request
 export interface CreateStockRequestDTO {
@@ -96,7 +84,7 @@ export interface StockRequestResponse {
 // Stock material response for a stock request
 export interface StockRequestMaterial {
 	stockMaterial: StockMaterialsDTO
-	packageMeasures: PackageMeasureWithQuantity
+	quantity: number
 }
 
 // Filters for fetching stock requests

@@ -190,10 +190,8 @@ function toEditableRow(item: StockRequestMaterial): EditableMaterialRow {
   return {
     stockMaterialId: item.stockMaterial.id,
     name: item.stockMaterial.name,
-    // We can treat `packageMeasures.quantity` as "expected" by default
-    expectedQuantity: item.packageMeasures.quantity,
-    // Start with the same quantity or 0, depending on your logic
-    quantity: item.packageMeasures.quantity
+    expectedQuantity: item.quantity,
+    quantity: item.quantity
   }
 }
 
@@ -204,7 +202,7 @@ function toEditableRow(item: StockRequestMaterial): EditableMaterialRow {
 function addMaterial(material: { id: number; name: string }) {
   openSelectDialog.value = false
   if (editableItems.value.some(item => item.stockMaterialId === material.id)) return
-  
+
   editableItems.value.push({
     stockMaterialId: material.id,
     name: material.name,
