@@ -39,9 +39,9 @@
 
 <script setup lang="ts">
 import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
 } from '@/core/components/ui/collapsible'
 import { getRouteName, type RouteKey } from '@/core/config/routes.config'
 import type { CollapsibleNavItem } from '@/core/layouts/admin/app-admin-sidebar-links.constants'
