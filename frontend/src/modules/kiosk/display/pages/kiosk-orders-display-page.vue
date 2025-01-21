@@ -5,7 +5,7 @@
 			<!-- Preparing Side -->
 			<div class="flex flex-col flex-1 bg-slate-800 p-6 h-full">
 				<div class="mb-8 text-center">
-					<h2 class="font-semibold text-3xl text-slate-100 2xl:text-4xl">В работе</h2>
+					<h2 class="font-semibold text-3xl text-slate-100 2xl:text-5xl">В работе</h2>
 				</div>
 
 				<div class="flex-1">
@@ -43,7 +43,7 @@
 			<!-- Ready Side -->
 			<div class="flex flex-col flex-1 bg-slate-900 p-6 h-full">
 				<div class="mb-8 text-center">
-					<h2 class="font-semibold text-3xl text-slate-200 2xl:text-4xl">Готовы</h2>
+					<h2 class="font-semibold text-3xl text-slate-200 2xl:text-5xl">Готовы</h2>
 				</div>
 				<div class="flex-1">
 					<TransitionGroup

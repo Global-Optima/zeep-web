@@ -5,7 +5,7 @@
 			<!-- In Progress Side -->
 			<div class="flex flex-col flex-1 gap-8 bg-slate-800 px-12 p-6 h-full">
 				<div class="text-left">
-					<h2 class="mb-2 font-medium text-3xl text-slate-100 2xl:text-6xl =">В работе</h2>
+					<h2 class="2xl:mb-4 font-medium text-3xl text-slate-100 2xl:text-6xl">В работе</h2>
 				</div>
 
 				<div class="flex-1">
@@ -18,12 +18,15 @@
 						<li
 							v-for="(order, index) in currentInProgressPage"
 							:key="`in-progress-${index}`"
-							class="flex items-center gap-5 text-3xl lg:text-4xl 2xl:text-5xl"
+							class="flex items-center gap-5 2xl:gap-10 text-3xl lg:text-4xl 2xl:text-5xl"
 						>
+							<!-- Fixed-width number container -->
 							<span
-								class="bg-blue-100 p-4 rounded-md w-fit font-bold text-blue-900"
-								>{{ order.number }}</span
+								class="flex justify-center items-center gap-2 bg-blue-100 p-4 rounded-md w-24 lg:w-28 2xl:w-32 font-bold text-blue-900"
 							>
+								{{ order.number }}
+							</span>
+							<!-- Name -->
 							<span class="font-medium text-slate-100">{{ order.name }}</span>
 						</li>
 					</transition-group>
@@ -36,7 +39,7 @@
 							:key="`in-progress-indicator-${i}`"
 							:class="[
 								'inline-block w-3 h-3 2xl:w-5 2xl:h-5 rounded-full',
-								i - 1 === readyPageIndex ? 'bg-blue-100' : 'bg-slate-700'
+								i - 1 === inProgressPageIndex ? 'bg-blue-100' : 'bg-slate-700'
 							]"
 						></span>
 					</div>
@@ -46,7 +49,7 @@
 			<!-- Ready Side -->
 			<div class="flex flex-col flex-1 gap-8 bg-slate-900 px-12 p-6 h-full">
 				<div class="text-left">
-					<h2 class="mb-2 font-medium text-3xl text-slate-100 2xl:text-6xl">В Готовы</h2>
+					<h2 class="2xl:mb-4 font-medium text-3xl text-slate-200 2xl:text-6xl">Готовы</h2>
 				</div>
 
 				<div class="flex-1">
@@ -58,17 +61,21 @@
 					>
 						<li
 							v-for="(order, index) in currentReadyPage"
-							:key="`in-progress-${index}`"
-							class="flex items-center gap-5 text-3xl lg:text-4xl 2xl:text-5xl"
+							:key="`ready-${index}`"
+							class="flex items-center gap-5 2xl:gap-10 text-3xl lg:text-4xl 2xl:text-5xl"
 						>
+							<!-- Fixed-width number container -->
 							<span
-								class="bg-emerald-100 p-4 rounded-md w-fit font-bold text-emerald-900"
-								>{{ order.number }}</span
+								class="flex justify-center items-center gap-2 bg-emerald-100 p-4 rounded-md w-24 lg:w-28 2xl:w-32 font-bold text-emerald-900"
 							>
+								{{ order.number }}
+							</span>
+							<!-- Name -->
 							<span class="font-medium text-slate-100">{{ order.name }}</span>
 						</li>
 					</transition-group>
 				</div>
+
 				<div class="flex justify-center mt-auto">
 					<div class="flex space-x-2">
 						<span
@@ -76,7 +83,7 @@
 							:key="`ready-indicator-${i}`"
 							:class="[
 								'inline-block w-3 h-3 2xl:w-5 2xl:h-5 rounded-full',
-								i - 1 === readyPageIndex ? 'bg-emerald-100' : 'bg-slate-700'
+								i - 1 === readyPageIndex ? 'bg-emerald-200' : 'bg-slate-700'
 							]"
 						></span>
 					</div>
@@ -157,10 +164,12 @@ onMounted(() => {
 </script>
 
 <style>
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
 	transition: opacity 0.5s ease-in-out;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
 	opacity: 0;
 }
 </style>

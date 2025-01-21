@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getRouteName } from '@/core/config/routes.config'
+import { getRouteName, type RouteKey } from '@/core/config/routes.config'
 import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
 import { useSelectedProductStore } from "@/modules/kiosk/products/stores/current-product.store"
 import { defineAsyncComponent, onBeforeUnmount, onMounted } from 'vue'
@@ -9,7 +9,7 @@ const KioskDetailsModal = defineAsyncComponent(() =>
   import('@/modules/kiosk/products/components/details/kiosk-details-modal.vue')
 );
 
-const pagesOmitRedirect = [ getRouteName('KIOSK_ORDERS')]
+const pagesOmitRedirect: RouteKey[] = [ 'KIOSK_ORDERS', 'KIOSK_ORDERS_DISPLAY', 'KIOSK_ORDERS_DISPLAY_V2']
 
 const router = useRouter()
 const productStore = useSelectedProductStore()
