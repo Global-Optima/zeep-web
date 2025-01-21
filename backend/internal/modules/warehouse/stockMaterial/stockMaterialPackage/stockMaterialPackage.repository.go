@@ -75,10 +75,10 @@ func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, pa
 			return fmt.Errorf("invalid package: %w", err)
 		}
 
-		if pkgDTO.StockMaterialPackageID != nil {
-			existing, exists := existingMap[*pkgDTO.StockMaterialPackageID]
+		if pkgDTO.ID != nil {
+			existing, exists := existingMap[*pkgDTO.ID]
 			if !exists {
-				return fmt.Errorf("package with ID %d not found", *pkgDTO.StockMaterialPackageID)
+				return fmt.Errorf("package with ID %d not found", *pkgDTO.ID)
 			}
 
 			if pkgDTO.Size != nil {
@@ -92,7 +92,7 @@ func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, pa
 				return fmt.Errorf("failed to update package with ID %d: %w", existing.ID, err)
 			}
 
-			processedIDs[*pkgDTO.StockMaterialPackageID] = true
+			processedIDs[*pkgDTO.ID] = true
 		} else {
 			newPackage := data.StockMaterialPackage{
 				StockMaterialID: stockMaterialID,

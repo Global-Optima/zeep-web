@@ -62,20 +62,20 @@ func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockM
 
 func ValidatePackageUpdates(pkg *data.StockMaterialPackage, dto *UpdateStockMaterialPackagesDTO) error {
 	if dto.Size != nil && *dto.Size <= 0 {
-		return fmt.Errorf("invalid size for package ID %d", *dto.StockMaterialPackageID)
+		return fmt.Errorf("invalid size for package ID %d", *dto.ID)
 	}
 	if dto.UnitID != nil && *dto.UnitID == 0 {
-		return fmt.Errorf("invalid unit ID for package ID %d", *dto.StockMaterialPackageID)
+		return fmt.Errorf("invalid unit ID for package ID %d", *dto.ID)
 	}
 	return nil
 }
 
 func ValidatePackageDTO(pkgDTO UpdateStockMaterialPackagesDTO) error {
-	if pkgDTO.StockMaterialPackageID == nil && pkgDTO.Size == nil && pkgDTO.UnitID == nil {
+	if pkgDTO.ID == nil && pkgDTO.Size == nil && pkgDTO.UnitID == nil {
 		return fmt.Errorf("empty package object is not allowed")
 	}
 
-	if pkgDTO.StockMaterialPackageID == nil {
+	if pkgDTO.ID == nil {
 		if pkgDTO.Size == nil || pkgDTO.UnitID == nil {
 			return fmt.Errorf("new packages must have both size and unitId")
 		}
