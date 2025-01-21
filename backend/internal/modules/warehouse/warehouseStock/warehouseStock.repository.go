@@ -232,7 +232,7 @@ func (r *warehouseStockRepository) DeductFromWarehouseStock(warehouseID, stockMa
 }
 
 func (r *warehouseStockRepository) GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error) {
-	warehouseStocks, totalCount, err := r.getWarehouseStocksWithPagination(filter)
+	warehouseStocks, err := r.getWarehouseStocksWithPagination(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
 	}
@@ -248,13 +248,6 @@ func (r *warehouseStockRepository) GetWarehouseStock(filter *types.GetWarehouseS
 	}
 
 	aggregatedStocks := r.aggregateWarehouseStocks(warehouseStocks, materialMap)
-
-	if filter.Pagination != nil {
-		filter.Pagination.TotalCount = int(totalCount)
-		if filter.Pagination.PageSize > 0 {
-			filter.Pagination.TotalPages = (int(totalCount) + filter.Pagination.PageSize - 1) / filter.Pagination.PageSize
-		}
-	}
 
 	return aggregatedStocks, nil
 }
@@ -374,9 +367,8 @@ func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID, warehouseI
 	return &stock, nil
 }
 
-func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *types.GetWarehouseStockFilterQuery) ([]data.WarehouseStock, int64, error) {
+func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *types.GetWarehouseStockFilterQuery) ([]data.WarehouseStock, error) {
 	var warehouseStocks []data.WarehouseStock
-	var totalCount int64
 
 	query := r.db.Model(&data.WarehouseStock{}).
 		Preload("StockMaterial").
@@ -387,7 +379,7 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.StockMaterialCategory").
 		Preload("StockMaterial.Packages").
 		Preload("StockMaterial.Packages.Unit").
-		Joins("LEFT JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
+		Joins("LEFT JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.stock_material_id = warehouse_stocks.stock_material_id").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 
 	// Apply filters
@@ -408,15 +400,14 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	}
 
 	if filter.IsExpiring != nil && *filter.IsExpiring {
-		days := 1095
-		if filter.ExpirationDays != nil {
-			days = *filter.ExpirationDays
-		}
+		query = query.Where("supplier_warehouse_delivery_materials.expiration_date <= stock_materials.expiration_period_in_days")
+	}
 
+	var days int
+	if filter.ExpirationDays != nil {
+		days = *filter.ExpirationDays
 		expirationThreshold := time.Now().AddDate(0, 0, days)
-		query = query.Where(`
-			supplier_warehouse_deliveries.expiration_date <= ? 
-			OR supplier_warehouse_deliveries.expiration_date IS NULL`, expirationThreshold)
+		query = query.Where("supplier_warehouse_delivery_materials.expiration_date <= ?", expirationThreshold)
 	}
 
 	if filter.CategoryID != nil {
@@ -430,14 +421,14 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.WarehouseStock{})
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	if err := query.Find(&warehouseStocks).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
+		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
 	}
 
-	return warehouseStocks, totalCount, nil
+	return warehouseStocks, nil
 }
 
 func (r *warehouseStockRepository) UpdateExpirationDate(stockMaterialID, warehouseID uint, newExpirationDate time.Time) error {
