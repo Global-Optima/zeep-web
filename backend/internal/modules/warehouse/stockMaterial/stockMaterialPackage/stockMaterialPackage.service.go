@@ -14,7 +14,7 @@ type StockMaterialPackageService interface {
 	GetByID(id uint) (*types.StockMaterialPackageResponse, error)
 	Update(id uint, dto types.UpdateStockMaterialPackageDTO) error
 	Delete(id uint) error
-	GetAll() ([]types.StockMaterialPackageResponse, error)
+	GetAll(filter types.StockMaterialPackageFilter) ([]types.StockMaterialPackageResponse, error)
 }
 
 type stockMaterialPackageService struct {
@@ -77,8 +77,8 @@ func (s *stockMaterialPackageService) GetByID(id uint) (*types.StockMaterialPack
 	return &response, nil
 }
 
-func (s *stockMaterialPackageService) GetAll() ([]types.StockMaterialPackageResponse, error) {
-	packages, err := s.repo.GetAll()
+func (s *stockMaterialPackageService) GetAll(filter types.StockMaterialPackageFilter) ([]types.StockMaterialPackageResponse, error) {
+	packages, err := s.repo.GetAll(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stock material packages: %w", err)
 	}

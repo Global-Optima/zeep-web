@@ -301,6 +301,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 			stockRoutes.POST("/receive", warehouseStockHandler.ReceiveInventory)
 			stockRoutes.POST("/transfer", warehouseStockHandler.TransferInventory)
 			stockRoutes.GET("/deliveries", warehouseStockHandler.GetDeliveries)
+			stockRoutes.GET("/deliveries/:id", warehouseStockHandler.GetDeliveryByID)
 		}
 	}
 }
