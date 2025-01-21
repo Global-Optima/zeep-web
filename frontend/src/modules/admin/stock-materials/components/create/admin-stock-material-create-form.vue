@@ -48,7 +48,7 @@ const createStockMaterialSchema = toTypedSchema(
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
-    barcode: z.string().optional(),
+    barcode:  z.string().min(1, 'Введите штрихкод').length(12, 'Штрихкод должен быть длинной в 12 символов'),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
   })
 )
@@ -67,8 +67,6 @@ const onCancel = () => {
   resetForm()
   emits('onCancel')
 }
-
-
 
 function selectUnit(unit: UnitDTO) {
   selectedUnit.value = unit
@@ -170,6 +168,23 @@ function selectIngredient(ingredient: IngredientsDTO) {
 							</FormField>
 
 							<FormField
+								name="barcode"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Штрихкод</FormLabel>
+									<FormControl>
+										<Input
+											id="barcode"
+											v-bind="componentField"
+											placeholder="Введите штрихкод"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+
+							<FormField
 								name="safetyStock"
 								v-slot="{ componentField }"
 							>
@@ -181,6 +196,24 @@ function selectIngredient(ingredient: IngredientsDTO) {
 											type="number"
 											v-bind="componentField"
 											placeholder="Введите безопасный запас"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+
+							<FormField
+								name="expirationPeriodInDays"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Срок годности (дни)</FormLabel>
+									<FormControl>
+										<Input
+											id="expirationPeriodInDays"
+											type="number"
+											v-bind="componentField"
+											placeholder="Введите минимальный срок годности в днях"
 										/>
 									</FormControl>
 									<FormMessage />

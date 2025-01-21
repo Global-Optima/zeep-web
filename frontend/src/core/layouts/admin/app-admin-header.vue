@@ -1,5 +1,5 @@
 <template>
-	<header class="flex items-center gap-4 bg-muted/40 px-4 lg:px-6 border-b h-14 lg:h-[60px]">
+	<header class="flex items-center gap-4 bg-muted/40 px-4 lg:px-6 border-b w-full h-14 lg:h-[60px]">
 		<Sheet>
 			<SheetTrigger as-child>
 				<Button
@@ -40,69 +40,28 @@
 			</SheetContent>
 		</Sheet>
 
-		<div class="flex-1 w-full">
-			<form>
-				<div class="relative">
-					<Search class="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
-					<Input
-						type="search"
-						placeholder="Поиск"
-						class="bg-background shadow-none pl-8 w-full md:w-2/3 lg:w-1/3 appearance-none"
-					/>
-				</div>
-			</form>
+		<div
+			v-if="currentEmployee"
+			class="flex justify-end items-center gap-4 w-full"
+		>
+			<AppAdminSearch :current-employee="currentEmployee" />
+			<AppAdminEmployeeDropdown :current-employee="currentEmployee" />
 		</div>
-
-		<DropdownMenu v-if="currentEmployee">
-			<DropdownMenuTrigger as-child>
-				<Button
-					variant="secondary"
-					size="icon"
-					class="rounded-full"
-				>
-					<CircleUser class="w-5 h-5" />
-					<span class="sr-only">Toggle user menu</span>
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end">
-				<DropdownMenuLabel>
-					{{ currentEmployee.firstName }} {{ currentEmployee.lastName }}
-				</DropdownMenuLabel>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem @click="onLogoutClick">Выйти</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
 	</header>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
-import { Input } from '@/core/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/core/components/ui/sheet'
-import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
+import AppAdminEmployeeDropdown from '@/core/layouts/admin/app-admin-employee-dropdown.vue'
+import AppAdminSearch from '@/core/layouts/admin/app-admin-search.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
-import { authService } from '@/modules/auth/services/auth.service'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
-import { useMutation } from '@tanstack/vue-query'
-import { CircleUser, Menu, Search, Store } from 'lucide-vue-next'
+import { Menu, Store } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
-const {currentEmployee, setCurrentEmployee} = useEmployeeAuthStore()
-const { toast } = useToast()
-
-const {mutate: logoutEmployee} = useMutation({
-		mutationFn: () => authService.logoutEmployee(),
-		onSuccess: () => {
-			toast({title: "Вы вышли из системы"})
-      setCurrentEmployee(null)
-			router.push({name: getRouteName("LOGIN")})
-		},
-		onError: () => {
-      toast({title: "Произошла ошибка при выходе"})
-		},
-})
+const {currentEmployee} = useEmployeeAuthStore()
 
 const router = useRouter()
 
@@ -112,10 +71,6 @@ const onKioskClick = () => {
 
 const onBaristaClick = () => {
 	router.push({name: getRouteName('KIOSK_ORDERS')})
-}
-
-const onLogoutClick = () => {
-  logoutEmployee()
 }
 </script>
 

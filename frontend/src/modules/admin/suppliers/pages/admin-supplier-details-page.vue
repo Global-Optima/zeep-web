@@ -31,6 +31,7 @@
 			<TabsContent value="variants">
 				<AdminSupplierMaterialsForm
 					:supplier="supplier"
+          :stock-materials='stockMaterials'
 					@on-submit="onUpdateSupplierMaterials"
 					@on-cancel="onCancel"
 				/>
@@ -48,7 +49,7 @@ import {
 } from '@/core/components/ui/tabs'
 import AdminSupplierDetailsForm from '@/modules/admin/suppliers/components/details/admin-supplier-details-form.vue'
 import AdminSupplierMaterialsForm from '@/modules/admin/suppliers/components/details/admin-supplier-materials-form.vue'
-import type { UpdateSupplierDTO, UpdateSupplierMaterialDTO } from '@/modules/admin/suppliers/models/suppliers.model'
+import type { UpdateSupplierDTO, UpdateSupplierMaterialDTO, UpsertSupplierMaterialsDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import { suppliersService } from '@/modules/admin/suppliers/services/suppliers.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
@@ -76,11 +77,17 @@ const {mutate: updateSupplier} = useMutation({
 })
 
 const {mutate: updateSupplierMaterials} = useMutation({
-	mutationFn: ({id, dto} : {id: number, dto: UpdateSupplierMaterialDTO[]}) => suppliersService.updateSupplierMaterials(id, dto),
+	mutationFn: ({id, dto} : {id: number, dto: UpsertSupplierMaterialsDTO}) => suppliersService.updateSupplierMaterials(id, dto),
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-suppliers'] })
     queryClient.invalidateQueries({ queryKey: ['admin-supplier-details', supplierId] })
 	},
+})
+
+const { data: stockMaterials } = useQuery({
+  queryKey:   ['admin-supplier-materials', supplierId],
+  queryFn:  () => suppliersService.getMaterialsBySupplier(Number(supplierId)),
+  initialData: [],
 })
 
 function onUpdateSupplier(dto: UpdateSupplierDTO) {
@@ -88,9 +95,9 @@ function onUpdateSupplier(dto: UpdateSupplierDTO) {
 	updateSupplier({id: Number(supplierId), dto})
 }
 
-function onUpdateSupplierMaterials(dto: UpdateSupplierMaterialDTO[]) {
+function onUpdateSupplierMaterials(data: UpdateSupplierMaterialDTO[]) {
   if (isNaN(Number(supplierId))) return router.back()
-	updateSupplierMaterials({id: Number(supplierId), dto})
+	updateSupplierMaterials({id: Number(supplierId), dto: {materials: data}})
 }
 
 function onCancel() {

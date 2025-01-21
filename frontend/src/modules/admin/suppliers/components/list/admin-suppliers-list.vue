@@ -4,7 +4,6 @@
 			<TableRow>
 				<TableHead>Название</TableHead>
 				<TableHead>Город</TableHead>
-				<TableHead>Адрес</TableHead>
 				<TableHead>Телефон</TableHead>
 			</TableRow>
 		</TableHeader>
@@ -17,7 +16,6 @@
 			>
 				<TableCell class="py-4 font-medium">{{ supplier.name }}</TableCell>
 				<TableCell>{{ supplier.city }}</TableCell>
-				<TableCell>{{ supplier.address }}</TableCell>
 				<TableCell>{{ supplier.contactPhone }}</TableCell>
 			</TableRow>
 		</TableBody>

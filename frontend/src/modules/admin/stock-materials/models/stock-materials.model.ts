@@ -10,7 +10,7 @@ export interface CreateStockMaterialDTO {
 	unitId: number
 	categoryId: number
 	ingredientId: number
-	barcode?: string
+	barcode: string
 	expirationPeriodInDays: number
 }
 
@@ -21,7 +21,6 @@ export interface UpdateStockMaterialDTO {
 	unitId?: number
 	categoryId?: number
 	ingredientId?: number
-	barcode?: string
 	expirationPeriodInDays?: number
 	isActive?: boolean
 }
