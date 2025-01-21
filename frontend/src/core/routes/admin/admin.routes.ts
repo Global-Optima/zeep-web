@@ -76,6 +76,37 @@ export const ADMIN_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/warehouse-stocks/pages/admin-warehouse-stock-create-page.vue'),
 	},
+	ADMIN_WAREHOUSE_DELIVERIES: {
+		path: 'warehouse-deliveries',
+		meta: {
+			title: 'Доставки на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/warehouse-deliveries/pages/admin-warehouse-deliveries-page.vue'),
+	},
+	ADMIN_WAREHOUSE_DELIVERIES_DETAILS: {
+		path: 'warehouse-deliveries/:id',
+		meta: {
+			title: 'Детали доставки на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/warehouse-deliveries/pages/admin-warehouse-deliveries-details-page.vue'
+			),
+	},
+	ADMIN_WAREHOUSE_DELIVERIES_CREATE: {
+		path: 'warehouse-deliveries/create',
+		meta: {
+			title: 'Создать доставку на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/warehouse-deliveries/pages/admin-warehouse-deliveries-create-page.vue'
+			),
+	},
 	ADMIN_STORE_STOCKS_DETAILS: {
 		path: 'store-stocks/:id',
 		meta: {
