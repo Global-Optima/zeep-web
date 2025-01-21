@@ -23,6 +23,14 @@ func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDT
 	}
 }
 
+func ConvertPackageDTOToModel(stockMaterialID uint, req *CreateStockMaterialPackagesDTO) *data.StockMaterialPackage {
+	return &data.StockMaterialPackage{
+		StockMaterialID: stockMaterialID,
+		Size:            req.Size,
+		UnitID:          req.UnitID,
+	}
+}
+
 func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMaterial) *StockMaterialsDTO {
 	return &StockMaterialsDTO{
 		ID:          stockMaterial.ID,

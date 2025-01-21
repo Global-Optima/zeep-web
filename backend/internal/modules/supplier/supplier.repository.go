@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
@@ -145,13 +144,11 @@ func (r *supplierRepository) UpsertSupplierMaterials(supplierID uint, newMateria
 func (r *supplierRepository) upsertSupplierPrice(tx *gorm.DB, supplierMaterialID uint, price data.SupplierPrice) error {
 	var existingPrice data.SupplierPrice
 	err := tx.Where("supplier_material_id = ?", supplierMaterialID).
-		Where("DATE(effective_date) = DATE(?)", time.Now()).
 		First(&existingPrice).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			price.SupplierMaterialID = supplierMaterialID
-			price.EffectiveDate = time.Now()
 			if err := tx.Create(&price).Error; err != nil {
 				return fmt.Errorf("failed to create new price: %w", err)
 			}
@@ -161,7 +158,6 @@ func (r *supplierRepository) upsertSupplierPrice(tx *gorm.DB, supplierMaterialID
 	}
 
 	existingPrice.BasePrice = price.BasePrice
-	existingPrice.EffectiveDate = time.Now()
 	if err := tx.Save(&existingPrice).Error; err != nil {
 		return fmt.Errorf("failed to update existing price: %w", err)
 	}

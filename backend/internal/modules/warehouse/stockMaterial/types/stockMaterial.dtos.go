@@ -16,6 +16,18 @@ type CreateStockMaterialDTO struct {
 	IngredientID           uint    `json:"ingredientId" binding:"required"`
 	Barcode                string  `json:"barcode"`
 	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
+
+	Packages []CreateStockMaterialPackagesDTO `json:"packages" binding:"required"`
+}
+
+type CreateStockMaterialPackagesDTO struct {
+	Size   float64 `json:"size" binding:"required,gt=0"`
+	UnitID uint    `json:"unitId" binding:"required"`
+}
+
+type UpdateStockMaterialPackagesDTO struct {
+	Size   *float64 `json:"size" binding:"omitempty,gt=0"`
+	UnitID *uint    `json:"unitId" binding:"omitempty"`
 }
 
 type UpdateStockMaterialDTO struct {

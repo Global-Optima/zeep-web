@@ -1415,27 +1415,27 @@ VALUES
 
 
 -- Insert mock data into supplier_prices
-INSERT INTO supplier_prices (supplier_material_id, base_price, effective_date)
+INSERT INTO supplier_prices (supplier_material_id, base_price)
 VALUES
     -- Prices for supplier_material_id 1
-    (1, 50.00, '2024-01-01T00:00:00Z'),
-    (1, 48.00, '2024-06-01T00:00:00Z'),
+    (1, 50.00),
+    (1, 48.00),
     
     -- Prices for supplier_material_id 2
-    (2, 25.00, '2024-01-01T00:00:00Z'),
-    (2, 24.50, '2024-07-01T00:00:00Z'),
+    (2, 25.00),
+    (2, 24.50),
     
     -- Prices for supplier_material_id 3
-    (3, 100.00, '2024-01-01T00:00:00Z'),
-    (3, 98.00, '2024-06-01T00:00:00Z'),
+    (3, 100.00),
+    (3, 98.00),
     
     -- Prices for supplier_material_id 4
-    (4, 30.00, '2024-01-01T00:00:00Z'),
-    (4, 28.00, '2024-05-01T00:00:00Z'),
+    (4, 30.00),
+    (4, 28.00),
     
     -- Prices for supplier_material_id 5
-    (5, 75.00, '2024-01-01T00:00:00Z'),
-    (5, 72.50, '2024-06-01T00:00:00Z');
+    (5, 75.00),
+    (5, 72.50);
 
 
 INSERT INTO warehouse_stocks (warehouse_id, stock_material_id, quantity)

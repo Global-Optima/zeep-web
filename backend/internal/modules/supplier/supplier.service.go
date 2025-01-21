@@ -3,7 +3,6 @@ package supplier
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
@@ -103,8 +102,7 @@ func (s *supplierService) UpsertMaterialsForSupplier(supplierID uint, dto types.
 			StockMaterialID: materialDTO.StockMaterialID,
 			SupplierPrices: []data.SupplierPrice{
 				{
-					BasePrice:     materialDTO.BasePrice,
-					EffectiveDate: time.Now(),
+					BasePrice: materialDTO.BasePrice,
 				},
 			},
 		}

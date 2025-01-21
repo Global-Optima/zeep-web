@@ -42,15 +42,7 @@ func (s *barcodeService) GenerateBarcode(req *types.GenerateBarcodeRequest) (*ty
 		return nil, errors.New("StockMaterial not found")
 	}
 
-	supplierMaterial, err := s.repo.GetSupplierMaterialByStockMaterialID(req.StockMaterialID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch supplier for StockMaterial: %w", err)
-	}
-	if supplierMaterial == nil {
-		return nil, errors.New("supplier not found for the given StockMaterial")
-	}
-
-	barcode, err := utils.GenerateUPCBarcode(*stockMaterial, supplierMaterial.SupplierID)
+	barcode, err := utils.GenerateUPCBarcode(*stockMaterial, req.SupplierID)
 	if err != nil {
 		return nil, err
 	}
