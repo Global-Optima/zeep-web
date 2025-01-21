@@ -2,7 +2,7 @@
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
-import type { SupplierDTO, SuppliersFilter } from '@/modules/admin/suppliers/models/suppliers.model'
+import type { SupplierDTO, SuppliersFilterDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import { suppliersService } from '@/modules/admin/suppliers/services/suppliers.service'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounce } from '@vueuse/core'
@@ -23,7 +23,7 @@ const debouncedSearchTerm = useDebounce(
   500
 )
 
-const filter = ref<SuppliersFilter>({})
+const filter = ref<SuppliersFilterDTO>({})
 
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1

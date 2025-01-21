@@ -1,6 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
-import type { PackageMeasure } from '../../store-stock-requests/models/stock-requests.model'
+import type { PackageMeasureWithQuantity } from '../../store-stock-requests/models/stock-requests.model'
 
 export interface WarehouseStocksDTO {
 	stockMaterial: StockMaterialResponse
@@ -8,12 +8,12 @@ export interface WarehouseStocksDTO {
 }
 
 export interface StockMaterialResponse extends StockMaterialsDTO {
-	packageMeasures: PackageMeasure
+	packageMeasures: PackageMeasureWithQuantity
 }
 
 export interface WarehouseStockMaterialDetailsDTO {
 	stockMaterial: StockMaterialsDTO
-	packageMeasure: PackageMeasure
+	packageMeasure: PackageMeasureWithQuantity
 	earliestExpirationDate?: string
 	deliveries: WarehouseStockMaterialDeliveryDTO[]
 }

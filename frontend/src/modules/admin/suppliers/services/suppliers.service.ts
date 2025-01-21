@@ -8,7 +8,7 @@ import type {
 	SupplierMaterialResponse,
 	SuppliersFilterDTO,
 	UpdateSupplierDTO,
-	UpdateSupplierMaterialDTO,
+  UpsertSupplierMaterialsDTO,
 } from '../models/suppliers.model'
 
 class SuppliersService {
@@ -54,7 +54,7 @@ class SuppliersService {
 		}
 	}
 
-	async updateSupplierMaterials(supplierId: number, data: UpdateSupplierMaterialDTO[]) {
+	async updateSupplierMaterials(supplierId: number, data: UpsertSupplierMaterialsDTO) {
 		try {
 			const response = await apiClient.put<void>(`/suppliers/${supplierId}/materials`, data)
 			return response.data

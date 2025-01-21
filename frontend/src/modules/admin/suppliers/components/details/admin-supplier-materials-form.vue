@@ -17,17 +17,16 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
-import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
 import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type {
   SupplierDTO,
+  SupplierMaterialResponse,
   UpdateSupplierMaterialDTO
 } from '@/modules/admin/suppliers/models/suppliers.model'
-import { suppliersService } from '@/modules/admin/suppliers/services/suppliers.service'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 interface UpdateSupplierMaterialForm extends UpdateSupplierMaterialDTO {
@@ -36,40 +35,26 @@ interface UpdateSupplierMaterialForm extends UpdateSupplierMaterialDTO {
 }
 
 /** Props */
-const { supplier } = defineProps<{ supplier: SupplierDTO }>()
-
-/** Emits */
+const { supplier, stockMaterials } = defineProps<{ supplier: SupplierDTO, stockMaterials: SupplierMaterialResponse[] }>()
 const emit = defineEmits<{
-  (e: 'submit', payload: UpdateSupplierMaterialDTO[]): void
-  (e: 'cancel'): void
+  (e: 'on-submit', payload: UpdateSupplierMaterialDTO[]): void
+  (e: 'on-cancel'): void
 }>()
 
-/** Toast */
 const { toast } = useToast()
 
-/** Local State */
-const stockMaterialsTableData = ref<UpdateSupplierMaterialForm[]>([])
 const openDialog = ref(false)
 
-/** Fetch Supplier Materials */
-const { data: stockMaterials, isFetching } = useQuery({
-  queryKey:   ['admin-supplier-materials', supplier.id],
-  queryFn:  () => suppliersService.getMaterialsBySupplier(supplier.id),
-  initialData: [],
-})
-
-watch(stockMaterials, materials => {
-  // stockMaterialsTableData.value = materials.map(m => ({
-  //   stockMaterialId: m.stockMaterial.id,
-  //   name: m.stockMaterial.name,
-  //   unit: m.stockMaterial.unit,
-  //   basePrice: m.basePrice,
-  // }))
-})
+const mergedStockMaterialsTableData = ref<UpdateSupplierMaterialForm[]>(stockMaterials.map(m => ({
+    stockMaterialId: m.stockMaterial.id,
+    name: m.stockMaterial.name,
+    unit: m.stockMaterial.unit,
+    basePrice: m.basePrice,
+  })))
 
 /** Add New Material */
 function addMaterial(material: StockMaterialsDTO) {
-  if (stockMaterialsTableData.value.some((item) => item.stockMaterialId === material.id)) {
+  if (mergedStockMaterialsTableData.value.some((item) => item.stockMaterialId === material.id)) {
     toast({
       title: 'Ошибка',
       description: 'Этот материал уже добавлен.',
@@ -78,7 +63,7 @@ function addMaterial(material: StockMaterialsDTO) {
     return
   }
 
-  stockMaterialsTableData.value.push({
+  mergedStockMaterialsTableData.value.push({
     stockMaterialId: material.id,
     name: material.name,
     unit: material.unit,
@@ -94,7 +79,7 @@ function addMaterial(material: StockMaterialsDTO) {
 
 /** Remove Material */
 function removeMaterial(index: number) {
-  const removed = stockMaterialsTableData.value.splice(index, 1)[0]
+  const removed = mergedStockMaterialsTableData.value.splice(index, 1)[0]
   toast({
     title: 'Удалено',
     description: `Материал "${removed.name}" удален.`,
@@ -104,7 +89,7 @@ function removeMaterial(index: number) {
 
 /** Submit Updated Materials */
 function onSubmit() {
-  if (stockMaterialsTableData.value.length === 0) {
+  if (mergedStockMaterialsTableData.value.length === 0) {
     toast({
       title: 'Ошибка',
       description: 'Добавьте хотя бы один материал перед отправкой.',
@@ -113,7 +98,7 @@ function onSubmit() {
     return
   }
 
-  const invalidMaterials = stockMaterialsTableData.value.filter((item) => item.basePrice <= 0)
+  const invalidMaterials = mergedStockMaterialsTableData.value.filter((item) => item.basePrice <= 0)
   if (invalidMaterials.length > 0) {
     toast({
       title: 'Ошибка',
@@ -123,12 +108,12 @@ function onSubmit() {
     return
   }
 
-  const payload: UpdateSupplierMaterialDTO[] = stockMaterialsTableData.value.map((item) => ({
+  const payload: UpdateSupplierMaterialDTO[] = mergedStockMaterialsTableData.value.map((item) => ({
     stockMaterialId: item.stockMaterialId,
     basePrice: item.basePrice,
   }))
 
-  emit('submit', payload)
+  emit('on-submit', payload)
   toast({
     title: 'Успех',
     description: 'Данные успешно сохранены.',
@@ -138,7 +123,7 @@ function onSubmit() {
 
 /** Cancel Form */
 function onCancel() {
-  emit('cancel')
+  emit('on-cancel')
   toast({
     title: 'Отмена',
     description: 'Действие отменено.',
@@ -204,15 +189,8 @@ function onCancel() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						<TableRow v-if="isFetching">
-							<TableCell
-								colspan="4"
-								class="py-4 text-center"
-								>Загрузка...</TableCell
-							>
-						</TableRow>
 						<TableRow
-							v-for="(item, index) in stockMaterialsTableData"
+							v-for="(item, index) in mergedStockMaterialsTableData"
 							:key="item.stockMaterialId"
 						>
 							<TableCell>{{ item.name }}</TableCell>
@@ -235,7 +213,7 @@ function onCancel() {
 								</Button>
 							</TableCell>
 						</TableRow>
-						<TableRow v-if="!isFetching && stockMaterialsTableData.length === 0">
+						<TableRow v-if="mergedStockMaterialsTableData.length === 0">
 							<TableCell
 								colspan="4"
 								class="py-4 text-center"

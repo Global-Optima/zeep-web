@@ -48,18 +48,17 @@ const openIngredientDialog = ref(false)
 const updateStockMaterialSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название материала'),
-    description: z.string().optional(),
+    description: z.string().min(1, 'Введите описание'),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас должен быть больше 0'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
-    barcode: z.string().optional(),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
   })
 )
 
 // Form Setup
-const { handleSubmit, resetForm, setFieldValue } = useForm<UpdateStockMaterialDTO>({
+const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: updateStockMaterialSchema,
   initialValues: {
     name: stockMaterial.name,
@@ -68,7 +67,6 @@ const { handleSubmit, resetForm, setFieldValue } = useForm<UpdateStockMaterialDT
     unitId: stockMaterial.unit.id,
     categoryId: stockMaterial.category.id,
     ingredientId: stockMaterial.ingredient.id,
-    barcode: stockMaterial.barcode,
     expirationPeriodInDays: stockMaterial.expirationPeriodInDays,
   },
 })
@@ -194,6 +192,24 @@ function selectIngredient(ingredient: IngredientsDTO) {
 											type="number"
 											v-bind="componentField"
 											placeholder="Введите безопасный запас"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+
+							<FormField
+								name="expirationPeriodInDays"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Срок годности (дни)</FormLabel>
+									<FormControl>
+										<Input
+											id="expirationPeriodInDays"
+											type="number"
+											v-bind="componentField"
+											placeholder="Введите минимальный срок годности в днях"
 										/>
 									</FormControl>
 									<FormMessage />

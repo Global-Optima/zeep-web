@@ -35,10 +35,10 @@ type SupplierResponse struct {
 }
 
 type UpsertSupplierMaterialsDTO struct {
-	Materials []SupplierMaterialDTO `json:"materials" binding:"required"`
+	Materials []UpdateSupplierMaterialDTO `json:"materials" binding:"required"`
 }
 
-type SupplierMaterialDTO struct {
+type UpdateSupplierMaterialDTO struct {
 	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
 	BasePrice       float64 `json:"basePrice" binding:"required,gt=0"`
 }

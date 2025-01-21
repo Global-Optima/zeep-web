@@ -41,9 +41,12 @@ export const WAREHOUSE_STOCK_REQUEST_STATUSES: StockRequestStatus[] =
 export const STORE_STOCK_REQUEST_STATUSES: StockRequestStatus[] = ALL_STOCK_REQUESTS_STATUSES
 
 export interface PackageMeasure {
-	quantity: number
 	unitsPerPackage: number
 	packageUnit: string
+}
+
+export interface PackageMeasureWithQuantity extends PackageMeasure {
+	quantity: number
 	totalUnitsInStock: number
 }
 
@@ -91,7 +94,7 @@ export interface StockRequestResponse {
 // Stock material response for a stock request
 export interface StockRequestMaterial {
 	stockMaterial: StockMaterialsDTO
-	packageMeasures: PackageMeasure
+	packageMeasures: PackageMeasureWithQuantity
 }
 
 // Filters for fetching stock requests
