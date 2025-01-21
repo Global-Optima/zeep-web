@@ -118,6 +118,7 @@ import { Button } from '@/core/components/ui/button'
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
@@ -157,7 +158,7 @@ const materialInfo = [
     value: `${initialData.stockMaterial.expirationPeriodInDays} дней`
   },
   { label: 'Штрихкод', value: initialData.stockMaterial.barcode },
-  { label: 'Количество на складе', value: initialData.packageMeasure.quantity },
+  { label: 'Количество на складе', value: initialData.quantity },
   {
     label: 'Ранняя дата истечения срока годности',
     value: initialData.earliestExpirationDate ? formatDate(new Date(initialData.earliestExpirationDate)) : "Доставки товара отсутвуют",
@@ -188,7 +189,7 @@ const schema = toTypedSchema(
 const { handleSubmit } = useForm({
   validationSchema: schema,
   initialValues: {
-    quantity: initialData.packageMeasure.quantity,
+    quantity: initialData.quantity,
     expirationDate: initialData.earliestExpirationDate?.split('T')[0],
   },
 })
