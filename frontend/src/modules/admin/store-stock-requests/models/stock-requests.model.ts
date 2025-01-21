@@ -1,6 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { StoreDTO } from '@/modules/stores/models/stores.models'
-import type { Warehouse } from '@/modules/warehouse/models/warehouse.model'
+import type { WarehouseDTO } from '@/modules/warehouse/models/warehouse.model'
 import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
 import type { UnitDTO } from '../../units/models/units.model'
 
@@ -84,7 +84,7 @@ export interface UpdateIngredientDates {
 export interface StockRequestResponse {
 	requestId: number
 	store: StoreDTO
-	warehouse: Warehouse
+	warehouse: WarehouseDTO
 	status: StockRequestStatus
 	stockMaterials: StockRequestMaterial[]
 	createdAt: string // ISO Date string

@@ -7,6 +7,7 @@ import {
 	LayoutList,
 	ListPlus,
 	Package,
+	PackageCheck,
 	Ruler,
 	ShoppingCart,
 	Store,
@@ -118,6 +119,12 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Запасы',
 		routeKey: 'ADMIN_WAREHOUSE_STOCKS',
 		icon: Blocks,
+		accessRoles: [EmployeeRole.WAREHOUSE],
+	},
+	{
+		name: 'Доставки',
+		routeKey: 'ADMIN_WAREHOUSE_DELIVERIES',
+		icon: PackageCheck,
 		accessRoles: [EmployeeRole.WAREHOUSE],
 	},
 	// Collapsible groups

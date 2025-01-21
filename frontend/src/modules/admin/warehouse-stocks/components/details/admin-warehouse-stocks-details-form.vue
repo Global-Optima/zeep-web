@@ -1,5 +1,3 @@
-<!-- TODO: TEST -->
-
 <template>
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-4xl">
 		<!-- Header -->

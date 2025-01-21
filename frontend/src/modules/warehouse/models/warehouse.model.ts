@@ -1,4 +1,4 @@
-export interface Warehouse {
+export interface WarehouseDTO {
 	id: string
 	name: string
 	facilityAddress: {
