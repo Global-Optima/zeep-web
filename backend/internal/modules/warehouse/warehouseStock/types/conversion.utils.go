@@ -8,8 +8,8 @@ import (
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 )
 
-func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) []DeliveryResponse {
-	response := make([]DeliveryResponse, len(deliveries))
+func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) []WarehouseDeliveryDTO {
+	response := make([]WarehouseDeliveryDTO, len(deliveries))
 	for i, delivery := range deliveries {
 		materials := make([]WarehouseDeliveryStockMaterialDTO, len(delivery.Materials))
 
@@ -23,7 +23,7 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 			}
 		}
 
-		response[i] = DeliveryResponse{
+		response[i] = WarehouseDeliveryDTO{
 			ID:           delivery.ID,
 			Supplier:     supplierTypes.ToSupplierResponse(delivery.Supplier),
 			Warehouse:    *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
@@ -34,7 +34,7 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 	return response
 }
 
-func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) DeliveryResponse {
+func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) WarehouseDeliveryDTO {
 	materials := make([]WarehouseDeliveryStockMaterialDTO, len(delivery.Materials))
 
 	for i, material := range delivery.Materials {
@@ -47,7 +47,7 @@ func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) DeliveryRespons
 		}
 	}
 
-	return DeliveryResponse{
+	return WarehouseDeliveryDTO{
 		ID:           delivery.ID,
 		Supplier:     supplierTypes.ToSupplierResponse(delivery.Supplier),
 		Warehouse:    *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),

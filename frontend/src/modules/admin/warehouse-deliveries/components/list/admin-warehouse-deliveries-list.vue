@@ -15,7 +15,7 @@
 				@click="handleRowClick(delivery.id)"
 			>
 				<TableCell class="py-4 font-medium">{{ delivery.supplier.name }}</TableCell>
-				<TableCell>{{ format(delivery.deliveryDate, "DD.MM.YYYY") }}</TableCell>
+				<TableCell>{{ format(delivery.deliveryDate, "dd.MM.yyyy") }}</TableCell>
 				<TableCell>{{  delivery.materials.length }}</TableCell>
 			</TableRow>
 		</TableBody>
@@ -33,12 +33,12 @@ import {
   TableHeader,
   TableRow
 } from '@/core/components/ui/table'
-import type { WarehouseDeliveriesDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
+import type { WarehouseDeliveryDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { format } from 'date-fns'
 
 
 defineProps<{
-  deliveries: WarehouseDeliveriesDTO[]
+  deliveries: WarehouseDeliveryDTO[]
 }>()
 
 

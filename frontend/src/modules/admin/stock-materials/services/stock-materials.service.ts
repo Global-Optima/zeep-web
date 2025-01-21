@@ -75,11 +75,10 @@ class StockMaterialService {
 		}
 	}
 
-	// TODO: refactor to existing endpoint
 	async getStockMaterialPackages(filter?: StockMaterialPackageFilterDTO) {
 		try {
 			const response = await apiClient.get<PaginatedResponse<StockMaterialPackagesDTO[]>>(
-				`${this.baseUrl}/packages`,
+				`/stock-material-packages`,
 				{
 					params: buildRequestFilter(filter),
 				},

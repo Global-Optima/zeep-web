@@ -14,8 +14,8 @@ import (
 type WarehouseStockService interface {
 	ReceiveInventory(warehouseID uint, req types.ReceiveWarehouseDelivery) error
 	TransferInventory(req types.TransferInventoryRequest) error
-	GetDeliveries(filter types.DeliveryFilter) ([]types.DeliveryResponse, error)
-	GetDeliveryByID(id uint) (*types.DeliveryResponse, error)
+	GetDeliveries(filter types.WarehouseDeliveryFilter) ([]types.WarehouseDeliveryDTO, error)
+	GetDeliveryByID(id uint) (*types.WarehouseDeliveryDTO, error)
 
 	AddWarehouseStockMaterial(req types.AdjustWarehouseStock) error
 	AddWarehouseStocks(warehouseID uint, req []types.AddWarehouseStockMaterial) error
@@ -122,7 +122,7 @@ func (s *warehouseStockService) TransferInventory(req types.TransferInventoryReq
 	return nil
 }
 
-func (s *warehouseStockService) GetDeliveries(filter types.DeliveryFilter) ([]types.DeliveryResponse, error) {
+func (s *warehouseStockService) GetDeliveries(filter types.WarehouseDeliveryFilter) ([]types.WarehouseDeliveryDTO, error) {
 	deliveries, err := s.repo.GetDeliveries(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch deliveries: %w", err)
@@ -131,7 +131,7 @@ func (s *warehouseStockService) GetDeliveries(filter types.DeliveryFilter) ([]ty
 	return types.DeliveriesToDeliveryResponses(deliveries), nil
 }
 
-func (s *warehouseStockService) GetDeliveryByID(id uint) (*types.DeliveryResponse, error) {
+func (s *warehouseStockService) GetDeliveryByID(id uint) (*types.WarehouseDeliveryDTO, error) {
 	var delivery data.SupplierWarehouseDelivery
 	err := s.repo.GetDeliveryByID(id, &delivery)
 	if err != nil {

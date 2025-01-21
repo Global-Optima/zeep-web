@@ -28,7 +28,7 @@ type TransferInventoryRequest struct {
 	Items             []ReceiveWarehouseStockMaterial `json:"items" binding:"required"`
 }
 
-type DeliveryResponse struct {
+type WarehouseDeliveryDTO struct {
 	ID           uint                                `json:"id"`
 	Supplier     supplierTypes.SupplierResponse      `json:"supplier"`
 	Warehouse    warehouseTypes.WarehouseResponse    `json:"warehouse"`
@@ -44,12 +44,12 @@ type WarehouseDeliveryStockMaterialDTO struct {
 	ExpirationDate time.Time                                              `json:"expirationDate"`
 }
 
-type DeliveryFilter struct {
-	WarehouseID      *uint      `form:"warehouseID"`
-	StartDate        *time.Time `form:"startDate" time_format:"2006-01-02T15:04:05Z07:00"`
-	EndDate          *time.Time `form:"endDate" time_format:"2006-01-02T15:04:05Z07:00"`
-	SearchBySupplier *string    `form:"searchBySupplier"`
+type WarehouseDeliveryFilter struct {
 	utils.BaseFilter
+	WarehouseID *uint      `form:"warehouseID"`
+	StartDate   *time.Time `form:"startDate" time_format:"2006-01-02T15:04:05Z07:00"`
+	EndDate     *time.Time `form:"endDate" time_format:"2006-01-02T15:04:05Z07:00"`
+	Search      *string    `form:"search"`
 }
 
 // stocks

@@ -76,23 +76,6 @@
 							<FormMessage />
 						</FormItem>
 					</FormField>
-
-					<FormField
-						name="expirationDate"
-						v-if="initialData.deliveries.length > 0"
-						v-slot="{ componentField }"
-					>
-						<FormItem>
-							<FormLabel>Дата истечения срока годности</FormLabel>
-							<FormControl>
-								<Input
-									type="date"
-									v-bind="componentField"
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					</FormField>
 				</form>
 			</CardContent>
 		</Card>

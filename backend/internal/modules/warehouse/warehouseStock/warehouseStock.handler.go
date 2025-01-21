@@ -72,7 +72,7 @@ func (h *WarehouseStockHandler) GetDeliveries(c *gin.Context) {
 		return
 	}
 
-	var filter types.DeliveryFilter
+	var filter types.WarehouseDeliveryFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.SupplierWarehouseDelivery{}); err != nil {
 		utils.SendBadRequestError(c, "Invalid query parameters: "+err.Error())
 		return
