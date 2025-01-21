@@ -13,7 +13,7 @@ type StockMaterialPackageRepository interface {
 	CreateMultiplePackages(packages []data.StockMaterialPackage) error
 	GetByID(id uint) (*data.StockMaterialPackage, error)
 	Update(id uint, packageEntity data.StockMaterialPackage) error
-	UpsertPackages(stockMaterialID uint, packages []types.UpdateStockMaterialPackagesDTO, tx *gorm.DB) error
+	UpsertPackages(stockMaterialID uint, packages []types.UpdateStockMaterialPackagesDTO) error
 	Delete(id uint) error
 	GetAll() ([]data.StockMaterialPackage, error)
 }
@@ -57,9 +57,9 @@ func (r *stockMaterialPackageRepository) GetAll() ([]data.StockMaterialPackage, 
 	return packages, err
 }
 
-func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, packages []types.UpdateStockMaterialPackagesDTO, tx *gorm.DB) error {
+func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, packages []types.UpdateStockMaterialPackagesDTO) error {
 	var existingPackages []data.StockMaterialPackage
-	if err := tx.Where("stock_material_id = ?", stockMaterialID).Find(&existingPackages).Error; err != nil {
+	if err := r.db.Where("stock_material_id = ?", stockMaterialID).Find(&existingPackages).Error; err != nil {
 		return fmt.Errorf("failed to fetch existing packages: %w", err)
 	}
 
@@ -71,33 +71,35 @@ func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, pa
 	processedIDs := make(map[uint]bool)
 
 	for _, pkgDTO := range packages {
+		if err := types.ValidatePackageDTO(pkgDTO); err != nil {
+			return fmt.Errorf("invalid package: %w", err)
+		}
+
 		if pkgDTO.StockMaterialPackageID != nil {
 			existing, exists := existingMap[*pkgDTO.StockMaterialPackageID]
-			if exists {
-				updatedPackage := existing
-
-				if pkgDTO.Size != nil {
-					updatedPackage.Size = *pkgDTO.Size
-				}
-				if pkgDTO.UnitID != nil {
-					updatedPackage.UnitID = *pkgDTO.UnitID
-				}
-
-				if err := tx.Model(&data.StockMaterialPackage{}).Where("id = ?", existing.ID).Updates(updatedPackage).Error; err != nil {
-					return fmt.Errorf("failed to update package: %w", err)
-				}
-
-				processedIDs[*pkgDTO.StockMaterialPackageID] = true
-			} else {
+			if !exists {
 				return fmt.Errorf("package with ID %d not found", *pkgDTO.StockMaterialPackageID)
 			}
+
+			if pkgDTO.Size != nil {
+				existing.Size = *pkgDTO.Size
+			}
+			if pkgDTO.UnitID != nil {
+				existing.UnitID = *pkgDTO.UnitID
+			}
+
+			if err := r.db.Model(&existing).Updates(existing).Error; err != nil {
+				return fmt.Errorf("failed to update package with ID %d: %w", existing.ID, err)
+			}
+
+			processedIDs[*pkgDTO.StockMaterialPackageID] = true
 		} else {
 			newPackage := data.StockMaterialPackage{
 				StockMaterialID: stockMaterialID,
 				Size:            *pkgDTO.Size,
 				UnitID:          *pkgDTO.UnitID,
 			}
-			if err := tx.Create(&newPackage).Error; err != nil {
+			if err := r.db.Create(&newPackage).Error; err != nil {
 				return fmt.Errorf("failed to create package: %w", err)
 			}
 		}
@@ -105,7 +107,7 @@ func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, pa
 
 	for _, existing := range existingPackages {
 		if !processedIDs[existing.ID] {
-			if err := tx.Delete(&existing).Unscoped().Error; err != nil {
+			if err := r.db.Delete(&existing).Error; err != nil {
 				return fmt.Errorf("failed to delete package: %w", err)
 			}
 		}

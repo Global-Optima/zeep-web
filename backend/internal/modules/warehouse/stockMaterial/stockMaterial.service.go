@@ -2,6 +2,7 @@ package stockMaterial
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
@@ -12,7 +13,7 @@ type StockMaterialService interface {
 	GetAllStockMaterials(filter *types.StockMaterialFilter) ([]types.StockMaterialsDTO, error)
 	GetStockMaterialByID(stockMaterialID uint) (*types.StockMaterialsDTO, error)
 	CreateStockMaterial(req *types.CreateStockMaterialDTO) (*types.StockMaterialsDTO, error)
-	UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialDTO) (*types.StockMaterialsDTO, error)
+	UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialDTO) error
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
 }
@@ -82,21 +83,34 @@ func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMateria
 	return stockMaterialResponse, nil
 }
 
-func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialDTO) (*types.StockMaterialsDTO, error) {
-	updated, err := s.repo.UpdateStockMaterialFields(stockMaterialID, *req)
+func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialDTO) error {
+	stockMaterial, err := s.repo.GetStockMaterialByID(stockMaterialID)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to fetch stock material: %w", err)
+	}
+
+	if stockMaterial == nil {
+		return fmt.Errorf("stock material with ID %d not found", stockMaterialID)
+	}
+
+	updatedStockMaterial, err := types.ValidateAndApplyUpdate(stockMaterial, req)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.UpdateStockMaterial(stockMaterialID, updatedStockMaterial)
+	if err != nil {
+		return fmt.Errorf("failed to update stock material: %w", err)
 	}
 
 	if len(req.Packages) != 0 {
-		s.packageRepo.UpsertPackages(stockMaterialID, req.Packages)
+		err = s.packageRepo.UpsertPackages(stockMaterialID, req.Packages)
 		if err != nil {
-			return nil, err
+			return fmt.Errorf("failed to upsert packages: %w", err)
 		}
 	}
 
-	updatedStockMaterial := types.ConvertStockMaterialToStockMaterialResponse(updated)
-	return updatedStockMaterial, nil
+	return nil
 }
 
 func (s *stockMaterialService) DeleteStockMaterial(stockMaterialID uint) error {
