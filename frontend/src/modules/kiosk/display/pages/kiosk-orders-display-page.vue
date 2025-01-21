@@ -3,16 +3,16 @@
 		<!-- Screen Content Wrapper -->
 		<div class="flex items-start w-full h-full">
 			<!-- Preparing Side -->
-			<div class="flex flex-col flex-1 bg-white p-6 h-full">
-				<div class="mb-6 text-center">
-					<h2 class="font-semibold text-3xl text-gray-800 2xl:text-4xl">Preparing</h2>
+			<div class="flex flex-col flex-1 bg-slate-800 p-6 h-full">
+				<div class="mb-8 text-center">
+					<h2 class="font-semibold text-3xl text-slate-100 2xl:text-4xl">В работе</h2>
 				</div>
 
 				<div class="flex-1">
 					<TransitionGroup
 						name="fade"
 						tag="div"
-						class="gap-2 grid grid-cols-4"
+						class="gap-2 grid grid-cols-2 md:grid-cols-3"
 						aria-live="polite"
 						type="transition"
 					>
@@ -32,27 +32,24 @@
 							v-for="i in totalPreparingPages"
 							:key="`prep-indicator-${i}`"
 							:class="[
-								'inline-block w-5 h-5 rounded-full',
-								i - 1 === preparingPageIndex ? 'bg-blue-900' : 'bg-gray-300'
+								'inline-block w-3 h-3 2xl:w-5 2xl:h-5 rounded-full',
+								i - 1 === readyPageIndex ? 'bg-blue-100' : 'bg-slate-700'
 							]"
 						></span>
 					</div>
 				</div>
 			</div>
 
-			<!-- Middle Separator -->
-			<div class="bg-gray-100 my-auto w-0.5 h-[95vh]"></div>
-
 			<!-- Ready Side -->
-			<div class="flex flex-col flex-1 bg-white p-6 h-full">
-				<div class="mb-6 text-center">
-					<h2 class="font-semibold text-3xl text-gray-800 2xl:text-4xl">Ready</h2>
+			<div class="flex flex-col flex-1 bg-slate-900 p-6 h-full">
+				<div class="mb-8 text-center">
+					<h2 class="font-semibold text-3xl text-slate-200 2xl:text-4xl">Готовы</h2>
 				</div>
 				<div class="flex-1">
 					<TransitionGroup
 						name="fade"
 						tag="div"
-						class="gap-2 grid grid-cols-4"
+						class="gap-2 grid grid-cols-2 md:grid-cols-3"
 						aria-live="polite"
 						type="transition"
 					>
@@ -71,8 +68,8 @@
 							v-for="i in totalReadyPages"
 							:key="`ready-indicator-${i}`"
 							:class="[
-								'inline-block w-5 h-5 rounded-full',
-								i - 1 === readyPageIndex ? 'bg-emerald-900' : 'bg-gray-300'
+								'inline-block w-3 h-3 2xl:w-5 2xl:h-5 rounded-full',
+								i - 1 === readyPageIndex ? 'bg-emerald-200' : 'bg-slate-700'
 							]"
 						></span>
 					</div>
@@ -86,7 +83,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 // Constants
-const ORDERS_PER_PAGE = 20; // Fixed number of orders per page
+const ORDERS_PER_PAGE = 15; // Fixed number of orders per page
 const TRANSITION_INTERVAL = 5000; // Transition interval in milliseconds
 
 // Mock Data
