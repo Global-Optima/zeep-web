@@ -627,6 +627,7 @@ CREATE TABLE
 	IF NOT EXISTS supplier_warehouse_deliveries (
 		id SERIAL PRIMARY KEY,
 		stock_material_id INT NOT NULL REFERENCES stock_materials (id) ON DELETE CASCADE,
+		package_id INT NOT NULL REFERENCES stock_material_packages (id) ON DELETE CASCADE,
 		supplier_id INT NOT NULL,
 		warehouse_id INT NOT NULL,
 		barcode VARCHAR(255) NOT NULL,

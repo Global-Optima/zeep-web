@@ -20,19 +20,25 @@ func NewWarehouseStockHandler(service WarehouseStockService) *WarehouseStockHand
 }
 
 func (h *WarehouseStockHandler) ReceiveInventory(c *gin.Context) {
-	var req types.ReceiveInventoryRequest
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusUnauthorized)
+		return
+	}
+
+	var req types.ReceiveWarehouseDelivery
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
-	if len(req.NewItems) == 0 && len(req.ExistingItems) == 0 {
+	if len(req.Materials) == 0 {
 		utils.SendBadRequestError(c, "No items provided in the request")
 		return
 	}
 
-	if err := h.service.ReceiveInventory(req); err != nil {
-		utils.SendInternalServerError(c, "failed to receive inventory")
+	if err := h.service.ReceiveInventory(warehouseID, req); err != nil {
+		utils.SendInternalServerError(c, "failed to receive inventory: "+err.Error())
 		return
 	}
 
@@ -60,19 +66,42 @@ func (h *WarehouseStockHandler) TransferInventory(c *gin.Context) {
 }
 
 func (h *WarehouseStockHandler) GetDeliveries(c *gin.Context) {
-	var filter types.DeliveryFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters: "+err.Error())
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusUnauthorized)
 		return
 	}
 
-	deliveries, err := h.service.GetDeliveries(filter.WarehouseID, filter.StartDate, filter.EndDate)
+	var filter types.DeliveryFilter
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.SupplierWarehouseDelivery{}); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters: "+err.Error())
+		return
+	}
+	filter.WarehouseID = &warehouseID
+
+	deliveries, err := h.service.GetDeliveries(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch deliveries")
 		return
 	}
 
-	utils.SendSuccessResponse(c, deliveries)
+	utils.SendSuccessResponseWithPagination(c, deliveries, filter.Pagination)
+}
+
+func (h *WarehouseStockHandler) GetDeliveryByID(c *gin.Context) {
+	deliveryID, err := utils.ParseParam(c, "id")
+	if err != nil {
+		utils.SendBadRequestInvalidParam(c, "delivery ID", err)
+		return
+	}
+
+	delivery, err := h.service.GetDeliveryByID(deliveryID)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to fetch deliveries")
+		return
+	}
+
+	utils.SendSuccessResponse(c, delivery)
 }
 
 func (h *WarehouseStockHandler) AddToStock(c *gin.Context) {

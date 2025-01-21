@@ -106,7 +106,7 @@ func (r *stockMaterialRepository) GetStockMaterialsByIDs(stockMaterialIDs []uint
 		return stockMaterials, nil // Return an empty slice if no IDs are provided
 	}
 
-	err := r.db.Where("id IN ?", stockMaterialIDs).Find(&stockMaterials).Error
+	err := r.db.Preload("Packages").Preload("Packages.Unit").Where("id IN ?", stockMaterialIDs).Find(&stockMaterials).Error
 	if err != nil {
 		return nil, err
 	}

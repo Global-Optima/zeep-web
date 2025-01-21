@@ -1,49 +1,47 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	supplierTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
+	stockMaterialPackageTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
-	"gorm.io/gorm"
 )
-
-func ConvertExistingItemsToStockRequest(items []ExistingWarehouseStockMaterial, db *gorm.DB) ([]data.StockRequestIngredient, error) {
-	converted := make([]data.StockRequestIngredient, len(items))
-
-	for i, item := range items {
-		var stockMaterial data.StockMaterial
-		err := db.Preload("Ingredient").First(&stockMaterial, "id = ?", item.StockMaterialID).Error
-		if err != nil {
-			return nil, fmt.Errorf("failed to find StockMaterial for ID %d: %w", item.StockMaterialID, err)
-		}
-
-		converted[i] = data.StockRequestIngredient{
-			IngredientID: stockMaterial.IngredientID,
-			Quantity:     item.Quantity,
-		}
-	}
-
-	return converted, nil
-}
 
 func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) []DeliveryResponse {
 	response := make([]DeliveryResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = DeliveryResponse{
-			ID:             delivery.ID,
-			StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&delivery.StockMaterial),
+			ID: delivery.ID,
+			Material: WarehouseDeliveryStockMaterialDTO{
+				StockMaterial: *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&delivery.StockMaterial),
+				Package:       stockMaterialPackageTypes.ToStockMaterialPackageResponse(&delivery.Package),
+				Quantity:      delivery.Quantity,
+			},
 			Supplier:       supplierTypes.ToSupplierResponse(delivery.Supplier),
 			Warehouse:      *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
 			Barcode:        delivery.Barcode,
-			Quantity:       delivery.Quantity,
 			DeliveryDate:   delivery.DeliveryDate,
 			ExpirationDate: delivery.ExpirationDate,
 		}
 	}
 	return response
+}
+
+func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) DeliveryResponse {
+	return DeliveryResponse{
+		ID: delivery.ID,
+		Material: WarehouseDeliveryStockMaterialDTO{
+			StockMaterial: *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&delivery.StockMaterial),
+			Package:       stockMaterialPackageTypes.ToStockMaterialPackageResponse(&delivery.Package),
+			Quantity:      delivery.Quantity,
+		},
+		Supplier:       supplierTypes.ToSupplierResponse(delivery.Supplier),
+		Warehouse:      *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
+		Barcode:        delivery.Barcode,
+		DeliveryDate:   delivery.DeliveryDate,
+		ExpirationDate: delivery.ExpirationDate,
+	}
 }
 
 func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock) WarehouseStockResponse {
