@@ -6,8 +6,8 @@ import type {
 	GetWarehouseStockFilter,
 	ReceiveWarehouseDelivery,
 	UpdateWarehouseStockDTO,
-	WarehouseDeliveriesDTO,
-	WarehouseDeliveriesFilterDTO,
+	WarehouseDeliveryDTO,
+	WarehouseDeliveryFilter,
 	WarehouseStockMaterialDetailsDTO,
 	WarehouseStocksDTO,
 } from '../models/warehouse-stock.model'
@@ -58,9 +58,9 @@ class WarehouseStocksService {
 		}
 	}
 
-	async getWarehouseDeliveries(filter?: WarehouseDeliveriesFilterDTO) {
+	async getWarehouseDeliveries(filter?: WarehouseDeliveryFilter) {
 		try {
-			const response = await apiClient.get<PaginatedResponse<WarehouseDeliveriesDTO[]>>(
+			const response = await apiClient.get<PaginatedResponse<WarehouseDeliveryDTO[]>>(
 				`/warehouses/stocks/deliveries`,
 				{ params: buildRequestFilter(filter) },
 			)
@@ -73,7 +73,7 @@ class WarehouseStocksService {
 
 	async getWarehouseDeliveryId(deliveryId: number) {
 		try {
-			const response = await apiClient.get<WarehouseDeliveriesDTO>(
+			const response = await apiClient.get<WarehouseDeliveryDTO>(
 				`/warehouses/stocks/deliveries/${deliveryId}`,
 			)
 			return response.data

@@ -16,7 +16,7 @@ type WarehouseStockRepository interface {
 	TransferStock(sourceWarehouseID, targetWarehouseID uint, items []data.StockRequestIngredient) error
 
 	GetDeliveryByID(deliveryID uint, delivery *data.SupplierWarehouseDelivery) error
-	GetDeliveries(filter types.DeliveryFilter) ([]data.SupplierWarehouseDelivery, error)
+	GetDeliveries(filter types.WarehouseDeliveryFilter) ([]data.SupplierWarehouseDelivery, error)
 
 	ConvertInventoryItemsToStockRequest(items []types.ReceiveWarehouseStockMaterial) ([]data.StockRequestIngredient, error)
 
@@ -145,7 +145,7 @@ func (r *warehouseStockRepository) GetDeliveryByID(deliveryID uint, delivery *da
 		Preload("Materials.StockMaterial.Packages.Unit").First(delivery, "id = ?", deliveryID).Error
 }
 
-func (r *warehouseStockRepository) GetDeliveries(filter types.DeliveryFilter) ([]data.SupplierWarehouseDelivery, error) {
+func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryFilter) ([]data.SupplierWarehouseDelivery, error) {
 	var deliveries []data.SupplierWarehouseDelivery
 	query := r.db.Model(&data.SupplierWarehouseDelivery{}).
 		Preload("Materials").
@@ -173,8 +173,8 @@ func (r *warehouseStockRepository) GetDeliveries(filter types.DeliveryFilter) ([
 		query = query.Where("delivery_date <= ?", *filter.EndDate)
 	}
 
-	if filter.SearchBySupplier != nil {
-		search := "%" + *filter.SearchBySupplier + "%"
+	if filter.Search != nil {
+		search := "%" + *filter.Search + "%"
 		query = query.Where("suppliers.name ILIKE ?", search)
 	}
 

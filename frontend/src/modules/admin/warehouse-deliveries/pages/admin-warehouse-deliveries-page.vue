@@ -36,12 +36,12 @@ import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminWarehouseDeliveriesList from '@/modules/admin/warehouse-deliveries/components/list/admin-warehouse-deliveries-list.vue'
 import AdminWarehouseDeliveriesToolbar from '@/modules/admin/warehouse-deliveries/components/list/admin-warehouse-deliveries-toolbar.vue'
-import type { WarehouseDeliveriesFilterDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
+import type { WarehouseDeliveryFilter } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { warehouseStocksService } from '@/modules/admin/warehouse-stocks/services/warehouse-stocks.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<WarehouseDeliveriesFilterDTO>({
+const filter = ref<WarehouseDeliveryFilter>({
 })
 
 const { data: warehouseDeliveriesResponse } = useQuery({
@@ -49,7 +49,7 @@ const { data: warehouseDeliveriesResponse } = useQuery({
   queryFn: () => warehouseStocksService.getWarehouseDeliveries(filter.value),
 })
 
-function updateFilter(updatedFilter: WarehouseDeliveriesFilterDTO) {
+function updateFilter(updatedFilter: WarehouseDeliveryFilter) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 
