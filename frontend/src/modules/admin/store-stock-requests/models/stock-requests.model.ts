@@ -2,6 +2,7 @@ import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { StoreDTO } from '@/modules/stores/models/stores.models'
 import type { Warehouse } from '@/modules/warehouse/models/warehouse.model'
 import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
+import type { UnitDTO } from '../../units/models/units.model'
 
 export enum StockRequestStatus {
 	CREATED = 'CREATED',
@@ -41,8 +42,9 @@ export const WAREHOUSE_STOCK_REQUEST_STATUSES: StockRequestStatus[] =
 export const STORE_STOCK_REQUEST_STATUSES: StockRequestStatus[] = ALL_STOCK_REQUESTS_STATUSES
 
 export interface PackageMeasure {
+	size: number
 	unitsPerPackage: number
-	packageUnit: string
+	packageUnit: UnitDTO
 }
 
 export interface PackageMeasureWithQuantity extends PackageMeasure {
