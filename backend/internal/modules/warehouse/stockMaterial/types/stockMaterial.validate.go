@@ -2,15 +2,20 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockMaterialDTO) error {
+func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockMaterialDTO) (*data.StockMaterial, error) {
+	if stockMaterial == nil {
+		return nil, errors.New("stockMaterial cannot be nil")
+	}
+
 	if req.Name != nil {
 		if *req.Name == "" {
-			return errors.New("stockMaterial name cannot be empty")
+			return nil, errors.New("stockMaterial name cannot be empty")
 		}
 		stockMaterial.Name = *req.Name
 	}
@@ -21,7 +26,7 @@ func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockM
 
 	if req.SafetyStock != nil {
 		if *req.SafetyStock <= 0 {
-			return errors.New("stockMaterial safety stock must be greater than zero")
+			return nil, errors.New("stockMaterial safety stock must be greater than zero")
 		}
 		stockMaterial.SafetyStock = *req.SafetyStock
 	}
@@ -51,6 +56,30 @@ func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockM
 	}
 
 	stockMaterial.UpdatedAt = time.Now()
+
+	return stockMaterial, nil
+}
+
+func ValidatePackageUpdates(pkg *data.StockMaterialPackage, dto *UpdateStockMaterialPackagesDTO) error {
+	if dto.Size != nil && *dto.Size <= 0 {
+		return fmt.Errorf("invalid size for package ID %d", *dto.ID)
+	}
+	if dto.UnitID != nil && *dto.UnitID == 0 {
+		return fmt.Errorf("invalid unit ID for package ID %d", *dto.ID)
+	}
+	return nil
+}
+
+func ValidatePackageDTO(pkgDTO UpdateStockMaterialPackagesDTO) error {
+	if pkgDTO.ID == nil && pkgDTO.Size == nil && pkgDTO.UnitID == nil {
+		return fmt.Errorf("empty package object is not allowed")
+	}
+
+	if pkgDTO.ID == nil {
+		if pkgDTO.Size == nil || pkgDTO.UnitID == nil {
+			return fmt.Errorf("new packages must have both size and unitId")
+		}
+	}
 
 	return nil
 }

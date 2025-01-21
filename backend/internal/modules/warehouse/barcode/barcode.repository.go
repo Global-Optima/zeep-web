@@ -93,7 +93,7 @@ func (r *barcodeRepository) AssignBarcode(barcode string, stockMaterialID uint) 
 
 func (r *barcodeRepository) GetStockMaterialByBarcode(barcode string) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
-	err := r.db.Preload("Unit").Preload("StockMaterialCategory").Preload("Package").Where("barcode = ?", barcode).First(&stockMaterial).Error
+	err := r.db.Preload("Unit").Preload("StockMaterialCategory").Preload("Packages").Where("barcode = ?", barcode).First(&stockMaterial).Error
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (r *barcodeRepository) GetStockMaterialByBarcode(barcode string) (*data.Sto
 
 func (r *barcodeRepository) GetStockMaterialBeforeDeletion(stockMaterialID uint) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
-	err := r.db.Preload("Unit").Preload("Package").First(&stockMaterial, stockMaterialID).Error
+	err := r.db.Preload("Unit").Preload("Packages").First(&stockMaterial, stockMaterialID).Error
 	if err != nil {
 		return nil, err
 	}

@@ -1,20 +1,21 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
-import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
-import type { PackageMeasure } from '../../store-stock-requests/models/stock-requests.model'
+import type { WarehouseDTO } from '@/modules/warehouse/models/warehouse.model'
+import type {
+	StockMaterialPackagesDTO,
+	StockMaterialsDTO,
+} from '../../stock-materials/models/stock-materials.model'
+import type { SupplierDTO } from '../../suppliers/models/suppliers.model'
 
 export interface WarehouseStocksDTO {
-	stockMaterial: StockMaterialResponse
+	stockMaterial: StockMaterialsDTO
+	quantity: number
 	earliestExpirationDate: string
-}
-
-export interface StockMaterialResponse extends StockMaterialsDTO {
-	packageMeasures: PackageMeasure
 }
 
 export interface WarehouseStockMaterialDetailsDTO {
 	stockMaterial: StockMaterialsDTO
-	packageMeasure: PackageMeasure
-	earliestExpirationDate: string
+	quantity: number
+	earliestExpirationDate?: string
 	deliveries: WarehouseStockMaterialDeliveryDTO[]
 }
 
@@ -38,10 +39,45 @@ export interface GetWarehouseStockFilter extends PaginationParams {
 
 export interface UpdateWarehouseStockDTO {
 	quantity: number
-	expirationDate: Date
+	expirationDate?: Date
 }
 
 export interface AddMultipleWarehouseStockDTO {
 	stockMaterialId: number
 	quantity: number
+}
+
+export interface WarehouseDeliveriesDTO {
+	id: number
+	barcode: string
+	quantity: number
+	materials: WarehouseDeliveryStockMaterialDTO[]
+	supplier: SupplierDTO
+	warehouse: WarehouseDTO
+	deliveryDate: Date
+	expirationDate: Date
+}
+
+export interface WarehouseDeliveryStockMaterialDTO {
+	stockMaterial: StockMaterialsDTO
+	package: StockMaterialPackagesDTO
+	quantity: number
+}
+
+export interface ReceiveWarehouseDelivery {
+	supplierId: number
+	materials: ReceiveWarehouseStockMaterial[]
+}
+
+export interface ReceiveWarehouseStockMaterial {
+	stockMaterialId: number
+	quantity: number
+	packageId: number
+}
+
+export interface WarehouseDeliveriesFilterDTO extends PaginationParams {
+	search?: string
+	warehouseId?: number
+	startDate?: Date
+	endDate?: Date
 }

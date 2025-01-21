@@ -1,29 +1,18 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
-
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 	items := make([]StockRequestMaterial, len(request.Ingredients))
 	for i, ingredient := range request.Ingredients {
-		var packageMeasures utils.PackageMeasure
-
-		packageMeasures, err := utils.ReturnPackageMeasure(ingredient, ingredient.Quantity)
-		if err != nil {
-			panic(fmt.Sprintf("Critical error: %v", err))
-		}
-
 		items[i] = StockRequestMaterial{
-			StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&ingredient.StockMaterial),
-			PackageMeasure: packageMeasures,
+			StockMaterial: *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&ingredient.StockMaterial),
+			Quantity:      ingredient.Quantity,
 		}
 	}
 
@@ -43,6 +32,7 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 				Longitude: *request.Store.FacilityAddress.Longitude,
 				Latitude:  *request.Store.FacilityAddress.Latitude,
 			},
+			StoreHours: request.Store.StoreHours,
 		},
 		Warehouse:      *warehouseTypes.ToWarehouseResponse(request.Warehouse),
 		Status:         request.Status,

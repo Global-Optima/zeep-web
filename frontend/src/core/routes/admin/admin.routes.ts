@@ -3,6 +3,7 @@ import { ADMIN_ADDITIVES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-addit
 import { ADMIN_INGREDIENTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-ingredients.routes'
 import { ADMIN_PRODUCTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-products.routes'
 import { ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-stock-materials.routes'
+import { ADMIN_SUPPLIERS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-suppliers.routes'
 import { ADMIN_UNITS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-units.routes'
 import type { AppRouteRecord, ParentRoutePage } from '../../config/routes.config'
 import { ADMIN_EMPLOYEES_CHILDREN_ROUTES } from './admin-employees.routes'
@@ -14,6 +15,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_UNITS_CHILDREN_ROUTES,
 	...ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES,
 	...ADMIN_EMPLOYEES_CHILDREN_ROUTES,
+	...ADMIN_SUPPLIERS_CHILDREN_ROUTES,
 
 	ADMIN_DASHBOARD: {
 		path: '',
@@ -74,6 +76,37 @@ export const ADMIN_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/warehouse-stocks/pages/admin-warehouse-stock-create-page.vue'),
 	},
+	ADMIN_WAREHOUSE_DELIVERIES: {
+		path: 'warehouse-deliveries',
+		meta: {
+			title: 'Доставки на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/warehouse-deliveries/pages/admin-warehouse-deliveries-page.vue'),
+	},
+	ADMIN_WAREHOUSE_DELIVERIES_DETAILS: {
+		path: 'warehouse-deliveries/:id',
+		meta: {
+			title: 'Детали доставки на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/warehouse-deliveries/pages/admin-warehouse-deliveries-details-page.vue'
+			),
+	},
+	ADMIN_WAREHOUSE_DELIVERIES_CREATE: {
+		path: 'warehouse-deliveries/create',
+		meta: {
+			title: 'Создать доставку на склад',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/warehouse-deliveries/pages/admin-warehouse-deliveries-create-page.vue'
+			),
+	},
 	ADMIN_STORE_STOCKS_DETAILS: {
 		path: 'store-stocks/:id',
 		meta: {
@@ -91,30 +124,6 @@ export const ADMIN_CHILDREN_ROUTES = {
 		},
 		component: () =>
 			import('@/modules/admin/store-stocks/pages/admin-store-stocks-create-page.vue'),
-	},
-	ADMIN_SUPPLIERS: {
-		path: 'suppliers',
-		meta: {
-			title: 'Постащики',
-			requiresAuth: true,
-		},
-		component: () => import('@/modules/admin/suppliers/pages/admin-suppliers-page.vue'),
-	},
-	ADMIN_CREATE_SUPPLIER: {
-		path: 'suppliers/create',
-		meta: {
-			title: 'Создать постащика',
-			requiresAuth: true,
-		},
-		component: () => import('@/modules/admin/suppliers/pages/admin-suppliers-create-page.vue'),
-	},
-	ADMIN_SUPPLIERS_DETAILS: {
-		path: 'suppliers/:id',
-		meta: {
-			title: 'Детали постащика',
-			requiresAuth: true,
-		},
-		component: () => import('@/modules/admin/suppliers/pages/admin-suppliers-details-page.vue'),
 	},
 	ADMIN_STORES: {
 		path: 'stores',

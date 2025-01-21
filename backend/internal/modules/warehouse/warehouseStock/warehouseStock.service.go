@@ -9,7 +9,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type WarehouseStockService interface {
@@ -243,16 +242,7 @@ func (s *warehouseStockService) GetStock(query *types.GetWarehouseStockFilterQue
 
 	responses := make([]types.WarehouseStockResponse, len(stocks))
 	for i, stock := range stocks {
-		if stock.StockMaterial.Package == nil {
-			return nil, fmt.Errorf("package measures not found for StockMaterialID %d", stock.StockMaterialID)
-		}
-
-		packageMeasures, err := utils.ReturnPackageMeasureForStockMaterial(stock.StockMaterial, stock.TotalQuantity)
-		if err != nil {
-			return nil, err
-		}
-
-		responses[i] = types.ToWarehouseStockResponse(stock, packageMeasures)
+		responses[i] = types.ToWarehouseStockResponse(stock)
 	}
 
 	return responses, nil
@@ -281,15 +271,7 @@ func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehou
 		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)
 	}
 
-	packageMeasure, err := utils.ReturnPackageMeasureForStockMaterial(
-		aggregatedStock.StockMaterial,
-		aggregatedStock.TotalQuantity,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	details := types.ToStockMaterialDetails(*aggregatedStock, packageMeasure, deliveries)
+	details := types.ToStockMaterialDetails(*aggregatedStock, deliveries)
 
 	return &details, nil
 }
@@ -300,12 +282,19 @@ func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, d
 		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
 	}
 
-	if err := s.repo.UpdateExpirationDate(stock.StockMaterialID, stock.WarehouseID, dto.ExpirationDate); err != nil {
-		return fmt.Errorf("failed to update expiration date: %w", err)
+	if dto.ExpirationDate == nil && dto.Quantity == nil {
+		return fmt.Errorf("nothing to update")
 	}
 
-	if err := s.repo.UpdateStockQuantity(stock.ID, dto.Quantity); err != nil {
-		return fmt.Errorf("failed to update stock quantity: %w", err)
+	if dto.ExpirationDate != nil {
+		if err := s.repo.UpdateExpirationDate(stock.StockMaterialID, stock.WarehouseID, *dto.ExpirationDate); err != nil {
+			return fmt.Errorf("failed to update expiration date: %w", err)
+		}
+	}
+	if dto.Quantity != nil {
+		if err := s.repo.UpdateStockQuantity(stock.ID, *dto.Quantity); err != nil {
+			return fmt.Errorf("failed to update stock quantity: %w", err)
+		}
 	}
 
 	return nil

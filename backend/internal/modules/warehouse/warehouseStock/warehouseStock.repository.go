@@ -158,7 +158,17 @@ func (r *warehouseStockRepository) GetDeliveryByID(deliveryID uint, delivery *da
 
 func (r *warehouseStockRepository) GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]data.SupplierWarehouseDelivery, error) {
 	var deliveries []data.SupplierWarehouseDelivery
-	query := r.db.Model(&data.SupplierWarehouseDelivery{})
+	query := r.db.Model(&data.SupplierWarehouseDelivery{}).
+		Preload("Supplier").
+		Preload("Warehouse").
+		Preload("StockMaterial").
+		Preload("StockMaterial.Unit").
+		Preload("StockMaterial.Ingredient").
+		Preload("StockMaterial.Ingredient.Unit").
+		Preload("StockMaterial.Ingredient.IngredientCategory").
+		Preload("StockMaterial.StockMaterialCategory").
+		Preload("StockMaterial.Packages").
+		Preload("StockMaterial.Packages.Unit")
 
 	if warehouseID != nil {
 		query = query.Where("warehouse_id = ?", *warehouseID)
@@ -340,7 +350,7 @@ func (r *warehouseStockRepository) getSupplierDeliveriesForStock(stockMaterialID
 		Preload("Supplier").
 		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
 		Find(&deliveries).Error
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("failed to fetch deliveries for stock material: %w", err)
 	}
 	return deliveries, nil
@@ -349,7 +359,7 @@ func (r *warehouseStockRepository) getSupplierDeliveriesForStock(stockMaterialID
 func (r *warehouseStockRepository) getSupplierDeliveries(filter *types.GetWarehouseStockFilterQuery) ([]data.SupplierWarehouseDelivery, error) {
 	var deliveries []data.SupplierWarehouseDelivery
 
-	query := r.db.Model(&data.SupplierWarehouseDelivery{})
+	query := r.db.Model(&data.SupplierWarehouseDelivery{}).Preload("Supplier")
 
 	if filter.WarehouseID != nil {
 		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
@@ -359,7 +369,7 @@ func (r *warehouseStockRepository) getSupplierDeliveries(filter *types.GetWareho
 		query = query.Where("stock_material_id = ?", *filter.StockMaterialID)
 	}
 
-	if err := query.Find(&deliveries).Error; err != nil {
+	if err := query.Find(&deliveries).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("failed to fetch supplier deliveries: %w", err)
 	}
 
@@ -375,8 +385,8 @@ func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID, warehouseI
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit").
+		Preload("StockMaterial.Packages").
+		Preload("StockMaterial.Packages.Unit").
 		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
 		First(&stock).Error
 	if err != nil {
@@ -396,9 +406,9 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit").
-		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
+		Preload("StockMaterial.Packages").
+		Preload("StockMaterial.Packages.Unit").
+		Joins("LEFT JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 
 	// Apply filters
@@ -419,13 +429,15 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	}
 
 	if filter.IsExpiring != nil && *filter.IsExpiring {
-		days := 1095 // Default to 1095 days if not specified, as said
+		days := 1095 
 		if filter.ExpirationDays != nil {
 			days = *filter.ExpirationDays
 		}
 
 		expirationThreshold := time.Now().AddDate(0, 0, days)
-		query = query.Where("supplier_warehouse_deliveries.expiration_date <= ?", expirationThreshold)
+		query = query.Where(`
+			supplier_warehouse_deliveries.expiration_date <= ? 
+			OR supplier_warehouse_deliveries.expiration_date IS NULL`, expirationThreshold)
 	}
 
 	if filter.CategoryID != nil {

@@ -1,5 +1,3 @@
-<!-- TODO: TEST -->
-
 <template>
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-4xl">
 		<!-- Header -->
@@ -81,6 +79,7 @@
 
 					<FormField
 						name="expirationDate"
+						v-if="initialData.deliveries.length > 0"
 						v-slot="{ componentField }"
 					>
 						<FormItem>
@@ -119,6 +118,7 @@ import { Button } from '@/core/components/ui/button'
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
@@ -158,10 +158,10 @@ const materialInfo = [
     value: `${initialData.stockMaterial.expirationPeriodInDays} дней`
   },
   { label: 'Штрихкод', value: initialData.stockMaterial.barcode },
-  { label: 'Количество на складе', value: initialData.packageMeasure.quantity },
+  { label: 'Количество на складе', value: initialData.quantity },
   {
     label: 'Ранняя дата истечения срока годности',
-    value: formatDate(new Date(initialData.earliestExpirationDate)),
+    value: initialData.earliestExpirationDate ? formatDate(new Date(initialData.earliestExpirationDate)) : "Доставки товара отсутвуют",
   },
 ]
 
@@ -181,7 +181,7 @@ const schema = toTypedSchema(
       .number()
       .min(1, 'Количество должно быть не менее 1')
       .refine((value) => Number.isInteger(value), 'Количество должно быть целым числом'),
-    expirationDate: z.string().min(1, 'Дата истечения срока годности обязательна'),
+    expirationDate: z.string().optional()
   })
 )
 
@@ -189,8 +189,8 @@ const schema = toTypedSchema(
 const { handleSubmit } = useForm({
   validationSchema: schema,
   initialValues: {
-    quantity: initialData.packageMeasure.quantity,
-    expirationDate: initialData.earliestExpirationDate.split('T')[0],
+    quantity: initialData.quantity,
+    expirationDate: initialData.earliestExpirationDate?.split('T')[0],
   },
 })
 
@@ -198,7 +198,7 @@ const { handleSubmit } = useForm({
 const onSubmit = handleSubmit((formValues) => {
   const dto: UpdateWarehouseStockDTO = {
     quantity: formValues.quantity,
-    expirationDate: new Date(formValues.expirationDate),
+    expirationDate: formValues.expirationDate ? new Date(formValues.expirationDate) : undefined,
   }
 
   emit('onSubmit', dto)

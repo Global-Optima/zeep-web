@@ -97,6 +97,7 @@ import {
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
+import type { StockRequestMaterial } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { Trash } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 
@@ -107,10 +108,7 @@ export interface StockRequestItemForm {
 }
 
 const props = defineProps<{
-	initialData: {
-		stockMaterial: { id: number; name: string }
-		packageMeasures: { quantity: number }
-	}[]
+	initialData: StockRequestMaterial[]
 }>()
 
 const emit = defineEmits<{
@@ -126,7 +124,7 @@ onMounted(() => {
 	stockRequestItemsForm.value = props.initialData.map((item) => ({
 		stockMaterialId: item.stockMaterial.id,
 		name: item.stockMaterial.name,
-		quantity: item.packageMeasures.quantity,
+		quantity: item.quantity,
 	}))
 })
 

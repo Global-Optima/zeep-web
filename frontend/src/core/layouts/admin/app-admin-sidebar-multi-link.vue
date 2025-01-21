@@ -13,7 +13,7 @@
 						:is="item.icon"
 						class="w-5 h-5"
 					/>
-					<span class='text-left'>{{ item.label }}</span>
+					<span class="text-left">{{ item.label }}</span>
 				</div>
 				<CaretSortIcon class="w-4 h-4 text-gray-500" />
 			</div>
@@ -39,12 +39,12 @@
 
 <script setup lang="ts">
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
 } from '@/core/components/ui/collapsible'
 import { getRouteName, type RouteKey } from '@/core/config/routes.config'
-import type { CollapsibleNavItem } from '@/core/layouts/admin/app-admin-links.constants'
+import type { CollapsibleNavItem } from '@/core/layouts/admin/app-admin-sidebar-links.constants'
 import { CaretSortIcon } from '@radix-icons/vue'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'

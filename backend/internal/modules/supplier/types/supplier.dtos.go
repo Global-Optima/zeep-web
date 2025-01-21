@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -33,35 +34,22 @@ type SupplierResponse struct {
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
-// SupplierMaterial
-type CreateSupplierMaterialDTO struct {
+type UpsertSupplierMaterialsDTO struct {
+	Materials []UpdateSupplierMaterialDTO `json:"materials" binding:"required"`
+}
+
+type UpdateSupplierMaterialDTO struct {
 	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
 	BasePrice       float64 `json:"basePrice" binding:"required,gt=0"`
 }
 
 type SupplierMaterialResponse struct {
-	StockMaterial StockMaterialDTO `json:"stockMaterial"`
-	BasePrice     float64          `json:"basePrice"`
-	EffectiveDate time.Time        `json:"effectiveDate"`
+	StockMaterial SupplierStockMaterialDTO `json:"stockMaterial"`
+	BasePrice     float64                  `json:"basePrice"`
 }
 
-type SupplierDTO struct {
-	ID           uint   `json:"id"`
-	Name         string `json:"name"`
-	ContactEmail string `json:"contactEmail"`
-	ContactPhone string `json:"contactPhone"`
-	City         string `json:"city"`
-	Address      string `json:"address"`
-}
-
-type StockMaterialDTO struct {
-	ID                   uint    `json:"id"`
-	Name                 string  `json:"name"`
-	Description          string  `json:"description"`
-	Category             string  `json:"category"`
-	SafetyStock          float64 `json:"safetyStock"`
-	Barcode              string  `json:"barcode"`
-	utils.PackageMeasure `json:"packageMeasures"`
+type SupplierStockMaterialDTO struct {
+	stockMaterialTypes.StockMaterialsDTO
 }
 
 type SuppliersFilter struct {

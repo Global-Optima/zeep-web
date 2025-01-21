@@ -1,5 +1,4 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
-import type { SuppliersDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '../../stock-material-categories/models/stock-material-categories.model'
 import type { UnitDTO } from '../../units/models/units.model'
@@ -9,11 +8,23 @@ export interface CreateStockMaterialDTO {
 	description?: string
 	safetyStock: number
 	unitId: number
-	supplierId: number
 	categoryId: number
 	ingredientId: number
-	barcode?: string
+	barcode: string
 	expirationPeriodInDays: number
+
+	packages: CreateStockMaterialPackagesDTO[]
+}
+
+export interface CreateStockMaterialPackagesDTO {
+	size: number
+	unitId: number
+}
+
+export interface UpdateStockMaterialPackagesDTO {
+	id?: number
+	size: number
+	unitId: number
 }
 
 export interface UpdateStockMaterialDTO {
@@ -22,11 +33,10 @@ export interface UpdateStockMaterialDTO {
 	safetyStock?: number
 	unitId?: number
 	categoryId?: number
-	supplierId: number
 	ingredientId?: number
-	barcode?: string
 	expirationPeriodInDays?: number
 	isActive?: boolean
+	packages: UpdateStockMaterialPackagesDTO[]
 }
 
 export interface StockMaterialsDTO {
@@ -35,7 +45,6 @@ export interface StockMaterialsDTO {
 	description: string
 	safetyStock: number
 	unit: UnitDTO
-	supplier: SuppliersDTO
 	category: StockMaterialCategoryDTO
 	barcode: string
 	ingredient: IngredientsDTO
@@ -43,14 +52,25 @@ export interface StockMaterialsDTO {
 	isActive: boolean
 	createdAt: string
 	updatedAt: string
+	packages: StockMaterialPackagesDTO[]
 }
 
 export interface StockMaterialsFilter extends PaginationParams {
 	search?: string
 	lowStock?: boolean
 	isActive?: boolean
-	supplierId?: number
 	ingredientId?: number
 	categoryId?: number
 	expirationInDays?: number
+}
+
+export interface StockMaterialPackageFilterDTO extends PaginationParams {
+	search?: string
+	stockMaterialId?: number
+}
+
+export interface StockMaterialPackagesDTO {
+	id: number
+	size: number
+	unit: UnitDTO
 }

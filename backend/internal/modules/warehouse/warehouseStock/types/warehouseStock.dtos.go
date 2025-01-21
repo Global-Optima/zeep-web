@@ -3,7 +3,10 @@ package types
 import (
 	"time"
 
+	supplierTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
+
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -44,14 +47,14 @@ type TransferInventoryRequest struct {
 }
 
 type DeliveryResponse struct {
-	ID              uint      `json:"id"`
-	StockMaterialID uint      `json:"stockMaterialId"`
-	SupplierID      uint      `json:"supplierId"`
-	WarehouseID     uint      `json:"warehouseId"`
-	Barcode         string    `json:"barcode"`
-	Quantity        float64   `json:"quantity"`
-	DeliveryDate    time.Time `json:"deliveryDate"`
-	ExpirationDate  time.Time `json:"expirationDate"`
+	ID             uint                                 `json:"id"`
+	Barcode        string                               `json:"barcode"`
+	Quantity       float64                              `json:"quantity"`
+	StockMaterial  stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
+	Supplier       supplierTypes.SupplierResponse       `json:"supplier"`
+	Warehouse      warehouseTypes.WarehouseResponse     `json:"warehouse"`
+	DeliveryDate   time.Time                            `json:"deliveryDate"`
+	ExpirationDate time.Time                            `json:"expirationDate"`
 }
 
 type DeliveryFilter struct {
@@ -74,8 +77,8 @@ type GetWarehouseStockFilterQuery struct {
 }
 
 type UpdateWarehouseStockDTO struct {
-	Quantity       float64   `json:"quantity" binding:"required,gt=0"`
-	ExpirationDate time.Time `json:"expirationDate" binding:"required"`
+	Quantity       *float64   `json:"quantity" binding:"omitempty,gt=0"`
+	ExpirationDate *time.Time `json:"expirationDate" binding:"omitempty"`
 }
 
 type AddWarehouseStockMaterial struct {
@@ -91,24 +94,24 @@ type AdjustWarehouseStock struct {
 
 type WarehouseStockResponse struct {
 	StockMaterial          StockMaterialResponse `json:"stockMaterial"`
+	Quantity               float64               `json:"quantity"`
 	EarliestExpirationDate *time.Time            `json:"earliestExpirationDate,omitempty"`
 }
 
 type StockMaterialResponse struct {
 	stockMaterialTypes.StockMaterialsDTO
-	utils.PackageMeasure `json:"packageMeasures"`
 }
 
 type WarehouseStockMaterialDetailsDTO struct {
 	StockMaterial          stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
-	PackageMeasure         utils.PackageMeasure                 `json:"packageMeasure"`
+	Quantity               float64                              `json:"quantity"`
 	EarliestExpirationDate *time.Time                           `json:"earliestExpirationDate,omitempty"`
 	Deliveries             []StockMaterialDeliveryDTO           `json:"deliveries"`
 }
 
 type StockMaterialDeliveryDTO struct {
-	Supplier       string    `json:"supplierName"`
-	Quantity       float64   `json:"quantity"`
-	DeliveryDate   time.Time `json:"deliveryDate"`
-	ExpirationDate time.Time `json:"expirationDate"`
+	Supplier       supplierTypes.SupplierResponse `json:"supplier"`
+	Quantity       float64                        `json:"quantity"`
+	DeliveryDate   time.Time                      `json:"deliveryDate"`
+	ExpirationDate time.Time                      `json:"expirationDate"`
 }

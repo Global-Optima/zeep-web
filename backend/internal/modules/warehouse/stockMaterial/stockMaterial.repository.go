@@ -15,8 +15,7 @@ type StockMaterialRepository interface {
 	GetStockMaterialsByIDs(stockMaterialIDs []uint) ([]data.StockMaterial, error)
 	CreateStockMaterial(stockMaterial *data.StockMaterial) error
 	CreateStockMaterials(stockMaterials []data.StockMaterial) error
-	CreateSupplierMaterial(supplierMaterial *data.SupplierMaterial) error
-	UpdateStockMaterial(stockMaterial *data.StockMaterial) error
+	UpdateStockMaterial(id uint, stockMaterial *data.StockMaterial) error
 	UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error)
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
@@ -36,11 +35,11 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 	var stockMaterials []data.StockMaterial
 	query := r.db.Model(&data.StockMaterial{}).
 		Preload("Unit").
-		Preload("Package").
 		Preload("StockMaterialCategory").
 		Preload("Ingredient").
 		Preload("Ingredient.IngredientCategory").
-		Preload("Ingredient.Unit")
+		Preload("Ingredient.Unit").
+		Preload("Packages").Preload("Packages.Unit")
 
 	query = query.Where("is_active = ?", true)
 
@@ -57,11 +56,6 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 
 		if filter.IsActive != nil {
 			query = query.Where("is_active = ?", *filter.IsActive)
-		}
-
-		if filter.SupplierID != nil {
-			query = query.Joins("JOIN supplier_materials ON supplier_materials.stock_material_id = stock_materials.id").
-				Where("supplier_materials.supplier_id = ?", *filter.SupplierID)
 		}
 
 		if filter.IngredientID != nil {
@@ -95,11 +89,10 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 func (r *stockMaterialRepository) GetStockMaterialByID(stockMaterialID uint) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
 	err := r.db.Preload("Unit").
-		Preload("Package").
 		Preload("StockMaterialCategory").
 		Preload("Ingredient").
 		Preload("Ingredient.IngredientCategory").
-		Preload("Ingredient.Unit").
+		Preload("Ingredient.Unit").Preload("Packages").Preload("Packages.Unit").
 		First(&stockMaterial, stockMaterialID).Error
 	if err != nil {
 		return nil, err
@@ -129,12 +122,8 @@ func (r *stockMaterialRepository) CreateStockMaterials(stockMaterials []data.Sto
 	return r.db.Create(&stockMaterials).Error
 }
 
-func (r *stockMaterialRepository) CreateSupplierMaterial(supplierMaterial *data.SupplierMaterial) error {
-	return r.db.Create(supplierMaterial).Error
-}
-
-func (r *stockMaterialRepository) UpdateStockMaterial(stockMaterial *data.StockMaterial) error {
-	return r.db.Save(stockMaterial).Error
+func (r *stockMaterialRepository) UpdateStockMaterial(id uint, stockMaterial *data.StockMaterial) error {
+	return r.db.Model(&data.StockMaterial{}).Where("id = ?", id).Updates(stockMaterial).Error
 }
 
 func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error) {
@@ -151,7 +140,7 @@ func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint
 		return nil, err
 	}
 
-	if err := r.db.Preload("Unit").Preload("Package").First(&stockMaterial, stockMaterialID).Error; err != nil {
+	if err := r.db.Preload("Unit").Preload("Packages").First(&stockMaterial, stockMaterialID).Error; err != nil {
 		return nil, err
 	}
 

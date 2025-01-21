@@ -200,7 +200,7 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 		router.PUT("/:id", handler.UpdateSupplier)
 		router.DELETE("/:id", handler.DeleteSupplier)
 
-		router.POST("/:id/materials", handler.AssociateMaterialToSupplier)
+		router.PUT("/:id/materials", handler.UpsertMaterialsForSupplier)
 		router.GET("/:id/materials", handler.GetMaterialsBySupplier)
 	}
 }

@@ -4,10 +4,10 @@ import {
 	Apple,
 	Blocks,
 	ChartBar,
-	FileBox,
 	LayoutList,
 	ListPlus,
 	Package,
+	PackageCheck,
 	Ruler,
 	ShoppingCart,
 	Store,
@@ -100,8 +100,8 @@ export const adminNavItems: SidebarNavItem[] = [
 	{
 		name: 'Поставщики',
 		routeKey: 'ADMIN_SUPPLIERS',
-		icon: FileBox,
-		accessRoles: [EmployeeRole.WAREHOUSE, EmployeeRole.DIRECTOR],
+		icon: Truck,
+		accessRoles: [EmployeeRole.ADMIN],
 	},
 	{
 		name: 'Запросы на склад',
@@ -119,6 +119,12 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Запасы',
 		routeKey: 'ADMIN_WAREHOUSE_STOCKS',
 		icon: Blocks,
+		accessRoles: [EmployeeRole.WAREHOUSE],
+	},
+	{
+		name: 'Доставки',
+		routeKey: 'ADMIN_WAREHOUSE_DELIVERIES',
+		icon: PackageCheck,
 		accessRoles: [EmployeeRole.WAREHOUSE],
 	},
 	// Collapsible groups

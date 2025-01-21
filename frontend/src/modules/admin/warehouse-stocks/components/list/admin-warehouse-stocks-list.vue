@@ -28,7 +28,7 @@
 				@click="handleRowClick(stock.stockMaterial.id)"
 			>
 				<TableCell class="py-4 font-medium">{{ stock.stockMaterial.name }}</TableCell>
-				<TableCell>{{ stock.stockMaterial.packageMeasures.quantity }}</TableCell>
+				<TableCell>{{ stock.quantity }}</TableCell>
 				<TableCell>{{ stock.stockMaterial.safetyStock }}</TableCell>
 
 				<!-- Unit name (hidden on small screens) -->
@@ -89,10 +89,10 @@ const INGREDIENT_STATUS_FORMATTED: Record<IngredientStatus, string> = {
 }
 
 function computeStatus(stock: WarehouseStocksDTO): IngredientStatus {
-  if (stock.stockMaterial.packageMeasures.quantity === 0) {
+  if (stock.quantity === 0) {
     return 'out_of_stock'
   }
-  if (stock.stockMaterial.packageMeasures.quantity <= stock.stockMaterial.safetyStock) {
+  if (stock.quantity <= stock.stockMaterial.safetyStock) {
     return 'low_stock'
   }
   return 'in_stock'

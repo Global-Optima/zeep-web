@@ -4,7 +4,10 @@ import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	AddMultipleWarehouseStockDTO,
 	GetWarehouseStockFilter,
+	ReceiveWarehouseDelivery,
 	UpdateWarehouseStockDTO,
+	WarehouseDeliveriesDTO,
+	WarehouseDeliveriesFilterDTO,
 	WarehouseStockMaterialDetailsDTO,
 	WarehouseStocksDTO,
 } from '../models/warehouse-stock.model'
@@ -51,6 +54,41 @@ class WarehouseStocksService {
 			return response.data
 		} catch (error) {
 			console.error(`Failed to add multiple warehouse stocks: `, error)
+			throw error
+		}
+	}
+
+	async getWarehouseDeliveries(filter?: WarehouseDeliveriesFilterDTO) {
+		try {
+			const response = await apiClient.get<PaginatedResponse<WarehouseDeliveriesDTO[]>>(
+				`/warehouses/stocks/deliveries`,
+				{ params: buildRequestFilter(filter) },
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch warehouse stock deliveries:', error)
+			throw error
+		}
+	}
+
+	async getWarehouseDeliveryId(deliveryId: number) {
+		try {
+			const response = await apiClient.get<WarehouseDeliveriesDTO>(
+				`/warehouses/stocks/deliveries/${deliveryId}`,
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch warehouse stock delivery by id:', error)
+			throw error
+		}
+	}
+
+	async receiveWarehouseDelivery(dto: ReceiveWarehouseDelivery) {
+		try {
+			const response = await apiClient.post<void>(`/warehouses/stocks/receive`, dto)
+			return response.data
+		} catch (error) {
+			console.error('Failed to receive warehouse stock delivery:', error)
 			throw error
 		}
 	}

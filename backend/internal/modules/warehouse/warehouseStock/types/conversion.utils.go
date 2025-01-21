@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	supplierTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"gorm.io/gorm"
 )
 
@@ -32,34 +33,34 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 	response := make([]DeliveryResponse, len(deliveries))
 	for i, delivery := range deliveries {
 		response[i] = DeliveryResponse{
-			ID:              delivery.ID,
-			StockMaterialID: delivery.StockMaterialID,
-			SupplierID:      delivery.SupplierID,
-			WarehouseID:     delivery.WarehouseID,
-			Barcode:         delivery.Barcode,
-			Quantity:        delivery.Quantity,
-			DeliveryDate:    delivery.DeliveryDate,
-			ExpirationDate:  delivery.ExpirationDate,
+			ID:             delivery.ID,
+			StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&delivery.StockMaterial),
+			Supplier:       supplierTypes.ToSupplierResponse(delivery.Supplier),
+			Warehouse:      *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
+			Barcode:        delivery.Barcode,
+			Quantity:       delivery.Quantity,
+			DeliveryDate:   delivery.DeliveryDate,
+			ExpirationDate: delivery.ExpirationDate,
 		}
 	}
 	return response
 }
 
-func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasure) WarehouseStockResponse {
+func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock) WarehouseStockResponse {
 	return WarehouseStockResponse{
 		StockMaterial: StockMaterialResponse{
 			*stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
-			pkgMeasure,
 		},
+		Quantity:               stock.TotalQuantity,
 		EarliestExpirationDate: stock.EarliestExpirationDate,
 	}
 }
 
-func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasure, deliveries []data.SupplierWarehouseDelivery) WarehouseStockMaterialDetailsDTO {
+func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, deliveries []data.SupplierWarehouseDelivery) WarehouseStockMaterialDetailsDTO {
 	deliveriesDTO := make([]StockMaterialDeliveryDTO, len(deliveries))
 	for i, delivery := range deliveries {
 		deliveriesDTO[i] = StockMaterialDeliveryDTO{
-			Supplier:       delivery.Supplier.Name,
+			Supplier:       supplierTypes.ToSupplierResponse(delivery.Supplier),
 			Quantity:       delivery.Quantity,
 			DeliveryDate:   delivery.DeliveryDate,
 			ExpirationDate: delivery.ExpirationDate,
@@ -68,7 +69,7 @@ func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, pkgMeasure util
 
 	return WarehouseStockMaterialDetailsDTO{
 		StockMaterial:          *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
-		PackageMeasure:         pkgMeasure,
+		Quantity:               stock.TotalQuantity,
 		EarliestExpirationDate: stock.EarliestExpirationDate,
 		Deliveries:             deliveriesDTO,
 	}

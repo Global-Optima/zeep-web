@@ -1,6 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { StoreDTO } from '@/modules/stores/models/stores.models'
-import type { Warehouse } from '@/modules/warehouse/models/warehouse.model'
+import type { WarehouseDTO } from '@/modules/warehouse/models/warehouse.model'
 import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
 
 export enum StockRequestStatus {
@@ -40,13 +40,6 @@ export const WAREHOUSE_STOCK_REQUEST_STATUSES: StockRequestStatus[] =
 
 export const STORE_STOCK_REQUEST_STATUSES: StockRequestStatus[] = ALL_STOCK_REQUESTS_STATUSES
 
-export interface PackageMeasure {
-	quantity: number
-	unitsPerPackage: number
-	packageUnit: string
-	totalUnitsInStock: number
-}
-
 // DTO for creating a stock request
 export interface CreateStockRequestDTO {
 	items: StockRequestStockMaterialDTO[]
@@ -79,7 +72,7 @@ export interface UpdateIngredientDates {
 export interface StockRequestResponse {
 	requestId: number
 	store: StoreDTO
-	warehouse: Warehouse
+	warehouse: WarehouseDTO
 	status: StockRequestStatus
 	stockMaterials: StockRequestMaterial[]
 	createdAt: string // ISO Date string
@@ -91,7 +84,7 @@ export interface StockRequestResponse {
 // Stock material response for a stock request
 export interface StockRequestMaterial {
 	stockMaterial: StockMaterialsDTO
-	packageMeasures: PackageMeasure
+	quantity: number
 }
 
 // Filters for fetching stock requests

@@ -113,29 +113,29 @@ func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponse(c, suppliers)
+	utils.SendSuccessResponseWithPagination(c, suppliers, filter.Pagination)
 }
 
-func (h *SupplierHandler) AssociateMaterialToSupplier(c *gin.Context) {
+func (h *SupplierHandler) UpsertMaterialsForSupplier(c *gin.Context) {
 	supplierID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || supplierID <= 0 {
 		utils.SendBadRequestError(c, "Invalid supplier ID")
 		return
 	}
 
-	var dto types.CreateSupplierMaterialDTO
+	var dto types.UpsertSupplierMaterialsDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, "Invalid request body")
 		return
 	}
 
-	err = h.service.AddMaterialToSupplier(uint(supplierID), dto)
+	err = h.service.UpsertMaterialsForSupplier(uint(supplierID), dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to associate material to supplier")
+		utils.SendInternalServerError(c, "Failed to upsert materials for supplier")
 		return
 	}
 
-	utils.SendMessageWithStatus(c, "Material associated with supplier successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "Materials upserted successfully", http.StatusOK)
 }
 
 func (h *SupplierHandler) GetMaterialsBySupplier(c *gin.Context) {

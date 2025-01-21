@@ -72,7 +72,7 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 		Preload("Ingredients.StockMaterial.Ingredient").
 		Preload("Ingredients.StockMaterial.Ingredient.Unit").
 		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
-		Preload("Ingredients.StockMaterial.Package.Unit").
+		Preload("Ingredients.StockMaterial.Packages.Unit").
 		Preload("Ingredients.StockMaterial.Unit")
 
 	if filter.StoreID != nil {
@@ -114,7 +114,7 @@ func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.Stoc
 		Preload("Ingredients.StockMaterial.Ingredient").
 		Preload("Ingredients.StockMaterial.Ingredient.Unit").
 		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
-		Preload("Ingredients.StockMaterial.Package.Unit").
+		Preload("Ingredients.StockMaterial.Packages.Unit").
 		Preload("Ingredients.StockMaterial.Unit").
 		First(&stockRequest, requestID).
 		Error
@@ -138,12 +138,12 @@ func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouse
 
 func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error {
 	var stockMaterial data.StockMaterial
-	if err := r.db.Preload("Package.Unit").Preload("Ingredient.Unit").
+	if err := r.db.Preload("Packages.Unit").Preload("Ingredient.Unit").
 		Where("id = ?", stockMaterialID).First(&stockMaterial).Error; err != nil {
 		return fmt.Errorf("failed to fetch stock material details for ID %d: %w", stockMaterialID, err)
 	}
 
-	quantityInUnits, err := utils.ConvertPackagesToUnits(stockMaterial, quantityInPackages)
+	quantityInUnits, err := utils.ConvertPackagesToUnits(stockMaterial, stockMaterial.UnitID, quantityInPackages)
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (r *stockRequestRepository) GetOpenCartByStoreID(storeID uint) (*data.Stock
 		Preload("Ingredients.StockMaterial.Ingredient").
 		Preload("Ingredients.StockMaterial.Ingredient.Unit").
 		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
-		Preload("Ingredients.StockMaterial.Package.Unit").
+		Preload("Ingredients.StockMaterial.Packages.Unit").
 		Preload("Ingredients.StockMaterial.Unit").
 		Where("store_id = ? AND status = ?", storeID, data.StockRequestCreated).
 		First(&request).Error

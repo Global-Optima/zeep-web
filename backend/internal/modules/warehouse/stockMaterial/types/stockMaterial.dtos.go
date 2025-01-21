@@ -4,6 +4,7 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	stockMaterialCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
+	stockMaterialPackageTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -12,11 +13,23 @@ type CreateStockMaterialDTO struct {
 	Description            string  `json:"description"`
 	SafetyStock            float64 `json:"safetyStock" binding:"required,gt=0"`
 	UnitID                 uint    `json:"unitId" binding:"required"`
-	SupplierID             uint    `json:"supplierId" binding:"required"`
 	CategoryID             uint    `json:"categoryId" binding:"required"`
 	IngredientID           uint    `json:"ingredientId" binding:"required"`
 	Barcode                string  `json:"barcode"`
 	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
+
+	Packages []CreateStockMaterialPackagesDTO `json:"packages" binding:"required"`
+}
+
+type CreateStockMaterialPackagesDTO struct {
+	Size   float64 `json:"size" binding:"required,gt=0"`
+	UnitID uint    `json:"unitId" binding:"required"`
+}
+
+type UpdateStockMaterialPackagesDTO struct {
+	ID     *uint    `json:"id"`
+	Size   *float64 `json:"size" binding:"omitempty,gt=0"`
+	UnitID *uint    `json:"unitId" binding:"omitempty"`
 }
 
 type UpdateStockMaterialDTO struct {
@@ -29,6 +42,8 @@ type UpdateStockMaterialDTO struct {
 	Barcode                *string  `json:"barcode"`
 	ExpirationPeriodInDays *int     `json:"expirationPeriodInDays"`
 	IsActive               *bool    `json:"isActive"`
+
+	Packages []UpdateStockMaterialPackagesDTO `json:"packages" binding:"omitempty"`
 }
 
 type StockMaterialsDTO struct {
@@ -42,6 +57,7 @@ type StockMaterialsDTO struct {
 	Category               stockMaterialCategoryTypes.StockMaterialCategoryResponse `json:"category"`
 	Ingredient             ingredientTypes.IngredientDTO                            `json:"ingredient"`
 	ExpirationPeriodInDays int                                                      `json:"expirationPeriodInDays"`
+	Packages               []stockMaterialPackageTypes.StockMaterialPackageResponse `json:"packages"`
 	CreatedAt              string                                                   `json:"createdAt"`
 	UpdatedAt              string                                                   `json:"updatedAt"`
 }
@@ -50,7 +66,6 @@ type StockMaterialFilter struct {
 	Search           *string `form:"search"`           // Search by name, description, or category
 	LowStock         *bool   `form:"lowStock"`         // Filter for materials below safety stock
 	IsActive         *bool   `form:"isActive"`         // Filter by active/inactive status
-	SupplierID       *uint   `form:"supplierId"`       // Filter by supplier
 	IngredientID     *uint   `form:"ingredientId"`     // Filter by ingredient
 	CategoryID       *uint   `form:"categoryId"`       // Filter by category
 	ExpirationInDays *int    `form:"expirationInDays"` // Filter by expiration period in days

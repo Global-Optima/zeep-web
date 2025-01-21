@@ -3,7 +3,6 @@ package supplier
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
@@ -16,7 +15,7 @@ type SupplierService interface {
 	DeleteSupplier(id uint) error
 	GetSuppliers(filter types.SuppliersFilter) ([]types.SupplierResponse, error)
 
-	AddMaterialToSupplier(supplierID uint, dto types.CreateSupplierMaterialDTO) error
+	UpsertMaterialsForSupplier(supplierID uint, dto types.UpsertSupplierMaterialsDTO) error
 	GetMaterialsBySupplier(supplierID uint) ([]types.SupplierMaterialResponse, error)
 }
 
@@ -95,22 +94,22 @@ func (s *supplierService) GetSuppliers(filter types.SuppliersFilter) ([]types.Su
 	return responses, nil
 }
 
-func (s *supplierService) AddMaterialToSupplier(supplierID uint, dto types.CreateSupplierMaterialDTO) error {
-	material := &data.SupplierMaterial{
-		SupplierID:      supplierID,
-		StockMaterialID: dto.StockMaterialID,
-	}
-	if err := s.repo.CreateSupplierMaterial(material); err != nil {
-		return fmt.Errorf("failed to add material to supplier: %w", err)
+func (s *supplierService) UpsertMaterialsForSupplier(supplierID uint, dto types.UpsertSupplierMaterialsDTO) error {
+	materials := make([]data.SupplierMaterial, len(dto.Materials))
+	for i, materialDTO := range dto.Materials {
+		materials[i] = data.SupplierMaterial{
+			SupplierID:      supplierID,
+			StockMaterialID: materialDTO.StockMaterialID,
+			SupplierPrices: []data.SupplierPrice{
+				{
+					BasePrice: materialDTO.BasePrice,
+				},
+			},
+		}
 	}
 
-	price := &data.SupplierPrice{
-		SupplierMaterialID: material.ID,
-		BasePrice:          dto.BasePrice,
-		EffectiveDate:      time.Now(),
-	}
-	if err := s.repo.CreateSupplierPrice(price); err != nil {
-		return fmt.Errorf("failed to set base price: %w", err)
+	if err := s.repo.UpsertSupplierMaterials(supplierID, materials); err != nil {
+		return fmt.Errorf("failed to upsert materials: %w", err)
 	}
 
 	return nil

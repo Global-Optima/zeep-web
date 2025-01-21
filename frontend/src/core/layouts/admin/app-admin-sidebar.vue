@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { getRouteName, type RouteKey } from '@/core/config/routes.config'
-import { adminNavItems, isCollapsibleNavItem } from '@/core/layouts/admin/app-admin-links.constants'
+import { adminNavItems, isCollapsibleNavItem } from '@/core/layouts/admin/app-admin-sidebar-links.constants'
 import AppAdminSidebarMultiLink from '@/core/layouts/admin/app-admin-sidebar-multi-link.vue'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { computed } from 'vue'
