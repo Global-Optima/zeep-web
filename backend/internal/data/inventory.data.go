@@ -1,6 +1,10 @@
 package data
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type StockRequestStatus string
 
@@ -52,6 +56,19 @@ type StockRequest struct {
 	Ingredients      []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
 }
 
+// Hooks for StockRequest
+func (s *StockRequest) BeforeCreate(tx *gorm.DB) (err error) {
+	UTCTime := toUTC(*s.RequestDate)
+	s.RequestDate = &UTCTime
+	return
+}
+
+func (s *StockRequest) AfterFind(tx *gorm.DB) (err error) {
+	UTCTime := toUTC(*s.RequestDate)
+	s.RequestDate = &UTCTime
+	return
+}
+
 type StockRequestIngredient struct {
 	BaseEntity
 	StockRequestID  uint          `gorm:"not null;index"`
@@ -63,6 +80,25 @@ type StockRequestIngredient struct {
 	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
 	DeliveredDate   time.Time     `gorm:"not null;default:CURRENT_TIMESTAMP" sort:"deliveryDate"` // Delivery start date
 	ExpirationDate  time.Time     `gorm:"not null" sort:"expirationDate"`                         // Calculated from DeliveredDate + ExpirationPeriodInDays
+}
+
+// Hooks for StockRequestIngredient
+func (s *StockRequestIngredient) BeforeCreate(tx *gorm.DB) (err error) {
+	s.DeliveredDate = toUTC(s.DeliveredDate)
+	s.ExpirationDate = toUTC(s.ExpirationDate)
+	return
+}
+
+func (s *StockRequestIngredient) BeforeUpdate(tx *gorm.DB) (err error) {
+	s.DeliveredDate = toUTC(s.DeliveredDate)
+	s.ExpirationDate = toUTC(s.ExpirationDate)
+	return
+}
+
+func (s *StockRequestIngredient) AfterFind(tx *gorm.DB) (err error) {
+	s.DeliveredDate = toUTC(s.DeliveredDate)
+	s.ExpirationDate = toUTC(s.ExpirationDate)
+	return
 }
 
 type Supplier struct {
@@ -149,6 +185,17 @@ type SupplierWarehouseDelivery struct {
 	DeliveryDate time.Time                           `gorm:"not null;default:CURRENT_TIMESTAMP" sort:"deliveryDate"`
 }
 
+// Hooks for SupplierWarehouseDelivery
+func (s *SupplierWarehouseDelivery) BeforeCreate(tx *gorm.DB) (err error) {
+	s.DeliveryDate = toUTC(s.DeliveryDate)
+	return
+}
+
+func (s *SupplierWarehouseDelivery) AfterFind(tx *gorm.DB) (err error) {
+	s.DeliveryDate = toUTC(s.DeliveryDate)
+	return
+}
+
 type SupplierWarehouseDeliveryMaterial struct {
 	BaseEntity
 	DeliveryID      uint                      `gorm:"not null;index"`
@@ -160,6 +207,17 @@ type SupplierWarehouseDeliveryMaterial struct {
 	Barcode         string                    `gorm:"size:255;not null"`
 	Quantity        float64                   `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
 	ExpirationDate  time.Time                 `gorm:"not null" sort:"expirationDate"`
+}
+
+// Hooks for SupplierWarehouseDeliveryMaterial
+func (s *SupplierWarehouseDeliveryMaterial) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ExpirationDate = toUTC(s.ExpirationDate)
+	return
+}
+
+func (s *SupplierWarehouseDeliveryMaterial) AfterFind(tx *gorm.DB) (err error) {
+	s.ExpirationDate = toUTC(s.ExpirationDate)
+	return
 }
 
 type AggregatedWarehouseStock struct {

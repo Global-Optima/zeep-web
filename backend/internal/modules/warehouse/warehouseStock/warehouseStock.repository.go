@@ -280,7 +280,8 @@ func (r *warehouseStockRepository) findEarliestMaterialExpirationDate(materials 
 			earliest = &material.ExpirationDate
 		}
 	}
-	return earliest
+	UTCTime := utils.ToUTC(*earliest)
+	return &UTCTime
 }
 
 func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error) {
@@ -298,7 +299,8 @@ func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMater
 		return nil, fmt.Errorf("failed to fetch earliest expiration date for stock material ID %d: %w", stockMaterialID, err)
 	}
 
-	return &earliestExpirationDate, nil
+	UTCTime := utils.ToUTC(earliestExpirationDate)
+	return &UTCTime, nil
 }
 
 func (r *warehouseStockRepository) aggregateWarehouseStocks(
@@ -310,14 +312,14 @@ func (r *warehouseStockRepository) aggregateWarehouseStocks(
 	for _, stock := range warehouseStocks {
 		materials := materialMap[stock.StockMaterialID]
 
-		earliestExpirationDate := r.findEarliestMaterialExpirationDate(materials)
+		earliestExpirationDate := utils.ToUTC(*r.findEarliestMaterialExpirationDate(materials))
 
 		aggregatedStocks = append(aggregatedStocks, data.AggregatedWarehouseStock{
 			WarehouseID:            stock.WarehouseID,
 			StockMaterialID:        stock.StockMaterialID,
 			StockMaterial:          stock.StockMaterial,
 			TotalQuantity:          stock.Quantity,
-			EarliestExpirationDate: earliestExpirationDate,
+			EarliestExpirationDate: &earliestExpirationDate,
 		})
 	}
 
