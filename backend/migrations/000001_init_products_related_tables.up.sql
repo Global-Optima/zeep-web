@@ -672,7 +672,6 @@ CREATE TABLE IF NOT EXISTS supplier_prices (
     id SERIAL PRIMARY KEY,
     supplier_material_id INT NOT NULL REFERENCES supplier_materials(id) ON DELETE CASCADE,
     base_price DECIMAL(10, 2) NOT NULL CHECK (base_price >= 0),
-    effective_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ

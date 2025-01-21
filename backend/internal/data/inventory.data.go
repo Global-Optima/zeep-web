@@ -137,7 +137,6 @@ type SupplierPrice struct {
 	SupplierMaterialID uint             `gorm:"not null;index"`
 	SupplierMaterial   SupplierMaterial `gorm:"foreignKey:SupplierMaterialID;constraint:OnDelete:CASCADE"`
 	BasePrice          float64          `gorm:"type:decimal(10,2);not null"`
-	EffectiveDate      time.Time        `gorm:"not null"`
 }
 
 type SupplierWarehouseDelivery struct {
