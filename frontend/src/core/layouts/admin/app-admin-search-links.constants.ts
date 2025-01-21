@@ -5,13 +5,21 @@ import {
 	type SidebarNavItem,
 } from './app-admin-sidebar-links.constants'
 
-function flattenSidebarNavItems(sidebarItems: SidebarNavItem[]): NavItem[] {
+function flattenSidebarNavItems(
+	sidebarItems: SidebarNavItem[],
+	parentLabel: string = '',
+): NavItem[] {
 	return sidebarItems.flatMap(item => {
 		if (isCollapsibleNavItem(item)) {
-			return flattenSidebarNavItems(item.items)
+			const updatedLabel = parentLabel ? `${parentLabel} ${item.label}` : item.label
+
+			return flattenSidebarNavItems(item.items, updatedLabel)
 		}
-    
-		return item
+
+		return {
+			...item,
+			name: parentLabel ? `${parentLabel} ${item.name.toLowerCase()}` : item.name,
+		}
 	})
 }
 
