@@ -57,7 +57,3 @@ func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMateri
 		UpdatedAt:              stockMaterial.UpdatedAt.Format(time.RFC3339),
 	}
 }
-
-func ConvertUpdateStockMaterialRequestToStockMaterial(stockMaterial *data.StockMaterial, req *UpdateStockMaterialDTO) error {
-	return ValidateAndApplyUpdate(stockMaterial, req)
-}

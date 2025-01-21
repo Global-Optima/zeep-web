@@ -350,7 +350,7 @@ func (r *warehouseStockRepository) getSupplierDeliveriesForStock(stockMaterialID
 		Preload("Supplier").
 		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
 		Find(&deliveries).Error
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("failed to fetch deliveries for stock material: %w", err)
 	}
 	return deliveries, nil

@@ -85,7 +85,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		return
 	}
 
-	stockMaterialResponse, err := h.service.UpdateStockMaterial(uint(stockMaterialID), &req)
+	err = h.service.UpdateStockMaterial(uint(stockMaterialID), &req)
 	if err != nil {
 		if err.Error() == "StockMaterial not found" {
 			utils.SendNotFoundError(c, "StockMaterial not found")
@@ -95,7 +95,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponse(c, stockMaterialResponse)
+	utils.SendSuccessResponse(c, "Updated stock material successfully")
 }
 
 func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
