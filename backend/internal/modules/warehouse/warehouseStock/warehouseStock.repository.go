@@ -167,8 +167,8 @@ func (r *warehouseStockRepository) GetDeliveries(warehouseID *uint, startDate, e
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit")
+		Preload("StockMaterial.Packages").
+		Preload("StockMaterial.Packages.Unit")
 
 	if warehouseID != nil {
 		query = query.Where("warehouse_id = ?", *warehouseID)
@@ -385,8 +385,8 @@ func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID, warehouseI
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit").
+		Preload("StockMaterial.Packages").
+		Preload("StockMaterial.Packages.Unit").
 		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
 		First(&stock).Error
 	if err != nil {
@@ -406,8 +406,8 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Package").
-		Preload("StockMaterial.Package.Unit").
+		Preload("StockMaterial.Packages").
+		Preload("StockMaterial.Packages.Unit").
 		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 

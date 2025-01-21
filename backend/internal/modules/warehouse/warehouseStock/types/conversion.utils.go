@@ -7,7 +7,6 @@ import (
 	supplierTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -47,17 +46,17 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 	return response
 }
 
-func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasureWithQuantity) WarehouseStockResponse {
+func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock) WarehouseStockResponse {
 	return WarehouseStockResponse{
 		StockMaterial: StockMaterialResponse{
 			*stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
-			pkgMeasure,
 		},
+		Quantity:               stock.TotalQuantity,
 		EarliestExpirationDate: stock.EarliestExpirationDate,
 	}
 }
 
-func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, pkgMeasure utils.PackageMeasureWithQuantity, deliveries []data.SupplierWarehouseDelivery) WarehouseStockMaterialDetailsDTO {
+func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, deliveries []data.SupplierWarehouseDelivery) WarehouseStockMaterialDetailsDTO {
 	deliveriesDTO := make([]StockMaterialDeliveryDTO, len(deliveries))
 	for i, delivery := range deliveries {
 		deliveriesDTO[i] = StockMaterialDeliveryDTO{
@@ -70,7 +69,7 @@ func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, pkgMeasure util
 
 	return WarehouseStockMaterialDetailsDTO{
 		StockMaterial:          *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
-		PackageMeasure:         pkgMeasure,
+		Quantity:               stock.TotalQuantity,
 		EarliestExpirationDate: stock.EarliestExpirationDate,
 		Deliveries:             deliveriesDTO,
 	}

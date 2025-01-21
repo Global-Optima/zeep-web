@@ -19,15 +19,9 @@ type UpdateStockMaterialPackageDTO struct {
 }
 
 type StockMaterialPackageResponse struct {
-	ID            uint             `json:"id"`
-	Size          float64          `json:"size"`
-	Unit          types.UnitsDTO   `json:"unit"`
-	StockMaterial StockMaterialDTO `json:"stockMaterial"`
-	CreatedAt     time.Time        `json:"createdAt"`
-	UpdatedAt     time.Time        `json:"updatedAt"`
-}
-
-type StockMaterialDTO struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	ID        uint           `json:"id"`
+	Size      float64        `json:"size"`
+	Unit      types.UnitsDTO `json:"unit"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
 }

@@ -87,6 +87,14 @@ func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *ty
 	if err != nil {
 		return nil, err
 	}
+
+	if len(req.Packages) != 0 {
+		s.packageRepo.UpsertPackages(stockMaterialID, req.Packages)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	updatedStockMaterial := types.ConvertStockMaterialToStockMaterialResponse(updated)
 	return updatedStockMaterial, nil
 }

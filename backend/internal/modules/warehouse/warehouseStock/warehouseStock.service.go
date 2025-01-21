@@ -9,7 +9,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type WarehouseStockService interface {
@@ -243,16 +242,7 @@ func (s *warehouseStockService) GetStock(query *types.GetWarehouseStockFilterQue
 
 	responses := make([]types.WarehouseStockResponse, len(stocks))
 	for i, stock := range stocks {
-		if stock.StockMaterial.Package == nil {
-			return nil, fmt.Errorf("package measures not found for StockMaterialID %d", stock.StockMaterialID)
-		}
-
-		packageMeasures, err := utils.ReturnPackageMeasureForStockMaterialWithQuantity(stock.StockMaterial, stock.TotalQuantity)
-		if err != nil {
-			return nil, err
-		}
-
-		responses[i] = types.ToWarehouseStockResponse(stock, packageMeasures)
+		responses[i] = types.ToWarehouseStockResponse(stock)
 	}
 
 	return responses, nil
@@ -281,15 +271,7 @@ func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehou
 		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)
 	}
 
-	packageMeasure, err := utils.ReturnPackageMeasureForStockMaterialWithQuantity(
-		aggregatedStock.StockMaterial,
-		aggregatedStock.TotalQuantity,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	details := types.ToStockMaterialDetails(*aggregatedStock, packageMeasure, deliveries)
+	details := types.ToStockMaterialDetails(*aggregatedStock, deliveries)
 
 	return &details, nil
 }

@@ -7,6 +7,7 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	stockMaterialCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
+	stockMaterialPackageTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 )
 
 func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDTO) *data.StockMaterial {
@@ -51,6 +52,7 @@ func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMateri
 		Barcode:                stockMaterial.Barcode,
 		ExpirationPeriodInDays: stockMaterial.ExpirationPeriodInDays,
 		IsActive:               stockMaterial.IsActive,
+		Packages:               stockMaterialPackageTypes.ToStockMaterialPackageResponses(stockMaterial.Packages),
 		CreatedAt:              stockMaterial.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:              stockMaterial.UpdatedAt.Format(time.RFC3339),
 	}

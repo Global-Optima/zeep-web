@@ -50,7 +50,6 @@ type SupplierMaterialResponse struct {
 
 type SupplierStockMaterialDTO struct {
 	stockMaterialTypes.StockMaterialsDTO
-	utils.PackageMeasure `json:"packageMeasures"`
 }
 
 type SuppliersFilter struct {
