@@ -44,7 +44,7 @@ const onRouteClick = (routeKey: RouteKey) => {
 		<CommandDialog v-model:open="open">
 			<CommandInput placeholder="Поиск по платформе" />
 			<CommandList>
-				<CommandEmpty>No results found.</CommandEmpty>
+				<CommandEmpty>Ничего не найдено</CommandEmpty>
 				<CommandGroup heading="Страницы">
 					<CommandItem
 						v-for="page in pages"

@@ -22,6 +22,24 @@
 				<div class="mt-auto">
 					<Button
 						variant="outline"
+						@click="onDisplayClick"
+						class="flex items-center gap-3 mb-1 py-6 w-full"
+					>
+						<TvMinimal class="w-5 h-5" />
+						<p class="text-base">Экран</p>
+					</Button>
+
+					<Button
+						variant="outline"
+						@click="onBaristaClick"
+						class="flex items-center gap-3 mb-1 py-6 w-full"
+					>
+						<Store class="w-5 h-5" />
+						<p class="text-base">Бариста</p>
+					</Button>
+
+					<Button
+						variant="outline"
 						@click="onBaristaClick"
 						class="flex items-center gap-3 mb-1 py-6 w-full"
 					>
@@ -58,7 +76,7 @@ import AppAdminEmployeeDropdown from '@/core/layouts/admin/app-admin-employee-dr
 import AppAdminSearch from '@/core/layouts/admin/app-admin-search.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
-import { Menu, Store } from 'lucide-vue-next'
+import { Menu, Store, TvMinimal } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const {currentEmployee} = useEmployeeAuthStore()
@@ -71,6 +89,10 @@ const onKioskClick = () => {
 
 const onBaristaClick = () => {
 	router.push({name: getRouteName('KIOSK_ORDERS')})
+}
+
+const onDisplayClick = () => {
+	router.push({name: getRouteName('KIOSK_ORDERS_DISPLAY')})
 }
 </script>
 
