@@ -1,7 +1,10 @@
 package stockMaterialPackage
 
 import (
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"gorm.io/gorm"
 )
 
@@ -10,6 +13,7 @@ type StockMaterialPackageRepository interface {
 	CreateMultiplePackages(packages []data.StockMaterialPackage) error
 	GetByID(id uint) (*data.StockMaterialPackage, error)
 	Update(id uint, packageEntity data.StockMaterialPackage) error
+	UpsertPackages(stockMaterialID uint, packages []types.UpdateStockMaterialPackagesDTO, tx *gorm.DB) error
 	Delete(id uint) error
 	GetAll() ([]data.StockMaterialPackage, error)
 }
@@ -51,4 +55,61 @@ func (r *stockMaterialPackageRepository) GetAll() ([]data.StockMaterialPackage, 
 	var packages []data.StockMaterialPackage
 	err := r.db.Preload("StockMaterial").Preload("Unit").Find(&packages).Error
 	return packages, err
+}
+
+func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, packages []types.UpdateStockMaterialPackagesDTO, tx *gorm.DB) error {
+	var existingPackages []data.StockMaterialPackage
+	if err := tx.Where("stock_material_id = ?", stockMaterialID).Find(&existingPackages).Error; err != nil {
+		return fmt.Errorf("failed to fetch existing packages: %w", err)
+	}
+
+	existingMap := make(map[uint]data.StockMaterialPackage)
+	for _, pkg := range existingPackages {
+		existingMap[pkg.ID] = pkg
+	}
+
+	processedIDs := make(map[uint]bool)
+
+	for _, pkgDTO := range packages {
+		if pkgDTO.StockMaterialPackageID != nil {
+			existing, exists := existingMap[*pkgDTO.StockMaterialPackageID]
+			if exists {
+				updatedPackage := existing
+
+				if pkgDTO.Size != nil {
+					updatedPackage.Size = *pkgDTO.Size
+				}
+				if pkgDTO.UnitID != nil {
+					updatedPackage.UnitID = *pkgDTO.UnitID
+				}
+
+				if err := tx.Model(&data.StockMaterialPackage{}).Where("id = ?", existing.ID).Updates(updatedPackage).Error; err != nil {
+					return fmt.Errorf("failed to update package: %w", err)
+				}
+
+				processedIDs[*pkgDTO.StockMaterialPackageID] = true
+			} else {
+				return fmt.Errorf("package with ID %d not found", *pkgDTO.StockMaterialPackageID)
+			}
+		} else {
+			newPackage := data.StockMaterialPackage{
+				StockMaterialID: stockMaterialID,
+				Size:            *pkgDTO.Size,
+				UnitID:          *pkgDTO.UnitID,
+			}
+			if err := tx.Create(&newPackage).Error; err != nil {
+				return fmt.Errorf("failed to create package: %w", err)
+			}
+		}
+	}
+
+	for _, existing := range existingPackages {
+		if !processedIDs[existing.ID] {
+			if err := tx.Delete(&existing).Unscoped().Error; err != nil {
+				return fmt.Errorf("failed to delete package: %w", err)
+			}
+		}
+	}
+
+	return nil
 }

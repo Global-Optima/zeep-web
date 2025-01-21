@@ -14,10 +14,6 @@ func ToStockMaterialPackageResponse(pkg *data.StockMaterialPackage) StockMateria
 			Name:             pkg.Unit.Name,
 			ConversionFactor: pkg.Unit.ConversionFactor,
 		},
-		StockMaterial: StockMaterialDTO{
-			ID:   pkg.StockMaterial.ID,
-			Name: pkg.StockMaterial.Name,
-		},
 		CreatedAt: pkg.CreatedAt,
 		UpdatedAt: pkg.UpdatedAt,
 	}

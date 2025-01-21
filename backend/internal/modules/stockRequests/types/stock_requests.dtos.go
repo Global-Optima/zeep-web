@@ -47,8 +47,8 @@ type StockRequestResponse struct {
 }
 
 type StockRequestMaterial struct {
-	StockMaterial                    stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
-	utils.PackageMeasureWithQuantity `json:"packageMeasures"`
+	StockMaterial stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
+	Quantity      float64                              `json:"quantity"`
 }
 
 type GetStockRequestsFilter struct {

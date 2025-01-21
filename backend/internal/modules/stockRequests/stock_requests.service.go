@@ -294,7 +294,7 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 
 func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, storeWarehouseID uint) error {
 	for _, ingredient := range request.Ingredients {
-		if ingredient.StockMaterial.Package == nil {
+		if ingredient.StockMaterial.Packages == nil {
 			return utils.WrapError("package is not presenent for stock material", fmt.Errorf("stock material ID %d", ingredient.StockMaterialID))
 		}
 

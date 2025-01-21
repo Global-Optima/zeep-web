@@ -3,7 +3,6 @@ package types
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 func ToSupplierResponse(supplier data.Supplier) SupplierResponse {
@@ -38,15 +37,9 @@ func ToSupplierMaterialResponse(material data.SupplierMaterial) SupplierMaterial
 		basePrice = latestPrice.BasePrice
 	}
 
-	pkgMeasure, err := utils.ReturnPackageMeasures(material.StockMaterial)
-	if err != nil {
-		panic(err.Error())
-	}
-
 	return SupplierMaterialResponse{
 		StockMaterial: SupplierStockMaterialDTO{
 			*stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
-			pkgMeasure,
 		},
 		BasePrice: basePrice,
 	}

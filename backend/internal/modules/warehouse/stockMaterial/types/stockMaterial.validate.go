@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -52,5 +53,15 @@ func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockM
 
 	stockMaterial.UpdatedAt = time.Now()
 
+	return nil
+}
+
+func ValidatePackageUpdates(pkg *data.StockMaterialPackage, dto *UpdateStockMaterialPackagesDTO) error {
+	if dto.Size != nil && *dto.Size <= 0 {
+		return fmt.Errorf("invalid size for package ID %d", *dto.StockMaterialPackageID)
+	}
+	if dto.UnitID != nil && *dto.UnitID == 0 {
+		return fmt.Errorf("invalid unit ID for package ID %d", *dto.StockMaterialPackageID)
+	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -11,56 +12,79 @@ type PackageMeasure struct {
 	PackageUnit     string  `json:"packageUnit"`     // Name of the unit of the package
 }
 
-type PackageMeasureWithQuantity struct {
-	PackageMeasure
-	Quantity          float64 `json:"quantity"`          // Quantity of the packages
-	TotalUnitsInStock float64 `json:"totalUnitsInStock"` // Total number of units
+// FindPackageByUnit finds the correct package for a given stock material by unit ID.
+func FindPackageByUnit(stockMaterial data.StockMaterial, unitID uint) (*data.StockMaterialPackage, error) {
+	for _, pkg := range stockMaterial.Packages {
+		if pkg.UnitID == unitID {
+			return &pkg, nil
+		}
+	}
+	return nil, fmt.Errorf("no package found for unit ID: %d in stock material ID: %d", unitID, stockMaterial.ID)
 }
 
-func ConvertPackagesToUnits(stockMaterial data.StockMaterial, quantityInPackages float64) (float64, error) {
-	if stockMaterial.Package == nil {
-		return 0, fmt.Errorf("package not found for stock material ID: %d", stockMaterial.ID)
+// ConvertPackagesToUnits converts a quantity of packages to units, based on the correct package.
+func ConvertPackagesToUnits(stockMaterial data.StockMaterial, unitID uint, quantityInPackages float64) (float64, error) {
+	packageDetails, err := FindPackageByUnit(stockMaterial, unitID)
+	if err != nil {
+		return 0, err
 	}
-	if stockMaterial.Package.Unit.ID != stockMaterial.Ingredient.Unit.ID {
-		return stockMaterial.Package.Size * quantityInPackages * stockMaterial.Ingredient.Unit.ConversionFactor, nil
+
+	if packageDetails.Unit.ID != stockMaterial.Ingredient.Unit.ID {
+		return packageDetails.Size * quantityInPackages * stockMaterial.Ingredient.Unit.ConversionFactor, nil
 	}
-	return stockMaterial.Package.Size * quantityInPackages, nil
+
+	return packageDetails.Size * quantityInPackages, nil
 }
 
-func ReturnPackageMeasureWithQuantity(ingredient data.StockRequestIngredient, quantityInPackages float64) (PackageMeasureWithQuantity, error) {
-	if ingredient.StockMaterial.Package == nil {
-		return PackageMeasureWithQuantity{}, fmt.Errorf("package not found for stock material ID: %d", ingredient.StockMaterialID)
+// ReturnPackageMeasures returns details of all available packages for a stock material.
+func ReturnPackageMeasures(stockMaterial data.StockMaterial) ([]PackageMeasure, error) {
+	if len(stockMaterial.Packages) == 0 {
+		return nil, errors.New("no packages found for stock material")
 	}
-	return PackageMeasureWithQuantity{
-		PackageMeasure: PackageMeasure{
-			UnitsPerPackage: ingredient.StockMaterial.Package.Size,
-			PackageUnit:     ingredient.StockMaterial.Package.Unit.Name,
-		},
-		TotalUnitsInStock: ingredient.StockMaterial.Package.Size * quantityInPackages,
-		Quantity:          quantityInPackages,
-	}, nil
+
+	var packageMeasures []PackageMeasure
+	for _, pkg := range stockMaterial.Packages {
+		packageMeasures = append(packageMeasures, PackageMeasure{
+			UnitsPerPackage: pkg.Size,
+			PackageUnit:     pkg.Unit.Name,
+		})
+	}
+
+	return packageMeasures, nil
 }
 
-func ReturnPackageMeasureForStockMaterialWithQuantity(stockMaterial data.StockMaterial, quantityInPackages float64) (PackageMeasureWithQuantity, error) {
-	if stockMaterial.Package == nil {
-		return PackageMeasureWithQuantity{}, fmt.Errorf("package not found for stock material ID: %d", stockMaterial.ID)
+// ReturnAllPackageMeasures returns details for all available packages in a stock material.
+func ReturnAllPackageMeasures(stockMaterial data.StockMaterial) ([]PackageMeasure, error) {
+	if len(stockMaterial.Packages) == 0 {
+		return nil, errors.New("no packages available for stock material")
 	}
-	return PackageMeasureWithQuantity{
-		PackageMeasure: PackageMeasure{
-			UnitsPerPackage: stockMaterial.Package.Size,
-			PackageUnit:     stockMaterial.Package.Unit.Name,
-		},
-		Quantity:          quantityInPackages,
-		TotalUnitsInStock: stockMaterial.Package.Size * quantityInPackages,
-	}, nil
+
+	var packageMeasures []PackageMeasure
+	for _, pkg := range stockMaterial.Packages {
+		packageMeasures = append(packageMeasures, PackageMeasure{
+			UnitsPerPackage: pkg.Size,
+			PackageUnit:     pkg.Unit.Name,
+		})
+	}
+
+	return packageMeasures, nil
 }
 
-func ReturnPackageMeasures(stockMaterial data.StockMaterial) (PackageMeasure, error) {
-	if stockMaterial.Package == nil {
-		return PackageMeasure{}, fmt.Errorf("package not found for stock material ID: %d", stockMaterial.ID)
+// ReturnTotalUnitsAcrossAllPackages calculates the total units across all packages for the given quantities.
+func ReturnTotalUnitsAcrossAllPackages(stockMaterial data.StockMaterial, quantitiesInPackages map[uint]float64) (float64, error) {
+	if len(stockMaterial.Packages) == 0 {
+		return 0, errors.New("no packages available for stock material")
 	}
-	return PackageMeasure{
-		UnitsPerPackage: stockMaterial.Package.Size,
-		PackageUnit:     stockMaterial.Package.Unit.Name,
-	}, nil
+
+	var totalUnits float64
+	for _, pkg := range stockMaterial.Packages {
+		quantityInPackages, ok := quantitiesInPackages[pkg.UnitID]
+		if !ok {
+			continue
+		}
+
+		totalUnits += pkg.Size * quantityInPackages
+	}
+
+	return totalUnits, nil
 }
