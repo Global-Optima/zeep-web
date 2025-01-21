@@ -21,7 +21,7 @@ type WarehouseStockService interface {
 	AddWarehouseStocks(warehouseID uint, req []types.AddWarehouseStockMaterial) error
 	DeductFromStock(req types.AdjustWarehouseStock) error
 	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
-	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error)
+	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error)
 	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
 }
 
@@ -56,7 +56,13 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 		stockMaterialMap[stockMaterial.ID] = &stockMaterial
 	}
 
-	deliveries := []data.SupplierWarehouseDelivery{}
+	delivery := data.SupplierWarehouseDelivery{
+		SupplierID:  req.SupplierID,
+		WarehouseID: warehouseID,
+	}
+
+	materials := make([]data.SupplierWarehouseDeliveryMaterial, len(req.Materials))
+
 	for _, material := range req.Materials {
 		stockMaterial, exists := stockMaterialMap[material.StockMaterialID]
 		if !exists {
@@ -85,21 +91,19 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 			return fmt.Errorf("failed to retrieve package details for package ID %d", material.PackageID)
 		}
 
-		quantityInBaseUnits := material.Quantity * packageToUse.Size
-
-		deliveries = append(deliveries, data.SupplierWarehouseDelivery{
-			StockMaterialID: material.StockMaterialID,
-			PackageID:       material.PackageID,
-			SupplierID:      req.SupplierID,
-			WarehouseID:     warehouseID,
-			Barcode:         stockMaterial.Barcode,
-			Quantity:        quantityInBaseUnits,
-			DeliveryDate:    time.Now(),
-			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
-		})
+		for _, material := range req.Materials {
+			materials = append(materials, data.SupplierWarehouseDeliveryMaterial{
+				StockMaterialID: material.StockMaterialID,
+				PackageID:       material.PackageID,
+				Barcode:         stockMaterial.Barcode,
+				Quantity:        material.Quantity,
+				DeliveryDate:    time.Now(),
+				ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
+			})
+		}
 	}
 
-	err = s.repo.RecordDeliveriesAndUpdateStock(deliveries, warehouseID)
+	err = s.repo.RecordDeliveriesAndUpdateStock(delivery, materials, warehouseID)
 	if err != nil {
 		return fmt.Errorf("failed to receive inventory: %w", err)
 	}
@@ -179,13 +183,13 @@ func (s *warehouseStockService) AddWarehouseStocks(warehouseID uint, req []types
 	return s.repo.AddWarehouseStocks(warehouseID, stocks)
 }
 
-func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error) {
-	aggregatedStock, deliveries, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
+func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error) {
+	aggregatedStock, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)
 	}
 
-	details := types.ToStockMaterialDetails(*aggregatedStock, deliveries)
+	details := types.ToWarehouseStockResponse(*aggregatedStock)
 
 	return &details, nil
 }

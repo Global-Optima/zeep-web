@@ -11,36 +11,48 @@ import (
 func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) []DeliveryResponse {
 	response := make([]DeliveryResponse, len(deliveries))
 	for i, delivery := range deliveries {
+		materials := make([]WarehouseDeliveryStockMaterialDTO, len(delivery.Materials))
+
+		for i, material := range delivery.Materials {
+			materials[i] = WarehouseDeliveryStockMaterialDTO{
+				StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
+				Package:        stockMaterialPackageTypes.ToStockMaterialPackageResponse(&material.Package),
+				Quantity:       material.Quantity,
+				Barcode:        material.Barcode,
+				DeliveryDate:   material.DeliveryDate,
+				ExpirationDate: material.ExpirationDate,
+			}
+		}
+
 		response[i] = DeliveryResponse{
-			ID: delivery.ID,
-			Material: WarehouseDeliveryStockMaterialDTO{
-				StockMaterial: *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&delivery.StockMaterial),
-				Package:       stockMaterialPackageTypes.ToStockMaterialPackageResponse(&delivery.Package),
-				Quantity:      delivery.Quantity,
-			},
-			Supplier:       supplierTypes.ToSupplierResponse(delivery.Supplier),
-			Warehouse:      *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
-			Barcode:        delivery.Barcode,
-			DeliveryDate:   delivery.DeliveryDate,
-			ExpirationDate: delivery.ExpirationDate,
+			ID:        delivery.ID,
+			Supplier:  supplierTypes.ToSupplierResponse(delivery.Supplier),
+			Warehouse: *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
+			Materials: materials,
 		}
 	}
 	return response
 }
 
 func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) DeliveryResponse {
+	materials := make([]WarehouseDeliveryStockMaterialDTO, len(delivery.Materials))
+
+	for i, material := range delivery.Materials {
+		materials[i] = WarehouseDeliveryStockMaterialDTO{
+			StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
+			Package:        stockMaterialPackageTypes.ToStockMaterialPackageResponse(&material.Package),
+			Quantity:       material.Quantity,
+			Barcode:        material.Barcode,
+			DeliveryDate:   material.DeliveryDate,
+			ExpirationDate: material.ExpirationDate,
+		}
+	}
+
 	return DeliveryResponse{
-		ID: delivery.ID,
-		Material: WarehouseDeliveryStockMaterialDTO{
-			StockMaterial: *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&delivery.StockMaterial),
-			Package:       stockMaterialPackageTypes.ToStockMaterialPackageResponse(&delivery.Package),
-			Quantity:      delivery.Quantity,
-		},
-		Supplier:       supplierTypes.ToSupplierResponse(delivery.Supplier),
-		Warehouse:      *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
-		Barcode:        delivery.Barcode,
-		DeliveryDate:   delivery.DeliveryDate,
-		ExpirationDate: delivery.ExpirationDate,
+		ID:        delivery.ID,
+		Supplier:  supplierTypes.ToSupplierResponse(delivery.Supplier),
+		Warehouse: *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
+		Materials: materials,
 	}
 }
 
@@ -51,24 +63,5 @@ func ToWarehouseStockResponse(stock data.AggregatedWarehouseStock) WarehouseStoc
 		},
 		Quantity:               stock.TotalQuantity,
 		EarliestExpirationDate: stock.EarliestExpirationDate,
-	}
-}
-
-func ToStockMaterialDetails(stock data.AggregatedWarehouseStock, deliveries []data.SupplierWarehouseDelivery) WarehouseStockMaterialDetailsDTO {
-	deliveriesDTO := make([]StockMaterialDeliveryDTO, len(deliveries))
-	for i, delivery := range deliveries {
-		deliveriesDTO[i] = StockMaterialDeliveryDTO{
-			Supplier:       supplierTypes.ToSupplierResponse(delivery.Supplier),
-			Quantity:       delivery.Quantity,
-			DeliveryDate:   delivery.DeliveryDate,
-			ExpirationDate: delivery.ExpirationDate,
-		}
-	}
-
-	return WarehouseStockMaterialDetailsDTO{
-		StockMaterial:          *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stock.StockMaterial),
-		Quantity:               stock.TotalQuantity,
-		EarliestExpirationDate: stock.EarliestExpirationDate,
-		Deliveries:             deliveriesDTO,
 	}
 }
