@@ -29,10 +29,11 @@ type TransferInventoryRequest struct {
 }
 
 type DeliveryResponse struct {
-	ID        uint                                `json:"id"`
-	Supplier  supplierTypes.SupplierResponse      `json:"supplier"`
-	Warehouse warehouseTypes.WarehouseResponse    `json:"warehouse"`
-	Materials []WarehouseDeliveryStockMaterialDTO `json:"materials"`
+	ID           uint                                `json:"id"`
+	Supplier     supplierTypes.SupplierResponse      `json:"supplier"`
+	Warehouse    warehouseTypes.WarehouseResponse    `json:"warehouse"`
+	Materials    []WarehouseDeliveryStockMaterialDTO `json:"materials"`
+	DeliveryDate time.Time                           `json:"deliveryDate"`
 }
 
 type WarehouseDeliveryStockMaterialDTO struct {
@@ -40,7 +41,6 @@ type WarehouseDeliveryStockMaterialDTO struct {
 	Package        stockMaterialPackageTypes.StockMaterialPackageResponse `json:"package"`
 	Quantity       float64                                                `json:"quantity"`
 	Barcode        string                                                 `json:"barcode"`
-	DeliveryDate   time.Time                                              `json:"deliveryDate"`
 	ExpirationDate time.Time                                              `json:"expirationDate"`
 }
 

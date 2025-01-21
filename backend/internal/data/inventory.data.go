@@ -141,11 +141,12 @@ type SupplierPrice struct {
 
 type SupplierWarehouseDelivery struct {
 	BaseEntity
-	SupplierID  uint                                `gorm:"not null"`
-	Supplier    Supplier                            `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
-	WarehouseID uint                                `gorm:"not null"`
-	Warehouse   Warehouse                           `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
-	Materials   []SupplierWarehouseDeliveryMaterial `gorm:"foreignKey:DeliveryID;constraint:OnDelete:CASCADE"`
+	SupplierID   uint                                `gorm:"not null"`
+	Supplier     Supplier                            `gorm:"foreignKey:SupplierID;constraint:OnDelete:CASCADE"`
+	WarehouseID  uint                                `gorm:"not null"`
+	Warehouse    Warehouse                           `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
+	Materials    []SupplierWarehouseDeliveryMaterial `gorm:"foreignKey:DeliveryID;constraint:OnDelete:CASCADE"`
+	DeliveryDate time.Time                           `gorm:"not null;default:CURRENT_TIMESTAMP" sort:"deliveryDate"`
 }
 
 type SupplierWarehouseDeliveryMaterial struct {
@@ -158,7 +159,6 @@ type SupplierWarehouseDeliveryMaterial struct {
 	Package         StockMaterialPackage      `gorm:"foreignKey:PackageID;constraint:OnDelete:CASCADE"`
 	Barcode         string                    `gorm:"size:255;not null"`
 	Quantity        float64                   `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
-	DeliveryDate    time.Time                 `gorm:"not null;default:CURRENT_TIMESTAMP" sort:"deliveryDate"`
 	ExpirationDate  time.Time                 `gorm:"not null" sort:"expirationDate"`
 }
 
