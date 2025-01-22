@@ -193,23 +193,24 @@ func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehou
 }
 
 func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error {
-	stock, err := s.repo.GetWarehouseStockByID(warehouseID, stockMaterialID)
-	if err != nil {
-		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
-	}
-
-	if dto.ExpirationDate == nil && dto.Quantity == nil {
+	// Validate input
+	if dto.Quantity == nil && dto.ExpirationDate == nil {
 		return fmt.Errorf("nothing to update")
 	}
 
-	if dto.ExpirationDate != nil {
-		if err := s.repo.UpdateExpirationDate(stock.StockMaterialID, stock.WarehouseID, *dto.ExpirationDate); err != nil {
-			return fmt.Errorf("failed to update expiration date: %w", err)
+	// Update quantity if provided
+	if dto.Quantity != nil {
+		err := s.repo.UpdateStockQuantity(stockMaterialID, warehouseID, *dto.Quantity)
+		if err != nil {
+			return fmt.Errorf("failed to update stock quantity: %w", err)
 		}
 	}
-	if dto.Quantity != nil {
-		if err := s.repo.UpdateStockQuantity(stock.ID, *dto.Quantity); err != nil {
-			return fmt.Errorf("failed to update stock quantity: %w", err)
+
+	// Update expiration date if provided
+	if dto.ExpirationDate != nil {
+		err := s.repo.UpdateExpirationDate(stockMaterialID, warehouseID, *dto.ExpirationDate)
+		if err != nil {
+			return fmt.Errorf("failed to update expiration date: %w", err)
 		}
 	}
 

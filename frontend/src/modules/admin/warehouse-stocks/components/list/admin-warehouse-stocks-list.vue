@@ -7,6 +7,7 @@
 				<TableHead>Мин. запас</TableHead>
 				<TableHead class="hidden md:table-cell">Единица измерения</TableHead>
 				<TableHead class="hidden md:table-cell">Статус</TableHead>
+				<TableHead class="hidden md:table-cell">Истекает</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -36,14 +37,30 @@
 					{{ stock.stockMaterial.unit.name }}
 				</TableCell>
 
-				<!-- Status badge (hidden on small screens) -->
+				<!-- Status badges -->
 				<TableCell class="hidden md:table-cell">
-					<p
-						class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
-						:class="getStatusClass(stock)"
-					>
-						{{ getStatusLabel(stock) }}
-					</p>
+					<div class="flex flex-col space-y-2">
+						<!-- Stock Status -->
+						<p
+							class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
+							:class="getStatusClass(stock)"
+						>
+							{{ getStatusLabel(stock) }}
+						</p>
+
+						<!-- Expiration Indicator -->
+						<p
+							v-if="shouldIndicateExpiration(stock)"
+							class="inline-flex items-center bg-orange-100 px-2.5 py-1 rounded-md w-fit text-orange-800 text-xs"
+						>
+							Истекает через 7 дней
+						</p>
+					</div>
+				</TableCell>
+
+				<!-- Expiration Date -->
+				<TableCell class="hidden md:table-cell">
+					{{ stock.earliestExpirationDate ? format(stock.earliestExpirationDate, "dd.MM.yyyy hh:mm") : "Не указано" }}
 				</TableCell>
 			</TableRow>
 		</TableBody>
@@ -62,14 +79,14 @@ import {
   TableRow
 } from '@/core/components/ui/table'
 import type { WarehouseStocksDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
-
+import { differenceInDays, format } from 'date-fns'
 
 defineProps<{
   stocks: WarehouseStocksDTO[]
 }>()
 
-
 const router = useRouter()
+
 function handleRowClick(stockId: number): void {
   router.push(`/admin/warehouse-stocks/${stockId}`)
 }
@@ -104,6 +121,14 @@ function getStatusClass(stock: WarehouseStocksDTO): string {
 
 function getStatusLabel(stock: WarehouseStocksDTO): string {
   return INGREDIENT_STATUS_FORMATTED[computeStatus(stock)]
+}
+
+function shouldIndicateExpiration(stock: WarehouseStocksDTO): boolean {
+  if (!stock.earliestExpirationDate) {
+    return false
+  }
+  const daysLeft = differenceInDays(new Date(stock.earliestExpirationDate), new Date())
+  return daysLeft <= 7 && daysLeft > 0
 }
 </script>
 
