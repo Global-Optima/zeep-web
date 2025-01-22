@@ -5,6 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/analytics"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
@@ -326,5 +327,14 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 			statusGroup.PATCH("/in-delivery", handler.SetInDeliveryStatus)
 			statusGroup.PATCH("/completed", handler.SetCompletedStatus)
 		}
+	}
+}
+
+func (r *Router) RegisterAnalyticRoutes(handler *analytics.AnalyticsHandler) {
+	router := r.EmployeeRoutes.Group("/analytics")
+	{
+		router.GET("/summary", handler.GetSummary)                  // Summary analytics
+		router.GET("/sales-by-month", handler.GetSalesByMonth)      // Monthly sales analytics
+		router.GET("/popular-products", handler.GetPopularProducts) // Popular products analytics
 	}
 }
