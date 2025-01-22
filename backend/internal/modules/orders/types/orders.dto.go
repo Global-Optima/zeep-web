@@ -134,3 +134,21 @@ type OrderDeliveryAddressDTO struct {
 	Longitude string `json:"longitude"`
 	Latitude  string `json:"latitude"`
 }
+
+type OrdersExportFilterQuery struct {
+	StartDate *time.Time `form:"startDate" binding:"omitempty"`
+	EndDate   *time.Time `form:"endDate" binding:"omitempty"`
+	StoreID   *uint      `form:"storeId" binding:"omitempty"`
+	Language  string     `form:"language" binding:"omitempty,oneof=kk ru en"` // Optional language filter
+}
+
+type OrderExportDTO struct {
+	ID              uint                     `json:"id"`
+	CustomerName    string                   `json:"customerName"`
+	Status          string                   `json:"status"`
+	Total           float64                  `json:"total"`
+	CreatedAt       time.Time                `json:"createdAt"`
+	StoreName       string                   `json:"storeName"`
+	Suborders       []SuborderDTO            `json:"suborders"`
+	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"`
+}

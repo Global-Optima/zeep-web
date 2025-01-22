@@ -2,11 +2,13 @@ package orders
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/export"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -209,4 +211,37 @@ func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, orderDetails)
+}
+
+func (h *OrderHandler) ExportOrders(c *gin.Context) {
+	var filter types.OrdersExportFilterQuery
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid filter parameters")
+		return
+	}
+
+	orders, err := h.service.ExportOrders(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to export orders")
+		return
+	}
+
+	headers := export.RusHeaders // Default to Rus
+	switch filter.Language {
+	case "kk":
+		headers = export.KazHeaders
+	case "en":
+		headers = export.EngHeaders
+	}
+
+	excelData, err := export.GenerateSalesExcelV2(orders, headers)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to generate Excel file")
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=sales_export.xlsx")
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Length", fmt.Sprintf("%d", len(excelData)))
+	c.Data(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelData)
 }
