@@ -79,28 +79,13 @@ func (r *warehouseStockRepository) updateOrInsertStock(tx *gorm.DB, warehouseID 
 		StockMaterialID: material.StockMaterialID,
 	}
 
-	if err := tx.Model(&material).
-		Preload("Package").
-		Preload("Package.Unit").
-		Preload("StockMaterial.Unit").
-		First(&material, "id = ?", material.ID).Error; err != nil {
-		return fmt.Errorf("failed to preload package and stock material for material ID %d: %w", material.ID, err)
-	}
-
-	var unitQuantity float64
-	if material.Package.UnitID == material.StockMaterial.UnitID {
-		unitQuantity = material.Quantity * material.Package.Size
-	} else {
-		unitQuantity = material.Quantity * material.Package.Size * material.StockMaterial.Unit.ConversionFactor
-	}
-
 	if err := tx.FirstOrCreate(&stock, "warehouse_id = ? AND stock_material_id = ?", warehouseID, material.StockMaterialID).Error; err != nil {
 		return fmt.Errorf("failed to find or create warehouse stock: %w", err)
 	}
 
 	if err := tx.Model(&data.WarehouseStock{}).
 		Where("id = ?", stock.ID).
-		Update("quantity", gorm.Expr("quantity + ?", unitQuantity)).Error; err != nil {
+		Update("quantity", gorm.Expr("quantity + ?", material.Quantity)).Error; err != nil {
 		return fmt.Errorf("failed to update warehouse stock quantity: %w", err)
 	}
 
@@ -134,16 +119,13 @@ func (r *warehouseStockRepository) GetDeliveryByID(deliveryID uint, delivery *da
 	return r.db.Preload("Materials").
 		Preload("Supplier").
 		Preload("Warehouse").
-		Preload("Materials.Package").
-		Preload("Materials.Package.Unit").
 		Preload("Materials.StockMaterial").
 		Preload("Materials.StockMaterial.Unit").
 		Preload("Materials.StockMaterial.Ingredient").
 		Preload("Materials.StockMaterial.Ingredient.Unit").
 		Preload("Materials.StockMaterial.Ingredient.IngredientCategory").
 		Preload("Materials.StockMaterial.StockMaterialCategory").
-		Preload("Materials.StockMaterial.Packages").
-		Preload("Materials.StockMaterial.Packages.Unit").First(delivery, "id = ?", deliveryID).Error
+		First(delivery, "id = ?", deliveryID).Error
 }
 
 func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryFilter) ([]data.SupplierWarehouseDelivery, error) {
@@ -152,16 +134,12 @@ func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryF
 		Preload("Materials").
 		Preload("Supplier").
 		Preload("Warehouse").
-		Preload("Materials.Package").
-		Preload("Materials.Package.Unit").
 		Preload("Materials.StockMaterial").
 		Preload("Materials.StockMaterial.Unit").
 		Preload("Materials.StockMaterial.Ingredient").
 		Preload("Materials.StockMaterial.Ingredient.Unit").
 		Preload("Materials.StockMaterial.Ingredient.IngredientCategory").
 		Preload("Materials.StockMaterial.StockMaterialCategory").
-		Preload("Materials.StockMaterial.Packages").
-		Preload("Materials.StockMaterial.Packages.Unit").
 		Joins("JOIN suppliers ON suppliers.id = supplier_warehouse_deliveries.supplier_id")
 
 	if filter.WarehouseID != nil {
@@ -346,9 +324,7 @@ func (r *warehouseStockRepository) getDeliveryMaterials(filter *types.GetWarehou
 	var materials []data.SupplierWarehouseDeliveryMaterial
 
 	query := r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
-		Preload("StockMaterial").
-		Preload("Package").
-		Preload("Package.Unit")
+		Preload("StockMaterial")
 
 	if filter.WarehouseID != nil {
 		query = query.Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.id = supplier_warehouse_delivery_materials.delivery_id").
@@ -375,8 +351,6 @@ func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID, warehouseI
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Packages").
-		Preload("StockMaterial.Packages.Unit").
 		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
 		First(&stock).Error
 	if err != nil {
@@ -396,8 +370,6 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Packages").
-		Preload("StockMaterial.Packages.Unit").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 
 	// Filter by warehouse

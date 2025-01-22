@@ -7,7 +7,6 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	stockMaterialCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
-	stockMaterialPackageTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 )
 
 func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDTO) *data.StockMaterial {
@@ -16,19 +15,12 @@ func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDT
 		Description:            req.Description,
 		SafetyStock:            req.SafetyStock,
 		UnitID:                 req.UnitID,
+		Size:                   req.Size,
 		CategoryID:             req.CategoryID,
 		IngredientID:           req.IngredientID,
 		Barcode:                req.Barcode,
 		ExpirationPeriodInDays: req.ExpirationPeriodInDays,
 		IsActive:               true,
-	}
-}
-
-func ConvertPackageDTOToModel(stockMaterialID uint, req *CreateStockMaterialPackagesDTO) *data.StockMaterialPackage {
-	return &data.StockMaterialPackage{
-		StockMaterialID: stockMaterialID,
-		Size:            req.Size,
-		UnitID:          req.UnitID,
 	}
 }
 
@@ -43,6 +35,7 @@ func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMateri
 			Name:             stockMaterial.Unit.Name,
 			ConversionFactor: stockMaterial.Unit.ConversionFactor,
 		},
+		Size: stockMaterial.Size,
 		Category: stockMaterialCategoryTypes.StockMaterialCategoryResponse{
 			ID:          stockMaterial.CategoryID,
 			Name:        stockMaterial.StockMaterialCategory.Name,
@@ -52,7 +45,6 @@ func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMateri
 		Barcode:                stockMaterial.Barcode,
 		ExpirationPeriodInDays: stockMaterial.ExpirationPeriodInDays,
 		IsActive:               stockMaterial.IsActive,
-		Packages:               stockMaterialPackageTypes.ToStockMaterialPackageResponses(stockMaterial.Packages),
 		CreatedAt:              stockMaterial.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:              stockMaterial.UpdatedAt.Format(time.RFC3339),
 	}

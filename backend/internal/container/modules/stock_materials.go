@@ -3,7 +3,6 @@ package modules
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 )
 
 type StockMaterialsModule struct {
@@ -13,9 +12,9 @@ type StockMaterialsModule struct {
 	Handler *stockMaterial.StockMaterialHandler
 }
 
-func NewStockMaterialsModule(base *common.BaseModule, packageRepo stockMaterialPackage.StockMaterialPackageRepository) *StockMaterialsModule {
+func NewStockMaterialsModule(base *common.BaseModule) *StockMaterialsModule {
 	repo := stockMaterial.NewStockMaterialRepository(base.DB)
-	service := stockMaterial.NewStockMaterialService(repo, packageRepo)
+	service := stockMaterial.NewStockMaterialService(repo)
 	handler := stockMaterial.NewStockMaterialHandler(service)
 
 	base.Router.RegisterStockMaterialRoutes(handler)

@@ -38,10 +38,8 @@ func ToSupplierMaterialResponse(material data.SupplierMaterial) SupplierMaterial
 	}
 
 	return SupplierMaterialResponse{
-		StockMaterial: SupplierStockMaterialDTO{
-			*stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
-		},
-		BasePrice: basePrice,
+		StockMaterial: *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
+		BasePrice:     basePrice,
 	}
 }
 

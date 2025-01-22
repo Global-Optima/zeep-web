@@ -107,19 +107,19 @@ type WarehouseStock struct {
 
 type StockMaterial struct {
 	BaseEntity
-	Name                   string                 `gorm:"size:255;not null" sort:"name"`
-	Description            string                 `gorm:"type:text"`
-	IngredientID           uint                   `gorm:"not null;index"` // Link to the ingredient
-	Ingredient             Ingredient             `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
-	SafetyStock            float64                `gorm:"type:decimal(10,2);not null" sort:"safetyStock"`
-	UnitID                 uint                   `gorm:"not null"`
-	Unit                   Unit                   `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
-	CategoryID             uint                   `gorm:"not null"` // Link to IngredientCategory
-	StockMaterialCategory  StockMaterialCategory  `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
-	Barcode                string                 `gorm:"unique;size:255"`
-	ExpirationPeriodInDays int                    `gorm:"not null;default:1095" sort:"expirationPeriodInDays"` // 3 years in days
-	IsActive               bool                   `gorm:"not null;default:true" sort:"isActive"`
-	Packages               []StockMaterialPackage `gorm:"foreignKey:StockMaterialID"`
+	Name                   string                `gorm:"size:255;not null" sort:"name"`
+	Description            string                `gorm:"type:text"`
+	IngredientID           uint                  `gorm:"not null;index"` // Link to the ingredient
+	Ingredient             Ingredient            `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	SafetyStock            float64               `gorm:"type:decimal(10,2);not null" sort:"safetyStock"`
+	UnitID                 uint                  `gorm:"not null"`
+	Unit                   Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
+	Size                   float64               `gorm:"type:decimal(10,2);not null"`
+	CategoryID             uint                  `gorm:"not null"` // Link to IngredientCategory
+	StockMaterialCategory  StockMaterialCategory `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
+	Barcode                string                `gorm:"unique;size:255"`
+	ExpirationPeriodInDays int                   `gorm:"not null;default:1095" sort:"expirationPeriodInDays"` // 3 years in days
+	IsActive               bool                  `gorm:"not null;default:true" sort:"isActive"`
 }
 
 type StockMaterialCategory struct {
@@ -133,15 +133,6 @@ type Unit struct {
 	BaseEntity
 	Name             string  `gorm:"size:50;not null"`
 	ConversionFactor float64 `gorm:"type:decimal(10,4);not null"` // To base unit
-}
-
-type StockMaterialPackage struct {
-	BaseEntity
-	StockMaterialID uint          `gorm:"index"`
-	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
-	Size            float64       `gorm:"type:decimal(10,2);not null"`
-	UnitID          uint          `gorm:"not null"`
-	Unit            Unit          `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 }
 
 type SupplierMaterial struct {
@@ -187,8 +178,6 @@ type SupplierWarehouseDeliveryMaterial struct {
 	Delivery        SupplierWarehouseDelivery `gorm:"foreignKey:DeliveryID;constraint:OnDelete:CASCADE"`
 	StockMaterialID uint                      `gorm:"not null;index"`
 	StockMaterial   StockMaterial             `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
-	PackageID       uint                      `gorm:"not null;index"`
-	Package         StockMaterialPackage      `gorm:"foreignKey:PackageID;constraint:OnDelete:CASCADE"`
 	Barcode         string                    `gorm:"size:255;not null"`
 	Quantity        float64                   `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
 	ExpirationDate  time.Time                 `gorm:"not null" sort:"expirationDate"`

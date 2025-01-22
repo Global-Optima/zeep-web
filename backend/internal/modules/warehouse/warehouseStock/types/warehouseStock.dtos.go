@@ -4,7 +4,6 @@ import (
 	"time"
 
 	supplierTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
-	stockMaterialPackageTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 
@@ -19,7 +18,6 @@ type ReceiveWarehouseDelivery struct {
 type ReceiveWarehouseStockMaterial struct {
 	StockMaterialID uint    `json:"stockMaterialId"`
 	Quantity        float64 `json:"quantity"`
-	PackageID       uint    `json:"packageId"`
 }
 
 type TransferInventoryRequest struct {
@@ -37,11 +35,10 @@ type WarehouseDeliveryDTO struct {
 }
 
 type WarehouseDeliveryStockMaterialDTO struct {
-	StockMaterial  stockMaterialTypes.StockMaterialsDTO                   `json:"stockMaterial"`
-	Package        stockMaterialPackageTypes.StockMaterialPackageResponse `json:"package"`
-	Quantity       float64                                                `json:"quantity"`
-	Barcode        string                                                 `json:"barcode"`
-	ExpirationDate time.Time                                              `json:"expirationDate"`
+	StockMaterial  stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
+	Quantity       float64                              `json:"quantity"`
+	Barcode        string                               `json:"barcode"`
+	ExpirationDate time.Time                            `json:"expirationDate"`
 }
 
 type WarehouseDeliveryFilter struct {

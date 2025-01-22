@@ -562,6 +562,7 @@ CREATE TABLE IF NOT EXISTS stock_materials (
 	ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
     safety_stock DECIMAL(10,2) NOT NULL CHECK (safety_stock >= 0),
     unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
+	size DECIMAL(10, 2) NOT NULL,
 	category_id INT NOT NULL REFERENCES stock_material_categories(id) ON DELETE RESTRICT,
     barcode VARCHAR(255),
     expiration_period_in_days INT NOT NULL DEFAULT 1095, -- Default 3 years
@@ -607,22 +608,6 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
--- Packages Table
-CREATE TABLE IF NOT EXISTS stock_material_packages (
-    id SERIAL PRIMARY KEY,
-    stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
-    size DECIMAL(10,2) NOT NULL,
-    unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-);
-
--- Prevent duplicate package sizes for the same material and unit
-CREATE UNIQUE INDEX unique_stock_material_package
-    ON stock_material_packages (stock_material_id, unit_id, size)
-    WHERE deleted_at IS NULL;
-
 -- Create supplier_warehouse_deliveries Table
 CREATE TABLE IF NOT EXISTS supplier_warehouse_deliveries (
     id SERIAL PRIMARY KEY,
@@ -639,7 +624,6 @@ CREATE TABLE IF NOT EXISTS supplier_warehouse_delivery_materials (
     id SERIAL PRIMARY KEY,
     delivery_id INT NOT NULL REFERENCES supplier_warehouse_deliveries (id) ON DELETE CASCADE,
     stock_material_id INT NOT NULL REFERENCES stock_materials (id) ON DELETE CASCADE,
-    package_id INT NOT NULL REFERENCES stock_material_packages (id) ON DELETE CASCADE,
     barcode VARCHAR(255) NOT NULL,
     quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
     expiration_date TIMESTAMPTZ NOT NULL,

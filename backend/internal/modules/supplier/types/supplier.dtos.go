@@ -44,12 +44,8 @@ type UpdateSupplierMaterialDTO struct {
 }
 
 type SupplierMaterialResponse struct {
-	StockMaterial SupplierStockMaterialDTO `json:"stockMaterial"`
-	BasePrice     float64                  `json:"basePrice"`
-}
-
-type SupplierStockMaterialDTO struct {
-	stockMaterialTypes.StockMaterialsDTO
+	StockMaterial stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
+	BasePrice     float64                              `json:"basePrice"`
 }
 
 type SuppliersFilter struct {
