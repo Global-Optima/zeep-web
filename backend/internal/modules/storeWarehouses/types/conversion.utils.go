@@ -8,6 +8,7 @@ import (
 func MapToStockDTO(stock data.StoreWarehouseStock) StoreStockDTO {
 	return StoreStockDTO{
 		ID:                stock.ID,
+		IngredientID:      stock.IngredientID,
 		Name:              stock.Ingredient.Name,
 		Quantity:          stock.Quantity,
 		LowStockThreshold: stock.LowStockThreshold,

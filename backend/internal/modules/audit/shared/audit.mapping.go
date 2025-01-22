@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 )
@@ -22,12 +23,10 @@ func GetAuditActionDetailsFactory(core AuditActionCore) func() data.AuditDetails
 	return factory
 }
 
-func NewAuditActionExtendedFactory[T any](
+func NewAuditActionBaseFactory(
 	operationType data.OperationType,
 	componentName data.ComponentName,
-	dto T,
-) func(baseDetails *data.BaseDetails, dto T) AuditActionExtended {
-	zapLogger := logger.GetZapSugaredLogger()
+) func(details *data.BaseDetails) AuditActionBase {
 
 	core := AuditActionCore{
 		OperationType: operationType,
@@ -35,7 +34,34 @@ func NewAuditActionExtendedFactory[T any](
 	}
 
 	if _, ok := auditActions[core]; ok {
-		zapLogger.Warn("Duplicate audit action core found, first copy was overwritten!")
+		panic(fmt.Errorf("duplicate audit action core found: %v", core))
+	}
+
+	auditActions[core] = func() data.AuditDetails {
+		return defaultFactory()
+	}
+
+	return func(baseDetails *data.BaseDetails) AuditActionBase {
+		return AuditActionBase{
+			Core:    core,
+			Details: baseDetails,
+		}
+	}
+}
+
+func NewAuditActionExtendedFactory[T any](
+	operationType data.OperationType,
+	componentName data.ComponentName,
+	dto T,
+) func(baseDetails *data.BaseDetails, dto T) AuditActionExtended {
+
+	core := AuditActionCore{
+		OperationType: operationType,
+		ComponentName: componentName,
+	}
+
+	if _, ok := auditActions[core]; ok {
+		panic(fmt.Errorf("duplicate audit action core found: %v", core))
 	}
 
 	auditActions[core] = func() data.AuditDetails {
@@ -55,11 +81,11 @@ func NewAuditActionExtendedFactory[T any](
 	}
 }
 
-func NewAuditActionBaseFactory(
+func NewAuditStoreActionExtendedFactory[T any](
 	operationType data.OperationType,
 	componentName data.ComponentName,
-) func(details *data.BaseDetails) AuditActionBase {
-	zapLogger := logger.GetZapSugaredLogger()
+	dto T,
+) func(baseDetails *data.BaseDetails, dto T, storeID uint) AuditStoreActionExtended {
 
 	core := AuditActionCore{
 		OperationType: operationType,
@@ -67,47 +93,68 @@ func NewAuditActionBaseFactory(
 	}
 
 	if _, ok := auditActions[core]; ok {
-		zapLogger.Warn("Duplicate audit action core found, first copy was overwritten!")
+		panic(fmt.Errorf("duplicate audit action core found: %v", core))
 	}
 
 	auditActions[core] = func() data.AuditDetails {
-		return defaultFactory()
+		return &data.ExtendedDetailsStore{
+			ExtendedDetails: data.ExtendedDetails{
+				DTO: dto,
+			},
+		}
 	}
 
-	return func(baseDetails *data.BaseDetails) AuditActionBase {
-		return AuditActionBase{
-			Core:    core,
-			Details: baseDetails,
+	return func(baseDetails *data.BaseDetails, dto T, storeID uint) AuditStoreActionExtended {
+		return AuditStoreActionExtended{
+			Core: core,
+			Details: &data.ExtendedDetailsStore{
+				ExtendedDetails: data.ExtendedDetails{
+					BaseDetails: *baseDetails,
+					DTO:         dto,
+				},
+				StoreInfo: data.StoreInfo{
+					StoreID: storeID,
+				},
+			},
 		}
 	}
 }
 
-/*func NewAuditActionMultiple[T any](
+func NewAuditWarehouseActionExtendedFactory[T any](
 	operationType data.OperationType,
 	componentName data.ComponentName,
 	dto T,
-) types.AuditAction[*data.MultipleItemDetails[T]] {
-	zapLogger := logger.GetZapSugaredLogger()
+) func(baseDetails *data.BaseDetails, dto T, warehouseID uint) AuditWarehouseActionExtended {
 
-	core := types.AuditActionCore{
+	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,
 	}
-	details := defaultFactory()
 
 	if _, ok := auditActions[core]; ok {
-		zapLogger.Warn("Duplicate audit action core found, first copy was overwritten!")
+		panic(fmt.Errorf("duplicate audit action core found: %v", core))
 	}
 
 	auditActions[core] = func() data.AuditDetails {
-		return details
+		return &data.ExtendedDetailsWarehouse{
+			ExtendedDetails: data.ExtendedDetails{
+				DTO: dto,
+			},
+		}
 	}
 
-	return types.AuditAction[*data.MultipleItemDetails[T]]{
-		OperationType: operationType,
-		ComponentName: componentName,
-		Details: &data.MultipleItemDetails[T]{
-			DTO: dto,
-		},
+	return func(baseDetails *data.BaseDetails, dto T, warehouseID uint) AuditWarehouseActionExtended {
+		return AuditWarehouseActionExtended{
+			Core: core,
+			Details: &data.ExtendedDetailsWarehouse{
+				ExtendedDetails: data.ExtendedDetails{
+					BaseDetails: *baseDetails,
+					DTO:         dto,
+				},
+				WarehouseInfo: data.WarehouseInfo{
+					WarehouseID: warehouseID,
+				},
+			},
+		}
 	}
-}*/
+}

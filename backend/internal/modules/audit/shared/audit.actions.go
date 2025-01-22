@@ -42,6 +42,40 @@ func (a *AuditActionExtended) GetActionDetails() data.AuditDetails {
 	return a.Details
 }
 
+type AuditStoreActionExtended struct {
+	Core    AuditActionCore
+	Details *data.ExtendedDetailsStore
+}
+
+func (a *AuditStoreActionExtended) GetActionCore() AuditActionCore {
+	return a.Core
+}
+
+func (a *AuditStoreActionExtended) GetActionDetails() data.AuditDetails {
+	return a.Details
+}
+
+func (a *AuditStoreActionExtended) GetStoreActionDetails() data.StoreInfo {
+	return a.Details.StoreInfo
+}
+
+type AuditWarehouseActionExtended struct {
+	Core    AuditActionCore
+	Details *data.ExtendedDetailsWarehouse
+}
+
+func (a *AuditWarehouseActionExtended) GetActionCore() AuditActionCore {
+	return a.Core
+}
+
+func (a *AuditWarehouseActionExtended) GetActionDetails() data.AuditDetails {
+	return a.Details
+}
+
+func (a *AuditWarehouseActionExtended) GetWarehouseActionDetails() data.WarehouseInfo {
+	return a.Details.WarehouseInfo
+}
+
 type AuditActionBase struct {
 	Core    AuditActionCore
 	Details *data.BaseDetails

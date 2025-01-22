@@ -1,7 +1,11 @@
 package recipes
 
 import (
+	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -10,12 +14,14 @@ import (
 )
 
 type RecipeHandler struct {
-	service RecipeService
+	service      RecipeService
+	auditService audit.AuditService
 }
 
-func NewRecipeHandler(service RecipeService) *RecipeHandler {
+func NewRecipeHandler(service RecipeService, auditService audit.AuditService) *RecipeHandler {
 	return &RecipeHandler{
-		service: service,
+		service:      service,
+		auditService: auditService,
 	}
 }
 
@@ -77,6 +83,40 @@ func (h *RecipeHandler) CreateRecipeSteps(c *gin.Context) {
 		return
 	}
 
+	recipeSteps, err := h.service.GetRecipeStepsByProductID(productID)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to create recipe steps: recipe step not found")
+		return
+	}
+
+	actions := make([]shared.AuditAction, len(recipeSteps))
+
+	for i, recipeStep := range recipeSteps {
+		var matchedDTO *types.CreateOrReplaceRecipeStepDTO
+		for _, dto := range input {
+			if recipeStep.Step == dto.Step {
+				matchedDTO = &dto
+				break
+			}
+		}
+
+		if matchedDTO == nil {
+			utils.SendInternalServerError(c, fmt.Sprintf("No matching DTO found for step %d", recipeStep.Step))
+			return
+		}
+
+		action := types.CreateProductAuditFactory(
+			&data.BaseDetails{
+				ID:   recipeStep.ID,
+				Name: recipeStep.Name,
+			},
+			matchedDTO,
+		)
+		actions[i] = &action
+	}
+
+	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+
 	utils.SendMessageWithStatus(c, "Recipe steps created successfully", http.StatusCreated)
 }
 
@@ -99,6 +139,40 @@ func (h *RecipeHandler) UpdateRecipeSteps(c *gin.Context) {
 		return
 	}
 
+	recipeSteps, err := h.service.GetRecipeStepsByProductID(productID)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to create recipe steps: recipe step not found")
+		return
+	}
+
+	actions := make([]shared.AuditAction, len(recipeSteps))
+
+	for i, recipeStep := range recipeSteps {
+		var matchedDTO *types.CreateOrReplaceRecipeStepDTO
+		for _, dto := range input {
+			if recipeStep.Step == dto.Step {
+				matchedDTO = &dto
+				break
+			}
+		}
+
+		if matchedDTO == nil {
+			utils.SendInternalServerError(c, fmt.Sprintf("No matching DTO found for step %d", recipeStep.Step))
+			return
+		}
+
+		action := types.UpdateProductAuditFactory(
+			&data.BaseDetails{
+				ID:   recipeStep.ID,
+				Name: recipeStep.Name,
+			},
+			matchedDTO,
+		)
+		actions[i] = &action
+	}
+
+	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+
 	utils.SendMessageWithStatus(c, "Recipe step updated successfully", http.StatusOK)
 }
 
@@ -114,6 +188,26 @@ func (h *RecipeHandler) DeleteRecipeSteps(c *gin.Context) {
 		utils.SendInternalServerError(c, "Failed to delete recipe step")
 		return
 	}
+
+	recipeSteps, err := h.service.GetRecipeStepsByProductID(productID)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to create recipe steps: recipe step not found")
+		return
+	}
+
+	actions := make([]shared.AuditAction, len(recipeSteps))
+
+	for i, recipeStep := range recipeSteps {
+		action := types.DeleteProductAuditFactory(
+			&data.BaseDetails{
+				ID:   recipeStep.ID,
+				Name: recipeStep.Name,
+			},
+		)
+		actions[i] = &action
+	}
+
+	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
 
 	utils.SendMessageWithStatus(c, "Recipe step deleted successfully", http.StatusOK)
 }

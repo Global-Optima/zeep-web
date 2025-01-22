@@ -1,6 +1,8 @@
 package stores
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
@@ -9,11 +11,15 @@ import (
 )
 
 type StoreHandler struct {
-	service StoreService
+	service      StoreService
+	auditService audit.AuditService
 }
 
-func NewStoreHandler(service StoreService) *StoreHandler {
-	return &StoreHandler{service: service}
+func NewStoreHandler(service StoreService, auditService audit.AuditService) *StoreHandler {
+	return &StoreHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
 func (h *StoreHandler) GetAllStores(c *gin.Context) {
@@ -41,6 +47,14 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to create store")
 		return
 	}
+
+	action := types.CreateStoreAuditFactory(
+		&data.BaseDetails{
+			ID:   createdStore.ID,
+			Name: storeDTO.Name,
+		})
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, createdStore)
 }
@@ -76,11 +90,26 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 		return
 	}
 
+	existingProduct, err := h.service.GetStoreByID(uint(storeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to update product details: product not found")
+		return
+	}
+
 	updatedStore, err := h.service.UpdateStore(uint(storeID), dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to update store")
 		return
 	}
+
+	action := types.UpdateStoreAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(storeID),
+			Name: existingProduct.Name,
+		},
+		&dto)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, updatedStore)
 }
@@ -99,6 +128,20 @@ func (h *StoreHandler) DeleteStore(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to delete store")
 		return
 	}
+
+	existingProduct, err := h.service.GetStoreByID(uint(storeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to update product details: product not found")
+		return
+	}
+
+	action := types.DeleteStoreAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(storeID),
+			Name: existingProduct.Name,
+		})
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "store deleted successfully"})
 }

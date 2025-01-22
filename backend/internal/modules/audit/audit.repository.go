@@ -9,8 +9,12 @@ import (
 
 type AuditRepository interface {
 	CreateAuditRecord(audit *data.EmployeeAudit) (uint, error)
+	CreateMultipleAuditRecords(audits []data.EmployeeAudit) ([]uint, error)
 	GetAuditRecords(filter *types.EmployeeAuditFilter) ([]data.EmployeeAudit, error)
 	GetAuditRecordByID(ID uint) (*data.EmployeeAudit, error)
+
+	GetStoreInfo(storeID uint) (*data.Store, error)
+	GetWarehouseInfo(warehouseID uint) (*data.Warehouse, error)
 }
 
 type auditRepository struct {
@@ -27,6 +31,21 @@ func (r *auditRepository) CreateAuditRecord(audit *data.EmployeeAudit) (uint, er
 		return 0, err
 	}
 	return audit.ID, nil
+}
+
+func (r *auditRepository) CreateMultipleAuditRecords(audits []data.EmployeeAudit) ([]uint, error) {
+	IDs := make([]uint, len(audits))
+
+	err := r.db.Create(&audits).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i, audit := range audits {
+		IDs[i] = audit.ID
+	}
+
+	return IDs, nil
 }
 
 func (r *auditRepository) GetAuditRecords(filter *types.EmployeeAuditFilter) ([]data.EmployeeAudit, error) {
@@ -94,4 +113,22 @@ func (r *auditRepository) GetAuditRecordByID(ID uint) (*data.EmployeeAudit, erro
 	}
 
 	return nil, nil
+}
+
+func (r *auditRepository) GetStoreInfo(storeID uint) (*data.Store, error) {
+	var store data.Store
+	err := r.db.Model(&data.Store{}).Where("id = ?", storeID).First(&store).Error
+	if err != nil {
+		return nil, err
+	}
+	return &store, nil
+}
+
+func (r *auditRepository) GetWarehouseInfo(warehouseID uint) (*data.Warehouse, error) {
+	var warehouse data.Warehouse
+	err := r.db.Model(&data.Warehouse{}).Where("id = ?", warehouseID).First(&warehouse).Error
+	if err != nil {
+		return nil, err
+	}
+	return &warehouse, nil
 }

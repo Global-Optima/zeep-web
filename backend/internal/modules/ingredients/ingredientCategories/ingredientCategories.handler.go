@@ -1,7 +1,7 @@
 package ingredientCategories
 
 import (
-	"net/http"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -11,11 +11,15 @@ import (
 )
 
 type IngredientCategoryHandler struct {
-	service IngredientCategoryService
+	service      IngredientCategoryService
+	auditService audit.AuditService
 }
 
-func NewIngredientCategoryHandler(service IngredientCategoryService) *IngredientCategoryHandler {
-	return &IngredientCategoryHandler{service: service}
+func NewIngredientCategoryHandler(service IngredientCategoryService, auditService audit.AuditService) *IngredientCategoryHandler {
+	return &IngredientCategoryHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
 func (h *IngredientCategoryHandler) Create(c *gin.Context) {
@@ -30,6 +34,15 @@ func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.CreateIngredientCategoryAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: dto.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SuccessCreatedResponse(c, gin.H{"id": id})
 }
@@ -59,7 +72,13 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 
 	var dto types.UpdateIngredientCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, "failed to update ingredient category: category not found")
+		return
+	}
+
+	existingCategory, err := h.service.GetByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to update ingredient category")
 		return
 	}
 
@@ -68,7 +87,17 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusOK)
+	action := types.UpdateIngredientCategoryAuditFactory(
+		&data.BaseDetails{
+			ID:   existingCategory.ID,
+			Name: existingCategory.Name,
+		},
+		&dto,
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient category updated successfully"})
 }
 
 func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
@@ -78,12 +107,27 @@ func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 		return
 	}
 
+	existingCategory, err := h.service.GetByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to update ingredient category")
+		return
+	}
+
 	if err := h.service.Delete(uint(id)); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	c.Status(http.StatusOK)
+	action := types.DeleteIngredientCategoryAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: existingCategory.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient category deleted successfully"})
 }
 
 func (h *IngredientCategoryHandler) GetAll(c *gin.Context) {

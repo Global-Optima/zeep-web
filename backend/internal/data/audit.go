@@ -4,7 +4,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/audit"
 	"github.com/json-iterator/go"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"net/http"
 )
@@ -14,27 +13,28 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 type OperationType string
 
 const (
-	CreateMultipleOperation OperationType = "CREATE MULTIPLE"
-	CreateOperation         OperationType = "CREATE"
-	UpdateOperation         OperationType = "UPDATE"
-	DeleteOperation         OperationType = "DELETE"
+	CreateOperation OperationType = "CREATE"
+	UpdateOperation OperationType = "UPDATE"
+	DeleteOperation OperationType = "DELETE"
 )
 
 type ComponentName string
 
 const (
 	ProductComponent             ComponentName = "PRODUCT"
+	ProductCategoryComponent     ComponentName = "PRODUCT CATEGORY"
 	StoreProductComponent        ComponentName = "STORE PRODUCT"
 	EmployeeComponent            ComponentName = "EMPLOYEE"
 	AdditiveComponent            ComponentName = "ADDITIVE"
+	AdditiveCategoryComponent    ComponentName = "ADDITIVE CATEGORY"
 	StoreAdditiveComponent       ComponentName = "STORE ADDITIVE"
 	ProductSizeComponent         ComponentName = "PRODUCT SIZE"
-	StoreProductSizeComponent    ComponentName = "STORE PRODUCT SIZE"
 	RecipeStepsComponent         ComponentName = "RECIPE STEPS"
 	StoreComponent               ComponentName = "STORE"
 	WarehouseComponent           ComponentName = "WAREHOUSE"
 	StoreWarehouseStockComponent ComponentName = "STORE WAREHOUSE STOCK"
 	IngredientComponent          ComponentName = "INGREDIENT"
+	IngredientCategoryComponent  ComponentName = "INGREDIENT CATEGORY"
 )
 
 func (o OperationType) ToString() string {
@@ -69,7 +69,7 @@ type DTO interface {
 
 type ExtendedDetails struct {
 	BaseDetails
-	DTO
+	DTO `json:"data"`
 }
 
 func (d *ExtendedDetails) GetBaseDetails() *BaseDetails {
@@ -80,13 +80,40 @@ func (d *ExtendedDetails) ToDetails() ([]byte, error) {
 	return ToJSONB(d, true)
 }
 
-type MultipleItemDetails[T any] struct {
-	IDs []uint `json:"ids"`
-	DTO T
+type StoreInfo struct {
+	StoreID   uint   `json:"storeId"`
+	StoreName string `json:"storeName"`
 }
 
-func (d *MultipleItemDetails[T]) ToDetails() ([]byte, error) {
+type WarehouseInfo struct {
+	WarehouseID   uint   `json:"warehouseId"`
+	WarehouseName string `json:"warehouseName"`
+}
+
+type ExtendedDetailsStore struct {
+	ExtendedDetails
+	StoreInfo
+}
+
+func (d *ExtendedDetailsStore) ToDetails() ([]byte, error) {
 	return ToJSONB(d, false)
+}
+
+func (d *ExtendedDetailsStore) SetStoreName(name string) {
+	d.StoreInfo.StoreName = name
+}
+
+type ExtendedDetailsWarehouse struct {
+	ExtendedDetails
+	WarehouseInfo
+}
+
+func (d *ExtendedDetailsWarehouse) ToDetails() ([]byte, error) {
+	return ToJSONB(d, false)
+}
+
+func (d *ExtendedDetailsWarehouse) SetWarehouseName(name string) {
+	d.WarehouseInfo.WarehouseName = name
 }
 
 type HTTPMethod string
@@ -133,7 +160,6 @@ func ToJSONB(input interface{}, excludeEmptyFields bool) ([]byte, error) {
 	} else {
 		fields = input
 	}
-	logrus.Info(fields)
 
 	return json.Marshal(fields)
 }

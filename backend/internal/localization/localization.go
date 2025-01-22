@@ -7,7 +7,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
+
+type LocalizedMessages struct {
+	En string `json:"en"`
+	Ru string `json:"ru"`
+	Kk string `json:"kk"`
+}
 
 type Locale string
 
@@ -73,14 +80,67 @@ func InitLocalizer() error {
 	return nil
 }
 
-func Translate(locale Locale, messageID string, data map[string]interface{}) (string, error) {
-	localizer, exists := localizers[locale]
-	if !exists {
-		localizer = localizers[DEFAULT_LOCALE]
-	}
+func Translate(messageID string, data map[string]interface{}) (*LocalizedMessages, error) {
+	localizedMessages := &LocalizedMessages{}
 
-	return localizer.Localize(&i18n.LocalizeConfig{
+	localizeCfg := &i18n.LocalizeConfig{
 		MessageID:    messageID,
 		TemplateData: data,
+	}
+
+	enLocalizer, exists := localizers[English]
+	if !exists {
+		enLocalizer = localizers[DEFAULT_LOCALE]
+	}
+	ruLocalizer, exists := localizers[Russian]
+	if !exists {
+		ruLocalizer = localizers[DEFAULT_LOCALE]
+	}
+	kkLocalizer, exists := localizers[Kazakh]
+	if !exists {
+		kkLocalizer = localizers[DEFAULT_LOCALE]
+	}
+
+	var err error
+	localizedMessages.En, err = enLocalizer.Localize(localizeCfg)
+	if err != nil {
+		return nil, err
+	}
+	localizedMessages.Ru, err = ruLocalizer.Localize(localizeCfg)
+	if err != nil {
+		return nil, err
+	}
+	localizedMessages.Kk, err = kkLocalizer.Localize(localizeCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return localizedMessages, nil
+}
+
+func FormTranslationKey(keys ...string) string {
+	camelCaseKeys := make([]string, len(keys))
+	for i, key := range keys {
+		camelCaseKeys[i] = ToCamelCase(key)
+	}
+	return strings.Join(camelCaseKeys, ".")
+}
+
+func ToCamelCase(str string) string {
+	words := strings.FieldsFunc(str, func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
 	})
+
+	if len(words) == 0 {
+		return ""
+	}
+
+	for i := range words {
+		words[i] = strings.ToLower(words[i])
+		if i > 0 {
+			words[i] = strings.ToUpper(words[i][:1]) + words[i][1:]
+		}
+	}
+
+	return strings.Join(words, "")
 }

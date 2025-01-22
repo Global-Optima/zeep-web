@@ -1,3 +1,52 @@
 {
-  "createAuditMessage": "{{.ComponentName}} {{.Name}} был создан"
+  "audit": {
+    "create": {
+      "product": "Продукт *{{.Name}}* был создан",
+      "productCategory": "Категория продукта *{{.Name}}* была создана",
+      "storeProduct": "Товар *{{.Name}}* был добавлен в магазин *{{.StoreName}}*",
+      "employee": "Сотрудник *{{.Name}}* был создан",
+      "additive": "Добавка *{{.Name}}* была создана",
+      "additiveCategory": "Категория добавки *{{.Name}}* была создана",
+      "storeAdditive": "Добавка *{{.Name}}* была добавлена в магазин *{{.StoreName}}*",
+      "productSize": "Размер продукта *{{.Name}}* был создан",
+      "storeProductSize": "Размер товара *{{.Name}}* был добавлен в магазин *{{.StoreName}}*",
+      "recipeSteps": "Этапы рецепта *{{.Name}}* были созданы",
+      "store": "Магазин *{{.Name}}* был создан",
+      "warehouse": "Склад *{{.Name}}* был создан",
+      "storeWarehouseStock": "Складской запас *{{.Name}}* был создан в магазине *{{.StoreName}}*",
+      "ingredient": "Ингредиент *{{.Name}}* был создан"
+    },
+    "update": {
+      "product": "Продукт *{{.Name}}* был обновлен",
+      "productCategory": "Категория продукта *{{.Name}}* была обновлена",
+      "storeProduct": "Товар*{{.Name}}* был обновлен магазине *{{.StoreName}}*",
+      "employee": "Сотрудник *{{.Name}}* был обновлен",
+      "additive": "Добавка *{{.Name}}* была обновлена",
+      "additiveCategory": "Категория добавки *{{.Name}}* была обновлена",
+      "storeAdditive": "Добавка *{{.Name}}* была обновлена в магазине *{{.StoreName}}*",
+      "productSize": "Размер продукта *{{.Name}}* был обновлен",
+      "storeProductSize": "Размер товара *{{.Name}}* был обновлен в магазине *{{.StoreName}}*",
+      "recipeSteps": "Этапы рецепта *{{.Name}}* были обновлены",
+      "store": "Магазин *{{.Name}}* был обновлен",
+      "warehouse": "Склад *{{.Name}}* был обновлен",
+      "storeWarehouseStock": "Складской запас *{{.Name}}* был обновлен в магазине *{{.StoreName}}*",
+      "ingredient": "Ингредиент *{{.Name}}* был обновлен"
+    },
+    "delete": {
+      "product": "Продукт *{{.Name}}* был удален",
+      "productCategory": "Категория продукта *{{.Name}}* была удалена",
+      "storeProduct": "Товар *{{.Name}}* был убран из магазина *{{.StoreName}}*",
+      "employee": "Сотрудник *{{.Name}}* был удален",
+      "additive": "Добавка *{{.Name}}* была удалена",
+      "additiveCategory": "Категория добавки *{{.Name}}* была удалена",
+      "storeAdditive": "Добавка *{{.Name}}* была убрана из магазина *{{.StoreName}}*",
+      "productSize": "Размер продукта *{{.Name}}* был удален",
+      "storeProductSize": "Размер товара *{{.Name}}* был убран из магазина *{{.StoreName}}*",
+      "recipeSteps": "Этапы рецепта *{{.Name}}* были удалены",
+      "store": "Магазин *{{.Name}}* был удален",
+      "warehouse": "Склад *{{.Name}}* был удален",
+      "storeWarehouseStock": "Складской запас *{{.Name}}* был убран из магазина *{{.StoreName}}*",
+      "ingredient": "Ингредиент *{{.Name}}* был удален"
+    }
+  }
 }

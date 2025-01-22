@@ -6,12 +6,12 @@ import (
 )
 
 var (
-	CreateStoreProductAuditFactory = shared.NewAuditActionExtendedFactory(
-		data.CreateOperation, data.StoreProductComponent, &AuditStoreProductDTO{})
+	CreateStoreProductAuditFactory = shared.NewAuditStoreActionExtendedFactory(
+		data.CreateOperation, data.StoreProductComponent, &CreateStoreProductDTO{})
 
-	UpdateStoreProductAuditFactory = shared.NewAuditActionExtendedFactory(
+	UpdateStoreProductAuditFactory = shared.NewAuditStoreActionExtendedFactory(
 		data.UpdateOperation, data.StoreProductComponent, &UpdateStoreProductDTO{})
 
-	DeleteStoreProductAuditFactory = shared.NewAuditActionExtendedFactory(
-		data.DeleteOperation, data.StoreProductComponent, &AuditStoreProductDTO{})
+	DeleteStoreProductAuditFactory = shared.NewAuditStoreActionExtendedFactory(
+		data.DeleteOperation, data.StoreProductComponent, &struct{}{})
 )

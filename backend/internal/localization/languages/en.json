@@ -1,5 +1,57 @@
 {
-  "createAuditMessage": "{{.ComponentName}} {{.Name}} was created",
-  "updateAuditMessage": "{{.ComponentName}} {{.Name}} was updated",
-  "deleteAuditMessage": "{{.ComponentName}} {{.Name}} was deleted"
+  "audit": {
+    "create": {
+      "product": "Product *{{.Name}}* was created",
+      "productCategory": "Product category *{{.Name}}* was created",
+      "storeProduct": "Store product *{{.Name}}* was created in store *{{.StoreName}}*",
+      "employee": "Employee *{{.Name}}* was created",
+      "additive": "Additive *{{.Name}}* was created",
+      "additiveCategory": "Additive category *{{.Name}}* was created",
+      "storeAdditive": "Store additive *{{.Name}}* was created in store *{{.StoreName}}*",
+      "productSize": "Product size *{{.Name}}* was created",
+      "storeProductSize": "Store product size *{{.Name}}* was created in store *{{.StoreName}}*",
+      "recipeSteps": "Recipe steps *{{.Name}}* were created",
+      "store": "Store *{{.Name}}* was created",
+      "warehouse": "Warehouse *{{.Name}}* was created",
+      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was created in store *{{.StoreName}}*",
+      "ingredient": "Ingredient *{{.Name}}* was created"
+    },
+    "update": {
+      "product": "Product *{{.Name}}* was updated",
+      "productCategory": "Product category *{{.Name}}* was updated",
+      "storeProduct": "Store product *{{.Name}}* was updated in store *{{.StoreName}}*",
+      "employee": "Employee *{{.Name}}* was updated",
+      "additive": "Additive *{{.Name}}* was updated",
+      "additiveCategory": "Additive category *{{.Name}}* was updated",
+      "storeAdditive": "Store additive *{{.Name}}* was updated in store *{{.StoreName}}*",
+      "productSize": "Product size *{{.Name}}* was updated",
+      "storeProductSize": "Store product size *{{.Name}}* was updated in store *{{.StoreName}}*",
+      "recipeSteps": "Recipe steps *{{.Name}}* were updated",
+      "store": "Store *{{.Name}}* was updated",
+      "warehouse": "Warehouse *{{.Name}}* was updated",
+      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was updated in store *{{.StoreName}}*",
+      "ingredient": "Ingredient *{{.Name}}* was updated"
+    },
+    "delete": {
+      "product": "Product *{{.Name}}* was deleted",
+      "productCategory": "Product category *{{.Name}}* was deleted",
+      "storeProduct": "Store product *{{.Name}}* was deleted in store *{{.StoreName}}*",
+      "employee": "Employee *{{.Name}}* was deleted",
+      "additive": "Additive *{{.Name}}* was deleted",
+      "additiveCategory": "Additive category *{{.Name}}* was deleted",
+      "storeAdditive": "Store additive *{{.Name}}* was deleted in store *{{.StoreName}}*",
+      "productSize": "Product size *{{.Name}}* was deleted",
+      "storeProductSize": "Store product size *{{.Name}}* was deleted in store *{{.StoreName}}*",
+      "recipeSteps": "Recipe steps *{{.Name}}* were deleted",
+      "store": "Store *{{.Name}}* was deleted",
+      "warehouse": "Warehouse *{{.Name}}* was deleted",
+      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
+      "ingredient": "Ingredient *{{.Name}}* was deleted"
+    }
+  }
 }
+
+
+
+
+

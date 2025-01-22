@@ -9,38 +9,20 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+)
+
+const (
+	AUDIT_TRANSLATION_KEY = "audit"
+	NAME_KEY              = "Name"
+	STORE_NAME_KEY        = "StoreName"
+	WAREHOUSE_NAME_KEY    = "WarehouseName"
 )
 
 func ConvertToEmployeeAuditDTO(audit *data.EmployeeAudit) (*EmployeeAuditDTO, error) {
-
-	logrus.Info(audit.OperationType, audit.ComponentName)
-
 	employee := data.Employee{}
 	if &audit.Employee != nil {
 		employee = audit.Employee
 	}
-
-	messages, err := MapLocalizedMessages(audit)
-	if err != nil {
-		return nil, err
-	}
-
-	return &EmployeeAuditDTO{
-		ID:            audit.ID,
-		Timestamp:     audit.BaseEntity.CreatedAt,
-		OperationType: audit.OperationType.ToString(),
-		ComponentName: audit.ComponentName.ToString(),
-		Messages:      *messages,
-		IPAddress:     audit.IPAddress,
-		ResourceURL:   audit.ResourceUrl,
-		Method:        audit.Method.ToString(),
-		EmployeeDTO:   *employeesTypes.MapToEmployeeDTO(&employee),
-	}, nil
-}
-
-func MapLocalizedMessages(audit *data.EmployeeAudit) (*Messages, error) {
-	messages := &Messages{}
 
 	core := shared.AuditActionCore{
 		OperationType: audit.OperationType,
@@ -58,26 +40,54 @@ func MapLocalizedMessages(audit *data.EmployeeAudit) (*Messages, error) {
 		return nil, fmt.Errorf("failed to unmarshal audit details: %w", err)
 	}
 
-	messages.En, err = localization.Translate(localization.English, "createAuditMessage", map[string]interface{}{
-		"ComponentName": localization.GetLocalizedComponentName(localization.English, audit.ComponentName),
-		"Name":          details.GetBaseDetails().Name,
-	})
+	messages, err := MapLocalizedMessages(audit, details)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate localized message: %w", err)
+		return nil, err
 	}
 
-	messages.Ru, err = localization.Translate(localization.Russian, "createAuditMessage", map[string]interface{}{
-		"ComponentName": localization.GetLocalizedComponentName(localization.Russian, audit.ComponentName),
-		"Name":          details.GetBaseDetails().Name,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate localized message: %w", err)
+	return &EmployeeAuditDTO{
+		ID:                audit.ID,
+		Timestamp:         audit.BaseEntity.CreatedAt,
+		OperationType:     audit.OperationType.ToString(),
+		ComponentName:     audit.ComponentName.ToString(),
+		LocalizedMessages: *messages,
+		IPAddress:         audit.IPAddress,
+		ResourceURL:       audit.ResourceUrl,
+		Details:           json.RawMessage(audit.Details),
+		Method:            audit.Method.ToString(),
+		EmployeeDTO:       *employeesTypes.MapToEmployeeDTO(&employee),
+	}, nil
+}
+
+func MapLocalizedMessages(audit *data.EmployeeAudit, details data.AuditDetails) (*localization.LocalizedMessages, error) {
+	var err error
+	messages := &localization.LocalizedMessages{}
+
+	key := localization.FormTranslationKey(AUDIT_TRANSLATION_KEY, audit.OperationType.ToString(), audit.ComponentName.ToString())
+
+	switch details := details.(type) {
+	case *data.BaseDetails:
+		messages, err = localization.Translate(key, map[string]interface{}{
+			NAME_KEY: details.GetBaseDetails().Name,
+		})
+	case *data.ExtendedDetails:
+		messages, err = localization.Translate(key, map[string]interface{}{
+			NAME_KEY: details.GetBaseDetails().Name,
+		})
+	case *data.ExtendedDetailsStore:
+		messages, err = localization.Translate(key, map[string]interface{}{
+			NAME_KEY:       details.GetBaseDetails().Name,
+			STORE_NAME_KEY: details.StoreInfo.StoreName,
+		})
+	case *data.ExtendedDetailsWarehouse:
+		messages, err = localization.Translate(key, map[string]interface{}{
+			NAME_KEY:           details.GetBaseDetails().Name,
+			WAREHOUSE_NAME_KEY: details.WarehouseInfo.WarehouseName,
+		})
+	default:
+		return nil, fmt.Errorf("unsupported type: %T", details)
 	}
 
-	messages.Kk, err = localization.Translate(localization.Kazakh, "createAuditMessage", map[string]interface{}{
-		"ComponentName": localization.GetLocalizedComponentName(localization.Kazakh, audit.ComponentName),
-		"Name":          details.GetBaseDetails().Name,
-	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate localized message: %w", err)
 	}
