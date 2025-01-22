@@ -20,7 +20,7 @@ const (
 
 func ConvertToEmployeeAuditDTO(audit *data.EmployeeAudit) (*EmployeeAuditDTO, error) {
 	employee := data.Employee{}
-	if &audit.Employee != nil {
+	if audit.Employee.ID != 0 {
 		employee = audit.Employee
 	}
 
@@ -61,7 +61,7 @@ func ConvertToEmployeeAuditDTO(audit *data.EmployeeAudit) (*EmployeeAuditDTO, er
 
 func MapLocalizedMessages(audit *data.EmployeeAudit, details data.AuditDetails) (*localization.LocalizedMessages, error) {
 	var err error
-	messages := &localization.LocalizedMessages{}
+	var messages *localization.LocalizedMessages
 
 	key := localization.FormTranslationKey(AUDIT_TRANSLATION_KEY, audit.OperationType.ToString(), audit.ComponentName.ToString())
 

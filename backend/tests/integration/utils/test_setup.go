@@ -163,7 +163,7 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 func setupRouter(db *gorm.DB) *gin.Engine {
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
-	
+
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 
 	dbHandler := &database.DBHandler{DB: db}
