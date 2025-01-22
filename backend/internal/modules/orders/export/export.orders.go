@@ -58,10 +58,6 @@ func addOrdersSheet(sheet *xlsx.Sheet, data []types.OrderExportDTO, file *xlsx.F
 }
 
 func addProductSheet(sheet *xlsx.Sheet, suborders []types.SuborderDTO, file *xlsx.File) {
-	sheet.SetColWidth(0, 0, 20)
-	sheet.SetColWidth(1, 1, 15)
-	sheet.SetColWidth(2, 2, 10)
-
 	headerRow := sheet.AddRow()
 	headers := []string{"Product Name", "Size", "Price"}
 	for _, header := range headers {
@@ -69,6 +65,11 @@ func addProductSheet(sheet *xlsx.Sheet, suborders []types.SuborderDTO, file *xls
 		cell.Value = header
 	}
 
+	err := setColumnWidths(sheet)
+	if err != nil {
+		logger.GetZapSugaredLogger().Errorln(err.Error())
+		return
+	}
 	setHeadersStyle(headerRow)
 
 	for _, suborder := range suborders {
@@ -86,10 +87,6 @@ func addProductSheet(sheet *xlsx.Sheet, suborders []types.SuborderDTO, file *xls
 }
 
 func addAdditiveSheet(sheet *xlsx.Sheet, additives []types.SuborderAdditiveDTO) {
-	sheet.SetColWidth(0, 0, 20)
-	sheet.SetColWidth(1, 1, 15)
-	sheet.SetColWidth(2, 2, 10)
-
 	headerRow := sheet.AddRow()
 	headers := []string{"Additive Name", "Price"}
 	for _, header := range headers {
@@ -97,6 +94,11 @@ func addAdditiveSheet(sheet *xlsx.Sheet, additives []types.SuborderAdditiveDTO) 
 		cell.Value = header
 	}
 
+	err := setColumnWidths(sheet)
+	if err != nil {
+		logger.GetZapSugaredLogger().Errorln(err.Error())
+		return
+	}
 	setHeadersStyle(headerRow)
 
 	for _, additive := range additives {
