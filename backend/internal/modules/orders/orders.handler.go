@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -233,15 +232,8 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 		return
 	}
 
-	// Create a temporary file to serve the response
-	tempFileName := "sales_export.xlsx"
-	if err := os.WriteFile(tempFileName, excelData, 0644); err != nil {
-		utils.SendInternalServerError(c, "Failed to write Excel file")
-		return
-	}
-	defer os.Remove(tempFileName) // Ensure the file is removed after serving
-
 	c.Header("Content-Disposition", "attachment; filename=sales_export.xlsx")
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	c.File(tempFileName)
+	c.Header("Content-Length", fmt.Sprintf("%d", len(excelData)))
+	c.Data(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelData)
 }

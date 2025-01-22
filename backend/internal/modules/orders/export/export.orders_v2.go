@@ -40,7 +40,7 @@ func GenerateSalesExcelV2(data []types.OrderExportDTO) ([]byte, error) {
 
 func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO) {
 	headerRow := sheet.AddRow()
-	headers := []string{"Order ID", "Customer Name", "Store Name", "Suborder ID", "Product Name", "Product Size", "Price", "Total (with additive price added)", "Additives", "Order Date"}
+	headers := []string{"Номер заказа", "Имя покупателя", "Название филиала", "Номер подзаказа", "Имя продукта", "Размер", "Цена", "Итого (с учетом цены добавок)", "Добавки", "Дата заказа"}
 	for _, header := range headers {
 		cell := headerRow.AddCell()
 		cell.Value = header
