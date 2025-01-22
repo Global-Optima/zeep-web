@@ -15,7 +15,7 @@ func setHeadersStyle(headerRow *xlsx.Row) {
 
 func setColumnWidths(sheet *xlsx.Sheet) error {
 	for i := range len(sheet.Cols) {
-		err := sheet.SetColWidth(i, i, 50)
+		err := sheet.SetColWidth(i, i, 30)
 		if err != nil {
 			return err
 		}
