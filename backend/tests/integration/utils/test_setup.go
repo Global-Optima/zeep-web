@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"log"
 	"net"
@@ -14,10 +15,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -164,14 +161,15 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 }
 
 func setupRouter(db *gorm.DB) *gin.Engine {
-	router := gin.Default()
+	router := gin.New()
+	router.Use(logger.ZapLoggerMiddleware())
+	
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 
 	dbHandler := &database.DBHandler{DB: db}
-	apiRouter.RegisterProductRoutes(product.NewProductHandler(product.NewProductService(product.NewProductRepository(dbHandler.DB), logger.GetZapSugaredLogger())))
-	apiRouter.RegisterStoresRoutes(stores.NewStoreHandler(stores.NewStoreService(stores.NewStoreRepository(dbHandler.DB))))
-	apiRouter.RegisterProductCategoriesRoutes(categories.NewCategoryHandler(categories.NewCategoryService(categories.NewCategoryRepository(dbHandler.DB))))
-	apiRouter.RegisterAdditivesRoutes(additives.NewAdditiveHandler(additives.NewAdditiveService(additives.NewAdditiveRepository(dbHandler.DB), logger.GetZapSugaredLogger())))
+
+	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
+	appContainer.MustInitModules()
 
 	return router
 }
