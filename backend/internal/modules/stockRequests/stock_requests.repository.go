@@ -29,7 +29,7 @@ type StockRequestRepository interface {
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
 
-	GetLastStockRequestDate(storeWarehouseID uint) (*time.Time, error)
+	GetLastStockRequestDate(storeID uint) (*time.Time, error)
 
 	DeleteStockRequest(requestID uint) error
 	GetOpenCartByStoreID(storeID uint) (*data.StockRequest, error)
