@@ -28,6 +28,7 @@ type OrderRepository interface {
 	GetOrderBySubOrderID(subOrderID uint) (*data.Order, error)
 
 	GetOrderDetails(orderID uint) (*data.Order, error)
+	GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error)
 }
 
 type orderRepository struct {
@@ -251,4 +252,28 @@ func (r *orderRepository) GetOrderDetails(orderID uint) (*data.Order, error) {
 	}
 
 	return &order, nil
+}
+
+func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error) {
+	var orders []data.Order
+	query := r.db.Preload("Suborders.ProductSize.Product").
+		Preload("Suborders.Additives").
+		Preload("Suborders.Additives.Additive").
+		Preload("Store").
+		Preload("DeliveryAddress")
+
+	if filter.StartDate != nil {
+		query = query.Where("created_at >= ?", *filter.StartDate)
+	}
+	if filter.EndDate != nil {
+		query = query.Where("created_at <= ?", *filter.EndDate)
+	}
+	if filter.StoreID != nil {
+		query = query.Where("store_id = ?", *filter.StoreID)
+	}
+
+	if err := query.Find(&orders).Error; err != nil {
+		return nil, err
+	}
+	return orders, nil
 }

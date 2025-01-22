@@ -24,6 +24,7 @@ type OrderService interface {
 	GetOrderById(orderId uint) (types.OrderDTO, error)
 
 	GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, error)
+	ExportOrders(filter *types.OrdersExportFilterQuery) ([]types.OrderExportDTO, error)
 }
 
 type orderValidationResults struct {
@@ -325,4 +326,18 @@ func (s *orderService) GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, er
 	}
 
 	return types.MapToOrderDetailsDTO(order), nil
+}
+
+func (s *orderService) ExportOrders(filter *types.OrdersExportFilterQuery) ([]types.OrderExportDTO, error) {
+	orders, err := s.orderRepo.GetOrdersForExport(filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch orders for export: %w", err)
+	}
+
+	exports := make([]types.OrderExportDTO, len(orders))
+	for i, order := range orders {
+		exports[i] = types.ToOrderExportDTO(&order, order.Store.Name)
+	}
+
+	return exports, nil
 }
