@@ -4,63 +4,52 @@ import (
 	"time"
 
 	supplierTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
+	stockMaterialPackageTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-type ReceiveInventoryRequest struct {
-	SupplierID    uint                             `json:"supplierId" binding:"required"`
-	WarehouseID   uint                             `json:"warehouseId" binding:"required"`
-	NewItems      []NewWarehouseStockMaterial      `json:"newWarehouseStockMaterial,omitempty"`      // For new SKUs
-	ExistingItems []ExistingWarehouseStockMaterial `json:"existingWarehouseStockMaterial,omitempty"` // For existing SKUs
+type ReceiveWarehouseDelivery struct {
+	SupplierID uint                            `json:"supplierId"`
+	Materials  []ReceiveWarehouseStockMaterial `json:"materials"`
 }
 
-type NewWarehouseStockMaterial struct {
-	Name             string  `json:"name" binding:"required"`
-	Description      string  `json:"description,omitempty"` // Optional
-	SafetyStock      float64 `json:"safetyStock" binding:"required"`
-	Quantity         float64 `json:"quantity" binding:"required,gte=0"`
-	UnitID           uint    `json:"unitId" binding:"required"`
-	CategoryID       uint    `json:"categoryId" binding:"required"`
-	ExpirationInDays *int    `json:"expirationInDays,omitempty"` // Optional override
-	Package          Package `json:"package" binding:"required"`
-	IngredientID     uint    `json:"ingredientId" binding:"required"` // New field for ingredient linkage
-}
-
-type ExistingWarehouseStockMaterial struct {
-	StockMaterialID uint    `json:"stockMaterialId"`                   // For existing SKUs
-	Quantity        float64 `json:"quantity" binding:"required,gte=0"` // Quantity to log
-	IngredientID    uint    `json:"ingredientId" binding:"required"`   // Link to ingredient
-}
-
-type Package struct {
-	Size   float64 `json:"size" binding:"required,gte=0"`
-	UnitID uint    `json:"unitId" binding:"required"`
+type ReceiveWarehouseStockMaterial struct {
+	StockMaterialID uint    `json:"stockMaterialId"`
+	Quantity        float64 `json:"quantity"`
+	PackageID       uint    `json:"packageId"`
 }
 
 type TransferInventoryRequest struct {
-	SourceWarehouseID uint                             `json:"sourceWarehouseId" binding:"required"`
-	TargetWarehouseID uint                             `json:"targetWarehouseId" binding:"required"`
-	Items             []ExistingWarehouseStockMaterial `json:"items" binding:"required"`
+	SourceWarehouseID uint                            `json:"sourceWarehouseId" binding:"required"`
+	TargetWarehouseID uint                            `json:"targetWarehouseId" binding:"required"`
+	Items             []ReceiveWarehouseStockMaterial `json:"items" binding:"required"`
 }
 
-type DeliveryResponse struct {
-	ID             uint                                 `json:"id"`
-	Barcode        string                               `json:"barcode"`
-	Quantity       float64                              `json:"quantity"`
-	StockMaterial  stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
-	Supplier       supplierTypes.SupplierResponse       `json:"supplier"`
-	Warehouse      warehouseTypes.WarehouseResponse     `json:"warehouse"`
-	DeliveryDate   time.Time                            `json:"deliveryDate"`
-	ExpirationDate time.Time                            `json:"expirationDate"`
+type WarehouseDeliveryDTO struct {
+	ID           uint                                `json:"id"`
+	Supplier     supplierTypes.SupplierResponse      `json:"supplier"`
+	Warehouse    warehouseTypes.WarehouseResponse    `json:"warehouse"`
+	Materials    []WarehouseDeliveryStockMaterialDTO `json:"materials"`
+	DeliveryDate time.Time                           `json:"deliveryDate"`
 }
 
-type DeliveryFilter struct {
+type WarehouseDeliveryStockMaterialDTO struct {
+	StockMaterial  stockMaterialTypes.StockMaterialsDTO                   `json:"stockMaterial"`
+	Package        stockMaterialPackageTypes.StockMaterialPackageResponse `json:"package"`
+	Quantity       float64                                                `json:"quantity"`
+	Barcode        string                                                 `json:"barcode"`
+	ExpirationDate time.Time                                              `json:"expirationDate"`
+}
+
+type WarehouseDeliveryFilter struct {
+	utils.BaseFilter
 	WarehouseID *uint      `form:"warehouseID"`
 	StartDate   *time.Time `form:"startDate" time_format:"2006-01-02T15:04:05Z07:00"`
 	EndDate     *time.Time `form:"endDate" time_format:"2006-01-02T15:04:05Z07:00"`
+	Search      *string    `form:"search"`
 }
 
 // stocks
@@ -100,18 +89,4 @@ type WarehouseStockResponse struct {
 
 type StockMaterialResponse struct {
 	stockMaterialTypes.StockMaterialsDTO
-}
-
-type WarehouseStockMaterialDetailsDTO struct {
-	StockMaterial          stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
-	Quantity               float64                              `json:"quantity"`
-	EarliestExpirationDate *time.Time                           `json:"earliestExpirationDate,omitempty"`
-	Deliveries             []StockMaterialDeliveryDTO           `json:"deliveries"`
-}
-
-type StockMaterialDeliveryDTO struct {
-	Supplier       supplierTypes.SupplierResponse `json:"supplier"`
-	Quantity       float64                        `json:"quantity"`
-	DeliveryDate   time.Time                      `json:"deliveryDate"`
-	ExpirationDate time.Time                      `json:"expirationDate"`
 }

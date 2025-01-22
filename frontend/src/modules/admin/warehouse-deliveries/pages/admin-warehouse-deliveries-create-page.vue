@@ -20,6 +20,7 @@ const createMutation = useMutation({
 	mutationFn: (dto: ReceiveWarehouseDelivery) => warehouseStocksService.receiveWarehouseDelivery(dto) ,
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['warehouse-deliveries'] })
+    queryClient.invalidateQueries({ queryKey: ['warehouse-stocks'] })
 		router.push({ name: getRouteName("ADMIN_WAREHOUSE_DELIVERIES") })
 	},
 })

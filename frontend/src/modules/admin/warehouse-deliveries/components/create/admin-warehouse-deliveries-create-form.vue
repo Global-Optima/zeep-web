@@ -97,6 +97,7 @@
 									type="number"
 									v-model.number="material.quantity"
 									:min="1"
+									class="w-20"
 									:class="{ 'border-red-500': material.quantity <= 0 }"
 									placeholder="Введите количество"
 								/>
@@ -146,6 +147,7 @@
 		/>
 		<AdminStockMaterialsSelectDialog
 			:open="openStockMaterialDialog"
+      :initial-filter='stockMaterialFilter'
 			@close="openStockMaterialDialog = false"
 			@select="addStockMaterial"
 		/>
@@ -184,11 +186,11 @@ import { ref } from 'vue'
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
 
 // Interfaces
-import type { StockMaterialPackageFilterDTO, StockMaterialPackagesDTO, StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
+import AdminSelectStockMaterialPackagesDialog from '@/modules/admin/stock-materials/components/admin-select-stock-material-packages-dialog.vue'
+import type { StockMaterialPackageFilterDTO, StockMaterialPackagesDTO, StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import AdminSelectSupplierDialog from '@/modules/admin/suppliers/components/admin-select-supplier-dialog.vue'
 import type { SupplierDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import type { ReceiveWarehouseDelivery, ReceiveWarehouseStockMaterial } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
-import AdminSelectStockMaterialPackagesDialog from '@/modules/admin/stock-materials/components/admin-select-stock-material-packages-dialog.vue'
 
 interface  ReceiveWarehouseStockMaterialForm extends ReceiveWarehouseStockMaterial {
   name: string
@@ -212,6 +214,7 @@ const openPackageDialogState = ref(false)
 const selectedMaterialIndex = ref<number | null>(null)
 
 const packageFilter = ref<StockMaterialPackageFilterDTO>({})
+const stockMaterialFilter = ref<StockMaterialsFilter>({})
 
 // Toast
 const { toast } = useToast()
@@ -220,6 +223,7 @@ const { toast } = useToast()
 function selectSupplier(supplier: SupplierDTO) {
 	selectedSupplier.value = supplier
 	openSupplierDialog.value = false
+  stockMaterialFilter.value = {supplierId: supplier.id}
 	toast({
 		title: 'Успех',
 		description: `Поставщик "${supplier.name}" выбран.`,
@@ -268,7 +272,7 @@ function removeMaterial(index: number) {
 
 // Open Package Dialog
 function openPackageDialog(index: number) {
-  // packageFilter.value = {stockMaterialId: ...}
+  packageFilter.value = {stockMaterialId: materials.value[index].stockMaterialId}
 	selectedMaterialIndex.value = index
 	openPackageDialogState.value = true
 }
@@ -277,8 +281,11 @@ function openPackageDialog(index: number) {
 function selectPackage(packageInfo: StockMaterialPackagesDTO) {
 	if (selectedMaterialIndex.value === null) return
 
-	const material = materials.value[selectedMaterialIndex.value]
-	material.packageId = packageInfo.id
+	materials.value[selectedMaterialIndex.value] = {
+    ...materials.value[selectedMaterialIndex.value],
+    packageId: packageInfo.id,
+    packageName: `${packageInfo.size} ${packageInfo.unit.name}`
+  }
 
 	toast({
 		title: 'Успех',

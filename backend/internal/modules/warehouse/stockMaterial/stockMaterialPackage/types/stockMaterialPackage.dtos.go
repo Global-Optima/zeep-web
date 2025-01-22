@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type CreateStockMaterialPackageDTO struct {
@@ -24,4 +25,11 @@ type StockMaterialPackageResponse struct {
 	Unit      types.UnitsDTO `json:"unit"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
+}
+
+type StockMaterialPackageFilter struct {
+	StockMaterialID *uint   `form:"stockMaterialId"`
+	UnitID          *uint   `form:"unitId"`
+	Search          *string `form:"search"`
+	utils.BaseFilter
 }

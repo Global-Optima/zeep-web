@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -13,9 +15,9 @@ type StockMaterialPackageRepository interface {
 	CreateMultiplePackages(packages []data.StockMaterialPackage) error
 	GetByID(id uint) (*data.StockMaterialPackage, error)
 	Update(id uint, packageEntity data.StockMaterialPackage) error
-	UpsertPackages(stockMaterialID uint, packages []types.UpdateStockMaterialPackagesDTO) error
+	UpsertPackages(stockMaterialID uint, packages []stockMaterialTypes.UpdateStockMaterialPackagesDTO) error
 	Delete(id uint) error
-	GetAll() ([]data.StockMaterialPackage, error)
+	GetAll(filter types.StockMaterialPackageFilter) ([]data.StockMaterialPackage, error)
 }
 
 type stockMaterialPackageRepository struct {
@@ -51,13 +53,41 @@ func (r *stockMaterialPackageRepository) Delete(id uint) error {
 	return r.db.Delete(&data.StockMaterialPackage{}, id).Error
 }
 
-func (r *stockMaterialPackageRepository) GetAll() ([]data.StockMaterialPackage, error) {
+func (r *stockMaterialPackageRepository) GetAll(filter types.StockMaterialPackageFilter) ([]data.StockMaterialPackage, error) {
 	var packages []data.StockMaterialPackage
-	err := r.db.Preload("StockMaterial").Preload("Unit").Find(&packages).Error
-	return packages, err
+
+	query := r.db.Model(&data.StockMaterialPackage{}).
+		Preload("StockMaterial").
+		Preload("Unit")
+
+	if filter.StockMaterialID != nil {
+		query = query.Where("stock_material_id = ?", *filter.StockMaterialID)
+	}
+
+	if filter.UnitID != nil {
+		query = query.Where("unit_id = ?", *filter.UnitID)
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		search := "%" + *filter.Search + "%"
+		query = query.Joins("JOIN stock_materials ON stock_materials.id = stock_material_packages.stock_material_id").
+			Where("stock_materials.name ILIKE ? OR stock_materials.description ILIKE ?", search, search)
+	}
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, data.StockMaterialPackage{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination and sorting: %w", err)
+	}
+
+	err = query.Find(&packages).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch stock material packages: %w", err)
+	}
+
+	return packages, nil
 }
 
-func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, packages []types.UpdateStockMaterialPackagesDTO) error {
+func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, packages []stockMaterialTypes.UpdateStockMaterialPackagesDTO) error {
 	var existingPackages []data.StockMaterialPackage
 	if err := r.db.Where("stock_material_id = ?", stockMaterialID).Find(&existingPackages).Error; err != nil {
 		return fmt.Errorf("failed to fetch existing packages: %w", err)
@@ -71,7 +101,7 @@ func (r *stockMaterialPackageRepository) UpsertPackages(stockMaterialID uint, pa
 	processedIDs := make(map[uint]bool)
 
 	for _, pkgDTO := range packages {
-		if err := types.ValidatePackageDTO(pkgDTO); err != nil {
+		if err := stockMaterialTypes.ValidatePackageDTO(pkgDTO); err != nil {
 			return fmt.Errorf("invalid package: %w", err)
 		}
 

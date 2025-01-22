@@ -54,15 +54,6 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		return 0, fmt.Errorf("an open cart already exists for this store")
 	}
 
-	lastRequestDate, err := s.repo.GetLastStockRequestDate(storeID)
-	if err != nil {
-		return 0, fmt.Errorf("failed to fetch last stock request date: %w", err)
-	}
-	err = types.ValidateStockRequestRate(lastRequestDate)
-	if err != nil {
-		return 0, err
-	}
-
 	storeWarehouse, err := s.repo.GetStoreWarehouse(storeID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to fetch store warehouse for store ID %d: %w", storeID, err)
@@ -176,6 +167,18 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
 		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestProcessed)
 	}
 
+	if request.Status == data.StockRequestCreated {
+		lastRequestDate, err := s.repo.GetLastStockRequestDate(request.StoreID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch last stock request date: %w", err)
+		}
+
+		err = types.ValidateStockRequestRate(lastRequestDate)
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := s.handleProcessedStatus(request); err != nil {
 		return err
 	}
@@ -189,18 +192,6 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
 }
 
 func (s *stockRequestService) handleProcessedStatus(request *data.StockRequest) error {
-	for _, ingredient := range request.Ingredients {
-		stockQuantity, err := s.repo.GetWarehouseStockQuantity(request.WarehouseID, ingredient.StockMaterialID)
-		if err != nil {
-			return fmt.Errorf("failed to fetch warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
-		}
-
-		if stockQuantity < ingredient.Quantity {
-			return fmt.Errorf("insufficient stock for material '%s' (ID: %d). Required: %.2f, Available: %.2f",
-				ingredient.StockMaterial.Name, ingredient.StockMaterialID, ingredient.Quantity, stockQuantity)
-		}
-	}
-
 	// TODO: Add notification logic for warehouse staff regarding the transition to PROCESSED
 	fmt.Printf("Stock request ID %d is now PROCESSED. Notifications will be added.\n", request.ID)
 
@@ -285,6 +276,16 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 
 func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest) error {
 	for _, ingredient := range request.Ingredients {
+		stockQuantity, err := s.repo.GetWarehouseStockQuantity(request.WarehouseID, ingredient.StockMaterialID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+
+		if stockQuantity < ingredient.Quantity {
+			return fmt.Errorf("insufficient stock for material '%s' (ID: %d). Required: %.2f, Available: %.2f",
+				ingredient.StockMaterial.Name, ingredient.StockMaterialID, ingredient.Quantity, stockQuantity)
+		}
+
 		if err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity); err != nil {
 			return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}

@@ -1,0 +1,59 @@
+<script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/core/components/ui/dropdown-menu'
+import { useToast } from '@/core/components/ui/toast'
+import { getRouteName } from '@/core/config/routes.config'
+import type { EmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
+import { authService } from '@/modules/auth/services/auth.service'
+import { useMutation } from '@tanstack/vue-query'
+import { User } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+
+const {currentEmployee} = defineProps<{currentEmployee: EmployeeDTO}>()
+const router = useRouter()
+
+const { toast } = useToast()
+
+const {mutate: logoutEmployee} = useMutation({
+		mutationFn: () => authService.logoutEmployee(),
+		onSuccess: () => {
+			toast({title: "Вы вышли из системы"})
+			router.push({name: getRouteName("LOGIN")})
+		},
+		onError: () => {
+      toast({title: "Произошла ошибка при выходе"})
+		},
+})
+const onLogoutClick = () => {
+  logoutEmployee()
+}
+</script>
+
+<template>
+	<DropdownMenu>
+		<DropdownMenuTrigger as-child>
+			<Button
+				variant="outline"
+				size="icon"
+				class="rounded-full"
+			>
+				<User class="w-5 h-5" />
+				<span class="sr-only">Toggle user menu</span>
+			</Button>
+		</DropdownMenuTrigger>
+		<DropdownMenuContent align="end">
+			<DropdownMenuLabel>
+				{{ currentEmployee.firstName }} {{ currentEmployee.lastName }}
+			</DropdownMenuLabel>
+			<DropdownMenuSeparator />
+			<DropdownMenuItem @click="onLogoutClick">Выйти</DropdownMenuItem>
+		</DropdownMenuContent>
+	</DropdownMenu>
+</template>

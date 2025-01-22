@@ -12,15 +12,16 @@ import (
 )
 
 type WarehouseStockService interface {
-	ReceiveInventory(req types.ReceiveInventoryRequest) error
+	ReceiveInventory(warehouseID uint, req types.ReceiveWarehouseDelivery) error
 	TransferInventory(req types.TransferInventoryRequest) error
-	GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]types.DeliveryResponse, error)
+	GetDeliveries(filter types.WarehouseDeliveryFilter) ([]types.WarehouseDeliveryDTO, error)
+	GetDeliveryByID(id uint) (*types.WarehouseDeliveryDTO, error)
 
 	AddWarehouseStockMaterial(req types.AdjustWarehouseStock) error
 	AddWarehouseStocks(warehouseID uint, req []types.AddWarehouseStockMaterial) error
 	DeductFromStock(req types.AdjustWarehouseStock) error
 	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
-	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error)
+	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error)
 	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
 }
 
@@ -40,165 +41,69 @@ func NewWarehouseStockService(repo WarehouseStockRepository, stockMaterialRepo s
 	}
 }
 
-func (s *warehouseStockService) ReceiveInventory(req types.ReceiveInventoryRequest) error {
-	var createdStockMaterials []data.StockMaterial
-	if len(req.NewItems) > 0 && req.NewItems != nil {
-		var err error
-		createdStockMaterials, err = s.createAndRegisterNewStockMaterials(req.SupplierID, req.NewItems)
-		if err != nil {
-			return fmt.Errorf("failed to create and register new stock materials: %w", err)
-		}
+func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.ReceiveWarehouseDelivery) error {
+	stockMaterialIDs := make([]uint, len(req.Materials))
+	for i, material := range req.Materials {
+		stockMaterialIDs[i] = material.StockMaterialID
 	}
-
-	existingStockMaterials, err := s.loadExistingStockMaterials(req.ExistingItems)
-	if err != nil {
-		return fmt.Errorf("failed to load existing stock materials: %w", err)
-	}
-
-	deliveries, err := s.assembleDeliveries(req, existingStockMaterials, createdStockMaterials)
-	if err != nil {
-		return fmt.Errorf("failed to assemble deliveries: %w", err)
-	}
-
-	if err := s.repo.RecordDeliveriesAndUpdateStock(deliveries, req.WarehouseID); err != nil {
-		return fmt.Errorf("failed to log incoming inventory: %w", err)
-	}
-
-	return nil
-}
-
-func (s *warehouseStockService) assembleDeliveries(
-	req types.ReceiveInventoryRequest,
-	existingStockMaterials map[uint]*data.StockMaterial,
-	newStockMaterials []data.StockMaterial,
-) ([]data.SupplierWarehouseDelivery, error) {
-	deliveries := []data.SupplierWarehouseDelivery{}
-	newStockMaterialMap := make(map[string]*data.StockMaterial)
-
-	for _, stockMaterial := range newStockMaterials {
-		newStockMaterialMap[stockMaterial.Name] = &stockMaterial
-	}
-
-	for _, item := range req.ExistingItems {
-		stockMaterial, found := existingStockMaterials[item.StockMaterialID]
-		if !found {
-			return nil, fmt.Errorf("existing stock material not found: ID %d", item.StockMaterialID)
-		}
-
-		delivery := data.SupplierWarehouseDelivery{
-			StockMaterialID: stockMaterial.ID,
-			SupplierID:      req.SupplierID,
-			WarehouseID:     req.WarehouseID,
-			Barcode:         stockMaterial.Barcode,
-			Quantity:        item.Quantity,
-			DeliveryDate:    time.Now(),
-			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
-		}
-		deliveries = append(deliveries, delivery)
-	}
-
-	for _, item := range req.NewItems {
-		stockMaterial, found := newStockMaterialMap[item.Name]
-		if !found {
-			return nil, fmt.Errorf("new stock material not found: Name %s", item.Name)
-		}
-
-		delivery := data.SupplierWarehouseDelivery{
-			StockMaterialID: stockMaterial.ID,
-			SupplierID:      req.SupplierID,
-			WarehouseID:     req.WarehouseID,
-			Barcode:         stockMaterial.Barcode,
-			Quantity:        item.Quantity,
-			DeliveryDate:    time.Now(),
-			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
-		}
-		deliveries = append(deliveries, delivery)
-	}
-
-	return deliveries, nil
-}
-
-func (s *warehouseStockService) createAndRegisterNewStockMaterials(supplierID uint, items []types.NewWarehouseStockMaterial) ([]data.StockMaterial, error) {
-	newStockMaterials := []data.StockMaterial{}
-
-	for _, item := range items {
-		expirationPeriod := 1095
-		if item.ExpirationInDays != nil {
-			expirationPeriod = *item.ExpirationInDays
-		}
-
-		newStockMaterial := data.StockMaterial{
-			Name:                   item.Name,
-			Description:            item.Description,
-			SafetyStock:            item.SafetyStock,
-			UnitID:                 item.UnitID,
-			CategoryID:             item.CategoryID,
-			ExpirationPeriodInDays: expirationPeriod,
-			IngredientID:           item.IngredientID, // Linking to ingredient
-			IsActive:               true,
-		}
-
-		if err := s.stockMaterialRepo.CreateStockMaterial(&newStockMaterial); err != nil {
-			return nil, fmt.Errorf("failed to create stock material %s: %w", item.Name, err)
-		}
-
-		if err := s.ensureSupplierMaterialAssociation(supplierID, newStockMaterial.ID); err != nil {
-			return nil, fmt.Errorf("failed to associate supplier %d with stock material %d: %w", supplierID, newStockMaterial.ID, err)
-		}
-
-		pkg := data.StockMaterialPackage{
-			Size:   item.Package.Size,
-			UnitID: item.Package.UnitID,
-		}
-
-		packageData := types.ValidatePackage(newStockMaterial.ID, pkg)
-		if packageData == nil {
-			return nil, fmt.Errorf("invalid package data for stock material %s", item.Name)
-		}
-		if err := s.packageRepo.Create(packageData); err != nil {
-			return nil, fmt.Errorf("failed to create package for stock material %s: %w", item.Name, err)
-		}
-
-		newStockMaterials = append(newStockMaterials, newStockMaterial)
-	}
-
-	return newStockMaterials, nil
-}
-
-func (s *warehouseStockService) loadExistingStockMaterials(items []types.ExistingWarehouseStockMaterial) (map[uint]*data.StockMaterial, error) {
-	stockMaterialIDs := []uint{}
-	for _, item := range items {
-		stockMaterialIDs = append(stockMaterialIDs, item.StockMaterialID)
-	}
-
 	stockMaterials, err := s.stockMaterialRepo.GetStockMaterialsByIDs(stockMaterialIDs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch stock materials: %w", err)
+		return fmt.Errorf("failed to fetch stock materials: %w", err)
 	}
 
-	existingStockMaterials := make(map[uint]*data.StockMaterial)
+	stockMaterialMap := make(map[uint]*data.StockMaterial)
 	for _, stockMaterial := range stockMaterials {
-		existingStockMaterials[stockMaterial.ID] = &stockMaterial
+		stockMaterialMap[stockMaterial.ID] = &stockMaterial
 	}
 
-	return existingStockMaterials, nil
-}
+	delivery := data.SupplierWarehouseDelivery{
+		SupplierID:   req.SupplierID,
+		WarehouseID:  warehouseID,
+		DeliveryDate: time.Now(),
+	}
 
-func (s *warehouseStockService) ensureSupplierMaterialAssociation(supplierID, stockMaterialID uint) error {
-	exists, err := s.repo.SupplierMaterialExists(supplierID, stockMaterialID)
+	materials := make([]data.SupplierWarehouseDeliveryMaterial, len(req.Materials))
+
+	for i, material := range req.Materials {
+		stockMaterial, exists := stockMaterialMap[material.StockMaterialID]
+		if !exists {
+			return fmt.Errorf("stock material with ID %d not found", material.StockMaterialID)
+		}
+
+		packageFound := false
+		for _, pkg := range stockMaterial.Packages {
+			if pkg.ID == material.PackageID {
+				packageFound = true
+				break
+			}
+		}
+		if !packageFound {
+			return fmt.Errorf("package with ID %d not found for stock material ID %d", material.PackageID, material.StockMaterialID)
+		}
+
+		var packageToUse *data.StockMaterialPackage
+		for _, pkg := range stockMaterial.Packages {
+			if pkg.ID == material.PackageID {
+				packageToUse = &pkg
+				break
+			}
+		}
+		if packageToUse == nil {
+			return fmt.Errorf("failed to retrieve package details for package ID %d", material.PackageID)
+		}
+
+		materials[i] = data.SupplierWarehouseDeliveryMaterial{
+			StockMaterialID: material.StockMaterialID,
+			PackageID:       material.PackageID,
+			Barcode:         stockMaterial.Barcode,
+			Quantity:        material.Quantity,
+			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
+		}
+	}
+
+	err = s.repo.RecordDeliveriesAndUpdateStock(delivery, materials, warehouseID)
 	if err != nil {
-		return fmt.Errorf("failed to check supplier-material association: %w", err)
-	}
-
-	if !exists {
-		association := data.SupplierMaterial{
-			SupplierID:      supplierID,
-			StockMaterialID: stockMaterialID,
-		}
-
-		if err := s.repo.CreateSupplierMaterial(&association); err != nil {
-			return fmt.Errorf("failed to create supplier-material association: %w", err)
-		}
+		return fmt.Errorf("failed to receive inventory: %w", err)
 	}
 
 	return nil
@@ -217,13 +122,24 @@ func (s *warehouseStockService) TransferInventory(req types.TransferInventoryReq
 	return nil
 }
 
-func (s *warehouseStockService) GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]types.DeliveryResponse, error) {
-	deliveries, err := s.repo.GetDeliveries(warehouseID, startDate, endDate)
+func (s *warehouseStockService) GetDeliveries(filter types.WarehouseDeliveryFilter) ([]types.WarehouseDeliveryDTO, error) {
+	deliveries, err := s.repo.GetDeliveries(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch deliveries: %w", err)
 	}
 
 	return types.DeliveriesToDeliveryResponses(deliveries), nil
+}
+
+func (s *warehouseStockService) GetDeliveryByID(id uint) (*types.WarehouseDeliveryDTO, error) {
+	var delivery data.SupplierWarehouseDelivery
+	err := s.repo.GetDeliveryByID(id, &delivery)
+	if err != nil {
+		return nil, err
+	}
+
+	response := types.ToDeliveryResponse(delivery)
+	return &response, nil
 }
 
 func (s *warehouseStockService) AddWarehouseStockMaterial(req types.AdjustWarehouseStock) error {
@@ -265,35 +181,36 @@ func (s *warehouseStockService) AddWarehouseStocks(warehouseID uint, req []types
 	return s.repo.AddWarehouseStocks(warehouseID, stocks)
 }
 
-func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockMaterialDetailsDTO, error) {
-	aggregatedStock, deliveries, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
+func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error) {
+	aggregatedStock, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)
 	}
 
-	details := types.ToStockMaterialDetails(*aggregatedStock, deliveries)
+	details := types.ToWarehouseStockResponse(*aggregatedStock)
 
 	return &details, nil
 }
 
 func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error {
-	stock, err := s.repo.GetWarehouseStockByID(warehouseID, stockMaterialID)
-	if err != nil {
-		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
-	}
-
-	if dto.ExpirationDate == nil && dto.Quantity == nil {
+	// Validate input
+	if dto.Quantity == nil && dto.ExpirationDate == nil {
 		return fmt.Errorf("nothing to update")
 	}
 
-	if dto.ExpirationDate != nil {
-		if err := s.repo.UpdateExpirationDate(stock.StockMaterialID, stock.WarehouseID, *dto.ExpirationDate); err != nil {
-			return fmt.Errorf("failed to update expiration date: %w", err)
+	// Update quantity if provided
+	if dto.Quantity != nil {
+		err := s.repo.UpdateStockQuantity(stockMaterialID, warehouseID, *dto.Quantity)
+		if err != nil {
+			return fmt.Errorf("failed to update stock quantity: %w", err)
 		}
 	}
-	if dto.Quantity != nil {
-		if err := s.repo.UpdateStockQuantity(stock.ID, *dto.Quantity); err != nil {
-			return fmt.Errorf("failed to update stock quantity: %w", err)
+
+	// Update expiration date if provided
+	if dto.ExpirationDate != nil {
+		err := s.repo.UpdateExpirationDate(stockMaterialID, warehouseID, *dto.ExpirationDate)
+		if err != nil {
+			return fmt.Errorf("failed to update expiration date: %w", err)
 		}
 	}
 

@@ -11,7 +11,7 @@
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Доставка №{{ delivery.id }}
+				Доставка №{{ delivery.id }} - {{ delivery.supplier.name }}
 			</h1>
 		</div>
 
@@ -24,25 +24,22 @@
 			<CardContent>
 				<ul class="space-y-2">
 					<li>
-						<span>Штрихкод:</span> <span class="font-medium">{{ delivery.barcode }}</span>
+						<span>Склад: </span> <span class="font-medium">{{ delivery.warehouse.name}}</span>
 					</li>
 					<li>
-						<span>Количество:</span> <span class="font-medium">{{ delivery.quantity }}</span>
+						<span>Количество: </span>
+						<span class="font-medium">{{ delivery.materials.length }}</span>
 					</li>
 					<li>
-						<span>Поставщик:</span>
+						<span>Поставщик: </span>
 						<span class="font-medium">{{ delivery.supplier.name }}</span>
 					</li>
 					<li>
-						<span>Склад:</span> <span class="font-medium">{{ delivery.warehouse.name }}</span>
+						<span>Склад: </span> <span class="font-medium">{{ delivery.warehouse.name }}</span>
 					</li>
 					<li>
-						<span>Дата доставки:</span>
+						<span>Дата доставки: yyyy</span>
 						<span class="font-medium">{{ formatDate(delivery.deliveryDate) }}</span>
-					</li>
-					<li>
-						<span>Дата истечения срока годности:</span>
-						<span class="font-medium">{{ formatDate(delivery.expirationDate) }}</span>
 					</li>
 				</ul>
 			</CardContent>
@@ -59,7 +56,9 @@
 					<TableHeader>
 						<TableRow>
 							<TableHead>Название материала</TableHead>
+							<TableHead>Упаковка</TableHead>
 							<TableHead>Количество</TableHead>
+							<TableHead>Срок годности</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -67,8 +66,10 @@
 							v-for="material in delivery.materials"
 							:key="material.stockMaterial.id"
 						>
-							<TableCell>{{ material.stockMaterial.name }}</TableCell>
+							<TableCell class="py-4 font-medium">{{ material.stockMaterial.name }}</TableCell>
+							<TableCell>{{ material.package.size }} {{ material.package.unit.name }}</TableCell>
 							<TableCell>{{ material.quantity }}</TableCell>
+							<TableCell>{{ format(material.expirationDate, "dd.MM.yyyy") }}</TableCell>
 						</TableRow>
 						<TableRow v-if="delivery.materials.length === 0">
 							<TableCell
@@ -102,13 +103,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import type { WarehouseDeliveriesDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
+import type { WarehouseDeliveryDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
+import { format } from 'date-fns'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Props
 
 const { delivery } = defineProps<{
-	delivery: WarehouseDeliveriesDTO
+	delivery: WarehouseDeliveryDTO
 }>()
 
 const emit = defineEmits<{

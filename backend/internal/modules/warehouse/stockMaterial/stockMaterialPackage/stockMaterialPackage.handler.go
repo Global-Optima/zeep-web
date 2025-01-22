@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -86,11 +87,18 @@ func (h *StockMaterialPackageHandler) Delete(c *gin.Context) {
 }
 
 func (h *StockMaterialPackageHandler) GetAll(c *gin.Context) {
-	packages, err := h.service.GetAll()
+	var filter types.StockMaterialPackageFilter
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockMaterialPackage{})
+	if err != nil {
+		utils.SendBadRequestError(c, "Failed to parse queries")
+		return
+	}
+
+	packages, err := h.service.GetAll(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch stock material packages")
 		return
 	}
 
-	utils.SendSuccessResponse(c, packages)
+	utils.SendSuccessResponseWithPagination(c, packages, filter.Pagination)
 }

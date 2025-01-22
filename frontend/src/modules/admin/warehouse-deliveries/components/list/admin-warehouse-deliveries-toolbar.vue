@@ -25,13 +25,13 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { WarehouseDeliveriesFilterDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
+import type { WarehouseDeliveryFilter } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Props and Emit
-const props = defineProps<{ filter: WarehouseDeliveriesFilterDTO }>()
+const props = defineProps<{ filter: WarehouseDeliveryFilter }>()
 const emit = defineEmits(['update:filter'])
 
 // Local Filter

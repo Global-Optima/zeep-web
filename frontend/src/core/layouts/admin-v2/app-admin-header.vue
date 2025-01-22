@@ -1,5 +1,5 @@
 <template>
-	<header class="flex items-center gap-4 bg-muted/40 px-4 lg:px-6 border-b w-full h-14 lg:h-[60px]">
+	<header class="flex items-center gap-4 bg-muted/40 px-4 lg:px-6 py-2 border-b w-full">
 		<Sheet>
 			<SheetTrigger as-child>
 				<Button

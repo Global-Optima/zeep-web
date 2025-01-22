@@ -1,37 +1,35 @@
 package warehouseStock
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
 type WarehouseStockRepository interface {
-	LogIncomingInventory(deliveries []data.SupplierWarehouseDelivery) error
-	RecordDeliveriesAndUpdateStock(deliveries []data.SupplierWarehouseDelivery, warehouseID uint) error
-	LogAndUpdateStock(deliveries []data.SupplierWarehouseDelivery, warehouseID uint) error
+	RecordDeliveriesAndUpdateStock(delivery data.SupplierWarehouseDelivery, materials []data.SupplierWarehouseDeliveryMaterial, warehouseID uint) error
 	TransferStock(sourceWarehouseID, targetWarehouseID uint, items []data.StockRequestIngredient) error
 
 	GetDeliveryByID(deliveryID uint, delivery *data.SupplierWarehouseDelivery) error
-	GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]data.SupplierWarehouseDelivery, error)
+	GetDeliveries(filter types.WarehouseDeliveryFilter) ([]data.SupplierWarehouseDelivery, error)
 
-	ConvertInventoryItemsToStockRequest(items []types.ExistingWarehouseStockMaterial) ([]data.StockRequestIngredient, error)
-	SupplierMaterialExists(supplierID, stockMaterialID uint) (bool, error)
-	CreateSupplierMaterial(association *data.SupplierMaterial) error
+	ConvertInventoryItemsToStockRequest(items []types.ReceiveWarehouseStockMaterial) ([]data.StockRequestIngredient, error)
 
 	AddToWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error
 	DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error
 	GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error)
-	GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID uint) (*data.AggregatedWarehouseStock, []data.SupplierWarehouseDelivery, error)
+	GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID uint) (*data.AggregatedWarehouseStock, error)
 	AddWarehouseStocks(warehouseID uint, stocks []data.WarehouseStock) error
 
 	UpdateWarehouseStock(stock *data.WarehouseStock) error
 	GetWarehouseStockByID(warehouseID, stockMaterialID uint) (*data.WarehouseStock, error)
-	UpdateStockQuantity(stockID uint, quantity float64) error
+	UpdateStockQuantity(stockID uint, warehouseID uint, quantity float64) error
 	UpdateExpirationDate(stockMaterialID, warehouseID uint, newExpirationDate time.Time) error
 }
 
@@ -43,41 +41,24 @@ func NewWarehouseStockRepository(db *gorm.DB) WarehouseStockRepository {
 	return &warehouseStockRepository{db: db}
 }
 
-func (r *warehouseStockRepository) LogIncomingInventory(deliveries []data.SupplierWarehouseDelivery) error {
-	return r.db.Create(&deliveries).Error
-}
-
-func (r *warehouseStockRepository) LogAndUpdateStock(deliveries []data.SupplierWarehouseDelivery, warehouseID uint) error {
+func (r *warehouseStockRepository) RecordDeliveriesAndUpdateStock(delivery data.SupplierWarehouseDelivery, materials []data.SupplierWarehouseDeliveryMaterial, warehouseID uint) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(&deliveries).Error; err != nil {
-			return fmt.Errorf("failed to log deliveries: %w", err)
+		if err := tx.Create(&delivery).Error; err != nil {
+			return fmt.Errorf("failed to create delivery: %w", err)
 		}
 
-		for _, delivery := range deliveries {
-			var stock data.WarehouseStock
-			err := tx.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, delivery.StockMaterialID).
-				First(&stock).Error
+		for i := range materials {
+			materials[i].DeliveryID = delivery.ID
+		}
 
-			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					newStock := data.WarehouseStock{
-						WarehouseID:     warehouseID,
-						StockMaterialID: delivery.StockMaterialID,
-						Quantity:        delivery.Quantity,
-					}
-					if err := tx.Create(&newStock).Error; err != nil {
-						return fmt.Errorf("failed to create warehouse stock: %w", err)
-					}
-				} else {
-					return fmt.Errorf("failed to query warehouse stock: %w", err)
-				}
-			} else {
-				err = tx.Model(&data.WarehouseStock{}).
-					Where("id = ?", stock.ID).
-					Update("quantity", gorm.Expr("quantity + ?", delivery.Quantity)).Error
-				if err != nil {
-					return fmt.Errorf("failed to update warehouse stock quantity: %w", err)
-				}
+		err := r.recordDeliveryMaterials(tx, materials)
+		if err != nil {
+			return fmt.Errorf("failed to record delivery materials: %w", err)
+		}
+
+		for _, material := range materials {
+			if err := r.updateOrInsertStock(tx, warehouseID, material); err != nil {
+				return fmt.Errorf("failed to update or insert stock for stock_material_id %d: %w", material.StockMaterialID, err)
 			}
 		}
 
@@ -85,45 +66,42 @@ func (r *warehouseStockRepository) LogAndUpdateStock(deliveries []data.SupplierW
 	})
 }
 
-func (r *warehouseStockRepository) RecordDeliveriesAndUpdateStock(deliveries []data.SupplierWarehouseDelivery, warehouseID uint) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := r.recordDeliveries(tx, deliveries); err != nil {
-			return fmt.Errorf("failed to record deliveries: %w", err)
-		}
-
-		for _, delivery := range deliveries {
-			if err := r.updateOrInsertStock(tx, warehouseID, delivery); err != nil {
-				return fmt.Errorf("failed to update or insert stock for stock_material_id %d: %w", delivery.StockMaterialID, err)
-			}
-		}
-
-		return nil
-	})
-}
-
-func (r *warehouseStockRepository) recordDeliveries(tx *gorm.DB, deliveries []data.SupplierWarehouseDelivery) error {
-	if err := tx.Create(&deliveries).Error; err != nil {
-		return fmt.Errorf("failed to log deliveries: %w", err)
+func (r *warehouseStockRepository) recordDeliveryMaterials(tx *gorm.DB, materials []data.SupplierWarehouseDeliveryMaterial) error {
+	if err := tx.Create(&materials).Error; err != nil {
+		return fmt.Errorf("failed to log delivery materials: %w", err)
 	}
 	return nil
 }
 
-func (r *warehouseStockRepository) updateOrInsertStock(tx *gorm.DB, warehouseID uint, delivery data.SupplierWarehouseDelivery) error {
+func (r *warehouseStockRepository) updateOrInsertStock(tx *gorm.DB, warehouseID uint, material data.SupplierWarehouseDeliveryMaterial) error {
 	stock := data.WarehouseStock{
 		WarehouseID:     warehouseID,
-		StockMaterialID: delivery.StockMaterialID,
+		StockMaterialID: material.StockMaterialID,
 	}
 
-	if err := tx.FirstOrCreate(&stock, "warehouse_id = ? AND stock_material_id = ?", warehouseID, delivery.StockMaterialID).Error; err != nil {
+	if err := tx.Model(&material).
+		Preload("Package").
+		Preload("Package.Unit").
+		Preload("StockMaterial.Unit").
+		First(&material, "id = ?", material.ID).Error; err != nil {
+		return fmt.Errorf("failed to preload package and stock material for material ID %d: %w", material.ID, err)
+	}
+
+	var unitQuantity float64
+	if material.Package.UnitID == material.StockMaterial.UnitID {
+		unitQuantity = material.Quantity * material.Package.Size
+	} else {
+		unitQuantity = material.Quantity * material.Package.Size * material.StockMaterial.Unit.ConversionFactor
+	}
+
+	if err := tx.FirstOrCreate(&stock, "warehouse_id = ? AND stock_material_id = ?", warehouseID, material.StockMaterialID).Error; err != nil {
 		return fmt.Errorf("failed to find or create warehouse stock: %w", err)
 	}
 
-	if stock.ID != 0 {
-		if err := tx.Model(&data.WarehouseStock{}).
-			Where("id = ?", stock.ID).
-			Update("quantity", gorm.Expr("quantity + ?", delivery.Quantity)).Error; err != nil {
-			return fmt.Errorf("failed to update warehouse stock quantity: %w", err)
-		}
+	if err := tx.Model(&data.WarehouseStock{}).
+		Where("id = ?", stock.ID).
+		Update("quantity", gorm.Expr("quantity + ?", unitQuantity)).Error; err != nil {
+		return fmt.Errorf("failed to update warehouse stock quantity: %w", err)
 	}
 
 	return nil
@@ -153,38 +131,64 @@ func (r *warehouseStockRepository) TransferStock(sourceWarehouseID, targetWareho
 }
 
 func (r *warehouseStockRepository) GetDeliveryByID(deliveryID uint, delivery *data.SupplierWarehouseDelivery) error {
-	return r.db.First(delivery, "id = ?", deliveryID).Error
-}
-
-func (r *warehouseStockRepository) GetDeliveries(warehouseID *uint, startDate, endDate *time.Time) ([]data.SupplierWarehouseDelivery, error) {
-	var deliveries []data.SupplierWarehouseDelivery
-	query := r.db.Model(&data.SupplierWarehouseDelivery{}).
+	return r.db.Preload("Materials").
 		Preload("Supplier").
 		Preload("Warehouse").
-		Preload("StockMaterial").
-		Preload("StockMaterial.Unit").
-		Preload("StockMaterial.Ingredient").
-		Preload("StockMaterial.Ingredient.Unit").
-		Preload("StockMaterial.Ingredient.IngredientCategory").
-		Preload("StockMaterial.StockMaterialCategory").
-		Preload("StockMaterial.Packages").
-		Preload("StockMaterial.Packages.Unit")
+		Preload("Materials.Package").
+		Preload("Materials.Package.Unit").
+		Preload("Materials.StockMaterial").
+		Preload("Materials.StockMaterial.Unit").
+		Preload("Materials.StockMaterial.Ingredient").
+		Preload("Materials.StockMaterial.Ingredient.Unit").
+		Preload("Materials.StockMaterial.Ingredient.IngredientCategory").
+		Preload("Materials.StockMaterial.StockMaterialCategory").
+		Preload("Materials.StockMaterial.Packages").
+		Preload("Materials.StockMaterial.Packages.Unit").First(delivery, "id = ?", deliveryID).Error
+}
 
-	if warehouseID != nil {
-		query = query.Where("warehouse_id = ?", *warehouseID)
+func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryFilter) ([]data.SupplierWarehouseDelivery, error) {
+	var deliveries []data.SupplierWarehouseDelivery
+	query := r.db.Model(&data.SupplierWarehouseDelivery{}).
+		Preload("Materials").
+		Preload("Supplier").
+		Preload("Warehouse").
+		Preload("Materials.Package").
+		Preload("Materials.Package.Unit").
+		Preload("Materials.StockMaterial").
+		Preload("Materials.StockMaterial.Unit").
+		Preload("Materials.StockMaterial.Ingredient").
+		Preload("Materials.StockMaterial.Ingredient.Unit").
+		Preload("Materials.StockMaterial.Ingredient.IngredientCategory").
+		Preload("Materials.StockMaterial.StockMaterialCategory").
+		Preload("Materials.StockMaterial.Packages").
+		Preload("Materials.StockMaterial.Packages.Unit").
+		Joins("JOIN suppliers ON suppliers.id = supplier_warehouse_deliveries.supplier_id")
+
+	if filter.WarehouseID != nil {
+		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
 	}
-	if startDate != nil {
-		query = query.Where("delivery_date >= ?", *startDate)
+	if filter.StartDate != nil {
+		query = query.Where("delivery_date >= ?", *filter.StartDate)
 	}
-	if endDate != nil {
-		query = query.Where("delivery_date <= ?", *endDate)
+	if filter.EndDate != nil {
+		query = query.Where("delivery_date <= ?", *filter.EndDate)
 	}
 
-	err := query.Find(&deliveries).Error
+	if filter.Search != nil {
+		search := "%" + *filter.Search + "%"
+		query = query.Where("suppliers.name ILIKE ?", search)
+	}
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.SupplierWarehouseDelivery{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = query.Find(&deliveries).Error
 	return deliveries, err
 }
 
-func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []types.ExistingWarehouseStockMaterial) ([]data.StockRequestIngredient, error) {
+func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []types.ReceiveWarehouseStockMaterial) ([]data.StockRequestIngredient, error) {
 	converted := make([]data.StockRequestIngredient, len(items))
 
 	for i, item := range items {
@@ -205,21 +209,6 @@ func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []t
 	}
 
 	return converted, nil
-}
-
-func (r *warehouseStockRepository) SupplierMaterialExists(supplierID, stockMaterialID uint) (bool, error) {
-	var count int64
-	err := r.db.Model(&data.SupplierMaterial{}).
-		Where("supplier_id = ? AND stock_material_id = ?", supplierID, stockMaterialID).
-		Count(&count).Error
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
-func (r *warehouseStockRepository) CreateSupplierMaterial(association *data.SupplierMaterial) error {
-	return r.db.Create(association).Error
 }
 
 func (r *warehouseStockRepository) AddToWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error {
@@ -253,69 +242,93 @@ func (r *warehouseStockRepository) DeductFromWarehouseStock(warehouseID, stockMa
 }
 
 func (r *warehouseStockRepository) GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error) {
-	warehouseStocks, totalCount, err := r.getWarehouseStocksWithPagination(filter)
+	warehouseStocks, err := r.getWarehouseStocksWithPagination(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
 	}
 
-	supplierDeliveries, err := r.getSupplierDeliveries(filter)
+	materials, err := r.getDeliveryMaterials(filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch supplier deliveries: %w", err)
+		return nil, fmt.Errorf("failed to fetch delivery materials: %w", err)
 	}
 
-	deliveryMap := make(map[uint][]data.SupplierWarehouseDelivery)
-	for _, delivery := range supplierDeliveries {
-		deliveryMap[delivery.StockMaterialID] = append(deliveryMap[delivery.StockMaterialID], delivery)
+	materialMap := make(map[uint][]data.SupplierWarehouseDeliveryMaterial)
+	for _, material := range materials {
+		materialMap[material.StockMaterialID] = append(materialMap[material.StockMaterialID], material)
 	}
 
-	aggregatedStocks := r.aggregateWarehouseStocks(warehouseStocks, deliveryMap)
-
-	if filter.Pagination != nil {
-		filter.Pagination.TotalCount = int(totalCount)
-		if filter.Pagination.PageSize > 0 {
-			filter.Pagination.TotalPages = (int(totalCount) + filter.Pagination.PageSize - 1) / filter.Pagination.PageSize
-		}
-	}
+	aggregatedStocks := r.aggregateWarehouseStocks(warehouseStocks, materialMap)
 
 	return aggregatedStocks, nil
 }
 
-func (r *warehouseStockRepository) GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID uint) (*data.AggregatedWarehouseStock, []data.SupplierWarehouseDelivery, error) {
+func (r *warehouseStockRepository) GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID uint) (*data.AggregatedWarehouseStock, error) {
 	warehouseStock, err := r.getWarehouseStock(stockMaterialID, warehouseID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch warehouse stock: %w", err)
+		return nil, fmt.Errorf("failed to fetch warehouse stock: %w", err)
 	}
 
-	deliveries, err := r.getSupplierDeliveriesForStock(stockMaterialID, warehouseID)
+	earliestExpirationDate, err := r.findEarliestExpirationDateForStock(stockMaterialID, warehouseID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch supplier deliveries: %w", err)
+		return nil, fmt.Errorf("failed to fetch earliest expiration date: %w", err)
 	}
 
-	aggregatedStock := r.aggregateWarehouseStock(*warehouseStock, deliveries)
-	return aggregatedStock, deliveries, nil
+	return &data.AggregatedWarehouseStock{
+		WarehouseID:            warehouseStock.WarehouseID,
+		StockMaterialID:        warehouseStock.StockMaterialID,
+		StockMaterial:          warehouseStock.StockMaterial,
+		TotalQuantity:          warehouseStock.Quantity,
+		EarliestExpirationDate: earliestExpirationDate,
+	}, nil
 }
 
 // helper functions
-func (r *warehouseStockRepository) findEarliestExpirationDate(deliveries []data.SupplierWarehouseDelivery) *time.Time {
+func (r *warehouseStockRepository) findEarliestMaterialExpirationDate(materials []data.SupplierWarehouseDeliveryMaterial) *time.Time {
+	if len(materials) == 0 {
+		return nil
+	}
+
 	var earliest *time.Time
-	for _, delivery := range deliveries {
-		if earliest == nil || delivery.ExpirationDate.Before(*earliest) {
-			earliest = &delivery.ExpirationDate
+	for _, material := range materials {
+		if earliest == nil || material.ExpirationDate.Before(*earliest) {
+			earliest = &material.ExpirationDate
 		}
 	}
-	return earliest
+
+	utcTime := utils.ToUTC(*earliest)
+	return &utcTime
+}
+
+func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error) {
+	var earliestExpirationDate sql.NullTime
+	err := r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
+		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.id = supplier_warehouse_delivery_materials.delivery_id").
+		Where("supplier_warehouse_deliveries.warehouse_id = ? AND supplier_warehouse_delivery_materials.stock_material_id = ?", warehouseID, stockMaterialID).
+		Select("MIN(supplier_warehouse_delivery_materials.expiration_date) AS earliest_expiration_date").
+		Scan(&earliestExpirationDate).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch earliest expiration date for stock material ID %d: %w", stockMaterialID, err)
+	}
+
+	if !earliestExpirationDate.Valid {
+		return nil, nil
+	}
+
+	UTCTime := utils.ToUTC(earliestExpirationDate.Time)
+	return &UTCTime, nil
 }
 
 func (r *warehouseStockRepository) aggregateWarehouseStocks(
 	warehouseStocks []data.WarehouseStock,
-	deliveryMap map[uint][]data.SupplierWarehouseDelivery,
+	materialMap map[uint][]data.SupplierWarehouseDeliveryMaterial,
 ) []data.AggregatedWarehouseStock {
 	aggregatedStocks := []data.AggregatedWarehouseStock{}
 
 	for _, stock := range warehouseStocks {
-		deliveries := deliveryMap[stock.StockMaterialID]
+		materials := materialMap[stock.StockMaterialID]
 
-		earliestExpirationDate := r.findEarliestExpirationDate(deliveries)
+		earliestExpirationDate := r.findEarliestMaterialExpirationDate(materials)
 
 		aggregatedStocks = append(aggregatedStocks, data.AggregatedWarehouseStock{
 			WarehouseID:            stock.WarehouseID,
@@ -329,51 +342,28 @@ func (r *warehouseStockRepository) aggregateWarehouseStocks(
 	return aggregatedStocks
 }
 
-func (r *warehouseStockRepository) aggregateWarehouseStock(
-	warehouseStock data.WarehouseStock,
-	deliveries []data.SupplierWarehouseDelivery,
-) *data.AggregatedWarehouseStock {
-	earliestExpirationDate := r.findEarliestExpirationDate(deliveries)
+func (r *warehouseStockRepository) getDeliveryMaterials(filter *types.GetWarehouseStockFilterQuery) ([]data.SupplierWarehouseDeliveryMaterial, error) {
+	var materials []data.SupplierWarehouseDeliveryMaterial
 
-	return &data.AggregatedWarehouseStock{
-		WarehouseID:            warehouseStock.WarehouseID,
-		StockMaterialID:        warehouseStock.StockMaterialID,
-		StockMaterial:          warehouseStock.StockMaterial,
-		TotalQuantity:          warehouseStock.Quantity,
-		EarliestExpirationDate: earliestExpirationDate,
-	}
-}
-
-func (r *warehouseStockRepository) getSupplierDeliveriesForStock(stockMaterialID, warehouseID uint) ([]data.SupplierWarehouseDelivery, error) {
-	var deliveries []data.SupplierWarehouseDelivery
-	err := r.db.Model(&data.SupplierWarehouseDelivery{}).
-		Preload("Supplier").
-		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
-		Find(&deliveries).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("failed to fetch deliveries for stock material: %w", err)
-	}
-	return deliveries, nil
-}
-
-func (r *warehouseStockRepository) getSupplierDeliveries(filter *types.GetWarehouseStockFilterQuery) ([]data.SupplierWarehouseDelivery, error) {
-	var deliveries []data.SupplierWarehouseDelivery
-
-	query := r.db.Model(&data.SupplierWarehouseDelivery{}).Preload("Supplier")
+	query := r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
+		Preload("StockMaterial").
+		Preload("Package").
+		Preload("Package.Unit")
 
 	if filter.WarehouseID != nil {
-		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
+		query = query.Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.id = supplier_warehouse_delivery_materials.delivery_id").
+			Where("supplier_warehouse_deliveries.warehouse_id = ?", *filter.WarehouseID)
 	}
 
 	if filter.StockMaterialID != nil {
 		query = query.Where("stock_material_id = ?", *filter.StockMaterialID)
 	}
 
-	if err := query.Find(&deliveries).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("failed to fetch supplier deliveries: %w", err)
+	if err := query.Find(&materials).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("failed to fetch delivery materials: %w", err)
 	}
 
-	return deliveries, nil
+	return materials, nil
 }
 
 func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID, warehouseID uint) (*data.WarehouseStock, error) {
@@ -395,10 +385,10 @@ func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID, warehouseI
 	return &stock, nil
 }
 
-func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *types.GetWarehouseStockFilterQuery) ([]data.WarehouseStock, int64, error) {
+func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *types.GetWarehouseStockFilterQuery) ([]data.WarehouseStock, error) {
 	var warehouseStocks []data.WarehouseStock
-	var totalCount int64
 
+	// Base query
 	query := r.db.Model(&data.WarehouseStock{}).
 		Preload("StockMaterial").
 		Preload("StockMaterial.Unit").
@@ -408,85 +398,132 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.StockMaterialCategory").
 		Preload("StockMaterial.Packages").
 		Preload("StockMaterial.Packages.Unit").
-		Joins("LEFT JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.stock_material_id = warehouse_stocks.stock_material_id").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 
-	// Apply filters
+	// Filter by warehouse
 	if filter.WarehouseID != nil {
 		query = query.Where("warehouse_stocks.warehouse_id = ?", *filter.WarehouseID)
 	}
 
+	// Filter by stock material
 	if filter.StockMaterialID != nil {
-		query = query.Where("stock_materials.stock_material_id = ?", *filter.StockMaterialID)
+		query = query.Where("warehouse_stocks.stock_material_id = ?", *filter.StockMaterialID)
 	}
 
+	// Filter by ingredient
 	if filter.IngredientID != nil {
 		query = query.Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
 	}
 
+	// Filter by low stock
 	if filter.LowStockOnly != nil && *filter.LowStockOnly {
 		query = query.Where("warehouse_stocks.quantity <= stock_materials.safety_stock")
 	}
 
+	// Filter by expiration-related conditions
 	if filter.IsExpiring != nil && *filter.IsExpiring {
-		days := 1095 
-		if filter.ExpirationDays != nil {
-			days = *filter.ExpirationDays
-		}
-
-		expirationThreshold := time.Now().AddDate(0, 0, days)
-		query = query.Where(`
-			supplier_warehouse_deliveries.expiration_date <= ? 
-			OR supplier_warehouse_deliveries.expiration_date IS NULL`, expirationThreshold)
+		query = query.Joins(`
+			LEFT JOIN supplier_warehouse_delivery_materials 
+			ON supplier_warehouse_delivery_materials.stock_material_id = warehouse_stocks.stock_material_id
+		`).
+			Where(`
+				supplier_warehouse_delivery_materials.expiration_date IS NOT NULL AND
+				supplier_warehouse_delivery_materials.expiration_date <= NOW() + INTERVAL '7 days'
+			`).
+			Group("warehouse_stocks.id")
 	}
 
+	// Filter by expiration days
+	if filter.ExpirationDays != nil {
+		expirationThreshold := time.Now().AddDate(0, 0, *filter.ExpirationDays)
+		query = query.Joins(`
+			LEFT JOIN supplier_warehouse_delivery_materials 
+			ON supplier_warehouse_delivery_materials.stock_material_id = warehouse_stocks.stock_material_id
+		`).
+			Where(`
+				supplier_warehouse_delivery_materials.expiration_date IS NOT NULL AND
+				supplier_warehouse_delivery_materials.expiration_date <= ?
+			`, expirationThreshold).
+			Group("warehouse_stocks.id")
+	}
+
+	// Filter by category
 	if filter.CategoryID != nil {
 		query = query.Where("stock_materials.category_id = ?", *filter.CategoryID)
 	}
 
+	// Filter by search query
 	if filter.Search != nil && *filter.Search != "" {
 		search := "%" + *filter.Search + "%"
-		query = query.Where("stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_materials.barcode ILIKE ?", search, search, search)
+		query = query.Where(`
+			stock_materials.name ILIKE ? OR 
+			stock_materials.description ILIKE ? OR 
+			stock_materials.barcode ILIKE ?
+		`, search, search, search)
 	}
 
-	if err := query.Count(&totalCount).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to count warehouse stocks: %w", err)
+	// Apply pagination and sorting
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.WarehouseStock{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
 
-	if filter.Pagination != nil {
-		offset := (filter.Pagination.Page - 1) * filter.Pagination.PageSize
-		query = query.Offset(offset).Limit(filter.Pagination.PageSize)
-	}
-
+	// Execute query
 	if err := query.Find(&warehouseStocks).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
+		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
 	}
 
-	return warehouseStocks, totalCount, nil
-}
-
-func (r *warehouseStockRepository) UpdateWarehouseStock(stock *data.WarehouseStock) error {
-	return r.db.Save(stock).Error
-}
-
-func (r *warehouseStockRepository) GetWarehouseStockByID(warehouseID, stockMaterialID uint) (*data.WarehouseStock, error) {
-	var stock data.WarehouseStock
-	if err := r.db.First(&stock).Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).Error; err != nil {
-		return nil, err
-	}
-	return &stock, nil
-}
-
-func (r *warehouseStockRepository) UpdateStockQuantity(stockID uint, quantity float64) error {
-	return r.db.Model(&data.WarehouseStock{}).
-		Where("id = ?", stockID).
-		Update("quantity", quantity).Error
+	return warehouseStocks, nil
 }
 
 func (r *warehouseStockRepository) UpdateExpirationDate(stockMaterialID, warehouseID uint, newExpirationDate time.Time) error {
-	return r.db.Model(&data.SupplierWarehouseDelivery{}).
-		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+	var deliveryMaterialIDs []uint
+	err := r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
+		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.id = supplier_warehouse_delivery_materials.delivery_id").
+		Where("supplier_warehouse_deliveries.warehouse_id = ? AND supplier_warehouse_delivery_materials.stock_material_id = ?", warehouseID, stockMaterialID).
+		Pluck("supplier_warehouse_delivery_materials.id", &deliveryMaterialIDs).Error
+
+	if err != nil {
+		return fmt.Errorf("failed to identify delivery materials to update: %w", err)
+	}
+
+	if len(deliveryMaterialIDs) == 0 {
+		return fmt.Errorf("no deliveries found for stock material ID %d in warehouse ID %d", stockMaterialID, warehouseID)
+	}
+
+	err = r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
+		Where("id IN ?", deliveryMaterialIDs).
 		Update("expiration_date", newExpirationDate).Error
+
+	if err != nil {
+		return fmt.Errorf("failed to update expiration date: %w", err)
+	}
+
+	return nil
+}
+
+func (r *warehouseStockRepository) UpdateStockQuantity(stockMaterialID, warehouseID uint, quantity float64) error {
+	var warehouseStock data.WarehouseStock
+	err := r.db.Model(&data.WarehouseStock{}).
+		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+		First(&warehouseStock).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("stock material ID %d not found in warehouse ID %d", stockMaterialID, warehouseID)
+		}
+		return fmt.Errorf("failed to check warehouse stock existence: %w", err)
+	}
+
+	err = r.db.Model(&data.WarehouseStock{}).
+		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+		Update("quantity", quantity).Error
+
+	if err != nil {
+		return fmt.Errorf("failed to update quantity for stock material ID %d in warehouse ID %d: %w", stockMaterialID, warehouseID, err)
+	}
+
+	return nil
 }
 
 func (r *warehouseStockRepository) AddWarehouseStocks(warehouseID uint, stocks []data.WarehouseStock) error {
@@ -513,4 +550,16 @@ func (r *warehouseStockRepository) AddWarehouseStocks(warehouseID uint, stocks [
 		}
 		return nil
 	})
+}
+
+func (r *warehouseStockRepository) GetWarehouseStockByID(warehouseID, stockMaterialID uint) (*data.WarehouseStock, error) {
+	var stock data.WarehouseStock
+	if err := r.db.First(&stock).Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).Error; err != nil {
+		return nil, err
+	}
+	return &stock, nil
+}
+
+func (r *warehouseStockRepository) UpdateWarehouseStock(stock *data.WarehouseStock) error {
+	return r.db.Save(stock).Error
 }

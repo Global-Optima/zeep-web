@@ -6,16 +6,21 @@ import AppAdminHeader from '@/core/layouts/admin/app-admin-header.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
 import { EmployeeType } from '@/modules/admin/store-employees/models/employees.models'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
-import { Coffee, Store } from 'lucide-vue-next'
+import { Coffee, Store, TvMinimal } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
 const {currentEmployee} = useEmployeeAuthStore()
 
+const onDisplayClick = () => {
+	router.push({name: getRouteName('KIOSK_ORDERS_DISPLAY')})
+}
+
 const onKioskClick = () => {
 	router.push({name: getRouteName('KIOSK_HOME')})
 }
+
 const onBaristaClick = () => {
 	router.push({name: getRouteName('KIOSK_ORDERS')})
 }
@@ -46,6 +51,15 @@ const onBaristaClick = () => {
 				</div>
 
 				<div class="mt-auto p-4">
+					<Button
+						variant="outline"
+						@click="onDisplayClick"
+						class="flex items-center gap-3 mb-2 py-5 w-full"
+					>
+						<TvMinimal class="w-4 h-4" />
+						<p class="text-base">Экран</p>
+					</Button>
+
 					<Button
 						variant="outline"
 						@click="onBaristaClick"

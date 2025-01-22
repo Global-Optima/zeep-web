@@ -16,14 +16,6 @@ export interface WarehouseStockMaterialDetailsDTO {
 	stockMaterial: StockMaterialsDTO
 	quantity: number
 	earliestExpirationDate?: string
-	deliveries: WarehouseStockMaterialDeliveryDTO[]
-}
-
-export interface WarehouseStockMaterialDeliveryDTO {
-	supplierName: string
-	quantity: number
-	deliveryDate: Date
-	expirationDate: Date
 }
 
 export interface GetWarehouseStockFilter extends PaginationParams {
@@ -47,21 +39,20 @@ export interface AddMultipleWarehouseStockDTO {
 	quantity: number
 }
 
-export interface WarehouseDeliveriesDTO {
+export interface WarehouseDeliveryDTO {
 	id: number
-	barcode: string
-	quantity: number
 	materials: WarehouseDeliveryStockMaterialDTO[]
 	supplier: SupplierDTO
 	warehouse: WarehouseDTO
 	deliveryDate: Date
-	expirationDate: Date
 }
 
 export interface WarehouseDeliveryStockMaterialDTO {
 	stockMaterial: StockMaterialsDTO
 	package: StockMaterialPackagesDTO
 	quantity: number
+	barcode: string
+	expirationDate: Date
 }
 
 export interface ReceiveWarehouseDelivery {
@@ -75,7 +66,7 @@ export interface ReceiveWarehouseStockMaterial {
 	packageId: number
 }
 
-export interface WarehouseDeliveriesFilterDTO extends PaginationParams {
+export interface WarehouseDeliveryFilter extends PaginationParams {
 	search?: string
 	warehouseId?: number
 	startDate?: Date

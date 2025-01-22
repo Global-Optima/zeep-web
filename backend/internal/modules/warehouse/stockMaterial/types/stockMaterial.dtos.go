@@ -69,5 +69,6 @@ type StockMaterialFilter struct {
 	IngredientID     *uint   `form:"ingredientId"`     // Filter by ingredient
 	CategoryID       *uint   `form:"categoryId"`       // Filter by category
 	ExpirationInDays *int    `form:"expirationInDays"` // Filter by expiration period in days
+	SupplierID       *uint   `form:"supplierId"`
 	utils.BaseFilter
 }

@@ -29,7 +29,7 @@ type StockRequestRepository interface {
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
 
-	GetLastStockRequestDate(storeWarehouseID uint) (*time.Time, error)
+	GetLastStockRequestDate(storeID uint) (*time.Time, error)
 
 	DeleteStockRequest(requestID uint) error
 	GetOpenCartByStoreID(storeID uint) (*data.StockRequest, error)
@@ -154,14 +154,27 @@ func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, stoc
 }
 
 func (r *stockRequestRepository) GetLastStockRequestDate(storeID uint) (*time.Time, error) {
+	var count int64
 	var lastRequest data.StockRequest
-	err := r.db.Select("created_at").Where("store_id = ?", storeID).
+
+	err := r.db.Model(&data.StockRequest{}).Where("store_id = ?", storeID).Count(&count).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if count <= 1 {
+		return nil, nil
+	}
+
+	err = r.db.Select("created_at").Where("store_id = ?", storeID).
 		Order("created_at DESC").First(&lastRequest).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
-	return lastRequest.RequestDate, err
+	return &lastRequest.CreatedAt, err
 }
+
+
 
 func (r *stockRequestRepository) GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error) {
 	var stock data.WarehouseStock
