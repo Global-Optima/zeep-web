@@ -28,7 +28,7 @@ func ValidateStatus(status string) error {
 
 func ValidateStockRequestRate(lastRequestDate *time.Time) error {
 	if lastRequestDate != nil && time.Since(*lastRequestDate) < 24*time.Hour {
-		return errors.New("only one stock request is allowed per day")
+		return errors.New("only one stock request is allowed to send per day")
 	}
 	return nil
 }

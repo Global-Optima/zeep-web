@@ -1457,12 +1457,12 @@ VALUES
 
 
 -- Insert into StockRequests (Initial Requests)
-INSERT INTO stock_requests (store_id, warehouse_id, status, request_date, created_at, updated_at)
+INSERT INTO stock_requests (store_id, warehouse_id, status, created_at, updated_at)
 VALUES
-    (1, 1, 'CREATED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 'PROCESSED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 'IN_DELIVERY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 4, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (1, 1, 'CREATED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (2, 2, 'PROCESSED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 3, 'IN_DELIVERY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 4, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, stock_material_id, quantity, created_at, updated_at)
 VALUES

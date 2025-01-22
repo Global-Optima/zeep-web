@@ -52,25 +52,7 @@ type StockRequest struct {
 	Status           StockRequestStatus       `gorm:"size:50;not null" sort:"status"`
 	StoreComment     *string                  `gorm:"type:text"` // Store-specific comments
 	WarehouseComment *string                  `gorm:"type:text"` // Warehouse-specific comments
-	RequestDate      *time.Time               `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP"`
 	Ingredients      []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
-}
-
-// Hooks for StockRequest
-func (s *StockRequest) BeforeCreate(tx *gorm.DB) (err error) {
-	if s.RequestDate != nil {
-		utcTime := toUTC(*s.RequestDate)
-		s.RequestDate = &utcTime
-	}
-	return
-}
-
-func (s *StockRequest) AfterFind(tx *gorm.DB) (err error) {
-	if s.RequestDate != nil {
-		utcTime := toUTC(*s.RequestDate)
-		s.RequestDate = &utcTime
-	}
-	return
 }
 
 type StockRequestIngredient struct {

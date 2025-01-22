@@ -51,8 +51,10 @@ import {
   type StockRequestResponse
 } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 
+import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
 import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
+import type { AxiosError } from 'axios'
 import { useRouter } from 'vue-router'
 
 /** Props */
@@ -62,7 +64,6 @@ const props = defineProps<{
   request: StockRequestResponse
 }>()
 
-
 const actions = computed<StockRequestAction[]>(() => {
   return getActions(props.status, props.role)
 })
@@ -70,6 +71,8 @@ const actions = computed<StockRequestAction[]>(() => {
 const commentDialogOpen = ref(false)
 const acceptChangesDialogOpen = ref(false)
 let currentAction: StockRequestAction | null = null
+
+const { toast } = useToast()
 
 function onActionClick(action: StockRequestAction) {
   currentAction = action
@@ -132,7 +135,7 @@ type MutationVariables =
 const router = useRouter()
 
 // Our single mutation for any action
-const {mutate, isPending} = useMutation({
+const { mutate, isPending } = useMutation({
   mutationFn: async (vars: MutationVariables) => {
     const { action } = vars
     switch (action.type) {
@@ -144,19 +147,29 @@ const {mutate, isPending} = useMutation({
         return action.handler(props.request.requestId, vars.payload as AcceptWithChangeRequestStatusDTO)
     }
   },
-  onSuccess: (_, {action}) => {
+  onSuccess: (_, { action }) => {
     queryClient.invalidateQueries({ queryKey: ['stock-requests'] })
     queryClient.invalidateQueries({ queryKey: ['stock-request', props.request.requestId] })
 
+    toast({
+      title: 'Успех',
+      description: `Действие "${action.label}" выполнено успешно.`,
+      variant: 'default',
+    })
+
     if (action.redirectRouteKey) {
-      router.push({name: getRouteName(action.redirectRouteKey)})
+      router.push({ name: getRouteName(action.redirectRouteKey) })
     }
   },
-  onError: (error) => {
-    console.error('Action failed:', error)
+  onError:(error: AxiosError<{error: string}>) => {
+    const message =  error.response?.data.error ?? 'Не удалось выполнить действие. Попробуйте снова.'
+    toast({
+      title: 'Ошибка',
+      description: message,
+      variant: 'destructive',
+    })
   },
 })
-
 
 function callHandler(action: StockRequestAction, payload?: RejectStockRequestStatusDTO | AcceptWithChangeRequestStatusDTO): void {
   switch (action.type) {
@@ -165,12 +178,12 @@ function callHandler(action: StockRequestAction, payload?: RejectStockRequestSta
     case 'COMMENT_DIALOG':
       return mutate({
         action,
-        payload: payload as RejectStockRequestStatusDTO
+        payload: payload as RejectStockRequestStatusDTO,
       })
     case 'ACCEPT_WITH_CHANGES_DIALOG':
       return mutate({
         action,
-        payload: payload as AcceptWithChangeRequestStatusDTO
+        payload: payload as AcceptWithChangeRequestStatusDTO,
       })
   }
 }

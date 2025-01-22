@@ -54,16 +54,6 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		return 0, fmt.Errorf("an open cart already exists for this store")
 	}
 
-	lastRequestDate, err := s.repo.GetLastStockRequestDate(storeID)
-	if err != nil {
-		return 0, fmt.Errorf("failed to fetch last stock request date: %w", err)
-	}
-
-	err = types.ValidateStockRequestRate(lastRequestDate)
-	if err != nil {
-		return 0, err
-	}
-
 	storeWarehouse, err := s.repo.GetStoreWarehouse(storeID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to fetch store warehouse for store ID %d: %w", storeID, err)
@@ -175,6 +165,18 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
 
 	if !types.IsValidTransition(request.Status, data.StockRequestProcessed) {
 		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestProcessed)
+	}
+
+	if request.Status == data.StockRequestCreated {
+		lastRequestDate, err := s.repo.GetLastStockRequestDate(request.StoreID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch last stock request date: %w", err)
+		}
+
+		err = types.ValidateStockRequestRate(lastRequestDate)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := s.handleProcessedStatus(request); err != nil {
