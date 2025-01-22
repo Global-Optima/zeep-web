@@ -40,8 +40,6 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		Preload("Ingredient").
 		Preload("Ingredient.IngredientCategory").
 		Preload("Ingredient.Unit").
-		Preload("Packages").
-		Preload("Packages.Unit").
 		Where("stock_materials.is_active = ?", true)
 
 	if filter != nil {
@@ -99,7 +97,7 @@ func (r *stockMaterialRepository) GetStockMaterialByID(stockMaterialID uint) (*d
 		Preload("StockMaterialCategory").
 		Preload("Ingredient").
 		Preload("Ingredient.IngredientCategory").
-		Preload("Ingredient.Unit").Preload("Packages").Preload("Packages.Unit").
+		Preload("Ingredient.Unit").
 		First(&stockMaterial, stockMaterialID).Error
 	if err != nil {
 		return nil, err
@@ -113,7 +111,7 @@ func (r *stockMaterialRepository) GetStockMaterialsByIDs(stockMaterialIDs []uint
 		return stockMaterials, nil // Return an empty slice if no IDs are provided
 	}
 
-	err := r.db.Preload("Packages").Preload("Packages.Unit").Where("id IN ?", stockMaterialIDs).Find(&stockMaterials).Error
+	err := r.db.Where("id IN ?", stockMaterialIDs).Find(&stockMaterials).Error
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +145,7 @@ func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint
 		return nil, err
 	}
 
-	if err := r.db.Preload("Unit").Preload("Packages").First(&stockMaterial, stockMaterialID).Error; err != nil {
+	if err := r.db.Preload("Unit").First(&stockMaterial, stockMaterialID).Error; err != nil {
 		return nil, err
 	}
 

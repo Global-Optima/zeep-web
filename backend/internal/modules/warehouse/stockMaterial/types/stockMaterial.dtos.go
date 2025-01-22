@@ -4,7 +4,6 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	stockMaterialCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
-	stockMaterialPackageTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -17,13 +16,7 @@ type CreateStockMaterialDTO struct {
 	IngredientID           uint    `json:"ingredientId" binding:"required"`
 	Barcode                string  `json:"barcode"`
 	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
-
-	Packages []CreateStockMaterialPackagesDTO `json:"packages" binding:"required"`
-}
-
-type CreateStockMaterialPackagesDTO struct {
-	Size   float64 `json:"size" binding:"required,gt=0"`
-	UnitID uint    `json:"unitId" binding:"required"`
+	Size                   float64 `json:"size"`
 }
 
 type UpdateStockMaterialPackagesDTO struct {
@@ -42,8 +35,7 @@ type UpdateStockMaterialDTO struct {
 	Barcode                *string  `json:"barcode"`
 	ExpirationPeriodInDays *int     `json:"expirationPeriodInDays"`
 	IsActive               *bool    `json:"isActive"`
-
-	Packages []UpdateStockMaterialPackagesDTO `json:"packages" binding:"omitempty"`
+	Size                   *float64 `json:"size"`
 }
 
 type StockMaterialsDTO struct {
@@ -57,7 +49,7 @@ type StockMaterialsDTO struct {
 	Category               stockMaterialCategoryTypes.StockMaterialCategoryResponse `json:"category"`
 	Ingredient             ingredientTypes.IngredientDTO                            `json:"ingredient"`
 	ExpirationPeriodInDays int                                                      `json:"expirationPeriodInDays"`
-	Packages               []stockMaterialPackageTypes.StockMaterialPackageResponse `json:"packages"`
+	Size                   float64                                                  `json:"size"`
 	CreatedAt              string                                                   `json:"createdAt"`
 	UpdatedAt              string                                                   `json:"updatedAt"`
 }

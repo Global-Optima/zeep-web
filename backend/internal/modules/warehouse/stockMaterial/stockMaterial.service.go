@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 )
@@ -67,18 +66,6 @@ func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMateria
 		return nil, err
 	}
 
-	if len(req.Packages) != 0 {
-		packages := make([]data.StockMaterialPackage, len(req.Packages))
-		for i, pkg := range req.Packages {
-			packages[i] = *types.ConvertPackageDTOToModel(stockMaterial.ID, &pkg)
-		}
-
-		err = s.packageRepo.CreateMultiplePackages(packages)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	stockMaterialResponse := types.ConvertStockMaterialToStockMaterialResponse(stockMaterial)
 	return stockMaterialResponse, nil
 }
@@ -101,13 +88,6 @@ func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *ty
 	err = s.repo.UpdateStockMaterial(stockMaterialID, updatedStockMaterial)
 	if err != nil {
 		return fmt.Errorf("failed to update stock material: %w", err)
-	}
-
-	if len(req.Packages) != 0 {
-		err = s.packageRepo.UpsertPackages(stockMaterialID, req.Packages)
-		if err != nil {
-			return fmt.Errorf("failed to upsert packages: %w", err)
-		}
 	}
 
 	return nil
