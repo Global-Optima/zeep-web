@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"log"
 	"net"
@@ -15,7 +14,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
-	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -164,12 +162,12 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
 
-	apiRouter := routes.NewRouter(router, "/api", "/test")
+	/*apiRouter := routes.NewRouter(router, "/api", "/test")
 
 	dbHandler := &database.DBHandler{DB: db}
 
 	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
-	appContainer.MustInitModules()
+	appContainer.MustInitModules()*/
 
 	return router
 }
