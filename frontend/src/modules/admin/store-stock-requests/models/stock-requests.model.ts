@@ -42,7 +42,7 @@ export const STORE_STOCK_REQUEST_STATUSES: StockRequestStatus[] = ALL_STOCK_REQU
 
 // DTO for creating a stock request
 export interface CreateStockRequestDTO {
-	items: StockRequestStockMaterialDTO[]
+	stockMaterials: StockRequestStockMaterialDTO[]
 }
 
 // DTO for individual stock material in a stock request

@@ -33,15 +33,16 @@ func NewStockMaterialRepository(db *gorm.DB) StockMaterialRepository {
 
 func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMaterialFilter) ([]data.StockMaterial, error) {
 	var stockMaterials []data.StockMaterial
+
 	query := r.db.Model(&data.StockMaterial{}).
 		Preload("Unit").
 		Preload("StockMaterialCategory").
 		Preload("Ingredient").
 		Preload("Ingredient.IngredientCategory").
 		Preload("Ingredient.Unit").
-		Preload("Packages").Preload("Packages.Unit")
-
-	query = query.Where("is_active = ?", true)
+		Preload("Packages").
+		Preload("Packages.Unit").
+		Where("stock_materials.is_active = ?", true)
 
 	if filter != nil {
 		if filter.Search != nil && *filter.Search != "" {
@@ -55,30 +56,36 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		}
 
 		if filter.IsActive != nil {
-			query = query.Where("is_active = ?", *filter.IsActive)
+			query = query.Where("stock_materials.is_active = ?", *filter.IsActive)
 		}
 
 		if filter.IngredientID != nil {
-			query = query.Where("ingredient_id = ?", *filter.IngredientID)
+			query = query.Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
 		}
 
 		if filter.CategoryID != nil {
-			query = query.Where("category_id = ?", *filter.CategoryID)
+			query = query.Where("stock_materials.category_id = ?", *filter.CategoryID)
+		}
+
+		if filter.SupplierID != nil {
+			query = query.Joins("JOIN supplier_materials ON supplier_materials.stock_material_id = stock_materials.id").
+				Where("supplier_materials.supplier_id = ?", *filter.SupplierID)
 		}
 
 		if filter.ExpirationInDays != nil {
-			query = query.Where("expiration_period_in_days <= ?", *filter.ExpirationInDays)
+			query = query.Where("stock_materials.expiration_period_in_days <= ?", *filter.ExpirationInDays)
 		}
 	}
 
-	query = query.Order("created_at DESC")
-
+	// Apply sorting and pagination
+	query = query.Order("stock_materials.created_at DESC")
 	var err error
 	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
 	if err != nil {
 		return nil, err
 	}
 
+	// Execute query
 	if err := query.Find(&stockMaterials).Error; err != nil {
 		return nil, err
 	}
