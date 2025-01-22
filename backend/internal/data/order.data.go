@@ -23,6 +23,7 @@ type Order struct {
 	CustomerName      string          `gorm:"size:255" sort:"customerName"`
 	EmployeeID        *uint           `gorm:"index"`
 	StoreID           uint            `gorm:"index"`
+	Store             Store           `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	DeliveryAddressID *uint           `gorm:"index"`
 	DeliveryAddress   CustomerAddress `gorm:"foreignKey:DeliveryAddressID;constraint:OnDelete:CASCADE"`
 	Status            OrderStatus     `gorm:"size:50;not null" sort:"orderStatus"`

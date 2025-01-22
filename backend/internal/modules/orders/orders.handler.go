@@ -2,11 +2,14 @@ package orders
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/export"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -209,4 +212,36 @@ func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, orderDetails)
+}
+
+func (h *OrderHandler) ExportOrders(c *gin.Context) {
+	var filter types.OrdersExportFilterQuery
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		utils.SendBadRequestError(c, "Invalid filter parameters")
+		return
+	}
+
+	orders, err := h.service.ExportOrders(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to export orders")
+		return
+	}
+
+	excelData, err := export.GenerateSalesExcelV2(orders)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to generate Excel file")
+		return
+	}
+
+	// Create a temporary file to serve the response
+	tempFileName := "sales_export.xlsx"
+	if err := os.WriteFile(tempFileName, excelData, 0644); err != nil {
+		utils.SendInternalServerError(c, "Failed to write Excel file")
+		return
+	}
+	defer os.Remove(tempFileName) // Ensure the file is removed after serving
+
+	c.Header("Content-Disposition", "attachment; filename=sales_export.xlsx")
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.File(tempFileName)
 }

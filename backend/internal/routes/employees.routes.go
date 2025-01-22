@@ -188,6 +188,8 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.GET("/statuses/count", handler.GetStatusesCount)
 		router.GET("/:orderId/receipt", handler.GeneratePDFReceipt)
 		router.GET("/:orderId", handler.GetOrderDetails)
+
+		router.GET("/sales", handler.ExportOrders)
 	}
 }
 

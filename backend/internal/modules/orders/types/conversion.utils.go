@@ -170,3 +170,42 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 		DeliveryAddress: deliveryAddress, // Optional
 	}
 }
+
+// for export
+func ToOrderExportDTO(order *data.Order, storeName string) OrderExportDTO {
+	suborders := make([]SuborderDTO, len(order.Suborders))
+	for i, suborder := range order.Suborders {
+		suborders[i] = ConvertSuborderToDTO(&suborder)
+	}
+
+	return OrderExportDTO{
+		ID:              order.ID,
+		CustomerName:    order.CustomerName,
+		Status:          string(order.Status),
+		Total:           order.Total,
+		CreatedAt:       order.CreatedAt,
+		StoreName:       storeName,
+		Suborders:       suborders,
+		DeliveryAddress: ToOrderDeliveryAddressDTO(&order.DeliveryAddress),
+	}
+}
+
+func ToOrderAdditivesDTO(additives []data.SuborderAdditive) []SuborderAdditiveDTO {
+	dtos := make([]SuborderAdditiveDTO, len(additives))
+	for i, additive := range additives {
+		dtos[i] = ConvertSuborderAdditiveToDTO(&additive)
+	}
+	return dtos
+}
+
+func ToOrderDeliveryAddressDTO(address *data.CustomerAddress) *OrderDeliveryAddressDTO {
+	if address == nil {
+		return nil
+	}
+	return &OrderDeliveryAddressDTO{
+		ID:        address.ID,
+		Address:   address.Address,
+		Longitude: address.Longitude,
+		Latitude:  address.Latitude,
+	}
+}
