@@ -58,14 +58,18 @@ type StockRequest struct {
 
 // Hooks for StockRequest
 func (s *StockRequest) BeforeCreate(tx *gorm.DB) (err error) {
-	UTCTime := toUTC(*s.RequestDate)
-	s.RequestDate = &UTCTime
+	if s.RequestDate != nil {
+		utcTime := toUTC(*s.RequestDate)
+		s.RequestDate = &utcTime
+	}
 	return
 }
 
 func (s *StockRequest) AfterFind(tx *gorm.DB) (err error) {
-	UTCTime := toUTC(*s.RequestDate)
-	s.RequestDate = &UTCTime
+	if s.RequestDate != nil {
+		utcTime := toUTC(*s.RequestDate)
+		s.RequestDate = &utcTime
+	}
 	return
 }
 

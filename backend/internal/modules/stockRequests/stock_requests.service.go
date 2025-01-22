@@ -58,6 +58,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 	if err != nil {
 		return 0, fmt.Errorf("failed to fetch last stock request date: %w", err)
 	}
+
 	err = types.ValidateStockRequestRate(lastRequestDate)
 	if err != nil {
 		return 0, err
