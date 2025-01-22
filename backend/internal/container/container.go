@@ -33,7 +33,6 @@ type Container struct {
 	StockRequests           *modules.StockRequestsModule
 	Warehouses              *modules.WarehousesModule
 	StockMaterials          *modules.StockMaterialsModule
-	StockMaterialPackages   *modules.StockMaterialPackagesModule
 	StockMaterialCategories *modules.StockMaterialCategoriesModule
 	Barcodes                *modules.BarcodeModule
 	Units                   *modules.UnitsModule
@@ -74,13 +73,12 @@ func (c *Container) mustInit() {
 	c.StoreWarehouses = modules.NewStoreWarehouseModule(baseModule)
 	c.Stores = modules.NewStoresModule(baseModule)
 	c.Suppliers = modules.NewSuppliersModule(baseModule)
-	c.StockMaterialPackages = modules.NewStockMaterialPackagesModule(baseModule)
-	c.StockMaterials = modules.NewStockMaterialsModule(baseModule, c.StockMaterialPackages.Repo)
+	c.StockMaterials = modules.NewStockMaterialsModule(baseModule)
 	c.StockMaterialCategories = modules.NewStockMaterialCategoriesModule(baseModule)
 	c.Barcodes = modules.NewBarcodeModule(baseModule, c.StockMaterials.Repo)
 	c.Units = modules.NewUnitsModule(baseModule)
 	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule)
-	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Barcodes.Repo, c.StockMaterialPackages.Repo)
+	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Barcodes.Repo)
 
 	c.Products = modules.NewProductsModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
 	c.Additives = modules.NewAdditivesModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)

@@ -7,7 +7,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
 )
 
@@ -29,15 +28,13 @@ type warehouseStockService struct {
 	repo              WarehouseStockRepository
 	stockMaterialRepo stockMaterial.StockMaterialRepository
 	barcodeRepo       barcode.BarcodeRepository
-	packageRepo       stockMaterialPackage.StockMaterialPackageRepository
 }
 
-func NewWarehouseStockService(repo WarehouseStockRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, packageRepo stockMaterialPackage.StockMaterialPackageRepository) WarehouseStockService {
+func NewWarehouseStockService(repo WarehouseStockRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository) WarehouseStockService {
 	return &warehouseStockService{
 		repo:              repo,
 		stockMaterialRepo: stockMaterialRepo,
 		barcodeRepo:       barcodeRepo,
-		packageRepo:       packageRepo,
 	}
 }
 
@@ -70,31 +67,8 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 			return fmt.Errorf("stock material with ID %d not found", material.StockMaterialID)
 		}
 
-		packageFound := false
-		for _, pkg := range stockMaterial.Packages {
-			if pkg.ID == material.PackageID {
-				packageFound = true
-				break
-			}
-		}
-		if !packageFound {
-			return fmt.Errorf("package with ID %d not found for stock material ID %d", material.PackageID, material.StockMaterialID)
-		}
-
-		var packageToUse *data.StockMaterialPackage
-		for _, pkg := range stockMaterial.Packages {
-			if pkg.ID == material.PackageID {
-				packageToUse = &pkg
-				break
-			}
-		}
-		if packageToUse == nil {
-			return fmt.Errorf("failed to retrieve package details for package ID %d", material.PackageID)
-		}
-
 		materials[i] = data.SupplierWarehouseDeliveryMaterial{
 			StockMaterialID: material.StockMaterialID,
-			PackageID:       material.PackageID,
 			Barcode:         stockMaterial.Barcode,
 			Quantity:        material.Quantity,
 			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),

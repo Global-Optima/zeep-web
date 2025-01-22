@@ -1355,13 +1355,13 @@ VALUES
     ('Ароматизаторы', 'Ванильный экстракт и другие ароматизаторы');
 
 -- Insert stock materials with Russian names and category references
-INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, category_id, barcode, expiration_period_in_days, is_active) 
+INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, size, category_id, barcode, expiration_period_in_days, is_active) 
 VALUES 
-    ('Простоквашино Молоко 3.2%', 'Молоко пастеризованное 1л', 2, 50, 3, 1, '111111111111', 1095, TRUE),
-    ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, 1, 2, '222222222222', 1095, TRUE),
-    ('Бабаевский горький шоколад 75%', 'Темный шоколад 500г', 3, 15, 2, 3, '333333333333', 730, TRUE),
-    ('Индийская корица молотая премиум', 'Корица молотая 200г', 4, 10, 2, 4, '444444444444', 1460, TRUE),
-    ('Dr.Oetker Ванильный экстракт', 'Натуральный экстракт ванили 50мл', 5, 25, 4, 5, '555555555555', 1460, TRUE);
+    ('Простоквашино Молоко 3.2%', 'Молоко пастеризованное 1л', 2, 50, 3, 1, 1, '111111111111', 1095, TRUE),
+    ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, 1, 1, 2, '222222222222', 1095, TRUE),
+    ('Бабаевский горький шоколад 75%', 'Темный шоколад 500г', 3, 15, 2, 500, 3, '333333333333', 730, TRUE),
+    ('Индийская корица молотая премиум', 'Корица молотая 200г', 4, 10, 2, 200, 4, '444444444444', 1460, TRUE),
+    ('Dr.Oetker Ванильный экстракт', 'Натуральный экстракт ванили 50мл', 5, 25, 4, 50, 5, '555555555555', 1460, TRUE);
 
 -- Insert into Suppliers
 INSERT INTO suppliers (name, contact_email, contact_phone, city, address)
@@ -1377,15 +1377,6 @@ VALUES
     ('ООО "Юнилевер Русь"', 'contact@unilever.ru', '+78002001201', 'Омск', 'ул. 10 лет Октября, д. 205'),
     ('ООО "Дженерал Миллс Рус"', 'support@generalmills.ru', '+74959373400', 'Москва', 'ул. Большая Новодмитровская, д. 14, стр. 2');
 
-INSERT INTO stock_material_packages (stock_material_id, size, unit_id)
-VALUES
-    (1, 1.0, 3), -- 1L Milk
-    (2, 1.0, 1), -- 1kg Sugar
-    (3, 500, 2), -- 500g Chocolate
-    (4, 200, 2), -- 200g Cinnamon
-    (5, 50, 4); -- 50ml Vanilla
-
-
 -- Insert into supplier_warehouse_deliveries
 INSERT INTO supplier_warehouse_deliveries (supplier_id, warehouse_id, delivery_date, created_at, updated_at)
 VALUES
@@ -1394,13 +1385,13 @@ VALUES
     (1, 2, '2024-10-01', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Delivery 3
 
 -- Insert into supplier_warehouse_delivery_materials
-INSERT INTO supplier_warehouse_delivery_materials (delivery_id, stock_material_id, package_id, barcode, quantity, expiration_date)
+INSERT INTO supplier_warehouse_delivery_materials (delivery_id, stock_material_id, barcode, quantity, expiration_date)
 VALUES
-    (1, 1, 1, '111111111111', 50,  '2026-12-01'), -- Milk Delivery
-    (1, 2, 2, '222222222222', 30,  '2025-06-05'), -- Sugar Delivery
-    (2, 3, 3, '333333333333', 40,  '2025-11-20'), -- Chocolate Delivery
-    (3, 4, 4, '444444444444', 20,  '2026-06-10'), -- Cinnamon Delivery
-    (3, 5, 5, '555555555555', 15,  '2027-12-15'); -- Vanilla Delivery
+    (1, 1, '111111111111', 50,  '2026-12-01'), -- Milk Delivery
+    (1, 2, '222222222222', 30,  '2025-06-05'), -- Sugar Delivery
+    (2, 3, '333333333333', 40,  '2025-11-20'), -- Chocolate Delivery
+    (3, 4, '444444444444', 20,  '2026-06-10'), -- Cinnamon Delivery
+    (3, 5, '555555555555', 15,  '2027-12-15'); -- Vanilla Delivery
 
 
 

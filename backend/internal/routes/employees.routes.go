@@ -23,7 +23,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
 )
 
@@ -227,17 +226,6 @@ func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMateria
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.UpdateStockMaterial)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeleteStockMaterial)
 		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(data.RoleAdmin), handler.DeactivateStockMaterial)
-	}
-}
-
-func (r *Router) RegisterStockMaterialPackageRoutes(handler *stockMaterialPackage.StockMaterialPackageHandler) {
-	router := r.EmployeeRoutes.Group("/stock-material-packages")
-	{
-		router.GET("", handler.GetAll)
-		router.GET("/:id", handler.GetByID)
-		router.POST("", handler.Create)
-		router.PUT("/:id", handler.Update)
-		router.DELETE("/:id", handler.Delete)
 	}
 }
 

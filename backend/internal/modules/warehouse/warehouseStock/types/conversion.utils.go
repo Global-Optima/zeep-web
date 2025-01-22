@@ -3,7 +3,6 @@ package types
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	supplierTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
-	stockMaterialPackageTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 )
@@ -16,7 +15,6 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 		for i, material := range delivery.Materials {
 			materials[i] = WarehouseDeliveryStockMaterialDTO{
 				StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
-				Package:        stockMaterialPackageTypes.ToStockMaterialPackageResponse(&material.Package),
 				Quantity:       material.Quantity,
 				Barcode:        material.Barcode,
 				ExpirationDate: material.ExpirationDate,
@@ -40,7 +38,6 @@ func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) WarehouseDelive
 	for i, material := range delivery.Materials {
 		materials[i] = WarehouseDeliveryStockMaterialDTO{
 			StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
-			Package:        stockMaterialPackageTypes.ToStockMaterialPackageResponse(&material.Package),
 			Quantity:       material.Quantity,
 			Barcode:        material.Barcode,
 			ExpirationDate: material.ExpirationDate,

@@ -72,7 +72,6 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 		Preload("Ingredients.StockMaterial.Ingredient").
 		Preload("Ingredients.StockMaterial.Ingredient.Unit").
 		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
-		Preload("Ingredients.StockMaterial.Packages.Unit").
 		Preload("Ingredients.StockMaterial.Unit")
 
 	if filter.StoreID != nil {
@@ -114,7 +113,6 @@ func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.Stoc
 		Preload("Ingredients.StockMaterial.Ingredient").
 		Preload("Ingredients.StockMaterial.Ingredient.Unit").
 		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
-		Preload("Ingredients.StockMaterial.Packages.Unit").
 		Preload("Ingredients.StockMaterial.Unit").
 		First(&stockRequest, requestID).
 		Error
@@ -138,14 +136,16 @@ func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouse
 
 func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error {
 	var stockMaterial data.StockMaterial
-	if err := r.db.Preload("Packages.Unit").Preload("Ingredient.Unit").
+	if err := r.db.Preload("Ingredient.Unit").
 		Where("id = ?", stockMaterialID).First(&stockMaterial).Error; err != nil {
 		return fmt.Errorf("failed to fetch stock material details for ID %d: %w", stockMaterialID, err)
 	}
 
-	quantityInUnits, err := utils.ConvertPackagesToUnits(stockMaterial, stockMaterial.UnitID, quantityInPackages)
-	if err != nil {
-		return err
+	var quantityInUnits float64
+	if stockMaterial.Ingredient.UnitID != stockMaterial.UnitID {
+		quantityInUnits = stockMaterial.Ingredient.Unit.ConversionFactor * stockMaterial.Size
+	} else {
+		quantityInUnits = stockMaterial.Size
 	}
 
 	return r.db.Model(&data.StoreWarehouseStock{}).
@@ -173,8 +173,6 @@ func (r *stockRequestRepository) GetLastStockRequestDate(storeID uint) (*time.Ti
 	}
 	return &lastRequest.CreatedAt, err
 }
-
-
 
 func (r *stockRequestRepository) GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error) {
 	var stock data.WarehouseStock
@@ -251,7 +249,6 @@ func (r *stockRequestRepository) GetOpenCartByStoreID(storeID uint) (*data.Stock
 		Preload("Ingredients.StockMaterial.Ingredient").
 		Preload("Ingredients.StockMaterial.Ingredient.Unit").
 		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
-		Preload("Ingredients.StockMaterial.Packages.Unit").
 		Preload("Ingredients.StockMaterial.Unit").
 		Where("store_id = ? AND status = ?", storeID, data.StockRequestCreated).
 		First(&request).Error

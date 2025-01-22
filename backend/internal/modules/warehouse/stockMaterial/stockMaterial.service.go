@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialPackage"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 )
 
@@ -18,14 +17,12 @@ type StockMaterialService interface {
 }
 
 type stockMaterialService struct {
-	repo        StockMaterialRepository
-	packageRepo stockMaterialPackage.StockMaterialPackageRepository
+	repo StockMaterialRepository
 }
 
-func NewStockMaterialService(repo StockMaterialRepository, packageRepo stockMaterialPackage.StockMaterialPackageRepository) StockMaterialService {
+func NewStockMaterialService(repo StockMaterialRepository) StockMaterialService {
 	return &stockMaterialService{
-		repo:        repo,
-		packageRepo: packageRepo,
+		repo: repo,
 	}
 }
 

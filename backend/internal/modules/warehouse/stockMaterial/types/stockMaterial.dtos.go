@@ -19,12 +19,6 @@ type CreateStockMaterialDTO struct {
 	Size                   float64 `json:"size"`
 }
 
-type UpdateStockMaterialPackagesDTO struct {
-	ID     *uint    `json:"id"`
-	Size   *float64 `json:"size" binding:"omitempty,gt=0"`
-	UnitID *uint    `json:"unitId" binding:"omitempty"`
-}
-
 type UpdateStockMaterialDTO struct {
 	Name                   *string  `json:"name"`
 	Description            *string  `json:"description"`

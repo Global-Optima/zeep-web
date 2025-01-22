@@ -34,8 +34,8 @@ func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockM
 		stockMaterial.UnitID = *req.UnitID
 	}
 
-	if req.UnitID != nil {
-		stockMaterial.UnitID = *req.UnitID
+	if req.Size != nil {
+		stockMaterial.Size = *req.Size
 	}
 
 	if req.CategoryID != nil {

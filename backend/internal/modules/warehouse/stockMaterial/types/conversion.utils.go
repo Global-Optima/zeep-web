@@ -15,6 +15,7 @@ func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDT
 		Description:            req.Description,
 		SafetyStock:            req.SafetyStock,
 		UnitID:                 req.UnitID,
+		Size:                   req.Size,
 		CategoryID:             req.CategoryID,
 		IngredientID:           req.IngredientID,
 		Barcode:                req.Barcode,
@@ -34,6 +35,7 @@ func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMateri
 			Name:             stockMaterial.Unit.Name,
 			ConversionFactor: stockMaterial.Unit.ConversionFactor,
 		},
+		Size: stockMaterial.Size,
 		Category: stockMaterialCategoryTypes.StockMaterialCategoryResponse{
 			ID:          stockMaterial.CategoryID,
 			Name:        stockMaterial.StockMaterialCategory.Name,
