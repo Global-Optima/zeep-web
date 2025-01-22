@@ -283,14 +283,19 @@ func (r *warehouseStockRepository) GetWarehouseStockMaterialDetails(stockMateria
 
 // helper functions
 func (r *warehouseStockRepository) findEarliestMaterialExpirationDate(materials []data.SupplierWarehouseDeliveryMaterial) *time.Time {
+	if len(materials) == 0 {
+		return nil
+	}
+
 	var earliest *time.Time
 	for _, material := range materials {
 		if earliest == nil || material.ExpirationDate.Before(*earliest) {
 			earliest = &material.ExpirationDate
 		}
 	}
-	UTCTime := utils.ToUTC(*earliest)
-	return &UTCTime
+
+	utcTime := utils.ToUTC(*earliest)
+	return &utcTime
 }
 
 func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error) {
@@ -321,14 +326,14 @@ func (r *warehouseStockRepository) aggregateWarehouseStocks(
 	for _, stock := range warehouseStocks {
 		materials := materialMap[stock.StockMaterialID]
 
-		earliestExpirationDate := utils.ToUTC(*r.findEarliestMaterialExpirationDate(materials))
+		earliestExpirationDate := r.findEarliestMaterialExpirationDate(materials)
 
 		aggregatedStocks = append(aggregatedStocks, data.AggregatedWarehouseStock{
 			WarehouseID:            stock.WarehouseID,
 			StockMaterialID:        stock.StockMaterialID,
 			StockMaterial:          stock.StockMaterial,
 			TotalQuantity:          stock.Quantity,
-			EarliestExpirationDate: &earliestExpirationDate,
+			EarliestExpirationDate: earliestExpirationDate,
 		})
 	}
 
@@ -381,6 +386,7 @@ func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID, warehouseI
 func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *types.GetWarehouseStockFilterQuery) ([]data.WarehouseStock, error) {
 	var warehouseStocks []data.WarehouseStock
 
+	// Base query
 	query := r.db.Model(&data.WarehouseStock{}).
 		Preload("StockMaterial").
 		Preload("StockMaterial.Unit").
@@ -390,51 +396,59 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		Preload("StockMaterial.StockMaterialCategory").
 		Preload("StockMaterial.Packages").
 		Preload("StockMaterial.Packages.Unit").
-		Joins("LEFT JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.stock_material_id = warehouse_stocks.stock_material_id").
 		Joins("JOIN stock_materials ON warehouse_stocks.stock_material_id = stock_materials.id")
 
-	// Apply filters
+	// Filter by warehouse
 	if filter.WarehouseID != nil {
-		query = query.Where("warehouse_stocks.id = ?", *filter.WarehouseID)
+		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
 	}
 
+	// Filter by stock material
 	if filter.StockMaterialID != nil {
-		query = query.Where("stock_materials.id = ?", *filter.StockMaterialID)
+		query = query.Where("stock_material_id = ?", *filter.StockMaterialID)
 	}
 
+	// Filter by ingredient
 	if filter.IngredientID != nil {
-		query = query.Where("stock_materials.id = ?", *filter.IngredientID)
+		query = query.Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
 	}
 
+	// Filter by low stock
 	if filter.LowStockOnly != nil && *filter.LowStockOnly {
 		query = query.Where("warehouse_stocks.quantity <= stock_materials.safety_stock")
 	}
 
+	// Filter by expiration-related conditions
 	if filter.IsExpiring != nil && *filter.IsExpiring {
-		query = query.Where("supplier_warehouse_delivery_materials.expiration_date <= stock_materials.expiration_period_in_days")
+		// Fetch stocks expiring within their expiration period
+		query = query.Joins("LEFT JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.stock_material_id = warehouse_stocks.stock_material_id").
+			Where("supplier_warehouse_delivery_materials.expiration_date <= NOW() + INTERVAL '1 day' * stock_materials.expiration_period_in_days")
 	}
 
-	var days int
 	if filter.ExpirationDays != nil {
-		days = *filter.ExpirationDays
-		expirationThreshold := time.Now().AddDate(0, 0, days)
-		query = query.Where("supplier_warehouse_delivery_materials.expiration_date <= ?", expirationThreshold)
+		expirationThreshold := time.Now().AddDate(0, 0, *filter.ExpirationDays)
+		query = query.Joins("LEFT JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.stock_material_id = warehouse_stocks.stock_material_id").
+			Where("supplier_warehouse_delivery_materials.expiration_date <= ?", expirationThreshold)
 	}
 
+	// Filter by category
 	if filter.CategoryID != nil {
-		query = query.Where("stock_materials.id = ?", *filter.CategoryID)
+		query = query.Where("stock_materials.category_id = ?", *filter.CategoryID)
 	}
 
+	// Filter by search query
 	if filter.Search != nil && *filter.Search != "" {
 		search := "%" + *filter.Search + "%"
 		query = query.Where("stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_materials.barcode ILIKE ?", search, search, search)
 	}
 
+	// Apply pagination and sorting
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.WarehouseStock{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
 
+	// Execute query
 	if err := query.Find(&warehouseStocks).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
 	}

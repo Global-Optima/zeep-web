@@ -17,16 +17,6 @@ func ValidateTime(s string) error {
 	return nil
 }
 
-const KazakhstanLocation = "Asia/Almaty"
-
-func ToKazakhstanTime(t time.Time) time.Time {
-	loc, err := time.LoadLocation(KazakhstanLocation)
-	if err != nil {
-		panic("Invalid timezone configuration")
-	}
-	return t.In(loc)
-}
-
 func ToUTC(t time.Time) time.Time {
 	return t.UTC()
 }
