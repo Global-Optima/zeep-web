@@ -12,7 +12,7 @@ import (
 )
 
 type CreateStockRequestDTO struct {
-	StockMaterials []StockRequestStockMaterialDTO `json:"items" binding:"required"`
+	StockMaterials []StockRequestStockMaterialDTO `json:"stockMaterials" binding:"required"`
 }
 
 type StockRequestStockMaterialDTO struct {

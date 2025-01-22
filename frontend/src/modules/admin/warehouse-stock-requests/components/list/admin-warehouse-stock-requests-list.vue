@@ -32,7 +32,7 @@
 					</p>
 				</TableCell>
 				<TableCell>
-					{{ new Date(request.createdAt).toLocaleDateString() }}
+					{{ format(request.createdAt, "dd.MM.yyy hh:mm") }}
 				</TableCell>
 			</TableRow>
 		</TableBody>
@@ -49,6 +49,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { STOCK_REQUEST_STATUS_COLOR, STOCK_REQUEST_STATUS_FORMATTED, type StockRequestResponse } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import { format } from 'date-fns'
 import { useRouter } from 'vue-router'
 
 const { requests } = defineProps<{ requests: StockRequestResponse[] }>();

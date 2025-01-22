@@ -61,6 +61,7 @@ export interface StockMaterialsFilter extends PaginationParams {
 	isActive?: boolean
 	ingredientId?: number
 	categoryId?: number
+  supplierId?: number
 	expirationInDays?: number
 }
 
