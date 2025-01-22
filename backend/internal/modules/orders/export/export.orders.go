@@ -5,19 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/tealeg/xlsx"
 )
-
-func setHeadersStyle(headerRow *xlsx.Row) {
-	style := xlsx.NewStyle()
-	style.Font.Bold = true
-	style.Fill.FgColor = "C6C6C6"
-	style.Fill.PatternType = "solid"
-
-	for _, cell := range headerRow.Cells {
-		cell.SetStyle(style)
-	}
-}
 
 func GenerateSalesExcel(data []types.OrderExportDTO) ([]byte, error) {
 	file := xlsx.NewFile()
@@ -38,13 +28,6 @@ func GenerateSalesExcel(data []types.OrderExportDTO) ([]byte, error) {
 }
 
 func addOrdersSheet(sheet *xlsx.Sheet, data []types.OrderExportDTO, file *xlsx.File) {
-	sheet.SetColWidth(0, 0, 15)
-	sheet.SetColWidth(1, 1, 25)
-	sheet.SetColWidth(2, 2, 25)
-	sheet.SetColWidth(3, 3, 15)
-	sheet.SetColWidth(4, 4, 15)
-	sheet.SetColWidth(5, 5, 20)
-
 	headerRow := sheet.AddRow()
 	headers := []string{"Order ID", "Store Name", "Customer Name", "Total", "Status", "Order Date"}
 	for _, header := range headers {
@@ -52,6 +35,11 @@ func addOrdersSheet(sheet *xlsx.Sheet, data []types.OrderExportDTO, file *xlsx.F
 		cell.Value = header
 	}
 
+	err := setColumnWidths(sheet)
+	if err != nil {
+		logger.GetZapSugaredLogger().Errorln(err.Error())
+		return
+	}
 	setHeadersStyle(headerRow)
 
 	for _, order := range data {

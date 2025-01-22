@@ -38,29 +38,18 @@ func GenerateSalesExcelV2(data []types.OrderExportDTO) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func setColumnWidths(sheet *xlsx.Sheet) error {
-	for i := range len(sheet.Cols) {
-		err := sheet.SetColWidth(i, i, 35)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO) {
-	err := setColumnWidths(sheet)
-	if err != nil {
-		logger.GetZapSugaredLogger().Errorln(err.Error())
-		return
-	}
-
 	headerRow := sheet.AddRow()
 	headers := []string{"Order ID", "Customer Name", "Store Name", "Suborder ID", "Product Name", "Product Size", "Price", "Total (with additive price added)", "Additives", "Order Date"}
 	for _, header := range headers {
 		cell := headerRow.AddCell()
 		cell.Value = header
+	}
+
+	err := setColumnWidths(sheet)
+	if err != nil {
+		logger.GetZapSugaredLogger().Errorln(err.Error())
+		return
 	}
 
 	setHeadersStyle(headerRow)
