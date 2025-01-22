@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/tealeg/xlsx"
 )
 
@@ -37,17 +38,23 @@ func GenerateSalesExcelV2(data []types.OrderExportDTO) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+func setColumnWidths(sheet *xlsx.Sheet) error {
+	for i := range len(sheet.Cols) {
+		err := sheet.SetColWidth(i, i, 35)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO) {
-	sheet.SetColWidth(0, 0, 10)
-	sheet.SetColWidth(1, 1, 20)
-	sheet.SetColWidth(2, 2, 20)
-	sheet.SetColWidth(3, 3, 10)
-	sheet.SetColWidth(4, 4, 20)
-	sheet.SetColWidth(5, 5, 10)
-	sheet.SetColWidth(6, 6, 10)
-	sheet.SetColWidth(7, 7, 15)
-	sheet.SetColWidth(8, 8, 50)
-	sheet.SetColWidth(9, 9, 20)
+	err := setColumnWidths(sheet)
+	if err != nil {
+		logger.GetZapSugaredLogger().Errorln(err.Error())
+		return
+	}
 
 	headerRow := sheet.AddRow()
 	headers := []string{"Order ID", "Customer Name", "Store Name", "Suborder ID", "Product Name", "Product Size", "Price", "Total (with additive price added)", "Additives", "Order Date"}
