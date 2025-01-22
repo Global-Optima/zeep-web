@@ -226,7 +226,15 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 		return
 	}
 
-	excelData, err := export.GenerateSalesExcelV2(orders)
+	headers := export.RusHeaders // Default to Rus
+	switch filter.Language {
+	case "kk":
+		headers = export.KazHeaders
+	case "en":
+		headers = export.EngHeaders
+	}
+
+	excelData, err := export.GenerateSalesExcelV2(orders, headers)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to generate Excel file")
 		return

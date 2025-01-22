@@ -20,7 +20,7 @@ func setGreyRowStyle(row *xlsx.Row) {
 	}
 }
 
-func GenerateSalesExcelV2(data []types.OrderExportDTO) ([]byte, error) {
+func GenerateSalesExcelV2(data []types.OrderExportDTO, headers []string) ([]byte, error) {
 	file := xlsx.NewFile()
 
 	ordersSheet, err := file.AddSheet("Все заказы")
@@ -28,7 +28,7 @@ func GenerateSalesExcelV2(data []types.OrderExportDTO) ([]byte, error) {
 		return nil, err
 	}
 
-	addOrdersData(ordersSheet, data)
+	addOrdersData(ordersSheet, data, headers)
 
 	buffer := bytes.NewBuffer(nil)
 	if err := file.Write(buffer); err != nil {
@@ -38,9 +38,8 @@ func GenerateSalesExcelV2(data []types.OrderExportDTO) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO) {
+func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO, headers []string) {
 	headerRow := sheet.AddRow()
-	headers := []string{"Номер заказа", "Имя покупателя", "Название филиала", "Номер подзаказа", "Имя продукта", "Размер", "Цена", "Итого (с учетом цены добавок)", "Добавки", "Дата заказа"}
 	for _, header := range headers {
 		cell := headerRow.AddCell()
 		cell.Value = header

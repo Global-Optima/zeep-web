@@ -2,6 +2,10 @@ package export
 
 import "github.com/tealeg/xlsx"
 
+var KazHeaders = []string{"Тапсырыс нөмірі", "Тапсырыс берушінің аты", "Филиал атауы", "Тапсырыс тауар нөмірі", "Тауар атауы", "Өлшемі", "Бағасы", "Жалпы баға (қоспалардың бағасын қоса)", "Қоспалар", "Тапсырыс күні"}
+var RusHeaders = []string{"Номер заказа", "Имя покупателя", "Название филиала", "Номер подзаказа", "Имя продукта", "Размер", "Цена", "Итого (с учетом цены добавок)", "Добавки", "Дата заказа"}
+var EngHeaders = []string{"Order ID", "Customer Name", "Store Name", "Suborder ID", "Product Name", "Size", "Price", "Total (with additive prices added)", "Additives", "Order Date"}
+
 func setHeadersStyle(headerRow *xlsx.Row) {
 	style := xlsx.NewStyle()
 	style.Font.Bold = true
