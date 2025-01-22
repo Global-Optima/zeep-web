@@ -12,13 +12,14 @@ import (
 
 type AdditiveRepository interface {
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
+	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
-	CreateAdditive(additive *data.Additive) error
+	CreateAdditive(additive *data.Additive) (uint, error)
 	UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
 	DeleteAdditive(additiveID uint) error
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
-	CreateAdditiveCategory(category *data.AdditiveCategory) error
+	CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error)
 	UpdateAdditiveCategory(category *data.AdditiveCategory) error
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error)
@@ -144,8 +145,27 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 	return &additive, nil
 }
 
-func (r *additiveRepository) CreateAdditive(additive *data.Additive) error {
-	return r.db.Create(additive).Error
+func (r *additiveRepository) GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error) {
+	var additives []data.Additive
+
+	query := r.db.
+		Preload("Category").
+		Preload("Unit").
+		Where("id IN (?)", additiveIDs)
+
+	if err := query.Find(&additives).Error; err != nil {
+		return nil, err
+	}
+
+	return additives, nil
+}
+
+func (r *additiveRepository) CreateAdditive(additive *data.Additive) (uint, error) {
+	err := r.db.Create(additive).Error
+	if err != nil {
+		return 0, err
+	}
+	return additive.ID, nil
 }
 
 func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error {
@@ -186,8 +206,12 @@ func (r *additiveRepository) DeleteAdditive(additiveID uint) error {
 	return r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error
 }
 
-func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCategory) error {
-	return r.db.Create(category).Error
+func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error) {
+	err := r.db.Create(category).Error
+	if err != nil {
+		return 0, err
+	}
+	return category.ID, nil
 }
 
 func (r *additiveRepository) UpdateAdditiveCategory(category *data.AdditiveCategory) error {

@@ -2,6 +2,7 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 )
 
@@ -12,10 +13,10 @@ type CategoriesModule struct {
 	Handler *categories.CategoryHandler
 }
 
-func NewCategoriesModule(base *common.BaseModule) *CategoriesModule {
+func NewCategoriesModule(base *common.BaseModule, auditService audit.AuditService) *CategoriesModule {
 	repo := categories.NewCategoryRepository(base.DB)
 	service := categories.NewCategoryService(repo)
-	handler := categories.NewCategoryHandler(service)
+	handler := categories.NewCategoryHandler(service, auditService)
 
 	base.Router.RegisterProductCategoriesRoutes(handler)
 

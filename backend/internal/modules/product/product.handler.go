@@ -1,6 +1,7 @@
 package product
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
 
@@ -12,12 +13,14 @@ import (
 )
 
 type ProductHandler struct {
-	service ProductService
+	service      ProductService
+	auditService audit.AuditService
 }
 
-func NewProductHandler(service ProductService) *ProductHandler {
+func NewProductHandler(service ProductService, auditService audit.AuditService) *ProductHandler {
 	return &ProductHandler{
-		service: service,
+		service:      service,
+		auditService: auditService,
 	}
 }
 
@@ -69,11 +72,19 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateProduct(&input)
+	id, err := h.service.CreateProduct(&input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
 	}
+
+	action := types.CreateProductAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: input.Name,
+		})
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
@@ -122,11 +133,19 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateProductSize(&input)
+	id, err := h.service.CreateProductSize(&input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve product details")
 		return
 	}
+
+	action := types.CreateProductSizeAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: input.Name,
+		})
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
@@ -144,11 +163,27 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateProduct(uint(productID), input)
+	existingProduct, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		utils.SendInternalServerError(c, "Failed to update product details: product not found")
 		return
 	}
+
+	err = h.service.UpdateProduct(uint(productID), input)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to update product details")
+		return
+	}
+
+	action := types.UpdateProductAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(productID),
+			Name: existingProduct.Name,
+		},
+		input,
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
 }
@@ -166,11 +201,27 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateProductSize(uint(productSizeID), input)
+	existingProductSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product")
+		utils.SendInternalServerError(c, "Failed to update product size: product size not found")
 		return
 	}
+
+	err = h.service.UpdateProductSize(uint(productSizeID), input)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to update product size")
+		return
+	}
+
+	action := types.UpdateProductSizeAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(productSizeID),
+			Name: existingProductSize.Name,
+		},
+		input,
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
 }
@@ -182,11 +233,57 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		return
 	}
 
+	existingProduct, err := h.service.GetProductByID(uint(productID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to delete product details: product not found")
+		return
+	}
+
 	err = h.service.DeleteProduct(uint(productID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to delete product")
 		return
 	}
+
+	action := types.DeleteProductAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(productID),
+			Name: existingProduct.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendMessageWithStatus(c, "product size deleted successfully", http.StatusOK)
+}
+
+func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
+	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid product size ID")
+		return
+	}
+
+	existingProduct, err := h.service.GetProductByID(uint(productSizeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to delete product size: product size not found")
+		return
+	}
+
+	err = h.service.DeleteProduct(uint(productSizeID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to delete product size")
+		return
+	}
+
+	action := types.DeleteProductSizeAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(productSizeID),
+			Name: existingProduct.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "product deleted successfully", http.StatusOK)
 }

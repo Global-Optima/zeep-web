@@ -2,6 +2,7 @@ package ingredients
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -10,11 +11,15 @@ import (
 )
 
 type IngredientHandler struct {
-	service IngredientService
+	service      IngredientService
+	auditService audit.AuditService
 }
 
-func NewIngredientHandler(service IngredientService) *IngredientHandler {
-	return &IngredientHandler{service: service}
+func NewIngredientHandler(service IngredientService, auditService audit.AuditService) *IngredientHandler {
+	return &IngredientHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
 func (h *IngredientHandler) CreateIngredient(c *gin.Context) {
@@ -24,10 +29,20 @@ func (h *IngredientHandler) CreateIngredient(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.CreateIngredient(&dto); err != nil {
+	id, err := h.service.CreateIngredient(&dto)
+	if err != nil {
 		utils.SendInternalServerError(c, "Failed to create ingredient")
 		return
 	}
+
+	action := types.CreateIngredientAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: dto.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient created successfully"})
 }
@@ -45,10 +60,26 @@ func (h *IngredientHandler) UpdateIngredient(c *gin.Context) {
 		return
 	}
 
+	existingIngredient, err := h.service.GetIngredientByID(uint(ingredientID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to get update ingredient: ingredient not found")
+		return
+	}
+
 	if err := h.service.UpdateIngredient(uint(ingredientID), &dto); err != nil {
 		utils.SendInternalServerError(c, "Failed to update ingredient")
 		return
 	}
+
+	action := types.UpdateIngredientAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(ingredientID),
+			Name: existingIngredient.Name,
+		},
+		&dto,
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient updated successfully"})
 }
@@ -60,10 +91,25 @@ func (h *IngredientHandler) DeleteIngredient(c *gin.Context) {
 		return
 	}
 
+	existing, err := h.service.GetIngredientByID(uint(ingredientID))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to delete ingredient: ingredient not found")
+		return
+	}
+
 	if err := h.service.DeleteIngredient(uint(ingredientID)); err != nil {
 		utils.SendInternalServerError(c, "Failed to delete ingredient")
 		return
 	}
+
+	action := types.DeleteIngredientAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(ingredientID),
+			Name: existing.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient deleted successfully"})
 }

@@ -20,6 +20,7 @@ type StoreAdditiveService interface {
 	CreateStoreAdditives(storeID uint, dtos []types.CreateStoreAdditiveDTO) ([]uint, error)
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, dto *types.UpdateStoreAdditiveDTO) error
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]types.StoreAdditiveDTO, error)
+	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]types.StoreAdditiveDTO, error)
 	GetStoreAdditiveCategoriesByProductSize(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error)
 	GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*types.StoreAdditiveDetailsDTO, error)
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
@@ -99,6 +100,22 @@ func (s *storeAdditiveService) GetStoreAdditives(storeID uint, filter *additiveT
 	storeAdditives, err := s.repo.GetStoreAdditives(storeID, filter)
 	if err != nil {
 		wrappedError := utils.WrapError("failed to retrieve store additives", err)
+		s.logger.Error(wrappedError)
+		return nil, wrappedError
+	}
+
+	storeAdditiveDTOs := make([]types.StoreAdditiveDTO, len(storeAdditives))
+	for i, additive := range storeAdditives {
+		storeAdditiveDTOs[i] = *types.ConvertToStoreAdditiveDTO(&additive)
+	}
+
+	return storeAdditiveDTOs, nil
+}
+
+func (s *storeAdditiveService) GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]types.StoreAdditiveDTO, error) {
+	storeAdditives, err := s.repo.GetStoreAdditivesByIDs(storeID, IDs)
+	if err != nil {
+		wrappedError := utils.WrapError("failed to retrieve store additives by id list", err)
 		s.logger.Error(wrappedError)
 		return nil, wrappedError
 	}
