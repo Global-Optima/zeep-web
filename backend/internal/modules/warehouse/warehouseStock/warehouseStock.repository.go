@@ -79,12 +79,6 @@ func (r *warehouseStockRepository) updateOrInsertStock(tx *gorm.DB, warehouseID 
 		StockMaterialID: material.StockMaterialID,
 	}
 
-	if err := tx.Model(&material).
-		Preload("StockMaterial.Unit").
-		First(&material, "id = ?", material.ID).Error; err != nil {
-		return fmt.Errorf("failed to preload stock material for material ID %d: %w", material.ID, err)
-	}
-
 	if err := tx.FirstOrCreate(&stock, "warehouse_id = ? AND stock_material_id = ?", warehouseID, material.StockMaterialID).Error; err != nil {
 		return fmt.Errorf("failed to find or create warehouse stock: %w", err)
 	}
