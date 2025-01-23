@@ -6,8 +6,6 @@
 				<TableHead>Название</TableHead>
 				<TableHead>Категория</TableHead>
 				<TableHead>Начальная цена</TableHead>
-				<TableHead>Размеры</TableHead>
-				<TableHead></TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -29,23 +27,12 @@
 				<TableCell class="font-medium">{{ product.name }}</TableCell>
 				<TableCell>{{ product.category.name }}</TableCell>
 				<TableCell>{{ formatPrice(product.basePrice) }}</TableCell>
-				<TableCell>{{ product.productSizeCount }}</TableCell>
-				<TableCell class="flex justify-end">
-					<Button
-						variant="ghost"
-						size="icon"
-						@click="e => onDeleteClick(e, product.id)"
-					>
-						<Trash class="w-6 h-6 text-red-400" />
-					</Button>
-				</TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/core/components/ui/button'
 import {
   Table,
   TableBody,
@@ -59,7 +46,6 @@ import { formatPrice } from '@/core/utils/price.utils'
 import type { ProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const { products } = defineProps<{ products: ProductDTO[] }>()

@@ -36,9 +36,9 @@
 			<CardHeader>
 				<div class="flex justify-between items-start gap-4">
 					<div>
-						<CardTitle>Добавить ингредиенты на склад</CardTitle>
+						<CardTitle>Добавить материалы на склад</CardTitle>
 						<CardDescription class="mt-2">
-							Заполните таблицу ниже, чтобы добавить несколько ингредиентов на склад.
+							Заполните таблицу ниже, чтобы добавить несколько материалов на склад.
 						</CardDescription>
 					</div>
 					<Button

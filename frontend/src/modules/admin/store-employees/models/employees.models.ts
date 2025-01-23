@@ -27,9 +27,9 @@ export enum EmployeeType {
 export const EMPLOYEE_ROLES_FORMATTED: Record<EmployeeRole, string> = {
 	[EmployeeRole.ADMIN]: 'Админ',
 	[EmployeeRole.DIRECTOR]: 'Директор',
-	[EmployeeRole.MANAGER]: 'Менеджер',
+	[EmployeeRole.MANAGER]: 'Проектный менеджер',
 	[EmployeeRole.BARISTA]: 'Бариста',
-	[EmployeeRole.WAREHOUSE]: 'Работник Склада',
+	[EmployeeRole.WAREHOUSE]: 'Работник склада',
 }
 
 export interface CreateWorkdayDTO {

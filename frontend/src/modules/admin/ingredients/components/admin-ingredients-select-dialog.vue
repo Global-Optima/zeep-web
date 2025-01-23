@@ -5,7 +5,7 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите ингредиент</DialogTitle>
+				<DialogTitle>Выберите материал</DialogTitle>
 			</DialogHeader>
 
 			<div>

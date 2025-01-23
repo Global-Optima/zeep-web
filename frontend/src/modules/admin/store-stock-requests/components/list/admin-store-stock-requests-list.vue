@@ -2,7 +2,7 @@
 	<Table>
 		<TableHeader>
 			<TableRow>
-				<TableHead>Запрос</TableHead>
+				<TableHead class="max-w-4">#</TableHead>
 				<TableHead>Склад</TableHead>
 				<TableHead>Статус</TableHead>
 				<TableHead>Дата создания</TableHead>
@@ -15,10 +15,10 @@
 				class="hover:bg-gray-50 h-12 cursor-pointer"
 				@click="goToDetails(request.requestId)"
 			>
-				<TableCell class="font-medium">
+				<TableCell>
 					{{ request.requestId }}
 				</TableCell>
-				<TableCell>
+				<TableCell class="font-medium">
 					{{ request.warehouse.name }}
 				</TableCell>
 				<TableCell>

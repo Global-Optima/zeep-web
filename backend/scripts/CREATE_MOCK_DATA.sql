@@ -1,63 +1,33 @@
 -- Insert into FacilityAddress
+-- Only 4 addresses in Kazakhstan
 INSERT INTO
   facility_addresses (address, longitude, latitude)
 VALUES
-  ('Улица Ленина, 12, Москва', 37.6173, 55.7558),
+  ('Улица Абая, 50, Алматы', 76.9497, 43.2383),
   (
-    'Проспект Мира, 45, Санкт-Петербург',
-    30.3158,
-    59.9343
+    'Проспект Назарбаева, 10, Астана',
+    71.4278,
+    51.1694
   ),
+  ('Улица Ауэзова, 12, Шымкент', 69.5983, 42.3417),
   (
-    'Улица Советская, 89, Екатеринбург',
-    60.6094,
-    56.8389
-  ),
-  (
-    'Улица Куйбышева, 101, Новосибирск',
-    82.9204,
-    55.0415
-  ),
-  (
-    'Площадь Революции, 17, Нижний Новгород',
-    44.0059,
-    56.3269
-  ),
-  ('Проспект Гагарина, 27, Казань', 49.1233, 55.8304),
-  ('Улица Ленина, 64, Пермь', 56.2516, 58.0105),
-  ('Проспект Победы, 5, Самара', 50.1834, 53.2038),
-  (
-    'Улица Большая Садовая, 101, Ростов-на-Дону',
-    39.7015,
-    47.2225
-  ),
-  (
-    'Невский проспект, 88, Санкт-Петербург',
-    30.3543,
-    59.9311
-  ),
-  (
-    'Улица Советская, 18, Волгоград',
-    44.5018,
-    48.7080
-  ),
-  (
-    'Улица Октябрьская, 5, Челябинск',
-    61.4026,
-    55.1600
-  ),
-  ('Улица Кирова, 2, Уфа', 56.0367, 54.7352);
+    'Проспект Республики, 25, Караганда',
+    73.0948,
+    49.8028
+  );
 
 -- Insert into Units
+-- Unit measures remain unchanged
 INSERT INTO
   units (name, conversion_factor)
 VALUES
-    ('Килограмм', 1.0),
-    ('Грамм', 0.001),
-    ('Литр', 1.0),
-    ('Миллилитр', 0.001);
+  ('Килограмм', 1.0),
+  ('Грамм', 0.001),
+  ('Штука', 1.0),
+  ('Комплект', 1.0);
 
--- Insert into CityWarehouses
+-- Insert into Warehouses
+-- Only 4 warehouses linked to the new facility addresses
 INSERT INTO
   warehouses (facility_address_id, name)
 VALUES
@@ -68,9 +38,9 @@ VALUES
       FROM
         facility_addresses
       WHERE
-        address = 'Улица Ленина, 12, Москва'
+        address = 'Улица Абая, 50, Алматы'
     ),
-    'Московский склад'
+    'Алматинский склад'
   ),
   (
     (
@@ -79,9 +49,9 @@ VALUES
       FROM
         facility_addresses
       WHERE
-        address = 'Проспект Мира, 45, Санкт-Петербург'
+        address = 'Проспект Назарбаева, 10, Астана'
     ),
-    'Санкт-Петербургский склад'
+    'Астанинский склад'
   ),
   (
     (
@@ -90,9 +60,9 @@ VALUES
       FROM
         facility_addresses
       WHERE
-        address = 'Улица Советская, 89, Екатеринбург'
+        address = 'Улица Ауэзова, 12, Шымкент'
     ),
-    'Екатеринбургский склад'
+    'Шымкентский склад'
   ),
   (
     (
@@ -101,155 +71,120 @@ VALUES
       FROM
         facility_addresses
       WHERE
-        address = 'Улица Куйбышева, 101, Новосибирск'
+        address = 'Проспект Республики, 25, Караганда'
     ),
-    'Новосибирский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Площадь Революции, 17, Нижний Новгород'
-    ),
-    'Нижегородский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Проспект Гагарина, 27, Казань'
-    ),
-    'Казанский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Ленина, 64, Пермь'
-    ),
-    'Пермский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Проспект Победы, 5, Самара'
-    ),
-    'Самарский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Большая Садовая, 101, Ростов-на-Дону'
-    ),
-    'Ростовский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Невский проспект, 88, Санкт-Петербург'
-    ),
-    'Второй Санкт-Петербургский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Советская, 18, Волгоград'
-    ),
-    'Волгоградский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Октябрьская, 5, Челябинск'
-    ),
-    'Челябинский склад'
-  ),
-  (
-    (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Кирова, 2, Уфа'
-    ),
-    'Уфимский склад'
+    'Карагандинский склад'
   );
 
--- Insert into ProductCategory
+INSERT INTO
+  ingredient_categories (name, description)
+VALUES
+  (
+    'Электронные компоненты',
+    'Микросхемы, транзисторы, резисторы и т.д.'
+  ),
+  (
+    'Крепёж',
+    'Болты, гайки, дюбели, саморезы и другие крепёжные изделия'
+  ),
+  (
+    'Кабели и провода',
+    'Электрические кабели и провода различных сечений'
+  ),
+  (
+    'Листовой металл',
+    'Металлические листы, пластины и другие материалы'
+  ),
+  (
+    'Инструменты',
+    'Ручные и электрические инструменты для ремонта и сборки'
+  ),
+  (
+    'Расходные материалы',
+    'Изоленты, масла, расходные материалы для производства'
+  );
+
+INSERT INTO
+  ingredients (
+    name,
+    calories,
+    fat,
+    carbs,
+    proteins,
+    expiration_in_days,
+    unit_id,
+    category_id
+  )
+VALUES
+  -- Technical items connected to updated categories
+  ('Микросхема ATmega328', 0, 0, 0, 0, 3650, 3, 1), -- Электронные компоненты
+  ('Болты М8', 0, 0, 0, 0, 1825, 3, 2), -- Крепёж
+  ('Кабель ВВГ 3x2.5', 0, 0, 0, 0, 3650, 1, 3), -- Кабели и провода
+  ('Листовая сталь 1.5 мм', 0, 0, 0, 0, 730, 1, 4), -- Листовой металл
+  ('Набор сверл (10 шт.)', 0, 0, 0, 0, 0, 4, 5), -- Инструменты
+  ('Резистор 10кОм (пачка)', 0, 0, 0, 0, 3650, 3, 1), -- Электронные компоненты
+  ('Транзистор IRFZ44N', 0, 0, 0, 0, 3650, 3, 1), -- Электронные компоненты
+  ('Разъём RJ-45 (упаковка)', 0, 0, 0, 0, 1095, 3, 1), -- Электронные компоненты
+  ('Изолента ПВХ', 0, 0, 0, 0, 1095, 3, 6), -- Расходные материалы
+  ('Масло для резки', 0, 0, 0, 0, 730, 1, 6);
+
+-- Расходные материалы
+-- Categories remain focused on technical goods, localized for Kazakhstan
 INSERT INTO
   product_categories (name, description)
 VALUES
-  ('Напитки', 'Различные виды напитков'),
-  ('Кофе', 'Горячие кофейные напитки'),
-  ('Чай', 'Различные виды чая'),
-  ('Смузи', 'Фруктовые и овощные смузи'),
-  ('Соки', 'Свежевыжатые соки и напитки'),
-  ('Коктейли','Алкогольные и безалкогольные коктейли'),
-  ('Газированные напитки','Прохладительные газированные напитки'),
-  ('Энергетические напитки','Напитки для повышения энергии'),
-  ('Молочные коктейли','Коктейли на основе молока и сливок'),
-  ('Минеральная вода','Природная и газированная минеральная вода'),
-  ('Фраппе', 'Кофейные напитки со льдом'),
-  ('Травяные чаи', 'Настои и чаи на травах'),
-  ('Круассаны', 'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе');
-
--- Insert into AdditiveCategory
-INSERT INTO
-  additive_categories (name, description, is_multiple_select)
-VALUES
-  ('Ароматизаторы','Дополнительные вкусы для усиления аромата',true),
-  ('Подсластители', 'Добавление сладости', false),
-  ('Топпинги','Украшения для десертов и напитков',true),
-  ('Сиропы', 'Сиропы для напитков и десертов', false),
-  ('Специи', 'Ароматные специи для напитков', true),
-  ('Молочные добавки','Добавление молока и сливок',false),
-  ('Фрукты', 'Свежие и сушеные фрукты', true),
-  ('Орехи','Измельченные орехи для украшения',false),
-  ('Шоколад', 'Шоколадная стружка и какао', true),
-  ('Мед','Естественный подсластитель на основе меда',false),
-  ('Сахарные добавки', 'Различные виды сахара', true),
-  ('Кубики льда','Лед для охлаждения напитков',false);
-
-  -- Insert into IngredientCategories
-INSERT INTO ingredient_categories (name, description)
-VALUES
-    ('Молочные продукты', 'Категория для молока, сливок, и других молочных ингредиентов'),
-    ('Фрукты', 'Категория для фруктов, таких как яблоки, бананы, апельсины'),
-    ('Подсластители', 'Категория для сахара, мёда, сиропов'),
-    ('Специи', 'Категория для специй, таких как корица, ваниль, мята, имбирь'),
-    ('Орехи и семена', 'Категория для орехов, фисташек, и других семян'),
-    ('Шоколад и какао', 'Категория для шоколада, какао-порошка, и других шоколадных продуктов');
-
+  (
+    'Электроника',
+    'Электронные устройства и компоненты'
+  ),
+  (
+    'Строительные материалы',
+    'Материалы для строительства и ремонта'
+  ),
+  (
+    'Кабели и провода',
+    'Кабельная продукция для электроснабжения и связи'
+  ),
+  (
+    'Компьютерное оборудование',
+    'Компьютеры, мониторы и периферия'
+  ),
+  (
+    'Офисная техника',
+    'Принтеры, сканеры, копировальные аппараты'
+  ),
+  (
+    'Запасные части',
+    'Запчасти и аксессуары для различного оборудования'
+  ),
+  (
+    'Промышленное оборудование',
+    'Станки и производственное оборудование'
+  ),
+  (
+    'Ручной инструмент',
+    'Инструменты для ремонта и монтажа'
+  ),
+  (
+    'Медицинское оборудование',
+    'Аппаратура для медицинских учреждений'
+  ),
+  (
+    'Химические реагенты',
+    'Химические вещества для производства'
+  ),
+  (
+    'Электродвигатели',
+    'Двигатели и моторы для техники'
+  ),
+  (
+    'Автозапчасти',
+    'Комплектующие для автомобилей и спецтехники'
+  ),
+  (
+    'Энергетическое оборудование',
+    'Генераторы и трансформаторы'
+  );
 
 -- Insert into Products
 INSERT INTO
@@ -261,188 +196,184 @@ INSERT INTO
     category_id
   )
 VALUES
+  -- 1 (category_id=2: "Строительные материалы")
   (
-    'Латте',
-    'Нежный кофе с молоком',
-    'https://png.pngtree.com/png-vector/20240416/ourmid/pngtree-coffee-latte-seen-up-close-png-image_12286454.png',
-    'https://example.com/videos/latte.mp4',
+    'Цемент М500',
+    'Высококачественный цемент для строительных работ',
+    'https://example.com/images/cement_m500.png',
+    'https://example.com/videos/cement_m500.mp4',
     2
   ),
+  -- 2 (category_id=2: "Строительные материалы")
   (
-    'Капучино',
-    'Кофе с густой пенкой',
-    'https://www.pngplay.com/wp-content/uploads/7/Cappuccino-Coffee-PNG-Clipart-Background.png',
-    'https://example.com/videos/cappuccino.mp4',
-    2
-  ),
-  (
-    'Эспрессо',
-    'Крепкий кофе, подается в маленькой чашке',
-    'https://static.vecteezy.com/system/resources/previews/023/438/448/non_2x/espresso-coffee-cutout-free-png.png',
+    'Песок карьерный',
+    'Крупнозернистый песок для изготовления бетонных смесей',
+    'https://example.com/images/sand.png',
     NULL,
     2
   ),
+  -- 3 (category_id=2: "Строительные материалы")
   (
-    'Зеленый чай',
-    'Свежий зеленый чай из лучших листьев',
-    'https://static.vecteezy.com/system/resources/thumbnails/024/108/075/small_2x/fresh-herbal-tea-cup-with-green-leaves-isolated-on-transparent-background-png.png',
+    'Арматура 12 мм',
+    'Стальная арматура для укрепления железобетонных конструкций',
+    'https://example.com/images/rebar_12mm.png',
+    NULL,
+    2
+  ),
+  -- 4 (category_id=3: "Кабели и провода")
+  (
+    'Кабель ВВГнг 3x2.5',
+    'Негорючий силовой кабель для внутренней проводки',
+    'https://example.com/images/cable_vvgn.png',
     NULL,
     3
   ),
+  -- 5 (category_id=3: "Кабели и провода")
   (
-    'Черный чай',
-    'Классический черный чай с насыщенным вкусом',
-    'https://static.vecteezy.com/system/resources/thumbnails/037/280/520/small_2x/ai-generated-black-tea-held-in-a-glass-isolated-on-transparent-background-free-png.png',
+    'Провод ПВС 3x1.5',
+    'Гибкий провод для подключения бытовых приборов',
+    'https://example.com/images/pvs_3x1.5.png',
     NULL,
     3
   ),
+  -- 6 (category_id=4: "Компьютерное оборудование")
   (
-    'Клубничный смузи',
-    'Смузи с клубникой и бананом',
-    'https://png.pngtree.com/png-vector/20240807/ourmid/pngtree-smooth-and-sweet-strawberry-smoothie-ready-to-serve-in-a-cool-png-image_13402854.png',
+    'Ноутбук Lenovo ThinkPad',
+    'Надёжный бизнес-ноутбук с длительным временем работы',
+    'https://example.com/images/lenovo_thinkpad.png',
+    'https://example.com/videos/thinkpad_review.mp4',
+    4
+  ),
+  -- 7 (category_id=4: "Компьютерное оборудование")
+  (
+    'Монитор Samsung 24"',
+    'Монитор с диагональю 24 дюйма и высоким разрешением',
+    'https://example.com/images/samsung_24.png',
     NULL,
     4
   ),
+  -- 8 (category_id=5: "Офисная техника")
   (
-    'Манговый смузи',
-    'Тропический смузи с манго',
-    'https://gallerypng.com/wp-content/uploads/2024/05/mango-shake-png-image.png',
-    NULL,
-    4
-  ),
-  (
-    'Апельсиновый сок',
-    'Свежевыжатый апельсиновый сок',
-    'https://www.pngplay.com/wp-content/uploads/6/Orange-Flavor-Juice-PNG.png',
+    'МФУ HP LaserJet',
+    'Многофункциональное устройство для печати, сканирования и копирования',
+    'https://example.com/images/hp_laserjet_mfp.png',
     NULL,
     5
   ),
+  -- 9 (category_id=5: "Офисная техника")
   (
-    'Яблочный сок',
-    'Сок из спелых яблок',
-    'https://static.vecteezy.com/system/resources/previews/027/145/688/non_2x/apple-juice-ice-surrounded-by-apples-and-leaves-ai-generated-png.png',
+    'Ламинатор OfficeKit',
+    'Компактный ламинатор для офисного использования',
+    'https://example.com/images/laminator_officekit.png',
     NULL,
     5
   ),
+  -- 10 (category_id=6: "Запасные части")
   (
-    'Мохито',
-    'Освежающий коктейль с мятой и лаймом',
-    'https://png.pngtree.com/png-clipart/20231119/original/pngtree-mojito-cocktail-herb-picture-image_13268789.png',
+    'Комплект ремня ГРМ',
+    'Набор деталей для замены ремня ГРМ в двигателе',
+    'https://example.com/images/timing_belt_kit.png',
     NULL,
     6
   ),
+  -- 11 (category_id=7: "Промышленное оборудование")
   (
-    'Кола',
-    'Классический газированный напиток',
-    'https://freepngimg.com/save/2438-coca-cola-bottle-png-image/906x906',
+    'Токарный станок 16К20',
+    'Универсальный токарный станок для металлообработки',
+    'https://example.com/images/lathe_16k20.png',
     NULL,
     7
   ),
+  -- 12 (category_id=8: "Ручной инструмент")
   (
-    'Энергетический напиток',
-    'Энергетический напиток для бодрости',
-    'https://pngimg.com/uploads/red_bull/red_bull_PNG29.png',
+    'Набор отверток',
+    'Универсальный набор отверток для разных типов крепежа',
+    'https://example.com/images/screwdriver_set.png',
     NULL,
     8
   ),
+  -- 13 (category_id=9: "Медицинское оборудование")
   (
-    'Шоколадный молочный коктейль',
-    'Сладкий коктейль с шоколадным вкусом',
-    'https://png.pngtree.com/png-vector/20240603/ourmid/pngtree-hyper-realistic-image-of-chocolate-milkshake-png-image_12614596.png',
+    'Аппарат УЗИ',
+    'Ультразвуковой диагностический аппарат для медицинских учреждений',
+    'https://example.com/images/ultrasound_machine.png',
     NULL,
     9
   ),
+  -- 14 (category_id=10: "Химические реагенты")
   (
-    'Минеральная вода',
-    'Природная минеральная вода без газа',
-    'https://static.vecteezy.com/system/resources/previews/036/573/060/non_2x/cold-mineral-water-bottle-borjomi-free-png.png',
+    'Соляная кислота (HCl)',
+    'Химический реагент для различных производственных процессов',
+    'https://example.com/images/hydrochloric_acid.png',
     NULL,
     10
   ),
+  -- 15 (category_id=11: "Электродвигатели")
   (
-    'Лимонный фраппе',
-    'Кофейный напиток с лимоном и льдом',
-    'https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-mocha-coffee-frappe-in-glass-png-image_13321780.png',
+    'Электродвигатель АИР80B2',
+    'Надёжный трёхфазный двигатель мощностью 1.5 кВт',
+    'https://example.com/images/electric_motor.png',
     NULL,
     11
   ),
+  -- 16 (category_id=12: "Автозапчасти")
   (
-    'Имбирный чай',
-    'Травяной чай с имбирем для бодрости',
-    'https://static.vecteezy.com/system/resources/thumbnails/039/336/072/small_2x/ai-generated-a-glass-of-ginger-tea-isolated-on-transparent-background-png.png',
+    'Автомобильный аккумулятор 75Ач',
+    'Аккумулятор повышенной ёмкости для легкового автомобиля',
+    'https://example.com/images/car_battery_75ah.png',
     NULL,
     12
   ),
+  -- 17 (category_id=12: "Автозапчасти")
   (
-    'Чай с мятой',
-    'Травяной чай с ароматом свежей мяты',
-    'https://www.freepnglogos.com/uploads/tea-png/tea-latte-mix-cafe-17.png',
+    'Масляный фильтр MANN',
+    'Фильтр для очистки моторного масла',
+    'https://example.com/images/mann_oil_filter.png',
     NULL,
     12
   ),
+  -- 18 (category_id=7: "Промышленное оборудование")
   (
-    'Малиновый лимонад',
-    'Освежающий лимонад с малиной',
-    'https://static.vecteezy.com/system/resources/thumbnails/036/257/929/small_2x/ai-generated-a-glass-of-strawberry-juice-isolated-on-transparent-background-free-png.png',
+    'Пресс гидравлический',
+    'Гидравлический пресс для обработки металла и сборки деталей',
+    'https://example.com/images/hydraulic_press.png',
     NULL,
     7
   ),
+  -- 19 (category_id=3: "Кабели и провода")
   (
-    'Клубничный чай',
-    'Чай с добавлением клубники',
-    'https://static.vecteezy.com/system/resources/previews/048/894/947/non_2x/a-strawberry-iced-tea-in-a-plastic-cup-transparent-background-png.png',
+    'Кабель КГ 4x10',
+    'Гибкий кабель силовой для сварочного оборудования',
+    'https://example.com/images/kg_cable.png',
     NULL,
     3
   ),
+  -- 20 (category_id=2: "Строительные материалы")
   (
-    'Карамельный латте',
-    'Кофе с молоком и карамельным вкусом',
-    'https://static.vecteezy.com/system/resources/thumbnails/027/145/750/small_2x/iced-caramel-latte-topped-with-whipped-cream-and-caramel-sauce-perfect-for-drink-catalog-ai-generated-png.png',
-    'https://example.com/videos/caramel-latte.mp4',
+    'Гипсокартон 2500x1200x9.5',
+    'Листовой материал для отделочных работ',
+    'https://example.com/images/drywall.png',
+    'https://example.com/videos/drywall_installation.mp4',
     2
   ),
+  -- 21 (category_id=13: "Энергетическое оборудование")
   (
-      'Круассан с шоколадом',
-      'Нежный хрустящий круассан с шоколадной начинкой',
-      'https://www.pngplay.com/wp-content/uploads/15/Pain-Au-Chocolat-Transparent-PNG.png',
-      NULL,
-      13
+    'Генератор дизельный 5кВт',
+    'Портативный дизельный генератор для резервного питания',
+    'https://example.com/images/diesel_generator_5kw.png',
+    NULL,
+    13
   ),
+  -- 22 (category_id=13: "Энергетическое оборудование")
   (
-      'Круассан с миндалем',
-      'Ароматный круассан с миндальной начинкой и посыпкой',
-      'https://www.pngplay.com/wp-content/uploads/15/Croissants-Transparent-Image.png',
-      NULL,
-      13
+    'ИБП APC 1500VA',
+    'Источник бесперебойного питания для защиты серверов и ПК',
+    'https://example.com/images/apc_ups_1500.png',
+    NULL,
+    13
   );
 
--- Insert into RecipeStep
-INSERT INTO
-  recipe_steps (product_id, step, name, description, image_url)
-VALUES
-  (
-    1,
-    1,
-    'Приготовление эспрессо',
-    'Сварить эспрессо',
-    'https://example.com/images/espresso.jpg'
-  ),
-  (
-    1,
-    2,
-    'Вспенивание молока',
-    'Вспенить молоко до нужной текстуры',
-    'https://example.com/images/steamed-milk.jpg'
-  ),
-  (
-    2,
-    1,
-    'Приготовление пены',
-    'Сделать густую пену для капучино',
-    'https://example.com/images/foam.jpg'
-  );
-
--- Insert into ProductSize
+-- Insert into product_sizes
 INSERT INTO
   product_sizes (
     name,
@@ -488,145 +419,6 @@ VALUES
   ('S', 4, 1100.00, 300, true, 19),
   ('S', 4, 1250.00, 500, true, 12);
 
--- Insert into Additives
-INSERT INTO
-  additives (
-    name,
-    description,
-    base_price,
-    size,
-    unit_id,
-    additive_category_id,
-    image_url
-  )
-VALUES
-  (
-    'Ванильный сироп',
-    'Сладкий аромат ванили',
-    50.00,
-    20,
-    1,
-    1,
-    'https://monin.us/cdn/shop/files/750mL-Vanilla.png?v=1724939521&width=1946'
-  ),
-  (
-    'Карамельный сироп',
-    'Сладкий вкус карамели',
-    70.00,
-    40,
-    3,
-    1,
-    'https://www.giffard.com/327-large_default/karamell-sirup.jpg'
-  ),
-  (
-    'Взбитые сливки',
-    'Сливки для украшения напитков',
-    80.00,
-    500,
-    2,
-    3,
-    'https://static.vecteezy.com/system/resources/previews/033/888/680/non_2x/white-whipped-cream-with-ai-generated-free-png.png'
-  ),
-  (
-    'Корица',
-    'Пряная корица для добавления аромата',
-    30.00,
-    20,
-    1,
-    2,
-    'https://png.pngtree.com/png-vector/20240803/ourmid/pngtree-cinnamon-isolated-on-white-background-png-image_13361859.png'
-  ),
-  (
-    'Шоколадная крошка',
-    'Крошка из шоколада для украшения',
-    90.00,
-    20,
-    1,
-    3,
-    'https://mlfwajaoc5gr.i.optimole.com/w:1080/h:1080/q:mauto/ig:avif/http://icecreambakery.in/wp-content/uploads/2024/03/Chocolate-Chips-Manufacturer-RPG-Industries-2.png'
-  ),
-  (
-    'Мед',
-    'Натуральный мед для подслащивания',
-    60.00,
-    20,
-    1,
-    2,
-    'https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-3d-bowl-of-honey-with-a-driper-on-transparent-background-png-image_13330438.png'
-  ),
-  (
-    'Кокосовое молоко',
-    'Молоко с ароматом кокоса',
-    100.00,
-    20,
-    1,
-    4,
-    'https://static.vecteezy.com/system/resources/previews/049/642/396/non_2x/coconut-milk-in-a-coconut-shell-with-a-transparent-background-png.png'
-  ),
-  (
-    'Клубничный сироп',
-    'Сироп с ароматом клубники',
-    65.00,
-    20,
-    1,
-    1,
-    'https://monin.ca/cdn/shop/files/750mL-Strawberry.png?v=1727882931&width=1445'
-  ),
-  (
-    'Мята',
-    'Свежие листья мяты для аромата',
-    40.00,
-    20,
-    1,
-    5,
-    'https://static.vecteezy.com/system/resources/thumbnails/047/732/281/small/basil-leaves-in-a-glass-bowl-transparent-background-png.png'
-  ),
-  (
-    'Сахар',
-    'Белый сахар для подслащивания',
-    10.00,
-    20,
-    1,
-    6,
-    'https://static.vecteezy.com/system/resources/thumbnails/044/902/343/small_2x/sweet-delight-enhance-your-recipes-with-sugar-in-bowl-free-png.png'
-  ),
-  (
-    'Кубики льда',
-    'Лед для охлаждения напитков',
-    5.00,
-    20,
-    1,
-    7,
-    'https://img.pikbest.com/origin/09/14/36/70CpIkbEsTeTk.png!sw800'
-  ),
-  (
-    'Сироп из клена',
-    'Ароматный сироп из клена',
-    80.00,
-    20,
-    1,
-    1,
-    'https://png.pngtree.com/png-vector/20240812/ourmid/pngtree-sweet-syrup-drizzling-over-breakfast-treats-png-image_13462282.png'
-  ),
-  (
-    'Лимонный сок',
-    'Свежий лимонный сок для аромата',
-    45.00,
-    20,
-    2,
-    2,
-    'https://www.bestlobster.com/test/wp-content/uploads/2021/02/Lemon-PNG-Image.png'
-  ),
-  (
-    'Какао-порошок',
-    'Порошок какао для украшения напитков',
-    35.00,
-    15,
-    2,
-    3,
-    'https://static.vecteezy.com/system/resources/previews/041/042/862/non_2x/ai-generated-heaping-spoonful-of-cocoa-powder-free-png.png'
-  );
-
 -- Insert into Store
 INSERT INTO
   stores (
@@ -642,476 +434,90 @@ INSERT INTO
     updated_at
   )
 VALUES
-    (
-        'Центральное кафе',
-        1,
-        false,
-        'ACTIVE',
-        '+79001112233',
-        'central@example.com',
-        '8:00-20:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кофейня на углу',
-        2,
-        true,
-        'ACTIVE',
-        '+79002223344',
-        'corner@example.com',
-        '9:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Маленький магазин на Советской',
-        3,
-        true,
-        'ACTIVE',
-        '+79003334455',
-        'smallstore@example.com',
-        '8:00-18:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кофейня у вокзала',
-        4,
-        false,
-        'DISABLED',
-        '+79004445566',
-        'station@example.com',
-        '10:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Городской кофе',
-        5,
-        true,
-        'ACTIVE',
-        '+79005556677',
-        'citycoffee@example.com',
-        '7:00-23:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Летняя терраса',
-        6,
-        true,
-        'ACTIVE',
-        '+79006667788',
-        'terrace@example.com',
-        '10:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кафе на проспекте',
-        7,
-        false,
-        'ACTIVE',
-        '+79007778899',
-        'avenuecafe@example.com',
-        '9:00-21:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Заведение у реки',
-        8,
-        true,
-        'ACTIVE',
-        '+79008889900',
-        'riverside@example.com',
-        '10:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Чайный дом',
-        9,
-        false,
-        'DISABLED',
-        '+79009990011',
-        'teahouse@example.com',
-        '8:00-20:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кофе и компании',
-        10,
-        true,
-        'ACTIVE',
-        '+79010001122',
-        'coffeeandco@example.com',
-        '8:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Парк-кафе',
-        11,
-        false,
-        'ACTIVE',
-        '+79011002233',
-        'parkcafe@example.com',
-        '10:00-21:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Восточный уголок',
-        12,
-        true,
-        'ACTIVE',
-        '+79012003344',
-        'easterncorner@example.com',
-        '10:00-23:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Семейная кофейня',
-        13,
-        false,
-        'ACTIVE',
-        '+79013004455',
-        'familycafe@example.com',
-        '9:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
+  (
+    'Центральный склад',
+    1, -- Ссылается на первую запись в facility_addresses
+    false,
+    'ACTIVE',
+    '+77001112233', -- Телефонный код Казахстана
+    'central@warehouse.kz',
+    '8:00-20:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
--- Insert into StoreAdditives
+-- Insert into Store Products
 INSERT INTO
-  store_additives (additive_id, store_id, price)
+  store_products (product_id, store_id, is_available)
 VALUES
-  (1, 1, 60.00),
-  (2, 1, 75.00),
-  (3, 2, 85.00),
-  (1, 3, 65.00),
-  (4, 1, 50.00),
-  (5, 4, 90.00),
-  (6, 5, 70.00),
-  (7, 6, 100.00),
-  (8, 7, 55.00),
-  (9, 8, 45.00),
-  (10, 9, 15.00),
-  (11, 10, 5.00),
-  (12, 11, 80.00),
-  (13, 12, 40.00),
-  (14, 13, 30.00),
-  (3, 4, 75.00),
-  (6, 6, 85.00),
-  (9, 7, 65.00),
-  (5, 8, 95.00),
-  (2, 9, 70.00);
+  -- Все товары прикреплены к центральному складу
+  (1, 1, true),
+  (2, 1, true),
+  (3, 1, true),
+  (4, 1, true),
+  (5, 1, true),
+  (6, 1, true),
+  (7, 1, true),
+  (8, 1, true),
+  (9, 1, true),
+  (10, 1, true),
+  (11, 1, true),
+  (12, 1, true),
+  (13, 1, true),
+  (14, 1, true),
+  (15, 1, true),
+  (16, 1, true),
+  (17, 1, true),
+  (18, 1, true),
+  (19, 1, true),
+  (20, 1, true),
+  (21, 1, true),
+  (22, 1, true);
 
--- Insert into StoreProduct
+-- Insert into Store Product Sizes
 INSERT INTO
-    store_products (product_id, store_id, is_available)
+  store_product_sizes (product_size_id, store_product_id, price)
 VALUES
-    -- All products available in the first store
-    (1, 1, true),
-    (2, 1, true),
-    (3, 1, true),
-    (4, 1, true),
-    (5, 1, true),
-    (6, 1, true),
-    (7, 1, true),
-    (8, 1, true),
-    (9, 1, true),
-    (10, 1, true),
-    (11, 1, true),
-    (12, 1, true),
-    (13, 1, true),
-    (14, 1, true),
-    (15, 1, true),
-    (16, 1, true),
-    (17, 1, true),
-    (18, 1, true),
-    (19, 1, true),
-    (20, 1, true),
-    -- Products in other stores with varied availability
-    (1, 2, true),
-    (2, 2, false),
-    (3, 2, true),
-    (4, 2, true),
-    (5, 3, false),
-    (6, 3, true),
-    (7, 3, false),
-    (8, 3, true),
-    (9, 4, true),
-    (10, 4, true),
-    (11, 4, false),
-    (12, 4, true),
-    (13, 5, true),
-    (14, 5, true),
-    (15, 5, false),
-    (16, 5, true),
-    (17, 6, true),
-    (18, 6, false),
-    (19, 6, true),
-    (20, 6, true);
+  -- Пример данных для единственного магазина
+  (1, 1, 1000.00), -- Продукт 1, размер S
+  (2, 1, 1250.00), -- Продукт 1, размер M
+  (3, 1, 1500.00), -- Продукт 1, размер L
+  (4, 2, 1100.00), -- Продукт 2, размер S
+  (5, 3, 750.00), -- Продукт 3, размер S
+  (6, 3, 900.00), -- Продукт 3, размер M
+  (7, 3, 1150.00), -- Продукт 3, размер L
+  (8, 4, 600.00), -- Продукт 4, размер S
+  (9, 4, 850.00), -- Продукт 4, размер M
+  (10, 4, 1100.00), -- Продукт 4, размер L
+  (11, 5, 900.00), -- Продукт 5, размер S
+  (12, 5, 1100.00), -- Продукт 5, размер M
+  (13, 5, 1300.00), -- Продукт 5, размер L
+  (14, 6, 1500.00), -- Продукт 6, размер S
+  (15, 6, 1750.00), -- Продукт 6, размер L
+  (16, 7, 500.00), -- Продукт 7, размер S
+  (17, 7, 750.00), -- Продукт 7, размер M
+  (18, 7, 900.00), -- Продукт 7, размер L
+  (19, 8, 600.00), -- Продукт 8, размер S
+  (20, 8, 750.00), -- Продукт 8, размер L
+  (21, 9, 800.00), -- Продукт 9, размер M
+  (22, 9, 1000.00), -- Продукт 9, размер L
+  (23, 10, 500.00), -- Продукт 10, размер S
+  (24, 10, 700.00), -- Продукт 10, размер M
+  (25, 11, 600.00), -- Продукт 11, размер S
+  (26, 12, 900.00), -- Продукт 12, размер S
+  (27, 13, 400.00), -- Продукт 13, размер S
+  (28, 14, 900.00), -- Продукт 14, размер S
+  (29, 15, 1200.00), -- Продукт 15, размер S
+  (30, 16, 800.00), -- Продукт 16, размер S
+  (31, 17, 800.00), -- Продукт 17, размер S
+  (32, 18, 1400.00), -- Продукт 18, размер S
+  (33, 19, 1100.00), -- Продукт 19, размер S
+  (34, 20, 1250.00);
 
-
--- Insert into StoreProductSizes
+-- Insert into Employees
 INSERT INTO
-    store_product_sizes (product_size_id, store_product_id, price)
-VALUES
-    -- Store 1 Products (All sizes included)
-    (1, 1, 1000.00), -- S size for Product 1
-    (2, 1, 1250.00), -- M size for Product 1
-    (3, 1, 1500.00), -- L size for Product 1
-
-    -- Store 2 Products (Only M and L sizes included)
-    -- S size excluded intentionally
-    (2, 2, 1100.00), -- M size for Product 2
-    (3, 2, 1350.00), -- L size for Product 2
-
-    -- Store 3 Products (Only S and M sizes included)
-    -- L size excluded intentionally
-    (4, 3, 750.00),  -- S size for Product 3
-    (5, 3, 900.00),  -- M size for Product 3
-
-    -- Store 4 Products (All sizes included)
-    (6, 4, 600.00),  -- S size for Product 4
-    (7, 4, 850.00),  -- M size for Product 4
-    (8, 4, 1100.00), -- L size for Product 4
-
-    -- Store 5 Products (Only S size included)
-    -- M and L sizes excluded intentionally
-    (9, 5, 900.00),  -- S size for Product 5
-
-    -- Store 6 Products (All sizes included)
-    (10, 6, 1500.00), -- S size for Product 6
-    (11, 6, 1750.00), -- L size for Product 6
-
-    -- Store 7 Products (Only M size included)
-    -- S and L sizes excluded intentionally
-    (12, 7, 750.00),  -- M size for Product 7
-
-    -- Store 8 Products (All sizes included)
-    (13, 8, 600.00),  -- S size for Product 8
-    (14, 8, 750.00),  -- L size for Product 8
-
-    -- Store 9 Products (All sizes included)
-    (15, 9, 800.00),  -- M size for Product 9
-    (16, 9, 1000.00), -- L size for Product 9
-
-    -- Store 10 Products (Only S size included)
-    -- M and L sizes excluded intentionally
-    (17, 10, 500.00), -- S size for Product 10
-
-    -- Store 11 Products (Only L size included)
-    -- S and M sizes excluded intentionally
-    (18, 11, 1200.00); -- L size for Product 11;
-
--- Insert into ProductAdditive
-INSERT INTO
-  product_size_additives (product_size_id, additive_id, is_default)
-VALUES
-    (1, 1, true),
-    (1, 2, true),
-    (2, 3, true),
-    (3, 1, true),
-    (4, 2, true),
-    (5, 4, false),
-    (6, 5, false),
-    (7, 3, false),
-    (8, 6, false),
-    (9, 7, true),
-    (10, 2, true),
-    (11, 8, false),
-    (12, 9, true),
-    (13, 10, true),
-    (14, 11, false),
-    (15, 12, false),
-    (16, 13, true),
-    (17, 14, false),
-    (18, 1, false),
-    (19, 3, true),
-    (20, 6, false),
-    (3, 8, false),
-    (4, 10, false),
-    (5, 12, true),
-    (6, 14, false),
-    (7, 1, false),
-    (8, 4, false),
-    (9, 5, false),
-    (10, 9, false);
-
--- Insert into Ingredients
-INSERT INTO
-  ingredients (name, calories, fat, carbs, proteins, expiration_in_days, unit_id, category_id)
-VALUES
-  ('Сахар', 387, 0, 100, 0, 365, 1, 3), -- Подсластители
-  ('Молоко', 42, 1, 5, 3, 7, 3, 1), -- Молочные продукты
-  ('Шоколад', 546, 30, 61, 7, 180, 2, 6), -- Шоколад и какао
-  ('Корица', 247, 1.2, 81, 4, 365, 2, 4), -- Специи
-  ('Мед', 304, 0, 82, 0, 365, 2, 3), -- Подсластители
-  ('Ваниль', 288, 12, 55, 0, 730, 2, 4), -- Специи
-  ('Орехи', 607, 54, 18, 20, 365, 2, 5), -- Орехи и семена
-  ('Кокосовое молоко', 230, 23, 6, 2, 120, 3, 1), -- Молочные продукты
-  ('Яблоки', 52, 0.2, 14, 0.3, 14, 1, 2), -- Фрукты
-  ('Бананы', 96, 0.3, 27, 1.3, 7, 1, 2), -- Фрукты
-  ('Сливки', 195, 20, 3, 2, 10, 1, 1), -- Молочные продукты
-  ('Апельсины', 47, 0.1, 12, 0.9, 14, 1, 2), -- Фрукты
-  ('Мята', 44, 0.7, 8, 3.3, 180, 2, 4), -- Специи
-  ('Лимонный сок', 123, 0.2, 6, 0.3, 60, 3, 2), -- Фрукты
-  ('Какао-порошок', 228, 13, 58, 19, 730, 2, 6), -- Шоколад и какао
-  ('Кленовый сироп', 261, 0, 67, 0, 365, 4, 3), -- Подсластители
-  ('Клубника', 33, 0.3, 8, 0.7, 10, 1, 2), -- Фрукты
-  ('Имбирь', 80, 0.8, 18, 1.8, 180, 1, 4), -- Специи
-  ('Соль', 0, 0, 0, 0, 1095, 1, 4), -- Специи
-  ('Фисташки', 562, 45, 28, 20, 365, 1, 5); -- Орехи и семена
-
-
--- Insert into AdditiveIngredients
-INSERT INTO
-    additive_ingredients (additive_id, ingredient_id, quantity)
-VALUES
-    (1, 1, 60.00),
-    (2, 1, 75.00),
-    (3, 2, 85.00),
-    (1, 3, 65.00),
-    (4, 1, 50.00),
-    (5, 4, 90.00),
-    (6, 5, 70.00),
-    (3, 4, 75.00),
-    (6, 6, 85.00),
-    (5, 1, 95.00),
-    (2, 2, 70.00);
-
--- Орехи и семена
--- Insert into ProductIngredients
-INSERT INTO
-  product_size_ingredients (ingredient_id, product_size_id, quantity)
-VALUES
-  -- Product Size 1 (S, Product 1)
-  (1, 1, 1), -- Сахар
-  (2, 1, 1), -- Молоко
-  (4, 1, 1), -- Корица
-  -- Product Size 2 (M, Product 1)
-  (1, 2, 1), -- Сахар
-  (3, 2, 1), -- Шоколад
-  (5, 2, 1), -- Мед
-  -- Product Size 3 (L, Product 1)
-  (3, 3, 1), -- Шоколад
-  (6, 3, 1), -- Ваниль
-  (7, 3, 1), -- Орехи
-  -- Product Size 4 (S, Product 2)
-  (4, 4, 1), -- Корица
-  (2, 4, 1), -- Молоко
-  (8, 4, 1), -- Кокосовое молоко
-  -- Product Size 5 (M, Product 2)
-  (5, 5, 1), -- Мед
-  (1, 5, 1), -- Сахар
-  (9, 5, 1), -- Яблоки
-  -- Product Size 6 (L, Product 2)
-  (6, 6, 1), -- Ваниль
-  (3, 6, 1), -- Шоколад
-  (10, 6, 1), -- Бананы
-  -- Product Size 7 (S, Product 3)
-  (7, 7, 1), -- Орехи
-  (8, 7, 1), -- Кокосовое молоко
-  (13, 7, 1), -- Мята
-  -- Product Size 8 (M, Product 3)
-  (9, 8, 1), -- Яблоки
-  (14, 8, 1), -- Лимонный сок
-  (4, 8, 1), -- Корица
-  -- Product Size 9 (L, Product 3)
-  (10, 9, 1), -- Бананы
-  (15, 9, 1), -- Какао-порошок
-  (11, 9, 1), -- Сливки
-  -- Product Size 10 (S, Product 4)
-  (11, 10, 1), -- Сливки
-  (16, 10, 1), -- Кленовый сироп
-  (2, 10, 1), -- Молоко
-  -- Product Size 11 (M, Product 4)
-  (12, 11, 1), -- Апельсины
-  (17, 11, 1), -- Клубника
-  (8, 11, 1), -- Кокосовое молоко
-  -- Product Size 12 (L, Product 4)
-  (13, 12, 1), -- Мята
-  (18, 12, 1), -- Имбирь
-  (5, 12, 1), -- Мед
-  -- Product Size 13 (S, Product 5)
-  (14, 13, 1), -- Лимонный сок
-  (19, 13, 1), -- Соль
-  (15, 13, 1), -- Какао-порошок
-  -- Product Size 14 (M, Product 5)
-  (20, 14, 1), -- Фисташки
-  (3, 14, 1), -- Шоколад
-  (6, 14, 1), -- Ваниль
-  -- Product Size 15 (L, Product 5)
-  (7, 15, 1), -- Орехи
-  (1, 15, 1), -- Сахар
-  (11, 15, 1), -- Сливки
-  -- Product Size 16 (S, Product 6)
-  (9, 16, 1), -- Яблоки
-  (4, 16, 1), -- Корица
-  (14, 16, 1), -- Лимонный сок
-  -- Product Size 17 (M, Product 6)
-  (10, 17, 1), -- Бананы
-  (17, 17, 1), -- Клубника
-  (13, 17, 1), -- Мята
-  -- Product Size 18 (L, Product 6)
-  (18, 18, 1), -- Имбирь
-  (12, 18, 1), -- Апельсины
-  (20, 18, 1);
-
--- Фисташки
--- Insert into Customer
-INSERT INTO
-    customers (first_name, last_name, password, phone, is_verified, is_banned)
-VALUES
-    (
-        'Иван',
-        'Иванов',
-        'hashed_password_123',
-        '+79031234567',
-        true,
-        false
-    ),
-    (
-        'Мария',
-        'Смирнова',
-        'hashed_password_456',
-        '+79876543210',
-        false,
-        false
-    ),
-    (
-        'Алексей',
-        'Петров',
-        'hashed_password_789',
-        '+79998887766',
-        true,
-        false
-    );
-
-
--- Insert into Employee
-INSERT INTO
-    employees (
+  employees (
     first_name,
     last_name,
     phone,
@@ -1122,131 +528,70 @@ INSERT INTO
     hashed_password,
     created_at,
     updated_at
-)
+  )
 VALUES
-    (
-        'Елена',
-        'Соколова',
-        '+79551234567',
-        'elena@example.com',
-        'ADMIN',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Сергей',
-        'Павлов',
-        '+79667778899',
-        'sergey@example.com',
-        'DIRECTOR',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Анна',
-        'Федорова',
-        '+79223334455',
-        'anna@example.com',
-        'MANAGER',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Иван',
-        'Иванов',
-        '+79161234567',
-        'ivan@example.com',
-        'BARISTA',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Мария',
-        'Смирнова',
-        '+79345566778',
-        'maria@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Олег',
-        'Кузнецов',
-        '+79991234567',
-        'oleg@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Татьяна',
-        'Орлова',
-        '+79882233445',
-        'tatiana@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Алексей',
-        'Попов',
-        '+79002221133',
-        'alexei@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Юлия',
-        'Петрова',
-        '+79115555666',
-        'yulia@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Дмитрий',
-        'Фролов',
-        '+79553334456',
-        'dmitry@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
+  (
+    'Елена',
+    'Соколова',
+    '+77001112233',
+    'elena@company.kz',
+    'ADMIN',
+    'STORE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Сергей',
+    'Павлов',
+    '+77002223344',
+    'sergey@company.kz',
+    'MANAGER',
+    'STORE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Мария',
+    'Смирнова',
+    '+77003334455',
+    'maria@company.kz',
+    'WAREHOUSE_EMPLOYEE',
+    'WAREHOUSE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Олег',
+    'Кузнецов',
+    '+77004445566',
+    'oleg@company.kz',
+    'WAREHOUSE_EMPLOYEE',
+    'WAREHOUSE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Анна',
+    'Федорова',
+    '+77005556677',
+    'anna@company.kz',
+    'MANAGER',
+    'STORE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
-
--- Insert into StoreEmployee
+-- Insert into Store Employees
 INSERT INTO
   store_employees (
     employee_id,
@@ -1256,77 +601,27 @@ INSERT INTO
     updated_at
   )
 VALUES
-  (1, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (2, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (3, 3, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (4, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (5, 2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (1, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Елена (ADMIN)
+  (2, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Сергей (MANAGER)
+  (5, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Insert into WarehouseEmployee
+-- Insert into Warehouse Employees
 INSERT INTO
   warehouse_employees (employee_id, warehouse_id, created_at, updated_at)
 VALUES
-  (6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (3, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Мария (WAREHOUSE_EMPLOYEE)
+  (4, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Insert into EmployeeAudit
-INSERT INTO
-  employee_audits (start_work_at, end_work_at, employee_id)
-VALUES
-  ('2024-10-01 09:00:00+00','2024-10-01 17:00:00+00',1),
-  ('2024-10-02 09:00:00+00','2024-10-02 17:00:00+00',2);
-
--- Insert into EmployeeWorkday
-INSERT INTO
-  employee_workdays (day, start_at, end_at, employee_id)
-VALUES
-  ('Понедельник', '08:00:00', '16:00:00', 1),
-  ('Вторник', '08:00:00', '16:00:00', 2),
-  ('Среда', '08:00:00', '16:00:00', 3);
-
--- Insert into Referral
-INSERT INTO
-  referrals (customer_id, referee_id)
-VALUES
-  (1, 2),
-  (2, 3);
-
--- Insert into VerificationCode
-INSERT INTO
-  verification_codes (customer_id, code, expires_at)
-VALUES
-  (1, '123456', '2024-12-31 23:59:59+00'),
-  (2, '654321', '2024-12-31 23:59:59+00');
-
--- Insert into CustomerAddress
-INSERT INTO
-  customer_addresses (customer_id, address, longitude, latitude)
-VALUES
-  (1, 'Улица Ленина, дом 34', 37.6173, 55.7558),
-  (2, 'Проспект Мира, дом 45', 30.3158, 59.9343),
-  (3, 'Улица Советская, дом 89', 60.6094, 56.8389);
-
--- Insert into Bonus
-INSERT INTO
-  bonuses (bonuses, customer_id, expires_at)
-VALUES
-  (100.00, 1, '2024-12-31 23:59:59+00'),
-  (50.00, 2, '2024-06-30 23:59:59+00'),
-  (25.00, 3, '2024-04-30 23:59:59+00');
-
+-- Insert store warehouses
 INSERT INTO
   store_warehouses (store_id, warehouse_id)
 VALUES
-  (1, 1), -- Store 1 linked to Central Warehouse in Moscow
-  (2, 2), -- Store 2 linked to Central Warehouse in St. Petersburg
-  (3, 3), -- Store 3 linked to Central Warehouse in Ekaterinburg
-  (4, 4), -- Store 4 linked to Central Warehouse in Novosibirsk
-  (5, 5),
-  (6, 6);
+  (1, 1), -- Связь магазина с 1-м складом (Алматы)
+  (1, 2), -- Связь магазина со 2-м складом (Астана)
+  (1, 3), -- Связь магазина с 3-м складом (Шымкент)
+  (1, 4);
 
+-- Insert store warehouse stock
 INSERT INTO
   store_warehouse_stocks (
     store_warehouse_id,
@@ -1337,139 +632,451 @@ INSERT INTO
     updated_at
   )
 VALUES
-    (1, 1, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (1, 2, 50, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 1, 20, 30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 30, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 1, 10000, 1000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 120, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
+  -- Склад 1 (id=1), храним 2 вида материалов
+  (
+    1,
+    1,
+    100,
+    10,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Микросхема XYZ
+  (
+    1,
+    2,
+    300,
+    50,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Болты М8
+  -- Склад 2 (id=2), храним ещё 2 вида материалов
+  (
+    2,
+    3,
+    500,
+    20,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Кабель ВВГ 3x2.5
+  (2, 4, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Стальной лист
+  -- Склад 3 (id=3), храним 1 материал
+  (
+    3,
+    2,
+    150,
+    30,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Болты М8 (пример)
+  -- Склад 4 (id=4), храним оставшийся материал
+  (4, 5, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert stock material categories
-INSERT INTO stock_material_categories (name, description)
-VALUES 
-    ('Молочные продукты', 'Молоко, сливки, йогурты и другие молочные продукты'),
-    ('Подсластители', 'Сахар, мед и другие подсластители'),
-    ('Кондитерские изделия', 'Шоколад, какао и другие кондитерские ингредиенты'),
-    ('Специи', 'Различные специи и пряности'),
-    ('Ароматизаторы', 'Ванильный экстракт и другие ароматизаторы');
+INSERT INTO
+  stock_material_categories (name, description)
+VALUES
+  (
+    'Электронные компоненты',
+    'Микросхемы, резисторы, конденсаторы и т.д.'
+  ),
+  ('Крепёж', 'Винты, гайки, саморезы, дюбели и т.п.'),
+  (
+    'Кабели и провода',
+    'Различные типы и сечения проводов и кабелей'
+  ),
+  (
+    'Листовой металл',
+    'Листовая сталь, алюминий и другие металлы'
+  ),
+  (
+    'Инструменты',
+    'Сверла, пилки, диски и другие расходные материалы для инструмента'
+  );
 
--- Insert stock materials with Russian names and category references
-INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, size, category_id, barcode, expiration_period_in_days, is_active) 
-VALUES 
-    ('Простоквашино Молоко 3.2%', 'Молоко пастеризованное 1л', 2, 50, 3, 1, 1, '111111111111', 1095, TRUE),
-    ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, 1, 1, 2, '222222222222', 1095, TRUE),
-    ('Бабаевский горький шоколад 75%', 'Темный шоколад 500г', 3, 15, 2, 500, 3, '333333333333', 730, TRUE),
-    ('Индийская корица молотая премиум', 'Корица молотая 200г', 4, 10, 2, 200, 4, '444444444444', 1460, TRUE),
-    ('Dr.Oetker Ванильный экстракт', 'Натуральный экстракт ванили 50мл', 5, 25, 4, 50, 5, '555555555555', 1460, TRUE);
+-- Insert stock materials
+INSERT INTO
+  stock_materials (
+    name,
+    description,
+    ingredient_id,
+    safety_stock,
+    unit_id,
+    size,
+    category_id,
+    barcode,
+    expiration_period_in_days,
+    is_active
+  )
+VALUES
+  (
+    'Микросхема XYZ',
+    'Высокочастотный микропроцессорный модуль',
+    1, -- условный ID "ингредиента"
+    30, -- минимальный страховой запас
+    3, -- допустим, 3 = "Штука"
+    1, -- размер (количество штук)
+    1, -- категория 1 ("Электронные компоненты")
+    '1111111111111',
+    3650, -- ~10 лет условного срока
+    TRUE
+  ),
+  (
+    'Болты М8',
+    'Набор болтов М8 с гайками',
+    2,
+    50,
+    3, -- "Штука"
+    100, -- в комплекте 100 штук
+    2, -- категория 2 ("Крепёж")
+    '2222222222222',
+    0, -- нет срока хранения, ставим 0
+    TRUE
+  ),
+  (
+    'Кабель ВВГ 3x2.5',
+    'Силовой кабель для внутренней электропроводки',
+    3,
+    10,
+    1, -- 1 = "Килограмм" (или можно "Метр", если бы была такая ед.изм.)
+    50, -- условная длина 50 м
+    3, -- категория 3 ("Кабели и провода")
+    '3333333333333',
+    0,
+    TRUE
+  ),
+  (
+    'Стальной лист 1.5 мм',
+    'Листовая сталь толщиной 1.5 мм',
+    4,
+    5,
+    1, -- "Килограмм" (или другое)
+    10, -- условно 10 кг/лист
+    4, -- категория 4 ("Листовой металл")
+    '4444444444444',
+    0,
+    TRUE
+  ),
+  (
+    'Набор сверл по металлу',
+    'Набор из 10 сверл разного диаметра',
+    5,
+    20,
+    4, -- 4 = "Комплект"
+    1, -- 1 комплект
+    5, -- категория 5 ("Инструменты")
+    '5555555555555',
+    0,
+    TRUE
+  );
 
 -- Insert into Suppliers
-INSERT INTO suppliers (name, contact_email, contact_phone, city, address)
+INSERT INTO
+  suppliers (name, contact_email, contact_phone, city, address)
 VALUES
-    ('ООО "Нестле Россия"', 'contact@nestle.ru', '+79005556677', 'Москва', 'Павелецкая площадь, д. 2, стр. 1'),
-    ('АО "Кока-Кола ЭйчБиСи Евразия"', 'info@coca-cola.ru', '+78002002222', 'Москва', 'ул. Новоорловская, д. 7'),
-    ('ООО "ПепсиКо Холдингс"', 'support@pepsico.ru', '+78007001000', 'Московская обл.', 'г. Солнечногорск, территория свободной экономической зоны "Шерризон", стр. 1'),
-    ('ООО "Юнилевер Русь"', 'info@unilever.ru', '+78002001200', 'Москва', 'ул. Сергея Макеева, д. 13'),
-    ('ООО "Штарбакс"', 'help@starbucks.ru', '+78001008333', 'Москва', 'ул. Большая Новодмитровская, д. 23, стр. 1'),
-    ('ООО "Мон`дэлис Русь"', 'support@mdlz.ru', '+74959602424', 'Владимирская обл.', 'г. Покров, ул. Франца Штольверка, д. 10'),
-    ('АО "ДАНОН РОССИЯ"', 'contact@danone.ru', '+78002000201', 'Москва', 'ул. Вятская, д. 27, корп. 13-14'),
-    ('ООО "Марс"', 'support@mars.ru', '+74957212100', 'Московская обл.', 'г. Ступино, ул. Ситенка, д. 12'),
-    ('ООО "Юнилевер Русь"', 'contact@unilever.ru', '+78002001201', 'Омск', 'ул. 10 лет Октября, д. 205'),
-    ('ООО "Дженерал Миллс Рус"', 'support@generalmills.ru', '+74959373400', 'Москва', 'ул. Большая Новодмитровская, д. 14, стр. 2');
+  (
+    'ТОО "KazTech Solutions"',
+    'contact@kaztech.kz',
+    '+77001112233',
+    'Алматы',
+    'пр. Абая, д. 15'
+  ),
+  (
+    'ТОО "Almaty Krepyozh"',
+    'info@krepyozh.kz',
+    '+77002223344',
+    'Алматы',
+    'ул. Толе би, д. 45'
+  ),
+  (
+    'ТОО "QazaqCable"',
+    'sales@qazaqcable.kz',
+    '+77003334455',
+    'Астана',
+    'пр. Туран, д. 10, оф. 101'
+  ),
+  (
+    'ТОО "Astana Metal"',
+    'info@ametall.kz',
+    '+77004445566',
+    'Астана',
+    'ул. Кабанбай батыра, д. 2'
+  ),
+  (
+    'ТОО "MegaInstrument"',
+    'support@megainst.kz',
+    '+77005556677',
+    'Шымкент',
+    'ул. Рыскулова, д. 87'
+  ),
+  (
+    'ТОО "AutoParts KZ"',
+    'parts@autokz.kz',
+    '+77006667788',
+    'Караганда',
+    'пр. Республики, д. 40'
+  ),
+  (
+    'ТОО "Resistor Co."',
+    'contact@resistor.kz',
+    '+77007778899',
+    'Алматы',
+    'ул. Сейфуллина, д. 120'
+  ),
+  (
+    'ТОО "CondenserGroup"',
+    'info@condenser.kz',
+    '+77008889900',
+    'Астана',
+    'ул. Достык, д. 14'
+  ),
+  (
+    'ТОО "StanKaz"',
+    'stan@kzindustry.kz',
+    '+77009990011',
+    'Актобе',
+    'пр. Молдагуловой, д. 30'
+  ),
+  (
+    'ТОО "GenIndustrial"',
+    'support@genindus.kz',
+    '+77010001122',
+    'Алматы',
+    'ул. Желтоксан, д. 56'
+  );
 
 -- Insert into supplier_warehouse_deliveries
-INSERT INTO supplier_warehouse_deliveries (supplier_id, warehouse_id, delivery_date, created_at, updated_at)
+INSERT INTO
+  supplier_warehouse_deliveries (
+    supplier_id,
+    warehouse_id,
+    delivery_date,
+    created_at,
+    updated_at
+  )
 VALUES
-    (1, 1, '2024-09-01', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Delivery 1
-    (2, 1,'2024-11-01',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Delivery 2
-    (1, 2, '2024-10-01', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Delivery 3
+  -- Поставка №1 от KazTech Solutions на склад №1 (Алматы)
+  (
+    1,
+    1,
+    '2024-09-01',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  -- Поставка №2 от QazaqCable на склад №2 (Астана)
+  (
+    3,
+    2,
+    '2024-10-15',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  -- Поставка №3 от MegaInstrument на склад №3 (Шымкент)
+  (
+    5,
+    3,
+    '2024-11-01',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  -- Поставка №4 от Astana Metal на склад №4 (Караганда)
+  (
+    4,
+    4,
+    '2024-12-01',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
 -- Insert into supplier_warehouse_delivery_materials
-INSERT INTO supplier_warehouse_delivery_materials (delivery_id, stock_material_id, barcode, quantity, expiration_date)
+INSERT INTO
+  supplier_warehouse_delivery_materials (
+    delivery_id,
+    stock_material_id,
+    barcode,
+    quantity,
+    expiration_date
+  )
 VALUES
-    (1, 1, '111111111111', 50,  '2026-12-01'), -- Milk Delivery
-    (1, 2, '222222222222', 30,  '2025-06-05'), -- Sugar Delivery
-    (2, 3, '333333333333', 40,  '2025-11-20'), -- Chocolate Delivery
-    (3, 4, '444444444444', 20,  '2026-06-10'), -- Cinnamon Delivery
-    (3, 5, '555555555555', 15,  '2027-12-15'); -- Vanilla Delivery
+  -- Поставка #1 (delivery_id=1) на склад #1
+  (1, 1, '1111111111111', 100, '2030-12-31'), -- Микросхема XYZ
+  (1, 2, '2222222222222', 200, '2030-12-31'), -- Болты М8
+  -- Поставка #2 (delivery_id=2) на склад #2
+  (2, 3, '3333333333333', 50, '2030-12-31'), -- Кабель ВВГ 3x2.5
+  -- Поставка #3 (delivery_id=3) на склад #3
+  (3, 5, '5555555555555', 30, '2030-12-31'), -- Набор сверл
+  -- Поставка #4 (delivery_id=4) на склад #4
+  (4, 4, '4444444444444', 25, '2030-12-31');
 
-
-
--- Insert mock data into supplier_materials
-INSERT INTO supplier_materials (supplier_id, stock_material_id, created_at, updated_at)
+-- Insert into supplier_materials
+INSERT INTO
+  supplier_materials (
+    supplier_id,
+    stock_material_id,
+    created_at,
+    updated_at
+  )
 VALUES
-    -- Nestlé supplies Milk and Sugar
-    (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    
-    -- Coca-Cola supplies Sugar
-    (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    
-    -- PepsiCo supplies Chocolate and Cinnamon
-    (3, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
-    (3, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
-    
-    -- Unilever supplies Vanilla
-    (4, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
-    (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate
-
+  -- KazTech Solutions (id=1) поставляет Микросхему и Болты
+  (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Микросхема XYZ
+  (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Болты М8
+  -- Almaty Krepyozh (id=2) поставляет Болты М8 и Набор сверл
+  (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Болты
+  (2, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Сверла
+  -- QazaqCable (id=3) поставляет Кабель ВВГ
+  (3, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Кабель
+  -- Astana Metal (id=4) поставляет Стальной лист
+  (4, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Лист
+  -- MegaInstrument (id=5) поставляет Набор сверл и Микросхему
+  (5, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (5, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert mock data into supplier_prices
-INSERT INTO supplier_prices (supplier_material_id, base_price)
+INSERT INTO
+  supplier_prices (supplier_material_id, base_price)
 VALUES
-    -- Prices for supplier_material_id 1
-    (1, 50.00),
-    (1, 48.00),
-    
-    -- Prices for supplier_material_id 2
-    (2, 25.00),
-    (2, 24.50),
-    
-    -- Prices for supplier_material_id 3
-    (3, 100.00),
-    (3, 98.00),
-    
-    -- Prices for supplier_material_id 4
-    (4, 30.00),
-    (4, 28.00),
-    
-    -- Prices for supplier_material_id 5
-    (5, 75.00),
-    (5, 72.50);
+  -- К примеру, поставщик #1 (KazTech Solutions) может поставлять
+  -- микросхему (supplier_material_id = 1) и болты (supplier_material_id = 2)
+  (1, 1500.00),
+  (1, 1490.00),
+  (2, 300.00),
+  (2, 295.00),
+  -- Допустим, поставщик #2 (Almaty Krepyozh) может поставлять
+  -- кабель (supplier_material_id = 3) и сверла (supplier_material_id = 4)
+  (3, 2000.00),
+  (3, 1950.00),
+  (4, 500.00),
+  (4, 480.00),
+  -- Поставщик #3 (QazaqCable), например, сталь (supplier_material_id = 5)
+  (5, 1000.00),
+  (5, 990.00);
 
-
-INSERT INTO warehouse_stocks (warehouse_id, stock_material_id, quantity)
+-- Insert mock data into warehouse_stocks
+INSERT INTO
+  warehouse_stocks (warehouse_id, stock_material_id, quantity)
 VALUES
-    (1, 1, 50), -- Milk in Warehouse 1
-    (1, 2, 30), -- Sugar in Warehouse 1
-    (1, 3, 40), -- Chocolate in Warehouse 1
-    (2, 4, 20), -- Cinnamon in Warehouse 2
-    (2, 5, 15); -- Vanilla in Warehouse 2
-
+  (1, 1, 100), -- Микросхема ATmega328 на Склада №1
+  (1, 2, 200), -- Болты М8 на Склада №1
+  (1, 3, 320), -- Микросхема ATmega328 на Склада №1
+  (1, 4, 120), -- Болты М8 на Склада №1
+  (1, 5, 30), -- Микросхема ATmega328 на Склада №1
+  (2, 3, 50), -- Кабель ВВГ на Склада №2
+  (3, 4, 20), -- Листовая сталь на Склада №3
+  (4, 5, 15);
 
 -- Insert into StockRequests (Initial Requests)
-INSERT INTO stock_requests (store_id, warehouse_id, status, created_at, updated_at)
+INSERT INTO
+  stock_requests (
+    store_id,
+    warehouse_id,
+    status,
+    created_at,
+    updated_at
+  )
 VALUES
-    (1, 1, 'CREATED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 'PROCESSED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 'IN_DELIVERY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 4, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (
+    1,
+    1,
+    'CREATED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    1,
+    1,
+    'PROCESSED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    1,
+    1,
+    'IN_DELIVERY',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    1,
+    1,
+    'COMPLETED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
-INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, stock_material_id, quantity, created_at, updated_at)
+INSERT INTO
+  stock_request_ingredients (
+    stock_request_id,
+    ingredient_id,
+    stock_material_id,
+    quantity,
+    created_at,
+    updated_at
+  )
 VALUES
-    -- StockRequest 1 (Store 1 -> Warehouse 1)
-    (1, 1, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (1, 2, 1, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-
-    -- StockRequest 2 (Store 2 -> Warehouse 2)
-    (2, 3, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Chocolate
-    (2, 4, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Cinnamon
-
-    -- StockRequest 3 (Store 3 -> Warehouse 3)
-    (3, 5, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Vanilla
-    (3, 1, 2, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-
-    -- StockRequest 4 (Store 4 -> Warehouse 4)
-    (4, 2, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (4, 3, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);  -- Chocolate
-
+  -- Запрос #1 (store_id=1 -> warehouse_id=1)
+  (
+    1,
+    1,
+    1,
+    10.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- запросить 10 шт. (Микросхем)
+  (
+    1,
+    2,
+    2,
+    50.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- запросить 50 шт. (Болтов)
+  -- Запрос #2 (store_id=1 -> warehouse_id=2)
+  (
+    2,
+    3,
+    3,
+    20.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- запросить 20 м кабеля
+  (
+    2,
+    2,
+    2,
+    100.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- ещё болты
+  -- Запрос #3 (store_id=1 -> warehouse_id=3)
+  (
+    3,
+    4,
+    4,
+    5.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- немного листовой стали
+  (
+    3,
+    5,
+    5,
+    2.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- несколько наборов сверл
+  -- Запрос #4 (store_id=1 -> warehouse_id=4)
+  (
+    4,
+    1,
+    1,
+    30.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- микросхемы
+  (
+    4,
+    3,
+    3,
+    10.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );

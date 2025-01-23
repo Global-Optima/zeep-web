@@ -12,8 +12,7 @@
 			<TableRow
 				v-for="employee in employees"
 				:key="employee.id"
-				class="h-12 cursor-pointer"
-				@click="goToEmployee(employee.id)"
+				class="h-12"
 			>
 				<!-- Employee Name and Image -->
 				<TableCell class="p-4">

@@ -19,7 +19,7 @@
 			>
 				<AppAdminSidebar />
 
-				<div class="mt-auto">
+				<div class="hidden mt-auto">
 					<Button
 						variant="outline"
 						@click="onDisplayClick"

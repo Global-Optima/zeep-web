@@ -1,16 +1,14 @@
 import type { RouteKey } from '@/core/config/routes.config'
 import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
 import {
-	Apple,
 	Blocks,
 	ChartBar,
+	FolderKanban,
 	LayoutList,
-	ListPlus,
 	Package,
 	PackageCheck,
 	Ruler,
-	ShoppingCart,
-	Store,
+	ShoppingBasket,
 	Truck,
 	Users,
 	Warehouse,
@@ -56,40 +54,22 @@ export const adminNavItems: SidebarNavItem[] = [
 		accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA],
 	},
 	{
-		name: 'Заказы',
-		routeKey: 'ADMIN_STORE_ORDERS',
-		icon: ShoppingCart,
-		accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA],
-	},
-	{
 		name: 'Сотрудники',
 		routeKey: 'ADMIN_STORE_EMPLOYEES',
 		icon: Users,
 		accessRoles: [EmployeeRole.MANAGER],
 	},
 	{
-		name: 'Склад',
+		name: 'Запасы',
 		routeKey: 'ADMIN_STORE_STOCKS',
 		icon: Warehouse,
 		accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA],
 	},
 	{
-		name: 'Товары',
-		routeKey: 'ADMIN_STORE_PRODUCTS',
-		icon: Package,
+		name: 'Проекты',
+		routeKey: 'ADMIN_PROJECTS',
+		icon: FolderKanban,
 		accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA],
-	},
-	{
-		name: 'Топпинги',
-		routeKey: 'ADMIN_STORE_ADDITIVES',
-		icon: ListPlus,
-		accessRoles: [EmployeeRole.MANAGER, EmployeeRole.BARISTA],
-	},
-	{
-		name: 'Магазины',
-		routeKey: 'ADMIN_STORES',
-		icon: Store,
-		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
 	},
 	{
 		name: 'Размеры',
@@ -129,8 +109,8 @@ export const adminNavItems: SidebarNavItem[] = [
 	},
 	// Collapsible groups
 	{
-		label: 'Товары',
-		icon: Package,
+		label: 'Каталог',
+		icon: ShoppingBasket,
 		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
 		items: [
 			{
@@ -148,44 +128,6 @@ export const adminNavItems: SidebarNavItem[] = [
 		],
 	},
 
-	{
-		label: 'Топпинги',
-		icon: ListPlus,
-		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
-		items: [
-			{
-				name: 'Список',
-				routeKey: 'ADMIN_ADDITIVES',
-				icon: ListPlus,
-				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
-			},
-			{
-				name: 'Категории',
-				routeKey: 'ADMIN_ADDITIVE_CATEGORIES',
-				icon: LayoutList,
-				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
-			},
-		],
-	},
-	{
-		label: 'Ингредиенты',
-		icon: Apple,
-		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
-		items: [
-			{
-				name: 'Список',
-				routeKey: 'ADMIN_INGREDIENTS',
-				icon: Apple,
-				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
-			},
-			{
-				name: 'Категории',
-				routeKey: 'ADMIN_INGREDIENT_CATEGORIES',
-				icon: LayoutList,
-				accessRoles: [EmployeeRole.ADMIN, EmployeeRole.DIRECTOR],
-			},
-		],
-	},
 	{
 		label: 'Складские товары',
 		icon: Package,

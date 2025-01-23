@@ -1,8 +1,8 @@
 <template>
-	<Card class="">
+	<Card>
 		<CardHeader>
-			<CardTitle class="text-lg sm:text-xl">Вход для сотрудника кафе</CardTitle>
-			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
+			<CardTitle class="text-lg sm:text-xl">Вход в личный кабинет</CardTitle>
+			<CardDescription>Введите ваши учетные данные для входа в систему учета ТМЦ</CardDescription>
 		</CardHeader>
 		<CardContent>
 			<form
@@ -11,53 +11,9 @@
 			>
 				<FormField
 					v-slot="{ componentField }"
-					name="selectedStoreId"
-				>
-					<FormItem>
-						<FormLabel class="text-sm sm:text-base">Заведение</FormLabel>
-						<FormControl>
-							<Select v-bind="componentField">
-								<SelectTrigger class="w-full">
-									<template v-if="storesLoading">
-										<SelectValue
-											class="text-sm sm:text-base"
-											placeholder="Загрузка кафе..."
-										/>
-									</template>
-									<template v-else-if="storesError">
-										<SelectValue
-											class="text-sm sm:text-base"
-											placeholder="Ошибка загрузки кафе"
-										/>
-									</template>
-									<template v-else>
-										<SelectValue
-											class="text-sm sm:text-base"
-											placeholder="Выберите кафе"
-										/>
-									</template>
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem
-										v-for="store in stores"
-										:key="store.id"
-										:value="store.id.toString()"
-										class="text-sm sm:text-base"
-									>
-										{{ store.name }}
-									</SelectItem>
-								</SelectContent>
-							</Select>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				</FormField>
-
-				<FormField
-					v-slot="{ componentField }"
 					name="selectedEmployeeEmail"
 				>
-					<FormItem v-if="values.selectedStoreId">
+					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Выберите сотрудника</FormLabel>
 						<FormControl>
 							<Select v-bind="componentField">
@@ -65,19 +21,19 @@
 									<template v-if="employeesLoading">
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Загрузка сотрудников..."
+											placeholder="Загрузка списка сотрудников..."
 										/>
 									</template>
 									<template v-else-if="employeesError">
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Ошибка загрузки сотрудников"
+											placeholder="Ошибка загрузки данных"
 										/>
 									</template>
 									<template v-else>
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Сотрудники"
+											placeholder="Выберите сотрудника"
 										/>
 									</template>
 								</SelectTrigger>
@@ -106,7 +62,7 @@
 						<FormControl>
 							<Input
 								type="password"
-								placeholder="Введите пароль сотрудника"
+								placeholder="Введите пароль"
 								v-bind="componentField"
 								class="text-sm sm:text-base"
 								required
@@ -154,7 +110,6 @@ import {
 } from '@/core/components/ui/select'
 import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
-import { storesService } from "@/modules/stores/services/stores.service"
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
@@ -167,8 +122,7 @@ const emits = defineEmits<{
 
 const formSchema = toTypedSchema(
   z.object({
-    selectedStoreId: z.coerce.number().min(1, {message: "Пожалуйста, выберите магазин"}),
-    selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
+    selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите МОЛ"}),
     password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
   })
 )
@@ -177,17 +131,9 @@ const { values, isSubmitting, handleSubmit } = useForm({
   validationSchema: formSchema,
 })
 
-
-const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
-  queryKey: ['stores'],
-  queryFn: () => storesService.getStores(),
-  initialData: [],
-})
-
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
-  queryKey: computed(() => ['store-employees', values.selectedStoreId]),
-  queryFn: () => authService.getStoreAccounts(values.selectedStoreId!),
-  enabled: computed(() => Boolean(values.selectedStoreId)),
+  queryKey: computed(() => ['store-employees', 1]), // Adjust query key as needed
+  queryFn: () => authService.getStoreAccounts(1), // Adjust service method as needed
   initialData: [],
 })
 

@@ -50,7 +50,7 @@ const onBaristaClick = () => {
 					<AppAdminSidebar />
 				</div>
 
-				<div class="mt-auto p-4">
+				<div class="hidden mt-auto p-4">
 					<Button
 						variant="outline"
 						@click="onDisplayClick"

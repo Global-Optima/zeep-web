@@ -127,7 +127,6 @@ const onSubmit = handleSubmit((formValues) => {
 
   const dto: CreateStockMaterialDTO = {
     ...formValues,
-    packages: finalPackages,
   }
 
   emits('onSubmit', dto)
@@ -446,8 +445,8 @@ function selectPackageUnit(unit: UnitDTO) {
 
 				<Card>
 					<CardHeader>
-						<CardTitle>Ингредиент</CardTitle>
-						<CardDescription>Выберите ингредиент.</CardDescription>
+						<CardTitle>Состовляющие</CardTitle>
+						<CardDescription>Выберите состовляющий элемент</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<Button

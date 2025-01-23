@@ -9,7 +9,7 @@ import {
   CommandList
 } from '@/core/components/ui/command'
 import { getRouteName, type RouteKey } from '@/core/config/routes.config'
-import { adminSearchItems } from '@/core/layouts/admin/app-admin-search-links.constants'
+import { adminSearchItems } from '@/core/layouts/admin-v2/app-admin-search-links.constants'
 import type { EmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { Search } from 'lucide-vue-next'
 import { computed, ref } from 'vue'

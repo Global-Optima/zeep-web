@@ -8,11 +8,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/core/components/ui/dropdown-menu'
+import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
 import AppAdminHeader from '@/core/layouts/admin-v2/app-admin-header.vue'
 import AppAdminSidebar from '@/core/layouts/admin-v2/app-admin-sidebar.vue'
 import { EMPLOYEE_ROLES_FORMATTED } from '@/modules/admin/store-employees/models/employees.models'
+import { authService } from '@/modules/auth/services/auth.service'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
+import { useMutation } from '@tanstack/vue-query'
 import { ChevronsUpDown, Coffee, Store, TvMinimal } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
@@ -30,6 +33,23 @@ const onKioskClick = () => {
 
 const onBaristaClick = () => {
 	router.push({name: getRouteName('KIOSK_ORDERS')})
+}
+
+const { toast } = useToast()
+
+const {mutate: logoutEmployee} = useMutation({
+		mutationFn: () => authService.logoutEmployee(),
+		onSuccess: () => {
+			toast({title: "Вы вышли из системы"})
+			router.push({name: getRouteName("LOGIN")})
+		},
+		onError: () => {
+      toast({title: "Произошла ошибка при выходе"})
+		},
+})
+
+const onLogoutClick = () => {
+  logoutEmployee()
 }
 </script>
 
@@ -49,14 +69,16 @@ const onBaristaClick = () => {
 								>
 									<div class="flex items-center gap-4">
 										<Avatar class="bg-gray-200 rounded-md w-11 h-11">
-											<AvatarFallback>CN</AvatarFallback>
+											<AvatarFallback>
+												{{ `${currentEmployee.firstName.charAt(0)}${currentEmployee.lastName.charAt(0)}` }}
+											</AvatarFallback>
 										</Avatar>
 
 										<div>
 											<p class="font-medium text-sm">
 												{{ currentEmployee.firstName }} {{ currentEmployee.lastName }}
 											</p>
-											<p class="text-gray-500 text-xs">
+											<p class="mt-0.5 text-gray-500 text-xs">
 												{{ EMPLOYEE_ROLES_FORMATTED[currentEmployee.role] }}
 											</p>
 										</div>
@@ -71,7 +93,11 @@ const onBaristaClick = () => {
 							side="bottom"
 							:side-offset="4"
 						>
-							<DropdownMenuItem class="w-full">Выйти</DropdownMenuItem>
+							<DropdownMenuItem
+								class="w-full"
+								@click="onLogoutClick"
+								>Выйти</DropdownMenuItem
+							>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
@@ -80,7 +106,7 @@ const onBaristaClick = () => {
 					<AppAdminSidebar />
 				</div>
 
-				<div class="mt-auto p-4">
+				<div class="hidden mt-auto p-4">
 					<Button
 						variant="outline"
 						@click="onDisplayClick"

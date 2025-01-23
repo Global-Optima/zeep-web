@@ -3,39 +3,34 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Название</TableHead>
+				<TableHead>Проект</TableHead>
+				<TableHead>Позиция</TableHead>
 				<TableHead>Количество</TableHead>
-				<TableHead>Мин. запас</TableHead>
-				<TableHead class="hidden md:table-cell">Единица измерения</TableHead>
 				<TableHead class="hidden md:table-cell">Статус</TableHead>
-				<TableHead class="hidden md:table-cell">Истекает</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
 			<!-- If no stocks -->
 			<TableRow v-if="stocks.length === 0">
 				<TableCell
-					colspan="6"
+					colspan="7"
 					class="py-6 text-center text-muted-foreground"
 				>
 					Нет данных
 				</TableCell>
 			</TableRow>
 
-			<!-- Otherwise, render each stock row -->
+			<!-- Render each stock row -->
 			<TableRow
-				v-for="stock in stocks"
+				v-for="stock in formattedStocks"
 				:key="stock.stockMaterial.id"
 				class="hover:bg-gray-50 cursor-pointer"
 				@click="handleRowClick(stock.stockMaterial.id)"
 			>
 				<TableCell class="py-4 font-medium">{{ stock.stockMaterial.name }}</TableCell>
+				<TableCell>{{ stock.projectName }}</TableCell>
+				<TableCell>{{ stock.position }}</TableCell>
 				<TableCell>{{ stock.quantity }}</TableCell>
-				<TableCell>{{ stock.stockMaterial.safetyStock }}</TableCell>
-
-				<!-- Unit name (hidden on small screens) -->
-				<TableCell class="hidden md:table-cell">
-					{{ stock.stockMaterial.unit.name }}
-				</TableCell>
 
 				<!-- Status badges -->
 				<TableCell class="hidden md:table-cell">
@@ -57,79 +52,88 @@
 						</p>
 					</div>
 				</TableCell>
-
-				<!-- Expiration Date -->
-				<TableCell class="hidden md:table-cell">
-					{{ stock.earliestExpirationDate ? format(stock.earliestExpirationDate, "dd.MM.yyyy hh:mm") : "Не указано" }}
-				</TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@/core/components/ui/table'
 import type { WarehouseStocksDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
-import { differenceInDays, format } from 'date-fns'
+import { differenceInDays } from 'date-fns'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
-defineProps<{
-  stocks: WarehouseStocksDTO[]
+interface TableType extends WarehouseStocksDTO {
+  projectName: string, position: string
+}
+
+// Define props
+const {stocks} = defineProps<{
+	stocks: WarehouseStocksDTO[]
 }>()
+
+// Mock projects and positions for the stocks
+const mockProjects = ['Модернизация системы учета', 'Поставка оборудования для склада', 'Ремонта оборудования', 'Обучение персонала']
+const mockPositions = ['A8', 'B7', 'C3', 'D4', 'E5', 'E8', 'B3', 'H7']
+
+// Enhance stocks with projects and positions
+const formattedStocks = computed<TableType[]>(() => stocks.map((stock, index) => ({
+  ...stock,
+	projectName: mockProjects[index % mockProjects.length],
+	position: mockPositions[index % mockPositions.length]
+})))
 
 const router = useRouter()
 
 function handleRowClick(stockId: number): void {
-  router.push(`/admin/warehouse-stocks/${stockId}`)
+	router.push(`/admin/warehouse-stocks/${stockId}`)
 }
 
 type IngredientStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
 
 const INGREDIENT_STATUS_COLOR: Record<IngredientStatus, string> = {
-  in_stock: 'bg-green-100 text-green-800',
-  low_stock: 'bg-yellow-100 text-yellow-800',
-  out_of_stock: 'bg-red-100 text-red-800',
+	in_stock: 'bg-green-100 text-green-800',
+	low_stock: 'bg-yellow-100 text-yellow-800',
+	out_of_stock: 'bg-red-100 text-red-800',
 }
 
 const INGREDIENT_STATUS_FORMATTED: Record<IngredientStatus, string> = {
-  in_stock: 'В наличии',
-  low_stock: 'Заканчивается',
-  out_of_stock: 'Нет в наличии',
+	in_stock: 'В наличии',
+	low_stock: 'Заканчивается',
+	out_of_stock: 'Нет в наличии',
 }
 
 function computeStatus(stock: WarehouseStocksDTO): IngredientStatus {
-  if (stock.quantity === 0) {
-    return 'out_of_stock'
-  }
-  if (stock.quantity <= stock.stockMaterial.safetyStock) {
-    return 'low_stock'
-  }
-  return 'in_stock'
+	if (stock.quantity === 0) {
+		return 'out_of_stock'
+	}
+	if (stock.quantity <= stock.stockMaterial.safetyStock) {
+		return 'low_stock'
+	}
+	return 'in_stock'
 }
 
 function getStatusClass(stock: WarehouseStocksDTO): string {
-  return INGREDIENT_STATUS_COLOR[computeStatus(stock)]
+	return INGREDIENT_STATUS_COLOR[computeStatus(stock)]
 }
 
 function getStatusLabel(stock: WarehouseStocksDTO): string {
-  return INGREDIENT_STATUS_FORMATTED[computeStatus(stock)]
+	return INGREDIENT_STATUS_FORMATTED[computeStatus(stock)]
 }
 
 function shouldIndicateExpiration(stock: WarehouseStocksDTO): boolean {
-  if (!stock.earliestExpirationDate) {
-    return false
-  }
-  const daysLeft = differenceInDays(new Date(stock.earliestExpirationDate), new Date())
-  return daysLeft <= 7 && daysLeft > 0
+	if (!stock.earliestExpirationDate) {
+		return false
+	}
+	const daysLeft = differenceInDays(new Date(stock.earliestExpirationDate), new Date())
+	return daysLeft <= 7 && daysLeft > 0
 }
 </script>
-
-<style scoped></style>

@@ -44,7 +44,7 @@ import {
   CollapsibleTrigger,
 } from '@/core/components/ui/collapsible'
 import { getRouteName, type RouteKey } from '@/core/config/routes.config'
-import type { CollapsibleNavItem } from '@/core/layouts/admin/app-admin-sidebar-links.constants'
+import type { CollapsibleNavItem } from '@/core/layouts/admin-v2/app-admin-sidebar-links.constants'
 import { CaretSortIcon } from '@radix-icons/vue'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'

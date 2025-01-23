@@ -19,7 +19,7 @@
 			>
 				<AppAdminSidebar />
 
-				<div class="mt-auto">
+				<div class="hidden mt-auto">
 					<Button
 						variant="outline"
 						@click="onDisplayClick"
@@ -72,9 +72,9 @@
 import { Button } from '@/core/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/core/components/ui/sheet'
 import { getRouteName } from '@/core/config/routes.config'
-import AppAdminEmployeeDropdown from '@/core/layouts/admin/app-admin-employee-dropdown.vue'
-import AppAdminSearch from '@/core/layouts/admin/app-admin-search.vue'
-import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
+import AppAdminEmployeeDropdown from '@/core/layouts/admin-v2/app-admin-employee-dropdown.vue'
+import AppAdminSearch from '@/core/layouts/admin-v2/app-admin-search.vue'
+import AppAdminSidebar from '@/core/layouts/admin-v2/app-admin-sidebar.vue'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { Menu, Store, TvMinimal } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'

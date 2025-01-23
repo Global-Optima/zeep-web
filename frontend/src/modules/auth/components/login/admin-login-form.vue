@@ -1,7 +1,7 @@
 <template>
 	<Card>
 		<CardHeader>
-			<CardTitle class="text-lg sm:text-xl">Вход для администраторов и руководителей</CardTitle>
+			<CardTitle class="text-lg sm:text-xl">Вход для администраторов</CardTitle>
 			<CardDescription
 				>Введите ваши учетные данные для доступа к системе управления</CardDescription
 			>

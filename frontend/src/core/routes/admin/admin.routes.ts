@@ -1,4 +1,4 @@
-import AppAdminLayout from '@/core/layouts/admin/app-admin-layout.vue'
+import AppAdminLayout from '@/core/layouts/admin-v2/app-admin-layout.vue'
 import { ADMIN_ADDITIVES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-additives.routes'
 import { ADMIN_INGREDIENTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-ingredients.routes'
 import { ADMIN_PRODUCTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-products.routes'
@@ -16,6 +16,24 @@ export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES,
 	...ADMIN_EMPLOYEES_CHILDREN_ROUTES,
 	...ADMIN_SUPPLIERS_CHILDREN_ROUTES,
+
+	ADMIN_PROJECTS: {
+		path: 'projects',
+		meta: {
+			title: 'Проекты',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/admin-projects/pages/admin-projects-page.vue'),
+	},
+
+	ADMIN_PROJECT_DETAILS: {
+		path: 'projects/:id',
+		meta: {
+			title: 'Проекты',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/admin-projects/pages/admin-project-details-page.vue'),
+	},
 
 	ADMIN_DASHBOARD: {
 		path: '',

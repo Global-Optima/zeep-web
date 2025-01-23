@@ -6,7 +6,7 @@
 					value="cafe"
 					class="p-2 text-base"
 				>
-					Кафе
+					МОЛ
 				</TabsTrigger>
 				<TabsTrigger
 					value="warehouse"
