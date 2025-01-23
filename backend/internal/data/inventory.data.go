@@ -18,9 +18,16 @@ var (
 	StockRequestAcceptedWithChange  StockRequestStatus = "ACCEPTED_WITH_CHANGE"
 )
 
+type Region struct {
+	BaseEntity
+	Name           string          `gorm:"size:255;not null" sort:"name"`
+	RegionManagers []RegionManager `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+}
+
 type Warehouse struct {
 	BaseEntity
 	FacilityAddressID uint            `gorm:"not null;index"`
+	RegionID          uint            `gorm:"not null;index"`
 	FacilityAddress   FacilityAddress `gorm:"foreignKey:FacilityAddressID;constraint:OnDelete:CASCADE"`
 	Name              string          `gorm:"size:255;not null" sort:"name"`
 }

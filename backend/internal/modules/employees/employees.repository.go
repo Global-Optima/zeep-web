@@ -221,7 +221,7 @@ func (r *employeeRepository) DeleteEmployeeById(employeeID uint, employeeType da
 func (r *employeeRepository) GetAllRoles() ([]data.EmployeeRole, error) {
 	roles := []data.EmployeeRole{
 		data.RoleAdmin,
-		data.RoleManager,
+		data.RoleWarehouseManager,
 		data.RoleBarista,
 	}
 	return roles, nil

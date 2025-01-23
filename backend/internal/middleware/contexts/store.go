@@ -24,7 +24,7 @@ func GetStoreId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
 	}
 
 	var storeID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleDirector {
+	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner && claims.Role != data.RoleFranchiseOwner && claims.Role != data.RoleFranchiseManager {
 		if claims.EmployeeType != data.StoreEmployeeType {
 			return 0, ErrInvalidEmployeeType
 		}

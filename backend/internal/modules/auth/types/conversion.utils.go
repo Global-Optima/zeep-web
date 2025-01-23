@@ -2,28 +2,36 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
 
-func MapEmployeeToClaimsData(employee *data.Employee) *EmployeeClaimsData {
+func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, error) {
 	var workplaceID uint
-	var workplaceType data.EmployeeType
 
-	if employee.StoreEmployee != nil {
+	//TODO validate case when no subgroup attached
+	switch employee.Type {
+	case data.StoreEmployeeType:
 		workplaceID = employee.StoreEmployee.StoreID
-		workplaceType = data.StoreEmployeeType
-	} else if employee.WarehouseEmployee != nil {
+	case data.WarehouseEmployeeType:
 		workplaceID = employee.WarehouseEmployee.WarehouseID
-		workplaceType = data.WarehouseEmployeeType
+	case data.RegionManagerEmployeeType:
+		workplaceID = employee.RegionManager.RegionID
+	case data.FranchiseeEmployeeType:
+		workplaceID = employee.FranchiseeEmployee.FranchiseeID
+	case data.AdminEmployeeType:
+		workplaceID = 0
+	default:
+		return nil, types.ErrUnsupportedEmployeeType
 	}
 
 	employeeData := EmployeeClaimsData{
 		ID:           employee.ID,
 		Role:         employee.Role,
 		WorkplaceID:  workplaceID,
-		EmployeeType: workplaceType,
+		EmployeeType: employee.Type,
 	}
 
-	return &employeeData
+	return &employeeData, nil
 }
 
 func MapCustomerToClaimsData(customer *data.Customer) *CustomerClaimsData {

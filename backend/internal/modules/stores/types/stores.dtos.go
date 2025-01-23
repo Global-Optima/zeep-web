@@ -21,7 +21,7 @@ type UpdateFacilityAddressDTO struct {
 
 type CreateStoreDTO struct {
 	Name            string                   `json:"name"`
-	IsFranchise     bool                     `json:"isFranchise"`
+	FranchiseID     *uint                    `json:"franchiseId"`
 	FacilityAddress UpdateFacilityAddressDTO `json:"facilityAddress"`
 	ContactPhone    string                   `json:"contactPhone"`
 	ContactEmail    string                   `json:"contactEmail"`
@@ -30,7 +30,7 @@ type CreateStoreDTO struct {
 
 type UpdateStoreDTO struct {
 	Name            string                   `json:"name"`
-	IsFranchise     bool                     `json:"isFranchise"`
+	FranchiseID     *uint                    `json:"franchiseId"`
 	FacilityAddress CreateFacilityAddressDTO `json:"facilityAddress"`
 	ContactPhone    string                   `json:"contactPhone"`
 	ContactEmail    string                   `json:"contactEmail"`
@@ -40,7 +40,7 @@ type UpdateStoreDTO struct {
 type StoreDTO struct {
 	ID              uint                `json:"id"`
 	Name            string              `json:"name"`
-	IsFranchise     bool                `json:"isFranchise"`
+	FranchiseID     *uint               `json:"franchiseId"`
 	FacilityAddress *FacilityAddressDTO `json:"facilityAddress"`
 	ContactPhone    string              `json:"contactPhone"`
 	ContactEmail    string              `json:"contactEmail"`

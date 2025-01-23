@@ -166,18 +166,27 @@ CREATE TABLE
 
 CREATE UNIQUE INDEX unique_additive_name ON additives (name) WHERE deleted_at IS NULL;
 
+-- Franchisees Table
+CREATE TABLE IF NOT EXISTS franchisees (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(1024),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
 -- Store Table
 CREATE TABLE
 	IF NOT EXISTS stores (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		facility_address_id INT REFERENCES facility_addresses (id),
-		is_franchise BOOLEAN DEFAULT FALSE,
+		franchisee_id INT REFERENCES franchisees (id) ON DELETE CASCADE,
 		status VARCHAR(20) DEFAULT 'ACTIVE',
 		contact_phone valid_phone,
 		contact_email VARCHAR(255),
 		store_hours VARCHAR(255),
-		admin_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -302,11 +311,21 @@ CREATE UNIQUE INDEX unique_additive_ingredient
     ON additive_ingredients (ingredient_id, additive_id)
     WHERE deleted_at IS NULL;
 
+-- Regions Table
+CREATE TABLE IF NOT EXISTS regions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
 -- Warehouses Table
 CREATE TABLE
 	IF NOT EXISTS warehouses (
 		id SERIAL PRIMARY KEY,
 		facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE CASCADE,
+        region_id INT NOT NULL REFERENCES regions (id) ON DELETE RESTRICT,
 		name VARCHAR(255) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -411,6 +430,34 @@ CREATE TABLE
 
 CREATE UNIQUE INDEX unique_warehouse_employee
     ON warehouse_employees (employee_id, warehouse_id)
+    WHERE deleted_at IS NULL;
+
+-- Region Managers Table
+CREATE TABLE IF NOT EXISTS region_managers (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    region_id INT NOT NULL REFERENCES regions (id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
+CREATE UNIQUE INDEX unique_region_manager
+    ON region_managers (region_id, employee_id)
+    WHERE deleted_at IS NULL;
+
+-- Franchisee Employees Table
+CREATE TABLE IF NOT EXISTS franchisee_employees (
+    id SERIAL PRIMARY KEY,
+    franchisee_id INT NOT NULL REFERENCES franchisees (id) ON DELETE CASCADE,
+    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
+CREATE UNIQUE INDEX unique_franchisee_employee
+    ON franchisee_employees (franchisee_id, employee_id)
     WHERE deleted_at IS NULL;
 
 -- EmployeeAudit Table

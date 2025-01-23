@@ -57,7 +57,12 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*types.To
 		return nil, errors.New("invalid credentials")
 	}
 
-	employeeData := types.MapEmployeeToClaimsData(employee)
+	employeeData, err := types.MapEmployeeToClaimsData(employee)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to map employee claims", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
 
 	accessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
 	if err != nil {
@@ -96,7 +101,12 @@ func (s *authenticationService) EmployeeRefreshAccessToken(refreshToken string) 
 		return "", wrappedErr
 	}
 
-	employeeData := types.MapEmployeeToClaimsData(employee)
+	employeeData, err := types.MapEmployeeToClaimsData(employee)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to map employee claims", err)
+		s.logger.Error(wrappedErr)
+		return "", wrappedErr
+	}
 
 	newAccessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
 	if err != nil {

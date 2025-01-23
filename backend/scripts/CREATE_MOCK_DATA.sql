@@ -57,153 +57,90 @@ VALUES
     ('Литр', 1.0),
     ('Миллилитр', 0.001);
 
--- Insert into CityWarehouses
-INSERT INTO
-  warehouses (facility_address_id, name)
+-- Insert into Regions
+INSERT INTO regions (name)
 VALUES
-  (
+    ('Москва'),
+    ('Санкт-Петербург'),
+    ('Екатеринбург'),
+    ('Новосибирск'),
+    ('Нижний Новгород'),
+    ('Казань'),
+    ('Пермь'),
+    ('Самара'),
+    ('Ростов-на-Дону'),
+    ('Волгоград'),
+    ('Челябинск'),
+    ('Уфа');
+
+-- Insert into CityWarehouses
+INSERT INTO warehouses (facility_address_id, name, region_id)
+VALUES
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Ленина, 12, Москва'
+        (SELECT id FROM facility_addresses WHERE address = 'Улица Ленина, 12, Москва'),
+        'Московский склад',
+        (SELECT id FROM regions WHERE name = 'Москва')
     ),
-    'Московский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Проспект Мира, 45, Санкт-Петербург'
+        (SELECT id FROM facility_addresses WHERE address = 'Проспект Мира, 45, Санкт-Петербург'),
+        'Санкт-Петербургский склад',
+        (SELECT id FROM regions WHERE name = 'Санкт-Петербург')
     ),
-    'Санкт-Петербургский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Советская, 89, Екатеринбург'
+        (SELECT id FROM facility_addresses WHERE address = 'Улица Советская, 89, Екатеринбург'),
+        'Екатеринбургский склад',
+        (SELECT id FROM regions WHERE name = 'Екатеринбург')
     ),
-    'Екатеринбургский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Куйбышева, 101, Новосибирск'
+        (SELECT id FROM facility_addresses WHERE address = 'Улица Куйбышева, 101, Новосибирск'),
+        'Новосибирский склад',
+        (SELECT id FROM regions WHERE name = 'Новосибирск')
     ),
-    'Новосибирский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Площадь Революции, 17, Нижний Новгород'
+        (SELECT id FROM facility_addresses WHERE address = 'Площадь Революции, 17, Нижний Новгород'),
+        'Нижегородский склад',
+        (SELECT id FROM regions WHERE name = 'Нижний Новгород')
     ),
-    'Нижегородский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Проспект Гагарина, 27, Казань'
+        (SELECT id FROM facility_addresses WHERE address = 'Проспект Гагарина, 27, Казань'),
+        'Казанский склад',
+        (SELECT id FROM regions WHERE name = 'Казань')
     ),
-    'Казанский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Ленина, 64, Пермь'
+        (SELECT id FROM facility_addresses WHERE address = 'Улица Ленина, 64, Пермь'),
+        'Пермский склад',
+        (SELECT id FROM regions WHERE name = 'Пермь')
     ),
-    'Пермский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Проспект Победы, 5, Самара'
+        (SELECT id FROM facility_addresses WHERE address = 'Проспект Победы, 5, Самара'),
+        'Самарский склад',
+        (SELECT id FROM regions WHERE name = 'Самара')
     ),
-    'Самарский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Большая Садовая, 101, Ростов-на-Дону'
+        (SELECT id FROM facility_addresses WHERE address = 'Улица Большая Садовая, 101, Ростов-на-Дону'),
+        'Ростовский склад',
+        (SELECT id FROM regions WHERE name = 'Ростов-на-Дону')
     ),
-    'Ростовский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Невский проспект, 88, Санкт-Петербург'
+        (SELECT id FROM facility_addresses WHERE address = 'Невский проспект, 88, Санкт-Петербург'),
+        'Второй Санкт-Петербургский склад',
+        (SELECT id FROM regions WHERE name = 'Санкт-Петербург')
     ),
-    'Второй Санкт-Петербургский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Советская, 18, Волгоград'
+        (SELECT id FROM facility_addresses WHERE address = 'Улица Советская, 18, Волгоград'),
+        'Волгоградский склад',
+        (SELECT id FROM regions WHERE name = 'Волгоград')
     ),
-    'Волгоградский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Октябрьская, 5, Челябинск'
+        (SELECT id FROM facility_addresses WHERE address = 'Улица Октябрьская, 5, Челябинск'),
+        'Челябинский склад',
+        (SELECT id FROM regions WHERE name = 'Челябинск')
     ),
-    'Челябинский склад'
-  ),
-  (
     (
-      SELECT
-        id
-      FROM
-        facility_addresses
-      WHERE
-        address = 'Улица Кирова, 2, Уфа'
-    ),
-    'Уфимский склад'
-  );
+        (SELECT id FROM facility_addresses WHERE address = 'Улица Кирова, 2, Уфа'),
+        'Уфимский склад',
+        (SELECT id FROM regions WHERE name = 'Уфа')
+    );
 
 -- Insert into ProductCategory
 INSERT INTO
@@ -627,17 +564,22 @@ VALUES
     'https://static.vecteezy.com/system/resources/previews/041/042/862/non_2x/ai-generated-heaping-spoonful-of-cocoa-powder-free-png.png'
   );
 
+INSERT INTO franchisees (name, description)
+VALUES
+    ('Кофейня "Астана"', 'Франчайзинговая сеть кофеен в городе Астана'),
+    ('Сеть кофеен "Юг"', 'Сеть кофеен на юге Казахстана'),
+    ('Кофейня "Шымкент"', 'Кофейня в центре города Шымкент');
+
 -- Insert into Store
 INSERT INTO
   stores (
     name,
     facility_address_id,
-    is_franchise,
+    franchisee_id,
     status,
     contact_phone,
     contact_email,
     store_hours,
-    admin_id,
     created_at,
     updated_at
   )
@@ -645,156 +587,143 @@ VALUES
     (
         'Центральное кафе',
         1,
-        false,
+        NULL,
         'ACTIVE',
         '+79001112233',
         'central@example.com',
         '8:00-20:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Кофейня на углу',
         2,
-        true,
+        1,
         'ACTIVE',
         '+79002223344',
         'corner@example.com',
         '9:00-22:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Маленький магазин на Советской',
         3,
-        true,
+        2,
         'ACTIVE',
         '+79003334455',
         'smallstore@example.com',
         '8:00-18:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Кофейня у вокзала',
         4,
-        false,
+        NULL,
         'DISABLED',
         '+79004445566',
         'station@example.com',
         '10:00-22:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Городской кофе',
         5,
-        true,
+        3,
         'ACTIVE',
         '+79005556677',
         'citycoffee@example.com',
         '7:00-23:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Летняя терраса',
         6,
-        true,
+        2,
         'ACTIVE',
         '+79006667788',
         'terrace@example.com',
         '10:00-22:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Кафе на проспекте',
         7,
-        false,
+        NULL,
         'ACTIVE',
         '+79007778899',
         'avenuecafe@example.com',
         '9:00-21:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Заведение у реки',
         8,
-        true,
+        1,
         'ACTIVE',
         '+79008889900',
         'riverside@example.com',
         '10:00-22:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Чайный дом',
         9,
-        false,
+        NULL,
         'DISABLED',
         '+79009990011',
         'teahouse@example.com',
         '8:00-20:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Кофе и компании',
         10,
-        true,
+        1,
         'ACTIVE',
         '+79010001122',
         'coffeeandco@example.com',
         '8:00-22:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Парк-кафе',
         11,
-        false,
+        NULL,
         'ACTIVE',
         '+79011002233',
         'parkcafe@example.com',
         '10:00-21:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Восточный уголок',
         12,
-        true,
+        3,
         'ACTIVE',
         '+79012003344',
         'easterncorner@example.com',
         '10:00-23:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         'Семейная кофейня',
         13,
-        false,
+        NULL,
         'ACTIVE',
         '+79013004455',
         'familycafe@example.com',
         '9:00-22:00',
-        NULL,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
@@ -1109,7 +1038,6 @@ VALUES
     );
 
 
--- Insert into Employee
 INSERT INTO
     employees (
     first_name,
@@ -1189,7 +1117,7 @@ VALUES
         'Кузнецов',
         '+79991234567',
         'oleg@example.com',
-        'WAREHOUSE_EMPLOYEE',
+        'WAREHOUSE_MANAGER',
         'WAREHOUSE',
         false,
         '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
@@ -1201,7 +1129,7 @@ VALUES
         'Орлова',
         '+79882233445',
         'tatiana@example.com',
-        'WAREHOUSE_EMPLOYEE',
+        'WAREHOUSE_REGION_MANAGER',
         'WAREHOUSE',
         true,
         '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
@@ -1213,8 +1141,8 @@ VALUES
         'Попов',
         '+79002221133',
         'alexei@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
+        'FRANCHISE_OWNER',
+        'FRANCHISEE',
         true,
         '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
         CURRENT_TIMESTAMP,
@@ -1225,8 +1153,8 @@ VALUES
         'Петрова',
         '+79115555666',
         'yulia@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
+        'FRANCHISE_MANAGER',
+        'FRANCHISEE',
         true,
         '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
         CURRENT_TIMESTAMP,
@@ -1237,40 +1165,49 @@ VALUES
         'Фролов',
         '+79553334456',
         'dmitry@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
+        'OWNER',
+        'STORE',
         false,
         '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
 
+INSERT INTO franchisee_employees (franchisee_id, employee_id)
+VALUES
+    (1, 8),
+    (1, 9);
 
--- Insert into StoreEmployee
 INSERT INTO
-  store_employees (
+    store_employees (
     employee_id,
     store_id,
     is_franchise,
     created_at,
     updated_at
-  )
+)
 VALUES
-  (1, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (2, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (3, 3, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (4, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (5, 2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (1, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (2, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 3, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (5, 2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (8, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (9, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into WarehouseEmployee
 INSERT INTO
-  warehouse_employees (employee_id, warehouse_id, created_at, updated_at)
+    warehouse_employees (employee_id, warehouse_id, created_at, updated_at)
 VALUES
-  (6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (8, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  (10, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (10, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Insert into RegionManagers
+INSERT INTO
+    region_managers (employee_id, region_id, created_at, updated_at)
+VALUES
+    (7, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into EmployeeAudit
 INSERT INTO

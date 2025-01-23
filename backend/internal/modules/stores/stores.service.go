@@ -28,7 +28,7 @@ func NewStoreService(repo StoreRepository) StoreService {
 func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.StoreDTO, error) {
 	var facilityAddress *data.FacilityAddress
 	existingFacilityAddress, err := s.repo.GetFacilityAddressByAddress(createStoreDto.FacilityAddress.Address)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("error checking existing facility address: %w", err)
 	}
 
@@ -48,7 +48,7 @@ func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.
 
 	store := &data.Store{
 		Name:              createStoreDto.Name,
-		IsFranchise:       createStoreDto.IsFranchise,
+		FranchiseeID:      createStoreDto.FranchiseID,
 		ContactPhone:      createStoreDto.ContactPhone,
 		ContactEmail:      createStoreDto.ContactEmail,
 		StoreHours:        createStoreDto.StoreHours,
@@ -130,7 +130,7 @@ func mapToStoreDTO(store data.Store) *types.StoreDTO {
 	return &types.StoreDTO{
 		ID:              store.ID,
 		Name:            store.Name,
-		IsFranchise:     store.IsFranchise,
+		FranchiseID:     store.FranchiseeID,
 		ContactPhone:    store.ContactPhone,
 		ContactEmail:    store.ContactEmail,
 		StoreHours:      store.StoreHours,
@@ -142,8 +142,8 @@ func updateStoreFields(store *data.Store, dto types.UpdateStoreDTO) {
 	if dto.Name != "" {
 		store.Name = dto.Name
 	}
-	if dto.IsFranchise {
-		store.IsFranchise = dto.IsFranchise
+	if dto.FranchiseID != nil {
+		store.FranchiseeID = dto.FranchiseID
 	}
 	if dto.ContactPhone != "" {
 		store.ContactPhone = dto.ContactPhone

@@ -23,7 +23,7 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 		Store: storeTypes.StoreDTO{
 			ID:           request.StoreID,
 			Name:         request.Store.Name,
-			IsFranchise:  request.Store.IsFranchise,
+			FranchiseID:  request.Store.FranchiseeID,
 			ContactPhone: request.Store.ContactPhone,
 			ContactEmail: request.Store.ContactEmail,
 			FacilityAddress: &storeTypes.FacilityAddressDTO{

@@ -322,24 +322,30 @@ func (h *EmployeeHandler) GetEmployeeWorkday(c *gin.Context) {
 func (h *EmployeeHandler) GetEmployeeWorkdays(c *gin.Context) {
 	var employeeID uint
 
+	id, err := strconv.ParseUint(c.Query("employeeId"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+	employeeID = uint(id)
+
+	workdays, err := h.service.GetEmployeeWorkdays(employeeID)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve workdays")
+		return
+	}
+
+	utils.SendSuccessResponse(c, workdays)
+}
+
+func (h *EmployeeHandler) GetMyWorkdays(c *gin.Context) {
 	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
 	if err != nil {
 		utils.SendErrorWithStatus(c, "failed to retrieve employee context", http.StatusUnauthorized)
 		return
 	}
 
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleDirector {
-		employeeID = claims.EmployeeClaimsData.ID
-	} else {
-		id, err := strconv.ParseUint(c.Query("employeeId"), 10, 64)
-		if err != nil {
-			utils.SendBadRequestError(c, "invalid employee ID")
-			return
-		}
-		employeeID = uint(id)
-	}
-
-	workdays, err := h.service.GetEmployeeWorkdays(employeeID)
+	workdays, err := h.service.GetEmployeeWorkdays(claims.EmployeeClaimsData.ID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve workdays")
 		return
