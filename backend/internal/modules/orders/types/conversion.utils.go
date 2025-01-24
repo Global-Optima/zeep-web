@@ -59,6 +59,7 @@ func ConvertOrderToDTO(order *data.Order) OrderDTO {
 		Total:             order.Total,
 		SubordersQuantity: len(order.Suborders),
 		Suborders:         []SuborderDTO{},
+		DisplayNumber:     order.DisplayNumber,
 	}
 
 	for _, suborder := range order.Suborders {

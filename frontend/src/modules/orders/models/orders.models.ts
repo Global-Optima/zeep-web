@@ -46,7 +46,7 @@ interface CreateSubOrderDTO {
 export interface OrderDTO {
 	id: number
 	customerId?: number
-	customerName?: string
+	customerName: string
 	employeeId?: number
 	storeId: number
 	deliveryAddressId?: number
@@ -54,6 +54,7 @@ export interface OrderDTO {
 	createdAt: string
 	total: number
 	subOrdersQuantity: number
+	displayNumber: number
 	subOrders: SuborderDTO[]
 }
 
