@@ -56,8 +56,8 @@ const selectedOrder = ref<OrderDTO | null>(null)
 const selectedSuborder = ref<SuborderDTO | null>(null)
 const selectedStatus = ref<Status>({ label: 'Все', count: 0 })
 
-const statusMap: Record<string, OrderStatus | null> = {
-	"Все": null,
+const statusMap: Record<string, OrderStatus | undefined> = {
+	"Все": undefined,
 	"Активные": OrderStatus.PREPARING,
 	"Завершенные": OrderStatus.COMPLETED,
 	"В доставке": OrderStatus.IN_DELIVERY,
@@ -87,19 +87,8 @@ const {data: fetchedStatuses} = useQuery({
 })
 
 // Use the composable
-const { getOrdersRef } = useOrderEventsService()
+const { filteredOrders } = useOrderEventsService({status: statusMap[selectedStatus.value.label]})
 
-// Filtered orders based on selectedStatus
-const filteredOrders = computed(() => {
-	const backendStatus = statusMap[selectedStatus.value.label]
-	let result = getOrdersRef().value
-
-	if (backendStatus) {
-		result = result.filter(o => o.status === backendStatus)
-	}
-
-	return result
-})
 
 function selectOrder(order: OrderDTO) {
 	if (selectedOrder.value?.id === order.id) return

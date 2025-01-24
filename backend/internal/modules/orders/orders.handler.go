@@ -31,6 +31,14 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 		return
 	}
 
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	filter.StoreID = &storeID
+
 	orders, err := h.service.GetOrders(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch orders")
@@ -41,10 +49,9 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
-	storeIDStr := c.Query("storeId")
-	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
-	if err != nil || storeID == 0 {
-		utils.SendBadRequestError(c, "invalid store ID")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -57,7 +64,6 @@ func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
 	utils.SendSuccessResponse(c, orders)
 }
 
-// Get all suborders for a specific order
 func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 	orderIDStr := c.Param("orderId")
 
@@ -106,7 +112,6 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	utils.SendSuccessResponse(c, createdOrder)
 }
 
-// Complete a suborder
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 	subOrderIDStr := c.Param("subOrderId")
 
@@ -134,7 +139,6 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 	utils.SendMessageWithStatus(c, "Sub order completed", http.StatusOK)
 }
 
-// Generate a PDF receipt for a specific order
 func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 	orderIDStr := c.Param("orderId")
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
@@ -159,10 +163,9 @@ func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 
 // Get count of orders grouped by statuses
 func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
-	storeIDStr := c.Query("storeId")
-	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
-	if err != nil || storeID == 0 {
-		utils.SendBadRequestError(c, "invalid store ID")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -176,10 +179,9 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 }
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
-	storeIDStr := c.Param("storeId")
-	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
-	if err != nil || storeID == 0 {
-		utils.SendBadRequestError(c, "invalid store ID")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 

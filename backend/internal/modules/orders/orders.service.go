@@ -108,7 +108,8 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	}
 
 	createOrderDTO.StoreID = storeID
-	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, validations.ProductPrices, validations.AdditivePrices)
+	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO,
+		validations.ProductPrices, validations.AdditivePrices)
 	order.Total = total
 
 	err = s.orderRepo.CreateOrder(&order)
