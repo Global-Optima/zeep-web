@@ -3,9 +3,8 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Название</TableHead>
+				<TableHead class="hidden md:table-cell">Упаковка</TableHead>
 				<TableHead>Количество</TableHead>
-				<TableHead>Мин. запас</TableHead>
-				<TableHead class="hidden md:table-cell">Единица измерения</TableHead>
 				<TableHead class="hidden md:table-cell">Статус</TableHead>
 				<TableHead class="hidden md:table-cell">Истекает</TableHead>
 			</TableRow>
@@ -29,14 +28,11 @@
 				@click="handleRowClick(stock.stockMaterial.id)"
 			>
 				<TableCell class="py-4 font-medium">{{ stock.stockMaterial.name }}</TableCell>
-				<TableCell>{{ stock.quantity }}</TableCell>
-				<TableCell>{{ stock.stockMaterial.safetyStock }}</TableCell>
-
-				<!-- Unit name (hidden on small screens) -->
 				<TableCell class="hidden md:table-cell">
+					{{ stock.stockMaterial.size }}
 					{{ stock.stockMaterial.unit.name }}
 				</TableCell>
-
+				<TableCell>{{ stock.quantity }}</TableCell>
 				<!-- Status badges -->
 				<TableCell class="hidden md:table-cell">
 					<div class="flex flex-col space-y-2">

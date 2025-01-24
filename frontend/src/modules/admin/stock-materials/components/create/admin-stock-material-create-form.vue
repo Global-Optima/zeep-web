@@ -10,40 +10,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
-import { useToast } from '@/core/components/ui/toast'
 
 // Select Dialog Components
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import AdminSelectStockMaterialCategory from '@/modules/admin/stock-material-categories/components/admin-select-stock-material-category.vue'
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 
-import { ChevronLeft, Trash } from 'lucide-vue-next'
+import { ChevronLeft } from 'lucide-vue-next'
 
 // Typings
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/core/components/ui/table'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
-import type { CreateStockMaterialDTO, CreateStockMaterialPackagesDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
+import type { CreateStockMaterialDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
-/**
- * Emits
- */
 const emits = defineEmits<{
   onSubmit: [dto: CreateStockMaterialDTO]
   onCancel: []
 }>()
 
-/**
- * Dialog States
- */
+
 const selectedUnit = ref<UnitDTO | null>(null)
 const selectedCategory = ref<StockMaterialCategoryDTO | null>(null)
 const selectedIngredient = ref<IngredientsDTO | null>(null)
@@ -53,22 +39,6 @@ const openCategoryDialog = ref(false)
 const openIngredientDialog = ref(false)
 
 /**
- * For Package Rows
- */
-interface PackageRow {
-  size: number
-  unitId: number
-  unitName?: string
-}
-const packages = ref<PackageRow[]>([])
-const openPackageUnitDialog = ref(false)
-/** This holds the index of the package row we’re currently editing. */
-const selectedPackageIndex = ref<number | null>(null)
-
-/** Toast */
-const { toast } = useToast()
-
-/**
  * Validation Schema
  */
 const createStockMaterialSchema = toTypedSchema(
@@ -76,6 +46,7 @@ const createStockMaterialSchema = toTypedSchema(
     name: z.string().min(1, 'Введите название материала'),
     description: z.string().optional(),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас должен быть больше 0'),
+    size: z.coerce.number().min(1, 'Введите размер упаковки'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
@@ -98,44 +69,12 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
  * Submissions
  */
 const onSubmit = handleSubmit((formValues) => {
-  // 1) Validate “packages” array
-  if (packages.value.length === 0) {
-    toast({
-      title: 'Ошибка',
-      description: 'Добавьте хотя бы одну упаковку',
-      variant: 'destructive',
-    })
-    return
-  }
-
-  for (const pkg of packages.value) {
-    if (pkg.size <= 0 || pkg.unitId <= 0) {
-      toast({
-        title: 'Ошибка',
-        description: 'Все упаковки должны иметь корректный размер и единицу измерения.',
-        variant: 'destructive',
-      })
-      return
-    }
-  }
-
-  // 2) Build final payload with packages
-  const finalPackages: CreateStockMaterialPackagesDTO[] = packages.value.map((p) => ({
-    size: p.size,
-    unitId: p.unitId,
-  }))
-
-  const dto: CreateStockMaterialDTO = {
-    ...formValues,
-    packages: finalPackages,
-  }
-
+  const dto: CreateStockMaterialDTO = formValues
   emits('onSubmit', dto)
 })
 
 const onCancel = () => {
   resetForm()
-  packages.value = []
   emits('onCancel')
 }
 
@@ -156,38 +95,6 @@ function selectIngredient(ingredient: IngredientsDTO) {
   selectedIngredient.value = ingredient
   openIngredientDialog.value = false
   setFieldValue('ingredientId', ingredient.id)
-}
-
-/**
- * Packages Methods
- */
-function addPackageRow() {
-  packages.value.push({
-    size: 0,
-    unitId: 0,
-    unitName: 'Не выбрана',
-  })
-}
-function removePackageRow(index: number) {
-  packages.value.splice(index, 1)
-}
-function openPackageRowUnitDialog(index: number) {
-  selectedPackageIndex.value = index
-  openPackageUnitDialog.value = true
-}
-/** Called after user picks a unit for a specific package row */
-function selectPackageUnit(unit: UnitDTO) {
-  if (selectedPackageIndex.value === null) return
-  const row = packages.value[selectedPackageIndex.value]
-  row.unitId = unit.id
-  row.unitName = unit.name
-  openPackageUnitDialog.value = false
-  selectedPackageIndex.value = null
-  toast({
-    title: 'Упаковка',
-    description: `Выбрана единица измерения: ${unit.name}`,
-    variant: 'default',
-  })
 }
 </script>
 
@@ -291,6 +198,24 @@ function selectPackageUnit(unit: UnitDTO) {
 								</FormItem>
 							</FormField>
 
+							<FormField
+								name="size"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Размер упаковки</FormLabel>
+									<FormControl>
+										<Input
+											id="safetyStock"
+											type="number"
+											v-bind="componentField"
+											placeholder="Введите размер упаковки"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+
 							<!-- Safety Stock -->
 							<FormField
 								name="safetyStock"
@@ -329,83 +254,6 @@ function selectPackageUnit(unit: UnitDTO) {
 								</FormItem>
 							</FormField>
 						</div>
-					</CardContent>
-				</Card>
-
-				<!-- Packages Card -->
-				<Card>
-					<CardHeader>
-						<div class="flex justify-between items-start gap-4">
-							<div>
-								<CardTitle>Упаковки</CardTitle>
-								<CardDescription class="mt-2">Укажите возможные варианты упаковки.</CardDescription>
-							</div>
-
-							<Button
-								variant="outline"
-								@click="addPackageRow"
-							>
-								Добавить
-							</Button>
-						</div>
-					</CardHeader>
-					<CardContent>
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Размер</TableHead>
-									<TableHead>Ед. Измерения</TableHead>
-									<TableHead class="text-center"></TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								<!-- Render each package row -->
-								<TableRow
-									v-for="(pkg, index) in packages"
-									:key="index"
-								>
-									<!-- Size -->
-									<TableCell>
-										<Input
-											type="number"
-											class="w-24"
-											v-model.number="pkg.size"
-											placeholder="Размер"
-										/>
-									</TableCell>
-
-									<!-- Unit -->
-									<TableCell>
-										<span
-											class="text-primary underline cursor-pointer"
-											@click="openPackageRowUnitDialog(index)"
-										>
-											{{ pkg.unitName || 'Не выбрана' }}
-										</span>
-									</TableCell>
-									<!-- Actions -->
-									<TableCell class="text-center">
-										<Button
-											variant="ghost"
-											size="icon"
-											@click="removePackageRow(index)"
-										>
-											<Trash class="w-5 h-5 text-destructive" />
-										</Button>
-									</TableCell>
-								</TableRow>
-
-								<!-- Empty state -->
-								<TableRow v-if="packages.length === 0">
-									<TableCell
-										colspan="3"
-										class="py-2 text-center text-muted-foreground"
-									>
-										Пакетов нет
-									</TableCell>
-								</TableRow>
-							</TableBody>
-						</Table>
 					</CardContent>
 				</Card>
 			</div>
@@ -491,11 +339,6 @@ function selectPackageUnit(unit: UnitDTO) {
 			:open="openIngredientDialog"
 			@close="openIngredientDialog = false"
 			@select="selectIngredient"
-		/>
-		<AdminSelectUnit
-			:open="openPackageUnitDialog"
-			@close="openPackageUnitDialog = false"
-			@select="selectPackageUnit"
 		/>
 	</div>
 </template>

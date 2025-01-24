@@ -1,141 +1,90 @@
 <template>
-	<div class="relative flex flex-col items-center bg-white h-screen overflow-hidden">
-		<!-- Screen Content Wrapper -->
+	<div class="flex flex-col items-center h-screen overflow-hidden">
+		<!-- Main Layout -->
 		<div class="flex items-start w-full h-full">
-			<!-- Preparing Side -->
-			<div class="flex flex-col flex-1 bg-slate-800 p-6 h-full">
-				<div class="mb-8 text-center">
-					<h2 class="font-semibold text-3xl text-slate-100 2xl:text-5xl">В работе</h2>
-				</div>
+			<!-- In Progress Orders Section -->
+			<OrderSection
+				title="В работе"
+				:orders="inProgressOrders"
+				:currentPageIndex="inProgressPageIndex"
+				:totalPages="totalInProgressPages"
+				class="bg-slate-800"
+				type="PREPARING"
+				@pageChange="setInProgressPage"
+			/>
 
-				<div class="flex-1">
-					<TransitionGroup
-						name="fade"
-						tag="div"
-						class="gap-2 grid grid-cols-2 md:grid-cols-3"
-						aria-live="polite"
-						type="transition"
-					>
-						<div
-							v-for="(order, index) in currentPreparingPage"
-							:key="`preparing-${index}`"
-							class="flex justify-center items-center bg-blue-100 py-6 rounded-md font-bold text-3xl text-blue-900 lg:text-4xl 2xl:text-6xl"
-						>
-							{{ order }}
-						</div>
-					</TransitionGroup>
-				</div>
-
-				<div class="flex justify-center mt-auto">
-					<div class="flex space-x-2">
-						<span
-							v-for="i in totalPreparingPages"
-							:key="`prep-indicator-${i}`"
-							:class="[
-								'inline-block w-3 h-3 2xl:w-5 2xl:h-5 rounded-full',
-								i - 1 === readyPageIndex ? 'bg-blue-100' : 'bg-slate-700'
-							]"
-						></span>
-					</div>
-				</div>
-			</div>
-
-			<!-- Ready Side -->
-			<div class="flex flex-col flex-1 bg-slate-900 p-6 h-full">
-				<div class="mb-8 text-center">
-					<h2 class="font-semibold text-3xl text-slate-200 2xl:text-5xl">Готовы</h2>
-				</div>
-				<div class="flex-1">
-					<TransitionGroup
-						name="fade"
-						tag="div"
-						class="gap-2 grid grid-cols-2 md:grid-cols-3"
-						aria-live="polite"
-						type="transition"
-					>
-						<div
-							v-for="(order, index) in currentReadyPage"
-							:key="`ready-${index}`"
-							class="flex justify-center items-center bg-emerald-100 py-6 rounded-md font-bold text-3xl text-emerald-900 lg:text-4xl 2xl:text-6xl"
-						>
-							{{ order }}
-						</div>
-					</TransitionGroup>
-				</div>
-				<div class="flex justify-center mt-auto">
-					<div class="flex space-x-2">
-						<span
-							v-for="i in totalReadyPages"
-							:key="`ready-indicator-${i}`"
-							:class="[
-								'inline-block w-3 h-3 2xl:w-5 2xl:h-5 rounded-full',
-								i - 1 === readyPageIndex ? 'bg-emerald-200' : 'bg-slate-700'
-							]"
-						></span>
-					</div>
-				</div>
-			</div>
+			<!-- Ready Orders Section -->
+			<OrderSection
+				title="Готовы"
+				:orders="readyOrders"
+				:currentPageIndex="readyPageIndex"
+				:totalPages="totalReadyPages"
+				class="bg-slate-900"
+				type="COMPLETED"
+				@pageChange="setReadyPage"
+			/>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import OrderSection from '@/modules/kiosk/display/components/kiosk-orders-display-list.vue'
+import { useOrderEventsService } from '@/modules/kiosk/orders/services/orders-event.service'
+import { OrderStatus } from '@/modules/orders/models/orders.models'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 // Constants
-const ORDERS_PER_PAGE = 15; // Fixed number of orders per page
-const TRANSITION_INTERVAL = 5000; // Transition interval in milliseconds
+const ORDERS_PER_PAGE = 6
+const AUTO_PAGE_INTERVAL = 6000 // 6 seconds
 
-// Mock Data
-const preparingOrders = ref<number[]>([145, 111, 561, 165, 651, 145, 312, 452, 412, 541, 674, 189, 205, 621, 145, 111, 561, 165, 651, 145, 312, 452, 412, 541, 674, 189, 205, 621,]);
-const readyOrders = ref<number[]>([123, 145, 712, 432, 615, 153, 143, 251, 411, 564]);
+// WebSocket Hook Integration
+const { filteredOrders } = useOrderEventsService()
+
+// State for "In Progress" and "Ready" orders
+const inProgressOrders = computed(() =>
+	filteredOrders.value.filter(order => order.status === OrderStatus.PREPARING)
+)
+const readyOrders = computed(() =>
+	filteredOrders.value.filter(order => order.status === OrderStatus.COMPLETED)
+)
 
 // Pagination State
-const preparingPageIndex = ref(0);
-const readyPageIndex = ref(0);
+const inProgressPageIndex = ref(0)
+const readyPageIndex = ref(0)
 
-// Computed Pages
-const totalPreparingPages = computed(() => Math.ceil(preparingOrders.value.length / ORDERS_PER_PAGE));
-const totalReadyPages = computed(() => Math.ceil(readyOrders.value.length / ORDERS_PER_PAGE));
+// Pagination Logic
+const totalInProgressPages = computed(() =>
+	Math.ceil(inProgressOrders.value.length / ORDERS_PER_PAGE)
+)
+const totalReadyPages = computed(() =>
+	Math.ceil(readyOrders.value.length / ORDERS_PER_PAGE)
+)
 
-const currentPreparingPage = computed(() =>
-	preparingOrders.value.slice(
-		preparingPageIndex.value * ORDERS_PER_PAGE,
-		(preparingPageIndex.value + 1) * ORDERS_PER_PAGE
-	)
-);
-
-const currentReadyPage = computed(() =>
-	readyOrders.value.slice(
-		readyPageIndex.value * ORDERS_PER_PAGE,
-		(readyPageIndex.value + 1) * ORDERS_PER_PAGE
-	)
-);
-
-// Auto Transition
-function transitionPages() {
-	setInterval(() => {
-		// Update Preparing Page
-		preparingPageIndex.value = (preparingPageIndex.value + 1) % totalPreparingPages.value;
-
-		// Update Ready Page
-		readyPageIndex.value = (readyPageIndex.value + 1) % totalReadyPages.value;
-	}, TRANSITION_INTERVAL);
+// Methods to update pages
+const setInProgressPage = (page: number) => {
+	inProgressPageIndex.value = page
+}
+const setReadyPage = (page: number) => {
+	readyPageIndex.value = page
 }
 
-// Lifecycle Hook
+// Automatically change pages every 6 seconds
+let interval: ReturnType<typeof setInterval>
+
+const rotatePages = () => {
+	interval = setInterval(() => {
+		inProgressPageIndex.value =
+			(inProgressPageIndex.value + 1) % totalInProgressPages.value
+		readyPageIndex.value =
+			(readyPageIndex.value + 1) % totalReadyPages.value
+	}, AUTO_PAGE_INTERVAL)
+}
+
 onMounted(() => {
-	if (preparingOrders.value.length > ORDERS_PER_PAGE || readyOrders.value.length > ORDERS_PER_PAGE) {
-		transitionPages();
-	}
-});
-</script>
+	rotatePages()
+})
 
-<style>
-.fade-enter-active, .fade-leave-active {
-	transition: opacity 0.3s ease-in;
-}
-.fade-enter-from, .fade-leave-to {
-	opacity: 0;
-}
-</style>
+onBeforeUnmount(() => {
+	clearInterval(interval)
+})
+</script>

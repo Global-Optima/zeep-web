@@ -1,12 +1,15 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import { saveAs } from 'file-saver'
 import type {
 	CreateOrderDTO,
 	OrderDTO,
+	OrdersExportFilterQuery,
 	OrdersFilterQuery,
 	OrderStatusesCountDTO,
 } from '../models/orders.models'
+import { format } from 'date-fns'
 
 class OrderService {
 	async getAllOrders(filter?: OrdersFilterQuery) {
@@ -72,6 +75,33 @@ class OrderService {
 			throw error
 		}
 	}
+
+	async exportOrders(filter?: OrdersExportFilterQuery) {
+		try {
+			const response = await apiClient.get('/orders/export', {
+				params: buildRequestFilter(filter),
+				responseType: 'blob',
+			})
+
+			// Extract filename from Content-Disposition header
+			const contentDisposition = response.headers['Content-Disposition']
+			let filename = `orders_export_${format(new Date(), "dd_MM_yyyy")}.xlsx`
+
+			if (contentDisposition) {
+				const filenameMatch = contentDisposition.match(/filename="?(.+)"?/)
+				if (filenameMatch && filenameMatch[1]) {
+					filename = filenameMatch[1]
+				}
+			}
+
+			const blob = new Blob([response.data], { type: response.headers['Content-Type']?.toString() })
+
+			saveAs(blob, filename)
+		} catch (error) {
+			console.error('Failed to export orders:', error)
+			throw error
+		}
+	}
 }
 
-export const orderService = new OrderService()
+export const ordersService = new OrderService()

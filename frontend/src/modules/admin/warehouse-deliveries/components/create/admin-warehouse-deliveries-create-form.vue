@@ -61,8 +61,9 @@
 					<Button
 						variant="outline"
 						@click="openStockMaterialDialog = true"
+						:disabled="!selectedSupplier"
 					>
-						Добавить материал
+						{{ !selectedSupplier ? "Выберите поставщика" : "Добавить" }}
 					</Button>
 				</div>
 			</CardHeader>
@@ -70,10 +71,10 @@
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead>Название материала</TableHead>
+							<TableHead>Название</TableHead>
+							<TableHead>Упаковка</TableHead>
 							<TableHead>Категория</TableHead>
 							<TableHead>Количество</TableHead>
-							<TableHead>Упаковка</TableHead>
 							<TableHead class="text-center"></TableHead>
 						</TableRow>
 					</TableHeader>
@@ -91,6 +92,7 @@
 							:key="material.stockMaterialId"
 						>
 							<TableCell>{{ material.name }}</TableCell>
+							<TableCell> {{ material.size }} {{ material.unit.name }} </TableCell>
 							<TableCell>{{ material.category }}</TableCell>
 							<TableCell>
 								<Input
@@ -101,15 +103,6 @@
 									:class="{ 'border-red-500': material.quantity <= 0 }"
 									placeholder="Введите количество"
 								/>
-							</TableCell>
-							<TableCell>
-								<Button
-									variant="link"
-									@click="openPackageDialog(index)"
-									class="mt-0 p-0 underline"
-								>
-									{{ material.packageName || 'Не выбрана' }}
-								</Button>
 							</TableCell>
 							<TableCell class="text-center">
 								<Trash
@@ -147,15 +140,9 @@
 		/>
 		<AdminStockMaterialsSelectDialog
 			:open="openStockMaterialDialog"
-      :initial-filter='stockMaterialFilter'
+			:initial-filter="stockMaterialFilter"
 			@close="openStockMaterialDialog = false"
 			@select="addStockMaterial"
-		/>
-		<AdminSelectStockMaterialPackagesDialog
-			:open="openPackageDialogState"
-			:initial-filter="packageFilter"
-			@close="openPackageDialogState = false"
-			@select="selectPackage"
 		/>
 	</div>
 </template>
@@ -186,16 +173,17 @@ import { ref } from 'vue'
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
 
 // Interfaces
-import AdminSelectStockMaterialPackagesDialog from '@/modules/admin/stock-materials/components/admin-select-stock-material-packages-dialog.vue'
-import type { StockMaterialPackageFilterDTO, StockMaterialPackagesDTO, StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
+import type { StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import AdminSelectSupplierDialog from '@/modules/admin/suppliers/components/admin-select-supplier-dialog.vue'
 import type { SupplierDTO } from '@/modules/admin/suppliers/models/suppliers.model'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import type { ReceiveWarehouseDelivery, ReceiveWarehouseStockMaterial } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 
 interface  ReceiveWarehouseStockMaterialForm extends ReceiveWarehouseStockMaterial {
   name: string
   category: string
-  packageName?: string
+  size: number
+  unit: UnitDTO
 }
 
 const emit = defineEmits<{
@@ -210,10 +198,7 @@ const selectedSupplier = ref<{ id: number; name: string } | null>(null)
 // Dialog States
 const openSupplierDialog = ref(false)
 const openStockMaterialDialog = ref(false)
-const openPackageDialogState = ref(false)
-const selectedMaterialIndex = ref<number | null>(null)
 
-const packageFilter = ref<StockMaterialPackageFilterDTO>({})
 const stockMaterialFilter = ref<StockMaterialsFilter>({})
 
 // Toast
@@ -247,10 +232,10 @@ function addStockMaterial(stockMaterial: StockMaterialsDTO) {
 	materials.value.push({
 		stockMaterialId: stockMaterial.id,
 		quantity: 0,
-		packageId: 0,
 		name: stockMaterial.name,
     category: stockMaterial.category.name,
-    packageName: undefined,
+    size: stockMaterial.size,
+    unit: stockMaterial.unit
 	})
 	toast({
 		title: 'Успех',
@@ -270,32 +255,6 @@ function removeMaterial(index: number) {
 	})
 }
 
-// Open Package Dialog
-function openPackageDialog(index: number) {
-  packageFilter.value = {stockMaterialId: materials.value[index].stockMaterialId}
-	selectedMaterialIndex.value = index
-	openPackageDialogState.value = true
-}
-
-// Select Package
-function selectPackage(packageInfo: StockMaterialPackagesDTO) {
-	if (selectedMaterialIndex.value === null) return
-
-	materials.value[selectedMaterialIndex.value] = {
-    ...materials.value[selectedMaterialIndex.value],
-    packageId: packageInfo.id,
-    packageName: `${packageInfo.size} ${packageInfo.unit.name}`
-  }
-
-	toast({
-		title: 'Успех',
-		description: `Выбрана упаковка: ${packageInfo.size}`,
-		variant: 'default',
-	})
-	openPackageDialogState.value = false
-	selectedMaterialIndex.value = null
-}
-
 // Submit
 function onSubmit() {
 	if (!selectedSupplier.value) {
@@ -307,7 +266,7 @@ function onSubmit() {
 		return
 	}
 
-	if (materials.value.some((item) => item.quantity <= 0 || item.packageId <= 0)) {
+	if (materials.value.some((item) => item.quantity <= 0)) {
 		toast({
 			title: 'Ошибка',
 			description: 'Убедитесь, что все поля заполнены корректно.',

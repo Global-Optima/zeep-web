@@ -39,6 +39,41 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 	return &orderRepository{db: db}
 }
 
+func (r *orderRepository) CreateOrder(order *data.Order) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Exec(`
+			SELECT 1 
+			FROM orders
+			WHERE store_id = ?
+			FOR UPDATE
+		`, order.StoreID).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("failed to lock rows for store %d: %w", order.StoreID, err)
+			}
+		}
+
+		var maxDisplayNumber int
+		if err := tx.Model(&data.Order{}).
+			Where("store_id = ?", order.StoreID).
+			Select("COALESCE(MAX(display_number), 0)").
+			Scan(&maxDisplayNumber).Error; err != nil {
+			return fmt.Errorf("failed to fetch max display number: %w", err)
+		}
+
+		nextDisplayNumber := maxDisplayNumber + 1
+		if nextDisplayNumber > 999 {
+			nextDisplayNumber = 1
+		}
+		order.DisplayNumber = nextDisplayNumber
+
+		if err := tx.Create(order).Error; err != nil {
+			return fmt.Errorf("failed to create order: %w", err)
+		}
+
+		return nil
+	})
+}
+
 func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error) {
 	var orders []data.Order
 
@@ -152,16 +187,6 @@ func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 	}
 
 	return &order, nil
-}
-
-func (r *orderRepository) CreateOrder(order *data.Order) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(order).Error; err != nil {
-			return fmt.Errorf("failed to create order: %w", err)
-		}
-
-		return nil
-	})
 }
 
 func (r *orderRepository) UpdateOrderStatus(orderID uint, status data.OrderStatus) error {

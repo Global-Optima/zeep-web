@@ -5,8 +5,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/export"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
@@ -29,6 +31,14 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 		return
 	}
 
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	filter.StoreID = &storeID
+
 	orders, err := h.service.GetOrders(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch orders")
@@ -39,10 +49,9 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
-	storeIDStr := c.Query("storeId")
-	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
-	if err != nil || storeID == 0 {
-		utils.SendBadRequestError(c, "invalid store ID")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -55,7 +64,6 @@ func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
 	utils.SendSuccessResponse(c, orders)
 }
 
-// Get all suborders for a specific order
 func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 	orderIDStr := c.Param("orderId")
 
@@ -81,7 +89,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	createdOrder, err := h.service.CreateOrder(&orderDTO)
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("failed to create order: %s", err.Error()))
 		return
@@ -98,7 +112,6 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	utils.SendSuccessResponse(c, createdOrder)
 }
 
-// Complete a suborder
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 	subOrderIDStr := c.Param("subOrderId")
 
@@ -126,7 +139,6 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 	utils.SendMessageWithStatus(c, "Sub order completed", http.StatusOK)
 }
 
-// Generate a PDF receipt for a specific order
 func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 	orderIDStr := c.Param("orderId")
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
@@ -151,10 +163,9 @@ func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 
 // Get count of orders grouped by statuses
 func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
-	storeIDStr := c.Query("storeId")
-	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
-	if err != nil || storeID == 0 {
-		utils.SendBadRequestError(c, "invalid store ID")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -168,10 +179,9 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 }
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
-	storeIDStr := c.Param("storeId")
-	storeID, err := strconv.ParseUint(storeIDStr, 10, 64)
-	if err != nil || storeID == 0 {
-		utils.SendBadRequestError(c, "invalid store ID")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
@@ -220,13 +230,21 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 		return
 	}
 
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	filter.StoreID = &storeID
+
 	orders, err := h.service.ExportOrders(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to export orders")
 		return
 	}
 
-	headers := export.RusHeaders // Default to Rus
+	headers := export.RusHeaders
 	switch filter.Language {
 	case "kk":
 		headers = export.KazHeaders
@@ -240,7 +258,8 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Disposition", "attachment; filename=sales_export.xlsx")
+	filename := fmt.Sprintf("orders_export_%s.xlsx", time.Now().Format("02_01_2006"))
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(excelData)))
 	c.Data(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelData)

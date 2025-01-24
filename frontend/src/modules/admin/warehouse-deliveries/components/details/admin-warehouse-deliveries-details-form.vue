@@ -67,7 +67,9 @@
 							:key="material.stockMaterial.id"
 						>
 							<TableCell class="py-4 font-medium">{{ material.stockMaterial.name }}</TableCell>
-							<TableCell>{{ material.package.size }} {{ material.package.unit.name }}</TableCell>
+							<TableCell
+								>{{ material.stockMaterial.size }} {{ material.stockMaterial.unit.name }}</TableCell
+							>
 							<TableCell>{{ material.quantity }}</TableCell>
 							<TableCell>{{ format(material.expirationDate, "dd.MM.yyyy") }}</TableCell>
 						</TableRow>

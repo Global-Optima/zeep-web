@@ -4,7 +4,7 @@ import { getRouteName } from '@/core/config/routes.config'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { useResetKioskState } from '@/modules/kiosk/hooks/use-reset-kiosk.hook'
 import type { CreateOrderDTO } from '@/modules/orders/models/orders.models'
-import { orderService } from '@/modules/orders/services/orders.service'
+import { ordersService } from '@/modules/orders/services/orders.service'
 import { useMutation } from '@tanstack/vue-query'
 import { ChevronRight } from 'lucide-vue-next'
 import { defineAsyncComponent, ref } from 'vue'
@@ -31,7 +31,7 @@ const { cartItems, clearCart } = useCartStore();
 
 // Mutation for creating the order
 const createOrderMutation = useMutation({
-  mutationFn: (orderDTO: CreateOrderDTO) => orderService.createOrder(orderDTO),
+  mutationFn: (orderDTO: CreateOrderDTO) => ordersService.createOrder(orderDTO),
   onSuccess: (response) => {
     stepState.value.orderId = response.orderId;
     stepState.value.qrCodeUrl = `/api/v1/orders/${response.orderId}/receipt`;
