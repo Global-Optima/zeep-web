@@ -47,6 +47,16 @@
       "warehouse": "Қойма *{{.Name}}* жойылды",
       "storeWarehouseStock": "Дүкеннен *{{.StoreName}}* қойма қоры *{{.Name}}* жойылды",
       "ingredient": "Ингредиент *{{.Name}}* жойылды"
+    },
+    "notification": {
+        "STOCK_REQUEST_STATUS_UPDATED": "Қор сұранысы *{{.Name}}* (ID: {{.ID}}) жаңартылды",
+        "NEW_ORDER": "Жаңа тапсырыс *{{.Name}}* (ID: {{.ID}}) орналастырылды",
+        "STORE_WAREHOUSE_RUN_OUT": "Қойма *{{.Name}}* (ID: {{.ID}}) тауарлар азайып барады",
+        "CENTRAL_CATALOG_UPDATE": "Орталық каталог *{{.Name}}* (ID: {{.ID}}) жаңартылды",
+        "STOCK_EXPIRATION": "Қор *{{.Name}}* (ID: {{.ID}}) мерзімі аяқталуға жақын",
+        "OUT_OF_STOCK": "Тауар *{{.Name}}* (ID: {{.ID}}) қоймада жоқ",
+        "NEW_STOCK_REQUEST": "Жаңа қор сұранысы *{{.Name}}* (ID: {{.ID}}) жасалды",
+        "PRICE_CHANGE": "*{{.Name}}* (ID: {{.ID}}) бағасы өзгерді"
     }
   }
 }
