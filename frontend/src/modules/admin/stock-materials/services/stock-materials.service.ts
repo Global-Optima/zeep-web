@@ -3,8 +3,6 @@ import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	CreateStockMaterialDTO,
-	StockMaterialPackageFilterDTO,
-	StockMaterialPackagesDTO,
 	StockMaterialsDTO,
 	StockMaterialsFilter,
 	UpdateStockMaterialDTO,
@@ -71,21 +69,6 @@ class StockMaterialService {
 			return response.data
 		} catch (error) {
 			console.error(`Failed to deactivate stock material with ID ${id}:`, error)
-			throw error
-		}
-	}
-
-	async getStockMaterialPackages(filter?: StockMaterialPackageFilterDTO) {
-		try {
-			const response = await apiClient.get<PaginatedResponse<StockMaterialPackagesDTO[]>>(
-				`/stock-material-packages`,
-				{
-					params: buildRequestFilter(filter),
-				},
-			)
-			return response.data
-		} catch (error) {
-			console.error('Failed to fetch stock material packages:', error)
 			throw error
 		}
 	}

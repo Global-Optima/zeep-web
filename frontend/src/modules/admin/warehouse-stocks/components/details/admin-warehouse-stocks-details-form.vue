@@ -134,7 +134,7 @@ const emit = defineEmits<{
 // Predefined Material Info Array
 const materialInfo = [
   { label: 'Категория', value: initialData.stockMaterial.category.name },
-  { label: 'Единица измерения', value: initialData.stockMaterial.unit?.name ?? "TODO" },
+  { label: 'Упаковка', value: `${initialData.stockMaterial.size} ${initialData.stockMaterial.unit.name}` },
   { label: 'Безопасный запас', value: initialData.stockMaterial.safetyStock },
   {
     label: 'Срок годности',
