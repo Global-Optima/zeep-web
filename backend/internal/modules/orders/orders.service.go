@@ -17,7 +17,7 @@ type OrderService interface {
 	GetAllBaristaOrders(storeID uint) ([]types.OrderDTO, error)
 	GetSubOrders(orderID uint) ([]types.SuborderDTO, error)
 	GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error)
-	CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
+	CreateOrder(storeId uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
 	CompleteSubOrder(subOrderID uint) error
 	GeneratePDFReceipt(orderID uint) ([]byte, error)
 	GetOrderBySubOrder(subOrderID uint) (*data.Order, error)
@@ -97,7 +97,7 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 	return subOrderDTOs, nil
 }
 
-func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
+func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
 	productSizeIDs, additiveIDs := RetrieveIDs(*createOrderDTO)
 
 	validations, err := s.ValidationResults(productSizeIDs, additiveIDs)
@@ -107,6 +107,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 		return nil, wrappedErr
 	}
 
+	createOrderDTO.StoreID = storeID
 	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, validations.ProductPrices, validations.AdditivePrices)
 	order.Total = total
 
