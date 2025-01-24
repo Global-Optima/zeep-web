@@ -22,6 +22,7 @@
 						<TableHeader>
 							<TableRow>
 								<TableHead>Материал</TableHead>
+								<TableHead>Упаковка</TableHead>
 								<TableHead>Количество</TableHead>
 								<TableHead class="text-center">Действия</TableHead>
 							</TableRow>
@@ -32,6 +33,7 @@
 								:key="index"
 							>
 								<TableCell>{{ item.name }}</TableCell>
+								<TableCell>{{ item.size }} {{ item.unit.name }}</TableCell>
 								<TableCell>
 									<Input
 										type="number"
@@ -97,14 +99,17 @@ import {
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
+import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StockRequestMaterial } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Trash } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
-
 export interface StockRequestItemForm {
 	stockMaterialId: number
 	name: string
 	quantity: number
+  size: number
+  unit: UnitDTO
 }
 
 const props = defineProps<{
@@ -125,10 +130,12 @@ onMounted(() => {
 		stockMaterialId: item.stockMaterial.id,
 		name: item.stockMaterial.name,
 		quantity: item.quantity,
+    unit: item.stockMaterial.unit,
+    size: item.stockMaterial.size,
 	}))
 })
 
-function addMaterial(material: { id: number; name: string }) {
+function addMaterial(material: StockMaterialsDTO) {
 	if (stockRequestItemsForm.value.some((item) => item.stockMaterialId === material.id)) {
 		toast({
 			title: 'Ошибка',
@@ -142,6 +149,8 @@ function addMaterial(material: { id: number; name: string }) {
 		stockMaterialId: material.id,
 		name: material.name,
 		quantity: 1,
+    unit: material.unit,
+    size: material.size,
 	})
 
 	toast({

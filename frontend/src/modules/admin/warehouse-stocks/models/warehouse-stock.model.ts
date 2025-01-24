@@ -1,9 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { WarehouseDTO } from '@/modules/warehouse/models/warehouse.model'
-import type {
-	StockMaterialPackagesDTO,
-	StockMaterialsDTO,
-} from '../../stock-materials/models/stock-materials.model'
+import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
 import type { SupplierDTO } from '../../suppliers/models/suppliers.model'
 
 export interface WarehouseStocksDTO {
@@ -49,7 +46,6 @@ export interface WarehouseDeliveryDTO {
 
 export interface WarehouseDeliveryStockMaterialDTO {
 	stockMaterial: StockMaterialsDTO
-	package: StockMaterialPackagesDTO
 	quantity: number
 	barcode: string
 	expirationDate: Date
@@ -63,7 +59,6 @@ export interface ReceiveWarehouseDelivery {
 export interface ReceiveWarehouseStockMaterial {
 	stockMaterialId: number
 	quantity: number
-	packageId: number
 }
 
 export interface WarehouseDeliveryFilter extends PaginationParams {
