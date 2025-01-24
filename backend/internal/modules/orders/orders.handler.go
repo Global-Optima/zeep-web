@@ -5,8 +5,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/export"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
@@ -81,7 +83,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	createdOrder, err := h.service.CreateOrder(&orderDTO)
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("failed to create order: %s", err.Error()))
 		return
@@ -220,13 +228,21 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 		return
 	}
 
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	filter.StoreID = &storeID
+
 	orders, err := h.service.ExportOrders(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to export orders")
 		return
 	}
 
-	headers := export.RusHeaders // Default to Rus
+	headers := export.RusHeaders
 	switch filter.Language {
 	case "kk":
 		headers = export.KazHeaders
@@ -240,7 +256,8 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Disposition", "attachment; filename=sales_export.xlsx")
+	filename := fmt.Sprintf("orders_export_%s.xlsx", time.Now().Format("02_01_2006"))
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(excelData)))
 	c.Data(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelData)

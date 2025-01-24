@@ -137,3 +137,10 @@ export interface OrderDeliveryAddressDTO {
 	longitude: string
 	latitude: string
 }
+
+export interface OrdersExportFilterQuery {
+	startDate?: string
+	endDate?: string
+	storeId?: number
+	language?: 'kk' | 'ru' | 'en'
+}

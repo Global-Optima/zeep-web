@@ -15,14 +15,14 @@
 
 		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<Button variant="outline">Экспорт</Button>
+			<AdminOrdersExport />
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
+import AdminOrdersExport from '@/modules/admin/store-orders/components/admin-orders-export.vue'
 import type { OrdersFilterQuery } from '@/modules/orders/models/orders.models'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
