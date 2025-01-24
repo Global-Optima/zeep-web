@@ -504,6 +504,7 @@ CREATE TABLE
 	IF NOT EXISTS orders (
 		id SERIAL PRIMARY KEY,
 		customer_id INT REFERENCES customers (id) ON DELETE SET NULL,
+		display_number INT NOT NULL,
 		customer_name VARCHAR(255) NOT NULL,
 		employee_id INT REFERENCES employees (id) ON DELETE SET NULL,
 		store_id INT REFERENCES stores (id) NOT NULL,
@@ -514,6 +515,9 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+CREATE INDEX idx_orders_store_display
+ON orders (store_id, display_number);
 
 -- SubOrders Table
 CREATE TABLE

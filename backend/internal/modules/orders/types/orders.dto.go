@@ -51,6 +51,7 @@ type OrderDTO struct {
 	Status            data.OrderStatus `json:"status"`
 	CreatedAt         time.Time        `json:"createdAt"`
 	Total             float64          `json:"total"`
+	DisplayNumber     int              `json:"displayNumber"`
 	SubordersQuantity int              `json:"subOrdersQuantity"`
 	Suborders         []SuborderDTO    `json:"subOrders"`
 }

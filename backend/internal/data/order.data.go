@@ -29,6 +29,7 @@ type Order struct {
 	Status            OrderStatus     `gorm:"size:50;not null" sort:"orderStatus"`
 	Total             float64         `gorm:"type:decimal(10,2);not null;check:total >= 0" sort:"total"`
 	Suborders         []Suborder      `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
+	DisplayNumber     int             `gorm:"not null;index"`
 }
 
 // Suborder Model
