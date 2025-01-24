@@ -169,6 +169,7 @@ VALUES
     'Медицинское оборудование',
     'Аппаратура для медицинских учреждений'
   ),
+  -- 10
   (
     'Химические реагенты',
     'Химические вещества для производства'
@@ -184,6 +185,22 @@ VALUES
   (
     'Энергетическое оборудование',
     'Генераторы и трансформаторы'
+  ),
+  (
+    'Сетевое оборудование',
+    'Коммутаторы, маршрутизаторы и сетевые устройства'
+  ),
+  (
+    'Серверное оборудование',
+    'Оборудование для центров обработки данных и серверных помещений'
+  ),
+  (
+    'Системы хранения данных',
+    'RAID-массивы и другие системы хранения'
+  ),
+  (
+    'Климатическое оборудование',
+    'Системы охлаждения и кондиционирования для серверных помещений'
   );
 
 -- Insert into Products
@@ -196,27 +213,86 @@ INSERT INTO
     category_id
   )
 VALUES
-  -- 1 (category_id=2: "Строительные материалы")
+  -- 1. Cisco Catalyst 9300 Switch
   (
-    'Цемент М500',
-    'Высококачественный цемент для строительных работ',
-    'https://example.com/images/cement_m500.png',
-    'https://example.com/videos/cement_m500.mp4',
-    2
+    'Коммутатор Cisco Catalyst 9300',
+    'Модульный коммутатор корпоративного уровня с поддержкой PoE и расширенной безопасности.',
+    'https://img.tehnomaks.ru/img/prod/full/1416453221_3.png',
+    'https://example.com/videos/cisco_catalyst_9300.mp4',
+    (
+      SELECT
+        id
+      FROM
+        product_categories
+      WHERE
+        name = 'Сетевое оборудование'
+    )
   ),
-  -- 2 (category_id=2: "Строительные материалы")
+  -- 2. Dell EMC PowerEdge R750 Server
   (
-    'Песок карьерный',
-    'Крупнозернистый песок для изготовления бетонных смесей',
-    'https://example.com/images/sand.png',
-    NULL,
-    2
+    'Сервер Dell EMC PowerEdge R750',
+    '2U сервер с процессорами Intel Xeon для высокопроизводительных вычислений и виртуализации.',
+    'https://www.dellparts.ru/upload/iblock/3c4/3c44dae1d58763502614ebfd9b135ef5.png',
+    'https://example.com/videos/dell_poweredge_r750.mp4',
+    (
+      SELECT
+        id
+      FROM
+        product_categories
+      WHERE
+        name = 'Серверное оборудование'
+    )
+  ),
+  -- 3. NetApp AFF A250 Storage System
+  (
+    'Система хранения данных NetApp AFF A250',
+    'Массивы All-Flash для обеспечения высокой производительности и надежности.',
+    'https://micronode.ru/_media/enterprise/netapp/description/fas8040.png?w=600&tok=082687',
+    'https://example.com/videos/netapp_aff_a250.mp4',
+    (
+      SELECT
+        id
+      FROM
+        product_categories
+      WHERE
+        name = 'Системы хранения данных'
+    )
+  ),
+  -- 4. APC Smart-UPS SRT 10kVA
+  (
+    'ИБП APC Smart-UPS SRT 10kVA',
+    'Источник бесперебойного питания для серверов и сетевого оборудования с возможностью мониторинга.',
+    'https://w7.pngwing.com/pngs/132/149/png-transparent-schneider-electric-apc-back-ups-650-390-00-ups-ups-apc-by-schneider-electric-apc-smart-ups-schneider-electric-apc-back-ups-bx650li-325-00-ups-ups-backup-battery-computer-electronic-thumbnail.png',
+    'https://example.com/videos/apc_smart_ups.mp4',
+    (
+      SELECT
+        id
+      FROM
+        product_categories
+      WHERE
+        name = 'Энергетическое оборудование'
+    )
+  ),
+  -- 5. Daikin Inverter Cooling System
+  (
+    'Система охлаждения Daikin Inverter',
+    'Энергоэффективное климатическое оборудование для серверных помещений.',
+    'https://zakupilis.ru/upload/iblock/dff/dffdc44d0b73ca7e50d8c8c9af66821c.png',
+    'https://example.com/videos/daikin_inverter.mp4',
+    (
+      SELECT
+        id
+      FROM
+        product_categories
+      WHERE
+        name = 'Климатическое оборудование'
+    )
   ),
   -- 3 (category_id=2: "Строительные материалы")
   (
     'Арматура 12 мм',
     'Стальная арматура для укрепления железобетонных конструкций',
-    'https://example.com/images/rebar_12mm.png',
+    'https://tdmpi.ru/wp-content/uploads/2019/03/armatura.png',
     NULL,
     2
   ),
@@ -224,7 +300,7 @@ VALUES
   (
     'Кабель ВВГнг 3x2.5',
     'Негорючий силовой кабель для внутренней проводки',
-    'https://example.com/images/cable_vvgn.png',
+    'https://images.satu.kz/226247730_w600_h600_226247730.jpg',
     NULL,
     3
   ),
@@ -232,7 +308,7 @@ VALUES
   (
     'Провод ПВС 3x1.5',
     'Гибкий провод для подключения бытовых приборов',
-    'https://example.com/images/pvs_3x1.5.png',
+    'https://images.satu.kz/68432854_provod-pvs-3h15.jpg',
     NULL,
     3
   ),
@@ -240,7 +316,7 @@ VALUES
   (
     'Ноутбук Lenovo ThinkPad',
     'Надёжный бизнес-ноутбук с длительным временем работы',
-    'https://example.com/images/lenovo_thinkpad.png',
+    'https://forcecom.kz/upload/iblock/c0e/e1y7nhp3g7wsthaelb09a0912ddcua4y.png',
     'https://example.com/videos/thinkpad_review.mp4',
     4
   ),
@@ -248,7 +324,7 @@ VALUES
   (
     'Монитор Samsung 24"',
     'Монитор с диагональю 24 дюйма и высоким разрешением',
-    'https://example.com/images/samsung_24.png',
+    'https://images.samsung.com/is/image/samsung/p6pim/kz_ru/ls24c310eaixci/gallery/kz-ru-essential-s3-22s31c-459087-ls24c310eaixci-537243748?$684_547_PNG$',
     NULL,
     4
   ),
@@ -256,7 +332,7 @@ VALUES
   (
     'МФУ HP LaserJet',
     'Многофункциональное устройство для печати, сканирования и копирования',
-    'https://example.com/images/hp_laserjet_mfp.png',
+    'https://forcecom.kz/upload/iblock/d00/d00bcf76b916a5ff580563910cf0d077.png',
     NULL,
     5
   ),
@@ -264,7 +340,7 @@ VALUES
   (
     'Ламинатор OfficeKit',
     'Компактный ламинатор для офисного использования',
-    'https://example.com/images/laminator_officekit.png',
+    'https://vitebsk.officeton.by/upload/Sh/imageCache/329/750/7507862351947990.png',
     NULL,
     5
   ),
@@ -272,47 +348,23 @@ VALUES
   (
     'Комплект ремня ГРМ',
     'Набор деталей для замены ремня ГРМ в двигателе',
-    'https://example.com/images/timing_belt_kit.png',
+    'https://www.kerg-ufa.ru/images/serves/Teas_genuine_timing_belts_16-9.png',
     NULL,
     6
-  ),
-  -- 11 (category_id=7: "Промышленное оборудование")
-  (
-    'Токарный станок 16К20',
-    'Универсальный токарный станок для металлообработки',
-    'https://example.com/images/lathe_16k20.png',
-    NULL,
-    7
   ),
   -- 12 (category_id=8: "Ручной инструмент")
   (
     'Набор отверток',
     'Универсальный набор отверток для разных типов крепежа',
-    'https://example.com/images/screwdriver_set.png',
+    'https://cdn.lemanapro.ru/lmru/image/upload/f_auto/q_auto/dpr_1.0/c_pad/w_1000/h_1000/v1731395779/lmcode/ZqZug8CJ9UqfLq5t5EJ-GQ/85086262_03.png',
     NULL,
     8
-  ),
-  -- 13 (category_id=9: "Медицинское оборудование")
-  (
-    'Аппарат УЗИ',
-    'Ультразвуковой диагностический аппарат для медицинских учреждений',
-    'https://example.com/images/ultrasound_machine.png',
-    NULL,
-    9
-  ),
-  -- 14 (category_id=10: "Химические реагенты")
-  (
-    'Соляная кислота (HCl)',
-    'Химический реагент для различных производственных процессов',
-    'https://example.com/images/hydrochloric_acid.png',
-    NULL,
-    10
   ),
   -- 15 (category_id=11: "Электродвигатели")
   (
     'Электродвигатель АИР80B2',
     'Надёжный трёхфазный двигатель мощностью 1.5 кВт',
-    'https://example.com/images/electric_motor.png',
+    'https://220volt.kz/assets/images/products/31829/2f5240cdfb5211e3beb174867ae0e2a9-b7a2722b083511ee980da8a159676602.jpg',
     NULL,
     11
   ),
@@ -320,7 +372,7 @@ VALUES
   (
     'Автомобильный аккумулятор 75Ач',
     'Аккумулятор повышенной ёмкости для легкового автомобиля',
-    'https://example.com/images/car_battery_75ah.png',
+    'https://akb-mir.kz/images/virtuemart/product/03.png',
     NULL,
     12
   ),
@@ -328,7 +380,7 @@ VALUES
   (
     'Масляный фильтр MANN',
     'Фильтр для очистки моторного масла',
-    'https://example.com/images/mann_oil_filter.png',
+    'https://dgufregat.ru/upload/iblock/255/255b50a9b52b26515d75998e754b2630.png',
     NULL,
     12
   ),
@@ -336,7 +388,7 @@ VALUES
   (
     'Пресс гидравлический',
     'Гидравлический пресс для обработки металла и сборки деталей',
-    'https://example.com/images/hydraulic_press.png',
+    'https://www.uik.ru/netcat_files/userfiles/1/instrument/hand-hydraulic-press-PGR-300.png',
     NULL,
     7
   ),
@@ -344,7 +396,7 @@ VALUES
   (
     'Кабель КГ 4x10',
     'Гибкий кабель силовой для сварочного оборудования',
-    'https://example.com/images/kg_cable.png',
+    'https://i0.wp.com/salternativa.ru/wp-content/uploads/2025/01/%D0%9A%D0%B0%D0%B1%D0%B5%D0%BB%D1%8C-%D0%9A%D0%93.png?fit=573%2C528&ssl=1',
     NULL,
     3
   ),
@@ -352,7 +404,7 @@ VALUES
   (
     'Гипсокартон 2500x1200x9.5',
     'Листовой материал для отделочных работ',
-    'https://example.com/images/drywall.png',
+    'https://novatorstroy.com/wa-data/public/shop/products/83/89/88983/images/385/385.970.png',
     'https://example.com/videos/drywall_installation.mp4',
     2
   ),
@@ -360,7 +412,7 @@ VALUES
   (
     'Генератор дизельный 5кВт',
     'Портативный дизельный генератор для резервного питания',
-    'https://example.com/images/diesel_generator_5kw.png',
+    'https://abc-solar.com.ua/wp-content/uploads/2020/05/KS-6102HDE-1.png',
     NULL,
     13
   ),
@@ -368,7 +420,7 @@ VALUES
   (
     'ИБП APC 1500VA',
     'Источник бесперебойного питания для защиты серверов и ПК',
-    'https://example.com/images/apc_ups_1500.png',
+    'https://www.pngall.com/wp-content/uploads/12/Power-UPS-PNG.png',
     NULL,
     13
   );

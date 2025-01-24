@@ -97,6 +97,7 @@ import AdminProductsPage from '@/modules/admin/products/pages/admin-products-pag
 import { ChevronLeft } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
 const route = useRoute()
 const router = useRouter()
 
@@ -135,11 +136,6 @@ const STATUS_COLORS: Record<ProjectStatus, string> = {
 	[ProjectStatus.COMPLETED]: 'text-green-700',
 }
 
-const STATUS_LABELS: Record<ProjectStatus, string> = {
-	[ProjectStatus.PLANNED]: 'Запланирован',
-	[ProjectStatus.IN_PROGRESS]: 'В процессе',
-	[ProjectStatus.COMPLETED]: 'Завершен',
-}
 
 const getStatusClass = (status: ProjectStatus): string => STATUS_COLORS[status] || ''
 </script>
