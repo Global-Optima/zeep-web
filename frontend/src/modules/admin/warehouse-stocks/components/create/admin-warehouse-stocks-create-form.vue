@@ -54,9 +54,9 @@
 					<TableHeader>
 						<TableRow>
 							<TableHead>Название</TableHead>
+							<TableHead>Упаковка</TableHead>
 							<TableHead>Категория</TableHead>
 							<TableHead>Количество</TableHead>
-							<TableHead>Единица измерения</TableHead>
 							<TableHead class="text-center"></TableHead>
 						</TableRow>
 					</TableHeader>
@@ -74,6 +74,7 @@
 							:key="ingredient.stockMaterialId"
 						>
 							<TableCell>{{ ingredient.name }}</TableCell>
+							<TableCell>{{ ingredient.size }} {{ ingredient.unit.name }}</TableCell>
 							<TableCell>{{ ingredient.category.name }}</TableCell>
 							<TableCell>
 								<Input
@@ -84,7 +85,6 @@
 									placeholder="Введите количество"
 								/>
 							</TableCell>
-							<TableCell>{{ ingredient.unit.name }}</TableCell>
 							<TableCell class="flex justify-center text-center">
 								<Trash
 									class="text-red-500 hover:text-red-700 cursor-pointer"
@@ -148,7 +148,6 @@ import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/s
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
-
 // Interfaces
 interface CreateWarehouseStockItem {
 	name: string
@@ -157,6 +156,7 @@ interface CreateWarehouseStockItem {
 	unit: UnitDTO
 	category: StockMaterialCategoryDTO
 	ingredient: IngredientsDTO
+  size: number
 }
 
 const emit = defineEmits<{
@@ -189,7 +189,8 @@ function addStockMaterial(stockMaterial: StockMaterialsDTO) {
     stockMaterialId: stockMaterial.id,
     unit: stockMaterial.unit,
     category: stockMaterial.category,
-    ingredient: stockMaterial.ingredient
+    ingredient: stockMaterial.ingredient,
+    size: stockMaterial.size
   })
 
 	toast({

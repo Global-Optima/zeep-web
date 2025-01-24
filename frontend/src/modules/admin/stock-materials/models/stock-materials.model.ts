@@ -12,19 +12,7 @@ export interface CreateStockMaterialDTO {
 	ingredientId: number
 	barcode: string
 	expirationPeriodInDays: number
-
-	packages: CreateStockMaterialPackagesDTO[]
-}
-
-export interface CreateStockMaterialPackagesDTO {
 	size: number
-	unitId: number
-}
-
-export interface UpdateStockMaterialPackagesDTO {
-	id?: number
-	size: number
-	unitId: number
 }
 
 export interface UpdateStockMaterialDTO {
@@ -36,7 +24,7 @@ export interface UpdateStockMaterialDTO {
 	ingredientId?: number
 	expirationPeriodInDays?: number
 	isActive?: boolean
-	packages: UpdateStockMaterialPackagesDTO[]
+	size?: number
 }
 
 export interface StockMaterialsDTO {
@@ -50,9 +38,9 @@ export interface StockMaterialsDTO {
 	ingredient: IngredientsDTO
 	expirationPeriodInDays: number
 	isActive: boolean
+	size: number
 	createdAt: string
 	updatedAt: string
-	packages: StockMaterialPackagesDTO[]
 }
 
 export interface StockMaterialsFilter extends PaginationParams {
@@ -61,17 +49,6 @@ export interface StockMaterialsFilter extends PaginationParams {
 	isActive?: boolean
 	ingredientId?: number
 	categoryId?: number
-  supplierId?: number
+	supplierId?: number
 	expirationInDays?: number
-}
-
-export interface StockMaterialPackageFilterDTO extends PaginationParams {
-	search?: string
-	stockMaterialId?: number
-}
-
-export interface StockMaterialPackagesDTO {
-	id: number
-	size: number
-	unit: UnitDTO
 }
