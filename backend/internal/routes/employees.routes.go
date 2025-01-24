@@ -159,6 +159,20 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 			warehouseEmployees.GET("/:id", handler.GetWarehouseEmployeeByID)
 			warehouseEmployees.PUT("/:id", handler.UpdateWarehouseEmployee)
 		}
+		franchiseeEmployees := router.Group("/franchisee")
+		{
+			franchiseeEmployees.GET("", handler.GetFranchiseeEmployees)
+			franchiseeEmployees.POST("", handler.CreateFranchiseeEmployee)
+			franchiseeEmployees.GET("/:id", handler.GetFranchiseeEmployeeByID)
+			franchiseeEmployees.PUT("/:id", handler.UpdateFranchiseeEmployee)
+		}
+		regionManagers := router.Group("/region-managers")
+		{
+			regionManagers.GET("", handler.GetRegionManagers)
+			regionManagers.POST("", handler.CreateRegionManager)
+			regionManagers.GET("/:id", handler.GetRegionManagerByID)
+			regionManagers.PUT("/:id", handler.UpdateRegionManager)
+		}
 
 		router.GET("/current", handler.GetCurrentEmployee)
 		router.DELETE("/:id", handler.DeleteEmployee)

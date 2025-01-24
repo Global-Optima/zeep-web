@@ -7,6 +7,26 @@ import (
 	"strings"
 )
 
+type StoreEmployeeUpdateModels struct {
+	Employee      *data.Employee
+	StoreEmployee *data.StoreEmployee
+}
+
+type WarehouseEmployeeUpdateModels struct {
+	Employee          *data.Employee
+	WarehouseEmployee *data.WarehouseEmployee
+}
+
+type FranchiseeEmployeeUpdateModels struct {
+	Employee           *data.Employee
+	FranchiseeEmployee *data.FranchiseeEmployee
+}
+
+type RegionManagerEmployeeUpdateModels struct {
+	Employee      *data.Employee
+	RegionManager *data.RegionManager
+}
+
 func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 	if strings.TrimSpace(input.LastName) == "" || strings.TrimSpace(input.FirstName) == "" {
 		return nil, fmt.Errorf("%w: employee name cannot contain empty values", ErrValidation)
@@ -93,40 +113,80 @@ func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
 	return employee, nil
 }
 
-func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*data.Employee, error) {
+func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*StoreEmployeeUpdateModels, error) {
 	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
 	if err != nil {
-		return employee, err
+		return nil, err
 	}
 
+	var storeEmployee *data.StoreEmployee = nil
 	if input.StoreID != nil {
-		employee.StoreEmployee = &data.StoreEmployee{
+		storeEmployee = &data.StoreEmployee{
 			StoreID: *input.StoreID,
 		}
 	}
-	if input.IsFranchise != nil {
-		if employee.StoreEmployee == nil {
-			employee.StoreEmployee = &data.StoreEmployee{}
-		}
-		employee.StoreEmployee.IsFranchise = *input.IsFranchise
-	}
 
-	return employee, nil
+	return &StoreEmployeeUpdateModels{
+		Employee:      employee,
+		StoreEmployee: storeEmployee,
+	}, nil
 }
 
-func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.Employee, error) {
+func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*WarehouseEmployeeUpdateModels, error) {
 	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
 	if err != nil {
 		return employee, err
 	}
 
+	var warehouseEmployee *data.WarehouseEmployee = nil
 	if input.WarehouseID != nil {
-		employee.WarehouseEmployee = &data.WarehouseEmployee{
+		warehouseEmployee = &data.WarehouseEmployee{
 			WarehouseID: *input.WarehouseID,
 		}
 	}
 
-	return employee, nil
+	return &WarehouseEmployeeUpdateModels{
+		Employee:          employee,
+		WarehouseEmployee: warehouseEmployee,
+	}, nil
+}
+
+func FranchiseeEmployeeUpdateFields(input *UpdateFranchiseeEmployeeDTO) (*FranchiseeEmployeeUpdateModels, error) {
+	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
+	if err != nil {
+		return nil, err
+	}
+
+	var franchiseeEmployee *data.FranchiseeEmployee = nil
+	if input.FranchiseeID != nil {
+		franchiseeEmployee = &data.FranchiseeEmployee{
+			FranchiseeID: *input.FranchiseeID,
+		}
+	}
+
+	return &FranchiseeEmployeeUpdateModels{
+		Employee:           employee,
+		FranchiseeEmployee: franchiseeEmployee,
+	}, nil
+}
+
+func RegionManagerEmployeeUpdateFields(input *UpdateRegionManagerEmployeeDTO) (*RegionManagerEmployeeUpdateModels, error) {
+	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
+	if err != nil {
+		return nil, err
+	}
+
+	var regionManager *data.RegionManager = nil
+	if input.RegionID != nil {
+		regionManager = &data.RegionManager{
+			RegionID: *input.RegionID,
+		}
+	}
+
+	return &RegionManagerEmployeeUpdateModels{
+		Employee:      employee,
+		RegionManager: regionManager,
+	}, nil
 }
 
 func ValidateWorkday(dto *CreateWorkdayDTO) (*data.EmployeeWorkday, error) {

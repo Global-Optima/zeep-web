@@ -12,13 +12,14 @@ import (
 
 type EmployeeRepository interface {
 	CreateEmployee(employee *data.Employee) error
-	GetStoreEmployees(storeID uint, filter *types.GetStoreEmployeesFilter) ([]data.Employee, error)
-	GetWarehouseEmployees(warehouseID uint, filter *types.GetWarehouseEmployeesFilter) ([]data.Employee, error)
+	GetStoreEmployees(storeID uint, filter *types.EmployeesFilter) ([]data.Employee, error)
+	GetWarehouseEmployees(warehouseID uint, filter *types.EmployeesFilter) ([]data.Employee, error)
+	GetFranchiseeEmployees(franchiseeID uint, filter *types.EmployeesFilter) ([]data.Employee, error)
+	GetRegionManagers(regionID uint, filter *types.EmployeesFilter) ([]data.Employee, error)
 	GetTypedEmployeeByID(employeeID uint, employeeType data.EmployeeType) (*data.Employee, error)
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
 	UpdateEmployee(employeeType data.EmployeeType, employee *data.Employee) error
 
-	PartialUpdateEmployee(employeeID uint, employeeType data.EmployeeType, employee *data.Employee) error
 	DeleteEmployeeById(employeeID uint, employeeType data.EmployeeType) error
 	GetEmployeeByEmailOrPhone(email string, phone string) (*data.Employee, error)
 	GetAllRoles() ([]data.EmployeeRole, error)
@@ -33,6 +34,11 @@ type EmployeeRepository interface {
 	GetAllStoreEmployees(storeID uint) ([]data.Employee, error)
 	GetAllWarehouseEmployees(warehouseID uint) ([]data.Employee, error)
 	GetAllAdminEmployees() ([]data.Employee, error)
+
+	UpdateFranchiseeEmployee(employeeID uint, franchiseeID uint, updateModels *types.FranchiseeEmployeeUpdateModels) error
+	UpdateRegionManager(employeeID uint, updateModels *types.RegionManagerEmployeeUpdateModels) error
+	UpdateStoreEmployee(employeeID uint, storeID uint, updateModels *types.StoreEmployeeUpdateModels) error
+	UpdateWarehouseEmployee(employeeID uint, warehouseID uint, updateModels *types.WarehouseEmployeeUpdateModels) error
 }
 
 type employeeRepository struct {
@@ -47,7 +53,7 @@ func (r *employeeRepository) CreateEmployee(employee *data.Employee) error {
 	return r.db.Create(employee).Error
 }
 
-func (r *employeeRepository) GetStoreEmployees(storeID uint, filter *types.GetStoreEmployeesFilter) ([]data.Employee, error) {
+func (r *employeeRepository) GetStoreEmployees(storeID uint, filter *types.EmployeesFilter) ([]data.Employee, error) {
 	var employees []data.Employee
 	query := r.db.Model(&data.Employee{}).
 		Joins("JOIN store_employees ON employees.id = store_employees.employee_id").
@@ -85,7 +91,8 @@ func (r *employeeRepository) GetStoreEmployees(storeID uint, filter *types.GetSt
 	return employees, err
 }
 
-func (r *employeeRepository) GetWarehouseEmployees(warehouseID uint, filter *types.GetWarehouseEmployeesFilter) ([]data.Employee, error) {
+// TODO search with data.WarehouseEmployee
+func (r *employeeRepository) GetWarehouseEmployees(warehouseID uint, filter *types.EmployeesFilter) ([]data.Employee, error) {
 	var employees []data.Employee
 	query := r.db.Model(&data.Employee{}).
 		Joins("JOIN warehouse_employees ON warehouse_employees.employee_id = employees.id").
@@ -124,12 +131,106 @@ func (r *employeeRepository) GetWarehouseEmployees(warehouseID uint, filter *typ
 	return employees, err
 }
 
+func (r *employeeRepository) GetFranchiseeEmployees(franchiseeID uint, filter *types.EmployeesFilter) ([]data.Employee, error) {
+	var employees []data.Employee
+	query := r.db.Model(&data.Employee{}).
+		Joins("JOIN franchisee_employees ON employees.id = franchisee_employees.employee_id").
+		Preload("FranchiseeEmployee")
+
+	if franchiseeID != 0 {
+		query = query.Where("franchisee_employees.franchisee_id = ?", franchiseeID)
+	}
+
+	if filter.IsActive != nil {
+		query = query.Where("is_active = ?", *filter.IsActive)
+	}
+
+	if filter.Role != nil {
+		query = query.Where("employees.role = ?", *filter.Role)
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where(
+			"employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.phone ILIKE ? OR employees.email ILIKE ?",
+			searchTerm, searchTerm, searchTerm, searchTerm,
+		)
+	}
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Employee{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = query.Find(&employees).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve franchisee employees: %w", err)
+	}
+	return employees, nil
+}
+
+func (r *employeeRepository) GetRegionManagers(regionID uint, filter *types.EmployeesFilter) ([]data.Employee, error) {
+	var employees []data.Employee
+	query := r.db.Model(&data.Employee{}).
+		Joins("JOIN region_managers ON employees.id = region_managers.employee_id").
+		Preload("RegionManager")
+
+	if regionID != 0 {
+		query = query.Where("region_managers.region_id = ?", regionID)
+	}
+
+	if filter.IsActive != nil {
+		query = query.Where("is_active = ?", *filter.IsActive)
+	}
+
+	if filter.Role != nil {
+		query = query.Where("employees.role = ?", *filter.Role)
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where(
+			"employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.phone ILIKE ? OR employees.email ILIKE ?",
+			searchTerm, searchTerm, searchTerm, searchTerm,
+		)
+	}
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Employee{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = query.Find(&employees).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve region managers: %w", err)
+	}
+	return employees, nil
+}
+
 func (r *employeeRepository) GetTypedEmployeeByID(employeeID uint, employeeType data.EmployeeType) (*data.Employee, error) {
 	var employee data.Employee
-	err := r.db.Preload("StoreEmployee").
-		Preload("WarehouseEmployee").
-		Where("type = ?", employeeType).
-		First(&employee, employeeID).Error
+	var err error
+
+	query := r.db.Model(&data.Employee{}).
+		Where("type = ?", employeeType)
+
+	switch employeeType {
+	case data.StoreEmployeeType:
+		query = r.db.Preload("StoreEmployee")
+	case data.WarehouseEmployeeType:
+		query = r.db.Preload("WarehouseEmployee")
+	case data.FranchiseeEmployeeType:
+		query = r.db.Preload("FranchiseeEmployee")
+	case data.WarehouseRegionManagerEmployeeType:
+		query = r.db.Preload("RegionManager")
+	case data.AdminEmployeeType:
+		query = r.db.Preload("StoreEmployee")
+	default:
+		return nil, types.ErrUnsupportedEmployeeType
+	}
+
+	err = query.First(&employee, employeeID).Error
+
 	return &employee, err
 }
 
@@ -137,6 +238,8 @@ func (r *employeeRepository) GetEmployeeByID(employeeID uint) (*data.Employee, e
 	var employee data.Employee
 	err := r.db.Preload("StoreEmployee").
 		Preload("WarehouseEmployee").
+		Preload("RegionManager").
+		Preload("FranchiseeEmployee").
 		First(&employee, employeeID).Error
 	return &employee, err
 }
@@ -160,11 +263,11 @@ func (r *employeeRepository) UpdateEmployee(employeeType data.EmployeeType, empl
 		}
 
 		if employeeType == data.StoreEmployeeType && employee.StoreEmployee != nil {
-			if err := tx.Save(employee.StoreEmployee).Error; err != nil {
+			if err := tx.Updates(employee.StoreEmployee).Error; err != nil {
 				return err
 			}
 		} else if employeeType == data.WarehouseEmployeeType && employee.WarehouseEmployee != nil {
-			if err := tx.Save(employee.WarehouseEmployee).Error; err != nil {
+			if err := tx.Updates(employee.WarehouseEmployee).Error; err != nil {
 				return err
 			}
 		} else {
@@ -175,16 +278,116 @@ func (r *employeeRepository) UpdateEmployee(employeeType data.EmployeeType, empl
 	})
 }
 
-func (r *employeeRepository) PartialUpdateEmployee(employeeID uint, employeeType data.EmployeeType, employee *data.Employee) error {
-	if employeeType == data.StoreEmployeeType {
-		return r.db.Model(&data.Employee{}).Where("id = ? AND type = ?", employeeID, employeeType).Updates(employee).Error
+func (r *employeeRepository) UpdateFranchiseeEmployee(employeeID uint, franchiseeID uint, updateModels *types.FranchiseeEmployeeUpdateModels) error {
+	if updateModels == nil {
+		return types.ErrNothingToUpdate
 	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if updateModels.Employee != nil {
+			if !data.IsAllowableRole(data.FranchiseeEmployeeType, updateModels.Employee.Role) {
+				return types.ErrEmployeeTypeAndRoleMismatch
+			}
 
-	if employeeType == data.WarehouseEmployeeType {
-		return r.db.Model(&data.Employee{}).Where("id = ? AND type = ?", employeeID, employeeType).Updates(employee).Error
+			if err := tx.Model(&data.Employee{}).
+				Where("id = ?", employeeID).
+				Updates(updateModels.Employee).Error; err != nil {
+				return err
+			}
+		}
+
+		if updateModels.FranchiseeEmployee != nil {
+			if err := tx.Model(&data.FranchiseeEmployee{}).
+				Where("employee_id = ? AND franchisee_id = ?", employeeID, franchiseeID).
+				Updates(updateModels.FranchiseeEmployee).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (r *employeeRepository) UpdateRegionManager(employeeID uint, updateModels *types.RegionManagerEmployeeUpdateModels) error {
+	if updateModels == nil {
+		return types.ErrNothingToUpdate
 	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if updateModels.Employee != nil {
+			if !data.IsAllowableRole(data.WarehouseRegionManagerEmployeeType, updateModels.Employee.Role) {
+				return types.ErrEmployeeTypeAndRoleMismatch
+			}
 
-	return fmt.Errorf("unsupported employee type: %v", employeeType)
+			if err := tx.Model(&data.Employee{}).
+				Where("id = ?", employeeID).
+				Updates(updateModels.Employee).Error; err != nil {
+				return err
+			}
+		}
+
+		if updateModels.RegionManager != nil {
+			if err := tx.Model(&data.RegionManager{}).
+				Where("employee_id = ?", employeeID).
+				Updates(updateModels.RegionManager).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (r *employeeRepository) UpdateStoreEmployee(employeeID uint, storeID uint, updateModels *types.StoreEmployeeUpdateModels) error {
+	if updateModels == nil {
+		return types.ErrNothingToUpdate
+	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if updateModels.Employee != nil {
+			if !data.IsAllowableRole(data.StoreEmployeeType, updateModels.Employee.Role) {
+				return types.ErrEmployeeTypeAndRoleMismatch
+			}
+
+			if err := tx.Model(&data.Employee{}).
+				Where("id = ?", employeeID).
+				Updates(updateModels.Employee).Error; err != nil {
+				return err
+			}
+		}
+
+		if updateModels.StoreEmployee != nil {
+			if err := tx.Model(&data.StoreEmployee{}).
+				Where("employee_id = ? AND store_id = ?", employeeID, storeID).
+				Updates(updateModels.StoreEmployee).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (r *employeeRepository) UpdateWarehouseEmployee(employeeID uint, warehouseID uint, updateModels *types.WarehouseEmployeeUpdateModels) error {
+	if updateModels == nil {
+		return types.ErrNothingToUpdate
+	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if updateModels.Employee != nil {
+			if !data.IsAllowableRole(data.WarehouseEmployeeType, updateModels.Employee.Role) {
+				return types.ErrEmployeeTypeAndRoleMismatch
+			}
+
+			if err := tx.Model(&data.Employee{}).
+				Where("id = ?", employeeID).
+				Updates(updateModels.Employee).Error; err != nil {
+				return err
+			}
+		}
+
+		if updateModels.WarehouseEmployee != nil {
+			if err := tx.Model(&data.WarehouseEmployee{}).
+				Where("employee_id = ? AND warehouse_id = ?", employeeID, warehouseID).
+				Updates(updateModels.WarehouseEmployee).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (r *employeeRepository) DeleteEmployeeById(employeeID uint, employeeType data.EmployeeType) error {
@@ -202,6 +405,16 @@ func (r *employeeRepository) DeleteEmployeeById(employeeID uint, employeeType da
 			if err := tx.Where("employee_id = ?", employeeID).Delete(&data.WarehouseEmployee{}).Error; err != nil {
 				return err
 			}
+		case data.FranchiseeEmployeeType:
+			if err := tx.Where("employee_id = ?", employeeID).Delete(&data.FranchiseeEmployee{}).Error; err != nil {
+				return err
+			}
+		case data.WarehouseRegionManagerEmployeeType:
+			if err := tx.Where("employee_id = ?", employeeID).Delete(&data.RegionManager{}).Error; err != nil {
+				return err
+			}
+		case data.AdminEmployeeType:
+
 		default:
 			return types.ErrUnsupportedEmployeeType
 		}
@@ -221,8 +434,14 @@ func (r *employeeRepository) DeleteEmployeeById(employeeID uint, employeeType da
 func (r *employeeRepository) GetAllRoles() ([]data.EmployeeRole, error) {
 	roles := []data.EmployeeRole{
 		data.RoleAdmin,
+		data.RoleOwner,
+		data.RoleFranchiseOwner,
+		data.RoleFranchiseManager,
+		data.RoleStoreManager,
+		data.RoleWarehouseRegionManager,
 		data.RoleWarehouseManager,
 		data.RoleBarista,
+		data.RoleWarehouseEmployee,
 	}
 	return roles, nil
 }
@@ -314,7 +533,7 @@ func (r *employeeRepository) GetAllWarehouseEmployees(warehouseID uint) ([]data.
 
 func (r *employeeRepository) GetAllAdminEmployees() ([]data.Employee, error) {
 	var employees []data.Employee
-	adminRoles := []data.EmployeeRole{data.RoleAdmin, data.RoleDirector}
+	adminRoles := []data.EmployeeRole{data.RoleAdmin}
 	err := r.db.Model(&data.Employee{}).
 		Where("role IN (?)", adminRoles).
 		Find(&employees).Error

@@ -42,7 +42,11 @@ tables TEXT[] := ARRAY[
         'additive_categories',
         'product_categories',
         'units',
-        'facility_addresses'
+        'facility_addresses',
+        'regions',
+        'region_managers',
+        'franchisees',
+        'franchisee_employee'
     ];
 BEGIN
     -- Drop all tables in reverse order

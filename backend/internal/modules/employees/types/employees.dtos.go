@@ -18,13 +18,22 @@ type CreateEmployeeDTO struct {
 
 type CreateStoreEmployeeDTO struct {
 	CreateEmployeeDTO
-	StoreID     uint `json:"storeId" binding:"required"`
-	IsFranchise bool `json:"isFranchise,omitempty"`
+	StoreID uint `json:"storeId" binding:"required"`
 }
 
 type CreateWarehouseEmployeeDTO struct {
 	CreateEmployeeDTO
 	WarehouseID uint `json:"warehouseId" binding:"required"`
+}
+
+type CreateFranchiseeEmployeeDTO struct {
+	CreateEmployeeDTO
+	FranchiseeID uint `json:"franchiseeId" binding:"required"`
+}
+
+type CreateRegionManagerDTO struct {
+	CreateEmployeeDTO
+	RegionID uint `json:"regionId" binding:"required"`
 }
 
 type CreateWorkdayDTO struct {
@@ -53,13 +62,22 @@ type UpdateEmployeeDTO struct {
 
 type UpdateStoreEmployeeDTO struct {
 	UpdateEmployeeDTO
-	StoreID     *uint `json:"storeId,omitempty"`
-	IsFranchise *bool `json:"isFranchise,omitempty"`
+	StoreID *uint `json:"storeId,omitempty"`
 }
 
 type UpdateWarehouseEmployeeDTO struct {
 	UpdateEmployeeDTO
 	WarehouseID *uint `json:"warehouseId,omitempty"`
+}
+
+type UpdateFranchiseeEmployeeDTO struct {
+	UpdateEmployeeDTO
+	FranchiseeID *uint `json:"franchiseeId,omitempty"`
+}
+
+type UpdateRegionManagerEmployeeDTO struct {
+	UpdateEmployeeDTO
+	RegionID *uint `json:"regionId,omitempty"`
 }
 
 type EmployeeDTO struct {
@@ -75,13 +93,27 @@ type EmployeeDTO struct {
 
 type StoreEmployeeDTO struct {
 	EmployeeDTO
-	StoreID     uint `json:"storeId"`
-	IsFranchise bool `json:"isFranchise"`
+	StoreID uint `json:"storeId"`
 }
 
 type WarehouseEmployeeDTO struct {
 	EmployeeDTO
 	WarehouseID uint `json:"warehouseId"`
+}
+
+type FranchiseeEmployeeDTO struct {
+	EmployeeDTO
+	FranchiseeID uint `json:"franchiseeId"`
+}
+
+type RegionManagerDTO struct {
+	EmployeeDTO
+	RegionID uint `json:"regionId"`
+}
+
+type AdminDTO struct {
+	EmployeeDTO
+	Roles uint `json:"regionId"`
 }
 
 type EmployeeAccountDTO struct {
@@ -99,14 +131,7 @@ type RoleDTO struct {
 	Name string `json:"name"`
 }
 
-type GetStoreEmployeesFilter struct {
-	utils.BaseFilter
-	Role     *string `form:"role,omitempty"`
-	IsActive *bool   `form:"isActive,omitempty"`
-	Search   *string `form:"search,omitempty"`
-}
-
-type GetWarehouseEmployeesFilter struct {
+type EmployeesFilter struct {
 	utils.BaseFilter
 	Role     *string `form:"role,omitempty"`
 	IsActive *bool   `form:"isActive,omitempty"`

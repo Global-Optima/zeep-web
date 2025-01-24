@@ -1,8 +1,8 @@
 package types
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
 
 func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, error) {
@@ -14,14 +14,14 @@ func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, erro
 		workplaceID = employee.StoreEmployee.StoreID
 	case data.WarehouseEmployeeType:
 		workplaceID = employee.WarehouseEmployee.WarehouseID
-	case data.RegionManagerEmployeeType:
+	case data.WarehouseRegionManagerEmployeeType:
 		workplaceID = employee.RegionManager.RegionID
 	case data.FranchiseeEmployeeType:
 		workplaceID = employee.FranchiseeEmployee.FranchiseeID
 	case data.AdminEmployeeType:
 		workplaceID = 0
 	default:
-		return nil, types.ErrUnsupportedEmployeeType
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedEmployeeType, employee.Type)
 	}
 
 	employeeData := EmployeeClaimsData{

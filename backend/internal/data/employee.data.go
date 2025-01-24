@@ -9,11 +9,11 @@ import (
 type EmployeeType string
 
 const (
-	StoreEmployeeType         EmployeeType = "STORE"
-	WarehouseEmployeeType     EmployeeType = "WAREHOUSE"
-	FranchiseeEmployeeType    EmployeeType = "FRANCHISEE"
-	RegionManagerEmployeeType EmployeeType = "REGION_MANAGER"
-	AdminEmployeeType         EmployeeType = "ADMIN"
+	StoreEmployeeType                  EmployeeType = "STORE"
+	WarehouseEmployeeType              EmployeeType = "WAREHOUSE"
+	FranchiseeEmployeeType             EmployeeType = "FRANCHISEE"
+	WarehouseRegionManagerEmployeeType EmployeeType = "WAREHOUSE_REGION_MANAGER"
+	AdminEmployeeType                  EmployeeType = "ADMIN"
 )
 
 type EmployeeRole string
@@ -24,12 +24,34 @@ const (
 	RoleWarehouseRegionManager EmployeeRole = "WAREHOUSE_REGION_MANAGER"
 	RoleFranchiseManager       EmployeeRole = "FRANCHISE_MANAGER"
 	RoleFranchiseOwner         EmployeeRole = "FRANCHISE_OWNER"
-	RoleDirector               EmployeeRole = "DIRECTOR"
 	RoleWarehouseManager       EmployeeRole = "WAREHOUSE_MANAGER"
 	RoleStoreManager           EmployeeRole = "STORE_MANAGER"
 	RoleBarista                EmployeeRole = "BARISTA"
 	RoleWarehouseEmployee      EmployeeRole = "WAREHOUSE_EMPLOYEE"
 )
+
+var EmployeeTypeRoleMap = map[EmployeeType][]EmployeeRole{
+	StoreEmployeeType:                  {RoleStoreManager, RoleBarista},
+	WarehouseEmployeeType:              {RoleWarehouseManager, RoleWarehouseEmployee},
+	FranchiseeEmployeeType:             {RoleFranchiseManager, RoleFranchiseOwner},
+	WarehouseRegionManagerEmployeeType: {RoleWarehouseRegionManager},
+	AdminEmployeeType:                  {RoleAdmin, RoleOwner},
+}
+
+func IsAllowableRole(employeeType EmployeeType, role EmployeeRole) bool {
+	roles, exists := EmployeeTypeRoleMap[employeeType]
+	if !exists {
+		return false
+	}
+
+	for _, r := range roles {
+		if r == role {
+			return true
+		}
+	}
+
+	return false
+}
 
 func IsValidEmployeeRole(role EmployeeRole) bool {
 	switch EmployeeRole(role) {
@@ -122,23 +144,26 @@ type Employee struct {
 
 type StoreEmployee struct {
 	BaseEntity
-	EmployeeID  uint `gorm:"not null;uniqueIndex"`
-	StoreID     uint `gorm:"not null"`
-	IsFranchise bool `gorm:"default:false" sort:"isFranchise"`
+	EmployeeID uint     `gorm:"not null;uniqueIndex"`
+	StoreID    uint     `gorm:"not null"`
+	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Store      Store    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE" sort:"store"`
 }
 
 type WarehouseEmployee struct {
 	BaseEntity
-	EmployeeID  uint `gorm:"not null;uniqueIndex"`
-	WarehouseID uint `gorm:"not null"`
+	EmployeeID  uint      `gorm:"not null;uniqueIndex"`
+	WarehouseID uint      `gorm:"not null"`
+	Employee    Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Warehouse   Warehouse `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouse"`
 }
 
 type FranchiseeEmployee struct {
 	BaseEntity
-	FranchiseeID uint `gorm:"index,not null"`
-	EmployeeID   uint `gorm:"index,not null"`
-	Franchisee   `gorm:"foreignKey:FranchiseeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Employee     `gorm:"foreignKey:EmployeeID"`
+	FranchiseeID uint       `gorm:"index,not null"`
+	EmployeeID   uint       `gorm:"index,not null"`
+	Franchisee   Franchisee `gorm:"foreignKey:FranchiseeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Employee     Employee   `gorm:"foreignKey:EmployeeID"`
 }
 
 type RegionManager struct {

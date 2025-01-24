@@ -85,12 +85,14 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 
 	var storeEmployee *types.StoreEmployeeDTO
 	var warehouseEmployee *types.WarehouseEmployeeDTO
+	var franchiseeEmployee *types.FranchiseeEmployeeDTO
+	var regionManager *types.RegionManagerDTO
+	var admin *types.AdminDTO
 
 	switch claims.EmployeeType {
 	case data.StoreEmployeeType:
 		storeEmployee, err = h.service.GetStoreEmployeeByID(claims.EmployeeClaimsData.ID)
 		if err != nil {
-			print(err)
 			utils.SendInternalServerError(c, "failed to fetch employee details")
 			return
 		}
@@ -99,11 +101,26 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 	case data.WarehouseEmployeeType:
 		warehouseEmployee, err = h.service.GetWarehouseEmployeeByID(claims.EmployeeClaimsData.ID)
 		if err != nil {
-			print(err)
 			utils.SendInternalServerError(c, "failed to fetch employee details")
 			return
 		}
 		utils.SendSuccessResponse(c, warehouseEmployee)
+		return
+	case data.FranchiseeEmployeeType:
+		franchiseeEmployee, err = h.service.GetFranchiseeEmployeeByID(claims.EmployeeClaimsData.ID)
+		if err != nil {
+			utils.SendInternalServerError(c, "failed to fetch employee details")
+			return
+		}
+		utils.SendSuccessResponse(c, franchiseeEmployee)
+		return
+	case data.WarehouseRegionManagerEmployeeType:
+		regionManager, err = h.service.GetRegionManagerByID(claims.EmployeeClaimsData.ID)
+		if err != nil {
+			utils.SendInternalServerError(c, "failed to fetch employee details")
+			return
+		}
+		utils.SendSuccessResponse(c, regionManager)
 		return
 	}
 
@@ -144,6 +161,46 @@ func (h *EmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 			return
 		}
 		utils.SendInternalServerError(c, "failed to create warehouse employee")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employee)
+}
+
+func (h *EmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
+	var input types.CreateFranchiseeEmployeeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	employee, err := h.service.CreateFranchiseeEmployee(&input)
+	if err != nil {
+		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
+			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+			return
+		}
+		utils.SendInternalServerError(c, "failed to create franchisee employee")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employee)
+}
+
+func (h *EmployeeHandler) CreateRegionManager(c *gin.Context) {
+	var input types.CreateRegionManagerDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	employee, err := h.service.CreateRegionManager(&input)
+	if err != nil {
+		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
+			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+			return
+		}
+		utils.SendInternalServerError(c, "failed to create store employee")
 		return
 	}
 
@@ -195,7 +252,7 @@ func (h *EmployeeHandler) GetWarehouseEmployeeByID(c *gin.Context) {
 }
 
 func (h *EmployeeHandler) GetStoreEmployees(c *gin.Context) {
-	var filter types.GetStoreEmployeesFilter
+	var filter types.EmployeesFilter
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil && !errors.Is(errH, contexts.ErrEmptyStoreID) {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
@@ -218,7 +275,7 @@ func (h *EmployeeHandler) GetStoreEmployees(c *gin.Context) {
 }
 
 func (h *EmployeeHandler) GetWarehouseEmployees(c *gin.Context) {
-	var filter types.GetWarehouseEmployeesFilter
+	var filter types.EmployeesFilter
 	warehouseID, errH := contexts.GetWarehouseId(c)
 	if errH != nil && !errors.Is(errH, contexts.ErrEmptyWarehouseID) {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
@@ -284,6 +341,48 @@ func (h *EmployeeHandler) UpdateWarehouseEmployee(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
+}
+
+func (h *EmployeeHandler) UpdateFranchiseeEmployee(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	var input types.UpdateFranchiseeEmployeeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, "invalid input")
+		return
+	}
+
+	if err := h.service.UpdateFranchiseeEmployee(uint(id), &input); err != nil {
+		utils.SendInternalServerError(c, "failed to update franchisee employee")
+		return
+	}
+
+	utils.SendSuccessResponse(c, gin.H{"message": "franchisee employee updated successfully"})
+}
+
+func (h *EmployeeHandler) UpdateRegionManager(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	var input types.UpdateRegionManagerEmployeeDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.SendBadRequestError(c, "invalid input")
+		return
+	}
+
+	if err := h.service.UpdateRegionManager(uint(id), &input); err != nil {
+		utils.SendInternalServerError(c, "failed to update region manager")
+		return
+	}
+
+	utils.SendSuccessResponse(c, gin.H{"message": "region manager updated successfully"})
 }
 
 func (h *EmployeeHandler) CreateEmployeeWorkday(c *gin.Context) {
@@ -382,12 +481,6 @@ func (h *EmployeeHandler) DeleteEmployeeWorkday(c *gin.Context) {
 	workdayID, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid workday ID")
-		return
-	}
-
-	var updateWorkday types.UpdateEmployeeWorkdayDTO
-	if err := c.ShouldBindJSON(&updateWorkday); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
