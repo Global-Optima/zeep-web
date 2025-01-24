@@ -22,19 +22,19 @@ type ComponentName string
 
 const (
 	ProductComponent             ComponentName = "PRODUCT"
-	ProductCategoryComponent     ComponentName = "PRODUCT CATEGORY"
-	StoreProductComponent        ComponentName = "STORE PRODUCT"
+	ProductCategoryComponent     ComponentName = "PRODUCT_CATEGORY"
+	StoreProductComponent        ComponentName = "STORE_PRODUCT"
 	EmployeeComponent            ComponentName = "EMPLOYEE"
 	AdditiveComponent            ComponentName = "ADDITIVE"
-	AdditiveCategoryComponent    ComponentName = "ADDITIVE CATEGORY"
-	StoreAdditiveComponent       ComponentName = "STORE ADDITIVE"
-	ProductSizeComponent         ComponentName = "PRODUCT SIZE"
-	RecipeStepsComponent         ComponentName = "RECIPE STEPS"
+	AdditiveCategoryComponent    ComponentName = "ADDITIVE_CATEGORY"
+	StoreAdditiveComponent       ComponentName = "STORE_ADDITIVE"
+	ProductSizeComponent         ComponentName = "PRODUCT_SIZE"
+	RecipeStepsComponent         ComponentName = "RECIPE_STEPS"
 	StoreComponent               ComponentName = "STORE"
 	WarehouseComponent           ComponentName = "WAREHOUSE"
-	StoreWarehouseStockComponent ComponentName = "STORE WAREHOUSE STOCK"
+	StoreWarehouseStockComponent ComponentName = "STORE_WAREHOUSE_STOCK"
 	IngredientComponent          ComponentName = "INGREDIENT"
-	IngredientCategoryComponent  ComponentName = "INGREDIENT CATEGORY"
+	IngredientCategoryComponent  ComponentName = "INGREDIENT_CATEGORY"
 )
 
 func (o OperationType) ToString() string {
