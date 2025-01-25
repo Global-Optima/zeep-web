@@ -12,8 +12,9 @@ import (
 
 type StoreWarehouseRepository interface {
 	AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)
-	AddOrUpdateStock(storeId uint, dto *types.AddStoreStockDTO) error
+	AddOrUpdateStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)
 	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error)
+	GetStockListByIDs(storeId uint, IDs []uint) ([]data.StoreWarehouseStock, error)
 	GetStockById(storeId, stockId uint) (*data.StoreWarehouseStock, error)
 	UpdateStock(storeId, stockId uint, dto *types.UpdateStoreStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
@@ -58,7 +59,7 @@ func (r *storeWarehouseRepository) CloneWithTransaction(tx *gorm.DB) storeWareho
 	}
 }
 
-func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) error {
+func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.AddStockDTO) (uint, error) {
 	// Fetch the StoreWarehouse for the given storeID
 	var storeWarehouse data.StoreWarehouse
 	err := r.db.
@@ -66,9 +67,9 @@ func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.Add
 		First(&storeWarehouse).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("store warehouse not found for store ID %d", storeID)
+			return 0, fmt.Errorf("store warehouse not found for store ID %d", storeID)
 		}
-		return fmt.Errorf("failed to fetch store warehouse: %w", err)
+		return 0, fmt.Errorf("failed to fetch store warehouse: %w", err)
 	}
 
 	// Fetch the existing stock (if any) for the given ingredient
@@ -83,9 +84,9 @@ func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.Add
 		existingStock.LowStockThreshold = dto.LowStockThreshold
 		err = r.db.Save(&existingStock).Error
 		if err != nil {
-			return fmt.Errorf("failed to update store warehouse stock: %w", err)
+			return 0, fmt.Errorf("failed to update store warehouse stock: %w", err)
 		}
-		return nil
+		return existingStock.ID, nil
 	}
 
 	// If no existing stock, create a new stock entry
@@ -99,13 +100,13 @@ func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.Add
 
 		err = r.db.Create(&storeWarehouseStock).Error
 		if err != nil {
-			return fmt.Errorf("failed to create store warehouse stock: %w", err)
+			return 0, fmt.Errorf("failed to create store warehouse stock: %w", err)
 		}
-		return nil
+		return storeWarehouseStock.ID, nil
 	}
 
 	// Handle unexpected errors
-	return fmt.Errorf("failed to add or update stock: %w", err)
+	return 0, fmt.Errorf("failed to add or update stock: %w", err)
 }
 
 func (r *storeWarehouseRepository) AddStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error) {
@@ -198,6 +199,29 @@ func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetS
 	return storeWarehouseStockList, nil
 }
 
+func (r *storeWarehouseRepository) GetStockListByIDs(storeID uint, stockIds []uint) ([]data.StoreWarehouseStock, error) {
+	if storeID == 0 {
+		return nil, fmt.Errorf("storeId cannot be 0")
+	}
+
+	var storeWarehouseStockList []data.StoreWarehouseStock
+
+	query := r.db.Model(&data.StoreWarehouseStock{}).
+		Preload("Ingredient.Unit").
+		Joins("JOIN store_warehouses ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
+		Joins("JOIN ingredients ON store_warehouse_stocks.ingredient_id = ingredients.id").
+		Where("store_warehouses.store_id = ? AND store_warehouse_stock.id IN (?)", storeID, stockIds).
+		Preload("Ingredient").
+		Preload("StoreWarehouse")
+
+	err := query.Find(&storeWarehouseStockList).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve stock list: %w", err)
+	}
+
+	return storeWarehouseStockList, nil
+}
+
 func (r *storeWarehouseRepository) GetStockById(storeId, stockId uint) (*data.StoreWarehouseStock, error) {
 	var StoreWarehouseStock data.StoreWarehouseStock
 
@@ -271,14 +295,14 @@ func (r *storeWarehouseRepository) UpdateStock(storeId, stockId uint, dto *types
 }
 
 func (r *storeWarehouseRepository) DeleteStockById(storeId, stockId uint) error {
-	res := r.db.Model(&data.StoreWarehouseStock{}).
-		Joins("JOIN store_warehouses ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
-		Where("store_warehouses.store_id = ? AND store_warehouse_stocks.id = ?", storeId, stockId).
+	res := r.db.
+		Where("id = ? AND store_warehouse_id IN (SELECT id FROM store_warehouses WHERE store_id = ?)", stockId, storeId).
 		Delete(&data.StoreWarehouseStock{})
 
 	if res.Error != nil {
 		return fmt.Errorf("failed to delete store warehouse stock: %w", res.Error)
 	}
+
 	if res.RowsAffected == 0 {
 		return fmt.Errorf("stock not found")
 	}

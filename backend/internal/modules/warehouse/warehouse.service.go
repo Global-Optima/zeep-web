@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
@@ -19,6 +20,12 @@ type WarehouseService interface {
 	GetAllWarehouses(pagination *utils.Pagination) ([]types.WarehouseResponse, error)
 	UpdateWarehouse(id uint, req types.UpdateWarehouseDTO) (*types.WarehouseResponse, error)
 	DeleteWarehouse(id uint) error
+
+	AddToStock(req types.AdjustWarehouseStockRequest) error
+	DeductFromStock(req types.AdjustWarehouseStockRequest) error
+	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
+	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.StockMaterialDetailsDTO, error)
+	ResetStock(req types.ResetWarehouseStockRequest) error
 }
 
 type warehouseService struct {
@@ -119,4 +126,94 @@ func (s *warehouseService) DeleteWarehouse(id uint) error {
 	}
 
 	return nil
+}
+
+func (s *warehouseService) AddToStock(req types.AdjustWarehouseStockRequest) error {
+	return s.repo.AddToWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
+}
+
+func (s *warehouseService) DeductFromStock(req types.AdjustWarehouseStockRequest) error {
+	return s.repo.DeductFromWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
+}
+
+func (s *warehouseService) GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error) {
+	stocks, err := s.repo.GetWarehouseStock(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
+	}
+
+	responses := make([]types.WarehouseStockResponse, len(stocks))
+	for i, stock := range stocks {
+		if stock.StockMaterial.Package == nil {
+			return nil, fmt.Errorf("package measures not found for StockMaterialID %d", stock.StockMaterialID)
+		}
+
+		packageMeasures := utils.ReturnPackageMeasureForStockMaterial(stock.StockMaterial, stock.TotalQuantity)
+
+		responses[i] = types.WarehouseStockResponse{
+			StockMaterial: types.StockMaterialResponse{
+				ID:             stock.StockMaterialID,
+				Name:           stock.StockMaterial.Name,
+				Description:    stock.StockMaterial.Description,
+				Category:       stock.StockMaterial.StockMaterialCategory.Name,
+				SafetyStock:    stock.StockMaterial.SafetyStock,
+				Barcode:        stock.StockMaterial.Barcode,
+				PackageMeasure: packageMeasures,
+			},
+			TotalQuantity:          stock.TotalQuantity,
+			EarliestExpirationDate: stock.EarliestExpirationDate,
+		}
+	}
+
+	return responses, nil
+}
+
+func (s *warehouseService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.StockMaterialDetailsDTO, error) {
+	aggregatedStock, deliveries, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)
+	}
+
+	deliveriesDTO := make([]types.StockMaterialDeliveryDTO, len(deliveries))
+	for i, delivery := range deliveries {
+		deliveriesDTO[i] = types.StockMaterialDeliveryDTO{
+			Supplier:     delivery.Supplier.Name,
+			Quantity:     delivery.Quantity,
+			DeliveryDate: delivery.DeliveryDate,
+			ExpiresOn:    delivery.ExpirationDate,
+		}
+	}
+
+	packageMeasure := utils.ReturnPackageMeasureForStockMaterial(
+		aggregatedStock.StockMaterial,
+		aggregatedStock.TotalQuantity,
+	)
+
+	details := &types.StockMaterialDetailsDTO{
+		ID:                     aggregatedStock.StockMaterial.ID,
+		Name:                   aggregatedStock.StockMaterial.Name,
+		Description:            aggregatedStock.StockMaterial.Description,
+		Category:               aggregatedStock.StockMaterial.StockMaterialCategory.Name,
+		SafetyStock:            aggregatedStock.StockMaterial.SafetyStock,
+		ExpirationFlag:         aggregatedStock.StockMaterial.ExpirationFlag,
+		ExpirationInDays:       aggregatedStock.StockMaterial.ExpirationPeriodInDays,
+		PackageMeasure:         packageMeasure,
+		TotalQuantity:          aggregatedStock.TotalQuantity,
+		EarliestExpirationDate: aggregatedStock.EarliestExpirationDate,
+		Deliveries:             deliveriesDTO,
+	}
+
+	return details, nil
+}
+
+func (s *warehouseService) ResetStock(req types.ResetWarehouseStockRequest) error {
+	stocks := []data.WarehouseStock{}
+	for _, stock := range req.Stocks {
+		stocks = append(stocks, data.WarehouseStock{
+			WarehouseID:     req.WarehouseID,
+			StockMaterialID: stock.StockMaterialID,
+			Quantity:        stock.Quantity,
+		})
+	}
+	return s.repo.ResetWarehouseStock(req.WarehouseID, stocks)
 }

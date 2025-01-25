@@ -7,10 +7,11 @@ import (
 )
 
 type IngredientService interface {
-	CreateIngredient(dto *types.CreateIngredientDTO) error
+	CreateIngredient(dto *types.CreateIngredientDTO) (uint, error)
 	UpdateIngredient(ingredientID uint, dto *types.UpdateIngredientDTO) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*types.IngredientDTO, error)
+	GetIngredientsByIDs(ingredientIDs []uint) ([]types.IngredientDTO, error)
 	GetIngredients(filter *types.IngredientFilter) ([]types.IngredientDTO, error)
 }
 
@@ -26,18 +27,19 @@ func NewIngredientService(repo IngredientRepository, logger *zap.SugaredLogger) 
 	}
 }
 
-func (s *ingredientService) CreateIngredient(dto *types.CreateIngredientDTO) error {
+func (s *ingredientService) CreateIngredient(dto *types.CreateIngredientDTO) (uint, error) {
 	ingredient, err := types.ConvertToIngredientModel(dto)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	if err := s.repo.CreateIngredient(ingredient); err != nil {
+	id, err := s.repo.CreateIngredient(ingredient)
+	if err != nil {
 		wrappedErr := utils.WrapError("Failed to create ingredient:", err)
 		s.logger.Error(wrappedErr)
-		return err
+		return 0, err
 	}
-	return nil
+	return id, nil
 }
 
 func (s *ingredientService) UpdateIngredient(ingredientID uint, dto *types.UpdateIngredientDTO) error {
@@ -69,6 +71,21 @@ func (s *ingredientService) GetIngredientByID(ingredientID uint) (*types.Ingredi
 	}
 
 	return types.ConvertToIngredientResponseDTO(ingredient), nil
+}
+
+func (s *ingredientService) GetIngredientsByIDs(ingredientIDs []uint) ([]types.IngredientDTO, error) {
+	ingredients, err := s.repo.GetIngredientsByIDs(ingredientIDs)
+	if err != nil {
+		s.logger.Error("Failed to fetch ingredient by ID:", err)
+		return nil, err
+	}
+
+	dtos := make([]types.IngredientDTO, len(ingredients))
+	for i, ingredient := range ingredients {
+		dtos[i] = *types.ConvertToIngredientResponseDTO(&ingredient)
+	}
+
+	return dtos, nil
 }
 
 func (s *ingredientService) GetIngredients(filter *types.IngredientFilter) ([]types.IngredientDTO, error) {
