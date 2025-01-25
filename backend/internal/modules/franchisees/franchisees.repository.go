@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -13,6 +14,7 @@ type FranchiseeRepository interface {
 	Delete(id uint) error
 	GetByID(id uint) (*data.Franchisee, error)
 	GetAll(filter *types.FranchiseeFilter) ([]data.Franchisee, error)
+	IsFranchiseeStore(franchiseeID, storeID uint) (bool, error)
 }
 
 type franchiseeRepository struct {
@@ -70,4 +72,15 @@ func (r *franchiseeRepository) GetAll(filter *types.FranchiseeFilter) ([]data.Fr
 		return nil, err
 	}
 	return franchisees, nil
+}
+
+func (r *franchiseeRepository) IsFranchiseeStore(franchiseeID, storeID uint) (bool, error) {
+	var store data.Store
+	if err := r.db.Model(&data.Store{}).Where("franchisee_id = ? AND id = ?", franchiseeID, storeID).First(&store).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

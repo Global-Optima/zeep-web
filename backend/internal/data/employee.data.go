@@ -1,12 +1,17 @@
 package data
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"strings"
 	"time"
 )
 
 type EmployeeType string
+
+func (t EmployeeType) ToString() string {
+	return string(t)
+}
 
 const (
 	StoreEmployeeType                  EmployeeType = "STORE"
@@ -18,16 +23,49 @@ const (
 
 type EmployeeRole string
 
+func (e EmployeeRole) ToString() string {
+	return string(e)
+}
+
+func ToEmployeeRole(role string) (EmployeeRole, error) {
+	if IsValidEmployeeRole(EmployeeRole(role)) {
+		return EmployeeRole(role), nil
+	}
+	return "", fmt.Errorf("invalid employee role: %s", role)
+}
+
+type AdminRole = EmployeeRole
+
 const (
-	RoleAdmin                  EmployeeRole = "ADMIN"
-	RoleOwner                  EmployeeRole = "OWNER"
-	RoleWarehouseRegionManager EmployeeRole = "WAREHOUSE_REGION_MANAGER"
-	RoleFranchiseManager       EmployeeRole = "FRANCHISE_MANAGER"
-	RoleFranchiseOwner         EmployeeRole = "FRANCHISE_OWNER"
-	RoleWarehouseManager       EmployeeRole = "WAREHOUSE_MANAGER"
-	RoleStoreManager           EmployeeRole = "STORE_MANAGER"
-	RoleBarista                EmployeeRole = "BARISTA"
-	RoleWarehouseEmployee      EmployeeRole = "WAREHOUSE_EMPLOYEE"
+	RoleAdmin AdminRole = "ADMIN"
+	RoleOwner AdminRole = "OWNER"
+)
+
+type StoreEmployeeRole = EmployeeRole
+
+const (
+	RoleStoreManager StoreEmployeeRole = "STORE_MANAGER"
+	RoleBarista      StoreEmployeeRole = "BARISTA"
+)
+
+type WarehouseEmployeeRole = EmployeeRole
+
+const (
+	RoleWarehouseManager  WarehouseEmployeeRole = "WAREHOUSE_MANAGER"
+	RoleWarehouseEmployee WarehouseEmployeeRole = "WAREHOUSE_EMPLOYEE"
+)
+
+type FranchiseeEmployeeRole = EmployeeRole
+
+const (
+	RoleFranchiseManager FranchiseeEmployeeRole = "FRANCHISE_MANAGER"
+	RoleFranchiseOwner   FranchiseeEmployeeRole = "FRANCHISE_OWNER"
+)
+
+type RegionManagerRole = EmployeeRole
+
+const (
+	RoleWarehouseRegionManager RegionManagerRole = "WAREHOUSE_REGION_MANAGER"
 )
 
 var EmployeeTypeRoleMap = map[EmployeeType][]EmployeeRole{
@@ -54,7 +92,7 @@ func IsAllowableRole(employeeType EmployeeType, role EmployeeRole) bool {
 }
 
 func IsValidEmployeeRole(role EmployeeRole) bool {
-	switch EmployeeRole(role) {
+	switch role {
 	case RoleAdmin, RoleOwner, RoleWarehouseRegionManager, RoleFranchiseManager, RoleFranchiseOwner,
 		RoleWarehouseManager, RoleStoreManager, RoleBarista, RoleWarehouseEmployee:
 		return true
@@ -132,46 +170,58 @@ type Employee struct {
 	Phone              string              `gorm:"size:16;not null"`
 	Email              string              `gorm:"size:255;not null" sort:"email"`
 	HashedPassword     string              `gorm:"size:255;not null"`
-	Role               EmployeeRole        `gorm:"size:50;not null" sort:"role"`
 	Type               EmployeeType        `gorm:"size:50;not null" sort:"type"`
 	IsActive           bool                `gorm:"default:true" sort:"isActive"`
 	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
 	RegionManager      *RegionManager      `gorm:"foreignKey:EmployeeID"`
 	FranchiseeEmployee *FranchiseeEmployee `gorm:"foreignKey:EmployeeID"`
+	AdminEmployee      *AdminEmployee      `gorm:"foreignKey:EmployeeID"`
 	Workdays           []EmployeeWorkday   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 }
 
 type StoreEmployee struct {
 	BaseEntity
-	EmployeeID uint     `gorm:"not null;uniqueIndex"`
-	StoreID    uint     `gorm:"not null"`
-	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
-	Store      Store    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE" sort:"store"`
+	EmployeeID uint              `gorm:"index,not null"`
+	StoreID    uint              `gorm:"index,not null"`
+	Role       StoreEmployeeRole `gorm:"type:store_employee_role;not null" sort:"role"`
+	Employee   Employee          `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Store      Store             `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE" sort:"store"`
 }
 
 type WarehouseEmployee struct {
 	BaseEntity
-	EmployeeID  uint      `gorm:"not null;uniqueIndex"`
-	WarehouseID uint      `gorm:"not null"`
-	Employee    Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
-	Warehouse   Warehouse `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouse"`
+	EmployeeID  uint                  `gorm:"index,not null"`
+	WarehouseID uint                  `gorm:"index,not null"`
+	Role        WarehouseEmployeeRole `gorm:"type:warehouse_employee_role;not null" sort:"role"`
+	Employee    Employee              `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Warehouse   Warehouse             `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouse"`
 }
 
 type FranchiseeEmployee struct {
 	BaseEntity
-	FranchiseeID uint       `gorm:"index,not null"`
-	EmployeeID   uint       `gorm:"index,not null"`
-	Franchisee   Franchisee `gorm:"foreignKey:FranchiseeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Employee     Employee   `gorm:"foreignKey:EmployeeID"`
+	FranchiseeID uint                   `gorm:"index,not null"`
+	EmployeeID   uint                   `gorm:"index,not null"`
+	Role         FranchiseeEmployeeRole `gorm:"type:franchisee_employee_role;not null" sort:"role"`
+	Franchisee   Franchisee             `gorm:"foreignKey:FranchiseeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" sort:"franchisee"`
+	Employee     Employee               `gorm:"foreignKey:EmployeeID" sort:"employee"`
 }
 
+// TODO consider renaming to RegionEmployee
 type RegionManager struct {
 	BaseEntity
-	EmployeeID uint     `gorm:"index;not null"`
-	RegionID   uint     `gorm:"index;not null"`
-	Employee   Employee `gorm:"foreignKey:ManagerID;constraint:OnDelete:CASCADE"`
-	Region     Region   `gorm:"foreignKey:RegionID;constraint:OnDelete:CASCADE"`
+	EmployeeID uint              `gorm:"index;not null"`
+	RegionID   uint              `gorm:"index;not null"`
+	Role       RegionManagerRole `gorm:"type:warehouse_region_manager_role;not null" sort:"role"`
+	Employee   Employee          `gorm:"foreignKey:ManagerID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Region     Region            `gorm:"foreignKey:RegionID;constraint:OnDelete:CASCADE" sort:"region"`
+}
+
+type AdminEmployee struct {
+	BaseEntity
+	EmployeeID uint      `gorm:"index;not null"`
+	Role       AdminRole `gorm:"type:admin_role;not null" sort:"role"`
+	Employee   Employee  `gorm:"foreignKey:ManagerID;constraint:OnDelete:CASCADE" sort:"employee"`
 }
 
 type EmployeeAudit struct {

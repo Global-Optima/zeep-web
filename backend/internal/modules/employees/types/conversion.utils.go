@@ -15,44 +15,53 @@ func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
 		Phone:     utils.FormatPhoneOutput(employee.Phone),
 		Email:     employee.Email,
 		Type:      employee.Type,
-		Role:      employee.Role,
 		IsActive:  employee.IsActive,
 	}
 
 	return dto
 }
 
-func MapToStoreEmployeeDTO(employee *data.Employee) *StoreEmployeeDTO {
+func MapToStoreEmployeeDTO(storeEmployee *data.StoreEmployee) *StoreEmployeeDTO {
 	dto := &StoreEmployeeDTO{
-		EmployeeDTO: *MapToEmployeeDTO(employee),
-		StoreID:     employee.StoreEmployee.StoreID,
+		EmployeeDTO: *MapToEmployeeDTO(&storeEmployee.Employee),
+		StoreID:     storeEmployee.StoreID,
+		Role:        storeEmployee.Role.ToString(),
 	}
-
 	return dto
 }
 
-func MapToWarehouseEmployeeDTO(employee *data.Employee) *WarehouseEmployeeDTO {
+func MapToWarehouseEmployeeDTO(warehouseEmployee *data.WarehouseEmployee) *WarehouseEmployeeDTO {
 	dto := &WarehouseEmployeeDTO{
-		EmployeeDTO: *MapToEmployeeDTO(employee),
-		WarehouseID: employee.WarehouseEmployee.WarehouseID,
+		EmployeeDTO: *MapToEmployeeDTO(&warehouseEmployee.Employee),
+		WarehouseID: warehouseEmployee.WarehouseID,
+		Role:        warehouseEmployee.Role.ToString(),
 	}
-
 	return dto
 }
 
-func MapToFranchiseeEmployeeDTO(employee *data.Employee) *FranchiseeEmployeeDTO {
+func MapToFranchiseeEmployeeDTO(franchiseeEmployee *data.FranchiseeEmployee) *FranchiseeEmployeeDTO {
 	dto := &FranchiseeEmployeeDTO{
-		EmployeeDTO:  *MapToEmployeeDTO(employee),
-		FranchiseeID: employee.FranchiseeEmployee.FranchiseeID,
+		EmployeeDTO:  *MapToEmployeeDTO(&franchiseeEmployee.Employee),
+		FranchiseeID: franchiseeEmployee.FranchiseeID,
+		Role:         franchiseeEmployee.Role.ToString(),
+	}
+	return dto
+}
+
+func MapToRegionManagerDTO(regionManager *data.RegionManager) *RegionManagerDTO {
+	dto := &RegionManagerDTO{
+		EmployeeDTO: *MapToEmployeeDTO(&regionManager.Employee),
+		RegionID:    regionManager.RegionID,
+		Role:        regionManager.Role.ToString(),
 	}
 
 	return dto
 }
 
-func MapToRegionManagerDTO(employee *data.Employee) *RegionManagerDTO {
-	dto := &RegionManagerDTO{
-		EmployeeDTO: *MapToEmployeeDTO(employee),
-		RegionID:    employee.RegionManager.RegionID,
+func MapToAdminEmployeeDTO(admin *data.AdminEmployee) *AdminEmployeeDTO {
+	dto := &AdminEmployeeDTO{
+		EmployeeDTO: *MapToEmployeeDTO(&admin.Employee),
+		Role:        admin.Role.ToString(),
 	}
 
 	return dto
@@ -92,72 +101,85 @@ func CreateToEmployee(dto *CreateEmployeeDTO) (*data.Employee, error) {
 	return employee, nil
 }
 
-func CreateToStoreEmployee(dto *CreateStoreEmployeeDTO) (*data.Employee, error) {
-	employee, err := CreateToEmployee(&dto.CreateEmployeeDTO)
+func CreateToStoreEmployee(storeID uint, dto *CreateEmployeeDTO) (*data.Employee, error) {
+	if !data.IsAllowableRole(data.StoreEmployeeType, dto.Role) {
+		return nil, fmt.Errorf("%w: %s for type %s", ErrInvalidEmployeeRole, dto.Role, data.StoreEmployeeType)
+	}
+
+	employee, err := CreateToEmployee(dto)
 	if err != nil {
 		return nil, err
 	}
-
-	employee.Type = data.StoreEmployeeType
-	if !data.IsAllowableRole(employee.Type, dto.Role) {
-		return nil, fmt.Errorf("%w: role %s is not allowed to create store employee", ErrEmployeeTypeAndRoleMismatch, dto.Role)
-	}
-
 	employee.StoreEmployee = &data.StoreEmployee{
-		StoreID: dto.StoreID,
+		StoreID: storeID,
+		Role:    dto.Role,
 	}
 
 	return employee, nil
 }
 
-func CreateToWarehouseEmployee(dto *CreateWarehouseEmployeeDTO) (*data.Employee, error) {
-	employee, err := CreateToEmployee(&dto.CreateEmployeeDTO)
+func CreateToWarehouseEmployee(warehouseID uint, dto *CreateEmployeeDTO) (*data.Employee, error) {
+	if !data.IsAllowableRole(data.WarehouseEmployeeType, dto.Role) {
+		return nil, fmt.Errorf("%w: %s for type %s", ErrInvalidEmployeeRole, dto.Role, data.WarehouseEmployeeType)
+	}
+
+	employee, err := CreateToEmployee(dto)
 	if err != nil {
 		return nil, err
 	}
-
-	employee.Type = data.WarehouseEmployeeType
-	if !data.IsAllowableRole(employee.Type, dto.Role) {
-		return nil, fmt.Errorf("%w: role %s is not allowed to create store employee", ErrEmployeeTypeAndRoleMismatch, dto.Role)
-	}
-
 	employee.WarehouseEmployee = &data.WarehouseEmployee{
-		WarehouseID: dto.WarehouseID,
+		WarehouseID: warehouseID,
+		Role:        dto.Role,
 	}
+
 	return employee, nil
 }
 
-func CreateToFranchiseeEmployee(dto *CreateFranchiseeEmployeeDTO) (*data.Employee, error) {
-	employee, err := CreateToEmployee(&dto.CreateEmployeeDTO)
+func CreateToFranchiseeEmployee(franchiseeID uint, dto *CreateEmployeeDTO) (*data.Employee, error) {
+	if !data.IsAllowableRole(data.FranchiseeEmployeeType, dto.Role) {
+		return nil, fmt.Errorf("%w: %s for type %s", ErrInvalidEmployeeRole, dto.Role, data.FranchiseeEmployeeType)
+	}
+
+	employee, err := CreateToEmployee(dto)
 	if err != nil {
 		return nil, err
 	}
-
-	employee.Type = data.FranchiseeEmployeeType
-	if !data.IsAllowableRole(employee.Type, dto.Role) {
-		return nil, fmt.Errorf("%w: role %s is not allowed to create franchisee employee", ErrEmployeeTypeAndRoleMismatch, dto.Role)
-	}
-
 	employee.FranchiseeEmployee = &data.FranchiseeEmployee{
-		FranchiseeID: dto.FranchiseeID,
+		FranchiseeID: franchiseeID,
+		Role:         dto.Role,
 	}
 
 	return employee, nil
 }
 
-func CreateToRegionManager(dto *CreateRegionManagerDTO) (*data.Employee, error) {
-	employee, err := CreateToEmployee(&dto.CreateEmployeeDTO)
+func CreateToRegionManager(regionID uint, dto *CreateEmployeeDTO) (*data.Employee, error) {
+	if !data.IsAllowableRole(data.WarehouseRegionManagerEmployeeType, dto.Role) {
+		return nil, fmt.Errorf("%w: %s for type %s", ErrInvalidEmployeeRole, dto.Role, data.WarehouseRegionManagerEmployeeType)
+	}
+
+	employee, err := CreateToEmployee(dto)
 	if err != nil {
 		return nil, err
 	}
-
-	employee.Type = data.WarehouseRegionManagerEmployeeType
-	if !data.IsAllowableRole(employee.Type, dto.Role) {
-		return nil, fmt.Errorf("%w: role %s is not allowed to create region manager", ErrEmployeeTypeAndRoleMismatch, dto.Role)
+	employee.RegionManager = &data.RegionManager{
+		RegionID: regionID,
+		Role:     dto.Role,
 	}
 
-	employee.RegionManager = &data.RegionManager{
-		RegionID: dto.RegionID,
+	return employee, nil
+}
+
+func CreateToAdminEmployee(dto *CreateEmployeeDTO) (*data.Employee, error) {
+	if !data.IsAllowableRole(data.AdminEmployeeType, dto.Role) {
+		return nil, fmt.Errorf("%w: %s for type %s", ErrInvalidEmployeeRole, dto.Role, data.AdminEmployeeType)
+	}
+
+	employee, err := CreateToEmployee(dto)
+	if err != nil {
+		return nil, err
+	}
+	employee.AdminEmployee = &data.AdminEmployee{
+		Role: dto.Role,
 	}
 
 	return employee, nil

@@ -11,26 +11,32 @@ import (
 )
 
 type EmployeeService interface {
-	CreateStoreEmployee(input *types.CreateStoreEmployeeDTO) (*types.StoreEmployeeDTO, error)
-	CreateWarehouseEmployee(input *types.CreateWarehouseEmployeeDTO) (*types.WarehouseEmployeeDTO, error)
-	CreateRegionManager(input *types.CreateRegionManagerDTO) (*types.RegionManagerDTO, error)
-	CreateFranchiseeEmployee(input *types.CreateFranchiseeEmployeeDTO) (*types.FranchiseeEmployeeDTO, error)
+	CreateStoreEmployee(storeID uint, input *types.CreateEmployeeDTO) (uint, error)
+	CreateWarehouseEmployee(warehouseID uint, input *types.CreateEmployeeDTO) (uint, error)
+	CreateRegionManager(regionID uint, input *types.CreateEmployeeDTO) (uint, error)
+	CreateFranchiseeEmployee(franchiseeID uint, input *types.CreateEmployeeDTO) (uint, error)
 
 	GetStoreEmployees(storeID uint, filter *types.EmployeesFilter) ([]types.StoreEmployeeDTO, error)
 	GetWarehouseEmployees(warehouseID uint, filter *types.EmployeesFilter) ([]types.WarehouseEmployeeDTO, error)
-	GetStoreEmployeeByID(employeeID uint) (*types.StoreEmployeeDTO, error)
-	GetWarehouseEmployeeByID(employeeID uint) (*types.WarehouseEmployeeDTO, error)
-	GetFranchiseeEmployeeByID(employeeID uint) (*types.FranchiseeEmployeeDTO, error)
-	GetRegionManagerByID(employeeID uint) (*types.RegionManagerDTO, error)
+	GetFranchiseeEmployees(franchiseeID uint, filter *types.EmployeesFilter) ([]types.FranchiseeEmployeeDTO, error)
+	GetRegionManagers(regionID uint, filter *types.EmployeesFilter) ([]types.RegionManagerDTO, error)
+	GetAdminEmployees(filter *types.EmployeesFilter) ([]types.AdminEmployeeDTO, error)
 
-	UpdateFranchiseeEmployee(employeeID uint, input *types.UpdateFranchiseeEmployeeDTO) error
-	UpdateStoreEmployee(employeeID uint, input *types.UpdateStoreEmployeeDTO) error
-	UpdateWarehouseEmployee(employeeID uint, input *types.UpdateWarehouseEmployeeDTO) error
-	UpdateRegionManager(employeeID uint, input *types.UpdateRegionManagerEmployeeDTO) error
+	GetEmployeeByID(id uint) (*types.EmployeeDTO, error)
+	GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDTO, error)
+	GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDTO, error)
+	GetFranchiseeEmployeeByID(id, franchiseeID uint) (*types.FranchiseeEmployeeDTO, error)
+	GetRegionManagerByID(id, regionID uint) (*types.RegionManagerDTO, error)
+	GetAdminByID(id uint) (*types.AdminEmployeeDTO, error)
+
+	UpdateFranchiseeEmployee(id, franchiseeID uint, input *types.UpdateFranchiseeEmployeeDTO) error
+	UpdateStoreEmployee(id, storeID uint, input *types.UpdateStoreEmployeeDTO) error
+	UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO) error
+	UpdateRegionManager(id, regionID uint, input *types.UpdateRegionManagerEmployeeDTO) error
 
 	DeleteEmployee(employeeID uint) error
 	UpdatePassword(employeeID uint, input *types.UpdatePasswordDTO) error
-	GetAllRoles() ([]types.RoleDTO, error)
+	GetAllRoles() ([]types.EmployeeTypeRoles, error)
 
 	CreateEmployeeWorkDay(dto *types.CreateEmployeeWorkdayDTO) (uint, error)
 	GetEmployeeWorkday(workdayID uint) (*types.EmployeeWorkdayDTO, error)
@@ -55,112 +61,116 @@ func NewEmployeeService(repo EmployeeRepository, logger *zap.SugaredLogger) Empl
 	}
 }
 
-func (s *employeeService) CreateStoreEmployee(input *types.CreateStoreEmployeeDTO) (*types.StoreEmployeeDTO, error) {
-	employee, err := types.CreateToStoreEmployee(input)
+func (s *employeeService) CreateStoreEmployee(storeID uint, input *types.CreateEmployeeDTO) (uint, error) {
+	employee, err := types.CreateToStoreEmployee(storeID, input)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to create store employee", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 
 	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 	if existingEmployee != nil {
-		return nil, types.ErrEmployeeAlreadyExists
+		return 0, types.ErrEmployeeAlreadyExists
 	}
 
-	if err := s.repo.CreateEmployee(employee); err != nil {
+	id, err := s.repo.CreateEmployee(employee)
+	if err != nil {
 		wrappedErr := utils.WrapError("failed to create store employee", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 
-	return types.MapToStoreEmployeeDTO(employee), nil
+	return id, nil
 }
 
-func (s *employeeService) CreateWarehouseEmployee(input *types.CreateWarehouseEmployeeDTO) (*types.WarehouseEmployeeDTO, error) {
-	employee, err := types.CreateToWarehouseEmployee(input)
+func (s *employeeService) CreateWarehouseEmployee(warehouseID uint, input *types.CreateEmployeeDTO) (uint, error) {
+	employee, err := types.CreateToWarehouseEmployee(warehouseID, input)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to create warehouse employee", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 
 	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 	if existingEmployee != nil {
-		return nil, types.ErrEmployeeAlreadyExists
+		return 0, types.ErrEmployeeAlreadyExists
 	}
 
-	if err := s.repo.CreateEmployee(employee); err != nil {
+	id, err := s.repo.CreateEmployee(employee)
+	if err != nil {
 		wrappedErr := utils.WrapError("failed to create warehouse employee", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 
-	return types.MapToWarehouseEmployeeDTO(employee), nil
+	return id, nil
 }
 
-func (s *employeeService) CreateFranchiseeEmployee(input *types.CreateFranchiseeEmployeeDTO) (*types.FranchiseeEmployeeDTO, error) {
-	employee, err := types.CreateToFranchiseeEmployee(input)
+func (s *employeeService) CreateFranchiseeEmployee(franchiseeID uint, input *types.CreateEmployeeDTO) (uint, error) {
+	employee, err := types.CreateToFranchiseeEmployee(franchiseeID, input)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to create franchisee employee", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 
 	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 	if existingEmployee != nil {
-		return nil, types.ErrEmployeeAlreadyExists
+		return 0, types.ErrEmployeeAlreadyExists
 	}
 
-	if err := s.repo.CreateEmployee(employee); err != nil {
+	id, err := s.repo.CreateEmployee(employee)
+	if err != nil {
 		wrappedErr := utils.WrapError("failed to create franchisee employee", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 
-	return types.MapToFranchiseeEmployeeDTO(employee), nil
+	return id, nil
 }
 
-func (s *employeeService) CreateRegionManager(input *types.CreateRegionManagerDTO) (*types.RegionManagerDTO, error) {
-	employee, err := types.CreateToRegionManager(input)
+func (s *employeeService) CreateRegionManager(regionID uint, input *types.CreateEmployeeDTO) (uint, error) {
+	employee, err := types.CreateToRegionManager(regionID, input)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to create region manager employee", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 
 	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 	if existingEmployee != nil {
-		return nil, types.ErrEmployeeAlreadyExists
+		return 0, types.ErrEmployeeAlreadyExists
 	}
 
-	if err := s.repo.CreateEmployee(employee); err != nil {
+	id, err := s.repo.CreateEmployee(employee)
+	if err != nil {
 		wrappedErr := utils.WrapError("failed to create region manager employee", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return 0, wrappedErr
 	}
 
-	return types.MapToRegionManagerDTO(employee), nil
+	return id, nil
 }
 
 func (s *employeeService) GetStoreEmployees(storeID uint, filter *types.EmployeesFilter) ([]types.StoreEmployeeDTO, error) {
@@ -223,14 +233,47 @@ func (s *employeeService) GetRegionManagers(regionID uint, filter *types.Employe
 	return dtos, nil
 }
 
-func (s *employeeService) GetStoreEmployeeByID(employeeID uint) (*types.StoreEmployeeDTO, error) {
-	if employeeID == 0 {
-		return nil, errors.New("invalid employee ID")
+func (s *employeeService) GetAdminEmployees(filter *types.EmployeesFilter) ([]types.AdminEmployeeDTO, error) {
+	employees, err := s.repo.GetAdminEmployees(filter)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve admin employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	dtos := make([]types.AdminEmployeeDTO, len(employees))
+	for i, employee := range employees {
+		dtos[i] = *types.MapToAdminEmployeeDTO(&employee)
+	}
+	return dtos, nil
+}
+
+func (s *employeeService) GetEmployeeByID(id uint) (*types.EmployeeDTO, error) {
+	if id == 0 {
+		return nil, errors.New("invalid store employee ID")
 	}
 
-	employee, err := s.repo.GetTypedEmployeeByID(employeeID, data.StoreEmployeeType)
+	employee, err := s.repo.GetEmployeeByID(id)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to retrieve store employee for employee with ID = %d: %w", employeeID, err)
+		wrappedErr := fmt.Errorf("failed to retrieve employee for store employee with ID = %d: %w", id, err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if employee == nil {
+		return nil, errors.New("employee not found")
+	}
+
+	return types.MapToEmployeeDTO(employee), nil
+}
+
+func (s *employeeService) GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDTO, error) {
+	if id == 0 {
+		return nil, errors.New("invalid store employee ID")
+	}
+
+	employee, err := s.repo.GetStoreEmployeeByID(id, storeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve store employee for store employee with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
@@ -242,14 +285,14 @@ func (s *employeeService) GetStoreEmployeeByID(employeeID uint) (*types.StoreEmp
 	return types.MapToStoreEmployeeDTO(employee), nil
 }
 
-func (s *employeeService) GetWarehouseEmployeeByID(employeeID uint) (*types.WarehouseEmployeeDTO, error) {
-	if employeeID == 0 {
-		return nil, errors.New("invalid employee ID")
+func (s *employeeService) GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDTO, error) {
+	if id == 0 {
+		return nil, errors.New("invalid warehouse employee ID")
 	}
 
-	employee, err := s.repo.GetTypedEmployeeByID(employeeID, data.WarehouseEmployeeType)
+	employee, err := s.repo.GetWarehouseEmployeeByID(id, warehouseID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to retrieve warehouse employee for employee with ID = %d: %w", employeeID, err)
+		wrappedErr := fmt.Errorf("failed to retrieve warehouse employee with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
@@ -261,14 +304,14 @@ func (s *employeeService) GetWarehouseEmployeeByID(employeeID uint) (*types.Ware
 	return types.MapToWarehouseEmployeeDTO(employee), nil
 }
 
-func (s *employeeService) GetFranchiseeEmployeeByID(employeeID uint) (*types.FranchiseeEmployeeDTO, error) {
-	if employeeID == 0 {
-		return nil, errors.New("invalid employee ID")
+func (s *employeeService) GetFranchiseeEmployeeByID(id, franchiseeID uint) (*types.FranchiseeEmployeeDTO, error) {
+	if id == 0 {
+		return nil, errors.New("invalid franchise employee ID")
 	}
 
-	employee, err := s.repo.GetTypedEmployeeByID(employeeID, data.FranchiseeEmployeeType)
+	employee, err := s.repo.GetFranchiseeEmployeeByID(id, franchiseeID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to retrieve store employee for franchisee with ID = %d: %w", employeeID, err)
+		wrappedErr := fmt.Errorf("failed to retrieve franchisee employee with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
@@ -280,14 +323,14 @@ func (s *employeeService) GetFranchiseeEmployeeByID(employeeID uint) (*types.Fra
 	return types.MapToFranchiseeEmployeeDTO(employee), nil
 }
 
-func (s *employeeService) GetRegionManagerByID(employeeID uint) (*types.RegionManagerDTO, error) {
-	if employeeID == 0 {
-		return nil, errors.New("invalid employee ID")
+func (s *employeeService) GetRegionManagerByID(id, regionID uint) (*types.RegionManagerDTO, error) {
+	if id == 0 {
+		return nil, errors.New("invalid region manager ID")
 	}
 
-	employee, err := s.repo.GetTypedEmployeeByID(employeeID, data.WarehouseRegionManagerEmployeeType)
+	employee, err := s.repo.GetRegionManagerByID(id, regionID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to retrieve warehouse region manager for employee with ID = %d: %w", employeeID, err)
+		wrappedErr := fmt.Errorf("failed to retrieve region manager with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
@@ -299,40 +342,55 @@ func (s *employeeService) GetRegionManagerByID(employeeID uint) (*types.RegionMa
 	return types.MapToRegionManagerDTO(employee), nil
 }
 
-func (s *employeeService) UpdateFranchiseeEmployee(employeeID uint, input *types.UpdateFranchiseeEmployeeDTO) error {
+func (s *employeeService) GetAdminByID(id uint) (*types.AdminEmployeeDTO, error) {
+	if id == 0 {
+		return nil, errors.New("invalid admin employee ID")
+	}
+
+	employee, err := s.repo.GetAdminEmployeeByID(id)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve admin employee with ID = %d: %w", id, err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if employee == nil {
+		return nil, errors.New("employee not found")
+	}
+
+	return types.MapToAdminEmployeeDTO(employee), nil
+}
+
+func (s *employeeService) UpdateFranchiseeEmployee(id, franchiseeID uint, input *types.UpdateFranchiseeEmployeeDTO) error {
 	updateFields, err := types.FranchiseeEmployeeUpdateFields(input)
 	if err != nil {
 		return err
 	}
-	updateFields.Employee.ID = employeeID
-	return s.repo.UpdateFranchiseeEmployee(employeeID, *input.FranchiseeID, updateFields)
+	return s.repo.UpdateFranchiseeEmployee(id, franchiseeID, updateFields)
 }
 
-func (s *employeeService) UpdateRegionManager(employeeID uint, input *types.UpdateRegionManagerEmployeeDTO) error {
+func (s *employeeService) UpdateRegionManager(id, regionID uint, input *types.UpdateRegionManagerEmployeeDTO) error {
 	updateFields, err := types.RegionManagerEmployeeUpdateFields(input)
 	if err != nil {
 		return err
 	}
-	updateFields.Employee.ID = employeeID
-	return s.repo.UpdateRegionManager(employeeID, updateFields)
+	return s.repo.UpdateRegionManager(id, regionID, updateFields)
 }
 
-func (s *employeeService) UpdateStoreEmployee(employeeID uint, input *types.UpdateStoreEmployeeDTO) error {
+func (s *employeeService) UpdateStoreEmployee(id, storeID uint, input *types.UpdateStoreEmployeeDTO) error {
 	updateFields, err := types.StoreEmployeeUpdateFields(input)
 	if err != nil {
 		return err
 	}
-	updateFields.Employee.ID = employeeID
-	return s.repo.UpdateStoreEmployee(employeeID, *input.StoreID, updateFields)
+	return s.repo.UpdateStoreEmployee(id, storeID, updateFields)
 }
 
-func (s *employeeService) UpdateWarehouseEmployee(employeeID uint, input *types.UpdateWarehouseEmployeeDTO) error {
+func (s *employeeService) UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO) error {
 	updateFields, err := types.WarehouseEmployeeUpdateFields(input)
 	if err != nil {
 		return err
 	}
-	updateFields.Employee.ID = employeeID
-	return s.repo.UpdateWarehouseEmployee(employeeID, *input.WarehouseID, updateFields)
+	return s.repo.UpdateWarehouseEmployee(id, warehouseID, updateFields)
 }
 
 func (s *employeeService) DeleteEmployee(employeeID uint) error {
@@ -359,6 +417,7 @@ func (s *employeeService) DeleteEmployee(employeeID uint) error {
 	return nil
 }
 
+// TODO move to Recovery module or leave for ADMIN only
 func (s *employeeService) UpdatePassword(employeeID uint, input *types.UpdatePasswordDTO) error {
 	if employeeID == 0 {
 		return errors.New("invalid employee ID")
@@ -386,7 +445,7 @@ func (s *employeeService) UpdatePassword(employeeID uint, input *types.UpdatePas
 	}
 
 	employee.HashedPassword = hashedPassword
-	if err := s.repo.UpdateEmployee(employee.Type, employee); err != nil {
+	if err := s.repo.UpdateEmployee(employeeID, employee); err != nil {
 		wrappedErr := fmt.Errorf("failed to update password for employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
@@ -395,19 +454,17 @@ func (s *employeeService) UpdatePassword(employeeID uint, input *types.UpdatePas
 	return nil
 }
 
-func (s *employeeService) GetAllRoles() ([]types.RoleDTO, error) {
-	roles, err := s.repo.GetAllRoles()
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve roles: %v", err)
+func (s *employeeService) GetAllRoles() ([]types.EmployeeTypeRoles, error) {
+	var employeeTypeRoles []types.EmployeeTypeRoles
+
+	for employeeType, roles := range data.EmployeeTypeRoleMap {
+		employeeTypeRoles = append(employeeTypeRoles, types.EmployeeTypeRoles{
+			EmployeeType: employeeType,
+			Roles:        roles,
+		})
 	}
 
-	roleDTOs := make([]types.RoleDTO, len(roles))
-	for i, role := range roles {
-		roleDTOs[i] = types.RoleDTO{
-			Name: string(role),
-		}
-	}
-	return roleDTOs, nil
+	return employeeTypeRoles, nil
 }
 
 func (s *employeeService) CreateEmployeeWorkDay(dto *types.CreateEmployeeWorkdayDTO) (uint, error) {

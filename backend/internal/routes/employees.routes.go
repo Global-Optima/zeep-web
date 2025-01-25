@@ -163,14 +163,14 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 		{
 			franchiseeEmployees.GET("", handler.GetFranchiseeEmployees)
 			franchiseeEmployees.POST("", handler.CreateFranchiseeEmployee)
-			franchiseeEmployees.GET("/:id", handler.GetFranchiseeEmployeeByID)
+			//franchiseeEmployees.GET("/:id", handler.GetFranchiseeEmployeeByID)
 			franchiseeEmployees.PUT("/:id", handler.UpdateFranchiseeEmployee)
 		}
 		regionManagers := router.Group("/region-managers")
 		{
 			regionManagers.GET("", handler.GetRegionManagers)
 			regionManagers.POST("", handler.CreateRegionManager)
-			regionManagers.GET("/:id", handler.GetRegionManagerByID)
+			//regionManagers.GET("/:id", handler.GetRegionManagerByID)
 			regionManagers.PUT("/:id", handler.UpdateRegionManager)
 		}
 

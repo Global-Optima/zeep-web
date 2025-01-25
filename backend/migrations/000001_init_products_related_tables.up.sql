@@ -381,6 +381,9 @@ CREATE TABLE
 
 CREATE UNIQUE INDEX unique_customer_phone ON customers (phone) WHERE deleted_at IS NULL;
 
+-- Create ENUM for EmployeeType
+CREATE TYPE employee_type AS ENUM ('STORE', 'WAREHOUSE', 'FRANCHISEE', 'WAREHOUSE_REGION_MANAGER', 'ADMIN');
+
 -- Employee Table
 CREATE TABLE
 	IF NOT EXISTS employees (
@@ -390,8 +393,7 @@ CREATE TABLE
 		phone valid_phone,
 		email VARCHAR(255),
 		hashed_password VARCHAR(255) NOT NULL,
-		role VARCHAR(50) NOT NULL,
-		type VARCHAR(50) NOT NULL,
+        type employee_type NOT NULL,
 		is_active BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -401,64 +403,82 @@ CREATE TABLE
 CREATE UNIQUE INDEX unique_employee_phone ON employees (phone) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX unique_employee_email ON employees (email) WHERE deleted_at IS NULL;
 
+CREATE TYPE store_employee_role AS ENUM ('STORE_MANAGER', 'BARISTA');
+
 -- StoreEmployee Table
 CREATE TABLE
-	IF NOT EXISTS store_employees (
-		id SERIAL PRIMARY KEY,
-		employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
-		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-		is_franchise BOOLEAN DEFAULT FALSE,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
+    IF NOT EXISTS store_employees (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
+    role store_employee_role NOT NULL,
+    franchisee_id INT REFERENCES franchisees (id),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
 
-CREATE UNIQUE INDEX unique_store_employee
-    ON store_employees (employee_id, store_id)
-    WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_store_employee ON store_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TYPE warehouse_employee_role AS ENUM ('WAREHOUSE_MANAGER', 'WAREHOUSE_EMPLOYEE');
 
 -- WarehouseEmployee Table
 CREATE TABLE
-	IF NOT EXISTS warehouse_employees (
-		id SERIAL PRIMARY KEY,
-		employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
-		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
+    IF NOT EXISTS warehouse_employees (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
+    role warehouse_employee_role NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
 
-CREATE UNIQUE INDEX unique_warehouse_employee
-    ON warehouse_employees (employee_id, warehouse_id)
-    WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_warehouse_employee ON warehouse_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TYPE warehouse_region_manager_role AS ENUM ('WAREHOUSE_REGION_MANAGER');
 
 -- Region Managers Table
 CREATE TABLE IF NOT EXISTS region_managers (
     id SERIAL PRIMARY KEY,
     employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
     region_id INT NOT NULL REFERENCES regions (id) ON DELETE CASCADE,
+    role warehouse_region_manager_role NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
     );
 
-CREATE UNIQUE INDEX unique_region_manager
-    ON region_managers (region_id, employee_id)
-    WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_region_manager ON region_managers (employee_id, deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TYPE franchisee_employee_role AS ENUM ('FRANCHISE_MANAGER', 'FRANCHISE_OWNER');
 
 -- Franchisee Employees Table
 CREATE TABLE IF NOT EXISTS franchisee_employees (
     id SERIAL PRIMARY KEY,
     franchisee_id INT NOT NULL REFERENCES franchisees (id) ON DELETE CASCADE,
     employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    role franchisee_employee_role NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
     );
 
-CREATE UNIQUE INDEX unique_franchisee_employee
-    ON franchisee_employees (franchisee_id, employee_id)
-    WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_franchisee_employee ON franchisee_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TYPE admin_role AS ENUM ('ADMIN', 'OWNER');
+
+-- Admin table
+CREATE TABLE IF NOT EXISTS admin_employees (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    role admin_role NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
+CREATE UNIQUE INDEX unique_admin_employee ON admin_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
 
 -- EmployeeAudit Table
 CREATE TABLE

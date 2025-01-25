@@ -7,26 +7,6 @@ import (
 	"strings"
 )
 
-type StoreEmployeeUpdateModels struct {
-	Employee      *data.Employee
-	StoreEmployee *data.StoreEmployee
-}
-
-type WarehouseEmployeeUpdateModels struct {
-	Employee          *data.Employee
-	WarehouseEmployee *data.WarehouseEmployee
-}
-
-type FranchiseeEmployeeUpdateModels struct {
-	Employee           *data.Employee
-	FranchiseeEmployee *data.FranchiseeEmployee
-}
-
-type RegionManagerEmployeeUpdateModels struct {
-	Employee      *data.Employee
-	RegionManager *data.RegionManager
-}
-
 func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 	if strings.TrimSpace(input.LastName) == "" || strings.TrimSpace(input.FirstName) == "" {
 		return nil, fmt.Errorf("%w: employee name cannot contain empty values", ErrValidation)
@@ -70,7 +50,6 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 		Email:          input.Email,
 		Phone:          utils.FormatPhoneInput(input.Phone),
 		HashedPassword: hashedPassword,
-		Role:           input.Role,
 		IsActive:       input.IsActive,
 		Workdays:       workdays,
 	}
@@ -103,90 +82,79 @@ func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
 		}
 		employee.Email = *input.Email
 	}
-	if input.Role != nil {
-		if !data.IsValidEmployeeRole(*input.Role) {
-			return employee, fmt.Errorf("%w: invalid role: %v", ErrValidation, *input.Role)
-		}
-		employee.Role = *input.Role
-	}
 
 	return employee, nil
 }
 
-func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*StoreEmployeeUpdateModels, error) {
-	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
-	if err != nil {
-		return nil, err
-	}
-
-	var storeEmployee *data.StoreEmployee = nil
+func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*data.StoreEmployee, error) {
+	var storeEmployee = &data.StoreEmployee{}
 	if input.StoreID != nil {
-		storeEmployee = &data.StoreEmployee{
-			StoreID: *input.StoreID,
-		}
+		storeEmployee.StoreID = *input.StoreID
 	}
 
-	return &StoreEmployeeUpdateModels{
-		Employee:      employee,
-		StoreEmployee: storeEmployee,
-	}, nil
+	if input.Role != nil {
+		if !data.IsAllowableRole(data.StoreEmployeeType, *input.Role) {
+		}
+		storeEmployee.Role = *input.Role
+	}
+
+	return storeEmployee, nil
 }
 
-func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*WarehouseEmployeeUpdateModels, error) {
-	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
-	if err != nil {
-		return employee, err
-	}
-
-	var warehouseEmployee *data.WarehouseEmployee = nil
+func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.WarehouseEmployee, error) {
+	var warehouseEmployee = &data.WarehouseEmployee{}
 	if input.WarehouseID != nil {
-		warehouseEmployee = &data.WarehouseEmployee{
-			WarehouseID: *input.WarehouseID,
-		}
+		warehouseEmployee.WarehouseID = *input.WarehouseID
 	}
 
-	return &WarehouseEmployeeUpdateModels{
-		Employee:          employee,
-		WarehouseEmployee: warehouseEmployee,
-	}, nil
+	if input.Role != nil {
+		if !data.IsAllowableRole(data.WarehouseEmployeeType, *input.Role) {
+		}
+		warehouseEmployee.Role = *input.Role
+	}
+
+	return warehouseEmployee, nil
 }
 
-func FranchiseeEmployeeUpdateFields(input *UpdateFranchiseeEmployeeDTO) (*FranchiseeEmployeeUpdateModels, error) {
-	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
-	if err != nil {
-		return nil, err
-	}
-
-	var franchiseeEmployee *data.FranchiseeEmployee = nil
+func FranchiseeEmployeeUpdateFields(input *UpdateFranchiseeEmployeeDTO) (*data.FranchiseeEmployee, error) {
+	var franchiseeEmployee = &data.FranchiseeEmployee{}
 	if input.FranchiseeID != nil {
-		franchiseeEmployee = &data.FranchiseeEmployee{
-			FranchiseeID: *input.FranchiseeID,
-		}
+		franchiseeEmployee.FranchiseeID = *input.FranchiseeID
 	}
 
-	return &FranchiseeEmployeeUpdateModels{
-		Employee:           employee,
-		FranchiseeEmployee: franchiseeEmployee,
-	}, nil
+	if input.Role != nil {
+		if !data.IsAllowableRole(data.FranchiseeEmployeeType, *input.Role) {
+		}
+		franchiseeEmployee.Role = *input.Role
+	}
+
+	return franchiseeEmployee, nil
 }
 
-func RegionManagerEmployeeUpdateFields(input *UpdateRegionManagerEmployeeDTO) (*RegionManagerEmployeeUpdateModels, error) {
-	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
-	if err != nil {
-		return nil, err
-	}
-
-	var regionManager *data.RegionManager = nil
+func RegionManagerEmployeeUpdateFields(input *UpdateRegionManagerEmployeeDTO) (*data.RegionManager, error) {
+	var regionManager = &data.RegionManager{}
 	if input.RegionID != nil {
-		regionManager = &data.RegionManager{
-			RegionID: *input.RegionID,
-		}
+		regionManager.RegionID = *input.RegionID
 	}
 
-	return &RegionManagerEmployeeUpdateModels{
-		Employee:      employee,
-		RegionManager: regionManager,
-	}, nil
+	if input.Role != nil {
+		if !data.IsAllowableRole(data.WarehouseRegionManagerEmployeeType, *input.Role) {
+		}
+		regionManager.Role = *input.Role
+	}
+
+	return regionManager, nil
+}
+
+func AdminEmployeeEmployeeUpdateFields(input *UpdateAdminEmployeeDTO) (*data.AdminEmployee, error) {
+	var adminEmployee = &data.AdminEmployee{}
+	if input.Role != nil {
+		if !data.IsAllowableRole(data.AdminEmployeeType, *input.Role) {
+		}
+		adminEmployee.Role = *input.Role
+	}
+
+	return adminEmployee, nil
 }
 
 func ValidateWorkday(dto *CreateWorkdayDTO) (*data.EmployeeWorkday, error) {

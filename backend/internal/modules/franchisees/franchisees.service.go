@@ -11,6 +11,7 @@ type FranchiseeService interface {
 	Delete(id uint) error
 	GetByID(id uint) (*types.FranchiseeDTO, error)
 	GetAll(filter *types.FranchiseeFilter) ([]types.FranchiseeDTO, error)
+	IsFranchiseeStore(franchiseeID, storeID uint) (bool, error)
 }
 
 type franchiseeService struct {
@@ -63,4 +64,8 @@ func (s *franchiseeService) GetAll(filter *types.FranchiseeFilter) ([]types.Fran
 		dtos[i] = *types.ConvertFranchiseeToDTO(&franchisee)
 	}
 	return dtos, nil
+}
+
+func (s *franchiseeService) IsFranchiseeStore(franchiseeID, storeID uint) (bool, error) {
+	return s.repo.IsFranchiseeStore(franchiseeID, storeID)
 }

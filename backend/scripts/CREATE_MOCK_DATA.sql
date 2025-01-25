@@ -1038,13 +1038,12 @@ VALUES
     );
 
 
-INSERT INTO
-    employees (
+-- Employee Table
+INSERT INTO employees (
     first_name,
     last_name,
     phone,
     email,
-    role,
     type,
     is_active,
     hashed_password,
@@ -1052,162 +1051,50 @@ INSERT INTO
     updated_at
 )
 VALUES
-    (
-        'Елена',
-        'Соколова',
-        '+79551234567',
-        'elena@example.com',
-        'ADMIN',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Сергей',
-        'Павлов',
-        '+79667778899',
-        'sergey@example.com',
-        'DIRECTOR',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Анна',
-        'Федорова',
-        '+79223334455',
-        'anna@example.com',
-        'MANAGER',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Иван',
-        'Иванов',
-        '+79161234567',
-        'ivan@example.com',
-        'BARISTA',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Мария',
-        'Смирнова',
-        '+79345566778',
-        'maria@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Олег',
-        'Кузнецов',
-        '+79991234567',
-        'oleg@example.com',
-        'WAREHOUSE_MANAGER',
-        'WAREHOUSE',
-        false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Татьяна',
-        'Орлова',
-        '+79882233445',
-        'tatiana@example.com',
-        'WAREHOUSE_REGION_MANAGER',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Алексей',
-        'Попов',
-        '+79002221133',
-        'alexei@example.com',
-        'FRANCHISE_OWNER',
-        'FRANCHISEE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Юлия',
-        'Петрова',
-        '+79115555666',
-        'yulia@example.com',
-        'FRANCHISE_MANAGER',
-        'FRANCHISEE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Дмитрий',
-        'Фролов',
-        '+79553334456',
-        'dmitry@example.com',
-        'OWNER',
-        'STORE',
-        false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
+    ('Елена', 'Соколова', '+79551234567', 'elena@example.com', 'ADMIN', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Сергей', 'Павлов', '+79667778899', 'sergey@example.com', 'STORE', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Анна', 'Федорова', '+79223334455', 'anna@example.com', 'STORE', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Иван', 'Иванов', '+79161234567', 'ivan@example.com', 'STORE', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Мария', 'Смирнова', '+79345566778', 'maria@example.com', 'WAREHOUSE', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Олег', 'Кузнецов', '+79991234567', 'oleg@example.com', 'WAREHOUSE', false, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Татьяна', 'Орлова', '+79882233445', 'tatiana@example.com', 'WAREHOUSE_REGION_MANAGER', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Алексей', 'Попов', '+79002221133', 'alexei@example.com', 'FRANCHISEE', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Юлия', 'Петрова', '+79115555666', 'yulia@example.com', 'FRANCHISEE', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Дмитрий', 'Фролов', '+79553334456', 'dmitry@example.com', 'STORE', false, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Елена', 'Орлова', '+79151236817', 'elenaOrlova@example.com', 'ADMIN', true, '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-INSERT INTO franchisee_employees (franchisee_id, employee_id)
-VALUES
-    (1, 8),
-    (1, 9);
 
-INSERT INTO
-    store_employees (
-    employee_id,
-    store_id,
-    is_franchise,
-    created_at,
-    updated_at
-)
+-- Franchisee Employees Table
+INSERT INTO franchisee_employees (franchisee_id, employee_id, role, created_at, updated_at)
 VALUES
-    (1, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (5, 2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (8, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (9, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (1, 8, 'FRANCHISE_OWNER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (1, 9, 'FRANCHISE_MANAGER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Insert into WarehouseEmployee
-INSERT INTO
-    warehouse_employees (employee_id, warehouse_id, created_at, updated_at)
+-- Store Employees Table
+INSERT INTO store_employees (employee_id, store_id, role, franchisee_id, created_at, updated_at)
 VALUES
-    (6, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (10, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (1, 1, 'ADMIN', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (2, 2, 'STORE_MANAGER', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 3, 'STORE_MANAGER', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 1, 'BARISTA', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (10, 2, 'OWNER', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Insert into RegionManagers
-INSERT INTO
-    region_managers (employee_id, region_id, created_at, updated_at)
+-- Warehouse Employees Table
+INSERT INTO warehouse_employees (employee_id, warehouse_id, role, created_at, updated_at)
 VALUES
-    (7, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (5, 1, 'WAREHOUSE_EMPLOYEE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (6, 2, 'WAREHOUSE_MANAGER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Region Managers Table
+INSERT INTO region_managers (employee_id, region_id, role, created_at, updated_at)
+VALUES
+    (7, 1, 'WAREHOUSE_REGION_MANAGER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Admin Employees Table
+INSERT INTO admin_employees (employee_id, role, created_at, updated_at)
+VALUES
+    (1, 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (11, 'OWNER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into EmployeeAudit
 INSERT INTO

@@ -6,27 +6,32 @@ import (
 )
 
 func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, error) {
-	var workplaceID uint
+	var workplaceID uint = 0
+	var role data.EmployeeRole = ""
 
-	//TODO validate case when no subgroup attached
 	switch employee.Type {
 	case data.StoreEmployeeType:
 		workplaceID = employee.StoreEmployee.StoreID
+		role = employee.StoreEmployee.Role
 	case data.WarehouseEmployeeType:
 		workplaceID = employee.WarehouseEmployee.WarehouseID
+		role = employee.WarehouseEmployee.Role
 	case data.WarehouseRegionManagerEmployeeType:
 		workplaceID = employee.RegionManager.RegionID
+		role = employee.RegionManager.Role
 	case data.FranchiseeEmployeeType:
 		workplaceID = employee.FranchiseeEmployee.FranchiseeID
+		role = employee.FranchiseeEmployee.Role
 	case data.AdminEmployeeType:
 		workplaceID = 0
+		role = employee.AdminEmployee.Role
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrUnsupportedEmployeeType, employee.Type)
 	}
 
 	employeeData := EmployeeClaimsData{
 		ID:           employee.ID,
-		Role:         employee.Role,
+		Role:         role,
 		WorkplaceID:  workplaceID,
 		EmployeeType: employee.Type,
 	}

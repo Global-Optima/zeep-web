@@ -36,6 +36,10 @@ type CreateRegionManagerDTO struct {
 	RegionID uint `json:"regionId" binding:"required"`
 }
 
+type CreateAdminEmployeeDTO struct {
+	CreateEmployeeDTO
+}
+
 type CreateWorkdayDTO struct {
 	Day     string `json:"day" binding:"required"`
 	StartAt string `json:"startAt" binding:"required"`
@@ -52,32 +56,39 @@ type WarehouseDetailsDTO struct {
 }
 
 type UpdateEmployeeDTO struct {
-	FirstName *string            `json:"firstName,omitempty"`
-	LastName  *string            `json:"lastName,omitempty"`
-	Phone     *string            `json:"phone,omitempty"`
-	Email     *string            `json:"email,omitempty"`
-	Role      *data.EmployeeRole `json:"role,omitempty"`
-	IsActive  *bool              `json:"isActive"`
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
+	Phone     *string `json:"phone,omitempty"`
+	Email     *string `json:"email,omitempty"`
+	IsActive  *bool   `json:"isActive"`
+}
+
+type UpdateTypedEmployeeFields struct {
+	Role *data.EmployeeRole `json:"role,omitempty"`
 }
 
 type UpdateStoreEmployeeDTO struct {
-	UpdateEmployeeDTO
+	UpdateTypedEmployeeFields
 	StoreID *uint `json:"storeId,omitempty"`
 }
 
 type UpdateWarehouseEmployeeDTO struct {
-	UpdateEmployeeDTO
+	UpdateTypedEmployeeFields
 	WarehouseID *uint `json:"warehouseId,omitempty"`
 }
 
 type UpdateFranchiseeEmployeeDTO struct {
-	UpdateEmployeeDTO
+	UpdateTypedEmployeeFields
 	FranchiseeID *uint `json:"franchiseeId,omitempty"`
 }
 
 type UpdateRegionManagerEmployeeDTO struct {
-	UpdateEmployeeDTO
+	UpdateTypedEmployeeFields
 	RegionID *uint `json:"regionId,omitempty"`
+}
+
+type UpdateAdminEmployeeDTO struct {
+	UpdateTypedEmployeeFields
 }
 
 type EmployeeDTO struct {
@@ -87,33 +98,36 @@ type EmployeeDTO struct {
 	Phone     string            `json:"phone"`
 	Email     string            `json:"email"`
 	Type      data.EmployeeType `json:"type"`
-	Role      data.EmployeeRole `json:"role"`
 	IsActive  bool              `json:"isActive"`
 }
 
 type StoreEmployeeDTO struct {
 	EmployeeDTO
-	StoreID uint `json:"storeId"`
+	StoreID uint   `json:"storeId"`
+	Role    string `json:"role"`
 }
 
 type WarehouseEmployeeDTO struct {
 	EmployeeDTO
-	WarehouseID uint `json:"warehouseId"`
+	WarehouseID uint   `json:"warehouseId"`
+	Role        string `json:"role"`
 }
 
 type FranchiseeEmployeeDTO struct {
 	EmployeeDTO
-	FranchiseeID uint `json:"franchiseeId"`
+	FranchiseeID uint   `json:"franchiseeId"`
+	Role         string `json:"role"`
 }
 
 type RegionManagerDTO struct {
 	EmployeeDTO
-	RegionID uint `json:"regionId"`
+	RegionID uint   `json:"regionId"`
+	Role     string `json:"role"`
 }
 
-type AdminDTO struct {
+type AdminEmployeeDTO struct {
 	EmployeeDTO
-	Roles uint `json:"regionId"`
+	Role string `json:"role"`
 }
 
 type EmployeeAccountDTO struct {
@@ -127,8 +141,9 @@ type UpdatePasswordDTO struct {
 	NewPassword string `json:"newPassword" binding:"required"`
 }
 
-type RoleDTO struct {
-	Name string `json:"name"`
+type EmployeeTypeRoles struct {
+	EmployeeType data.EmployeeType   `json:"employeeType" binding:"required"`
+	Roles        []data.EmployeeRole `json:"roles" binding:"required"`
 }
 
 type EmployeesFilter struct {
