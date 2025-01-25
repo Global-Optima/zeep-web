@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -13,6 +14,7 @@ type RegionRepository interface {
 	Delete(id uint) error
 	GetByID(id uint) (*data.Region, error)
 	GetAll(filter *types.RegionFilter) ([]data.Region, error)
+	IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error)
 }
 
 type regionRepository struct {
@@ -66,4 +68,18 @@ func (r *regionRepository) GetAll(filter *types.RegionFilter) ([]data.Region, er
 		return nil, err
 	}
 	return regions, nil
+}
+
+func (r *regionRepository) IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error) {
+	var warehouse data.Warehouse
+	err := r.db.Model(&data.Warehouse{}).
+		Where("region_id = ? AND id = ?", regionID, warehouseID).
+		First(&warehouse).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

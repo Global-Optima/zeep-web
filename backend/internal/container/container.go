@@ -23,10 +23,12 @@ type Container struct {
 	Categories              *modules.CategoriesModule
 	Customers               *modules.CustomersModule
 	Employees               *modules.EmployeesModule
+	Franchisees             *modules.FranchiseesModule
 	Ingredients             *modules.IngredientsModule
 	IngredientCategories    *modules.IngredientCategoriesModule
 	Orders                  *modules.OrdersModule
 	Products                *modules.ProductsModule
+	Regions                 *modules.RegionsModule
 	Stores                  *modules.StoresModule
 	StoreWarehouses         *modules.StoreWarehouseModule
 	Suppliers               *modules.SuppliersModule
@@ -66,6 +68,8 @@ func (c *Container) mustInit() {
 
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
 
+	c.Franchisees = modules.NewFranchiseesModule(baseModule)
+	c.Regions = modules.NewRegionsModule(baseModule)
 	c.Categories = modules.NewCategoriesModule(baseModule)
 	c.Customers = modules.NewCustomersModule(baseModule)
 	c.Employees = modules.NewEmployeesModule(baseModule)

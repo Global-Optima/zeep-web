@@ -11,6 +11,7 @@ type RegionService interface {
 	Delete(id uint) error
 	GetByID(id uint) (*types.RegionDTO, error)
 	GetAll(filter *types.RegionFilter) ([]types.RegionDTO, error)
+	IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error)
 }
 
 type regionService struct {
@@ -70,4 +71,8 @@ func (s *regionService) GetAll(filter *types.RegionFilter) ([]types.RegionDTO, e
 		}
 	}
 	return dtos, nil
+}
+
+func (s *regionService) IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error) {
+	return s.repo.IsRegionWarehouse(regionID, warehouseID)
 }

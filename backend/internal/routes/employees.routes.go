@@ -8,12 +8,14 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/analytics"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
@@ -25,6 +27,28 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
 )
+
+func (r *Router) RegisterFranchiseeRoutes(handler *franchisees.FranchiseeHandler) {
+	router := r.EmployeeRoutes.Group("/franchisees")
+	{
+		router.GET("", handler.GetAll)
+		router.GET("/:id", handler.GetByID)
+		router.POST("", handler.Create)
+		router.PUT("/:id", handler.Update)
+		router.DELETE("/:id", handler.Delete)
+	}
+}
+
+func (r *Router) RegisterRegionRoutes(handler *regions.RegionHandler) {
+	router := r.EmployeeRoutes.Group("/regions")
+	{
+		router.GET("", handler.GetAll)
+		router.GET("/:id", handler.GetByID)
+		router.POST("", handler.Create)
+		router.PUT("/:id", handler.Update)
+		router.DELETE("/:id", handler.Delete)
+	}
+}
 
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	router := r.EmployeeRoutes.Group("/products")
