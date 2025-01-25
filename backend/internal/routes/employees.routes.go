@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/analytics"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
@@ -25,6 +26,13 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
 )
+
+func (r *Router) RegisterAuditRoutes(handler *audit.AuditHandler) {
+	router := r.EmployeeRoutes.Group("/audits")
+	{
+		router.GET("", handler.GetAudits)
+	}
+}
 
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	router := r.EmployeeRoutes.Group("/products")

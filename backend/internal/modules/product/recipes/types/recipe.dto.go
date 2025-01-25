@@ -2,6 +2,7 @@ package types
 
 type RecipeStepDTO struct {
 	ID          uint   `json:"id"`
+	Name        string `json:"name"`
 	ProductID   uint   `json:"productId"`
 	Step        int    `json:"stepNumber"`
 	Description string `json:"description"`
