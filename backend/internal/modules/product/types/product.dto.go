@@ -19,9 +19,8 @@ type BaseProductDTO struct {
 type ProductDTO struct {
 	ID uint `json:"id"`
 	BaseProductDTO
-	ProductSizeCount int              `json:"productSizeCount"`
-	BasePrice        float64          `json:"basePrice"`
-	Sizes            []ProductSizeDTO `json:"sizes"`
+	ProductSizeCount int     `json:"productSizeCount"`
+	BasePrice        float64 `json:"basePrice"`
 }
 
 type ProductSizeIngredientDTO struct {

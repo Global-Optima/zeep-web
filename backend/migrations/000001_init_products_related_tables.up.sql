@@ -480,55 +480,17 @@ CREATE TABLE IF NOT EXISTS admin_employees (
 
 CREATE UNIQUE INDEX unique_admin_employee ON admin_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
 
--- EmployeeWorkTrack Table
+-- EmployeeAudit Table
 CREATE TABLE
-    IF NOT EXISTS employee_work_tracks (
-    id SERIAL PRIMARY KEY,
-    start_work_at TIMESTAMPTZ,
-    end_work_at TIMESTAMPTZ,
-    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-    );
-
--- Enum type for HTTP methods
-CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
-
-CREATE TYPE operation_type AS ENUM ('CREATE', 'UPDATE', 'DELETE');
-CREATE TYPE component_name AS ENUM (
-    'PRODUCT',
-    'PRODUCT CATEGORY',
-    'STORE PRODUCT',
-    'EMPLOYEE',
-    'ADDITIVE',
-    'ADDITIVE CATEGORY',
-    'STORE ADDITIVE',
-    'PRODUCT SIZE',
-    'RECIPE STEPS',
-    'STORE',
-    'WAREHOUSE',
-    'STORE WAREHOUSE STOCK',
-    'INGREDIENT',
-    'INGREDIENT CATEGORY'
-);
-
-CREATE TABLE employee_audits (
-    id SERIAL PRIMARY KEY,
-    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
-    operation_type operation_type NOT NULL,
-    component_name component_name NOT NULL,
-    details JSONB,
-    ip_address VARCHAR(45) NOT NULL,
-    resource_url TEXT NOT NULL,
-    method http_method NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-);
-
-CREATE INDEX idx_employee_audits_timestamp ON employee_audits(created_at);
-CREATE INDEX idx_employee_audits_employee_id ON employee_audits(employee_id);
+	IF NOT EXISTS employee_audits (
+		id SERIAL PRIMARY KEY,
+		start_work_at TIMESTAMPTZ,
+		end_work_at TIMESTAMPTZ,
+		employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
 
 -- EmployeeWorkday Table
 CREATE TABLE

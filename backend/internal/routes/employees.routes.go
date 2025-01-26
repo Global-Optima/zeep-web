@@ -29,13 +29,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
 )
 
-func (r *Router) RegisterAuditRoutes(handler *audit.AuditHandler) {
-	router := r.EmployeeRoutes.Group("/audits")
-	{
-		router.GET("", handler.GetAudits)
-	}
-}
-
 func (r *Router) RegisterFranchiseeRoutes(handler *franchisees.FranchiseeHandler) {
 	router := r.EmployeeRoutes.Group("/franchisees")
 	{

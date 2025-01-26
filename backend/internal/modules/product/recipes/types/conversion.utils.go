@@ -40,7 +40,6 @@ func UpdateToRecipeStepModel(dto *CreateOrReplaceRecipeStepDTO) *data.RecipeStep
 func MapRecipeStepToDTO(recipeStep *data.RecipeStep) RecipeStepDTO {
 	return RecipeStepDTO{
 		ID:          recipeStep.ID,
-		Name:        recipeStep.Name,
 		ProductID:   recipeStep.ProductID,
 		Step:        recipeStep.Step,
 		Description: recipeStep.Description,

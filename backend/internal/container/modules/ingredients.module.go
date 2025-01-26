@@ -2,7 +2,6 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 )
 
@@ -13,10 +12,10 @@ type IngredientsModule struct {
 	Handler *ingredients.IngredientHandler
 }
 
-func NewIngredientsModule(base *common.BaseModule, auditService audit.AuditService) *IngredientsModule {
+func NewIngredientsModule(base *common.BaseModule) *IngredientsModule {
 	repo := ingredients.NewIngredientRepository(base.DB)
 	service := ingredients.NewIngredientService(repo, base.Logger)
-	handler := ingredients.NewIngredientHandler(service, auditService)
+	handler := ingredients.NewIngredientHandler(service)
 
 	base.Router.RegisterIngredientRoutes(handler)
 

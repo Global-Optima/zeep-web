@@ -35,6 +35,7 @@ func (r *Router) RegisterEmployeeAccountRoutes(handler *employees.EmployeeHandle
 		router.GET("/admins", handler.GetAdminAccounts)
 	}
 }
+
 func (r *Router) RegisterCommonStoresRoutes(handler *stores.StoreHandler) {
 	router := r.CommonRoutes.Group("/stores")
 	{
@@ -46,19 +47,5 @@ func (r *Router) RegisterCommonWarehousesRoutes(handler *warehouse.WarehouseHand
 	router := r.CommonRoutes.Group("/warehouses")
 	{
 		router.GET("", handler.GetAllWarehouses)
-	}
-}
-
-func (r *Router) RegisterCommonEmployeesRoutes(handler *employees.EmployeeHandler) {
-	router := r.CommonRoutes.Group("/employees")
-	{
-		storeEmployees := router.Group("/store")
-		{
-			storeEmployees.GET("", handler.GetStoreEmployees)
-		}
-		warehouseEmployees := router.Group("/warehouse")
-		{
-			warehouseEmployees.GET("", handler.GetWarehouseEmployees)
-		}
 	}
 }

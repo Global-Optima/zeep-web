@@ -3,10 +3,6 @@ package storeAdditives
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
-	"go.uber.org/zap"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
@@ -16,24 +12,11 @@ import (
 )
 
 type StoreAdditiveHandler struct {
-	service         StoreAdditiveService
-	additiveService additives.AdditiveService
-	auditService    audit.AuditService
-	logger          *zap.SugaredLogger
+	service StoreAdditiveService
 }
 
-func NewStoreAdditiveHandler(
-	service StoreAdditiveService,
-	additiveService additives.AdditiveService,
-	auditService audit.AuditService,
-	logger *zap.SugaredLogger,
-) *StoreAdditiveHandler {
-	return &StoreAdditiveHandler{
-		service:         service,
-		additiveService: additiveService,
-		auditService:    auditService,
-		logger:          logger,
-	}
+func NewStoreAdditiveHandler(service StoreAdditiveService) *StoreAdditiveHandler {
+	return &StoreAdditiveHandler{service: service}
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
@@ -55,13 +38,13 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	additivesList, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(productSizeID), &filter)
+	additives, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(productSizeID), &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve store additives")
 		return
 	}
 
-	utils.SendSuccessResponse(c, additivesList)
+	utils.SendSuccessResponse(c, additives)
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
@@ -78,13 +61,13 @@ func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
 		return
 	}
 
-	storeAdditives, err := h.service.GetStoreAdditives(storeID, &filter)
+	additives, err := h.service.GetStoreAdditives(storeID, &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch additives")
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, storeAdditives, filter.Pagination)
+	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
 }
 
 func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
@@ -100,58 +83,9 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 		return
 	}
 
-	additiveIDs := make([]uint, len(dtos))
-	for i, dto := range dtos {
-		additiveIDs[i] = dto.AdditiveID
-	}
-
-	additiveList, err := h.additiveService.GetAdditivesByIDs(additiveIDs)
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create additives: additive not found")
-		return
-	}
-
-	ids, err := h.service.CreateStoreAdditives(storeID, dtos)
-	if err != nil {
+	if _, err := h.service.CreateStoreAdditives(storeID, dtos); err != nil {
 		utils.SendInternalServerError(c, "Failed to create additive")
 		return
-	}
-
-	stockList, err := h.service.GetStoreAdditivesByIDs(storeID, ids)
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create additives: additive not found")
-		return
-	}
-
-	actions := make([]shared.AuditAction, len(additiveList))
-
-	for i, stock := range stockList {
-
-		var matchedDTO *types.CreateStoreAdditiveDTO
-
-		for _, dto := range dtos {
-			if stock.AdditiveID == dto.AdditiveID {
-				matchedDTO = &dto
-				break
-			}
-		}
-
-		if matchedDTO == nil {
-			h.logger.Error("Failed to match stock with DTO for stock %d")
-		}
-
-		action := types.CreateStoreAdditiveAuditFactory(
-			&data.BaseDetails{
-				ID:   ids[i],
-				Name: stock.Name,
-			},
-			matchedDTO, storeID,
-		)
-		actions[i] = &action
-	}
-
-	if err := h.auditService.RecordMultipleEmployeeActions(c, actions); err != nil {
-		utils.SendInternalServerError(c, "Failed to record audit actions")
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive created successfully"})
@@ -170,12 +104,6 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 		return
 	}
 
-	storeAdditive, err := h.service.GetStoreAdditiveByID(storeID, uint(storeAdditiveID))
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update additive: additive not found")
-		return
-	}
-
 	var dto types.UpdateStoreAdditiveDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, "Invalid input data")
@@ -186,15 +114,6 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 		utils.SendInternalServerError(c, "Failed to update additive")
 		return
 	}
-
-	action := types.UpdateStoreAdditiveAuditFactory(
-		&data.BaseDetails{
-			ID:   uint(storeAdditiveID),
-			Name: storeAdditive.Name,
-		},
-		&dto, storeID)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive updated successfully"})
 }
@@ -212,25 +131,10 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 		return
 	}
 
-	storeAdditive, err := h.service.GetStoreAdditiveByID(storeID, uint(storeAdditiveID))
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update additive: additive not found")
-		return
-	}
-
 	if err := h.service.DeleteStoreAdditive(storeID, uint(storeAdditiveID)); err != nil {
 		utils.SendInternalServerError(c, "Failed to delete additive")
 		return
 	}
-
-	action := types.DeleteStoreAdditiveAuditFactory(
-		&data.BaseDetails{
-			ID:   uint(storeAdditiveID),
-			Name: storeAdditive.Name,
-		},
-		struct{}{}, storeID)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive deleted successfully"})
 }

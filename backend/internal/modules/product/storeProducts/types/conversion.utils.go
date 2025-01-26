@@ -1,10 +1,11 @@
 package types
 
 import (
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"sort"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 )
 
@@ -65,30 +66,22 @@ func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 }
 
 func MapToStoreProductSizeDTO(sps data.StoreProductSize) StoreProductSizeDTO {
-	return StoreProductSizeDTO{
-		ID:                 sps.ID,
-		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(sps.ProductSize),
-		ProductSizeID:      sps.ProductSizeID,
-		StorePrice:         sps.Price,
-	}
-}
-
-func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSizeDetailsDTO {
-	var additives = make([]productTypes.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
+	var additives = make([]types.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
 	var ingredients = make([]ingredientTypes.IngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
 
 	for i, productSizeAdditive := range sps.ProductSize.Additives {
-		additives[i] = productTypes.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
+		additives[i] = types.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	for i, productSizeIngredient := range sps.ProductSize.ProductSizeIngredients {
 		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
 	}
 
-	return StoreProductSizeDetailsDTO{
-		StoreProductSizeDTO: MapToStoreProductSizeDTO(sps),
-		Additives:           additives,
-		Ingredients:         ingredients,
+	return StoreProductSizeDTO{
+		ID:                 sps.ID,
+		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(sps.ProductSize),
+		ProductSizeID:      sps.ProductSizeID,
+		StorePrice:         sps.Price,
 	}
 }
 

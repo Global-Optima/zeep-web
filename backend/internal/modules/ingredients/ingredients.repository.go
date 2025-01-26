@@ -8,11 +8,10 @@ import (
 )
 
 type IngredientRepository interface {
-	CreateIngredient(ingredient *data.Ingredient) (uint, error)
+	CreateIngredient(ingredient *data.Ingredient) error
 	UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
-	GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error)
 	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
 	GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error)
 	GetIngredientsForAdditives(additiveIDs []uint) ([]data.Ingredient, error)
@@ -26,12 +25,8 @@ func NewIngredientRepository(db *gorm.DB) IngredientRepository {
 	return &ingredientRepository{db: db}
 }
 
-func (r *ingredientRepository) CreateIngredient(ingredient *data.Ingredient) (uint, error) {
-	err := r.db.Create(ingredient).Error
-	if err != nil {
-		return 0, err
-	}
-	return ingredient.ID, err
+func (r *ingredientRepository) CreateIngredient(ingredient *data.Ingredient) error {
+	return r.db.Create(ingredient).Error
 }
 
 func (r *ingredientRepository) UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error {
@@ -55,21 +50,6 @@ func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingre
 	}
 
 	return &ingredient, nil
-}
-
-func (r *ingredientRepository) GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error) {
-	var ingredients []data.Ingredient
-	err := r.db.Model(&data.Ingredient{}).
-		Preload("Unit").
-		Preload("IngredientCategory").
-		Where("id IN (?)", ingredientIDs).
-		Find(&ingredients).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return ingredients, nil
 }
 
 func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error) {

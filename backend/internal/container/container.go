@@ -19,7 +19,6 @@ type Container struct {
 	router                  *routes.Router
 	logger                  *zap.SugaredLogger
 	Additives               *modules.AdditivesModule
-	Audits                  *modules.AuditsModule
 	Auth                    *modules.AuthModule
 	Categories              *modules.CategoriesModule
 	Customers               *modules.CustomersModule
@@ -69,25 +68,24 @@ func (c *Container) mustInit() {
 
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
 
-	c.Audits = modules.NewAuditsModule(baseModule)
-	c.Franchisees = modules.NewFranchiseesModule(baseModule, c.Audits.Service)
-	c.Regions = modules.NewRegionsModule(baseModule, c.Audits.Service)
-	c.Categories = modules.NewCategoriesModule(baseModule, c.Audits.Service)
+	c.Franchisees = modules.NewFranchiseesModule(baseModule)
+	c.Regions = modules.NewRegionsModule(baseModule)
+	c.Categories = modules.NewCategoriesModule(baseModule)
 	c.Customers = modules.NewCustomersModule(baseModule)
-	c.Employees = modules.NewEmployeesModule(baseModule, c.Audits.Service)
-	c.Ingredients = modules.NewIngredientsModule(baseModule, c.Audits.Service)
-	c.StoreWarehouses = modules.NewStoreWarehouseModule(baseModule, c.Ingredients.Service, c.Audits.Service)
-	c.Stores = modules.NewStoresModule(baseModule, c.Audits.Service)
+	c.Employees = modules.NewEmployeesModule(baseModule)
+	c.Ingredients = modules.NewIngredientsModule(baseModule)
+	c.StoreWarehouses = modules.NewStoreWarehouseModule(baseModule)
+	c.Stores = modules.NewStoresModule(baseModule)
 	c.Suppliers = modules.NewSuppliersModule(baseModule)
 	c.StockMaterials = modules.NewStockMaterialsModule(baseModule)
 	c.StockMaterialCategories = modules.NewStockMaterialCategoriesModule(baseModule)
 	c.Barcodes = modules.NewBarcodeModule(baseModule, c.StockMaterials.Repo)
 	c.Units = modules.NewUnitsModule(baseModule)
-	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service)
+	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule)
 	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Barcodes.Repo)
 
-	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Ingredients.Repo, c.StoreWarehouses.Repo)
-	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Ingredients.Repo, c.StoreWarehouses.Repo)
+	c.Products = modules.NewProductsModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
+	c.Additives = modules.NewAdditivesModule(baseModule, c.Ingredients.Repo, c.StoreWarehouses.Repo)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)
 	c.Orders = modules.NewOrdersModule(baseModule, c.Products.Repo, c.Additives.Repo)
 	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.StockMaterials.Repo)

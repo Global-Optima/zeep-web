@@ -230,7 +230,7 @@ type AdminEmployee struct {
 	Employee   Employee  `gorm:"foreignKey:ManagerID;constraint:OnDelete:CASCADE" sort:"employee"`
 }
 
-type EmployeeWorkTrack struct {
+type EmployeeAudit struct {
 	BaseEntity
 	StartWorkAt *time.Time `gorm:"type:timestamp"`
 	EndWorkAt   *time.Time `gorm:"type:timestamp"`

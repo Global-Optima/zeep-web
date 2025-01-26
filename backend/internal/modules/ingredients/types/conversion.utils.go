@@ -115,9 +115,3 @@ func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []Ingredient
 	}
 	return dtos
 }
-
-func ConvertToIngredientDetailsDTO(ingredient *data.Ingredient) IngredientDetailsDTO {
-	return IngredientDetailsDTO{
-		IngredientResponseDTO: *ConvertToIngredientResponseDTO(ingredient),
-	}
-}

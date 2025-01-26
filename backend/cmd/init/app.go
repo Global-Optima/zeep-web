@@ -2,8 +2,6 @@ package init
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/container"
-	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"log"
 	"time"
 
@@ -117,10 +115,6 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 	err := logger.InitLoggers("info", "logs/gin.log", "logs/service.log", cfg.IsDevelopment)
 	if err != nil {
 		panic(err)
-	}
-
-	if err := localization.InitLocalizer(); err != nil {
-		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
 	}
 
 	dbHandler := InitializeDatabase(cfg)

@@ -35,12 +35,6 @@ type StoreProductSizeDetailsDTO struct {
 	Ingredients []ingredientTypes.IngredientDTO       `json:"ingredients"`
 }
 
-type StoreProductSizeDetailsDTO struct {
-	StoreProductSizeDTO
-	Additives   []productTypes.ProductSizeAdditiveDTO `json:"additives"`
-	Ingredients []ingredientTypes.IngredientDTO       `json:"ingredients"`
-}
-
 type CreateStoreProductDTO struct {
 	ProductID    uint                        `json:"productId" binding:"required,gt=0"`
 	IsAvailable  bool                        `json:"isAvailable" binding:"required"`
@@ -80,8 +74,4 @@ type StoreProductSizesFilterDTO struct {
 	IsDefault  *bool   `form:"isDefault" binding:"omitempty"`
 	MinSize    *int    `form:"minSize" binding:"omitempty,gt=0"`
 	MaxSize    *int    `form:"maxSize" binding:"omitempty,gt=0"`
-}
-
-type AuditStoreProductDTO struct {
-	StoreID uint `json:"storeId"`
 }

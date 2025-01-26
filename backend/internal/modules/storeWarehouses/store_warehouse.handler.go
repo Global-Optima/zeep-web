@@ -2,10 +2,6 @@ package storeWarehouses
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
-	"go.uber.org/zap"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -17,24 +13,11 @@ import (
 )
 
 type StoreWarehouseHandler struct {
-	service           StoreWarehouseService
-	auditService      audit.AuditService
-	ingredientService ingredients.IngredientService
-	logger            *zap.SugaredLogger
+	service StoreWarehouseService
 }
 
-func NewStoreWarehouseHandler(
-	service StoreWarehouseService,
-	ingredientService ingredients.IngredientService,
-	auditService audit.AuditService,
-	logger *zap.SugaredLogger,
-) *StoreWarehouseHandler {
-	return &StoreWarehouseHandler{
-		service:           service,
-		ingredientService: ingredientService,
-		auditService:      auditService,
-		logger:            logger,
-	}
+func NewStoreWarehouseHandler(service StoreWarehouseService) *StoreWarehouseHandler {
+	return &StoreWarehouseHandler{service: service}
 }
 
 func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
@@ -51,26 +34,11 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	ingredient, err := h.ingredientService.GetIngredientByID(dto.IngredientID)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to add new stock: ingredient not found")
-		return
-	}
-
 	id, err := h.service.AddStock(storeID, &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to add new stock")
 		return
 	}
-
-	action := types.CreateStoreWarehouseStockAuditFactory(
-		&data.BaseDetails{
-			ID:   id,
-			Name: ingredient.Name,
-		},
-		&dto, storeID)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{
 		"message": fmt.Sprintf("store warehouse stock with id %d successfully created", id),
@@ -91,43 +59,10 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	IDs, err := h.service.AddMultipleStock(storeID, &dto)
+	err := h.service.AddMultipleStock(storeID, &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to add new multiple stocks")
 		return
-	}
-
-	stockList, err := h.service.GetStockListByIDs(storeID, IDs)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to add new stock: ingredient not found")
-		return
-	}
-
-	actions := make([]shared.AuditAction, len(stockList))
-
-	for i, stock := range stockList {
-
-		var matchedDTO *types.AddStockDTO
-
-		for _, dto := range dto.IngredientStocks {
-			if stock.ID == dto.IngredientID {
-				matchedDTO = &dto
-				break
-			}
-		}
-
-		if matchedDTO == nil {
-			h.logger.Error("Failed to match stock with DTO for stock %d")
-		}
-
-		action := types.CreateStoreWarehouseStockAuditFactory(
-			&data.BaseDetails{
-				ID:   stock.ID,
-				Name: stock.Name,
-			},
-			matchedDTO, storeID,
-		)
-		actions[i] = &action
 	}
 
 	utils.SendSuccessResponse(c, gin.H{
@@ -170,13 +105,13 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	stock, err := h.service.GetStockById(storeID, uint(stockId))
+	ingredients, err := h.service.GetStockById(storeID, uint(stockId))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve stock")
 		return
 	}
 
-	utils.SendSuccessResponse(c, stock)
+	utils.SendSuccessResponse(c, ingredients)
 }
 
 func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
@@ -199,26 +134,11 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	stock, err := h.service.GetStockById(storeID, uint(stockId))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to add update stock: stock not found")
-		return
-	}
-
 	err = h.service.UpdateStockById(storeID, uint(stockId), &input)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to update stock")
 		return
 	}
-
-	action := types.UpdateStoreWarehouseStockAuditFactory(
-		&data.BaseDetails{
-			ID:   uint(stockId),
-			Name: stock.Name,
-		},
-		&input, storeID)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "stock updated successfully"})
 }
@@ -236,26 +156,11 @@ func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	stock, err := h.service.GetStockById(storeID, uint(stockId))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to add update stock: stock not found")
-		return
-	}
-
 	err = h.service.DeleteStockById(storeID, uint(stockId))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to delete stock")
 		return
 	}
-
-	action := types.DeleteStoreWarehouseStockAuditFactory(
-		&data.BaseDetails{
-			ID:   uint(stockId),
-			Name: stock.Name,
-		},
-		struct{}{}, storeID)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "stock deleted successfully"})
 }

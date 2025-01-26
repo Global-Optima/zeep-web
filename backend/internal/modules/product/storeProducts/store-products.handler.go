@@ -2,8 +2,6 @@ package storeProducts
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"net/http"
 	"strconv"
 
@@ -12,21 +10,15 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 type StoreProductHandler struct {
-	service        StoreProductService
-	productService product.ProductService
-	auditService   audit.AuditService
+	service StoreProductService
 }
 
-func NewStoreProductHandler(service StoreProductService, productService product.ProductService, auditService audit.AuditService) *StoreProductHandler {
+func NewStoreProductHandler(service StoreProductService) *StoreProductHandler {
 	return &StoreProductHandler{
-		service:        service,
-		productService: productService,
-		auditService:   auditService,
+		service: service,
 	}
 }
 
@@ -125,27 +117,11 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.productService.GetProductByID(dto.ProductID)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
-		return
-	}
-
-	id, err := h.service.CreateStoreProduct(storeID, &dto)
+	_, err := h.service.CreateStoreProduct(storeID, &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to create store product")
 		return
 	}
-
-	action := types.CreateStoreProductAuditFactory(
-		&data.BaseDetails{
-			ID:   id,
-			Name: existingProduct.Name,
-		},
-		&dto, storeID)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
-
 	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
 }
 
@@ -169,18 +145,6 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		utils.SendInternalServerError(c, msg)
 		return
 	}
-
-	/*createDetails := types.AuditStoreProductDTO{
-		StoreID: storeID,
-	}
-
-	_ = h.auditService.RecordEmployeeAction(c, data.CreateMultipleOperation, data.StoreProductComponent,
-		&data.MultipleItemDetails[types.AuditStoreProductDTO]{
-			IDs: ids,
-			DTO: createDetails,
-		},
-	)*/
-
 	msg := fmt.Sprintf("%d store product created successfully", dtoLength)
 	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
 }
@@ -205,26 +169,11 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
-		return
-	}
-
 	err = h.service.UpdateStoreProduct(storeID, uint(storeProductID), &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to update store product")
 		return
 	}
-
-	action := types.UpdateStoreProductAuditFactory(
-		&data.BaseDetails{
-			ID:   uint(storeProductID),
-			Name: existingProduct.Name,
-		},
-		&dto, storeID)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
 }
@@ -242,27 +191,11 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
-		return
-	}
-
-	action := types.DeleteStoreProductAuditFactory(
-		&data.BaseDetails{
-			ID:   uint(storeProductID),
-			Name: existingProduct.Name,
-		},
-		nil, storeID,
-	)
-
 	err = h.service.DeleteStoreProduct(storeID, uint(storeProductID))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to delete store product")
 		return
 	}
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)
 }

@@ -8,9 +8,8 @@ import (
 
 type StoreWarehouseService interface {
 	AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)
-	AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) ([]uint, error)
-	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StockDTO, error)
-	GetStockListByIDs(storeId uint, stockIds []uint) ([]types.StoreStockDTO, error)
+	AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) error
+	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StoreStockDTO, error)
 	GetStockById(storeId, stockId uint) (*types.StoreStockDTO, error)
 	UpdateStockById(storeId, stockId uint, input *types.UpdateStoreStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
@@ -28,20 +27,17 @@ func NewStoreWarehouseService(repo StoreWarehouseRepository, logger *zap.Sugared
 	}
 }
 
-func (s *storeWarehouseService) AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) ([]uint, error) {
-	var IDs []uint
-
+func (s *storeWarehouseService) AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) error {
 	// Start a transaction
 	err := s.repo.WithTransaction(func(txRepo storeWarehouseRepository) error {
 		for _, stock := range dto.IngredientStocks {
 			// Add or update stock for each ingredient
-			id, err := txRepo.AddOrUpdateStock(storeId, &stock)
+			err := txRepo.AddOrUpdateStock(storeId, &stock)
 			if err != nil {
 				wrappedErr := utils.WrapError("error adding/updating stock element", err)
 				s.logger.Error(wrappedErr)
 				return wrappedErr
 			}
-			IDs = append(IDs, id)
 		}
 		return nil
 	})
@@ -49,10 +45,10 @@ func (s *storeWarehouseService) AddMultipleStock(storeId uint, dto *types.AddMul
 	if err != nil {
 		wrappedErr := utils.WrapError("error adding multiple stock elements", err)
 		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return wrappedErr
 	}
 
-	return IDs, nil
+	return nil
 }
 
 func (s *storeWarehouseService) AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error) {
@@ -68,22 +64,6 @@ func (s *storeWarehouseService) AddStock(storeId uint, dto *types.AddStoreStockD
 
 func (s *storeWarehouseService) GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StoreStockDTO, error) {
 	stockList, err := s.repo.GetStockList(storeId, query)
-	if err != nil {
-		wrappedErr := utils.WrapError("error getting store stock list", err)
-		s.logger.Error(wrappedErr)
-		return nil, err
-	}
-
-	dtos := make([]types.StockDTO, len(stockList))
-	for i, stock := range stockList {
-		dtos[i] = types.MapToStockDTO(stock)
-	}
-
-	return dtos, nil
-}
-
-func (s *storeWarehouseService) GetStockListByIDs(storeId uint, IDs []uint) ([]types.StoreStockDTO, error) {
-	stockList, err := s.repo.GetStockListByIDs(storeId, IDs)
 	if err != nil {
 		wrappedErr := utils.WrapError("error getting store stock list", err)
 		s.logger.Error(wrappedErr)

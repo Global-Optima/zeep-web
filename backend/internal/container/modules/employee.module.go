@@ -19,7 +19,6 @@ func NewEmployeesModule(base *common.BaseModule, auditService audit.AuditService
 	handler := employees.NewEmployeeHandler(service, auditService)
 
 	base.Router.RegisterEmployeesRoutes(handler)
-	base.Router.RegisterCommonEmployeesRoutes(handler)
 	base.Router.RegisterEmployeeAccountRoutes(handler)
 
 	return &EmployeesModule{

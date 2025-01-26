@@ -1,7 +1,6 @@
 package categories
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
 
@@ -12,15 +11,11 @@ import (
 )
 
 type CategoryHandler struct {
-	service      CategoryService
-	auditService audit.AuditService
+	service CategoryService
 }
 
-func NewCategoryHandler(service CategoryService, auditService audit.AuditService) *CategoryHandler {
-	return &CategoryHandler{
-		service:      service,
-		auditService: auditService,
-	}
+func NewCategoryHandler(service CategoryService) *CategoryHandler {
+	return &CategoryHandler{service: service}
 }
 
 func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
@@ -65,20 +60,11 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.CreateCategory(&dto)
+	_, err := h.service.CreateCategory(&dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to create category")
 		return
 	}
-
-	action := types.CreateProductCategoryAuditFactory(
-		&data.BaseDetails{
-			ID:   id,
-			Name: dto.Name,
-		},
-	)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "category created successfully", http.StatusCreated)
 }
@@ -96,27 +82,11 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	existingCategory, err := h.service.GetCategoryByID(uint(id))
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update category: category not found")
-		return
-	}
-
 	err = h.service.UpdateCategory(uint(id), &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to update category")
 		return
 	}
-
-	action := types.UpdateProductCategoryAuditFactory(
-		&data.BaseDetails{
-			ID:   existingCategory.ID,
-			Name: existingCategory.Name,
-		},
-		&dto,
-	)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "category updated successfully", http.StatusOK)
 }
@@ -128,25 +98,10 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 		return
 	}
 
-	existingCategory, err := h.service.GetCategoryByID(uint(id))
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete category: category not found")
-		return
-	}
-
 	if err := h.service.DeleteCategory(uint(id)); err != nil {
 		utils.SendInternalServerError(c, "Failed to delete category")
 		return
 	}
-
-	action := types.DeleteProductCategoryAuditFactory(
-		&data.BaseDetails{
-			ID:   existingCategory.ID,
-			Name: existingCategory.Name,
-		},
-	)
-
-	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendMessageWithStatus(c, "Category deleted successfully", http.StatusOK)
 }

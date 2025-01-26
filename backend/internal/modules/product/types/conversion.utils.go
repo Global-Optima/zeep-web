@@ -7,12 +7,6 @@ import (
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
-
-	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
-	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -26,7 +20,6 @@ type ProductSizeModels struct {
 
 func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 	return BaseProductDTO{
-		ID:          product.ID,
 		Name:        product.Name,
 		Description: product.Description,
 		ImageURL:    product.ImageURL,
@@ -115,33 +108,6 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 
 	return ProductSizeDetailsDTO{
 		ProductSizeDTO: MapToProductSizeDTO(productSize),
-		Additives:      additives,
-		Ingredients:    ingredients,
-	}
-}
-
-func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditive) ProductSizeAdditiveDTO {
-	return ProductSizeAdditiveDTO{
-		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive),
-		IsDefault:   productSizeAdditive.IsDefault,
-	}
-}
-
-func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
-	var additives = make([]ProductSizeAdditiveDTO, len(productSize.Additives))
-	var ingredients = make([]ingredientTypes.IngredientDTO, len(productSize.ProductSizeIngredients))
-
-	for i, productSizeAdditive := range productSize.Additives {
-		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
-	}
-
-	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
-		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
-	}
-
-	return ProductSizeDetailsDTO{
-		ProductSizeDTO: MapToProductSizeDTO(productSize),
-		ProductID:      productSize.ProductID,
 		Additives:      additives,
 		Ingredients:    ingredients,
 	}
