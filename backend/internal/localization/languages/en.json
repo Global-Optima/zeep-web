@@ -50,14 +50,14 @@
     }
   }, 
   "notification": {
-    "STOCK_REQUEST_STATUS_UPDATED": "Stock request in *{{.FacilityName}}* (ID: {{.ID}}) with ID: *{{.StockRequestID}}* has been updated to {{.RequestStatus}}",
-    "NEW_ORDER": "A new order (ID: {{.OrderID}}) has been placed by *{{.CustomerName}}* at *{{.FacilityName}}*",
-    "STORE_WAREHOUSE_RUN_OUT": "The warehouse *{{.FacilityName}}* is running out of *{{.StockItem}}* (ID: {{.StockItemID}})",
-    "CENTRAL_CATALOG_UPDATE": "The central catalog at *{{.FacilityName}}* was updated by *{{.UpdatedBy}}*: {{.Changes}}",
-    "STOCK_EXPIRATION": "The item *{{.ItemName}}* in *{{.FacilityName}}* is expiring on {{.ExpirationDate}}",
-    "OUT_OF_STOCK": "The item *{{.ItemName}}* is out of stock in *{{.FacilityName}}*",
-    "NEW_STOCK_REQUEST": "A new stock request (ID: {{.RequestID}}) was submitted by *{{.RequesterName}}* in *{{.FacilityName}}*",
-    "PRICE_CHANGE": "The price of *{{.ProductName}}* has changed from {{.OldPrice}} to {{.NewPrice}}"
+    "stockRequestStatusUpdated": "Stock request in *{{.FacilityName}}* (ID: {{.ID}}) with ID: *{{.StockRequestID}}* has been updated to {{.RequestStatus}}",
+    "newOrder": "A new order (ID: {{.OrderID}}) has been placed by *{{.CustomerName}}* at *{{.FacilityName}}*",
+    "storeWarehouseRunOut": "The warehouse *{{.FacilityName}}* is running out of *{{.StockItem}}* (ID: {{.StockItemID}})",
+    "centralCatalogUpdate": "The central catalog at *{{.FacilityName}}* was updated by *{{.UpdatedBy}}*: {{.Changes}}",
+    "stockExpiration": "The item *{{.ItemName}}* in *{{.FacilityName}}* is expiring on {{.ExpirationDate}}",
+    "outOfStock": "The item *{{.ItemName}}* is out of stock in *{{.FacilityName}}*",
+    "newStockRequest": "A new stock request (ID: {{.RequestID}}) was submitted by *{{.RequesterName}}* in *{{.FacilityName}}*",
+    "priceChange": "The price of *{{.ProductName}}* has changed from {{.OldPrice}} to {{.NewPrice}}"
   }
 }
 

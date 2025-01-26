@@ -20,7 +20,7 @@ type NotificationService interface {
 	NotifyNewStockRequest(details details.NotificationDetails) error
 	NotifyPriceChange(details details.NotificationDetails) error
 
-	GetNotificationByID(notificationID uint) (*types.NotificationDTO, error)
+	GetNotificationByID(notificationID, employeeID uint) (*types.NotificationDTO, error)
 	GetNotificationsByEmployee(employeeID uint, filter types.GetNotificationsFilter) ([]types.NotificationDTO, error)
 	MarkNotificationAsRead(notificationID uint, employeeID uint) error
 	MarkMultipleNotificationsAsRead(employeeID uint, notificationIDs []uint) error
@@ -139,8 +139,8 @@ func (s *notificationService) NotifyPriceChange(details details.NotificationDeta
 }
 
 // Base notification module methods
-func (s *notificationService) GetNotificationByID(notificationID uint) (*types.NotificationDTO, error) {
-	employeeNotification, err := s.repo.GetNotificationByID(notificationID)
+func (s *notificationService) GetNotificationByID(notificationID, employeeID uint) (*types.NotificationDTO, error) {
+	employeeNotification, err := s.repo.GetNotificationByID(notificationID, employeeID)
 	if err != nil {
 		return nil, err
 	}

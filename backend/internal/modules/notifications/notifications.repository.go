@@ -12,7 +12,7 @@ type NotificationRepository interface {
 	CreateNotification(notification *data.EmployeeNotification) error
 	CreateNotificationRecipients(recipients []data.EmployeeNotificationRecipient) error
 
-	GetNotificationByID(notificationID uint) (*data.EmployeeNotificationRecipient, error)
+	GetNotificationByID(notificationID, employeeID uint) (*data.EmployeeNotificationRecipient, error)
 	GetNotificationsByEmployee(employeeID uint, filter types.GetNotificationsFilter) ([]data.EmployeeNotificationRecipient, error)
 
 	MarkNotificationAsRead(notificationID uint, employeeID uint) error
@@ -38,10 +38,10 @@ func (r *notificationRepository) CreateNotificationRecipients(recipients []data.
 	return r.db.Create(&recipients).Error
 }
 
-func (r *notificationRepository) GetNotificationByID(notificationID uint) (*data.EmployeeNotificationRecipient, error) {
+func (r *notificationRepository) GetNotificationByID(notificationID, employeeID uint) (*data.EmployeeNotificationRecipient, error) {
 	var notification data.EmployeeNotificationRecipient
 	err := r.db.Preload("Notification").Preload("Employee").
-		First(&notification, "id = ?", notificationID).Error
+		First(&notification, "notification_id = ? AND employee_id = ?", notificationID, employeeID).Error
 	if err != nil {
 		return nil, err
 	}

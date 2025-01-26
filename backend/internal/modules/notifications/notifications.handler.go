@@ -17,13 +17,19 @@ func NewNotificationHandler(service NotificationService) *NotificationHandler {
 }
 
 func (h *NotificationHandler) GetNotificationByID(c *gin.Context) {
+	employeeID, err := contexts.GetEmployeeIDFromCtx(c)
+	if err != nil {
+		utils.SendMessageWithStatus(c, "Employee ID not found in context", 401)
+		return
+	}
+
 	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		utils.SendBadRequestError(c, "Invalid ID")
 		return
 	}
 
-	notification, err := h.service.GetNotificationByID(id)
+	notification, err := h.service.GetNotificationByID(id, employeeID)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve notification")
 		return
@@ -47,7 +53,7 @@ func (h *NotificationHandler) GetNotificationsByEmployee(c *gin.Context) {
 
 	notifications, err := h.service.GetNotificationsByEmployee(employeeID, filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve notifications")
+		utils.SendInternalServerError(c, "Failed to retrieve notifications; "+err.Error())
 		return
 	}
 
@@ -61,13 +67,13 @@ func (h *NotificationHandler) MarkNotificationAsRead(c *gin.Context) {
 		return
 	}
 
-	var dto types.MarkNotificationAsReadDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+	id, err := utils.ParseParam(c, "id")
+	if err != nil {
+		utils.SendBadRequestError(c, "Invalid ID")
 		return
 	}
 
-	err = h.service.MarkNotificationAsRead(dto.NotificationID, employeeID)
+	err = h.service.MarkNotificationAsRead(id, employeeID)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to mark notification as read")
 		return

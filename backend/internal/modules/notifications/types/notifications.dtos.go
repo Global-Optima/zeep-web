@@ -14,7 +14,6 @@ type NotificationDTO struct {
 	Priority  string                         `json:"priority"`
 	Message   localization.LocalizedMessages `json:"messages"`
 	Details   json.RawMessage                `json:"details"`
-	Timestamp time.Time                      `json:"timestamp"`
 	IsRead    bool                           `json:"isRead"`
 	CreatedAt time.Time                      `json:"createdAt"`
 	UpdatedAt time.Time                      `json:"updatedAt"`

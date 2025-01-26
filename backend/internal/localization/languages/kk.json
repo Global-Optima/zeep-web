@@ -50,13 +50,13 @@
     }
   },
   "notification": {
-    "STOCK_REQUEST_STATUS_UPDATED": "Қор сұранысы ID: *{{.StockRequestID}}*, *{{.FacilityName}}* (ID: {{.ID}}) жаңартылды: {{.RequestStatus}}",
-    "NEW_ORDER": "Жаңа тапсырыс (ID: {{.OrderID}}) *{{.CustomerName}}* клиентімен *{{.FacilityName}}* мекенінде жасалды",
-    "STORE_WAREHOUSE_RUN_OUT": "*{{.FacilityName}}* қоймасында *{{.StockItem}}* (ID: {{.StockItemID}}) таусылуға жақын",
-    "CENTRAL_CATALOG_UPDATE": "Орталық каталог *{{.FacilityName}}* жаңартылды *{{.UpdatedBy}}*: {{.Changes}}",
-    "STOCK_EXPIRATION": "*{{.FacilityName}}* қоймасында *{{.ItemName}}* мерзімі {{.ExpirationDate}} аяқталады",
-    "OUT_OF_STOCK": "*{{.FacilityName}}* қоймасында *{{.ItemName}}* жоқ",
-    "NEW_STOCK_REQUEST": "Жаңа қор сұранысы (ID: {{.RequestID}}) *{{.RequesterName}}* арқылы *{{.FacilityName}}* мекенінде жасалды",
-    "PRICE_CHANGE": "*{{.ProductName}}* бағасы {{.OldPrice}}-ден {{.NewPrice}}-ге өзгерді"
+    "stockRequestStatusUpdated": "Қор сұранысы ID: *{{.StockRequestID}}*, *{{.FacilityName}}* (ID: {{.ID}}) жаңартылды: {{.RequestStatus}}",
+    "newOrder": "Жаңа тапсырыс (ID: {{.OrderID}}) *{{.CustomerName}}* клиентімен *{{.FacilityName}}* мекенінде жасалды",
+    "storeWarehouseRunOut": "*{{.FacilityName}}* қоймасында *{{.StockItem}}* (ID: {{.StockItemID}}) таусылуға жақын",
+    "centralCatalogUpdate": "Орталық каталог *{{.FacilityName}}* жаңартылды *{{.UpdatedBy}}*: {{.Changes}}",
+    "stockExpiration": "*{{.FacilityName}}* қоймасында *{{.ItemName}}* мерзімі {{.ExpirationDate}} аяқталады",
+    "outOfStock": "*{{.FacilityName}}* қоймасында *{{.ItemName}}* жоқ",
+    "newStockRequest": "Жаңа қор сұранысы (ID: {{.RequestID}}) *{{.RequesterName}}* арқылы *{{.FacilityName}}* мекенінде жасалды",
+    "priceChange": "*{{.ProductName}}* бағасы {{.OldPrice}}-ден {{.NewPrice}}-ге өзгерді"
   }
 }
