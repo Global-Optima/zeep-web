@@ -37,7 +37,7 @@ import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminStoreOrdersList from '@/modules/admin/store-orders/components/list/admin-store-orders-list.vue'
 import AdminStoreOrdersToolbar from '@/modules/admin/store-orders/components/list/admin-store-orders-toolbar.vue'
 import type { OrdersFilterQuery } from '@/modules/orders/models/orders.models'
-import { orderService } from '@/modules/orders/services/orders.service'
+import { ordersService } from '@/modules/orders/services/orders.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
@@ -46,8 +46,7 @@ const filter = ref<OrdersFilterQuery>({})
 
 const { data: storeOrders } = useQuery({
   queryKey: computed(() => ['store-orders', filter.value]),
-  queryFn: () => orderService.getAllOrders(filter.value),
-  // enabled: computed(() => !!currentStoreId)
+  queryFn: () => ordersService.getAllOrders(filter.value),
 })
 
 function updateFilter(updatedFilter: OrdersFilterQuery) {

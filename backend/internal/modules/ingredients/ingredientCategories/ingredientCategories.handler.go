@@ -1,6 +1,7 @@
 package ingredientCategories
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"strconv"
 
@@ -44,7 +45,7 @@ func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 
 	_ = h.auditService.RecordEmployeeAction(c, &action)
 
-	utils.SendSuccessCreatedResponse(c, gin.H{"id": id})
+	utils.SendSuccessCreatedResponse(c, fmt.Sprintf("id: %d", id))
 }
 
 func (h *IngredientCategoryHandler) GetByID(c *gin.Context) {

@@ -9,7 +9,7 @@ const KioskDetailsModal = defineAsyncComponent(() =>
   import('@/modules/kiosk/products/components/details/kiosk-details-modal.vue')
 );
 
-const pagesOmitRedirect: RouteKey[] = [ 'KIOSK_ORDERS', 'KIOSK_ORDERS_DISPLAY', 'KIOSK_ORDERS_DISPLAY_V2']
+const pagesOmitRedirect: RouteKey[] = [ 'KIOSK_ORDERS', 'KIOSK_ORDERS_DISPLAY']
 
 const router = useRouter()
 const productStore = useSelectedProductStore()

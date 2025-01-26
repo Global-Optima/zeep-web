@@ -20,9 +20,10 @@ type CreateOrderDTO struct {
 	CustomerID        *uint               `json:"customerId,omitempty"`
 	CustomerName      string              `json:"customerName"`
 	EmployeeID        *uint               `json:"employeeId,omitempty"`
-	StoreID           uint                `json:"storeId"`
 	DeliveryAddressID *uint               `json:"deliveryAddressId"`
 	Suborders         []CreateSubOrderDTO `json:"subOrders"`
+
+	StoreID uint
 }
 
 type OrderStatusesCountDTO struct {
@@ -50,6 +51,7 @@ type OrderDTO struct {
 	Status            data.OrderStatus `json:"status"`
 	CreatedAt         time.Time        `json:"createdAt"`
 	Total             float64          `json:"total"`
+	DisplayNumber     int              `json:"displayNumber"`
 	SubordersQuantity int              `json:"subOrdersQuantity"`
 	Suborders         []SuborderDTO    `json:"subOrders"`
 }

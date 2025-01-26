@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 )
@@ -16,12 +17,12 @@ type AdditivesModule struct {
 	StoreAdditivesModule *StoreAdditivesModule
 }
 
-func NewAdditivesModule(base *common.BaseModule, ingredientRepo ingredients.IngredientRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository) *AdditivesModule {
+func NewAdditivesModule(base *common.BaseModule, auditService audit.AuditService, ingredientRepo ingredients.IngredientRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository) *AdditivesModule {
 	repo := additives.NewAdditiveRepository(base.DB)
 	service := additives.NewAdditiveService(repo, base.Logger)
-	handler := additives.NewAdditiveHandler(service)
+	handler := additives.NewAdditiveHandler(service, auditService)
 
-	storeAdditivesModule := NewStoreAdditivesModule(base, ingredientRepo, storeWarehouseRepo)
+	storeAdditivesModule := NewStoreAdditivesModule(base, service, auditService, ingredientRepo, storeWarehouseRepo)
 
 	base.Router.RegisterAdditivesRoutes(handler)
 
@@ -43,6 +44,8 @@ type StoreAdditivesModule struct {
 
 func NewStoreAdditivesModule(
 	base *common.BaseModule,
+	additiveService additives.AdditiveService,
+	auditService audit.AuditService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository,
 ) *StoreAdditivesModule {
@@ -52,7 +55,7 @@ func NewStoreAdditivesModule(
 		ingredientRepo,
 		storeAdditives.NewTransactionManager(base.DB, repo, storeWarehouseRepo),
 		base.Logger)
-	handler := storeAdditives.NewStoreAdditiveHandler(service)
+	handler := storeAdditives.NewStoreAdditiveHandler(service, additiveService, auditService, base.Logger)
 
 	base.Router.RegisterStoreAdditivesRoutes(handler)
 

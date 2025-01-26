@@ -24,6 +24,7 @@ import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/com
 import type { StockRequestItemForm } from '@/modules/admin/store-stock-requests/components/update/admin-store-stock-requests-update-form.vue'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { ref } from 'vue'
+import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 
 const emit = defineEmits<{
   (e: 'submit', payload: StockRequestStockMaterialDTO[]): void;
@@ -35,7 +36,7 @@ const openDialog = ref(false)
 const { toast } = useToast()
 
 // Add Material
-function addMaterial(material: { id: number; name: string }) {
+function addMaterial(material: StockMaterialsDTO) {
   if (stockRequestItemsForm.value.some((item) => item.stockMaterialId === material.id)) {
     toast({
       title: 'Ошибка',
@@ -49,6 +50,8 @@ function addMaterial(material: { id: number; name: string }) {
     stockMaterialId: material.id,
     name: material.name,
     quantity: 0,
+    unit: material.unit,
+    size: material.size,
   })
   toast({
     title: 'Успех',
@@ -132,6 +135,7 @@ function cancelForm() {
 					<TableHeader>
 						<TableRow>
 							<TableHead>Материал</TableHead>
+							<TableHead>Упаковка</TableHead>
 							<TableHead>Количество</TableHead>
 							<TableHead class="text-center">Действия</TableHead>
 						</TableRow>
@@ -142,6 +146,7 @@ function cancelForm() {
 							:key="index"
 						>
 							<TableCell>{{ item.name }}</TableCell>
+							<TableCell>{{ item.size }} {{ item.unit.name }}</TableCell>
 							<TableCell>
 								<Input
 									type="number"
