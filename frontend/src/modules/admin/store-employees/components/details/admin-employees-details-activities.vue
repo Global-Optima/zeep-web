@@ -2,7 +2,7 @@
 	<div>
 		<!-- Display Message if No Activities -->
 		<p
-			v-if="activities.length === 0"
+			v-if="audits.length === 0"
 			class="py-4 text-center text-muted-foreground"
 		>
 			Активности отсутствуют
@@ -15,23 +15,22 @@
 		>
 			<TableHeader>
 				<TableRow>
-					<TableHead>Дата</TableHead>
 					<TableHead>Активность</TableHead>
+					<TableHead>Дата</TableHead>
 				</TableRow>
 			</TableHeader>
 			<TableBody>
 				<TableRow
-					v-for="(activity, index) in activities"
+					v-for="(audit, index) in audits"
 					:key="index"
 					class="h-12"
 				>
-					<!-- Date -->
 					<TableCell>
-						{{ activity.date }}
+						<span v-html="formatMessage(audit.localizedMessages.ru)"></span>
 					</TableCell>
-					<!-- Activity -->
+
 					<TableCell>
-						{{ activity.activity }}
+						{{ formatDate(audit.timestamp) }}
 					</TableCell>
 				</TableRow>
 			</TableBody>
@@ -48,19 +47,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { type EmployeeAuditDTO } from '@/modules/admin/store-employees/models/employees-audit.models'
+import { format } from 'date-fns'
+import { ru } from 'date-fns/locale'
+defineProps<{
+  audits: EmployeeAuditDTO[]
+}>()
 
-interface Activity {
-  date: string;
-  activity: string;
-  status: string;
+const formatDate = (date: Date): string => {
+  return format(new Date(date), 'dd MMM yyyy, HH:mm', { locale: ru })
 }
 
-// Props for activities
-defineProps<{
-  activities: Activity[];
-}>();
+const formatMessage = (s: string) => {
+  return s.replace(/\*(.*?)\*/g, '<span class="font-semibold">$1</span>')
+}
 </script>
 
-<style scoped>
-/* Add any additional custom styles here if necessary */
-</style>
+<style scoped></style>
