@@ -11,6 +11,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
@@ -31,6 +32,17 @@ func (r *Router) RegisterAuditRoutes(handler *audit.AuditHandler) {
 	router := r.EmployeeRoutes.Group("/audits")
 	{
 		router.GET("", handler.GetAudits)
+	}
+}
+
+func (r *Router) RegisterNotificationsRoutes(handler *notifications.NotificationHandler) {
+	router := r.EmployeeRoutes.Group("/notifications")
+	{
+		router.GET("", handler.GetNotificationsByEmployee)
+		router.GET("/:id", handler.GetNotificationByID)
+		router.POST("/:id/mark-as-read", handler.MarkNotificationAsRead)
+		router.POST("/mark-multiple-as-read", handler.MarkMultipleNotificationsAsRead)
+		router.DELETE("/:id", handler.DeleteNotification)
 	}
 }
 

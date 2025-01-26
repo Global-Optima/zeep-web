@@ -1,21 +1,23 @@
 package types
 
 import (
+	"encoding/json"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type NotificationDTO struct {
-	ID        uint      `json:"id"`
-	EventType string    `json:"eventType"`
-	Priority  string    `json:"priority"`
-	Message   string    `json:"message"`
-	Details   string    `json:"details"`
-	Timestamp time.Time `json:"timestamp"`
-	IsRead    bool      `json:"isRead"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        uint                           `json:"id"`
+	EventType string                         `json:"eventType"`
+	Priority  string                         `json:"priority"`
+	Message   localization.LocalizedMessages `json:"messages"`
+	Details   json.RawMessage                `json:"details"`
+	Timestamp time.Time                      `json:"timestamp"`
+	IsRead    bool                           `json:"isRead"`
+	CreatedAt time.Time                      `json:"createdAt"`
+	UpdatedAt time.Time                      `json:"updatedAt"`
 }
 
 type GetNotificationsFilter struct {

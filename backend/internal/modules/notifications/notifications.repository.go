@@ -2,7 +2,7 @@ package notifications
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	shared "github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/roles"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"

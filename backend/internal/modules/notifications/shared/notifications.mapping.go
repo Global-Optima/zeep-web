@@ -1,4 +1,4 @@
-package roles
+package shared
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -23,7 +23,7 @@ func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 				{
 					EventType:     data.STOCK_REQUEST_STATUS_UPDATED,
 					EmployeeTypes: []data.EmployeeType{data.WarehouseEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleAdmin},
+					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleAdmin, data.RoleWarehouse},
 				},
 				{
 					EventType:     data.NEW_ORDER,

@@ -30,7 +30,6 @@ type EmployeeNotification struct {
 	BaseEntity
 	EventType  NotificationEventType           `gorm:"type:varchar(255);not null"`
 	Priority   NotificationPriority            `gorm:"type:varchar(50);not null"`
-	Message    string                          `gorm:"type:text;not null"`
 	Details    datatypes.JSON                  `gorm:"type:jsonb"`
 	Recipients []EmployeeNotificationRecipient `gorm:"foreignKey:NotificationID"`
 }

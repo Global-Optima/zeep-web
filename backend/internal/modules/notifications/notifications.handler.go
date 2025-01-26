@@ -29,16 +29,7 @@ func (h *NotificationHandler) GetNotificationByID(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponse(c, types.NotificationDTO{
-		ID:        notification.ID,
-		EventType: string(notification.Notification.EventType),
-		Priority:  string(notification.Notification.Priority),
-		Message:   notification.Notification.Message,
-		Details:   string(notification.Notification.Details),
-		IsRead:    notification.IsRead,
-		CreatedAt: notification.Notification.CreatedAt,
-		UpdatedAt: notification.Notification.UpdatedAt,
-	})
+	utils.SendSuccessResponse(c, notification)
 }
 
 func (h *NotificationHandler) GetNotificationsByEmployee(c *gin.Context) {
@@ -60,21 +51,7 @@ func (h *NotificationHandler) GetNotificationsByEmployee(c *gin.Context) {
 		return
 	}
 
-	response := make([]types.NotificationDTO, len(notifications))
-	for i, n := range notifications {
-		response[i] = types.NotificationDTO{
-			ID:        n.ID,
-			EventType: string(n.Notification.EventType),
-			Priority:  string(n.Notification.Priority),
-			Message:   n.Notification.Message,
-			Details:   string(n.Notification.Details),
-			IsRead:    n.IsRead,
-			CreatedAt: n.Notification.CreatedAt,
-			UpdatedAt: n.Notification.UpdatedAt,
-		}
-	}
-
-	utils.SendSuccessResponseWithPagination(c, response, filter.Pagination)
+	utils.SendSuccessResponseWithPagination(c, notifications, filter.Pagination)
 }
 
 func (h *NotificationHandler) MarkNotificationAsRead(c *gin.Context) {
