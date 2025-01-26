@@ -28,10 +28,14 @@ func NewWarehousesModule(base *common.BaseModule, stockMaterialRepo stockMateria
 	base.Router.RegisterWarehouseRoutes(handler, warehouseStockHandler)
 	base.Router.RegisterCommonWarehousesRoutes(handler)
 
-	cronManager.RegisterJob("daily", func() {
+	err := cronManager.RegisterJob("daily", func() {
 		warehouseStockCronTasks := scheduler.NewWarehouseStockCronTasks(repo, warehouseStockService, base.Logger)
 		warehouseStockCronTasks.CheckWarehouseStockNotifications()
 	}, "04:03")
+
+	if err != nil {
+		base.Logger.Errorf("Failed to register warehouse stock cron job: %v", err)
+	}
 
 	return &WarehousesModule{
 		BaseModule: base,
