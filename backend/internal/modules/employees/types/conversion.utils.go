@@ -7,8 +7,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
-	dto := &EmployeeDTO{
+func MapToBaseEmployeeDTO(employee *data.Employee) *BaseEmployeeDTO {
+	dto := &BaseEmployeeDTO{
 		ID:        employee.ID,
 		FirstName: employee.FirstName,
 		LastName:  employee.LastName,
@@ -21,38 +21,61 @@ func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
 	return dto
 }
 
+func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
+	var role data.EmployeeRole = ""
+	dto := MapToBaseEmployeeDTO(employee)
+
+	switch {
+	case employee.StoreEmployee != nil:
+		role = employee.StoreEmployee.Role
+	case employee.WarehouseEmployee != nil:
+		role = employee.WarehouseEmployee.Role
+	case employee.FranchiseeEmployee != nil:
+		role = employee.FranchiseeEmployee.Role
+	case employee.RegionEmployee != nil:
+		role = employee.RegionEmployee.Role
+	case employee.AdminEmployee != nil:
+		role = employee.AdminEmployee.Role
+	}
+
+	return &EmployeeDTO{
+		BaseEmployeeDTO: *dto,
+		Role:            role,
+	}
+}
+
 func MapToStoreEmployeeDTO(storeEmployee *data.StoreEmployee) *StoreEmployeeDTO {
 	dto := &StoreEmployeeDTO{
-		EmployeeDTO: *MapToEmployeeDTO(&storeEmployee.Employee),
-		StoreID:     storeEmployee.StoreID,
-		Role:        storeEmployee.Role.ToString(),
+		BaseEmployeeDTO: *MapToBaseEmployeeDTO(&storeEmployee.Employee),
+		StoreID:         storeEmployee.StoreID,
+		Role:            storeEmployee.Role,
 	}
 	return dto
 }
 
 func MapToWarehouseEmployeeDTO(warehouseEmployee *data.WarehouseEmployee) *WarehouseEmployeeDTO {
 	dto := &WarehouseEmployeeDTO{
-		EmployeeDTO: *MapToEmployeeDTO(&warehouseEmployee.Employee),
-		WarehouseID: warehouseEmployee.WarehouseID,
-		Role:        warehouseEmployee.Role.ToString(),
+		BaseEmployeeDTO: *MapToBaseEmployeeDTO(&warehouseEmployee.Employee),
+		WarehouseID:     warehouseEmployee.WarehouseID,
+		Role:            warehouseEmployee.Role,
 	}
 	return dto
 }
 
 func MapToFranchiseeEmployeeDTO(franchiseeEmployee *data.FranchiseeEmployee) *FranchiseeEmployeeDTO {
 	dto := &FranchiseeEmployeeDTO{
-		EmployeeDTO:  *MapToEmployeeDTO(&franchiseeEmployee.Employee),
-		FranchiseeID: franchiseeEmployee.FranchiseeID,
-		Role:         franchiseeEmployee.Role.ToString(),
+		BaseEmployeeDTO: *MapToBaseEmployeeDTO(&franchiseeEmployee.Employee),
+		FranchiseeID:    franchiseeEmployee.FranchiseeID,
+		Role:            franchiseeEmployee.Role,
 	}
 	return dto
 }
 
-func MapToRegionManagerDTO(regionManager *data.RegionManager) *RegionManagerDTO {
-	dto := &RegionManagerDTO{
-		EmployeeDTO: *MapToEmployeeDTO(&regionManager.Employee),
-		RegionID:    regionManager.RegionID,
-		Role:        regionManager.Role.ToString(),
+func MapToRegionEmployeeDTO(regionManager *data.RegionEmployee) *RegionEmployeeDTO {
+	dto := &RegionEmployeeDTO{
+		BaseEmployeeDTO: *MapToBaseEmployeeDTO(&regionManager.Employee),
+		RegionID:        regionManager.RegionID,
+		Role:            regionManager.Role,
 	}
 
 	return dto
@@ -60,8 +83,8 @@ func MapToRegionManagerDTO(regionManager *data.RegionManager) *RegionManagerDTO 
 
 func MapToAdminEmployeeDTO(admin *data.AdminEmployee) *AdminEmployeeDTO {
 	dto := &AdminEmployeeDTO{
-		EmployeeDTO: *MapToEmployeeDTO(&admin.Employee),
-		Role:        admin.Role.ToString(),
+		BaseEmployeeDTO: *MapToBaseEmployeeDTO(&admin.Employee),
+		Role:            admin.Role,
 	}
 
 	return dto
@@ -110,6 +133,7 @@ func CreateToStoreEmployee(storeID uint, dto *CreateEmployeeDTO) (*data.Employee
 	if err != nil {
 		return nil, err
 	}
+	employee.Type = data.StoreEmployeeType
 	employee.StoreEmployee = &data.StoreEmployee{
 		StoreID: storeID,
 		Role:    dto.Role,
@@ -127,6 +151,7 @@ func CreateToWarehouseEmployee(warehouseID uint, dto *CreateEmployeeDTO) (*data.
 	if err != nil {
 		return nil, err
 	}
+	employee.Type = data.WarehouseEmployeeType
 	employee.WarehouseEmployee = &data.WarehouseEmployee{
 		WarehouseID: warehouseID,
 		Role:        dto.Role,
@@ -144,6 +169,7 @@ func CreateToFranchiseeEmployee(franchiseeID uint, dto *CreateEmployeeDTO) (*dat
 	if err != nil {
 		return nil, err
 	}
+	employee.Type = data.FranchiseeEmployeeType
 	employee.FranchiseeEmployee = &data.FranchiseeEmployee{
 		FranchiseeID: franchiseeID,
 		Role:         dto.Role,
@@ -152,16 +178,17 @@ func CreateToFranchiseeEmployee(franchiseeID uint, dto *CreateEmployeeDTO) (*dat
 	return employee, nil
 }
 
-func CreateToRegionManager(regionID uint, dto *CreateEmployeeDTO) (*data.Employee, error) {
-	if !data.IsAllowableRole(data.WarehouseRegionManagerEmployeeType, dto.Role) {
-		return nil, fmt.Errorf("%w: %s for type %s", ErrInvalidEmployeeRole, dto.Role, data.WarehouseRegionManagerEmployeeType)
+func CreateToRegionEmployee(regionID uint, dto *CreateEmployeeDTO) (*data.Employee, error) {
+	if !data.IsAllowableRole(data.RegionEmployeeType, dto.Role) {
+		return nil, fmt.Errorf("%w: %s for type %s", ErrInvalidEmployeeRole, dto.Role, data.RegionEmployeeType)
 	}
 
 	employee, err := CreateToEmployee(dto)
 	if err != nil {
 		return nil, err
 	}
-	employee.RegionManager = &data.RegionManager{
+	employee.Type = data.RegionEmployeeType
+	employee.RegionEmployee = &data.RegionEmployee{
 		RegionID: regionID,
 		Role:     dto.Role,
 	}
@@ -178,6 +205,7 @@ func CreateToAdminEmployee(dto *CreateEmployeeDTO) (*data.Employee, error) {
 	if err != nil {
 		return nil, err
 	}
+	employee.Type = data.AdminEmployeeType
 	employee.AdminEmployee = &data.AdminEmployee{
 		Role: dto.Role,
 	}

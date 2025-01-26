@@ -2,7 +2,10 @@ package regions
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
+	"github.com/gin-gonic/gin"
 )
 
 type RegionService interface {
@@ -11,7 +14,9 @@ type RegionService interface {
 	DeleteRegion(id uint) error
 	GetRegionByID(id uint) (*types.RegionDTO, error)
 	GetRegions(filter *types.RegionFilter) ([]types.RegionDTO, error)
-	IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error)
+	IsRegionWarehouse(regionID, warehouseID uint) *handlerErrors.HandlerError
+	CheckRegionWarehouse(c *gin.Context) (uint, *handlerErrors.HandlerError)
+	CheckRegionWarehouseWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError)
 }
 
 type regionService struct {
@@ -71,6 +76,67 @@ func (s *regionService) GetRegions(filter *types.RegionFilter) ([]types.RegionDT
 	return dtos, nil
 }
 
-func (s *regionService) IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error) {
-	return s.repo.IsRegionWarehouse(regionID, warehouseID)
+func (s *regionService) IsRegionWarehouse(regionID, warehouseID uint) *handlerErrors.HandlerError {
+	ok, err := s.repo.IsRegionWarehouse(regionID, warehouseID)
+	if err != nil {
+		return types.ErrFailedToCheckRegionWarehouse
+	}
+	if !ok {
+		return types.ErrRegionWarehouseMismatch
+	}
+	return nil
+}
+
+func (s *regionService) CheckRegionWarehouse(c *gin.Context) (uint, *handlerErrors.HandlerError) {
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		return 0, contexts.ErrUnauthorizedAccess
+	}
+
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		return 0, errH
+	}
+
+	if claims.Role == data.RoleRegionWarehouseManager {
+		regionID, errH := contexts.GetRegionId(c)
+		if errH != nil {
+			return 0, errH
+		}
+
+		errH = s.IsRegionWarehouse(regionID, warehouseID)
+		if errH != nil {
+			return 0, errH
+		}
+		return warehouseID, nil
+	}
+
+	return warehouseID, nil
+}
+
+func (s *regionService) CheckRegionWarehouseWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError) {
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		return 0, "", contexts.ErrUnauthorizedAccess
+	}
+
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		return 0, "", errH
+	}
+
+	if claims.Role == data.RoleRegionWarehouseManager {
+		regionID, errH := contexts.GetRegionId(c)
+		if errH != nil {
+			return 0, "", errH
+		}
+
+		errH = s.IsRegionWarehouse(regionID, warehouseID)
+		if errH != nil {
+			return 0, "", errH
+		}
+		return warehouseID, claims.Role, nil
+	}
+
+	return warehouseID, claims.Role, nil
 }

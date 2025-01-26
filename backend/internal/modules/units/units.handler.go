@@ -25,13 +25,13 @@ func (h *UnitHandler) CreateUnit(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.Create(dto)
+	_, err := h.service.Create(dto)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	utils.SendSuccessCreatedResponse(c, gin.H{"id": id})
+	utils.SendSuccessCreatedResponse(c, "unit created successfully")
 }
 
 func (h *UnitHandler) GetAllUnits(c *gin.Context) {

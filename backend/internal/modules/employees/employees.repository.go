@@ -16,13 +16,13 @@ type EmployeeRepository interface {
 	GetStoreEmployees(storeID uint, filter *types.EmployeesFilter) ([]data.StoreEmployee, error)
 	GetWarehouseEmployees(warehouseID uint, filter *types.EmployeesFilter) ([]data.WarehouseEmployee, error)
 	GetFranchiseeEmployees(franchiseeID uint, filter *types.EmployeesFilter) ([]data.FranchiseeEmployee, error)
-	GetRegionManagers(regionID uint, filter *types.EmployeesFilter) ([]data.RegionManager, error)
+	GetRegionEmployees(regionID uint, filter *types.EmployeesFilter) ([]data.RegionEmployee, error)
 	GetAdminEmployees(filter *types.EmployeesFilter) ([]data.AdminEmployee, error)
 
 	GetStoreEmployeeByID(id, storeID uint) (*data.StoreEmployee, error)
 	GetWarehouseEmployeeByID(id, warehouseID uint) (*data.WarehouseEmployee, error)
 	GetFranchiseeEmployeeByID(id, franchiseeID uint) (*data.FranchiseeEmployee, error)
-	GetRegionManagerByID(id, regionID uint) (*data.RegionManager, error)
+	GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error)
 	GetAdminEmployeeByID(id uint) (*data.AdminEmployee, error)
 
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
@@ -43,7 +43,7 @@ type EmployeeRepository interface {
 	GetAllAdminEmployees() ([]data.Employee, error)
 
 	UpdateFranchiseeEmployee(id uint, franchiseeID uint, update *data.FranchiseeEmployee) error
-	UpdateRegionManager(id uint, regionID uint, update *data.RegionManager) error
+	UpdateRegionEmployee(id uint, regionID uint, update *data.RegionEmployee) error
 	UpdateStoreEmployee(id uint, storeID uint, update *data.StoreEmployee) error
 	UpdateWarehouseEmployee(id uint, warehouseID uint, update *data.WarehouseEmployee) error
 	UpdateAdminEmployee(id uint, update *data.AdminEmployee) error
@@ -164,9 +164,9 @@ func (r *employeeRepository) GetFranchiseeEmployees(franchiseeID uint, filter *t
 	return employees, nil
 }
 
-func (r *employeeRepository) GetRegionManagers(regionID uint, filter *types.EmployeesFilter) ([]data.RegionManager, error) {
-	var employees []data.RegionManager
-	query := r.db.Model(&data.RegionManager{}).
+func (r *employeeRepository) GetRegionEmployees(regionID uint, filter *types.EmployeesFilter) ([]data.RegionEmployee, error) {
+	var employees []data.RegionEmployee
+	query := r.db.Model(&data.RegionEmployee{}).
 		Where("region_id = ?", regionID).Preload("Employee")
 
 	if filter.IsActive != nil {
@@ -185,7 +185,7 @@ func (r *employeeRepository) GetRegionManagers(regionID uint, filter *types.Empl
 		)
 	}
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.RegionManager{})
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.RegionEmployee{})
 	if err != nil {
 		return nil, err
 	}
@@ -265,16 +265,16 @@ func (r *employeeRepository) GetFranchiseeEmployeeByID(id, franchiseeID uint) (*
 	return &franchiseeEmployee, nil
 }
 
-func (r *employeeRepository) GetRegionManagerByID(id, regionID uint) (*data.RegionManager, error) {
-	var regionManager data.RegionManager
-	err := r.db.Model(&data.RegionManager{}).
+func (r *employeeRepository) GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error) {
+	var regionEmployee data.RegionEmployee
+	err := r.db.Model(&data.RegionEmployee{}).
 		Preload("Employee").
 		Where("id = ? AND region_id = ?", id, regionID).
-		First(&regionManager).Error
+		First(&regionEmployee).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve region manager by ID: %w", err)
 	}
-	return &regionManager, nil
+	return &regionEmployee, nil
 }
 
 func (r *employeeRepository) GetAdminEmployeeByID(id uint) (*data.AdminEmployee, error) {
@@ -291,9 +291,10 @@ func (r *employeeRepository) GetAdminEmployeeByID(id uint) (*data.AdminEmployee,
 
 func (r *employeeRepository) GetEmployeeByID(employeeID uint) (*data.Employee, error) {
 	var employee data.Employee
-	err := r.db.Preload("StoreEmployee").
+	err := r.db.Model(&data.Employee{}).
+		Preload("StoreEmployee").
 		Preload("WarehouseEmployee").
-		Preload("RegionManager").
+		Preload("RegionEmployee").
 		Preload("FranchiseeEmployee").
 		Preload("AdminEmployee").
 		First(&employee, employeeID).Error
@@ -302,10 +303,11 @@ func (r *employeeRepository) GetEmployeeByID(employeeID uint) (*data.Employee, e
 
 func (r *employeeRepository) GetEmployeeByEmailOrPhone(email string, phone string) (*data.Employee, error) {
 	var employee data.Employee
-	err := r.db.Preload("StoreEmployee").
+	err := r.db.Model(&data.Employee{}).
+		Preload("StoreEmployee").
 		Preload("WarehouseEmployee").
 		Preload("FranchiseeEmployee").
-		Preload("RegionManager").
+		Preload("RegionEmployee").
 		Preload("AdminEmployee").
 		Where("email = ? OR phone = ?", email, phone).
 		First(&employee).Error
@@ -351,13 +353,13 @@ func (r *employeeRepository) UpdateFranchiseeEmployee(id uint, franchiseeID uint
 		Updates(franchiseeEmployee).Error
 }
 
-func (r *employeeRepository) UpdateRegionManager(id uint, regionID uint, regionManager *data.RegionManager) error {
-	if regionManager == nil {
+func (r *employeeRepository) UpdateRegionEmployee(id uint, regionID uint, regionEmployee *data.RegionEmployee) error {
+	if regionEmployee == nil {
 		return types.ErrNothingToUpdate
 	}
-	return r.db.Model(&data.RegionManager{}).
+	return r.db.Model(&data.RegionEmployee{}).
 		Where("id = ? AND region_id = ?", id, regionID).
-		Updates(regionManager).Error
+		Updates(regionEmployee).Error
 }
 
 func (r *employeeRepository) UpdateAdminEmployee(id uint, adminEmployee *data.AdminEmployee) error {
@@ -388,8 +390,8 @@ func (r *employeeRepository) DeleteTypedEmployeeById(employeeID, workplaceID uin
 			if err := tx.Where("id = ? AND franchisee_id", employeeID, workplaceID).Delete(&data.FranchiseeEmployee{}).Error; err != nil {
 				return err
 			}
-		case data.WarehouseRegionManagerEmployeeType:
-			if err := tx.Where("id = ? AND region_id", employeeID, workplaceID).Delete(&data.RegionManager{}).Error; err != nil {
+		case data.RegionEmployeeType:
+			if err := tx.Where("id = ? AND region_id", employeeID, workplaceID).Delete(&data.RegionEmployee{}).Error; err != nil {
 				return err
 			}
 		default:

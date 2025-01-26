@@ -79,13 +79,13 @@ func (h *WarehouseHandler) CreateWarehouse(c *gin.Context) {
 		return
 	}
 
-	warehouseID, err := h.service.CreateWarehouse(dto)
+	_, err := h.service.CreateWarehouse(dto)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	utils.SendSuccessCreatedResponse(c, gin.H{"warehouseId": warehouseID})
+	utils.SendSuccessCreatedResponse(c, "warehouse created successfully")
 }
 
 func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {

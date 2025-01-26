@@ -16,9 +16,9 @@ func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, erro
 	case data.WarehouseEmployeeType:
 		workplaceID = employee.WarehouseEmployee.WarehouseID
 		role = employee.WarehouseEmployee.Role
-	case data.WarehouseRegionManagerEmployeeType:
-		workplaceID = employee.RegionManager.RegionID
-		role = employee.RegionManager.Role
+	case data.RegionEmployeeType:
+		workplaceID = employee.RegionEmployee.RegionID
+		role = employee.RegionEmployee.Role
 	case data.FranchiseeEmployeeType:
 		workplaceID = employee.FranchiseeEmployee.FranchiseeID
 		role = employee.FranchiseeEmployee.Role

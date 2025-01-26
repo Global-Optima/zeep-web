@@ -43,3 +43,30 @@ func GetStoreId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
 
 	return storeID, nil
 }
+
+func GetStoreIdWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError) {
+	claims, err := GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		return 0, "", ErrUnauthorizedAccess
+	}
+
+	var storeID uint
+	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner && claims.Role != data.RoleFranchiseOwner && claims.Role != data.RoleFranchiseManager {
+		if claims.EmployeeType != data.StoreEmployeeType {
+			return 0, "", ErrInvalidEmployeeType
+		}
+		storeID = claims.WorkplaceID
+	} else {
+		storeIdStr := c.Query("storeId")
+		if storeIdStr == "" {
+			return 0, "", ErrEmptyStoreID
+		}
+		id, err := strconv.ParseUint(storeIdStr, 10, 64)
+		if err != nil {
+			return 0, "", ErrInvalidStoreID
+		}
+		storeID = uint(id)
+	}
+
+	return storeID, claims.Role, nil
+}

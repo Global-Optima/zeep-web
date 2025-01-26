@@ -31,7 +31,7 @@ type CreateFranchiseeEmployeeDTO struct {
 	FranchiseeID uint `json:"franchiseeId" binding:"required"`
 }
 
-type CreateRegionManagerDTO struct {
+type CreateRegionEmployeeDTO struct {
 	CreateEmployeeDTO
 	RegionID uint `json:"regionId" binding:"required"`
 }
@@ -82,7 +82,7 @@ type UpdateFranchiseeEmployeeDTO struct {
 	FranchiseeID *uint `json:"franchiseeId,omitempty"`
 }
 
-type UpdateRegionManagerEmployeeDTO struct {
+type UpdateRegionEmployeeDTO struct {
 	UpdateTypedEmployeeFields
 	RegionID *uint `json:"regionId,omitempty"`
 }
@@ -91,7 +91,7 @@ type UpdateAdminEmployeeDTO struct {
 	UpdateTypedEmployeeFields
 }
 
-type EmployeeDTO struct {
+type BaseEmployeeDTO struct {
 	ID        uint              `json:"id"`
 	FirstName string            `json:"firstName"`
 	LastName  string            `json:"lastName"`
@@ -101,33 +101,38 @@ type EmployeeDTO struct {
 	IsActive  bool              `json:"isActive"`
 }
 
+type EmployeeDTO struct {
+	BaseEmployeeDTO
+	Role data.EmployeeRole `json:"role"`
+}
+
 type StoreEmployeeDTO struct {
-	EmployeeDTO
-	StoreID uint   `json:"storeId"`
-	Role    string `json:"role"`
+	BaseEmployeeDTO
+	StoreID uint              `json:"storeId"`
+	Role    data.EmployeeRole `json:"role"`
 }
 
 type WarehouseEmployeeDTO struct {
-	EmployeeDTO
-	WarehouseID uint   `json:"warehouseId"`
-	Role        string `json:"role"`
+	BaseEmployeeDTO
+	WarehouseID uint              `json:"warehouseId"`
+	Role        data.EmployeeRole `json:"role"`
 }
 
 type FranchiseeEmployeeDTO struct {
-	EmployeeDTO
-	FranchiseeID uint   `json:"franchiseeId"`
-	Role         string `json:"role"`
+	BaseEmployeeDTO
+	FranchiseeID uint              `json:"franchiseeId"`
+	Role         data.EmployeeRole `json:"role"`
 }
 
-type RegionManagerDTO struct {
-	EmployeeDTO
-	RegionID uint   `json:"regionId"`
-	Role     string `json:"role"`
+type RegionEmployeeDTO struct {
+	BaseEmployeeDTO
+	RegionID uint              `json:"regionId"`
+	Role     data.EmployeeRole `json:"role"`
 }
 
 type AdminEmployeeDTO struct {
-	EmployeeDTO
-	Role string `json:"role"`
+	BaseEmployeeDTO
+	Role data.EmployeeRole `json:"role"`
 }
 
 type EmployeeAccountDTO struct {

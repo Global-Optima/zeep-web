@@ -158,3 +158,81 @@ func NewAuditWarehouseActionExtendedFactory[T any](
 		}
 	}
 }
+
+func NewAuditFranchiseeActionExtendedFactory[T any](
+	operationType data.OperationType,
+	componentName data.ComponentName,
+	dto T,
+) func(baseDetails *data.BaseDetails, dto T, storeID uint) AuditFranchiseeActionExtended {
+
+	core := AuditActionCore{
+		OperationType: operationType,
+		ComponentName: componentName,
+	}
+
+	if _, ok := auditActions[core]; ok {
+		panic(fmt.Errorf("duplicate audit action core found: %v", core))
+	}
+
+	auditActions[core] = func() data.AuditDetails {
+		return &data.ExtendedDetailsStore{
+			ExtendedDetails: data.ExtendedDetails{
+				DTO: dto,
+			},
+		}
+	}
+
+	return func(baseDetails *data.BaseDetails, dto T, franchiseeID uint) AuditFranchiseeActionExtended {
+		return AuditFranchiseeActionExtended{
+			Core: core,
+			Details: &data.ExtendedDetailsFranchisee{
+				ExtendedDetails: data.ExtendedDetails{
+					BaseDetails: *baseDetails,
+					DTO:         dto,
+				},
+				FranchiseeInfo: data.FranchiseeInfo{
+					FranchiseeID: franchiseeID,
+				},
+			},
+		}
+	}
+}
+
+func NewAuditRegionActionExtendedFactory[T any](
+	operationType data.OperationType,
+	componentName data.ComponentName,
+	dto T,
+) func(baseDetails *data.BaseDetails, dto T, storeID uint) AuditRegionActionExtended {
+
+	core := AuditActionCore{
+		OperationType: operationType,
+		ComponentName: componentName,
+	}
+
+	if _, ok := auditActions[core]; ok {
+		panic(fmt.Errorf("duplicate audit action core found: %v", core))
+	}
+
+	auditActions[core] = func() data.AuditDetails {
+		return &data.ExtendedDetailsStore{
+			ExtendedDetails: data.ExtendedDetails{
+				DTO: dto,
+			},
+		}
+	}
+
+	return func(baseDetails *data.BaseDetails, dto T, regionID uint) AuditRegionActionExtended {
+		return AuditRegionActionExtended{
+			Core: core,
+			Details: &data.ExtendedDetailsRegion{
+				ExtendedDetails: data.ExtendedDetails{
+					BaseDetails: *baseDetails,
+					DTO:         dto,
+				},
+				RegionInfo: data.RegionInfo{
+					RegionID: regionID,
+				},
+			},
+		}
+	}
+}

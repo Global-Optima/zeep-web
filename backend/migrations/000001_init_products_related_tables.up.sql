@@ -382,7 +382,7 @@ CREATE TABLE
 CREATE UNIQUE INDEX unique_customer_phone ON customers (phone) WHERE deleted_at IS NULL;
 
 -- Create ENUM for EmployeeType
-CREATE TYPE employee_type AS ENUM ('STORE', 'WAREHOUSE', 'FRANCHISEE', 'WAREHOUSE_REGION_MANAGER', 'ADMIN');
+CREATE TYPE employee_type AS ENUM ('STORE', 'WAREHOUSE', 'FRANCHISEE', 'REGION', 'ADMIN');
 
 -- Employee Table
 CREATE TABLE
@@ -436,20 +436,20 @@ CREATE TABLE
 
 CREATE UNIQUE INDEX unique_warehouse_employee ON warehouse_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
 
-CREATE TYPE warehouse_region_manager_role AS ENUM ('WAREHOUSE_REGION_MANAGER');
+CREATE TYPE warehouse_region_manager_role AS ENUM ('REGION_WAREHOUSE_MANAGER');
 
 -- Region Managers Table
-CREATE TABLE IF NOT EXISTS region_managers (
+CREATE TABLE IF NOT EXISTS region_employees (
     id SERIAL PRIMARY KEY,
     employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
     region_id INT NOT NULL REFERENCES regions (id) ON DELETE CASCADE,
-    role warehouse_region_manager_role NOT NULL,
+    role warehouse_region_employee_role NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
     );
 
-CREATE UNIQUE INDEX unique_region_manager ON region_managers (employee_id, deleted_at) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_region_employee ON region_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
 
 CREATE TYPE franchisee_employee_role AS ENUM ('FRANCHISE_MANAGER', 'FRANCHISE_OWNER');
 
@@ -497,10 +497,15 @@ CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
 
 CREATE TYPE operation_type AS ENUM ('CREATE', 'UPDATE', 'DELETE');
 CREATE TYPE component_name AS ENUM (
+    'FRANCHISEE',
+    'REGION',
     'PRODUCT',
     'PRODUCT_CATEGORY',
     'STORE_PRODUCT',
-    'EMPLOYEE',
+    'STORE_EMPLOYEE',
+    'WAREHOUSE_EMPLOYEE',
+    'FRANCHISEE_EMPLOYEE',
+    'REGION_EMPLOYEE',
     'ADDITIVE',
     'ADDITIVE_CATEGORY',
     'STORE_ADDITIVE',
@@ -508,23 +513,29 @@ CREATE TYPE component_name AS ENUM (
     'RECIPE_STEPS',
     'STORE',
     'WAREHOUSE',
-    'STORE_WAREHOUSE STOCK',
+    'STORE_WAREHOUSE_STOCK',
     'INGREDIENT',
-    'INGREDIENT_CATEGORY'
+    'INGREDIENT_CATEGORY',
+    'STOCK_REQUEST',
+    'STOCK_MATERIAL',
+    'WAREHOUSE_STOCK',
+    'SUPPLIER',
+    'UNIT'
 );
 
-CREATE TABLE employee_audits (
-    id SERIAL PRIMARY KEY,
-    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
-    operation_type operation_type NOT NULL,
-    component_name component_name NOT NULL,
-    details JSONB,
-    ip_address VARCHAR(45) NOT NULL,
-    resource_url TEXT NOT NULL,
-    method http_method NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
+CREATE TABLE
+    IF NOT EXISTS employee_audits (
+        id SERIAL PRIMARY KEY,
+        employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+        operation_type operation_type NOT NULL,
+        component_name component_name NOT NULL,
+        details JSONB,
+        ip_address VARCHAR(45) NOT NULL,
+        resource_url TEXT NOT NULL,
+        method http_method NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMPTZ
 );
 
 CREATE INDEX idx_employee_audits_timestamp ON employee_audits(created_at);

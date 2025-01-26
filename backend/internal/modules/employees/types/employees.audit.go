@@ -15,8 +15,8 @@ var (
 	CreateWarehouseEmployeeAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
 		data.CreateOperation, data.WarehouseEmployeeComponent, &CreateEmployeeDTO{})
 
-	CreateRegionManagerAuditFactory = shared.NewAuditRegionActionExtendedFactory(
-		data.CreateOperation, data.RegionManagerComponent, &CreateEmployeeDTO{})
+	CreateRegionEmployeeAuditFactory = shared.NewAuditRegionActionExtendedFactory(
+		data.CreateOperation, data.RegionEmployeeComponent, &CreateEmployeeDTO{})
 
 	UpdateStoreEmployeeAuditFactory = shared.NewAuditStoreActionExtendedFactory(
 		data.UpdateOperation, data.StoreEmployeeComponent, &UpdateStoreEmployeeDTO{})
@@ -27,8 +27,8 @@ var (
 	UpdateFranchiseeEmployeeAuditFactory = shared.NewAuditFranchiseeActionExtendedFactory(
 		data.UpdateOperation, data.FranchiseeEmployeeComponent, &UpdateFranchiseeEmployeeDTO{})
 
-	UpdateRegionManagerEmployeeAuditFactory = shared.NewAuditRegionActionExtendedFactory(
-		data.UpdateOperation, data.RegionManagerComponent, &UpdateRegionManagerEmployeeDTO{})
+	UpdateRegionEmployeeAuditFactory = shared.NewAuditRegionActionExtendedFactory(
+		data.UpdateOperation, data.RegionEmployeeComponent, &UpdateRegionEmployeeDTO{})
 
 	DeleteFranchiseeEmployeeAuditFactory = shared.NewAuditFranchiseeActionExtendedFactory(
 		data.DeleteOperation, data.FranchiseeEmployeeComponent, struct{}{})
@@ -39,6 +39,6 @@ var (
 	DeleteWarehouseEmployeeAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
 		data.DeleteOperation, data.WarehouseEmployeeComponent, struct{}{})
 
-	DeleteRegionManagerEmployeeAuditFactory = shared.NewAuditRegionActionExtendedFactory(
-		data.DeleteOperation, data.RegionManagerComponent, struct{}{})
+	DeleteRegionEmployeeAuditFactory = shared.NewAuditRegionActionExtendedFactory(
+		data.DeleteOperation, data.RegionEmployeeComponent, struct{}{})
 )

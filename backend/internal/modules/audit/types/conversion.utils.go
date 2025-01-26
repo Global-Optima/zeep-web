@@ -55,7 +55,7 @@ func ConvertToEmployeeAuditDTO(audit *data.EmployeeAudit) (*EmployeeAuditDTO, er
 		ResourceURL:       audit.ResourceUrl,
 		Details:           json.RawMessage(audit.Details),
 		Method:            audit.Method.ToString(),
-		EmployeeDTO:       *employeesTypes.MapToEmployeeDTO(&employee),
+		BaseEmployeeDTO:   *employeesTypes.MapToBaseEmployeeDTO(&employee),
 	}, nil
 }
 

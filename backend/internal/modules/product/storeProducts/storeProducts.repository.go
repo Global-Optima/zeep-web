@@ -12,6 +12,7 @@ import (
 
 type StoreProductRepository interface {
 	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
+	GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
@@ -59,6 +60,26 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 	}
 
 	return &storeProduct, nil
+}
+
+func (r *storeProductRepository) GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]data.StoreProduct, error) {
+	var storeProducts []data.StoreProduct
+	query := r.db.Model(&data.StoreProduct{}).
+		Where("store_id = ? AND product_id IN (?)", storeID, productIDs).
+		Joins("JOIN products ON store_products.product_id = products.id").
+		Preload("Product.ProductSizes").
+		Preload("Product.Category").
+		Preload("StoreProductSizes.ProductSize.Unit").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
+
+	if err := query.Find(&storeProducts).Error; err != nil {
+		return nil, err
+	}
+
+	return storeProducts, nil
 }
 
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {

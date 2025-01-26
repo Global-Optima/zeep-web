@@ -21,10 +21,15 @@ const (
 type ComponentName string
 
 const (
+	FranchiseeComponent          ComponentName = "FRANCHISEE"
+	RegionComponent              ComponentName = "REGION"
 	ProductComponent             ComponentName = "PRODUCT"
 	ProductCategoryComponent     ComponentName = "PRODUCT_CATEGORY"
 	StoreProductComponent        ComponentName = "STORE_PRODUCT"
-	EmployeeComponent            ComponentName = "EMPLOYEE"
+	StoreEmployeeComponent       ComponentName = "STORE_EMPLOYEE"
+	WarehouseEmployeeComponent   ComponentName = "WAREHOUSE_EMPLOYEE"
+	FranchiseeEmployeeComponent  ComponentName = "FRANCHISEE_EMPLOYEE"
+	RegionEmployeeComponent      ComponentName = "REGION_EMPLOYEE"
 	AdditiveComponent            ComponentName = "ADDITIVE"
 	AdditiveCategoryComponent    ComponentName = "ADDITIVE_CATEGORY"
 	StoreAdditiveComponent       ComponentName = "STORE_ADDITIVE"
@@ -35,6 +40,11 @@ const (
 	StoreWarehouseStockComponent ComponentName = "STORE_WAREHOUSE_STOCK"
 	IngredientComponent          ComponentName = "INGREDIENT"
 	IngredientCategoryComponent  ComponentName = "INGREDIENT_CATEGORY"
+	StockRequestComponent        ComponentName = "STOCK_REQUEST"
+	StockMaterialComponent       ComponentName = "STOCK_MATERIAL"
+	WarehouseStockComponent      ComponentName = "WAREHOUSE_STOCK"
+	SupplierComponent            ComponentName = "SUPPLIER"
+	UnitComponent                ComponentName = "UNIT"
 )
 
 func (o OperationType) ToString() string {
@@ -90,6 +100,16 @@ type WarehouseInfo struct {
 	WarehouseName string `json:"warehouseName"`
 }
 
+type FranchiseeInfo struct {
+	FranchiseeID   uint   `json:"franchiseeId"`
+	FranchiseeName string `json:"franchiseeName"`
+}
+
+type RegionInfo struct {
+	RegionID   uint   `json:"regionId"`
+	RegionName string `json:"regionName"`
+}
+
 type ExtendedDetailsStore struct {
 	ExtendedDetails
 	StoreInfo
@@ -114,6 +134,32 @@ func (d *ExtendedDetailsWarehouse) ToDetails() ([]byte, error) {
 
 func (d *ExtendedDetailsWarehouse) SetWarehouseName(name string) {
 	d.WarehouseInfo.WarehouseName = name
+}
+
+type ExtendedDetailsFranchisee struct {
+	ExtendedDetails
+	FranchiseeInfo
+}
+
+func (d *ExtendedDetailsFranchisee) ToDetails() ([]byte, error) {
+	return ToJSONB(d, false)
+}
+
+func (d *ExtendedDetailsFranchisee) SetFranchiseeName(name string) {
+	d.FranchiseeInfo.FranchiseeName = name
+}
+
+type ExtendedDetailsRegion struct {
+	ExtendedDetails
+	RegionInfo
+}
+
+func (d *ExtendedDetailsRegion) ToDetails() ([]byte, error) {
+	return ToJSONB(d, false)
+}
+
+func (d *ExtendedDetailsRegion) SetRegionName(name string) {
+	d.RegionInfo.RegionName = name
 }
 
 type HTTPMethod string

@@ -4,6 +4,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 )
 
 type EmployeesModule struct {
@@ -13,10 +15,15 @@ type EmployeesModule struct {
 	Handler *employees.EmployeeHandler
 }
 
-func NewEmployeesModule(base *common.BaseModule, auditService audit.AuditService) *EmployeesModule {
+func NewEmployeesModule(
+	base *common.BaseModule,
+	auditService audit.AuditService,
+	franchiseeService franchisees.FranchiseeService,
+	regionService regions.RegionService,
+) *EmployeesModule {
 	repo := employees.NewEmployeeRepository(base.DB)
 	service := employees.NewEmployeeService(repo, base.Logger)
-	handler := employees.NewEmployeeHandler(service, auditService)
+	handler := employees.NewEmployeeHandler(service, auditService, franchiseeService, regionService)
 
 	base.Router.RegisterEmployeesRoutes(handler)
 	base.Router.RegisterEmployeeAccountRoutes(handler)

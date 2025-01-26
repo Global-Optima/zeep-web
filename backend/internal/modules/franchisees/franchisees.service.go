@@ -2,7 +2,10 @@ package franchisees
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
+	"github.com/gin-gonic/gin"
 )
 
 type FranchiseeService interface {
@@ -11,7 +14,9 @@ type FranchiseeService interface {
 	DeleteFranchisee(id uint) error
 	GetFranchiseeByID(id uint) (*types.FranchiseeDTO, error)
 	GetFranchisees(filter *types.FranchiseeFilter) ([]types.FranchiseeDTO, error)
-	IsFranchiseeStore(franchiseeID, storeID uint) (bool, error)
+	IsFranchiseeStore(franchiseeID, storeID uint) *handlerErrors.HandlerError
+	CheckFranchiseeStore(c *gin.Context) (uint, *handlerErrors.HandlerError)
+	CheckFranchiseeStoreWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError)
 }
 
 type franchiseeService struct {
@@ -66,6 +71,67 @@ func (s *franchiseeService) GetFranchisees(filter *types.FranchiseeFilter) ([]ty
 	return dtos, nil
 }
 
-func (s *franchiseeService) IsFranchiseeStore(franchiseeID, storeID uint) (bool, error) {
-	return s.repo.IsFranchiseeStore(franchiseeID, storeID)
+func (s *franchiseeService) CheckFranchiseeStore(c *gin.Context) (uint, *handlerErrors.HandlerError) {
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		return 0, contexts.ErrUnauthorizedAccess
+	}
+
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		return 0, errH
+	}
+
+	if claims.Role == data.RoleFranchiseManager || claims.Role == data.RoleFranchiseOwner {
+		franchiseeID, errH := contexts.GetFranchiseeId(c)
+		if errH != nil {
+			return 0, errH
+		}
+
+		errH = s.IsFranchiseeStore(franchiseeID, storeID)
+		if errH != nil {
+			return 0, errH
+		}
+		return storeID, nil
+	}
+
+	return storeID, nil
+}
+
+func (s *franchiseeService) CheckFranchiseeStoreWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError) {
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		return 0, "", contexts.ErrUnauthorizedAccess
+	}
+
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		return 0, "", errH
+	}
+
+	if claims.Role == data.RoleFranchiseManager || claims.Role == data.RoleFranchiseOwner {
+		franchiseeID, errH := contexts.GetFranchiseeId(c)
+		if errH != nil {
+			return 0, "", errH
+		}
+
+		errH = s.IsFranchiseeStore(franchiseeID, storeID)
+		if errH != nil {
+			return 0, "", errH
+		}
+		return storeID, claims.Role, nil
+	}
+
+	return storeID, claims.Role, nil
+}
+
+func (s *franchiseeService) IsFranchiseeStore(franchiseeID, storeID uint) *handlerErrors.HandlerError {
+	ok, err := s.repo.IsFranchiseeStore(franchiseeID, storeID)
+	if err != nil {
+		return types.ErrFailedToCheckFranchiseeStore
+	}
+	if !ok {
+		return types.ErrFranchiseeStoreMismatch
+	}
+	return nil
 }

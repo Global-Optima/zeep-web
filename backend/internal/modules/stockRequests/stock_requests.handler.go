@@ -39,13 +39,13 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	requestID, err := h.service.CreateStockRequest(storeID, req)
+	_, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to create stock requests: %s", err.Error()))
 		return
 	}
 
-	utils.SendSuccessCreatedResponse(c, gin.H{"requestId": requestID})
+	utils.SendSuccessCreatedResponse(c, "stock request created successfully")
 }
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {

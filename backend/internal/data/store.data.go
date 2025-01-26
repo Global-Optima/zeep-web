@@ -2,10 +2,10 @@ package data
 
 type Franchisee struct {
 	BaseEntity
-	Name                string     `gorm:"size:255;not null" sort:"name"`
-	Description         string     `gorm:"size:1024"`
-	FranchiseeEmployees []Employee `gorm:"foreignKey:FranchiseeID"`
-	Stores              []Store    `gorm:"foreignKey:FranchiseeID"`
+	Name                string               `gorm:"size:255;not null" sort:"name"`
+	Description         string               `gorm:"size:1024"`
+	FranchiseeEmployees []FranchiseeEmployee `gorm:"foreignKey:FranchiseeID"`
+	Stores              []Store              `gorm:"foreignKey:FranchiseeID"`
 }
 
 type Store struct {

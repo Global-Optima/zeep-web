@@ -99,25 +99,22 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 
 	stockList, err := h.service.GetStockListByIDs(storeID, IDs)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to add new stock: ingredient not found")
+		utils.SendInternalServerError(c, "failed to retrieve added stock: ingredient not found")
 		return
 	}
 
-	actions := make([]shared.AuditAction, len(stockList))
+	dtoMap := make(map[uint]*types.AddStoreStockDTO)
+	for _, stockDTO := range dto.IngredientStocks {
+		dtoCopy := stockDTO
+		dtoMap[stockDTO.IngredientID] = &dtoCopy
+	}
 
-	for i, stock := range stockList {
-
-		var matchedDTO *types.AddStoreStockDTO
-
-		for _, dto := range dto.IngredientStocks {
-			if stock.ID == dto.IngredientID {
-				matchedDTO = &dto
-				break
-			}
-		}
-
-		if matchedDTO == nil {
-			h.logger.Error("Failed to match stock with DTO for stock %d")
+	var actions []shared.AuditAction
+	for _, stock := range stockList {
+		matchedDTO, exists := dtoMap[stock.Ingredient.ID]
+		if !exists {
+			h.logger.Errorf("Failed to match stock with DTO for stock ID: %d", stock.ID)
+			continue
 		}
 
 		action := types.CreateStoreWarehouseStockAuditFactory(
@@ -127,8 +124,10 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 			},
 			matchedDTO, storeID,
 		)
-		actions[i] = &action
+		actions = append(actions, &action)
 	}
+
+	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
 
 	utils.SendSuccessResponse(c, gin.H{
 		"message": "success",

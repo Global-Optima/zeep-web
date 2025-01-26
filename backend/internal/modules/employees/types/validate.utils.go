@@ -86,7 +86,7 @@ func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
 	return employee, nil
 }
 
-func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*data.StoreEmployee, error) {
+func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO, role data.EmployeeRole) (*data.StoreEmployee, error) {
 	var storeEmployee = &data.StoreEmployee{}
 	if input.StoreID != nil {
 		storeEmployee.StoreID = *input.StoreID
@@ -94,6 +94,10 @@ func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*data.StoreEmploy
 
 	if input.Role != nil {
 		if !data.IsAllowableRole(data.StoreEmployeeType, *input.Role) {
+			return nil, ErrUnsupportedEmployeeType
+		}
+		if !data.CanManageRole(role, *input.Role) {
+			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
 		}
 		storeEmployee.Role = *input.Role
 	}
@@ -101,7 +105,7 @@ func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*data.StoreEmploy
 	return storeEmployee, nil
 }
 
-func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.WarehouseEmployee, error) {
+func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO, role data.EmployeeRole) (*data.WarehouseEmployee, error) {
 	var warehouseEmployee = &data.WarehouseEmployee{}
 	if input.WarehouseID != nil {
 		warehouseEmployee.WarehouseID = *input.WarehouseID
@@ -109,6 +113,10 @@ func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.War
 
 	if input.Role != nil {
 		if !data.IsAllowableRole(data.WarehouseEmployeeType, *input.Role) {
+			return nil, ErrUnsupportedEmployeeType
+		}
+		if !data.CanManageRole(role, *input.Role) {
+			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
 		}
 		warehouseEmployee.Role = *input.Role
 	}
@@ -116,7 +124,7 @@ func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.War
 	return warehouseEmployee, nil
 }
 
-func FranchiseeEmployeeUpdateFields(input *UpdateFranchiseeEmployeeDTO) (*data.FranchiseeEmployee, error) {
+func FranchiseeEmployeeUpdateFields(input *UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) (*data.FranchiseeEmployee, error) {
 	var franchiseeEmployee = &data.FranchiseeEmployee{}
 	if input.FranchiseeID != nil {
 		franchiseeEmployee.FranchiseeID = *input.FranchiseeID
@@ -124,6 +132,10 @@ func FranchiseeEmployeeUpdateFields(input *UpdateFranchiseeEmployeeDTO) (*data.F
 
 	if input.Role != nil {
 		if !data.IsAllowableRole(data.FranchiseeEmployeeType, *input.Role) {
+			return nil, ErrUnsupportedEmployeeType
+		}
+		if !data.CanManageRole(role, *input.Role) {
+			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
 		}
 		franchiseeEmployee.Role = *input.Role
 	}
@@ -131,14 +143,18 @@ func FranchiseeEmployeeUpdateFields(input *UpdateFranchiseeEmployeeDTO) (*data.F
 	return franchiseeEmployee, nil
 }
 
-func RegionManagerEmployeeUpdateFields(input *UpdateRegionManagerEmployeeDTO) (*data.RegionManager, error) {
-	var regionManager = &data.RegionManager{}
+func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.EmployeeRole) (*data.RegionEmployee, error) {
+	var regionManager = &data.RegionEmployee{}
 	if input.RegionID != nil {
 		regionManager.RegionID = *input.RegionID
 	}
 
 	if input.Role != nil {
-		if !data.IsAllowableRole(data.WarehouseRegionManagerEmployeeType, *input.Role) {
+		if !data.IsAllowableRole(data.RegionEmployeeType, *input.Role) {
+			return nil, ErrUnsupportedEmployeeType
+		}
+		if !data.CanManageRole(role, *input.Role) {
+			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
 		}
 		regionManager.Role = *input.Role
 	}
@@ -146,10 +162,14 @@ func RegionManagerEmployeeUpdateFields(input *UpdateRegionManagerEmployeeDTO) (*
 	return regionManager, nil
 }
 
-func AdminEmployeeEmployeeUpdateFields(input *UpdateAdminEmployeeDTO) (*data.AdminEmployee, error) {
+func AdminEmployeeUpdateFields(input *UpdateAdminEmployeeDTO, role data.EmployeeRole) (*data.AdminEmployee, error) {
 	var adminEmployee = &data.AdminEmployee{}
 	if input.Role != nil {
 		if !data.IsAllowableRole(data.AdminEmployeeType, *input.Role) {
+			return nil, ErrUnsupportedEmployeeType
+		}
+		if !data.CanManageRole(role, *input.Role) {
+			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
 		}
 		adminEmployee.Role = *input.Role
 	}

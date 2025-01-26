@@ -2,10 +2,10 @@ package storeAdditives
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"go.uber.org/zap"
 	"strconv"
 
@@ -16,33 +16,35 @@ import (
 )
 
 type StoreAdditiveHandler struct {
-	service         StoreAdditiveService
-	additiveService additives.AdditiveService
-	auditService    audit.AuditService
-	logger          *zap.SugaredLogger
+	service           StoreAdditiveService
+	additiveService   additives.AdditiveService
+	franchiseeService franchisees.FranchiseeService
+	auditService      audit.AuditService
+	logger            *zap.SugaredLogger
 }
 
 func NewStoreAdditiveHandler(
 	service StoreAdditiveService,
 	additiveService additives.AdditiveService,
+	franchiseeService franchisees.FranchiseeService,
 	auditService audit.AuditService,
 	logger *zap.SugaredLogger,
 ) *StoreAdditiveHandler {
 	return &StoreAdditiveHandler{
-		service:         service,
-		additiveService: additiveService,
-		auditService:    auditService,
-		logger:          logger,
+		service:           service,
+		additiveService:   additiveService,
+		franchiseeService: franchiseeService,
+		auditService:      auditService,
+		logger:            logger,
 	}
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
-
 	productSizeID, err := strconv.ParseUint(c.Param("productSizeId"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid productSizeID")
@@ -67,7 +69,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
 	var filter additiveTypes.AdditiveFilterQuery
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -88,7 +90,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
 }
 
 func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -150,7 +152,7 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 }
 
 func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -192,7 +194,7 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 }
 
 func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -228,7 +230,7 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditiveByID(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return

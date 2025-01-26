@@ -14,11 +14,11 @@ func (t EmployeeType) ToString() string {
 }
 
 const (
-	StoreEmployeeType                  EmployeeType = "STORE"
-	WarehouseEmployeeType              EmployeeType = "WAREHOUSE"
-	FranchiseeEmployeeType             EmployeeType = "FRANCHISEE"
-	WarehouseRegionManagerEmployeeType EmployeeType = "WAREHOUSE_REGION_MANAGER"
-	AdminEmployeeType                  EmployeeType = "ADMIN"
+	StoreEmployeeType      EmployeeType = "STORE"
+	WarehouseEmployeeType  EmployeeType = "WAREHOUSE"
+	FranchiseeEmployeeType EmployeeType = "FRANCHISEE"
+	RegionEmployeeType     EmployeeType = "REGION"
+	AdminEmployeeType      EmployeeType = "ADMIN"
 )
 
 type EmployeeRole string
@@ -65,21 +65,69 @@ const (
 type RegionManagerRole = EmployeeRole
 
 const (
-	RoleWarehouseRegionManager RegionManagerRole = "WAREHOUSE_REGION_MANAGER"
+	RoleRegionWarehouseManager RegionManagerRole = "REGION_WAREHOUSE_MANAGER"
 )
 
 var EmployeeTypeRoleMap = map[EmployeeType][]EmployeeRole{
-	StoreEmployeeType:                  {RoleStoreManager, RoleBarista},
-	WarehouseEmployeeType:              {RoleWarehouseManager, RoleWarehouseEmployee},
-	FranchiseeEmployeeType:             {RoleFranchiseManager, RoleFranchiseOwner},
-	WarehouseRegionManagerEmployeeType: {RoleWarehouseRegionManager},
-	AdminEmployeeType:                  {RoleAdmin, RoleOwner},
+	StoreEmployeeType:      {RoleStoreManager, RoleBarista},
+	WarehouseEmployeeType:  {RoleWarehouseManager, RoleWarehouseEmployee},
+	FranchiseeEmployeeType: {RoleFranchiseManager, RoleFranchiseOwner},
+	RegionEmployeeType:     {RoleRegionWarehouseManager},
+	AdminEmployeeType:      {RoleAdmin, RoleOwner},
+}
+
+var RoleManagePermissions = map[EmployeeRole][]EmployeeRole{
+	RoleStoreManager:           {RoleBarista},
+	RoleWarehouseManager:       {RoleWarehouseEmployee},
+	RoleFranchiseManager:       {RoleStoreManager, RoleBarista},
+	RoleRegionWarehouseManager: {RoleWarehouseManager, RoleWarehouseEmployee},
+	RoleAdmin: {RoleOwner, RoleFranchiseOwner, RoleFranchiseManager,
+		RoleRegionWarehouseManager, RoleStoreManager, RoleWarehouseManager,
+		RoleBarista, RoleWarehouseEmployee},
+}
+
+func CanManageRole(currentRole, targetRole EmployeeRole) bool {
+	allowedRoles, exists := RoleManagePermissions[currentRole]
+	if !exists {
+		return false
+	}
+
+	for _, allowedRole := range allowedRoles {
+		if allowedRole == targetRole {
+			return true
+		}
+	}
+	return false
 }
 
 var (
-	WarehouseManagementPermissions = []EmployeeRole{RoleWarehouseRegionManager, RoleWarehouseManager}
-	WarehouseReadPermissions       = []EmployeeRole{RoleOwner, RoleWarehouseEmployee}
-	StoreManagementPermissions     = []EmployeeRole{RoleFranchiseManager, RoleStoreManager}
+	WarehouseManagementPermissions = []EmployeeRole{
+		RoleRegionWarehouseManager,
+		RoleWarehouseManager,
+	}
+	WarehouseReadPermissions = append(
+		WarehouseManagementPermissions,
+		RoleOwner,
+		RoleWarehouseEmployee,
+	)
+	WarehouseWorkerPermissions = []EmployeeRole{
+		RoleWarehouseManager,
+		RoleWarehouseEmployee,
+	}
+	StoreManagementPermissions = []EmployeeRole{
+		RoleFranchiseManager,
+		RoleStoreManager,
+	}
+	StoreWorkerPermissions = []EmployeeRole{
+		RoleStoreManager,
+		RoleBarista,
+	}
+	StoreReadPermissions = append(
+		StoreManagementPermissions,
+		RoleBarista,
+		RoleFranchiseOwner,
+		RoleOwner,
+	)
 )
 
 func IsAllowableRole(employeeType EmployeeType, role EmployeeRole) bool {
@@ -99,7 +147,7 @@ func IsAllowableRole(employeeType EmployeeType, role EmployeeRole) bool {
 
 func IsValidEmployeeRole(role EmployeeRole) bool {
 	switch role {
-	case RoleAdmin, RoleOwner, RoleWarehouseRegionManager, RoleFranchiseManager, RoleFranchiseOwner,
+	case RoleAdmin, RoleOwner, RoleRegionWarehouseManager, RoleFranchiseManager, RoleFranchiseOwner,
 		RoleWarehouseManager, RoleStoreManager, RoleBarista, RoleWarehouseEmployee:
 		return true
 	default:
@@ -180,7 +228,7 @@ type Employee struct {
 	IsActive           bool                `gorm:"default:true" sort:"isActive"`
 	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
-	RegionManager      *RegionManager      `gorm:"foreignKey:EmployeeID"`
+	RegionEmployee     *RegionEmployee     `gorm:"foreignKey:EmployeeID"`
 	FranchiseeEmployee *FranchiseeEmployee `gorm:"foreignKey:EmployeeID"`
 	AdminEmployee      *AdminEmployee      `gorm:"foreignKey:EmployeeID"`
 	Workdays           []EmployeeWorkday   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
@@ -209,17 +257,17 @@ type FranchiseeEmployee struct {
 	FranchiseeID uint                   `gorm:"index,not null"`
 	EmployeeID   uint                   `gorm:"index,not null"`
 	Role         FranchiseeEmployeeRole `gorm:"type:franchisee_employee_role;not null" sort:"role"`
+	Employee     Employee               `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
 	Franchisee   Franchisee             `gorm:"foreignKey:FranchiseeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" sort:"franchisee"`
-	Employee     Employee               `gorm:"foreignKey:EmployeeID" sort:"employee"`
 }
 
 // TODO consider renaming to RegionEmployee
-type RegionManager struct {
+type RegionEmployee struct {
 	BaseEntity
 	EmployeeID uint              `gorm:"index;not null"`
 	RegionID   uint              `gorm:"index;not null"`
 	Role       RegionManagerRole `gorm:"type:warehouse_region_manager_role;not null" sort:"role"`
-	Employee   Employee          `gorm:"foreignKey:ManagerID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Employee   Employee          `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
 	Region     Region            `gorm:"foreignKey:RegionID;constraint:OnDelete:CASCADE" sort:"region"`
 }
 
@@ -227,7 +275,7 @@ type AdminEmployee struct {
 	BaseEntity
 	EmployeeID uint      `gorm:"index;not null"`
 	Role       AdminRole `gorm:"type:admin_role;not null" sort:"role"`
-	Employee   Employee  `gorm:"foreignKey:ManagerID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Employee   Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
 }
 
 type EmployeeWorkTrack struct {
