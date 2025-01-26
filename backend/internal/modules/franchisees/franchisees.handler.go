@@ -1,6 +1,8 @@
 package franchisees
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -8,30 +10,42 @@ import (
 )
 
 type FranchiseeHandler struct {
-	service FranchiseeService
+	service      FranchiseeService
+	auditService audit.AuditService
 }
 
-func NewFranchiseeHandler(service FranchiseeService) *FranchiseeHandler {
-	return &FranchiseeHandler{service: service}
+func NewFranchiseeHandler(service FranchiseeService, auditService audit.AuditService) *FranchiseeHandler {
+	return &FranchiseeHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
-func (h *FranchiseeHandler) Create(c *gin.Context) {
+func (h *FranchiseeHandler) CreateFranchisee(c *gin.Context) {
 	var input types.CreateFranchiseeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.SendBadRequestError(c, "invalid input")
 		return
 	}
-	_, err := h.service.Create(&input)
+	id, err := h.service.CreateFranchisee(&input)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to create franchisee")
 		return
 	}
-	utils.SuccessCreatedResponse(c, gin.H{
-		"message": "franchisee was created successfully",
-	})
+
+	action := types.CreateFranchiseeAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: input.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessCreatedResponse(c, "franchisee was created successfully")
 }
 
-func (h *FranchiseeHandler) Update(c *gin.Context) {
+func (h *FranchiseeHandler) UpdateFranchisee(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid franchisee ID")
@@ -44,35 +58,72 @@ func (h *FranchiseeHandler) Update(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Update(uint(id), &input); err != nil {
+	franchisee, err := h.service.GetFranchiseeByID(uint(id))
+	if err != nil {
+		utils.SendNotFoundError(c, "failed to update franchisee: franchisee not found")
+		return
+	}
+
+	if err := h.service.UpdateFranchisee(uint(id), &input); err != nil {
 		utils.SendInternalServerError(c, "failed to update franchisee")
 		return
 	}
+
+	action := types.UpdateFranchiseeAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: franchisee.Name,
+		},
+		&input,
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
 	utils.SendSuccessResponse(c, gin.H{"message": "franchisee updated successfully"})
 }
 
-func (h *FranchiseeHandler) Delete(c *gin.Context) {
+func (h *FranchiseeHandler) DeleteFranchisee(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid franchisee ID")
 		return
 	}
 
-	if err := h.service.Delete(uint(id)); err != nil {
+	franchisee, err := h.service.GetFranchiseeByID(uint(id))
+	if err != nil {
+		utils.SendNotFoundError(c, "failed to delete franchisee: franchisee not found")
+		return
+	}
+
+	if err := h.service.DeleteFranchisee(uint(id)); err != nil {
+		utils.SendInternalServerError(c, "failed to delete franchisee")
+		return
+	}
+
+	action := types.DeleteFranchiseeAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: franchisee.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	if err := h.service.DeleteFranchisee(uint(id)); err != nil {
 		utils.SendInternalServerError(c, "failed to delete franchisee")
 		return
 	}
 	utils.SendSuccessResponse(c, gin.H{"message": "franchisee deleted successfully"})
 }
 
-func (h *FranchiseeHandler) GetByID(c *gin.Context) {
+func (h *FranchiseeHandler) GetFranchiseeByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid franchisee ID")
 		return
 	}
 
-	franchisee, err := h.service.GetByID(uint(id))
+	franchisee, err := h.service.GetFranchiseeByID(uint(id))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve franchisee")
 		return
@@ -80,14 +131,14 @@ func (h *FranchiseeHandler) GetByID(c *gin.Context) {
 	utils.SendSuccessResponse(c, franchisee)
 }
 
-func (h *FranchiseeHandler) GetAll(c *gin.Context) {
+func (h *FranchiseeHandler) GetFranchisees(c *gin.Context) {
 	var filter types.FranchiseeFilter
 	if err := c.ShouldBindQuery(&filter); err != nil {
 		utils.SendBadRequestError(c, "invalid filter parameters")
 		return
 	}
 
-	franchisees, err := h.service.GetAll(&filter)
+	franchisees, err := h.service.GetFranchisees(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve franchisees")
 		return

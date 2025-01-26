@@ -6,11 +6,11 @@ import (
 )
 
 type RegionService interface {
-	Create(dto *types.CreateRegionDTO) (*types.RegionDTO, error)
-	Update(id uint, dto *types.UpdateRegionDTO) error
-	Delete(id uint) error
-	GetByID(id uint) (*types.RegionDTO, error)
-	GetAll(filter *types.RegionFilter) ([]types.RegionDTO, error)
+	CreateRegion(dto *types.CreateRegionDTO) (uint, error)
+	UpdateRegion(id uint, dto *types.UpdateRegionDTO) error
+	DeleteRegion(id uint) error
+	GetRegionByID(id uint) (*types.RegionDTO, error)
+	GetRegions(filter *types.RegionFilter) ([]types.RegionDTO, error)
 	IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error)
 }
 
@@ -22,33 +22,31 @@ func NewRegionService(repo RegionRepository) RegionService {
 	return &regionService{repo: repo}
 }
 
-func (s *regionService) Create(dto *types.CreateRegionDTO) (*types.RegionDTO, error) {
+func (s *regionService) CreateRegion(dto *types.CreateRegionDTO) (uint, error) {
 	region := &data.Region{
 		Name: dto.Name,
 	}
-	if err := s.repo.Create(region); err != nil {
-		return nil, err
+	id, err := s.repo.CreateRegion(region)
+	if err != nil {
+		return 0, err
 	}
-	return &types.RegionDTO{
-		ID:   region.ID,
-		Name: region.Name,
-	}, nil
+	return id, nil
 }
 
-func (s *regionService) Update(id uint, dto *types.UpdateRegionDTO) error {
+func (s *regionService) UpdateRegion(id uint, dto *types.UpdateRegionDTO) error {
 	updateData := &data.Region{}
 	if dto.Name != nil {
 		updateData.Name = *dto.Name
 	}
-	return s.repo.Update(id, updateData)
+	return s.repo.UpdateRegion(id, updateData)
 }
 
-func (s *regionService) Delete(id uint) error {
-	return s.repo.Delete(id)
+func (s *regionService) DeleteRegion(id uint) error {
+	return s.repo.DeleteRegion(id)
 }
 
-func (s *regionService) GetByID(id uint) (*types.RegionDTO, error) {
-	region, err := s.repo.GetByID(id)
+func (s *regionService) GetRegionByID(id uint) (*types.RegionDTO, error) {
+	region, err := s.repo.GetRegionByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +56,8 @@ func (s *regionService) GetByID(id uint) (*types.RegionDTO, error) {
 	}, nil
 }
 
-func (s *regionService) GetAll(filter *types.RegionFilter) ([]types.RegionDTO, error) {
-	regions, err := s.repo.GetAll(filter)
+func (s *regionService) GetRegions(filter *types.RegionFilter) ([]types.RegionDTO, error) {
+	regions, err := s.repo.GetRegions(filter)
 	if err != nil {
 		return nil, err
 	}

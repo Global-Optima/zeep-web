@@ -1,6 +1,8 @@
 package regions
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -8,69 +10,116 @@ import (
 )
 
 type RegionHandler struct {
-	service RegionService
+	service      RegionService
+	auditService audit.AuditService
 }
 
-func NewRegionHandler(service RegionService) *RegionHandler {
-	return &RegionHandler{service: service}
+func NewRegionHandler(service RegionService, auditService audit.AuditService) *RegionHandler {
+	return &RegionHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
-func (h *RegionHandler) Create(c *gin.Context) {
-	var input types.CreateRegionDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
+func (h *RegionHandler) CreateRegion(c *gin.Context) {
+	var dto types.CreateRegionDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, "invalid input")
 		return
 	}
-	region, err := h.service.Create(&input)
+	id, err := h.service.CreateRegion(&dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to create region")
 		return
 	}
-	utils.SendSuccessResponse(c, region)
+
+	action := types.CreateRegionAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: dto.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessCreatedResponse(c, "region created successfully")
 }
 
-func (h *RegionHandler) Update(c *gin.Context) {
+func (h *RegionHandler) UpdateRegion(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid region ID")
 		return
 	}
 
-	var input types.UpdateRegionDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
+	var dto types.UpdateRegionDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
 		utils.SendBadRequestError(c, "invalid input")
 		return
 	}
 
-	if err := h.service.Update(uint(id), &input); err != nil {
+	region, err := h.service.GetRegionByID(uint(id))
+	if err != nil {
+		utils.SendNotFoundError(c, "failed to update region: region not found")
+		return
+	}
+
+	if err := h.service.UpdateRegion(uint(id), &dto); err != nil {
 		utils.SendInternalServerError(c, "failed to update region")
 		return
 	}
+
+	action := types.UpdateRegionAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: region.Name,
+		},
+		&dto,
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
 	utils.SendSuccessResponse(c, gin.H{"message": "region updated successfully"})
 }
 
-func (h *RegionHandler) Delete(c *gin.Context) {
+func (h *RegionHandler) DeleteRegion(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid region ID")
 		return
 	}
 
-	if err := h.service.Delete(uint(id)); err != nil {
+	region, err := h.service.GetRegionByID(uint(id))
+	if err != nil {
+		utils.SendNotFoundError(c, "failed to delete region: region not found")
+		return
+	}
+
+	if err := h.service.DeleteRegion(uint(id)); err != nil {
 		utils.SendInternalServerError(c, "failed to delete region")
 		return
 	}
+
+	action := types.DeleteRegionAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: region.Name,
+		},
+	)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
 	utils.SendSuccessResponse(c, gin.H{"message": "region deleted successfully"})
 }
 
-func (h *RegionHandler) GetByID(c *gin.Context) {
+func (h *RegionHandler) GetRegionByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid region ID")
 		return
 	}
 
-	region, err := h.service.GetByID(uint(id))
+	region, err := h.service.GetRegionByID(uint(id))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve region")
 		return
@@ -78,14 +127,14 @@ func (h *RegionHandler) GetByID(c *gin.Context) {
 	utils.SendSuccessResponse(c, region)
 }
 
-func (h *RegionHandler) GetAll(c *gin.Context) {
+func (h *RegionHandler) GetRegions(c *gin.Context) {
 	var filter types.RegionFilter
 	if err := c.ShouldBindQuery(&filter); err != nil {
 		utils.SendBadRequestError(c, "invalid filter parameters")
 		return
 	}
 
-	regions, err := h.service.GetAll(&filter)
+	regions, err := h.service.GetRegions(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve regions")
 		return

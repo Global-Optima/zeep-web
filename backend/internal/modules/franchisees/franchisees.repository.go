@@ -9,11 +9,11 @@ import (
 )
 
 type FranchiseeRepository interface {
-	Create(franchisee *data.Franchisee) (uint, error)
-	Update(id uint, updateData *data.Franchisee) error
-	Delete(id uint) error
-	GetByID(id uint) (*data.Franchisee, error)
-	GetAll(filter *types.FranchiseeFilter) ([]data.Franchisee, error)
+	CreateFranchisee(franchisee *data.Franchisee) (uint, error)
+	UpdateFranchisee(id uint, updateData *data.Franchisee) error
+	DeleteFranchisee(id uint) error
+	GetFranchiseeByID(id uint) (*data.Franchisee, error)
+	GetFranchisees(filter *types.FranchiseeFilter) ([]data.Franchisee, error)
 	IsFranchiseeStore(franchiseeID, storeID uint) (bool, error)
 }
 
@@ -25,7 +25,7 @@ func NewFranchiseeRepository(db *gorm.DB) FranchiseeRepository {
 	return &franchiseeRepository{db: db}
 }
 
-func (r *franchiseeRepository) Create(franchisee *data.Franchisee) (uint, error) {
+func (r *franchiseeRepository) CreateFranchisee(franchisee *data.Franchisee) (uint, error) {
 	err := r.db.Create(franchisee).Error
 	if err != nil {
 		return 0, err
@@ -33,15 +33,15 @@ func (r *franchiseeRepository) Create(franchisee *data.Franchisee) (uint, error)
 	return franchisee.ID, nil
 }
 
-func (r *franchiseeRepository) Update(id uint, updateData *data.Franchisee) error {
+func (r *franchiseeRepository) UpdateFranchisee(id uint, updateData *data.Franchisee) error {
 	return r.db.Model(&data.Franchisee{}).Where("id = ?", id).Updates(updateData).Error
 }
 
-func (r *franchiseeRepository) Delete(id uint) error {
+func (r *franchiseeRepository) DeleteFranchisee(id uint) error {
 	return r.db.Delete(&data.Franchisee{}, id).Error
 }
 
-func (r *franchiseeRepository) GetByID(id uint) (*data.Franchisee, error) {
+func (r *franchiseeRepository) GetFranchiseeByID(id uint) (*data.Franchisee, error) {
 	var franchisee data.Franchisee
 	if err := r.db.First(&franchisee, id).Error; err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (r *franchiseeRepository) GetByID(id uint) (*data.Franchisee, error) {
 	return &franchisee, nil
 }
 
-func (r *franchiseeRepository) GetAll(filter *types.FranchiseeFilter) ([]data.Franchisee, error) {
+func (r *franchiseeRepository) GetFranchisees(filter *types.FranchiseeFilter) ([]data.Franchisee, error) {
 	var franchisees []data.Franchisee
 	query := r.db.Model(&data.Franchisee{})
 

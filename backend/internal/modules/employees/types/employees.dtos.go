@@ -99,7 +99,6 @@ type EmployeeDTO struct {
 	Email     string            `json:"email"`
 	Type      data.EmployeeType `json:"type"`
 	IsActive  bool              `json:"isActive"`
-	Type      data.EmployeeType `json:"type"`
 }
 
 type StoreEmployeeDTO struct {

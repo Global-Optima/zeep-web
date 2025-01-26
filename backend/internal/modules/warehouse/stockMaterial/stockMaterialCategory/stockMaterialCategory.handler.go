@@ -30,7 +30,7 @@ func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessCreatedResponse(c, gin.H{"id": id})
+	utils.SendSuccessCreatedResponse(c, gin.H{"id": id})
 }
 
 func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {

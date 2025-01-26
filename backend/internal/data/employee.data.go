@@ -76,6 +76,12 @@ var EmployeeTypeRoleMap = map[EmployeeType][]EmployeeRole{
 	AdminEmployeeType:                  {RoleAdmin, RoleOwner},
 }
 
+var (
+	WarehouseManagementPermissions = []EmployeeRole{RoleWarehouseRegionManager, RoleWarehouseManager}
+	WarehouseReadPermissions       = []EmployeeRole{RoleOwner, RoleWarehouseEmployee}
+	StoreManagementPermissions     = []EmployeeRole{RoleFranchiseManager, RoleStoreManager}
+)
+
 func IsAllowableRole(employeeType EmployeeType, role EmployeeRole) bool {
 	roles, exists := EmployeeTypeRoleMap[employeeType]
 	if !exists {

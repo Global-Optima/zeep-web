@@ -2,6 +2,7 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 )
 
@@ -12,10 +13,10 @@ type RegionsModule struct {
 	Handler *regions.RegionHandler
 }
 
-func NewRegionsModule(base *common.BaseModule) *RegionsModule {
+func NewRegionsModule(base *common.BaseModule, auditService audit.AuditService) *RegionsModule {
 	repo := regions.NewRegionRepository(base.DB)
 	service := regions.NewRegionService(repo)
-	handler := regions.NewRegionHandler(service)
+	handler := regions.NewRegionHandler(service, auditService)
 
 	base.Router.RegisterRegionRoutes(handler)
 

@@ -9,11 +9,11 @@ import (
 )
 
 type RegionRepository interface {
-	Create(region *data.Region) error
-	Update(id uint, updateData *data.Region) error
-	Delete(id uint) error
-	GetByID(id uint) (*data.Region, error)
-	GetAll(filter *types.RegionFilter) ([]data.Region, error)
+	CreateRegion(region *data.Region) (uint, error)
+	UpdateRegion(id uint, updateData *data.Region) error
+	DeleteRegion(id uint) error
+	GetRegionByID(id uint) (*data.Region, error)
+	GetRegions(filter *types.RegionFilter) ([]data.Region, error)
 	IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error)
 }
 
@@ -25,19 +25,23 @@ func NewRegionRepository(db *gorm.DB) RegionRepository {
 	return &regionRepository{db: db}
 }
 
-func (r *regionRepository) Create(region *data.Region) error {
-	return r.db.Create(region).Error
+func (r *regionRepository) CreateRegion(region *data.Region) (uint, error) {
+	err := r.db.Create(region).Error
+	if err != nil {
+		return 0, err
+	}
+	return region.ID, nil
 }
 
-func (r *regionRepository) Update(id uint, updateData *data.Region) error {
+func (r *regionRepository) UpdateRegion(id uint, updateData *data.Region) error {
 	return r.db.Model(&data.Region{}).Where("id = ?", id).Updates(updateData).Error
 }
 
-func (r *regionRepository) Delete(id uint) error {
+func (r *regionRepository) DeleteRegion(id uint) error {
 	return r.db.Delete(&data.Region{}, id).Error
 }
 
-func (r *regionRepository) GetByID(id uint) (*data.Region, error) {
+func (r *regionRepository) GetRegionByID(id uint) (*data.Region, error) {
 	var region data.Region
 	if err := r.db.Preload("Warehouses").First(&region, id).Error; err != nil {
 		return nil, err
@@ -45,9 +49,9 @@ func (r *regionRepository) GetByID(id uint) (*data.Region, error) {
 	return &region, nil
 }
 
-func (r *regionRepository) GetAll(filter *types.RegionFilter) ([]data.Region, error) {
+func (r *regionRepository) GetRegions(filter *types.RegionFilter) ([]data.Region, error) {
 	var regions []data.Region
-	query := r.db.Model(&data.Region{}).Preload("Warehouses")
+	query := r.db.Model(&data.Region{})
 
 	if filter.Name != nil {
 		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")

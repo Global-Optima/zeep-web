@@ -44,7 +44,7 @@ func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 
 	_ = h.auditService.RecordEmployeeAction(c, &action)
 
-	utils.SuccessCreatedResponse(c, gin.H{"id": id})
+	utils.SendSuccessCreatedResponse(c, gin.H{"id": id})
 }
 
 func (h *IngredientCategoryHandler) GetByID(c *gin.Context) {

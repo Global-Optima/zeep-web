@@ -31,7 +31,7 @@ func (h *UnitHandler) CreateUnit(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessCreatedResponse(c, gin.H{"id": id})
+	utils.SendSuccessCreatedResponse(c, gin.H{"id": id})
 }
 
 func (h *UnitHandler) GetAllUnits(c *gin.Context) {

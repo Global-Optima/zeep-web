@@ -1,11 +1,11 @@
 package employees
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"net/http"
 	"strconv"
-
-
-	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -16,28 +16,161 @@ import (
 )
 
 type EmployeeHandler struct {
-	service EmployeeService
+	service           EmployeeService
+	auditService      audit.AuditService
+	franchiseeService franchisees.FranchiseeService
 }
 
-func NewEmployeeHandler(service EmployeeService) *EmployeeHandler {
-	return &EmployeeHandler{service: service}
+func NewEmployeeHandler(service EmployeeService, auditService audit.AuditService, franchiseeService franchisees.FranchiseeService) *EmployeeHandler {
+	return &EmployeeHandler{
+		service:           service,
+		auditService:      auditService,
+		franchiseeService: franchiseeService,
+	}
 }
 
-func (h *EmployeeHandler) DeleteEmployee(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.ParseUint(idParam, 10, 64)
+func (h *EmployeeHandler) DeleteStoreEmployee(c *gin.Context) {
+	employeeIDParam := c.Param("employeeId")
+	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid employee ID")
 		return
 	}
 
-	err = h.service.DeleteEmployee(uint(id))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to delete employee")
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	utils.SendSuccessResponse(c, gin.H{"message": "employee deleted successfully"})
+	employee, err := h.service.GetEmployeeByID(uint(employeeID))
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to delete warehouse employee: employee not found")
+		return
+	}
+
+	err = h.service.DeleteTypedEmployee(uint(employeeID), storeID, data.StoreEmployeeType)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to delete warehouse employee")
+		return
+	}
+
+	action := types.DeleteStoreEmployeeAuditFactory(&data.BaseDetails{
+		ID:   uint(employeeID),
+		Name: employee.FirstName + " " + employee.LastName,
+	}, struct{}{}, storeID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessResponse(c, "warehouse employee deleted successfully")
+}
+
+func (h *EmployeeHandler) DeleteWarehouseEmployee(c *gin.Context) {
+	employeeIDParam := c.Param("employeeId")
+	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	warehouseID, errH := contexts.GetWarehouseId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	employee, err := h.service.GetEmployeeByID(uint(employeeID))
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to delete warehouse employee: employee not found")
+		return
+	}
+
+	err = h.service.DeleteTypedEmployee(uint(employeeID), warehouseID, data.WarehouseEmployeeType)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to delete warehouse employee")
+		return
+	}
+
+	action := types.DeleteWarehouseEmployeeAuditFactory(&data.BaseDetails{
+		ID:   uint(employeeID),
+		Name: employee.FirstName + " " + employee.LastName,
+	}, struct{}{}, warehouseID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessResponse(c, "warehouse employee deleted successfully")
+}
+
+func (h *EmployeeHandler) DeleteFranchiseeEmployee(c *gin.Context) {
+	employeeIDParam := c.Param("employeeId")
+	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	franchiseeID, errH := contexts.GetFranchiseeId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	employee, err := h.service.GetEmployeeByID(uint(employeeID))
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to delete franchisee employee: employee not found")
+		return
+	}
+
+	err = h.service.DeleteTypedEmployee(uint(employeeID), franchiseeID, data.FranchiseeEmployeeType)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to delete franchisee employee")
+		return
+	}
+
+	action := types.DeleteFranchiseeEmployeeAuditFactory(&data.BaseDetails{
+		ID:   uint(employeeID),
+		Name: employee.FirstName + " " + employee.LastName,
+	}, struct{}{}, franchiseeID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessResponse(c, "franchisee employee deleted successfully")
+}
+
+func (h *EmployeeHandler) DeleteRegionManager(c *gin.Context) {
+	employeeIDParam := c.Param("employeeId")
+	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	regionID, errH := contexts.GetRegionId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	employee, err := h.service.GetEmployeeByID(uint(employeeID))
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to delete region manager: employee not found")
+		return
+	}
+
+	err = h.service.DeleteTypedEmployee(uint(employeeID), regionID, data.WarehouseRegionManagerEmployeeType)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to delete region manager")
+		return
+	}
+
+	action := types.DeleteRegionManagerEmployeeAuditFactory(&data.BaseDetails{
+		ID:   uint(employeeID),
+		Name: employee.FirstName + " " + employee.LastName,
+	}, struct{}{}, regionID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessResponse(c, "region manager deleted successfully")
 }
 
 func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
@@ -100,13 +233,23 @@ func (h *EmployeeHandler) CreateStoreEmployee(c *gin.Context) {
 		return
 	}
 
+	ok, errH := h.FranchiseeStoreCheck(c, storeID)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+	if !ok {
+		utils.SendErrorWithStatus(c, "access denied", http.StatusForbidden)
+		return
+	}
+
 	var input types.CreateEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
-	employee, err := h.service.CreateStoreEmployee(storeID, &input)
+	id, err := h.service.CreateStoreEmployee(storeID, &input)
 	if err != nil {
 		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
 			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
@@ -116,7 +259,14 @@ func (h *EmployeeHandler) CreateStoreEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponse(c, employee)
+	action := types.CreateStoreEmployeeAuditFactory(&data.BaseDetails{
+		ID:   id,
+		Name: input.FirstName + " " + input.LastName,
+	}, &input, storeID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessCreatedResponse(c, "store employee created successfully")
 }
 
 func (h *EmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
@@ -132,7 +282,7 @@ func (h *EmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.service.CreateWarehouseEmployee(warehouseID, &input)
+	id, err := h.service.CreateWarehouseEmployee(warehouseID, &input)
 	if err != nil {
 		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
 			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
@@ -142,7 +292,14 @@ func (h *EmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponse(c, employee)
+	action := types.CreateWarehouseEmployeeAuditFactory(&data.BaseDetails{
+		ID:   id,
+		Name: input.FirstName + " " + input.LastName,
+	}, &input, warehouseID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessCreatedResponse(c, "warehouse employee created successfully")
 }
 
 func (h *EmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
@@ -158,7 +315,7 @@ func (h *EmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.service.CreateFranchiseeEmployee(franchiseeID, &input)
+	id, err := h.service.CreateFranchiseeEmployee(franchiseeID, &input)
 	if err != nil {
 		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
 			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
@@ -168,7 +325,14 @@ func (h *EmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponse(c, employee)
+	action := types.CreateFranchiseeEmployeeAuditFactory(&data.BaseDetails{
+		ID:   id,
+		Name: input.FirstName + " " + input.LastName,
+	}, &input, franchiseeID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessCreatedResponse(c, "franchisee employee created successfully")
 }
 
 func (h *EmployeeHandler) CreateRegionManager(c *gin.Context) {
@@ -184,17 +348,24 @@ func (h *EmployeeHandler) CreateRegionManager(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.service.CreateRegionManager(regionID, &input)
+	id, err := h.service.CreateRegionManager(regionID, &input)
 	if err != nil {
 		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
 			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 			return
 		}
-		utils.SendInternalServerError(c, "failed to create store employee")
+		utils.SendInternalServerError(c, "failed to create region employee")
 		return
 	}
 
-	utils.SendSuccessResponse(c, employee)
+	action := types.CreateRegionManagerAuditFactory(&data.BaseDetails{
+		ID:   id,
+		Name: input.FirstName + " " + input.LastName,
+	}, &input, regionID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
+
+	utils.SendSuccessCreatedResponse(c, "region employee created successfully")
 }
 
 func (h *EmployeeHandler) GetStoreEmployeeByID(c *gin.Context) {
@@ -222,7 +393,7 @@ func (h *EmployeeHandler) GetStoreEmployeeByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, employee)
+	utils.SendSuccessResponse(c, employee)
 }
 
 func (h *EmployeeHandler) GetWarehouseEmployeeByID(c *gin.Context) {
@@ -250,7 +421,63 @@ func (h *EmployeeHandler) GetWarehouseEmployeeByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, employee)
+	utils.SendSuccessResponse(c, employee)
+}
+
+func (h *EmployeeHandler) GetFranchiseeEmployeeByID(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	storeID, errH := contexts.GetFranchiseeId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	employee, err := h.service.GetFranchiseeEmployeeByID(uint(id), storeID)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve franchisee employee details")
+		return
+	}
+
+	if employee == nil {
+		utils.SendErrorWithStatus(c, "employee not found", http.StatusNotFound)
+		return
+	}
+
+	utils.SendSuccessResponse(c, employee)
+}
+
+func (h *EmployeeHandler) GetRegionManagerByID(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	warehouseID, errH := contexts.GetRegionId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	employee, err := h.service.GetRegionManagerByID(uint(id), warehouseID)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve warehouse employee details")
+		return
+	}
+
+	if employee == nil {
+		utils.SendErrorWithStatus(c, "employee not found", http.StatusNotFound)
+		return
+	}
+
+	utils.SendSuccessResponse(c, employee)
 }
 
 func (h *EmployeeHandler) GetStoreEmployees(c *gin.Context) {
@@ -383,11 +610,24 @@ func (h *EmployeeHandler) UpdateStoreEmployee(c *gin.Context) {
 		return
 	}
 
+	storeEmployee, err := h.service.GetStoreEmployeeByID(uint(id), storeID)
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to update store employee: employee not found")
+		return
+	}
+
 	err = h.service.UpdateStoreEmployee(uint(id), storeID, &input)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to update store employee")
 		return
 	}
+
+	action := types.UpdateStoreEmployeeAuditFactory(&data.BaseDetails{
+		ID:   uint(id),
+		Name: storeEmployee.FirstName + " " + storeEmployee.LastName,
+	}, &input, storeID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
 }
@@ -412,11 +652,24 @@ func (h *EmployeeHandler) UpdateWarehouseEmployee(c *gin.Context) {
 		return
 	}
 
+	warehouseEmployee, err := h.service.GetWarehouseEmployeeByID(uint(id), warehouseID)
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to update warehouse employee: employee not found")
+		return
+	}
+
 	err = h.service.UpdateWarehouseEmployee(uint(id), warehouseID, &input)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to update warehouse employee")
 		return
 	}
+
+	action := types.UpdateWarehouseEmployeeAuditFactory(&data.BaseDetails{
+		ID:   uint(id),
+		Name: warehouseEmployee.FirstName + " " + warehouseEmployee.LastName,
+	}, &input, warehouseID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
 }
@@ -440,10 +693,23 @@ func (h *EmployeeHandler) UpdateFranchiseeEmployee(c *gin.Context) {
 		return
 	}
 
+	franchiseeEmployee, err := h.service.GetFranchiseeEmployeeByID(uint(id), franchiseeID)
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to update franchisee employee: employee not found")
+		return
+	}
+
 	if err := h.service.UpdateFranchiseeEmployee(uint(id), franchiseeID, &input); err != nil {
 		utils.SendInternalServerError(c, "failed to update franchisee employee")
 		return
 	}
+
+	action := types.UpdateFranchiseeEmployeeAuditFactory(&data.BaseDetails{
+		ID:   uint(id),
+		Name: franchiseeEmployee.FirstName + " " + franchiseeEmployee.LastName,
+	}, &input, franchiseeID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "franchisee employee updated successfully"})
 }
@@ -467,10 +733,23 @@ func (h *EmployeeHandler) UpdateRegionManager(c *gin.Context) {
 		return
 	}
 
+	regionManagerEmployee, err := h.service.GetRegionManagerByID(uint(id), regionID)
+	if err != nil {
+		utils.SendBadRequestError(c, "failed to update region manager: employee not found")
+		return
+	}
+
 	if err := h.service.UpdateRegionManager(uint(id), regionID, &input); err != nil {
 		utils.SendInternalServerError(c, "failed to update region manager")
 		return
 	}
+
+	action := types.UpdateRegionManagerEmployeeAuditFactory(&data.BaseDetails{
+		ID:   uint(id),
+		Name: regionManagerEmployee.FirstName + " " + regionManagerEmployee.LastName,
+	}, &input, regionID)
+
+	_ = h.auditService.RecordEmployeeAction(c, &action)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "region manager updated successfully"})
 }
@@ -625,4 +904,18 @@ func (h *EmployeeHandler) GetAdminAccounts(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, employees)
+}
+
+func (h *EmployeeHandler) FranchiseeStoreCheck(c *gin.Context, storeID uint) (bool, *handlerErrors.HandlerError) {
+	franchiseeID, errH := contexts.GetFranchiseeId(c)
+	if errH != nil {
+		return false, errH
+	}
+
+	ok, err := h.franchiseeService.IsFranchiseeStore(franchiseeID, storeID)
+	if err != nil {
+		return false, errH
+	}
+	return ok, nil
+
 }

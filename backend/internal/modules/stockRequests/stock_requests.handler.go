@@ -45,7 +45,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessCreatedResponse(c, gin.H{"requestId": requestID})
+	utils.SendSuccessCreatedResponse(c, gin.H{"requestId": requestID})
 }
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {

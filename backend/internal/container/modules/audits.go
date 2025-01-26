@@ -12,9 +12,7 @@ type AuditsModule struct {
 	Handler *audit.AuditHandler
 }
 
-func NewAuditsModule(
-	base *common.BaseModule,
-) *AuditsModule {
+func NewAuditsModule(base *common.BaseModule) *AuditsModule {
 
 	repo := audit.NewAuditRepository(base.DB)
 	service := audit.NewAuditService(repo, base.Logger)

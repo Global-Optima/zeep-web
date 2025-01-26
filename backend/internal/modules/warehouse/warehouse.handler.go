@@ -85,7 +85,7 @@ func (h *WarehouseHandler) CreateWarehouse(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessCreatedResponse(c, gin.H{"warehouseId": warehouseID})
+	utils.SendSuccessCreatedResponse(c, gin.H{"warehouseId": warehouseID})
 }
 
 func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {

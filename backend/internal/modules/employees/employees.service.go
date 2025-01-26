@@ -34,7 +34,7 @@ type EmployeeService interface {
 	UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO) error
 	UpdateRegionManager(id, regionID uint, input *types.UpdateRegionManagerEmployeeDTO) error
 
-	DeleteEmployee(employeeID uint) error
+	DeleteTypedEmployee(employeeID, workplaceID uint, employeeType data.EmployeeType) error
 	UpdatePassword(employeeID uint, input *types.UpdatePasswordDTO) error
 	GetAllRoles() ([]types.EmployeeTypeRoles, error)
 
@@ -393,23 +393,13 @@ func (s *employeeService) UpdateWarehouseEmployee(id, warehouseID uint, input *t
 	return s.repo.UpdateWarehouseEmployee(id, warehouseID, updateFields)
 }
 
-func (s *employeeService) DeleteEmployee(employeeID uint) error {
+func (s *employeeService) DeleteTypedEmployee(employeeID, workplaceID uint, employeeType data.EmployeeType) error {
 	if employeeID == 0 {
 		return errors.New("invalid employee ID")
 	}
 
-	employee, err := s.repo.GetEmployeeByID(employeeID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve employee", err)
-		s.logger.Error(wrappedErr)
-		return wrappedErr
-	}
-	if employee == nil {
-		return errors.New("employee not found")
-	}
-
-	if err := s.repo.DeleteEmployeeById(employeeID, employee.Type); err != nil {
-		wrappedErr := fmt.Errorf("failed to delete employee with ID = %d: %w", employeeID, err)
+	if err := s.repo.DeleteTypedEmployeeById(employeeID, workplaceID, employeeType); err != nil {
+		wrappedErr := fmt.Errorf("failed to delete %s employee with ID = %d: %w", employeeType, employeeID, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}

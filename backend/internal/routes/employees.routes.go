@@ -5,8 +5,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/analytics"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
@@ -39,22 +39,22 @@ func (r *Router) RegisterAuditRoutes(handler *audit.AuditHandler) {
 func (r *Router) RegisterFranchiseeRoutes(handler *franchisees.FranchiseeHandler) {
 	router := r.EmployeeRoutes.Group("/franchisees")
 	{
-		router.GET("", handler.GetAll)
-		router.GET("/:id", handler.GetByID)
-		router.POST("", handler.Create)
-		router.PUT("/:id", handler.Update)
-		router.DELETE("/:id", handler.Delete)
+		router.GET("", handler.GetFranchisees)
+		router.GET("/:id", handler.GetFranchiseeByID)
+		router.POST("", handler.CreateFranchisee)
+		router.PUT("/:id", handler.UpdateFranchisee)
+		router.DELETE("/:id", handler.DeleteFranchisee)
 	}
 }
 
 func (r *Router) RegisterRegionRoutes(handler *regions.RegionHandler) {
 	router := r.EmployeeRoutes.Group("/regions")
 	{
-		router.GET("", handler.GetAll)
-		router.GET("/:id", handler.GetByID)
-		router.POST("", handler.Create)
-		router.PUT("/:id", handler.Update)
-		router.DELETE("/:id", handler.Delete)
+		router.GET("", handler.GetRegions)
+		router.GET("/:id", handler.GetRegionByID)
+		router.POST("", handler.CreateRegion)
+		router.PUT("/:id", handler.UpdateRegion)
+		router.DELETE("/:id", handler.DeleteRegion)
 	}
 }
 
@@ -179,10 +179,15 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	{
 		storeEmployees := router.Group("/stores")
 		{
-			storeEmployees.GET("", handler.GetStoreEmployees)
+			storeEmployees.GET("")
 			storeEmployees.POST("", handler.CreateStoreEmployee)
 			storeEmployees.GET("/:id", handler.GetStoreEmployeeByID)
 			storeEmployees.PUT("/:id", handler.UpdateStoreEmployee)
+			storeEmployees.DELETE("/:employeeId", handler.DeleteStoreEmployee, middleware.EmployeeRoleMiddleware(
+				data.RoleAdmin,
+				data.RoleWarehouseRegionManager,
+				data.RoleWarehouseManager,
+			))
 		}
 		warehouseEmployees := router.Group("/warehouses")
 		{
@@ -190,24 +195,26 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 			warehouseEmployees.POST("", handler.CreateWarehouseEmployee)
 			warehouseEmployees.GET("/:id", handler.GetWarehouseEmployeeByID)
 			warehouseEmployees.PUT("/:id", handler.UpdateWarehouseEmployee)
+			warehouseEmployees.DELETE("/:employeeId", handler.DeleteWarehouseEmployee)
 		}
-		franchiseeEmployees := router.Group("/franchisee")
+		franchiseeEmployees := router.Group("/franchisee", middleware.EmployeeRoleMiddleware(data.RoleStoreManager, data.RoleFranchiseManager))
 		{
 			franchiseeEmployees.GET("", handler.GetFranchiseeEmployees)
 			franchiseeEmployees.POST("", handler.CreateFranchiseeEmployee)
-			//franchiseeEmployees.GET("/:id", handler.GetFranchiseeEmployeeByID)
+			franchiseeEmployees.GET("/:id", handler.GetFranchiseeEmployeeByID)
 			franchiseeEmployees.PUT("/:id", handler.UpdateFranchiseeEmployee)
+			franchiseeEmployees.DELETE("/:employeeId", handler.DeleteFranchiseeEmployee)
 		}
 		regionManagers := router.Group("/region-managers")
 		{
 			regionManagers.GET("", handler.GetRegionManagers)
 			regionManagers.POST("", handler.CreateRegionManager)
-			//regionManagers.GET("/:id", handler.GetRegionManagerByID)
+			regionManagers.GET("/:id", handler.GetRegionManagerByID)
 			regionManagers.PUT("/:id", handler.UpdateRegionManager)
+			regionManagers.DELETE("/:employeeId", handler.DeleteRegionManager)
 		}
 
 		router.GET("/current", handler.GetCurrentEmployee)
-		router.DELETE("/:id", handler.DeleteEmployee)
 		router.GET("/roles", handler.GetAllRoles)
 		router.PUT("/:id/password", handler.UpdatePassword)
 
