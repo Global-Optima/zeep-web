@@ -47,16 +47,6 @@
       "warehouse": "Склад *{{.Name}}* был удален",
       "storeWarehouseStock": "Складской запас *{{.Name}}* был убран из магазина *{{.StoreName}}*",
       "ingredient": "Ингредиент *{{.Name}}* был удален"
-    },
-    "notification": {
-      "STOCK_REQUEST_STATUS_UPDATED": "Запрос на запас *{{.Name}}* (ID: {{.ID}}) был обновлен",
-      "NEW_ORDER": "Новый заказ *{{.Name}}* (ID: {{.ID}}) был размещен",
-      "STORE_WAREHOUSE_RUN_OUT": "Склад *{{.Name}}* (ID: {{.ID}}) заканчивается",
-      "CENTRAL_CATALOG_UPDATE": "Центральный каталог *{{.Name}}* (ID: {{.ID}}) был обновлен",
-      "STOCK_EXPIRATION": "Запас *{{.Name}}* (ID: {{.ID}}) скоро истечет",
-      "OUT_OF_STOCK": "Товар *{{.Name}}* (ID: {{.ID}}) закончился",
-      "NEW_STOCK_REQUEST": "Новый запрос на запас *{{.Name}}* (ID: {{.ID}}) был создан",
-      "PRICE_CHANGE": "Цена на *{{.Name}}* (ID: {{.ID}}) изменилась"
     }
   }
 }

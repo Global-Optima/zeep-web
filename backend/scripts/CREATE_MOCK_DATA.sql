@@ -1274,7 +1274,7 @@ VALUES
 
 -- Insert into EmployeeAudit
 INSERT INTO
-  employee_audits (start_work_at, end_work_at, employee_id)
+  employee_work_tracks (start_work_at, end_work_at, employee_id)
 VALUES
   ('2024-10-01 09:00:00+00','2024-10-01 17:00:00+00',1),
   ('2024-10-02 09:00:00+00','2024-10-02 17:00:00+00',2);
@@ -1347,7 +1347,7 @@ VALUES
 
 -- Insert stock material categories
 INSERT INTO stock_material_categories (name, description)
-VALUES 
+VALUES
     ('Молочные продукты', 'Молоко, сливки, йогурты и другие молочные продукты'),
     ('Подсластители', 'Сахар, мед и другие подсластители'),
     ('Кондитерские изделия', 'Шоколад, какао и другие кондитерские ингредиенты'),
@@ -1355,8 +1355,8 @@ VALUES
     ('Ароматизаторы', 'Ванильный экстракт и другие ароматизаторы');
 
 -- Insert stock materials with Russian names and category references
-INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, size, category_id, barcode, expiration_period_in_days, is_active) 
-VALUES 
+INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, size, category_id, barcode, expiration_period_in_days, is_active)
+VALUES
     ('Простоквашино Молоко 3.2%', 'Молоко пастеризованное 1л', 2, 50, 3, 1, 1, '111111111111', 1095, TRUE),
     ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, 1, 1, 2, '222222222222', 1095, TRUE),
     ('Бабаевский горький шоколад 75%', 'Темный шоколад 500г', 3, 15, 2, 500, 3, '333333333333', 730, TRUE),
@@ -1401,14 +1401,14 @@ VALUES
     -- Nestlé supplies Milk and Sugar
     (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
     (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    
+
     -- Coca-Cola supplies Sugar
     (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    
+
     -- PepsiCo supplies Chocolate and Cinnamon
     (3, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
     (3, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
-    
+
     -- Unilever supplies Vanilla
     (4, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
     (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate
@@ -1420,19 +1420,19 @@ VALUES
     -- Prices for supplier_material_id 1
     (1, 50.00),
     (1, 48.00),
-    
+
     -- Prices for supplier_material_id 2
     (2, 25.00),
     (2, 24.50),
-    
+
     -- Prices for supplier_material_id 3
     (3, 100.00),
     (3, 98.00),
-    
+
     -- Prices for supplier_material_id 4
     (4, 30.00),
     (4, 28.00),
-    
+
     -- Prices for supplier_material_id 5
     (5, 75.00),
     (5, 72.50);

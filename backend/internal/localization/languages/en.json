@@ -47,16 +47,6 @@
       "warehouse": "Warehouse *{{.Name}}* was deleted",
       "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was deleted"
-    },
-      "notification": {
-        "STOCK_REQUEST_STATUS_UPDATED": "Stock request *{{.Name}}* (ID: {{.ID}}) has been updated",
-        "NEW_ORDER": "A new order *{{.Name}}* (ID: {{.ID}}) has been placed",
-        "STORE_WAREHOUSE_RUN_OUT": "Warehouse *{{.Name}}* (ID: {{.ID}}) is running out of stock",
-        "CENTRAL_CATALOG_UPDATE": "Central catalog *{{.Name}}* (ID: {{.ID}}) has been updated",
-        "STOCK_EXPIRATION": "Stock *{{.Name}}* (ID: {{.ID}}) is nearing expiration",
-        "OUT_OF_STOCK": "Item *{{.Name}}* (ID: {{.ID}}) is out of stock",
-        "NEW_STOCK_REQUEST": "New stock request *{{.Name}}* (ID: {{.ID}}) has been created",
-        "PRICE_CHANGE": "The price of *{{.Name}}* (ID: {{.ID}}) has changed"
     }
   }
 }

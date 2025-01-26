@@ -89,18 +89,17 @@ func (h *RecipeHandler) CreateRecipeSteps(c *gin.Context) {
 		return
 	}
 
-	actions := make([]shared.AuditAction, len(recipeSteps))
+	dtoMap := make(map[int]*types.CreateOrReplaceRecipeStepDTO)
+	for _, dto := range input {
+		dtoCopy := dto
+		dtoMap[dto.Step] = &dtoCopy
+	}
 
-	for i, recipeStep := range recipeSteps {
-		var matchedDTO *types.CreateOrReplaceRecipeStepDTO
-		for _, dto := range input {
-			if recipeStep.Step == dto.Step {
-				matchedDTO = &dto
-				break
-			}
-		}
+	var actions []shared.AuditAction
 
-		if matchedDTO == nil {
+	for _, recipeStep := range recipeSteps {
+		matchedDTO, exists := dtoMap[recipeStep.Step]
+		if !exists {
 			utils.SendInternalServerError(c, fmt.Sprintf("No matching DTO found for step %d", recipeStep.Step))
 			return
 		}
@@ -112,10 +111,12 @@ func (h *RecipeHandler) CreateRecipeSteps(c *gin.Context) {
 			},
 			matchedDTO,
 		)
-		actions[i] = &action
+		actions = append(actions, &action)
 	}
 
-	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	if len(actions) > 0 {
+		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	}
 
 	utils.SendMessageWithStatus(c, "Recipe steps created successfully", http.StatusCreated)
 }
@@ -145,18 +146,17 @@ func (h *RecipeHandler) UpdateRecipeSteps(c *gin.Context) {
 		return
 	}
 
+	dtoMap := make(map[int]*types.CreateOrReplaceRecipeStepDTO)
+	for _, dto := range input {
+		dtoCopy := dto
+		dtoMap[dto.Step] = &dtoCopy
+	}
+
 	actions := make([]shared.AuditAction, len(recipeSteps))
 
 	for i, recipeStep := range recipeSteps {
-		var matchedDTO *types.CreateOrReplaceRecipeStepDTO
-		for _, dto := range input {
-			if recipeStep.Step == dto.Step {
-				matchedDTO = &dto
-				break
-			}
-		}
-
-		if matchedDTO == nil {
+		matchedDTO, exists := dtoMap[recipeStep.Step]
+		if !exists {
 			utils.SendInternalServerError(c, fmt.Sprintf("No matching DTO found for step %d", recipeStep.Step))
 			return
 		}

@@ -105,12 +105,6 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 		additiveIDs[i] = dto.AdditiveID
 	}
 
-	additiveList, err := h.additiveService.GetAdditivesByIDs(additiveIDs)
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create additives: additive not found")
-		return
-	}
-
 	ids, err := h.service.CreateStoreAdditives(storeID, dtos)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to create additive")
@@ -123,35 +117,33 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 		return
 	}
 
-	actions := make([]shared.AuditAction, len(additiveList))
+	dtoMap := make(map[uint]*types.CreateStoreAdditiveDTO)
+	for _, dto := range dtos {
+		dtoCopy := dto
+		dtoMap[dto.AdditiveID] = &dtoCopy
+	}
 
-	for i, stock := range stockList {
+	var actions []shared.AuditAction
 
-		var matchedDTO *types.CreateStoreAdditiveDTO
-
-		for _, dto := range dtos {
-			if stock.AdditiveID == dto.AdditiveID {
-				matchedDTO = &dto
-				break
-			}
-		}
-
-		if matchedDTO == nil {
-			h.logger.Error("Failed to match stock with DTO for stock %d")
+	for _, stock := range stockList {
+		matchedDTO, exists := dtoMap[stock.AdditiveID]
+		if !exists {
+			h.logger.Errorf("Failed to match stock with DTO for stock ID: %d, AdditiveID: %d", stock.ID, stock.AdditiveID)
+			continue
 		}
 
 		action := types.CreateStoreAdditiveAuditFactory(
 			&data.BaseDetails{
-				ID:   ids[i],
+				ID:   stock.ID,
 				Name: stock.Name,
 			},
 			matchedDTO, storeID,
 		)
-		actions[i] = &action
+		actions = append(actions, &action)
 	}
 
-	if err := h.auditService.RecordMultipleEmployeeActions(c, actions); err != nil {
-		utils.SendInternalServerError(c, "Failed to record audit actions")
+	if len(actions) > 0 {
+		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive created successfully"})
