@@ -19,7 +19,7 @@ const queryClient = useQueryClient()
 const createMutation = useMutation({
 	mutationFn: (newStoreData: CreateStoreEmployeeDTO) => employeesService.createStoreEmployee(newStoreData),
 	onSuccess: () => {
-		queryClient.invalidateQueries({ queryKey: ['admin-store-employees'] })
+		queryClient.invalidateQueries({ queryKey: ['store-employees'] })
 		router.push({ name: getRouteName("ADMIN_STORE_EMPLOYEES") })
 	},
 })
