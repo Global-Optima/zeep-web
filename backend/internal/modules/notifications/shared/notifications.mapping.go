@@ -33,7 +33,7 @@ func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 				{
 					EventType:     data.STORE_WAREHOUSE_RUN_OUT,
 					EmployeeTypes: []data.EmployeeType{data.StoreEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager},
+					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleDirector},
 				},
 				{
 					EventType:     data.CENTRAL_CATALOG_UPDATE,
@@ -43,17 +43,17 @@ func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 				{
 					EventType:     data.STOCK_EXPIRATION,
 					EmployeeTypes: []data.EmployeeType{data.WarehouseEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager},
+					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleWarehouse},
 				},
 				{
 					EventType:     data.OUT_OF_STOCK,
 					EmployeeTypes: []data.EmployeeType{data.WarehouseEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleAdmin, data.RoleManager},
+					EmployeeRoles: []data.EmployeeRole{data.RoleAdmin, data.RoleManager, data.RoleWarehouse},
 				},
 				{
 					EventType:     data.NEW_STOCK_REQUEST,
 					EmployeeTypes: []data.EmployeeType{data.WarehouseEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager},
+					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleWarehouse},
 				},
 				{
 					EventType:     data.PRICE_CHANGE,

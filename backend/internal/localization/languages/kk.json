@@ -49,14 +49,14 @@
       "ingredient": "Ингредиент *{{.Name}}* жойылды"
     }
   },
-  "notification": {
-    "stockRequestStatusUpdated": "Қор сұранысы ID: *{{.StockRequestID}}*, *{{.FacilityName}}* (ID: {{.ID}}) жаңартылды: {{.RequestStatus}}",
-    "newOrder": "Жаңа тапсырыс (ID: {{.OrderID}}) *{{.CustomerName}}* клиентімен *{{.FacilityName}}* мекенінде жасалды",
-    "storeWarehouseRunOut": "*{{.FacilityName}}* қоймасында *{{.StockItem}}* (ID: {{.StockItemID}}) таусылуға жақын",
-    "centralCatalogUpdate": "Орталық каталог *{{.FacilityName}}* жаңартылды *{{.UpdatedBy}}*: {{.Changes}}",
-    "stockExpiration": "*{{.FacilityName}}* қоймасында *{{.ItemName}}* мерзімі {{.ExpirationDate}} аяқталады",
-    "outOfStock": "*{{.FacilityName}}* қоймасында *{{.ItemName}}* жоқ",
-    "newStockRequest": "Жаңа қор сұранысы (ID: {{.RequestID}}) *{{.RequesterName}}* арқылы *{{.FacilityName}}* мекенінде жасалды",
-    "priceChange": "*{{.ProductName}}* бағасы {{.OldPrice}}-ден {{.NewPrice}}-ге өзгерді"
+"notification": {
+    "stockRequestStatusUpdated": "Қор сұранысының күйі *{{.RequestStatus}}* болып жаңартылды.",
+    "newOrder": "Жаңа тапсырысты *{{.CustomerName}}* жасады.",
+    "storeWarehouseRunOut": "Қоймада *{{.StockItem}}* таусылуға жақын.",
+    "centralCatalogUpdate": "Орталық каталог жаңартылды: *{{.Changes}}*.",
+    "stockExpiration": "*{{.ItemName}}* мерзімі *{{.ExpirationDate}}* аяқталады.",
+    "outOfStock": "*{{.ItemName}}* жоқ.",
+    "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
+    "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді."
   }
 }

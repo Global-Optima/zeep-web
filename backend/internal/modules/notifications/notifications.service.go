@@ -47,6 +47,10 @@ func (s *notificationService) createNotification(eventType data.NotificationEven
 		return fmt.Errorf("failed to fetch recipients: %w", err)
 	}
 
+	if len(employees) == 0 {
+		return fmt.Errorf("no recipients found for event type %s", eventType)
+	}
+
 	notification := &data.EmployeeNotification{
 		EventType: eventType,
 		Priority:  priority,

@@ -1,0 +1,51 @@
+package scheduler
+
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
+	"go.uber.org/zap"
+)
+
+type StoreWarehouseCronTasks struct {
+	storeWarehouseService storeWarehouses.StoreWarehouseService
+	storeWarehouseRepo    storeWarehouses.StoreWarehouseRepository
+	storeService          stores.StoreService
+	logger                *zap.SugaredLogger
+}
+
+func NewStoreWarehouseCronTasks(storeWarehouseService storeWarehouses.StoreWarehouseService, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, storeService stores.StoreService, logger *zap.SugaredLogger) *StoreWarehouseCronTasks {
+	return &StoreWarehouseCronTasks{
+		storeWarehouseService: storeWarehouseService,
+		storeWarehouseRepo:    storeWarehouseRepo,
+		storeService:          storeService,
+		logger:                logger,
+	}
+}
+
+func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
+	tasks.logger.Info("Running CheckStockNotifications...")
+
+	stores, err := tasks.storeService.GetAllStores(nil)
+
+	if err != nil {
+		tasks.logger.Errorf("Failed to fetch stores: %v", err)
+		return
+	}
+
+	for _, store := range stores {
+		stockList, err := tasks.storeWarehouseRepo.GetStockList(store.ID, nil)
+		if err != nil {
+			tasks.logger.Errorf("Failed to fetch stock list for store %d: %v", store.ID, err)
+			continue
+		}
+
+		for _, stock := range stockList {
+			err := tasks.storeWarehouseService.CheckStockNotifications(store.ID, stock)
+			if err != nil {
+				tasks.logger.Errorf("Failed to check notifications for stock ID %d: %v", stock.ID, err)
+			}
+		}
+	}
+
+	tasks.logger.Info("Check Stock Notifications completed.")
+}

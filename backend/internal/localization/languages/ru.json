@@ -50,13 +50,13 @@
     }
   },
   "notification": {
-    "stockRequestStatusUpdated": "Запрос на запас в *{{.FacilityName}}* (ID: {{.ID}}) с ID: *{{.StockRequestID}}* был обновлен до {{.RequestStatus}}",
-    "newOrder": "Новый заказ (ID: {{.OrderID}}) был размещен клиентом *{{.CustomerName}}* в *{{.FacilityName}}*",
-    "storeWarehouseRunOut": "Склад *{{.FacilityName}}* заканчивается для *{{.StockItem}}* (ID: {{.StockItemID}})",
-    "centralCatalogUpdate": "Центральный каталог в *{{.FacilityName}}* был обновлен *{{.UpdatedBy}}*: {{.Changes}}",
-    "stockExpiration": "Товар *{{.ItemName}}* в *{{.FacilityName}}* истекает {{.ExpirationDate}}",
-    "outOfStock": "Товар *{{.ItemName}}* закончился в *{{.FacilityName}}*",
-    "newStockRequest": "Новый запрос на запас (ID: {{.RequestID}}) был отправлен *{{.RequesterName}}* в *{{.FacilityName}}*",
-    "priceChange": "Цена на *{{.ProductName}}* изменилась с {{.OldPrice}} на {{.NewPrice}}"
+    "stockRequestStatusUpdated": "Статус запроса на запас был обновлен на *{{.RequestStatus}}*.",
+    "newOrder": "Новый заказ был сделан *{{.CustomerName}}*.",
+    "storeWarehouseRunOut": "На складе заканчивается *{{.StockItem}}*.",
+    "centralCatalogUpdate": "Центральный каталог был обновлен: *{{.Changes}}*.",
+    "stockExpiration": "*{{.ItemName}}* истекает *{{.ExpirationDate}}*.",
+    "outOfStock": "*{{.ItemName}}* отсутствует в наличии.",
+    "newStockRequest": "Новый запрос на запас был отправлен *{{.RequesterName}}*.",
+    "priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."
   }
 }

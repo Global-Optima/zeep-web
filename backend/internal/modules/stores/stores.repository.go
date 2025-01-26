@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +16,7 @@ const (
 )
 
 type StoreRepository interface {
-	GetAllStores(searchTerm string) ([]data.Store, error)
+	GetAllStores(filter types.StoreFilter) ([]data.Store, error)
 	CreateStore(store *data.Store) (*data.Store, error)
 	GetStoreByID(storeID uint) (*data.Store, error)
 	UpdateStore(store *data.Store) (*data.Store, error)
@@ -31,13 +33,24 @@ func NewStoreRepository(db *gorm.DB) StoreRepository {
 	return &storeRepository{db: db}
 }
 
-func (r *storeRepository) GetAllStores(searchTerm string) ([]data.Store, error) {
+func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, error) {
 	var stores []data.Store
 
 	query := r.db.Preload("FacilityAddress").Where("status = ?", ACTIVE_STORE_STATUS).Preload("FacilityAddress")
 
-	if searchTerm != "" {
-		query = query.Where("name ILIKE ? OR CAST(id AS TEXT) = ?", "%"+searchTerm+"%", searchTerm)
+	if *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("name ILIKE ? OR contact_phone ILIKE = ? OR contact_email ILIKE = ? OR CAST(id AS TEXT) = ?",
+			searchTerm, searchTerm, searchTerm, searchTerm)
+	}
+
+	if filter.IsFranchise != nil {
+		query = query.Where("is_franchise = ?", *filter.IsFranchise)
+	}
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &stores)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := query.Find(&stores).Error; err != nil {

@@ -10,8 +10,7 @@ import (
 
 type CentralCatalogUpdateDetails struct {
 	BaseNotificationDetails
-	UpdatedBy string `json:"updatedBy"`
-	Changes   string `json:"changes"` // Summary of changes
+	Changes string `json:"changes"` // Summary of changes
 }
 
 func (c *CentralCatalogUpdateDetails) ToDetails() ([]byte, error) {
@@ -22,8 +21,8 @@ func (c *CentralCatalogUpdateDetails) GetBaseDetails() *BaseNotificationDetails 
 	return &c.BaseNotificationDetails
 }
 
-func BuildCentralCatalogUpdateDetails(facilityID uint, facilityName, updatedBy, changes string) (*CentralCatalogUpdateDetails, error) {
-	if facilityID == 0 || facilityName == "" || updatedBy == "" || changes == "" {
+func BuildCentralCatalogUpdateDetails(facilityID uint, facilityName, changes string) (*CentralCatalogUpdateDetails, error) {
+	if facilityID == 0 || facilityName == "" || changes == "" {
 		return nil, fmt.Errorf("invalid input: facilityID, facilityName, updatedBy, and changes are required")
 	}
 
@@ -32,8 +31,7 @@ func BuildCentralCatalogUpdateDetails(facilityID uint, facilityName, updatedBy, 
 			ID:           facilityID,
 			FacilityName: facilityName,
 		},
-		UpdatedBy: updatedBy,
-		Changes:   changes,
+		Changes: changes,
 	}, nil
 }
 
@@ -46,7 +44,6 @@ func BuildCentralCatalogUpdateMessage(details *CentralCatalogUpdateDetails) (loc
 	messages, err := localization.Translate(key, map[string]interface{}{
 		"FacilityName": details.FacilityName,
 		"ID":           details.ID,
-		"UpdatedBy":    details.UpdatedBy,
 		"Changes":      details.Changes,
 	})
 	if err != nil {

@@ -101,7 +101,11 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		RequestID:     stockRequest.ID,
 	}
 
-	s.notificationService.NotifyNewStockRequest(details)
+	err = s.notificationService.NotifyNewStockRequest(details)
+	if err != nil {
+		return 0, fmt.Errorf("failed to send notification: %w", err)
+	}
+
 	return stockRequest.ID, nil
 }
 

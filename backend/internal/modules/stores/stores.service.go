@@ -11,7 +11,7 @@ import (
 
 type StoreService interface {
 	CreateStore(storeDTO types.CreateStoreDTO) (*types.StoreDTO, error)
-	GetAllStores(searchTerm string) ([]types.StoreDTO, error)
+	GetAllStores(filter *types.StoreFilter) ([]types.StoreDTO, error)
 	GetStoreByID(storeID uint) (*types.StoreDTO, error)
 	UpdateStore(storeId uint, storeDTO types.UpdateStoreDTO) (*types.StoreDTO, error)
 	DeleteStore(storeID uint, hardDelete bool) error
@@ -63,8 +63,8 @@ func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.
 	return mapToStoreDTO(*createdStore), nil
 }
 
-func (s *storeService) GetAllStores(searchTerm string) ([]types.StoreDTO, error) {
-	stores, err := s.repo.GetAllStores(searchTerm)
+func (s *storeService) GetAllStores(filter *types.StoreFilter) ([]types.StoreDTO, error) {
+	stores, err := s.repo.GetAllStores(*filter)
 	if err != nil {
 		return nil, err
 	}

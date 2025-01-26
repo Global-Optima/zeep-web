@@ -1,6 +1,11 @@
 package storeWarehouses
 
 import (
+	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -14,17 +19,21 @@ type StoreWarehouseService interface {
 	GetStockById(storeId, stockId uint) (*types.StoreStockDTO, error)
 	UpdateStockById(storeId, stockId uint, input *types.UpdateStoreStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
+
+	CheckStockNotifications(storeID uint, stock data.StoreWarehouseStock) error
 }
 
 type storeWarehouseService struct {
-	repo   StoreWarehouseRepository
-	logger *zap.SugaredLogger
+	repo                StoreWarehouseRepository
+	notificationService notifications.NotificationService
+	logger              *zap.SugaredLogger
 }
 
-func NewStoreWarehouseService(repo StoreWarehouseRepository, logger *zap.SugaredLogger) StoreWarehouseService {
+func NewStoreWarehouseService(repo StoreWarehouseRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) StoreWarehouseService {
 	return &storeWarehouseService{
-		repo:   repo,
-		logger: logger,
+		repo:                repo,
+		notificationService: notificationService,
+		logger:              logger,
 	}
 }
 
@@ -128,6 +137,42 @@ func (s *storeWarehouseService) DeleteStockById(storeId, stockId uint) error {
 		wrappedErr := utils.WrapError("error deleting stock", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
+	}
+	return nil
+}
+
+func (s *storeWarehouseService) CheckStockNotifications(storeID uint, stock data.StoreWarehouseStock) error {
+	if stock.Quantity < stock.LowStockThreshold {
+		details := &details.StoreWarehouseRunOutDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           storeID,
+				FacilityName: stock.StoreWarehouse.Store.Name,
+			},
+			StockItem:   stock.Ingredient.Name,
+			StockItemID: stock.ID,
+		}
+		err := s.notificationService.NotifyStoreWarehouseRunOut(details)
+		if err != nil {
+			s.logger.Errorf("failed to send store warehouse runout notification: %v", err)
+		}
+	}
+
+	closestExpirationDate := stock.UpdatedAt.Add(time.Duration(stock.Ingredient.ExpirationInDays) * 24 * time.Hour)
+
+	if closestExpirationDate.Before(time.Now().Add(7 * 24 * time.Hour)) { // Expiration within 7 days
+		details := &details.StockExpirationDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           storeID,
+				FacilityName: stock.StoreWarehouse.Store.Name,
+			},
+			ItemName:       stock.Ingredient.Name,
+			ExpirationDate: closestExpirationDate.Format("2006-01-02"),
+		}
+
+		err := s.notificationService.NotifyStockExpiration(details)
+		if err != nil {
+			s.logger.Errorf("failed to send stock expiration notification: %v", err)
+		}
 	}
 	return nil
 }
