@@ -1,8 +1,7 @@
-package shared
+package roles
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"gorm.io/gorm"
 )
 
 var NotificationRoleMappingManagerInstance *NotificationRoleMappingManager
@@ -102,15 +101,4 @@ func (m *NotificationRoleMappingManager) DeleteMapping(eventType data.Notificati
 		}
 	}
 	return false
-}
-
-func (m *NotificationRoleMappingManager) GetRecipients(db *gorm.DB, eventType data.NotificationEventType) ([]data.Employee, error) {
-	mapping := m.GetMappingByEventType(eventType)
-	if mapping == nil {
-		return nil, nil
-	}
-
-	var employees []data.Employee
-	err := db.Where("type IN ? AND role IN ?", mapping.EmployeeTypes, mapping.EmployeeRoles).Find(&employees).Error
-	return employees, err
 }

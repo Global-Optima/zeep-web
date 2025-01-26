@@ -480,6 +480,34 @@ CREATE UNIQUE INDEX unique_employee_workday
     ON employee_workdays (employee_id, day)
     WHERE deleted_at IS NULL;
 
+
+-- Table: employee_notifications
+CREATE TABLE employee_notifications (
+    id SERIAL PRIMARY KEY,
+    event_type VARCHAR(255) NOT NULL,
+    priority VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    details JSONB DEFAULT '{}'::JSONB
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP NULL
+);
+
+-- Table: employee_notification_recipients
+CREATE TABLE employee_notification_recipients (
+    id SERIAL PRIMARY KEY,
+    notification_id INT NOT NULL REFERENCES employee_notifications(id) ON DELETE CASCADE,
+    employee_id INT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    is_read BOOLEAN DEFAULT FALSE NOT NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP NULL
+);
+
+-- Indexes for employee_notification_recipients
+CREATE INDEX idx_notification_id ON employee_notification_recipients (notification_id);
+CREATE INDEX idx_employee_id ON employee_notification_recipients (employee_id);
+
 -- Referral Table
 CREATE TABLE
 	IF NOT EXISTS referrals (

@@ -14,7 +14,3 @@ func ConvertToNotificationDetails(details *data.EmployeeNotification) (*data.Ext
 	}
 	return &extendedDetails, nil
 }
-
-func MapToNotificationDetails(details data.NotificationDetails) ([]byte, error) {
-	return details.ToDetails()
-}

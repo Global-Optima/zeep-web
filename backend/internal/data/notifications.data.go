@@ -26,11 +26,6 @@ func (nt NotificationEventType) ToString() string {
 	return string(nt)
 }
 
-type NotificationDetails interface {
-	ToDetails() ([]byte, error)
-	GetBaseDetails() *BaseDetails
-}
-
 type EmployeeNotification struct {
 	BaseEntity
 	EventType  NotificationEventType           `gorm:"type:varchar(255);not null"`
