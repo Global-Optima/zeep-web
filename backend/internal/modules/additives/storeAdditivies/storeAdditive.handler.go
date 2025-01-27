@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"strconv"
 
@@ -57,6 +58,10 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 
 	additivesList, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(productSizeID), &filter)
 	if err != nil {
+		if errors.Is(err, types.ErrStoreAdditiveCategoriesNotFound) {
+			utils.SendSuccessResponse(c, []types.StoreAdditiveCategoryDTO{})
+			return
+		}
 		utils.SendInternalServerError(c, "Failed to retrieve store additives")
 		return
 	}

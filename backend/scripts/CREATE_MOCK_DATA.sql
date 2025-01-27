@@ -134,12 +134,12 @@ VALUES
 -- Insert into Products
 INSERT INTO
     products (
-        name,
-        description,
-        image_url,
-        video_url,
-        category_id
-    )
+    name,
+    description,
+    image_url,
+    video_url,
+    category_id
+)
 VALUES
     (
         'Латте',
@@ -296,6 +296,7 @@ VALUES
         13
     );
 
+
 -- Insert into RecipeStep
 INSERT INTO
     recipe_steps (product_id, step, name, description, image_url)
@@ -325,13 +326,13 @@ VALUES
 -- Insert into ProductSize
 INSERT INTO
     product_sizes (
-        name,
-        unit_id,
-        base_price,
-        size,
-        is_default,
-        product_id
-    )
+    name,
+    unit_id,
+    base_price,
+    size,
+    is_default,
+    product_id
+)
 VALUES
     ('S', 1, 1000.00, 250, true, 1),
     ('M', 1, 1250.00, 350, false, 1),
@@ -366,19 +367,21 @@ VALUES
     ('S', 4, 800.00, 300, true, 17),
     ('S', 4, 1400.00, 300, true, 18),
     ('S', 4, 1100.00, 300, true, 19),
-    ('S', 4, 1250.00, 500, true, 20);
+    ('S', 4, 1250.00, 500, true, 20),
+    ('S', 4, 1250.00, 500, true, 21),
+    ('S', 1, 1500.00, 500, true, 22);
 
 -- Insert into Additives
 INSERT INTO
     additives (
-        name,
-        description,
-        base_price,
-        size,
-        unit_id,
-        additive_category_id,
-        image_url
-    )
+    name,
+    description,
+    base_price,
+    size,
+    unit_id,
+    additive_category_id,
+    image_url
+)
 VALUES
     (
         'Ванильный сироп',
@@ -508,75 +511,17 @@ VALUES
     );
 
 -- Insert into Store
-INSERT INTO
-    stores (
-        name,
-        is_franchise,
-        status,
-        contact_phone,
-        contact_email,
-        store_hours,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'Центральное Кафе',
-        false,
-        'ACTIVE',
-        '+79001112233',
-        'central@example.com',
-        '8:00-20:00',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кафе на Углу',
-        true,
-        'ACTIVE',
-        '+79002223344',
-        'corner@example.com',
-        '9:00-22:00',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Маленькое Кафе',
-        false,
-        'ACTIVE',
-        '+79003334455',
-        'smallstore@example.com',
-        '8:00-18:00',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Городское Кафе',
-        true,
-        'ACTIVE',
-        '+79004445566',
-        'citycoffee@example.com',
-        '7:00-23:00',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
 
--- Insert into StoreAdditives
-INSERT INTO
-    store_additives (store_id, additive_id)
+INSERT INTO stores (name, is_franchise, status, contact_phone, contact_email, store_hours, created_at, updated_at)
 VALUES
-    (1, 1),
-    (1, 2),
-    (1, 3),
-    (1, 4),
-    (1, 5),
-    (1, 6),
-    (1, 7),
-    (1, 8),
-    (1, 9),
-    (1, 10),
-    (1, 13),
-    (1, 14),
+    ('Центральное Кафе', false, 'ACTIVE', '+79001112233', 'central@example.com', '8:00-20:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Кафе на Углу', true, 'ACTIVE', '+79002223344', 'corner@example.com', '9:00-22:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Маленькое Кафе', false, 'ACTIVE', '+79003334455', 'smallstore@example.com', '8:00-18:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Городское Кафе', true, 'ACTIVE', '+79004445566', 'citycoffee@example.com', '7:00-23:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Insert into StoreAdditives store 1 additives are loaded later in the script
+INSERT INTO store_additives (store_id, additive_id)
+VALUES
     (2, 1),
     (2, 3),
     (2, 4),
@@ -600,116 +545,60 @@ VALUES
     (4, 11),
     (4, 12);
 
--- Insert into StoreProduct
-INSERT INTO
-    store_products (store_id, product_id, is_available)
-VALUES
-    (1, 1, true), -- Latte
-    (1, 2, true), -- Cappuccino
-    (1, 4, true), -- Green Tea
-    (1, 7, true), -- Mango Smoothie
-    (1, 13, false), -- Chocolate Milkshake
-    (1, 10, false), -- Mojito
-    (1, 15, true), -- Lemon Frappe
-    (1, 21, true);
 
--- Croissant w/ Chocolate
+INSERT INTO store_products (store_id, product_id, is_available, created_at, updated_at)
+SELECT
+    1,
+    p.id,
+    true,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM products p
+WHERE p.deleted_at IS NULL;
+
 -- Store 2
-INSERT INTO
-    store_products (store_id, product_id, is_available)
-VALUES
-    (2, 3, true), -- Espresso
-    (2, 5, true), -- Black Tea
-    (2, 6, false), -- Strawberry Smoothie
-    (2, 8, true), -- Orange Juice
+INSERT INTO store_products (store_id, product_id, is_available) VALUES
+    (2, 3,  true),  -- Espresso
+    (2, 5,  true),  -- Black Tea
+    (2, 6,  false), -- Strawberry Smoothie
+    (2, 8,  true),  -- Orange Juice
     (2, 14, false), -- Mineral Water
-    (2, 18, true), -- Raspberry Lemonade
+    (2, 18, true),  -- Raspberry Lemonade
     (2, 17, false), -- Mint Tea
-    (2, 16, true);
+    (2, 16, true);  -- Ginger Tea
 
--- Ginger Tea
 -- Store 3
-INSERT INTO
-    store_products (store_id, product_id, is_available)
-VALUES
-    (3, 12, true), -- Energy Drink
-    (3, 19, true), -- Strawberry Tea
-    (3, 21, true), -- Croissant w/ Chocolate
-    (3, 10, true), -- Mojito
-    (3, 15, true), -- Lemon Frappe
-    (3, 7, true), -- Mango Smoothie
-    (3, 20, true), -- Caramel Latte
-    (3, 13, true);
+INSERT INTO store_products (store_id, product_id, is_available) VALUES
+    (3, 12, true),  -- Energy Drink
+    (3, 19, true),  -- Strawberry Tea
+    (3, 21, true),  -- Croissant w/ Chocolate
+    (3, 10, true),  -- Mojito
+    (3, 15, true),  -- Lemon Frappe
+    (3, 7,  true),  -- Mango Smoothie
+    (3, 20, true),  -- Caramel Latte
+    (3, 13, true);  -- Chocolate Milkshake
 
--- Chocolate Milkshake
 -- Store 4
-INSERT INTO
-    store_products (store_id, product_id, is_available)
-VALUES
-    (4, 20, true), -- (Assume re-using product 20 for "Maple Syrup Latte"?)
-    (4, 16, true), -- Ginger Tea
-    (4, 4, true), -- Green Tea
-    (4, 6, false), -- Strawberry Smoothie
-    (4, 10, true), -- Mojito
-    (4, 18, true), -- Raspberry Lemonade
-    (4, 17, true), -- Mint Tea
-    (4, 12, true);
+INSERT INTO store_products (store_id, product_id, is_available) VALUES
+    (4, 20, true),  -- (Assume re-using product 20 for "Maple Syrup Latte"?)
+    (4, 16, true),  -- Ginger Tea
+    (4, 4,  true),  -- Green Tea
+    (4, 6,  false), -- Strawberry Smoothie
+    (4, 10, true),  -- Mojito
+    (4, 18, true),  -- Raspberry Lemonade
+    (4, 17, true),  -- Mint Tea
+    (4, 12, true);  -- Energy Drink
 
--- Energy Drink
--- Insert into StoreProductSizes
-INSERT INTO
-    store_product_sizes (store_product_id, product_size_id, price)
-VALUES
-    -- Store 1 Product Sizes
-    (1, 1, 150.00), -- Latte, size S
-    (1, 2, 170.00), -- Latte, size M
-    (1, 3, 190.00), -- Latte, size L
-    (2, 4, 160.00), -- Cappuccino, size S
-    (3, 8, 120.00),
-    (3, 9, 140.00),
-    (3, 10, 160.00),
-    (4, 16, 130.00),
-    (4, 17, 150.00),
-    (4, 18, 170.00),
-    (5, 27, 180.00),
-    (6, 23, 160.00),
-    (6, 24, 190.00),
-    (7, 29, 200.00),
-    (9, 5, 120.00),
-    (9, 6, 140.00),
-    (9, 7, 160.00),
-    (10, 11, 100.00),
-    (10, 12, 120.00),
-    (10, 13, 140.00),
-    (11, 14, 130.00),
-    (11, 15, 150.00),
-    (12, 19, 90.00),
-    (12, 20, 110.00),
-    (13, 28, 60.00),
-    (15, 31, 85.00),
-    (16, 30, 90.00),
-    (17, 26, 120.00),
-    (18, 33, 110.00),
-    (20, 23, 150.00),
-    (20, 24, 180.00),
-    (21, 29, 200.00),
-    (22, 16, 130.00),
-    (22, 17, 150.00),
-    (22, 18, 170.00),
-    (23, 34, 220.00),
-    (24, 27, 180.00),
-    (25, 34, 230.00),
-    (26, 30, 95.00),
-    (27, 8, 120.00),
-    (27, 9, 140.00),
-    (27, 10, 160.00),
-    (28, 14, 130.00),
-    (28, 15, 150.00),
-    (29, 23, 160.00),
-    (29, 24, 190.00),
-    (30, 32, 100.00),
-    (31, 31, 85.00),
-    (32, 26, 120.00);
+INSERT INTO store_product_sizes (store_product_id, product_size_id, price, created_at, updated_at)
+SELECT
+    sp.id,
+    ps.id,
+    ps.base_price,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM store_products sp
+         JOIN product_sizes ps ON ps.product_id = sp.product_id
+WHERE sp.store_id IS NOT NULL;
 
 -- L size for Product 11;
 -- Insert into ProductAdditive
@@ -746,18 +635,31 @@ VALUES
     (9, 5, false),
     (10, 9, false);
 
+INSERT INTO store_additives (store_id, additive_id, price, created_at, updated_at)
+SELECT DISTINCT
+    1,
+    psa.additive_id,
+    a.base_price,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM store_product_sizes sps
+         JOIN product_size_additives psa ON psa.product_size_id = sps.product_size_id
+         JOIN additives a ON a.id = psa.additive_id
+         JOIN store_products sp ON sp.id = sps.store_product_id
+WHERE sp.store_id = 1;
+
 -- Insert into Ingredients
 INSERT INTO
     ingredients (
-        name,
-        calories,
-        fat,
-        carbs,
-        proteins,
-        expiration_in_days,
-        unit_id,
-        category_id
-    )
+    name,
+    calories,
+    fat,
+    carbs,
+    proteins,
+    expiration_in_days,
+    unit_id,
+    category_id
+)
 VALUES
     ('Сахар', 387, 0, 100, 0, 365, 1, 3), -- Подсластители
     ('Молоко', 42, 1, 5, 3, 7, 3, 1), -- Молочные продукты
@@ -797,25 +699,22 @@ VALUES
     (5, 1, 95.00),
     (2, 2, 70.00);
 
-INSERT INTO
-    additive_ingredients (
-        additive_id,
-        ingredient_id,
-        quantity,
-        created_at,
-        updated_at
-    )
+INSERT INTO additive_ingredients (
+    additive_id,
+    ingredient_id,
+    quantity,
+    created_at,
+    updated_at
+)
 SELECT
     a.id AS additive_id,
-    1 AS ingredient_id, -- e.g. "Sugar" or some real ingredient
-    1.0 AS quantity,
-    NOW (),
-    NOW ()
-FROM
-    additives a
-    LEFT JOIN additive_ingredients ai ON a.id = ai.additive_id
-WHERE
-    ai.id IS NULL;
+    1    AS ingredient_id,  -- e.g. "Sugar" or some real ingredient
+    1.0  AS quantity,
+    NOW(),
+    NOW()
+FROM additives a
+         LEFT JOIN additive_ingredients ai ON a.id = ai.additive_id
+WHERE ai.id IS NULL;
 
 -- Орехи и семена
 -- Insert into ProductIngredients
@@ -895,37 +794,34 @@ VALUES
     (12, 18, 1), -- Апельсины
     (20, 18, 1);
 
-INSERT INTO
-    product_size_ingredients (
-        product_size_id,
-        ingredient_id,
-        quantity,
-        created_at,
-        updated_at
-    )
+INSERT INTO product_size_ingredients (
+    product_size_id,
+    ingredient_id,
+    quantity,
+    created_at,
+    updated_at
+)
 SELECT
     ps.id AS product_size_id,
-    1 AS ingredient_id, -- e.g. "Sugar" or some default
-    1.0 AS quantity,
-    NOW (),
-    NOW ()
-FROM
-    product_sizes ps
-    LEFT JOIN product_size_ingredients psi ON ps.id = psi.product_size_id
-WHERE
-    psi.id IS NULL;
+    1       AS ingredient_id,  -- e.g. "Sugar" or some default
+    1.0     AS quantity,
+    NOW(),
+    NOW()
+FROM product_sizes ps
+         LEFT JOIN product_size_ingredients psi ON ps.id = psi.product_size_id
+WHERE psi.id IS NULL;
 
 -- Фисташки
 -- Insert into Customer
 INSERT INTO
     customers (
-        first_name,
-        last_name,
-        password,
-        phone,
-        is_verified,
-        is_banned
-    )
+    first_name,
+    last_name,
+    password,
+    phone,
+    is_verified,
+    is_banned
+)
 VALUES
     (
         'Иван',
@@ -955,17 +851,17 @@ VALUES
 -- Insert into Employee
 INSERT INTO
     employees (
-        first_name,
-        last_name,
-        phone,
-        email,
-        role,
-        type,
-        is_active,
-        hashed_password,
-        created_at,
-        updated_at
-    )
+    first_name,
+    last_name,
+    phone,
+    email,
+    role,
+    type,
+    is_active,
+    hashed_password,
+    created_at,
+    updated_at
+)
 VALUES
     (
         'Елена',
@@ -1020,8 +916,8 @@ VALUES
         'Смирнова',
         '+79345566778',
         'maria@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
+        'BARISTA',
+        'STORE',
         true,
         '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
         CURRENT_TIMESTAMP,
@@ -1091,12 +987,12 @@ VALUES
 -- Insert into StoreEmployee
 INSERT INTO
     store_employees (
-        employee_id,
-        store_id,
-        is_franchise,
-        created_at,
-        updated_at
-    )
+    employee_id,
+    store_id,
+    is_franchise,
+    created_at,
+    updated_at
+)
 VALUES
     (1, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (2, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -1176,161 +1072,83 @@ VALUES
     (4, 2);
 
 -- Insert into StoreWarehouseStocks
-INSERT INTO
-    store_warehouse_stocks (
-        store_warehouse_id,
-        ingredient_id,
-        quantity,
-        low_stock_threshold,
-        created_at,
-        updated_at
-    )
+INSERT INTO store_warehouse_stocks (
+    store_warehouse_id,
+    ingredient_id,
+    quantity,
+    low_stock_threshold,
+    created_at,
+    updated_at
+)
 VALUES
     -- Store 1 Stocks
-    (
-        1,
-        1,
-        100,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
-    (1, 2, 50, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (
-        1,
-        3,
-        70,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Chocolate
-    (
-        1,
-        5,
-        90,
-        20,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Honey
-    (
-        1,
-        6,
-        50,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Vanilla
-    -- Store 2 Stocks
-    (
-        2,
-        1,
-        80,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
-    (2, 2, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (
-        2,
-        7,
-        60,
-        15,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Mint
-    (
-        2,
-        8,
-        90,
-        20,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Coconut Milk
-    (
-        2,
-        10,
-        50,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Lemon Juice
-    -- Store 3 Stocks
-    (
-        3,
-        1,
-        100,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
-    (
-        3,
-        3,
-        70,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Chocolate
-    (
-        3,
-        5,
-        90,
-        20,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Honey
-    (
-        3,
-        12,
-        40,
-        5,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Ginger
-    (
-        3,
-        14,
-        60,
-        15,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Cocoa Powder
-    -- Store 4 Stocks
-    (
-        4,
-        1,
-        120,
-        20,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
-    (
-        4,
-        2,
-        60,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Sugar
-    (
-        4,
-        7,
-        50,
-        15,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Mint
-    (4, 9, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Ice Cubes
-    (
-        4,
-        14,
-        50,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
+    (1, 1, 100, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (1, 2, 50, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),   -- Sugar
+    (1, 3, 70, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Chocolate
+    (1, 5, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Honey
+    (1, 6, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Vanilla
 
--- Cocoa Powder
+    -- Store 2 Stocks
+    (2, 1, 80, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Milk
+    (2, 2, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),   -- Sugar
+    (2, 7, 60, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Mint
+    (2, 8, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Coconut Milk
+    (2, 10, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Lemon Juice
+
+    -- Store 3 Stocks
+    (3, 1, 100, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (3, 3, 70, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Chocolate
+    (3, 5, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Honey
+    (3, 12, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Ginger
+    (3, 14, 60, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cocoa Powder
+
+    -- Store 4 Stocks
+    (4, 1, 120, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (4, 2, 60, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Sugar
+    (4, 7, 50, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Mint
+    (4, 9, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),   -- Ice Cubes
+    (4, 14, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Cocoa Powder
+
+WITH wh AS (
+    SELECT sw.id AS store_warehouse_id,
+           sw.store_id
+    FROM store_warehouses sw
+)
+INSERT INTO store_warehouse_stocks (
+    store_warehouse_id,
+    ingredient_id,
+    quantity,
+    low_stock_threshold,
+    created_at,
+    updated_at
+)
+SELECT
+    wh.store_warehouse_id,
+    i.id AS ingredient_id,
+    25 AS quantity,        -- Например, начальный остаток 25
+    10 AS low_stock_threshold,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM (
+         SELECT sa.store_id, ai.ingredient_id
+         FROM store_additives sa
+                  JOIN additive_ingredients ai ON ai.additive_id = sa.additive_id
+         UNION
+         SELECT sp.store_id, psi.ingredient_id
+         FROM store_products sp
+                  JOIN store_product_sizes sps ON sps.store_product_id = sp.id
+                  JOIN product_size_ingredients psi ON psi.product_size_id = sps.product_size_id
+     ) AS needed
+         JOIN wh ON wh.store_id = needed.store_id
+         JOIN ingredients i ON i.id = needed.ingredient_id
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM store_warehouse_stocks s
+    WHERE s.store_warehouse_id = wh.store_warehouse_id
+      AND s.ingredient_id = i.id
+      AND s.deleted_at IS NULL
+);
+
 -- Insert stock material categories
 INSERT INTO
     stock_material_categories (name, description)
@@ -1356,17 +1174,17 @@ VALUES
 -- Insert stock materials with Russian names and category references
 INSERT INTO
     stock_materials (
-        name,
-        description,
-        ingredient_id,
-        safety_stock,
-        unit_id,
-        size,
-        category_id,
-        barcode,
-        expiration_period_in_days,
-        is_active
-    )
+    name,
+    description,
+    ingredient_id,
+    safety_stock,
+    unit_id,
+    size,
+    category_id,
+    barcode,
+    expiration_period_in_days,
+    is_active
+)
 VALUES
     (
         'Простоквашино Молоко 3.2%',
@@ -1507,12 +1325,12 @@ VALUES
 -- Insert into supplier_warehouse_deliveries
 INSERT INTO
     supplier_warehouse_deliveries (
-        supplier_id,
-        warehouse_id,
-        delivery_date,
-        created_at,
-        updated_at
-    )
+    supplier_id,
+    warehouse_id,
+    delivery_date,
+    created_at,
+    updated_at
+)
 VALUES
     (
         1,
@@ -1540,12 +1358,12 @@ VALUES
 -- Insert into supplier_warehouse_delivery_materials
 INSERT INTO
     supplier_warehouse_delivery_materials (
-        delivery_id,
-        stock_material_id,
-        barcode,
-        quantity,
-        expiration_date
-    )
+    delivery_id,
+    stock_material_id,
+    barcode,
+    quantity,
+    expiration_date
+)
 VALUES
     (1, 1, '111111111111', 50, '2026-12-01'), -- Milk Delivery
     (1, 2, '222222222222', 30, '2025-06-05'), -- Sugar Delivery
@@ -1557,11 +1375,11 @@ VALUES
 -- Insert mock data into supplier_materials
 INSERT INTO
     supplier_materials (
-        supplier_id,
-        stock_material_id,
-        created_at,
-        updated_at
-    )
+    supplier_id,
+    stock_material_id,
+    created_at,
+    updated_at
+)
 VALUES
     -- Nestlé supplies Milk and Sugar
     (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
@@ -1609,12 +1427,12 @@ VALUES
 -- Insert into StockRequests (Initial Requests)
 INSERT INTO
     stock_requests (
-        store_id,
-        warehouse_id,
-        status,
-        created_at,
-        updated_at
-    )
+    store_id,
+    warehouse_id,
+    status,
+    created_at,
+    updated_at
+)
 VALUES
     (
         1,
@@ -1647,13 +1465,13 @@ VALUES
 
 INSERT INTO
     stock_request_ingredients (
-        stock_request_id,
-        ingredient_id,
-        stock_material_id,
-        quantity,
-        created_at,
-        updated_at
-    )
+    stock_request_id,
+    ingredient_id,
+    stock_material_id,
+    quantity,
+    created_at,
+    updated_at
+)
 VALUES
     -- StockRequest 1 (Store 1 -> Warehouse 1)
     (

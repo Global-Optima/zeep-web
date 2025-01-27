@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
@@ -82,6 +83,9 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSiz
 	}
 
 	if err := query.Find(&categories).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return categories, nil
+		}
 		return nil, err
 	}
 
