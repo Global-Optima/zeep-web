@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"net/http"
 	"strconv"
 
@@ -53,6 +54,35 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, productDetails)
+}
+
+func (h *StoreProductHandler) GetProductsListToAdd(c *gin.Context) {
+	var filter productTypes.ProductsFilterDto
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
+
+	//TODO change to franchisees.CheckFranchiseeStore()
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	productDetails, err := h.service.GetProductsListToAdd(storeID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve products list to add for store")
+		return
+	}
+
+	if productDetails == nil {
+		utils.SendNotFoundError(c, "products not found")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, productDetails, filter.Pagination)
 }
 
 func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {

@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
@@ -13,6 +14,7 @@ import (
 type StoreProductRepository interface {
 	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
+	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
 	UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error
@@ -108,6 +110,43 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	}
 
 	return storeProducts, nil
+}
+
+func (r *storeProductRepository) GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error) {
+	var products []data.Product
+
+	query := r.db.
+		Model(&data.Product{}).
+		Preload("Category").
+		Preload("ProductSizes.Unit")
+
+	if filter.CategoryID != nil {
+		query = query.Where("products.category_id = ?", *filter.CategoryID)
+	}
+
+	if filter.Search != nil {
+		searchPattern := "%" + *filter.Search + "%"
+		query = query.Where("products.name ILIKE ? OR products.description ILIKE ?", searchPattern, searchPattern)
+	}
+
+	query = query.Where("products.id NOT IN (?)", r.db.Model(&data.StoreProduct{}).Select("product_id").Where("store_id = ?", storeID))
+
+	var err error
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Product{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
+	}
+
+	err = query.Find(&products).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if products == nil {
+		products = []data.Product{}
+	}
+
+	return products, nil
 }
 
 func (r *storeProductRepository) CreateStoreProduct(product *data.StoreProduct) (uint, error) {

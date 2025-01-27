@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
@@ -17,6 +18,7 @@ const DEFAULT_LOW_STOCK_THRESHOLD = 50
 type StoreProductService interface {
 	GetStoreProductById(storeID, storeProductID uint) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
+	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error)
 	GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error)
 	CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error)
 	CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error)
@@ -75,6 +77,22 @@ func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.Store
 	}
 
 	return dtos, nil
+}
+
+func (s *storeProductService) GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error) {
+	products, err := s.repo.GetProductsListToAdd(storeID, filter)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get products list to add", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	productDTOs := make([]productTypes.ProductDetailsDTO, len(products))
+	for i, product := range products {
+		productDTOs[i] = *productTypes.MapToProductDetailsDTO(&product)
+	}
+
+	return productDTOs, nil
 }
 
 func (s *storeProductService) GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error) {

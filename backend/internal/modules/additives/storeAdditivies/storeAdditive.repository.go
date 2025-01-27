@@ -14,6 +14,7 @@ import (
 type StoreAdditiveRepository interface {
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*data.StoreAdditive, error)
+	GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
 	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]data.StoreAdditive, error)
 	GetStoreAdditiveCategories(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
@@ -50,6 +51,50 @@ func (r *storeAdditiveRepository) CreateStoreAdditives(storeAdditives []data.Sto
 	}
 
 	return ids, nil
+}
+
+func (r *storeAdditiveRepository) GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error) {
+	var additives []data.Additive
+
+	query := r.db.
+		Preload("Category").
+		Preload("Unit").
+		Joins("JOIN additive_categories ON additives.additive_category_id = additive_categories.id")
+
+	var err error
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
+	}
+
+	if filter.MinPrice != nil {
+		query = query.Where("additives.base_price >= ?", *filter.MinPrice)
+	}
+	if filter.MaxPrice != nil {
+		query = query.Where("additives.base_price <= ?", *filter.MaxPrice)
+	}
+
+	if filter.CategoryID != nil {
+		query = query.Where("additive_categories.id = ?", *filter.CategoryID)
+	}
+
+	if filter.ProductSizeID != nil {
+		query = query.Where("product_additives.product_size_id = ?", *filter.ProductSizeID)
+	}
+
+	query = query.Where("additives.id NOT IN (?)", r.db.Model(&data.StoreAdditive{}).Select("additive_id").Where("store_id = ?", storeID))
+
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Additive{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
+	}
+
+	if err := query.Find(&additives).Error; err != nil {
+		return nil, err
+	}
+
+	return additives, nil
 }
 
 func (r *storeAdditiveRepository) GetStoreAdditiveCategories(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error) {

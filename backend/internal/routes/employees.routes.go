@@ -76,6 +76,7 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 	router := r.EmployeeRoutes.Group("/store-products")
 	{
 		router.GET("", handler.GetStoreProducts)
+		router.GET("/addList", handler.GetProductsListToAdd)
 		router.GET("/:id", handler.GetStoreProduct)
 		router.POST("", handler.CreateStoreProduct)
 		router.POST("/multiple", handler.CreateMultipleStoreProducts)
@@ -154,6 +155,7 @@ func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAddit
 	router := r.EmployeeRoutes.Group("/store-additives")
 	{
 		router.GET("", handler.GetStoreAdditives)
+		router.GET("/addList", handler.GetAdditivesListToAdd)
 		router.GET("/categories/:productSizeId", handler.GetStoreAdditiveCategories)
 		router.POST("", handler.CreateStoreAdditives)
 		router.PUT("/:id", handler.UpdateStoreAdditive)

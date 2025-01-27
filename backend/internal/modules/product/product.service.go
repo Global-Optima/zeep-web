@@ -129,6 +129,11 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 }
 
 func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
+	if dto.IsDefault != nil && !*dto.IsDefault {
+		wrappedErr := fmt.Errorf("failed to update product size: cannot set isDefault to false")
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
 	updateModels := types.UpdateProductSizeToModels(dto)
 
 	productSize, err := s.repo.GetProductSizeById(productSizeID)
@@ -145,7 +150,7 @@ func (s *productService) UpdateProductSize(productSizeID uint, dto *types.Update
 		return wrappedErr
 	}
 
-	if productSize.BasePrice != *dto.BasePrice && dto.BasePrice != nil {
+	if dto.BasePrice != nil && productSize.BasePrice != *dto.BasePrice {
 		details := &details.PriceChangeNotificationDetails{
 			ProductSizeID: productSize.ID,
 			ProductName:   productSize.Product.Name,
