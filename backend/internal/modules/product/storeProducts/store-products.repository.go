@@ -12,7 +12,9 @@ import (
 )
 
 type StoreProductRepository interface {
+	GetStoreProductCategories(storeID uint) ([]data.ProductCategory, error)
 	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
+	GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
@@ -40,6 +42,23 @@ func (r *storeProductRepository) CloneWithTransaction(tx *gorm.DB) StoreProductR
 	}
 }
 
+func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data.ProductCategory, error) {
+	var categories []data.ProductCategory
+
+	err := r.db.Model(&data.ProductCategory{}).
+		Joins("JOIN products ON products.category_id = product_categories.id").
+		Joins("JOIN store_products ON store_products.product_id = products.id").
+		Where("store_products.store_id = ?", storeID).
+		Group("product_categories.id").
+		Find(&categories).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
 func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error) {
 	var storeProduct data.StoreProduct
 	err := r.db.Model(&data.StoreProduct{}).
@@ -61,6 +80,26 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 	}
 
 	return &storeProduct, nil
+}
+
+func (r *storeProductRepository) GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]data.StoreProduct, error) {
+	var storeProducts []data.StoreProduct
+	query := r.db.Model(&data.StoreProduct{}).
+		Where("store_id = ? AND product_id IN (?)", storeID, productIDs).
+		Joins("JOIN products ON store_products.product_id = products.id").
+		Preload("Product.ProductSizes").
+		Preload("Product.Category").
+		Preload("StoreProductSizes.ProductSize.Unit").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
+
+	if err := query.Find(&storeProducts).Error; err != nil {
+		return nil, err
+	}
+
+	return storeProducts, nil
 }
 
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {

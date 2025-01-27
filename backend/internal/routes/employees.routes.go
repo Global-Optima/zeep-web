@@ -75,6 +75,8 @@ func (r *Router) RegisterRecipeRoutes(handler *recipes.RecipeHandler) {
 func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductHandler) {
 	router := r.EmployeeRoutes.Group("/store-products")
 	{
+		router.GET("/categories", handler.GetStoreProductCategories)
+
 		router.GET("", handler.GetStoreProducts)
 		router.GET("/addList", handler.GetProductsListToAdd)
 		router.GET("/:id", handler.GetStoreProduct)

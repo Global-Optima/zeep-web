@@ -90,7 +90,7 @@ func NewStoreProductsModule(
 		ingredientRepo,
 		storeProducts.NewTransactionManager(base.DB, repo, storeWarehouseRepo),
 		base.Logger)
-	handler := storeProducts.NewStoreProductHandler(service, productService, auditService)
+	handler := storeProducts.NewStoreProductHandler(service, productService, auditService, base.Logger)
 
 	base.Router.RegisterStoreProductRoutes(handler)
 
