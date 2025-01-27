@@ -2,7 +2,6 @@ package types
 
 import (
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 )
 
 type CreateStoreAdditiveDTO struct {
@@ -23,7 +22,7 @@ type StoreAdditiveDTO struct {
 
 type StoreAdditiveDetailsDTO struct {
 	StoreAdditiveDTO
-	Ingredients []ingredientTypes.IngredientDTO `json:"ingredients"`
+	Ingredients []additiveTypes.AdditiveIngredientDTO `json:"ingredients"`
 }
 
 type StoreAdditiveCategoriesFilter struct {

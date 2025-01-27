@@ -48,7 +48,12 @@ type AdditiveDTO struct {
 
 type AdditiveDetailsDTO struct {
 	AdditiveDTO
-	Ingredients []ingredientTypes.IngredientDTO `json:"ingredients"`
+	Ingredients []AdditiveIngredientDTO `json:"ingredients"`
+}
+
+type AdditiveIngredientDTO struct {
+	Quantity   float64                       `json:"quantity"`
+	Ingredient ingredientTypes.IngredientDTO `json:"ingredient"`
 }
 
 type BaseAdditiveCategoryItemDTO struct {

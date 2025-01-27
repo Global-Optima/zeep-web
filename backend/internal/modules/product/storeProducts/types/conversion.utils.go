@@ -66,14 +66,15 @@ func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 
 func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSizeDetailsDTO {
 	var additives = make([]productTypes.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
-	var ingredients = make([]ingredientTypes.IngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
+	var ingredients = make([]productTypes.ProductSizeIngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
 
 	for i, productSizeAdditive := range sps.ProductSize.Additives {
 		additives[i] = productTypes.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	for i, productSizeIngredient := range sps.ProductSize.ProductSizeIngredients {
-		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+		ingredients[i].Quantity = productSizeIngredient.Quantity
 	}
 
 	return StoreProductSizeDetailsDTO{
