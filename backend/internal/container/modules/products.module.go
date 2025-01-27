@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
@@ -19,9 +20,14 @@ type ProductsModule struct {
 	StoreProducts *StoreProductsModule
 }
 
-func NewProductsModule(base *common.BaseModule, auditService audit.AuditService, ingredientRepo ingredients.IngredientRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository) *ProductsModule {
+func NewProductsModule(base *common.BaseModule,
+	auditService audit.AuditService,
+	ingredientRepo ingredients.IngredientRepository,
+	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository,
+	notificationService notifications.NotificationService,
+) *ProductsModule {
 	repo := product.NewProductRepository(base.DB)
-	service := product.NewProductService(repo, base.Logger)
+	service := product.NewProductService(repo, notificationService, base.Logger)
 	handler := product.NewProductHandler(service, auditService)
 
 	recipeModule := NewRecipeModule(base, auditService)

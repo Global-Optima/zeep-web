@@ -13,6 +13,48 @@ BEGIN
 END $$;
 
 
+-- Enum type for HTTP methods
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'http_method') THEN
+        CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
+    END IF;
+END
+$$;
+
+-- Enum type for operation types
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'operation_type') THEN
+        CREATE TYPE operation_type AS ENUM ('CREATE', 'UPDATE', 'DELETE');
+    END IF;
+END
+$$;
+
+-- Enum type for component names
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'component_name') THEN
+        CREATE TYPE component_name AS ENUM (
+            'PRODUCT',
+            'PRODUCT_CATEGORY',
+            'STORE_PRODUCT',
+            'EMPLOYEE',
+            'ADDITIVE',
+            'ADDITIVE_CATEGORY',
+            'STORE_ADDITIVE',
+            'PRODUCT_SIZE',
+            'RECIPE_STEPS',
+            'STORE',
+            'WAREHOUSE',
+            'STORE_WAREHOUSE STOCK',
+            'INGREDIENT',
+            'INGREDIENT_CATEGORY'
+        );
+    END IF;
+END
+$$;
+
 -- FacilityAddress Table
 CREATE TABLE
 	IF NOT EXISTS facility_addresses (
@@ -425,27 +467,6 @@ CREATE TABLE
     deleted_at TIMESTAMPTZ
     );
 
--- Enum type for HTTP methods
-CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
-
-CREATE TYPE operation_type AS ENUM ('CREATE', 'UPDATE', 'DELETE');
-CREATE TYPE component_name AS ENUM (
-    'PRODUCT',
-    'PRODUCT_CATEGORY',
-    'STORE_PRODUCT',
-    'EMPLOYEE',
-    'ADDITIVE',
-    'ADDITIVE_CATEGORY',
-    'STORE_ADDITIVE',
-    'PRODUCT_SIZE',
-    'RECIPE_STEPS',
-    'STORE',
-    'WAREHOUSE',
-    'STORE_WAREHOUSE STOCK',
-    'INGREDIENT',
-    'INGREDIENT_CATEGORY'
-);
-
 CREATE TABLE employee_audits (
     id SERIAL PRIMARY KEY,
     employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
@@ -479,6 +500,33 @@ CREATE TABLE
 CREATE UNIQUE INDEX unique_employee_workday
     ON employee_workdays (employee_id, day)
     WHERE deleted_at IS NULL;
+
+
+-- Table: employee_notifications
+CREATE TABLE employee_notifications (
+    id SERIAL PRIMARY KEY,
+    event_type VARCHAR(255) NOT NULL,
+    priority VARCHAR(50) NOT NULL,
+    details JSONB DEFAULT '{}'::JSONB,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP NULL
+);
+
+-- Table: employee_notification_recipients
+CREATE TABLE employee_notification_recipients (
+    id SERIAL PRIMARY KEY,
+    notification_id INT NOT NULL REFERENCES employee_notifications(id) ON DELETE CASCADE,
+    employee_id INT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    is_read BOOLEAN DEFAULT FALSE NOT NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP NULL
+);
+
+-- Indexes for employee_notification_recipients
+CREATE INDEX idx_notification_id ON employee_notification_recipients (notification_id);
+CREATE INDEX idx_employee_id ON employee_notification_recipients (employee_id);
 
 -- Referral Table
 CREATE TABLE

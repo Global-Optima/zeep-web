@@ -10,7 +10,7 @@ import {
 } from '@/core/components/ui/dropdown-menu'
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
-import type { EmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
+import { EMPLOYEE_ROLES_FORMATTED, type EmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
 import { useMutation } from '@tanstack/vue-query'
 import { User } from 'lucide-vue-next'
@@ -44,13 +44,16 @@ const onLogoutClick = () => {
 				size="icon"
 				class="rounded-full"
 			>
-				<User class="w-5 h-5" />
+				<User class="size-[18px]" />
 				<span class="sr-only">Toggle user menu</span>
 			</Button>
 		</DropdownMenuTrigger>
 		<DropdownMenuContent align="end">
 			<DropdownMenuLabel>
-				{{ currentEmployee.firstName }} {{ currentEmployee.lastName }}
+				<div>
+					<p>{{ currentEmployee.firstName }} {{ currentEmployee.lastName }}</p>
+					<p class="font-normal text-xs">{{ EMPLOYEE_ROLES_FORMATTED[currentEmployee.role] }}</p>
+				</div>
 			</DropdownMenuLabel>
 			<DropdownMenuSeparator />
 			<DropdownMenuItem @click="onLogoutClick">Выйти</DropdownMenuItem>

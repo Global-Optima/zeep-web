@@ -1,9 +1,10 @@
 package stores
 
 import (
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -23,15 +24,19 @@ func NewStoreHandler(service StoreService, auditService audit.AuditService) *Sto
 }
 
 func (h *StoreHandler) GetAllStores(c *gin.Context) {
-	searchTerm := c.Query("searchTerm")
+	var filter types.StoreFilter
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Store{}); err != nil {
+		utils.SendBadRequestError(c, err.Error())
+		return
+	}
 
-	stores, err := h.service.GetAllStores(searchTerm)
+	stores, err := h.service.GetAllStores(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve stores")
 		return
 	}
 
-	utils.SendSuccessResponse(c, stores)
+	utils.SendSuccessResponseWithPagination(c, stores, filter.Pagination)
 }
 
 func (h *StoreHandler) CreateStore(c *gin.Context) {

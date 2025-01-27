@@ -1,7 +1,7 @@
-import type { AppRouteRecord, ParentRoutePage } from '../config/routes.config'
 import AppDefaultLayout from '../layouts/default/app-default-layout.vue'
+import type { AppRouteRecord, ParentRoutePage } from './routes.types'
 
-export const ERROR_CHILDREN_ROUTES = {
+export const ERRORS_CHILDREN_ROUTES = {
 	NOT_FOUND_ERROR: {
 		path: 'not-found',
 		name: 'not-found',
@@ -23,5 +23,5 @@ export const ERROR_CHILDREN_ROUTES = {
 export const ERRORS_ROUTES_CONFIG: ParentRoutePage = {
 	path: '/errors',
 	component: AppDefaultLayout,
-	children: ERROR_CHILDREN_ROUTES,
+	children: ERRORS_CHILDREN_ROUTES,
 }

@@ -39,7 +39,7 @@
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="store in stores"
+										v-for="store in stores?.data ?? []"
 										:key="store.id"
 										:value="store.id.toString()"
 										class="text-sm sm:text-base"
@@ -180,8 +180,7 @@ const { values, isSubmitting, handleSubmit } = useForm({
 
 const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
   queryKey: ['stores'],
-  queryFn: () => storesService.getStores(),
-  initialData: [],
+  queryFn: () => storesService.getStores({pageSize: 1000}),
 })
 
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({

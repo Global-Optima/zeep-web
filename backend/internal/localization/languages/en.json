@@ -48,6 +48,16 @@
       "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was deleted"
     }
+  }, 
+  "notification": {
+      "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
+      "newOrder": "A new order has been placed by *{{.CustomerName}}*.",
+      "storeWarehouseRunOut": "The warehouse is running out of *{{.StockItem}}*.",
+      "centralCatalogUpdate": "The central catalog was updated: *{{.Changes}}*.",
+      "stockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",
+      "outOfStock": "*{{.ItemName}}* is out of stock.",
+      "newStockRequest": "A new stock request was submitted by *{{.RequesterName}}*.",
+      "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*."
   }
 }
 

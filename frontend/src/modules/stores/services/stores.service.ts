@@ -2,11 +2,12 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type { CreateStoreDTO, StoresFilter, UpdateStoreDTO } from '../models/stores-dto.model'
 import type { StoreDTO } from '../models/stores.models'
+import { type PaginatedResponse } from './../../../core/utils/pagination.utils'
 
 class StoreService {
-	async getStores(filter?: StoresFilter): Promise<StoreDTO[]> {
+	async getStores(filter?: StoresFilter) {
 		try {
-			const response = await apiClient.get<StoreDTO[]>('/stores', {
+			const response = await apiClient.get<PaginatedResponse<StoreDTO[]>>('/stores', {
 				params: buildRequestFilter(filter),
 			})
 			return response.data

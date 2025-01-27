@@ -1,5 +1,7 @@
 package types
 
+import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+
 type FacilityAddressDTO struct {
 	ID        uint    `json:"id"`
 	Address   string  `json:"address"`
@@ -45,4 +47,10 @@ type StoreDTO struct {
 	ContactPhone    string              `json:"contactPhone"`
 	ContactEmail    string              `json:"contactEmail"`
 	StoreHours      string              `json:"storeHours"`
+}
+
+type StoreFilter struct {
+	IsFranchise *bool   `form:"isFranchise"`
+	Search      *string `form:"search"`
+	utils.BaseFilter
 }

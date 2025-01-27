@@ -1,43 +1,23 @@
 import { ADMIN_CHILDREN_ROUTES, ADMIN_ROUTES_CONFIG } from '@/core/routes/admin/admin.routes'
 import { KIOSK_CHILDREN_ROUTES, KIOSK_ROUTES_CONFIG } from '@/core/routes/kiosk.routes'
-import type { RouteComponent, RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 import { AUTH_CHILDREN_ROUTES, AUTH_ROUTES_CONFIG } from '../routes/auth.routes'
-import { ERROR_CHILDREN_ROUTES, ERRORS_ROUTES_CONFIG } from '../routes/errors.routes'
-
-type LazyRoute = () => Promise<RouteComponent>
-
-export type ParentRoutePage = {
-	path: string
-	component: RouteComponent | LazyRoute
-	children: AppRouteRecord
-}
-
-export type AppRoutePage = {
-	path: string
-	component: RouteComponent | LazyRoute
-	name?: string
-	meta: {
-		title: string
-		pageTitle?: string
-		requiresAuth?: boolean
-	}
-}
-
-export type AppRouteRecord = Record<string, AppRoutePage>
+import { ERRORS_CHILDREN_ROUTES, ERRORS_ROUTES_CONFIG } from '../routes/errors.routes'
+import type { AppRoutePage, AppRouteRecord, ParentRoutePage } from '../routes/routes.types'
 
 const PARENT_ROUTES_RECORDS = addNameToChildrenInParent([
 	KIOSK_ROUTES_CONFIG,
-	ADMIN_ROUTES_CONFIG,
 	AUTH_ROUTES_CONFIG,
 	ERRORS_ROUTES_CONFIG,
+	ADMIN_ROUTES_CONFIG,
 ] as const)
 
 const CHILDREN_ROUTES_RECORDS = addNameToChildren([
 	KIOSK_CHILDREN_ROUTES,
-	ADMIN_CHILDREN_ROUTES,
 	AUTH_CHILDREN_ROUTES,
-	ERROR_CHILDREN_ROUTES,
-] as const)
+	ERRORS_CHILDREN_ROUTES,
+	ADMIN_CHILDREN_ROUTES,
+])
 
 function addNameToChildrenInParent(parentRoutes: ParentRoutePage[]): ParentRoutePage[] {
 	return parentRoutes.map(parent => {

@@ -15,7 +15,7 @@
 				v-for="additive in additives"
 				:key="additive.id"
 				class="hover:bg-gray-50 h-12 cursor-pointer"
-				@click="onProductClick(additive.storeAdditiveId)"
+				@click="onProductClick(additive.id)"
 			>
 				<TableCell class="hidden sm:table-cell">
 					<img

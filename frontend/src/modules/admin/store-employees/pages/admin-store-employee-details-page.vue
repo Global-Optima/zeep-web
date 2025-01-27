@@ -1,6 +1,3 @@
-<template>TODO: Complete it</template>
-
-<!-- 
 <template>
 	<p
 		v-if="!employee"
@@ -11,7 +8,7 @@
 
 	<div
 		v-else
-		class="flex md:flex-row flex-col gap-4"
+		class="flex md:flex-row flex-col gap-4 mx-auto max-w-7xl"
 	>
 		<div class="w-full md:w-1/3">
 			<AdminEmployeesDetailsInfo :employee="employee" />
@@ -38,21 +35,31 @@
 
 			<Card>
 				<CardHeader>
-					<CardTitle class="font-medium text-lg"> Недавние активности</CardTitle>
-					<CardDescription>Последние выполненные задачи сотрудника</CardDescription>
+					<CardTitle> График рабочих смен</CardTitle>
+					<CardDescription>Просмотр смен сотрудника</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<AdminEmployeesDetailsActivities :activities="employeeActivities" />
+					<AdminEmployeesDetailsShifts :shifts="employeeShifts" />
 				</CardContent>
 			</Card>
 
 			<Card>
 				<CardHeader>
-					<CardTitle class="font-medium text-lg"> График рабочих смен</CardTitle>
-					<CardDescription>Просмотр смен сотрудника</CardDescription>
+					<div class="flex justify-between items-start gap-4">
+						<div>
+							<CardTitle>Недавние активности</CardTitle>
+							<CardDescription>Последние выполненные задачи сотрудника</CardDescription>
+						</div>
+
+						<Button
+							variant="outline"
+							@click="$router.push(`/admin/store-employees/${employeeId}/audit`)"
+							>Еще</Button
+						>
+					</div>
 				</CardHeader>
 				<CardContent>
-					<AdminEmployeesDetailsShifts :shifts="employeeShifts" />
+					<AdminEmployeesDetailsActivities :audits="employeeAudits?.data ?? []" />
 				</CardContent>
 			</Card>
 		</div>
@@ -60,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
 import {
   Card,
   CardContent,
@@ -68,11 +76,12 @@ import {
   CardTitle,
 } from '@/core/components/ui/card'
 import { formatPrice } from '@/core/utils/price.utils'
-import AdminEmployeesDetailsActivities from '@/modules/admin/employees/components/details/admin-employees-details-activities.vue'
-import AdminEmployeesDetailsInfo from '@/modules/admin/employees/components/details/admin-employees-details-info.vue'
-import AdminEmployeesDetailsShifts from '@/modules/admin/employees/components/details/admin-employees-details-shifts.vue'
-import AdminEmployeesDetailsStats from '@/modules/admin/employees/components/details/admin-employees-details-stats.vue'
-import { employeesService } from '@/modules/admin/employees/services/employees.service'
+import AdminEmployeesDetailsActivities from '@/modules/admin/store-employees/components/details/admin-employees-details-activities.vue'
+import AdminEmployeesDetailsInfo from '@/modules/admin/store-employees/components/details/admin-employees-details-info.vue'
+import AdminEmployeesDetailsShifts from '@/modules/admin/store-employees/components/details/admin-employees-details-shifts.vue'
+import AdminEmployeesDetailsStats from '@/modules/admin/store-employees/components/details/admin-employees-details-stats.vue'
+import { employeeAuditService } from '@/modules/admin/store-employees/services/employees-audit.service'
+import { employeesService } from '@/modules/admin/store-employees/services/employees.service'
 import { useQuery } from '@tanstack/vue-query'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -81,12 +90,6 @@ interface Stat {
   totalSales: string;
   hoursWorked: string;
   tasksCompleted: string;
-}
-
-interface Activity {
-  date: string;
-  activity: string;
-  status: string;
 }
 
 interface Shift {
@@ -98,8 +101,15 @@ const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-  queryKey: ['employee', employeeId],
+  queryKey: ['store-employee', employeeId],
 	queryFn: () => employeesService.getStoreEmployeeById(Number(employeeId)),
+  enabled: !!employeeId,
+})
+
+
+const { data: employeeAudits } = useQuery({
+  queryKey: ['employee-audits', employeeId],
+	queryFn: () => employeeAuditService.getAudits({employeeId: Number(employeeId)}),
   enabled: !!employeeId,
 })
 
@@ -109,16 +119,6 @@ const employeeStats = ref<Stat>({
   tasksCompleted: '350 задач',
 });
 
-const employeeActivities = ref<Activity[]>([
-  { date: '2023-10-01', activity: 'Заключил сделку с компанией XYZ', status: 'Завершено' },
-  { date: '2023-09-28', activity: 'Участвовал в собрании отдела продаж', status: 'Завершено' },
-  { date: '2023-09-25', activity: 'Обновил базу данных клиентов', status: 'Завершено' },
-  { date: '2023-09-22', activity: 'Отправил еженедельный отчет руководству', status: 'Завершено' },
-  { date: '2023-09-20', activity: 'Провел переговоры с новым клиентом', status: 'Завершено' },
-  { date: '2023-09-18', activity: 'Решил проблему клиента с заказом', status: 'Завершено' },
-  { date: '2023-09-15', activity: 'Участвовал в тренинге по продажам', status: 'Завершено' },
-  { date: '2023-09-13', activity: 'Подготовил презентацию для нового продукта', status: 'Завершено' },
-]);
 
 const employeeShifts = ref<Shift[]>([
   { date: 'Понедельник', shift: '9:00 - 17:00' },
@@ -131,5 +131,4 @@ const employeeShifts = ref<Shift[]>([
 ]);
 </script>
 
-<style scoped>
-</style> -->
+<style scoped></style>

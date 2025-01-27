@@ -52,10 +52,10 @@ VALUES
 INSERT INTO
   units (name, conversion_factor)
 VALUES
-    ('Килограмм', 1.0),
-    ('Грамм', 0.001),
-    ('Литр', 1.0),
-    ('Миллилитр', 0.001);
+  ('Килограмм', 1.0),
+  ('Грамм', 0.001),
+  ('Литр', 1.0),
+  ('Миллилитр', 0.001);
 
 -- Insert into CityWarehouses
 INSERT INTO
@@ -214,42 +214,102 @@ VALUES
   ('Чай', 'Различные виды чая'),
   ('Смузи', 'Фруктовые и овощные смузи'),
   ('Соки', 'Свежевыжатые соки и напитки'),
-  ('Коктейли','Алкогольные и безалкогольные коктейли'),
-  ('Газированные напитки','Прохладительные газированные напитки'),
-  ('Энергетические напитки','Напитки для повышения энергии'),
-  ('Молочные коктейли','Коктейли на основе молока и сливок'),
-  ('Минеральная вода','Природная и газированная минеральная вода'),
+  (
+    'Коктейли',
+    'Алкогольные и безалкогольные коктейли'
+  ),
+  (
+    'Газированные напитки',
+    'Прохладительные газированные напитки'
+  ),
+  (
+    'Энергетические напитки',
+    'Напитки для повышения энергии'
+  ),
+  (
+    'Молочные коктейли',
+    'Коктейли на основе молока и сливок'
+  ),
+  (
+    'Минеральная вода',
+    'Природная и газированная минеральная вода'
+  ),
   ('Фраппе', 'Кофейные напитки со льдом'),
   ('Травяные чаи', 'Настои и чаи на травах'),
-  ('Круассаны', 'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе');
+  (
+    'Круассаны',
+    'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе'
+  );
 
 -- Insert into AdditiveCategory
 INSERT INTO
   additive_categories (name, description, is_multiple_select)
 VALUES
-  ('Ароматизаторы','Дополнительные вкусы для усиления аромата',true),
+  (
+    'Ароматизаторы',
+    'Дополнительные вкусы для усиления аромата',
+    true
+  ),
   ('Подсластители', 'Добавление сладости', false),
-  ('Топпинги','Украшения для десертов и напитков',true),
+  (
+    'Топпинги',
+    'Украшения для десертов и напитков',
+    true
+  ),
   ('Сиропы', 'Сиропы для напитков и десертов', false),
   ('Специи', 'Ароматные специи для напитков', true),
-  ('Молочные добавки','Добавление молока и сливок',false),
+  (
+    'Молочные добавки',
+    'Добавление молока и сливок',
+    false
+  ),
   ('Фрукты', 'Свежие и сушеные фрукты', true),
-  ('Орехи','Измельченные орехи для украшения',false),
+  (
+    'Орехи',
+    'Измельченные орехи для украшения',
+    false
+  ),
   ('Шоколад', 'Шоколадная стружка и какао', true),
-  ('Мед','Естественный подсластитель на основе меда',false),
+  (
+    'Мед',
+    'Естественный подсластитель на основе меда',
+    false
+  ),
   ('Сахарные добавки', 'Различные виды сахара', true),
-  ('Кубики льда','Лед для охлаждения напитков',false);
+  (
+    'Кубики льда',
+    'Лед для охлаждения напитков',
+    false
+  );
 
-  -- Insert into IngredientCategories
-INSERT INTO ingredient_categories (name, description)
+-- Insert into IngredientCategories
+INSERT INTO
+  ingredient_categories (name, description)
 VALUES
-    ('Молочные продукты', 'Категория для молока, сливок, и других молочных ингредиентов'),
-    ('Фрукты', 'Категория для фруктов, таких как яблоки, бананы, апельсины'),
-    ('Подсластители', 'Категория для сахара, мёда, сиропов'),
-    ('Специи', 'Категория для специй, таких как корица, ваниль, мята, имбирь'),
-    ('Орехи и семена', 'Категория для орехов, фисташек, и других семян'),
-    ('Шоколад и какао', 'Категория для шоколада, какао-порошка, и других шоколадных продуктов');
-
+  (
+    'Молочные продукты',
+    'Категория для молока, сливок, и других молочных ингредиентов'
+  ),
+  (
+    'Фрукты',
+    'Категория для фруктов, таких как яблоки, бананы, апельсины'
+  ),
+  (
+    'Подсластители',
+    'Категория для сахара, мёда, сиропов'
+  ),
+  (
+    'Специи',
+    'Категория для специй, таких как корица, ваниль, мята, имбирь'
+  ),
+  (
+    'Орехи и семена',
+    'Категория для орехов, фисташек, и других семян'
+  ),
+  (
+    'Шоколад и какао',
+    'Категория для шоколада, какао-порошка, и других шоколадных продуктов'
+  );
 
 -- Insert into Products
 INSERT INTO
@@ -402,18 +462,18 @@ VALUES
     2
   ),
   (
-      'Круассан с шоколадом',
-      'Нежный хрустящий круассан с шоколадной начинкой',
-      'https://www.pngplay.com/wp-content/uploads/15/Pain-Au-Chocolat-Transparent-PNG.png',
-      NULL,
-      13
+    'Круассан с шоколадом',
+    'Нежный хрустящий круассан с шоколадной начинкой',
+    'https://www.pngplay.com/wp-content/uploads/15/Pain-Au-Chocolat-Transparent-PNG.png',
+    NULL,
+    13
   ),
   (
-      'Круассан с миндалем',
-      'Ароматный круассан с миндальной начинкой и посыпкой',
-      'https://www.pngplay.com/wp-content/uploads/15/Croissants-Transparent-Image.png',
-      NULL,
-      13
+    'Круассан с миндалем',
+    'Ароматный круассан с миндальной начинкой и посыпкой',
+    'https://www.pngplay.com/wp-content/uploads/15/Croissants-Transparent-Image.png',
+    NULL,
+    13
   );
 
 -- Insert into RecipeStep
@@ -642,162 +702,162 @@ INSERT INTO
     updated_at
   )
 VALUES
-    (
-        'Центральное кафе',
-        1,
-        false,
-        'ACTIVE',
-        '+79001112233',
-        'central@example.com',
-        '8:00-20:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кофейня на углу',
-        2,
-        true,
-        'ACTIVE',
-        '+79002223344',
-        'corner@example.com',
-        '9:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Маленький магазин на Советской',
-        3,
-        true,
-        'ACTIVE',
-        '+79003334455',
-        'smallstore@example.com',
-        '8:00-18:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кофейня у вокзала',
-        4,
-        false,
-        'DISABLED',
-        '+79004445566',
-        'station@example.com',
-        '10:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Городской кофе',
-        5,
-        true,
-        'ACTIVE',
-        '+79005556677',
-        'citycoffee@example.com',
-        '7:00-23:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Летняя терраса',
-        6,
-        true,
-        'ACTIVE',
-        '+79006667788',
-        'terrace@example.com',
-        '10:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кафе на проспекте',
-        7,
-        false,
-        'ACTIVE',
-        '+79007778899',
-        'avenuecafe@example.com',
-        '9:00-21:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Заведение у реки',
-        8,
-        true,
-        'ACTIVE',
-        '+79008889900',
-        'riverside@example.com',
-        '10:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Чайный дом',
-        9,
-        false,
-        'DISABLED',
-        '+79009990011',
-        'teahouse@example.com',
-        '8:00-20:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Кофе и компании',
-        10,
-        true,
-        'ACTIVE',
-        '+79010001122',
-        'coffeeandco@example.com',
-        '8:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Парк-кафе',
-        11,
-        false,
-        'ACTIVE',
-        '+79011002233',
-        'parkcafe@example.com',
-        '10:00-21:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Восточный уголок',
-        12,
-        true,
-        'ACTIVE',
-        '+79012003344',
-        'easterncorner@example.com',
-        '10:00-23:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Семейная кофейня',
-        13,
-        false,
-        'ACTIVE',
-        '+79013004455',
-        'familycafe@example.com',
-        '9:00-22:00',
-        NULL,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
+  (
+    'Центральное кафе',
+    1,
+    false,
+    'ACTIVE',
+    '+79001112233',
+    'central@example.com',
+    '8:00-20:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Кофейня на углу',
+    2,
+    true,
+    'ACTIVE',
+    '+79002223344',
+    'corner@example.com',
+    '9:00-22:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Маленький магазин на Советской',
+    3,
+    true,
+    'ACTIVE',
+    '+79003334455',
+    'smallstore@example.com',
+    '8:00-18:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Кофейня у вокзала',
+    4,
+    false,
+    'DISABLED',
+    '+79004445566',
+    'station@example.com',
+    '10:00-22:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Городской кофе',
+    5,
+    true,
+    'ACTIVE',
+    '+79005556677',
+    'citycoffee@example.com',
+    '7:00-23:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Летняя терраса',
+    6,
+    true,
+    'ACTIVE',
+    '+79006667788',
+    'terrace@example.com',
+    '10:00-22:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Кафе на проспекте',
+    7,
+    false,
+    'ACTIVE',
+    '+79007778899',
+    'avenuecafe@example.com',
+    '9:00-21:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Заведение у реки',
+    8,
+    true,
+    'ACTIVE',
+    '+79008889900',
+    'riverside@example.com',
+    '10:00-22:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Чайный дом',
+    9,
+    false,
+    'DISABLED',
+    '+79009990011',
+    'teahouse@example.com',
+    '8:00-20:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Кофе и компании',
+    10,
+    true,
+    'ACTIVE',
+    '+79010001122',
+    'coffeeandco@example.com',
+    '8:00-22:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Парк-кафе',
+    11,
+    false,
+    'ACTIVE',
+    '+79011002233',
+    'parkcafe@example.com',
+    '10:00-21:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Восточный уголок',
+    12,
+    true,
+    'ACTIVE',
+    '+79012003344',
+    'easterncorner@example.com',
+    '10:00-23:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Семейная кофейня',
+    13,
+    false,
+    'ACTIVE',
+    '+79013004455',
+    'familycafe@example.com',
+    '9:00-22:00',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
 -- Insert into StoreAdditives
 INSERT INTO
@@ -826,141 +886,140 @@ VALUES
 
 -- Insert into StoreProduct
 INSERT INTO
-    store_products (product_id, store_id, is_available)
+  store_products (product_id, store_id, is_available)
 VALUES
-    -- All products available in the first store
-    (1, 1, true),
-    (2, 1, true),
-    (3, 1, true),
-    (4, 1, true),
-    (5, 1, true),
-    (6, 1, true),
-    (7, 1, true),
-    (8, 1, true),
-    (9, 1, true),
-    (10, 1, true),
-    (11, 1, true),
-    (12, 1, true),
-    (13, 1, true),
-    (14, 1, true),
-    (15, 1, true),
-    (16, 1, true),
-    (17, 1, true),
-    (18, 1, true),
-    (19, 1, true),
-    (20, 1, true),
-    -- Products in other stores with varied availability
-    (1, 2, true),
-    (2, 2, false),
-    (3, 2, true),
-    (4, 2, true),
-    (5, 3, false),
-    (6, 3, true),
-    (7, 3, false),
-    (8, 3, true),
-    (9, 4, true),
-    (10, 4, true),
-    (11, 4, false),
-    (12, 4, true),
-    (13, 5, true),
-    (14, 5, true),
-    (15, 5, false),
-    (16, 5, true),
-    (17, 6, true),
-    (18, 6, false),
-    (19, 6, true),
-    (20, 6, true);
-
+  -- All products available in the first store
+  (1, 1, true),
+  (2, 1, true),
+  (3, 1, true),
+  (4, 1, true),
+  (5, 1, true),
+  (6, 1, true),
+  (7, 1, true),
+  (8, 1, true),
+  (9, 1, true),
+  (10, 1, true),
+  (11, 1, true),
+  (12, 1, true),
+  (13, 1, true),
+  (14, 1, true),
+  (15, 1, true),
+  (16, 1, true),
+  (17, 1, true),
+  (18, 1, true),
+  (19, 1, true),
+  (20, 1, true),
+  -- Products in other stores with varied availability
+  (1, 2, true),
+  (2, 2, false),
+  (3, 2, true),
+  (4, 2, true),
+  (5, 3, false),
+  (6, 3, true),
+  (7, 3, false),
+  (8, 3, true),
+  (9, 4, true),
+  (10, 4, true),
+  (11, 4, false),
+  (12, 4, true),
+  (13, 5, true),
+  (14, 5, true),
+  (15, 5, false),
+  (16, 5, true),
+  (17, 6, true),
+  (18, 6, false),
+  (19, 6, true),
+  (20, 6, true);
 
 -- Insert into StoreProductSizes
 INSERT INTO
-    store_product_sizes (product_size_id, store_product_id, price)
+  store_product_sizes (product_size_id, store_product_id, price)
 VALUES
-    -- Store 1 Products (All sizes included)
-    (1, 1, 1000.00), -- S size for Product 1
-    (2, 1, 1250.00), -- M size for Product 1
-    (3, 1, 1500.00), -- L size for Product 1
+  -- Store 1 Products (All sizes included)
+  (1, 1, 1000.00), -- S size for Product 1
+  (2, 1, 1250.00), -- M size for Product 1
+  (3, 1, 1500.00), -- L size for Product 1
+  -- Store 2 Products (Only M and L sizes included)
+  -- S size excluded intentionally
+  (2, 2, 1100.00), -- M size for Product 2
+  (3, 2, 1350.00), -- L size for Product 2
+  -- Store 3 Products (Only S and M sizes included)
+  -- L size excluded intentionally
+  (4, 3, 750.00), -- S size for Product 3
+  (5, 3, 900.00), -- M size for Product 3
+  -- Store 4 Products (All sizes included)
+  (6, 4, 600.00), -- S size for Product 4
+  (7, 4, 850.00), -- M size for Product 4
+  (8, 4, 1100.00), -- L size for Product 4
+  -- Store 5 Products (Only S size included)
+  -- M and L sizes excluded intentionally
+  (9, 5, 900.00), -- S size for Product 5
+  -- Store 6 Products (All sizes included)
+  (10, 6, 1500.00), -- S size for Product 6
+  (11, 6, 1750.00), -- L size for Product 6
+  -- Store 7 Products (Only M size included)
+  -- S and L sizes excluded intentionally
+  (12, 7, 750.00), -- M size for Product 7
+  -- Store 8 Products (All sizes included)
+  (13, 8, 600.00), -- S size for Product 8
+  (14, 8, 750.00), -- L size for Product 8
+  -- Store 9 Products (All sizes included)
+  (15, 9, 800.00), -- M size for Product 9
+  (16, 9, 1000.00), -- L size for Product 9
+  -- Store 10 Products (Only S size included)
+  -- M and L sizes excluded intentionally
+  (17, 10, 500.00), -- S size for Product 10
+  -- Store 11 Products (Only L size included)
+  -- S and M sizes excluded intentionally
+  (18, 11, 1200.00);
 
-    -- Store 2 Products (Only M and L sizes included)
-    -- S size excluded intentionally
-    (2, 2, 1100.00), -- M size for Product 2
-    (3, 2, 1350.00), -- L size for Product 2
-
-    -- Store 3 Products (Only S and M sizes included)
-    -- L size excluded intentionally
-    (4, 3, 750.00),  -- S size for Product 3
-    (5, 3, 900.00),  -- M size for Product 3
-
-    -- Store 4 Products (All sizes included)
-    (6, 4, 600.00),  -- S size for Product 4
-    (7, 4, 850.00),  -- M size for Product 4
-    (8, 4, 1100.00), -- L size for Product 4
-
-    -- Store 5 Products (Only S size included)
-    -- M and L sizes excluded intentionally
-    (9, 5, 900.00),  -- S size for Product 5
-
-    -- Store 6 Products (All sizes included)
-    (10, 6, 1500.00), -- S size for Product 6
-    (11, 6, 1750.00), -- L size for Product 6
-
-    -- Store 7 Products (Only M size included)
-    -- S and L sizes excluded intentionally
-    (12, 7, 750.00),  -- M size for Product 7
-
-    -- Store 8 Products (All sizes included)
-    (13, 8, 600.00),  -- S size for Product 8
-    (14, 8, 750.00),  -- L size for Product 8
-
-    -- Store 9 Products (All sizes included)
-    (15, 9, 800.00),  -- M size for Product 9
-    (16, 9, 1000.00), -- L size for Product 9
-
-    -- Store 10 Products (Only S size included)
-    -- M and L sizes excluded intentionally
-    (17, 10, 500.00), -- S size for Product 10
-
-    -- Store 11 Products (Only L size included)
-    -- S and M sizes excluded intentionally
-    (18, 11, 1200.00); -- L size for Product 11;
-
+-- L size for Product 11;
 -- Insert into ProductAdditive
 INSERT INTO
   product_size_additives (product_size_id, additive_id, is_default)
 VALUES
-    (1, 1, true),
-    (1, 2, true),
-    (2, 3, true),
-    (3, 1, true),
-    (4, 2, true),
-    (5, 4, false),
-    (6, 5, false),
-    (7, 3, false),
-    (8, 6, false),
-    (9, 7, true),
-    (10, 2, true),
-    (11, 8, false),
-    (12, 9, true),
-    (13, 10, true),
-    (14, 11, false),
-    (15, 12, false),
-    (16, 13, true),
-    (17, 14, false),
-    (18, 1, false),
-    (19, 3, true),
-    (20, 6, false),
-    (3, 8, false),
-    (4, 10, false),
-    (5, 12, true),
-    (6, 14, false),
-    (7, 1, false),
-    (8, 4, false),
-    (9, 5, false),
-    (10, 9, false);
+  (1, 1, true),
+  (1, 2, true),
+  (2, 3, true),
+  (3, 1, true),
+  (4, 2, true),
+  (5, 4, false),
+  (6, 5, false),
+  (7, 3, false),
+  (8, 6, false),
+  (9, 7, true),
+  (10, 2, true),
+  (11, 8, false),
+  (12, 9, true),
+  (13, 10, true),
+  (14, 11, false),
+  (15, 12, false),
+  (16, 13, true),
+  (17, 14, false),
+  (18, 1, false),
+  (19, 3, true),
+  (20, 6, false),
+  (3, 8, false),
+  (4, 10, false),
+  (5, 12, true),
+  (6, 14, false),
+  (7, 1, false),
+  (8, 4, false),
+  (9, 5, false),
+  (10, 9, false);
 
 -- Insert into Ingredients
 INSERT INTO
-  ingredients (name, calories, fat, carbs, proteins, expiration_in_days, unit_id, category_id)
+  ingredients (
+    name,
+    calories,
+    fat,
+    carbs,
+    proteins,
+    expiration_in_days,
+    unit_id,
+    category_id
+  )
 VALUES
   ('Сахар', 387, 0, 100, 0, 365, 1, 3), -- Подсластители
   ('Молоко', 42, 1, 5, 3, 7, 3, 1), -- Молочные продукты
@@ -981,24 +1040,24 @@ VALUES
   ('Клубника', 33, 0.3, 8, 0.7, 10, 1, 2), -- Фрукты
   ('Имбирь', 80, 0.8, 18, 1.8, 180, 1, 4), -- Специи
   ('Соль', 0, 0, 0, 0, 1095, 1, 4), -- Специи
-  ('Фисташки', 562, 45, 28, 20, 365, 1, 5); -- Орехи и семена
+  ('Фисташки', 562, 45, 28, 20, 365, 1, 5);
 
-
+-- Орехи и семена
 -- Insert into AdditiveIngredients
 INSERT INTO
-    additive_ingredients (additive_id, ingredient_id, quantity)
+  additive_ingredients (additive_id, ingredient_id, quantity)
 VALUES
-    (1, 1, 60.00),
-    (2, 1, 75.00),
-    (3, 2, 85.00),
-    (1, 3, 65.00),
-    (4, 1, 50.00),
-    (5, 4, 90.00),
-    (6, 5, 70.00),
-    (3, 4, 75.00),
-    (6, 6, 85.00),
-    (5, 1, 95.00),
-    (2, 2, 70.00);
+  (1, 1, 60.00),
+  (2, 1, 75.00),
+  (3, 2, 85.00),
+  (1, 3, 65.00),
+  (4, 1, 50.00),
+  (5, 4, 90.00),
+  (6, 5, 70.00),
+  (3, 4, 75.00),
+  (6, 6, 85.00),
+  (5, 1, 95.00),
+  (2, 2, 70.00);
 
 -- Орехи и семена
 -- Insert into ProductIngredients
@@ -1081,37 +1140,43 @@ VALUES
 -- Фисташки
 -- Insert into Customer
 INSERT INTO
-    customers (first_name, last_name, password, phone, is_verified, is_banned)
+  customers (
+    first_name,
+    last_name,
+    password,
+    phone,
+    is_verified,
+    is_banned
+  )
 VALUES
-    (
-        'Иван',
-        'Иванов',
-        'hashed_password_123',
-        '+79031234567',
-        true,
-        false
-    ),
-    (
-        'Мария',
-        'Смирнова',
-        'hashed_password_456',
-        '+79876543210',
-        false,
-        false
-    ),
-    (
-        'Алексей',
-        'Петров',
-        'hashed_password_789',
-        '+79998887766',
-        true,
-        false
-    );
-
+  (
+    'Иван',
+    'Иванов',
+    'hashed_password_123',
+    '+79031234567',
+    true,
+    false
+  ),
+  (
+    'Мария',
+    'Смирнова',
+    'hashed_password_456',
+    '+79876543210',
+    false,
+    false
+  ),
+  (
+    'Алексей',
+    'Петров',
+    'hashed_password_789',
+    '+79998887766',
+    true,
+    false
+  );
 
 -- Insert into Employee
 INSERT INTO
-    employees (
+  employees (
     first_name,
     last_name,
     phone,
@@ -1122,129 +1187,128 @@ INSERT INTO
     hashed_password,
     created_at,
     updated_at
-)
+  )
 VALUES
-    (
-        'Елена',
-        'Соколова',
-        '+79551234567',
-        'elena@example.com',
-        'ADMIN',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Сергей',
-        'Павлов',
-        '+79667778899',
-        'sergey@example.com',
-        'DIRECTOR',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Анна',
-        'Федорова',
-        '+79223334455',
-        'anna@example.com',
-        'MANAGER',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Иван',
-        'Иванов',
-        '+79161234567',
-        'ivan@example.com',
-        'BARISTA',
-        'STORE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Мария',
-        'Смирнова',
-        '+79345566778',
-        'maria@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Олег',
-        'Кузнецов',
-        '+79991234567',
-        'oleg@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Татьяна',
-        'Орлова',
-        '+79882233445',
-        'tatiana@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Алексей',
-        'Попов',
-        '+79002221133',
-        'alexei@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Юлия',
-        'Петрова',
-        '+79115555666',
-        'yulia@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        'Дмитрий',
-        'Фролов',
-        '+79553334456',
-        'dmitry@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
-        false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
-
+  (
+    'Елена',
+    'Соколова',
+    '+79551234567',
+    'elena@example.com',
+    'ADMIN',
+    'STORE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Сергей',
+    'Павлов',
+    '+79667778899',
+    'sergey@example.com',
+    'DIRECTOR',
+    'STORE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Анна',
+    'Федорова',
+    '+79223334455',
+    'anna@example.com',
+    'MANAGER',
+    'STORE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Иван',
+    'Иванов',
+    '+79161234567',
+    'ivan@example.com',
+    'MANAGER',
+    'STORE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Мария',
+    'Смирнова',
+    '+79345566778',
+    'maria@example.com',
+    'WAREHOUSE_EMPLOYEE',
+    'WAREHOUSE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Олег',
+    'Кузнецов',
+    '+79991234567',
+    'oleg@example.com',
+    'WAREHOUSE_EMPLOYEE',
+    'WAREHOUSE',
+    false,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Татьяна',
+    'Орлова',
+    '+79882233445',
+    'tatiana@example.com',
+    'WAREHOUSE_EMPLOYEE',
+    'WAREHOUSE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Алексей',
+    'Попов',
+    '+79002221133',
+    'alexei@example.com',
+    'WAREHOUSE_EMPLOYEE',
+    'WAREHOUSE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Юлия',
+    'Петрова',
+    '+79115555666',
+    'yulia@example.com',
+    'WAREHOUSE_EMPLOYEE',
+    'WAREHOUSE',
+    true,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    'Дмитрий',
+    'Фролов',
+    '+79553334456',
+    'dmitry@example.com',
+    'WAREHOUSE_EMPLOYEE',
+    'WAREHOUSE',
+    false,
+    '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
 -- Insert into StoreEmployee
 INSERT INTO
@@ -1276,8 +1340,16 @@ VALUES
 INSERT INTO
   employee_work_tracks (start_work_at, end_work_at, employee_id)
 VALUES
-  ('2024-10-01 09:00:00+00','2024-10-01 17:00:00+00',1),
-  ('2024-10-02 09:00:00+00','2024-10-02 17:00:00+00',2);
+  (
+    '2024-10-01 09:00:00+00',
+    '2024-10-01 17:00:00+00',
+    1
+  ),
+  (
+    '2024-10-02 09:00:00+00',
+    '2024-10-02 17:00:00+00',
+    2
+  );
 
 -- Insert into EmployeeWorkday
 INSERT INTO
@@ -1337,139 +1409,439 @@ INSERT INTO
     updated_at
   )
 VALUES
-    (1, 1, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (1, 2, 50, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 1, 20, 30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 30, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 1, 10000, 1000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 120, 500, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
+  (1, 1, 20, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (
+    1,
+    2,
+    50,
+    500,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    1,
+    20,
+    30,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    2,
+    30,
+    100,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    3,
+    1,
+    10000,
+    1000,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    3,
+    3,
+    120,
+    500,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
 -- Insert stock material categories
-INSERT INTO stock_material_categories (name, description)
+INSERT INTO
+  stock_material_categories (name, description)
 VALUES
-    ('Молочные продукты', 'Молоко, сливки, йогурты и другие молочные продукты'),
-    ('Подсластители', 'Сахар, мед и другие подсластители'),
-    ('Кондитерские изделия', 'Шоколад, какао и другие кондитерские ингредиенты'),
-    ('Специи', 'Различные специи и пряности'),
-    ('Ароматизаторы', 'Ванильный экстракт и другие ароматизаторы');
+  (
+    'Молочные продукты',
+    'Молоко, сливки, йогурты и другие молочные продукты'
+  ),
+  (
+    'Подсластители',
+    'Сахар, мед и другие подсластители'
+  ),
+  (
+    'Кондитерские изделия',
+    'Шоколад, какао и другие кондитерские ингредиенты'
+  ),
+  ('Специи', 'Различные специи и пряности'),
+  (
+    'Ароматизаторы',
+    'Ванильный экстракт и другие ароматизаторы'
+  );
 
 -- Insert stock materials with Russian names and category references
-INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, size, category_id, barcode, expiration_period_in_days, is_active)
+INSERT INTO
+  stock_materials (
+    name,
+    description,
+    ingredient_id,
+    safety_stock,
+    unit_id,
+    size,
+    category_id,
+    barcode,
+    expiration_period_in_days,
+    is_active
+  )
 VALUES
-    ('Простоквашино Молоко 3.2%', 'Молоко пастеризованное 1л', 2, 50, 3, 1, 1, '111111111111', 1095, TRUE),
-    ('Русский сахар Экстра', 'Сахар песок высший сорт 1кг', 1, 20, 1, 1, 2, '222222222222', 1095, TRUE),
-    ('Бабаевский горький шоколад 75%', 'Темный шоколад 500г', 3, 15, 2, 500, 3, '333333333333', 730, TRUE),
-    ('Индийская корица молотая премиум', 'Корица молотая 200г', 4, 10, 2, 200, 4, '444444444444', 1460, TRUE),
-    ('Dr.Oetker Ванильный экстракт', 'Натуральный экстракт ванили 50мл', 5, 25, 4, 50, 5, '555555555555', 1460, TRUE);
+  (
+    'Простоквашино Молоко 3.2%',
+    'Молоко пастеризованное 1л',
+    2,
+    50,
+    3,
+    1,
+    1,
+    '111111111111',
+    1095,
+    TRUE
+  ),
+  (
+    'Русский сахар Экстра',
+    'Сахар песок высший сорт 1кг',
+    1,
+    20,
+    1,
+    1,
+    2,
+    '222222222222',
+    1095,
+    TRUE
+  ),
+  (
+    'Бабаевский горький шоколад 75%',
+    'Темный шоколад 500г',
+    3,
+    15,
+    2,
+    500,
+    3,
+    '333333333333',
+    730,
+    TRUE
+  ),
+  (
+    'Индийская корица молотая премиум',
+    'Корица молотая 200г',
+    4,
+    10,
+    2,
+    200,
+    4,
+    '444444444444',
+    1460,
+    TRUE
+  ),
+  (
+    'Dr.Oetker Ванильный экстракт',
+    'Натуральный экстракт ванили 50мл',
+    5,
+    25,
+    4,
+    50,
+    5,
+    '555555555555',
+    1460,
+    TRUE
+  );
 
 -- Insert into Suppliers
-INSERT INTO suppliers (name, contact_email, contact_phone, city, address)
+INSERT INTO
+  suppliers (name, contact_email, contact_phone, city, address)
 VALUES
-    ('ООО "Нестле Россия"', 'contact@nestle.ru', '+79005556677', 'Москва', 'Павелецкая площадь, д. 2, стр. 1'),
-    ('АО "Кока-Кола ЭйчБиСи Евразия"', 'info@coca-cola.ru', '+78002002222', 'Москва', 'ул. Новоорловская, д. 7'),
-    ('ООО "ПепсиКо Холдингс"', 'support@pepsico.ru', '+78007001000', 'Московская обл.', 'г. Солнечногорск, территория свободной экономической зоны "Шерризон", стр. 1'),
-    ('ООО "Юнилевер Русь"', 'info@unilever.ru', '+78002001200', 'Москва', 'ул. Сергея Макеева, д. 13'),
-    ('ООО "Штарбакс"', 'help@starbucks.ru', '+78001008333', 'Москва', 'ул. Большая Новодмитровская, д. 23, стр. 1'),
-    ('ООО "Мон`дэлис Русь"', 'support@mdlz.ru', '+74959602424', 'Владимирская обл.', 'г. Покров, ул. Франца Штольверка, д. 10'),
-    ('АО "ДАНОН РОССИЯ"', 'contact@danone.ru', '+78002000201', 'Москва', 'ул. Вятская, д. 27, корп. 13-14'),
-    ('ООО "Марс"', 'support@mars.ru', '+74957212100', 'Московская обл.', 'г. Ступино, ул. Ситенка, д. 12'),
-    ('ООО "Юнилевер Русь"', 'contact@unilever.ru', '+78002001201', 'Омск', 'ул. 10 лет Октября, д. 205'),
-    ('ООО "Дженерал Миллс Рус"', 'support@generalmills.ru', '+74959373400', 'Москва', 'ул. Большая Новодмитровская, д. 14, стр. 2');
+  (
+    'ООО "Нестле Россия"',
+    'contact@nestle.ru',
+    '+79005556677',
+    'Москва',
+    'Павелецкая площадь, д. 2, стр. 1'
+  ),
+  (
+    'АО "Кока-Кола ЭйчБиСи Евразия"',
+    'info@coca-cola.ru',
+    '+78002002222',
+    'Москва',
+    'ул. Новоорловская, д. 7'
+  ),
+  (
+    'ООО "ПепсиКо Холдингс"',
+    'support@pepsico.ru',
+    '+78007001000',
+    'Московская обл.',
+    'г. Солнечногорск, территория свободной экономической зоны "Шерризон", стр. 1'
+  ),
+  (
+    'ООО "Юнилевер Русь"',
+    'info@unilever.ru',
+    '+78002001200',
+    'Москва',
+    'ул. Сергея Макеева, д. 13'
+  ),
+  (
+    'ООО "Штарбакс"',
+    'help@starbucks.ru',
+    '+78001008333',
+    'Москва',
+    'ул. Большая Новодмитровская, д. 23, стр. 1'
+  ),
+  (
+    'ООО "Мон`дэлис Русь"',
+    'support@mdlz.ru',
+    '+74959602424',
+    'Владимирская обл.',
+    'г. Покров, ул. Франца Штольверка, д. 10'
+  ),
+  (
+    'АО "ДАНОН РОССИЯ"',
+    'contact@danone.ru',
+    '+78002000201',
+    'Москва',
+    'ул. Вятская, д. 27, корп. 13-14'
+  ),
+  (
+    'ООО "Марс"',
+    'support@mars.ru',
+    '+74957212100',
+    'Московская обл.',
+    'г. Ступино, ул. Ситенка, д. 12'
+  ),
+  (
+    'ООО "Юнилевер Русь"',
+    'contact@unilever.ru',
+    '+78002001201',
+    'Омск',
+    'ул. 10 лет Октября, д. 205'
+  ),
+  (
+    'ООО "Дженерал Миллс Рус"',
+    'support@generalmills.ru',
+    '+74959373400',
+    'Москва',
+    'ул. Большая Новодмитровская, д. 14, стр. 2'
+  );
 
 -- Insert into supplier_warehouse_deliveries
-INSERT INTO supplier_warehouse_deliveries (supplier_id, warehouse_id, delivery_date, created_at, updated_at)
+INSERT INTO
+  supplier_warehouse_deliveries (
+    supplier_id,
+    warehouse_id,
+    delivery_date,
+    created_at,
+    updated_at
+  )
 VALUES
-    (1, 1, '2024-09-01', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Delivery 1
-    (2, 1,'2024-11-01',  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Delivery 2
-    (1, 2, '2024-10-01', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Delivery 3
+  (
+    1,
+    1,
+    '2024-09-01',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Delivery 1
+  (
+    2,
+    1,
+    '2024-11-01',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Delivery 2
+  (
+    1,
+    2,
+    '2024-10-01',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
+-- Delivery 3
 -- Insert into supplier_warehouse_delivery_materials
-INSERT INTO supplier_warehouse_delivery_materials (delivery_id, stock_material_id, barcode, quantity, expiration_date)
+INSERT INTO
+  supplier_warehouse_delivery_materials (
+    delivery_id,
+    stock_material_id,
+    barcode,
+    quantity,
+    expiration_date
+  )
 VALUES
-    (1, 1, '111111111111', 50,  '2026-12-01'), -- Milk Delivery
-    (1, 2, '222222222222', 30,  '2025-06-05'), -- Sugar Delivery
-    (2, 3, '333333333333', 40,  '2025-11-20'), -- Chocolate Delivery
-    (3, 4, '444444444444', 20,  '2026-06-10'), -- Cinnamon Delivery
-    (3, 5, '555555555555', 15,  '2027-12-15'); -- Vanilla Delivery
+  (1, 1, '111111111111', 50, '2026-12-01'), -- Milk Delivery
+  (1, 2, '222222222222', 30, '2025-06-05'), -- Sugar Delivery
+  (2, 3, '333333333333', 40, '2025-11-20'), -- Chocolate Delivery
+  (3, 4, '444444444444', 20, '2026-06-10'), -- Cinnamon Delivery
+  (3, 5, '555555555555', 15, '2027-12-15');
 
-
-
+-- Vanilla Delivery
 -- Insert mock data into supplier_materials
-INSERT INTO supplier_materials (supplier_id, stock_material_id, created_at, updated_at)
+INSERT INTO
+  supplier_materials (
+    supplier_id,
+    stock_material_id,
+    created_at,
+    updated_at
+  )
 VALUES
-    -- Nestlé supplies Milk and Sugar
-    (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+  -- Nestlé supplies Milk and Sugar
+  (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+  (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+  -- Coca-Cola supplies Sugar
+  (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+  -- PepsiCo supplies Chocolate and Cinnamon
+  (3, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
+  (3, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
+  -- Unilever supplies Vanilla
+  (4, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
+  (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-    -- Coca-Cola supplies Sugar
-    (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-
-    -- PepsiCo supplies Chocolate and Cinnamon
-    (3, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
-    (3, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
-
-    -- Unilever supplies Vanilla
-    (4, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
-    (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate
-
-
+-- Chocolate
 -- Insert mock data into supplier_prices
-INSERT INTO supplier_prices (supplier_material_id, base_price)
+INSERT INTO
+  supplier_prices (supplier_material_id, base_price)
 VALUES
-    -- Prices for supplier_material_id 1
-    (1, 50.00),
-    (1, 48.00),
+  -- Prices for supplier_material_id 1
+  (1, 50.00),
+  (1, 48.00),
+  -- Prices for supplier_material_id 2
+  (2, 25.00),
+  (2, 24.50),
+  -- Prices for supplier_material_id 3
+  (3, 100.00),
+  (3, 98.00),
+  -- Prices for supplier_material_id 4
+  (4, 30.00),
+  (4, 28.00),
+  -- Prices for supplier_material_id 5
+  (5, 75.00),
+  (5, 72.50);
 
-    -- Prices for supplier_material_id 2
-    (2, 25.00),
-    (2, 24.50),
-
-    -- Prices for supplier_material_id 3
-    (3, 100.00),
-    (3, 98.00),
-
-    -- Prices for supplier_material_id 4
-    (4, 30.00),
-    (4, 28.00),
-
-    -- Prices for supplier_material_id 5
-    (5, 75.00),
-    (5, 72.50);
-
-
-INSERT INTO warehouse_stocks (warehouse_id, stock_material_id, quantity)
+INSERT INTO
+  warehouse_stocks (warehouse_id, stock_material_id, quantity)
 VALUES
-    (1, 1, 50), -- Milk in Warehouse 1
-    (1, 2, 30), -- Sugar in Warehouse 1
-    (1, 3, 40), -- Chocolate in Warehouse 1
-    (2, 4, 20), -- Cinnamon in Warehouse 2
-    (2, 5, 15); -- Vanilla in Warehouse 2
+  (1, 1, 50), -- Milk in Warehouse 1
+  (1, 2, 30), -- Sugar in Warehouse 1
+  (1, 3, 40), -- Chocolate in Warehouse 1
+  (2, 4, 20), -- Cinnamon in Warehouse 2
+  (2, 5, 15);
 
-
+-- Vanilla in Warehouse 2
 -- Insert into StockRequests (Initial Requests)
-INSERT INTO stock_requests (store_id, warehouse_id, status, created_at, updated_at)
+INSERT INTO
+  stock_requests (
+    store_id,
+    warehouse_id,
+    status,
+    created_at,
+    updated_at
+  )
 VALUES
-    (1, 1, 'CREATED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 'PROCESSED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 'IN_DELIVERY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 4, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  (
+    1,
+    1,
+    'CREATED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    2,
+    2,
+    'PROCESSED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    3,
+    3,
+    'IN_DELIVERY',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ),
+  (
+    4,
+    4,
+    'COMPLETED',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
-INSERT INTO stock_request_ingredients (stock_request_id, ingredient_id, stock_material_id, quantity, created_at, updated_at)
+INSERT INTO
+  stock_request_ingredients (
+    stock_request_id,
+    ingredient_id,
+    stock_material_id,
+    quantity,
+    created_at,
+    updated_at
+  )
 VALUES
-    -- StockRequest 1 (Store 1 -> Warehouse 1)
-    (1, 1, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (1, 2, 1, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+  -- StockRequest 1 (Store 1 -> Warehouse 1)
+  (
+    1,
+    1,
+    2,
+    10.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Sugar
+  (
+    1,
+    2,
+    1,
+    20.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Milk
+  -- StockRequest 2 (Store 2 -> Warehouse 2)
+  (
+    2,
+    3,
+    3,
+    5.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Chocolate
+  (
+    2,
+    4,
+    4,
+    2.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Cinnamon
+  -- StockRequest 3 (Store 3 -> Warehouse 3)
+  (
+    3,
+    5,
+    5,
+    1.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Vanilla
+  (
+    3,
+    1,
+    2,
+    15.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Sugar
+  -- StockRequest 4 (Store 4 -> Warehouse 4)
+  (
+    4,
+    2,
+    1,
+    10.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  ), -- Milk
+  (
+    4,
+    3,
+    3,
+    8.0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+  );
 
-    -- StockRequest 2 (Store 2 -> Warehouse 2)
-    (2, 3, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Chocolate
-    (2, 4, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Cinnamon
-
-    -- StockRequest 3 (Store 3 -> Warehouse 3)
-    (3, 5, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),  -- Vanilla
-    (3, 1, 2, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-
-    -- StockRequest 4 (Store 4 -> Warehouse 4)
-    (4, 2, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (4, 3, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);  -- Chocolate
-
+-- Chocolate

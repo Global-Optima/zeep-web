@@ -81,8 +81,8 @@ func (r *auditRepository) GetAuditRecords(filter *types.EmployeeAuditFilter) ([]
 	if filter.Search != nil {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where(
-			"resource_url ILIKE ? OR ip_address ILIKE ? OR operation ILIKE ?",
-			searchTerm, searchTerm,
+			"resource_url ILIKE ? OR ip_address ILIKE ? OR details->>'name' ILIKE ?",
+			searchTerm, searchTerm, searchTerm,
 		)
 	}
 

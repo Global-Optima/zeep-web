@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
@@ -22,19 +24,23 @@ type WarehouseStockService interface {
 	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
 	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error)
 	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
+
+	CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error
 }
 
 type warehouseStockService struct {
-	repo              WarehouseStockRepository
-	stockMaterialRepo stockMaterial.StockMaterialRepository
-	barcodeRepo       barcode.BarcodeRepository
+	repo                WarehouseStockRepository
+	stockMaterialRepo   stockMaterial.StockMaterialRepository
+	barcodeRepo         barcode.BarcodeRepository
+	notificationService notifications.NotificationService
 }
 
-func NewWarehouseStockService(repo WarehouseStockRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository) WarehouseStockService {
+func NewWarehouseStockService(repo WarehouseStockRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, notificationService notifications.NotificationService) WarehouseStockService {
 	return &warehouseStockService{
-		repo:              repo,
-		stockMaterialRepo: stockMaterialRepo,
-		barcodeRepo:       barcodeRepo,
+		repo:                repo,
+		stockMaterialRepo:   stockMaterialRepo,
+		barcodeRepo:         barcodeRepo,
+		notificationService: notificationService,
 	}
 }
 
@@ -185,6 +191,42 @@ func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, d
 		err := s.repo.UpdateExpirationDate(stockMaterialID, warehouseID, *dto.ExpirationDate)
 		if err != nil {
 			return fmt.Errorf("failed to update expiration date: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error {
+	if stock.Quantity < stock.StockMaterial.SafetyStock {
+		details := &details.StoreWarehouseRunOutDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           warehouseID,
+				FacilityName: stock.Warehouse.Name,
+			},
+			StockItem:   stock.StockMaterial.Name,
+			StockItemID: stock.ID,
+		}
+		err := s.notificationService.NotifyStoreWarehouseRunOut(details)
+		if err != nil {
+			return fmt.Errorf("failed to send warehouse runout notification: %v", err)
+		}
+	}
+
+	closestExpirationDate := stock.UpdatedAt.Add(time.Duration(stock.StockMaterial.ExpirationPeriodInDays) * 24 * time.Hour)
+
+	if closestExpirationDate.Before(time.Now().Add(7 * 24 * time.Hour)) { // Expiration within 7 days
+		details := &details.StockExpirationDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           warehouseID,
+				FacilityName: stock.Warehouse.Name,
+			},
+			ItemName:       stock.StockMaterial.Name,
+			ExpirationDate: closestExpirationDate.Format("2006-01-02"),
+		}
+		err := s.notificationService.NotifyStockExpiration(details)
+		if err != nil {
+			return fmt.Errorf("failed to send stock expiration notification: %v", err)
 		}
 	}
 

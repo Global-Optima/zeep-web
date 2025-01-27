@@ -5,7 +5,7 @@ import { ADMIN_PRODUCTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-produc
 import { ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-stock-materials.routes'
 import { ADMIN_SUPPLIERS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-suppliers.routes'
 import { ADMIN_UNITS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-units.routes'
-import type { AppRouteRecord, ParentRoutePage } from '../../config/routes.config'
+import type { AppRouteRecord, ParentRoutePage } from '../routes.types'
 import { ADMIN_EMPLOYEES_CHILDREN_ROUTES } from './admin-employees.routes'
 
 export const ADMIN_CHILDREN_ROUTES = {
@@ -17,6 +17,15 @@ export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_EMPLOYEES_CHILDREN_ROUTES,
 	...ADMIN_SUPPLIERS_CHILDREN_ROUTES,
 
+	ADMIN_NOTIFICATIONS: {
+		path: 'notifications',
+		meta: {
+			title: 'Уведомления',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/admin-notifications/pages/admin-notifications-page.vue'),
+	},
 	ADMIN_DASHBOARD: {
 		path: '',
 		meta: {
