@@ -19,7 +19,7 @@
 				</TableCell>
 
 				<TableCell class="p-4">
-					<span class="max-w-12 font-medium truncate">{{ category.description }}</span>
+					<span class="line-clamp-1 max-w-md">{{ category.description }}</span>
 				</TableCell>
 
 				<TableCell class="flex justify-end">

@@ -202,7 +202,7 @@ function selectCategory(category: ProductCategoryDTO) {
 						<div>
 							<Button
 								variant="link"
-								class="mt-0 p-0 h-fit text-blue-600 underline"
+								class="mt-0 p-0 h-fit text-primary underline"
 								@click="openCategoryDialog = true"
 							>
 								{{ selectedCategory?.name || 'Категория не выбрана' }}

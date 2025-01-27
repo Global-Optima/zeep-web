@@ -9,40 +9,75 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
+import { useToast } from '@/core/components/ui/toast'
 import AdminSelectAdditiveCategory from '@/modules/admin/additive-categories/components/admin-select-additive-category.vue'
-import type { AdditiveCategoryDTO, CreateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
-import { ChevronLeft } from 'lucide-vue-next'
+import type { AdditiveCategoryDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
+import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
+import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
+import { ChevronLeft, Trash } from 'lucide-vue-next'
+
+interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
+  name: string
+  unit: string
+  category: string
+}
 
 const emits = defineEmits<{
   onSubmit: [dto: CreateAdditiveDTO]
   onCancel: []
 }>()
 
+const {toast} = useToast()
+
 // Reactive State for Category Selection
 const selectedCategory = ref<AdditiveCategoryDTO | null>(null)
 const openCategoryDialog = ref(false)
+
+const selectedUnit = ref<UnitDTO | null>(null)
+const openUnitDialog = ref(false)
+
+const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>([])
+const openIngredientsDialog = ref(false)
+
 
 // Validation Schema
 const createAdditiveSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название добавки'),
-    description: z.string().optional(),
-    price: z.number().min(0, 'Введите корректную цену'),
-    size: z.string().min(1, 'Введите размер добавки'),
+    description: z.string().min(1, 'Введите описание'),
+    basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
+    size: z.coerce.number().min(0, 'Введите размер'),
+    unitId: z.number().min(0, 'Введите единицу измерения'),
     imageUrl: z.string().min(1, 'Вставьте картинку добавки'),
     additiveCategoryId: z.coerce.number().min(1, 'Выберите категорию добавки'),
   })
 )
 
 // Form Setup
-const { handleSubmit, resetForm, setFieldValue } = useForm<CreateAdditiveDTO>({
+const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createAdditiveSchema,
 })
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
-  emits('onSubmit', { ...formValues, additiveCategoryId: selectedCategory.value?.id || 0 })
+  if (!selectedCategory.value?.id) return
+  if (!selectedUnit.value?.id) return
+  if (selectedIngredients.value.length === 0) {
+    return toast({description: "Технологическая карта должна иметь минимум 1 ингредиент"})
+  }
+
+  const dto: CreateAdditiveDTO = {
+    ...formValues,
+    additiveCategoryId: selectedCategory.value.id,
+    unitId: selectedUnit.value.id,
+    ingredients: selectedIngredients.value.map(i => ({ingredientId: i.ingredientId, quantity: i.quantity}))
+  }
+
+  emits('onSubmit', dto)
 })
 
 const onCancel = () => {
@@ -54,6 +89,27 @@ function selectCategory(category: AdditiveCategoryDTO) {
   selectedCategory.value = category
   openCategoryDialog.value = false
   setFieldValue('additiveCategoryId', category.id)
+}
+
+function selectUnit(unit: UnitDTO) {
+  selectedUnit.value = unit
+  openUnitDialog.value = false
+  setFieldValue('unitId', unit.id)
+}
+
+function addIngredient(ingredient: IngredientsDTO) {
+  if (!selectedIngredients.value.some((item) => item.ingredientId === ingredient.id)) {
+    selectedIngredients.value.push({
+      ingredientId: ingredient.id,
+      name: ingredient.name,
+      unit: ingredient.unit.name,
+      category: ingredient.category.name,
+      quantity: 0
+    })
+  }
+}
+function removeIngredient(index: number) {
+  selectedIngredients.value.splice(index, 1)
 }
 </script>
 
@@ -140,7 +196,7 @@ function selectCategory(category: AdditiveCategoryDTO) {
 							<!-- Price and Size -->
 							<div class="flex gap-4">
 								<FormField
-									name="price"
+									name="basePrice"
 									v-slot="{ componentField }"
 								>
 									<FormItem class="flex-1">
@@ -168,7 +224,7 @@ function selectCategory(category: AdditiveCategoryDTO) {
 												id="size"
 												type="text"
 												v-bind="componentField"
-												placeholder="Например: 500 мл"
+												placeholder="500"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -176,6 +232,67 @@ function selectCategory(category: AdditiveCategoryDTO) {
 								</FormField>
 							</div>
 						</div>
+					</CardContent>
+				</Card>
+
+				<Card class="mt-4">
+					<CardHeader>
+						<div class="flex justify-between items-start">
+							<div>
+								<CardTitle>Технологическая карта</CardTitle>
+								<CardDescription class="mt-2">
+									Выберите инргредиент и его количество
+								</CardDescription>
+							</div>
+							<Button
+								variant="outline"
+								@click="openIngredientsDialog = true"
+							>
+								Добавить
+							</Button>
+						</div>
+					</CardHeader>
+					<CardContent>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Название</TableHead>
+									<TableHead>Категория</TableHead>
+									<TableHead>Количество</TableHead>
+									<TableHead>Размер</TableHead>
+									<TableHead></TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								<TableRow
+									v-for="(ingredient, index) in selectedIngredients"
+									:key="ingredient.ingredientId"
+								>
+									<TableCell>{{ ingredient.name }}</TableCell>
+									<TableCell>{{ ingredient.category }}</TableCell>
+
+									<TableCell class="flex items-center gap-2">
+										<Input
+											type="number"
+											v-model.number="ingredient.quantity"
+											:min="0"
+											placeholder="Введите количество"
+                      class='w-16'
+										/>
+									</TableCell>
+									<TableCell>{{ ingredient.unit }}</TableCell>
+									<TableCell class="text-center">
+										<Button
+											variant="ghost"
+											size="icon"
+											@click="removeIngredient(index)"
+										>
+											<Trash class="w-6 h-6 text-red-500" />
+										</Button>
+									</TableCell>
+								</TableRow>
+							</TableBody>
+						</Table>
 					</CardContent>
 				</Card>
 			</div>
@@ -219,10 +336,28 @@ function selectCategory(category: AdditiveCategoryDTO) {
 						<div>
 							<Button
 								variant="link"
-								class="mt-0 p-0 h-fit text-blue-600 underline"
+								class="mt-0 p-0 h-fit text-primary underline"
 								@click="openCategoryDialog = true"
 							>
 								{{ selectedCategory?.name || 'Категория не выбрана' }}
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Единица измерения</CardTitle>
+						<CardDescription>Выберите единицу измерения</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div>
+							<Button
+								variant="link"
+								class="mt-0 p-0 h-fit text-primary underline"
+								@click="openUnitDialog = true"
+							>
+								{{ selectedUnit?.name || 'Единица измерения не выбрана' }}
 							</Button>
 						</div>
 					</CardContent>
@@ -244,11 +379,23 @@ function selectCategory(category: AdditiveCategoryDTO) {
 			>
 		</div>
 
+		<AdminIngredientsSelectDialog
+			:open="openIngredientsDialog"
+			@close="openIngredientsDialog = false"
+			@select="addIngredient"
+		/>
+
 		<!-- Category Dialog -->
 		<AdminSelectAdditiveCategory
 			:open="openCategoryDialog"
 			@close="openCategoryDialog = false"
 			@select="selectCategory"
+		/>
+
+		<AdminSelectUnit
+			:open="openUnitDialog"
+			@close="openUnitDialog = false"
+			@select="selectUnit"
 		/>
 	</div>
 </template>

@@ -40,7 +40,16 @@ const updateIngredientSchema = toTypedSchema(
 // Form Setup
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: updateIngredientSchema,
-  initialValues:ingredient
+  initialValues: {
+    name: ingredient.name,
+    calories: ingredient.calories,
+    fat: ingredient.fat,
+    carbs: ingredient.carbs,
+    proteins: ingredient.proteins,
+    expirationInDays: ingredient.expirationInDays,
+    unitId: ingredient.unit.id,
+    categoryId: ingredient.category.id,
+  }
 })
 
 // Handlers
@@ -255,7 +264,7 @@ function selectUnit(unit: UnitDTO) {
 							<FormItem>
 								<Button
 									variant="link"
-									class="mt-0 p-0 h-fit text-blue-600 underline"
+									class="mt-0 p-0 h-fit text-primary underline"
 									@click="openUnitDialog = true"
 								>
 									{{ selectedUnit?.name || 'Размер не выбран' }}
@@ -277,7 +286,7 @@ function selectUnit(unit: UnitDTO) {
 							<FormItem>
 								<Button
 									variant="link"
-									class="mt-0 p-0 h-fit text-blue-600 underline"
+									class="mt-0 p-0 h-fit text-primary underline"
 									@click="openCategoryDialog = true"
 								>
 									{{ selectedCategory?.name || 'Категория не выбрана' }}

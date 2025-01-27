@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/core/components/ui/tooltip'
 import type { NotificationDTO } from '@/modules/admin/admin-notifications/models/notifications.model'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -80,16 +86,24 @@ const formatMessage = (s: string) => s.replace(/\*(.*?)\*/g, '<span class="font-
 						{{ PRIORITY_LABELS[notification.priority] }}
 					</span>
 				</TableCell>
-				<TableCell class="flex justify-center">
-					<Button
-						size="xs"
-						variant="ghost"
-						@click="emit('markAsRead', notification.id)"
-						v-if="!notification.isRead"
-						class=""
-					>
-						<Check class="text-primary size-5" />
-					</Button>
+				<TableCell class="flex justify-center items-center">
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger>
+								<Button
+									size="xs"
+									variant="ghost"
+									@click="emit('markAsRead', notification.id)"
+									v-if="!notification.isRead"
+								>
+									<Check class="text-primary size-6" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Прочитать</p>
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 				</TableCell>
 			</TableRow>
 		</TableBody>

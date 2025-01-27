@@ -10,15 +10,13 @@
 				<TabsTrigger
 					class="py-2"
 					value="details"
+					>Детали</TabsTrigger
 				>
-					Детали
-				</TabsTrigger>
 				<TabsTrigger
 					class="py-2"
 					value="variants"
+					>Варианты</TabsTrigger
 				>
-					Варианты
-				</TabsTrigger>
 			</TabsList>
 			<TabsContent value="details">
 				<AdminProductDetailsForm
@@ -45,9 +43,9 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/core/components/ui/tabs'
-import { getRouteName } from '@/core/config/routes.config'
-import AdminProductDetailsForm from "@/modules/admin/products/components/details/admin-product-details-form.vue"
-import AdminProductsVariants from "@/modules/admin/products/components/details/admin-products-variants.vue"
+import { useToast } from '@/core/components/ui/toast/use-toast'
+import AdminProductDetailsForm from '@/modules/admin/products/components/details/admin-product-details-form.vue'
+import AdminProductsVariants from '@/modules/admin/products/components/details/admin-products-variants.vue'
 import type { UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -56,26 +54,52 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
+const { toast } = useToast()
 
 const productId = route.params.id as string
 
 const { data: productDetails } = useQuery({
-  queryKey: ['admin-product-details', productId],
+	queryKey: ['admin-product-details', productId],
 	queryFn: () => productsService.getProductDetails(Number(productId)),
-  enabled: !isNaN(Number(productId)),
+	enabled: !isNaN(Number(productId)),
 })
 
 const productUpdateMutation = useMutation({
-	mutationFn: ({id, dto} : {id: number, dto: UpdateProductDTO}) => productsService.updateProduct(id, dto),
+	mutationFn: ({ id, dto }: { id: number; dto: UpdateProductDTO }) =>
+		productsService.updateProduct(id, dto),
+	onMutate: () => {
+		toast({
+			title: 'Обновление...',
+			description: 'Обновление данных товара. Пожалуйста, подождите.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-products'] })
-    queryClient.invalidateQueries({ queryKey: ['admin-product-details', productId] })
-		router.push({ name: getRouteName("ADMIN_PRODUCTS") })
+		queryClient.invalidateQueries({ queryKey: ['admin-product-details', productId] })
+		toast({
+			title: 'Успех!',
+			description: 'Данные товара успешно обновлены.',
+		})
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при обновлении товара.',
+			variant: 'destructive',
+		})
 	},
 })
 
 function onUpdate(dto: UpdateProductDTO) {
-	productUpdateMutation.mutate({id: Number(productId), dto})
+	if (isNaN(Number(productId))) {
+		toast({
+			title: 'Ошибка',
+			description: 'Неверный идентификатор товара.',
+			variant: 'destructive',
+		})
+		return router.back()
+	}
+	productUpdateMutation.mutate({ id: Number(productId), dto })
 }
 
 function onCancel() {
