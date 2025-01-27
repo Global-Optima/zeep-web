@@ -515,22 +515,9 @@ VALUES
     ('Маленькое Кафе', false, 'ACTIVE', '+79003334455', 'smallstore@example.com', '8:00-18:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('Городское Кафе', true, 'ACTIVE', '+79004445566', 'citycoffee@example.com', '7:00-23:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-
--- Insert into StoreAdditives
+-- Insert into StoreAdditives store 1 additives are loaded later in the script
 INSERT INTO store_additives (store_id, additive_id)
 VALUES
-    (1, 1),
-    (1, 2),
-    (1, 3),
-    (1, 4),
-    (1, 5),
-    (1, 6),
-    (1, 7),
-    (1, 8),
-    (1, 9),
-    (1, 10),
-    (1, 13),
-    (1, 14),
     (2, 1),
     (2, 3),
     (2, 4),
@@ -554,16 +541,16 @@ VALUES
     (4, 11),
     (4, 12);
 
--- Insert into StoreProduct
-INSERT INTO store_products (store_id, product_id, is_available) VALUES
-    (1, 1, true),   -- Latte
-    (1, 2, true),   -- Cappuccino
-    (1, 4, true),   -- Green Tea
-    (1, 7, true),   -- Mango Smoothie
-    (1, 13, false), -- Chocolate Milkshake
-    (1, 10, false), -- Mojito
-    (1, 15, true),  -- Lemon Frappe
-    (1, 21, true);  -- Croissant w/ Chocolate
+
+INSERT INTO store_products (store_id, product_id, is_available, created_at, updated_at)
+SELECT
+    1,
+    p.id,
+    true,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM products p
+WHERE p.deleted_at IS NULL;
 
 -- Store 2
 INSERT INTO store_products (store_id, product_id, is_available) VALUES
@@ -598,38 +585,13 @@ INSERT INTO store_products (store_id, product_id, is_available) VALUES
     (4, 17, true),  -- Mint Tea
     (4, 12, true);  -- Energy Drink
 
-
 -- Insert into StoreProductSizes
 INSERT INTO store_product_sizes (store_product_id, product_size_id, price)
 VALUES
-    -- Store 1 Product Sizes
-    (1, 1, 150.00),   -- Latte, size S
-    (1, 2, 170.00),   -- Latte, size M
-    (1, 3, 190.00),   -- Latte, size L
-    (2, 4, 160.00),   -- Cappuccino, size S
-    (3,  8, 120.00),
-    (3,  9, 140.00),
-    (3, 10, 160.00),
-    (4, 16, 130.00),
-    (4, 17, 150.00),
-    (4, 18, 170.00),
-    (5, 27, 180.00),
-    (6, 23, 160.00),
-    (6, 24, 190.00),
-    (7, 29, 200.00),
-    (9, 5, 120.00),
-    (9, 6, 140.00),
-    (9, 7, 160.00),
-    (10, 11, 100.00),
-    (10, 12, 120.00),
-    (10, 13, 140.00),
-    (11, 14, 130.00),
-    (11, 15, 150.00),
     (12, 19,  90.00),
     (12, 20, 110.00),
     (13, 28, 60.00),
     (15, 31, 85.00),
-    (16, 30, 90.00),
     (17, 26, 120.00),
     (18, 33, 110.00),
     (20, 23, 150.00),
@@ -653,6 +615,16 @@ VALUES
     (31, 31, 85.00),
     (32, 26, 120.00);
 
+INSERT INTO store_product_sizes (store_product_id, product_size_id, price, created_at, updated_at)
+SELECT
+    sp.id,
+    ps.id,
+    ps.base_price,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM store_products sp
+         JOIN product_sizes ps ON ps.product_id = sp.product_id
+WHERE sp.store_id = 1;
 
 -- L size for Product 11;
 -- Insert into ProductAdditive
@@ -688,6 +660,19 @@ VALUES
     (8, 4, false),
     (9, 5, false),
     (10, 9, false);
+
+INSERT INTO store_additives (store_id, additive_id, price, created_at, updated_at)
+SELECT DISTINCT
+    1,
+    psa.additive_id,
+    a.base_price,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM store_product_sizes sps
+         JOIN product_size_additives psa ON psa.product_size_id = sps.product_size_id
+         JOIN additives a ON a.id = psa.additive_id
+         JOIN store_products sp ON sp.id = sps.store_product_id
+WHERE sp.store_id = 1;
 
 -- Insert into Ingredients
 INSERT INTO
@@ -1150,6 +1135,45 @@ VALUES
     (4, 9, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),   -- Ice Cubes
     (4, 14, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Cocoa Powder
 
+WITH wh AS (
+    SELECT sw.id AS store_warehouse_id,
+           sw.store_id
+    FROM store_warehouses sw
+)
+INSERT INTO store_warehouse_stocks (
+    store_warehouse_id,
+    ingredient_id,
+    quantity,
+    low_stock_threshold,
+    created_at,
+    updated_at
+)
+SELECT
+    wh.store_warehouse_id,
+    i.id AS ingredient_id,
+    25 AS quantity,        -- Например, начальный остаток 25
+    10 AS low_stock_threshold,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM (
+         SELECT sa.store_id, ai.ingredient_id
+         FROM store_additives sa
+                  JOIN additive_ingredients ai ON ai.additive_id = sa.additive_id
+         UNION
+         SELECT sp.store_id, psi.ingredient_id
+         FROM store_products sp
+                  JOIN store_product_sizes sps ON sps.store_product_id = sp.id
+                  JOIN product_size_ingredients psi ON psi.product_size_id = sps.product_size_id
+     ) AS needed
+         JOIN wh ON wh.store_id = needed.store_id
+         JOIN ingredients i ON i.id = needed.ingredient_id
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM store_warehouse_stocks s
+    WHERE s.store_warehouse_id = wh.store_warehouse_id
+      AND s.ingredient_id = i.id
+      AND s.deleted_at IS NULL
+);
 
 -- Insert stock material categories
 INSERT INTO
