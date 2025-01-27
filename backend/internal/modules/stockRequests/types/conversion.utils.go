@@ -16,23 +16,31 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 		}
 	}
 
+	facilityAddress := &storeTypes.FacilityAddressDTO{
+		ID:      request.Store.FacilityAddressID,
+		Address: request.Store.FacilityAddress.Address,
+	}
+
+	if request.Store.FacilityAddress.Longitude == nil || request.Store.FacilityAddress.Latitude == nil {
+		facilityAddress.Longitude = 0
+		facilityAddress.Latitude = 0
+	} else {
+		facilityAddress.Longitude = *request.Store.FacilityAddress.Longitude
+		facilityAddress.Latitude = *request.Store.FacilityAddress.Latitude
+	}
+
 	return StockRequestResponse{
 		RequestID:        request.ID,
 		StoreComment:     request.StoreComment,
 		WarehouseComment: request.WarehouseComment,
 		Store: storeTypes.StoreDTO{
-			ID:           request.StoreID,
-			Name:         request.Store.Name,
-			IsFranchise:  request.Store.IsFranchise,
-			ContactPhone: request.Store.ContactPhone,
-			ContactEmail: request.Store.ContactEmail,
-			FacilityAddress: &storeTypes.FacilityAddressDTO{
-				ID:        request.Store.FacilityAddressID,
-				Address:   request.Store.FacilityAddress.Address,
-				Longitude: *request.Store.FacilityAddress.Longitude,
-				Latitude:  *request.Store.FacilityAddress.Latitude,
-			},
-			StoreHours: request.Store.StoreHours,
+			ID:              request.StoreID,
+			Name:            request.Store.Name,
+			IsFranchise:     request.Store.IsFranchise,
+			ContactPhone:    request.Store.ContactPhone,
+			ContactEmail:    request.Store.ContactEmail,
+			FacilityAddress: facilityAddress,
+			StoreHours:      request.Store.StoreHours,
 		},
 		Warehouse:      *warehouseTypes.ToWarehouseResponse(request.Warehouse),
 		Status:         request.Status,
