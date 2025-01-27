@@ -1,11 +1,8 @@
-<!-- <template>
+<template>
 	<div class="relative bg-white p-6 border rounded-xl">
-  TODO: add image url
-		<img
-			class="mb-6 rounded-full w-48 h-48 object-cover"
-			src=""
-			alt="Employee Image"
-		/>
+		<Avatar class="bg-gray-200 rounded-lg size-32">
+			<AvatarFallback>{{ getEmployeeInitials(employee) }}</AvatarFallback>
+		</Avatar>
 		<div
 			v-for="attribute in attributes"
 			:key="attribute.label"
@@ -20,6 +17,7 @@
 			<Button
 				size="icon"
 				variant="ghost"
+				@click="$router.push(`/admin/store-employees/${employee.id}/update`)"
 			>
 				<Pencil class="w-6 h-6 text-gray-500" />
 			</Button>
@@ -28,12 +26,14 @@
 </template>
 
 <script setup lang="ts">
+import { Avatar, AvatarFallback } from '@/core/components/ui/avatar'
 import Button from '@/core/components/ui/button/Button.vue'
-import { EMPLOYEE_ROLES_FORMATTED, type Employee } from '@/modules/admin/store-employees/models/employees.models'
+import { getEmployeeInitials } from '@/core/utils/user-formatting.utils'
+import { EMPLOYEE_ROLES_FORMATTED, type StoreEmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-const {employee} = defineProps<{employee: Employee}>()
+const {employee} = defineProps<{employee: StoreEmployeeDTO}>()
 
 const attributes = computed(() => [
   { label: 'Имя', value: `${employee.firstName} ${employee.lastName}` },
@@ -44,4 +44,4 @@ const attributes = computed(() => [
 ]);
 </script>
 
-<style scoped></style> -->
+<style scoped></style>

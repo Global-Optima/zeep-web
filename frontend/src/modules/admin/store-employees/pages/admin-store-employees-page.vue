@@ -42,7 +42,7 @@ import { computed, ref } from 'vue'
 const filter = ref<GetStoreEmployeesFilter>({})
 
 const { data: employees } = useQuery({
-  queryKey: computed(() => ['admin-store-employees', filter.value]),
+  queryKey: computed(() => ['store-employees', filter.value]),
   queryFn: () => employeesService.getStoreEmployees(filter.value),
 })
 

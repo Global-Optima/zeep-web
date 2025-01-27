@@ -17,6 +17,15 @@ export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_EMPLOYEES_CHILDREN_ROUTES,
 	...ADMIN_SUPPLIERS_CHILDREN_ROUTES,
 
+	ADMIN_NOTIFICATIONS: {
+		path: 'notifications',
+		meta: {
+			title: 'Уведомления',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/admin-notifications/pages/admin-notifications-page.vue'),
+	},
 	ADMIN_DASHBOARD: {
 		path: '',
 		meta: {

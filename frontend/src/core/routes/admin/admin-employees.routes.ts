@@ -18,6 +18,15 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/store-employees/pages/admin-store-employee-details-page.vue'),
 	},
+	ADMIN_STORE_EMPLOYEE_AUDIT: {
+		path: 'store-employees/:id/audit',
+		meta: {
+			title: 'Аудит сотруника',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/store-employees/pages/admin-store-employee-audit-page.vue'),
+	},
 	ADMIN_STORE_EMPLOYEE_UPDATE: {
 		path: 'store-employees/:id/update',
 		meta: {
