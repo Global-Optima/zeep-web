@@ -2,6 +2,8 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 )
@@ -13,10 +15,15 @@ type StockRequestsModule struct {
 	Handler *stockRequests.StockRequestHandler
 }
 
-func NewStockRequestsModule(base *common.BaseModule, stockMaterialRepo stockMaterial.StockMaterialRepository) *StockRequestsModule {
+func NewStockRequestsModule(
+	base *common.BaseModule,
+	franchiseeService franchisees.FranchiseeService,
+	regionService regions.RegionService,
+	stockMaterialRepo stockMaterial.StockMaterialRepository,
+) *StockRequestsModule {
 	repo := stockRequests.NewStockRequestRepository(base.DB)
 	service := stockRequests.NewStockRequestService(repo, stockMaterialRepo)
-	handler := stockRequests.NewStockRequestHandler(service)
+	handler := stockRequests.NewStockRequestHandler(service, franchiseeService, regionService)
 
 	base.Router.RegisterStockRequestRoutes(handler)
 

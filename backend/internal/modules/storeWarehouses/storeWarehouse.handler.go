@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"go.uber.org/zap"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -20,6 +19,7 @@ type StoreWarehouseHandler struct {
 	service           StoreWarehouseService
 	auditService      audit.AuditService
 	ingredientService ingredients.IngredientService
+	franchiseeService franchisees.FranchiseeService
 	logger            *zap.SugaredLogger
 }
 
@@ -27,6 +27,7 @@ func NewStoreWarehouseHandler(
 	service StoreWarehouseService,
 	ingredientService ingredients.IngredientService,
 	auditService audit.AuditService,
+	franchiseeService franchisees.FranchiseeService,
 	logger *zap.SugaredLogger,
 ) *StoreWarehouseHandler {
 	return &StoreWarehouseHandler{
@@ -40,7 +41,7 @@ func NewStoreWarehouseHandler(
 func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 	var dto types.AddStoreStockDTO
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -80,7 +81,7 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 	var dto types.AddMultipleStoreStockDTO
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -135,7 +136,7 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -157,7 +158,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -181,7 +182,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 	var input types.UpdateStoreStockDTO
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -223,7 +224,7 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 }
 
 func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
