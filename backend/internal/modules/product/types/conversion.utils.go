@@ -97,14 +97,15 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 
 func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
 	var additives = make([]ProductSizeAdditiveDTO, len(productSize.Additives))
-	var ingredients = make([]ingredientTypes.IngredientDTO, len(productSize.ProductSizeIngredients))
+	var ingredients = make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
 
 	for i, productSizeAdditive := range productSize.Additives {
 		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
-		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+		ingredients[i].Quantity = productSizeIngredient.Quantity
 	}
 
 	return ProductSizeDetailsDTO{

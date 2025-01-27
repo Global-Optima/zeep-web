@@ -22,9 +22,10 @@ func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditive
 }
 
 func ConvertToStoreAdditiveDetailsDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDetailsDTO {
-	ingredients := make([]ingredientTypes.IngredientDTO, len(storeAdditive.Additive.Ingredients))
+	ingredients := make([]additiveTypes.AdditiveIngredientDTO, len(storeAdditive.Additive.Ingredients))
 	for i, additiveIngredient := range storeAdditive.Additive.Ingredients {
-		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
+		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
+		ingredients[i].Quantity = additiveIngredient.Quantity
 	}
 
 	return &StoreAdditiveDetailsDTO{

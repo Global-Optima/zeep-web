@@ -3,7 +3,11 @@ package storeProducts
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 
@@ -18,13 +22,15 @@ type StoreProductHandler struct {
 	service        StoreProductService
 	productService product.ProductService
 	auditService   audit.AuditService
+	logger         *zap.SugaredLogger
 }
 
-func NewStoreProductHandler(service StoreProductService, productService product.ProductService, auditService audit.AuditService) *StoreProductHandler {
+func NewStoreProductHandler(service StoreProductService, productService product.ProductService, auditService audit.AuditService, logger *zap.SugaredLogger) *StoreProductHandler {
 	return &StoreProductHandler{
 		service:        service,
 		productService: productService,
 		auditService:   auditService,
+		logger:         logger,
 	}
 }
 
@@ -53,6 +59,57 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, productDetails)
+}
+
+func (h *StoreProductHandler) GetProductsListToAdd(c *gin.Context) {
+	var filter productTypes.ProductsFilterDto
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
+
+	//TODO change to franchisees.CheckFranchiseeStore()
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	productDetails, err := h.service.GetProductsListToAdd(storeID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve products list to add for store")
+		return
+	}
+
+	if productDetails == nil {
+		utils.SendNotFoundError(c, "products not found")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, productDetails, filter.Pagination)
+}
+
+func (h *StoreProductHandler) GetStoreProductCategories(c *gin.Context) {
+	//TODO replace by franchisee.CheckStore
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	categories, err := h.service.GetStoreProductCategories(storeID)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve store product categories")
+		return
+	}
+
+	if categories == nil {
+		utils.SendNotFoundError(c, "store product categories not found")
+		return
+	}
+
+	utils.SendSuccessResponse(c, categories)
 }
 
 func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
@@ -148,38 +205,63 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 }
 
 func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
-	var dto []types.CreateStoreProductDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	var dtos []types.CreateStoreProductDTO
+	if err := c.ShouldBindJSON(&dtos); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
-	dtoLength := len(dto)
+	dtoLength := len(dtos)
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	_, err := h.service.CreateMultipleStoreProducts(storeID, dto)
+	ids, err := h.service.CreateMultipleStoreProducts(storeID, dtos)
 	if err != nil {
 		msg := fmt.Sprintf("failed to create %d store products", dtoLength)
 		utils.SendInternalServerError(c, msg)
 		return
 	}
 
-	/*createDetails := types.AuditStoreProductDTO{
-		StoreID: storeID,
+	storeProducts, err := h.service.GetStoreProductsByProductIDs(storeID, ids)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve created store products: product not found")
+		return
 	}
 
-	_ = h.auditService.RecordEmployeeAction(c, data.CreateMultipleOperation, data.StoreProductComponent,
-		&data.MultipleItemDetails[types.AuditStoreProductDTO]{
-			IDs: ids,
-			DTO: createDetails,
-		},
-	)*/
+	dtoMap := make(map[uint]*types.CreateStoreProductDTO)
+	for _, dto := range dtos {
+		dtoCopy := dto
+		dtoMap[dto.ProductID] = &dtoCopy
+	}
 
-	msg := fmt.Sprintf("%d store product created successfully", dtoLength)
+	// Prepare audit actions
+	actions := make([]shared.AuditAction, 0, len(storeProducts))
+	for _, product := range storeProducts {
+		matchedDTO, exists := dtoMap[product.ProductID]
+		if !exists {
+			h.logger.Errorf("Failed to match product with DTO for product ID: %d", product.ProductID)
+			continue
+		}
+
+		action := types.CreateStoreProductAuditFactory(
+			&data.BaseDetails{
+				ID:   product.ID,
+				Name: product.Name,
+			},
+			matchedDTO, storeID,
+		)
+		actions = append(actions, &action)
+	}
+
+	// Record audit actions (ignore errors as requested)
+	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	logrus.Info(len(actions))
+
+	// Send success message
+	msg := fmt.Sprintf("%d store product(s) created successfully", dtoLength)
 	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
 }
 

@@ -69,6 +69,30 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 	utils.SendSuccessResponse(c, additivesList)
 }
 
+func (h *StoreAdditiveHandler) GetAdditivesListToAdd(c *gin.Context) {
+	var filter additiveTypes.AdditiveFilterQuery
+
+	//TODO replace with franchisee.CheckStore
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Additive{}); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
+		return
+	}
+
+	storeAdditives, err := h.service.GetAdditivesListToAdd(storeID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch additives")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, storeAdditives, filter.Pagination)
+}
+
 func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
 	var filter additiveTypes.AdditiveFilterQuery
 

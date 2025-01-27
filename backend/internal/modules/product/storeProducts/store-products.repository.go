@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
@@ -11,8 +12,11 @@ import (
 )
 
 type StoreProductRepository interface {
+	GetStoreProductCategories(storeID uint) ([]data.ProductCategory, error)
 	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
+	GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
+	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
 	UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error
@@ -38,6 +42,23 @@ func (r *storeProductRepository) CloneWithTransaction(tx *gorm.DB) StoreProductR
 	}
 }
 
+func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data.ProductCategory, error) {
+	var categories []data.ProductCategory
+
+	err := r.db.Model(&data.ProductCategory{}).
+		Joins("JOIN products ON products.category_id = product_categories.id").
+		Joins("JOIN store_products ON store_products.product_id = products.id").
+		Where("store_products.store_id = ?", storeID).
+		Group("product_categories.id").
+		Find(&categories).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
 func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error) {
 	var storeProduct data.StoreProduct
 	err := r.db.Model(&data.StoreProduct{}).
@@ -59,6 +80,26 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 	}
 
 	return &storeProduct, nil
+}
+
+func (r *storeProductRepository) GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]data.StoreProduct, error) {
+	var storeProducts []data.StoreProduct
+	query := r.db.Model(&data.StoreProduct{}).
+		Where("store_id = ? AND product_id IN (?)", storeID, productIDs).
+		Joins("JOIN products ON store_products.product_id = products.id").
+		Preload("Product.ProductSizes").
+		Preload("Product.Category").
+		Preload("StoreProductSizes.ProductSize.Unit").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
+
+	if err := query.Find(&storeProducts).Error; err != nil {
+		return nil, err
+	}
+
+	return storeProducts, nil
 }
 
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {
@@ -108,6 +149,43 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	}
 
 	return storeProducts, nil
+}
+
+func (r *storeProductRepository) GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error) {
+	var products []data.Product
+
+	query := r.db.
+		Model(&data.Product{}).
+		Preload("Category").
+		Preload("ProductSizes.Unit")
+
+	if filter.CategoryID != nil {
+		query = query.Where("products.category_id = ?", *filter.CategoryID)
+	}
+
+	if filter.Search != nil {
+		searchPattern := "%" + *filter.Search + "%"
+		query = query.Where("products.name ILIKE ? OR products.description ILIKE ?", searchPattern, searchPattern)
+	}
+
+	query = query.Where("products.id NOT IN (?)", r.db.Model(&data.StoreProduct{}).Select("product_id").Where("store_id = ?", storeID))
+
+	var err error
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Product{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
+	}
+
+	err = query.Find(&products).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if products == nil {
+		products = []data.Product{}
+	}
+
+	return products, nil
 }
 
 func (r *storeProductRepository) CreateStoreProduct(product *data.StoreProduct) (uint, error) {

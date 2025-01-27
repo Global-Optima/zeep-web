@@ -2,6 +2,8 @@ package storeProducts
 
 import (
 	"fmt"
+	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
@@ -15,8 +17,11 @@ import (
 const DEFAULT_LOW_STOCK_THRESHOLD = 50
 
 type StoreProductService interface {
+	GetStoreProductCategories(storeID uint) ([]categoriesTypes.ProductCategoryDTO, error)
 	GetStoreProductById(storeID, storeProductID uint) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
+	GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]types.StoreProductDetailsDTO, error)
+	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error)
 	GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error)
 	CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error)
 	CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error)
@@ -48,6 +53,21 @@ func NewStoreProductService(
 	}
 }
 
+func (s *storeProductService) GetStoreProductCategories(storeID uint) ([]categoriesTypes.ProductCategoryDTO, error) {
+	categories, err := s.repo.GetStoreProductCategories(storeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("error getting store product categories: %w", err)
+		s.logger.Errorw(wrappedErr.Error())
+		return nil, err
+	}
+
+	dtos := make([]categoriesTypes.ProductCategoryDTO, len(categories))
+	for i, category := range categories {
+		dtos[i] = *categoriesTypes.MapCategoryToDTO(category)
+	}
+	return dtos, nil
+}
+
 func (s *storeProductService) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
 	storeProduct, err := s.repo.GetStoreProductById(storeID, storeProductID)
 	if err != nil {
@@ -75,6 +95,38 @@ func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.Store
 	}
 
 	return dtos, nil
+}
+
+func (s *storeProductService) GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]types.StoreProductDetailsDTO, error) {
+	storeProducts, err := s.repo.GetStoreProductsByProductIDs(storeID, productIDs)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get store products", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]types.StoreProductDetailsDTO, len(storeProducts))
+	for i, storeProduct := range storeProducts {
+		dtos[i] = types.MapToStoreProductDetailsDTO(&storeProduct)
+	}
+
+	return dtos, nil
+}
+
+func (s *storeProductService) GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error) {
+	products, err := s.repo.GetProductsListToAdd(storeID, filter)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get products list to add", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	productDTOs := make([]productTypes.ProductDetailsDTO, len(products))
+	for i, product := range products {
+		productDTOs[i] = *productTypes.MapToProductDetailsDTO(&product)
+	}
+
+	return productDTOs, nil
 }
 
 func (s *storeProductService) GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error) {
@@ -184,7 +236,7 @@ func (s *storeProductService) UpdateStoreProduct(storeID, storeProductID uint, d
 			return wrappedErr
 		}
 
-		if err := s.validateProductSizesByProductID(inputSizeIDs, storeProductDetails.ID); err != nil {
+		if err := s.validateProductSizesByProductID(inputSizeIDs, storeProductDetails.ProductID); err != nil {
 			wrappedErr := utils.WrapError("failed to update store product: ", err)
 			return wrappedErr
 		}
