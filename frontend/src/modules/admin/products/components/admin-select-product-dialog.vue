@@ -3,9 +3,12 @@
 		:open="open"
 		@update:open="onClose"
 	>
-		<DialogContent :include-close-button="false">
+		<DialogContent
+			:include-close-button="false"
+			class="w-full max-w-7xl"
+		>
 			<DialogHeader>
-				<DialogTitle>Выберите топпинг</DialogTitle>
+				<DialogTitle>Выберите товар</DialogTitle>
 			</DialogHeader>
 
 			<div>

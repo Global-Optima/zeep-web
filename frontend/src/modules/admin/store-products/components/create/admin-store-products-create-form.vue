@@ -209,6 +209,8 @@ function removeProduct(index: number) {
 										<TableCell>
 											<Checkbox
 												v-model="size.selected"
+												:checked="size.selected"
+												@update:checked="v => size.selected = v"
 												class="mr-2"
 											/>
 										</TableCell>
