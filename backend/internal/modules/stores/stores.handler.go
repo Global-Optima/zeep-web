@@ -36,7 +36,7 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponse(c, stores)
+	utils.SendSuccessResponseWithPagination(c, stores, filter.Pagination)
 }
 
 func (h *StoreHandler) CreateStore(c *gin.Context) {

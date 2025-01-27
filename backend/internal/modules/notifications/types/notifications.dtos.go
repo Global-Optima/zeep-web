@@ -11,9 +11,9 @@ import (
 
 type NotificationDTO struct {
 	ID        uint                           `json:"id"`
-	EventType string                         `json:"eventType"`
-	Priority  string                         `json:"priority"`
-	Message   localization.LocalizedMessages `json:"messages"`
+	EventType data.NotificationEventType     `json:"eventType"`
+	Priority  data.NotificationPriority      `json:"priority"`
+	Messages  localization.LocalizedMessages `json:"messages"`
 	Details   json.RawMessage                `json:"details"`
 	IsRead    bool                           `json:"isRead"`
 	CreatedAt time.Time                      `json:"createdAt"`

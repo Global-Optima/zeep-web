@@ -39,7 +39,7 @@ func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, 
 
 	query := r.db.Preload("FacilityAddress").Where("status = ?", ACTIVE_STORE_STATUS).Preload("FacilityAddress")
 
-	if *filter.Search != "" {
+	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where("name ILIKE ? OR contact_phone ILIKE = ? OR contact_email ILIKE = ? OR CAST(id AS TEXT) = ?",
 			searchTerm, searchTerm, searchTerm, searchTerm)

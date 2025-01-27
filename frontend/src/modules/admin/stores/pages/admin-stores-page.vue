@@ -7,7 +7,7 @@
 	<Card>
 		<CardContent class="mt-4">
 			<p
-				v-if="!stores || stores.length === 0"
+				v-if="!stores || stores.data.length === 0"
 				class="text-muted-foreground"
 			>
 				Магазины не найдены
@@ -15,7 +15,7 @@
 
 			<AdminStoresList
 				v-else
-				:stores="stores"
+				:stores="stores.data"
 			/>
 		</CardContent>
 	</Card>
@@ -40,7 +40,6 @@ const filter = ref<StoresFilter>({
 const { data: stores } = useQuery({
   queryKey: computed(() => ['stores', filter.value]),
   queryFn: () => storesService.getStores(filter.value),
-  initialData: []
 })
 
 // Update filter handler

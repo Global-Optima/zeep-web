@@ -1,8 +1,8 @@
-import { ADMIN_CHILDREN_ROUTES, ADMIN_ROUTES_CONFIG } from '@/core/routes/admin/admin.routes'
-import { KIOSK_CHILDREN_ROUTES, KIOSK_ROUTES_CONFIG } from '@/core/routes/kiosk.routes'
+import { ADMIN_ROUTES_CONFIG } from '@/core/routes/admin/admin.routes'
+import { KIOSK_ROUTES_CONFIG } from '@/core/routes/kiosk.routes'
 import type { RouteComponent, RouteRecordRaw } from 'vue-router'
-import { AUTH_CHILDREN_ROUTES, AUTH_ROUTES_CONFIG } from '../routes/auth.routes'
-import { ERROR_CHILDREN_ROUTES, ERRORS_ROUTES_CONFIG } from '../routes/errors.routes'
+import { AUTH_ROUTES_CONFIG } from '../routes/auth.routes'
+import { ERRORS_ROUTES_CONFIG } from '../routes/errors.routes'
 
 type LazyRoute = () => Promise<RouteComponent>
 
@@ -32,12 +32,7 @@ const PARENT_ROUTES_RECORDS = addNameToChildrenInParent([
 	ERRORS_ROUTES_CONFIG,
 ] as const)
 
-const CHILDREN_ROUTES_RECORDS = addNameToChildren([
-	KIOSK_CHILDREN_ROUTES,
-	ADMIN_CHILDREN_ROUTES,
-	AUTH_CHILDREN_ROUTES,
-	ERROR_CHILDREN_ROUTES,
-] as const)
+const CHILDREN_ROUTES_RECORDS = addNameToChildren(PARENT_ROUTES_RECORDS.map(r => r.children))
 
 function addNameToChildrenInParent(parentRoutes: ParentRoutePage[]): ParentRoutePage[] {
 	return parentRoutes.map(parent => {

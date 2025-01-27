@@ -30,9 +30,9 @@ func ConvertNotificationToDTO(notification *data.EmployeeNotification, isRead bo
 	}
 	return &NotificationDTO{
 		ID:        notification.ID,
-		EventType: string(notification.EventType),
-		Priority:  string(notification.Priority),
-		Message:   messages,
+		EventType: notification.EventType,
+		Priority:  notification.Priority,
+		Messages:  messages,
 		Details:   json.RawMessage(notificationDetails), // Dynamic payload
 		IsRead:    isRead,
 		CreatedAt: notification.CreatedAt,
