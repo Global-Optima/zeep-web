@@ -40,9 +40,12 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 }
 
 func (r *orderRepository) CreateOrder(order *data.Order) error {
+	const workingHours = 16 // Working hours for a cafe
+
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Lock the store's orders for consistency
 		if err := tx.Exec(`
-			SELECT 1 
+			SELECT 1
 			FROM orders
 			WHERE store_id = ?
 			FOR UPDATE
@@ -52,20 +55,42 @@ func (r *orderRepository) CreateOrder(order *data.Order) error {
 			}
 		}
 
-		var maxDisplayNumber int
-		if err := tx.Model(&data.Order{}).
-			Where("store_id = ?", order.StoreID).
-			Select("COALESCE(MAX(display_number), 0)").
-			Scan(&maxDisplayNumber).Error; err != nil {
-			return fmt.Errorf("failed to fetch max display number: %w", err)
+		var lastOrder struct {
+			DisplayNumber int
+			CreatedAt     time.Time
 		}
 
-		nextDisplayNumber := maxDisplayNumber + 1
+		// Fetch the latest order for the store
+		if err := tx.Model(&data.Order{}).
+			Where("store_id = ?", order.StoreID).
+			Order("created_at DESC").
+			Limit(1).
+			Select("display_number, created_at").
+			Scan(&lastOrder).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("failed to fetch last order: %w", err)
+			}
+		}
+
+		var nextDisplayNumber int
+		now := time.Now()
+
+		// Check if the elapsed time since the last order exceeds the working hours
+		if now.Sub(lastOrder.CreatedAt) > time.Duration(workingHours)*time.Hour {
+			// Reset display number if more than working hours have passed
+			nextDisplayNumber = 1
+		} else {
+			// Increment display number if within the same working period
+			nextDisplayNumber = lastOrder.DisplayNumber + 1
+		}
+
+		// Ensure display number doesn't exceed the maximum
 		if nextDisplayNumber > 999 {
 			nextDisplayNumber = 1
 		}
 		order.DisplayNumber = nextDisplayNumber
 
+		// Create the new order
 		if err := tx.Create(order).Error; err != nil {
 			return fmt.Errorf("failed to create order: %w", err)
 		}

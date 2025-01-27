@@ -2,12 +2,14 @@ package localization
 
 import (
 	"encoding/json"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"golang.org/x/text/language"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/text/language"
 )
 
 type LocalizedMessages struct {
@@ -52,18 +54,23 @@ func InitLocalizer() error {
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
 
-	dir := "./internal/localization/languages"
+	// Resolve absolute path
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
+	dir := filepath.Join(workingDir, "internal/localization/languages")
 
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read directory %s: %w", dir, err)
 	}
 
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".json" {
 			_, err := bundle.LoadMessageFile(filepath.Join(dir, file.Name()))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to load message file %s: %w", file.Name(), err)
 			}
 		}
 	}
