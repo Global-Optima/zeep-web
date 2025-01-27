@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -213,4 +214,26 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 		Additives:   additives,
 		Ingredients: ingredients,
 	}
+}
+
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) string {
+	changes := []string{}
+
+	if dto.Name != "" && dto.Name != before.Name {
+		changes = append(changes, fmt.Sprintf("Name: '%s' -> '%s'", before.Name, dto.Name))
+	}
+
+	if dto.Description != "" && dto.Description != before.Description {
+		changes = append(changes, fmt.Sprintf("Description: '%s' -> '%s'", before.Description, dto.Description))
+	}
+
+	if dto.ImageURL != "" && dto.ImageURL != before.ImageURL {
+		changes = append(changes, fmt.Sprintf("ImageURL: '%s' -> '%s'", before.ImageURL, dto.ImageURL))
+	}
+
+	if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
+		changes = append(changes, fmt.Sprintf("CategoryID: %d -> %d", before.CategoryID, dto.CategoryID))
+	}
+
+	return strings.Join(changes, "; ")
 }

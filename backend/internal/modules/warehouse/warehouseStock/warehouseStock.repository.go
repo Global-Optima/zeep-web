@@ -29,6 +29,7 @@ type WarehouseStockRepository interface {
 
 	UpdateWarehouseStock(stock *data.WarehouseStock) error
 	GetWarehouseStockByID(warehouseID, stockMaterialID uint) (*data.WarehouseStock, error)
+	GetWarehouseStocksForNotifications(warehouseID uint) ([]data.WarehouseStock, error)
 	UpdateStockQuantity(stockID uint, warehouseID uint, quantity float64) error
 	UpdateExpirationDate(stockMaterialID, warehouseID uint, newExpirationDate time.Time) error
 }
@@ -526,10 +527,27 @@ func (r *warehouseStockRepository) AddWarehouseStocks(warehouseID uint, stocks [
 
 func (r *warehouseStockRepository) GetWarehouseStockByID(warehouseID, stockMaterialID uint) (*data.WarehouseStock, error) {
 	var stock data.WarehouseStock
-	if err := r.db.First(&stock).Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).Error; err != nil {
+	if err := r.db.Model(&stock).
+		Preload("Warehouse").
+		Preload("StockMaterial").
+		First(&stock).Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).Error; err != nil {
 		return nil, err
 	}
 	return &stock, nil
+}
+
+func (r *warehouseStockRepository) GetWarehouseStocksForNotifications(warehouseID uint) ([]data.WarehouseStock, error) {
+	var stocks []data.WarehouseStock
+	err := r.db.Model(&data.WarehouseStock{}).
+		Preload("StockMaterial").
+		Preload("Warehouse").
+		Where("warehouse_id = ?", warehouseID).
+		Find(&stocks).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return stocks, nil
 }
 
 func (r *warehouseStockRepository) UpdateWarehouseStock(stock *data.WarehouseStock) error {

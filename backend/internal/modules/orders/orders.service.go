@@ -7,6 +7,8 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
@@ -35,18 +37,20 @@ type orderValidationResults struct {
 }
 
 type orderService struct {
-	orderRepo    OrderRepository
-	productRepo  product.ProductRepository
-	additiveRepo additives.AdditiveRepository
-	logger       *zap.SugaredLogger
+	orderRepo           OrderRepository
+	productRepo         product.ProductRepository
+	additiveRepo        additives.AdditiveRepository
+	notificationService notifications.NotificationService
+	logger              *zap.SugaredLogger
 }
 
-func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, logger *zap.SugaredLogger) OrderService {
+func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) OrderService {
 	return &orderService{
-		orderRepo:    orderRepo,
-		productRepo:  productRepo,
-		additiveRepo: additiveRepo,
-		logger:       logger,
+		orderRepo:           orderRepo,
+		productRepo:         productRepo,
+		additiveRepo:        additiveRepo,
+		notificationService: notificationService,
+		logger:              logger,
 	}
 }
 
@@ -117,6 +121,19 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		wrappedErr := fmt.Errorf("error creating order: %w", err)
 		s.logger.Error(wrappedErr.Error())
 		return nil, wrappedErr
+	}
+
+	details := &details.NewOrderNotificationDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID:           order.StoreID,
+			FacilityName: order.Store.Name,
+		},
+		CustomerName: createOrderDTO.CustomerName,
+		OrderID:      order.ID,
+	}
+	err = s.notificationService.NotifyNewOrder(details)
+	if err != nil {
+		return nil, fmt.Errorf("failed to notify new order: %w", err)
 	}
 
 	return &order, nil

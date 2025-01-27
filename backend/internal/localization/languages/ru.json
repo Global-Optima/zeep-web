@@ -48,5 +48,15 @@
       "storeWarehouseStock": "Складской запас *{{.Name}}* был убран из магазина *{{.StoreName}}*",
       "ingredient": "Ингредиент *{{.Name}}* был удален"
     }
+  },
+  "notification": {
+    "stockRequestStatusUpdated": "Статус запроса на запас был обновлен на *{{.RequestStatus}}*.",
+    "newOrder": "Новый заказ был сделан *{{.CustomerName}}*.",
+    "storeWarehouseRunOut": "На складе заканчивается *{{.StockItem}}*.",
+    "centralCatalogUpdate": "Центральный каталог был обновлен: *{{.Changes}}*.",
+    "stockExpiration": "*{{.ItemName}}* истекает *{{.ExpirationDate}}*.",
+    "outOfStock": "*{{.ItemName}}* отсутствует в наличии.",
+    "newStockRequest": "Новый запрос на запас был отправлен *{{.RequesterName}}*.",
+    "priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."
   }
 }

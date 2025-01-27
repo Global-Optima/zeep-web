@@ -190,7 +190,7 @@ func (r *stockRequestRepository) GetWarehouseStockQuantity(warehouseID, stockMat
 
 func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error) {
 	var storeWarehouse data.StoreWarehouse
-	err := r.db.Where("store_id = ?", storeID).First(&storeWarehouse).Error
+	err := r.db.Model(&data.StoreWarehouse{}).Preload("Store").Where("store_id = ?", storeID).First(&storeWarehouse).Error
 	if err != nil {
 		return nil, err
 	}
