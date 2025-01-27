@@ -367,7 +367,9 @@ VALUES
     ('S', 4, 800.00, 300, true, 17),
     ('S', 4, 1400.00, 300, true, 18),
     ('S', 4, 1100.00, 300, true, 19),
-    ('S', 4, 1250.00, 500, true, 20);
+    ('S', 4, 1250.00, 500, true, 20),
+    ('S', 4, 1250.00, 500, true, 21),
+    ('S', 1, 1500.00, 500, true, 22);
 
 -- Insert into Additives
 INSERT INTO
@@ -587,36 +589,6 @@ INSERT INTO store_products (store_id, product_id, is_available) VALUES
     (4, 17, true),  -- Mint Tea
     (4, 12, true);  -- Energy Drink
 
--- Insert into StoreProductSizes
-INSERT INTO store_product_sizes (store_product_id, product_size_id, price)
-VALUES
-    (12, 19,  90.00),
-    (12, 20, 110.00),
-    (13, 28, 60.00),
-    (15, 31, 85.00),
-    (17, 26, 120.00),
-    (18, 33, 110.00),
-    (20, 23, 150.00),
-    (20, 24, 180.00),
-    (21, 29, 200.00),
-    (22, 16, 130.00),
-    (22, 17, 150.00),
-    (22, 18, 170.00),
-    (23, 34, 220.00),
-    (24, 27, 180.00),
-    (25, 34, 230.00),
-    (26, 30, 95.00),
-    (27,  8, 120.00),
-    (27,  9, 140.00),
-    (27, 10, 160.00),
-    (28, 14, 130.00),
-    (28, 15, 150.00),
-    (29, 23, 160.00),
-    (29, 24, 190.00),
-    (30, 32, 100.00),
-    (31, 31, 85.00),
-    (32, 26, 120.00);
-
 INSERT INTO store_product_sizes (store_product_id, product_size_id, price, created_at, updated_at)
 SELECT
     sp.id,
@@ -626,7 +598,7 @@ SELECT
     CURRENT_TIMESTAMP
 FROM store_products sp
          JOIN product_sizes ps ON ps.product_id = sp.product_id
-WHERE sp.store_id = 1;
+WHERE sp.store_id IS NOT NULL;
 
 -- L size for Product 11;
 -- Insert into ProductAdditive
@@ -944,8 +916,8 @@ VALUES
         'Смирнова',
         '+79345566778',
         'maria@example.com',
-        'WAREHOUSE_EMPLOYEE',
-        'WAREHOUSE',
+        'BARISTA',
+        'STORE',
         true,
         '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
         CURRENT_TIMESTAMP,
