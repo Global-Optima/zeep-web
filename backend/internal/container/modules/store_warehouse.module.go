@@ -28,8 +28,8 @@ func NewStoreWarehouseModule(base *common.BaseModule,
 
 	base.Router.RegisterStoreWarehouseRoutes(handler)
 
-	err := cronManager.RegisterJob("daily", func() {
-		storeWarehouseCronTasks := scheduler.NewStoreWarehouseCronTasks(service, repo, storeService, base.Logger)
+	storeWarehouseCronTasks := scheduler.NewStoreWarehouseCronTasks(service, repo, storeService, base.Logger)
+	err := cronManager.RegisterJob(scheduler.DailyJob, func() {
 		storeWarehouseCronTasks.CheckStockNotifications()
 	})
 

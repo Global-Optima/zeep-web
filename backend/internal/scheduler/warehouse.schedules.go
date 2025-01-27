@@ -3,7 +3,6 @@ package scheduler
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
 	"go.uber.org/zap"
 )
 
@@ -14,10 +13,11 @@ type WarehouseStockCronTasks struct {
 	logger                *zap.SugaredLogger
 }
 
-func NewWarehouseStockCronTasks(warehouseRepo warehouse.WarehouseRepository, warehouseStockService warehouseStock.WarehouseStockService, logger *zap.SugaredLogger) *WarehouseStockCronTasks {
+func NewWarehouseStockCronTasks(warehouseRepo warehouse.WarehouseRepository, warehouseStockService warehouseStock.WarehouseStockService, warehouseStockRepo warehouseStock.WarehouseStockRepository, logger *zap.SugaredLogger) *WarehouseStockCronTasks {
 	return &WarehouseStockCronTasks{
 		warehouseRepo:         warehouseRepo,
 		warehouseStockService: warehouseStockService,
+		warehouseStockRepo:    warehouseStockRepo,
 		logger:                logger,
 	}
 }
@@ -25,14 +25,14 @@ func NewWarehouseStockCronTasks(warehouseRepo warehouse.WarehouseRepository, war
 func (tasks *WarehouseStockCronTasks) CheckWarehouseStockNotifications() {
 	tasks.logger.Info("Running CheckWarehouseStockNotifications...")
 
-	warehouses, err := tasks.warehouseRepo.GetAllWarehouses(nil)
+	warehouses, err := tasks.warehouseRepo.GetAllWarehousesForNotifications()
 	if err != nil {
 		tasks.logger.Errorf("Failed to fetch warehouses: %v", err)
 		return
 	}
 
 	for _, warehouse := range warehouses {
-		stocks, err := tasks.warehouseStockRepo.GetWarehouseStock(&types.GetWarehouseStockFilterQuery{WarehouseID: &warehouse.ID})
+		stocks, err := tasks.warehouseStockRepo.GetWarehouseStocksForNotifications(warehouse.ID)
 		if err != nil {
 			tasks.logger.Errorf("Failed to fetch stock list for warehouse %d: %v", warehouse.ID, err)
 			continue

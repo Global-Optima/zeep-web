@@ -20,19 +20,28 @@ func NewCronManager(logger *zap.SugaredLogger) *CronManager {
 	}
 }
 
-func (cm *CronManager) RegisterJob(interval string, task func(), timeUTC ...string) error {
+type CronJob string
+
+const (
+	HourlyJob CronJob = "HOURLY"
+	DailyJob  CronJob = "DAILY"
+)
+
+func (cm *CronManager) RegisterJob(interval CronJob, task func(), timeUTC ...string) error {
 	switch interval {
-	case "hourly":
+	case HourlyJob:
 		_, err := cm.scheduler.Every(1).Hour().Do(task)
 		if err != nil {
 			return err
 		}
-	case "daily":
+	case DailyJob:
 		if len(timeUTC) > 0 {
 			_, err := cm.scheduler.Every(1).Day().At(timeUTC[0]).Do(task)
 			if err != nil {
 				return err
 			}
+
+			cm.logger.Infof("Job registered for interval: %s at %v", interval, timeUTC[0])
 		} else {
 			_, err := cm.scheduler.Every(1).Day().At("00:00").Do(task)
 			if err != nil {

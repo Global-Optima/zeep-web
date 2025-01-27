@@ -17,6 +17,7 @@ const (
 
 type StoreRepository interface {
 	GetAllStores(filter types.StoreFilter) ([]data.Store, error)
+	GetAllStoresForNotifications() ([]data.Store, error)
 	CreateStore(store *data.Store) (*data.Store, error)
 	GetStoreByID(storeID uint) (*data.Store, error)
 	UpdateStore(store *data.Store) (*data.Store, error)
@@ -52,6 +53,17 @@ func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, 
 	if err != nil {
 		return nil, err
 	}
+
+	if err := query.Find(&stores).Error; err != nil {
+		return nil, err
+	}
+	return stores, nil
+}
+
+func (r *storeRepository) GetAllStoresForNotifications() ([]data.Store, error) {
+	var stores []data.Store
+
+	query := r.db.Preload("FacilityAddress").Preload("FacilityAddress")
 
 	if err := query.Find(&stores).Error; err != nil {
 		return nil, err

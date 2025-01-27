@@ -25,7 +25,7 @@ func NewStoreWarehouseCronTasks(storeWarehouseService storeWarehouses.StoreWareh
 func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
 	tasks.logger.Info("Running CheckStockNotifications...")
 
-	stores, err := tasks.storeService.GetAllStores(nil)
+	stores, err := tasks.storeService.GetAllStoresForNotifications()
 
 	if err != nil {
 		tasks.logger.Errorf("Failed to fetch stores: %v", err)
