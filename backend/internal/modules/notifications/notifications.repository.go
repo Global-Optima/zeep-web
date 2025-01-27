@@ -69,16 +69,16 @@ func (r *notificationRepository) GetNotificationsByEmployee(employeeID uint, fil
 	}
 
 	if filter.StartDate != nil {
-		query = query.Where("n.timestamp >= ?", *filter.StartDate)
+		query = query.Where("n.created_at >= ?", *filter.StartDate)
 	}
 
 	if filter.EndDate != nil {
-		query = query.Where("n.timestamp <= ?", *filter.EndDate)
+		query = query.Where("n.created_at <= ?", *filter.EndDate)
 	}
 
 	if filter.Search != nil {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("n.message ILIKE ? OR n.details::text ILIKE ?", searchTerm, searchTerm)
+		query = query.Where("n.details::text ILIKE ?", searchTerm)
 	}
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.BaseFilter.Pagination, filter.BaseFilter.Sort, &data.EmployeeNotificationRecipient{})

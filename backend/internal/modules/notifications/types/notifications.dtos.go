@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
@@ -20,12 +21,12 @@ type NotificationDTO struct {
 }
 
 type GetNotificationsFilter struct {
-	Priority  *string    `form:"priority"`
-	EventType *string    `form:"eventType"`
-	Search    *string    `form:"search"`
-	IsRead    *bool      `form:"isRead"`
-	StartDate *time.Time `form:"startDate"`
-	EndDate   *time.Time `form:"endDate"`
+	Priority  *data.NotificationPriority  `form:"priority"`
+	EventType *data.NotificationEventType `form:"eventType"`
+	Search    *string                     `form:"search"`
+	IsRead    *bool                       `form:"isRead"`
+	StartDate *time.Time                  `form:"startDate" time_format:"2006-01-02"`
+	EndDate   *time.Time                  `form:"endDate" time_format:"2006-01-02"`
 	utils.BaseFilter
 }
 

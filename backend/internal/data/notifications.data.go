@@ -26,6 +26,10 @@ func (nt NotificationEventType) ToString() string {
 	return string(nt)
 }
 
+func (np NotificationPriority) ToString() string {
+	return string(np)
+}
+
 type EmployeeNotification struct {
 	BaseEntity
 	EventType  NotificationEventType           `gorm:"type:varchar(255);not null"`
