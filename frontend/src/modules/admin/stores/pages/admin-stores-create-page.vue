@@ -1,12 +1,12 @@
 <template>
 	<AdminStoreCreateForm
-		:initialData="defaultStoreData"
 		@onSubmit="handleCreate"
 		@onCancel="handleCancel"
 	/>
 </template>
 
 <script lang="ts" setup>
+import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminStoreCreateForm from '@/modules/admin/stores/components/create/admin-store-create-form.vue'
 import type { CreateStoreDTO } from '@/modules/stores/models/stores-dto.model'
 import { storesService } from '@/modules/stores/services/stores.service'
@@ -15,27 +15,30 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
+const { toast } = useToast()
 
-// Default values for a new store
-const defaultStoreData: Partial<CreateStoreDTO> = {
-	name: '',
-	isFranchise: false,
-	facilityAddress: {
-		address: '',
-		longitude: 0,
-		latitude: 0,
-	},
-	contactPhone: '',
-	contactEmail: '',
-	storeHours: '',
-}
-
-// Mutation for creating a store
 const createMutation = useMutation({
 	mutationFn: (newStoreData: CreateStoreDTO) => storesService.createStore(newStoreData),
+	onMutate: () => {
+		toast({
+			title: 'Создание...',
+			description: 'Пожалуйста, подождите, создается новый магазин.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['stores'] })
+		toast({
+			title: 'Успех!',
+			description: 'Магазин успешно создан.',
+		})
 		router.push({ name: 'ADMIN_STORES' })
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при создании магазина.',
+			variant: 'destructive',
+		})
 	},
 })
 
