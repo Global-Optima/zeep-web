@@ -10,7 +10,7 @@
 </template>
 
 <script lang="ts" setup>
-import { getRouteName } from '@/core/config/routes.config'
+import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminIngredientsDetailsForm from '@/modules/admin/ingredients/components/details/admin-ingredients-details-form.vue'
 import type { UpdateIngredientDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
@@ -20,33 +20,54 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const queryClient = useQueryClient()
+const { toast } = useToast()
 
 const ingredientId = route.params.id as string
 
-const queryClient = useQueryClient()
-
-
 const { data: ingredientDetails } = useQuery({
-  queryKey: computed(() => ['admin-ingredient-details', ingredientId]),
+	queryKey: computed(() => ['admin-ingredient-details', ingredientId]),
 	queryFn: () => ingredientsService.getIngredientById(Number(ingredientId)),
-  enabled: !isNaN(Number(ingredientId)),
+	enabled: !isNaN(Number(ingredientId)),
 })
 
 const updateMutation = useMutation({
-	mutationFn: ({id, dto}:{id: number, dto: UpdateIngredientDTO}) => {
-    return ingredientsService.updateIngredient(id, dto)
-  },
+	mutationFn: ({ id, dto }: { id: number; dto: UpdateIngredientDTO }) =>
+		ingredientsService.updateIngredient(id, dto),
+	onMutate: () => {
+		toast({
+			title: 'Обновление...',
+			description: 'Обновление данных ингредиента. Пожалуйста, подождите.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-ingredients'] })
 		queryClient.invalidateQueries({ queryKey: ['admin-ingredient-details', ingredientId] })
-		router.push({ name: getRouteName("ADMIN_INGREDIENTS") })
+		toast({
+			title: 'Успех!',
+			description: 'Данные ингредиента успешно обновлены.',
+		})
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при обновлении ингредиента.',
+			variant: 'destructive',
+		})
 	},
 })
 
 function handleUpdate(updatedData: UpdateIngredientDTO) {
-  if (isNaN(Number(ingredientId))) return router.back()
+	if (isNaN(Number(ingredientId))) {
+		toast({
+			title: 'Ошибка',
+			description: 'Неверный идентификатор ингредиента.',
+			variant: 'destructive',
+		})
+		return router.back()
+	}
 
-	updateMutation.mutate({id: Number(ingredientId), dto: updatedData})
+	updateMutation.mutate({ id: Number(ingredientId), dto: updatedData })
 }
 
 function handleCancel() {

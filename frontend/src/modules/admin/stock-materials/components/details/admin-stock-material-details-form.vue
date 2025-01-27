@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
-import { useToast } from '@/core/components/ui/toast'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Dialogs
@@ -37,9 +36,6 @@ const emits = defineEmits<{
   onSubmit: [dto: UpdateStockMaterialDTO]
   onCancel: []
 }>()
-
-// Toast
-const { toast } = useToast()
 
 /**
  * Dialog States
@@ -134,7 +130,7 @@ function selectIngredient(ingredient: IngredientsDTO) {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Обновить Материал
+				Обновить {{ stockMaterial.name }}
 			</h1>
 
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">

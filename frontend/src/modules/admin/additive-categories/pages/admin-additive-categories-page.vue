@@ -40,7 +40,7 @@ import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
 const filter = ref<AdditiveCategoriesFilterQuery>({
-  showAll: true
+  includeEmpty: true
 })
 
 const { data: categoriesResponse } = useQuery({
