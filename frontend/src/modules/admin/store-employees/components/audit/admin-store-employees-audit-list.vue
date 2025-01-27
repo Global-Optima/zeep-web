@@ -44,7 +44,7 @@
 								size="icon"
 								class="p-0 w-9"
 							>
-								<Info class="text-gray-500 size-5" />
+								<SquareChartGantt class="text-gray-500 size-5" />
 							</Button>
 						</HoverCardTrigger>
 						<HoverCardContent class="bg-gray-50 rounded-xl w-fit text-gray-800 text-sm">
@@ -71,7 +71,7 @@ import {
 import { EmployeeAuditComponentName, EmployeeAuditOperationType, FORMATTED_AUDIT_COMPONENTS, FORMATTED_AUDIT_OPERATION, type EmployeeAuditDTO } from '@/modules/admin/store-employees/models/employees-audit.models'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import { Info } from 'lucide-vue-next'
+import { SquareChartGantt } from 'lucide-vue-next'
 
 defineProps<{
   audits: EmployeeAuditDTO[]
@@ -106,8 +106,4 @@ const formatDetails = (details: Record<string, unknown>): string => {
 }
 </script>
 
-<style scoped>
-.icon-details {
-  cursor: pointer;
-}
-</style>
+<style scoped></style>
