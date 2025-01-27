@@ -32,7 +32,11 @@
 
 		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<Button variant="outline">Экспорт</Button>
+			<Button
+				variant="outline"
+				disabled
+				>Экспорт</Button
+			>
 			<Button @click="addStore">Добавить</Button>
 		</div>
 	</div>

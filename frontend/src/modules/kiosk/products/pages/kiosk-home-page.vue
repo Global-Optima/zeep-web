@@ -121,8 +121,7 @@ const { data: products } = useQuery({
   queryKey: productsQueryKey,
   queryFn: () =>
     storeProductsService.getStoreProducts({
-       categoryId: selectedCategoryId.value!, search: searchTerm.value,
-
+       categoryId: selectedCategoryId.value!, search: searchTerm.value, isAvailable: true
     }),
   enabled: computed(() => Boolean(selectedCategoryId.value) || searchTerm.value.trim() !== ''),
 })
