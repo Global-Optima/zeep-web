@@ -4,9 +4,10 @@ import { Button } from '@/core/components/ui/button'
 import { getRouteName } from '@/core/config/routes.config'
 import AppAdminHeader from '@/core/layouts/admin/app-admin-header.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
-import { EmployeeType } from '@/modules/admin/store-employees/models/employees.models'
+import { EmployeeRole, EmployeeType } from '@/modules/admin/store-employees/models/employees.models'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { Coffee, Store, TvMinimal } from 'lucide-vue-next'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -24,6 +25,8 @@ const onKioskClick = () => {
 const onBaristaClick = () => {
 	router.push({name: getRouteName('KIOSK_ORDERS')})
 }
+
+const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.BARISTA, EmployeeRole.MANAGER].includes(currentEmployee.role) : false )
 </script>
 
 <template>
@@ -50,7 +53,10 @@ const onBaristaClick = () => {
 					<AppAdminSidebar />
 				</div>
 
-				<div class="mt-auto p-4">
+				<div
+					class="mt-auto p-4"
+					v-if="showBottomButtons"
+				>
 					<Button
 						variant="outline"
 						@click="onDisplayClick"
