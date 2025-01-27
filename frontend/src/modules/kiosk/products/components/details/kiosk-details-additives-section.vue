@@ -24,8 +24,7 @@
 
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
-import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
-import type { StoreAdditiveCategoryDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import KioskDetailsAdditivesCard from '@/modules/kiosk/products/components/details/kiosk-details-additives-card.vue'
 
 defineProps<{
@@ -35,10 +34,10 @@ defineProps<{
 }>()
 
 const emits = defineEmits<{
-  (e: 'toggleAdditive', categoryId: number, additive: AdditiveCategoryItemDTO): void
+  (e: 'toggleAdditive', categoryId: number, additive: StoreAdditiveCategoryItemDTO): void
 }>()
 
-const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItemDTO) => {
+const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
   emits('toggleAdditive', categoryId, additive)
 }
 </script>

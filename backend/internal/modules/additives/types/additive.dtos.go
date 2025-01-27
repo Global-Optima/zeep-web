@@ -23,7 +23,7 @@ type AdditiveFilterQuery struct {
 	ProductSizeID *uint    `form:"productSizeId"`
 }
 
-type CategoryDTO struct {
+type BaseAdditiveCategoryDTO struct {
 	ID               uint   `json:"id"`
 	Name             string `json:"name"`
 	IsMultipleSelect bool   `json:"isMultipleSelect"`
@@ -32,13 +32,13 @@ type CategoryDTO struct {
 // BaseAdditiveDTO should not be returned directly as a response,
 // instead wrap it into another struct with more info like ID and etc
 type BaseAdditiveDTO struct {
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	BasePrice   float64            `json:"basePrice"`
-	ImageURL    string             `json:"imageUrl"`
-	Size        int                `json:"size"`
-	Unit        unitTypes.UnitsDTO `json:"unit"`
-	Category    CategoryDTO        `json:"category"`
+	Name        string                  `json:"name"`
+	Description string                  `json:"description"`
+	BasePrice   float64                 `json:"basePrice"`
+	ImageURL    string                  `json:"imageUrl"`
+	Size        int                     `json:"size"`
+	Unit        unitTypes.UnitsDTO      `json:"unit"`
+	Category    BaseAdditiveCategoryDTO `json:"category"`
 }
 
 type AdditiveDTO struct {

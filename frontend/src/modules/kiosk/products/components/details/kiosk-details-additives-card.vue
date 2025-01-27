@@ -30,7 +30,7 @@
         ]"
 				data-testid="additive-price"
 			>
-				{{ isDefault ? formatPrice(0) : formatPrice(additive.price) }}
+				{{ isDefault ? formatPrice(0) : formatPrice(additive.storePrice) }}
 			</p>
 			<button
 				class="relative rounded-full w-6 sm:w-8 h-6 sm:h-8 focus:outline-none"
@@ -53,10 +53,10 @@
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 
 const {additive, isSelected, isDefault} = defineProps<{
-  additive: AdditiveCategoryItemDTO;
+  additive: StoreAdditiveCategoryItemDTO;
   isSelected: boolean;
   isDefault: boolean;
 }>()
