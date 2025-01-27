@@ -26,6 +26,7 @@ WORKDIR /app
 COPY --from=builder /app/server .
 COPY --from=builder /app/.env .env
 COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/internal/localization ./internal/localization
 
 # Expose the application port
 EXPOSE 8080
