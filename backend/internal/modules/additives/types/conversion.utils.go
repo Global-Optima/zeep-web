@@ -140,8 +140,8 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 	}
 }
 
-func ConvertToCategoryDTO(category *data.AdditiveCategory) *CategoryDTO {
-	return &CategoryDTO{
+func ConvertToCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategoryDTO {
+	return &BaseAdditiveCategoryDTO{
 		ID:               category.ID,
 		Name:             category.Name,
 		IsMultipleSelect: category.IsMultipleSelect,

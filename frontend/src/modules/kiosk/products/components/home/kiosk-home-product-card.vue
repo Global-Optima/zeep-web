@@ -25,7 +25,7 @@
 				class="font-medium text-xl sm:text-2xl"
 				data-testid="product-price"
 			>
-				{{ formatPrice(product.basePrice) }}
+				{{ formatPrice(product.storePrice) }}
 			</p>
 		</div>
 	</div>

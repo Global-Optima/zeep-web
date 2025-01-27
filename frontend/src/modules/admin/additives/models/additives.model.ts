@@ -33,7 +33,7 @@ export interface AdditiveCategoryItemDTO {
 	id: number
 	name: string
 	description: string
-	price: number
+	basePrice: number
 	imageUrl: string
 	size: string
 	categoryId: number

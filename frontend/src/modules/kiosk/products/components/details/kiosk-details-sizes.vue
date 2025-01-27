@@ -8,14 +8,14 @@
 </template>
 
 <script setup lang="ts">
-import type { ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
+import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 
 
 
-const {size, isSelected} = defineProps<{size: ProductSizeDTO, isSelected: boolean}>()
+const {size, isSelected} = defineProps<{size: StoreProductSizeDetailsDTO, isSelected: boolean}>()
 const emit = defineEmits(["click:size"])
 
-const onUpdateSize = (newSize: ProductSizeDTO) => {
+const onUpdateSize = (newSize: StoreProductSizeDetailsDTO) => {
   emit("click:size", newSize)
 }
 </script>

@@ -1,10 +1,13 @@
 -- Insert into FacilityAddress
-
-INSERT INTO facility_addresses (address, longitude, latitude)
+INSERT INTO
+    facility_addresses (address, longitude, latitude)
 VALUES
-    ('Проспект Ленина, 12, Москва', 37.6173, 55.7558),
-    ('Проспект Мира, 45, Санкт-Петербург', 30.3158, 59.9343);
-
+    ('Улица Абая, 50, Алматы', 76.9497, 43.2383),
+    (
+        'Проспект Республики, 25, Астана',
+        73.0948,
+        49.8028
+    );
 
 -- Insert into Units
 INSERT INTO
@@ -16,12 +19,11 @@ VALUES
     ('Миллилитр', 0.001);
 
 -- Insert into CityWarehouses
-
-INSERT INTO warehouses (facility_address_id, name)
+INSERT INTO
+    warehouses (facility_address_id, name)
 VALUES
-    (1, 'Московский Склад'),
-    (2, 'Санкт-Петербургский Склад');
-
+    (1, 'Алматинский склад'),
+    (2, 'Астанинский склад');
 
 -- Insert into ProductCategory
 INSERT INTO
@@ -184,7 +186,7 @@ VALUES
     (
         'Манговый смузи',
         'Тропический смузи с манго',
-        'https://gallerypng.com/wp-content/uploads/2024/05/mango-shake-png-image.png',
+        'https://static.vecteezy.com/system/resources/thumbnails/033/321/478/small_2x/mango-smoothie-in-a-glass-isolated-png.png',
         NULL,
         4
     ),
