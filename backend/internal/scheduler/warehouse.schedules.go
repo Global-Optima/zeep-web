@@ -31,23 +31,29 @@ func (tasks *WarehouseStockCronTasks) CheckWarehouseStockNotifications() {
 		return
 	}
 
+	processedStocks := make(map[uint]bool)
+
 	for _, warehouse := range warehouses {
+		tasks.logger.Infof("Processing warehouse ID: %d, Name: %s", warehouse.ID, warehouse.Name)
+
 		stocks, err := tasks.warehouseStockRepo.GetWarehouseStocksForNotifications(warehouse.ID)
 		if err != nil {
-			tasks.logger.Errorf("Failed to fetch stock list for warehouse %d: %v", warehouse.ID, err)
+			tasks.logger.Errorf("Failed to fetch stock list for warehouse ID %d: %v", warehouse.ID, err)
 			continue
 		}
 
 		for _, stock := range stocks {
-			modelStock, err := tasks.warehouseStockRepo.GetWarehouseStockByID(warehouse.ID, stock.StockMaterialID)
-			if err != nil {
-				tasks.logger.Errorf("Failed to fetch stock model for stock ID %d: %v", stock.StockMaterialID, err)
+			if processedStocks[stock.StockMaterialID] {
+				tasks.logger.Infof("Skipping duplicate stock material ID: %d", stock.StockMaterialID)
 				continue
 			}
-			err = tasks.warehouseStockService.CheckStockNotifications(warehouse.ID, *modelStock)
+
+			err = tasks.warehouseStockService.CheckStockNotifications(warehouse.ID, stock)
 			if err != nil {
-				tasks.logger.Errorf("Failed to check notifications for stock ID %d: %v", stock.StockMaterialID, err)
+				tasks.logger.Errorf("Failed to check notifications for stock ID %d in warehouse ID %d: %v", stock.StockMaterialID, warehouse.ID, err)
 			}
+
+			processedStocks[stock.StockMaterialID] = true
 		}
 	}
 

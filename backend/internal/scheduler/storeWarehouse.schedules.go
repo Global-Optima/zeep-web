@@ -26,11 +26,12 @@ func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
 	tasks.logger.Info("Running CheckStockNotifications...")
 
 	stores, err := tasks.storeService.GetAllStoresForNotifications()
-
 	if err != nil {
 		tasks.logger.Errorf("Failed to fetch stores: %v", err)
 		return
 	}
+
+	processedStocks := make(map[uint]bool)
 
 	for _, store := range stores {
 		stockList, err := tasks.storeWarehouseRepo.GetStockList(store.ID, nil)
@@ -40,10 +41,17 @@ func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
 		}
 
 		for _, stock := range stockList {
+			if processedStocks[stock.IngredientID] {
+				tasks.logger.Infof("Skipping duplicate IngredientID: %d", stock.IngredientID)
+				continue
+			}
+
 			err := tasks.storeWarehouseService.CheckStockNotifications(store.ID, stock)
 			if err != nil {
 				tasks.logger.Errorf("Failed to check notifications for stock ID %d: %v", stock.ID, err)
 			}
+
+			processedStocks[stock.IngredientID] = true
 		}
 	}
 

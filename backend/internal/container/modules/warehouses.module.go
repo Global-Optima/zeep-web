@@ -30,9 +30,8 @@ func NewWarehousesModule(base *common.BaseModule, stockMaterialRepo stockMateria
 
 	warehouseStockCronTasks := scheduler.NewWarehouseStockCronTasks(repo, warehouseStockService, warehouseStockRepo, base.Logger)
 	err := cronManager.RegisterJob(scheduler.DailyJob, func() {
-		base.Logger.Info("Executing CheckWarehouseStockNotifications task...")
 		warehouseStockCronTasks.CheckWarehouseStockNotifications()
-	}, "00:09")
+	}, "00:29")
 
 	if err != nil {
 		base.Logger.Errorf("Failed to register warehouse stock cron job: %v", err)

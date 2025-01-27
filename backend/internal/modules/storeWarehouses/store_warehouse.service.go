@@ -142,7 +142,7 @@ func (s *storeWarehouseService) DeleteStockById(storeId, stockId uint) error {
 }
 
 func (s *storeWarehouseService) CheckStockNotifications(storeID uint, stock data.StoreWarehouseStock) error {
-	if stock.Quantity < stock.LowStockThreshold {
+	if stock.Quantity <= stock.LowStockThreshold {
 		details := &details.StoreWarehouseRunOutDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           storeID,
