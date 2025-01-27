@@ -167,7 +167,7 @@ const onSubmit = handleSubmit((formValues) => {
   const finalDTO: UpdateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
-    ingredients: ingredients.value //TODO: test it
+    ingredients: [] //TODO: test it
   }
   emits('onSubmit', finalDTO)
 })

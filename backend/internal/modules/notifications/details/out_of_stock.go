@@ -41,7 +41,7 @@ func BuildOutOfStockMessage(details *OutOfStockDetails) (localization.LocalizedM
 		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
 	}
 
-	key := localization.FormTranslationKey("notification", data.OUT_OF_STOCK.ToString())
+	key := localization.FormTranslationKey("notification", data.WAREHOUSE_OUT_OF_STOCK.ToString())
 	messages, err := localization.Translate(key, map[string]interface{}{
 		"FacilityName": details.FacilityName,
 		"ID":           details.ID,

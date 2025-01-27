@@ -94,7 +94,7 @@ const formatDate = (date: Date): string => {
 
 // Function to format the message with bold text inside *...*
 const formatMessage = (s: string) => {
-  return s.replace(/\*(.*?)\*/g, '<span class="font-semibold">$1</span>')
+  return s.replace(/\*(.*?)\*/g, '<span class="font-medium">$1</span>')
 }
 
 // Function to filter and format the details object

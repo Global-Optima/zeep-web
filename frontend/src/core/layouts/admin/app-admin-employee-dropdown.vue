@@ -44,7 +44,7 @@ const onLogoutClick = () => {
 				size="icon"
 				class="rounded-full"
 			>
-				<User class="w-5 h-5" />
+				<User class="size-[18px]" />
 				<span class="sr-only">Toggle user menu</span>
 			</Button>
 		</DropdownMenuTrigger>

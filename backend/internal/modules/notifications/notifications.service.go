@@ -112,7 +112,7 @@ func (s *notificationService) NotifyStockExpiration(details details.Notification
 		return err
 	}
 
-	return s.createNotification(data.STOCK_EXPIRATION, data.MEDIUM, notificationDetails)
+	return s.createNotification(data.WAREHOUSE_STOCK_EXPIRATION, data.MEDIUM, notificationDetails)
 }
 
 func (s *notificationService) NotifyOutOfStock(details details.NotificationDetails) error {
@@ -121,7 +121,7 @@ func (s *notificationService) NotifyOutOfStock(details details.NotificationDetai
 		return err
 	}
 
-	return s.createNotification(data.OUT_OF_STOCK, data.HIGH, notificationDetails)
+	return s.createNotification(data.WAREHOUSE_OUT_OF_STOCK, data.HIGH, notificationDetails)
 }
 
 func (s *notificationService) NotifyNewStockRequest(details details.NotificationDetails) error {

@@ -59,7 +59,7 @@ const formatDate = (date: Date): string => {
 }
 
 const formatMessage = (s: string) => {
-  return s.replace(/\*(.*?)\*/g, '<span class="font-semibold">$1</span>')
+  return s.replace(/\*(.*?)\*/g, '<span class="font-medium">$1</span>')
 }
 </script>
 

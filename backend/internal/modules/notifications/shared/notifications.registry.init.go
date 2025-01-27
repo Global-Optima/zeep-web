@@ -52,7 +52,7 @@ func InitNotificationRegistry() {
 	)
 
 	RegisterNotification(
-		data.OUT_OF_STOCK,
+		data.WAREHOUSE_OUT_OF_STOCK,
 		func() details.NotificationDetails {
 			return &details.OutOfStockDetails{}
 		},
@@ -80,7 +80,7 @@ func InitNotificationRegistry() {
 	)
 
 	RegisterNotification(
-		data.STOCK_EXPIRATION,
+		data.WAREHOUSE_STOCK_EXPIRATION,
 		func() details.NotificationDetails {
 			return &details.StockExpirationDetails{}
 		},

@@ -107,7 +107,7 @@ func (r *notificationRepository) MarkMultipleNotificationsAsRead(employeeID uint
 }
 
 func (r *notificationRepository) DeleteNotification(notificationID uint) error {
-	return r.db.Delete(&data.EmployeeNotification{}, "id = ?", notificationID).Error
+	return r.db.Delete(&data.EmployeeNotificationRecipient{}, "notification_id = ?", notificationID).Error
 }
 
 func (r *notificationRepository) GetRecipientsForEvent(eventType data.NotificationEventType) ([]data.Employee, error) {

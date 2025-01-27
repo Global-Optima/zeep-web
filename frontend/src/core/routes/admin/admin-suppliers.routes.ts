@@ -1,4 +1,4 @@
-import type { AppRouteRecord } from '../../config/routes.config'
+import type { AppRouteRecord } from '../routes.types'
 
 export const ADMIN_SUPPLIERS_CHILDREN_ROUTES = {
 	ADMIN_SUPPLIERS: {
