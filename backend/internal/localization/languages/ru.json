@@ -53,7 +53,15 @@
 		"stockRequestStatusUpdated": "Статус запроса на запас был обновлен на *{{.RequestStatus}}*.",
 		"newOrder": "Новый заказ был сделан *{{.CustomerName}}*.",
 		"storeWarehouseRunOut": "На складе заканчивается *{{.StockItem}}*.",
+
 		"centralCatalogUpdate": "Центральный каталог был обновлен: *{{.Changes}}*.",
+		"centralCatalogUpdateDetails": {
+			"nameChange": "Название изменено с '{{.OldName}}' на '{{.NewName}}'",
+			"descriptionChange": "Описание обновлено с '{{.OldDescription}}' на '{{.NewDescription}}'",
+			"imageUrlChange": "URL изображения обновлен с '{{.OldImageURL}}' на '{{.NewImageURL}}'",
+			"categoryChange": "ID категории изменён с {{.OldCategoryID}} на {{.NewCategoryID}}"
+		},
+
 		"stockExpiration": "*{{.ItemName}}* истекает *{{.ExpirationDate}}*.",
 		"outOfStock": "*{{.ItemName}}* отсутствует в наличии.",
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",
