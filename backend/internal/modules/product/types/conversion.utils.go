@@ -1,13 +1,13 @@
 package types
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -217,24 +217,52 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) string {
-	changes := []string{}
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []details.CentralCatalogChange {
+	changes := []details.CentralCatalogChange{}
 
 	if dto.Name != "" && dto.Name != before.Name {
-		changes = append(changes, fmt.Sprintf("Name: '%s' -> '%s'", before.Name, dto.Name))
+		key := "notification.centralCatalogUpdateDetails.nameChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldName": before.Name,
+				"NewName": dto.Name,
+			},
+		})
 	}
 
 	if dto.Description != "" && dto.Description != before.Description {
-		changes = append(changes, fmt.Sprintf("Description: '%s' -> '%s'", before.Description, dto.Description))
+		key := "notification.centralCatalogUpdateDetails.descriptionChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldDescription": before.Description,
+				"NewDescription": dto.Description,
+			},
+		})
 	}
 
 	if dto.ImageURL != "" && dto.ImageURL != before.ImageURL {
-		changes = append(changes, fmt.Sprintf("ImageURL: '%s' -> '%s'", before.ImageURL, dto.ImageURL))
+		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldImageURL": before.ImageURL,
+				"NewImageURL": dto.ImageURL,
+			},
+		})
 	}
 
 	if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
-		changes = append(changes, fmt.Sprintf("CategoryID: %d -> %d", before.CategoryID, dto.CategoryID))
+		key := "notification.centralCatalogUpdateDetails.categoryChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldCategoryID": before.CategoryID,
+				"NewCategoryID": dto.CategoryID,
+			},
+		})
 	}
 
-	return strings.Join(changes, "; ")
+	return changes
 }

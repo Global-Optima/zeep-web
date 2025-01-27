@@ -21,7 +21,6 @@
 			>
 				Экспорт
 			</Button>
-			<Button @click="addProductCategory"> Добавить </Button>
 		</div>
 	</div>
 </template>
@@ -30,15 +29,15 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { StockMaterialCategoryFilterDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
+import type { SuppliersFilterDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-const router = useRouter()
-
-const props = defineProps<{ filter: StockMaterialCategoryFilterDTO }>()
+const props = defineProps<{ filter: SuppliersFilterDTO }>()
 const emit = defineEmits(['update:filter'])
+
+const router = useRouter()
 
 const localFilter = ref({ ...props.filter })
 
@@ -50,7 +49,7 @@ watch(debouncedSearchTerm, (newValue) => {
 	emit('update:filter', { search: newValue.trim() })
 })
 
-const addProductCategory = () => {
-	router.push({ name: getRouteName("ADMIN_STOCK_MATERIAL_CATEGORY_CREATE") })
+const addStore = () => {
+	router.push({ name: getRouteName('ADMIN_SUPPLIER_CREATE') })
 }
 </script>

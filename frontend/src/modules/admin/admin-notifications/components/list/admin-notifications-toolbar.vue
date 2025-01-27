@@ -64,7 +64,11 @@ const updateIsReadFilter = (value: string) => {
 
 		<!-- Right Side: Export and Add Notification Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<Button variant="outline">Экспорт</Button>
+			<Button
+				variant="outline"
+				disabled
+				>Экспорт</Button
+			>
 		</div>
 	</div>
 </template>

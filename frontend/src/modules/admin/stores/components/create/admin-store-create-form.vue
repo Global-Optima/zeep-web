@@ -168,10 +168,6 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
-// Props
-const props = defineProps<{
-	initialData: Partial<CreateStoreDTO>
-}>()
 
 const emit = defineEmits<{
 	(e: 'onSubmit', formValues: CreateStoreDTO): void
@@ -182,11 +178,9 @@ const emit = defineEmits<{
 const schema = toTypedSchema(
 	z.object({
 		name: z.string().min(2, 'Название должно содержать минимум 2 символа'),
-		isFranchise: z.boolean(),
+		isFranchise: z.boolean().default(false),
 		facilityAddress: z.object({
 			address: z.string().min(5, 'Адрес должен содержать минимум 5 символов'),
-			longitude: z.number(),
-			latitude: z.number(),
 		}),
 		contactPhone: z.string().min(7, 'Телефон должен содержать минимум 7 символов'),
 		contactEmail: z.string().email('Введите действительный адрес электронной почты'),
@@ -197,7 +191,6 @@ const schema = toTypedSchema(
 // Initialize form
 const { handleSubmit, resetForm, meta } = useForm<CreateStoreDTO>({
 	validationSchema: schema,
-	initialValues: props.initialData,
 })
 
 // Submit form

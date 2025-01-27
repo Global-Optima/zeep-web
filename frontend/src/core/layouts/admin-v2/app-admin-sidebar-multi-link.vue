@@ -2,6 +2,7 @@
 	<Collapsible v-model:open="isOpen">
 		<CollapsibleTrigger class="p-0 w-full">
 			<div
+				@click="onParentClick"
 				class="flex justify-between items-center gap-4 px-3 py-2 rounded-lg"
 				:class="{
 					'bg-muted text-foreground': isActiveParent,
@@ -47,9 +48,10 @@ import { getRouteName, type RouteKey } from '@/core/config/routes.config'
 import type { CollapsibleNavItem } from '@/core/layouts/admin/app-admin-sidebar-links.constants'
 import { CaretSortIcon } from '@radix-icons/vue'
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute();
+const router = useRouter()
 const { item } = defineProps<{ item: CollapsibleNavItem }>();
 
 const isOpen = ref(false);
@@ -58,6 +60,14 @@ const isOpen = ref(false);
 const isActiveParent = computed(() => {
 	return item.items.some(child => isActiveRoute(child.routeKey));
 });
+
+const onParentClick = () => {
+  console.log("HEREEEE", item.items)
+
+  if(!item.items[0]) return
+  console.log("HEREEEE")
+  router.push({ name: getRouteName(item.items[0].routeKey) })
+}
 
 const isActiveRoute = (routeKey: RouteKey) => {
 	const routeName = getRouteName(routeKey);

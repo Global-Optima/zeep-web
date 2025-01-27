@@ -5,7 +5,7 @@ import * as z from 'zod'
 
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
+import { FormControl, FormField, FormItem, FormLabel } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import type { StoreAdditiveDTO, UpdateStoreAdditiveDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { ChevronLeft } from 'lucide-vue-next'
@@ -83,13 +83,28 @@ const onCancel = () => {
 				<CardTitle>Детали добавки</CardTitle>
 				<CardDescription>Измените цену добавки для магазина.</CardDescription>
 			</CardHeader>
-			<CardContent>
+			<CardContent class="space-y-6">
+				<FormField name="basePrice">
+					<FormItem>
+						<FormLabel>Базовая цена</FormLabel>
+						<FormControl>
+							<Input
+								id="storePrice"
+								type="number"
+								:model-value="initialAdditive.basePrice"
+								disabled
+							/>
+						</FormControl>
+					</FormItem>
+				</FormField>
+
 				<FormField
 					name="storePrice"
 					v-slot="{ componentField }"
 				>
 					<FormItem>
 						<FormLabel>Цена в магазине</FormLabel>
+
 						<FormControl>
 							<Input
 								id="storePrice"
@@ -98,7 +113,6 @@ const onCancel = () => {
 								placeholder="Введите цену в магазине"
 							/>
 						</FormControl>
-						<FormMessage />
 					</FormItem>
 				</FormField>
 			</CardContent>
