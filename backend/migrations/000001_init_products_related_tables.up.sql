@@ -47,7 +47,7 @@ BEGIN
             'RECIPE_STEPS',
             'STORE',
             'WAREHOUSE',
-            'STORE_WAREHOUSE STOCK',
+            'STORE_WAREHOUSE_STOCK',
             'INGREDIENT',
             'INGREDIENT_CATEGORY'
         );

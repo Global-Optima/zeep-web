@@ -48,7 +48,7 @@ func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data
 	err := r.db.Model(&data.ProductCategory{}).
 		Joins("JOIN products ON products.category_id = product_categories.id").
 		Joins("JOIN store_products ON store_products.product_id = products.id").
-		Where("store_products.store_id = ?", storeID).
+		Where("store_products.store_id = ? AND store_products.is_available = ?", storeID, true).
 		Group("product_categories.id").
 		Find(&categories).Error
 
