@@ -40,7 +40,7 @@
 					<Button
 						variant="ghost"
 						size="icon"
-						@click="e => onDeleteProductClick(e, additive.storeAdditiveId)"
+						@click="e => onDeleteProductClick(e, additive.id)"
 					>
 						<Trash class="w-6 h-6 text-red-400" />
 					</Button>

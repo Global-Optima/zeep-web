@@ -3,7 +3,8 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Название</TableHead>
-				<TableHead>Калорий (ккал)</TableHead>
+				<TableHead>Категория</TableHead>
+				<TableHead>Ед. измерения</TableHead>
 				<TableHead>Срок годности (дни)</TableHead>
 				<TableHead></TableHead>
 			</TableRow>
@@ -16,7 +17,8 @@
 				class="hover:bg-slate-50 cursor-pointer"
 			>
 				<TableCell class="py-4 font-medium">{{ ingredient.name }}</TableCell>
-				<TableCell>{{ ingredient.calories }}</TableCell>
+				<TableCell>{{ ingredient.category.name }}</TableCell>
+				<TableCell>{{ ingredient.unit.name }}</TableCell>
 				<TableCell>{{ ingredient.expirationInDays ?? "Не указано" }}</TableCell>
 				<TableCell class="flex justify-end">
 					<Button
@@ -48,7 +50,6 @@ import { ingredientsService } from '@/modules/admin/ingredients/services/ingredi
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-
 const {ingredients} = defineProps<{ingredients: IngredientsDTO[]}>()
 
 const router = useRouter();

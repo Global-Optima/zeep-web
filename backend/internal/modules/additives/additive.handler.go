@@ -25,7 +25,7 @@ func NewAdditiveHandler(service AdditiveService, auditService audit.AuditService
 func (h *AdditiveHandler) GetAdditiveCategories(c *gin.Context) {
 	var filter types.AdditiveCategoriesFilterQuery
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.AdditiveCategory{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
