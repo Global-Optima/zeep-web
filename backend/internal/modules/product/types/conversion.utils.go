@@ -130,6 +130,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	productSize := &data.ProductSize{
 		ProductID: dto.ProductID,
 		Name:      dto.Name,
+		UnitID:    dto.UnitID,
 		BasePrice: dto.BasePrice,
 		Size:      dto.Size,
 		IsDefault: dto.IsDefault,
