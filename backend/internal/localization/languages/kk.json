@@ -63,7 +63,7 @@
     },
 
     "stockExpiration": "*{{.ItemName}}* мерзімі *{{.ExpirationDate}}* аяқталады.",
-    "outOfStock": "*{{.ItemName}}* жоқ.",
+    "warehouseOutOfStock": "*{{.ItemName}}* жоқ.",
     "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
     "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді."
   }
