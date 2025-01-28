@@ -156,7 +156,7 @@ func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto type
 			FacilityName: request.Store.Name,
 		},
 		StockRequestID: request.ID,
-		RequestStatus:  string(request.Status),
+		RequestStatus:  request.Status,
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
 	if err != nil {
@@ -191,7 +191,7 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 			FacilityName: request.Store.Name,
 		},
 		StockRequestID: request.ID,
-		RequestStatus:  string(request.Status),
+		RequestStatus:  request.Status,
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
 	if err != nil {
@@ -238,7 +238,7 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
 			FacilityName: request.Store.Name,
 		},
 		StockRequestID: request.ID,
-		RequestStatus:  string(request.Status),
+		RequestStatus:  request.Status,
 	}
 
 	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
@@ -279,7 +279,7 @@ func (s *stockRequestService) SetInDeliveryStatus(requestID uint) error {
 			FacilityName: request.Store.Name,
 		},
 		StockRequestID: request.ID,
-		RequestStatus:  string(request.Status),
+		RequestStatus:  request.Status,
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
 	if err != nil {
@@ -319,7 +319,7 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) error {
 			FacilityName: request.Store.Name,
 		},
 		StockRequestID: request.ID,
-		RequestStatus:  string(request.Status),
+		RequestStatus:  request.Status,
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
 	if err != nil {
@@ -359,7 +359,7 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 			FacilityName: request.Store.Name,
 		},
 		StockRequestID: request.ID,
-		RequestStatus:  string(request.Status),
+		RequestStatus:  request.Status,
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
 	if err != nil {
