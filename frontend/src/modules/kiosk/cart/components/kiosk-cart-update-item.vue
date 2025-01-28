@@ -48,7 +48,7 @@ const fetchAdditives = async () => {
       ...category,
       additives: category.additives.map((additive) => ({
         ...additive,
-        isSelected: isAdditiveSelected(category.id, additive.id),
+        isSelected: isAdditiveSelected(category.id, additive.additiveId),
       })),
     }));
   } catch {
@@ -124,14 +124,14 @@ const calculatedEnergy = computed(() => {
 
 // Check if additive is selected
 const isAdditiveSelected = (categoryId: number, additiveId: number) =>
-  selectedAdditives.value[categoryId]?.some((a) => a.id === additiveId) || false;
+  selectedAdditives.value[categoryId]?.some((a) => a.additiveId === additiveId) || false;
 
 // Handle additive selection
 const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[categoryId] || [];
-  const isSelected = current.some((a) => a.id === additive.id);
+  const isSelected = current.some((a) => a.additiveId === additive.additiveId);
   selectedAdditives.value[categoryId] = isSelected
-    ? current.filter((a) => a.id !== additive.id)
+    ? current.filter((a) => a.additiveId !== additive.additiveId)
     : [...current, additive];
 };
 

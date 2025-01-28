@@ -162,9 +162,9 @@ const onSizeSelect = async (size: StoreProductSizeDetailsDTO) => {
 // Toggle additive selection
 const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[categoryId] || [];
-  const isSelected = current.some((a) => a.id === additive.id);
+  const isSelected = current.some((a) => a.additiveId === additive.additiveId);
   if (isSelected) {
-    selectedAdditives.value[categoryId] = current.filter((a) => a.id !== additive.id);
+    selectedAdditives.value[categoryId] = current.filter((a) => a.additiveId !== additive.additiveId);
   } else {
     selectedAdditives.value[categoryId] = [...current, additive];
   }
@@ -172,7 +172,7 @@ const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryIte
 
 // Check if additive is selected
 const isAdditiveSelected = (categoryId: number, additiveId: number): boolean =>
-  selectedAdditives.value[categoryId]?.some((a) => a.id === additiveId) || false;
+  selectedAdditives.value[categoryId]?.some((a) => a.additiveId === additiveId) || false;
 
 
 // Handle add to cart action
