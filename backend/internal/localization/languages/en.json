@@ -51,6 +51,16 @@
   }, 
   "notification": {
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
+      "stockRequestStatus": {
+          "created": "Created",
+          "processed": "Processed",
+          "inDelivery": "In Delivery",
+          "completed": "Completed",
+          "rejectedByStore": "Rejected by Store",
+          "rejectedByWarehouse": "Rejected by Warehouse",
+          "acceptedWithChange": "Accepted with Change"
+        },
+
       "newOrder": "A new order has been placed by *{{.CustomerName}}*.",
       "storeWarehouseRunOut": "The warehouse is running out of *{{.StockItem}}*.",
 

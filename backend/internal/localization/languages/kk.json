@@ -51,6 +51,16 @@
   },
 "notification": {
     "stockRequestStatusUpdated": "Қор сұранысының күйі *{{.RequestStatus}}* болып жаңартылды.",
+    "stockRequestStatus": {
+      "created": "Жасалды",
+      "processed": "Өңделді",
+      "inDelivery": "Жеткізілуде",
+      "completed": "Аяқталды",
+      "rejectedByStore": "Дүкен қабылдамады",
+      "rejectedByWarehouse": "Қойма қабылдамады",
+      "acceptedWithChange": "Өзгерістермен қабылданды"
+    },
+    
     "newOrder": "Жаңа тапсырысты *{{.CustomerName}}* жасады.",
     "storeWarehouseRunOut": "Қоймада *{{.StockItem}}* таусылуға жақын.",
    

@@ -51,6 +51,16 @@
 	},
 	"notification": {
 		"stockRequestStatusUpdated": "Статус запроса на запас был обновлен на *{{.RequestStatus}}*.",
+		"stockRequestStatus": {
+			"created": "Создан",
+			"processed": "Обработан",
+			"inDelivery": "В доставке",
+			"completed": "Завершён",
+			"rejectedByStore": "Отклонён магазином",
+			"rejectedByWarehouse": "Отклонён складом",
+			"acceptedWithChange": "Принят с изменениями"
+		},
+
 		"newOrder": "Новый заказ был сделан *{{.CustomerName}}*.",
 		"storeWarehouseRunOut": "На складе заканчивается *{{.StockItem}}*.",
 
