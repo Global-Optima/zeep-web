@@ -10,7 +10,7 @@
 </template>
 
 <script lang="ts" setup>
-import { getRouteName } from '@/core/config/routes.config'
+import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminStoreAdditiveDetailsForm from '@/modules/admin/store-additives/components/details/admin-store-additive-details-form.vue'
 import type { UpdateStoreAdditiveDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
@@ -20,32 +20,54 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const queryClient = useQueryClient()
+const { toast } = useToast()
 
 const storeAdditiveId = route.params.id as string
 
-const queryClient = useQueryClient()
-
 const { data: storeAdditiveDetails } = useQuery({
-  queryKey: computed(() => ['admin-store-additive-details', storeAdditiveId]),
+	queryKey: computed(() => ['admin-store-additive-details', storeAdditiveId]),
 	queryFn: () => storeAdditivesService.getStoreAdditiveById(Number(storeAdditiveId)),
-  enabled: !isNaN(Number(storeAdditiveId)),
+	enabled: !isNaN(Number(storeAdditiveId)),
 })
 
 const updateMutation = useMutation({
-	mutationFn: ({id, dto}:{id: number, dto: UpdateStoreAdditiveDTO}) => {
-    return storeAdditivesService.updateStoreAdditive(id, dto)
-  },
+	mutationFn: ({ id, dto }: { id: number; dto: UpdateStoreAdditiveDTO }) =>
+		storeAdditivesService.updateStoreAdditive(id, dto),
+	onMutate: () => {
+		toast({
+			title: 'Обновление...',
+			description: 'Обновление данных добавки магазина. Пожалуйста, подождите.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-store-additives'] })
 		queryClient.invalidateQueries({ queryKey: ['admin-store-additive-details', storeAdditiveId] })
-		router.push({ name: getRouteName("ADMIN_STORE_ADDITIVES") })
+		toast({
+			title: 'Успех!',
+			description: 'Данные добавки магазина успешно обновлены.',
+		})
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при обновлении данных добавки магазина.',
+			variant: 'destructive',
+		})
 	},
 })
 
 function handleUpdate(updatedData: UpdateStoreAdditiveDTO) {
-  if (isNaN(Number(storeAdditiveId))) return router.back()
+	if (isNaN(Number(storeAdditiveId))) {
+		toast({
+			title: 'Ошибка',
+			description: 'Неверный идентификатор добавки.',
+			variant: 'destructive',
+		})
+		return router.back()
+	}
 
-	updateMutation.mutate({id: Number(storeAdditiveId), dto: updatedData})
+	updateMutation.mutate({ id: Number(storeAdditiveId), dto: updatedData })
 }
 
 function handleCancel() {

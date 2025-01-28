@@ -4,8 +4,8 @@
 			<TableRow>
 				<TableHead class="hidden w-[100px] sm:table-cell"> </TableHead>
 				<TableHead>Название</TableHead>
-				<TableHead class="hidden md:table-cell">Описание</TableHead>
 				<TableHead>Категория</TableHead>
+				<TableHead>Размер</TableHead>
 				<TableHead>Цена</TableHead>
 				<TableHead></TableHead>
 			</TableRow>
@@ -29,12 +29,10 @@
 				<TableCell class="font-medium">
 					{{ additive.name }}
 				</TableCell>
-				<TableCell class="hidden md:table-cell">
-					{{ additive.description }}
-				</TableCell>
 				<TableCell>
 					{{ additive.category.name }}
 				</TableCell>
+				<TableCell> {{ additive.size }} {{ additive.unit.name }} </TableCell>
 				<TableCell>
 					{{ formatPrice(additive.storePrice) }}
 				</TableCell>
@@ -69,6 +67,7 @@ import { storeAdditivesService } from '@/modules/admin/store-additives/services/
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+
 const router = useRouter()
 const queryClient = useQueryClient()
 
