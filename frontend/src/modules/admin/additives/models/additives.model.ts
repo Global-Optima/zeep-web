@@ -21,6 +21,7 @@ export interface AdditiveFilterQuery extends PaginationParams {
 export interface BaseAdditiveCategoryDTO {
 	id: number
 	name: string
+	description: string
 	isMultipleSelect: boolean
 }
 

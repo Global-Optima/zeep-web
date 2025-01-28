@@ -68,6 +68,15 @@ const createAdditiveSchema = toTypedSchema(
 // Form Setup
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createAdditiveSchema,
+  initialValues: {
+    name: additive.name,
+    description: additive.description,
+    basePrice: additive.basePrice,
+    size: additive.size,
+    unitId: additive.unit.id,
+    imageUrl: additive.imageUrl,
+    additiveCategoryId: additive.category.id,
+  }
 })
 
 // Handlers
@@ -76,6 +85,9 @@ const onSubmit = handleSubmit((formValues) => {
   if (!selectedUnit.value?.id) return
   if (selectedIngredients.value.length === 0) {
     return toast({description: "Технологическая карта должна иметь минимум 1 ингредиент"})
+  }
+  if (selectedIngredients.value.some(i => i.quantity <= 0)) {
+    return toast({description: "Технологическая карта не может иметь количество 0"})
   }
 
   const dto: UpdateAdditiveDTO = {

@@ -38,7 +38,7 @@
 					</TableHeader>
 					<TableBody>
 						<TableRow
-							v-for="variant in productSizes"
+							v-for="variant in sortedProductSizes"
 							:key="variant.id"
 							@click="onVariantClick(variant)"
 							class="hover:bg-slate-50 cursor-pointer"
@@ -81,6 +81,7 @@ import type { ProductDetailsDTO, ProductSizeDTO, UpdateProductSizeDTO } from '@/
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
+import { computed } from 'vue'
 import { useRouter } from "vue-router"
 
 const {productDetails} = defineProps<{
@@ -100,6 +101,10 @@ const { data: productSizes } = useQuery({
 	queryFn: () => productsService.getProductSizesByProductID(productDetails.id),
   enabled: Boolean(productDetails.id),
 })
+
+const sortedProductSizes = computed(() => {
+  return productSizes.value ? [...productSizes.value].sort((a, b) => a.basePrice - b.basePrice) : [];
+});
 
 const {mutate: updateSize} = useMutation({
 	mutationFn: (props: {productSizeId: number, dto: UpdateProductSizeDTO}) => productsService.updateProductSize(props.productSizeId, props.dto),

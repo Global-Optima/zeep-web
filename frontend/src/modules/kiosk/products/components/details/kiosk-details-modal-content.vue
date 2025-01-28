@@ -139,10 +139,10 @@ const calculatedEnergy: Ref<KioskDetailsEnergyDTO> = computed(() => {
   const totalEnergy = ingredients.reduce(
     (totals, ingredient) => {
       return {
-        ccal: totals.ccal + ingredient.calories,
-        proteins: totals.proteins + ingredient.proteins,
-        carbs: totals.carbs + ingredient.carbs,
-        fats: totals.fats + ingredient.fat,
+        ccal: totals.ccal + ingredient.ingredient.calories,
+        proteins: totals.proteins + ingredient.ingredient.proteins,
+        carbs: totals.carbs + ingredient.ingredient.carbs,
+        fats: totals.fats + ingredient.ingredient.fat,
       };
     },
     { ccal: 0, proteins: 0, carbs: 0, fats: 0 }
@@ -150,8 +150,6 @@ const calculatedEnergy: Ref<KioskDetailsEnergyDTO> = computed(() => {
 
   return totalEnergy;
 });
-
-
 
 // Handle size selection
 const onSizeSelect = async (size: StoreProductSizeDetailsDTO) => {

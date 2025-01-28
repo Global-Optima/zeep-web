@@ -73,7 +73,6 @@ function handleUpdate(data: UpdateProductSizeFormSchema) {
 		basePrice: data.basePrice,
 		size: data.size,
 		unitId: data.unitId,
-		isDefault: false,
 		additives: data.additives.map(a => ({ additiveId: a.additiveId, isDefault: a.isDefault ?? false })),
 		ingredients: data.ingredients.map(a => ({ ingredientId: a.ingredientId, quantity: a.quantity })),
 	}

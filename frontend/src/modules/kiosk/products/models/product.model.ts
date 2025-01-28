@@ -1,6 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
-import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { ProductSizeIngredientDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 export enum ProductSizeNames {
@@ -24,15 +24,6 @@ export interface ProductDTO extends BaseProductDTO {
 	basePrice: number
 }
 
-export interface ProductSizeIngredientDTO {
-	id: number
-	name: string
-	calories: number
-	fat: number
-	carbs: number
-	proteins: number
-}
-
 export interface ProductDetailsDTO extends ProductDTO {
 	sizes: ProductSizeDTO[]
 }
@@ -52,7 +43,7 @@ export interface ProductSizeDTO extends BaseProductSizeDTO {
 
 export interface ProductSizeDetailsDTO extends ProductSizeDTO {
 	additives: ProductSizeAdditiveDTO[]
-	ingredients: IngredientsDTO[]
+	ingredients: ProductSizeIngredientDTO[]
 }
 
 export interface ProductSizeAdditiveDTO extends AdditiveDTO {
