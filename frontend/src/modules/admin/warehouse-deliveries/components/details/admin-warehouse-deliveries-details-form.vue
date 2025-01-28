@@ -38,7 +38,7 @@
 						<span>Склад: </span> <span class="font-medium">{{ delivery.warehouse.name }}</span>
 					</li>
 					<li>
-						<span>Дата доставки: yyyy</span>
+						<span>Дата доставки: </span>
 						<span class="font-medium">{{ formatDate(delivery.deliveryDate) }}</span>
 					</li>
 				</ul>

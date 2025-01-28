@@ -10,7 +10,7 @@ export interface UpdateStoreAdditiveDTO {
 }
 
 export interface StoreAdditiveDTO extends AdditiveDTO {
-	storeAdditiveId: number
+	additiveId: number
 	storePrice: number
 }
 

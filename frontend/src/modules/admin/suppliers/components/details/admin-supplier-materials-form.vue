@@ -32,6 +32,7 @@ import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 interface UpdateSupplierMaterialForm extends UpdateSupplierMaterialDTO {
   name: string
   unit: UnitDTO
+  size: number
 }
 
 /** Props */
@@ -50,6 +51,7 @@ const mergedStockMaterialsTableData = ref<UpdateSupplierMaterialForm[]>(stockMat
     name: m.stockMaterial.name,
     unit: m.stockMaterial.unit,
     basePrice: m.basePrice,
+    size: m.stockMaterial.size
   })))
 
 /** Add New Material */
@@ -68,6 +70,7 @@ function addMaterial(material: StockMaterialsDTO) {
     name: material.name,
     unit: material.unit,
     basePrice: 0,
+    size: material.size
   })
 
   toast({
@@ -169,7 +172,9 @@ function onCancel() {
 				<div class="flex justify-between items-center">
 					<div>
 						<CardTitle>Материалы поставщика</CardTitle>
-						<CardDescription>Обновите цены или удалите материалы из списка.</CardDescription>
+						<CardDescription class="mt-2"
+							>Обновите цены или удалите материалы из списка.</CardDescription
+						>
 					</div>
 					<Button
 						variant="outline"
@@ -183,7 +188,7 @@ function onCancel() {
 					<TableHeader>
 						<TableRow>
 							<TableHead>Товар</TableHead>
-							<TableHead>Ед. Измерения</TableHead>
+							<TableHead>Упаковка</TableHead>
 							<TableHead>Цена</TableHead>
 							<TableHead class="text-center"></TableHead>
 						</TableRow>
@@ -194,7 +199,7 @@ function onCancel() {
 							:key="item.stockMaterialId"
 						>
 							<TableCell>{{ item.name }}</TableCell>
-							<TableCell>{{ item.unit.name }}</TableCell>
+							<TableCell> {{item.size }} {{ item.unit.name }} </TableCell>
 							<TableCell>
 								<Input
 									v-model.number="item.basePrice"
