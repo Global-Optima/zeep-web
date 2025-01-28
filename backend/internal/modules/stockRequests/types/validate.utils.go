@@ -59,6 +59,7 @@ func IsValidTransition(currentStatus, targetStatus data.StockRequestStatus) bool
 }
 
 var warehouseAllowedStatuses = map[data.StockRequestStatus]bool{
+	data.StockRequestCreated:             false,
 	data.StockRequestProcessed:           true,
 	data.StockRequestInDelivery:          true,
 	data.StockRequestCompleted:           true,
@@ -74,4 +75,15 @@ func ValidateWarehouseStatuses(inputStatuses []data.StockRequestStatus) error {
 		}
 	}
 	return nil
+}
+
+func DefaultWarehouseStasuses() []data.StockRequestStatus {
+	return []data.StockRequestStatus{
+		data.StockRequestProcessed,
+		data.StockRequestInDelivery,
+		data.StockRequestCompleted,
+		data.StockRequestRejectedByStore,
+		data.StockRequestRejectedByWarehouse,
+		data.StockRequestAcceptedWithChange,
+	}
 }

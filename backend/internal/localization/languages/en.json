@@ -73,7 +73,7 @@
       },
 
       "stockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",
-      "warehouseOutOfStock": "*{{.ItemName}}* is out of stock.",
+      "warehouseOutOfStock": "*{{.ItemName}}* is running out of stock.",
       "newStockRequest": "A new stock request was submitted by *{{.RequesterName}}*.",
       "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*."
   }
