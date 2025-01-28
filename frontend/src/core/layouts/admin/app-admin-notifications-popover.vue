@@ -74,7 +74,7 @@ const formatMessage = (s: string) => s.replace(/\*(.*?)\*/g, '<span class="font-
 				<Button
 					variant="outline"
 					size="icon"
-					class="rounded-full"
+					class="rounded-md"
 				>
 					<BellIcon class="text-gray-800 size-4" />
 					<span class="sr-only">Переключить уведомления</span>

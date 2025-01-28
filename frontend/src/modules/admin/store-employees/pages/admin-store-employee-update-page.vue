@@ -2,7 +2,7 @@
 	<AdminEmployeesUpdateForm
 		v-if="employee"
 		:employee="employee"
-		@on-submit="handleCreate"
+		@on-submit="handleUpdate"
 		@on-cancel="handleCancel"
 	/>
 
@@ -10,7 +10,7 @@
 </template>
 
 <script lang="ts" setup>
-import { getRouteName } from '@/core/config/routes.config'
+import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminEmployeesUpdateForm from '@/modules/admin/store-employees/components/update/admin-employees-update-form.vue'
 import type { UpdateEmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { employeesService } from '@/modules/admin/store-employees/services/employees.service'
@@ -19,26 +19,53 @@ import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
+const { toast } = useToast()
 
 const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-  queryKey: ['employee', employeeId],
+	queryKey: ['store-employee', employeeId],
 	queryFn: () => employeesService.getStoreEmployeeById(Number(employeeId)),
-  enabled: !!employeeId,
+	enabled: !!employeeId,
 })
 
 const updateMutation = useMutation({
-	mutationFn: (newStoreData: UpdateEmployeeDTO) => employeesService.updateStoreEmployee(Number(employeeId), newStoreData),
+	mutationFn: (newStoreData: UpdateEmployeeDTO) =>
+		employeesService.updateStoreEmployee(Number(employeeId), newStoreData),
+	onMutate: () => {
+		toast({
+			title: 'Обновление...',
+			description: 'Обновление данных сотрудника. Пожалуйста, подождите.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['store-employees'] })
-    queryClient.invalidateQueries({ queryKey: ['store-employee', employeeId] })
-		router.push({ name: getRouteName("ADMIN_STORE_EMPLOYEES") })
+		queryClient.invalidateQueries({ queryKey: ['store-employee', employeeId] })
+		toast({
+			title: 'Успех!',
+			description: 'Данные сотрудника успешно обновлены.',
+		})
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при обновлении данных сотрудника.',
+			variant: 'destructive',
+		})
 	},
 })
 
-function handleCreate(dto: UpdateEmployeeDTO) {
+function handleUpdate(dto: UpdateEmployeeDTO) {
+	if (!employeeId) {
+		toast({
+			title: 'Ошибка',
+			description: 'Неверный идентификатор сотрудника.',
+			variant: 'destructive',
+		})
+		return
+	}
+
 	updateMutation.mutate(dto)
 }
 
