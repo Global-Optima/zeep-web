@@ -10,10 +10,10 @@
 				<div class="flex flex-wrap gap-2 mt-4">
 					<KioskDetailsAdditivesCard
 						v-for="additive in category.additives"
-						:key="additive.id"
+						:key="additive.additiveId"
 						:additive="additive"
 						:is-default="additive.isDefault"
-						:is-selected="isAdditiveSelected(category.id, additive.id)"
+						:is-selected="isAdditiveSelected(category.id, additive.additiveId)"
 						@click:additive="() => onAdditiveToggle(category.id, additive)"
 					/>
 				</div>

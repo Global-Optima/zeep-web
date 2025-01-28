@@ -49,7 +49,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 			additives: StoreAdditiveCategoryItemDTO[],
 		): string {
 			const additiveIds = additives
-				.map(a => a.id)
+				.map(a => a.additiveId)
 				.sort()
 				.join('-')
 			return md5(`${product.id}-${size.id}-${additiveIds}`)

@@ -75,7 +75,7 @@ const stepsConfig: StepConfig[] = [
           subOrders: Object.entries(cartItems).map(([_, item]) => ({
             productSizeId: item.size.id,
             quantity: item.quantity,
-            additivesIds: item.additives.map((add) => add.id),
+            additivesIds: item.additives.map((add) => add.additiveId),
           })),
         };
 
