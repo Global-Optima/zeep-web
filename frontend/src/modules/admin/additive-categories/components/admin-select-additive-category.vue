@@ -76,7 +76,7 @@ const debouncedSearchTerm = useDebounce(
   computed(() => searchTerm.value),
   500
 )
-const filter = ref<AdditiveCategoriesFilterQuery>({showAll: true})
+const filter = ref<AdditiveCategoriesFilterQuery>({includeEmpty: true})
 
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1

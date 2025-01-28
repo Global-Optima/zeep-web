@@ -6,7 +6,7 @@
 
 		<div class="mt-8">
 			<KioskDetailsIngredients
-				:ingredients="ingredients"
+				:ingredients="ingredients.map(i => i.ingredient)"
 				:energy="energy"
 			/>
 		</div>
@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
-import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { ProductSizeIngredientDTO } from '@/modules/admin/store-products/models/store-products.model'
 import KioskDetailsIngredients from '@/modules/kiosk/products/components/details/kiosk-details-ingredients.vue'
 
 export interface  KioskDetailsEnergyDTO {
@@ -30,7 +30,7 @@ defineProps<{
   description: string
   containerClass?: string
   energy: KioskDetailsEnergyDTO
-  ingredients: IngredientsDTO[]
+  ingredients: ProductSizeIngredientDTO[]
 }>()
 </script>
 

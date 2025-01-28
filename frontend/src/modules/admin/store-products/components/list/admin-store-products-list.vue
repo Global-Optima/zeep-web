@@ -92,8 +92,8 @@ const {mutate: deleteStoreProduct} = useMutation({
 		},
 })
 
-const onProductClick = (productId: number) => {
-  router.push(`/admin/store-products/${productId}`);
+const onProductClick = (storeProductId: number) => {
+  router.push(`/admin/store-products/${storeProductId}`);
 };
 
 const onDeleteProductClick = (e: Event, id: number) => {

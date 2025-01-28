@@ -210,7 +210,7 @@ func (r *storeWarehouseRepository) GetStockListByIDs(storeID uint, stockIds []ui
 		Preload("Ingredient.Unit").
 		Joins("JOIN store_warehouses ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
 		Joins("JOIN ingredients ON store_warehouse_stocks.ingredient_id = ingredients.id").
-		Where("store_warehouses.store_id = ? AND store_warehouse_stock.id IN (?)", storeID, stockIds).
+		Where("store_warehouses.store_id = ? AND store_warehouse_stocks.id IN (?)", storeID, stockIds).
 		Preload("Ingredient").
 		Preload("StoreWarehouse")
 
