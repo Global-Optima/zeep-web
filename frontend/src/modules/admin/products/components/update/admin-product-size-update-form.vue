@@ -7,6 +7,7 @@ import * as z from 'zod'
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
+import Checkbox from '@/core/components/ui/checkbox/Checkbox.vue'
 import {
   FormControl,
   FormField,
@@ -81,7 +82,6 @@ const createProductSizeSchema = toTypedSchema(
   })
 )
 
-
 const validateAdditives = (additives: SelectedAdditiveTypesDTO[]) => {
   if (!additives.length) {
     return 'Необходимо добавить хотя бы одну добавку.'
@@ -99,7 +99,6 @@ const { handleSubmit, isSubmitting, setFieldValue } = useForm({
   }
 })
 
-
 const additives = ref<SelectedAdditiveTypesDTO[]>(productSize.additives.map(a => ({
       additiveId: a.id,
       isDefault: a.isDefault,
@@ -113,11 +112,11 @@ const openAdditiveDialog = ref(false)
 
 const ingredients = ref<SelectedIngredientsTypesDTO[]>(productSize.ingredients.map(i => (
   {
-    ingredientId: i.id,
-    name: i.name,
-    unit: i.unit.name,
-    category: i.category.name,
-    quantity: 0,
+    ingredientId: i.ingredient.id,
+    name: i.ingredient.name,
+    unit: i.ingredient.unit.name,
+    category: i.ingredient.category.name,
+    quantity: i.quantity,
   }))
   )
 const openIngredientsDialog = ref(false)
@@ -167,7 +166,7 @@ const onSubmit = handleSubmit((formValues) => {
   const finalDTO: UpdateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
-    ingredients: [] //TODO: test it
+    ingredients: ingredients.value
   }
   emits('onSubmit', finalDTO)
 })
@@ -359,12 +358,12 @@ function selectUnit(unit: UnitDTO) {
 								</TableCell>
 								<TableCell>{{ additive.name }}</TableCell>
 								<TableCell>{{ additive.categoryName }}</TableCell>
-								<TableCell class="text-center">
-									<Input
+								<TableCell>
+									<Checkbox
 										type="checkbox"
-										class="shadow-none h-5"
+										class="text-center size-6"
 										:checked="additive.isDefault"
-										@change="toggleDefault(index)"
+										@update:checked="v => additive.isDefault = v"
 									/>
 								</TableCell>
 								<TableCell class="text-center">

@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts" setup>
-import { getRouteName } from '@/core/config/routes.config'
+import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminStoreProductDetailsForm from '@/modules/admin/store-products/components/details/admin-store-product-details-form.vue'
 import type { UpdateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
@@ -22,39 +22,60 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const queryClient = useQueryClient()
+const { toast } = useToast()
 
 const storeProductId = route.params.id as string
 
-const queryClient = useQueryClient()
-
 const { data: storeProductDetails } = useQuery({
-  queryKey: computed(() => ['admin-store-product-details', storeProductId]),
+	queryKey: computed(() => ['admin-store-product-details', storeProductId]),
 	queryFn: () => storeProductsService.getStoreProduct(Number(storeProductId)),
-  enabled: !isNaN(Number(storeProductId)),
+	enabled: !isNaN(Number(storeProductId)),
 })
 
 const { data: productDetails } = useQuery({
-  queryKey: computed(() => ['admin-product-details', storeProductDetails.value?.productId]),
-	queryFn: () => productsService.getProductDetails(Number(storeProductDetails.value?.productId)),
-  enabled: computed(() => Boolean(storeProductDetails.value?.productId)),
+	queryKey: computed(() => ['admin-product-details', storeProductDetails.value?.productId]),
+	queryFn: () => productsService.getProductDetails(storeProductDetails.value!.productId),
+	enabled: computed(() => !!storeProductDetails.value),
 })
 
-
 const updateMutation = useMutation({
-	mutationFn: ({id, dto}:{id: number, dto: UpdateStoreProductDTO}) => {
-    return storeProductsService.updateStoreProduct(id, dto)
-  },
+	mutationFn: ({ id, dto }: { id: number; dto: UpdateStoreProductDTO }) =>
+		storeProductsService.updateStoreProduct(id, dto),
+	onMutate: () => {
+		toast({
+			title: 'Обновление...',
+			description: 'Обновление данных товара магазина. Пожалуйста, подождите.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-store-products'] })
 		queryClient.invalidateQueries({ queryKey: ['admin-store-product-details', storeProductId] })
-		router.push({ name: getRouteName("ADMIN_STORE_PRODUCTS") })
+		toast({
+			title: 'Успех!',
+			description: 'Данные товара магазина успешно обновлены.',
+		})
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при обновлении данных товара магазина.',
+			variant: 'destructive',
+		})
 	},
 })
 
 function handleUpdate(updatedData: UpdateStoreProductDTO) {
-  if (storeProductDetails.value?.productId) return router.back()
+	if (!storeProductDetails.value?.id) {
+		toast({
+			title: 'Ошибка',
+			description: 'Неверный идентификатор товара.',
+			variant: 'destructive',
+		})
+		return router.back()
+	}
 
-	updateMutation.mutate({id: Number(storeProductId), dto: updatedData})
+	updateMutation.mutate({ id: Number(storeProductId), dto: updatedData })
 }
 
 function handleCancel() {

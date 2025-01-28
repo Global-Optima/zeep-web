@@ -25,7 +25,12 @@ export interface StoreProductSizeDetailsDTO extends BaseProductSizeDTO {
 	productSizeId: number
 	storePrice: number
 	additives: ProductSizeAdditiveDTO[]
-	ingredients: IngredientsDTO[]
+	ingredients: ProductSizeIngredientDTO[]
+}
+
+export interface ProductSizeIngredientDTO {
+	quantity: number
+	ingredient: IngredientsDTO
 }
 
 export interface CreateStoreProductDTO {

@@ -20,7 +20,7 @@ type WarehousesModule struct {
 func NewWarehousesModule(base *common.BaseModule, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, notificationService notifications.NotificationService, cronManager *scheduler.CronManager) *WarehousesModule {
 	repo := warehouse.NewWarehouseRepository(base.DB)
 	warehouseStockRepo := warehouseStock.NewWarehouseStockRepository(base.DB)
-	warehouseStockService := warehouseStock.NewWarehouseStockService(warehouseStockRepo, stockMaterialRepo, barcodeRepo, notificationService)
+	warehouseStockService := warehouseStock.NewWarehouseStockService(warehouseStockRepo, stockMaterialRepo, barcodeRepo, notificationService, base.Logger)
 	warehouseStockHandler := warehouseStock.NewWarehouseStockHandler(warehouseStockService)
 	service := warehouse.NewWarehouseService(repo)
 	handler := warehouse.NewWarehouseHandler(service)

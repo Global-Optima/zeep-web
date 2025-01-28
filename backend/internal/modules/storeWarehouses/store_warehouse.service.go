@@ -50,6 +50,12 @@ func (s *storeWarehouseService) AddMultipleStock(storeId uint, dto *types.AddMul
 				s.logger.Error(wrappedErr)
 				return wrappedErr
 			}
+
+			err = s.checkStockAndNotify(storeId, id)
+			if err != nil {
+				s.logger.Errorf("failed to check stock and notify: %v", err)
+			}
+
 			IDs = append(IDs, id)
 		}
 		return nil
@@ -70,6 +76,11 @@ func (s *storeWarehouseService) AddStock(storeId uint, dto *types.AddStoreStockD
 		wrappedErr := utils.WrapError("error adding new stock element", err)
 		s.logger.Error(wrappedErr)
 		return 0, err
+	}
+
+	err = s.checkStockAndNotify(storeId, id)
+	if err != nil {
+		s.logger.Errorf("failed to check stock and notify: %v", err)
 	}
 
 	return id, nil
@@ -128,6 +139,11 @@ func (s *storeWarehouseService) UpdateStockById(storeId, stockId uint, input *ty
 		return wrappedErr
 	}
 
+	err = s.checkStockAndNotify(storeId, stockId)
+	if err != nil {
+		s.logger.Errorf("failed to check stock and notify: %v", err)
+	}
+
 	return nil
 }
 
@@ -174,5 +190,31 @@ func (s *storeWarehouseService) CheckStockNotifications(storeID uint, stock data
 			s.logger.Errorf("failed to send stock expiration notification: %v", err)
 		}
 	}
+	return nil
+}
+
+func (s *storeWarehouseService) checkStockAndNotify(storeId, stockId uint) error {
+	updatedStock, err := s.repo.GetStockById(storeId, stockId)
+	if updatedStock.Quantity <= updatedStock.LowStockThreshold {
+		details := &details.StoreWarehouseRunOutDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           storeId,
+				FacilityName: updatedStock.StoreWarehouse.Store.Name,
+			},
+			StockItem:   updatedStock.Ingredient.Name,
+			StockItemID: updatedStock.IngredientID,
+		}
+
+		err := s.notificationService.NotifyStoreWarehouseRunOut(details)
+		if err != nil {
+			s.logger.Errorf("failed to send store warehouse runout notification: %v", err)
+			return err
+		}
+	}
+	if err != nil {
+		s.logger.Errorf("failed to fetch stock for %d: %v", stockId, err)
+		return err
+	}
+
 	return nil
 }

@@ -4,6 +4,7 @@
 		:delivery="deliveryDetails"
 		@on-cancel="handleCancel"
 	/>
+	<p v-else>Загрузка данных поставки...</p>
 </template>
 
 <script lang="ts" setup>
@@ -19,9 +20,9 @@ const router = useRouter()
 const warehouseDeliveryId = route.params.id as string
 
 const { data: deliveryDetails } = useQuery({
-  queryKey: computed(() => ['warehouse-delivery', warehouseDeliveryId]),
+	queryKey: computed(() => ['warehouse-delivery', warehouseDeliveryId]),
 	queryFn: () => warehouseStocksService.getWarehouseDeliveryId(Number(warehouseDeliveryId)),
-  enabled: !isNaN(Number(warehouseDeliveryId)),
+	enabled: !isNaN(Number(warehouseDeliveryId)),
 })
 
 function handleCancel() {

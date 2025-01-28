@@ -18,7 +18,7 @@ func NewNotificationModule(base *common.BaseModule) *NotificationModule {
 
 	repo := notifications.NewNotificationRepository(base.DB)
 	roleManager := shared.NewNotificationRoleMappingManager()
-	service := notifications.NewNotificationService(base.DB, repo, roleManager)
+	service := notifications.NewNotificationService(base.DB, repo, roleManager, base.Logger)
 	handler := notifications.NewNotificationHandler(service)
 
 	base.Router.RegisterNotificationsRoutes(handler)

@@ -145,6 +145,7 @@ func ConvertToCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategory
 	return &BaseAdditiveCategoryDTO{
 		ID:               category.ID,
 		Name:             category.Name,
+		Description:      category.Description,
 		IsMultipleSelect: category.IsMultipleSelect,
 	}
 }

@@ -101,24 +101,22 @@ const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-  queryKey: ['store-employee', employeeId],
+	queryKey: ['store-employee', employeeId],
 	queryFn: () => employeesService.getStoreEmployeeById(Number(employeeId)),
-  enabled: !!employeeId,
+	enabled: !isNaN(Number(employeeId)),
 })
 
-
 const { data: employeeAudits } = useQuery({
-  queryKey: ['employee-audits', employeeId],
-	queryFn: () => employeeAuditService.getAudits({employeeId: Number(employeeId)}),
-  enabled: !!employeeId,
+	queryKey: ['employee-audits', employeeId],
+	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employeeId) }),
+	enabled: !isNaN(Number(employeeId)),
 })
 
 const employeeStats = ref<Stat>({
   totalSales: formatPrice(3500000),
   hoursWorked: '1 200 часов',
   tasksCompleted: '350 задач',
-});
-
+})
 
 const employeeShifts = ref<Shift[]>([
   { date: 'Понедельник', shift: '9:00 - 17:00' },
@@ -128,7 +126,7 @@ const employeeShifts = ref<Shift[]>([
   { date: 'Пятница', shift: '9:00 - 17:00' },
   { date: 'Суббота', shift: 'Выходной' },
   { date: 'Воскресенье', shift: 'Выходной' },
-]);
+])
 </script>
 
 <style scoped></style>
