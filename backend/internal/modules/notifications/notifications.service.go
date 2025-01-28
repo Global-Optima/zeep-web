@@ -1,8 +1,6 @@
 package notifications
 
 import (
-	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/shared"
@@ -44,34 +42,34 @@ func NewNotificationService(db *gorm.DB, repo NotificationRepository, roleManage
 	}
 }
 
-func (s *notificationService) createNotification(eventType data.NotificationEventType, priority data.NotificationPriority, detailsJSON []byte) error {
-	employees, err := s.repo.GetRecipientsForEvent(eventType)
-	if err != nil {
-		return fmt.Errorf("failed to fetch recipients: %w", err)
-	}
+// func (s *notificationService) createNotification(eventType data.NotificationEventType, priority data.NotificationPriority, detailsJSON []byte) error {
+// 	employees, err := s.repo.GetRecipientsForEvent(eventType)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to fetch recipients: %w", err)
+// 	}
 
-	if len(employees) == 0 {
-		return fmt.Errorf("no recipients found for event type %s", eventType)
-	}
+// 	if len(employees) == 0 {
+// 		return fmt.Errorf("no recipients found for event type %s", eventType)
+// 	}
 
-	notification := &data.EmployeeNotification{
-		EventType: eventType,
-		Priority:  priority,
-		Details:   detailsJSON,
-	}
-	if err := s.repo.CreateNotification(notification); err != nil {
-		return fmt.Errorf("failed to create notification: %w", err)
-	}
+// 	notification := &data.EmployeeNotification{
+// 		EventType: eventType,
+// 		Priority:  priority,
+// 		Details:   detailsJSON,
+// 	}
+// 	if err := s.repo.CreateNotification(notification); err != nil {
+// 		return fmt.Errorf("failed to create notification: %w", err)
+// 	}
 
-	recipients := make([]data.EmployeeNotificationRecipient, len(employees))
-	for i, employee := range employees {
-		recipients[i] = data.EmployeeNotificationRecipient{
-			NotificationID: notification.ID,
-			EmployeeID:     employee.ID,
-		}
-	}
-	return s.repo.CreateNotificationRecipients(recipients)
-}
+// 	recipients := make([]data.EmployeeNotificationRecipient, len(employees))
+// 	for i, employee := range employees {
+// 		recipients[i] = data.EmployeeNotificationRecipient{
+// 			NotificationID: notification.ID,
+// 			EmployeeID:     employee.ID,
+// 		}
+// 	}
+// 	return s.repo.CreateNotificationRecipients(recipients)
+// }
 
 func (s *notificationService) createNotificationAsync(eventType data.NotificationEventType, priority data.NotificationPriority, detailsJSON []byte) {
 	go func() {
