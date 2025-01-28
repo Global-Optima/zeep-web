@@ -486,34 +486,39 @@ func (r *warehouseStockRepository) UpdateExpirationDate(stockMaterialID, warehou
 }
 
 func (r *warehouseStockRepository) UpdateStockQuantity(stockMaterialID, warehouseID uint, quantity float64) (*data.WarehouseStock, error) {
-	var warehouseStock data.WarehouseStock
-	err := r.db.Model(&data.WarehouseStock{}).
-		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
-		First(&warehouseStock).Error
+	var updatedStock data.WarehouseStock
 
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("stock material ID %d not found in warehouse ID %d", stockMaterialID, warehouseID)
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var warehouseStock data.WarehouseStock
+		if err := tx.Model(&data.WarehouseStock{}).
+			Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+			First(&warehouseStock).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("stock material ID %d not found in warehouse ID %d", stockMaterialID, warehouseID)
+			}
+			return fmt.Errorf("failed to check warehouse stock existence: %w", err)
 		}
-		return nil, fmt.Errorf("failed to check warehouse stock existence: %w", err)
-	}
 
-	err = r.db.Model(&data.WarehouseStock{}).
-		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
-		Update("quantity", quantity).Error
+		if err := tx.Model(&data.WarehouseStock{}).
+			Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+			Update("quantity", quantity).Error; err != nil {
+			return fmt.Errorf("failed to update quantity for stock material ID %d in warehouse ID %d: %w", stockMaterialID, warehouseID, err)
+		}
+
+		if err := tx.Model(&data.WarehouseStock{}).Preload("StockMaterial").
+			Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+			First(&updatedStock).Error; err != nil {
+			return fmt.Errorf("failed to fetch updated stock: %w", err)
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to update quantity for stock material ID %d in warehouse ID %d: %w", stockMaterialID, warehouseID, err)
+		return nil, err
 	}
 
-	err = r.db.Model(&data.WarehouseStock{}).Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
-		First(&warehouseStock).Error
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch updated stock: %w", err)
-	}
-
-	return &warehouseStock, nil
+	return &updatedStock, nil
 }
 
 func (r *warehouseStockRepository) AddWarehouseStocks(warehouseID uint, stocks []data.WarehouseStock) error {
