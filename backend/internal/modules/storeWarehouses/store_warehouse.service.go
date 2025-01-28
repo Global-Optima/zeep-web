@@ -1,6 +1,7 @@
 package storeWarehouses
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -195,6 +196,16 @@ func (s *storeWarehouseService) CheckStockNotifications(storeID uint, stock data
 
 func (s *storeWarehouseService) checkStockAndNotify(storeId, stockId uint) error {
 	updatedStock, err := s.repo.GetStockById(storeId, stockId)
+	if err != nil {
+		s.logger.Errorf("failed to fetch stock for %d: %v", stockId, err)
+		return err
+	}
+
+	if updatedStock == nil {
+		s.logger.Errorf("stock with ID %d not found", stockId)
+		return fmt.Errorf("stock with ID %d not found", stockId)
+	}
+
 	if updatedStock.Quantity <= updatedStock.LowStockThreshold {
 		details := &details.StoreWarehouseRunOutDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
@@ -210,10 +221,6 @@ func (s *storeWarehouseService) checkStockAndNotify(storeId, stockId uint) error
 			s.logger.Errorf("failed to send store warehouse runout notification: %v", err)
 			return err
 		}
-	}
-	if err != nil {
-		s.logger.Errorf("failed to fetch stock for %d: %v", stockId, err)
-		return err
 	}
 
 	return nil
