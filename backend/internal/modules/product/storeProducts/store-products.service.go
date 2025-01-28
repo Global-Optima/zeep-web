@@ -20,7 +20,7 @@ type StoreProductService interface {
 	GetStoreProductCategories(storeID uint) ([]categoriesTypes.ProductCategoryDTO, error)
 	GetStoreProductById(storeID, storeProductID uint) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
-	GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]types.StoreProductDetailsDTO, error)
+	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]types.StoreProductDetailsDTO, error)
 	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error)
 	GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error)
 	CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error)
@@ -97,8 +97,8 @@ func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.Store
 	return dtos, nil
 }
 
-func (s *storeProductService) GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]types.StoreProductDetailsDTO, error) {
-	storeProducts, err := s.repo.GetStoreProductsByProductIDs(storeID, productIDs)
+func (s *storeProductService) GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]types.StoreProductDetailsDTO, error) {
+	storeProducts, err := s.repo.GetStoreProductsByStoreProductIDs(storeID, storeProductIDs)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to get store products", err)
 		s.logger.Error(wrappedErr)

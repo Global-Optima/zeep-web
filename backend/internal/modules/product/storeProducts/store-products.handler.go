@@ -225,7 +225,7 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		return
 	}
 
-	storeProducts, err := h.service.GetStoreProductsByProductIDs(storeID, ids)
+	storeProducts, err := h.service.GetStoreProductsByStoreProductIDs(storeID, ids)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve created store products: product not found")
 		return
