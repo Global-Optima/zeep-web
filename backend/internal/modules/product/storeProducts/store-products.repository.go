@@ -14,7 +14,7 @@ import (
 type StoreProductRepository interface {
 	GetStoreProductCategories(storeID uint) ([]data.ProductCategory, error)
 	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
-	GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]data.StoreProduct, error)
+	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
@@ -82,10 +82,10 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 	return &storeProduct, nil
 }
 
-func (r *storeProductRepository) GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]data.StoreProduct, error) {
+func (r *storeProductRepository) GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error) {
 	var storeProducts []data.StoreProduct
 	query := r.db.Model(&data.StoreProduct{}).
-		Where("store_id = ? AND product_id IN (?)", storeID, productIDs).
+		Where("store_products.store_id = ? AND store_products.id IN (?)", storeID, storeProductIDs).
 		Joins("JOIN products ON store_products.product_id = products.id").
 		Preload("Product.ProductSizes").
 		Preload("Product.Category").

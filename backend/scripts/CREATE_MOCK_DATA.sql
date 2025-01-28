@@ -3,11 +3,11 @@ INSERT INTO
     facility_addresses (address, longitude, latitude)
 VALUES
     ('Улица Абая, 50, Алматы', 76.9497, 43.2383),
-    (
-        'Проспект Республики, 25, Астана',
-        73.0948,
-        49.8028
-    );
+    ('Проспект Республики, 25, Астана', 73.0948, 49.8028),
+    ('Улица Байтурсынова, 15, Алматы', 76.9422, 43.2528),
+    ('Улица Сарыарка, 12, Астана', 71.4100, 51.1690),
+    ('Улица Панфилова, 98, Алматы', 76.9271, 43.2575),
+    ('Улица Ш. Уалиханова, 7, Астана', 71.4451, 51.1715);
 
 -- Insert into Units
 INSERT INTO
@@ -512,12 +512,12 @@ VALUES
 
 -- Insert into Store
 
-INSERT INTO stores (name, is_franchise, status, contact_phone, contact_email, store_hours, created_at, updated_at)
+INSERT INTO stores (name, facility_address_id, is_franchise, status, contact_phone, contact_email, store_hours, created_at, updated_at)
 VALUES
-    ('Центральное Кафе', false, 'ACTIVE', '+79001112233', 'central@example.com', '8:00-20:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('Кафе на Углу', true, 'ACTIVE', '+79002223344', 'corner@example.com', '9:00-22:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('Маленькое Кафе', false, 'ACTIVE', '+79003334455', 'smallstore@example.com', '8:00-18:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('Городское Кафе', true, 'ACTIVE', '+79004445566', 'citycoffee@example.com', '7:00-23:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    ('Центральное Кафе', 3, false, 'ACTIVE', '+79001112233', 'central@example.com', '8:00-20:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Кафе на Углу', 4, true, 'ACTIVE', '+79002223344', 'corner@example.com', '9:00-22:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Маленькое Кафе', 5, false, 'ACTIVE', '+79003334455', 'smallstore@example.com', '8:00-18:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('Городское Кафе', 6, true, 'ACTIVE', '+79004445566', 'citycoffee@example.com', '7:00-23:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into StoreAdditives store 1 additives are loaded later in the script
 INSERT INTO store_additives (store_id, additive_id)
@@ -982,6 +982,18 @@ VALUES
         '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
+    ),
+    (
+        'Диар',
+        'Бегисбаев',
+        '+79513334456',
+        'diar@example.com',
+        'MANAGER',
+        'STORE',
+        true,
+        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
     );
 
 -- Insert into StoreEmployee
@@ -998,7 +1010,8 @@ VALUES
     (2, 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (3, 3, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     (4, 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (5, 2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (5, 2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (11, 4, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert into WarehouseEmployee
 INSERT INTO
