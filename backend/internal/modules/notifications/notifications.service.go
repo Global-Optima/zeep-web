@@ -1,12 +1,11 @@
 package notifications
 
 import (
-	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/types"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -31,52 +30,94 @@ type notificationService struct {
 	db          *gorm.DB
 	repo        NotificationRepository
 	roleManager *shared.NotificationRoleMappingManager
+	logger      *zap.SugaredLogger
 }
 
-func NewNotificationService(db *gorm.DB, repo NotificationRepository, roleManager *shared.NotificationRoleMappingManager) NotificationService {
+func NewNotificationService(db *gorm.DB, repo NotificationRepository, roleManager *shared.NotificationRoleMappingManager, logger *zap.SugaredLogger) NotificationService {
 	return &notificationService{
 		db:          db,
 		repo:        repo,
 		roleManager: roleManager,
+		logger:      logger,
 	}
 }
 
-func (s *notificationService) createNotification(eventType data.NotificationEventType, priority data.NotificationPriority, detailsJSON []byte) error {
-	employees, err := s.repo.GetRecipientsForEvent(eventType)
-	if err != nil {
-		return fmt.Errorf("failed to fetch recipients: %w", err)
-	}
+// func (s *notificationService) createNotification(eventType data.NotificationEventType, priority data.NotificationPriority, detailsJSON []byte) error {
+// 	employees, err := s.repo.GetRecipientsForEvent(eventType)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to fetch recipients: %w", err)
+// 	}
 
-	if len(employees) == 0 {
-		return fmt.Errorf("no recipients found for event type %s", eventType)
-	}
+// 	if len(employees) == 0 {
+// 		return fmt.Errorf("no recipients found for event type %s", eventType)
+// 	}
 
-	notification := &data.EmployeeNotification{
-		EventType: eventType,
-		Priority:  priority,
-		Details:   detailsJSON,
-	}
-	if err := s.repo.CreateNotification(notification); err != nil {
-		return fmt.Errorf("failed to create notification: %w", err)
-	}
+// 	notification := &data.EmployeeNotification{
+// 		EventType: eventType,
+// 		Priority:  priority,
+// 		Details:   detailsJSON,
+// 	}
+// 	if err := s.repo.CreateNotification(notification); err != nil {
+// 		return fmt.Errorf("failed to create notification: %w", err)
+// 	}
 
-	recipients := make([]data.EmployeeNotificationRecipient, len(employees))
-	for i, employee := range employees {
-		recipients[i] = data.EmployeeNotificationRecipient{
-			NotificationID: notification.ID,
-			EmployeeID:     employee.ID,
+// 	recipients := make([]data.EmployeeNotificationRecipient, len(employees))
+// 	for i, employee := range employees {
+// 		recipients[i] = data.EmployeeNotificationRecipient{
+// 			NotificationID: notification.ID,
+// 			EmployeeID:     employee.ID,
+// 		}
+// 	}
+// 	return s.repo.CreateNotificationRecipients(recipients)
+// }
+
+func (s *notificationService) createNotificationAsync(eventType data.NotificationEventType, priority data.NotificationPriority, detailsJSON []byte) {
+	go func() {
+		employees, err := s.repo.GetRecipientsForEvent(eventType)
+		if err != nil {
+			s.logger.Errorf("Failed to fetch recipients for event %s: %v", eventType, err)
+			return
 		}
-	}
-	return s.repo.CreateNotificationRecipients(recipients)
+
+		if len(employees) == 0 {
+			s.logger.Infof("No recipients found for event type %s", eventType)
+			return
+		}
+
+		notification := &data.EmployeeNotification{
+			EventType: eventType,
+			Priority:  priority,
+			Details:   detailsJSON,
+		}
+
+		if err := s.repo.CreateNotification(notification); err != nil {
+			s.logger.Errorf("Failed to create notification for event type %s: %v", eventType, err)
+			return
+		}
+
+		recipients := make([]data.EmployeeNotificationRecipient, len(employees))
+		for i, employee := range employees {
+			recipients[i] = data.EmployeeNotificationRecipient{
+				NotificationID: notification.ID,
+				EmployeeID:     employee.ID,
+			}
+		}
+
+		if err := s.repo.CreateNotificationRecipients(recipients); err != nil {
+			s.logger.Errorf("Failed to create recipients for notification %d: %v", notification.ID, err)
+		}
+	}()
 }
 
+// notifiers
 func (s *notificationService) NotifyStockRequestStatusUpdated(details details.NotificationDetails) error {
 	notificationDetails, err := details.ToDetails()
 	if err != nil {
 		return err
 	}
 
-	return s.createNotification(data.STOCK_REQUEST_STATUS_UPDATED, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.STOCK_REQUEST_STATUS_UPDATED, data.MEDIUM, notificationDetails)
+	return nil
 }
 
 func (s *notificationService) NotifyNewOrder(details details.NotificationDetails) error {
@@ -84,8 +125,8 @@ func (s *notificationService) NotifyNewOrder(details details.NotificationDetails
 	if err != nil {
 		return err
 	}
-
-	return s.createNotification(data.NEW_ORDER, data.LOW, notificationDetails)
+	s.createNotificationAsync(data.NEW_ORDER, data.LOW, notificationDetails)
+	return nil
 }
 
 func (s *notificationService) NotifyStoreWarehouseRunOut(details details.NotificationDetails) error {
@@ -94,7 +135,8 @@ func (s *notificationService) NotifyStoreWarehouseRunOut(details details.Notific
 		return err
 	}
 
-	return s.createNotification(data.STORE_WAREHOUSE_RUN_OUT, data.HIGH, notificationDetails)
+	s.createNotificationAsync(data.STORE_WAREHOUSE_RUN_OUT, data.HIGH, notificationDetails)
+	return nil
 }
 
 func (s *notificationService) NotifyCentralCatalogUpdate(details details.NotificationDetails) error {
@@ -103,7 +145,8 @@ func (s *notificationService) NotifyCentralCatalogUpdate(details details.Notific
 		return err
 	}
 
-	return s.createNotification(data.CENTRAL_CATALOG_UPDATE, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.CENTRAL_CATALOG_UPDATE, data.MEDIUM, notificationDetails)
+	return nil
 }
 
 func (s *notificationService) NotifyStockExpiration(details details.NotificationDetails) error {
@@ -112,7 +155,8 @@ func (s *notificationService) NotifyStockExpiration(details details.Notification
 		return err
 	}
 
-	return s.createNotification(data.WAREHOUSE_STOCK_EXPIRATION, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.WAREHOUSE_STOCK_EXPIRATION, data.MEDIUM, notificationDetails)
+	return nil
 }
 
 func (s *notificationService) NotifyOutOfStock(details details.NotificationDetails) error {
@@ -121,7 +165,8 @@ func (s *notificationService) NotifyOutOfStock(details details.NotificationDetai
 		return err
 	}
 
-	return s.createNotification(data.WAREHOUSE_OUT_OF_STOCK, data.HIGH, notificationDetails)
+	s.createNotificationAsync(data.WAREHOUSE_OUT_OF_STOCK, data.HIGH, notificationDetails)
+	return nil
 }
 
 func (s *notificationService) NotifyNewStockRequest(details details.NotificationDetails) error {
@@ -130,7 +175,8 @@ func (s *notificationService) NotifyNewStockRequest(details details.Notification
 		return err
 	}
 
-	return s.createNotification(data.NEW_STOCK_REQUEST, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.NEW_STOCK_REQUEST, data.MEDIUM, notificationDetails)
+	return nil
 }
 
 func (s *notificationService) NotifyPriceChange(details details.NotificationDetails) error {
@@ -139,7 +185,8 @@ func (s *notificationService) NotifyPriceChange(details details.NotificationDeta
 		return err
 	}
 
-	return s.createNotification(data.PRICE_CHANGE, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.PRICE_CHANGE, data.MEDIUM, notificationDetails)
+	return nil
 }
 
 // Base notification module methods

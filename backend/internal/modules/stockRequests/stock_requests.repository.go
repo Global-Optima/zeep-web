@@ -24,7 +24,7 @@ type StockRequestRepository interface {
 	AddStoreComment(requestID uint, comment string) error
 	AddWarehouseComment(requestID uint, comment string) error
 
-	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) error
+	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) (*data.WarehouseStock, error)
 	AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
@@ -106,6 +106,8 @@ func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.Stoc
 	var stockRequest data.StockRequest
 
 	err := r.db.Model(&data.StockRequest{}).
+		Preload("Warehouse").
+		Preload("Store").
 		Preload("Warehouse.FacilityAddress").
 		Preload("Store.FacilityAddress").
 		Preload("Ingredients.StockMaterial").
@@ -128,10 +130,27 @@ func (r *stockRequestRepository) UpdateStockRequestStatus(stockRequest *data.Sto
 	return r.db.Model(&data.StockRequest{}).Where("id = ?", stockRequest.ID).Update("status", stockRequest.Status).Error
 }
 
-func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) error {
-	return r.db.Model(&data.WarehouseStock{}).
-		Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).
-		Update("quantity", gorm.Expr("quantity - ?", quantity)).Error
+func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) (*data.WarehouseStock, error) {
+	var updatedStock data.WarehouseStock
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&data.WarehouseStock{}).
+			Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).
+			Update("quantity", gorm.Expr("quantity - ?", quantity)).Error; err != nil {
+			return fmt.Errorf("failed to update stock quantity: %w", err)
+		}
+		if err := tx.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).
+			First(&updatedStock).Error; err != nil {
+			return fmt.Errorf("failed to fetch updated stock: %w", err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &updatedStock, nil
 }
 
 func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error {

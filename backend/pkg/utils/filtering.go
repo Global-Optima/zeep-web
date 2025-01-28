@@ -15,6 +15,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	DEFAULT_SORT       = "created_at DESC, updated_at DESC"
+	SORT_DEFAULT_QUERY = "createdAt,DESC"
+)
+
 // Pagination struct can be included into a DTO as a pointer
 type Pagination struct {
 	Page       int `json:"page"`
@@ -92,10 +97,6 @@ func ApplySortedPaginationForModel[T any](query *gorm.DB, pagination *Pagination
 	query, err = ApplyPagination(query, pagination, model)
 	if err != nil {
 		return nil, err
-	}
-
-	if sort == nil {
-		return query, fmt.Errorf("sort is not binded")
 	}
 
 	return query.Scopes(sort.SortGorm()), nil
@@ -195,20 +196,14 @@ func (s *Sort) SortGorm() func(db *gorm.DB) *gorm.DB {
 }
 
 func defaultGormSort(db *gorm.DB) *gorm.DB {
-	cfg := config.GetConfig()
-
-	orderClause := fmt.Sprintf("%s %s",
-		camelToSnake(cfg.Filtering.DefaultSortParameter), cfg.Filtering.DefaultSortDirection)
+	orderClause := DEFAULT_SORT
 	return db.Order(orderClause)
 }
 
 func ParseSortParamsForModel(c *gin.Context, model interface{}) (*Sort, error) {
-	cfg := config.GetConfig()
 	var field, order string
 
-	defaultQuery := fmt.Sprintf("%s,%s",
-		cfg.Filtering.DefaultSortParameter, cfg.Filtering.DefaultSortDirection)
-	sortBy := c.DefaultQuery("sortBy", defaultQuery)
+	sortBy := c.DefaultQuery("sortBy", SORT_DEFAULT_QUERY)
 
 	parts := strings.Split(sortBy, ",")
 	if len(parts) == 2 {
@@ -217,6 +212,10 @@ func ParseSortParamsForModel(c *gin.Context, model interface{}) (*Sort, error) {
 		field, order = parts[0], "ASC"
 	} else {
 		return nil, fmt.Errorf("invalid sort by query")
+	}
+
+	if sortBy == SORT_DEFAULT_QUERY {
+		return nil, nil
 	}
 
 	if order != "ASC" && order != "DESC" {

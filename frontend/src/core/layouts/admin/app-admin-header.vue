@@ -60,7 +60,7 @@
 
 		<div
 			v-if="currentEmployee"
-			class="flex justify-end items-center gap-4 w-full"
+			class="flex justify-end items-center gap-2 w-full"
 		>
 			<AppAdminSearch :current-employee="currentEmployee" />
 			<AppAdminNotificationsPopover :current-employee="currentEmployee" />

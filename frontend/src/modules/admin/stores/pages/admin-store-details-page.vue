@@ -5,11 +5,11 @@
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
 	/>
-	<div v-else>Loading...</div>
+	<div v-else>Загрузка...</div>
 </template>
 
 <script lang="ts" setup>
-import { getRouteName } from '@/core/config/routes.config'
+import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminStoreDetailsForm from '@/modules/admin/stores/components/details/admin-store-details-form.vue'
 import type { UpdateStoreDTO } from '@/modules/stores/models/stores-dto.model'
 import { storesService } from '@/modules/stores/services/stores.service'
@@ -19,6 +19,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const { toast } = useToast()
 
 const storeId = route.params.id as string
 
@@ -31,16 +32,32 @@ const { data: storeData } = useQuery({
 })
 
 const updateMutation = useMutation({
-  mutationFn: (updatedData: UpdateStoreDTO) => storesService.updateStore(Number(storeId), updatedData),
+	mutationFn: (updatedData: UpdateStoreDTO) =>
+		storesService.updateStore(Number(storeId), updatedData),
+	onMutate: () => {
+		toast({
+			title: 'Обновление...',
+			description: 'Пожалуйста, подождите, данные обновляются.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['stores'] })
-		queryClient.invalidateQueries({queryKey: ['store', storeId]})
-		router.push({name: getRouteName("ADMIN_STORES")})
+		queryClient.invalidateQueries({ queryKey: ['store', storeId] })
+		toast({
+			title: 'Успех!',
+			description: 'Данные магазина успешно обновлены.',
+		})
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при обновлении данных магазина.',
+			variant: 'destructive',
+		})
 	},
 })
 
 function handleUpdate(updatedData: UpdateStoreDTO) {
-  console.log("HERE")
 	updateMutation.mutate(updatedData)
 }
 

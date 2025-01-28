@@ -61,10 +61,9 @@ import KioskDetailsLoading from '@/modules/kiosk/products/components/details/kio
 import KioskDetailsProductImage from '@/modules/kiosk/products/components/details/kiosk-details-product-image.vue'
 import KioskDetailsProductInfo, { type KioskDetailsEnergyDTO } from '@/modules/kiosk/products/components/details/kiosk-details-product-info.vue'
 
-import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
-import type { StoreAdditiveCategoryDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
-import type { StoreProductDetailsDTO, StoreProductSizeDTO } from '@/modules/admin/store-products/models/store-products.model'
+import type { StoreProductDetailsDTO, StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 
 // Define props
@@ -82,8 +81,8 @@ const cartStore = useCartStore();
 // Reactive state
 const productDetails = ref<StoreProductDetailsDTO | null>(null);
 const additives = ref<StoreAdditiveCategoryDTO[]>([]);
-const selectedSize = ref<StoreProductSizeDTO | null>(null);
-const selectedAdditives = ref<Record<number, AdditiveCategoryItemDTO[]>>({});
+const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null);
+const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({});
 const quantity = ref<number>(1);
 const isLoading = ref<boolean>(true);
 const error = ref<string | null>(null);
@@ -123,11 +122,11 @@ const fetchAdditives = async (sizeId: number) => {
 // Compute total price
 const totalPrice = computed(() => {
   if (!selectedSize.value) return 0;
-  const basePrice = selectedSize.value.basePrice;
+  const storePrice = selectedSize.value.storePrice;
   const additivePrice = Object.values(selectedAdditives.value)
     .flat()
-    .reduce((sum, add) => sum + add.price, 0);
-  return (basePrice + additivePrice) * quantity.value;
+    .reduce((sum, add) => sum + add.storePrice, 0);
+  return (storePrice + additivePrice) * quantity.value;
 });
 
 const calculatedEnergy: Ref<KioskDetailsEnergyDTO> = computed(() => {
@@ -140,10 +139,10 @@ const calculatedEnergy: Ref<KioskDetailsEnergyDTO> = computed(() => {
   const totalEnergy = ingredients.reduce(
     (totals, ingredient) => {
       return {
-        ccal: totals.ccal + ingredient.calories,
-        proteins: totals.proteins + ingredient.proteins,
-        carbs: totals.carbs + ingredient.carbs,
-        fats: totals.fats + ingredient.fat,
+        ccal: totals.ccal + ingredient.ingredient.calories,
+        proteins: totals.proteins + ingredient.ingredient.proteins,
+        carbs: totals.carbs + ingredient.ingredient.carbs,
+        fats: totals.fats + ingredient.ingredient.fat,
       };
     },
     { ccal: 0, proteins: 0, carbs: 0, fats: 0 }
@@ -152,10 +151,8 @@ const calculatedEnergy: Ref<KioskDetailsEnergyDTO> = computed(() => {
   return totalEnergy;
 });
 
-
-
 // Handle size selection
-const onSizeSelect = async (size: StoreProductSizeDTO) => {
+const onSizeSelect = async (size: StoreProductSizeDetailsDTO) => {
   if (selectedSize.value?.id === size.id) return;
   selectedSize.value = size;
   selectedAdditives.value = {};
@@ -163,7 +160,7 @@ const onSizeSelect = async (size: StoreProductSizeDTO) => {
 };
 
 // Toggle additive selection
-const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItemDTO) => {
+const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[categoryId] || [];
   const isSelected = current.some((a) => a.id === additive.id);
   if (isSelected) {

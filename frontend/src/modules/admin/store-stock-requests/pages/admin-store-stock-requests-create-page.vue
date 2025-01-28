@@ -17,26 +17,47 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
-const {toast} = useToast()
+const { toast } = useToast()
 
 const createMutation = useMutation({
-	mutationFn: (dto: CreateStockRequestDTO) => {
-    return stockRequestsService.createStockRequest(dto)
-  },
+	mutationFn: (dto: CreateStockRequestDTO) => stockRequestsService.createStockRequest(dto),
+	onMutate: () => {
+		toast({
+			title: 'Создание...',
+			description: 'Запрос на склад создается. Пожалуйста, подождите.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['stock-requests'] })
-		router.push({ name: getRouteName("ADMIN_STORE_STOCK_REQUESTS") })
+		toast({
+			title: 'Успех!',
+			description: 'Запрос на склад успешно создан.',
+		})
+		router.push({ name: getRouteName('ADMIN_STORE_STOCK_REQUESTS') })
 	},
-  onError:(error: AxiosError<{error: string}>) => {
-      const message =  error.response?.data.error ?? "Ошибка при создании" // TODO: reconsider the error messages (localization)
-      toast({description: message, variant: "destructive"})
-  }
+	onError: (error: AxiosError<{ error: string }>) => {
+		const message = error.response?.data.error ?? 'Ошибка при создании запроса на склад.'
+		toast({
+			title: 'Ошибка',
+			description: message,
+			variant: 'destructive',
+		})
+	},
 })
 
 function handleCreate(items: StockRequestStockMaterialDTO[]) {
-  const dto: CreateStockRequestDTO = {
-    stockMaterials: items
-  }
+	if (items.length === 0) {
+		toast({
+			title: 'Ошибка',
+			description: 'Список материалов пуст. Пожалуйста, добавьте материалы перед отправкой.',
+			variant: 'destructive',
+		})
+		return
+	}
+
+	const dto: CreateStockRequestDTO = {
+		stockMaterials: items,
+	}
 
 	createMutation.mutate(dto)
 }

@@ -3,10 +3,10 @@ package product
 import (
 	"errors"
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -217,6 +217,7 @@ func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, add
 			AdditiveID:    additive.AdditiveID,
 			IsDefault:     additive.IsDefault,
 		}
+		logrus.Info(newAdditives[i].IsDefault)
 	}
 
 	if err := tx.Create(newAdditives).Error; err != nil {

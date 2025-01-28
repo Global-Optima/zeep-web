@@ -51,11 +51,29 @@
   }, 
   "notification": {
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
+      "stockRequestStatus": {
+          "created": "Created",
+          "processed": "Processed",
+          "inDelivery": "In Delivery",
+          "completed": "Completed",
+          "rejectedByStore": "Rejected by Store",
+          "rejectedByWarehouse": "Rejected by Warehouse",
+          "acceptedWithChange": "Accepted with Change"
+        },
+
       "newOrder": "A new order has been placed by *{{.CustomerName}}*.",
       "storeWarehouseRunOut": "The warehouse is running out of *{{.StockItem}}*.",
+
       "centralCatalogUpdate": "The central catalog was updated: *{{.Changes}}*.",
+      "centralCatalogUpdateDetails": {
+        "nameChange": "Name changed from '{{.OldName}}' to '{{.NewName}}'",
+        "descriptionChange": "Description updated from '{{.OldDescription}}' to '{{.NewDescription}}'",
+        "imageUrlChange": "Image URL updated from '{{.OldImageURL}}' to '{{.NewImageURL}}'",
+        "categoryChange": "Category ID updated from {{.OldCategoryID}} to {{.NewCategoryID}}"
+      },
+
       "stockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",
-      "outOfStock": "*{{.ItemName}}* is out of stock.",
+      "warehouseOutOfStock": "*{{.ItemName}}* is running out of stock.",
       "newStockRequest": "A new stock request was submitted by *{{.RequesterName}}*.",
       "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*."
   }

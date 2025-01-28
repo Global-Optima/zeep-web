@@ -22,7 +22,7 @@ type WarehouseStockRepository interface {
 	ConvertInventoryItemsToStockRequest(items []types.ReceiveWarehouseStockMaterial) ([]data.StockRequestIngredient, error)
 
 	AddToWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error
-	DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error
+	DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) (*data.WarehouseStock, error)
 	GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error)
 	GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID uint) (*data.AggregatedWarehouseStock, error)
 	AddWarehouseStocks(warehouseID uint, stocks []data.WarehouseStock) error
@@ -30,7 +30,7 @@ type WarehouseStockRepository interface {
 	UpdateWarehouseStock(stock *data.WarehouseStock) error
 	GetWarehouseStockByID(warehouseID, stockMaterialID uint) (*data.WarehouseStock, error)
 	GetWarehouseStocksForNotifications(warehouseID uint) ([]data.WarehouseStock, error)
-	UpdateStockQuantity(stockID uint, warehouseID uint, quantity float64) error
+	UpdateStockQuantity(stockID uint, warehouseID uint, quantity float64) (*data.WarehouseStock, error)
 	UpdateExpirationDate(stockMaterialID, warehouseID uint, newExpirationDate time.Time) error
 }
 
@@ -207,17 +207,27 @@ func (r *warehouseStockRepository) AddToWarehouseStock(warehouseID, stockMateria
 	return r.db.Model(stock).Update("quantity", gorm.Expr("quantity + ?", quantityInPackages)).Error
 }
 
-func (r *warehouseStockRepository) DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error {
+func (r *warehouseStockRepository) DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) (*data.WarehouseStock, error) {
 	stock := &data.WarehouseStock{}
 	if err := r.db.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).First(stock).Error; err != nil {
-		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
+		return nil, fmt.Errorf("failed to fetch warehouse stock: %w", err)
 	}
 
 	if stock.Quantity < quantityInPackages {
-		return fmt.Errorf("insufficient stock for StockMaterialID %d in WarehouseID %d", stockMaterialID, warehouseID)
+		return nil, fmt.Errorf("insufficient stock for StockMaterialID %d in WarehouseID %d: available %.2f, requested %.2f", stockMaterialID, warehouseID, stock.Quantity, quantityInPackages)
 	}
 
-	return r.db.Model(stock).Update("quantity", gorm.Expr("quantity - ?", quantityInPackages)).Error
+	if err := r.db.Model(stock).
+		Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).
+		Update("quantity", gorm.Expr("quantity - ?", quantityInPackages)).Error; err != nil {
+		return nil, fmt.Errorf("failed to deduct stock for StockMaterialID %d in WarehouseID %d: %w", stockMaterialID, warehouseID, err)
+	}
+
+	if err := r.db.Preload("StockMaterial").Preload("Warehouse").Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).First(stock).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch updated stock: %w", err)
+	}
+
+	return stock, nil
 }
 
 func (r *warehouseStockRepository) GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error) {
@@ -475,28 +485,40 @@ func (r *warehouseStockRepository) UpdateExpirationDate(stockMaterialID, warehou
 	return nil
 }
 
-func (r *warehouseStockRepository) UpdateStockQuantity(stockMaterialID, warehouseID uint, quantity float64) error {
-	var warehouseStock data.WarehouseStock
-	err := r.db.Model(&data.WarehouseStock{}).
-		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
-		First(&warehouseStock).Error
+func (r *warehouseStockRepository) UpdateStockQuantity(stockMaterialID, warehouseID uint, quantity float64) (*data.WarehouseStock, error) {
+	var updatedStock data.WarehouseStock
 
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("stock material ID %d not found in warehouse ID %d", stockMaterialID, warehouseID)
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var warehouseStock data.WarehouseStock
+		if err := tx.Model(&data.WarehouseStock{}).
+			Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+			First(&warehouseStock).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("stock material ID %d not found in warehouse ID %d", stockMaterialID, warehouseID)
+			}
+			return fmt.Errorf("failed to check warehouse stock existence: %w", err)
 		}
-		return fmt.Errorf("failed to check warehouse stock existence: %w", err)
-	}
 
-	err = r.db.Model(&data.WarehouseStock{}).
-		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
-		Update("quantity", quantity).Error
+		if err := tx.Model(&data.WarehouseStock{}).
+			Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+			Update("quantity", quantity).Error; err != nil {
+			return fmt.Errorf("failed to update quantity for stock material ID %d in warehouse ID %d: %w", stockMaterialID, warehouseID, err)
+		}
+
+		if err := tx.Model(&data.WarehouseStock{}).Preload("StockMaterial").
+			Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
+			First(&updatedStock).Error; err != nil {
+			return fmt.Errorf("failed to fetch updated stock: %w", err)
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		return fmt.Errorf("failed to update quantity for stock material ID %d in warehouse ID %d: %w", stockMaterialID, warehouseID, err)
+		return nil, err
 	}
 
-	return nil
+	return &updatedStock, nil
 }
 
 func (r *warehouseStockRepository) AddWarehouseStocks(warehouseID uint, stocks []data.WarehouseStock) error {

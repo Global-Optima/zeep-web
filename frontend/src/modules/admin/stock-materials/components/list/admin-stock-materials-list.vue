@@ -5,7 +5,7 @@
 				<TableHead>Название</TableHead>
 				<TableHead>Категория</TableHead>
 				<TableHead>Ингредиент</TableHead>
-				<TableHead>Ед. измерения</TableHead>
+				<TableHead>Упаковка</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -18,7 +18,7 @@
 				<TableCell class="py-4 font-medium">{{ stockMaterial.name }}</TableCell>
 				<TableCell>{{ stockMaterial.category.name }}</TableCell>
 				<TableCell>{{ stockMaterial.ingredient.name }}</TableCell>
-				<TableCell>{{ stockMaterial.unit.name }}</TableCell>
+				<TableCell>{{ stockMaterial.size }} {{ stockMaterial.unit.name }}</TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>

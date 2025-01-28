@@ -210,7 +210,7 @@ func (r *storeWarehouseRepository) GetStockListByIDs(storeID uint, stockIds []ui
 		Preload("Ingredient.Unit").
 		Joins("JOIN store_warehouses ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
 		Joins("JOIN ingredients ON store_warehouse_stocks.ingredient_id = ingredients.id").
-		Where("store_warehouses.store_id = ? AND store_warehouse_stock.id IN (?)", storeID, stockIds).
+		Where("store_warehouses.store_id = ? AND store_warehouse_stocks.id IN (?)", storeID, stockIds).
 		Preload("Ingredient").
 		Preload("StoreWarehouse")
 
@@ -233,9 +233,12 @@ func (r *storeWarehouseRepository) GetStockById(storeId, stockId uint) (*data.St
 		return nil, fmt.Errorf("store warhouse stock id cannot be 0")
 	}
 
-	dbQuery := r.db.Preload("Ingredient.Unit").
+	dbQuery := r.db.Model(&data.StoreWarehouseStock{}).
+		Preload("Ingredient").
+		Preload("Ingredient.Unit").
 		Preload("Ingredient.IngredientCategory").
-		Preload("StoreWarehouse")
+		Preload("StoreWarehouse").
+		Preload("StoreWarehouse.Store")
 
 	if err := dbQuery.
 		Joins("JOIN store_warehouses ON store_warehouses.id = store_warehouse_stocks.store_warehouse_id").

@@ -32,8 +32,11 @@
 
 		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<Button variant="outline">Экспорт</Button>
-			<Button @click="addStore">Добавить</Button>
+			<Button
+				variant="outline"
+				disabled
+				>Экспорт</Button
+			>
 		</div>
 	</div>
 </template>
@@ -42,12 +45,10 @@
 import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
-import { getRouteName } from '@/core/config/routes.config'
 import type { GetStoreEmployeesFilter } from '@/modules/admin/store-employees/models/employees.models'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 // Props and Emit
 const props = defineProps<{ filter: GetStoreEmployeesFilter }>()
@@ -77,11 +78,5 @@ const applyFilter = (filterType: string) => {
 		localFilter.value.isActive = false
 	}
 	emit('update:filter', { ...localFilter.value })
-}
-
-// Add Store Navigation
-const router = useRouter()
-const addStore = () => {
-	router.push({ name: getRouteName('ADMIN_STORE_EMPLOYEE_CREATE') })
 }
 </script>

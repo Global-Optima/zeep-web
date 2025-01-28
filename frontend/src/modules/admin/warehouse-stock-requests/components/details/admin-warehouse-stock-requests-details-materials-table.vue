@@ -1,15 +1,20 @@
 <template>
 	<Card>
 		<CardHeader>
-			<CardTitle>Список материалов</CardTitle>
-			<CardDescription class="mt-2"> Материалы представленные в заказе </CardDescription>
+			<div class="flex justify-between items-start gap-4">
+				<div>
+					<CardTitle>Список материалов</CardTitle>
+					<CardDescription class="mt-2"> Материалы представленные в заказе </CardDescription>
+				</div>
+			</div>
 		</CardHeader>
 
 		<CardContent>
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead>Материал</TableHead>
+						<TableHead>Товар</TableHead>
+						<TableHead>Упаковка</TableHead>
 						<TableHead>Количество</TableHead>
 					</TableRow>
 				</TableHeader>
@@ -19,6 +24,7 @@
 						:key="index"
 					>
 						<TableCell>{{ item.stockMaterial.name }}</TableCell>
+						<TableCell>{{ item.stockMaterial.size }} {{ item.stockMaterial.unit.name }}</TableCell>
 						<TableCell>{{ item.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>
@@ -44,7 +50,6 @@ import {
   TableRow
 } from '@/core/components/ui/table'
 import { type StockRequestResponse } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
-
 
 const {stockRequest} = defineProps<{
   stockRequest: StockRequestResponse
