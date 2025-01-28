@@ -33,17 +33,17 @@ const onRouteClick = (routeKey: RouteKey) => {
 	<div>
 		<Button
 			variant="outline"
-			size="sm"
-			@click="open = true"
-			class="gap-2"
+			size="icon"
+			class="rounded-md"
+			@click="open=true"
 		>
-			<Search class="w-3.5 h-3.5" />
-			Поиск
+			<Search class="size-[16px]" />
+			<span class="sr-only">Toggle user menu</span>
 		</Button>
 
 		<CommandDialog v-model:open="open">
 			<CommandInput placeholder="Поиск по платформе" />
-			<CommandList>
+			<CommandList class="p-1">
 				<CommandEmpty>Ничего не найдено</CommandEmpty>
 				<CommandGroup heading="Страницы">
 					<CommandItem
@@ -52,11 +52,7 @@ const onRouteClick = (routeKey: RouteKey) => {
 						:value="page.name"
 						@click="onRouteClick(page.routeKey)"
 					>
-						<div class="flex items-center gap-3 py-1 w-ful">
-							<component
-								:is="page.icon"
-								class="w-5 h-5 text-gray-600"
-							/>
+						<div class="flex items-center gap-4 py-1.5 w-full">
 							{{ page.name }}
 						</div>
 					</CommandItem>

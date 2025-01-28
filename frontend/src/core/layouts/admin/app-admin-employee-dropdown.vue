@@ -42,7 +42,7 @@ const onLogoutClick = () => {
 			<Button
 				variant="outline"
 				size="icon"
-				class="rounded-full"
+				class="rounded-md"
 			>
 				<User class="size-[18px]" />
 				<span class="sr-only">Toggle user menu</span>
