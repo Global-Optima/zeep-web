@@ -63,7 +63,7 @@
 		},
 
 		"stockExpiration": "*{{.ItemName}}* истекает *{{.ExpirationDate}}*.",
-		"outOfStock": "*{{.ItemName}}* отсутствует в наличии.",
+		"warehouseOutOfStock": "*{{.ItemName}}* отсутствует в наличии.",
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",
 		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."
 	}

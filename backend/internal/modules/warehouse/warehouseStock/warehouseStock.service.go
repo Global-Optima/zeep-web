@@ -10,6 +10,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
+	"go.uber.org/zap"
 )
 
 type WarehouseStockService interface {
@@ -33,14 +34,20 @@ type warehouseStockService struct {
 	stockMaterialRepo   stockMaterial.StockMaterialRepository
 	barcodeRepo         barcode.BarcodeRepository
 	notificationService notifications.NotificationService
+	logger              *zap.SugaredLogger
 }
 
-func NewWarehouseStockService(repo WarehouseStockRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, barcodeRepo barcode.BarcodeRepository, notificationService notifications.NotificationService) WarehouseStockService {
+func NewWarehouseStockService(repo WarehouseStockRepository,
+	stockMaterialRepo stockMaterial.StockMaterialRepository,
+	barcodeRepo barcode.BarcodeRepository,
+	notificationService notifications.NotificationService,
+	logger *zap.SugaredLogger) WarehouseStockService {
 	return &warehouseStockService{
 		repo:                repo,
 		stockMaterialRepo:   stockMaterialRepo,
 		barcodeRepo:         barcodeRepo,
 		notificationService: notificationService,
+		logger:              logger,
 	}
 }
 
@@ -127,7 +134,17 @@ func (s *warehouseStockService) AddWarehouseStockMaterial(req types.AdjustWareho
 }
 
 func (s *warehouseStockService) DeductFromStock(req types.AdjustWarehouseStock) error {
-	return s.repo.DeductFromWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
+	stock, err := s.repo.DeductFromWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
+	if err != nil {
+		return fmt.Errorf("failed to deduct from stock: %w", err)
+	}
+
+	err = s.checkStockAndNotify(stock)
+	if err != nil {
+		s.logger.Errorf("failed to check stock and notify: %w", err)
+	}
+
+	return nil
 }
 
 func (s *warehouseStockService) GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error) {
@@ -173,20 +190,22 @@ func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehou
 }
 
 func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error {
-	// Validate input
 	if dto.Quantity == nil && dto.ExpirationDate == nil {
 		return fmt.Errorf("nothing to update")
 	}
 
-	// Update quantity if provided
 	if dto.Quantity != nil {
-		err := s.repo.UpdateStockQuantity(stockMaterialID, warehouseID, *dto.Quantity)
+		stock, err := s.repo.UpdateStockQuantity(stockMaterialID, warehouseID, *dto.Quantity)
 		if err != nil {
 			return fmt.Errorf("failed to update stock quantity: %w", err)
 		}
+
+		err = s.checkStockAndNotify(stock)
+		if err != nil {
+			s.logger.Errorf("failed to check stock and notify: %w", err)
+		}
 	}
 
-	// Update expiration date if provided
 	if dto.ExpirationDate != nil {
 		err := s.repo.UpdateExpirationDate(stockMaterialID, warehouseID, *dto.ExpirationDate)
 		if err != nil {
@@ -227,6 +246,25 @@ func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock 
 		err := s.notificationService.NotifyStockExpiration(details)
 		if err != nil {
 			return fmt.Errorf("failed to send stock expiration notification: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *warehouseStockService) checkStockAndNotify(stock *data.WarehouseStock) error {
+	if stock.Quantity < stock.StockMaterial.SafetyStock {
+		details := &details.OutOfStockDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           stock.WarehouseID,
+				FacilityName: stock.Warehouse.Name,
+			},
+			ItemName: stock.StockMaterial.Name,
+		}
+
+		err := s.notificationService.NotifyOutOfStock(details)
+		if err != nil {
+			return fmt.Errorf("failed to send out of stock notification: %w", err)
 		}
 	}
 

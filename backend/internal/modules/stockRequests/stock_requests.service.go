@@ -240,6 +240,7 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
 		StockRequestID: request.ID,
 		RequestStatus:  string(request.Status),
 	}
+
 	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
 	if err != nil {
 		return fmt.Errorf("failed to send notification: %w", err)
@@ -249,9 +250,7 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
 }
 
 func (s *stockRequestService) handleProcessedStatus(request *data.StockRequest) error {
-	// TODO: Add notification logic for warehouse staff regarding the transition to PROCESSED
 	fmt.Printf("Stock request ID %d is now PROCESSED. Notifications will be added.\n", request.ID)
-
 	return nil
 }
 
@@ -377,13 +376,34 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 			return fmt.Errorf("failed to fetch warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 
+		details := &details.OutOfStockDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           request.WarehouseID,
+				FacilityName: request.Warehouse.Name,
+			},
+			ItemName: ingredient.StockMaterial.Name,
+		}
+
 		if stockQuantity < ingredient.Quantity {
+			err := s.notificationService.NotifyOutOfStock(details)
+			if err != nil {
+				return fmt.Errorf("failed to send out of stock notification: %w", err)
+			}
+
 			return fmt.Errorf("insufficient stock for material '%s' (ID: %d). Required: %.2f, Available: %.2f",
 				ingredient.StockMaterial.Name, ingredient.StockMaterialID, ingredient.Quantity, stockQuantity)
 		}
 
-		if err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity); err != nil {
+		updatedStock, err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity)
+		if err != nil {
 			return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+
+		if updatedStock.Quantity < ingredient.StockMaterial.SafetyStock {
+			err := s.notificationService.NotifyOutOfStock(details)
+			if err != nil {
+				return fmt.Errorf("failed to send out of stock notification: %w", err)
+			}
 		}
 	}
 	return nil
@@ -439,11 +459,11 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 			))
 		}
 
-		if originalIngredient != nil && originalIngredient.Quantity > 0 {
-			if err := s.repo.DeductWarehouseStock(originalIngredient.StockMaterialID, request.WarehouseID, originalIngredient.Quantity); err != nil {
-				return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", originalIngredient.StockMaterialID, err)
-			}
-		}
+		// if originalIngredient != nil && originalIngredient.Quantity > 0 {
+		// 	if err := s.repo.DeductWarehouseStock(originalIngredient.StockMaterialID, request.WarehouseID, originalIngredient.Quantity); err != nil {
+		// 		return fmt.Errorf("failed to deduct warehouse stock for stock material ID %d: %w", originalIngredient.StockMaterialID, err)
+		// 	}
+		// }
 
 		if item.Quantity > 0 {
 			if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
