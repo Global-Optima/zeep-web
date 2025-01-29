@@ -15,7 +15,7 @@ type StockRequestRepository interface {
 	CreateStockRequest(stockRequest *data.StockRequest) error
 	AddIngredientsToStockRequest(ingredients []data.StockRequestIngredient) error
 	DeleteStockRequestIngredient(ingredientID uint) error
-	ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error
+	ReplaceStockRequestIngredients(request data.StockRequest, ingredients []data.StockRequestIngredient) error
 	UpdateStockRequestIngredientDates(stockRequestIngredientID uint, dates *types.UpdateIngredientDates) error
 
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error)
@@ -216,15 +216,32 @@ func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWar
 	return &storeWarehouse, nil
 }
 
-func (r *stockRequestRepository) ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error {
+func (r *stockRequestRepository) ReplaceStockRequestIngredients(request data.StockRequest, ingredients []data.StockRequestIngredient) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		var warehouseStocks []data.WarehouseStock
+		err := tx.Find(&warehouseStocks, request.WarehouseID).Error
+		if err != nil {
+			return fmt.Errorf("failed to fetch the warehouse stock: %w", err)
+		}
 
-		if err := tx.Where("stock_request_id = ?", requestID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
-			return fmt.Errorf("failed to delete existing ingredients for stock request ID %d: %w", requestID, err)
+		warehouseStockMap := make(map[uint]bool)
+		for _, stock := range warehouseStocks {
+			warehouseStockMap[stock.StockMaterialID] = true
+		}
+
+		// Ensure all requested materials exist in the warehouse
+		for _, ingredient := range ingredients {
+			if !warehouseStockMap[ingredient.StockMaterialID] {
+				return fmt.Errorf("material ID %d is not present in warehouse ID %d", ingredient.StockMaterialID, request.WarehouseID)
+			}
+		}
+
+		if err := tx.Where("stock_request_id = ?", request.ID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
+			return fmt.Errorf("failed to delete existing ingredients for stock request ID %d: %w", request.ID, err)
 		}
 
 		if err := tx.Create(&ingredients).Error; err != nil {
-			return fmt.Errorf("failed to add new ingredients for stock request ID %d: %w", requestID, err)
+			return fmt.Errorf("failed to add new ingredients for stock request ID %d: %w", request.ID, err)
 		}
 
 		return nil
