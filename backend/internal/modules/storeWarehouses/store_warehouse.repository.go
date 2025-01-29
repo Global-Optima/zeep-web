@@ -16,7 +16,7 @@ type StoreWarehouseRepository interface {
 	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error)
 	GetStockListByIDs(storeId uint, IDs []uint) ([]data.StoreWarehouseStock, error)
 	GetStockById(storeId, stockId uint) (*data.StoreWarehouseStock, error)
-	GetStockListForNotifications(storeID uint) ([]data.StoreWarehouseStock, error)
+	GetAllStockList(storeID uint) ([]data.StoreWarehouseStock, error)
 	UpdateStock(storeId, stockId uint, dto *types.UpdateStoreStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
 	WithTransaction(txFunc func(txRepo storeWarehouseRepository) error) error
@@ -200,7 +200,7 @@ func (r *storeWarehouseRepository) GetStockList(storeID uint, filter *types.GetS
 	return storeWarehouseStockList, nil
 }
 
-func (r *storeWarehouseRepository) GetStockListForNotifications(storeID uint) ([]data.StoreWarehouseStock, error) {
+func (r *storeWarehouseRepository) GetAllStockList(storeID uint) ([]data.StoreWarehouseStock, error) {
 	if storeID == 0 {
 		return nil, fmt.Errorf("storeId cannot be 0")
 	}
