@@ -75,5 +75,9 @@
 		"warehouseOutOfStock": "*{{.ItemName}}* заканчивается на складе.",
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",
 		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."
-	}
+	},
+	"stockRequestComments": {
+		"quantityMismatch" : "*{{MaterialName}}* заказывали *{{ActualQuantity}}*, в заказе *{{Quantity}}*.",
+		"unexpectedMaterial" : "В поставке *{{MaterialName}}*  *{{ActualQuantity}}* жеткізілді."
+	  }
 }

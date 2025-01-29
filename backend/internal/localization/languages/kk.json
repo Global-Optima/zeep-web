@@ -75,5 +75,9 @@
     "warehouseOutOfStock": "*{{.ItemName}}* қоймада аз қалды.",
     "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
     "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді."
+  },
+  "stockRequestComments": {
+    "quantityMismatch" : "*{{MaterialName}}*, *{{ActualQuantity}}* жеткізілді, тапсырыста *{{Quantity}}*.",
+    "unexpectedMaterial" : "Тапсырыста болмаған *{{MaterialName}}*, *{{ActualQuantity}}* жеткізілді."
   }
 }

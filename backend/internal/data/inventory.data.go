@@ -45,11 +45,12 @@ type StoreWarehouseStock struct {
 
 type StockRequest struct {
 	BaseEntity
-	StoreID          uint                     `gorm:"not null;index"` // Links to Store
-	Store            Store                    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
-	WarehouseID      uint                     `gorm:"not null;index"` // Central warehouse fulfilling the request
-	Warehouse        Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
-	Status           StockRequestStatus       `gorm:"size:50;not null" sort:"status"`
+	StoreID     uint               `gorm:"not null;index"` // Links to Store
+	Store       Store              `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	WarehouseID uint               `gorm:"not null;index"` // Central warehouse fulfilling the request
+	Warehouse   Warehouse          `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
+	Status      StockRequestStatus `gorm:"size:50;not null" sort:"status"`
+	// Details          datatypes.JSON           `gorm:"type:jsonb"`
 	StoreComment     *string                  `gorm:"type:text"` // Store-specific comments
 	WarehouseComment *string                  `gorm:"type:text"` // Warehouse-specific comments
 	Ingredients      []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`

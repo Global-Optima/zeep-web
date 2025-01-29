@@ -314,7 +314,7 @@ func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountD
 }
 
 func (s *orderService) ValidationResults(storeID uint, productSizeIDs, additiveIDs []uint) (*orderValidationResults, error) {
-	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.productRepo)
+	productPrices, productNames, err := ValidateProductSizes(storeID, productSizeIDs, s.productRepo)
 	if err != nil {
 		return nil, fmt.Errorf("product validation failed: %w", err)
 	}
@@ -356,11 +356,11 @@ func ValidateAdditives(storeID uint, additiveIDs []uint, repo additives.Additive
 	return prices, additiveNames, nil
 }
 
-func ValidateProductSizes(productSizeIDs []uint, repo product.ProductRepository) (map[uint]float64, map[uint]string, error) {
+func ValidateProductSizes(storeID uint, productSizeIDs []uint, repo product.ProductRepository) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	productNames := make(map[uint]string)
 	for _, id := range productSizeIDs {
-		productSize, err := repo.GetStoreProductSizeById(id)
+		productSize, err := repo.GetStoreProductSizeById(storeID, id)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid product size ID: %d", id)
 		}

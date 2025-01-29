@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 )
 
 func ValidateStatus(status string) error {
@@ -86,4 +87,69 @@ func DefaultWarehouseStasuses() []data.StockRequestStatus {
 		data.StockRequestRejectedByWarehouse,
 		data.StockRequestAcceptedWithChange,
 	}
+}
+
+type StockRequestDetails struct {
+	MaterialName   string  `json:"materialName"`
+	Quantity       float64 `json:"quantity"`
+	ActualQuantity float64 `json:"actualQuantity"`
+}
+
+func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
+	key := "stockRequestComment.unexpected"
+	translations, err := localization.Translate(key, map[string]interface{}{
+		"MaterialName":   details.MaterialName,
+		"ActualQuantity": details.ActualQuantity,
+	})
+
+	if err != nil {
+		return nil
+	}
+
+	return translations
+}
+
+func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
+	key := "stockRequestComment.mismatch"
+	translations, err := localization.Translate(key, map[string]interface{}{
+		"MaterialName":   details.MaterialName,
+		"Quantity":       details.Quantity,
+		"ActualQuantity": details.ActualQuantity,
+	})
+
+	if err != nil {
+		return nil
+	}
+
+	return translations
+}
+
+func CombineComments(
+	storeComment string,
+	mismatchComments []localization.LocalizedMessages,
+	unexpectedComments []localization.LocalizedMessages,
+) *localization.LocalizedMessages {
+	var combinedComments localization.LocalizedMessages
+
+	for _, mismismatchComment := range mismatchComments {
+		combinedComments.En += mismismatchComment.En + "\n"
+		combinedComments.Ru += mismismatchComment.Ru + "\n"
+		combinedComments.Kk += mismismatchComment.Kk + "\n"
+	}
+
+	combinedComments.En += "\n"
+	combinedComments.Ru += "\n"
+	combinedComments.Kk += "\n"
+
+	for _, unexpectedComment := range unexpectedComments {
+		unexpectedComment.En += unexpectedComment.En + "\n"
+		unexpectedComment.Ru += unexpectedComment.Ru + "\n"
+		unexpectedComment.Kk += unexpectedComment.Kk + "\n"
+	}
+
+	combinedComments.En += "\n" + "Store comment: " + storeComment
+	combinedComments.Ru += "\n" + "Комментарий от магазина: " + storeComment
+	combinedComments.Kk += "\n" + "Кафе пікірі: " + storeComment
+
+	return &combinedComments
 }

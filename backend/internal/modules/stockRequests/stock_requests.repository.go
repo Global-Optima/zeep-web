@@ -219,19 +219,19 @@ func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWar
 func (r *stockRequestRepository) ReplaceStockRequestIngredients(request data.StockRequest, ingredients []data.StockRequestIngredient) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		var warehouseStocks []data.WarehouseStock
-		err := tx.Find(&warehouseStocks, request.WarehouseID).Error
+		err := tx.Model(&data.WarehouseStock{}).Where("warehouse_id = ?", request.WarehouseID).Find(&warehouseStocks).Error
 		if err != nil {
 			return fmt.Errorf("failed to fetch the warehouse stock: %w", err)
 		}
 
-		warehouseStockMap := make(map[uint]bool)
+		warehouseStockMap := make(map[uint]*data.WarehouseStock)
 		for _, stock := range warehouseStocks {
-			warehouseStockMap[stock.StockMaterialID] = true
+			warehouseStockMap[stock.StockMaterialID] = &stock
 		}
 
 		// Ensure all requested materials exist in the warehouse
 		for _, ingredient := range ingredients {
-			if !warehouseStockMap[ingredient.StockMaterialID] {
+			if warehouseStockMap[ingredient.StockMaterialID] == nil {
 				return fmt.Errorf("material ID %d is not present in warehouse ID %d", ingredient.StockMaterialID, request.WarehouseID)
 			}
 		}
