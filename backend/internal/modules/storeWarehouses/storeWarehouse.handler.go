@@ -72,7 +72,9 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 		},
 		&dto, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{
 		"message": fmt.Sprintf("store warehouse stock with id %d successfully created", id),
@@ -129,7 +131,9 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 		actions = append(actions, &action)
 	}
 
-	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	go func() {
+		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{
 		"message": "success",
@@ -219,7 +223,9 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 		},
 		&input, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "stock updated successfully"})
 }
@@ -256,7 +262,9 @@ func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
 		},
 		struct{}{}, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "stock deleted successfully"})
 }

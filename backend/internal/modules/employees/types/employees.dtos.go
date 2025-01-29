@@ -16,30 +16,6 @@ type CreateEmployeeDTO struct {
 	Workdays  []CreateWorkdayDTO `json:"workdays" binding:"dive"`
 }
 
-type CreateStoreEmployeeDTO struct {
-	CreateEmployeeDTO
-	StoreID uint `json:"storeId" binding:"required"`
-}
-
-type CreateWarehouseEmployeeDTO struct {
-	CreateEmployeeDTO
-	WarehouseID uint `json:"warehouseId" binding:"required"`
-}
-
-type CreateFranchiseeEmployeeDTO struct {
-	CreateEmployeeDTO
-	FranchiseeID uint `json:"franchiseeId" binding:"required"`
-}
-
-type CreateRegionEmployeeDTO struct {
-	CreateEmployeeDTO
-	RegionID uint `json:"regionId" binding:"required"`
-}
-
-type CreateAdminEmployeeDTO struct {
-	CreateEmployeeDTO
-}
-
 type CreateWorkdayDTO struct {
 	Day     string `json:"day" binding:"required"`
 	StartAt string `json:"startAt" binding:"required"`

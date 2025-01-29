@@ -27,6 +27,7 @@ type EmployeeRepository interface {
 
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
 	UpdateEmployee(id uint, employee *data.Employee) error
+	ReassignEmployeeType(employeeID uint, newType data.EmployeeType, workplaceID uint) error
 
 	DeleteTypedEmployeeById(employeeID, workplaceID uint, employeeType data.EmployeeType) error
 	GetEmployeeByEmailOrPhone(email string, phone string) (*data.Employee, error)
@@ -320,6 +321,66 @@ func (r *employeeRepository) GetEmployeeByEmailOrPhone(email string, phone strin
 
 func (r *employeeRepository) UpdateEmployee(id uint, employee *data.Employee) error {
 	err := r.db.Model(&data.Employee{}).Where("id = ?", id).Updates(employee).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *employeeRepository) ReassignEmployeeType(employeeID uint, newType data.EmployeeType, workplaceID uint) error {
+	employee, err := r.GetEmployeeByID(employeeID)
+	if err != nil {
+		return err
+	}
+
+	if employee.Type == newType {
+		return types.ErrUnsupportedEmployeeType
+	}
+
+	typeMappings := map[data.EmployeeType]struct {
+		deleteModel interface{}
+		createModel interface{}
+	}{
+		data.StoreEmployeeType: {
+			deleteModel: &data.StoreEmployee{},
+			createModel: &data.StoreEmployee{EmployeeID: employeeID, StoreID: workplaceID},
+		},
+		data.WarehouseEmployeeType: {
+			deleteModel: &data.WarehouseEmployee{},
+			createModel: &data.WarehouseEmployee{EmployeeID: employeeID, WarehouseID: workplaceID},
+		},
+		data.RegionEmployeeType: {
+			deleteModel: &data.RegionEmployee{},
+			createModel: &data.RegionEmployee{EmployeeID: employeeID, RegionID: workplaceID},
+		},
+		data.FranchiseeEmployeeType: {
+			deleteModel: &data.FranchiseeEmployee{},
+			createModel: &data.FranchiseeEmployee{EmployeeID: employeeID, FranchiseeID: workplaceID},
+		},
+	}
+
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+		if deleteModel, ok := typeMappings[employee.Type]; ok {
+			if err := tx.Where("employee_id = ?", employeeID).Delete(deleteModel.deleteModel).Error; err != nil {
+				return err
+			}
+		} else {
+			return types.ErrUnsupportedEmployeeType
+		}
+
+		if err := tx.Model(&data.Employee{}).Where("id = ?", employeeID).Update("type", newType).Error; err != nil {
+			return err
+		}
+
+		if newTypeMapping, ok := typeMappings[newType]; ok {
+			if err := tx.Create(newTypeMapping.createModel).Error; err != nil {
+				return err
+			}
+		} else {
+			return types.ErrUnsupportedEmployeeType
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}

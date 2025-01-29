@@ -43,7 +43,9 @@ func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, fmt.Sprintf("id: %d", id))
 }
@@ -96,7 +98,9 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 		&dto,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient category updated successfully"})
 }
@@ -126,7 +130,9 @@ func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient category deleted successfully"})
 }

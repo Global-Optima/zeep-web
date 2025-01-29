@@ -115,7 +115,9 @@ func (h *RecipeHandler) CreateRecipeSteps(c *gin.Context) {
 	}
 
 	if len(actions) > 0 {
-		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+		go func() {
+			_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+		}()
 	}
 
 	utils.SendMessageWithStatus(c, "Recipe steps created successfully", http.StatusCreated)
@@ -171,7 +173,9 @@ func (h *RecipeHandler) UpdateRecipeSteps(c *gin.Context) {
 		actions[i] = &action
 	}
 
-	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	go func() {
+		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	}()
 
 	utils.SendMessageWithStatus(c, "Recipe step updated successfully", http.StatusOK)
 }
@@ -207,7 +211,9 @@ func (h *RecipeHandler) DeleteRecipeSteps(c *gin.Context) {
 		actions[i] = &action
 	}
 
-	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	go func() {
+		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	}()
 
 	utils.SendMessageWithStatus(c, "Recipe step deleted successfully", http.StatusOK)
 }

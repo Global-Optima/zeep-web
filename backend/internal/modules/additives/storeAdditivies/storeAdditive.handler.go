@@ -173,7 +173,9 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 	}
 
 	if len(actions) > 0 {
-		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+		go func() {
+			_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+		}()
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive created successfully"})
@@ -216,7 +218,9 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 		},
 		&dto, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive updated successfully"})
 }
@@ -252,7 +256,9 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 		},
 		struct{}{}, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive deleted successfully"})
 }

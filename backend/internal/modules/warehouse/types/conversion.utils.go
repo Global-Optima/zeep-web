@@ -38,6 +38,7 @@ func ToFacilityAddressModel(dto FacilityAddressDTO) data.FacilityAddress {
 func ToWarehouseModel(dto CreateWarehouseDTO, facilityAddressID uint) data.Warehouse {
 	return data.Warehouse{
 		FacilityAddressID: facilityAddressID,
+		RegionID:          dto.RegionID,
 		Name:              dto.Name,
 	}
 }

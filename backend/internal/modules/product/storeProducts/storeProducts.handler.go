@@ -7,7 +7,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -205,7 +204,9 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		},
 		&dto, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
 }
@@ -243,7 +244,6 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		dtoMap[dto.ProductID] = &dtoCopy
 	}
 
-	// Prepare audit actions
 	actions := make([]shared.AuditAction, 0, len(storeProducts))
 	for _, product := range storeProducts {
 		matchedDTO, exists := dtoMap[product.ProductID]
@@ -262,11 +262,10 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		actions = append(actions, &action)
 	}
 
-	// Record audit actions (ignore errors as requested)
-	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
-	logrus.Info(len(actions))
+	go func() {
+		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	}()
 
-	// Send success message
 	msg := fmt.Sprintf("%d store product(s) created successfully", dtoLength)
 	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
 }
@@ -310,7 +309,9 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		},
 		&dto, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
 }
@@ -348,7 +349,9 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		return
 	}
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)
 }

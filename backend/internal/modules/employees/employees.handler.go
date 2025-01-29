@@ -66,7 +66,9 @@ func (h *EmployeeHandler) DeleteStoreEmployee(c *gin.Context) {
 		Name: employee.FirstName + " " + employee.LastName,
 	}, struct{}{}, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, "store employee deleted successfully")
 }
@@ -107,7 +109,9 @@ func (h *EmployeeHandler) DeleteWarehouseEmployee(c *gin.Context) {
 		Name: employee.FirstName + " " + employee.LastName,
 	}, struct{}{}, warehouseID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, "warehouse employee deleted successfully")
 }
@@ -148,7 +152,9 @@ func (h *EmployeeHandler) DeleteFranchiseeEmployee(c *gin.Context) {
 		Name: employee.FirstName + " " + employee.LastName,
 	}, struct{}{}, franchiseeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, "franchisee employee deleted successfully")
 }
@@ -189,7 +195,9 @@ func (h *EmployeeHandler) DeleteRegionEmployee(c *gin.Context) {
 		Name: employee.FirstName + " " + employee.LastName,
 	}, struct{}{}, regionID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, "region employee deleted successfully")
 }
@@ -260,7 +268,6 @@ func (h *EmployeeHandler) CreateStoreEmployee(c *gin.Context) {
 		return
 	}
 
-	// Check if the role is manageable by the current user
 	if !data.CanManageRole(role, input.Role) {
 		utils.SendErrorWithStatus(c, types.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
 		return
@@ -281,7 +288,9 @@ func (h *EmployeeHandler) CreateStoreEmployee(c *gin.Context) {
 		Name: input.FirstName + " " + input.LastName,
 	}, &input, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "store employee created successfully")
 }
@@ -320,7 +329,9 @@ func (h *EmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 		Name: input.FirstName + " " + input.LastName,
 	}, &input, warehouseID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "warehouse employee created successfully")
 }
@@ -358,7 +369,9 @@ func (h *EmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 		Name: input.FirstName + " " + input.LastName,
 	}, &input, franchiseeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "franchisee employee created successfully")
 }
@@ -397,7 +410,9 @@ func (h *EmployeeHandler) CreateRegionEmployee(c *gin.Context) {
 		Name: input.FirstName + " " + input.LastName,
 	}, &input, regionID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "region employee created successfully")
 }
@@ -665,7 +680,9 @@ func (h *EmployeeHandler) UpdateStoreEmployee(c *gin.Context) {
 		Name: storeEmployee.FirstName + " " + storeEmployee.LastName,
 	}, &input, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
 }
@@ -711,7 +728,9 @@ func (h *EmployeeHandler) UpdateWarehouseEmployee(c *gin.Context) {
 		Name: warehouseEmployee.FirstName + " " + warehouseEmployee.LastName,
 	}, &input, warehouseID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "employee updated successfully"})
 }
@@ -755,7 +774,9 @@ func (h *EmployeeHandler) UpdateFranchiseeEmployee(c *gin.Context) {
 		Name: franchiseeEmployee.FirstName + " " + franchiseeEmployee.LastName,
 	}, &input, franchiseeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "franchisee employee updated successfully"})
 }
@@ -799,7 +820,9 @@ func (h *EmployeeHandler) UpdateRegionEmployee(c *gin.Context) {
 		Name: regionEmployee.FirstName + " " + regionEmployee.LastName,
 	}, &input, regionID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "region manager updated successfully"})
 }

@@ -40,7 +40,9 @@ func (h *FranchiseeHandler) CreateFranchisee(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "franchisee was created successfully")
 }
@@ -77,7 +79,9 @@ func (h *FranchiseeHandler) UpdateFranchisee(c *gin.Context) {
 		&input,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "franchisee updated successfully"})
 }
@@ -107,7 +111,9 @@ func (h *FranchiseeHandler) DeleteFranchisee(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	if err := h.service.DeleteFranchisee(uint(id)); err != nil {
 		utils.SendInternalServerError(c, "failed to delete franchisee")

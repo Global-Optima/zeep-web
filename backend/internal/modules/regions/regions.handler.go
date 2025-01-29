@@ -40,7 +40,9 @@ func (h *RegionHandler) CreateRegion(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "region created successfully")
 }
@@ -77,7 +79,9 @@ func (h *RegionHandler) UpdateRegion(c *gin.Context) {
 		&dto,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "region updated successfully"})
 }
@@ -107,7 +111,9 @@ func (h *RegionHandler) DeleteRegion(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "region deleted successfully"})
 }

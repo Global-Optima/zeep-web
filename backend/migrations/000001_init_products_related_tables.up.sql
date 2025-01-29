@@ -186,7 +186,7 @@ CREATE TABLE
 	IF NOT EXISTS product_sizes (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
-		unit_id INT NOT NULL REFERENCES units (id) ON DELETE CASCADE,
+		unit_id INT NOT NULL REFERENCES units (id) ON DELETE RESTRICT,
 		base_price DECIMAL(10, 2) NOT NULL,
 		size INT NOT NULL,
 		is_default BOOLEAN DEFAULT FALSE,
@@ -465,7 +465,6 @@ CREATE TABLE
     employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
     store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
     role store_employee_role NOT NULL,
-    franchisee_id INT REFERENCES franchisees (id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
