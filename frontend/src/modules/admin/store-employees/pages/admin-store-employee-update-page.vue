@@ -1,48 +1,75 @@
-<template>TODO: Complete it</template>
-
-<!-- <template>
+<template>
 	<AdminEmployeesUpdateForm
 		v-if="employee"
-		:initialData="employee"
-		@onSubmit="handleCreate"
-		@onCancel="handleCancel"
+		:employee="employee"
+		@on-submit="handleUpdate"
+		@on-cancel="handleCancel"
 	/>
+
+	<p v-else>Сотрудник не найден</p>
 </template>
 
 <script lang="ts" setup>
-import { getRouteName } from '@/core/config/routes.config'
+import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminEmployeesUpdateForm from '@/modules/admin/store-employees/components/update/admin-employees-update-form.vue'
-import type { UpdateEmployeeDto } from '@/modules/admin/store-employees/models/employees.models'
+import type { UpdateEmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { employeesService } from '@/modules/admin/store-employees/services/employees.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
+const { toast } = useToast()
 
 const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-  queryKey: ['employee', employeeId],
+	queryKey: ['store-employee', employeeId],
 	queryFn: () => employeesService.getStoreEmployeeById(Number(employeeId)),
-  enabled: !!employeeId,
+	enabled: !!employeeId,
 })
 
 const updateMutation = useMutation({
-	mutationFn: (newStoreData: UpdateEmployeeDto) => employeesService.updateStoreEmployee(Number(employeeId), newStoreData),
+	mutationFn: (newStoreData: UpdateEmployeeDTO) =>
+		employeesService.updateStoreEmployee(Number(employeeId), newStoreData),
+	onMutate: () => {
+		toast({
+			title: 'Обновление...',
+			description: 'Обновление данных сотрудника. Пожалуйста, подождите.',
+		})
+	},
 	onSuccess: () => {
-		queryClient.invalidateQueries({ queryKey: ['employees'] })
-    queryClient.invalidateQueries({ queryKey: ['employee', employeeId] })
-		router.push({ name: getRouteName("ADMIN_EMPLOYEES") })
+		queryClient.invalidateQueries({ queryKey: ['store-employees'] })
+		queryClient.invalidateQueries({ queryKey: ['store-employee', employeeId] })
+		toast({
+			title: 'Успех!',
+			description: 'Данные сотрудника успешно обновлены.',
+		})
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при обновлении данных сотрудника.',
+			variant: 'destructive',
+		})
 	},
 })
 
-function handleCreate(dto: UpdateEmployeeDto) {
+function handleUpdate(dto: UpdateEmployeeDTO) {
+	if (!employeeId) {
+		toast({
+			title: 'Ошибка',
+			description: 'Неверный идентификатор сотрудника.',
+			variant: 'destructive',
+		})
+		return
+	}
+
 	updateMutation.mutate(dto)
 }
 
 function handleCancel() {
 	router.back()
 }
-</script> -->
+</script>

@@ -1,4 +1,4 @@
-import type { AppRouteRecord } from '../../config/routes.config'
+import type { AppRouteRecord } from '../routes.types'
 
 export const ADMIN_SUPPLIERS_CHILDREN_ROUTES = {
 	ADMIN_SUPPLIERS: {
@@ -24,5 +24,21 @@ export const ADMIN_SUPPLIERS_CHILDREN_ROUTES = {
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/suppliers/pages/admin-supplier-details-page.vue'),
+	},
+	ADMIN_WAREHOUSE_SUPPLIERS: {
+		path: 'warehouse-suppliers',
+		meta: {
+			title: 'Постащики',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/warehouse-suppliers/pages/admin-warehouse-suppliers-page.vue'),
+	},
+	ADMIN_WAREHOUSE_SUPPLIER_DETAILS: {
+		path: 'warehouse-suppliers/:id',
+		meta: {
+			title: 'Детали постащика',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/warehouse-suppliers/pages/admin-warehouse-supplier-details-page.vue'),
 	},
 } satisfies AppRouteRecord

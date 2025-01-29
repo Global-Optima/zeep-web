@@ -22,7 +22,8 @@
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead>Материал</TableHead>
+						<TableHead>Товар</TableHead>
+						<TableHead>Упаковка</TableHead>
 						<TableHead>Количество</TableHead>
 					</TableRow>
 				</TableHeader>
@@ -32,6 +33,7 @@
 						:key="index"
 					>
 						<TableCell>{{ item.stockMaterial.name }}</TableCell>
+						<TableCell>{{ item.stockMaterial.size }} {{ item.stockMaterial.unit.name }}</TableCell>
 						<TableCell>{{ item.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>

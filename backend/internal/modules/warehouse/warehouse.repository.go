@@ -16,6 +16,7 @@ type WarehouseRepository interface {
 	CreateWarehouse(warehouse *data.Warehouse, facilityAddress *data.FacilityAddress) error
 	GetWarehouseByID(id uint) (*data.Warehouse, error)
 	GetAllWarehouses(pagination *utils.Pagination) ([]data.Warehouse, error)
+	GetAllWarehousesForNotifications() ([]data.Warehouse, error)
 	UpdateWarehouse(warehouse *data.Warehouse) error
 	DeleteWarehouse(id uint) error
 }
@@ -84,6 +85,18 @@ func (r *warehouseRepository) GetAllWarehouses(pagination *utils.Pagination) ([]
 	if _, err := utils.ApplyPagination(query, pagination, &data.Warehouse{}); err != nil {
 		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
+
+	if err := query.Find(&warehouses).Error; err != nil {
+		return nil, err
+	}
+
+	return warehouses, nil
+}
+
+func (r *warehouseRepository) GetAllWarehousesForNotifications() ([]data.Warehouse, error) {
+	var warehouses []data.Warehouse
+
+	query := r.db.Preload("FacilityAddress").Model(&data.Warehouse{})
 
 	if err := query.Find(&warehouses).Error; err != nil {
 		return nil, err

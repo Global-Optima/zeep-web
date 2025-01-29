@@ -13,7 +13,7 @@
 				<div class="mb-4">
 					<Label>Материал</Label>
 					<p
-						class="mt-1 text-blue-600 underline cursor-pointer"
+						class="mt-1 text-primary underline cursor-pointer"
 						@click="openMaterialDialog"
 					>
 						{{ selectedStockMaterial ? selectedStockMaterial.name : 'Выбрать материал' }}

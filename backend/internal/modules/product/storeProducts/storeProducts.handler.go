@@ -4,8 +4,12 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -65,6 +69,55 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, productDetails)
+}
+
+func (h *StoreProductHandler) GetProductsListToAdd(c *gin.Context) {
+	var filter productTypes.ProductsFilterDto
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
+
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	productDetails, err := h.service.GetProductsListToAdd(storeID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve products list to add for store")
+		return
+	}
+
+	if productDetails == nil {
+		utils.SendNotFoundError(c, "products not found")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, productDetails, filter.Pagination)
+}
+
+func (h *StoreProductHandler) GetStoreProductCategories(c *gin.Context) {
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	categories, err := h.service.GetStoreProductCategories(storeID)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to retrieve store product categories")
+		return
+	}
+
+	if categories == nil {
+		utils.SendNotFoundError(c, "store product categories not found")
+		return
+	}
+
+	utils.SendSuccessResponse(c, categories)
 }
 
 func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
@@ -213,6 +266,7 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 
 	// Record audit actions (ignore errors as requested)
 	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	logrus.Info(len(actions))
 
 	// Send success message
 	msg := fmt.Sprintf("%d store product(s) created successfully", dtoLength)

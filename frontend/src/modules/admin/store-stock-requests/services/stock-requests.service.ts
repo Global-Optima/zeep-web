@@ -1,5 +1,6 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
+import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	AcceptWithChangeRequestStatusDTO,
 	CreateStockRequestDTO,
@@ -14,7 +15,7 @@ class StockRequestsService {
 
 	async getStockRequests(filter?: GetStockRequestsFilter) {
 		const response = await apiClient.get<PaginatedResponse<StockRequestResponse[]>>(this.baseUrl, {
-			params: filter,
+			params: buildRequestFilter(filter),
 		})
 		return response.data
 	}

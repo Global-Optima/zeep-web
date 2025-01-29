@@ -2,7 +2,7 @@
 	<div class="flex flex-col gap-6 mx-auto w-full md:w-2/3">
 		<Card>
 			<CardHeader>
-				<CardTitle>Обновить магазин</CardTitle>
+				<CardTitle>Обновить {{ initialData.name }}</CardTitle>
 				<CardDescription> Заполните форму ниже, чтобы обновить магазин. </CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -11,38 +11,45 @@
 					class="gap-6 grid"
 				>
 					<!-- Store Name and Is Franchise -->
-					<FormField
-						name="name"
-						v-slot="{ componentField }"
-					>
-						<FormItem>
-							<FormLabel>Название магазина</FormLabel>
-							<FormControl>
-								<Input
-									v-bind="componentField"
-									placeholder="Введите название магазина"
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					</FormField>
+					<div class="flex items-end gap-4">
+						<div class="flex-grow">
+							<FormField
+								name="name"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Название магазина</FormLabel>
+									<FormControl>
+										<Input
+											v-bind="componentField"
+											placeholder="Введите название магазина"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+						</div>
 
-					<FormField
-						name="isFranchise"
-						v-slot="{ value, handleChange }"
-					>
-						<FormItem class="flex items-center gap-3">
-							<Label for="is-franchise"> Франшиза </Label>
-
-							<Switch
-								id="is-franchise"
-								:checked="value"
-								@update:checked="handleChange"
-								class="!mb-1"
-							/>
-						</FormItem>
-					</FormField>
-
+						<div>
+							<FormField
+								name="isFranchise"
+								v-slot="{ value, handleChange }"
+							>
+								<FormItem class="flex items-center gap-3 mb-3">
+									<Switch
+										id="is-franchise"
+										:checked="value"
+										@update:checked="handleChange"
+									/>
+									<Label
+										class="!m-0"
+										for="is-franchise"
+										>Франшиза</Label
+									>
+								</FormItem>
+							</FormField>
+						</div>
+					</div>
 					<!-- Facility Address -->
 					<FormField
 						name="facilityAddress.address"
@@ -117,10 +124,11 @@
 					<!-- Action Buttons -->
 					<div class="flex gap-4 mt-6">
 						<Button
+							:disabled="!meta.valid"
 							type="submit"
 							class="flex-1"
 						>
-							Обновить
+							Создать
 						</Button>
 						<Button
 							variant="outline"
@@ -139,18 +147,18 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/core/components/ui/card'
 import {
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Label } from '@/core/components/ui/label'
@@ -163,7 +171,7 @@ import * as z from 'zod'
 
 // Props
 const props = defineProps<{
-	initialData: Partial<StoreDTO>
+	initialData: StoreDTO
 }>()
 
 const emit = defineEmits<{
@@ -178,8 +186,6 @@ const schema = toTypedSchema(
 		isFranchise: z.boolean(),
 		facilityAddress: z.object({
 			address: z.string().min(5, 'Адрес должен содержать минимум 5 символов'),
-			longitude: z.number(),
-			latitude: z.number(),
 		}),
 		contactPhone: z.string().min(7, 'Телефон должен содержать минимум 7 символов'),
 		contactEmail: z.string().email('Введите действительный адрес электронной почты'),
@@ -188,7 +194,7 @@ const schema = toTypedSchema(
 )
 
 // Initialize form
-const { handleSubmit } = useForm<UpdateStoreDTO>({
+const { handleSubmit, resetForm, meta } = useForm({
 	validationSchema: schema,
 	initialValues: props.initialData,
 })
@@ -200,6 +206,7 @@ const submitForm = handleSubmit((formValues) => {
 
 // Handle cancel
 const handleCancel = () => {
+  resetForm()
 	emit('onCancel')
 }
 </script>

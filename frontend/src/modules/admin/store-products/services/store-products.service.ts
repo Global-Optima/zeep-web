@@ -8,6 +8,7 @@ import type {
 	StoreProductsFilterDTO,
 	UpdateStoreProductDTO,
 } from '../models/store-products.model'
+import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 
 class StoreProductsService {
 	/**
@@ -24,6 +25,16 @@ class StoreProductsService {
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch store products: ', error)
+			throw error
+		}
+	}
+
+	async getStoreProductCategories() {
+		try {
+			const response = await apiClient.get<ProductCategoryDTO[]>(`/store-products/categories`)
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch store product cateogries: ', error)
 			throw error
 		}
 	}

@@ -3,6 +3,7 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Название</TableHead>
+				<TableHead>Категория</TableHead>
 				<TableHead>Количество</TableHead>
 				<TableHead>Мин. запас</TableHead>
 				<TableHead class="hidden md:table-cell">Единица измерения</TableHead>
@@ -29,6 +30,7 @@
 				@click="handleRowClick(stock.id)"
 			>
 				<TableCell class="font-medium">{{ stock.name }}</TableCell>
+				<TableCell>{{ stock.ingredient.category.name }}</TableCell>
 				<TableCell>{{ stock.quantity }}</TableCell>
 				<TableCell>{{ stock.lowStockThreshold }}</TableCell>
 

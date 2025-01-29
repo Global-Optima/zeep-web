@@ -97,8 +97,8 @@
 
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
-import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
-import type { StoreProductSizeDTO } from '@/modules/admin/store-products/models/store-products.model'
+import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 import KioskCartCheckout from '@/modules/kiosk/cart/components/checkouts/kiosk-cart-checkout.vue'
 import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
 import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
@@ -135,7 +135,7 @@ const closeUpdateDialog = () => {
   selectedCartItem.value = null;
 };
 
-const handleUpdate = (updatedSize: StoreProductSizeDTO, updatedAdditives: AdditiveCategoryItemDTO[]) => {
+const handleUpdate = (updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]) => {
   if (!selectedCartItem.value) return;
   cartStore.updateCartItem(selectedCartItem.value.key, {
     size: updatedSize,

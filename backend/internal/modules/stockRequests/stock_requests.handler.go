@@ -84,7 +84,9 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 		err = types.ValidateWarehouseStatuses(filter.Statuses)
 		if err != nil {
 			utils.SendBadRequestError(c, err.Error())
+			return
 		}
+		filter.Statuses = types.DefaultWarehouseStasuses()
 		requests, err = h.service.GetStockRequests(filter)
 	}
 

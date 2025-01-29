@@ -1,5 +1,5 @@
-import type { AppRouteRecord, ParentRoutePage } from '../config/routes.config'
 import AppKioskLayout from '../layouts/kiosk/app-kiosk-layout.vue'
+import type { AppRouteRecord, ParentRoutePage } from './routes.types'
 
 export const KIOSK_CHILDREN_ROUTES = {
 	KIOSK_HOME: {

@@ -24,7 +24,7 @@
 			</div>
 
 			<div class="flex justify-between items-center mt-2">
-				<p class="font-medium text-lg sm:text-2xl">
+				<p class="font-medium text-lg sm:text-3xl">
 					{{ formatPrice(itemTotalPrice) }}
 				</p>
 
@@ -87,12 +87,12 @@ const decrement = (e: Event) => {
 
 // Computed property for item total price
 const itemTotalPrice = computed(() => {
-  const basePrice = props.item.size.basePrice;
+  const storePrice = props.item.size.storePrice;
   const additivesPrice = props.item.additives.reduce(
-    (sum, additive) => sum + additive.price,
+    (sum, additive) => sum + additive.storePrice,
     0
   );
-  return (basePrice + additivesPrice) * props.item.quantity;
+  return (storePrice + additivesPrice) * props.item.quantity;
 });
 
 // Computed property for additives list as a comma-separated string

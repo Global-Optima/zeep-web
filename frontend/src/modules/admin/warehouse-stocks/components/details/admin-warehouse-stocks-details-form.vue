@@ -60,6 +60,21 @@
 					@submit="onSubmit"
 					class="gap-6 grid"
 				>
+					<FormField name="safetyStock">
+						<FormItem>
+							<FormLabel>Безопасный запас</FormLabel>
+							<FormControl>
+								<Input
+									type="number"
+									placeholder="Введите безопасный запас"
+									:model-value="initialData.stockMaterial.safetyStock"
+									disabled
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					</FormField>
+
 					<FormField
 						name="quantity"
 						v-slot="{ componentField }"
@@ -120,6 +135,7 @@ import type {
 import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
+import { computed } from 'vue'
 import * as z from 'zod'
 // Props
 const {initialData} = defineProps<{
@@ -132,21 +148,19 @@ const emit = defineEmits<{
 }>()
 
 // Predefined Material Info Array
-const materialInfo = [
+const materialInfo = computed(() =>[
   { label: 'Категория', value: initialData.stockMaterial.category.name },
   { label: 'Упаковка', value: `${initialData.stockMaterial.size} ${initialData.stockMaterial.unit.name}` },
-  { label: 'Безопасный запас', value: initialData.stockMaterial.safetyStock },
   {
     label: 'Срок годности',
     value: `${initialData.stockMaterial.expirationPeriodInDays} дней`
   },
   { label: 'Штрихкод', value: initialData.stockMaterial.barcode },
-  { label: 'Количество на складе', value: initialData.quantity },
   {
     label: 'Ранняя дата истечения срока годности',
     value: initialData.earliestExpirationDate ? formatDate(new Date(initialData.earliestExpirationDate)) : "Доставки товара отсутвуют",
   },
-]
+])
 
 // Date Formatter Utility
 function formatDate(date: Date): string {

@@ -3,6 +3,7 @@ import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	AdditiveCategoriesFilterQuery,
 	AdditiveCategoryDTO,
+	AdditiveDetailsDTO,
 	AdditiveDTO,
 	AdditiveFilterQuery,
 	CreateAdditiveCategoryDTO,
@@ -21,7 +22,7 @@ class AdditiveService {
 	}
 
 	async getAdditiveById(id: number) {
-		const response = await apiClient.get<AdditiveDTO>(`/additives/${id}`)
+		const response = await apiClient.get<AdditiveDetailsDTO>(`/additives/${id}`)
 		return response.data
 	}
 

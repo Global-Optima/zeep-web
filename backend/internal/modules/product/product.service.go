@@ -3,6 +3,8 @@ package product
 import (
 	"fmt"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -23,14 +25,16 @@ type ProductService interface {
 }
 
 type productService struct {
-	repo   ProductRepository
-	logger *zap.SugaredLogger
+	repo              ProductRepository
+	noticationService notifications.NotificationService
+	logger            *zap.SugaredLogger
 }
 
-func NewProductService(repo ProductRepository, logger *zap.SugaredLogger) ProductService {
+func NewProductService(repo ProductRepository, noticationService notifications.NotificationService, logger *zap.SugaredLogger) ProductService {
 	return &productService{
-		repo:   repo,
-		logger: logger,
+		repo:              repo,
+		logger:            logger,
+		noticationService: noticationService,
 	}
 }
 
@@ -90,9 +94,33 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) error {
 	product := types.UpdateProductToModel(dto)
 
-	err := s.repo.UpdateProduct(productID, product)
+	productBefore, err := s.repo.GetProductByID(productID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to update product additives: %w", err)
+		wrappedErr := fmt.Errorf("failed to fetch product: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	err = s.repo.UpdateProduct(productID, product)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to update product: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	changes := types.GenerateProductChanges(productBefore, dto)
+
+	details := &details.CentralCatalogUpdateDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID:           productID,
+			FacilityName: "Central Catalog",
+		},
+		Changes: changes,
+	}
+
+	err = s.noticationService.NotifyCentralCatalogUpdate(details)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to send notification: %w", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
@@ -101,13 +129,38 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 }
 
 func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
-	updateModels := types.UpdateProductSizeToModels(dto)
-
-	err := s.repo.UpdateProductSizeWithAssociations(productSizeID, updateModels)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to update product additives: %w", err)
+	if dto.IsDefault != nil && !*dto.IsDefault {
+		wrappedErr := fmt.Errorf("failed to update product size: cannot set isDefault to false")
 		s.logger.Error(wrappedErr)
 		return wrappedErr
+	}
+	updateModels := types.UpdateProductSizeToModels(dto)
+
+	productSize, err := s.repo.GetProductSizeById(productSizeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to fetch product: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	err = s.repo.UpdateProductSizeWithAssociations(productSizeID, updateModels)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to update product size: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	if dto.BasePrice != nil && productSize.BasePrice != *dto.BasePrice {
+		details := &details.PriceChangeNotificationDetails{
+			ProductSizeID: productSize.ID,
+			ProductName:   productSize.Product.Name,
+			OldPrice:      productSize.BasePrice,
+			NewPrice:      *dto.BasePrice,
+		}
+		err = s.noticationService.NotifyPriceChange(details)
+		if err != nil {
+			return fmt.Errorf("failed to notify price change: %w", err)
+		}
 	}
 
 	return nil

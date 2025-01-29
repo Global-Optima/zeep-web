@@ -117,9 +117,10 @@ func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 }
 
 func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
-	ingredients := make([]ingredientTypes.IngredientDTO, len(additive.Ingredients))
+	ingredients := make([]AdditiveIngredientDTO, len(additive.Ingredients))
 	for i, additiveIngredient := range additive.Ingredients {
-		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
+		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
+		ingredients[i].Quantity = additiveIngredient.Quantity
 	}
 
 	return &AdditiveDetailsDTO{
@@ -140,10 +141,11 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 	}
 }
 
-func ConvertToCategoryDTO(category *data.AdditiveCategory) *CategoryDTO {
-	return &CategoryDTO{
+func ConvertToCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategoryDTO {
+	return &BaseAdditiveCategoryDTO{
 		ID:               category.ID,
 		Name:             category.Name,
+		Description:      category.Description,
 		IsMultipleSelect: category.IsMultipleSelect,
 	}
 }

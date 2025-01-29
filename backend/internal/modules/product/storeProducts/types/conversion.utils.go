@@ -5,7 +5,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 )
 
@@ -65,42 +64,26 @@ func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 	return spsMinPrice, spsCount
 }
 
-func MapToStoreProductSizeDTO(sps data.StoreProductSize) StoreProductSizeDTO {
-	var additives = make([]types.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
-	var ingredients = make([]ingredientTypes.IngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
-
-	for i, productSizeAdditive := range sps.ProductSize.Additives {
-		additives[i] = types.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
-	}
-
-	for i, productSizeIngredient := range sps.ProductSize.ProductSizeIngredients {
-		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
-	}
-
-	return StoreProductSizeDTO{
-		ID:                 sps.ID,
-		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(sps.ProductSize),
-		ProductSizeID:      sps.ProductSizeID,
-		StorePrice:         sps.Price,
-	}
-}
-
 func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSizeDetailsDTO {
 	var additives = make([]productTypes.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
-	var ingredients = make([]ingredientTypes.IngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
+	var ingredients = make([]productTypes.ProductSizeIngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
 
 	for i, productSizeAdditive := range sps.ProductSize.Additives {
 		additives[i] = productTypes.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	for i, productSizeIngredient := range sps.ProductSize.ProductSizeIngredients {
-		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+		ingredients[i].Quantity = productSizeIngredient.Quantity
 	}
 
 	return StoreProductSizeDetailsDTO{
-		StoreProductSizeDTO: MapToStoreProductSizeDTO(sps),
-		Additives:           additives,
-		Ingredients:         ingredients,
+		ID:                 sps.ID,
+		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(sps.ProductSize),
+		ProductSizeID:      sps.ProductSizeID,
+		StorePrice:         sps.Price,
+		Additives:          additives,
+		Ingredients:        ingredients,
 	}
 }
 

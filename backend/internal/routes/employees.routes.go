@@ -12,6 +12,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
@@ -58,6 +59,17 @@ func (r *Router) RegisterRegionRoutes(handler *regions.RegionHandler) {
 	}
 }
 
+func (r *Router) RegisterNotificationsRoutes(handler *notifications.NotificationHandler) {
+	router := r.EmployeeRoutes.Group("/notifications")
+	{
+		router.GET("", handler.GetNotificationsByEmployee)
+		router.GET("/:id", handler.GetNotificationByID)
+		router.POST("/:id/mark-as-read", handler.MarkNotificationAsRead)
+		router.POST("/mark-multiple-as-read", handler.MarkMultipleNotificationsAsRead)
+		router.DELETE("/:id", handler.DeleteNotification)
+	}
+}
+
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	router := r.EmployeeRoutes.Group("/products")
 	{
@@ -87,7 +99,10 @@ func (r *Router) RegisterRecipeRoutes(handler *recipes.RecipeHandler) {
 func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductHandler) {
 	router := r.EmployeeRoutes.Group("/store-products")
 	{
+		router.GET("/categories", handler.GetStoreProductCategories, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
+
 		router.GET("", handler.GetStoreProducts, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
+		router.GET("/addList", handler.GetProductsListToAdd, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
 		router.GET("/:id", handler.GetStoreProduct, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
 		router.POST("", handler.CreateStoreProduct, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
 		router.POST("/multiple", handler.CreateMultipleStoreProducts, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
@@ -166,11 +181,12 @@ func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAddit
 	router := r.EmployeeRoutes.Group("/store-additives")
 	{
 		router.GET("", handler.GetStoreAdditives, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
+		router.GET("/addList", handler.GetAdditivesListToAdd, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
 		router.GET("/categories/:productSizeId", handler.GetStoreAdditiveCategories, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
-		router.POST("", handler.CreateStoreAdditives)
-		router.PUT("/:id", handler.UpdateStoreAdditive)
-		router.DELETE("/:id", handler.DeleteStoreAdditive)
-		router.GET("/:id", handler.GetStoreAdditiveByID)
+		router.POST("", handler.CreateStoreAdditives, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
+		router.PUT("/:id", handler.UpdateStoreAdditive, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
+		router.DELETE("/:id", handler.DeleteStoreAdditive, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
+		router.GET("/:id", handler.GetStoreAdditiveByID, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
 	}
 }
 

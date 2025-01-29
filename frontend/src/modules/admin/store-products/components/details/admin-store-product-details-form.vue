@@ -63,13 +63,10 @@ function initStoreProductLocal() {
   storeProductLocal.isAvailable = props.initialStoreProduct.isAvailable
 
   storeProductLocal.sizes = props.initialStoreProduct.sizes.map((storeSz) => {
-    const productSize = props.product.sizes.find((pSz) => pSz.id === storeSz.id)
-    const basePrice = productSize ? productSize.basePrice : storeSz.storePrice
-
     return {
       id: storeSz.productSizeId,
       name: storeSz.name,
-      basePrice,
+      basePrice: storeSz.basePrice,
       storePrice: storeSz.storePrice,
     }
   })
@@ -162,8 +159,8 @@ function onCancel() {
 
 			<CardContent class="space-y-4">
 				<div class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg">
-					<div class="flex flex-col space-y-0.5">
-						<Label class="font-medium text-base"> Товар доступен к продаже </Label>
+					<div class="flex flex-col space-y-1">
+						<Label class="font-medium"> Товар доступен к продаже </Label>
 						<p class="text-gray-500 text-sm">
 							Укажите доступен ли этот товар для продажи в магазине
 						</p>

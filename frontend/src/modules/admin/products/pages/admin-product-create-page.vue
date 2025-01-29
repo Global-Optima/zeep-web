@@ -6,6 +6,7 @@
 </template>
 
 <script lang="ts" setup>
+import { useToast } from '@/core/components/ui/toast/use-toast'
 import { getRouteName } from '@/core/config/routes.config'
 import AdminProductCreateForm from '@/modules/admin/products/components/create/admin-product-create-form.vue'
 import type { CreateProductDTO } from '@/modules/kiosk/products/models/product.model'
@@ -15,12 +16,30 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
+const { toast } = useToast()
 
 const createMutation = useMutation({
 	mutationFn: (dto: CreateProductDTO) => productsService.createProduct(dto),
+	onMutate: () => {
+		toast({
+			title: 'Создание...',
+			description: 'Пожалуйста, подождите, создается новый продукт.',
+		})
+	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-products'] })
-		router.push({ name: getRouteName("ADMIN_PRODUCTS") })
+		toast({
+			title: 'Успех!',
+			description: 'Продукт успешно создан.',
+		})
+		router.push({ name: getRouteName('ADMIN_PRODUCTS') })
+	},
+	onError: () => {
+		toast({
+			title: 'Ошибка',
+			description: 'Произошла ошибка при создании продукта.',
+			variant: 'destructive',
+		})
 	},
 })
 

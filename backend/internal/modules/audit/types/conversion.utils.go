@@ -48,8 +48,8 @@ func ConvertToEmployeeAuditDTO(audit *data.EmployeeAudit) (*EmployeeAuditDTO, er
 	return &EmployeeAuditDTO{
 		ID:                audit.ID,
 		Timestamp:         audit.BaseEntity.CreatedAt,
-		OperationType:     audit.OperationType.ToString(),
-		ComponentName:     audit.ComponentName.ToString(),
+		OperationType:     audit.OperationType,
+		ComponentName:     audit.ComponentName,
 		LocalizedMessages: *messages,
 		IPAddress:         audit.IPAddress,
 		ResourceURL:       audit.ResourceUrl,

@@ -4,7 +4,7 @@
 		<div class="sm:block hidden py-4 pl-4">
 			<KioskHomeSidebarTablet
 				@update:category="onUpdateCategory"
-				:categories="categories?.data ?? []"
+				:categories="categories ?? []"
 				:selected-category-id="selectedCategoryId"
 			/>
 		</div>
@@ -15,7 +15,7 @@
 			<KioskHomeToolbarMobile
 				v-if="!categoriesLoading"
 				class="block sm:hidden"
-				:categories="categories?.data ?? []"
+				:categories="categories ?? []"
 				:selected-category-id="selectedCategoryId"
 				:search-term="searchTerm"
 				@update:category="onUpdateCategory"
@@ -65,22 +65,15 @@
 <script setup lang="ts">
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
+import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeSidebarTablet from '@/modules/kiosk/products/components/home/kiosk-home-sidebar-tablet.vue'
+import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/kiosk-home-toolbar-mobile.vue'
 import KioskHomeToolbarTablet from '@/modules/kiosk/products/components/home/kiosk-home-toolbar-tablet.vue'
-import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounceFn } from '@vueuse/core'
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-// Asynchronous Components
-const KioskHomeCart = defineAsyncComponent(() =>
-  import('@/modules/kiosk/products/components/home/kiosk-home-cart.vue')
-)
-
-const KioskHomeToolbarMobile = defineAsyncComponent(() =>
-  import('@/modules/kiosk/products/components/home/kiosk-home-toolbar-mobile.vue')
-)
 
 const cartStore = useCartStore()
 
@@ -95,21 +88,19 @@ const productsQueryKey = computed(() => [
   { categoryId: selectedCategoryId.value, searchTerm: searchTerm.value },
 ])
 
-const categoriesQueryKey = ['categories']
 
 // Fetch Categories
-// TODO: Make it more button or unpaged
 const { data: categories, isLoading: categoriesLoading } = useQuery({
-  queryKey: categoriesQueryKey,
-  queryFn: () => productsService.getAllProductCategories({pageSize: 1000}),
+  queryKey: ['store-product-categories'],
+  queryFn: () => storeProductsService.getStoreProductCategories(),
 })
 
 // Watch Categories to Set Default Selection
 watch(
   categories,
   (newCategories) => {
-    if (newCategories && newCategories.data.length > 0 && selectedCategoryId.value === null && searchTerm.value === '') {
-      selectedCategoryId.value = newCategories.data[0].id
+    if (newCategories && newCategories.length > 0 && selectedCategoryId.value === null && searchTerm.value === '') {
+      selectedCategoryId.value = newCategories[0].id
     }
   },
   { immediate: true }
@@ -121,8 +112,7 @@ const { data: products } = useQuery({
   queryKey: productsQueryKey,
   queryFn: () =>
     storeProductsService.getStoreProducts({
-       categoryId: selectedCategoryId.value!, search: searchTerm.value,
-
+       categoryId: selectedCategoryId.value!, search: searchTerm.value, isAvailable: true
     }),
   enabled: computed(() => Boolean(selectedCategoryId.value) || searchTerm.value.trim() !== ''),
 })

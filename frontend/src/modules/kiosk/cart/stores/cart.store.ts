@@ -1,7 +1,7 @@
-import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
+import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import type {
 	StoreProductDetailsDTO,
-	StoreProductSizeDTO,
+	StoreProductSizeDetailsDTO,
 } from '@/modules/admin/store-products/models/store-products.model'
 import md5 from 'md5'
 import { defineStore } from 'pinia'
@@ -10,8 +10,8 @@ import type { ProductSizeDTO } from '../../products/models/product.model'
 export interface CartItem {
 	key: string
 	product: StoreProductDetailsDTO
-	size: StoreProductSizeDTO
-	additives: AdditiveCategoryItemDTO[]
+	size: StoreProductSizeDetailsDTO
+	additives: StoreAdditiveCategoryItemDTO[]
 	quantity: number
 }
 
@@ -33,8 +33,11 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		},
 		totalPrice(state): number {
 			return Object.values(state.cartItems).reduce((total, item) => {
-				const additivesPrice = item.additives.reduce((sum, additive) => sum + additive.price, 0)
-				return total + (item.size.basePrice + additivesPrice) * item.quantity
+				const additivesPrice = item.additives.reduce(
+					(sum, additive) => sum + additive.storePrice,
+					0,
+				)
+				return total + (item.size.storePrice + additivesPrice) * item.quantity
 			}, 0)
 		},
 	},
@@ -43,10 +46,10 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		generateCartItemKey(
 			product: StoreProductDetailsDTO,
 			size: ProductSizeDTO,
-			additives: AdditiveCategoryItemDTO[],
+			additives: StoreAdditiveCategoryItemDTO[],
 		): string {
 			const additiveIds = additives
-				.map(a => a.id)
+				.map(a => a.additiveId)
 				.sort()
 				.join('-')
 			return md5(`${product.id}-${size.id}-${additiveIds}`)
@@ -54,8 +57,8 @@ export const useCartStore = defineStore('ZEEP_CART', {
 
 		addToCart(
 			product: StoreProductDetailsDTO,
-			size: StoreProductSizeDTO,
-			additives: AdditiveCategoryItemDTO[],
+			size: StoreProductSizeDetailsDTO,
+			additives: StoreAdditiveCategoryItemDTO[],
 			quantity: number = 1,
 		) {
 			const key = this.generateCartItemKey(product, size, additives)
@@ -75,7 +78,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		removeFromCart(
 			product: StoreProductDetailsDTO,
 			size: ProductSizeDTO,
-			additives: AdditiveCategoryItemDTO[],
+			additives: StoreAdditiveCategoryItemDTO[],
 		) {
 			const key = this.generateCartItemKey(product, size, additives)
 			delete this.cartItems[key]
@@ -107,8 +110,8 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		updateCartItem(
 			key: string,
 			updates: {
-				size?: StoreProductSizeDTO
-				additives?: AdditiveCategoryItemDTO[]
+				size?: StoreProductSizeDetailsDTO
+				additives?: StoreAdditiveCategoryItemDTO[]
 				quantity?: number
 			},
 		) {

@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"strconv"
 
@@ -59,11 +60,38 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 
 	additivesList, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(productSizeID), &filter)
 	if err != nil {
+		if errors.Is(err, types.ErrStoreAdditiveCategoriesNotFound) {
+			utils.SendSuccessResponse(c, []types.StoreAdditiveCategoryDTO{})
+			return
+		}
 		utils.SendInternalServerError(c, "Failed to retrieve store additives")
 		return
 	}
 
 	utils.SendSuccessResponse(c, additivesList)
+}
+
+func (h *StoreAdditiveHandler) GetAdditivesListToAdd(c *gin.Context) {
+	var filter additiveTypes.AdditiveFilterQuery
+
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Additive{}); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
+		return
+	}
+
+	storeAdditives, err := h.service.GetAdditivesListToAdd(storeID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch additives")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, storeAdditives, filter.Pagination)
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {

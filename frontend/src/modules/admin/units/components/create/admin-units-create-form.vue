@@ -21,7 +21,7 @@ const emits = defineEmits<{
 const createAdditiveCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
-    conversionFactor: z.number().min(1, 'Введите множитель'),
+    conversionFactor: z.number().min(0.001, 'Введите множитель'),
   })
 )
 

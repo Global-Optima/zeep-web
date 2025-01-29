@@ -60,9 +60,10 @@
 
 		<div
 			v-if="currentEmployee"
-			class="flex justify-end items-center gap-4 w-full"
+			class="flex justify-end items-center gap-2 w-full"
 		>
 			<AppAdminSearch :current-employee="currentEmployee" />
+			<AppAdminNotificationsPopover :current-employee="currentEmployee" />
 			<AppAdminEmployeeDropdown :current-employee="currentEmployee" />
 		</div>
 	</header>
@@ -73,6 +74,7 @@ import { Button } from '@/core/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/core/components/ui/sheet'
 import { getRouteName } from '@/core/config/routes.config'
 import AppAdminEmployeeDropdown from '@/core/layouts/admin/app-admin-employee-dropdown.vue'
+import AppAdminNotificationsPopover from '@/core/layouts/admin/app-admin-notifications-popover.vue'
 import AppAdminSearch from '@/core/layouts/admin/app-admin-search.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'

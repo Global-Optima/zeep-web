@@ -7,6 +7,7 @@ import (
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -96,14 +97,15 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 
 func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
 	var additives = make([]ProductSizeAdditiveDTO, len(productSize.Additives))
-	var ingredients = make([]ingredientTypes.IngredientDTO, len(productSize.ProductSizeIngredients))
+	var ingredients = make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
 
 	for i, productSizeAdditive := range productSize.Additives {
 		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
-		ingredients[i] = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
+		ingredients[i].Quantity = productSizeIngredient.Quantity
 	}
 
 	return ProductSizeDetailsDTO{
@@ -128,6 +130,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	productSize := &data.ProductSize{
 		ProductID: dto.ProductID,
 		Name:      dto.Name,
+		UnitID:    dto.UnitID,
 		BasePrice: dto.BasePrice,
 		Size:      dto.Size,
 		IsDefault: dto.IsDefault,
@@ -213,4 +216,54 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 		Additives:   additives,
 		Ingredients: ingredients,
 	}
+}
+
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []details.CentralCatalogChange {
+	changes := []details.CentralCatalogChange{}
+
+	if dto.Name != "" && dto.Name != before.Name {
+		key := "notification.centralCatalogUpdateDetails.nameChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldName": before.Name,
+				"NewName": dto.Name,
+			},
+		})
+	}
+
+	if dto.Description != "" && dto.Description != before.Description {
+		key := "notification.centralCatalogUpdateDetails.descriptionChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldDescription": before.Description,
+				"NewDescription": dto.Description,
+			},
+		})
+	}
+
+	if dto.ImageURL != "" && dto.ImageURL != before.ImageURL {
+		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldImageURL": before.ImageURL,
+				"NewImageURL": dto.ImageURL,
+			},
+		})
+	}
+
+	if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
+		key := "notification.centralCatalogUpdateDetails.categoryChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldCategoryID": before.CategoryID,
+				"NewCategoryID": dto.CategoryID,
+			},
+		})
+	}
+
+	return changes
 }

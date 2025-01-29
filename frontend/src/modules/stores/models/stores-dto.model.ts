@@ -1,4 +1,6 @@
-export interface StoresFilter {
+import type { PaginationParams } from '@/core/utils/pagination.utils'
+
+export interface StoresFilter extends PaginationParams {
 	searchTerm?: string
 	isFranchise?: boolean
 }

@@ -2,29 +2,25 @@ package types
 
 import (
 	"encoding/json"
+	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"time"
 )
 
-type Messages struct {
-	En string `json:"en"`
-	Ru string `json:"ru"`
-	Kk string `json:"kk"`
-}
-
 type EmployeeAuditDTO struct {
-	ID                             uint                           `json:"id"`
-	Timestamp                      time.Time                      `json:"timestamp"`
-	OperationType                  string                         `json:"operationType"`
-	ComponentName                  string                         `json:"componentName"`
-	LocalizedMessages              localization.LocalizedMessages `json:"localizedMessages"`
-	IPAddress                      string                         `json:"ipAddress"`
-	ResourceURL                    string                         `json:"resourceUrl"`
-	Method                         string                         `json:"method"`
-	Details                        json.RawMessage                `json:"details"`
-	employeesTypes.BaseEmployeeDTO `json:"employee"`
+	ID                         uint                           `json:"id"`
+	Timestamp                  time.Time                      `json:"timestamp"`
+	OperationType              data.OperationType             `json:"operationType"`
+	ComponentName              data.ComponentName             `json:"componentName"`
+	LocalizedMessages          localization.LocalizedMessages `json:"localizedMessages"`
+	IPAddress                  string                         `json:"ipAddress"`
+	ResourceURL                string                         `json:"resourceUrl"`
+	Method                     string                         `json:"method"`
+	Details                    json.RawMessage                `json:"details"`
+	employeesTypes.EmployeeDTO `json:"employee"`
 }
 
 type EmployeeAuditFilter struct {

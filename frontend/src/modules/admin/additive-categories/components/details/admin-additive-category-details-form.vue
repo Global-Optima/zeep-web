@@ -9,8 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import Switch from '@/core/components/ui/switch/Switch.vue'
-import type { UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
-import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
+import type { AdditiveCategoryDTO, UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Emits
@@ -19,7 +18,7 @@ const emits = defineEmits<{
   onCancel: []
 }>()
 
-const {category} = defineProps<{category: ProductCategoryDTO}>()
+const {category} = defineProps<{category: AdditiveCategoryDTO}>()
 
 // Validation Schema
 const createAdditiveCategorySchema = toTypedSchema(

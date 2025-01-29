@@ -3,10 +3,9 @@ import {
   Dialog,
   DialogContent
 } from '@/core/components/ui/dialog'
-import type { AdditiveCategoryItemDTO } from '@/modules/admin/additives/models/additives.model'
-import type { StoreAdditiveCategoryDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
-import type { StoreProductSizeDTO } from '@/modules/admin/store-products/models/store-products.model'
+import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { CartItem } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
 import KioskDetailsBottomBar from '@/modules/kiosk/products/components/details/kiosk-details-bottom-bar.vue'
@@ -19,7 +18,7 @@ interface UpdateCartDialogProps {
   isOpen: boolean;
   cartItem: CartItem;
   onClose: () => void;
-  onUpdate: (updatedSize: StoreProductSizeDTO, updatedAdditives: AdditiveCategoryItemDTO[]) => void;
+  onUpdate: (updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]) => void;
 }
 
 const { isOpen, cartItem, onClose, onUpdate } = defineProps<UpdateCartDialogProps>();
@@ -28,7 +27,7 @@ const { isOpen, cartItem, onClose, onUpdate } = defineProps<UpdateCartDialogProp
 const productDetails = ref(cartItem.product);
 const selectedSize = ref(cartItem.size);
 const selectedAdditives = ref(
-  cartItem.additives.reduce<Record<number, AdditiveCategoryItemDTO[]>>((acc, additive) => {
+  cartItem.additives.reduce<Record<number, StoreAdditiveCategoryItemDTO[]>>((acc, additive) => {
     acc[additive.categoryId] = acc[additive.categoryId] || [];
     acc[additive.categoryId].push(additive);
     return acc;
@@ -49,7 +48,7 @@ const fetchAdditives = async () => {
       ...category,
       additives: category.additives.map((additive) => ({
         ...additive,
-        isSelected: isAdditiveSelected(category.id, additive.id),
+        isSelected: isAdditiveSelected(category.id, additive.additiveId),
       })),
     }));
   } catch {
@@ -62,7 +61,7 @@ const fetchAdditives = async () => {
 // Reset dialog state and fetch additives
 const resetAndFetchAdditives = async () => {
   selectedSize.value = cartItem.size;
-  selectedAdditives.value = cartItem.additives.reduce<Record<number, AdditiveCategoryItemDTO[]>>((acc, additive) => {
+  selectedAdditives.value = cartItem.additives.reduce<Record<number, StoreAdditiveCategoryItemDTO[]>>((acc, additive) => {
     acc[additive.categoryId] = acc[additive.categoryId] || [];
     acc[additive.categoryId].push(additive);
     return acc;
@@ -82,7 +81,7 @@ const preserveSelectedAdditives = () => {
 };
 
 // Handle size selection
-const onSizeSelect = async (size: StoreProductSizeDTO) => {
+const onSizeSelect = async (size: StoreProductSizeDetailsDTO) => {
   if (selectedSize.value?.id === size.id) return;
   selectedSize.value = size;
   selectedAdditives.value = []
@@ -93,11 +92,11 @@ const onSizeSelect = async (size: StoreProductSizeDTO) => {
 
 // Computed total price
 const totalPrice = computed(() => {
-  const basePrice = selectedSize.value?.basePrice || 0;
+  const storePrice = selectedSize.value.storePrice;
   const additivePrice = Object.values(selectedAdditives.value)
     .flat()
-    .reduce((sum, add) => sum + add.price, 0);
-  return basePrice + additivePrice;
+    .reduce((sum, add) => sum + add.storePrice, 0);
+  return storePrice + additivePrice;
 });
 
 // Computed energy
@@ -125,14 +124,14 @@ const calculatedEnergy = computed(() => {
 
 // Check if additive is selected
 const isAdditiveSelected = (categoryId: number, additiveId: number) =>
-  selectedAdditives.value[categoryId]?.some((a) => a.id === additiveId) || false;
+  selectedAdditives.value[categoryId]?.some((a) => a.additiveId === additiveId) || false;
 
 // Handle additive selection
-const onAdditiveToggle = (categoryId: number, additive: AdditiveCategoryItemDTO) => {
+const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[categoryId] || [];
-  const isSelected = current.some((a) => a.id === additive.id);
+  const isSelected = current.some((a) => a.additiveId === additive.additiveId);
   selectedAdditives.value[categoryId] = isSelected
-    ? current.filter((a) => a.id !== additive.id)
+    ? current.filter((a) => a.additiveId !== additive.additiveId)
     : [...current, additive];
 };
 

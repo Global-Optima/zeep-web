@@ -75,7 +75,7 @@ const stepsConfig: StepConfig[] = [
           subOrders: Object.entries(cartItems).map(([_, item]) => ({
             productSizeId: item.size.id,
             quantity: item.quantity,
-            additivesIds: item.additives.map((add) => add.id),
+            additivesIds: item.additives.map((add) => add.additiveId),
           })),
         };
 
@@ -144,7 +144,7 @@ const handleBack = (stepName: string) => {
 		class="flex items-center bg-white p-2 sm:p-4 rounded-full text-primary"
 		@click="openStep('customer')"
 	>
-		<ChevronRight class="w-9 h-9" />
+		<ChevronRight class="size-10" />
 	</button>
 
 	<component

@@ -17,10 +17,18 @@
 					:key="detail.label"
 				>
 					<p class="mb-1 text-muted-foreground text-sm">{{ detail.label }}</p>
-					<p v-if="detail.value">
+					<p
+						v-if="detail.value"
+						class="text-sm"
+					>
 						{{ detail.value }}
 					</p>
-					<p v-else>Отсутствует</p>
+					<p
+						v-else
+						class="text-sm"
+					>
+						Отсутствует
+					</p>
 				</div>
 			</div>
 		</CardContent>
@@ -52,6 +60,8 @@ import {
 import AdminStockRequestsActions from '@/modules/admin/store-stock-requests/components/details/admin-stock-requests-actions.vue'
 import { type StockRequestResponse, STOCK_REQUEST_STATUS_FORMATTED } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
+import { format } from 'date-fns'
+import { ru } from 'date-fns/locale'
 import { computed } from 'vue'
 
 // Props
@@ -69,11 +79,11 @@ const requestDetails = computed(() => [
   { label: 'Статус', value: STOCK_REQUEST_STATUS_FORMATTED[props.request.status] },
   {
     label: 'Дата создания',
-    value: new Date(props.request.createdAt).toLocaleDateString('ru-RU'),
+    value: format(props.request.createdAt, "dd.MM.yyyy hh:mm", {locale: ru}),
   },
   {
     label: 'Дата обновления',
-    value: new Date(props.request.updatedAt).toLocaleDateString('ru-RU'),
+    value: format(props.request.updatedAt, "dd.MM.yyyy hh:mm", {locale: ru}),
   },
   { label: 'Комментарий от заказчика', value: props.request.storeComment },
   { label: 'Комментарий от Склада', value: props.request.warehouseComment },
