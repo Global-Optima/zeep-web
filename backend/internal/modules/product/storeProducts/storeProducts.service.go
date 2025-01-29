@@ -97,22 +97,6 @@ func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.Store
 	return dtos, nil
 }
 
-func (s *storeProductService) GetStoreProductsByProductIDs(storeID uint, productIDs []uint) ([]types.StoreProductDetailsDTO, error) {
-	storeProducts, err := s.repo.GetStoreProductsByProductIDs(storeID, productIDs)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to get store products", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	dtos := make([]types.StoreProductDetailsDTO, len(storeProducts))
-	for i, storeProduct := range storeProducts {
-		dtos[i] = types.MapToStoreProductDetailsDTO(&storeProduct)
-	}
-
-	return dtos, nil
-}
-
 func (s *storeProductService) GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]types.StoreProductDetailsDTO, error) {
 	storeProducts, err := s.repo.GetStoreProductsByStoreProductIDs(storeID, storeProductIDs)
 	if err != nil {

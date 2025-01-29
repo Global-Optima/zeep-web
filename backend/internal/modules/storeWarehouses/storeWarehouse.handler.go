@@ -34,6 +34,7 @@ func NewStoreWarehouseHandler(
 		service:           service,
 		ingredientService: ingredientService,
 		auditService:      auditService,
+		franchiseeService: franchiseeService,
 		logger:            logger,
 	}
 }

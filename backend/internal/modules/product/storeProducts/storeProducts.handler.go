@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -233,7 +231,7 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		return
 	}
 
-	storeProducts, err := h.service.GetStoreProductsByProductIDs(storeID, ids)
+	storeProducts, err := h.service.GetStoreProductsByStoreProductIDs(storeID, ids)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve created store products: product not found")
 		return
