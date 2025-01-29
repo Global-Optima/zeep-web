@@ -64,7 +64,7 @@ func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.Add
 	// Fetch the StoreWarehouse for the given storeID
 	var storeWarehouse data.StoreWarehouse
 	err := r.db.
-		Where("store	_id = ?", storeID).
+		Where("store_id = ?", storeID).
 		First(&storeWarehouse).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
