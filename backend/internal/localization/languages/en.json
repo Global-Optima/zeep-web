@@ -66,10 +66,9 @@
 
       "centralCatalogUpdate": "The central catalog was updated: *{{.Changes}}*.",
       "centralCatalogUpdateDetails": {
-        "nameChange": "Name changed from '{{.OldName}}' to '{{.NewName}}'",
-        "descriptionChange": "Description updated from '{{.OldDescription}}' to '{{.NewDescription}}'",
-        "imageUrlChange": "Image URL updated from '{{.OldImageURL}}' to '{{.NewImageURL}}'",
-        "categoryChange": "Category ID updated from {{.OldCategoryID}} to {{.NewCategoryID}}"
+        "nameChange": "Name changed from {{.OldName}} to {{.NewName}}",
+        "descriptionChange": "Description updated from {{.OldDescription}} to {{.NewDescription}}",
+        "imageUrlChange": "Image URL updated from {{.OldImageURL}} to {{.NewImageURL}}"
       },
 
       "stockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",

@@ -66,10 +66,9 @@
 
 		"centralCatalogUpdate": "Центральный каталог был обновлен: *{{.Changes}}*.",
 		"centralCatalogUpdateDetails": {
-			"nameChange": "Название изменено с '{{.OldName}}' на '{{.NewName}}'",
-			"descriptionChange": "Описание обновлено с '{{.OldDescription}}' на '{{.NewDescription}}'",
-			"imageUrlChange": "URL изображения обновлен с '{{.OldImageURL}}' на '{{.NewImageURL}}'",
-			"categoryChange": "ID категории изменён с {{.OldCategoryID}} на {{.NewCategoryID}}"
+			"nameChange": "Название изменено с {{.OldName}} на {{.NewName}}",
+			"descriptionChange": "Описание обновлено с {{.OldDescription}} на {{.NewDescription}}",
+			"imageUrlChange": "URL изображения обновлен с {{.OldImageURL}} на {{.NewImageURL}}"
 		},
 
 		"stockExpiration": "*{{.ItemName}}* истекает *{{.ExpirationDate}}*.",

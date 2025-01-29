@@ -12,6 +12,7 @@ import (
 
 type AdditiveRepository interface {
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
+	GetStoreAdditiveByID(additiveID, storeID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) (uint, error)
@@ -143,6 +144,23 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 	}
 
 	return &additive, nil
+}
+
+func (r *additiveRepository) GetStoreAdditiveByID(additiveID, storeID uint) (*data.Additive, error) {
+	var storeAdditive data.StoreAdditive
+	err := r.db.Model(&storeAdditive).
+		Preload("Additive").
+		Where("store_id = ? AND additive_id = ?", storeID, additiveID).
+		First(&storeAdditive).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("additive with ID %d not found", additiveID)
+		}
+		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
+	}
+
+	return &storeAdditive.Additive, nil
 }
 
 func (r *additiveRepository) GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error) {

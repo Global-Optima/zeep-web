@@ -66,10 +66,9 @@
    
     "centralCatalogUpdate": "Орталық каталог жаңартылды: *{{.Changes}}*.",
     "centralCatalogUpdateDetails": {
-      "nameChange": "Атауы '{{.OldName}}'-ден '{{.NewName}}'-ке өзгертілді",
-      "descriptionChange": "Сипаттама '{{.OldDescription}}'-ден '{{.NewDescription}}'-ке жаңартылды",
-      "imageUrlChange": "Сурет URL '{{.OldImageURL}}'-ден '{{.NewImageURL}}'-ке жаңартылды",
-      "categoryChange": "Санат ID {{.OldCategoryID}}-ден {{.NewCategoryID}}-ке өзгертілді"
+      "nameChange": "Атауы {{.OldName}}-ден {{.NewName}}-ке өзгертілді",
+      "descriptionChange": "Сипаттама {{.OldDescription}}-ден {{.NewDescription}}-ке жаңартылды",
+      "imageUrlChange": "Сурет URL {{.OldImageURL}}-ден {{.NewImageURL}}-ке жаңартылды"
     },
 
     "stockExpiration": "*{{.ItemName}}* мерзімі *{{.ExpirationDate}}* аяқталады.",

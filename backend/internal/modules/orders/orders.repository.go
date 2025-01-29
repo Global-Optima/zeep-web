@@ -204,6 +204,7 @@ func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 		Preload("Suborders.ProductSize.Product").
 		Preload("Suborders.Additives.Additive").
 		Preload("Suborders.ProductSize.Unit").
+		Preload("Store").
 		Where("id = ?", orderId).
 		First(&order).Error
 

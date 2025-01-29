@@ -11,6 +11,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
 )
 
@@ -40,15 +41,17 @@ type orderService struct {
 	orderRepo           OrderRepository
 	productRepo         product.ProductRepository
 	additiveRepo        additives.AdditiveRepository
+	storeWarehouseRepo  storeWarehouses.StoreWarehouseRepository
 	notificationService notifications.NotificationService
 	logger              *zap.SugaredLogger
 }
 
-func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) OrderService {
+func NewOrderService(orderRepo OrderRepository, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) OrderService {
 	return &orderService{
 		orderRepo:           orderRepo,
 		productRepo:         productRepo,
 		additiveRepo:        additiveRepo,
+		storeWarehouseRepo:  storeWarehouseRepo,
 		notificationService: notificationService,
 		logger:              logger,
 	}
@@ -104,7 +107,7 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
 	productSizeIDs, additiveIDs := RetrieveIDs(*createOrderDTO)
 
-	validations, err := s.ValidationResults(productSizeIDs, additiveIDs)
+	validations, err := s.ValidationResults(storeID, productSizeIDs, additiveIDs)
 	if err != nil {
 		wrappedErr := fmt.Errorf("validation failed: %w", err)
 		s.logger.Error(wrappedErr.Error())
@@ -162,6 +165,20 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 			return wrappedErr
 		}
 
+		stockMap := make(map[uint]*data.StoreWarehouseStock)
+
+		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
+		if err != nil {
+			return fmt.Errorf("failed to deduct ingredients for products: %w", err)
+		}
+
+		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
+		if err != nil {
+			return fmt.Errorf("failed to deduct ingredients for additives: %w", err)
+		}
+
+		s.notifyLowStockIngredients(order, stockMap)
+
 		var newStatus data.OrderStatus
 		if order.DeliveryAddressID != nil {
 			newStatus = data.OrderStatusInDelivery
@@ -179,6 +196,65 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 	}
 
 	return nil
+}
+
+func (s *orderService) deductProductSizeIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreWarehouseStock) error {
+	for _, suborder := range order.Suborders {
+		updatedStocks, err := s.storeWarehouseRepo.DeductStockByProductSizeTechCart(order.StoreID, suborder.ProductSizeID)
+		if err != nil {
+			return fmt.Errorf("failed to deduct from store stock: %w", err)
+		}
+
+		for _, stock := range updatedStocks {
+			if existingStock, exists := stockMap[stock.IngredientID]; exists {
+				existingStock.Quantity = stock.Quantity // Update latest quantity
+			} else {
+				stockMap[stock.IngredientID] = &stock
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreWarehouseStock) error {
+	for _, suborder := range order.Suborders {
+		for _, additive := range suborder.Additives {
+			updatedStocks, err := s.storeWarehouseRepo.DeductStockByAdditiveTechCart(order.StoreID, additive.AdditiveID)
+			if err != nil {
+				return fmt.Errorf("failed to deduct from store stock: %w", err)
+			}
+
+			for _, stock := range updatedStocks {
+				if existingStock, exists := stockMap[stock.IngredientID]; exists {
+					existingStock.Quantity = stock.Quantity // Update latest quantity
+				} else {
+					stockMap[stock.IngredientID] = &stock
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *orderService) notifyLowStockIngredients(order *data.Order, stockMap map[uint]*data.StoreWarehouseStock) {
+	for _, stock := range stockMap {
+		if stock.Quantity <= stock.LowStockThreshold {
+			details := &details.StoreWarehouseRunOutDetails{
+				BaseNotificationDetails: details.BaseNotificationDetails{
+					ID:           order.StoreID,
+					FacilityName: order.Store.Name,
+				},
+				StockItem:   stock.Ingredient.Name,
+				StockItemID: stock.IngredientID,
+			}
+			err := s.notificationService.NotifyStoreWarehouseRunOut(details)
+			if err != nil {
+				s.logger.Errorf("failed to send notification: %v", err)
+			}
+		}
+	}
 }
 
 func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
@@ -237,13 +313,13 @@ func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountD
 	return dto, nil
 }
 
-func (s *orderService) ValidationResults(productSizeIDs, additiveIDs []uint) (*orderValidationResults, error) {
+func (s *orderService) ValidationResults(storeID uint, productSizeIDs, additiveIDs []uint) (*orderValidationResults, error) {
 	productPrices, productNames, err := ValidateProductSizes(productSizeIDs, s.productRepo)
 	if err != nil {
 		return nil, fmt.Errorf("product validation failed: %w", err)
 	}
 
-	additivePrices, additiveNames, err := ValidateAdditives(additiveIDs, s.additiveRepo)
+	additivePrices, additiveNames, err := ValidateAdditives(storeID, additiveIDs, s.additiveRepo)
 	if err != nil {
 		return nil, fmt.Errorf("additive validation failed: %w", err)
 	}
@@ -256,11 +332,11 @@ func (s *orderService) ValidationResults(productSizeIDs, additiveIDs []uint) (*o
 	}, nil
 }
 
-func ValidateAdditives(additiveIDs []uint, repo additives.AdditiveRepository) (map[uint]float64, map[uint]string, error) {
+func ValidateAdditives(storeID uint, additiveIDs []uint, repo additives.AdditiveRepository) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 	for _, id := range additiveIDs {
-		additive, err := repo.GetAdditiveByID(id)
+		additive, err := repo.GetStoreAdditiveByID(id, storeID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid additive ID: %d", id)
 		}
@@ -284,7 +360,7 @@ func ValidateProductSizes(productSizeIDs []uint, repo product.ProductRepository)
 	prices := make(map[uint]float64)
 	productNames := make(map[uint]string)
 	for _, id := range productSizeIDs {
-		productSize, err := repo.GetProductSizeById(id)
+		productSize, err := repo.GetStoreProductSizeById(id)
 		if err != nil {
 			return nil, nil, fmt.Errorf("invalid product size ID: %d", id)
 		}
