@@ -7,6 +7,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 )
 
 func ValidateStatus(status string) error {
@@ -113,9 +114,9 @@ func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localiza
 func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
 	key := "stockRequestComments.quantityMismatch"
 	translations, err := localization.Translate(key, map[string]interface{}{
-		"MaterialName":   details.MaterialName,
-		"Quantity":       details.Quantity,
-		"ActualQuantity": details.ActualQuantity,
+		"OriginalMaterialName": details.OriginalMaterialName,
+		"Quantity":             details.Quantity,
+		"ActualQuantity":       details.ActualQuantity,
 	})
 
 	if err != nil {
@@ -129,7 +130,8 @@ func CombineComments(
 	mismatchComments []localization.LocalizedMessages,
 	unexpectedComments []localization.LocalizedMessages,
 ) *localization.LocalizedMessages {
-	if mismatchComments == nil && unexpectedComments == nil {
+	if len(mismatchComments) == 0 && len(unexpectedComments) == 0 {
+		logger.GetZapSugaredLogger().Warn("No comments to combine")
 		return nil
 	}
 
@@ -141,14 +143,16 @@ func CombineComments(
 		combinedComments.Kk += mismismatchComment.Kk + "\n"
 	}
 
-	combinedComments.En += "\n"
-	combinedComments.Ru += "\n"
-	combinedComments.Kk += "\n"
+	if len(mismatchComments) > 0 {
+		combinedComments.En += "\n"
+		combinedComments.Ru += "\n"
+		combinedComments.Kk += "\n"
+	}
 
 	for _, unexpectedComment := range unexpectedComments {
-		unexpectedComment.En += unexpectedComment.En + "\n"
-		unexpectedComment.Ru += unexpectedComment.Ru + "\n"
-		unexpectedComment.Kk += unexpectedComment.Kk + "\n"
+		combinedComments.En += unexpectedComment.En + "\n"
+		combinedComments.Ru += unexpectedComment.Ru + "\n"
+		combinedComments.Kk += unexpectedComment.Kk + "\n"
 	}
 
 	return &combinedComments

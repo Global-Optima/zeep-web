@@ -77,8 +77,8 @@
       "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*."
   },
   "stockRequestComments": {
-    "quantityMismatch" : "*{{OriginalMaterialName}}* received *{{ActualQuantity}}*, expected *{{Quantity}}*",
-    "unexpectedMaterial" : "Unexpected material *{{MaterialName}}* received *{{ActualQuantity}}*"
+    "quantityMismatch" : "*{{.OriginalMaterialName}}* received *{{.ActualQuantity}}*, expected *{{.Quantity}}*",
+    "unexpectedMaterial" : "Unexpected material *{{.MaterialName}}* received *{{.ActualQuantity}}*"
   }
 }
 
