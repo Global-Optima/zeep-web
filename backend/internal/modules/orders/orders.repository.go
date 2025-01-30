@@ -24,11 +24,12 @@ type OrderRepository interface {
 	GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error)
 	UpdateSubOrderStatus(subOrderID uint, status data.SubOrderStatus) error
 	AddSubOrderAdditive(subOrderID uint, additive *data.SuborderAdditive) error
-	CheckAllSubordersCompleted(subOrderID uint) (uint, bool, error)
+	CheckAllSubordersCompleted(orderID, subOrderID uint) (bool, error)
 	GetOrderBySubOrderID(subOrderID uint) (*data.Order, error)
 
 	GetOrderDetails(orderID uint) (*data.Order, error)
 	GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error)
+	GetSuborderByID(suborderID uint) (*data.Suborder, error)
 }
 
 type orderRepository struct {
@@ -244,24 +245,22 @@ func (r *orderRepository) AddSubOrderAdditive(suborderID uint, additive *data.Su
 	return r.db.Create(additive).Error
 }
 
-func (r *orderRepository) CheckAllSubordersCompleted(subOrderID uint) (uint, bool, error) {
+func (r *orderRepository) CheckAllSubordersCompleted(orderID, subOrderID uint) (bool, error) {
 	var suborder data.Suborder
 	err := r.db.Select("order_id").Where("id = ?", subOrderID).First(&suborder).Error
 	if err != nil {
-		return 0, false, fmt.Errorf("failed to fetch suborder: %w", err)
+		return false, fmt.Errorf("failed to fetch suborder: %w", err)
 	}
-
-	orderID := suborder.OrderID
 
 	var count int64
 	err = r.db.Model(&data.Suborder{}).
 		Where("order_id = ? AND status != ?", orderID, data.SubOrderStatusCompleted).
 		Count(&count).Error
 	if err != nil {
-		return 0, false, fmt.Errorf("failed to count suborders: %w", err)
+		return false, fmt.Errorf("failed to count suborders: %w", err)
 	}
 
-	return orderID, count == 0, nil
+	return count == 0, nil
 }
 
 func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, error) {
@@ -326,4 +325,13 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 		return nil, err
 	}
 	return orders, nil
+}
+
+func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, error) {
+	var suborder data.Suborder
+	err := r.db.Where("id = ?", suborderID).First(&suborder).Error
+	if err != nil {
+		return nil, err
+	}
+	return &suborder, nil
 }
