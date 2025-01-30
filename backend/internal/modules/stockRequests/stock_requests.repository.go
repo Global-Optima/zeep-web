@@ -321,7 +321,7 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientQuantity(ingredient
 
 func (r *stockRequestRepository) AddDetails(stockRequestID uint, newDetails []types.StockRequestDetails) error {
 	var existingDetails []types.StockRequestDetails
-	var detailsJSON datatypes.JSON
+	var detailsJSON *datatypes.JSON
 
 	err := r.db.Model(&data.StockRequest{}).
 		Select("details").
@@ -331,12 +331,12 @@ func (r *stockRequestRepository) AddDetails(stockRequestID uint, newDetails []ty
 		return fmt.Errorf("failed to fetch existing details: %w", err)
 	}
 
-	if len(detailsJSON) > 0 {
-		if err := json.Unmarshal(detailsJSON, &existingDetails); err != nil {
+	if detailsJSON == nil || len(*detailsJSON) == 0 {
+		existingDetails = []types.StockRequestDetails{}
+	} else {
+		if err := json.Unmarshal(*detailsJSON, &existingDetails); err != nil {
 			return fmt.Errorf("failed to unmarshal existing details: %w", err)
 		}
-	} else {
-		existingDetails = []types.StockRequestDetails{}
 	}
 
 	existingDetails = append(existingDetails, newDetails...)

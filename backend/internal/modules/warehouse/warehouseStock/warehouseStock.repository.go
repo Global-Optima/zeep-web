@@ -159,8 +159,16 @@ func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryF
 	}
 
 	if filter.Search != nil {
+
 		search := "%" + *filter.Search + "%"
-		query = query.Where("suppliers.name ILIKE ?", search)
+		query = query.
+			Joins("JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.delivery_id = supplier_warehouse_deliveries.id").
+			Joins("JOIN stock_materials ON supplier_warehouse_delivery_materials.stock_material_id = stock_materials.id").
+			Where(`stock_materials.name ILIKE ? OR 
+				stock_materials.description ILIKE ? OR 
+				stock_materials.barcode ILIKE ? OR
+				suppliers.name ILIKE ?
+			`, search, search, search, search)
 	}
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.SupplierWarehouseDelivery{})
