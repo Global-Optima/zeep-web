@@ -560,7 +560,7 @@ func (r *employeeRepository) GetAllAdminEmployees() ([]data.Employee, error) {
 	var employees []data.Employee
 
 	err := r.db.Model(&data.Employee{}).
-		Joins("INNER JOIN warehouse_employees ON warehouse_employees.employee_id = employees.id").
+		Joins("INNER JOIN admin_employees ON admin_employees.employee_id = employees.id").
 		Find(&employees).Error
 
 	if err != nil {
