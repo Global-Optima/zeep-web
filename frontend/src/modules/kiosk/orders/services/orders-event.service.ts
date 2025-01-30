@@ -14,6 +14,7 @@ const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'
 export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	const queryClient = useQueryClient()
 	const url = `${wsUrl}/orders/ws`
+	const localFilter = ref({ ...filter })
 
 	const {
 		status,
@@ -53,19 +54,17 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 		}
 	})
 
-
-	const filteredOrders = computed<OrderDTO[]>(() => {
-		let result = allOrders.value
-
-		if (filter.status) {
-			result = result.filter(order => order.status === filter.status)
-		}
-
-		return result
+	const filteredOrders = computed(() => {
+		if (!localFilter.value.status) return allOrders.value
+		return allOrders.value.filter(order => order.status === localFilter.value.status)
 	})
 
+	function setFilter(filter: OrderFilterOptions) {
+		localFilter.value = { ...localFilter.value, ...filter }
+	}
+
 	function invalidateOrderStatuses() {
-		queryClient.invalidateQueries({ queryKey: ['statuses'] })
+		queryClient.invalidateQueries({ queryKey: ['order-statuses'] })
 	}
 
 	function handleInitialData(initialOrders: OrderDTO[]) {
@@ -104,6 +103,7 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	return {
 		status,
 		filteredOrders,
+		setFilter,
 		send,
 		open,
 		close,
