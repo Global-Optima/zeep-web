@@ -35,7 +35,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	if len(req.StockMaterials) == 0 {
+	if len(req.StockMaterials) == 0 {	
 		utils.SendBadRequestError(c, "The cart cannot be empty")
 		return
 	}
