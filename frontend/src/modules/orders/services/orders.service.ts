@@ -1,6 +1,7 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import type {
 	CreateOrderDTO,
@@ -8,8 +9,8 @@ import type {
 	OrdersExportFilterQuery,
 	OrdersFilterQuery,
 	OrderStatusesCountDTO,
+	SuborderDTO,
 } from '../models/orders.models'
-import { format } from 'date-fns'
 
 class OrderService {
 	async getAllOrders(filter?: OrdersFilterQuery) {
@@ -33,11 +34,45 @@ class OrderService {
 		}
 	}
 
+	async getSuborderBarcode(suborderId: number) {
+		try {
+			const response = await apiClient.get<Blob>(`/orders/suborders/${suborderId}/barcode`, {
+				responseType: 'blob',
+			})
+			return response.data
+		} catch (error) {
+			console.error(`Failed to fetch barcode for suborder ID ${suborderId}:`, error)
+			throw error
+		}
+	}
+
 	async completeSubOrder(orderId: number, subOrderId: number): Promise<void> {
 		try {
 			await apiClient.put(`/orders/${orderId}/suborders/${subOrderId}/complete`, {})
 		} catch (error) {
 			console.error('Failed to complete sub-order:', error)
+			throw error
+		}
+	}
+
+	async completeSubOrderById(subOrderId: number) {
+		try {
+			const response = await apiClient.put<SuborderDTO>(
+				`/orders/suborders/${subOrderId}/complete`,
+				{},
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to complete sub-order:', error)
+			throw error
+		}
+	}
+
+	async revertSubOrderById(subOrderId: number): Promise<void> {
+		try {
+			await apiClient.put(`/orders/suborders/${subOrderId}/revert`, {})
+		} catch (error) {
+			console.error('Failed to revert sub-order:', error)
 			throw error
 		}
 	}
@@ -85,7 +120,7 @@ class OrderService {
 
 			// Extract filename from Content-Disposition header
 			const contentDisposition = response.headers['Content-Disposition']
-			let filename = `orders_export_${format(new Date(), "dd_MM_yyyy")}.xlsx`
+			let filename = `orders_export_${format(new Date(), 'dd_MM_yyyy')}.xlsx`
 
 			if (contentDisposition) {
 				const filenameMatch = contentDisposition.match(/filename="?(.+)"?/)

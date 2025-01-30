@@ -8,16 +8,18 @@
 			v-if="suborder"
 		>
 			<div class="relative flex flex-col gap-4 bg-white p-6 rounded-xl overflow-y-auto">
-				<button
-					class="top-6 right-6 absolute"
+				<Button
+					size="icon"
+					variant="ghost"
+					class="top-6 right-6 absolute !p-2"
 					:disabled="suborder.status === 'COMPLETED'"
 					@click="printQrCode"
 				>
 					<Printer
 						stroke-width="1.5"
-						class="w-8 h-8"
+						class="!size-8"
 					/>
-				</button>
+				</Button>
 
 				<div>
 					<p class="font-medium text-xl">
@@ -86,25 +88,30 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/core/components/ui/button'
+import { usePrinter } from '@/core/hooks/use-print.hook'
 import type { SuborderDTO } from '@/modules/orders/models/orders.models'
+import { ordersService } from '@/modules/orders/services/orders.service'
 import { Plus, Printer } from 'lucide-vue-next'
 
-const props = defineProps<{
+const {suborder} = defineProps<{
   suborder: SuborderDTO | null;
 }>();
 
 const emits = defineEmits<{
   (e: 'toggleSuborderStatus', suborder: SuborderDTO): void;
-  (e: 'printQrCode', suborder: SuborderDTO): void;
 }>();
 
 const toggleSuborderStatus = (suborder: SuborderDTO) => {
   emits('toggleSuborderStatus', suborder);
 };
 
-const printQrCode = () => {
-  if (props.suborder) {
-    emits('printQrCode', props.suborder);
+const {print} = usePrinter()
+
+const printQrCode = async () => {
+  if (suborder) {
+    const subOrderBarcode = await ordersService.getSuborderBarcode(suborder.id);
+    print(subOrderBarcode)
   }
 };
 </script>

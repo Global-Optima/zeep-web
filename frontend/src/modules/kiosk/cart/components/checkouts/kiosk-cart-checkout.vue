@@ -56,7 +56,6 @@ const stepsConfig: StepConfig[] = [
     ),
     onProceed: (data: { customerName: string }) => {
       stepState.value.customerName = data.customerName;
-      console.log(stepState.value.customerName)
     },
     onBack: null,
   },
@@ -67,7 +66,6 @@ const stepsConfig: StepConfig[] = [
     ),
     onProceed: async (data: { selectedPayment: string }) => {
       stepState.value.selectedPayment = data.selectedPayment;
-      console.log("HERE", stepState.value.customerName)
       try {
 
         const orderDTO: CreateOrderDTO = {

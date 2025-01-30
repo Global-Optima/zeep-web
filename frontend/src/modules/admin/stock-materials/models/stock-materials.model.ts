@@ -52,3 +52,7 @@ export interface StockMaterialsFilter extends PaginationParams {
 	supplierId?: number
 	expirationInDays?: number
 }
+
+export interface GeneratedStockMaterialBarcode {
+  barcode: string
+}

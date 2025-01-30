@@ -45,7 +45,6 @@ import {
 import { Icon } from '@iconify/vue'
 
 const { locale } = useI18n()
-console.log(locale)
 const router = useRouter()
 
 const supportedLocales = [

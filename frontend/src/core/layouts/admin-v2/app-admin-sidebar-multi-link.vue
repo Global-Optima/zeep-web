@@ -62,10 +62,7 @@ const isActiveParent = computed(() => {
 });
 
 const onParentClick = () => {
-  console.log("HEREEEE", item.items)
-
   if(!item.items[0]) return
-  console.log("HEREEEE")
   router.push({ name: getRouteName(item.items[0].routeKey) })
 }
 
