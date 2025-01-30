@@ -332,7 +332,7 @@ func (s *orderService) deductProductSizeIngredientsFromStock(order *data.Order, 
 
 func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreWarehouseStock) error {
 	for _, suborder := range order.Suborders {
-		for _, storeAdditive := range suborder.StoreAdditives {
+		for _, storeAdditive := range suborder.SuborderAdditives {
 			updatedStocks, err := s.storeWarehouseRepo.DeductStockByAdditiveTechCart(order.StoreID, storeAdditive.StoreAdditiveID)
 			if err != nil {
 				return fmt.Errorf("failed to deduct from store stock: %w", err)
@@ -392,7 +392,7 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 			Status:      string(suborder.Status),
 		}
 
-		for _, storeAdditive := range suborder.StoreAdditives {
+		for _, storeAdditive := range suborder.SuborderAdditives {
 			pdfSuborder.Additives = append(pdfSuborder.Additives, pdf.PDFAdditive{
 				Name:  fmt.Sprintf("Additive #%d", storeAdditive.StoreAdditiveID),
 				Price: storeAdditive.Price,
@@ -427,12 +427,12 @@ func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountD
 }
 
 func (s *orderService) ValidationResults(storeID uint, storeProductSizeIDs, storeAdditiveIDs []uint) (*orderValidationResults, error) {
-	productPrices, productNames, err := ValidateProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo)
+	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo)
 	if err != nil {
 		return nil, fmt.Errorf("product validation failed: %w", err)
 	}
 
-	additivePrices, additiveNames, err := ValidateAdditives(storeID, storeAdditiveIDs, s.storeAdditiveRepo)
+	additivePrices, additiveNames, err := ValidateStoreAdditives(storeID, storeAdditiveIDs, s.storeAdditiveRepo)
 	if err != nil {
 		return nil, fmt.Errorf("additive validation failed: %w", err)
 	}
@@ -445,19 +445,19 @@ func (s *orderService) ValidationResults(storeID uint, storeProductSizeIDs, stor
 	}, nil
 }
 
-func ValidateAdditives(storeID uint, storeAdditiveIDs []uint, repo storeAdditives.StoreAdditiveRepository) (map[uint]float64, map[uint]string, error) {
+func ValidateStoreAdditives(storeID uint, storeAdditiveIDs []uint, repo storeAdditives.StoreAdditiveRepository) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 	for _, id := range storeAdditiveIDs {
-		storeAdditive, err := repo.GetStoreAdditiveByID(id, storeID)
+		storeAdditive, err := repo.GetStoreAdditiveByID(storeID, id)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid additive ID: %d", id)
+			return nil, nil, fmt.Errorf("invalid store additive ID: %d", id)
 		}
 		if storeAdditive == nil {
-			return nil, nil, fmt.Errorf("additive with ID %d is nil", id)
+			return nil, nil, fmt.Errorf("store additive with ID %d is nil", id)
 		}
 		if storeAdditive.Additive.Name == "" {
-			return nil, nil, fmt.Errorf("additive with ID %d has an empty name", id)
+			return nil, nil, fmt.Errorf("store additive with ID %d has an empty name", id)
 		}
 
 		price := storeAdditive.Additive.BasePrice
@@ -470,7 +470,7 @@ func ValidateAdditives(storeID uint, storeAdditiveIDs []uint, repo storeAdditive
 	return prices, additiveNames, nil
 }
 
-func ValidateProductSizes(storeID uint, storeProductSizeIDs []uint, repo storeProducts.StoreProductRepository) (map[uint]float64, map[uint]string, error) {
+func ValidateStoreProductSizes(storeID uint, storeProductSizeIDs []uint, repo storeProducts.StoreProductRepository) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	productNames := make(map[uint]string)
 	for _, id := range storeProductSizeIDs {
@@ -481,7 +481,7 @@ func ValidateProductSizes(storeID uint, storeProductSizeIDs []uint, repo storePr
 		if storeProductSize == nil {
 			return nil, nil, fmt.Errorf("store product size with ID %d is nil", id)
 		}
-		if storeProductSize.StoreProduct.Product.Name == "" {
+		if storeProductSize.ProductSize.Product.Name == "" {
 			return nil, nil, fmt.Errorf("product size with ID %d has an associated product with an empty name", id)
 		}
 

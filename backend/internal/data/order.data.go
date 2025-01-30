@@ -40,7 +40,7 @@ type Suborder struct {
 	StoreProductSize   StoreProductSize   `gorm:"foreignKey:StoreProductSizeID;constraint:OnDelete:CASCADE"`
 	Price              float64            `gorm:"type:decimal(10,2);not null;check:price >= 0"`
 	Status             SubOrderStatus     `gorm:"size:50;not null"`
-	StoreAdditives     []SuborderAdditive `gorm:"foreignKey:SuborderID;constraint:OnDelete:CASCADE"`
+	SuborderAdditives  []SuborderAdditive `gorm:"foreignKey:SuborderID;constraint:OnDelete:CASCADE"`
 }
 
 // SuborderAdditive Model

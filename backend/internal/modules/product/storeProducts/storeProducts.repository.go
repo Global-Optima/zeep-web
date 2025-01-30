@@ -277,6 +277,7 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 		Joins("JOIN store_products sp ON store_product_sizes.store_product_id = sp.id").
 		Where("sp.store_id = ? AND store_product_sizes.id = ?", storeID, storeProductSizeID).
 		Preload("ProductSize.Unit").
+		Preload("ProductSize.Product").
 		Preload("ProductSize.Additives.Additive.Category").
 		Preload("ProductSize.Additives.Additive.Unit").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
