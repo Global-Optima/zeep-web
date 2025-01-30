@@ -21,6 +21,8 @@ type StoreWarehouseRepository interface {
 	DeleteStockById(storeId, stockId uint) error
 	WithTransaction(txFunc func(txRepo storeWarehouseRepository) error) error
 	CloneWithTransaction(tx *gorm.DB) storeWarehouseRepository
+	DeductStockByProductSizeTechCart(storeID, productSizeID uint) ([]data.StoreWarehouseStock, error)
+	DeductStockByAdditiveTechCart(storeID, additiveID uint) ([]data.StoreWarehouseStock, error)
 }
 
 type storeWarehouseRepository struct {
@@ -334,4 +336,175 @@ func (r *storeWarehouseRepository) DeleteStockById(storeId, stockId uint) error 
 	}
 
 	return nil
+}
+
+func (r *storeWarehouseRepository) DeductStockByProductSizeTechCart(storeID, productSizeID uint) ([]data.StoreWarehouseStock, error) {
+	var storeWarehouse data.StoreWarehouse
+	if err := r.getStoreWarehouse(storeID, &storeWarehouse); err != nil {
+		return nil, err
+	}
+
+	productSizeIngredients, err := r.getProductSizeIngredients(productSizeID)
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedStocks []data.StoreWarehouseStock
+
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+		for _, ingredient := range productSizeIngredients {
+			updatedStock, err := r.deductProductSizeIngredientStock(tx, storeWarehouse.ID, ingredient)
+			if err != nil {
+				return err
+			}
+			updatedStocks = append(updatedStocks, *updatedStock)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedStocks, nil
+}
+
+func (r *storeWarehouseRepository) DeductStockByAdditiveTechCart(storeID, additiveID uint) ([]data.StoreWarehouseStock, error) {
+	var storeWarehouse data.StoreWarehouse
+	if err := r.getStoreWarehouse(storeID, &storeWarehouse); err != nil {
+		return nil, err
+	}
+
+	additiveIngredients, err := r.getAdditiveIngredients(additiveID)
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedStocks []data.StoreWarehouseStock
+
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+		for _, ingredient := range additiveIngredients {
+			updatedStock, err := r.deductAdditiveIngredientStock(tx, storeWarehouse.ID, ingredient)
+			if err != nil {
+				return err
+			}
+			updatedStocks = append(updatedStocks, *updatedStock)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedStocks, nil
+}
+
+func (r *storeWarehouseRepository) getStoreWarehouse(storeID uint, storeWarehouse *data.StoreWarehouse) error {
+	err := r.db.Where("store_id = ?", storeID).First(storeWarehouse).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("store warehouse not found for store ID %d", storeID)
+		}
+		return fmt.Errorf("failed to fetch store warehouse: %w", err)
+	}
+	return nil
+}
+
+func (r *storeWarehouseRepository) getProductSizeIngredients(productSizeID uint) ([]data.ProductSizeIngredient, error) {
+	var productSizeIngredients []data.ProductSizeIngredient
+	err := r.db.Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		Where("product_size_id = ?", productSizeID).
+		Find(&productSizeIngredients).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch product size ingredients: %w", err)
+	}
+	return productSizeIngredients, nil
+}
+
+func (r *storeWarehouseRepository) getAdditiveIngredients(additiveID uint) ([]data.AdditiveIngredient, error) {
+	var additiveIngredients []data.AdditiveIngredient
+	err := r.db.Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		Where("additive_id = ?", additiveID).
+		Find(&additiveIngredients).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch additive ingredients: %w", err)
+	}
+	return additiveIngredients, nil
+}
+
+func (r *storeWarehouseRepository) deductProductSizeIngredientStock(tx *gorm.DB, storeWarehouseID uint, ingredient data.ProductSizeIngredient) (*data.StoreWarehouseStock, error) {
+	var existingStock data.StoreWarehouseStock
+	err := tx.Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouseID, ingredient.IngredientID).
+		First(&existingStock).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("stock not found for ingredient ID %d", ingredient.IngredientID)
+		}
+		return nil, fmt.Errorf("failed to fetch store warehouse stock: %w", err)
+	}
+
+	var deductedQuantity float64
+	if existingStock.Ingredient.UnitID == ingredient.Ingredient.UnitID {
+		deductedQuantity = ingredient.Quantity
+	} else {
+		deductedQuantity = ingredient.Quantity * existingStock.Ingredient.Unit.ConversionFactor
+	}
+
+	if existingStock.Quantity < deductedQuantity {
+		return nil, fmt.Errorf("insufficient stock for ingredient ID %d", ingredient.IngredientID)
+	}
+
+	newQuantity := existingStock.Quantity - deductedQuantity
+	err = tx.Model(&data.StoreWarehouseStock{}).
+		Where("id = ?", existingStock.ID).
+		Update("quantity", newQuantity).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to update store warehouse stock for ingredient ID %d: %w", ingredient.IngredientID, err)
+	}
+
+	existingStock.Quantity = newQuantity
+	return &existingStock, nil
+}
+
+func (r *storeWarehouseRepository) deductAdditiveIngredientStock(tx *gorm.DB, storeWarehouseID uint, ingredient data.AdditiveIngredient) (*data.StoreWarehouseStock, error) {
+	var existingStock data.StoreWarehouseStock
+	err := tx.Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouseID, ingredient.IngredientID).
+		First(&existingStock).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("stock not found for ingredient ID %d", ingredient.IngredientID)
+		}
+		return nil, fmt.Errorf("failed to fetch store warehouse stock: %w", err)
+	}
+
+	var deductedQuantity float64
+	if existingStock.Ingredient.UnitID == ingredient.Ingredient.UnitID {
+		deductedQuantity = ingredient.Quantity
+	} else {
+		deductedQuantity = ingredient.Quantity * existingStock.Ingredient.Unit.ConversionFactor
+	}
+
+	if existingStock.Quantity < deductedQuantity {
+		return nil, fmt.Errorf("insufficient stock for ingredient ID %d", ingredient.IngredientID)
+	}
+
+	newQuantity := existingStock.Quantity - deductedQuantity
+	err = tx.Model(&data.StoreWarehouseStock{}).
+		Where("id = ?", existingStock.ID).
+		Update("quantity", newQuantity).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to update store warehouse stock for ingredient ID %d: %w", ingredient.IngredientID, err)
+	}
+
+	existingStock.Quantity = newQuantity
+	return &existingStock, nil
 }

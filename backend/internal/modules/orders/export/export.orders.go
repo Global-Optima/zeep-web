@@ -59,7 +59,7 @@ func addOrdersSheet(sheet *xlsx.Sheet, data []types.OrderExportDTO, file *xlsx.F
 
 func addProductSheet(sheet *xlsx.Sheet, suborders []types.SuborderDTO, file *xlsx.File) {
 	headerRow := sheet.AddRow()
-	headers := []string{"Product Name", "Size", "Price"}
+	headers := []string{"Product Name", "Size", "StorePrice"}
 	for _, header := range headers {
 		cell := headerRow.AddCell()
 		cell.Value = header
@@ -88,7 +88,7 @@ func addProductSheet(sheet *xlsx.Sheet, suborders []types.SuborderDTO, file *xls
 
 func addAdditiveSheet(sheet *xlsx.Sheet, additives []types.SuborderAdditiveDTO) {
 	headerRow := sheet.AddRow()
-	headers := []string{"Additive Name", "Price"}
+	headers := []string{"Additive Name", "StorePrice"}
 	for _, header := range headers {
 		cell := headerRow.AddCell()
 		cell.Value = header

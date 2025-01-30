@@ -14,11 +14,11 @@ import (
 
 type ProductsModule struct {
 	*common.BaseModule
-	Repo          product.ProductRepository
-	Service       product.ProductService
-	Handler       *product.ProductHandler
-	Recipe        *RecipeModule
-	StoreProducts *StoreProductsModule
+	Repo                product.ProductRepository
+	Service             product.ProductService
+	Handler             *product.ProductHandler
+	Recipe              *RecipeModule
+	StoreProductsModule *StoreProductsModule
 }
 
 func NewProductsModule(
@@ -39,12 +39,12 @@ func NewProductsModule(
 	base.Router.RegisterProductRoutes(handler)
 
 	return &ProductsModule{
-		BaseModule:    base,
-		Repo:          repo,
-		Service:       service,
-		Handler:       handler,
-		Recipe:        recipeModule,
-		StoreProducts: storeProductsModule,
+		BaseModule:          base,
+		Repo:                repo,
+		Service:             service,
+		Handler:             handler,
+		Recipe:              recipeModule,
+		StoreProductsModule: storeProductsModule,
 	}
 }
 

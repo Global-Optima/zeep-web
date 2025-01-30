@@ -66,15 +66,18 @@
 
 		"centralCatalogUpdate": "Центральный каталог был обновлен: *{{.Changes}}*.",
 		"centralCatalogUpdateDetails": {
-			"nameChange": "Название изменено с '{{.OldName}}' на '{{.NewName}}'",
-			"descriptionChange": "Описание обновлено с '{{.OldDescription}}' на '{{.NewDescription}}'",
-			"imageUrlChange": "URL изображения обновлен с '{{.OldImageURL}}' на '{{.NewImageURL}}'",
-			"categoryChange": "ID категории изменён с {{.OldCategoryID}} на {{.NewCategoryID}}"
+			"nameChange": "Название изменено с {{.OldName}} на {{.NewName}}",
+			"descriptionChange": "Описание обновлено с {{.OldDescription}} на {{.NewDescription}}",
+			"imageUrlChange": "URL изображения обновлен с {{.OldImageURL}} на {{.NewImageURL}}"
 		},
 
 		"stockExpiration": "*{{.ItemName}}* истекает *{{.ExpirationDate}}*.",
 		"warehouseOutOfStock": "*{{.ItemName}}* заканчивается на складе.",
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",
 		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."
-	}
+	},
+	"stockRequestComments": {
+		"quantityMismatch" : "*{{OriginalMaterialName}}* получено *{{ActualQuantity}}*, ожидалось *{{Quantity}}*.",
+		"unexpectedMaterial" : "В поставке непредусмотренный материал *{{MaterialName}}*, количество *{{ActualQuantity}}* ."
+	  }
 }

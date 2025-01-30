@@ -124,7 +124,7 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		unit_id INT NOT NULL REFERENCES units (id) ON DELETE RESTRICT,
-		base_price DECIMAL(10, 2) NOT NULL,
+		base_price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
 		size INT NOT NULL,
 		is_default BOOLEAN DEFAULT FALSE,
 		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
@@ -144,7 +144,7 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		description TEXT,
-		base_price DECIMAL(10, 2) DEFAULT 0,
+		base_price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
         size INT NOT NULL,
         unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
 		additive_category_id INT NOT NULL REFERENCES additive_categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -192,7 +192,7 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-		price DECIMAL(10, 2) DEFAULT 0,
+        store_price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -224,7 +224,7 @@ CREATE TABLE
     id SERIAL PRIMARY KEY,
     product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
     store_product_id INT NOT NULL REFERENCES store_products (id),
-    price DECIMAL(10, 2) DEFAULT 0,
+    store_price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
@@ -653,8 +653,8 @@ CREATE TABLE
 	 suborders (
 		id SERIAL PRIMARY KEY,
 		order_id INT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE RESTRICT,
-		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+		store_product_size_id INT NOT NULL REFERENCES store_product_sizes (id) ON DELETE RESTRICT,
+		price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
 		status VARCHAR(50) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -666,8 +666,8 @@ CREATE TABLE
 	 suborder_additives (
 		id SERIAL PRIMARY KEY,
 		suborder_id INT NOT NULL REFERENCES suborders (id) ON DELETE CASCADE,
-		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
-		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+		store_additive_id INT NOT NULL REFERENCES store_additives (id) ON DELETE CASCADE,
+		price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -680,6 +680,7 @@ CREATE TABLE
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		status VARCHAR(50) NOT NULL,
+		details JSONB,
 		store_comment TEXT,
 		warehouse_comment TEXT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -798,7 +799,7 @@ CREATE UNIQUE INDEX unique_supplier_material
 CREATE TABLE  supplier_prices (
     id SERIAL PRIMARY KEY,
     supplier_material_id INT NOT NULL REFERENCES supplier_materials(id) ON DELETE CASCADE,
-    base_price DECIMAL(10, 2) NOT NULL CHECK (base_price >= 0),
+    base_price DECIMAL(10, 2) NOT NULL CHECK (base_price > 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ

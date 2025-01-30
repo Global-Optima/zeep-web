@@ -726,15 +726,7 @@ VALUES
     (4, 17, true), -- Mint Tea
     (4, 12, true);
 
--- Energy Drink
-INSERT INTO
-    store_product_sizes (
-        store_product_id,
-        product_size_id,
-        price,
-        created_at,
-        updated_at
-    )
+INSERT INTO store_product_sizes (store_product_id, product_size_id, store_price, created_at, updated_at)
 SELECT
     sp.id,
     ps.id,
@@ -782,14 +774,7 @@ VALUES
     (9, 5, false),
     (10, 9, false);
 
-INSERT INTO
-    store_additives (
-        store_id,
-        additive_id,
-        price,
-        created_at,
-        updated_at
-    )
+INSERT INTO store_additives (store_id, additive_id, store_price, created_at, updated_at)
 SELECT DISTINCT
     1,
     psa.additive_id,

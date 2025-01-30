@@ -8,17 +8,19 @@ import (
 )
 
 func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
-	storePrice := storeAdditive.Price
-	if storePrice == 0 {
-		storePrice = storeAdditive.Additive.BasePrice
-	}
-
 	return &StoreAdditiveDTO{
 		ID:              storeAdditive.ID,
 		BaseAdditiveDTO: *additiveTypes.ConvertToBaseAdditiveDTO(&storeAdditive.Additive),
 		AdditiveID:      storeAdditive.AdditiveID,
-		StorePrice:      storePrice,
+		StorePrice:      getStorePrice(storeAdditive),
 	}
+}
+
+func getStorePrice(storeAdditive *data.StoreAdditive) float64 {
+	if storeAdditive.StorePrice != nil {
+		return *storeAdditive.StorePrice
+	}
+	return storeAdditive.Additive.BasePrice
 }
 
 func ConvertToStoreAdditiveDetailsDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDetailsDTO {
@@ -54,7 +56,7 @@ func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []S
 				ID:                          additive.StoreAdditives[0].ID,
 				BaseAdditiveCategoryItemDTO: *additiveTypes.ConvertToBaseAdditiveCategoryItem(&additive, category.ID),
 				AdditiveID:                  additive.StoreAdditives[0].AdditiveID,
-				StorePrice:                  additive.StoreAdditives[0].Price,
+				StorePrice:                  getStorePrice(&additive.StoreAdditives[0]),
 				IsDefault:                   additive.ProductSizeAdditives[0].IsDefault,
 			})
 		}
@@ -69,12 +71,12 @@ func CreateToStoreAdditive(dto *CreateStoreAdditiveDTO, storeID uint) *data.Stor
 	return &data.StoreAdditive{
 		StoreID:    storeID,
 		AdditiveID: dto.AdditiveID,
-		Price:      dto.StorePrice,
+		StorePrice: dto.StorePrice,
 	}
 }
 
 func UpdateToStoreAdditive(dto *UpdateStoreAdditiveDTO) *data.StoreAdditive {
 	return &data.StoreAdditive{
-		Price: dto.StorePrice,
+		StorePrice: dto.StorePrice,
 	}
 }
