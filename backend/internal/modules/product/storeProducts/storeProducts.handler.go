@@ -2,14 +2,15 @@ package storeProducts
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"go.uber.org/zap"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
@@ -68,7 +69,7 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 	utils.SendSuccessResponse(c, productDetails)
 }
 
-func (h *StoreProductHandler) GetProductsListToAdd(c *gin.Context) {
+func (h *StoreProductHandler) GetAvailableProducts(c *gin.Context) {
 	var filter productTypes.ProductsFilterDto
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {

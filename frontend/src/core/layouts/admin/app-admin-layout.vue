@@ -27,10 +27,29 @@ const onBaristaClick = () => {
 }
 
 const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.BARISTA, EmployeeRole.STORE_MANAGER].includes(currentEmployee.role) : false )
+
+const layoutLabel = computed(() => {
+  if (!currentEmployee?.type) return "ZEEP"
+
+  switch (currentEmployee.type) {
+    case EmployeeType.STORE:
+      return "Кафе"
+    case EmployeeType.ADMIN:
+      return "Администрация"
+    case EmployeeType.FRANCHISEE:
+      return "Франшизы"
+    case EmployeeType.REGION:
+      return "Регионы"
+    case EmployeeType.WAREHOUSE:
+      return "Склад"
+    default:
+      return "ZEEP"
+  }
+})
 </script>
 
 <template>
-	<div class="grid md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr] bg-white w-full min-h-screen">
+	<div class="flex bg-white w-full min-h-screen">
 		<div class="md:block relative hidden bg-muted/40 border-r">
 			<div class="top-0 sticky flex flex-col gap-2 h-full max-h-screen">
 				<div class="flex items-center px-4 lg:px-6 border-b h-14 lg:h-[60px]">
@@ -41,10 +60,9 @@ const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.B
 						<div class="flex items-center gap-2">
 							<span class="font-bold text-xl">Zeep</span>
 							<span class="font-normal text-base">|</span>
-							<span
-								class="font-normal"
-								>{{ currentEmployee?.type === EmployeeType.STORE ? "Кафе" : "Склад" }}</span
-							>
+							<span class="font-normal">
+								{{ layoutLabel }}
+							</span>
 						</div>
 					</a>
 				</div>
@@ -86,7 +104,7 @@ const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.B
 			</div>
 		</div>
 
-		<div class="flex flex-col overflow-y-auto">
+		<div class="flex flex-col flex-1">
 			<AppAdminHeader />
 
 			<main class="flex-1 bg-slate-50 p-4 lg:p-6">

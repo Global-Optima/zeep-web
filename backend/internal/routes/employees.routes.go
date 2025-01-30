@@ -107,7 +107,7 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 		router.GET("/categories", handler.GetStoreProductCategories, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
 
 		router.GET("", handler.GetStoreProducts, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
-		router.GET("/addList", handler.GetProductsListToAdd, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
+		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.GetAvailableProducts)
 		router.GET("/:id", handler.GetStoreProduct, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
 		router.POST("", handler.CreateStoreProduct, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
 		router.POST("/multiple", handler.CreateMultipleStoreProducts, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
