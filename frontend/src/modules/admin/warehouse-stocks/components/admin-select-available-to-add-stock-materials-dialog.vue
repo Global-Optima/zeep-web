@@ -5,7 +5,7 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите материал</DialogTitle>
+				<DialogTitle>Выберите доступный материал</DialogTitle>
 			</DialogHeader>
 
 			<div>
@@ -66,7 +66,6 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
-import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
 import type { AvailableWarehouseStockMaterialsFilter } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { warehouseStocksService } from '@/modules/admin/warehouse-stocks/services/warehouse-stocks.service'
 import { useQuery } from '@tanstack/vue-query'

@@ -3,6 +3,7 @@ import { Button } from '@/core/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/core/components/ui/popover'
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
+import { formatLocalizedMessage } from '@/core/utils/format-localized-messages.utils'
 import type {
   GetNotificationsFilter,
   MarkNotificationsAsReadDTO,
@@ -61,7 +62,6 @@ const onSeeAllClick = () => {
 
 // Format time into "time ago" format
 const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { locale: ru });
-const formatMessage = (s: string) => s.replace(/\*(.*?)\*/g, '<span class="font-medium">$1</span>');
 </script>
 
 <template>
@@ -126,7 +126,7 @@ const formatMessage = (s: string) => s.replace(/\*(.*?)\*/g, '<span class="font-
 						<p class="text-sm">
 							<span
 								class="line-clamp-2 font-medium text-gray-700"
-								v-html="formatMessage(notification.messages.ru)"
+								v-html="formatLocalizedMessage(notification.messages.ru)"
 							></span>
 						</p>
 
