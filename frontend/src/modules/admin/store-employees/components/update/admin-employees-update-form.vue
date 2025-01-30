@@ -219,7 +219,7 @@ const emit = defineEmits<{
 }>()
 
 const roles = ref([
-	{ value: EmployeeRole.MANAGER, label: 'Менеджер' },
+	{ value: EmployeeRole.STORE_MANAGER, label: 'Менеджер' },
 	{ value: EmployeeRole.BARISTA, label: 'Бариста' },
 ]);
 

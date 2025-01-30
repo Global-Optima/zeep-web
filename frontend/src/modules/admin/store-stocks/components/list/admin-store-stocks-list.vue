@@ -179,7 +179,6 @@ function handleAddToCartClick(ingredientId: number): void {
 }
 
 function handleSelectStockMaterial(dto: StockRequestStockMaterialDTO): void {
-  console.log("DTOOO", dto)
   mutateAddMaterial(dto)
 }
 </script>

@@ -1,29 +1,42 @@
 package types
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func MapEmployeeToClaimsData(employee *data.Employee) *EmployeeClaimsData {
-	var workplaceID uint
-	var workplaceType data.EmployeeType
+func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, error) {
+	var workplaceID uint = 0
+	var role data.EmployeeRole = ""
 
-	if employee.StoreEmployee != nil {
+	switch employee.GetType() {
+	case data.StoreEmployeeType:
 		workplaceID = employee.StoreEmployee.StoreID
-		workplaceType = data.StoreEmployeeType
-	} else if employee.WarehouseEmployee != nil {
+		role = employee.StoreEmployee.Role
+	case data.WarehouseEmployeeType:
 		workplaceID = employee.WarehouseEmployee.WarehouseID
-		workplaceType = data.WarehouseEmployeeType
+		role = employee.WarehouseEmployee.Role
+	case data.RegionEmployeeType:
+		workplaceID = employee.RegionEmployee.RegionID
+		role = employee.RegionEmployee.Role
+	case data.FranchiseeEmployeeType:
+		workplaceID = employee.FranchiseeEmployee.FranchiseeID
+		role = employee.FranchiseeEmployee.Role
+	case data.AdminEmployeeType:
+		workplaceID = 0
+		role = employee.AdminEmployee.Role
+	default:
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedEmployeeType, employee.GetType())
 	}
 
 	employeeData := EmployeeClaimsData{
 		ID:           employee.ID,
-		Role:         employee.Role,
+		Role:         role,
 		WorkplaceID:  workplaceID,
-		EmployeeType: workplaceType,
+		EmployeeType: employee.GetType(),
 	}
 
-	return &employeeData
+	return &employeeData, nil
 }
 
 func MapCustomerToClaimsData(customer *data.Customer) *CustomerClaimsData {

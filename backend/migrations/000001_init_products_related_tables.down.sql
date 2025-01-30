@@ -18,6 +18,7 @@ tables TEXT[] := ARRAY[
         'referrals',
         'employee_workdays',
         'employee_audits',
+        'employee_work_tracks',
         'warehouse_employees',
         'store_employees',
         'employees',
@@ -42,7 +43,12 @@ tables TEXT[] := ARRAY[
         'additive_categories',
         'product_categories',
         'units',
-        'facility_addresses'
+        'facility_addresses',
+        'regions',
+        'region_managers',
+        'franchisees',
+        'franchisee_employees',
+        'admin_employees'
     ];
 BEGIN
     -- Drop all tables in reverse order

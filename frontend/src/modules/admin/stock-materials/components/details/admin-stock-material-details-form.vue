@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, Printer } from 'lucide-vue-next'
 
 // Dialogs
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
@@ -18,6 +18,7 @@ import AdminSelectStockMaterialCategory from '@/modules/admin/stock-material-cat
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 
 // Types
+import { usePrinter } from '@/core/hooks/use-print.hook'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import type {
@@ -25,6 +26,7 @@ import type {
   UpdateStockMaterialDTO,
 } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
+import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
 
 // Props
 const { stockMaterial } = defineProps<{
@@ -58,13 +60,13 @@ const updateStockMaterialSchema = toTypedSchema(
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
+    barcode: z
+      .string()
+      .max(20, 'Введите штрихкод'),
   })
 )
 
-/**
- * Vee-validate Form Setup
- */
-const { handleSubmit, resetForm, setFieldValue } = useForm<UpdateStockMaterialDTO>({
+const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: updateStockMaterialSchema,
   initialValues: {
     name: stockMaterial.name,
@@ -74,14 +76,11 @@ const { handleSubmit, resetForm, setFieldValue } = useForm<UpdateStockMaterialDT
     categoryId: stockMaterial.category.id,
     ingredientId: stockMaterial.ingredient.id,
     expirationPeriodInDays: stockMaterial.expirationPeriodInDays,
-    size: stockMaterial.size
+    size: stockMaterial.size,
+    barcode: stockMaterial.barcode
   },
 })
 
-/**
- * Submit Handler
- * Builds `UpdateStockMaterialDTO` with packages, then emits onSubmit.
- */
 const onSubmit = handleSubmit((formValues) => {
 
   const dto: UpdateStockMaterialDTO = formValues
@@ -89,17 +88,11 @@ const onSubmit = handleSubmit((formValues) => {
   emits('onSubmit', dto)
 })
 
-/**
- * Cancel Handler
- */
 function onCancel() {
   resetForm()
   emits('onCancel')
 }
 
-/**
- * Unit/Category/Ingredient Selection
- */
 function selectUnit(unit: UnitDTO) {
   selectedUnit.value = unit
   openUnitDialog.value = false
@@ -114,6 +107,13 @@ function selectIngredient(ingredient: IngredientsDTO) {
   selectedIngredient.value = ingredient
   openIngredientDialog.value = false
   setFieldValue('ingredientId', ingredient.id)
+}
+
+const { print } = usePrinter();
+
+const onPrintBarcode = async () => {
+  const barcodeImage = await stockMaterialsService.getBarcodeFile(stockMaterial.id);
+  await print(barcodeImage)
 }
 </script>
 
@@ -194,6 +194,35 @@ function selectIngredient(ingredient: IngredientsDTO) {
 											placeholder="Краткое описание материала"
 											class="min-h-32"
 										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+
+							<FormField
+								name="barcode"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Штрихкод</FormLabel>
+									<FormControl>
+										<div class="flex items-center gap-2">
+											<Input
+												id="barcode"
+												v-bind="componentField"
+												placeholder="Введите штрихкод"
+												disabled
+											/>
+
+											<Button
+												variant="outline"
+												@click="onPrintBarcode"
+												class="gap-2"
+											>
+												<Printer class="text-gray-800 size-4" />
+												<span>Печать</span>
+											</Button>
+										</div>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

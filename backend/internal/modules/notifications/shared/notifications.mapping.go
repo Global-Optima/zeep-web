@@ -16,6 +16,7 @@ type NotificationRoleMappingManager struct {
 	mappings []NotificationRoleMapping
 }
 
+// TODO check role mapping
 func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 	if NotificationRoleMappingManagerInstance == nil {
 		NotificationRoleMappingManagerInstance = &NotificationRoleMappingManager{
@@ -23,17 +24,17 @@ func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 				{
 					EventType:     data.STOCK_REQUEST_STATUS_UPDATED,
 					EmployeeTypes: []data.EmployeeType{data.WarehouseEmployeeType, data.StoreEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleAdmin, data.RoleWarehouse},
+					EmployeeRoles: []data.EmployeeRole{data.RoleWarehouseManager, data.RoleWarehouseEmployee, data.RoleAdmin, data.RoleStoreManager},
 				},
 				{
 					EventType:     data.NEW_ORDER,
 					EmployeeTypes: []data.EmployeeType{data.StoreEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleBarista},
+					EmployeeRoles: []data.EmployeeRole{data.RoleStoreManager, data.RoleBarista},
 				},
 				{
 					EventType:     data.STORE_WAREHOUSE_RUN_OUT,
 					EmployeeTypes: []data.EmployeeType{data.StoreEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleDirector},
+					EmployeeRoles: []data.EmployeeRole{data.RoleWarehouseManager},
 				},
 				{
 					EventType:     data.CENTRAL_CATALOG_UPDATE,
@@ -43,22 +44,22 @@ func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 				{
 					EventType:     data.WAREHOUSE_STOCK_EXPIRATION,
 					EmployeeTypes: []data.EmployeeType{data.WarehouseEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleWarehouse},
+					EmployeeRoles: []data.EmployeeRole{data.RoleWarehouseManager, data.RoleWarehouseEmployee},
 				},
 				{
 					EventType:     data.WAREHOUSE_OUT_OF_STOCK,
 					EmployeeTypes: []data.EmployeeType{data.WarehouseEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleAdmin, data.RoleManager, data.RoleWarehouse},
+					EmployeeRoles: []data.EmployeeRole{data.RoleAdmin, data.RoleWarehouseManager, data.RoleWarehouseEmployee},
 				},
 				{
 					EventType:     data.NEW_STOCK_REQUEST,
 					EmployeeTypes: []data.EmployeeType{data.WarehouseEmployeeType, data.StoreEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleWarehouse},
+					EmployeeRoles: []data.EmployeeRole{data.RoleWarehouseManager, data.RoleWarehouseEmployee},
 				},
 				{
 					EventType:     data.PRICE_CHANGE,
 					EmployeeTypes: []data.EmployeeType{data.StoreEmployeeType},
-					EmployeeRoles: []data.EmployeeRole{data.RoleManager, data.RoleAdmin},
+					EmployeeRoles: []data.EmployeeRole{data.RoleStoreManager, data.RoleAdmin},
 				},
 			},
 		}

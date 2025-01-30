@@ -1,6 +1,7 @@
 package ingredientCategories
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"strconv"
 
@@ -42,9 +43,11 @@ func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
-	utils.SuccessCreatedResponse(c, gin.H{"id": id})
+	utils.SendSuccessCreatedResponse(c, fmt.Sprintf("id: %d", id))
 }
 
 func (h *IngredientCategoryHandler) GetByID(c *gin.Context) {
@@ -95,7 +98,9 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 		&dto,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient category updated successfully"})
 }
@@ -125,7 +130,9 @@ func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient category deleted successfully"})
 }

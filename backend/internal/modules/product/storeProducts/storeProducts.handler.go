@@ -2,40 +2,48 @@ package storeProducts
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
-	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"go.uber.org/zap"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
 type StoreProductHandler struct {
-	service        StoreProductService
-	productService product.ProductService
-	auditService   audit.AuditService
-	logger         *zap.SugaredLogger
+	service           StoreProductService
+	productService    product.ProductService
+	franchiseeService franchisees.FranchiseeService
+	auditService      audit.AuditService
+	logger            *zap.SugaredLogger
 }
 
-func NewStoreProductHandler(service StoreProductService, productService product.ProductService, auditService audit.AuditService, logger *zap.SugaredLogger) *StoreProductHandler {
+func NewStoreProductHandler(
+	service StoreProductService,
+	productService product.ProductService,
+	franchiseeService franchisees.FranchiseeService,
+	auditService audit.AuditService,
+	logger *zap.SugaredLogger,
+) *StoreProductHandler {
 	return &StoreProductHandler{
-		service:        service,
-		productService: productService,
-		auditService:   auditService,
-		logger:         logger,
+		service:           service,
+		productService:    productService,
+		franchiseeService: franchiseeService,
+		auditService:      auditService,
+		logger:            logger,
 	}
 }
 
 func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -61,7 +69,7 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 	utils.SendSuccessResponse(c, productDetails)
 }
 
-func (h *StoreProductHandler) GetProductsListToAdd(c *gin.Context) {
+func (h *StoreProductHandler) GetAvailableProducts(c *gin.Context) {
 	var filter productTypes.ProductsFilterDto
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
@@ -69,8 +77,7 @@ func (h *StoreProductHandler) GetProductsListToAdd(c *gin.Context) {
 		return
 	}
 
-	//TODO change to franchisees.CheckFranchiseeStore()
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -91,8 +98,7 @@ func (h *StoreProductHandler) GetProductsListToAdd(c *gin.Context) {
 }
 
 func (h *StoreProductHandler) GetStoreProductCategories(c *gin.Context) {
-	//TODO replace by franchisee.CheckStore
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -120,7 +126,7 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -141,7 +147,7 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 }
 
 func (h *StoreProductHandler) GetStoreProductSizeByID(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -174,7 +180,7 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -199,7 +205,9 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		},
 		&dto, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
 }
@@ -212,7 +220,7 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 	}
 
 	dtoLength := len(dtos)
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -237,7 +245,6 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		dtoMap[dto.ProductID] = &dtoCopy
 	}
 
-	// Prepare audit actions
 	actions := make([]shared.AuditAction, 0, len(storeProducts))
 	for _, product := range storeProducts {
 		matchedDTO, exists := dtoMap[product.ProductID]
@@ -256,11 +263,10 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		actions = append(actions, &action)
 	}
 
-	// Record audit actions (ignore errors as requested)
-	_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
-	logrus.Info(len(actions))
+	go func() {
+		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+	}()
 
-	// Send success message
 	msg := fmt.Sprintf("%d store product(s) created successfully", dtoLength)
 	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
 }
@@ -279,7 +285,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -304,7 +310,9 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		},
 		&dto, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
 }
@@ -316,7 +324,7 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -342,7 +350,9 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		return
 	}
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)
 }

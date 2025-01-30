@@ -29,7 +29,7 @@ func NewStoreService(repo StoreRepository) StoreService {
 func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.StoreDTO, error) {
 	var facilityAddress *data.FacilityAddress
 	existingFacilityAddress, err := s.repo.GetFacilityAddressByAddress(createStoreDto.FacilityAddress.Address)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("error checking existing facility address: %w", err)
 	}
 
@@ -49,7 +49,7 @@ func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.
 
 	store := &data.Store{
 		Name:              createStoreDto.Name,
-		IsFranchise:       createStoreDto.IsFranchise,
+		FranchiseeID:      createStoreDto.FranchiseID,
 		ContactPhone:      createStoreDto.ContactPhone,
 		ContactEmail:      createStoreDto.ContactEmail,
 		StoreHours:        createStoreDto.StoreHours,
@@ -61,7 +61,7 @@ func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.
 		return nil, fmt.Errorf("failed to create store: %w", err)
 	}
 
-	return mapToStoreDTO(*createdStore), nil
+	return types.MapToStoreDTO(createdStore), nil
 }
 
 func (s *storeService) GetAllStores(filter *types.StoreFilter) ([]types.StoreDTO, error) {
@@ -72,7 +72,7 @@ func (s *storeService) GetAllStores(filter *types.StoreFilter) ([]types.StoreDTO
 
 	storeDTOs := make([]types.StoreDTO, len(stores))
 	for i, store := range stores {
-		storeDTOs[i] = *mapToStoreDTO(store)
+		storeDTOs[i] = *types.MapToStoreDTO(&store)
 	}
 
 	return storeDTOs, nil
@@ -86,7 +86,7 @@ func (s *storeService) GetAllStoresForNotifications() ([]types.StoreDTO, error) 
 
 	storeDTOs := make([]types.StoreDTO, len(stores))
 	for i, store := range stores {
-		storeDTOs[i] = *mapToStoreDTO(store)
+		storeDTOs[i] = *types.MapToStoreDTO(&store)
 	}
 
 	return storeDTOs, nil
@@ -105,7 +105,7 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 		return nil, err
 	}
 
-	return mapToStoreDTO(*store), nil
+	return types.MapToStoreDTO(store), nil
 }
 
 func (s *storeService) UpdateStore(storeId uint, updateStoreDto types.UpdateStoreDTO) (*types.StoreDTO, error) {
@@ -117,13 +117,13 @@ func (s *storeService) UpdateStore(storeId uint, updateStoreDto types.UpdateStor
 		return nil, err
 	}
 
-	updateStoreFields(store, updateStoreDto)
+	types.UpdateStoreFields(store, updateStoreDto)
 	updatedStore, err := s.repo.UpdateStore(store)
 	if err != nil {
 		return nil, err
 	}
 
-	return mapToStoreDTO(*updatedStore), nil
+	return types.MapToStoreDTO(updatedStore), nil
 }
 
 func (s *storeService) DeleteStore(storeID uint, hardDelete bool) error {
@@ -132,57 +132,4 @@ func (s *storeService) DeleteStore(storeID uint, hardDelete bool) error {
 	}
 
 	return s.repo.DeleteStore(storeID, hardDelete)
-}
-
-func mapToStoreDTO(store data.Store) *types.StoreDTO {
-	facilityAddress := &types.FacilityAddressDTO{
-		ID:        store.FacilityAddress.ID,
-		Address:   store.FacilityAddress.Address,
-		Longitude: safeFloat(store.FacilityAddress.Longitude),
-		Latitude:  safeFloat(store.FacilityAddress.Latitude),
-	}
-
-	return &types.StoreDTO{
-		ID:              store.ID,
-		Name:            store.Name,
-		IsFranchise:     store.IsFranchise,
-		ContactPhone:    store.ContactPhone,
-		ContactEmail:    store.ContactEmail,
-		StoreHours:      store.StoreHours,
-		FacilityAddress: facilityAddress,
-	}
-}
-
-func updateStoreFields(store *data.Store, dto types.UpdateStoreDTO) {
-	if dto.Name != "" {
-		store.Name = dto.Name
-	}
-	if dto.IsFranchise {
-		store.IsFranchise = dto.IsFranchise
-	}
-	if dto.ContactPhone != "" {
-		store.ContactPhone = dto.ContactPhone
-	}
-	if dto.ContactEmail != "" {
-		store.ContactEmail = dto.ContactEmail
-	}
-	if dto.StoreHours != "" {
-		store.StoreHours = dto.StoreHours
-	}
-	if dto.FacilityAddress.Address != "" {
-		store.FacilityAddress.Address = dto.FacilityAddress.Address
-	}
-	if dto.FacilityAddress.Latitude != nil {
-		store.FacilityAddress.Latitude = dto.FacilityAddress.Latitude
-	}
-	if dto.FacilityAddress.Longitude != nil {
-		store.FacilityAddress.Longitude = dto.FacilityAddress.Longitude
-	}
-}
-
-func safeFloat(f *float64) float64 {
-	if f == nil {
-		return 0
-	}
-	return *f
 }

@@ -31,8 +31,11 @@ export interface AcceptWithChangesDialogAction extends Action {
 
 export type StockRequestAction = DirectAction | CommentDialogAction | AcceptWithChangesDialogAction
 
+const STORE_ACTIONS_ROLES = [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA]
+const WAREHOUSE_ACTIONS_ROLES = [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE]
+
 export function getActions(status: StockRequestStatus, role: EmployeeRole): StockRequestAction[] {
-	if (role === EmployeeRole.BARISTA || role === EmployeeRole.MANAGER) {
+	if (STORE_ACTIONS_ROLES.includes(role)) {
 		switch (status) {
 			case StockRequestStatus.CREATED:
 				return [
@@ -88,7 +91,7 @@ export function getActions(status: StockRequestStatus, role: EmployeeRole): Stoc
 		}
 	}
 
-	if (role === EmployeeRole.WAREHOUSE) {
+	if (WAREHOUSE_ACTIONS_ROLES.includes(role)) {
 		switch (status) {
 			case StockRequestStatus.PROCESSED:
 				return [

@@ -36,13 +36,4 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/store-employees/pages/admin-store-employee-update-page.vue'),
 	},
-	ADMIN_STORE_EMPLOYEE_CREATE: {
-		path: 'store-employees/create',
-		meta: {
-			title: 'Создать сотрудника кафе',
-			requiresAuth: true,
-		},
-		component: () =>
-			import('@/modules/admin/store-employees/pages/admin-store-employee-create-page.vue'),
-	},
 } satisfies AppRouteRecord

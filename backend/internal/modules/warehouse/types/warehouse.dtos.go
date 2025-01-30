@@ -16,6 +16,7 @@ type ListStoresResponse struct {
 
 type CreateWarehouseDTO struct {
 	FacilityAddress FacilityAddressDTO `json:"facilityAddress" binding:"required"`
+	RegionID        uint               `json:"regionId" binding:"required"`
 	Name            string             `json:"name" binding:"required"`
 }
 

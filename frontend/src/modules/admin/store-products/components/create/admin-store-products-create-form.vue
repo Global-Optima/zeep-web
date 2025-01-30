@@ -25,9 +25,9 @@ import {
 import { ChevronLeft, Trash } from 'lucide-vue-next'
 
 // Dialog for selecting products
-import AdminSelectProductDialog from '@/modules/admin/products/components/admin-select-product-dialog.vue'
 
 // Types
+import AdminSelectAvailableToAddProductDialog from '@/modules/admin/store-products/components/admin-select-available-to-add-product-dialog.vue'
 import type { CreateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { ProductDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 
@@ -279,7 +279,7 @@ function removeProduct(index: number) {
 		</div>
 
 		<!-- Dialog for selecting product -->
-		<AdminSelectProductDialog
+		<AdminSelectAvailableToAddProductDialog
 			:open="openProductDialog"
 			@close="openProductDialog = false"
 			@select="selectProduct"

@@ -13,23 +13,34 @@ export interface EmployeeAccount {
 
 export enum EmployeeRole {
 	ADMIN = 'ADMIN',
-	DIRECTOR = 'DIRECTOR',
-	MANAGER = 'MANAGER',
+	OWNER = 'OWNER',
+	STORE_MANAGER = 'STORE_MANAGER',
 	BARISTA = 'BARISTA',
-	WAREHOUSE = 'WAREHOUSE_EMPLOYEE',
+	WAREHOUSE_MANAGER = 'WAREHOUSE_MANAGER',
+	WAREHOUSE_EMPLOYEE = 'WAREHOUSE_EMPLOYEE',
+	FRANCHISE_MANAGER = 'FRANCHISE_MANAGER',
+	FRANCHISE_OWNER = 'FRANCHISE_OWNER',
+	REGION_WAREHOUSE_MANAGER = 'REGION_WAREHOUSE_MANAGER',
 }
 
 export enum EmployeeType {
 	STORE = 'STORE',
 	WAREHOUSE = 'WAREHOUSE',
+	FRANCHISEE = 'FRANCHISEE',
+	REGION = 'REGION',
+	ADMIN = 'ADMIN',
 }
 
 export const EMPLOYEE_ROLES_FORMATTED: Record<EmployeeRole, string> = {
-	[EmployeeRole.ADMIN]: 'Админ',
-	[EmployeeRole.DIRECTOR]: 'Директор',
-	[EmployeeRole.MANAGER]: 'Менеджер',
+	[EmployeeRole.ADMIN]: 'Администратор',
+	[EmployeeRole.OWNER]: 'CEO',
+	[EmployeeRole.STORE_MANAGER]: 'Менеджер кафе',
 	[EmployeeRole.BARISTA]: 'Бариста',
-	[EmployeeRole.WAREHOUSE]: 'Работник Склада',
+	[EmployeeRole.WAREHOUSE_MANAGER]: 'Менеджер склада',
+	[EmployeeRole.WAREHOUSE_EMPLOYEE]: 'Сотрудник склада',
+	[EmployeeRole.FRANCHISE_MANAGER]: 'Менеджер франшизы',
+	[EmployeeRole.FRANCHISE_OWNER]: 'Владелец франшизы',
+	[EmployeeRole.REGION_WAREHOUSE_MANAGER]: 'Региональный менеджер склада',
 }
 
 export interface CreateWorkdayDTO {

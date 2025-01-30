@@ -3,6 +3,7 @@ import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	CreateStockMaterialDTO,
+	GeneratedStockMaterialBarcode,
 	StockMaterialsDTO,
 	StockMaterialsFilter,
 	UpdateStockMaterialDTO,
@@ -19,6 +20,28 @@ class StockMaterialService {
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch stock materials:', error)
+			throw error
+		}
+	}
+
+	async getBarcodeFile(stockMaterialId: number) {
+		try {
+			const response = await apiClient.get<Blob>(`/stock-materials/${stockMaterialId}/barcode`, {
+				responseType: 'blob', // Ensure the response is treated as a Blob
+			})
+			return response.data
+		} catch (error) {
+			console.error(`Failed to fetch barcode for stock material ID ${stockMaterialId}:`, error)
+			throw error
+		}
+	}
+
+	async generateBarcode() {
+		try {
+			const response = await apiClient.get<GeneratedStockMaterialBarcode>(`${this.baseUrl}/barcode`)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to create barcode for stock material:`, error)
 			throw error
 		}
 	}

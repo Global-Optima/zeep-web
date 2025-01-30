@@ -2,13 +2,17 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
+	ProductCategoryDTO,
+	ProductDetailsDTO,
+	ProductsFilterDTO,
+} from '@/modules/kiosk/products/models/product.model'
+import type {
 	CreateStoreProductDTO,
 	StoreProductDetailsDTO,
 	StoreProductDTO,
 	StoreProductsFilterDTO,
 	UpdateStoreProductDTO,
 } from '../models/store-products.model'
-import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 
 class StoreProductsService {
 	/**
@@ -18,6 +22,21 @@ class StoreProductsService {
 		try {
 			const response = await apiClient.get<PaginatedResponse<StoreProductDTO[]>>(
 				`/store-products`,
+				{
+					params: buildRequestFilter(filter),
+				},
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch store products: ', error)
+			throw error
+		}
+	}
+
+	async getAvailableToAddProductsList(filter?: ProductsFilterDTO) {
+		try {
+			const response = await apiClient.get<PaginatedResponse<ProductDetailsDTO[]>>(
+				`/store-products/available-to-add`,
 				{
 					params: buildRequestFilter(filter),
 				},
