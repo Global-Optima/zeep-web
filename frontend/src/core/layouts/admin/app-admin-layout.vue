@@ -26,7 +26,7 @@ const onBaristaClick = () => {
 	router.push({name: getRouteName('KIOSK_ORDERS')})
 }
 
-const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.BARISTA, EmployeeRole.MANAGER].includes(currentEmployee.role) : false )
+const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.BARISTA, EmployeeRole.STORE_MANAGER].includes(currentEmployee.role) : false )
 </script>
 
 <template>
