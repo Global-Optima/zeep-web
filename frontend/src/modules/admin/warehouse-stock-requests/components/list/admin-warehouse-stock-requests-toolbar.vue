@@ -4,6 +4,13 @@
 	>
 		<!-- Left Side: Filter Menu -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
+			<Input
+				v-model="searchTerm"
+				placeholder="Поиск"
+				type="search"
+				class="bg-white w-full md:w-64"
+			/>
+
 			<MultiSelectFilter
 				title="Статусы"
 				:options="statusOptions"
@@ -17,6 +24,7 @@
 				disabled
 				>Экспорт</Button
 			>
+			<Button @click="onCreateClick">Создать</Button>
 		</div>
 	</div>
 </template>
@@ -24,15 +32,31 @@
 <script setup lang="ts">
 import MultiSelectFilter from '@/core/components/multi-select-filter/MultiSelectFilter.vue'
 import { Button } from '@/core/components/ui/button'
-import type { GetStockRequestsFilter, StockRequestStatus } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
-import { ref, watch } from 'vue'
+import { Input } from '@/core/components/ui/input'
+import { getRouteName } from '@/core/config/routes.config'
+import { StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import { useDebounce } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{ filter?: GetStockRequestsFilter }>()
 const emit = defineEmits(['update:filter'])
+const router = useRouter()
 
+const localFilter = ref({ ...props.filter })
 
 const selectedStatuses = ref<StockRequestStatus[]>(props.filter?.statuses ?? [])
 
+const searchTerm = ref(localFilter.value.search || '')
+const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
+
+watch(debouncedSearchTerm, (newValue) => {
+  localFilter.value.search = newValue
+  emit('update:filter', {
+    ...props.filter,
+    search: newValue.trim()
+  })
+})
 
 watch(selectedStatuses, (newStatuses) => {
   emit('update:filter', {
@@ -42,11 +66,16 @@ watch(selectedStatuses, (newStatuses) => {
 })
 
 const statusOptions = [
-  { label: 'Обработанные', value: 'PROCESSED' },
-  { label: 'В доставке', value: 'IN_DELIVERY' },
-  { label: 'Завершённые', value: 'COMPLETED' },
-  { label: 'Отклонённые магазином', value: 'REJECTED_BY_STORE' },
-  { label: 'Отклонённые складом', value: 'REJECTED_BY_WAREHOUSE' },
-  { label: 'Принятые с изменениями', value: 'ACCEPTED_WITH_CHANGE' },
+  { label: 'Созданные', value: StockRequestStatus.CREATED },
+  { label: 'Обработанные', value: StockRequestStatus.PROCESSED },
+  { label: 'В доставке', value: StockRequestStatus.IN_DELIVERY },
+  { label: 'Завершённые', value: StockRequestStatus.COMPLETED },
+  { label: 'Отклонённые магазином', value: StockRequestStatus.REJECTED_BY_STORE },
+  { label: 'Отклонённые складом', value: StockRequestStatus.REJECTED_BY_WAREHOUSE },
+  { label: 'Принятые с изменениями', value: StockRequestStatus.ACCEPTED_WITH_CHANGE },
 ]
+
+const onCreateClick = () => {
+  router.push({name: getRouteName("ADMIN_STORE_STOCK_REQUESTS_CREATE")})
+}
 </script>

@@ -20,7 +20,7 @@
 				<Textarea
 					id="comment"
 					v-model="comment"
-					placeholder="Оставьте комменатрий"
+					placeholder="Оставьте комментарий"
 					rows="2"
 					class="mt-1"
 				/>
