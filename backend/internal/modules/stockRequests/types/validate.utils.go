@@ -97,7 +97,7 @@ type StockRequestDetails struct {
 }
 
 func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
-	key := "stockRequestComment.unexpected"
+	key := "stockRequestComments.unexpectedMaterial"
 	translations, err := localization.Translate(key, map[string]interface{}{
 		"MaterialName":   details.MaterialName,
 		"ActualQuantity": details.ActualQuantity,
@@ -111,7 +111,7 @@ func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localiza
 }
 
 func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
-	key := "stockRequestComment.mismatch"
+	key := "stockRequestComments.quantityMismatch"
 	translations, err := localization.Translate(key, map[string]interface{}{
 		"MaterialName":   details.MaterialName,
 		"Quantity":       details.Quantity,

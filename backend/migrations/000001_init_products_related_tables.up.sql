@@ -637,7 +637,7 @@ CREATE TABLE
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		status VARCHAR(50) NOT NULL,
-		details JSONB[],
+		details JSONB,
 		store_comment TEXT,
 		warehouse_comment TEXT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

@@ -306,16 +306,39 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientQuantity(ingredient
 		Error
 }
 
-func (r *stockRequestRepository) AddDetails(stockRequestID uint, details []types.StockRequestDetails) error {
-	detailsJSON, err := json.Marshal(details)
+func (r *stockRequestRepository) AddDetails(stockRequestID uint, newDetails []types.StockRequestDetails) error {
+	var existingDetails []types.StockRequestDetails
+	var detailsJSON datatypes.JSON
+
+	err := r.db.Model(&data.StockRequest{}).
+		Select("details").
+		Where("id = ?", stockRequestID).
+		Scan(&detailsJSON).Error
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch existing details: %w", err)
 	}
 
-	err = r.db.Update("details", datatypes.JSON(detailsJSON)).Error
+	if len(detailsJSON) > 0 {
+		if err := json.Unmarshal(detailsJSON, &existingDetails); err != nil {
+			return fmt.Errorf("failed to unmarshal existing details: %w", err)
+		}
+	} else {
+		existingDetails = []types.StockRequestDetails{}
+	}
+
+	existingDetails = append(existingDetails, newDetails...)
+
+	updatedDetailsJSON, err := json.Marshal(existingDetails)
+	if err != nil {
+		return fmt.Errorf("failed to marshal updated details: %w", err)
+	}
+
+	err = r.db.Model(&data.StockRequest{}).
+		Where("id = ?", stockRequestID).
+		Update("details", datatypes.JSON(updatedDetailsJSON)).Error
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update details for stock request ID %d: %w", stockRequestID, err)
 	}
 
 	return nil

@@ -472,6 +472,13 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 		})
 	}
 
+	if len(changeDetails) > 0 {
+		err := s.repo.AddDetails(request.ID, changeDetails)
+		if err != nil {
+			return fmt.Errorf("failed to add details of cahnges for request ID %d: %w", request.ID, err)
+		}
+	}
+
 	if err := s.repo.ReplaceStockRequestIngredients(*request, updatedIngredients); err != nil {
 		return fmt.Errorf("failed to replace ingredients for stock request ID %d: %w", request.ID, err)
 	}
@@ -479,13 +486,6 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 	if comment != nil {
 		if err := s.repo.AddStoreComment(request.ID, *comment); err != nil {
 			return fmt.Errorf("failed to add store comment for request ID %d: %w", request.ID, err)
-		}
-	}
-
-	if len(changeDetails) > 0 {
-		err := s.repo.AddDetails(request.ID, changeDetails)
-		if err != nil {
-			return fmt.Errorf("failed to add details of cahnges for request ID %d: %w", request.ID, err)
 		}
 	}
 
