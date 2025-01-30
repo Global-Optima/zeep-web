@@ -26,7 +26,7 @@ class StockMaterialService {
 
 	async getBarcodeFile(stockMaterialId: number) {
 		try {
-			const response = await apiClient.get<Blob>(`/stock-materials/${stockMaterialId}/barcode`, {
+			const response = await apiClient.get<Blob>(`${this.baseUrl}/${stockMaterialId}/barcode`, {
 				responseType: 'blob', // Ensure the response is treated as a Blob
 			})
 			return response.data
@@ -38,7 +38,9 @@ class StockMaterialService {
 
 	async generateBarcode() {
 		try {
-			const response = await apiClient.get<GeneratedStockMaterialBarcode>(`${this.baseUrl}/barcode`)
+			const response = await apiClient.post<GeneratedStockMaterialBarcode>(
+				`${this.baseUrl}/barcodes/generate`,
+			)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to create barcode for stock material:`, error)

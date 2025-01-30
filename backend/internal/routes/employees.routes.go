@@ -385,7 +385,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
 	router := r.EmployeeRoutes.Group("/stock-requests")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetStockRequests)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.RoleStoreManager, data.RoleWarehouseEmployee), handler.GetStockRequests)
 		router.GET("/:requestId", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetStockRequestByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateStockRequest)
 		router.GET("/current", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.GetLastCreatedStockRequest)
