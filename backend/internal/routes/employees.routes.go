@@ -369,11 +369,12 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 
 		stockRoutes := router.Group("/stocks")
 		{
-			stockRoutes.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetStocks)
-			stockRoutes.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), warehouseStockHandler.GetAvailableToAddStockMaterials)
-			stockRoutes.GET("/:stockMaterialId", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetStockMaterialDetails)
-			stockRoutes.PUT("/:stockMaterialId", middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...), warehouseStockHandler.UpdateStock)
-			stockRoutes.POST("/add", middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...), warehouseStockHandler.AddWarehouseStocks)
+			var stockRequestRoles = append(data.StoreReadPermissions, data.WarehouseReadPermissions...)
+			stockRoutes.GET("", middleware.EmployeeRoleMiddleware(stockRequestRoles...), warehouseStockHandler.GetStocks)
+			stockRoutes.GET("/available-to-add", middleware.EmployeeRoleMiddleware(stockRequestRoles...), warehouseStockHandler.GetAvailableToAddStockMaterials)
+			stockRoutes.GET("/:stockMaterialId", middleware.EmployeeRoleMiddleware(stockRequestRoles...), warehouseStockHandler.GetStockMaterialDetails)
+			stockRoutes.PUT("/:stockMaterialId", middleware.EmployeeRoleMiddleware(stockRequestRoles...), warehouseStockHandler.UpdateStock)
+			stockRoutes.POST("/add", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), warehouseStockHandler.AddWarehouseStocks)
 			stockRoutes.POST("/receive", middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...), warehouseStockHandler.ReceiveInventory)
 			stockRoutes.POST("/transfer", middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...), warehouseStockHandler.TransferInventory)
 			stockRoutes.GET("/deliveries", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveries)
