@@ -33,10 +33,7 @@ type WarehouseStockRepository interface {
 	UpdateStockQuantity(stockID uint, warehouseID uint, quantity float64) (*data.WarehouseStock, error)
 	UpdateExpirationDate(stockMaterialID, warehouseID uint, newExpirationDate time.Time) error
 
-	GetAvailableToAddStockMaterials(
-		storeID uint,
-		filter *types.AvailableStockMaterialFilter,
-	) ([]data.StockMaterial, error)
+	GetAvailableToAddStockMaterials(storeID uint, filter *types.AvailableStockMaterialFilter) ([]data.StockMaterial, error)
 }
 
 type warehouseStockRepository struct {
@@ -590,10 +587,7 @@ func (r *warehouseStockRepository) UpdateWarehouseStock(stock *data.WarehouseSto
 	return r.db.Save(stock).Error
 }
 
-func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(
-	storeID uint,
-	filter *types.AvailableStockMaterialFilter,
-) ([]data.StockMaterial, error) {
+func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint, filter *types.AvailableStockMaterialFilter) ([]data.StockMaterial, error) {
 
 	var stockMaterials []data.StockMaterial
 	var warehouseID uint

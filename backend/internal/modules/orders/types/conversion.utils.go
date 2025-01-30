@@ -131,11 +131,11 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 			ID:     sub.ID,
 			Price:  sub.Price,
 			Status: string(sub.Status),
-			ProductSize: OrderProductSizeDetailsDTO{
-				ID:        sub.StoreProductSize.ID,
-				Name:      sub.StoreProductSize.ProductSize.Name,
-				Unit:      unitTypes.ToUnitResponse(sub.StoreProductSize.ProductSize.Unit),
-				BasePrice: sub.StoreProductSize.ProductSize.BasePrice,
+			StoreProductSize: OrderProductSizeDetailsDTO{
+				ID:         sub.StoreProductSize.ID,
+				Name:       sub.StoreProductSize.ProductSize.Name,
+				Unit:       unitTypes.ToUnitResponse(sub.StoreProductSize.ProductSize.Unit),
+				StorePrice: sub.StoreProductSize.ProductSize.BasePrice,
 				Product: OrderProductDetailsDTO{
 					ID:          sub.StoreProductSize.ProductSize.Product.ID,
 					Name:        sub.StoreProductSize.ProductSize.Product.Name,
@@ -143,7 +143,7 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 					ImageURL:    sub.StoreProductSize.ProductSize.Product.ImageURL,
 				},
 			},
-			Additives: storeAdditives,
+			StoreAdditives: storeAdditives,
 		}
 	}
 

@@ -51,6 +51,7 @@ type WarehouseDeliveryFilter struct {
 
 // stocks
 type GetWarehouseStockFilterQuery struct {
+	utils.BaseFilter
 	WarehouseID     *uint   `form:"warehouseId"`
 	StockMaterialID *uint   `form:"stockMaterialId"`
 	IngredientID    *uint   `form:"ingredientId"`
@@ -59,7 +60,6 @@ type GetWarehouseStockFilterQuery struct {
 	CategoryID      *uint   `form:"categoryId"`
 	ExpirationDays  *int    `form:"daysToExpire"`
 	Search          *string `form:"search"`
-	utils.BaseFilter
 }
 
 type UpdateWarehouseStockDTO struct {
@@ -89,6 +89,6 @@ type StockMaterialResponse struct {
 }
 
 type AvailableStockMaterialFilter struct {
-	Search *string `form:"search"`
 	utils.BaseFilter
+	Search *string `form:"search"`
 }
