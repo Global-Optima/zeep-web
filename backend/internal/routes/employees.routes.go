@@ -284,6 +284,8 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.GET("/:orderId", handler.GetOrderDetails, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
 
 		router.GET("/export", handler.ExportOrders, middleware.EmployeeRoleMiddleware(data.RoleOwner, data.RoleFranchiseOwner, data.RoleFranchiseManager))
+		router.PUT("/suborders/:subOrderId/complete", handler.CompleteSubOrderByBarcode, middleware.EmployeeRoleMiddleware(data.StoreWorkerPermissions...))
+		router.GET("/suborders/:subOrderId/barcode", handler.GetSuborderBarcode)
 	}
 }
 

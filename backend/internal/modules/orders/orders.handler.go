@@ -113,15 +113,61 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 }
 
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
-	subOrderIDStr := c.Param("subOrderId")
+	orderID, errH := utils.ParseParam(c, "orderId")
+	if errH != nil {
+		utils.SendBadRequestError(c, "invalid order ID")
+		return
+	}
 
-	subOrderID, err := strconv.ParseUint(subOrderIDStr, 10, 64)
+	subOrderID, errH := utils.ParseParam(c, "subOrderId")
+	if errH != nil {
+		utils.SendBadRequestError(c, "invalid suborder ID")
+		return
+	}
+
+	err := h.service.CompleteSubOrder(orderID, uint(subOrderID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to complete suborder")
+		return
+	}
+
+	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	if err != nil {
+		errorMessage := fmt.Sprintf("failed to get order: %v", err)
+		utils.SendInternalServerError(c, errorMessage)
+		return
+	}
+
+	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
+
+	utils.SendMessageWithStatus(c, "Sub order completed", http.StatusOK)
+}
+
+func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
+	suborderIDParam := c.Param("subOrderId")
+	suborderID, err := strconv.ParseUint(suborderIDParam, 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid suborder ID")
 		return
 	}
 
-	err = h.service.CompleteSubOrder(uint(subOrderID))
+	barcodeImage, err := h.service.GenerateSuborderBarcode(uint(suborderID))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	c.Data(http.StatusOK, "image/png", barcodeImage)
+}
+
+func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {
+	subOrderID, errH := utils.ParseParam(c, "subOrderId")
+	if errH != nil {
+		utils.SendBadRequestError(c, "invalid suborder ID")
+		return
+	}
+
+	err := h.service.CompleteSubOrderByBarcode(subOrderID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to complete suborder")
 		return
