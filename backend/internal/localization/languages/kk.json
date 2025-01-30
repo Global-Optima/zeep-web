@@ -77,7 +77,7 @@
     "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді."
   },
   "stockRequestComments": {
-    "quantityMismatch" : "*{{OriginalMaterialName}}*, *{{ActualQuantity}}* жеткізілді, тапсырыста *{{Quantity}}*.",
-    "unexpectedMaterial" : "Тапсырыста болмаған *{{MaterialName}}*, *{{ActualQuantity}}* жеткізілді."
+    "quantityMismatch" : "*{{.OriginalMaterialName}}*, *{{.ActualQuantity}}* жеткізілді, тапсырыста *{{.Quantity}}*.",
+    "unexpectedMaterial" : "Тапсырыста болмаған *{{.MaterialName}}*, *{{.ActualQuantity}}* жеткізілді."
   }
 }
