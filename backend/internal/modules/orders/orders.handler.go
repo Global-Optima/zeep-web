@@ -157,6 +157,11 @@ func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
 		return
 	}
 
+	filename := fmt.Sprintf("suborder-barcode-%d.png", suborderID)
+
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Content-Type", "image/png")
+	c.Header("Content-Length", fmt.Sprintf("%d", len(barcodeImage)))
 	c.Data(http.StatusOK, "image/png", barcodeImage)
 }
 

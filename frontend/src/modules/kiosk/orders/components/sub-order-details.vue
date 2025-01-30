@@ -11,8 +11,8 @@
 				<Button
 					size="icon"
 					variant="ghost"
-					class="top-6 right-6 absolute !p-2"
-					:disabled="suborder.status === 'COMPLETED'"
+					class="top-6 right-6 absolute"
+					:disabled="suborder.status === SubOrderStatus.COMPLETED"
 					@click="printQrCode"
 				>
 					<Printer
@@ -64,7 +64,7 @@
 				<div class="flex items-center gap-2 mt-4">
 					<button
 						@click="toggleSuborderStatus(suborder)"
-						:disabled="suborder.status === 'COMPLETED'"
+						:disabled="suborder.status === SubOrderStatus.COMPLETED"
 						:class="[
               'flex-1 px-4 py-4 rounded-xl text-primary-foreground',
               suborder.status === 'COMPLETED'
@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import { usePrinter } from '@/core/hooks/use-print.hook'
-import type { SuborderDTO } from '@/modules/orders/models/orders.models'
+import { SubOrderStatus, type SuborderDTO } from '@/modules/orders/models/orders.models'
 import { ordersService } from '@/modules/orders/services/orders.service'
 import { Plus, Printer } from 'lucide-vue-next'
 

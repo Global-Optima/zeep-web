@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type StockMaterialService interface {
@@ -14,6 +15,9 @@ type StockMaterialService interface {
 	UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialDTO) error
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
+	GetStockMaterialBarcode(stockMaterialID uint) ([]byte, error)
+	GenerateBarcode() (*types.GenerateBarcodeResponse, error)
+	RetrieveStockMaterialByBarcode(barcode string) (*types.StockMaterialsDTO, error)
 }
 
 type stockMaterialService struct {
@@ -96,4 +100,57 @@ func (s *stockMaterialService) DeleteStockMaterial(stockMaterialID uint) error {
 
 func (s *stockMaterialService) DeactivateStockMaterial(stockMaterialID uint) error {
 	return s.repo.DeactivateStockMaterial(stockMaterialID)
+}
+
+func (s *stockMaterialService) GetStockMaterialBarcode(stockMaterialID uint) ([]byte, error) {
+	stockMaterial, err := s.repo.GetStockMaterialByID(stockMaterialID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve stock material: %w", err)
+	}
+
+	barcodeImage, err := utils.GenerateBarcodeImage(stockMaterial.Barcode)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate barcode image: %w", err)
+	}
+
+	return barcodeImage, nil
+}
+
+func (s *stockMaterialService) GenerateBarcode() (*types.GenerateBarcodeResponse, error) {
+	maxRetries := 10
+	var barcode string
+	var exists bool
+	var err error
+
+	for i := 0; i < maxRetries; i++ {
+		barcode = utils.GenerateRandomEAN13()
+
+		exists, err = s.repo.IsBarcodeExists(barcode)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check uniqueness of barcode: %w", err)
+		}
+
+		if !exists {
+			break
+		}
+	}
+
+	if exists {
+		return nil, fmt.Errorf("failed to generate unique barcode after %d attempts", maxRetries)
+	}
+
+	response := types.ToGenerateBarcodeResponse(barcode)
+	return &response, nil
+}
+
+func (s *stockMaterialService) RetrieveStockMaterialByBarcode(barcode string) (*types.StockMaterialsDTO, error) {
+	stockMaterial, err := s.repo.GetStockMaterialByBarcode(barcode)
+	if err != nil {
+		return nil, err
+	}
+	if stockMaterial == nil {
+		return nil, errors.New("StockMaterial not found with the provided barcode")
+	}
+
+	return types.ConvertStockMaterialToStockMaterialResponse(stockMaterial), nil
 }

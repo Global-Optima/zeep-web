@@ -59,6 +59,7 @@ type GetStockRequestsFilter struct {
 	WarehouseID *uint      `form:"warehouseId"`
 	StartDate   *time.Time `form:"startDate"`
 	EndDate     *time.Time `form:"endDate"`
+	Search      *string    `form:"search"`
 
 	Statuses []data.StockRequestStatus `form:"statuses[]"`
 }
