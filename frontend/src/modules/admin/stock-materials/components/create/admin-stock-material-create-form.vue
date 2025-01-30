@@ -16,7 +16,6 @@ import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.
 
 import { ChevronLeft } from 'lucide-vue-next'
 
-import { useBarcodeScanner } from '@/core/hooks/use-barcode-listener.hook'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import type { CreateStockMaterialDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
@@ -52,16 +51,6 @@ const createStockMaterialSchema = toTypedSchema(
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
   })
 )
-
-useBarcodeScanner({
-      onScan: (barcode: string) => {
-        setFieldValue('barcode', barcode)
-      },
-      onError: (err: Error) => {
-        console.error('Barcode Scan Error:', err);
-      },
-});
-
 
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createStockMaterialSchema,
@@ -196,7 +185,6 @@ const onGenerateBarcodeClick = async () => {
 												id="barcode"
 												v-bind="componentField"
 												placeholder="Введите штрихкод"
-												disabled
 											/>
 
 											<Button
