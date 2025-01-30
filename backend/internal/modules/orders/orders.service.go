@@ -7,9 +7,11 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"sync"
 
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/golang/freetype/truetype"
 
 	"go.uber.org/zap"
 	"golang.org/x/image/font"
@@ -18,7 +20,6 @@ import (
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/code128"
-	"github.com/golang/freetype/truetype"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -71,6 +72,12 @@ func NewOrderService(orderRepo OrderRepository, storeProductRepo storeProducts.S
 		logger:              logger,
 	}
 }
+
+var (
+	fontFace      font.Face
+	fontInitError error
+	fontInitOnce  sync.Once
+)
 
 func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetOrders(filter)
@@ -213,51 +220,82 @@ func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
 	return nil
 }
 
+// initFont ensures we parse the font only once (thread-safe).
+func initFont() {
+	fontInitOnce.Do(func() {
+		f, err := truetype.Parse(goregular.TTF)
+		if err != nil {
+			fontInitError = fmt.Errorf("failed to parse goregular font: %w", err)
+			return
+		}
+
+		// Adjust Size as needed. This is a typical 12pt usage.
+		fontFace = truetype.NewFace(f, &truetype.Options{
+			Size: 12,
+		})
+	})
+}
+
 func (s *orderService) GenerateSuborderBarcode(suborderID uint) ([]byte, error) {
-	suborder, err := s.orderRepo.GetSuborderByID(suborderID)
-	if err != nil {
-		return nil, err
+	// Make sure font is ready first
+	initFont()
+	if fontInitError != nil {
+		return nil, fontInitError
 	}
 
+	// 1. Fetch suborder from repository
+	suborder, err := s.orderRepo.GetSuborderByID(suborderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve suborder (id=%d): %w", suborderID, err)
+	}
+	if suborder == nil {
+		return nil, fmt.Errorf("no suborder found for ID %d", suborderID)
+	}
+
+	// 2. Encode the barcode data using Code-128
 	barcodeData := fmt.Sprintf("suborder-%d", suborder.ID)
 	bcode, err := code128.Encode(barcodeData)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to encode barcode data %q: %w", barcodeData, err)
 	}
 
-	scaledBcode, err := barcode.Scale(bcode, 150, 70)
+	// 3. Scale the barcode to fit exactly within the image without margins
+	const labelWidth = 300
+	const labelHeight = 120                                              // Reduced height to fit text inside barcode
+	scaledBcode, err := barcode.Scale(bcode, labelWidth, labelHeight-20) // Leave space for text
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to scale barcode: %w", err)
 	}
 
-	finalImg := image.NewRGBA(image.Rect(0, 0, 150, 90))
-	draw.Draw(finalImg, finalImg.Bounds(), image.White, image.Point{}, draw.Src)
+	// 4. Create the final blank image (white background)
+	finalImg := image.NewRGBA(image.Rect(0, 0, labelWidth, labelHeight))
+	draw.Draw(finalImg, finalImg.Bounds(), &image.Uniform{color.White}, image.Point{}, draw.Src)
 
-	draw.Draw(finalImg, scaledBcode.Bounds().Add(image.Pt(0, 0)), scaledBcode, image.Point{}, draw.Over)
+	// 5. Draw the barcode directly on the image (no offsets, no margins)
+	bcBounds := scaledBcode.Bounds()
+	draw.Draw(finalImg, bcBounds, scaledBcode, image.Point{}, draw.Over)
 
-	fontData, err := truetype.Parse(goregular.TTF)
-	if err != nil {
-		return nil, err
-	}
-
-	fontFace := truetype.NewFace(fontData, &truetype.Options{
-		Size: 12,
-	})
-
-	col := color.Black
-	point := fixed.Point26_6{X: fixed.I(40), Y: fixed.I(85)}
-	d := &font.Drawer{
+	// 6. Draw the text directly inside the barcode (closer to it)
+	drawer := &font.Drawer{
 		Dst:  finalImg,
-		Src:  image.NewUniform(col),
+		Src:  image.NewUniform(color.Black),
 		Face: fontFace,
-		Dot:  point,
 	}
-	d.DrawString(barcodeData)
 
+	textWidth := drawer.MeasureString(barcodeData).Ceil()
+	textX := (labelWidth - textWidth) / 2
+	textY := labelHeight - 5 // Slightly above	 bottom for proper alignment
+
+	drawer.Dot = fixed.Point26_6{
+		X: fixed.I(textX),
+		Y: fixed.I(textY),
+	}
+	drawer.DrawString(barcodeData)
+
+	// 7. Encode final image as PNG
 	var buf bytes.Buffer
-	err = png.Encode(&buf, finalImg)
-	if err != nil {
-		return nil, err
+	if err := png.Encode(&buf, finalImg); err != nil {
+		return nil, fmt.Errorf("failed to encode final PNG: %w", err)
 	}
 
 	return buf.Bytes(), nil
