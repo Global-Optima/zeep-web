@@ -22,7 +22,6 @@ type ProductRepository interface {
 	CreateProductSize(createModels *data.ProductSize) (uint, error)
 	GetProductSizesByProductID(productID uint) ([]data.ProductSize, error)
 	GetProductSizeById(productSizeID uint) (*data.ProductSize, error)
-	GetStoreProductSizeById(storeID, productSizeID uint) (*data.ProductSize, error)
 	GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error)
 	UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error
 	DeleteProductSize(productID uint) error
@@ -54,50 +53,6 @@ func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.Produc
 	}
 
 	return &productSize, nil
-}
-
-func (r *productRepository) GetStoreProductSizeById(storeID, productSizeID uint) (*data.ProductSize, error) {
-	var productSize data.ProductSize
-	err := r.db.Model(&data.ProductSize{}).
-		Where("id = ?", productSizeID).
-		First(&productSize).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to fetch ProductSize ID %d: %w", productSizeID, err)
-	}
-
-	var storeProduct data.StoreProduct
-	err = r.db.Model(&data.StoreProduct{}).
-		Where("store_id = ? AND product_id = ?", storeID, productSize.ProductID).
-		First(&storeProduct).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to fetch Store Product ID %d: %w", productSizeID, err)
-	}
-
-	var storeProductSize data.StoreProductSize
-	err = r.db.Model(&storeProductSize).
-		Preload("ProductSize").
-		Preload("ProductSize.Product").
-		Where("store_product_id = ? AND product_size_id = ?", storeProduct.ID, productSizeID).
-		First(&storeProductSize).Error
-
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to fetch Store ProductSize ID %d: %w", productSizeID, err)
-	}
-
-	if storeProductSize.ProductSize.Product.ID == 0 || storeProductSize.ProductSize.Product.Name == "" {
-		return nil, fmt.Errorf("product size with ID %d has no valid associated product", productSizeID)
-	}
-
-	return &storeProductSize.ProductSize, nil
 }
 
 func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error) {

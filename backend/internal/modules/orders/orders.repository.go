@@ -44,7 +44,7 @@ func (r *orderRepository) CreateOrder(order *data.Order) error {
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// Lock the store's orders for consistency
-		if err := tx.Exec(`
+		if err := tx.Exec(`Store
 			SELECT 1
 			FROM orders
 			WHERE store_id = ?
@@ -103,10 +103,9 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 	var orders []data.Order
 
 	query := r.db.
-		Preload("Suborders.ProductSize").
-		Preload("Suborders.ProductSize.Unit").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.Additives.Additive").
+		Preload("Suborders.StoreProductSize.Unit").
+		Preload("Suborders.StoreProductSize.Product").
+		Preload("Suborders.StoreAdditives.Additive").
 		Order("created_at DESC")
 
 	if filter.Search != nil && *filter.Search != "" {
@@ -146,10 +145,9 @@ func (r *orderRepository) GetAllBaristaOrders(storeID uint) ([]data.Order, error
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, time.UTC)
 
-	query := r.db.Preload("Suborders.ProductSize").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.ProductSize.Unit").
-		Preload("Suborders.Additives.Additive").
+	query := r.db.Preload("Suborders.StoreProductSize.Product").
+		Preload("Suborders.StoreProductSize.Unit").
+		Preload("Suborders.StoreAdditives.Additive").
 		Where("store_id = ?", storeID).
 		Where("created_at >= ? AND created_at <= ?", startOfToday, endOfToday)
 
@@ -200,10 +198,9 @@ func (r *orderRepository) GetStatusesCount(storeID uint) (map[data.OrderStatus]i
 
 func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 	var order data.Order
-	err := r.db.Preload("Suborders.ProductSize").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.Additives.Additive").
-		Preload("Suborders.ProductSize.Unit").
+	err := r.db.Preload("Suborders.StoreProductSize.Product").
+		Preload("Suborders.StoreAdditives.Additive").
+		Preload("Suborders.StoreProductSize.Unit").
 		Preload("Store").
 		Where("id = ?", orderId).
 		First(&order).Error
@@ -227,7 +224,7 @@ func (r *orderRepository) DeleteOrder(orderID uint) error {
 
 func (r *orderRepository) GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error) {
 	var suborders []data.Suborder
-	err := r.db.Preload("Additives").Where("order_id = ?", orderID).Find(&suborders).Error
+	err := r.db.Preload("StoreAdditives").Where("order_id = ?", orderID).Find(&suborders).Error
 	if err != nil {
 		return nil, err
 	}
@@ -271,10 +268,9 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 	err := r.db.
 		Joins("JOIN suborders ON suborders.order_id = orders.id").
 		Where("suborders.id = ?", subOrderID).
-		Preload("Suborders.ProductSize").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.ProductSize.Unit").
-		Preload("Suborders.Additives.Additive").
+		Preload("Suborders.StoreProductSize.Product").
+		Preload("Suborders.StoreProductSize.Unit").
+		Preload("Suborders.StoreAdditives.Additive").
 		First(&order).Error
 
 	if err != nil {
@@ -287,10 +283,10 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 func (r *orderRepository) GetOrderDetails(orderID uint) (*data.Order, error) {
 	var order data.Order
 
-	err := r.db.Preload("Suborders.Additives.Additive").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.ProductSize.Additives.Additive").
-		Preload("Suborders.ProductSize.Unit").
+	err := r.db.Preload("Suborders.StoreAdditives.Additive").
+		Preload("Suborders.StoreProductSize.Product").
+		Preload("Suborders.StoreProductSize.Additives.Additive").
+		Preload("Suborders.StoreProductSize.Unit").
 		Preload("DeliveryAddress").
 		Where("id = ?", orderID).
 		First(&order).Error
@@ -307,9 +303,8 @@ func (r *orderRepository) GetOrderDetails(orderID uint) (*data.Order, error) {
 
 func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error) {
 	var orders []data.Order
-	query := r.db.Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.Additives").
-		Preload("Suborders.Additives.Additive").
+	query := r.db.Preload("Suborders.StoreProductSize.Product").
+		Preload("Suborders.StoreAdditives.Additive").
 		Preload("Store").
 		Preload("DeliveryAddress")
 

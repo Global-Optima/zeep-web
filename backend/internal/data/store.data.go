@@ -18,7 +18,7 @@ type StoreAdditive struct {
 	BaseEntity
 	AdditiveID uint     `gorm:"index;not null"`
 	StoreID    uint     `gorm:"index;not null"`
-	Price      float64  `gorm:"type:decimal(10,2);default:0"`
+	StorePrice *float64 `gorm:"type:decimal(10,2);not null;check:price >= 0"`
 	Store      Store    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	Additive   Additive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 }
@@ -27,7 +27,7 @@ type StoreProductSize struct {
 	BaseEntity
 	ProductSizeID  uint         `gorm:"index;not null"`
 	StoreProductID uint         `gorm:"index;not null"`
-	Price          float64      `gorm:"type:decimal(10,2);default:0"`
+	StorePrice     *float64     `gorm:"type:decimal(10,2);not null;check:price >= 0"`
 	StoreProduct   StoreProduct `gorm:"foreignKey:StoreProductID;constraint:OnDelete:CASCADE"`
 	ProductSize    ProductSize  `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 }
