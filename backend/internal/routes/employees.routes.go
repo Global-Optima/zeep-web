@@ -386,8 +386,8 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
 	router := r.EmployeeRoutes.Group("/stock-requests")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(data.RoleStoreManager, data.RoleWarehouseEmployee), handler.GetStockRequests)
-		router.GET("/:requestId", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetStockRequestByID)
+		router.GET("", handler.GetStockRequests)
+		router.GET("/:requestId", handler.GetStockRequestByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateStockRequest)
 		router.GET("/current", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.GetLastCreatedStockRequest)
 		router.PUT("/:requestId", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.UpdateStockRequest)
@@ -396,11 +396,11 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 
 		statusGroup := router.Group("/status/:requestId")
 		{
-			statusGroup.PATCH("/accept-with-change", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.AcceptWithChangeStatus) // DTO with different stock material
-			statusGroup.PATCH("/reject-store", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.RejectStoreStatus)            // Comment
-			statusGroup.PATCH("/reject-warehouse", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.RejectWarehouseStatus)    // Comment
-			statusGroup.PATCH("/processed", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.SetProcessedStatus)
-			statusGroup.PATCH("/in-delivery", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.SetInDeliveryStatus)
+			statusGroup.PATCH("/accept-with-change", handler.AcceptWithChangeStatus) // DTO with different stock material
+			statusGroup.PATCH("/reject-store", handler.RejectStoreStatus)            // Comment
+			statusGroup.PATCH("/reject-warehouse", handler.RejectWarehouseStatus)    // Comment
+			statusGroup.PATCH("/processed", handler.SetProcessedStatus)
+			statusGroup.PATCH("/in-delivery", handler.SetInDeliveryStatus)
 			statusGroup.PATCH("/completed", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.SetCompletedStatus)
 		}
 	}

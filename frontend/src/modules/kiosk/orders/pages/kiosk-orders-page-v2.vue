@@ -21,6 +21,7 @@ import { useRouter } from 'vue-router'
 interface Status {
   label: string
   count: number
+  status?: OrderStatus
 }
 
 const router = useRouter()
@@ -28,15 +29,7 @@ const { toast } = useToast()
 
 const selectedOrder = ref<OrderDTO | null>(null)
 const selectedSuborder = ref<SuborderDTO | null>(null)
-const selectedStatus = ref<Status>({ label: 'Все', count: 0 })
-
-// Map your local status labels to actual OrderStatus
-const statusMap: Record<string, OrderStatus | undefined> = {
-  'Все': undefined,
-  'Активные': OrderStatus.PREPARING,
-  'Завершенные': OrderStatus.COMPLETED,
-  'В доставке': OrderStatus.IN_DELIVERY,
-}
+const selectedStatus = ref<Status>({ label: 'Все', count: 0, status: undefined })
 
 // Default statuses (shown if not yet fetched)
 const statuses = ref<Status[]>([
@@ -50,26 +43,21 @@ const statuses = ref<Status[]>([
 async function fetchStatuses(): Promise<Status[]> {
   const data = await ordersService.getStatusesCount()
   return [
-    { label: 'Все', count: data.ALL },
-    { label: 'Активные', count: data.PREPARING },
-    { label: 'Завершенные', count: data.COMPLETED },
-    { label: 'В доставке', count: data.IN_DELIVERY },
+    { label: 'Все', count: data.ALL, status: undefined },
+    { label: 'Активные', count: data.PREPARING, status: OrderStatus.PREPARING },
+    { label: 'Завершенные', count: data.COMPLETED, status: OrderStatus.COMPLETED },
+    { label: 'В доставке', count: data.IN_DELIVERY, status: OrderStatus.IN_DELIVERY },
   ]
 }
 
 const { data: fetchedStatuses } = useQuery({
-  queryKey: ['statuses'],
+  queryKey: ['order-statuses'],
   queryFn: fetchStatuses,
 })
 
-/**
- * Main dynamic orders list (automatically updated via event service).
- *
- * NOTE:   The `useOrderEventsService` presumably handles subscription to
- *         real-time updates so `filteredOrders.value` is always up to date.
- */
-const { filteredOrders } = useOrderEventsService({
-  status: statusMap[selectedStatus.value.label],
+
+const { filteredOrders, setFilter } = useOrderEventsService({
+  status: selectedStatus.value.status,
 })
 
 /**
@@ -128,6 +116,8 @@ async function onSelectStatus(status: Status) {
   selectedStatus.value = status
   selectedOrder.value = null
   selectedSuborder.value = null
+
+  setFilter({status: status.status})
 
   await scrollToTop()
 }
