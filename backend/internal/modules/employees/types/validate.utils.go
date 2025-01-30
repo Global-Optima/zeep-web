@@ -57,7 +57,7 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 	return employee, nil
 }
 
-func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
+func PrepareUpdateFields(input *UpdateEmployeeDTO) *data.Employee {
 	employee := &data.Employee{}
 
 	if input.FirstName != nil {
@@ -69,112 +69,8 @@ func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
 	if input.IsActive != nil {
 		employee.IsActive = *input.IsActive
 	}
-	if input.Phone != nil {
-		if utils.IsValidPhone(*input.Phone, "") {
-			employee.Phone = utils.FormatPhoneInput(*input.Phone)
-		} else {
-			return nil, fmt.Errorf("%w: invalid phone number format: %s", ErrValidation, *input.Phone)
-		}
-	}
-	if input.Email != nil {
-		if !utils.IsValidEmail(*input.Email) {
-			return employee, fmt.Errorf("%w: invalid email format", ErrValidation)
-		}
-		employee.Email = *input.Email
-	}
 
-	return employee, nil
-}
-
-func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO, role data.EmployeeRole) (*data.StoreEmployee, error) {
-	var storeEmployee = &data.StoreEmployee{}
-	if input.StoreID != nil {
-		storeEmployee.StoreID = *input.StoreID
-	}
-
-	if input.Role != nil {
-		if !data.IsAllowableRole(data.StoreEmployeeType, *input.Role) {
-			return nil, ErrUnsupportedEmployeeType
-		}
-		if !data.CanManageRole(role, *input.Role) {
-			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
-		}
-		storeEmployee.Role = *input.Role
-	}
-
-	return storeEmployee, nil
-}
-
-func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO, role data.EmployeeRole) (*data.WarehouseEmployee, error) {
-	var warehouseEmployee = &data.WarehouseEmployee{}
-	if input.WarehouseID != nil {
-		warehouseEmployee.WarehouseID = *input.WarehouseID
-	}
-
-	if input.Role != nil {
-		if !data.IsAllowableRole(data.WarehouseEmployeeType, *input.Role) {
-			return nil, ErrUnsupportedEmployeeType
-		}
-		if !data.CanManageRole(role, *input.Role) {
-			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
-		}
-		warehouseEmployee.Role = *input.Role
-	}
-
-	return warehouseEmployee, nil
-}
-
-func FranchiseeEmployeeUpdateFields(input *UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) (*data.FranchiseeEmployee, error) {
-	var franchiseeEmployee = &data.FranchiseeEmployee{}
-	if input.FranchiseeID != nil {
-		franchiseeEmployee.FranchiseeID = *input.FranchiseeID
-	}
-
-	if input.Role != nil {
-		if !data.IsAllowableRole(data.FranchiseeEmployeeType, *input.Role) {
-			return nil, ErrUnsupportedEmployeeType
-		}
-		if !data.CanManageRole(role, *input.Role) {
-			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
-		}
-		franchiseeEmployee.Role = *input.Role
-	}
-
-	return franchiseeEmployee, nil
-}
-
-func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.EmployeeRole) (*data.RegionEmployee, error) {
-	var regionManager = &data.RegionEmployee{}
-	if input.RegionID != nil {
-		regionManager.RegionID = *input.RegionID
-	}
-
-	if input.Role != nil {
-		if !data.IsAllowableRole(data.RegionEmployeeType, *input.Role) {
-			return nil, ErrUnsupportedEmployeeType
-		}
-		if !data.CanManageRole(role, *input.Role) {
-			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
-		}
-		regionManager.Role = *input.Role
-	}
-
-	return regionManager, nil
-}
-
-func AdminEmployeeUpdateFields(input *UpdateAdminEmployeeDTO, role data.EmployeeRole) (*data.AdminEmployee, error) {
-	var adminEmployee = &data.AdminEmployee{}
-	if input.Role != nil {
-		if !data.IsAllowableRole(data.AdminEmployeeType, *input.Role) {
-			return nil, ErrUnsupportedEmployeeType
-		}
-		if !data.CanManageRole(role, *input.Role) {
-			return nil, fmt.Errorf("%s %w %s", role, ErrNotAllowedToManageTheRole, *input.Role)
-		}
-		adminEmployee.Role = *input.Role
-	}
-
-	return adminEmployee, nil
+	return employee
 }
 
 func ValidateWorkday(dto *CreateWorkdayDTO) (*data.EmployeeWorkday, error) {

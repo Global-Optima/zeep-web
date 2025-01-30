@@ -101,6 +101,15 @@ func CanManageRole(currentRole, targetRole EmployeeRole) bool {
 }
 
 var (
+	FranchiseeReadPermissions = []EmployeeRole{
+		RoleOwner,
+		RoleFranchiseManager,
+		RoleFranchiseOwner,
+	}
+	RegionReadPermissions = []EmployeeRole{
+		RoleOwner,
+		RoleRegionWarehouseManager,
+	}
 	WarehouseManagementPermissions = []EmployeeRole{
 		RoleRegionWarehouseManager,
 		RoleWarehouseManager,
@@ -224,7 +233,6 @@ type Employee struct {
 	Phone              string              `gorm:"size:16;not null"`
 	Email              string              `gorm:"size:255;not null" sort:"email"`
 	HashedPassword     string              `gorm:"size:255;not null"`
-	Type               EmployeeType        `gorm:"size:50;not null" sort:"type"`
 	IsActive           bool                `gorm:"default:true" sort:"isActive"`
 	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
@@ -232,6 +240,23 @@ type Employee struct {
 	FranchiseeEmployee *FranchiseeEmployee `gorm:"foreignKey:EmployeeID"`
 	AdminEmployee      *AdminEmployee      `gorm:"foreignKey:EmployeeID"`
 	Workdays           []EmployeeWorkday   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+}
+
+func (e *Employee) GetType() EmployeeType {
+	switch {
+	case e.StoreEmployee != nil:
+		return StoreEmployeeType
+	case e.FranchiseeEmployee != nil:
+		return FranchiseeEmployeeType
+	case e.AdminEmployee != nil:
+		return AdminEmployeeType
+	case e.RegionEmployee != nil:
+		return RegionEmployeeType
+	case e.WarehouseEmployee != nil:
+		return WarehouseEmployeeType
+	default:
+		return ""
+	}
 }
 
 type StoreEmployee struct {
@@ -261,7 +286,6 @@ type FranchiseeEmployee struct {
 	Franchisee   Franchisee             `gorm:"foreignKey:FranchiseeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" sort:"franchisee"`
 }
 
-// TODO consider renaming to RegionEmployee
 type RegionEmployee struct {
 	BaseEntity
 	EmployeeID uint              `gorm:"index;not null"`

@@ -31,6 +31,8 @@ func (r *Router) RegisterEmployeeAccountRoutes(handler *employees.EmployeeHandle
 	router := r.CommonRoutes.Group("/auth/employees")
 	{
 		router.GET("/store/:id", handler.GetStoreAccounts)
+		router.GET("region/:id", handler.GetRegionAccounts)
+		router.GET("franchisee/:id", handler.GetFranchiseeAccounts)
 		router.GET("/warehouse/:id", handler.GetWarehouseAccounts)
 		router.GET("/admins", handler.GetAdminAccounts)
 	}

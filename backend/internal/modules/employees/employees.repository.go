@@ -13,18 +13,6 @@ import (
 type EmployeeRepository interface {
 	CreateEmployee(employee *data.Employee) (uint, error)
 
-	GetStoreEmployees(storeID uint, filter *types.EmployeesFilter) ([]data.StoreEmployee, error)
-	GetWarehouseEmployees(warehouseID uint, filter *types.EmployeesFilter) ([]data.WarehouseEmployee, error)
-	GetFranchiseeEmployees(franchiseeID uint, filter *types.EmployeesFilter) ([]data.FranchiseeEmployee, error)
-	GetRegionEmployees(regionID uint, filter *types.EmployeesFilter) ([]data.RegionEmployee, error)
-	GetAdminEmployees(filter *types.EmployeesFilter) ([]data.AdminEmployee, error)
-
-	GetStoreEmployeeByID(id, storeID uint) (*data.StoreEmployee, error)
-	GetWarehouseEmployeeByID(id, warehouseID uint) (*data.WarehouseEmployee, error)
-	GetFranchiseeEmployeeByID(id, franchiseeID uint) (*data.FranchiseeEmployee, error)
-	GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error)
-	GetAdminEmployeeByID(id uint) (*data.AdminEmployee, error)
-
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
 	UpdateEmployee(id uint, employee *data.Employee) error
 	ReassignEmployeeType(employeeID uint, newType data.EmployeeType, workplaceID uint) error
@@ -40,14 +28,10 @@ type EmployeeRepository interface {
 	DeleteEmployeeWorkday(workdayID uint) error
 
 	GetAllStoreEmployees(storeID uint) ([]data.Employee, error)
+	GetAllRegionEmployees(regionID uint) ([]data.Employee, error)
+	GetAllFranchiseeEmployees(franchiseeID uint) ([]data.Employee, error)
 	GetAllWarehouseEmployees(warehouseID uint) ([]data.Employee, error)
 	GetAllAdminEmployees() ([]data.Employee, error)
-
-	UpdateFranchiseeEmployee(id uint, franchiseeID uint, update *data.FranchiseeEmployee) error
-	UpdateRegionEmployee(id uint, regionID uint, update *data.RegionEmployee) error
-	UpdateStoreEmployee(id uint, storeID uint, update *data.StoreEmployee) error
-	UpdateWarehouseEmployee(id uint, warehouseID uint, update *data.WarehouseEmployee) error
-	UpdateAdminEmployee(id uint, update *data.AdminEmployee) error
 }
 
 type employeeRepository struct {
@@ -64,6 +48,26 @@ func (r *employeeRepository) CreateEmployee(employee *data.Employee) (uint, erro
 		return 0, err
 	}
 	return employee.ID, nil
+}
+
+func (r *employeeRepository) GetEmployeesByRoles(roles []data.EmployeeRole) ([]data.Employee, error) {
+	var employees []data.Employee
+	err := r.db.Where("role IN ?", roles).
+		Joins("JOIN store_employees ON employees.id = store_employees.employee_id").
+		Where("store_employees.role IN (?)", roles).
+		Joins("JOIN warehouse_employees ON employees.id = warehouse_employees.employee_id").
+		Where("warehouse_employees.role IN (?)", roles).
+		Joins("JOIN franchisee_employees ON employees.id = franchisee_employees.employee_id").
+		Where("warehouse_employees.role IN (?)", roles).
+		Joins("JOIN region_employees ON employees.id = region_employees.employee_id").
+		Where("region_employees.role IN (?)", roles).
+		Joins("JOIN admin_employees ON employees.id = admin_employees.employee_id").
+		Where("admin_employees.role IN (?)", roles).
+		Find(&employees).Error
+	if err != nil {
+		return nil, err
+	}
+	return employees, err
 }
 
 func (r *employeeRepository) GetStoreEmployees(storeID uint, filter *types.EmployeesFilter) ([]data.StoreEmployee, error) {
@@ -333,10 +337,6 @@ func (r *employeeRepository) ReassignEmployeeType(employeeID uint, newType data.
 		return err
 	}
 
-	if employee.Type == newType {
-		return types.ErrUnsupportedEmployeeType
-	}
-
 	typeMappings := map[data.EmployeeType]struct {
 		deleteModel interface{}
 		createModel interface{}
@@ -360,7 +360,7 @@ func (r *employeeRepository) ReassignEmployeeType(employeeID uint, newType data.
 	}
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
-		if deleteModel, ok := typeMappings[employee.Type]; ok {
+		if deleteModel, ok := typeMappings[employee.GetType()]; ok {
 			if err := tx.Where("employee_id = ?", employeeID).Delete(deleteModel.deleteModel).Error; err != nil {
 				return err
 			}
@@ -558,9 +558,39 @@ func (r *employeeRepository) GetAllWarehouseEmployees(warehouseID uint) ([]data.
 
 func (r *employeeRepository) GetAllAdminEmployees() ([]data.Employee, error) {
 	var employees []data.Employee
-	adminRoles := []data.EmployeeRole{data.RoleAdmin}
+
 	err := r.db.Model(&data.Employee{}).
-		Where("role IN (?)", adminRoles).
+		Joins("INNER JOIN warehouse_employees ON warehouse_employees.employee_id = employees.id").
+		Find(&employees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
+}
+
+func (r *employeeRepository) GetAllRegionEmployees(regionID uint) ([]data.Employee, error) {
+	var employees []data.Employee
+
+	err := r.db.Model(&data.Employee{}).
+		Joins("INNER JOIN region_employees ON region_employees.employee_id = employees.id").
+		Where("region_employees.region_id = ?", regionID).
+		Find(&employees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
+}
+
+func (r *employeeRepository) GetAllFranchiseeEmployees(franchiseeID uint) ([]data.Employee, error) {
+	var employees []data.Employee
+
+	err := r.db.Model(&data.Employee{}).
+		Joins("INNER JOIN franchisee_employees ON franchisee_employees.employee_id = employees.id").
+		Where("franchisee_employees.franchisee_id = ?", franchiseeID).
 		Find(&employees).Error
 
 	if err != nil {

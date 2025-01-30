@@ -22,93 +22,27 @@ type CreateWorkdayDTO struct {
 	EndAt   string `json:"endAt" binding:"required"`
 }
 
-type StoreDetailsDTO struct {
-	StoreID     uint `json:"storeId" binding:"required"`
-	IsFranchise bool `json:"isFranchise,omitempty"`
-}
-
-type WarehouseDetailsDTO struct {
-	WarehouseID uint `json:"warehouseId" binding:"required"`
-}
-
 type UpdateEmployeeDTO struct {
 	FirstName *string `json:"firstName,omitempty"`
 	LastName  *string `json:"lastName,omitempty"`
-	Phone     *string `json:"phone,omitempty"`
-	Email     *string `json:"email,omitempty"`
 	IsActive  *bool   `json:"isActive"`
 }
 
-type UpdateTypedEmployeeFields struct {
-	Role *data.EmployeeRole `json:"role,omitempty"`
+type ReassignEmployeeTypeDTO struct {
+	EmployeeType data.EmployeeType `json:"employeeType" binding:"required"`
+	Role         data.EmployeeRole `json:"role" binding:"required"`
+	WorkplaceID  uint              `json:"workplaceId" binding:"required"`
 }
 
-type UpdateStoreEmployeeDTO struct {
-	UpdateTypedEmployeeFields
-	StoreID *uint `json:"storeId,omitempty"`
-}
-
-type UpdateWarehouseEmployeeDTO struct {
-	UpdateTypedEmployeeFields
-	WarehouseID *uint `json:"warehouseId,omitempty"`
-}
-
-type UpdateFranchiseeEmployeeDTO struct {
-	UpdateTypedEmployeeFields
-	FranchiseeID *uint `json:"franchiseeId,omitempty"`
-}
-
-type UpdateRegionEmployeeDTO struct {
-	UpdateTypedEmployeeFields
-	RegionID *uint `json:"regionId,omitempty"`
-}
-
-type UpdateAdminEmployeeDTO struct {
-	UpdateTypedEmployeeFields
-}
-
-type BaseEmployeeDTO struct {
+type EmployeeDTO struct {
 	ID        uint              `json:"id"`
 	FirstName string            `json:"firstName"`
 	LastName  string            `json:"lastName"`
 	Phone     string            `json:"phone"`
 	Email     string            `json:"email"`
 	Type      data.EmployeeType `json:"type"`
+	Role      data.EmployeeRole `json:"role"`
 	IsActive  bool              `json:"isActive"`
-}
-
-type EmployeeDTO struct {
-	BaseEmployeeDTO
-	Role data.EmployeeRole `json:"role"`
-}
-
-type StoreEmployeeDTO struct {
-	BaseEmployeeDTO
-	StoreID uint              `json:"storeId"`
-	Role    data.EmployeeRole `json:"role"`
-}
-
-type WarehouseEmployeeDTO struct {
-	BaseEmployeeDTO
-	WarehouseID uint              `json:"warehouseId"`
-	Role        data.EmployeeRole `json:"role"`
-}
-
-type FranchiseeEmployeeDTO struct {
-	BaseEmployeeDTO
-	FranchiseeID uint              `json:"franchiseeId"`
-	Role         data.EmployeeRole `json:"role"`
-}
-
-type RegionEmployeeDTO struct {
-	BaseEmployeeDTO
-	RegionID uint              `json:"regionId"`
-	Role     data.EmployeeRole `json:"role"`
-}
-
-type AdminEmployeeDTO struct {
-	BaseEmployeeDTO
-	Role data.EmployeeRole `json:"role"`
 }
 
 type EmployeeAccountDTO struct {

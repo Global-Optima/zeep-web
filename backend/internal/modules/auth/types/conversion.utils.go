@@ -9,7 +9,7 @@ func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, erro
 	var workplaceID uint = 0
 	var role data.EmployeeRole = ""
 
-	switch employee.Type {
+	switch employee.GetType() {
 	case data.StoreEmployeeType:
 		workplaceID = employee.StoreEmployee.StoreID
 		role = employee.StoreEmployee.Role
@@ -26,14 +26,14 @@ func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, erro
 		workplaceID = 0
 		role = employee.AdminEmployee.Role
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnsupportedEmployeeType, employee.Type)
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedEmployeeType, employee.GetType())
 	}
 
 	employeeData := EmployeeClaimsData{
 		ID:           employee.ID,
 		Role:         role,
 		WorkplaceID:  workplaceID,
-		EmployeeType: employee.Type,
+		EmployeeType: employee.GetType(),
 	}
 
 	return &employeeData, nil

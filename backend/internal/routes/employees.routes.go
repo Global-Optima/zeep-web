@@ -9,6 +9,11 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	adminEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/adminEmployees"
+	franchiseeEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/franchiseeEmployees"
+	regionEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees"
+	storeEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees"
+	warehouseEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/warehouseEmployees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories"
@@ -193,44 +198,14 @@ func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAddit
 func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	router := r.EmployeeRoutes.Group("/employees")
 	{
-		storeEmployees := router.Group("/stores")
-		{
-			storeEmployees.GET("", handler.GetStoreEmployees, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
-			storeEmployees.POST("", handler.CreateStoreEmployee, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
-			storeEmployees.GET("/:id", handler.GetStoreEmployeeByID, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
-			storeEmployees.PUT("/:id", handler.UpdateStoreEmployee, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
-			storeEmployees.DELETE("/:employeeId", handler.DeleteStoreEmployee, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
-		}
-		warehouseEmployees := router.Group("/warehouses")
-		{
-			warehouseEmployees.GET("", handler.GetWarehouseEmployees, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
-			warehouseEmployees.POST("", handler.CreateWarehouseEmployee, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
-			warehouseEmployees.GET("/:id", handler.GetWarehouseEmployeeByID, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
-			warehouseEmployees.PUT("/:id", handler.UpdateWarehouseEmployee, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
-			warehouseEmployees.DELETE("/:employeeId", handler.DeleteWarehouseEmployee, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
-		}
-		franchiseeEmployees := router.Group("/franchisee")
-		{
-			franchiseeEmployees.GET("", handler.GetFranchiseeEmployees, middleware.EmployeeRoleMiddleware(data.RoleOwner, data.RoleFranchiseOwner, data.RoleFranchiseManager))
-			franchiseeEmployees.POST("", handler.CreateFranchiseeEmployee, middleware.EmployeeRoleMiddleware())
-			franchiseeEmployees.GET("/:id", handler.GetFranchiseeEmployeeByID, middleware.EmployeeRoleMiddleware(data.RoleOwner, data.RoleFranchiseOwner, data.RoleFranchiseManager))
-			franchiseeEmployees.PUT("/:id", handler.UpdateFranchiseeEmployee, middleware.EmployeeRoleMiddleware())
-			franchiseeEmployees.DELETE("/:employeeId", handler.DeleteFranchiseeEmployee, middleware.EmployeeRoleMiddleware())
-		}
-		regionManagers := router.Group("/region-managers")
-		{
-			regionManagers.GET("", handler.GetRegionEmployees, middleware.EmployeeRoleMiddleware(data.RoleOwner))
-			regionManagers.POST("", handler.CreateRegionEmployee, middleware.EmployeeRoleMiddleware())
-			regionManagers.GET("/:id", handler.GetRegionEmployeeByID, middleware.EmployeeRoleMiddleware(data.RoleOwner))
-			regionManagers.PUT("/:id", handler.UpdateRegionEmployee, middleware.EmployeeRoleMiddleware())
-			regionManagers.DELETE("/:employeeId", handler.DeleteRegionEmployee, middleware.EmployeeRoleMiddleware())
-		}
 
+		router.PUT("/reassign", handler.ReassignEmployeeType, middleware.EmployeeRoleMiddleware())
 		router.GET("/current", handler.GetCurrentEmployee)
 		router.GET("/roles", handler.GetAllRoles)
-		router.PUT("/:id/password", handler.UpdatePassword)
+		router.PUT("/:id/password", handler.UpdatePassword, middleware.EmployeeRoleMiddleware())
 
 		workdays := router.Group("/workdays")
+
 		{
 			var workdaysManagementPermissions = []data.EmployeeRole{data.RoleStoreManager, data.RoleWarehouseManager, data.RoleRegionWarehouseManager, data.RoleFranchiseManager}
 			workdays.POST("", handler.CreateEmployeeWorkday, middleware.EmployeeRoleMiddleware(workdaysManagementPermissions...))
@@ -239,6 +214,59 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 			workdays.PUT("/:id", handler.UpdateEmployeeWorkday, middleware.EmployeeRoleMiddleware(workdaysManagementPermissions...))
 			workdays.DELETE("/:id", handler.DeleteEmployeeWorkday, middleware.EmployeeRoleMiddleware(workdaysManagementPermissions...))
 		}
+	}
+}
+
+func (r *Router) RegisterStoreEmployeeRoutes(handler storeEmployees.StoreEmployeeHandler) {
+	router := r.EmployeeRoutes.Group("/store-employees")
+	{
+		router.GET("", handler.GetStoreEmployees, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
+		router.POST("", handler.CreateStoreEmployee, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
+		router.GET("/:id", handler.GetStoreEmployeeByID, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
+		router.PUT("/:id", handler.UpdateStoreEmployee, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
+		router.DELETE("/:employeeId", handler.DeleteStoreEmployee, middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...))
+	}
+}
+
+func (r *Router) RegisterWarehouseEmployeeRoutes(handler warehouseEmployees.WarehouseEmployeeHandler) {
+	router := r.EmployeeRoutes.Group("/warehouse-employees")
+	{
+		router.GET("", handler.GetWarehouseEmployees, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
+		router.POST("", handler.CreateWarehouseEmployee, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.GET("/:id", handler.GetWarehouseEmployeeByID, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
+		router.PUT("/:id", handler.UpdateWarehouseEmployee, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.DELETE("/:employeeId", handler.DeleteWarehouseEmployee, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+	}
+}
+
+func (r *Router) RegisterFranchiseeEmployeeRoutes(handler franchiseeEmployees.FranchiseeEmployeeHandler) {
+	router := r.EmployeeRoutes.Group("/store-employees")
+	{
+		router.GET("", handler.GetFranchiseeEmployees, middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...))
+		router.POST("", handler.CreateFranchiseeEmployee, middleware.EmployeeRoleMiddleware())
+		router.GET("/:id", handler.GetFranchiseeEmployeeByID, middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...))
+		router.PUT("/:id", handler.UpdateFranchiseeEmployee, middleware.EmployeeRoleMiddleware())
+		router.DELETE("/:employeeId", handler.DeleteFranchiseeEmployee, middleware.EmployeeRoleMiddleware())
+	}
+}
+
+func (r *Router) RegisterRegionEmployeeRoutes(handler regionEmployees.RegionEmployeeHandler) {
+	router := r.EmployeeRoutes.Group("/region-employees")
+	{
+		router.GET("", handler.GetRegionEmployees, middleware.EmployeeRoleMiddleware(data.RegionReadPermissions...))
+		router.POST("", handler.CreateRegionEmployee, middleware.EmployeeRoleMiddleware())
+		router.GET("/:id", handler.GetRegionEmployeeByID, middleware.EmployeeRoleMiddleware(data.RegionReadPermissions...))
+		router.PUT("/:id", handler.UpdateRegionEmployee, middleware.EmployeeRoleMiddleware())
+		router.DELETE("/:employeeId", handler.DeleteRegionEmployee, middleware.EmployeeRoleMiddleware())
+	}
+}
+
+func (r *Router) RegisterAdminEmployeeRoutes(handler adminEmployees.AdminEmployeeHandler) {
+	router := r.EmployeeRoutes.Group("/warehouse-employees")
+	{
+		router.GET("", handler.GetAdminEmployees, middleware.EmployeeRoleMiddleware())
+		router.POST("", handler.CreateAdminEmployee, middleware.EmployeeRoleMiddleware())
+		router.GET("/:id", handler.GetAdminEmployeeByID, middleware.EmployeeRoleMiddleware())
 	}
 }
 

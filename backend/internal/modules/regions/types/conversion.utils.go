@@ -16,7 +16,7 @@ func UpdateToRegion(dto *UpdateRegionDTO) *data.Region {
 	return updateData
 }
 
-func MapRegionEntityToDTO(entity *data.Region) *RegionDTO {
+func MapRegionToDTO(entity *data.Region) *RegionDTO {
 	return &RegionDTO{
 		ID:   entity.ID,
 		Name: entity.Name,
