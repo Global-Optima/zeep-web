@@ -1,6 +1,7 @@
 package warehouseStock
 
 import (
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 
@@ -162,6 +163,7 @@ func (h *WarehouseStockHandler) GetStocks(c *gin.Context) {
 }
 
 func (h *WarehouseStockHandler) GetAvailableToAddStockMaterials(c *gin.Context) {
+	logrus.Info("dasdasd")
 	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
