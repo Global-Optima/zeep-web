@@ -324,6 +324,9 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 	}
 
 	subOrder, err := s.orderRepo.GetSuborderByID(subOrderID)
+	if err != nil {
+		return nil, err
+	}
 	response := types.ConvertSuborderToDTO(subOrder)
 
 	return &response, nil
