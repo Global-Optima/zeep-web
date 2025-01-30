@@ -129,6 +129,10 @@ func CombineComments(
 	mismatchComments []localization.LocalizedMessages,
 	unexpectedComments []localization.LocalizedMessages,
 ) *localization.LocalizedMessages {
+	if mismatchComments == nil && unexpectedComments == nil {
+		return nil
+	}
+
 	var combinedComments localization.LocalizedMessages
 
 	for _, mismismatchComment := range mismatchComments {

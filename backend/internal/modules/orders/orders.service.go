@@ -3,12 +3,13 @@ package orders
 import (
 	"bytes"
 	"fmt"
-	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/png"
+
+	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 
 	"go.uber.org/zap"
 	"golang.org/x/image/font"
@@ -34,7 +35,7 @@ type OrderService interface {
 	GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error)
 	CreateOrder(storeId uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
 	CompleteSubOrder(orderID, subOrderID uint) error
-	CompleteSubOrderByBarcode(subOrderID uint) error
+	CompleteSubOrderByBarcode(subOrderID uint) (*types.SuborderDTO, error)
 	GeneratePDFReceipt(orderID uint) ([]byte, error)
 	GetOrderBySubOrder(subOrderID uint) (*data.Order, error)
 	GetOrderById(orderId uint) (types.OrderDTO, error)
@@ -262,26 +263,26 @@ func (s *orderService) GenerateSuborderBarcode(suborderID uint) ([]byte, error) 
 	return buf.Bytes(), nil
 }
 
-func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) error {
+func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.SuborderDTO, error) {
 	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to fetch order for suborder: %w", err)
 		s.logger.Error(wrappedErr.Error())
-		return wrappedErr
+		return nil, wrappedErr
 	}
 
 	err = s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
 		s.logger.Error(wrappedErr.Error())
-		return wrappedErr
+		return nil, wrappedErr
 	}
 
 	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(order.ID, subOrderID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to check suborder: %w", err)
 		s.logger.Error(wrappedErr.Error())
-		return wrappedErr
+		return nil, wrappedErr
 	}
 
 	if allCompleted {
@@ -289,8 +290,22 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) error {
 		if err != nil {
 			wrappedErr := fmt.Errorf("failed to get order by id: %w", err)
 			s.logger.Error(wrappedErr.Error())
-			return wrappedErr
+			return nil, wrappedErr
 		}
+
+		stockMap := make(map[uint]*data.StoreWarehouseStock)
+
+		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
+		if err != nil {
+			return nil, fmt.Errorf("failed to deduct ingredients for products: %w", err)
+		}
+
+		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
+		if err != nil {
+			return nil, fmt.Errorf("failed to deduct ingredients for additives: %w", err)
+		}
+
+		s.notifyLowStockIngredients(order, stockMap)
 
 		var newStatus data.OrderStatus
 		if order.DeliveryAddressID != nil {
@@ -304,11 +319,14 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) error {
 		if err != nil {
 			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
 			s.logger.Error(wrappedErr.Error())
-			return wrappedErr
+			return nil, wrappedErr
 		}
 	}
 
-	return nil
+	subOrder, err := s.orderRepo.GetSuborderByID(subOrderID)
+	response := types.ConvertSuborderToDTO(subOrder)
+
+	return &response, nil
 }
 
 func (s *orderService) deductProductSizeIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreWarehouseStock) error {
