@@ -1,11 +1,23 @@
 package orders
 
 import (
+	"bytes"
 	"fmt"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
 
 	"go.uber.org/zap"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/goregular"
+	"golang.org/x/image/math/fixed"
+
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/code128"
+	"github.com/golang/freetype/truetype"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -21,13 +33,15 @@ type OrderService interface {
 	GetSubOrders(orderID uint) ([]types.SuborderDTO, error)
 	GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error)
 	CreateOrder(storeId uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
-	CompleteSubOrder(subOrderID uint) error
+	CompleteSubOrder(orderID, subOrderID uint) error
+	CompleteSubOrderByBarcode(subOrderID uint) error
 	GeneratePDFReceipt(orderID uint) ([]byte, error)
 	GetOrderBySubOrder(subOrderID uint) (*data.Order, error)
 	GetOrderById(orderId uint) (types.OrderDTO, error)
 
 	GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, error)
 	ExportOrders(filter *types.OrdersExportFilterQuery) ([]types.OrderExportDTO, error)
+	GenerateSuborderBarcode(suborderID uint) ([]byte, error)
 }
 
 type orderValidationResults struct {
@@ -142,7 +156,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	return &order, nil
 }
 
-func (s *orderService) CompleteSubOrder(subOrderID uint) error {
+func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
 	err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
@@ -150,7 +164,7 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		return wrappedErr
 	}
 
-	orderID, allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(subOrderID)
+	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(orderID, subOrderID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to check suborder: %w", err)
 		s.logger.Error(wrappedErr.Error())
@@ -187,6 +201,105 @@ func (s *orderService) CompleteSubOrder(subOrderID uint) error {
 		}
 
 		err = s.orderRepo.UpdateOrderStatus(orderID, newStatus)
+
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
+			s.logger.Error(wrappedErr.Error())
+			return wrappedErr
+		}
+	}
+
+	return nil
+}
+
+func (s *orderService) GenerateSuborderBarcode(suborderID uint) ([]byte, error) {
+	suborder, err := s.orderRepo.GetSuborderByID(suborderID)
+	if err != nil {
+		return nil, err
+	}
+
+	barcodeData := fmt.Sprintf("suborder-%d", suborder.ID)
+	bcode, err := code128.Encode(barcodeData)
+	if err != nil {
+		return nil, err
+	}
+
+	scaledBcode, err := barcode.Scale(bcode, 150, 70)
+	if err != nil {
+		return nil, err
+	}
+
+	finalImg := image.NewRGBA(image.Rect(0, 0, 150, 90))
+	draw.Draw(finalImg, finalImg.Bounds(), image.White, image.Point{}, draw.Src)
+
+	draw.Draw(finalImg, scaledBcode.Bounds().Add(image.Pt(0, 0)), scaledBcode, image.Point{}, draw.Over)
+
+	fontData, err := truetype.Parse(goregular.TTF)
+	if err != nil {
+		return nil, err
+	}
+
+	fontFace := truetype.NewFace(fontData, &truetype.Options{
+		Size: 12,
+	})
+
+	col := color.Black
+	point := fixed.Point26_6{X: fixed.I(40), Y: fixed.I(85)}
+	d := &font.Drawer{
+		Dst:  finalImg,
+		Src:  image.NewUniform(col),
+		Face: fontFace,
+		Dot:  point,
+	}
+	d.DrawString(barcodeData)
+
+	var buf bytes.Buffer
+	err = png.Encode(&buf, finalImg)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) error {
+	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to fetch order for suborder: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return wrappedErr
+	}
+
+	err = s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return wrappedErr
+	}
+
+	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(order.ID, subOrderID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to check suborder: %w", err)
+		s.logger.Error(wrappedErr.Error())
+		return wrappedErr
+	}
+
+	if allCompleted {
+		order, err := s.orderRepo.GetOrderById(order.ID)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to get order by id: %w", err)
+			s.logger.Error(wrappedErr.Error())
+			return wrappedErr
+		}
+
+		var newStatus data.OrderStatus
+		if order.DeliveryAddressID != nil {
+			newStatus = data.OrderStatusInDelivery
+		} else {
+			newStatus = data.OrderStatusCompleted
+		}
+
+		err = s.orderRepo.UpdateOrderStatus(order.ID, newStatus)
 
 		if err != nil {
 			wrappedErr := fmt.Errorf("failed to update order status: %w", err)

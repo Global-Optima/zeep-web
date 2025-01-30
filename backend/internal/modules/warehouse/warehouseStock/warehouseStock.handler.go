@@ -6,17 +6,20 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
+
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
 type WarehouseStockHandler struct {
-	service WarehouseStockService
+	service           WarehouseStockService
+	franchiseeService franchisees.FranchiseeService
 }
 
-func NewWarehouseStockHandler(service WarehouseStockService) *WarehouseStockHandler {
-	return &WarehouseStockHandler{service: service}
+func NewWarehouseStockHandler(service WarehouseStockService, franchiseeService franchisees.FranchiseeService) *WarehouseStockHandler {
+	return &WarehouseStockHandler{service: service, franchiseeService: franchiseeService}
 }
 
 func (h *WarehouseStockHandler) ReceiveInventory(c *gin.Context) {
@@ -152,6 +155,29 @@ func (h *WarehouseStockHandler) GetStocks(c *gin.Context) {
 	stocks, err := h.service.GetStock(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch stock: "+err.Error())
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, stocks, filter.Pagination)
+}
+
+func (h *WarehouseStockHandler) GetAvailableToAddStockMaterials(c *gin.Context) {
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	var filter types.AvailableStockMaterialFilter
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockMaterial{})
+	if err != nil {
+		utils.SendBadRequestError(c, err.Error())
+		return
+	}
+
+	stocks, err := h.service.GetAvailableToAddStockMaterials(storeID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch stock materials: "+err.Error())
 		return
 	}
 

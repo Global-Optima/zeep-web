@@ -284,6 +284,8 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.GET("/:orderId", handler.GetOrderDetails, middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...))
 
 		router.GET("/export", handler.ExportOrders, middleware.EmployeeRoleMiddleware(data.RoleOwner, data.RoleFranchiseOwner, data.RoleFranchiseManager))
+		router.PUT("/suborders/:subOrderId/complete", handler.CompleteSubOrderByBarcode, middleware.EmployeeRoleMiddleware(data.StoreWorkerPermissions...))
+		router.GET("/suborders/:subOrderId/barcode", handler.GetSuborderBarcode)
 	}
 }
 
@@ -380,6 +382,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 		stockRoutes := router.Group("/stocks")
 		{
 			stockRoutes.GET("", warehouseStockHandler.GetStocks, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
+			stockRoutes.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), warehouseStockHandler.GetAvailableToAddStockMaterials)
 			stockRoutes.GET("/:stockMaterialId", warehouseStockHandler.GetStockMaterialDetails, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
 			stockRoutes.PUT("/:stockMaterialId", warehouseStockHandler.UpdateStock, middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...))
 			stockRoutes.POST("/add", warehouseStockHandler.AddWarehouseStocks, middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...))
