@@ -29,7 +29,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
@@ -315,12 +314,16 @@ func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWare
 func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMaterialHandler) {
 	router := r.EmployeeRoutes.Group("/stock-materials")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetAllStockMaterials)
-		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetStockMaterialByID)
-		router.POST("", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.CreateStockMaterial)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.UpdateStockMaterial)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.DeleteStockMaterial)
-		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.DeactivateStockMaterial)
+		router.GET("", handler.GetAllStockMaterials, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
+		router.GET("/:id", handler.GetStockMaterialByID, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
+		router.POST("", handler.CreateStockMaterial, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.PUT("/:id", handler.UpdateStockMaterial, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.DELETE("/:id", handler.DeleteStockMaterial, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.PATCH("/:id/deactivate", handler.DeactivateStockMaterial, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+
+		router.GET("/:id/barcode", handler.GetStockMaterialBarcode)
+		router.GET("/barcodes/:barcode", handler.RetrieveStockMaterialByBarcode)
+		router.POST("/barcodes/generate", handler.GenerateBarcode)
 	}
 }
 
@@ -343,18 +346,6 @@ func (r *Router) RegisterUnitRoutes(handler *units.UnitHandler) {
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateUnit)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateUnit)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteUnit)
-	}
-}
-
-func (r *Router) RegisterBarcodeRoutes(handler *barcode.BarcodeHandler) {
-	router := r.EmployeeRoutes.Group("/barcode")
-	{
-		router.POST("/generate", middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...), handler.GenerateBarcode)
-		router.GET("/:barcode", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.RetrieveStockMaterialByBarcode)
-		router.POST("/print", middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...), handler.PrintAdditionalBarcodes)
-
-		router.POST("/by-material", middleware.EmployeeRoleMiddleware(data.WarehouseWorkerPermissions...), handler.GetBarcodesForStockMaterials) // Retrieve multiple barcodes
-		router.GET("/by-material/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetBarcodeForStockMaterial)  // Retrieve a single barcode by ID
 	}
 }
 

@@ -39,7 +39,6 @@ type Container struct {
 	Warehouses              *modules.WarehousesModule
 	StockMaterials          *modules.StockMaterialsModule
 	StockMaterialCategories *modules.StockMaterialCategoriesModule
-	Barcodes                *modules.BarcodeModule
 	Units                   *modules.UnitsModule
 	Analytics               *modules.AnalyticsModule
 }
@@ -85,10 +84,9 @@ func (c *Container) mustInit() {
 	c.Suppliers = modules.NewSuppliersModule(baseModule)
 	c.StockMaterials = modules.NewStockMaterialsModule(baseModule)
 	c.StockMaterialCategories = modules.NewStockMaterialCategoriesModule(baseModule)
-	c.Barcodes = modules.NewBarcodeModule(baseModule, c.StockMaterials.Repo)
 	c.Units = modules.NewUnitsModule(baseModule)
 	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service)
-	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Barcodes.Repo, c.Notifications.Service, cronManager, c.Franchisees.Service)
+	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Notifications.Service, cronManager, c.Franchisees.Service)
 
 	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreWarehouses.Repo, c.Notifications.Service)
 	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreWarehouses.Repo)

@@ -446,8 +446,9 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		query = query.Where(`
 			stock_materials.name ILIKE ? OR 
 			stock_materials.description ILIKE ? OR 
+			stock_materials.barcode ILIKE ? OR
 			stock_materials.barcode ILIKE ?
-		`, search, search, search)
+		`, search, search, search, search)
 	}
 
 	// Apply pagination and sorting

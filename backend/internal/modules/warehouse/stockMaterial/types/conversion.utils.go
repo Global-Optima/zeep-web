@@ -9,6 +9,12 @@ import (
 	stockMaterialCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
 )
 
+func ToGenerateBarcodeResponse(barcode string) GenerateBarcodeResponse {
+	return GenerateBarcodeResponse{
+		Barcode: barcode,
+	}
+}
+
 func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDTO) *data.StockMaterial {
 	return &data.StockMaterial{
 		Name:                   req.Name,
