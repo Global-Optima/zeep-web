@@ -73,7 +73,7 @@ func ConvertSuborderToDTO(suborder *data.Suborder) SuborderDTO {
 	suborderDTO := SuborderDTO{
 		ID:      suborder.ID,
 		OrderID: suborder.OrderID,
-		ProductSize: OrderProductSizeDTO{
+		ProductSize: OrderStoreProductSizeDTO{
 			ID:          suborder.StoreProductSize.ProductSize.ID,
 			SizeName:    suborder.StoreProductSize.ProductSize.Name,
 			ProductName: suborder.StoreProductSize.ProductSize.Product.Name,
@@ -84,7 +84,7 @@ func ConvertSuborderToDTO(suborder *data.Suborder) SuborderDTO {
 		Status:    suborder.Status,
 		CreatedAt: suborder.CreatedAt,
 		UpdatedAt: suborder.UpdatedAt,
-		Additives: []SuborderAdditiveDTO{},
+		Additives: []SuborderStoreAdditiveDTO{},
 	}
 
 	for _, additive := range suborder.StoreAdditives {
@@ -94,11 +94,11 @@ func ConvertSuborderToDTO(suborder *data.Suborder) SuborderDTO {
 	return suborderDTO
 }
 
-func ConvertSuborderAdditiveToDTO(suborderAdditive *data.SuborderAdditive) SuborderAdditiveDTO {
-	return SuborderAdditiveDTO{
+func ConvertSuborderAdditiveToDTO(suborderAdditive *data.SuborderAdditive) SuborderStoreAdditiveDTO {
+	return SuborderStoreAdditiveDTO{
 		ID:         suborderAdditive.ID,
 		SuborderID: suborderAdditive.SuborderID,
-		Additive: OrderAdditiveDTO{
+		Additive: OrderStoreAdditiveDTO{
 			ID:          suborderAdditive.StoreAdditive.Additive.ID,
 			Name:        suborderAdditive.StoreAdditive.Additive.Name,
 			Description: suborderAdditive.StoreAdditive.Additive.Description,
@@ -191,8 +191,8 @@ func ToOrderExportDTO(order *data.Order, storeName string) OrderExportDTO {
 	}
 }
 
-func ToOrderAdditivesDTO(additives []data.SuborderAdditive) []SuborderAdditiveDTO {
-	dtos := make([]SuborderAdditiveDTO, len(additives))
+func ToOrderAdditivesDTO(additives []data.SuborderAdditive) []SuborderStoreAdditiveDTO {
+	dtos := make([]SuborderStoreAdditiveDTO, len(additives))
 	for i, additive := range additives {
 		dtos[i] = ConvertSuborderAdditiveToDTO(&additive)
 	}

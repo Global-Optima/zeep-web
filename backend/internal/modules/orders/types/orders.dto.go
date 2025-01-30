@@ -57,17 +57,17 @@ type OrderDTO struct {
 }
 
 type SuborderDTO struct {
-	ID          uint                  `json:"id"`
-	OrderID     uint                  `json:"orderId"`
-	ProductSize OrderProductSizeDTO   `json:"productSize"`
-	Price       float64               `json:"price"`
-	Status      data.SubOrderStatus   `json:"status"`
-	Additives   []SuborderAdditiveDTO `json:"additives"`
-	CreatedAt   time.Time             `json:"createdAt"`
-	UpdatedAt   time.Time             `json:"updatedAt"`
+	ID          uint                       `json:"id"`
+	OrderID     uint                       `json:"orderId"`
+	ProductSize OrderStoreProductSizeDTO   `json:"productSize"`
+	Price       float64                    `json:"price"`
+	Status      data.SubOrderStatus        `json:"status"`
+	Additives   []SuborderStoreAdditiveDTO `json:"additives"`
+	CreatedAt   time.Time                  `json:"createdAt"`
+	UpdatedAt   time.Time                  `json:"updatedAt"`
 }
 
-type OrderProductSizeDTO struct {
+type OrderStoreProductSizeDTO struct {
 	ID          uint               `json:"id"`
 	SizeName    string             `json:"sizeName"`
 	ProductName string             `json:"productName"`
@@ -75,20 +75,20 @@ type OrderProductSizeDTO struct {
 	Unit        unitTypes.UnitsDTO `json:"unit"`
 }
 
-type OrderAdditiveDTO struct {
+type OrderStoreAdditiveDTO struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Size        int    `json:"size"`
 }
 
-type SuborderAdditiveDTO struct {
-	ID         uint             `json:"id"`
-	SuborderID uint             `json:"subOrderId"`
-	Additive   OrderAdditiveDTO `json:"additive"`
-	Price      float64          `json:"price"`
-	CreatedAt  time.Time        `json:"createdAt"`
-	UpdatedAt  time.Time        `json:"updatedAt"`
+type SuborderStoreAdditiveDTO struct {
+	ID         uint                  `json:"id"`
+	SuborderID uint                  `json:"subOrderId"`
+	Additive   OrderStoreAdditiveDTO `json:"additive"`
+	Price      float64               `json:"price"`
+	CreatedAt  time.Time             `json:"createdAt"`
+	UpdatedAt  time.Time             `json:"updatedAt"`
 }
 
 type OrderDetailsDTO struct {

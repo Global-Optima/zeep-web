@@ -86,7 +86,7 @@ func addProductSheet(sheet *xlsx.Sheet, suborders []types.SuborderDTO, file *xls
 	}
 }
 
-func addAdditiveSheet(sheet *xlsx.Sheet, additives []types.SuborderAdditiveDTO) {
+func addAdditiveSheet(sheet *xlsx.Sheet, additives []types.SuborderStoreAdditiveDTO) {
 	headerRow := sheet.AddRow()
 	headers := []string{"Additive Name", "StorePrice"}
 	for _, header := range headers {

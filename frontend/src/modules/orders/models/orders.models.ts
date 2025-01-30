@@ -38,9 +38,9 @@ export interface OrderStatusesCountDTO {
 }
 
 interface CreateSubOrderDTO {
-	productSizeId: number
+	storeProductSizeId: number
 	quantity: number
-	additivesIds: number[]
+	storeAdditivesIds: number[]
 }
 
 export interface OrderDTO {
