@@ -6,12 +6,13 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type BarcodeService interface {
-	GenerateBarcode(req *types.GenerateBarcodeRequest) (*types.GenerateBarcodeResponse, error)
-	RetrieveStockMaterialByBarcode(req *types.RetrieveStockMaterialByBarcodeRequest) (*types.RetrieveStockMaterialByBarcodeResponse, error)
+	GenerateBarcode() (*types.GenerateBarcodeResponse, error)
+	RetrieveStockMaterialByBarcode(barcode string) (*stockMaterialTypes.StockMaterialsDTO, error)
 	PrintAdditionalBarcodes(req *types.PrintAdditionalBarcodesRequest) (*types.PrintAdditionalBarcodesResponse, error)
 
 	GetBarcodesForStockMaterials(stockMaterialIDs []uint) ([]types.StockMaterialBarcodeResponse, error)
@@ -33,36 +34,35 @@ func NewBarcodeService(repo BarcodeRepository, stockMaterialRepo stockMaterial.S
 	}
 }
 
-func (s *barcodeService) GenerateBarcode(req *types.GenerateBarcodeRequest) (*types.GenerateBarcodeResponse, error) {
-	stockMaterial, err := s.stockMaterialRepo.GetStockMaterialByID(req.StockMaterialID)
-	if err != nil {
-		return nil, err
-	}
-	if stockMaterial == nil {
-		return nil, errors.New("StockMaterial not found")
+func (s *barcodeService) GenerateBarcode() (*types.GenerateBarcodeResponse, error) {
+	maxRetries := 10
+	var barcode string
+	var exists bool
+	var err error
+
+	for i := 0; i < maxRetries; i++ {
+		barcode = utils.GenerateRandomEAN13()
+
+		exists, err = s.repo.IsBarcodeExists(barcode)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check uniqueness of barcode: %w", err)
+		}
+
+		if !exists {
+			break
+		}
 	}
 
-	barcode, err := utils.GenerateUPCBarcode(*stockMaterial, req.SupplierID)
-	if err != nil {
-		return nil, err
+	if exists {
+		return nil, fmt.Errorf("failed to generate unique barcode after %d attempts", maxRetries)
 	}
 
-	err = s.repo.AssignBarcode(barcode, req.StockMaterialID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.printerService.PrintBarcode(barcode)
-	if err != nil {
-		return nil, err
-	}
-
-	response := types.ToGenerateBarcodeResponse(*stockMaterial, barcode)
+	response := types.ToGenerateBarcodeResponse(barcode)
 	return &response, nil
 }
 
-func (s *barcodeService) RetrieveStockMaterialByBarcode(req *types.RetrieveStockMaterialByBarcodeRequest) (*types.RetrieveStockMaterialByBarcodeResponse, error) {
-	stockMaterial, err := s.repo.GetStockMaterialByBarcode(req.Barcode)
+func (s *barcodeService) RetrieveStockMaterialByBarcode(barcode string) (*stockMaterialTypes.StockMaterialsDTO, error) {
+	stockMaterial, err := s.repo.GetStockMaterialByBarcode(barcode)
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +70,7 @@ func (s *barcodeService) RetrieveStockMaterialByBarcode(req *types.RetrieveStock
 		return nil, errors.New("StockMaterial not found with the provided barcode")
 	}
 
-	response := types.ToRetrieveStockMaterialByBarcodeResponse(*stockMaterial)
-	return &response, nil
+	return stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(stockMaterial), nil
 }
 
 func (s *barcodeService) PrintAdditionalBarcodes(req *types.PrintAdditionalBarcodesRequest) (*types.PrintAdditionalBarcodesResponse, error) {

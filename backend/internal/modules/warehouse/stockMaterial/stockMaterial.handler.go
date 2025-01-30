@@ -1,6 +1,7 @@
 package stockMaterial
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -138,4 +139,26 @@ func (h *StockMaterialHandler) DeactivateStockMaterial(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *StockMaterialHandler) GetStockMaterialBarcode(c *gin.Context) {
+	stockMaterialID, errH := utils.ParseParam(c, "id")
+	if errH != nil {
+		utils.SendBadRequestError(c, errH.Error())
+		return
+	}
+
+	barcodeImage, err := h.service.GetStockMaterialBarcode(stockMaterialID)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to get barcode image")
+		return
+	}
+
+	filename := fmt.Sprintf("barcode-%d.png", stockMaterialID)
+
+	// Add headers for downloading the barcode image
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Content-Type", "image/png")
+	c.Header("Content-Length", fmt.Sprintf("%d", len(barcodeImage)))
+	c.Data(http.StatusOK, "image/png", barcodeImage)
 }

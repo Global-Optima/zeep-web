@@ -6,12 +6,9 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func ToGenerateBarcodeResponse(stockMaterial data.StockMaterial, barcode string) GenerateBarcodeResponse {
+func ToGenerateBarcodeResponse(barcode string) GenerateBarcodeResponse {
 	return GenerateBarcodeResponse{
-		StockMaterialID: stockMaterial.ID,
-		Barcode:         barcode,
-		Message:         "Barcode generated and assigned successfully.",
-		CreatedAt:       stockMaterial.CreatedAt.Format(time.RFC3339),
+		Barcode: barcode,
 	}
 }
 

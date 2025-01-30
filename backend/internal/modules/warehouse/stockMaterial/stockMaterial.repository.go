@@ -120,7 +120,14 @@ func (r *stockMaterialRepository) GetStockMaterialsByIDs(stockMaterialIDs []uint
 }
 
 func (r *stockMaterialRepository) CreateStockMaterial(stockMaterial *data.StockMaterial) error {
-	return r.db.Create(stockMaterial).Error
+	var existingBarcode data.StockMaterial
+	err := r.db.Model(&data.StockMaterial{}).Where("barcode = ?", stockMaterial.Barcode).First(&existingBarcode).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return r.db.Create(stockMaterial).Error
+	}
+
+	return err
 }
 
 func (r *stockMaterialRepository) CreateStockMaterials(stockMaterials []data.StockMaterial) error {

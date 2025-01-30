@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type StockMaterialService interface {
@@ -14,6 +15,7 @@ type StockMaterialService interface {
 	UpdateStockMaterial(stockMaterialID uint, req *types.UpdateStockMaterialDTO) error
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
+	GetStockMaterialBarcode(stockMaterialID uint) ([]byte, error)
 }
 
 type stockMaterialService struct {
@@ -96,4 +98,18 @@ func (s *stockMaterialService) DeleteStockMaterial(stockMaterialID uint) error {
 
 func (s *stockMaterialService) DeactivateStockMaterial(stockMaterialID uint) error {
 	return s.repo.DeactivateStockMaterial(stockMaterialID)
+}
+
+func (s *stockMaterialService) GetStockMaterialBarcode(stockMaterialID uint) ([]byte, error) {
+	stockMaterial, err := s.repo.GetStockMaterialByID(stockMaterialID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve stock material: %w", err)
+	}
+
+	barcodeImage, err := utils.GenerateBarcodeImage(stockMaterial.Barcode)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate barcode image: %w", err)
+	}
+
+	return barcodeImage, nil
 }

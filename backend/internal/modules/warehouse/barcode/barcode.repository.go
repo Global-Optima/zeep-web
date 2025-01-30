@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
 type BarcodeRepository interface {
-	GenerateAndAssignBarcode(stockMaterialID uint) (string, error)
 	AssignBarcode(barcode string, stockMaterialID uint) error
 	GetStockMaterialByBarcode(barcode string) (*data.StockMaterial, error)
 	GetStockMaterialBeforeDeletion(stockMaterialID uint) (*data.StockMaterial, error)
@@ -20,6 +18,7 @@ type BarcodeRepository interface {
 
 	GetBarcodesForStockMaterials(stockMaterialIDs []uint) ([]data.StockMaterial, error)
 	GetBarcodeForStockMaterial(stockMaterialID uint) (*data.StockMaterial, error)
+	IsBarcodeExists(barcode string) (bool, error)
 }
 
 type barcodeRepository struct {
@@ -30,43 +29,6 @@ func NewBarcodeRepository(db *gorm.DB) BarcodeRepository {
 	return &barcodeRepository{db: db}
 }
 
-func (r *barcodeRepository) GenerateAndAssignBarcode(stockMaterialID uint) (string, error) {
-	var stockMaterial data.StockMaterial
-	err := r.db.First(&stockMaterial, stockMaterialID).Error
-	if err != nil {
-		return "", err
-	}
-
-	supplierMaterial, err := r.GetSupplierMaterialByStockMaterialID(stockMaterialID)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch supplier for StockMaterial: %w", err)
-	}
-	if supplierMaterial == nil {
-		return "", errors.New("supplier not found for the given StockMaterial")
-	}
-
-	barcode, err := utils.GenerateUPCBarcode(stockMaterial, supplierMaterial.SupplierID)
-	if err != nil {
-		return "", err
-	}
-
-	exists, err := isBarcodeExists(barcode, r.db)
-	if err != nil {
-		return "", fmt.Errorf("failed to check barcode uniqueness: %w", err)
-	}
-	if exists {
-		return "", errors.New("generated barcode already exists")
-	}
-
-	stockMaterial.Barcode = barcode
-	err = r.db.Save(&stockMaterial).Error
-	if err != nil {
-		return "", err
-	}
-
-	return barcode, nil
-}
-
 func (r *barcodeRepository) AssignBarcode(barcode string, stockMaterialID uint) error {
 	var stockMaterial data.StockMaterial
 	err := r.db.First(&stockMaterial, stockMaterialID).Error
@@ -74,7 +36,7 @@ func (r *barcodeRepository) AssignBarcode(barcode string, stockMaterialID uint) 
 		return err
 	}
 
-	exists, err := isBarcodeExists(barcode, r.db)
+	exists, err := r.IsBarcodeExists(barcode)
 	if err != nil {
 		return fmt.Errorf("failed to check barcode uniqueness: %w", err)
 	}
@@ -93,7 +55,14 @@ func (r *barcodeRepository) AssignBarcode(barcode string, stockMaterialID uint) 
 
 func (r *barcodeRepository) GetStockMaterialByBarcode(barcode string) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
-	err := r.db.Preload("Unit").Preload("StockMaterialCategory").Where("barcode = ?", barcode).First(&stockMaterial).Error
+	err := r.db.
+		Preload("Unit").
+		Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		Preload("Ingredient.IngredientCategory").
+		Preload("StockMaterialCategory").
+		Where("barcode = ?", barcode).
+		First(&stockMaterial).Error
 	if err != nil {
 		return nil, err
 	}
@@ -113,9 +82,9 @@ func (r *barcodeRepository) UpdateStockMaterialBarcode(stockMaterial *data.Stock
 	return r.db.Save(stockMaterial).Error
 }
 
-func isBarcodeExists(barcode string, tx *gorm.DB) (bool, error) {
+func (r *barcodeRepository) IsBarcodeExists(barcode string) (bool, error) {
 	var stockMaterial data.StockMaterial
-	err := tx.Where("barcode = ?", barcode).First(&stockMaterial).Error
+	err := r.db.Where("barcode = ?", barcode).First(&stockMaterial).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil

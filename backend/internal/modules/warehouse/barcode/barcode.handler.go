@@ -15,13 +15,7 @@ func NewBarcodeHandler(service BarcodeService) *BarcodeHandler {
 }
 
 func (h *BarcodeHandler) GenerateBarcode(c *gin.Context) {
-	var req types.GenerateBarcodeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
-	response, err := h.service.GenerateBarcode(&req)
+	response, err := h.service.GenerateBarcode()
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to generate barcode")
 		return
@@ -37,11 +31,7 @@ func (h *BarcodeHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
 		return
 	}
 
-	req := types.RetrieveStockMaterialByBarcodeRequest{
-		Barcode: barcode,
-	}
-
-	response, err := h.service.RetrieveStockMaterialByBarcode(&req)
+	response, err := h.service.RetrieveStockMaterialByBarcode(barcode)
 	if err != nil {
 		if err.Error() == "StockMaterial not found with the provided barcode" {
 			utils.SendNotFoundError(c, "StockMaterial not found with the provided barcode")

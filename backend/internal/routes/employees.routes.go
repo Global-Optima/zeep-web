@@ -315,12 +315,13 @@ func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWare
 func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMaterialHandler) {
 	router := r.EmployeeRoutes.Group("/stock-materials")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetAllStockMaterials)
-		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetStockMaterialByID)
-		router.POST("", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.CreateStockMaterial)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.UpdateStockMaterial)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.DeleteStockMaterial)
-		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.DeactivateStockMaterial)
+		router.GET("", handler.GetAllStockMaterials, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
+		router.GET("/:id", handler.GetStockMaterialByID, middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...))
+		router.POST("", handler.CreateStockMaterial, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.PUT("/:id", handler.UpdateStockMaterial, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.DELETE("/:id", handler.DeleteStockMaterial, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.PATCH("/:id/deactivate", handler.DeactivateStockMaterial, middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...))
+		router.GET("/:id/barcode", handler.GetStockMaterialBarcode)
 	}
 }
 
