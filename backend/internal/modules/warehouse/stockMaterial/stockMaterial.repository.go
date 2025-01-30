@@ -21,6 +21,9 @@ type StockMaterialRepository interface {
 	DeactivateStockMaterial(stockMaterialID uint) error
 
 	PopulateStockMaterial(stockMaterialID uint, stockMaterial *data.StockMaterial) error
+
+	IsBarcodeExists(barcode string) (bool, error)
+	GetStockMaterialByBarcode(barcode string) (*data.StockMaterial, error)
 }
 
 type stockMaterialRepository struct {
@@ -46,7 +49,7 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		if filter.Search != nil && *filter.Search != "" {
 			search := "%" + *filter.Search + "%"
 			query = query.Joins("JOIN stock_material_categories ON stock_material_categories.id = stock_materials.category_id").
-				Where("(stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_material_categories.name ILIKE ?)", search, search, search)
+				Where("(stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_material_categories.name ILIKE ? OR stock_materials.barcode ILIKE ?)", search, search, search, search)
 		}
 
 		if filter.LowStock != nil && *filter.LowStock {
@@ -169,4 +172,32 @@ func (r *stockMaterialRepository) DeactivateStockMaterial(stockMaterialID uint) 
 
 func (r *stockMaterialRepository) PopulateStockMaterial(stockMaterialID uint, stockMaterial *data.StockMaterial) error {
 	return r.db.Preload("Ingredient").Preload("StockMaterialCategory").First(stockMaterial, "id = ?", stockMaterialID).Error
+}
+
+func (r *stockMaterialRepository) IsBarcodeExists(barcode string) (bool, error) {
+	var stockMaterial data.StockMaterial
+	err := r.db.Where("barcode = ?", barcode).First(&stockMaterial).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *stockMaterialRepository) GetStockMaterialByBarcode(barcode string) (*data.StockMaterial, error) {
+	var stockMaterial data.StockMaterial
+	err := r.db.
+		Preload("Unit").
+		Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		Preload("Ingredient.IngredientCategory").
+		Preload("StockMaterialCategory").
+		Where("barcode = ?", barcode).
+		First(&stockMaterial).Error
+	if err != nil {
+		return nil, err
+	}
+	return &stockMaterial, nil
 }

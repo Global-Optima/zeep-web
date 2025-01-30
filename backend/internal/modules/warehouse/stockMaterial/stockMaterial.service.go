@@ -16,6 +16,8 @@ type StockMaterialService interface {
 	DeleteStockMaterial(stockMaterialID uint) error
 	DeactivateStockMaterial(stockMaterialID uint) error
 	GetStockMaterialBarcode(stockMaterialID uint) ([]byte, error)
+	GenerateBarcode() (*types.GenerateBarcodeResponse, error)
+	RetrieveStockMaterialByBarcode(barcode string) (*types.StockMaterialsDTO, error)
 }
 
 type stockMaterialService struct {
@@ -112,4 +114,43 @@ func (s *stockMaterialService) GetStockMaterialBarcode(stockMaterialID uint) ([]
 	}
 
 	return barcodeImage, nil
+}
+
+func (s *stockMaterialService) GenerateBarcode() (*types.GenerateBarcodeResponse, error) {
+	maxRetries := 10
+	var barcode string
+	var exists bool
+	var err error
+
+	for i := 0; i < maxRetries; i++ {
+		barcode = utils.GenerateRandomEAN13()
+
+		exists, err = s.repo.IsBarcodeExists(barcode)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check uniqueness of barcode: %w", err)
+		}
+
+		if !exists {
+			break
+		}
+	}
+
+	if exists {
+		return nil, fmt.Errorf("failed to generate unique barcode after %d attempts", maxRetries)
+	}
+
+	response := types.ToGenerateBarcodeResponse(barcode)
+	return &response, nil
+}
+
+func (s *stockMaterialService) RetrieveStockMaterialByBarcode(barcode string) (*types.StockMaterialsDTO, error) {
+	stockMaterial, err := s.repo.GetStockMaterialByBarcode(barcode)
+	if err != nil {
+		return nil, err
+	}
+	if stockMaterial == nil {
+		return nil, errors.New("StockMaterial not found with the provided barcode")
+	}
+
+	return types.ConvertStockMaterialToStockMaterialResponse(stockMaterial), nil
 }

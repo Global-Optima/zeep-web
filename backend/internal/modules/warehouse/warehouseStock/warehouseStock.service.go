@@ -7,7 +7,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
@@ -35,20 +34,17 @@ type WarehouseStockService interface {
 type warehouseStockService struct {
 	repo                WarehouseStockRepository
 	stockMaterialRepo   stockMaterial.StockMaterialRepository
-	barcodeRepo         barcode.BarcodeRepository
 	notificationService notifications.NotificationService
 	logger              *zap.SugaredLogger
 }
 
 func NewWarehouseStockService(repo WarehouseStockRepository,
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
-	barcodeRepo barcode.BarcodeRepository,
 	notificationService notifications.NotificationService,
 	logger *zap.SugaredLogger) WarehouseStockService {
 	return &warehouseStockService{
 		repo:                repo,
 		stockMaterialRepo:   stockMaterialRepo,
-		barcodeRepo:         barcodeRepo,
 		notificationService: notificationService,
 		logger:              logger,
 	}

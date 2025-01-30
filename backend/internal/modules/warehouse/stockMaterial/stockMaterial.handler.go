@@ -162,3 +162,33 @@ func (h *StockMaterialHandler) GetStockMaterialBarcode(c *gin.Context) {
 	c.Header("Content-Length", fmt.Sprintf("%d", len(barcodeImage)))
 	c.Data(http.StatusOK, "image/png", barcodeImage)
 }
+
+func (h *StockMaterialHandler) GenerateBarcode(c *gin.Context) {
+	response, err := h.service.GenerateBarcode()
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to generate barcode")
+		return
+	}
+
+	utils.SendSuccessResponse(c, response)
+}
+
+func (h *StockMaterialHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
+	barcode := c.Param("barcode")
+	if barcode == "" {
+		utils.SendBadRequestError(c, "Barcode is required")
+		return
+	}
+
+	response, err := h.service.RetrieveStockMaterialByBarcode(barcode)
+	if err != nil {
+		if err.Error() == "StockMaterial not found with the provided barcode" {
+			utils.SendNotFoundError(c, "StockMaterial not found with the provided barcode")
+		} else {
+			utils.SendInternalServerError(c, "failed to retrieve stockMaterial barcode")
+		}
+		return
+	}
+
+	utils.SendSuccessResponse(c, response)
+}
