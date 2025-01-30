@@ -1,6 +1,7 @@
 package stockRequests
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -23,6 +25,7 @@ type StockRequestRepository interface {
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
 	AddStoreComment(requestID uint, comment string) error
 	AddWarehouseComment(requestID uint, comment string) error
+	AddDetails(stockRequestID uint, details []types.StockRequestDetails) error
 
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) (*data.WarehouseStock, error)
 	AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error
@@ -301,4 +304,19 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientQuantity(ingredient
 		Where("id = ?", ingredientID).
 		Update("quantity", quantity).
 		Error
+}
+
+func (r *stockRequestRepository) AddDetails(stockRequestID uint, details []types.StockRequestDetails) error {
+	detailsJSON, err := json.Marshal(details)
+	if err != nil {
+		return err
+	}
+
+	err = r.db.Update("details", datatypes.JSON(detailsJSON)).Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -77,7 +77,7 @@
 		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."
 	},
 	"stockRequestComments": {
-		"quantityMismatch" : "*{{MaterialName}}* заказывали *{{ActualQuantity}}*, в заказе *{{Quantity}}*.",
-		"unexpectedMaterial" : "В поставке *{{MaterialName}}*  *{{ActualQuantity}}* жеткізілді."
+		"quantityMismatch" : "*{{OriginalMaterialName}}* получено *{{ActualQuantity}}*, ожидалось *{{Quantity}}*.",
+		"unexpectedMaterial" : "В поставке непредусмотренный материал *{{MaterialName}}*, количество *{{ActualQuantity}}* ."
 	  }
 }

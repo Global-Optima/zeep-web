@@ -90,9 +90,10 @@ func DefaultWarehouseStasuses() []data.StockRequestStatus {
 }
 
 type StockRequestDetails struct {
-	MaterialName   string  `json:"materialName"`
-	Quantity       float64 `json:"quantity"`
-	ActualQuantity float64 `json:"actualQuantity"`
+	OriginalMaterialName string  `json:"originalMaterialName,omitempty"`
+	MaterialName         string  `json:"materialName,omitempty"`
+	Quantity             float64 `json:"quantity,omitempty"`
+	ActualQuantity       float64 `json:"actualQuantity,omitempty"`
 }
 
 func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
@@ -125,7 +126,6 @@ func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localizati
 }
 
 func CombineComments(
-	storeComment string,
 	mismatchComments []localization.LocalizedMessages,
 	unexpectedComments []localization.LocalizedMessages,
 ) *localization.LocalizedMessages {
@@ -146,10 +146,6 @@ func CombineComments(
 		unexpectedComment.Ru += unexpectedComment.Ru + "\n"
 		unexpectedComment.Kk += unexpectedComment.Kk + "\n"
 	}
-
-	combinedComments.En += "\n" + "Store comment: " + storeComment
-	combinedComments.Ru += "\n" + "Комментарий от магазина: " + storeComment
-	combinedComments.Kk += "\n" + "Кафе пікірі: " + storeComment
 
 	return &combinedComments
 }
