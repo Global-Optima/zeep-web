@@ -9,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
 	"go.uber.org/zap"
 )
@@ -27,6 +28,8 @@ type WarehouseStockService interface {
 	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
 
 	CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error
+
+	GetAvailableToAddStockMaterials(storeID uint, query *types.AvailableStockMaterialFilter) ([]stockMaterialTypes.StockMaterialsDTO, error)
 }
 
 type warehouseStockService struct {
@@ -269,4 +272,22 @@ func (s *warehouseStockService) checkStockAndNotify(stock *data.WarehouseStock) 
 	}
 
 	return nil
+}
+
+func (s *warehouseStockService) GetAvailableToAddStockMaterials(
+	storeID uint,
+	query *types.AvailableStockMaterialFilter,
+) ([]stockMaterialTypes.StockMaterialsDTO, error) {
+
+	stocks, err := s.repo.GetAvailableToAddStockMaterials(storeID, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch available stock materials: %w", err)
+	}
+
+	stockMaterialResponses := make([]stockMaterialTypes.StockMaterialsDTO, 0)
+	for _, stockMaterial := range stocks {
+		stockMaterialResponses = append(stockMaterialResponses, *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stockMaterial))
+	}
+
+	return stockMaterialResponses, nil
 }

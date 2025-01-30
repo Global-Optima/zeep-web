@@ -87,3 +87,8 @@ type WarehouseStockResponse struct {
 type StockMaterialResponse struct {
 	stockMaterialTypes.StockMaterialsDTO
 }
+
+type AvailableStockMaterialFilter struct {
+	Search *string `form:"search"`
+	utils.BaseFilter
+}
