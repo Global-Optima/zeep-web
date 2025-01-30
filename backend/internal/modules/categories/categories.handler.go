@@ -78,7 +78,9 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "category created successfully", http.StatusCreated)
 }
@@ -116,7 +118,9 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 		&dto,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "category updated successfully", http.StatusOK)
 }
@@ -146,7 +150,9 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "Category deleted successfully", http.StatusOK)
 }

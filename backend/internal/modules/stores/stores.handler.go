@@ -59,7 +59,9 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 			Name: storeDTO.Name,
 		})
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, createdStore)
 }
@@ -114,7 +116,9 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 		},
 		&dto)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, updatedStore)
 }
@@ -146,7 +150,9 @@ func (h *StoreHandler) DeleteStore(c *gin.Context) {
 			Name: existingProduct.Name,
 		})
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "store deleted successfully"})
 }

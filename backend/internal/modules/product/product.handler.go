@@ -84,7 +84,9 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 			Name: input.Name,
 		})
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
@@ -145,7 +147,9 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 			Name: input.Name,
 		})
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
@@ -183,7 +187,9 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		input,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
 }
@@ -221,7 +227,9 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		input,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
 }
@@ -252,7 +260,9 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product size deleted successfully", http.StatusOK)
 }
@@ -283,7 +293,9 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product deleted successfully", http.StatusOK)
 }

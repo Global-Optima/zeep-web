@@ -2,10 +2,10 @@ package storeAdditives
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"strconv"
@@ -17,33 +17,35 @@ import (
 )
 
 type StoreAdditiveHandler struct {
-	service         StoreAdditiveService
-	additiveService additives.AdditiveService
-	auditService    audit.AuditService
-	logger          *zap.SugaredLogger
+	service           StoreAdditiveService
+	additiveService   additives.AdditiveService
+	franchiseeService franchisees.FranchiseeService
+	auditService      audit.AuditService
+	logger            *zap.SugaredLogger
 }
 
 func NewStoreAdditiveHandler(
 	service StoreAdditiveService,
 	additiveService additives.AdditiveService,
+	franchiseeService franchisees.FranchiseeService,
 	auditService audit.AuditService,
 	logger *zap.SugaredLogger,
 ) *StoreAdditiveHandler {
 	return &StoreAdditiveHandler{
-		service:         service,
-		additiveService: additiveService,
-		auditService:    auditService,
-		logger:          logger,
+		service:           service,
+		additiveService:   additiveService,
+		franchiseeService: franchiseeService,
+		auditService:      auditService,
+		logger:            logger,
 	}
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
-
 	productSizeID, err := strconv.ParseUint(c.Param("productSizeId"), 10, 64)
 	if err != nil {
 		utils.SendBadRequestError(c, "invalid productSizeID")
@@ -72,8 +74,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 func (h *StoreAdditiveHandler) GetAdditivesListToAdd(c *gin.Context) {
 	var filter additiveTypes.AdditiveFilterQuery
 
-	//TODO replace with franchisee.CheckStore
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -96,7 +97,7 @@ func (h *StoreAdditiveHandler) GetAdditivesListToAdd(c *gin.Context) {
 func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
 	var filter additiveTypes.AdditiveFilterQuery
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -117,7 +118,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
 }
 
 func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -172,14 +173,16 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 	}
 
 	if len(actions) > 0 {
-		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+		go func() {
+			_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
+		}()
 	}
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive created successfully"})
 }
 
 func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -215,13 +218,15 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 		},
 		&dto, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive updated successfully"})
 }
 
 func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -251,13 +256,15 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 		},
 		struct{}{}, storeID)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive deleted successfully"})
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditiveByID(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return

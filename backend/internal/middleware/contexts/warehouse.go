@@ -22,18 +22,18 @@ func GetWarehouseId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
 	}
 
 	var warehouseID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleDirector {
+	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner && claims.Role != data.RoleRegionWarehouseManager {
 		if claims.EmployeeType != data.WarehouseEmployeeType {
 			return 0, ErrInvalidEmployeeType
 		}
-    
+
 		warehouseID = claims.WorkplaceID
 	} else {
 		warehouseIdStr := c.Query("warehouseId")
 		if warehouseIdStr == "" {
 			return 0, ErrEmptyWarehouseID
 		}
-    
+
 		id, err := strconv.ParseUint(warehouseIdStr, 10, 64)
 		if err != nil {
 			return 0, ErrInvalidWarehouseID
@@ -42,4 +42,33 @@ func GetWarehouseId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
 	}
 
 	return warehouseID, nil
+}
+
+func GetWarehouseIdWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError) {
+	claims, err := GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		return 0, "", ErrUnauthorizedAccess
+	}
+
+	var warehouseID uint
+	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner && claims.Role != data.RoleRegionWarehouseManager {
+		if claims.EmployeeType != data.WarehouseEmployeeType {
+			return 0, "", ErrInvalidEmployeeType
+		}
+
+		warehouseID = claims.WorkplaceID
+	} else {
+		warehouseIdStr := c.Query("warehouseId")
+		if warehouseIdStr == "" {
+			return 0, "", ErrEmptyWarehouseID
+		}
+
+		id, err := strconv.ParseUint(warehouseIdStr, 10, 64)
+		if err != nil {
+			return 0, "", ErrInvalidWarehouseID
+		}
+		warehouseID = uint(id)
+	}
+
+	return warehouseID, claims.Role, nil
 }

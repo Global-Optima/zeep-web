@@ -21,6 +21,11 @@ func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc 
 			return
 		}
 
+		if claims.Role == data.RoleAdmin {
+			c.Next()
+			return
+		}
+
 		for _, role := range requiredRoles {
 			if claims.Role == role {
 				c.Next()
@@ -28,7 +33,7 @@ func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc 
 			}
 		}
 
-		utils.SendErrorWithStatus(c, "unauthorized access", http.StatusForbidden)
+		utils.SendErrorWithStatus(c, "access denied", http.StatusForbidden)
 		c.Abort()
 	}
 }

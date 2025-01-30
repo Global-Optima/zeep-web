@@ -88,3 +88,37 @@ func (a *AuditActionBase) GetActionCore() AuditActionCore {
 func (a *AuditActionBase) GetActionDetails() data.AuditDetails {
 	return a.Details
 }
+
+type AuditFranchiseeActionExtended struct {
+	Core    AuditActionCore
+	Details *data.ExtendedDetailsFranchisee
+}
+
+func (a *AuditFranchiseeActionExtended) GetActionCore() AuditActionCore {
+	return a.Core
+}
+
+func (a *AuditFranchiseeActionExtended) GetActionDetails() data.AuditDetails {
+	return a.Details
+}
+
+func (a *AuditFranchiseeActionExtended) GetFranchiseeActionDetails() data.FranchiseeInfo {
+	return a.Details.FranchiseeInfo
+}
+
+type AuditRegionActionExtended struct {
+	Core    AuditActionCore
+	Details *data.ExtendedDetailsRegion
+}
+
+func (a *AuditRegionActionExtended) GetActionCore() AuditActionCore {
+	return a.Core
+}
+
+func (a *AuditRegionActionExtended) GetActionDetails() data.AuditDetails {
+	return a.Details
+}
+
+func (a *AuditRegionActionExtended) GetRegionActionDetails() data.RegionInfo {
+	return a.Details.RegionInfo
+}

@@ -1,12 +1,20 @@
 package data
 
+type Franchisee struct {
+	BaseEntity
+	Name                string               `gorm:"size:255;not null" sort:"name"`
+	Description         string               `gorm:"size:1024"`
+	FranchiseeEmployees []FranchiseeEmployee `gorm:"foreignKey:FranchiseeID"`
+	Stores              []Store              `gorm:"foreignKey:FranchiseeID"`
+}
+
 type Store struct {
 	BaseEntity
 	Name              string          `gorm:"size:255;not null" sort:"name"`
 	FacilityAddressID uint            `gorm:"index;not null"`
 	FacilityAddress   FacilityAddress `gorm:"foreignKey:FacilityAddressID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-	IsFranchise       bool            `gorm:"default:false" sort:"isFranchise"`
-	AdminID           *uint           `gorm:"index;not null"`
+	FranchiseeID      *uint           `gorm:"index"`
+	Franchisee        *Franchisee     `gorm:"foreignKey:FranchiseeID"`
 	ContactPhone      string          `gorm:"size:16"`
 	ContactEmail      string          `gorm:"size:255"`
 	StoreHours        string          `gorm:"size:255"`

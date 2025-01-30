@@ -1,6 +1,7 @@
 package data
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"strings"
 	"time"
@@ -8,24 +9,155 @@ import (
 
 type EmployeeType string
 
+func (t EmployeeType) ToString() string {
+	return string(t)
+}
+
 const (
-	StoreEmployeeType     EmployeeType = "STORE"
-	WarehouseEmployeeType EmployeeType = "WAREHOUSE"
+	StoreEmployeeType      EmployeeType = "STORE"
+	WarehouseEmployeeType  EmployeeType = "WAREHOUSE"
+	FranchiseeEmployeeType EmployeeType = "FRANCHISEE"
+	RegionEmployeeType     EmployeeType = "REGION"
+	AdminEmployeeType      EmployeeType = "ADMIN"
 )
 
 type EmployeeRole string
 
+func (e EmployeeRole) ToString() string {
+	return string(e)
+}
+
+func ToEmployeeRole(role string) (EmployeeRole, error) {
+	if IsValidEmployeeRole(EmployeeRole(role)) {
+		return EmployeeRole(role), nil
+	}
+	return "", fmt.Errorf("invalid employee role: %s", role)
+}
+
+type AdminRole = EmployeeRole
+
 const (
-	RoleAdmin     EmployeeRole = "ADMIN"
-	RoleDirector  EmployeeRole = "DIRECTOR"
-	RoleManager   EmployeeRole = "MANAGER"
-	RoleBarista   EmployeeRole = "BARISTA"
-	RoleWarehouse EmployeeRole = "WAREHOUSE_EMPLOYEE"
+	RoleAdmin AdminRole = "ADMIN"
+	RoleOwner AdminRole = "OWNER"
 )
 
+type StoreEmployeeRole = EmployeeRole
+
+const (
+	RoleStoreManager StoreEmployeeRole = "STORE_MANAGER"
+	RoleBarista      StoreEmployeeRole = "BARISTA"
+)
+
+type WarehouseEmployeeRole = EmployeeRole
+
+const (
+	RoleWarehouseManager  WarehouseEmployeeRole = "WAREHOUSE_MANAGER"
+	RoleWarehouseEmployee WarehouseEmployeeRole = "WAREHOUSE_EMPLOYEE"
+)
+
+type FranchiseeEmployeeRole = EmployeeRole
+
+const (
+	RoleFranchiseManager FranchiseeEmployeeRole = "FRANCHISE_MANAGER"
+	RoleFranchiseOwner   FranchiseeEmployeeRole = "FRANCHISE_OWNER"
+)
+
+type RegionManagerRole = EmployeeRole
+
+const (
+	RoleRegionWarehouseManager RegionManagerRole = "REGION_WAREHOUSE_MANAGER"
+)
+
+var EmployeeTypeRoleMap = map[EmployeeType][]EmployeeRole{
+	StoreEmployeeType:      {RoleStoreManager, RoleBarista},
+	WarehouseEmployeeType:  {RoleWarehouseManager, RoleWarehouseEmployee},
+	FranchiseeEmployeeType: {RoleFranchiseManager, RoleFranchiseOwner},
+	RegionEmployeeType:     {RoleRegionWarehouseManager},
+	AdminEmployeeType:      {RoleAdmin, RoleOwner},
+}
+
+var RoleManagePermissions = map[EmployeeRole][]EmployeeRole{
+	RoleStoreManager:           {RoleBarista},
+	RoleWarehouseManager:       {RoleWarehouseEmployee},
+	RoleFranchiseManager:       {RoleStoreManager, RoleBarista},
+	RoleRegionWarehouseManager: {RoleWarehouseManager, RoleWarehouseEmployee},
+	RoleAdmin: {RoleOwner, RoleFranchiseOwner, RoleFranchiseManager,
+		RoleRegionWarehouseManager, RoleStoreManager, RoleWarehouseManager,
+		RoleBarista, RoleWarehouseEmployee},
+}
+
+func CanManageRole(currentRole, targetRole EmployeeRole) bool {
+	allowedRoles, exists := RoleManagePermissions[currentRole]
+	if !exists {
+		return false
+	}
+
+	for _, allowedRole := range allowedRoles {
+		if allowedRole == targetRole {
+			return true
+		}
+	}
+	return false
+}
+
+var (
+	FranchiseeReadPermissions = []EmployeeRole{
+		RoleOwner,
+		RoleFranchiseManager,
+		RoleFranchiseOwner,
+	}
+	RegionReadPermissions = []EmployeeRole{
+		RoleOwner,
+		RoleRegionWarehouseManager,
+	}
+	WarehouseManagementPermissions = []EmployeeRole{
+		RoleRegionWarehouseManager,
+		RoleWarehouseManager,
+	}
+	WarehouseReadPermissions = append(
+		WarehouseManagementPermissions,
+		RoleOwner,
+		RoleWarehouseEmployee,
+	)
+	WarehouseWorkerPermissions = []EmployeeRole{
+		RoleWarehouseManager,
+		RoleWarehouseEmployee,
+	}
+	StoreManagementPermissions = []EmployeeRole{
+		RoleFranchiseManager,
+		RoleStoreManager,
+	}
+	StoreWorkerPermissions = []EmployeeRole{
+		RoleStoreManager,
+		RoleBarista,
+	}
+	StoreReadPermissions = append(
+		StoreManagementPermissions,
+		RoleBarista,
+		RoleFranchiseOwner,
+		RoleOwner,
+	)
+)
+
+func IsAllowableRole(employeeType EmployeeType, role EmployeeRole) bool {
+	roles, exists := EmployeeTypeRoleMap[employeeType]
+	if !exists {
+		return false
+	}
+
+	for _, r := range roles {
+		if r == role {
+			return true
+		}
+	}
+
+	return false
+}
+
 func IsValidEmployeeRole(role EmployeeRole) bool {
-	switch EmployeeRole(role) {
-	case RoleAdmin, RoleDirector, RoleManager, RoleBarista, RoleWarehouse:
+	switch role {
+	case RoleAdmin, RoleOwner, RoleRegionWarehouseManager, RoleFranchiseManager, RoleFranchiseOwner,
+		RoleWarehouseManager, RoleStoreManager, RoleBarista, RoleWarehouseEmployee:
 		return true
 	default:
 		return false
@@ -96,30 +228,78 @@ func IsValidWeekday(weekday Weekday) bool {
 
 type Employee struct {
 	BaseEntity
-	FirstName         string             `gorm:"size:255;not null" sort:"firstName"`
-	LastName          string             `gorm:"size:255;not null" sort:"lastName"`
-	Phone             string             `gorm:"size:16;not null"`
-	Email             string             `gorm:"size:255;not null" sort:"email"`
-	HashedPassword    string             `gorm:"size:255;not null"`
-	Role              EmployeeRole       `gorm:"size:50;not null" sort:"role"`
-	Type              EmployeeType       `gorm:"size:50;not null" sort:"type"`
-	IsActive          bool               `gorm:"default:true" sort:"isActive"`
-	StoreEmployee     *StoreEmployee     `gorm:"foreignKey:EmployeeID"`
-	WarehouseEmployee *WarehouseEmployee `gorm:"foreignKey:EmployeeID"`
-	Workdays          []EmployeeWorkday  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+	FirstName          string              `gorm:"size:255;not null" sort:"firstName"`
+	LastName           string              `gorm:"size:255;not null" sort:"lastName"`
+	Phone              string              `gorm:"size:16;not null"`
+	Email              string              `gorm:"size:255;not null" sort:"email"`
+	HashedPassword     string              `gorm:"size:255;not null"`
+	IsActive           bool                `gorm:"default:true" sort:"isActive"`
+	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
+	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
+	RegionEmployee     *RegionEmployee     `gorm:"foreignKey:EmployeeID"`
+	FranchiseeEmployee *FranchiseeEmployee `gorm:"foreignKey:EmployeeID"`
+	AdminEmployee      *AdminEmployee      `gorm:"foreignKey:EmployeeID"`
+	Workdays           []EmployeeWorkday   `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+}
+
+func (e *Employee) GetType() EmployeeType {
+	switch {
+	case e.StoreEmployee != nil:
+		return StoreEmployeeType
+	case e.FranchiseeEmployee != nil:
+		return FranchiseeEmployeeType
+	case e.AdminEmployee != nil:
+		return AdminEmployeeType
+	case e.RegionEmployee != nil:
+		return RegionEmployeeType
+	case e.WarehouseEmployee != nil:
+		return WarehouseEmployeeType
+	default:
+		return ""
+	}
 }
 
 type StoreEmployee struct {
 	BaseEntity
-	EmployeeID  uint `gorm:"not null;uniqueIndex"`
-	StoreID     uint `gorm:"not null"`
-	IsFranchise bool `gorm:"default:false" sort:"isFranchise"`
+	EmployeeID uint              `gorm:"index,not null"`
+	StoreID    uint              `gorm:"index,not null"`
+	Role       StoreEmployeeRole `gorm:"type:store_employee_role;not null" sort:"role"`
+	Employee   Employee          `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Store      Store             `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE" sort:"store"`
 }
 
 type WarehouseEmployee struct {
 	BaseEntity
-	EmployeeID  uint `gorm:"not null;uniqueIndex"`
-	WarehouseID uint `gorm:"not null"`
+	EmployeeID  uint                  `gorm:"index,not null"`
+	WarehouseID uint                  `gorm:"index,not null"`
+	Role        WarehouseEmployeeRole `gorm:"type:warehouse_employee_role;not null" sort:"role"`
+	Employee    Employee              `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Warehouse   Warehouse             `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouse"`
+}
+
+type FranchiseeEmployee struct {
+	BaseEntity
+	FranchiseeID uint                   `gorm:"index,not null"`
+	EmployeeID   uint                   `gorm:"index,not null"`
+	Role         FranchiseeEmployeeRole `gorm:"type:franchisee_employee_role;not null" sort:"role"`
+	Employee     Employee               `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Franchisee   Franchisee             `gorm:"foreignKey:FranchiseeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" sort:"franchisee"`
+}
+
+type RegionEmployee struct {
+	BaseEntity
+	EmployeeID uint              `gorm:"index;not null"`
+	RegionID   uint              `gorm:"index;not null"`
+	Role       RegionManagerRole `gorm:"type:warehouse_region_manager_role;not null" sort:"role"`
+	Employee   Employee          `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
+	Region     Region            `gorm:"foreignKey:RegionID;constraint:OnDelete:CASCADE" sort:"region"`
+}
+
+type AdminEmployee struct {
+	BaseEntity
+	EmployeeID uint      `gorm:"index;not null"`
+	Role       AdminRole `gorm:"type:admin_role;not null" sort:"role"`
+	Employee   Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employee"`
 }
 
 type EmployeeWorkTrack struct {
