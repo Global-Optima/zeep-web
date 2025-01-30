@@ -395,11 +395,11 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 
 		statusGroup := router.Group("/status/:requestId")
 		{
-			statusGroup.PATCH("/accept-with-change", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.AcceptWithChangeStatus) // DTO with different stock material
-			statusGroup.PATCH("/reject-store", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.RejectStoreStatus)            // Comment
-			statusGroup.PATCH("/reject-warehouse", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.RejectWarehouseStatus)    // Comment
-			statusGroup.PATCH("/processed", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.SetProcessedStatus)
-			statusGroup.PATCH("/in-delivery", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.SetInDeliveryStatus)
+			statusGroup.PATCH("/accept-with-change", handler.AcceptWithChangeStatus) // DTO with different stock material
+			statusGroup.PATCH("/reject-store", handler.RejectStoreStatus)            // Comment
+			statusGroup.PATCH("/reject-warehouse", handler.RejectWarehouseStatus)    // Comment
+			statusGroup.PATCH("/processed", handler.SetProcessedStatus)
+			statusGroup.PATCH("/in-delivery", handler.SetInDeliveryStatus)
 			statusGroup.PATCH("/completed", middleware.EmployeeRoleMiddleware(data.WarehouseManagementPermissions...), handler.SetCompletedStatus)
 		}
 	}

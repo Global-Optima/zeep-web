@@ -172,7 +172,7 @@ func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {
 		return
 	}
 
-	err := h.service.CompleteSubOrderByBarcode(subOrderID)
+	subOrder, err := h.service.CompleteSubOrderByBarcode(subOrderID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to complete suborder")
 		return
@@ -187,7 +187,7 @@ func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {
 
 	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 
-	utils.SendMessageWithStatus(c, "Sub order completed", http.StatusOK)
+	utils.SendSuccessResponse(c, subOrder)
 }
 
 func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
