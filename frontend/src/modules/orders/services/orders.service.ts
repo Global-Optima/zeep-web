@@ -46,6 +46,32 @@ class OrderService {
 		}
 	}
 
+	async getSuborderBarcodeFile(suborderId: number) {
+		try {
+			const response = await apiClient.get<Blob>(`/orders/suborders/${suborderId}/barcode`, {
+				responseType: 'blob', // Ensure the response is treated as a Blob
+			})
+
+			// Extract filename from Content-Disposition header
+			const contentDisposition = response.headers['Content-Disposition']
+			let filename = `suborder_${suborderId}.pdf`
+
+			if (contentDisposition) {
+				const filenameMatch = contentDisposition.match(/filename="?(.+)"?/)
+				if (filenameMatch && filenameMatch[1]) {
+					filename = filenameMatch[1]
+				}
+			}
+
+			const blob = new Blob([response.data], { type: response.headers['Content-Type']?.toString() })
+
+			saveAs(blob, filename)
+		} catch (error) {
+			console.error(`Failed to fetch barcode for stock material ID ${suborderId}:`, error)
+			throw error
+		}
+	}
+
 	async completeSubOrder(orderId: number, subOrderId: number): Promise<void> {
 		try {
 			await apiClient.put(`/orders/${orderId}/suborders/${subOrderId}/complete`, {})
