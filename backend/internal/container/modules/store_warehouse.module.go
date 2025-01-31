@@ -27,7 +27,7 @@ func NewStoreWarehouseModule(
 	cronManager *scheduler.CronManager,
 ) *StoreWarehouseModule {
 	repo := storeWarehouses.NewStoreWarehouseRepository(base.DB)
-	service := storeWarehouses.NewStoreWarehouseService(repo,notificationService, base.Logger)
+	service := storeWarehouses.NewStoreWarehouseService(repo, notificationService, base.Logger)
 	handler := storeWarehouses.NewStoreWarehouseHandler(service, ingredientService, auditService, franchiseeService, base.Logger)
 
 	base.Router.RegisterStoreWarehouseRoutes(handler)

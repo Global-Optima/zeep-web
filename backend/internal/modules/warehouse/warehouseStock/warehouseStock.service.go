@@ -217,15 +217,14 @@ func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, d
 
 func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error {
 	if stock.Quantity < stock.StockMaterial.SafetyStock {
-		details := &details.StoreWarehouseRunOutDetails{
+		details := &details.OutOfStockDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           warehouseID,
 				FacilityName: stock.Warehouse.Name,
 			},
-			StockItem:   stock.StockMaterial.Name,
-			StockItemID: stock.ID,
+			ItemName: stock.StockMaterial.Name,
 		}
-		err := s.notificationService.NotifyStoreWarehouseRunOut(details)
+		err := s.notificationService.NotifyOutOfStock(details)
 		if err != nil {
 			return fmt.Errorf("failed to send warehouse runout notification: %v", err)
 		}
