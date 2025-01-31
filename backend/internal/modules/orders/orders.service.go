@@ -5,6 +5,7 @@ import (
 	"fmt"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"image"
 	"image/color"
 	"image/draw"
@@ -119,6 +120,10 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 }
 
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
+	if _, err := utils.CensorText(createOrderDTO.CustomerName); err != nil {
+		return nil, err
+	}
+
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
 
 	validations, err := s.ValidationResults(storeID, storeProductSizeIDs, storeAdditiveIDs)

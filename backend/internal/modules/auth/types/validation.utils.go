@@ -121,7 +121,7 @@ func ValidateEmployeeJWT(tokenString string, claims *EmployeeClaims, tokenType T
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.JWT.EmployeeSecretKey), nil
 	})
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to parse token: %w", err)
 	}
