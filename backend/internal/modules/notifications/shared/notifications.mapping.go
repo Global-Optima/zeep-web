@@ -30,7 +30,7 @@ func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 				},
 				{
 					EventType:     data.STORE_WAREHOUSE_RUN_OUT,
-					EmployeeRoles: []data.EmployeeRole{data.RoleWarehouseManager},
+					EmployeeRoles: []data.EmployeeRole{data.RoleStoreManager, data.RoleBarista},
 				},
 				{
 					EventType:     data.CENTRAL_CATALOG_UPDATE,
@@ -50,7 +50,7 @@ func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 				},
 				{
 					EventType:     data.PRICE_CHANGE,
-					EmployeeRoles: []data.EmployeeRole{data.RoleStoreManager, data.RoleAdmin},
+					EmployeeRoles: []data.EmployeeRole{data.RoleStoreManager, data.RoleBarista},
 				},
 			},
 		}
