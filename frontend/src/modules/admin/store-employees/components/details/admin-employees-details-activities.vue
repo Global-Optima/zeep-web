@@ -26,7 +26,7 @@
 					class="h-12"
 				>
 					<TableCell>
-						<span v-html="formatMessage(audit.localizedMessages.ru)"></span>
+						<span v-html="formatLocalizedMessage(audit.localizedMessages.ru)"></span>
 					</TableCell>
 
 					<TableCell>
@@ -47,6 +47,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { formatLocalizedMessage } from '@/core/utils/format-localized-messages.utils'
 import { type EmployeeAuditDTO } from '@/modules/admin/store-employees/models/employees-audit.models'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -56,10 +57,6 @@ defineProps<{
 
 const formatDate = (date: Date): string => {
   return format(new Date(date), 'dd MMM yyyy, HH:mm', { locale: ru })
-}
-
-const formatMessage = (s: string) => {
-  return s.replace(/\*(.*?)\*/g, '<span class="font-medium">$1</span>')
 }
 </script>
 

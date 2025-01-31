@@ -43,6 +43,21 @@
 					>
 						<span>{{ info.label }}:</span> <span class="font-medium">{{ info.value }}</span>
 					</li>
+
+					<li class="flex items-center gap-2">
+						<span>Штрихкод: </span>
+						<div class="flex items-center gap-2">
+							<span class="font-medium">{{ initialData.stockMaterial.barcode }}</span>
+							<Button
+								variant="outline"
+								@click="onPrintBarcode"
+								class="gap-2"
+							>
+								<Printer class="text-gray-800 size-4" />
+								<span>Печать</span>
+							</Button>
+						</div>
+					</li>
 				</ul>
 			</CardContent>
 		</Card>
@@ -128,12 +143,13 @@ import {
   FormMessage,
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
 import type {
   UpdateWarehouseStockDTO,
   WarehouseStockMaterialDetailsDTO,
 } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { toTypedSchema } from '@vee-validate/zod'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, Printer } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import { computed } from 'vue'
 import * as z from 'zod'
@@ -161,6 +177,10 @@ const materialInfo = computed(() =>[
     value: initialData.earliestExpirationDate ? formatDate(new Date(initialData.earliestExpirationDate)) : "Доставки товара отсутвуют",
   },
 ])
+
+const onPrintBarcode = async () => {
+  await stockMaterialsService.getStockMaterialsBarcodeFile(initialData.stockMaterial.id);
+}
 
 // Date Formatter Utility
 function formatDate(date: Date): string {

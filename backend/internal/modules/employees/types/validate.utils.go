@@ -50,7 +50,6 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 		Email:          input.Email,
 		Phone:          utils.FormatPhoneInput(input.Phone),
 		HashedPassword: hashedPassword,
-		Role:           input.Role,
 		IsActive:       input.IsActive,
 		Workdays:       workdays,
 	}
@@ -58,7 +57,7 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 	return employee, nil
 }
 
-func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
+func PrepareUpdateFields(input *UpdateEmployeeDTO) *data.Employee {
 	employee := &data.Employee{}
 
 	if input.FirstName != nil {
@@ -70,63 +69,8 @@ func PrepareUpdateFields(input UpdateEmployeeDTO) (*data.Employee, error) {
 	if input.IsActive != nil {
 		employee.IsActive = *input.IsActive
 	}
-	if input.Phone != nil {
-		if utils.IsValidPhone(*input.Phone, "") {
-			employee.Phone = utils.FormatPhoneInput(*input.Phone)
-		} else {
-			return nil, fmt.Errorf("%w: invalid phone number format: %s", ErrValidation, *input.Phone)
-		}
-	}
-	if input.Email != nil {
-		if !utils.IsValidEmail(*input.Email) {
-			return employee, fmt.Errorf("%w: invalid email format", ErrValidation)
-		}
-		employee.Email = *input.Email
-	}
-	if input.Role != nil {
-		if !data.IsValidEmployeeRole(*input.Role) {
-			return employee, fmt.Errorf("%w: invalid role: %v", ErrValidation, *input.Role)
-		}
-		employee.Role = *input.Role
-	}
 
-	return employee, nil
-}
-
-func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO) (*data.Employee, error) {
-	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
-	if err != nil {
-		return employee, err
-	}
-
-	if input.StoreID != nil {
-		employee.StoreEmployee = &data.StoreEmployee{
-			StoreID: *input.StoreID,
-		}
-	}
-	if input.IsFranchise != nil {
-		if employee.StoreEmployee == nil {
-			employee.StoreEmployee = &data.StoreEmployee{}
-		}
-		employee.StoreEmployee.IsFranchise = *input.IsFranchise
-	}
-
-	return employee, nil
-}
-
-func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO) (*data.Employee, error) {
-	employee, err := PrepareUpdateFields(input.UpdateEmployeeDTO)
-	if err != nil {
-		return employee, err
-	}
-
-	if input.WarehouseID != nil {
-		employee.WarehouseEmployee = &data.WarehouseEmployee{
-			WarehouseID: *input.WarehouseID,
-		}
-	}
-
-	return employee, nil
+	return employee
 }
 
 func ValidateWorkday(dto *CreateWorkdayDTO) (*data.EmployeeWorkday, error) {

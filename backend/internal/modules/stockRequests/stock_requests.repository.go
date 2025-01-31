@@ -1,6 +1,7 @@
 package stockRequests
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +17,7 @@ type StockRequestRepository interface {
 	CreateStockRequest(stockRequest *data.StockRequest) error
 	AddIngredientsToStockRequest(ingredients []data.StockRequestIngredient) error
 	DeleteStockRequestIngredient(ingredientID uint) error
-	ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error
+	ReplaceStockRequestIngredients(request data.StockRequest, ingredients []data.StockRequestIngredient) error
 	UpdateStockRequestIngredientDates(stockRequestIngredientID uint, dates *types.UpdateIngredientDates) error
 
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error)
@@ -23,6 +25,7 @@ type StockRequestRepository interface {
 	UpdateStockRequestStatus(stockRequest *data.StockRequest) error
 	AddStoreComment(requestID uint, comment string) error
 	AddWarehouseComment(requestID uint, comment string) error
+	AddDetails(stockRequestID uint, details []types.StockRequestDetails) error
 
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) (*data.WarehouseStock, error)
 	AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error
@@ -88,6 +91,19 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 	}
 	if filter.EndDate != nil {
 		query = query.Where("created_at <= ?", *filter.EndDate)
+	}
+
+	if filter.Search != nil {
+		if *filter.Search != "" {
+			search := "%" + *filter.Search + "%"
+			query = query.Joins("JOIN stock_request_ingredients ON stock_request_ingredients.stock_request_id = stock_requests.id").
+				Joins("JOIN stock_materials ON stock_request_ingredients.stock_material_id = stock_materials.id").
+				Where(`
+				stock_materials.name ILIKE ? OR 
+				stock_materials.description ILIKE ? OR 
+				stock_materials.barcode ILIKE ?
+			`, search, search, search)
+		}
 	}
 
 	query = query.Order("created_at DESC")
@@ -216,15 +232,32 @@ func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWar
 	return &storeWarehouse, nil
 }
 
-func (r *stockRequestRepository) ReplaceStockRequestIngredients(requestID uint, ingredients []data.StockRequestIngredient) error {
+func (r *stockRequestRepository) ReplaceStockRequestIngredients(request data.StockRequest, ingredients []data.StockRequestIngredient) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		var warehouseStocks []data.WarehouseStock
+		err := tx.Model(&data.WarehouseStock{}).Where("warehouse_id = ?", request.WarehouseID).Find(&warehouseStocks).Error
+		if err != nil {
+			return fmt.Errorf("failed to fetch the warehouse stock: %w", err)
+		}
 
-		if err := tx.Where("stock_request_id = ?", requestID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
-			return fmt.Errorf("failed to delete existing ingredients for stock request ID %d: %w", requestID, err)
+		warehouseStockMap := make(map[uint]*data.WarehouseStock)
+		for _, stock := range warehouseStocks {
+			warehouseStockMap[stock.StockMaterialID] = &stock
+		}
+
+		// Ensure all requested materials exist in the warehouse
+		for _, ingredient := range ingredients {
+			if warehouseStockMap[ingredient.StockMaterialID] == nil {
+				return fmt.Errorf("material ID %d is not present in warehouse ID %d", ingredient.StockMaterialID, request.WarehouseID)
+			}
+		}
+
+		if err := tx.Where("stock_request_id = ?", request.ID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
+			return fmt.Errorf("failed to delete existing ingredients for stock request ID %d: %w", request.ID, err)
 		}
 
 		if err := tx.Create(&ingredients).Error; err != nil {
-			return fmt.Errorf("failed to add new ingredients for stock request ID %d: %w", requestID, err)
+			return fmt.Errorf("failed to add new ingredients for stock request ID %d: %w", request.ID, err)
 		}
 
 		return nil
@@ -284,4 +317,21 @@ func (r *stockRequestRepository) UpdateStockRequestIngredientQuantity(ingredient
 		Where("id = ?", ingredientID).
 		Update("quantity", quantity).
 		Error
+}
+
+func (r *stockRequestRepository) AddDetails(stockRequestID uint, newDetails []types.StockRequestDetails) error {
+	updatedDetailsJSON, err := json.Marshal(newDetails)
+	if err != nil {
+		return fmt.Errorf("failed to marshal updated details: %w", err)
+	}
+
+	err = r.db.Model(&data.StockRequest{}).
+		Where("id = ?", stockRequestID).
+		Update("details", datatypes.JSON(updatedDetailsJSON)).Error
+
+	if err != nil {
+		return fmt.Errorf("failed to update details for stock request ID %d: %w", stockRequestID, err)
+	}
+
+	return nil
 }

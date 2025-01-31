@@ -16,50 +16,22 @@ type CreateEmployeeDTO struct {
 	Workdays  []CreateWorkdayDTO `json:"workdays" binding:"dive"`
 }
 
-type CreateStoreEmployeeDTO struct {
-	CreateEmployeeDTO
-	StoreID     uint `json:"storeId" binding:"required"`
-	IsFranchise bool `json:"isFranchise,omitempty"`
-}
-
-type CreateWarehouseEmployeeDTO struct {
-	CreateEmployeeDTO
-	WarehouseID uint `json:"warehouseId" binding:"required"`
-}
-
 type CreateWorkdayDTO struct {
 	Day     string `json:"day" binding:"required"`
 	StartAt string `json:"startAt" binding:"required"`
 	EndAt   string `json:"endAt" binding:"required"`
 }
 
-type StoreDetailsDTO struct {
-	StoreID     uint `json:"storeId" binding:"required"`
-	IsFranchise bool `json:"isFranchise,omitempty"`
-}
-
-type WarehouseDetailsDTO struct {
-	WarehouseID uint `json:"warehouseId" binding:"required"`
-}
-
 type UpdateEmployeeDTO struct {
-	FirstName *string            `json:"firstName,omitempty"`
-	LastName  *string            `json:"lastName,omitempty"`
-	Phone     *string            `json:"phone,omitempty"`
-	Email     *string            `json:"email,omitempty"`
-	Role      *data.EmployeeRole `json:"role,omitempty"`
-	IsActive  *bool              `json:"isActive"`
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
+	IsActive  *bool   `json:"isActive"`
 }
 
-type UpdateStoreEmployeeDTO struct {
-	UpdateEmployeeDTO
-	StoreID     *uint `json:"storeId,omitempty"`
-	IsFranchise *bool `json:"isFranchise,omitempty"`
-}
-
-type UpdateWarehouseEmployeeDTO struct {
-	UpdateEmployeeDTO
-	WarehouseID *uint `json:"warehouseId,omitempty"`
+type ReassignEmployeeTypeDTO struct {
+	EmployeeType data.EmployeeType `json:"employeeType" binding:"required"`
+	Role         data.EmployeeRole `json:"role" binding:"required"`
+	WorkplaceID  uint              `json:"workplaceId" binding:"required"`
 }
 
 type EmployeeDTO struct {
@@ -73,17 +45,6 @@ type EmployeeDTO struct {
 	IsActive  bool              `json:"isActive"`
 }
 
-type StoreEmployeeDTO struct {
-	EmployeeDTO
-	StoreID     uint `json:"storeId"`
-	IsFranchise bool `json:"isFranchise"`
-}
-
-type WarehouseEmployeeDTO struct {
-	EmployeeDTO
-	WarehouseID uint `json:"warehouseId"`
-}
-
 type EmployeeAccountDTO struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
@@ -95,18 +56,12 @@ type UpdatePasswordDTO struct {
 	NewPassword string `json:"newPassword" binding:"required"`
 }
 
-type RoleDTO struct {
-	Name string `json:"name"`
+type EmployeeTypeRoles struct {
+	EmployeeType data.EmployeeType   `json:"employeeType" binding:"required"`
+	Roles        []data.EmployeeRole `json:"roles" binding:"required"`
 }
 
-type GetStoreEmployeesFilter struct {
-	utils.BaseFilter
-	Role     *string `form:"role,omitempty"`
-	IsActive *bool   `form:"isActive,omitempty"`
-	Search   *string `form:"search,omitempty"`
-}
-
-type GetWarehouseEmployeesFilter struct {
+type EmployeesFilter struct {
 	utils.BaseFilter
 	Role     *string `form:"role,omitempty"`
 	IsActive *bool   `form:"isActive,omitempty"`

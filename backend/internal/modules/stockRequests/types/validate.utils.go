@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 )
 
 func ValidateStatus(status string) error {
@@ -86,4 +88,72 @@ func DefaultWarehouseStasuses() []data.StockRequestStatus {
 		data.StockRequestRejectedByWarehouse,
 		data.StockRequestAcceptedWithChange,
 	}
+}
+
+type StockRequestDetails struct {
+	OriginalMaterialName string  `json:"originalMaterialName,omitempty"`
+	MaterialName         string  `json:"materialName,omitempty"`
+	Quantity             float64 `json:"quantity,omitempty"`
+	ActualQuantity       float64 `json:"actualQuantity,omitempty"`
+}
+
+func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
+	key := "stockRequestComments.unexpectedMaterial"
+	translations, err := localization.Translate(key, map[string]interface{}{
+		"MaterialName":   details.MaterialName,
+		"ActualQuantity": details.ActualQuantity,
+	})
+
+	if err != nil {
+		return nil
+	}
+
+	return translations
+}
+
+func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
+	key := "stockRequestComments.quantityMismatch"
+	translations, err := localization.Translate(key, map[string]interface{}{
+		"OriginalMaterialName": details.OriginalMaterialName,
+		"Quantity":             details.Quantity,
+		"ActualQuantity":       details.ActualQuantity,
+	})
+
+	if err != nil {
+		return nil
+	}
+
+	return translations
+}
+
+func CombineComments(
+	mismatchComments []localization.LocalizedMessages,
+	unexpectedComments []localization.LocalizedMessages,
+) *localization.LocalizedMessages {
+	if len(mismatchComments) == 0 && len(unexpectedComments) == 0 {
+		logger.GetZapSugaredLogger().Warn("No comments to combine")
+		return nil
+	}
+
+	var combinedComments localization.LocalizedMessages
+
+	for _, mismismatchComment := range mismatchComments {
+		combinedComments.En += mismismatchComment.En + "\n"
+		combinedComments.Ru += mismismatchComment.Ru + "\n"
+		combinedComments.Kk += mismismatchComment.Kk + "\n"
+	}
+
+	if len(mismatchComments) > 0 {
+		combinedComments.En += "\n"
+		combinedComments.Ru += "\n"
+		combinedComments.Kk += "\n"
+	}
+
+	for _, unexpectedComment := range unexpectedComments {
+		combinedComments.En += unexpectedComment.En + "\n"
+		combinedComments.Ru += unexpectedComment.Ru + "\n"
+		combinedComments.Kk += unexpectedComment.Kk + "\n"
+	}
+
+	return &combinedComments
 }

@@ -161,6 +161,7 @@ func (r *storeAdditiveRepository) GetStoreAdditives(storeID uint, filter *additi
 
 	query := r.db.Model(&data.StoreAdditive{}).
 		Where("store_id = ?", storeID).
+		Joins("JOIN additives ON additives.id = store_additives.additive_id").
 		Preload("Additive.Category").
 		Preload("Additive.Unit")
 
@@ -168,7 +169,7 @@ func (r *storeAdditiveRepository) GetStoreAdditives(storeID uint, filter *additi
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ? OR additives.size ILIKE ?", searchTerm, searchTerm, searchTerm)
+		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ?", searchTerm, searchTerm)
 	}
 
 	if filter.MinPrice != nil {

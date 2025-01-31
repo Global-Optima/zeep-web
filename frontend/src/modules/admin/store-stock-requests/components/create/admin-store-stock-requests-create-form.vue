@@ -20,11 +20,11 @@ import {
 import { Trash } from 'lucide-vue-next'
 
 import { useToast } from '@/core/components/ui/toast'
-import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
+import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StockRequestItemForm } from '@/modules/admin/store-stock-requests/components/update/admin-store-stock-requests-update-form.vue'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import AdminSelectAvailableToAddStockMaterialsDialog from '@/modules/admin/warehouse-stocks/components/admin-select-available-to-add-stock-materials-dialog.vue'
 import { ref } from 'vue'
-import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 
 const emit = defineEmits<{
   (e: 'submit', payload: StockRequestStockMaterialDTO[]): void;
@@ -182,7 +182,7 @@ function cancelForm() {
 			</CardFooter>
 		</Card>
 
-		<AdminStockMaterialsSelectDialog
+		<AdminSelectAvailableToAddStockMaterialsDialog
 			:open="openDialog"
 			@close="openDialog = false"
 			@select="addMaterial"

@@ -42,7 +42,9 @@ func (h *IngredientHandler) CreateIngredient(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient created successfully"})
 }
@@ -79,7 +81,9 @@ func (h *IngredientHandler) UpdateIngredient(c *gin.Context) {
 		&dto,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient updated successfully"})
 }
@@ -109,7 +113,9 @@ func (h *IngredientHandler) DeleteIngredient(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient deleted successfully"})
 }

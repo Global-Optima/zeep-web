@@ -26,6 +26,10 @@ export interface GetWarehouseStockFilter extends PaginationParams {
 	search?: string
 }
 
+export interface AvailableWarehouseStockMaterialsFilter extends PaginationParams {
+	search?: string
+}
+
 export interface UpdateWarehouseStockDTO {
 	quantity: number
 	expirationDate?: Date

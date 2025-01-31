@@ -1,8 +1,10 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type {
 	AddMultipleWarehouseStockDTO,
+	AvailableWarehouseStockMaterialsFilter,
 	GetWarehouseStockFilter,
 	ReceiveWarehouseDelivery,
 	UpdateWarehouseStockDTO,
@@ -34,6 +36,19 @@ class WarehouseStocksService {
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch store stock:', error)
+			throw error
+		}
+	}
+
+	async getAvailableStockMaterials(filter?: AvailableWarehouseStockMaterialsFilter) {
+		try {
+			const response = await apiClient.get<PaginatedResponse<StockMaterialsDTO[]>>(
+				`/warehouses/stocks/available-to-add`,
+				{ params: buildRequestFilter(filter) },
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch available warehouse stock materials:', error)
 			throw error
 		}
 	}

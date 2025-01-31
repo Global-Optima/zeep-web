@@ -1,8 +1,10 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import { saveAs } from 'file-saver'
 import type {
 	CreateStockMaterialDTO,
+	GeneratedStockMaterialBarcode,
 	StockMaterialsDTO,
 	StockMaterialsFilter,
 	UpdateStockMaterialDTO,
@@ -19,6 +21,70 @@ class StockMaterialService {
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch stock materials:', error)
+			throw error
+		}
+	}
+
+	async getBarcodeFile(stockMaterialId: number) {
+		try {
+			const response = await apiClient.get<Blob>(`${this.baseUrl}/${stockMaterialId}/barcode`, {
+				responseType: 'blob', // Ensure the response is treated as a Blob
+			})
+
+			// Extract filename from Content-Disposition header
+			const contentDisposition = response.headers['Content-Disposition']
+			let filename = `stock_material_${stockMaterialId}.pdf`
+
+			if (contentDisposition) {
+				const filenameMatch = contentDisposition.match(/filename="?(.+)"?/)
+				if (filenameMatch && filenameMatch[1]) {
+					filename = filenameMatch[1]
+				}
+			}
+
+			const blob = new Blob([response.data], { type: response.headers['Content-Type']?.toString() })
+
+			saveAs(blob, filename)
+		} catch (error) {
+			console.error(`Failed to fetch barcode for stock material ID ${stockMaterialId}:`, error)
+			throw error
+		}
+	}
+
+	async getStockMaterialsBarcodeFile(stockMaterialId: number) {
+		try {
+			const response = await apiClient.get<Blob>(`${this.baseUrl}/${stockMaterialId}/barcode`, {
+				responseType: 'blob', // Ensure the response is treated as a Blob
+			})
+
+			// Extract filename from Content-Disposition header
+			const contentDisposition = response.headers['Content-Disposition']
+			let filename = `stock_materials_${stockMaterialId}.pdf`
+
+			if (contentDisposition) {
+				const filenameMatch = contentDisposition.match(/filename="?(.+)"?/)
+				if (filenameMatch && filenameMatch[1]) {
+					filename = filenameMatch[1]
+				}
+			}
+
+			const blob = new Blob([response.data], { type: response.headers['Content-Type']?.toString() })
+
+			saveAs(blob, filename)
+		} catch (error) {
+			console.error(`Failed to fetch barcode for stock material ID ${stockMaterialId}:`, error)
+			throw error
+		}
+	}
+
+	async generateBarcode() {
+		try {
+			const response = await apiClient.post<GeneratedStockMaterialBarcode>(
+				`${this.baseUrl}/barcodes/generate`,
+			)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to create barcode for stock material:`, error)
 			throw error
 		}
 	}

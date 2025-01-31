@@ -1,63 +1,11 @@
 SET timezone TO 'UTC';
 
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_type
-        WHERE typname = 'valid_phone'
-    ) THEN
-        CREATE DOMAIN valid_phone AS VARCHAR(16)
-        CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
-    END IF;
-END $$;
-
-
--- Enum type for HTTP methods
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'http_method') THEN
-        CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
-    END IF;
-END
-$$;
-
--- Enum type for operation types
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'operation_type') THEN
-        CREATE TYPE operation_type AS ENUM ('CREATE', 'UPDATE', 'DELETE');
-    END IF;
-END
-$$;
-
--- Enum type for component names
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'component_name') THEN
-        CREATE TYPE component_name AS ENUM (
-            'PRODUCT',
-            'PRODUCT_CATEGORY',
-            'STORE_PRODUCT',
-            'EMPLOYEE',
-            'ADDITIVE',
-            'ADDITIVE_CATEGORY',
-            'STORE_ADDITIVE',
-            'PRODUCT_SIZE',
-            'RECIPE_STEPS',
-            'STORE',
-            'WAREHOUSE',
-            'STORE_WAREHOUSE_STOCK',
-            'INGREDIENT',
-            'INGREDIENT_CATEGORY'
-        );
-    END IF;
-END
-$$;
+CREATE DOMAIN valid_phone AS VARCHAR(16)
+CHECK (VALUE ~ '^\+[1-9]\d{1,14}$');
 
 -- FacilityAddress Table
 CREATE TABLE
-	IF NOT EXISTS facility_addresses (
+	 facility_addresses (
 		id SERIAL PRIMARY KEY,
 		address VARCHAR(255) UNIQUE NOT NULL,
 		longitude DECIMAL(9, 6) UNIQUE,
@@ -73,7 +21,7 @@ CREATE UNIQUE INDEX unique_facility_coordinates
 
 -- Units Table
 CREATE TABLE
-	IF NOT EXISTS units (
+	 units (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(50) NOT NULL,
 		conversion_factor DECIMAL(10, 4) NOT NULL,
@@ -86,7 +34,7 @@ CREATE UNIQUE INDEX unique_unit_name ON units (name) WHERE deleted_at IS NULL;
 
 -- ProductCategory Table
 CREATE TABLE
-	IF NOT EXISTS product_categories (
+	 product_categories (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		description TEXT,
@@ -99,7 +47,7 @@ CREATE UNIQUE INDEX unique_product_category_name ON product_categories (name) WH
 
 -- AdditiveCategory Table
 CREATE TABLE
-	IF NOT EXISTS additive_categories (
+	 additive_categories (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		description TEXT,
@@ -112,7 +60,7 @@ CREATE TABLE
 CREATE UNIQUE INDEX unique_additive_category_name ON additive_categories (name) WHERE deleted_at IS NULL;
 
 -- IngredientCategory Table
-CREATE TABLE IF NOT EXISTS ingredient_categories (
+CREATE TABLE  ingredient_categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -124,7 +72,7 @@ CREATE TABLE IF NOT EXISTS ingredient_categories (
 CREATE UNIQUE INDEX unique_ingredient_category_name ON ingredient_categories (name) WHERE deleted_at IS NULL;
 
 -- StockMaterialCategory Table
-CREATE TABLE IF NOT EXISTS stock_material_categories (
+CREATE TABLE  stock_material_categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -137,7 +85,7 @@ CREATE UNIQUE INDEX unique_stock_material_category_name ON stock_material_catego
 
 -- Product Table
 CREATE TABLE
-	IF NOT EXISTS products (
+	 products (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		description TEXT,
@@ -153,7 +101,7 @@ CREATE UNIQUE INDEX unique_product_name ON products (name) WHERE deleted_at IS N
 
 -- RecipeStep Table
 CREATE TABLE
-	IF NOT EXISTS recipe_steps (
+	 recipe_steps (
 		id SERIAL PRIMARY KEY,
 		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
 		step INT NOT NULL,
@@ -172,11 +120,11 @@ CREATE UNIQUE INDEX unique_recipe_step_number
 
 -- ProductSize Table
 CREATE TABLE
-	IF NOT EXISTS product_sizes (
+	 product_sizes (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
-		unit_id INT NOT NULL REFERENCES units (id) ON DELETE CASCADE,
-		base_price DECIMAL(10, 2) NOT NULL,
+		unit_id INT NOT NULL REFERENCES units (id) ON DELETE RESTRICT,
+		base_price DECIMAL(10, 2) NOT NULL CHECK (base_price > 0),
 		size INT NOT NULL,
 		is_default BOOLEAN DEFAULT FALSE,
 		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
@@ -192,13 +140,13 @@ CREATE UNIQUE INDEX unique_default_product_size
 
 -- Additive Table
 CREATE TABLE
-	IF NOT EXISTS additives (
+	 additives (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		description TEXT,
-		base_price DECIMAL(10, 2) DEFAULT 0,
-        size INT NOT NULL,
-        unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
+		base_price DECIMAL(10, 2) NOT NULL CHECK (base_price > 0),
+    size INT NOT NULL,
+    unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
 		additive_category_id INT NOT NULL REFERENCES additive_categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		image_url VARCHAR(2048),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -208,18 +156,27 @@ CREATE TABLE
 
 CREATE UNIQUE INDEX unique_additive_name ON additives (name) WHERE deleted_at IS NULL;
 
+-- Franchisees Table
+CREATE TABLE  franchisees (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(1024),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
 -- Store Table
 CREATE TABLE
-	IF NOT EXISTS stores (
+	 stores (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		facility_address_id INT REFERENCES facility_addresses (id),
-		is_franchise BOOLEAN DEFAULT FALSE,
+		franchisee_id INT REFERENCES franchisees (id) ON DELETE CASCADE,
 		status VARCHAR(20) DEFAULT 'ACTIVE',
 		contact_phone valid_phone,
 		contact_email VARCHAR(255),
 		store_hours VARCHAR(255),
-		admin_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -231,11 +188,11 @@ CREATE UNIQUE INDEX unique_store_contact_email ON stores (contact_email) WHERE d
 
 -- StoreAdditive Table
 CREATE TABLE
-	IF NOT EXISTS store_additives (
+	 store_additives (
 		id SERIAL PRIMARY KEY,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-		price DECIMAL(10, 2) DEFAULT 0,
+    store_price DECIMAL(10, 2) CHECK (store_price > 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -247,7 +204,7 @@ CREATE UNIQUE INDEX unique_store_additive
 
 -- StoreProduct Table
 CREATE TABLE
-	IF NOT EXISTS store_products (
+	 store_products (
 		id SERIAL PRIMARY KEY,
 		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
@@ -263,11 +220,11 @@ CREATE UNIQUE INDEX unique_store_product
 
 -- StoreProductSize Table
 CREATE TABLE
-    IF NOT EXISTS store_product_sizes (
+     store_product_sizes (
     id SERIAL PRIMARY KEY,
     product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
     store_product_id INT NOT NULL REFERENCES store_products (id),
-    price DECIMAL(10, 2) DEFAULT 0,
+    store_price DECIMAL(10, 2) CHECK (store_price > 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
@@ -279,7 +236,7 @@ CREATE UNIQUE INDEX unique_store_product_size
 
 -- ProductAdditive Table
 CREATE TABLE
-	IF NOT EXISTS product_size_additives (
+	 product_size_additives (
 		id SERIAL PRIMARY KEY,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
@@ -295,7 +252,7 @@ CREATE UNIQUE INDEX unique_product_size_additive
 
 -- Ingredient Table
 CREATE TABLE
-	IF NOT EXISTS ingredients (
+	 ingredients (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		calories DECIMAL(5, 2) CHECK (calories >= 0),
@@ -314,7 +271,7 @@ CREATE UNIQUE INDEX unique_ingredient_name ON ingredients (name) WHERE deleted_a
 
 -- ProductIngredient Table
 CREATE TABLE
-	IF NOT EXISTS product_size_ingredients (
+	 product_size_ingredients (
 		id SERIAL PRIMARY KEY,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
@@ -330,7 +287,7 @@ CREATE UNIQUE INDEX unique_product_size_ingredient
 
 -- AdditiveIngredients Table
 CREATE TABLE
-	IF NOT EXISTS additive_ingredients (
+	 additive_ingredients (
 		id SERIAL PRIMARY KEY,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
@@ -344,11 +301,21 @@ CREATE UNIQUE INDEX unique_additive_ingredient
     ON additive_ingredients (ingredient_id, additive_id)
     WHERE deleted_at IS NULL;
 
+-- Regions Table
+CREATE TABLE  regions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
 -- Warehouses Table
 CREATE TABLE
-	IF NOT EXISTS warehouses (
+	 warehouses (
 		id SERIAL PRIMARY KEY,
 		facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE CASCADE,
+        region_id INT NOT NULL REFERENCES regions (id) ON DELETE RESTRICT,
 		name VARCHAR(255) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -357,7 +324,7 @@ CREATE TABLE
 
 -- StoreWarehouses Table
 CREATE TABLE
-	IF NOT EXISTS store_warehouses (
+	 store_warehouses (
 		id SERIAL PRIMARY KEY,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
@@ -372,7 +339,7 @@ CREATE UNIQUE INDEX unique_store_warehouse
 
 -- StoreWarehouseStock Table
 CREATE TABLE
-	IF NOT EXISTS store_warehouse_stocks (
+	 store_warehouse_stocks (
 		id SERIAL PRIMARY KEY,
 		store_warehouse_id INT NOT NULL REFERENCES store_warehouses (id) ON DELETE CASCADE,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
@@ -389,7 +356,7 @@ CREATE UNIQUE INDEX unique_store_warehouse_stock
 
 -- Customer Table
 CREATE TABLE
-	IF NOT EXISTS customers (
+	 customers (
 		id SERIAL PRIMARY KEY,
         first_name VARCHAR(255) NOT NULL,
         last_name VARCHAR(255) NOT NULL,
@@ -406,15 +373,13 @@ CREATE UNIQUE INDEX unique_customer_phone ON customers (phone) WHERE deleted_at 
 
 -- Employee Table
 CREATE TABLE
-	IF NOT EXISTS employees (
+	 employees (
 		id SERIAL PRIMARY KEY,
 		first_name VARCHAR(255) NOT NULL,
         last_name VARCHAR(255) NOT NULL,
 		phone valid_phone,
 		email VARCHAR(255),
 		hashed_password VARCHAR(255) NOT NULL,
-		role VARCHAR(50) NOT NULL,
-		type VARCHAR(50) NOT NULL,
 		is_active BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -424,40 +389,85 @@ CREATE TABLE
 CREATE UNIQUE INDEX unique_employee_phone ON employees (phone) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX unique_employee_email ON employees (email) WHERE deleted_at IS NULL;
 
+CREATE TYPE store_employee_role AS ENUM ('STORE_MANAGER', 'BARISTA');
+
 -- StoreEmployee Table
 CREATE TABLE
-	IF NOT EXISTS store_employees (
-		id SERIAL PRIMARY KEY,
-		employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
-		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-		is_franchise BOOLEAN DEFAULT FALSE,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
+     store_employees (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
+    role store_employee_role NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
 
-CREATE UNIQUE INDEX unique_store_employee
-    ON store_employees (employee_id, store_id)
-    WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_store_employee ON store_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TYPE warehouse_employee_role AS ENUM ('WAREHOUSE_MANAGER', 'WAREHOUSE_EMPLOYEE');
 
 -- WarehouseEmployee Table
 CREATE TABLE
-	IF NOT EXISTS warehouse_employees (
-		id SERIAL PRIMARY KEY,
-		employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
-		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
+     warehouse_employees (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
+    role warehouse_employee_role NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
 
-CREATE UNIQUE INDEX unique_warehouse_employee
-    ON warehouse_employees (employee_id, warehouse_id)
-    WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX unique_warehouse_employee ON warehouse_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TYPE region_employee_role AS ENUM ('REGION_WAREHOUSE_MANAGER');
+
+-- Region Managers Table
+CREATE TABLE  region_employees (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    region_id INT NOT NULL REFERENCES regions (id) ON DELETE CASCADE,
+    role region_employee_role NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
+CREATE UNIQUE INDEX unique_region_employee ON region_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TYPE franchisee_employee_role AS ENUM ('FRANCHISE_MANAGER', 'FRANCHISE_OWNER');
+
+-- Franchisee Employees Table
+CREATE TABLE  franchisee_employees (
+    id SERIAL PRIMARY KEY,
+    franchisee_id INT NOT NULL REFERENCES franchisees (id) ON DELETE CASCADE,
+    employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
+    role franchisee_employee_role NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
+CREATE UNIQUE INDEX unique_franchisee_employee ON franchisee_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TYPE admin_role AS ENUM ('ADMIN', 'OWNER');
+
+-- Admin table
+CREATE TABLE  admin_employees (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    role admin_role NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
+CREATE UNIQUE INDEX unique_admin_employee ON admin_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
 
 -- EmployeeWorkTrack Table
 CREATE TABLE
-    IF NOT EXISTS employee_work_tracks (
+     employee_work_tracks (
     id SERIAL PRIMARY KEY,
     start_work_at TIMESTAMPTZ,
     end_work_at TIMESTAMPTZ,
@@ -466,6 +476,39 @@ CREATE TABLE
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
     );
+
+CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
+CREATE TYPE operation_type AS ENUM ('CREATE', 'UPDATE', 'DELETE');
+CREATE TYPE component_name AS ENUM (
+    'FRANCHISEE',
+    'REGION',
+    'PRODUCT',
+    'PRODUCT_CATEGORY',
+    'STORE_PRODUCT',
+    'EMPLOYEE',
+    'STORE_EMPLOYEE',
+    'WAREHOUSE_EMPLOYEE',
+    'FRANCHISEE_EMPLOYEE',
+    'REGION_EMPLOYEE',
+    'ADMIN_EMPLOYEE'
+    'ADDITIVE',
+    'ADDITIVE_CATEGORY',
+    'STORE_ADDITIVE',
+    'PRODUCT_SIZE',
+    'RECIPE_STEPS',
+    'STORE',
+    'WAREHOUSE',
+    'STORE_WAREHOUSE_STOCK',
+    'INGREDIENT',
+    'INGREDIENT_CATEGORY',
+    'STOCK_REQUEST',
+    'STOCK_MATERIAL',
+    'STOCK_MATERIAL_CATEGORY',
+    'WAREHOUSE_STOCK',
+    'SUPPLIER',
+    'UNIT'
+    );
+
 
 CREATE TABLE employee_audits (
     id SERIAL PRIMARY KEY,
@@ -486,7 +529,7 @@ CREATE INDEX idx_employee_audits_employee_id ON employee_audits(employee_id);
 
 -- EmployeeWorkday Table
 CREATE TABLE
-	IF NOT EXISTS employee_workdays (
+	 employee_workdays (
 		id SERIAL PRIMARY KEY,
 		day VARCHAR(15) NOT NULL,
 		start_at TIME NOT NULL,
@@ -530,7 +573,7 @@ CREATE INDEX idx_employee_id ON employee_notification_recipients (employee_id);
 
 -- Referral Table
 CREATE TABLE
-	IF NOT EXISTS referrals (
+	 referrals (
 		id SERIAL PRIMARY KEY,
 		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
 		referee_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
@@ -545,7 +588,7 @@ CREATE UNIQUE INDEX unique_referrals
 
 -- VerificationCode Table
 CREATE TABLE
-	IF NOT EXISTS verification_codes (
+	 verification_codes (
 		id SERIAL PRIMARY KEY,
 		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
 		code VARCHAR(6) NOT NULL,
@@ -557,7 +600,7 @@ CREATE TABLE
 
 -- CustomerAddress Table
 CREATE TABLE
-	IF NOT EXISTS customer_addresses (
+	 customer_addresses (
 		id SERIAL PRIMARY KEY,
 		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
 		address VARCHAR(255) NOT NULL,
@@ -575,7 +618,7 @@ CREATE UNIQUE INDEX unique_customer_address
 
 -- Bonus Table
 CREATE TABLE
-	IF NOT EXISTS bonuses (
+	 bonuses (
 		id SERIAL PRIMARY KEY,
 		bonuses DECIMAL(10, 2) CHECK (bonuses >= 0),
 		customer_id INT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
@@ -587,7 +630,7 @@ CREATE TABLE
 
 -- Orders Table
 CREATE TABLE
-	IF NOT EXISTS orders (
+	 orders (
 		id SERIAL PRIMARY KEY,
 		customer_id INT REFERENCES customers (id) ON DELETE SET NULL,
 		display_number INT NOT NULL,
@@ -607,11 +650,11 @@ ON orders (store_id, display_number);
 
 -- SubOrders Table
 CREATE TABLE
-	IF NOT EXISTS suborders (
+	 suborders (
 		id SERIAL PRIMARY KEY,
 		order_id INT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE RESTRICT,
-		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+		store_product_size_id INT NOT NULL REFERENCES store_product_sizes (id) ON DELETE RESTRICT,
+		price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
 		status VARCHAR(50) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -620,11 +663,11 @@ CREATE TABLE
 
 -- SubOrdersAdditives Table
 CREATE TABLE
-	IF NOT EXISTS suborder_additives (
+	 suborder_additives (
 		id SERIAL PRIMARY KEY,
 		suborder_id INT NOT NULL REFERENCES suborders (id) ON DELETE CASCADE,
-		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
-		price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+		store_additive_id INT NOT NULL REFERENCES store_additives (id) ON DELETE CASCADE,
+		price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -632,11 +675,12 @@ CREATE TABLE
 
 -- StockRequests Table
 CREATE TABLE
-	IF NOT EXISTS stock_requests (
+	 stock_requests (
 		id SERIAL PRIMARY KEY,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		status VARCHAR(50) NOT NULL,
+		details JSONB,
 		store_comment TEXT,
 		warehouse_comment TEXT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -645,7 +689,7 @@ CREATE TABLE
 	);
 
 -- StockMaterials Table
-CREATE TABLE IF NOT EXISTS stock_materials (
+CREATE TABLE  stock_materials (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -666,7 +710,7 @@ CREATE UNIQUE INDEX unique_stock_material_barcode ON stock_materials (barcode) W
 
 -- StockRequestIngredients Table
 CREATE TABLE
-	IF NOT EXISTS stock_request_ingredients (
+	 stock_request_ingredients (
 		id SERIAL PRIMARY KEY,
 		stock_request_id INT NOT NULL REFERENCES stock_requests (id) ON DELETE CASCADE,
 		stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
@@ -686,7 +730,7 @@ CREATE UNIQUE INDEX unique_stock_request_ingredient
 
 -- Suppliers Table
 CREATE TABLE
-	IF NOT EXISTS suppliers (
+	 suppliers (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		contact_email VARCHAR(255),
@@ -699,7 +743,7 @@ CREATE TABLE
 	);
 
 -- Create supplier_warehouse_deliveries Table
-CREATE TABLE IF NOT EXISTS supplier_warehouse_deliveries (
+CREATE TABLE  supplier_warehouse_deliveries (
     id SERIAL PRIMARY KEY,
     supplier_id INT NOT NULL REFERENCES suppliers (id) ON DELETE CASCADE,
     warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
@@ -710,7 +754,7 @@ CREATE TABLE IF NOT EXISTS supplier_warehouse_deliveries (
 );
 
 -- Create supplier_warehouse_delivery_materials Table
-CREATE TABLE IF NOT EXISTS supplier_warehouse_delivery_materials (
+CREATE TABLE  supplier_warehouse_delivery_materials (
     id SERIAL PRIMARY KEY,
     delivery_id INT NOT NULL REFERENCES supplier_warehouse_deliveries (id) ON DELETE CASCADE,
     stock_material_id INT NOT NULL REFERENCES stock_materials (id) ON DELETE CASCADE,
@@ -723,7 +767,7 @@ CREATE TABLE IF NOT EXISTS supplier_warehouse_delivery_materials (
 );
 
 CREATE TABLE
-	IF NOT EXISTS warehouse_stocks (
+	 warehouse_stocks (
 		id SERIAL PRIMARY KEY,
 		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		stock_material_id INT NOT NULL REFERENCES stock_materials (id) ON DELETE CASCADE,
@@ -738,7 +782,7 @@ CREATE UNIQUE INDEX unique_warehouse_stock
     WHERE deleted_at IS NULL;
 
 CREATE TABLE
-	IF NOT EXISTS supplier_materials (
+	 supplier_materials (
 		id SERIAL PRIMARY KEY,
 		stock_material_id INT NOT NULL REFERENCES stock_materials (id) ON DELETE CASCADE,
 		supplier_id INT NOT NULL REFERENCES suppliers (id) ON DELETE CASCADE,
@@ -752,10 +796,10 @@ CREATE UNIQUE INDEX unique_supplier_material
     WHERE deleted_at IS NULL;
 
 -- Create the supplier_prices table
-CREATE TABLE IF NOT EXISTS supplier_prices (
+CREATE TABLE  supplier_prices (
     id SERIAL PRIMARY KEY,
     supplier_material_id INT NOT NULL REFERENCES supplier_materials(id) ON DELETE CASCADE,
-    base_price DECIMAL(10, 2) NOT NULL CHECK (base_price >= 0),
+    base_price DECIMAL(10, 2) NOT NULL CHECK (base_price > 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ

@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/core/components/ui/tooltip'
+import { formatLocalizedMessage } from '@/core/utils/format-localized-messages.utils'
 import type { NotificationDTO } from '@/modules/admin/admin-notifications/models/notifications.model'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -32,7 +33,6 @@ const PRIORITY_LABELS = {
 };
 
 const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { locale: ru });
-const formatMessage = (s: string) => s.replace(/\*(.*?)\*/g, '<span class="font-medium">$1</span>');
 </script>
 
 <template>
@@ -75,7 +75,7 @@ const formatMessage = (s: string) => s.replace(/\*(.*?)\*/g, '<span class="font-
 					/>
 				</TableCell>
 				<TableCell class="py-4">
-					<span v-html="formatMessage(notification.messages.ru)"></span>
+					<span v-html="formatLocalizedMessage(notification.messages.ru)"></span>
 				</TableCell>
 				<TableCell>{{ formatTimeAgo(notification.createdAt) }}</TableCell>
 				<TableCell>

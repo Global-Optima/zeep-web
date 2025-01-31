@@ -17,7 +17,7 @@
 			>
 				<!-- Display Activity Message -->
 				<TableCell>
-					<span v-html="formatMessage(audit.localizedMessages.ru)"></span>
+					<span v-html="formatLocalizedMessage(audit.localizedMessages.ru)"></span>
 				</TableCell>
 
 				<!-- Display Component Name -->
@@ -68,6 +68,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { formatLocalizedMessage } from '@/core/utils/format-localized-messages.utils'
 import { EmployeeAuditComponentName, EmployeeAuditOperationType, FORMATTED_AUDIT_COMPONENTS, FORMATTED_AUDIT_OPERATION, type EmployeeAuditDTO } from '@/modules/admin/store-employees/models/employees-audit.models'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -92,10 +93,6 @@ const formatDate = (date: Date): string => {
   return format(new Date(date), 'dd MMM yyyy, HH:mm', { locale: ru })
 }
 
-// Function to format the message with bold text inside *...*
-const formatMessage = (s: string) => {
-  return s.replace(/\*(.*?)\*/g, '<span class="font-medium">$1</span>')
-}
 
 // Function to filter and format the details object
 const formatDetails = (details: Record<string, unknown>): string => {

@@ -32,6 +32,8 @@ type WarehouseStockRepository interface {
 	GetWarehouseStocksForNotifications(warehouseID uint) ([]data.WarehouseStock, error)
 	UpdateStockQuantity(stockID uint, warehouseID uint, quantity float64) (*data.WarehouseStock, error)
 	UpdateExpirationDate(stockMaterialID, warehouseID uint, newExpirationDate time.Time) error
+
+	GetAvailableToAddStockMaterials(storeID uint, filter *types.AvailableStockMaterialFilter) ([]data.StockMaterial, error)
 }
 
 type warehouseStockRepository struct {
@@ -154,8 +156,16 @@ func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryF
 	}
 
 	if filter.Search != nil {
+
 		search := "%" + *filter.Search + "%"
-		query = query.Where("suppliers.name ILIKE ?", search)
+		query = query.
+			Joins("JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.delivery_id = supplier_warehouse_deliveries.id").
+			Joins("JOIN stock_materials ON supplier_warehouse_delivery_materials.stock_material_id = stock_materials.id").
+			Where(`stock_materials.name ILIKE ? OR 
+				stock_materials.description ILIKE ? OR 
+				stock_materials.barcode ILIKE ? OR
+				suppliers.name ILIKE ?
+			`, search, search, search, search)
 	}
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.SupplierWarehouseDelivery{})
@@ -441,8 +451,9 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		query = query.Where(`
 			stock_materials.name ILIKE ? OR 
 			stock_materials.description ILIKE ? OR 
+			stock_materials.barcode ILIKE ? OR
 			stock_materials.barcode ILIKE ?
-		`, search, search, search)
+		`, search, search, search, search)
 	}
 
 	// Apply pagination and sorting
@@ -574,4 +585,59 @@ func (r *warehouseStockRepository) GetWarehouseStocksForNotifications(warehouseI
 
 func (r *warehouseStockRepository) UpdateWarehouseStock(stock *data.WarehouseStock) error {
 	return r.db.Save(stock).Error
+}
+
+func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint, filter *types.AvailableStockMaterialFilter) ([]data.StockMaterial, error) {
+
+	var stockMaterials []data.StockMaterial
+	var warehouseID uint
+
+	// Step 1: Retrieve WarehouseID linked to the provided StoreID
+	if err := r.db.
+		Model(&data.StoreWarehouse{}).
+		Select("warehouse_id").
+		Where("store_id = ?", storeID).
+		Limit(1).
+		Scan(&warehouseID).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch warehouse for store: %w", err)
+	}
+
+	if warehouseID == 0 {
+		return nil, fmt.Errorf("no warehouse found for the given store ID: %d", storeID)
+	}
+
+	// Step 2: Query only stock materials that exist in the warehouse and have a quantity > 0
+	query := r.db.Model(&data.StockMaterial{}).
+		Select("DISTINCT stock_materials.*").
+		Joins("JOIN warehouse_stocks ON warehouse_stocks.stock_material_id = stock_materials.id").
+		Where("warehouse_stocks.warehouse_id = ?", warehouseID).
+		Where("stock_materials.is_active = ?", true).
+		Preload("Unit").
+		Preload("StockMaterialCategory").
+		Preload("Ingredient").
+		Preload("Ingredient.IngredientCategory").
+		Preload("Ingredient.Unit")
+
+	// Step 3: Apply search filter if provided
+	if filter.Search != nil && *filter.Search != "" {
+		search := "%" + *filter.Search + "%"
+		query = query.Where(`
+			stock_materials.name ILIKE ? OR 
+			stock_materials.description ILIKE ? OR 
+			stock_materials.barcode ILIKE ?`,
+			search, search, search)
+	}
+
+	// Step 4: Apply pagination and sorting using utility function
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply pagination: %w", err)
+	}
+
+	// Step 5: Execute the query and fetch stock materials
+	if err := query.Find(&stockMaterials).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch available stock materials: %w", err)
+	}
+
+	return stockMaterials, nil
 }

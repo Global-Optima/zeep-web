@@ -24,11 +24,12 @@ type OrderRepository interface {
 	GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error)
 	UpdateSubOrderStatus(subOrderID uint, status data.SubOrderStatus) error
 	AddSubOrderAdditive(subOrderID uint, additive *data.SuborderAdditive) error
-	CheckAllSubordersCompleted(subOrderID uint) (uint, bool, error)
+	CheckAllSubordersCompleted(orderID, subOrderID uint) (bool, error)
 	GetOrderBySubOrderID(subOrderID uint) (*data.Order, error)
 
 	GetOrderDetails(orderID uint) (*data.Order, error)
 	GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error)
+	GetSuborderByID(suborderID uint) (*data.Suborder, error)
 }
 
 type orderRepository struct {
@@ -103,10 +104,9 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 	var orders []data.Order
 
 	query := r.db.
-		Preload("Suborders.ProductSize").
-		Preload("Suborders.ProductSize.Unit").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.Additives.Additive").
+		Preload("Suborders.StoreProductSize.ProductSize.Unit").
+		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Order("created_at DESC")
 
 	if filter.Search != nil && *filter.Search != "" {
@@ -146,10 +146,9 @@ func (r *orderRepository) GetAllBaristaOrders(storeID uint) ([]data.Order, error
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, time.UTC)
 
-	query := r.db.Preload("Suborders.ProductSize").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.ProductSize.Unit").
-		Preload("Suborders.Additives.Additive").
+	query := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Unit").
+		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Where("store_id = ?", storeID).
 		Where("created_at >= ? AND created_at <= ?", startOfToday, endOfToday)
 
@@ -200,10 +199,10 @@ func (r *orderRepository) GetStatusesCount(storeID uint) (map[data.OrderStatus]i
 
 func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 	var order data.Order
-	err := r.db.Preload("Suborders.ProductSize").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.Additives.Additive").
-		Preload("Suborders.ProductSize.Unit").
+	err := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
+		Preload("Suborders.StoreProductSize.ProductSize.Unit").
+		Preload("Store").
 		Where("id = ?", orderId).
 		First(&order).Error
 
@@ -226,7 +225,7 @@ func (r *orderRepository) DeleteOrder(orderID uint) error {
 
 func (r *orderRepository) GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error) {
 	var suborders []data.Suborder
-	err := r.db.Preload("Additives").Where("order_id = ?", orderID).Find(&suborders).Error
+	err := r.db.Preload("StoreAdditives").Where("order_id = ?", orderID).Find(&suborders).Error
 	if err != nil {
 		return nil, err
 	}
@@ -244,24 +243,22 @@ func (r *orderRepository) AddSubOrderAdditive(suborderID uint, additive *data.Su
 	return r.db.Create(additive).Error
 }
 
-func (r *orderRepository) CheckAllSubordersCompleted(subOrderID uint) (uint, bool, error) {
+func (r *orderRepository) CheckAllSubordersCompleted(orderID, subOrderID uint) (bool, error) {
 	var suborder data.Suborder
 	err := r.db.Select("order_id").Where("id = ?", subOrderID).First(&suborder).Error
 	if err != nil {
-		return 0, false, fmt.Errorf("failed to fetch suborder: %w", err)
+		return false, fmt.Errorf("failed to fetch suborder: %w", err)
 	}
-
-	orderID := suborder.OrderID
 
 	var count int64
 	err = r.db.Model(&data.Suborder{}).
 		Where("order_id = ? AND status != ?", orderID, data.SubOrderStatusCompleted).
 		Count(&count).Error
 	if err != nil {
-		return 0, false, fmt.Errorf("failed to count suborders: %w", err)
+		return false, fmt.Errorf("failed to count suborders: %w", err)
 	}
 
-	return orderID, count == 0, nil
+	return count == 0, nil
 }
 
 func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, error) {
@@ -270,10 +267,9 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 	err := r.db.
 		Joins("JOIN suborders ON suborders.order_id = orders.id").
 		Where("suborders.id = ?", subOrderID).
-		Preload("Suborders.ProductSize").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.ProductSize.Unit").
-		Preload("Suborders.Additives.Additive").
+		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Unit").
+		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		First(&order).Error
 
 	if err != nil {
@@ -286,10 +282,9 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 func (r *orderRepository) GetOrderDetails(orderID uint) (*data.Order, error) {
 	var order data.Order
 
-	err := r.db.Preload("Suborders.Additives.Additive").
-		Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.ProductSize.Additives.Additive").
-		Preload("Suborders.ProductSize.Unit").
+	err := r.db.Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
+		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("DeliveryAddress").
 		Where("id = ?", orderID).
 		First(&order).Error
@@ -306,9 +301,8 @@ func (r *orderRepository) GetOrderDetails(orderID uint) (*data.Order, error) {
 
 func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error) {
 	var orders []data.Order
-	query := r.db.Preload("Suborders.ProductSize.Product").
-		Preload("Suborders.Additives").
-		Preload("Suborders.Additives.Additive").
+	query := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Preload("Store").
 		Preload("DeliveryAddress")
 
@@ -326,4 +320,13 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 		return nil, err
 	}
 	return orders, nil
+}
+
+func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, error) {
+	var suborder data.Suborder
+	err := r.db.Where("id = ?", suborderID).First(&suborder).Error
+	if err != nil {
+		return nil, err
+	}
+	return &suborder, nil
 }

@@ -56,7 +56,6 @@ const stepsConfig: StepConfig[] = [
     ),
     onProceed: (data: { customerName: string }) => {
       stepState.value.customerName = data.customerName;
-      console.log(stepState.value.customerName)
     },
     onBack: null,
   },
@@ -67,15 +66,14 @@ const stepsConfig: StepConfig[] = [
     ),
     onProceed: async (data: { selectedPayment: string }) => {
       stepState.value.selectedPayment = data.selectedPayment;
-      console.log("HERE", stepState.value.customerName)
       try {
 
         const orderDTO: CreateOrderDTO = {
           customerName: stepState.value.customerName,
           subOrders: Object.entries(cartItems).map(([_, item]) => ({
-            productSizeId: item.size.id,
+            storeProductSizeId: item.size.id,
             quantity: item.quantity,
-            additivesIds: item.additives.map((add) => add.additiveId),
+            storeAdditivesIds: item.additives.map((add) => add.id),
           })),
         };
 

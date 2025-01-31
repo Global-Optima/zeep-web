@@ -3,6 +3,7 @@ package modules
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
@@ -13,15 +14,17 @@ import (
 
 type ProductsModule struct {
 	*common.BaseModule
-	Repo          product.ProductRepository
-	Service       product.ProductService
-	Handler       *product.ProductHandler
-	Recipe        *RecipeModule
-	StoreProducts *StoreProductsModule
+	Repo                product.ProductRepository
+	Service             product.ProductService
+	Handler             *product.ProductHandler
+	Recipe              *RecipeModule
+	StoreProductsModule *StoreProductsModule
 }
 
-func NewProductsModule(base *common.BaseModule,
+func NewProductsModule(
+	base *common.BaseModule,
 	auditService audit.AuditService,
+	franchiseeService franchisees.FranchiseeService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository,
 	notificationService notifications.NotificationService,
@@ -31,17 +34,17 @@ func NewProductsModule(base *common.BaseModule,
 	handler := product.NewProductHandler(service, auditService)
 
 	recipeModule := NewRecipeModule(base, auditService)
-	storeProductsModule := NewStoreProductsModule(base, auditService, service, repo, ingredientRepo, storeWarehouseRepo)
+	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeWarehouseRepo)
 
 	base.Router.RegisterProductRoutes(handler)
 
 	return &ProductsModule{
-		BaseModule:    base,
-		Repo:          repo,
-		Service:       service,
-		Handler:       handler,
-		Recipe:        recipeModule,
-		StoreProducts: storeProductsModule,
+		BaseModule:          base,
+		Repo:                repo,
+		Service:             service,
+		Handler:             handler,
+		Recipe:              recipeModule,
+		StoreProductsModule: storeProductsModule,
 	}
 }
 
@@ -79,6 +82,7 @@ func NewStoreProductsModule(
 	base *common.BaseModule,
 	auditService audit.AuditService,
 	productService product.ProductService,
+	franchiseeService franchisees.FranchiseeService,
 	productRepo product.ProductRepository,
 	ingredientRepo ingredients.IngredientRepository,
 	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository,
@@ -90,7 +94,7 @@ func NewStoreProductsModule(
 		ingredientRepo,
 		storeProducts.NewTransactionManager(base.DB, repo, storeWarehouseRepo),
 		base.Logger)
-	handler := storeProducts.NewStoreProductHandler(service, productService, auditService, base.Logger)
+	handler := storeProducts.NewStoreProductHandler(service, productService, franchiseeService, auditService, base.Logger)
 
 	base.Router.RegisterStoreProductRoutes(handler)
 

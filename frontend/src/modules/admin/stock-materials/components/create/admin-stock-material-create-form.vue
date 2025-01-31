@@ -4,24 +4,22 @@ import { useForm } from 'vee-validate'
 import { ref } from 'vue'
 import * as z from 'zod'
 
-// UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
 
-// Select Dialog Components
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import AdminSelectStockMaterialCategory from '@/modules/admin/stock-material-categories/components/admin-select-stock-material-category.vue'
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 
 import { ChevronLeft } from 'lucide-vue-next'
 
-// Typings
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import type { CreateStockMaterialDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
+import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 const emits = defineEmits<{
@@ -38,9 +36,6 @@ const openUnitDialog = ref(false)
 const openCategoryDialog = ref(false)
 const openIngredientDialog = ref(false)
 
-/**
- * Validation Schema
- */
 const createStockMaterialSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название материала'),
@@ -52,22 +47,15 @@ const createStockMaterialSchema = toTypedSchema(
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
     barcode: z
       .string()
-      .min(1, 'Введите штрихкод')
-      .length(12, 'Штрихкод должен быть длинной в 12 символов'),
+      .max(20, 'Введите штрихкод'),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
   })
 )
 
-/**
- * Setup the form
- */
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createStockMaterialSchema,
 })
 
-/**
- * Submissions
- */
 const onSubmit = handleSubmit((formValues) => {
   const dto: CreateStockMaterialDTO = formValues
   emits('onSubmit', dto)
@@ -78,23 +66,27 @@ const onCancel = () => {
   emits('onCancel')
 }
 
-/**
- * Selection Handlers
- */
 function selectUnit(unit: UnitDTO) {
   selectedUnit.value = unit
   openUnitDialog.value = false
   setFieldValue('unitId', unit.id)
 }
+
 function selectCategory(category: StockMaterialCategoryDTO) {
   selectedCategory.value = category
   openCategoryDialog.value = false
   setFieldValue('categoryId', category.id)
 }
+
 function selectIngredient(ingredient: IngredientsDTO) {
   selectedIngredient.value = ingredient
   openIngredientDialog.value = false
   setFieldValue('ingredientId', ingredient.id)
+}
+
+const onGenerateBarcodeClick = async () => {
+  const barcodeResponse = await stockMaterialsService.generateBarcode()
+  setFieldValue('barcode', barcodeResponse.barcode)
 }
 </script>
 
@@ -188,11 +180,19 @@ function selectIngredient(ingredient: IngredientsDTO) {
 								<FormItem>
 									<FormLabel>Штрихкод</FormLabel>
 									<FormControl>
-										<Input
-											id="barcode"
-											v-bind="componentField"
-											placeholder="Введите штрихкод"
-										/>
+										<div class="flex items-center gap-2">
+											<Input
+												id="barcode"
+												v-bind="componentField"
+												placeholder="Введите штрихкод"
+											/>
+
+											<Button
+												variant="outline"
+												@click="onGenerateBarcodeClick"
+												>Создать</Button
+											>
+										</div>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

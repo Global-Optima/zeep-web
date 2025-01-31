@@ -2,10 +2,11 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
+	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 )
 
 type OrdersModule struct {
@@ -15,9 +16,9 @@ type OrdersModule struct {
 	Handler *orders.OrderHandler
 }
 
-func NewOrdersModule(base *common.BaseModule, productRepo product.ProductRepository, additiveRepo additives.AdditiveRepository, notificationService notifications.NotificationService) *OrdersModule {
+func NewOrdersModule(base *common.BaseModule, productRepo storeProducts.StoreProductRepository, additiveRepo storeAdditives.StoreAdditiveRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, notificationService notifications.NotificationService) *OrdersModule {
 	repo := orders.NewOrderRepository(base.DB)
-	service := orders.NewOrderService(repo, productRepo, additiveRepo, notificationService, base.Logger)
+	service := orders.NewOrderService(repo, productRepo, additiveRepo, storeWarehouseRepo, notificationService, base.Logger)
 	handler := orders.NewOrderHandler(service)
 
 	base.Router.RegisterOrderRoutes(handler)

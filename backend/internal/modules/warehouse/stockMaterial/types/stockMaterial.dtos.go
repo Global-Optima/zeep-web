@@ -7,6 +7,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
+type GenerateBarcodeResponse struct {
+	Barcode string `json:"barcode"`
+}
+
 type CreateStockMaterialDTO struct {
 	Name                   string  `json:"name" binding:"required"`
 	Description            string  `json:"description"`

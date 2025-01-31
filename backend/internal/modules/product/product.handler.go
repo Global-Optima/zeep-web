@@ -1,9 +1,11 @@
 package product
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
@@ -84,7 +86,9 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 			Name: input.Name,
 		})
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
@@ -145,7 +149,9 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 			Name: input.Name,
 		})
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
 }
@@ -183,7 +189,9 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		input,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
 }
@@ -207,7 +215,13 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateProductSize(uint(productSizeID), input)
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendBadRequestError(c, "Store ID is not present")
+		return
+	}
+
+	err = h.service.UpdateProductSize(storeID, uint(productSizeID), input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to update product size")
 		return
@@ -221,7 +235,9 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		input,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
 }
@@ -252,7 +268,9 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product size deleted successfully", http.StatusOK)
 }
@@ -283,7 +301,9 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "product deleted successfully", http.StatusOK)
 }

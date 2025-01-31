@@ -66,16 +66,19 @@
 
       "centralCatalogUpdate": "The central catalog was updated: *{{.Changes}}*.",
       "centralCatalogUpdateDetails": {
-        "nameChange": "Name changed from '{{.OldName}}' to '{{.NewName}}'",
-        "descriptionChange": "Description updated from '{{.OldDescription}}' to '{{.NewDescription}}'",
-        "imageUrlChange": "Image URL updated from '{{.OldImageURL}}' to '{{.NewImageURL}}'",
-        "categoryChange": "Category ID updated from {{.OldCategoryID}} to {{.NewCategoryID}}"
+        "nameChange": "Name changed from {{.OldName}} to {{.NewName}}",
+        "descriptionChange": "Description updated from {{.OldDescription}} to {{.NewDescription}}",
+        "imageUrlChange": "Image URL updated from {{.OldImageURL}} to {{.NewImageURL}}"
       },
 
       "stockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",
       "warehouseOutOfStock": "*{{.ItemName}}* is running out of stock.",
       "newStockRequest": "A new stock request was submitted by *{{.RequesterName}}*.",
       "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*."
+  },
+  "stockRequestComments": {
+    "quantityMismatch" : "*{{.OriginalMaterialName}}* received *{{.ActualQuantity}}*, expected *{{.Quantity}}*",
+    "unexpectedMaterial" : "Unexpected material *{{.MaterialName}}* received *{{.ActualQuantity}}*"
   }
 }
 

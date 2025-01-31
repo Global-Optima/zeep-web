@@ -17,10 +17,6 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 	basePrice, productSizeCount := productTypes.ProductAdditionalInfo(sp.Product)
 	storePrice, storeProductSizeCount := StoreProductAdditionalInfo(*sp)
 
-	if storePrice == 0 {
-		storePrice = basePrice
-	}
-
 	return &StoreProductDTO{
 		ID:                    sp.ID,
 		BaseProductDTO:        productTypes.MapToBaseProductDTO(&sp.Product),
@@ -53,7 +49,7 @@ func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 
 	if sp.StoreProductSizes != nil && spsCount > 0 {
 		for _, storeProductSize := range sp.StoreProductSizes {
-			spsPrices = append(spsPrices, storeProductSize.Price)
+			spsPrices = append(spsPrices, getStorePrice(&storeProductSize))
 		}
 
 		sort.Float64s(spsPrices)
@@ -81,7 +77,7 @@ func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSize
 		ID:                 sps.ID,
 		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(sps.ProductSize),
 		ProductSizeID:      sps.ProductSizeID,
-		StorePrice:         sps.Price,
+		StorePrice:         getStorePrice(&sps),
 		Additives:          additives,
 		Ingredients:        ingredients,
 	}
@@ -94,9 +90,8 @@ func CreateToStoreProduct(dto *CreateStoreProductDTO) *data.StoreProduct {
 		storeProductSizes[i] = data.StoreProductSize{
 			ProductSizeID: size.ProductSizeID,
 		}
-		if size.StorePrice != nil {
-			storeProductSizes[i].Price = *size.StorePrice
-		}
+		storeProductSizes[i].StorePrice = size.StorePrice
+
 	}
 
 	return &data.StoreProduct{
@@ -107,17 +102,10 @@ func CreateToStoreProduct(dto *CreateStoreProductDTO) *data.StoreProduct {
 }
 
 func CreateToStoreProductSize(dto *CreateStoreProductSizeDTO) *data.StoreProductSize {
-	model := &data.StoreProductSize{
+	return &data.StoreProductSize{
 		ProductSizeID: dto.ProductSizeID,
+		StorePrice:    dto.StorePrice,
 	}
-
-	if dto.StorePrice != nil {
-		model.Price = *dto.StorePrice
-	} else {
-		model.Price = 0
-	}
-
-	return model
 }
 
 func UpdateToStoreProductModels(dto *UpdateStoreProductDTO) *StoreProductModels {
@@ -132,9 +120,7 @@ func UpdateToStoreProductModels(dto *UpdateStoreProductDTO) *StoreProductModels 
 		storeProductSizes[i] = data.StoreProductSize{
 			ProductSizeID: size.ProductSizeID,
 		}
-		if size.StorePrice != nil {
-			storeProductSizes[i].Price = *size.StorePrice
-		}
+		storeProductSizes[i].StorePrice = size.StorePrice
 	}
 
 	return &StoreProductModels{
@@ -144,11 +130,14 @@ func UpdateToStoreProductModels(dto *UpdateStoreProductDTO) *StoreProductModels 
 }
 
 func UpdateToStoreProductSize(dto *UpdateStoreProductSizeDTO) *data.StoreProductSize {
-	model := &data.StoreProductSize{}
-
-	if dto.StorePrice != nil {
-		model.Price = *dto.StorePrice
+	return &data.StoreProductSize{
+		StorePrice: dto.StorePrice,
 	}
+}
 
-	return model
+func getStorePrice(storeProductSize *data.StoreProductSize) float64 {
+	if storeProductSize.StorePrice != nil {
+		return *storeProductSize.StorePrice
+	}
+	return storeProductSize.ProductSize.BasePrice
 }

@@ -51,8 +51,8 @@ func SendNotFoundError(c *gin.Context, message string) {
 	SendErrorWithStatus(c, message, http.StatusNotFound)
 }
 
-func SuccessCreatedResponse(c *gin.Context, data interface{}) {
-	c.JSON(http.StatusCreated, data)
+func SendSuccessCreatedResponse(c *gin.Context, message string) {
+	SendMessageWithStatus(c, message, http.StatusCreated)
 }
 
 func SendDetailedError(c *gin.Context, err error, details ...string) {

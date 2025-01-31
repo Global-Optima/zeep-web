@@ -3,6 +3,7 @@ package data
 import (
 	"time"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -18,9 +19,17 @@ var (
 	StockRequestAcceptedWithChange  StockRequestStatus = "ACCEPTED_WITH_CHANGE"
 )
 
+type Region struct {
+	BaseEntity
+	Name           string           `gorm:"size:255;not null" sort:"name"`
+	Warehouses     []Warehouse      `gorm:"foreignKey:RegionID;constraint:OnDelete:CASCADE"`
+	RegionManagers []RegionEmployee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+}
+
 type Warehouse struct {
 	BaseEntity
 	FacilityAddressID uint            `gorm:"not null;index"`
+	RegionID          uint            `gorm:"not null;index"`
 	FacilityAddress   FacilityAddress `gorm:"foreignKey:FacilityAddressID;constraint:OnDelete:CASCADE"`
 	Name              string          `gorm:"size:255;not null" sort:"name"`
 }
@@ -50,6 +59,7 @@ type StockRequest struct {
 	WarehouseID      uint                     `gorm:"not null;index"` // Central warehouse fulfilling the request
 	Warehouse        Warehouse                `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
 	Status           StockRequestStatus       `gorm:"size:50;not null" sort:"status"`
+	Details          datatypes.JSON           `gorm:"type:jsonb"`
 	StoreComment     *string                  `gorm:"type:text"` // Store-specific comments
 	WarehouseComment *string                  `gorm:"type:text"` // Warehouse-specific comments
 	Ingredients      []StockRequestIngredient `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`

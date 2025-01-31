@@ -57,7 +57,9 @@ func (h *AdditiveHandler) CreateAdditiveCategory(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive category created successfully"})
 }
@@ -94,7 +96,9 @@ func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 		&dto,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive category updated successfully"})
 }
@@ -124,7 +128,9 @@ func (h *AdditiveHandler) DeleteAdditiveCategory(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive category deleted successfully"})
 }
@@ -183,7 +189,9 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive created successfully"})
 }
@@ -220,7 +228,9 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		&dto,
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive updated successfully"})
 }
@@ -250,7 +260,9 @@ func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
 		},
 	)
 
-	_ = h.auditService.RecordEmployeeAction(c, &action)
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Additive deleted successfully"})
 }

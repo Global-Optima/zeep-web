@@ -31,20 +31,22 @@ func (r *Router) RegisterEmployeeAccountRoutes(handler *employees.EmployeeHandle
 	router := r.CommonRoutes.Group("/auth/employees")
 	{
 		router.GET("/store/:id", handler.GetStoreAccounts)
+		router.GET("region/:id", handler.GetRegionAccounts)
+		router.GET("franchisee/:id", handler.GetFranchiseeAccounts)
 		router.GET("/warehouse/:id", handler.GetWarehouseAccounts)
 		router.GET("/admins", handler.GetAdminAccounts)
 	}
 }
 
 func (r *Router) RegisterCommonStoresRoutes(handler *stores.StoreHandler) {
-	router := r.CommonRoutes.Group("/stores")
+	router := r.CommonRoutes.Group("/stores/all")
 	{
 		router.GET("", handler.GetAllStores)
 	}
 }
 
 func (r *Router) RegisterCommonWarehousesRoutes(handler *warehouse.WarehouseHandler) {
-	router := r.CommonRoutes.Group("/warehouses")
+	router := r.CommonRoutes.Group("/warehouses/all")
 	{
 		router.GET("", handler.GetAllWarehouses)
 	}

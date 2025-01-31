@@ -24,13 +24,13 @@ func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
 		return
 	}
 
-	id, err := h.service.Create(dto)
+	_, err := h.service.Create(dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to create stock material category")
 		return
 	}
 
-	utils.SuccessCreatedResponse(c, gin.H{"id": id})
+	utils.SendSuccessCreatedResponse(c, "stock material created successfully")
 }
 
 func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {

@@ -3,10 +3,11 @@ package stockRequests
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -14,11 +15,17 @@ import (
 )
 
 type StockRequestHandler struct {
-	service StockRequestService
+	service           StockRequestService
+	franchiseeService franchisees.FranchiseeService
+	regionService     regions.RegionService
 }
 
-func NewStockRequestHandler(service StockRequestService) *StockRequestHandler {
-	return &StockRequestHandler{service: service}
+func NewStockRequestHandler(service StockRequestService, franchiseeService franchisees.FranchiseeService, regionService regions.RegionService) *StockRequestHandler {
+	return &StockRequestHandler{
+		service:           service,
+		franchiseeService: franchiseeService,
+		regionService:     regionService,
+	}
 }
 
 func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
@@ -28,31 +35,31 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	if len(req.StockMaterials) == 0 {
+	if len(req.StockMaterials) == 0 {	
 		utils.SendBadRequestError(c, "The cart cannot be empty")
 		return
 	}
 
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	requestID, err := h.service.CreateStockRequest(storeID, req)
+	_, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to create stock requests: %s", err.Error()))
 		return
 	}
 
-	utils.SuccessCreatedResponse(c, gin.H{"requestId": requestID})
+	utils.SendSuccessCreatedResponse(c, "stock request created successfully")
 }
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.GetStockRequestsFilter
 
-	storeID, storeErr := contexts.GetStoreId(c)
-	warehouseID, warehouseErr := contexts.GetWarehouseId(c)
+	storeID, storeErr := h.franchiseeService.CheckFranchiseeStore(c)
+	warehouseID, warehouseErr := h.regionService.CheckRegionWarehouse(c)
 
 	if storeErr != nil && warehouseErr != nil {
 		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusForbidden)
@@ -60,11 +67,9 @@ func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	}
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockRequest{}); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
 	}
-
-	filter.Pagination = utils.ParsePagination(c)
 
 	var requests []types.StockRequestResponse
 	var err error
@@ -260,7 +265,7 @@ func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) GetLastCreatedStockRequest(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -276,7 +281,7 @@ func (h *StockRequestHandler) GetLastCreatedStockRequest(c *gin.Context) {
 }
 
 func (h *StockRequestHandler) AddStockMaterialToCart(c *gin.Context) {
-	storeID, errH := contexts.GetStoreId(c)
+	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return

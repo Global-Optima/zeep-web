@@ -7,8 +7,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/barcode"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
+	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
 	"go.uber.org/zap"
 )
@@ -27,25 +27,24 @@ type WarehouseStockService interface {
 	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
 
 	CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error
+
+	GetAvailableToAddStockMaterials(storeID uint, query *types.AvailableStockMaterialFilter) ([]stockMaterialTypes.StockMaterialsDTO, error)
 }
 
 type warehouseStockService struct {
 	repo                WarehouseStockRepository
 	stockMaterialRepo   stockMaterial.StockMaterialRepository
-	barcodeRepo         barcode.BarcodeRepository
 	notificationService notifications.NotificationService
 	logger              *zap.SugaredLogger
 }
 
 func NewWarehouseStockService(repo WarehouseStockRepository,
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
-	barcodeRepo barcode.BarcodeRepository,
 	notificationService notifications.NotificationService,
 	logger *zap.SugaredLogger) WarehouseStockService {
 	return &warehouseStockService{
 		repo:                repo,
 		stockMaterialRepo:   stockMaterialRepo,
-		barcodeRepo:         barcodeRepo,
 		notificationService: notificationService,
 		logger:              logger,
 	}
@@ -218,15 +217,14 @@ func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, d
 
 func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error {
 	if stock.Quantity < stock.StockMaterial.SafetyStock {
-		details := &details.StoreWarehouseRunOutDetails{
+		details := &details.OutOfStockDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           warehouseID,
 				FacilityName: stock.Warehouse.Name,
 			},
-			StockItem:   stock.StockMaterial.Name,
-			StockItemID: stock.ID,
+			ItemName: stock.StockMaterial.Name,
 		}
-		err := s.notificationService.NotifyStoreWarehouseRunOut(details)
+		err := s.notificationService.NotifyOutOfStock(details)
 		if err != nil {
 			return fmt.Errorf("failed to send warehouse runout notification: %v", err)
 		}
@@ -269,4 +267,22 @@ func (s *warehouseStockService) checkStockAndNotify(stock *data.WarehouseStock) 
 	}
 
 	return nil
+}
+
+func (s *warehouseStockService) GetAvailableToAddStockMaterials(
+	storeID uint,
+	query *types.AvailableStockMaterialFilter,
+) ([]stockMaterialTypes.StockMaterialsDTO, error) {
+
+	stocks, err := s.repo.GetAvailableToAddStockMaterials(storeID, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch available stock materials: %w", err)
+	}
+
+	stockMaterialResponses := make([]stockMaterialTypes.StockMaterialsDTO, 0)
+	for _, stockMaterial := range stocks {
+		stockMaterialResponses = append(stockMaterialResponses, *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stockMaterial))
+	}
+
+	return stockMaterialResponses, nil
 }

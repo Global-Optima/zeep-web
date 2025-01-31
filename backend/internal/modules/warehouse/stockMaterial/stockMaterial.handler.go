@@ -1,6 +1,7 @@
 package stockMaterial
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -138,4 +139,56 @@ func (h *StockMaterialHandler) DeactivateStockMaterial(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *StockMaterialHandler) GetStockMaterialBarcode(c *gin.Context) {
+	stockMaterialID, errH := utils.ParseParam(c, "id")
+	if errH != nil {
+		utils.SendBadRequestError(c, errH.Error())
+		return
+	}
+
+	barcodeImage, err := h.service.GenerateStockMaterialBarcodePDF(stockMaterialID)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to get barcode image")
+		return
+	}
+
+	filename := fmt.Sprintf("barcode-%d.pdf", stockMaterialID)
+
+	// Add headers for downloading the barcode image
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Length", fmt.Sprintf("%d", len(barcodeImage)))
+	c.Data(http.StatusOK, "application/pdf", barcodeImage)
+}
+
+func (h *StockMaterialHandler) GenerateBarcode(c *gin.Context) {
+	response, err := h.service.GenerateBarcode()
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to generate barcode")
+		return
+	}
+
+	utils.SendSuccessResponse(c, response)
+}
+
+func (h *StockMaterialHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
+	barcode := c.Param("barcode")
+	if barcode == "" {
+		utils.SendBadRequestError(c, "Barcode is required")
+		return
+	}
+
+	response, err := h.service.RetrieveStockMaterialByBarcode(barcode)
+	if err != nil {
+		if err.Error() == "StockMaterial not found with the provided barcode" {
+			utils.SendNotFoundError(c, "StockMaterial not found with the provided barcode")
+		} else {
+			utils.SendInternalServerError(c, "failed to retrieve stockMaterial barcode")
+		}
+		return
+	}
+
+	utils.SendSuccessResponse(c, response)
 }

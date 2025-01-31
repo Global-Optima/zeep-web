@@ -213,11 +213,7 @@ const onSubmit = handleSubmit((formValues) => {
     workingHours: store.value.workingHours,
   };
   if (isEditing.value) {
-    // Update store logic
-    console.log('Store updated:', storeData);
   } else {
-    // Create store logic
-    console.log('Store created:', storeData);
   }
   router.push('/admin/stores'); // Redirect after saving
 });
