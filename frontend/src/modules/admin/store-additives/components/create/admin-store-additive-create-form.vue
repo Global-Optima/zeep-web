@@ -21,10 +21,10 @@ import {
 } from '@/core/components/ui/table'
 
 // Icons
-import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
-import { ChevronLeft, Trash } from 'lucide-vue-next'
+import AdminSelectAvailableToAddAdditiveDialog from '@/modules/admin/store-additives/components/admin-select-available-to-add-additive-dialog.vue'
 import type { CreateStoreAdditiveDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import { ChevronLeft, Trash } from 'lucide-vue-next'
 
 
 // Props & Emits
@@ -197,7 +197,7 @@ function removeAdditive(index: number) {
 		</div>
 
 		<!-- Dialog for selecting additives -->
-		<AdminSelectAdditiveDialog
+		<AdminSelectAvailableToAddAdditiveDialog
 			:open="openAdditiveDialog"
 			@close="openAdditiveDialog = false"
 			@select="selectAdditive"

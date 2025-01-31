@@ -96,7 +96,7 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
+		query = query.Where("additives.name LIKE ? OR additives.description LIKE ?", searchTerm, searchTerm)
 	}
 
 	if filter.MinPrice != nil {

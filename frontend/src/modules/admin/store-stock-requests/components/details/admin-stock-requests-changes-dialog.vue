@@ -105,7 +105,7 @@
 		</DialogContent>
 
 		<!-- MATERIAL SELECT DIALOG (for choosing new materials to add) -->
-		<AdminStockMaterialsSelectDialog
+		<AdminSelectAvailableToAddStockMaterialsDialog
 			:open="openSelectDialog"
 			@close="openSelectDialog = false"
 			@select="addMaterial"
@@ -129,7 +129,6 @@ import { Textarea } from '@/core/components/ui/textarea'
 import { Trash } from 'lucide-vue-next'
 import { ref, watch } from 'vue'
 
-import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
 
 // The final DTO shape for submission
 import type {
@@ -138,6 +137,7 @@ import type {
 
 // The raw data we get for each item from the backend
 import type { StockRequestMaterial } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import AdminSelectAvailableToAddStockMaterialsDialog from '@/modules/admin/warehouse-stocks/components/admin-select-available-to-add-stock-materials-dialog.vue'
 
 
 /**

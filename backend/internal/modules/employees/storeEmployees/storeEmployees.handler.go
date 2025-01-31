@@ -1,12 +1,13 @@
 package employees
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -21,12 +22,12 @@ type StoreEmployeeHandler struct {
 	franchiseeService franchisees.FranchiseeService
 }
 
-func NewStoreEmployeeHandler(service StoreEmployeeService, employeeService employees.EmployeeService, auditService audit.AuditService, franchiseeService franchisees.FranchiseeService) *StoreEmployeeHandler {
+func NewStoreEmployeeHandler(service StoreEmployeeService, employeeService employees.EmployeeService, franchiseeService franchisees.FranchiseeService, auditService audit.AuditService) *StoreEmployeeHandler {
 	return &StoreEmployeeHandler{
 		service:           service,
 		employeeService:   employeeService,
-		auditService:      auditService,
 		franchiseeService: franchiseeService,
+		auditService:      auditService,
 	}
 }
 

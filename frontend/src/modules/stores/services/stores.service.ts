@@ -7,7 +7,7 @@ import { type PaginatedResponse } from './../../../core/utils/pagination.utils'
 class StoreService {
 	async getStores(filter?: StoresFilter) {
 		try {
-			const response = await apiClient.get<PaginatedResponse<StoreDTO[]>>('/stores', {
+			const response = await apiClient.get<PaginatedResponse<StoreDTO[]>>('/stores/all', {
 				params: buildRequestFilter(filter),
 			})
 			return response.data
