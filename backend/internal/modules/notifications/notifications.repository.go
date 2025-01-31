@@ -2,6 +2,7 @@ package notifications
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -19,7 +20,7 @@ type NotificationRepository interface {
 	MarkMultipleNotificationsAsRead(employeeID uint, notificationIDs []uint) error
 
 	DeleteNotification(notificationID uint) error
-	GetRecipientsForEvent(eventType data.NotificationEventType) ([]data.Employee, error)
+	GetRecipientsForEvent(eventType data.NotificationEventType, baseDetails details.BaseNotificationDetails) ([]data.Employee, error)
 }
 
 type notificationRepository struct {
@@ -110,13 +111,86 @@ func (r *notificationRepository) DeleteNotification(notificationID uint) error {
 	return r.db.Delete(&data.EmployeeNotificationRecipient{}, "notification_id = ?", notificationID).Error
 }
 
-func (r *notificationRepository) GetRecipientsForEvent(eventType data.NotificationEventType) ([]data.Employee, error) {
+func contains(slice []data.EmployeeRole, role data.EmployeeRole) bool {
+	for _, r := range slice {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *notificationRepository) GetRecipientsForEvent(eventType data.NotificationEventType, baseDetails details.BaseNotificationDetails) ([]data.Employee, error) {
 	mapping := shared.NotificationRoleMappingManagerInstance.GetMappingByEventType(eventType)
 	if mapping == nil {
 		return nil, nil
 	}
 
 	var employees []data.Employee
-	err := r.db.Where("type IN ? AND role IN ?", mapping.EmployeeTypes, mapping.EmployeeRoles).Find(&employees).Error
-	return employees, err
+
+	roleMapping := make(map[data.EmployeeType][]data.EmployeeRole)
+
+	for _, role := range mapping.EmployeeRoles {
+		for employeeType, validRoles := range data.EmployeeTypeRoleMap {
+			if contains(validRoles, role) {
+				roleMapping[employeeType] = append(roleMapping[employeeType], role)
+			}
+		}
+	}
+
+	query := r.db.Preload("StoreEmployee").Preload("WarehouseEmployee").
+		Preload("FranchiseeEmployee").Preload("RegionEmployee").Preload("AdminEmployee")
+
+	if roles, exists := roleMapping[data.StoreEmployeeType]; exists {
+		query = query.Or(`EXISTS (
+			SELECT 1 FROM store_employees 
+			WHERE store_employees.employee_id = employees.id 
+			AND store_employees.role IN (?)
+			AND store_employees.store_id = ?
+		)`, roles, baseDetails.ID)
+	}
+
+	if roles, exists := roleMapping[data.WarehouseEmployeeType]; exists {
+		query = query.Or(`EXISTS (
+			SELECT 1 FROM warehouse_employees 
+			WHERE warehouse_employees.employee_id = employees.id 
+			AND warehouse_employees.role IN (?)
+			AND warehouse_employees.warehouse_id = ?
+		)`, roles, baseDetails.ID)
+	}
+
+	if roles, exists := roleMapping[data.FranchiseeEmployeeType]; exists {
+		query = query.Or(`EXISTS (
+			SELECT 1 FROM franchisee_employees 
+			WHERE franchisee_employees.employee_id = employees.id 
+			AND franchisee_employees.role IN (?)
+			AND franchisee_employees.franchisee_id = ?
+
+		)`, roles, baseDetails.ID)
+	}
+
+	if roles, exists := roleMapping[data.RegionEmployeeType]; exists {
+		query = query.Or(`EXISTS (
+			SELECT 1 FROM region_employees 
+			WHERE region_employees.employee_id = employees.id 
+			AND region_employees.role IN (?)
+			AND region_employees.region_id = ?
+
+		)`, roles, baseDetails.ID)
+	}
+
+	if roles, exists := roleMapping[data.AdminEmployeeType]; exists {
+		query = query.Or(`EXISTS (
+			SELECT 1 FROM admin_employees 
+			WHERE admin_employees.employee_id = employees.id 
+			AND admin_employees.role IN (?)
+		)`, roles)
+	}
+
+	err := query.Find(&employees).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
 }

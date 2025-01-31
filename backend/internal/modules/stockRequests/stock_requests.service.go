@@ -93,7 +93,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 
 	details := &details.NewStockRequestDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           storeWarehouse.StoreID,
+			ID:           storeWarehouse.WarehouseID,
 			FacilityName: storeWarehouse.Store.Name,
 		},
 		RequesterName: storeWarehouse.Store.Name,
@@ -151,8 +151,8 @@ func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto type
 
 	details := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           request.StoreID,
-			FacilityName: request.Store.Name,
+			ID:           request.WarehouseID,
+			FacilityName: request.Warehouse.Name,
 		},
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
@@ -233,8 +233,8 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) error {
 
 	details := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           request.StoreID,
-			FacilityName: request.Store.Name,
+			ID:           request.WarehouseID,
+			FacilityName: request.Warehouse.Name,
 		},
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
@@ -314,8 +314,8 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) error {
 
 	details := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           request.StoreID,
-			FacilityName: request.Store.Name,
+			ID:           request.WarehouseID,
+			FacilityName: request.Warehouse.Name,
 		},
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
@@ -354,8 +354,8 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 
 	details := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           request.StoreID,
-			FacilityName: request.Store.Name,
+			ID:           request.WarehouseID,
+			FacilityName: request.Warehouse.Name,
 		},
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
