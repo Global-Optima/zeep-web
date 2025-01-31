@@ -18,15 +18,14 @@ import AdminSelectStockMaterialCategory from '@/modules/admin/stock-material-cat
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 
 // Types
-import { usePrinter } from '@/core/hooks/use-print.hook'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import type {
   StockMaterialsDTO,
   UpdateStockMaterialDTO,
 } from '@/modules/admin/stock-materials/models/stock-materials.model'
-import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
+import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 // Props
 const { stockMaterial } = defineProps<{
@@ -109,11 +108,8 @@ function selectIngredient(ingredient: IngredientsDTO) {
   setFieldValue('ingredientId', ingredient.id)
 }
 
-const { print } = usePrinter();
-
 const onPrintBarcode = async () => {
-  const barcodeImage = await stockMaterialsService.getBarcodeFile(stockMaterial.id);
-  await print(barcodeImage)
+  await stockMaterialsService.getBarcodeFile(stockMaterial.id);
 }
 </script>
 

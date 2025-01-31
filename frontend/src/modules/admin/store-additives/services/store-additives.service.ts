@@ -1,7 +1,7 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
-import type { AdditiveFilterQuery } from '../../additives/models/additives.model'
+import type { AdditiveDTO, AdditiveFilterQuery } from '../../additives/models/additives.model'
 import type {
 	CreateStoreAdditiveDTO,
 	StoreAdditiveCategoryDTO,
@@ -24,6 +24,21 @@ class StoreAdditivesService {
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch store additives:', error)
+			throw error
+		}
+	}
+
+	async getAvailableToAddAdditivesList(filter?: AdditiveFilterQuery) {
+		try {
+			const response = await apiClient.get<PaginatedResponse<AdditiveDTO[]>>(
+				`/store-additives/available-to-add`,
+				{
+					params: buildRequestFilter(filter),
+				},
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch store products: ', error)
 			throw error
 		}
 	}

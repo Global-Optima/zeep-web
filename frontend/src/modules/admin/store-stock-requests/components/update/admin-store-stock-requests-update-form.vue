@@ -71,7 +71,7 @@
 			</CardContent>
 		</Card>
 
-		<AdminStockMaterialsSelectDialog
+		<AdminSelectAvailableToAddStockMaterialsDialog
 			:open="openDialog"
 			@close="openDialog = false"
 			@select="addMaterial"
@@ -98,10 +98,10 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
-import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
 import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StockRequestMaterial } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
+import AdminSelectAvailableToAddStockMaterialsDialog from '@/modules/admin/warehouse-stocks/components/admin-select-available-to-add-stock-materials-dialog.vue'
 import { Trash } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 export interface StockRequestItemForm {
