@@ -1,9 +1,11 @@
 package product
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
@@ -213,7 +215,13 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateProductSize(uint(productSizeID), input)
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendBadRequestError(c, "Store ID is not present")
+		return
+	}
+
+	err = h.service.UpdateProductSize(storeID, uint(productSizeID), input)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to update product size")
 		return

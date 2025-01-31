@@ -71,9 +71,14 @@ func NewNotificationService(db *gorm.DB, repo NotificationRepository, roleManage
 // 	return s.repo.CreateNotificationRecipients(recipients)
 // }
 
-func (s *notificationService) createNotificationAsync(eventType data.NotificationEventType, priority data.NotificationPriority, detailsJSON []byte) {
+func (s *notificationService) createNotificationAsync(eventType data.NotificationEventType, priority data.NotificationPriority, detailsJSON []byte, baseDetails *details.BaseNotificationDetails) {
 	go func() {
-		employees, err := s.repo.GetRecipientsForEvent(eventType)
+		if baseDetails == nil {
+			s.logger.Errorf("Base details are not provided, don't know where to send notifications!")
+			return
+		}
+
+		employees, err := s.repo.GetRecipientsForEvent(eventType, *baseDetails)
 		if err != nil {
 			s.logger.Errorf("Failed to fetch recipients for event %s: %v", eventType, err)
 			return
@@ -116,7 +121,7 @@ func (s *notificationService) NotifyStockRequestStatusUpdated(details details.No
 		return err
 	}
 
-	s.createNotificationAsync(data.STOCK_REQUEST_STATUS_UPDATED, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.STOCK_REQUEST_STATUS_UPDATED, data.MEDIUM, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 
@@ -125,7 +130,7 @@ func (s *notificationService) NotifyNewOrder(details details.NotificationDetails
 	if err != nil {
 		return err
 	}
-	s.createNotificationAsync(data.NEW_ORDER, data.LOW, notificationDetails)
+	s.createNotificationAsync(data.NEW_ORDER, data.LOW, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 
@@ -135,7 +140,7 @@ func (s *notificationService) NotifyStoreWarehouseRunOut(details details.Notific
 		return err
 	}
 
-	s.createNotificationAsync(data.STORE_WAREHOUSE_RUN_OUT, data.HIGH, notificationDetails)
+	s.createNotificationAsync(data.STORE_WAREHOUSE_RUN_OUT, data.HIGH, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 
@@ -145,7 +150,7 @@ func (s *notificationService) NotifyCentralCatalogUpdate(details details.Notific
 		return err
 	}
 
-	s.createNotificationAsync(data.CENTRAL_CATALOG_UPDATE, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.CENTRAL_CATALOG_UPDATE, data.MEDIUM, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 
@@ -155,7 +160,7 @@ func (s *notificationService) NotifyStockExpiration(details details.Notification
 		return err
 	}
 
-	s.createNotificationAsync(data.WAREHOUSE_STOCK_EXPIRATION, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.WAREHOUSE_STOCK_EXPIRATION, data.MEDIUM, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 
@@ -165,7 +170,7 @@ func (s *notificationService) NotifyOutOfStock(details details.NotificationDetai
 		return err
 	}
 
-	s.createNotificationAsync(data.WAREHOUSE_OUT_OF_STOCK, data.HIGH, notificationDetails)
+	s.createNotificationAsync(data.WAREHOUSE_OUT_OF_STOCK, data.HIGH, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 
@@ -175,7 +180,7 @@ func (s *notificationService) NotifyNewStockRequest(details details.Notification
 		return err
 	}
 
-	s.createNotificationAsync(data.NEW_STOCK_REQUEST, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.NEW_STOCK_REQUEST, data.MEDIUM, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 
@@ -185,7 +190,7 @@ func (s *notificationService) NotifyPriceChange(details details.NotificationDeta
 		return err
 	}
 
-	s.createNotificationAsync(data.PRICE_CHANGE, data.MEDIUM, notificationDetails)
+	s.createNotificationAsync(data.PRICE_CHANGE, data.MEDIUM, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 
