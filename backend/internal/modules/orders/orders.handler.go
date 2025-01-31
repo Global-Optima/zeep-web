@@ -151,18 +151,18 @@ func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
 		return
 	}
 
-	barcodeImage, err := h.service.GenerateSuborderBarcode(uint(suborderID))
+	barcodeImage, err := h.service.GenerateSuborderBarcodePDF(uint(suborderID))
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	filename := fmt.Sprintf("suborder-barcode-%d.png", suborderID)
+	filename := fmt.Sprintf("suborder-barcode-%d.pdf", suborderID)
 
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	c.Header("Content-Type", "image/png")
+	c.Header("Content-Type", "application/pdf")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(barcodeImage)))
-	c.Data(http.StatusOK, "image/png", barcodeImage)
+	c.Data(http.StatusOK, "application/pdf", barcodeImage)
 }
 
 func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {

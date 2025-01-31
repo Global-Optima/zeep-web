@@ -51,6 +51,32 @@ class StockMaterialService {
 		}
 	}
 
+	async getStockMaterialsBarcodeFile(stockMaterialId: number) {
+		try {
+			const response = await apiClient.get<Blob>(`${this.baseUrl}/${stockMaterialId}/barcode`, {
+				responseType: 'blob', // Ensure the response is treated as a Blob
+			})
+
+			// Extract filename from Content-Disposition header
+			const contentDisposition = response.headers['Content-Disposition']
+			let filename = `stock_materials_${stockMaterialId}.pdf`
+
+			if (contentDisposition) {
+				const filenameMatch = contentDisposition.match(/filename="?(.+)"?/)
+				if (filenameMatch && filenameMatch[1]) {
+					filename = filenameMatch[1]
+				}
+			}
+
+			const blob = new Blob([response.data], { type: response.headers['Content-Type']?.toString() })
+
+			saveAs(blob, filename)
+		} catch (error) {
+			console.error(`Failed to fetch barcode for stock material ID ${stockMaterialId}:`, error)
+			throw error
+		}
+	}
+
 	async generateBarcode() {
 		try {
 			const response = await apiClient.post<GeneratedStockMaterialBarcode>(

@@ -148,19 +148,19 @@ func (h *StockMaterialHandler) GetStockMaterialBarcode(c *gin.Context) {
 		return
 	}
 
-	barcodeImage, err := h.service.GetStockMaterialBarcode(stockMaterialID)
+	barcodeImage, err := h.service.GenerateStockMaterialBarcodePDF(stockMaterialID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to get barcode image")
 		return
 	}
 
-	filename := fmt.Sprintf("barcode-%d.png", stockMaterialID)
+	filename := fmt.Sprintf("barcode-%d.pdf", stockMaterialID)
 
 	// Add headers for downloading the barcode image
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	c.Header("Content-Type", "image/png")
+	c.Header("Content-Type", "application/pdf")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(barcodeImage)))
-	c.Data(http.StatusOK, "image/png", barcodeImage)
+	c.Data(http.StatusOK, "application/pdf", barcodeImage)
 }
 
 func (h *StockMaterialHandler) GenerateBarcode(c *gin.Context) {

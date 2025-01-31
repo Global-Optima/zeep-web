@@ -143,7 +143,6 @@ import {
   FormMessage,
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import { usePrinter } from '@/core/hooks/use-print.hook'
 import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
 import type {
   UpdateWarehouseStockDTO,
@@ -179,11 +178,8 @@ const materialInfo = computed(() =>[
   },
 ])
 
-const { print } = usePrinter();
-
 const onPrintBarcode = async () => {
-  const barcodeImage = await stockMaterialsService.getBarcodeFile(initialData.stockMaterial.id);
-  await print(barcodeImage)
+  await stockMaterialsService.getStockMaterialsBarcodeFile(initialData.stockMaterial.id);
 }
 
 // Date Formatter Utility
