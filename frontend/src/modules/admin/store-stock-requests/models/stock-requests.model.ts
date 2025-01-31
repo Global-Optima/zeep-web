@@ -99,5 +99,5 @@ export interface GetStockRequestsFilter extends PaginationParams {
 	startDate?: string // ISO Date string
 	endDate?: string // ISO Date string
 	statuses?: StockRequestStatus[] // Use a string enum for `data.StockRequestStatus`
-	search: string
+	search?: string
 }
