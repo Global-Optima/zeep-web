@@ -10,7 +10,7 @@ export interface PrintOptions {
 
 	/**
 	 * Optional callback invoked before printing starts.
-	 */
+	 */ 
 	beforePrint?: () => void
 
 	/**

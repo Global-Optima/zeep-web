@@ -183,7 +183,7 @@ func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAddit
 	router := r.EmployeeRoutes.Group("/store-additives")
 	{
 		router.GET("", handler.GetStoreAdditives)
-		router.GET("/addList", handler.GetAdditivesListToAdd)
+		router.GET("/available-to-add", handler.GetAdditivesListToAdd)
 		router.GET("/categories/:productSizeId", handler.GetStoreAdditiveCategories)
 		router.POST("", handler.CreateStoreAdditives)
 		router.PUT("/:id", handler.UpdateStoreAdditive)
@@ -212,7 +212,7 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	}
 }
 
-func (r *Router) RegisterStoreEmployeeRoutes(handler storeEmployees.StoreEmployeeHandler) {
+func (r *Router) RegisterStoreEmployeeRoutes(handler *storeEmployees.StoreEmployeeHandler) {
 	router := r.EmployeeRoutes.Group("/store-employees")
 	{
 		router.GET("", handler.GetStoreEmployees)
