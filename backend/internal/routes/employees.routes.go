@@ -243,15 +243,10 @@ func (r *Router) RegisterEmployeesRoutes(
 			regionEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(), regionEmployeeHandler.DeleteRegionEmployee)
 		}
 
-		//TODO leave only GET methods, make update and create inside the employee updates
 		workdays := router.Group("/workdays")
 		{
-			var workdaysManagementPermissions = []data.EmployeeRole{data.RoleStoreManager, data.RoleWarehouseManager, data.RoleRegionWarehouseManager, data.RoleFranchiseManager}
-			workdays.POST("", middleware.EmployeeRoleMiddleware(workdaysManagementPermissions...), handler.CreateEmployeeWorkday)
 			workdays.GET("/:id", handler.GetEmployeeWorkday)
 			workdays.GET("", handler.GetEmployeeWorkdays)
-			workdays.PUT("/:id", middleware.EmployeeRoleMiddleware(workdaysManagementPermissions...), handler.UpdateEmployeeWorkday)
-			workdays.DELETE("/:id", middleware.EmployeeRoleMiddleware(workdaysManagementPermissions...), handler.DeleteEmployeeWorkday)
 		}
 	}
 }

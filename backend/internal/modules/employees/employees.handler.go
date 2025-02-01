@@ -122,22 +122,6 @@ func (h *EmployeeHandler) ReassignEmployeeType(c *gin.Context) {
 	utils.SendSuccessResponse(c, gin.H{"message": "reassign employee type successfully"})
 }
 
-func (h *EmployeeHandler) CreateEmployeeWorkday(c *gin.Context) {
-	var workday types.CreateEmployeeWorkdayDTO
-	if err := c.ShouldBindJSON(&workday); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
-	_, err := h.service.CreateEmployeeWorkDay(&workday)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to create workday")
-		return
-	}
-
-	utils.SendMessageWithStatus(c, "workday created successfully", http.StatusCreated)
-}
-
 func (h *EmployeeHandler) GetEmployeeWorkday(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
@@ -188,46 +172,6 @@ func (h *EmployeeHandler) GetMyWorkdays(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, workdays)
-}
-
-func (h *EmployeeHandler) UpdateEmployeeWorkday(c *gin.Context) {
-	idParam := c.Param("id")
-	workdayID, err := strconv.ParseUint(idParam, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid workday ID")
-		return
-	}
-
-	var updateWorkday types.UpdateEmployeeWorkdayDTO
-	if err := c.ShouldBindJSON(&updateWorkday); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
-	err = h.service.UpdateEmployeeWorkday(uint(workdayID), &updateWorkday)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to update workday")
-		return
-	}
-
-	utils.SendMessageWithStatus(c, "workday updated successfully", http.StatusOK)
-}
-
-func (h *EmployeeHandler) DeleteEmployeeWorkday(c *gin.Context) {
-	idParam := c.Param("id")
-	workdayID, err := strconv.ParseUint(idParam, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid workday ID")
-		return
-	}
-
-	err = h.service.DeleteEmployeeWorkday(uint(workdayID))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to delete workday")
-		return
-	}
-
-	utils.SendMessageWithStatus(c, "workday deleted successfully", http.StatusOK)
 }
 
 func (h *EmployeeHandler) GetWarehouseAccounts(c *gin.Context) {

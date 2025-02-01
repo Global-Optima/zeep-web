@@ -40,7 +40,6 @@ func (r *Router) RegisterEmployeeAccountRoutes(handler *employees.EmployeeHandle
 	}
 }
 
-// TODO remove pagination but add filter with searching
 func (r *Router) RegisterCommonStoresRoutes(handler *stores.StoreHandler) {
 	router := r.CommonRoutes.Group("/stores/all")
 	{

@@ -70,8 +70,8 @@ func NewStoreEmployeesModule(
 	employeeRepo employees.EmployeeRepository,
 ) *StoreEmployeesModule {
 
-	repo := storeEmployees.NewStoreEmployeeRepository(base.DB)
-	service := storeEmployees.NewStoreEmployeeService(repo, employeeRepo, base.Logger)
+	repo := storeEmployees.NewStoreEmployeeRepository(base.DB, employeeRepo)
+	service := storeEmployees.NewStoreEmployeeService(repo, employeeService, base.Logger)
 	handler := storeEmployees.NewStoreEmployeeHandler(service, employeeService, franchiseeService, auditService)
 
 	return &StoreEmployeesModule{
@@ -97,7 +97,7 @@ func NewWarehouseEmployeesModule(
 	employeeRepo employees.EmployeeRepository,
 ) *WarehouseEmployeesModule {
 
-	repo := warehouseEmployees.NewWarehouseEmployeeRepository(base.DB)
+	repo := warehouseEmployees.NewWarehouseEmployeeRepository(base.DB, employeeRepo)
 	service := warehouseEmployees.NewWarehouseEmployeeService(repo, employeeRepo, base.Logger)
 	handler := warehouseEmployees.NewWarehouseEmployeeHandler(service, employeeService, regionService, auditService)
 
@@ -124,7 +124,7 @@ func NewFranchiseeEmployeesModule(
 	employeeRepo employees.EmployeeRepository,
 ) *FranchiseeEmployeesModule {
 
-	repo := franchiseeEmployees.NewFranchiseeEmployeeRepository(base.DB)
+	repo := franchiseeEmployees.NewFranchiseeEmployeeRepository(base.DB, employeeRepo)
 	service := franchiseeEmployees.NewFranchiseeEmployeeService(repo, employeeRepo, base.Logger)
 	handler := franchiseeEmployees.NewFranchiseeEmployeeHandler(service, employeeService, franchiseeService, auditService)
 
@@ -151,7 +151,7 @@ func NewRegionEmployeesModule(
 	employeeRepo employees.EmployeeRepository,
 ) *RegionEmployeesModule {
 
-	repo := regionEmployees.NewRegionEmployeeRepository(base.DB)
+	repo := regionEmployees.NewRegionEmployeeRepository(base.DB, employeeRepo)
 	service := regionEmployees.NewRegionEmployeeService(repo, employeeRepo, base.Logger)
 	handler := regionEmployees.NewRegionEmployeeHandler(service, employeeService, regionService, auditService)
 

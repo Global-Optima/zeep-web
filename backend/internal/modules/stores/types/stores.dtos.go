@@ -25,6 +25,7 @@ type CreateStoreDTO struct {
 	Name            string                   `json:"name"`
 	FranchiseID     *uint                    `json:"franchiseId"`
 	FacilityAddress UpdateFacilityAddressDTO `json:"facilityAddress"`
+	IsActive        bool                     `json:"isActive"`
 	ContactPhone    string                   `json:"contactPhone"`
 	ContactEmail    string                   `json:"contactEmail"`
 	StoreHours      string                   `json:"storeHours"`
@@ -34,6 +35,7 @@ type UpdateStoreDTO struct {
 	Name            string                   `json:"name"`
 	FranchiseID     *uint                    `json:"franchiseId"`
 	FacilityAddress CreateFacilityAddressDTO `json:"facilityAddress"`
+	IsActive        bool                     `json:"isActive"`
 	ContactPhone    string                   `json:"contactPhone"`
 	ContactEmail    string                   `json:"contactEmail"`
 	StoreHours      string                   `json:"storeHours"`
@@ -44,13 +46,14 @@ type StoreDTO struct {
 	Name            string              `json:"name"`
 	FranchiseID     *uint               `json:"franchiseId"`
 	FacilityAddress *FacilityAddressDTO `json:"facilityAddress"`
+	IsActive        bool                `json:"isActive"`
 	ContactPhone    string              `json:"contactPhone"`
 	ContactEmail    string              `json:"contactEmail"`
 	StoreHours      string              `json:"storeHours"`
 }
 
 type StoreFilter struct {
-	IsFranchise *bool   `form:"isFranchise"`
-	Search      *string `form:"search"`
 	utils.BaseFilter
+	IsFranchisee *bool   `form:"isFranchise"`
+	Search       *string `form:"search"`
 }

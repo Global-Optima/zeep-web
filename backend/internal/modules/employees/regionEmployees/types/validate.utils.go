@@ -6,12 +6,12 @@ import (
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
 
-type UpdateModels struct {
-	Employee       *data.Employee
+type UpdateRegionEmployeeModels struct {
+	*employeesTypes.UpdateEmployeeModels
 	RegionEmployee *data.RegionEmployee
 }
 
-func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.EmployeeRole) (*UpdateModels, error) {
+func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.EmployeeRole) (*UpdateRegionEmployeeModels, error) {
 	var regionEmployee = &data.RegionEmployee{}
 	if input.RegionID != nil {
 		regionEmployee.RegionID = *input.RegionID
@@ -27,8 +27,13 @@ func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.Employ
 		regionEmployee.Role = *input.Role
 	}
 
-	return &UpdateModels{
-		Employee:       employeesTypes.PrepareUpdateFields(&input.UpdateEmployeeDTO),
-		RegionEmployee: regionEmployee,
+	updateEmployeeModels, err := employeesTypes.PrepareUpdateFields(&input.UpdateEmployeeDTO)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UpdateRegionEmployeeModels{
+		UpdateEmployeeModels: updateEmployeeModels,
+		RegionEmployee:       regionEmployee,
 	}, nil
 }

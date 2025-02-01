@@ -26,7 +26,7 @@ func NewStoreHandler(service StoreService, auditService audit.AuditService) *Sto
 func (h *StoreHandler) GetAllStores(c *gin.Context) {
 	var filter types.StoreFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Store{}); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, stores, filter.Pagination)
+	utils.SendSuccessResponse(c, stores)
 }
 
 func (h *StoreHandler) CreateStore(c *gin.Context) {

@@ -107,11 +107,11 @@ func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
 }
 
 func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
-	var filter types.AllWarehousesFilter
+	var filter types.WarehouseFilter
 
-	filter, err := utils.Parse(c, &data.Warehouse{})
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
 
-	warehouses, err := h.service.GetAllWarehouses()
+	warehouses, err := h.service.GetAllWarehouses(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return

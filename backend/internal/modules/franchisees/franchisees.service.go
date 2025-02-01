@@ -14,6 +14,7 @@ type FranchiseeService interface {
 	DeleteFranchisee(id uint) error
 	GetFranchiseeByID(id uint) (*types.FranchiseeDTO, error)
 	GetFranchisees(filter *types.FranchiseeFilter) ([]types.FranchiseeDTO, error)
+	GetAllFranchisees(filter *types.FranchiseeFilter) ([]types.FranchiseeDTO, error)
 	IsFranchiseeStore(franchiseeID, storeID uint) *handlerErrors.HandlerError
 	CheckFranchiseeStore(c *gin.Context) (uint, *handlerErrors.HandlerError)
 	CheckFranchiseeStoreWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError)
@@ -61,6 +62,18 @@ func (s *franchiseeService) GetFranchiseeByID(id uint) (*types.FranchiseeDTO, er
 
 func (s *franchiseeService) GetFranchisees(filter *types.FranchiseeFilter) ([]types.FranchiseeDTO, error) {
 	franchisees, err := s.repo.GetFranchisees(filter)
+	if err != nil {
+		return nil, err
+	}
+	dtos := make([]types.FranchiseeDTO, len(franchisees))
+	for i, franchisee := range franchisees {
+		dtos[i] = *types.ConvertFranchiseeToDTO(&franchisee)
+	}
+	return dtos, nil
+}
+
+func (s *franchiseeService) GetAllFranchisees(filter *types.FranchiseeFilter) ([]types.FranchiseeDTO, error) {
+	franchisees, err := s.repo.GetAllFranchisees(filter)
 	if err != nil {
 		return nil, err
 	}

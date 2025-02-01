@@ -166,3 +166,17 @@ func (h *FranchiseeHandler) GetFranchisees(c *gin.Context) {
 	}
 	utils.SendSuccessResponse(c, franchisees)
 }
+
+func (h *FranchiseeHandler) GetAllFranchisees(c *gin.Context) {
+	var filter types.FranchiseeFilter
+
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+
+	warehouses, err := h.service.GetAllFranchisees(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SendSuccessResponse(c, warehouses)
+}

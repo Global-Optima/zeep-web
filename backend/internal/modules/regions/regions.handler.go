@@ -145,5 +145,19 @@ func (h *RegionHandler) GetRegions(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to retrieve regions")
 		return
 	}
-	utils.SendSuccessResponse(c, regions)
+	utils.SendSuccessResponseWithPagination(c, regions, filter.Pagination)
+}
+
+func (h *RegionHandler) GetAllRegions(c *gin.Context) {
+	var filter types.RegionFilter
+
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+
+	warehouses, err := h.service.GetAllRegions(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SendSuccessResponse(c, warehouses)
 }

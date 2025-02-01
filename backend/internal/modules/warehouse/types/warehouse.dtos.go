@@ -40,7 +40,8 @@ type WarehouseResponse struct {
 	UpdatedAt       string             `json:"updatedAt"`
 }
 
-type AllWarehousesFilter struct {
-	Search string `json:"search"`
-	utils.Sort
+type WarehouseFilter struct {
+	utils.BaseFilter
+	Name   *string `form:"name"`
+	Search *string `form:"search"`
 }

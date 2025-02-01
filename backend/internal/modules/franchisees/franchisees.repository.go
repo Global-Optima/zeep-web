@@ -1,6 +1,7 @@
 package franchisees
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -14,6 +15,7 @@ type FranchiseeRepository interface {
 	DeleteFranchisee(id uint) error
 	GetFranchiseeByID(id uint) (*data.Franchisee, error)
 	GetFranchisees(filter *types.FranchiseeFilter) ([]data.Franchisee, error)
+	GetAllFranchisees(filter *types.FranchiseeFilter) ([]data.Franchisee, error)
 	IsFranchiseeStore(franchiseeID, storeID uint) (bool, error)
 }
 
@@ -69,6 +71,29 @@ func (r *franchiseeRepository) GetFranchisees(filter *types.FranchiseeFilter) ([
 	}
 
 	if err := query.Find(&franchisees).Error; err != nil {
+		return nil, err
+	}
+	return franchisees, nil
+}
+
+func (r *franchiseeRepository) GetAllFranchisees(filter *types.FranchiseeFilter) ([]data.Franchisee, error) {
+	var franchisees []data.Franchisee
+	query := r.db.Model(&data.Franchisee{})
+
+	if filter == nil {
+		return nil, fmt.Errorf("filter is nil")
+	}
+
+	if filter.Name != nil {
+		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
+	}
+
+	if filter.Search != nil {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("name ILIKE ?", searchTerm)
+	}
+
+	if err := query.Scopes(filter.Sort.SortGorm()).Find(&franchisees).Error; err != nil {
 		return nil, err
 	}
 	return franchisees, nil
