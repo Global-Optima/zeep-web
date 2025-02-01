@@ -20,7 +20,7 @@ type ProductService interface {
 	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDetailsDTO, error)
 	GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error)
 	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
-	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
+	UpdateProductSize(storeID, productSizeID uint, dto *types.UpdateProductSizeDTO) error
 	DeleteProductSize(productSizeID uint) error
 }
 
@@ -128,7 +128,7 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 	return nil
 }
 
-func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
+func (s *productService) UpdateProductSize(storeID, productSizeID uint, dto *types.UpdateProductSizeDTO) error {
 	if dto.IsDefault != nil && !*dto.IsDefault {
 		wrappedErr := fmt.Errorf("failed to update product size: cannot set isDefault to false")
 		s.logger.Error(wrappedErr)
@@ -152,6 +152,9 @@ func (s *productService) UpdateProductSize(productSizeID uint, dto *types.Update
 
 	if dto.BasePrice != nil && productSize.BasePrice != *dto.BasePrice {
 		details := &details.PriceChangeNotificationDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID: storeID,
+			},
 			ProductSizeID: productSize.ID,
 			ProductName:   productSize.Product.Name,
 			OldPrice:      productSize.BasePrice,

@@ -89,7 +89,6 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { usePrinter } from '@/core/hooks/use-print.hook'
 import { SubOrderStatus, type SuborderDTO } from '@/modules/orders/models/orders.models'
 import { ordersService } from '@/modules/orders/services/orders.service'
 import { Plus, Printer } from 'lucide-vue-next'
@@ -106,12 +105,9 @@ const toggleSuborderStatus = (suborder: SuborderDTO) => {
   emits('toggleSuborderStatus', suborder);
 };
 
-const {print} = usePrinter()
-
 const printQrCode = async () => {
   if (suborder) {
-    const subOrderBarcode = await ordersService.getSuborderBarcode(suborder.id);
-    print(subOrderBarcode)
+    await ordersService.getSuborderBarcodeFile(suborder.id);
   }
 };
 </script>

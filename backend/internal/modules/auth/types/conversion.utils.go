@@ -2,12 +2,14 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
 func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, error) {
-	var workplaceID uint = 0
-	var role data.EmployeeRole = ""
+	// Declare them without initial assignment; Go defaults to zero values anyway.
+	var workplaceID uint
+	var role data.EmployeeRole
 
 	switch employee.GetType() {
 	case data.StoreEmployeeType:
