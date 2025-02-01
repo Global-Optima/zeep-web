@@ -45,7 +45,9 @@ const roles = [
 				<!-- Role Selection Block -->
 				<template v-if="!selectedRole">
 					<div class="flex flex-col gap-5">
-						<h1 class="font-semibold text-gray-800 text-xl md:text-2xl">Выберите вашу роль</h1>
+						<h1 class="font-semibold text-gray-800 text-xl md:text-2xl">
+							Выберите способ авторизации
+						</h1>
 						<div class="flex flex-col gap-2">
 							<div
 								v-for="(role, index) in roles"
