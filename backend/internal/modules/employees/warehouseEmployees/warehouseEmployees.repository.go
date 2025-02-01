@@ -19,7 +19,7 @@ type warehouseEmployeeRepository struct {
 	db *gorm.DB
 }
 
-func NewEmployeeRepository(db *gorm.DB) WarehouseEmployeeRepository {
+func NewWarehouseEmployeeRepository(db *gorm.DB) WarehouseEmployeeRepository {
 	return &warehouseEmployeeRepository{db: db}
 }
 

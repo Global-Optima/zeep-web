@@ -4,7 +4,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"net/http"
 	"strconv"
 
@@ -21,16 +20,14 @@ type FranchiseeEmployeeHandler struct {
 	employeeService   employees.EmployeeService
 	auditService      audit.AuditService
 	franchiseeService franchisees.FranchiseeService
-	regionService     regions.RegionService
 }
 
-func NewFranchiseeEmployeeHandler(service FranchiseeEmployeeService, employeeService employees.EmployeeService, auditService audit.AuditService, franchiseeService franchisees.FranchiseeService, regionService regions.RegionService) *FranchiseeEmployeeHandler {
+func NewFranchiseeEmployeeHandler(service FranchiseeEmployeeService, employeeService employees.EmployeeService, franchiseeService franchisees.FranchiseeService, auditService audit.AuditService) *FranchiseeEmployeeHandler {
 	return &FranchiseeEmployeeHandler{
 		service:           service,
 		employeeService:   employeeService,
-		auditService:      auditService,
 		franchiseeService: franchiseeService,
-		regionService:     regionService,
+		auditService:      auditService,
 	}
 }
 

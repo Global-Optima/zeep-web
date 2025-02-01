@@ -2,6 +2,7 @@ package franchisees
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -130,6 +131,20 @@ func (h *FranchiseeHandler) GetFranchiseeByID(c *gin.Context) {
 	}
 
 	franchisee, err := h.service.GetFranchiseeByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve franchisee")
+		return
+	}
+	utils.SendSuccessResponse(c, franchisee)
+}
+
+func (h *FranchiseeHandler) GetMyFranchisee(c *gin.Context) {
+	franchiseeID, errH := contexts.GetFranchiseeId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+	}
+
+	franchisee, err := h.service.GetFranchiseeByID(franchiseeID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve franchisee")
 		return

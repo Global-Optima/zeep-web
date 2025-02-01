@@ -3,6 +3,8 @@ package routes
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 )
@@ -38,6 +40,7 @@ func (r *Router) RegisterEmployeeAccountRoutes(handler *employees.EmployeeHandle
 	}
 }
 
+// TODO remove pagination but add filter with searching
 func (r *Router) RegisterCommonStoresRoutes(handler *stores.StoreHandler) {
 	router := r.CommonRoutes.Group("/stores/all")
 	{
@@ -49,5 +52,19 @@ func (r *Router) RegisterCommonWarehousesRoutes(handler *warehouse.WarehouseHand
 	router := r.CommonRoutes.Group("/warehouses/all")
 	{
 		router.GET("", handler.GetAllWarehouses)
+	}
+}
+
+func (r *Router) RegisterCommonFranchiseesRoutes(handler *franchisees.FranchiseeHandler) {
+	router := r.CommonRoutes.Group("/franchisees/all")
+	{
+		router.GET("", handler.GetAllFranchisees)
+	}
+}
+
+func (r *Router) RegisterCommonRegionsRoutes(handler *regions.RegionHandler) {
+	router := r.CommonRoutes.Group("/regions/all")
+	{
+		router.GET("", handler.GetAllRegions)
 	}
 }

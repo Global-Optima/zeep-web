@@ -101,15 +101,21 @@ func CanManageRole(currentRole, targetRole EmployeeRole) bool {
 }
 
 var (
-	FranchiseeReadPermissions = []EmployeeRole{
-		RoleOwner,
+	FranchiseePermissions = []EmployeeRole{
 		RoleFranchiseManager,
 		RoleFranchiseOwner,
 	}
-	RegionReadPermissions = []EmployeeRole{
+	FranchiseeReadPermissions = append(
+		FranchiseePermissions,
 		RoleOwner,
+	)
+	RegionPermissions = []EmployeeRole{
 		RoleRegionWarehouseManager,
 	}
+	RegionReadPermissions = append(
+		RegionPermissions,
+		RoleOwner,
+	)
 	WarehouseManagementPermissions = []EmployeeRole{
 		RoleRegionWarehouseManager,
 		RoleWarehouseManager,
@@ -119,23 +125,25 @@ var (
 		RoleOwner,
 		RoleWarehouseEmployee,
 	)
-	WarehouseWorkerPermissions = []EmployeeRole{
+	WarehousePermissions = []EmployeeRole{
 		RoleWarehouseManager,
 		RoleWarehouseEmployee,
 	}
-	StoreManagementPermissions = []EmployeeRole{
-		RoleFranchiseManager,
+	StoreManagementPermissions = append(
+		FranchiseePermissions,
 		RoleStoreManager,
-	}
-	StoreWorkerPermissions = []EmployeeRole{
+	)
+	StorePermissions = []EmployeeRole{
 		RoleStoreManager,
 		RoleBarista,
 	}
 	StoreReadPermissions = append(
 		StoreManagementPermissions,
 		RoleBarista,
-		RoleFranchiseOwner,
-		RoleOwner,
+	)
+	StoreAndWarehousePermissions = append(
+		StorePermissions,
+		WarehousePermissions...,
 	)
 )
 

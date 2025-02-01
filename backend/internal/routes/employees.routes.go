@@ -44,31 +44,30 @@ func (r *Router) RegisterAuditRoutes(handler *audit.AuditHandler) {
 func (r *Router) RegisterFranchiseeRoutes(handler *franchisees.FranchiseeHandler) {
 	router := r.EmployeeRoutes.Group("/franchisees")
 	{
-		router.GET("", handler.GetFranchisees)        // owner
-		router.GET("/:id", handler.GetFranchiseeByID) // owner
-		router.POST("", handler.CreateFranchisee)
-		router.PUT("/:id", handler.UpdateFranchisee)    // franchise owner, manager
-		router.DELETE("/:id", handler.DeleteFranchisee) // franchise owner, manager
-
-		// Add new endpoint to get MY franchise (/franchisees/my)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetFranchisees)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetFranchiseeByID)
+		router.GET("/my", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), handler.GetMyFranchisee)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateFranchisee)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), handler.UpdateFranchisee)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner, data.RoleFranchiseOwner), handler.DeleteFranchisee)
 	}
 }
 
 func (r *Router) RegisterRegionRoutes(handler *regions.RegionHandler) {
 	router := r.EmployeeRoutes.Group("/regions")
 	{
-		router.GET("", handler.GetRegions)        // owner
-		router.GET("/:id", handler.GetRegionByID) // owner
-		router.POST("", handler.CreateRegion)
-		router.PUT("/:id", handler.UpdateRegion)
-		router.DELETE("/:id", handler.DeleteRegion)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetRegions)        // owner
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetRegionByID) // owner
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateRegion)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateRegion)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteRegion)
 	}
 }
 
 func (r *Router) RegisterNotificationsRoutes(handler *notifications.NotificationHandler) {
 	router := r.EmployeeRoutes.Group("/notifications")
 	{
-		router.GET("", handler.GetNotificationsByEmployee) // rename to my endpoints
+		router.GET("", handler.GetNotificationsByEmployee)
 		router.GET("/:id", handler.GetNotificationByID)
 		router.POST("/:id/mark-as-read", handler.MarkNotificationAsRead)
 		router.POST("/mark-multiple-as-read", handler.MarkMultipleNotificationsAsRead)
@@ -79,129 +78,172 @@ func (r *Router) RegisterNotificationsRoutes(handler *notifications.Notification
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 	router := r.EmployeeRoutes.Group("/products")
 	{
-		router.GET("", handler.GetProducts)           // all
-		router.GET("/:id", handler.GetProductDetails) // all
-		router.POST("", handler.CreateProduct)
-		router.PUT("/:id", handler.UpdateProduct)
-		router.DELETE("/:id", handler.DeleteProduct)
-		router.GET(":id/sizes", handler.GetProductSizesByProductID) // all
-		router.POST("/sizes", handler.CreateProductSize)
-		router.PUT("/sizes/:id", handler.UpdateProductSize)
+		router.GET("", handler.GetProducts)
+		router.GET("/:id", handler.GetProductDetails)
+		router.GET(":id/sizes", handler.GetProductSizesByProductID)
 		router.GET("/sizes/:id", handler.GetProductSizeByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProduct)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProduct)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProduct)
+		router.POST("/sizes", middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
+		router.PUT("/sizes/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
 	}
 }
 
 func (r *Router) RegisterRecipeRoutes(handler *recipes.RecipeHandler) {
 	router := r.EmployeeRoutes.Group("/products/recipe-steps")
 	{
-		router.GET("/product/:product-id", handler.GetRecipeSteps) // all
-		router.GET("/step/:id", handler.GetRecipeStepDetails)      // all
-		router.POST("/product/:product-id", handler.CreateRecipeSteps)
-		router.PUT("/step/:id", handler.UpdateRecipeSteps)
-		router.DELETE("/step/:id", handler.DeleteRecipeSteps)
+		router.GET("/product/:product-id", handler.GetRecipeSteps)
+		router.GET("/step/:id", handler.GetRecipeStepDetails)
+		router.POST("/product/:product-id", middleware.EmployeeRoleMiddleware(), handler.CreateRecipeSteps)
+		router.PUT("/step/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateRecipeSteps)
+		router.DELETE("/step/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteRecipeSteps)
 	}
 }
 
 func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductHandler) {
-	router := r.EmployeeRoutes.Group("/store-products") // to all below store, franchisee
+	router := r.EmployeeRoutes.Group("/store-products")
 	{
-		router.GET("/categories", handler.GetStoreProductCategories)
-		router.GET("", handler.GetStoreProducts)
-		router.GET("/available-to-add", handler.GetAvailableProducts)
-		router.GET("/:id", handler.GetStoreProduct)
-		router.POST("", handler.CreateStoreProduct)                   // Franchise + store manager
-		router.POST("/multiple", handler.CreateMultipleStoreProducts) // Franchise + store manager
-		router.PUT("/:id", handler.UpdateStoreProduct)                // Franchise + store manager
-		router.DELETE("/:id", handler.DeleteStoreProduct)             // Franchise + store manager
-		router.GET("/sizes/:id", handler.GetStoreProductSizeByID)
+		router.GET("/categories", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProductCategories)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProducts)
+		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAvailableProducts)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProduct)
+		router.GET("/sizes/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProductSizeByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateStoreProduct)
+		router.POST("/multiple", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateMultipleStoreProducts)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.UpdateStoreProduct)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.DeleteStoreProduct)
 	}
 }
 
 func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler) {
 	router := r.EmployeeRoutes.Group("/ingredients")
 	{
-		router.POST("", handler.CreateIngredient)
-		router.PUT("/:id", handler.UpdateIngredient)
-		router.DELETE("/:id", handler.DeleteIngredient)
-		router.GET("/:id", handler.GetIngredientByID) // all
-		router.GET("", handler.GetIngredients)        // all
+		router.GET("/:id", handler.GetIngredientByID)
+		router.GET("", handler.GetIngredients)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateIngredient)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateIngredient)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteIngredient)
 	}
 }
 
 func (r *Router) RegisterIngredientCategoriesRoutes(handler *ingredientCategories.IngredientCategoryHandler) {
 	router := r.EmployeeRoutes.Group("/ingredient-categories")
 	{
-		router.GET("", handler.GetAll)      // all
-		router.GET("/:id", handler.GetByID) // all
-		router.POST("", handler.Create)
-		router.PUT("/:id", handler.Update)
-		router.DELETE("/:id", handler.Delete)
+		router.GET("", handler.GetAll)
+		router.GET("/:id", handler.GetByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.Create)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.Update)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.Delete)
 	}
 }
 
 func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.EmployeeRoutes.Group("/stores")
 	{
-		router.GET("/:id", handler.GetStoreByID)   // all
-		router.POST("", handler.CreateStore)       // franchise owner, manager
-		router.PUT("/:id", handler.UpdateStore)    // franchise owner, manager
-		router.DELETE("/:id", handler.DeleteStore) // franchise owner, manager
+		router.GET("/:id", handler.GetStoreByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStore)       // franchise owner, manager
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStore)    // franchise owner, manager
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStore) // franchise owner, manager
 	}
 }
 
 func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHandler) {
 	router := r.EmployeeRoutes.Group("/product-categories") // merge with products routes, like in additives (/products/categories)
 	{
-		router.GET("", handler.GetAllCategories)    // all
-		router.GET("/:id", handler.GetCategoryByID) // all
-		router.POST("", handler.CreateCategory)
-		router.PUT("/:id", handler.UpdateCategory)
-		router.DELETE("/:id", handler.DeleteCategory)
+		router.GET("", handler.GetAllCategories)
+		router.GET("/:id", handler.GetCategoryByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateCategory)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateCategory)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteCategory)
 	}
 }
 
 func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	router := r.EmployeeRoutes.Group("/additives")
 	{
-		router.GET("", handler.GetAdditives)        // all
-		router.GET("/:id", handler.GetAdditiveByID) // all
-		router.POST("", handler.CreateAdditive)
-		router.PUT("/:id", handler.UpdateAdditive)
-		router.DELETE("/:id", handler.DeleteAdditive)
+		router.GET("", handler.GetAdditives)
+		router.GET("/:id", handler.GetAdditiveByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditive)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditive)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditive)
 
 		additiveCategories := router.Group("/categories")
 		{
-			additiveCategories.GET("", handler.GetAdditiveCategories)       // all
-			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID) // all
-			additiveCategories.POST("", handler.CreateAdditiveCategory)
-			additiveCategories.PUT("/:id", handler.UpdateAdditiveCategory)
-			additiveCategories.DELETE("/:id", handler.DeleteAdditiveCategory)
+			additiveCategories.GET("", handler.GetAdditiveCategories)
+			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
+			additiveCategories.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditiveCategory)
+			additiveCategories.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditiveCategory)
+			additiveCategories.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditiveCategory)
 		}
 	}
 }
 
 func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAdditiveHandler) {
-	router := r.EmployeeRoutes.Group("/store-additives") // to all below store, franchisee
+	router := r.EmployeeRoutes.Group("/store-additives")
 	{
-		router.GET("", handler.GetStoreAdditives)
-		router.GET("/available-to-add", handler.GetAdditivesListToAdd)
-		router.GET("/categories/:productSizeId", handler.GetStoreAdditiveCategories)
-		router.GET("/:id", handler.GetStoreAdditiveByID)
-		router.POST("", handler.CreateStoreAdditives)      // franchisee and store manager
-		router.PUT("/:id", handler.UpdateStoreAdditive)    // franchisee and store manager
-		router.DELETE("/:id", handler.DeleteStoreAdditive) // franchisee and store manager
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditives)
+		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAdditivesListToAdd)
+		router.GET("/categories/:productSizeId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditiveCategories)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditiveByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateStoreAdditives)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.UpdateStoreAdditive)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.DeleteStoreAdditive)
 	}
 }
 
-func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
+func (r *Router) RegisterEmployeesRoutes(
+	handler *employees.EmployeeHandler,
+	storeEmployeeHandler *storeEmployees.StoreEmployeeHandler,
+	warehouseEmployeeHandler *warehouseEmployees.WarehouseEmployeeHandler,
+	franchiseeEmployeeHandler *franchiseeEmployees.FranchiseeEmployeeHandler,
+	regionEmployeeHandler *regionEmployees.RegionEmployeeHandler,
+	adminEmployeeHandler *adminEmployees.AdminEmployeeHandler,
+) {
 	router := r.EmployeeRoutes.Group("/employees")
 	{
-		router.PUT("/reassign", handler.ReassignEmployeeType)
-		router.GET("/current", handler.GetCurrentEmployee)  // all
-		router.GET("/roles", handler.GetAllRoles)           // all
-		router.PUT("/:id/password", handler.UpdatePassword) // all
+		router.GET("/current", handler.GetCurrentEmployee)
+		router.GET("/roles", handler.GetAllRoles)
+		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(), handler.UpdatePassword)
+		router.PUT("/reassign", middleware.EmployeeRoleMiddleware(), handler.ReassignEmployeeType)
 
-		// leave only GET methods, make update and create inside the employee updates
+		storeEmployeeRouter := r.EmployeeRoutes.Group("/store")
+		{
+			storeEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), storeEmployeeHandler.GetStoreEmployees)
+			storeEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), storeEmployeeHandler.GetStoreEmployeeByID)
+			storeEmployeeRouter.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), storeEmployeeHandler.CreateStoreEmployee)
+			storeEmployeeRouter.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), storeEmployeeHandler.UpdateStoreEmployee)
+			storeEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), storeEmployeeHandler.DeleteStoreEmployee)
+		}
+
+		warehouseEmployeeRouter := r.EmployeeRoutes.Group("/warehouse-employees") // warehouse and region managers
+		{
+			warehouseEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.RegionReadPermissions...), warehouseEmployeeHandler.GetWarehouseEmployees)
+			warehouseEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.RegionReadPermissions...), warehouseEmployeeHandler.GetWarehouseEmployeeByID)
+			warehouseEmployeeRouter.POST("", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseEmployeeHandler.CreateWarehouseEmployee)
+			warehouseEmployeeRouter.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseEmployeeHandler.UpdateWarehouseEmployee)
+			warehouseEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseEmployeeHandler.DeleteWarehouseEmployee)
+		}
+
+		franchiseeEmployeeRouter := r.EmployeeRoutes.Group("/franchisee-employees")
+		{
+			franchiseeEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), franchiseeEmployeeHandler.GetFranchiseeEmployees)        // owner, all franchisee
+			franchiseeEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), franchiseeEmployeeHandler.GetFranchiseeEmployeeByID) // owner, all franchisee
+			franchiseeEmployeeRouter.POST("", middleware.EmployeeRoleMiddleware(data.RoleFranchiseOwner), franchiseeEmployeeHandler.CreateFranchiseeEmployee)               // franchise owner
+			franchiseeEmployeeRouter.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RoleFranchiseOwner), franchiseeEmployeeHandler.UpdateFranchiseeEmployee)            // franchise owner
+			franchiseeEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(data.RoleFranchiseOwner), franchiseeEmployeeHandler.DeleteFranchiseeEmployee) // franchise owner
+		}
+
+		regionEmployeeRouter := r.EmployeeRoutes.Group("/region-employees", middleware.EmployeeRoleMiddleware())
+		{
+			regionEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.RoleOwner), regionEmployeeHandler.GetRegionEmployees)
+			regionEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner), regionEmployeeHandler.GetRegionEmployeeByID)
+			regionEmployeeRouter.POST("", middleware.EmployeeRoleMiddleware(), regionEmployeeHandler.CreateRegionEmployee)
+			regionEmployeeRouter.PUT("/:id", middleware.EmployeeRoleMiddleware(), regionEmployeeHandler.UpdateRegionEmployee)
+			regionEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(), regionEmployeeHandler.DeleteRegionEmployee)
+		}
+
+		//TODO leave only GET methods, make update and create inside the employee updates
 		workdays := router.Group("/workdays")
 		{
 			var workdaysManagementPermissions = []data.EmployeeRole{data.RoleStoreManager, data.RoleWarehouseManager, data.RoleRegionWarehouseManager, data.RoleFranchiseManager}
@@ -214,52 +256,8 @@ func (r *Router) RegisterEmployeesRoutes(handler *employees.EmployeeHandler) {
 	}
 }
 
-func (r *Router) RegisterStoreEmployeeRoutes(handler *storeEmployees.StoreEmployeeHandler) {
-	router := r.EmployeeRoutes.Group("/store-employees") // franchisee and store managers
-	{
-		router.GET("", handler.GetStoreEmployees)        // fr owner and owner
-		router.GET("/:id", handler.GetStoreEmployeeByID) // fr owner and owner
-		router.POST("", handler.CreateStoreEmployee)
-		router.PUT("/:id", handler.UpdateStoreEmployee)
-		router.DELETE("/:employeeId", handler.DeleteStoreEmployee)
-	}
-}
-
-func (r *Router) RegisterWarehouseEmployeeRoutes(handler warehouseEmployees.WarehouseEmployeeHandler) {
-	router := r.EmployeeRoutes.Group("/warehouse-employees") // warehouse and region managers
-	{
-		router.GET("", handler.GetWarehouseEmployees)        // owner
-		router.GET("/:id", handler.GetWarehouseEmployeeByID) // owner
-		router.POST("", handler.CreateWarehouseEmployee)
-		router.PUT("/:id", handler.UpdateWarehouseEmployee)
-		router.DELETE("/:employeeId", handler.DeleteWarehouseEmployee)
-	}
-}
-
-func (r *Router) RegisterFranchiseeEmployeeRoutes(handler franchiseeEmployees.FranchiseeEmployeeHandler) {
-	router := r.EmployeeRoutes.Group("/franchisee-employees")
-	{
-		router.GET("", handler.GetFranchiseeEmployees)                  // owner, all franchisee
-		router.GET("/:id", handler.GetFranchiseeEmployeeByID)           // owner, all franchisee
-		router.POST("", handler.CreateFranchiseeEmployee)               // franchise owner
-		router.PUT("/:id", handler.UpdateFranchiseeEmployee)            // franchise owner
-		router.DELETE("/:employeeId", handler.DeleteFranchiseeEmployee) // franchise owner
-	}
-}
-
-func (r *Router) RegisterRegionEmployeeRoutes(handler regionEmployees.RegionEmployeeHandler) {
-	router := r.EmployeeRoutes.Group("/region-employees")
-	{
-		router.GET("", handler.GetRegionEmployees)
-		router.GET("/:id", handler.GetRegionEmployeeByID)
-		router.POST("", handler.CreateRegionEmployee)
-		router.PUT("/:id", handler.UpdateRegionEmployee)
-		router.DELETE("/:employeeId", handler.DeleteRegionEmployee)
-	}
-}
-
 func (r *Router) RegisterAdminEmployeeRoutes(handler adminEmployees.AdminEmployeeHandler) {
-	router := r.EmployeeRoutes.Group("/admin-employees")
+	router := r.EmployeeRoutes.Group("/admin-employees", middleware.EmployeeRoleMiddleware())
 	{
 		router.GET("", handler.GetAdminEmployees)
 		router.POST("", handler.CreateAdminEmployee)
@@ -270,61 +268,61 @@ func (r *Router) RegisterAdminEmployeeRoutes(handler adminEmployees.AdminEmploye
 func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.EmployeeRoutes.Group("/orders")
 	{
-		router.POST("", handler.CreateOrder)                                             // Store manager and barista
-		router.GET("", handler.GetOrders)                                                // all franchise, stores
-		router.GET("/ws", handler.ServeWS)                                               // Store manager and barista
-		router.PUT("/:orderId/suborders/:subOrderId/complete", handler.CompleteSubOrder) // Store manager and barista
-		router.GET("/kiosk", handler.GetAllBaristaOrders)                                // Store manager and barista
-		router.GET("/:orderId/suborders", handler.GetSubOrders)                          // Store manager and barista
-		router.GET("/statuses/count", handler.GetStatusesCount)                          // Store manager and barista
-		router.GET("/:orderId/receipt", handler.GeneratePDFReceipt)                      // Store manager and barista
-		router.GET("/:orderId", handler.GetOrderDetails)                                 // all franchise, stores
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateOrder)                                             // Store manager and barista
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrders)                                            // all franchise, stores
+		router.GET("/ws", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.ServeWS)                                               // Store manager and barista
+		router.PUT("/:orderId/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteSubOrder) // Store manager and barista
+		router.GET("/kiosk", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetAllBaristaOrders)                                // Store manager and barista
+		router.GET("/:orderId/suborders", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetSubOrders)                          // Store manager and barista
+		router.GET("/statuses/count", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStatusesCount)                          // Store manager and barista
+		router.GET("/:orderId/receipt", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GeneratePDFReceipt)                      // Store manager and barista
+		router.GET("/:orderId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrderDetails)                             // all franchise, stores
 
-		router.GET("/export", handler.ExportOrders)                                      // franchise and store management
-		router.PUT("/suborders/:subOrderId/complete", handler.CompleteSubOrderByBarcode) // Store manager and barista
-		router.GET("/suborders/:subOrderId/barcode", handler.GetSuborderBarcode)         // Store manager and barista
+		router.GET("/export", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.ExportOrders)                            // franchise and store management
+		router.PUT("/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteSubOrderByBarcode) // Store manager and barista
+		router.GET("/suborders/:subOrderId/barcode", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetSuborderBarcode)         // Store manager and barista
 	}
 }
 
 func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 	router := r.EmployeeRoutes.Group("/suppliers")
 	{
-		router.GET("", handler.GetSuppliers)        // Region, warehouse
-		router.GET("/:id", handler.GetSupplierByID) // Region, warehouse
-		router.POST("", handler.CreateSupplier)
-		router.PUT("/:id", handler.UpdateSupplier)
-		router.DELETE("/:id", handler.DeleteSupplier)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetSuppliers)        // Region, warehouse
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetSupplierByID) // Region, warehouse
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateSupplier)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateSupplier)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteSupplier)
 
-		router.PUT("/:id/materials", handler.UpsertMaterialsForSupplier)
-		router.GET("/:id/materials", handler.GetMaterialsBySupplier) // Region, warehouse
+		router.GET("/:id/materials", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetMaterialsBySupplier) // Region, warehouse
+		router.PUT("/:id/materials", middleware.EmployeeRoleMiddleware(), handler.UpsertMaterialsForSupplier)
 	}
 }
 
 func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
 	router := r.EmployeeRoutes.Group("/store-warehouse-stock") // Franchise and store all roles
 	{
-		router.GET("", handler.GetStoreWarehouseStockList)
-		router.GET("/:id", handler.GetStoreWarehouseStockById)
-		router.POST("", handler.AddStoreWarehouseStock)
-		router.POST("/multiple", handler.AddMultipleStoreWarehouseStock)
-		router.PUT("/:id", handler.UpdateStoreWarehouseStockById)
-		router.DELETE("/:id", handler.DeleteStoreWarehouseStockById)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreWarehouseStockList)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreWarehouseStockById)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.AddStoreWarehouseStock)
+		router.POST("/multiple", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.AddMultipleStoreWarehouseStock)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.UpdateStoreWarehouseStockById)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.DeleteStoreWarehouseStockById)
 	}
 }
 
 func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMaterialHandler) {
 	router := r.EmployeeRoutes.Group("/stock-materials")
 	{
-		router.GET("", handler.GetAllStockMaterials)     // all
-		router.GET("/:id", handler.GetStockMaterialByID) // all
-		router.POST("", handler.CreateStockMaterial)
-		router.PUT("/:id", handler.UpdateStockMaterial)
-		router.DELETE("/:id", handler.DeleteStockMaterial)
-		router.PATCH("/:id/deactivate", handler.DeactivateStockMaterial)
+		router.GET("", handler.GetAllStockMaterials)
+		router.GET("/:id", handler.GetStockMaterialByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStockMaterial)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStockMaterial)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStockMaterial)
+		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(), handler.DeactivateStockMaterial)
 
 		router.GET("/:id/barcode", handler.GetStockMaterialBarcode)
 		router.GET("/barcodes/:barcode", handler.RetrieveStockMaterialByBarcode)
-		router.POST("/barcodes/generate", handler.GenerateBarcode)
+		router.POST("/barcodes/generate", middleware.EmployeeRoleMiddleware(), handler.GenerateBarcode)
 	}
 }
 func (r *Router) RegisterStockMaterialCategoryRoutes(handler *stockMaterialCategory.StockMaterialCategoryHandler) {
@@ -332,9 +330,9 @@ func (r *Router) RegisterStockMaterialCategoryRoutes(handler *stockMaterialCateg
 	{
 		router.GET("", handler.GetAll)
 		router.GET("/:id", handler.GetByID)
-		router.POST("", handler.Create)
-		router.PUT("/:id", handler.Update)
-		router.DELETE("/:id", handler.Delete)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.Create)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.Update)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.Delete)
 	}
 }
 
@@ -343,9 +341,9 @@ func (r *Router) RegisterUnitRoutes(handler *units.UnitHandler) {
 	{
 		router.GET("", handler.GetAllUnits)
 		router.GET("/:id", handler.GetUnitByID)
-		router.POST("", handler.CreateUnit)
-		router.PUT("/:id", handler.UpdateUnit)
-		router.DELETE("/:id", handler.DeleteUnit)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateUnit)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateUnit)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteUnit)
 	}
 }
 
@@ -354,31 +352,31 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 	{
 		warehouseRoutes := router.Group("")
 		{
-			warehouseRoutes.POST("", handler.CreateWarehouse) // region
 			warehouseRoutes.GET("/:warehouseId", handler.GetWarehouseByID)
-			warehouseRoutes.PUT("/:warehouseId", handler.UpdateWarehouse)    // region
-			warehouseRoutes.DELETE("/:warehouseId", handler.DeleteWarehouse) // region
+			warehouseRoutes.POST("", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.CreateWarehouse)                // region
+			warehouseRoutes.PUT("/:warehouseId", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.UpdateWarehouse)    // region
+			warehouseRoutes.DELETE("/:warehouseId", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.DeleteWarehouse) // region
 		}
 
 		storeRoutes := router.Group("/stores")
 		{
-			storeRoutes.POST("", handler.AssignStoreToWarehouse)              // On considerations
-			storeRoutes.PUT("/:storeId", handler.ReassignStore)               // On considerations
-			storeRoutes.GET("/:warehouseId", handler.GetAllStoresByWarehouse) // Store and warehouse
+			storeRoutes.POST("", handler.AssignStoreToWarehouse)                                                                                       //TODO On considerations
+			storeRoutes.PUT("/:storeId", handler.ReassignStore)                                                                                        //TODO On considerations
+			storeRoutes.GET("/:warehouseId", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetAllStoresByWarehouse) // Store and warehouse
 		}
 
 		stockRoutes := router.Group("/stocks")
 		{
-			stockRoutes.GET("", warehouseStockHandler.GetStocks) // Region and warehouses all roles
-			stockRoutes.GET("/:stockMaterialId", warehouseStockHandler.GetStockMaterialDetails)
-			stockRoutes.PUT("/:stockMaterialId", warehouseStockHandler.UpdateStock)   // Warehouse all roles
-			stockRoutes.POST("/add", warehouseStockHandler.AddWarehouseStocks)        // Warehouse all roles
-			stockRoutes.POST("/receive", warehouseStockHandler.ReceiveInventory)      // Warehouse all roles
-			stockRoutes.GET("/deliveries", warehouseStockHandler.GetDeliveries)       // Region and warehouses
-			stockRoutes.GET("/deliveries/:id", warehouseStockHandler.GetDeliveryByID) // Region and warehouses
+			stockRoutes.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetStocks) // Region and warehouses all roles
+			stockRoutes.GET("/:stockMaterialId", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetStockMaterialDetails)
+			stockRoutes.PUT("/:stockMaterialId", middleware.EmployeeRoleMiddleware(data.WarehousePermissions...), warehouseStockHandler.UpdateStock)       // Warehouse all roles
+			stockRoutes.POST("/add", middleware.EmployeeRoleMiddleware(data.WarehousePermissions...), warehouseStockHandler.AddWarehouseStocks)            // Warehouse all roles
+			stockRoutes.POST("/receive", middleware.EmployeeRoleMiddleware(data.WarehousePermissions...), warehouseStockHandler.ReceiveInventory)          // Warehouse all roles
+			stockRoutes.GET("/deliveries", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveries)       // Region and warehouses
+			stockRoutes.GET("/deliveries/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveryByID) // Region and warehouses
 
-			// Consider if it needed, consider requests
-			stockRoutes.POST("/transfer", warehouseStockHandler.TransferInventory) // region manager
+			//TODO Consider if it needed, consider requests
+			stockRoutes.POST("/transfer", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseStockHandler.TransferInventory) // region manager
 		}
 	}
 }
@@ -386,22 +384,22 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
 	router := r.EmployeeRoutes.Group("/stock-requests")
 	{
-		router.GET("", handler.GetStockRequests)                                    // Store and warehouses all roles
-		router.GET("/:requestId", handler.GetStockRequestByID)                      // Store and warehouses all roles
-		router.GET("/current", handler.GetLastCreatedStockRequest)                  // Store and warehouses all roles
-		router.POST("", handler.CreateStockRequest)                                 // Store all roles
-		router.POST("/add-material-to-latest-cart", handler.AddStockMaterialToCart) // Store all roles
-		router.PUT("/:requestId", handler.UpdateStockRequest)                       // Store all roles
-		router.DELETE("/:requestId", handler.DeleteStockRequest)                    // Store all roles
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetStockRequests)                        // Store and warehouses all roles
+		router.GET("/:requestId", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetStockRequestByID)          // Store and warehouses all roles
+		router.GET("/current", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetLastCreatedStockRequest)      // Store and warehouses all roles
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateStockRequest)                                 // Store all roles
+		router.POST("/add-material-to-latest-cart", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.AddStockMaterialToCart) // Store all roles
+		router.PUT("/:requestId", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.UpdateStockRequest)                       // Store all roles
+		router.DELETE("/:requestId", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.DeleteStockRequest)                    // Store all roles
 
 		statusGroup := router.Group("/status/:requestId")
 		{
-			statusGroup.PATCH("/processed", handler.SetProcessedStatus)              // Store
-			statusGroup.PATCH("/reject-warehouse", handler.RejectWarehouseStatus)    // Warehouse
-			statusGroup.PATCH("/in-delivery", handler.SetInDeliveryStatus)           // Warehouse
-			statusGroup.PATCH("/accept-with-change", handler.AcceptWithChangeStatus) // Store
-			statusGroup.PATCH("/reject-store", handler.RejectStoreStatus)            // Store
-			statusGroup.PATCH("/completed", handler.SetCompletedStatus)              // Store
+			statusGroup.PATCH("/processed", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SetProcessedStatus)               // Store
+			statusGroup.PATCH("/reject-warehouse", middleware.EmployeeRoleMiddleware(data.WarehousePermissions...), handler.RejectWarehouseStatus) // Warehouse
+			statusGroup.PATCH("/in-delivery", middleware.EmployeeRoleMiddleware(data.WarehousePermissions...), handler.SetInDeliveryStatus)        // Warehouse
+			statusGroup.PATCH("/accept-with-change", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.AcceptWithChangeStatus)  // Store
+			statusGroup.PATCH("/reject-store", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.RejectStoreStatus)             // Store
+			statusGroup.PATCH("/completed", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SetCompletedStatus)               // Store
 		}
 	}
 }

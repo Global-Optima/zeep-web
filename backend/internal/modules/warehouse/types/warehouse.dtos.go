@@ -1,5 +1,7 @@
 package types
 
+import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+
 type AssignStoreToWarehouseRequest struct {
 	StoreID     uint `json:"storeId" binding:"required"`
 	WarehouseID uint `json:"warehouseId" binding:"required"`
@@ -36,4 +38,9 @@ type WarehouseResponse struct {
 	FacilityAddress FacilityAddressDTO `json:"facilityAddress"`
 	CreatedAt       string             `json:"createdAt"`
 	UpdatedAt       string             `json:"updatedAt"`
+}
+
+type AllWarehousesFilter struct {
+	Search string `json:"search"`
+	utils.Sort
 }
