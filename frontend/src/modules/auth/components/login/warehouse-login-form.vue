@@ -1,10 +1,10 @@
 <template>
-	<Card class="">
-		<CardHeader>
+	<Card class="border-none">
+		<CardHeader class="p-0">
 			<CardTitle class="text-lg sm:text-xl">Вход для сотрудников склада</CardTitle>
 			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
 		</CardHeader>
-		<CardContent>
+		<CardContent class="mt-6 p-0">
 			<form
 				class="space-y-6 w-full"
 				@submit="onSubmit"
@@ -39,7 +39,7 @@
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="warehouse in warehouses?.data"
+										v-for="warehouse in warehouses"
 										:key="warehouse.id"
 										:value="warehouse.id.toString()"
 										class="text-sm sm:text-base"
@@ -178,7 +178,7 @@ const { values, isSubmitting, handleSubmit } = useForm({
 })
 
 const { data: warehouses, isLoading: warehousesLoading, isError: warehousesError } = useQuery({
-  queryKey: ['warehouses'],
+  queryKey: ['warehouses-all'],
   queryFn: () => warehouseService.getWarehouses(),
 })
 

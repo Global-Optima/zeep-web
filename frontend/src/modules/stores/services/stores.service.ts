@@ -17,6 +17,18 @@ class StoreService {
 		}
 	}
 
+  async getAllStores(filter?: StoresFilter) {
+		try {
+			const response = await apiClient.get<StoreDTO[]>('/stores/all', {
+				params: buildRequestFilter(filter),
+			})
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch stores:', error)
+			throw error
+		}
+	}
+
 	async getStore(id: number): Promise<StoreDTO> {
 		try {
 			const response = await apiClient.get<StoreDTO>(`/stores/${id}`)

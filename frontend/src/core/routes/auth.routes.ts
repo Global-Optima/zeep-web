@@ -1,4 +1,4 @@
-import LoginPage from '@/modules/auth/pages/login-page.vue'
+import LoginPage from '@/modules/auth/pages/login-page-v2.vue'
 import AppDefaultLayout from '../layouts/default/app-default-layout.vue'
 import type { AppRouteRecord, ParentRoutePage } from './routes.types'
 
