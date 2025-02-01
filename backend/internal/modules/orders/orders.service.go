@@ -3,6 +3,8 @@ package orders
 import (
 	"bytes"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 	"image"
 	"image/color"
 	"image/draw"
@@ -127,7 +129,9 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 }
 
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
-	if _, err := utils.CensorText(createOrderDTO.CustomerName); err != nil {
+	if _, err := censor.CensorText(createOrderDTO.CustomerName); err != nil {
+		wrappedErr := utils.WrapError("inappropriate customer name", err)
+		s.logger.Error(wrappedErr)
 		return nil, err
 	}
 

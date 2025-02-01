@@ -3,6 +3,7 @@ package init
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 	"log"
 	"time"
 
@@ -120,6 +121,10 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 
 	if err := localization.InitLocalizer(); err != nil {
 		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
+	}
+
+	if err := censor.InitializeCensor(); err != nil {
+		logger.GetZapSugaredLogger().Fatalf("Failed to initialize censor: %v", err)
 	}
 
 	dbHandler := InitializeDatabase(cfg)
