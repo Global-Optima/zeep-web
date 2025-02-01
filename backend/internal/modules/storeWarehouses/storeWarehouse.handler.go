@@ -2,10 +2,12 @@ package storeWarehouses
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"go.uber.org/zap"
 	"strconv"
 
@@ -37,6 +39,28 @@ func NewStoreWarehouseHandler(
 		franchiseeService: franchiseeService,
 		logger:            logger,
 	}
+}
+
+func (h *StoreWarehouseHandler) GetAvailableIngredientsToAdd(c *gin.Context) {
+	var filter ingredientTypes.IngredientFilter
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Ingredient{}); err != nil {
+		utils.SendBadRequestError(c, "Invalid query parameters")
+		return
+	}
+
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	ingredientsList, err := h.service.GetAvailableIngredientsToAdd(storeID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch ingredients")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, ingredientsList, filter.Pagination)
 }
 
 func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {

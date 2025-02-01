@@ -106,7 +106,7 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 	{
 		router.GET("/categories", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProductCategories)
 		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProducts)
-		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAvailableProducts)
+		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAvailableProductsToAdd)
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProduct)
 		router.GET("/sizes/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProductSizeByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateStoreProduct)
@@ -296,6 +296,7 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
 	router := r.EmployeeRoutes.Group("/store-warehouse-stock") // Franchise and store all roles
 	{
+		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAvailableIngredientsToAdd)
 		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreWarehouseStockList)
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreWarehouseStockById)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.AddStoreWarehouseStock)

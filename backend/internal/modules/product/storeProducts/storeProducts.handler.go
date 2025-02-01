@@ -69,7 +69,7 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 	utils.SendSuccessResponse(c, productDetails)
 }
 
-func (h *StoreProductHandler) GetAvailableProducts(c *gin.Context) {
+func (h *StoreProductHandler) GetAvailableProductsToAdd(c *gin.Context) {
 	var filter productTypes.ProductsFilterDto
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
@@ -83,7 +83,7 @@ func (h *StoreProductHandler) GetAvailableProducts(c *gin.Context) {
 		return
 	}
 
-	productDetails, err := h.service.GetProductsListToAdd(storeID, &filter)
+	productDetails, err := h.service.GetAvailableProductsToAdd(storeID, &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve products list to add for store")
 		return

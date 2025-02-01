@@ -2,6 +2,7 @@ package storeWarehouses
 
 import (
 	"fmt"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -13,6 +14,7 @@ import (
 )
 
 type StoreWarehouseService interface {
+	GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]ingredientTypes.IngredientDTO, error)
 	AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)
 	AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) ([]uint, error)
 	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StoreStockDTO, error)
@@ -156,6 +158,17 @@ func (s *storeWarehouseService) DeleteStockById(storeId, stockId uint) error {
 		return wrappedErr
 	}
 	return nil
+}
+
+func (s *storeWarehouseService) GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]ingredientTypes.IngredientDTO, error) {
+	ingredients, err := s.repo.GetAvailableIngredientsToAdd(storeID, filter)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to fetch available ingredients to add for store: %d: %w", storeID, err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	return ingredientTypes.ConvertToIngredientResponseDTOs(ingredients), nil
 }
 
 func (s *storeWarehouseService) CheckStockNotifications(storeID uint, stock data.StoreWarehouseStock) error {

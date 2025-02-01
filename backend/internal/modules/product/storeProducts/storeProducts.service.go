@@ -21,7 +21,7 @@ type StoreProductService interface {
 	GetStoreProductById(storeID, storeProductID uint) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]types.StoreProductDetailsDTO, error)
-	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error)
+	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error)
 	GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error)
 	CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error)
 	CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error)
@@ -113,17 +113,17 @@ func (s *storeProductService) GetStoreProductsByStoreProductIDs(storeID uint, st
 	return dtos, nil
 }
 
-func (s *storeProductService) GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error) {
-	products, err := s.repo.GetProductsListToAdd(storeID, filter)
+func (s *storeProductService) GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error) {
+	productsList, err := s.repo.GetAvailableProductsToAdd(storeID, filter)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to get products list to add", err)
+		wrappedErr := utils.WrapError("failed to get available products to add", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	productDTOs := make([]productTypes.ProductDetailsDTO, len(products))
-	for i, product := range products {
-		productDTOs[i] = *productTypes.MapToProductDetailsDTO(&product)
+	productDTOs := make([]productTypes.ProductDetailsDTO, len(productsList))
+	for i, productItem := range productsList {
+		productDTOs[i] = *productTypes.MapToProductDetailsDTO(&productItem)
 	}
 
 	return productDTOs, nil

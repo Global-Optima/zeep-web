@@ -2,6 +2,7 @@ package storeWarehouses
 
 import (
 	"fmt"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
@@ -11,6 +12,7 @@ import (
 )
 
 type StoreWarehouseRepository interface {
+	GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]data.Ingredient, error)
 	AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)
 	AddOrUpdateStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)
 	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]data.StoreWarehouseStock, error)
@@ -60,6 +62,40 @@ func (r *storeWarehouseRepository) CloneWithTransaction(tx *gorm.DB) storeWareho
 	return storeWarehouseRepository{
 		db: tx,
 	}
+}
+
+func (r *storeWarehouseRepository) GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]data.Ingredient, error) {
+	var ingredients []data.Ingredient
+	query := r.db.Model(&data.Ingredient{}).Preload("Unit").Preload("IngredientCategory")
+
+	if filter.ProductSizeID != nil {
+		query = query.Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
+			Where("psi.product_size_id = ?", *filter.ProductSizeID)
+	}
+
+	if filter.Name != nil {
+		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
+	}
+	if filter.MinCalories != nil {
+		query = query.Where("calories >= ?", *filter.MinCalories)
+	}
+	if filter.MaxCalories != nil {
+		query = query.Where("calories <= ?", *filter.MaxCalories)
+	}
+
+	query = query.Where("ingredients.id NOT IN (?)", r.db.Model(&data.StoreWarehouseStock{}).Select("ingredient_id").Where("store_id = ?", storeID))
+
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Ingredient{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Execute query
+	if err := query.Find(&ingredients).Error; err != nil {
+		return nil, err
+	}
+
+	return ingredients, nil
 }
 
 func (r *storeWarehouseRepository) AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error) {
