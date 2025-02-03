@@ -66,7 +66,9 @@ func (r *storeWarehouseRepository) CloneWithTransaction(tx *gorm.DB) storeWareho
 
 func (r *storeWarehouseRepository) GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
-	query := r.db.Model(&data.Ingredient{}).Preload("Unit").Preload("IngredientCategory")
+	query := r.db.Model(&data.Ingredient{}).
+		Preload("Unit").
+		Preload("IngredientCategory")
 
 	if filter.ProductSizeID != nil {
 		query = query.Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
@@ -83,7 +85,10 @@ func (r *storeWarehouseRepository) GetAvailableIngredientsToAdd(storeID uint, fi
 		query = query.Where("calories <= ?", *filter.MaxCalories)
 	}
 
-	query = query.Where("ingredients.id NOT IN (?)", r.db.Model(&data.StoreWarehouseStock{}).Select("ingredient_id").Where("store_id = ?", storeID))
+	query = query.Where("ingredients.id NOT IN (?)", r.db.Model(&data.StoreWarehouse{}).
+		Joins("JOIN store_warehouse_stocks ON store_warehouse_stocks.store_warehouse_id = store_warehouses.id").
+		Select("store_warehouse_stocks.ingredient_id").
+		Where("store_id = ?", storeID))
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Ingredient{})
 	if err != nil {

@@ -36,10 +36,11 @@ type Warehouse struct {
 
 type StoreWarehouse struct {
 	BaseEntity
-	StoreID     uint      `gorm:"not null;index"`
-	Store       Store     `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE" sort:"stores"`
-	WarehouseID uint      `gorm:"not null;index"`
-	Warehouse   Warehouse `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
+	StoreID              uint                  `gorm:"not null;index"`
+	Store                Store                 `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE" sort:"stores"`
+	WarehouseID          uint                  `gorm:"not null;index"`
+	Warehouse            Warehouse             `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
+	StoreWarehouseStocks []StoreWarehouseStock `gorm:"foreignKey:StoreWarehouseID;constraint:OnDelete:CASCADE"`
 }
 
 type StoreWarehouseStock struct {

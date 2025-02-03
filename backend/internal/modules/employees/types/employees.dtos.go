@@ -35,8 +35,7 @@ type ReassignEmployeeTypeDTO struct {
 	WorkplaceID  uint              `json:"workplaceId" binding:"required"`
 }
 
-type EmployeeDTO struct {
-	ID        uint              `json:"id"`
+type BaseEmployeeDTO struct {
 	FirstName string            `json:"firstName"`
 	LastName  string            `json:"lastName"`
 	Phone     string            `json:"phone"`
@@ -44,6 +43,21 @@ type EmployeeDTO struct {
 	Type      data.EmployeeType `json:"type"`
 	Role      data.EmployeeRole `json:"role"`
 	IsActive  bool              `json:"isActive"`
+}
+
+type EmployeeDTO struct {
+	ID uint `json:"id"`
+	BaseEmployeeDTO
+}
+
+type BaseEmployeeDetailsDTO struct {
+	BaseEmployeeDTO
+	Workdays []EmployeeWorkdayDTO `json:"workdays"`
+}
+
+type EmployeeDetailsDTO struct {
+	ID uint `json:"id"`
+	BaseEmployeeDetailsDTO
 }
 
 type EmployeeAccountDTO struct {
@@ -64,9 +78,9 @@ type EmployeeTypeRoles struct {
 
 type EmployeesFilter struct {
 	utils.BaseFilter
-	Role     *string `form:"role,omitempty"`
-	IsActive *bool   `form:"isActive,omitempty"`
-	Search   *string `form:"search,omitempty"`
+	Role     *data.EmployeeRole `form:"role,omitempty"`
+	IsActive *bool              `form:"isActive,omitempty"`
+	Search   *string            `form:"search,omitempty"`
 }
 
 type EmployeeWorkdayDTO struct {

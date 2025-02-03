@@ -3,6 +3,7 @@ package data
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"slices"
 	"strings"
 	"time"
 )
@@ -101,6 +102,10 @@ func CanManageRole(currentRole, targetRole EmployeeRole) bool {
 }
 
 var (
+	AdminPermissions = []EmployeeRole{
+		RoleAdmin,
+		RoleOwner,
+	}
 	FranchiseePermissions = []EmployeeRole{
 		RoleFranchiseManager,
 		RoleFranchiseOwner,
@@ -146,6 +151,22 @@ var (
 		WarehousePermissions...,
 	)
 )
+
+func GetEmployeeTypeByRole(role EmployeeRole) EmployeeType {
+	switch {
+	case slices.Contains(FranchiseePermissions, role):
+		return FranchiseeEmployeeType
+	case slices.Contains(RegionPermissions, role):
+		return RegionEmployeeType
+	case slices.Contains(WarehousePermissions, role):
+		return WarehouseEmployeeType
+	case slices.Contains(StorePermissions, role):
+		return StoreEmployeeType
+	case slices.Contains(AdminPermissions, role):
+		return AdminEmployeeType
+	}
+	return ""
+}
 
 func IsAllowableRole(employeeType EmployeeType, role EmployeeRole) bool {
 	roles, exists := EmployeeTypeRoleMap[employeeType]
@@ -241,7 +262,7 @@ type Employee struct {
 	Phone              string              `gorm:"size:16;not null"`
 	Email              string              `gorm:"size:255;not null" sort:"email"`
 	HashedPassword     string              `gorm:"size:255;not null"`
-	IsActive           bool                `gorm:"default:true" sort:"isActive"`
+	IsActive           bool                `gorm:"not null" sort:"isActive"`
 	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
 	RegionEmployee     *RegionEmployee     `gorm:"foreignKey:EmployeeID"`

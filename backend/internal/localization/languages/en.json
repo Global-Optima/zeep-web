@@ -48,7 +48,16 @@
       "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was deleted"
     }
-  }, 
+  },
+  "responses": {
+    "500": "An unexpected error occurred. Please try again later.",
+    "404": "The requested resource was not found.",
+    "403": "Access denied. You do not have permission to view this resource.",
+    "401": "You need to log in to access this resource.",
+    "400": "Bad request. The server could not understand the data sent. Please check your input and try again.",
+    "200": "The request was successfully processed.",
+    "201": "The resource was successfully created."
+  },
   "notification": {
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
       "stockRequestStatus": {

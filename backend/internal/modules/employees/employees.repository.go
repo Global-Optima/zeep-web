@@ -3,6 +3,8 @@ package employees
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -13,6 +15,7 @@ type EmployeeRepository interface {
 	CreateEmployee(employee *data.Employee) (uint, error)
 
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
+	GetEmployees(filter *types.EmployeesFilter) ([]data.Employee, error)
 	UpdateEmployee(id uint, updateModels *types.UpdateEmployeeModels) error
 	UpdateEmployeeWithAssociations(tx *gorm.DB, id uint, updateModels *types.UpdateEmployeeModels) error
 	ReassignEmployeeType(employeeID uint, newType data.EmployeeType, workplaceID uint) error
@@ -50,13 +53,71 @@ func (r *employeeRepository) CreateEmployee(employee *data.Employee) (uint, erro
 func (r *employeeRepository) GetEmployeeByID(employeeID uint) (*data.Employee, error) {
 	var employee data.Employee
 	err := r.db.Model(&data.Employee{}).
-		Preload("StoreEmployee").
-		Preload("WarehouseEmployee").
-		Preload("RegionEmployee").
-		Preload("FranchiseeEmployee").
+		Preload("StoreEmployee.Store").
+		Preload("WarehouseEmployee.Warehouse").
+		Preload("RegionEmployee.Region").
+		Preload("FranchiseeEmployee.Franchisee").
 		Preload("AdminEmployee").
+		Preload("Workdays").
 		First(&employee, employeeID).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, moduleErrors.ErrNotFound
+	}
+
 	return &employee, err
+}
+
+func (r *employeeRepository) GetEmployees(filter *types.EmployeesFilter) ([]data.Employee, error) {
+	var employees []data.Employee
+	query := r.db.Model(&data.Employee{})
+
+	if filter == nil {
+		return nil, fmt.Errorf("filter is nil")
+	}
+
+	if filter.Role != nil {
+		employeeType := data.GetEmployeeTypeByRole(*filter.Role)
+		switch employeeType {
+		case data.WarehouseEmployeeType:
+			query.Joins("JOIN warehouse_employees ON warehouse_employees.employee_id = employees.id").
+				Where("warehouse_employees.role = ?", *filter.Role)
+		case data.StoreEmployeeType:
+			query.Joins("JOIN store_employees ON store_employees.employee_id = employees.id").
+				Where("store_employees.role = ?", *filter.Role)
+		case data.RegionEmployeeType:
+			query.Joins("JOIN region_employees ON region_employees.employee_id = employees.id").
+				Where("region_employees.role = ?", *filter.Role)
+		case data.FranchiseeEmployeeType:
+			query.Joins("JOIN franchisee_employees ON franchisee_employees.employee_id = employees.id").
+				Where("franchisee_employees.role = ?", *filter.Role)
+		case data.AdminEmployeeType:
+			query.Joins("JOIN store_employees ON store_employees.employee_id = employees.id").
+				Where("store_employees.role = ?", *filter.Role)
+		}
+	}
+
+	if filter.IsActive != nil {
+		query.Where("is_active = ?", *filter.IsActive)
+	}
+
+	if filter.Search != nil {
+		searchTerm := "%" + *filter.Search + "%"
+		query.Where("(first_name || ' ' || last_name) ILIKE ?", "%"+searchTerm+"%")
+	}
+
+	var err error
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Employee{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = query.Find(&employees).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, moduleErrors.ErrNotFound
+	}
+
+	return employees, err
 }
 
 func (r *employeeRepository) GetEmployeeByEmailOrPhone(email string, phone string) (*data.Employee, error) {
@@ -93,17 +154,21 @@ func (r *employeeRepository) UpdateEmployeeWithAssociations(tx *gorm.DB, id uint
 		return types.ErrNothingToUpdate
 	}
 
-	if updateModels.Employee != nil {
+	if updateModels.Employee != nil && !utils.IsEmpty(updateModels.Employee) {
 		err := tx.Model(&data.Employee{}).Where("id = ?", id).Updates(updateModels.Employee).Error
 		if err != nil {
 			return err
 		}
 	}
 
-	if updateModels.Workdays == nil {
-		err := tx.Where("employees.id = ?", id).Delete(&data.EmployeeWorkday{}).Error
+	if updateModels.Workdays != nil && !utils.IsEmpty(updateModels.Workdays) {
+		err := tx.Where("employee_id = ?", id).Unscoped().Delete(&data.EmployeeWorkday{}).Error
 		if err != nil {
 			return err
+		}
+
+		for i := 0; i < len(updateModels.Workdays); i++ {
+			updateModels.Workdays[i].EmployeeID = id
 		}
 
 		err = tx.Model(&data.EmployeeWorkday{}).Create(&updateModels.Workdays).Error

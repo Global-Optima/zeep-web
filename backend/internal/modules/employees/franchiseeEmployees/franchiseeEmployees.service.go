@@ -15,7 +15,7 @@ import (
 type FranchiseeEmployeeService interface {
 	CreateFranchiseeEmployee(franchiseeID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetFranchiseeEmployees(franchiseeID uint, filter *employeesTypes.EmployeesFilter) ([]types.FranchiseeEmployeeDTO, error)
-	GetFranchiseeEmployeeByID(id, franchiseeID uint) (*types.FranchiseeEmployeeDTO, error)
+	GetFranchiseeEmployeeByID(id, franchiseeID uint) (*types.FranchiseeEmployeeDetailsDTO, error)
 	UpdateFranchiseeEmployee(id, franchiseeID uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error
 }
 
@@ -69,13 +69,13 @@ func (s *franchiseeEmployeeService) GetFranchiseeEmployees(franchiseeID uint, fi
 		return nil, wrappedErr
 	}
 	dtos := make([]types.FranchiseeEmployeeDTO, len(franchiseeEmployees))
-	for i, employee := range franchiseeEmployees {
-		dtos[i] = *types.MapToFranchiseeEmployeeDTO(&employee)
+	for i, franchiseeEmployee := range franchiseeEmployees {
+		dtos[i] = *types.MapToFranchiseeEmployeeDTO(&franchiseeEmployee)
 	}
 	return dtos, nil
 }
 
-func (s *franchiseeEmployeeService) GetFranchiseeEmployeeByID(id, franchiseeID uint) (*types.FranchiseeEmployeeDTO, error) {
+func (s *franchiseeEmployeeService) GetFranchiseeEmployeeByID(id, franchiseeID uint) (*types.FranchiseeEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid franchise employee ID")
 	}
@@ -91,7 +91,7 @@ func (s *franchiseeEmployeeService) GetFranchiseeEmployeeByID(id, franchiseeID u
 		return nil, errors.New("employee not found")
 	}
 
-	return types.MapToFranchiseeEmployeeDTO(employee), nil
+	return types.MapToFranchiseeEmployeeDetailsDTO(employee), nil
 }
 
 func (s *franchiseeEmployeeService) UpdateFranchiseeEmployee(id, franchiseeID uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error {

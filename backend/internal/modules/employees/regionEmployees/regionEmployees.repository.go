@@ -65,7 +65,8 @@ func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *emp
 func (r *regionEmployeeRepository) GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error) {
 	var regionEmployee data.RegionEmployee
 	err := r.db.Model(&data.RegionEmployee{}).
-		Preload("Employee").
+		Preload("Employee.Workdays").
+		Preload("Region").
 		Where("id = ? AND region_id = ?", id, regionID).
 		First(&regionEmployee).Error
 	if err != nil {
@@ -81,9 +82,13 @@ func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, 
 	}
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var existingRegionEmployee data.RegionEmployee
+		r.db.Model(&data.RegionEmployee{}).
+			Where("id = ? AND region_id = ?", id, regionID).
+			First(&existingRegionEmployee)
 
 		if updateModels.RegionEmployee != nil {
-			err := tx.Model(&data.StoreEmployee{}).
+			err := tx.Model(&data.RegionEmployee{}).
 				Where("id = ? AND region_id = ?", id, regionID).
 				Updates(updateModels.RegionEmployee).Error
 			if err != nil {
@@ -92,7 +97,7 @@ func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, 
 		}
 
 		if updateModels.UpdateEmployeeModels != nil {
-			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, updateModels.RegionEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingRegionEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err
 			}

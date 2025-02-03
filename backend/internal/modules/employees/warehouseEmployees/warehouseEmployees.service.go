@@ -15,7 +15,7 @@ import (
 type WarehouseEmployeeService interface {
 	CreateWarehouseEmployee(warehouseID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetWarehouseEmployees(warehouseID uint, filter *employeesTypes.EmployeesFilter) ([]types.WarehouseEmployeeDTO, error)
-	GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDTO, error)
+	GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDetailsDTO, error)
 	UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error
 }
 
@@ -70,14 +70,15 @@ func (s *warehouseEmployeeService) GetWarehouseEmployees(warehouseID uint, filte
 	}
 
 	dtos := make([]types.WarehouseEmployeeDTO, len(warehouseEmployees))
-	for i, employee := range warehouseEmployees {
-		dtos[i] = *types.MapToWarehouseEmployeeDTO(&employee)
+	for i, warehouseEmployee := range warehouseEmployees {
+		warehouseEmployee.Employee.WarehouseEmployee = &warehouseEmployee
+		dtos[i] = *types.MapToWarehouseEmployeeDTO(&warehouseEmployee)
 	}
 
 	return dtos, nil
 }
 
-func (s *warehouseEmployeeService) GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDTO, error) {
+func (s *warehouseEmployeeService) GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid warehouse employee ID")
 	}
@@ -93,7 +94,7 @@ func (s *warehouseEmployeeService) GetWarehouseEmployeeByID(id, warehouseID uint
 		return nil, errors.New("employee not found")
 	}
 
-	return types.MapToWarehouseEmployeeDTO(employee), nil
+	return types.MapToWarehouseEmployeeDetailsDTO(employee), nil
 }
 
 func (s *warehouseEmployeeService) UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error {

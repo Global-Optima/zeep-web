@@ -8,9 +8,21 @@ import (
 )
 
 func MapToFranchiseeEmployeeDTO(franchiseeEmployee *data.FranchiseeEmployee) *FranchiseeEmployeeDTO {
-	dto := &FranchiseeEmployeeDTO{
-		EmployeeDTO: *employeesTypes.MapToEmployeeDTO(&franchiseeEmployee.Employee),
-		Franchisee:  *franchiseesTypes.ConvertFranchiseeToDTO(&franchiseeEmployee.Franchisee),
+	franchiseeEmployee.Employee.FranchiseeEmployee = franchiseeEmployee
+	return &FranchiseeEmployeeDTO{
+		ID:              franchiseeEmployee.ID,
+		BaseEmployeeDTO: *employeesTypes.MapToBaseEmployeeDTO(&franchiseeEmployee.Employee),
+		EmployeeID:      franchiseeEmployee.Employee.ID,
+	}
+}
+
+func MapToFranchiseeEmployeeDetailsDTO(franchiseeEmployee *data.FranchiseeEmployee) *FranchiseeEmployeeDetailsDTO {
+	franchiseeEmployee.Employee.FranchiseeEmployee = franchiseeEmployee
+	dto := &FranchiseeEmployeeDetailsDTO{
+		ID:                     franchiseeEmployee.ID,
+		BaseEmployeeDetailsDTO: *employeesTypes.MapToBaseEmployeeDetailsDTO(&franchiseeEmployee.Employee),
+		EmployeeID:             franchiseeEmployee.EmployeeID,
+		Franchisee:             *franchiseesTypes.ConvertFranchiseeToDTO(&franchiseeEmployee.Franchisee),
 	}
 	return dto
 }

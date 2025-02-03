@@ -190,10 +190,6 @@ func (h *StoreEmployeeHandler) UpdateStoreEmployee(c *gin.Context) {
 		utils.SendBadRequestError(c, "failed to update store employee: employee not found")
 		return
 	}
-	if !data.CanManageRole(role, *input.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
-		return
-	}
 
 	err = h.service.UpdateStoreEmployee(uint(id), storeID, &input, role)
 	if err != nil {

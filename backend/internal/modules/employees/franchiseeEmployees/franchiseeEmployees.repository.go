@@ -65,7 +65,8 @@ func (r *franchiseeEmployeeRepository) GetFranchiseeEmployees(franchiseeID uint,
 func (r *franchiseeEmployeeRepository) GetFranchiseeEmployeeByID(id, franchiseeID uint) (*data.FranchiseeEmployee, error) {
 	var franchiseeEmployee data.FranchiseeEmployee
 	err := r.db.Model(&data.FranchiseeEmployee{}).
-		Preload("Employee").
+		Preload("Employee.Workdays").
+		Preload("Franchisee").
 		Where("id = ? AND franchisee_id = ?", id, franchiseeID).
 		First(&franchiseeEmployee).Error
 	if err != nil {
@@ -80,9 +81,13 @@ func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchi
 	}
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var existingFranchiseeEmployee data.FranchiseeEmployee
+		r.db.Model(&data.FranchiseeEmployee{}).
+			Where("id = ? AND franchisee_id = ?", id, franchiseeID).
+			First(&existingFranchiseeEmployee)
 
 		if updateModels.FranchiseeEmployee != nil {
-			err := tx.Model(&data.StoreEmployee{}).
+			err := tx.Model(&data.FranchiseeEmployee{}).
 				Where("id = ? AND franchisee_id = ?", id, franchiseeID).
 				Updates(updateModels.FranchiseeEmployee).Error
 			if err != nil {
@@ -91,7 +96,7 @@ func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchi
 		}
 
 		if updateModels.UpdateEmployeeModels != nil {
-			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, updateModels.FranchiseeEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingFranchiseeEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err
 			}

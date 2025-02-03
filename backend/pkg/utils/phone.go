@@ -26,11 +26,3 @@ func FormatPhoneInput(rawNumber string) string {
 	}
 	return phonenumbers.Format(phoneNumber, INTERNATIONAL_COMPACT_PHONE_NUMBER_FORMAT)
 }
-
-func FormatPhoneOutput(rawNumber string) string {
-	phoneNumber, err := phonenumbers.Parse(rawNumber, "")
-	if err != nil {
-		return ""
-	}
-	return phonenumbers.Format(phoneNumber, phonenumbers.INTERNATIONAL)
-}
