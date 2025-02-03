@@ -7,8 +7,8 @@ import { formatLocalizedMessage } from '@/core/utils/format-localized-messages.u
 import type {
   GetNotificationsFilter,
   MarkNotificationsAsReadDTO,
-} from '@/modules/admin/admin-notifications/models/notifications.model'
-import { notificationsService } from '@/modules/admin/admin-notifications/services/notifications.service'
+} from '@/modules/admin/notifications/models/notifications.model'
+import { notificationsService } from '@/modules/admin/notifications/services/notifications.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -31,7 +31,7 @@ const filter = ref<GetNotificationsFilter>({
 const { data: notificationsResponse } = useQuery({
   queryKey: computed(() => ['admin-notifications', filter.value]),
   queryFn: () => notificationsService.getNotifications(filter.value),
-  refetchInterval: 5_000,
+  refetchInterval: 10_000,
 });
 
 const { mutate: readMultipleNotifications } = useMutation({

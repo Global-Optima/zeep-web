@@ -24,7 +24,11 @@ import type { SupplierDTO, UpdateSupplierDTO } from '@/modules/admin/suppliers/m
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Props & Events
-const {supplier} = defineProps<{supplier: SupplierDTO}>()
+const props = defineProps<{
+  supplier: SupplierDTO
+  readonly?: boolean
+}>()
+
 const emits = defineEmits<{
   (e: 'onSubmit', dto: UpdateSupplierDTO): void
   (e: 'onCancel'): void
@@ -44,11 +48,12 @@ const createSupplierSchema = toTypedSchema(
 // Form Setup
 const { handleSubmit, resetForm } = useForm({
   validationSchema: createSupplierSchema,
-  initialValues: supplier
+  initialValues: props.supplier
 })
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
+  if (props.readonly) return
   emits('onSubmit', formValues)
 })
 
@@ -71,10 +76,13 @@ const onCancel = () => {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Обновить {{ supplier.name }}
+				{{ supplier.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+				v-if="!readonly"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -109,6 +117,7 @@ const onCancel = () => {
 									id="name"
 									type="text"
 									v-bind="componentField"
+									:readonly="readonly"
 									placeholder="Введите название"
 								/>
 							</FormControl>
@@ -129,6 +138,7 @@ const onCancel = () => {
 										id="contactEmail"
 										type="email"
 										v-bind="componentField"
+										:readonly="readonly"
 										placeholder="Введите email"
 									/>
 								</FormControl>
@@ -146,6 +156,7 @@ const onCancel = () => {
 										id="contactPhone"
 										type="text"
 										v-bind="componentField"
+										:readonly="readonly"
 										placeholder="Введите телефон"
 									/>
 								</FormControl>
@@ -154,7 +165,6 @@ const onCancel = () => {
 						</FormField>
 					</div>
 
-					<!-- City -->
 					<FormField
 						name="city"
 						v-slot="{ componentField }"
@@ -166,6 +176,7 @@ const onCancel = () => {
 									id="city"
 									type="text"
 									v-bind="componentField"
+									:readonly="readonly"
 									placeholder="Введите город"
 								/>
 							</FormControl>
@@ -185,6 +196,7 @@ const onCancel = () => {
 									id="address"
 									type="text"
 									v-bind="componentField"
+									:readonly="readonly"
 									placeholder="Введите адрес"
 								/>
 							</FormControl>
@@ -196,7 +208,10 @@ const onCancel = () => {
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div
+			class="flex justify-center items-center gap-2 md:hidden"
+			v-if="!readonly"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
 
 // UI
@@ -12,10 +12,13 @@ import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
 import { ChevronLeft, Printer } from 'lucide-vue-next'
 
-// Dialogs
-import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
-import AdminSelectStockMaterialCategory from '@/modules/admin/stock-material-categories/components/admin-select-stock-material-category.vue'
-import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
+// Async Components
+const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
+const AdminSelectStockMaterialCategory = defineAsyncComponent(() =>
+  import('@/modules/admin/stock-material-categories/components/admin-select-stock-material-category.vue'))
+const AdminSelectUnit = defineAsyncComponent(() =>
+  import('@/modules/admin/units/components/admin-select-unit.vue'))
 
 // Types
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
@@ -28,8 +31,9 @@ import { stockMaterialsService } from '@/modules/admin/stock-materials/services/
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 // Props
-const { stockMaterial } = defineProps<{
+const { stockMaterial, readonly = false } = defineProps<{
   stockMaterial: StockMaterialsDTO
+  readonly?: boolean
 }>()
 
 // Emit
@@ -59,9 +63,7 @@ const updateStockMaterialSchema = toTypedSchema(
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
-    barcode: z
-      .string()
-      .max(20, 'Введите штрихкод'),
+    barcode: z.string().max(20, 'Введите штрихкод'),
   })
 )
 
@@ -81,9 +83,8 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
 })
 
 const onSubmit = handleSubmit((formValues) => {
-
+  if (readonly) return
   const dto: UpdateStockMaterialDTO = formValues
-
   emits('onSubmit', dto)
 })
 
@@ -93,23 +94,29 @@ function onCancel() {
 }
 
 function selectUnit(unit: UnitDTO) {
+  if (readonly) return
   selectedUnit.value = unit
   openUnitDialog.value = false
   setFieldValue('unitId', unit.id)
 }
+
 function selectCategory(category: StockMaterialCategoryDTO) {
+  if (readonly) return
   selectedCategory.value = category
   openCategoryDialog.value = false
   setFieldValue('categoryId', category.id)
 }
+
 function selectIngredient(ingredient: IngredientsDTO) {
+  if (readonly) return
   selectedIngredient.value = ingredient
   openIngredientDialog.value = false
   setFieldValue('ingredientId', ingredient.id)
 }
 
 const onPrintBarcode = async () => {
-  await stockMaterialsService.getBarcodeFile(stockMaterial.id);
+  if (readonly) return
+  await stockMaterialsService.getBarcodeFile(stockMaterial.id)
 }
 </script>
 
@@ -126,21 +133,26 @@ const onPrintBarcode = async () => {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Обновить {{ stockMaterial.name }}
+				{{ stockMaterial.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				v-if="!readonly"
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+			>
 				<Button
 					variant="outline"
 					type="button"
 					@click="onCancel"
-					>Отменить</Button
 				>
+					Отменить
+				</Button>
 				<Button
 					type="submit"
 					@click="onSubmit"
-					>Сохранить</Button
 				>
+					Сохранить
+				</Button>
 			</div>
 		</div>
 
@@ -151,9 +163,9 @@ const onPrintBarcode = async () => {
 				<Card>
 					<CardHeader>
 						<CardTitle>Детали материала</CardTitle>
-						<CardDescription
-							>Обновите название, описание и характеристики материала.</CardDescription
-						>
+						<CardDescription v-if="!readonly">
+							Обновите название, описание и характеристики материала.
+						</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div class="gap-6 grid">
@@ -170,6 +182,7 @@ const onPrintBarcode = async () => {
 											type="text"
 											v-bind="componentField"
 											placeholder="Введите название материала"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -189,6 +202,7 @@ const onPrintBarcode = async () => {
 											v-bind="componentField"
 											placeholder="Краткое описание материала"
 											class="min-h-32"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -211,6 +225,7 @@ const onPrintBarcode = async () => {
 											/>
 
 											<Button
+												v-if="!readonly"
 												variant="outline"
 												@click="onPrintBarcode"
 												class="gap-2"
@@ -236,6 +251,7 @@ const onPrintBarcode = async () => {
 											type="number"
 											v-bind="componentField"
 											placeholder="Введите размер упаковки"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -255,6 +271,7 @@ const onPrintBarcode = async () => {
 											type="number"
 											v-bind="componentField"
 											placeholder="Введите безопасный запас"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -274,6 +291,7 @@ const onPrintBarcode = async () => {
 											type="number"
 											v-bind="componentField"
 											placeholder="Введите минимальный срок годности в днях"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -293,13 +311,18 @@ const onPrintBarcode = async () => {
 						<CardDescription>Выберите единицу измерения.</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Button
-							variant="link"
-							@click="openUnitDialog = true"
-							class="mt-0 p-0 underline"
-						>
-							{{ selectedUnit?.name || 'Не выбрана' }}
-						</Button>
+						<template v-if="!readonly">
+							<Button
+								variant="link"
+								@click="openUnitDialog = true"
+								class="mt-0 p-0 underline"
+							>
+								{{ selectedUnit?.name || 'Не выбрана' }}
+							</Button>
+						</template>
+						<template v-else>
+							<span class="text-muted-foreground">{{ selectedUnit?.name || 'Не выбрана' }}</span>
+						</template>
 					</CardContent>
 				</Card>
 
@@ -310,13 +333,21 @@ const onPrintBarcode = async () => {
 						<CardDescription>Выберите категорию материала.</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Button
-							variant="link"
-							@click="openCategoryDialog = true"
-							class="mt-0 p-0 underline"
-						>
-							{{ selectedCategory?.name || 'Не выбрана' }}
-						</Button>
+						<template v-if="!readonly">
+							<Button
+								variant="link"
+								@click="openCategoryDialog = true"
+								class="mt-0 p-0 underline"
+							>
+								{{ selectedCategory?.name || 'Не выбрана' }}
+							</Button>
+						</template>
+						<template v-else>
+							<span
+								class="text-muted-foreground"
+								>{{ selectedCategory?.name || 'Не выбрана' }}</span
+							>
+						</template>
 					</CardContent>
 				</Card>
 
@@ -327,44 +358,60 @@ const onPrintBarcode = async () => {
 						<CardDescription>Выберите ингредиент.</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Button
-							variant="link"
-							@click="openIngredientDialog = true"
-							class="mt-0 p-0 underline"
-						>
-							{{ selectedIngredient?.name || 'Не выбран' }}
-						</Button>
+						<template v-if="!readonly">
+							<Button
+								variant="link"
+								@click="openIngredientDialog = true"
+								class="mt-0 p-0 underline"
+							>
+								{{ selectedIngredient?.name || 'Не выбран' }}
+							</Button>
+						</template>
+						<template v-else>
+							<span
+								class="text-muted-foreground"
+								>{{ selectedIngredient?.name || 'Не выбран' }}</span
+							>
+						</template>
 					</CardContent>
 				</Card>
 			</div>
 		</div>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div
+			v-if="!readonly"
+			class="flex justify-center items-center gap-2 md:hidden"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"
-				>Отменить</Button
 			>
+				Отменить
+			</Button>
 			<Button
 				type="submit"
 				@click="onSubmit"
-				>Сохранить</Button
 			>
+				Сохранить
+			</Button>
 		</div>
 
 		<!-- Dialogs -->
 		<AdminSelectUnit
+			v-if="!readonly"
 			:open="openUnitDialog"
 			@close="openUnitDialog = false"
 			@select="selectUnit"
 		/>
 		<AdminSelectStockMaterialCategory
+			v-if="!readonly"
 			:open="openCategoryDialog"
 			@close="openCategoryDialog = false"
 			@select="selectCategory"
 		/>
 		<AdminIngredientsSelectDialog
+			v-if="!readonly"
 			:open="openIngredientDialog"
 			@close="openIngredientDialog = false"
 			@select="selectIngredient"

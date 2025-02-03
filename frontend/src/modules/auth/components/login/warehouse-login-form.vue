@@ -153,8 +153,8 @@ import {
   SelectValue
 } from '@/core/components/ui/select'
 import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import { warehouseService } from '@/modules/admin/warehouses/services/warehouse.service'
 import { authService } from '@/modules/auth/services/auth.service'
-import { warehouseService } from "@/modules/warehouse/services/warehouse.service"
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
@@ -179,7 +179,7 @@ const { values, isSubmitting, handleSubmit } = useForm({
 
 const { data: warehouses, isLoading: warehousesLoading, isError: warehousesError } = useQuery({
   queryKey: ['warehouses-all'],
-  queryFn: () => warehouseService.getWarehouses(),
+  queryFn: () => warehouseService.getAll(),
 })
 
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({

@@ -163,7 +163,7 @@ import {
 import { Input } from '@/core/components/ui/input'
 import { Label } from '@/core/components/ui/label'
 import { Switch } from '@/core/components/ui/switch'
-import type { CreateStoreDTO } from '@/modules/stores/models/stores-dto.model'
+import type { CreateStoreDTO } from '@/modules/admin/stores/models/stores-dto.model'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'

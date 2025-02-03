@@ -6,6 +6,7 @@ import {
 	ChartBar,
 	LayoutList,
 	ListPlus,
+	MapPinned,
 	Package,
 	PackageCheck,
 	Ruler,
@@ -133,7 +134,12 @@ export const adminNavItems: SidebarNavItem[] = [
 		icon: PackageCheck,
 		accessRoles: [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE],
 	},
-	// Collapsible groups
+	{
+		name: 'Регионы',
+		routeKey: 'ADMIN_REGIONS',
+		icon: MapPinned,
+		accessRoles: [EmployeeRole.ADMIN],
+	},
 	{
 		label: 'Товары',
 		icon: Package,

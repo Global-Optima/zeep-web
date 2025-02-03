@@ -25,8 +25,8 @@
 import { Card, CardContent } from '@/core/components/ui/card'
 import AdminStoresList from '@/modules/admin/stores/components/list/admin-stores-list.vue'
 import AdminStoresToolbar from '@/modules/admin/stores/components/list/admin-stores-toolbar.vue'
-import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
-import { storesService } from '@/modules/stores/services/stores.service'
+import type { StoresFilter } from '@/modules/admin/stores/models/stores-dto.model'
+import { storesService } from '@/modules/admin/stores/services/stores.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 

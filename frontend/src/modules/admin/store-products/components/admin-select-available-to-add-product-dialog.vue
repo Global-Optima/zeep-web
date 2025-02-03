@@ -5,7 +5,7 @@
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="w-full max-w-7xl"
+			class="w-full max-w-2xl lg:max-w-4xl"
 		>
 			<DialogHeader>
 				<DialogTitle>Выберите доступный для добавления товар</DialogTitle>

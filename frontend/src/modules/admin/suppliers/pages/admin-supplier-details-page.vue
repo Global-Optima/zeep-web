@@ -23,6 +23,7 @@
 					:supplier="supplier"
 					@on-submit="onUpdateSupplier"
 					@on-cancel="onCancel"
+					readonly
 				/>
 			</TabsContent>
 
@@ -32,6 +33,7 @@
 					:stock-materials="stockMaterials"
 					@on-submit="onUpdateSupplierMaterials"
 					@on-cancel="onCancel"
+					readonly
 				/>
 			</TabsContent>
 		</Tabs>
@@ -150,6 +152,7 @@ function onUpdateSupplierMaterials(data: UpdateSupplierMaterialDTO[]) {
 }
 
 function onCancel() {
+  toast({ title: 'Отмена', description: 'Действие отменено.', variant: 'default' })
 	router.back()
 }
 </script>

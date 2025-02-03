@@ -111,7 +111,7 @@ function selectCategory(category: ProductCategoryDTO) {
 					<CardHeader>
 						<CardTitle>Основная информация</CardTitle>
 						<CardDescription>
-							Заполните основные сведения о продукте (название и описание).
+							Заполните основные сведения о продукте.
 						</CardDescription>
 					</CardHeader>
 					<CardContent>

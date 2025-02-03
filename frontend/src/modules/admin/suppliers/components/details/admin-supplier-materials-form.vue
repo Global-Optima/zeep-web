@@ -17,51 +17,47 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
-import { ChevronLeft, Trash } from 'lucide-vue-next'
-import { ref } from 'vue'
-
-import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
 import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type {
   SupplierDTO,
   SupplierMaterialResponse,
   UpdateSupplierMaterialDTO
 } from '@/modules/admin/suppliers/models/suppliers.model'
-import type { UnitDTO } from '@/modules/admin/units/models/units.model'
+import { ChevronLeft, Trash } from 'lucide-vue-next'
+import { defineAsyncComponent, ref } from 'vue'
 
-interface UpdateSupplierMaterialForm extends UpdateSupplierMaterialDTO {
-  name: string
-  unit: UnitDTO
-  size: number
-}
+// Async Dialog Components
+const AdminStockMaterialsSelectDialog = defineAsyncComponent(() => import('@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'))
 
 /** Props */
-const { supplier, stockMaterials } = defineProps<{ supplier: SupplierDTO, stockMaterials: SupplierMaterialResponse[] }>()
+const props = defineProps<{
+  supplier: SupplierDTO
+  stockMaterials: SupplierMaterialResponse[]
+  readonly?: boolean
+}>()
+
 const emit = defineEmits<{
   (e: 'on-submit', payload: UpdateSupplierMaterialDTO[]): void
   (e: 'on-cancel'): void
 }>()
 
 const { toast } = useToast()
-
 const openDialog = ref(false)
 
-const mergedStockMaterialsTableData = ref<UpdateSupplierMaterialForm[]>(stockMaterials.map(m => ({
+const mergedStockMaterialsTableData = ref(props.stockMaterials.map(m => ({
     stockMaterialId: m.stockMaterial.id,
     name: m.stockMaterial.name,
     unit: m.stockMaterial.unit,
     basePrice: m.basePrice,
     size: m.stockMaterial.size
-  })))
+})))
 
 /** Add New Material */
 function addMaterial(material: StockMaterialsDTO) {
+  if (props.readonly) return
+
   if (mergedStockMaterialsTableData.value.some((item) => item.stockMaterialId === material.id)) {
-    toast({
-      title: 'Ошибка',
-      description: 'Этот материал уже добавлен.',
-      variant: 'destructive',
-    })
+    toast({ title: 'Ошибка', description: 'Этот материал уже добавлен.', variant: 'destructive' })
     return
   }
 
@@ -73,41 +69,29 @@ function addMaterial(material: StockMaterialsDTO) {
     size: material.size
   })
 
-  toast({
-    title: 'Успех',
-    description: `Материал "${material.name}" добавлен.`,
-    variant: 'default',
-  })
+  toast({ title: 'Успех', description: `Материал "${material.name}" добавлен.`, variant: 'default' })
 }
 
 /** Remove Material */
 function removeMaterial(index: number) {
+  if (props.readonly) return
+
   const removed = mergedStockMaterialsTableData.value.splice(index, 1)[0]
-  toast({
-    title: 'Удалено',
-    description: `Материал "${removed.name}" удален.`,
-    variant: 'default',
-  })
+  toast({ title: 'Удалено', description: `Материал "${removed.name}" удален.`, variant: 'default' })
 }
 
 /** Submit Updated Materials */
 function onSubmit() {
+  if (props.readonly) return
+
   if (mergedStockMaterialsTableData.value.length === 0) {
-    toast({
-      title: 'Ошибка',
-      description: 'Добавьте хотя бы один материал перед отправкой.',
-      variant: 'destructive',
-    })
+    toast({ title: 'Ошибка', description: 'Добавьте хотя бы один материал перед отправкой.', variant: 'destructive' })
     return
   }
 
   const invalidMaterials = mergedStockMaterialsTableData.value.filter((item) => item.basePrice <= 0)
   if (invalidMaterials.length > 0) {
-    toast({
-      title: 'Ошибка',
-      description: 'Убедитесь, что все цены больше нуля.',
-      variant: 'destructive',
-    })
+    toast({ title: 'Ошибка', description: 'Убедитесь, что все цены больше нуля.', variant: 'destructive' })
     return
   }
 
@@ -117,21 +101,12 @@ function onSubmit() {
   }))
 
   emit('on-submit', payload)
-  toast({
-    title: 'Успех',
-    description: 'Данные успешно сохранены.',
-    variant: 'default',
-  })
+  toast({ title: 'Успех', description: 'Данные успешно сохранены.', variant: 'default' })
 }
 
 /** Cancel Form */
 function onCancel() {
   emit('on-cancel')
-  toast({
-    title: 'Отмена',
-    description: 'Действие отменено.',
-    variant: 'default',
-  })
 }
 </script>
 
@@ -151,7 +126,10 @@ function onCancel() {
 				Товары {{ supplier.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+				v-if="!readonly"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -177,8 +155,10 @@ function onCancel() {
 						>
 					</div>
 					<Button
+						v-if="!readonly"
 						variant="outline"
 						@click="openDialog = true"
+						:disabled="readonly"
 						>Добавить материал</Button
 					>
 				</div>
@@ -190,7 +170,10 @@ function onCancel() {
 							<TableHead>Товар</TableHead>
 							<TableHead>Упаковка</TableHead>
 							<TableHead>Цена</TableHead>
-							<TableHead class="text-center"></TableHead>
+							<TableHead
+								class="text-center"
+								v-if="!readonly"
+							></TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -199,20 +182,25 @@ function onCancel() {
 							:key="item.stockMaterialId"
 						>
 							<TableCell>{{ item.name }}</TableCell>
-							<TableCell> {{item.size }} {{ item.unit.name }} </TableCell>
+							<TableCell>{{ item.size }} {{ item.unit.name }}</TableCell>
 							<TableCell>
 								<Input
 									v-model.number="item.basePrice"
 									type="number"
 									class="w-full"
 									placeholder="Введите цену"
+									:readonly="readonly"
 								/>
 							</TableCell>
-							<TableCell class="text-center">
+							<TableCell
+								class="text-center"
+								v-if="!readonly"
+							>
 								<Button
 									variant="ghost"
 									size="icon"
 									@click="removeMaterial(index)"
+									:disabled="readonly"
 								>
 									<Trash class="text-red-500 hover:text-red-700" />
 								</Button>
@@ -230,7 +218,10 @@ function onCancel() {
 			</CardContent>
 		</Card>
 
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div
+			class="flex justify-center items-center gap-2 md:hidden"
+			v-if="!readonly"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"
@@ -243,8 +234,9 @@ function onCancel() {
 			>
 		</div>
 
-		<!-- Dialog -->
+		<!-- Async Dialog -->
 		<AdminStockMaterialsSelectDialog
+			v-if="!readonly"
 			:open="openDialog"
 			@close="openDialog = false"
 			@select="addMaterial"

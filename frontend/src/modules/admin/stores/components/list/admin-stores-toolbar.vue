@@ -53,7 +53,7 @@ import {
 } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
+import type { StoresFilter } from '@/modules/admin/stores/models/stores-dto.model'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'

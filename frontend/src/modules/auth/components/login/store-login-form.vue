@@ -153,8 +153,8 @@ import {
   SelectValue
 } from '@/core/components/ui/select'
 import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import { storesService } from "@/modules/admin/stores/services/stores.service"
 import { authService } from '@/modules/auth/services/auth.service'
-import { storesService } from "@/modules/stores/services/stores.service"
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'

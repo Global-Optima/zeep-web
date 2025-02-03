@@ -1,7 +1,7 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
-import type { WarehouseDTO } from '@/modules/warehouse/models/warehouse.model'
 import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
 import type { SupplierDTO } from '../../suppliers/models/suppliers.model'
+import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 
 export interface WarehouseStocksDTO {
 	stockMaterial: StockMaterialsDTO

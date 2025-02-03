@@ -52,7 +52,7 @@ class AuthService {
 	async getRegionAccounts(regionId: number) {
 		try {
 			return apiClient
-				.get<EmployeeAccount[]>(`${this.baseUrl}/employees/regions/${regionId}`)
+				.get<EmployeeAccount[]>(`${this.baseUrl}/employees/region/${regionId}`)
 				.then(res => res.data)
 		} catch (error) {
 			console.error(`Failed to get region accounts:`, error)
