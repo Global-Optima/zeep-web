@@ -3,6 +3,7 @@ import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.m
 import {
 	Apple,
 	Blocks,
+	Building2,
 	ChartBar,
 	LayoutList,
 	ListPlus,
@@ -138,6 +139,12 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Регионы',
 		routeKey: 'ADMIN_REGIONS',
 		icon: MapPinned,
+		accessRoles: [EmployeeRole.ADMIN],
+	},
+	{
+		name: 'Франчайзи',
+		routeKey: 'ADMIN_FRANCHISEES',
+		icon: Building2,
 		accessRoles: [EmployeeRole.ADMIN],
 	},
 	{

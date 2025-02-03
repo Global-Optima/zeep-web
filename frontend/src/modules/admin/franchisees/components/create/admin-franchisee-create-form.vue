@@ -6,38 +6,37 @@ import * as z from 'zod'
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import { Switch } from '@/core/components/ui/switch'
-import type { CreateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
+import { Textarea } from '@/core/components/ui/textarea'
 import { ChevronLeft } from 'lucide-vue-next'
+
+// API Service & DTOs
+import type { CreateFranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
 
 // Emits
 const emits = defineEmits<{
-  onSubmit: [dto: CreateAdditiveCategoryDTO]
-  onCancel: []
+  (e: 'onSubmit', dto: CreateFranchiseeDTO): void
+  (e: 'onCancel'): void
 }>()
 
 // Validation Schema
-const createAdditiveCategorySchema = toTypedSchema(
+const createFranchiseeSchema = toTypedSchema(
   z.object({
-    name: z.string().min(1, 'Введите название категории'),
-    description: z.string().min(1, 'Введите описание категории'),
-    isMultipleSelect: z.boolean(),
+    name: z.string().min(1, 'Введите название франчайзи'),
+    description: z.string().min(1, 'Введите описание франчайзи'),
   })
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm<CreateAdditiveCategoryDTO>({
-  validationSchema: createAdditiveCategorySchema,
-  initialValues: {
-    isMultipleSelect: true
-  }
+const { handleSubmit, resetForm } = useForm({
+  validationSchema: createFranchiseeSchema,
 })
 
 // Handlers
-const onSubmit = handleSubmit((formValues) => {
-  emits('onSubmit', {...formValues, isMultipleSelect: formValues.isMultipleSelect ?? false})
+const onSubmit = handleSubmit(async (formValues) => {
+  emits('onSubmit', formValues)
+  resetForm()
 })
 
 const onCancel = () => {
@@ -59,7 +58,7 @@ const onCancel = () => {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Создать категорию добавки
+				Создать франчайзи
 			</h1>
 
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
@@ -80,24 +79,27 @@ const onCancel = () => {
 		<!-- Main Content -->
 		<Card>
 			<CardHeader>
-				<CardTitle>Детали категории добавки</CardTitle>
-				<CardDescription>Заполните информацию о категории добавки.</CardDescription>
+				<CardTitle>Детали франчайзи</CardTitle>
+				<CardDescription>Введите название и описание нового франчайзи.</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<div class="gap-6 grid">
+				<form
+					@submit="onSubmit"
+					class="gap-6 grid"
+				>
 					<!-- Name -->
 					<FormField
 						name="name"
 						v-slot="{ componentField }"
 					>
 						<FormItem>
-							<FormLabel>Название</FormLabel>
+							<FormLabel>Название франчайзи</FormLabel>
 							<FormControl>
 								<Input
 									id="name"
 									type="text"
 									v-bind="componentField"
-									placeholder="Введите название категории добавки"
+									placeholder="Введите название франчайзи"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -112,41 +114,17 @@ const onCancel = () => {
 						<FormItem>
 							<FormLabel>Описание</FormLabel>
 							<FormControl>
-								<Input
+								<Textarea
 									id="description"
-									type="text"
 									v-bind="componentField"
-									placeholder="Введите описание категории добавки"
+									placeholder="Введите описание (необязательно)"
+									class="min-h-32"
 								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
 					</FormField>
-
-					<!-- Is Multiple Select -->
-					<FormField
-						v-slot="{ value, handleChange }"
-						name="isMultipleSelect"
-					>
-						<FormItem
-							class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
-						>
-							<div class="flex flex-col space-y-0.5">
-								<FormLabel class="font-medium text-base"> Множественный выбор </FormLabel>
-								<FormDescription class="text-sm">
-									Укажите можно ли выбрать несколько топпингов в этой категории при заказе
-								</FormDescription>
-							</div>
-
-							<FormControl>
-								<Switch
-									:checked="value"
-									@update:checked="handleChange"
-								/>
-							</FormControl>
-						</FormItem>
-					</FormField>
-				</div>
+				</form>
 			</CardContent>
 		</Card>
 
@@ -160,8 +138,9 @@ const onCancel = () => {
 			<Button
 				type="submit"
 				@click="onSubmit"
-				>Сохранить</Button
 			>
+				Сохранить
+			</Button>
 		</div>
 	</div>
 </template>

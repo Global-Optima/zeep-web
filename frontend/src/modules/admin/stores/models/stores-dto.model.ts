@@ -1,8 +1,8 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 
 export interface StoresFilter extends PaginationParams {
-	searchTerm?: string
-	isFranchise?: boolean
+	search?: string
+	franchiseeId?: number
 }
 
 export interface CreateStoreDTO {
