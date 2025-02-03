@@ -87,7 +87,7 @@ func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, 
 			Where("id = ? AND region_id = ?", id, regionID).
 			First(&existingRegionEmployee)
 
-		if updateModels.RegionEmployee != nil {
+		if updateModels.RegionEmployee != nil && !utils.IsEmpty(updateModels.RegionEmployee) {
 			err := tx.Model(&data.RegionEmployee{}).
 				Where("id = ? AND region_id = ?", id, regionID).
 				Updates(updateModels.RegionEmployee).Error
@@ -96,7 +96,7 @@ func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, 
 			}
 		}
 
-		if updateModels.UpdateEmployeeModels != nil {
+		if updateModels.UpdateEmployeeModels != nil && !utils.IsEmpty(updateModels.UpdateEmployeeModels) {
 			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingRegionEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err

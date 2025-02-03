@@ -86,7 +86,7 @@ func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchi
 			Where("id = ? AND franchisee_id = ?", id, franchiseeID).
 			First(&existingFranchiseeEmployee)
 
-		if updateModels.FranchiseeEmployee != nil {
+		if updateModels.FranchiseeEmployee != nil && !utils.IsEmpty(updateModels.FranchiseeEmployee) {
 			err := tx.Model(&data.FranchiseeEmployee{}).
 				Where("id = ? AND franchisee_id = ?", id, franchiseeID).
 				Updates(updateModels.FranchiseeEmployee).Error
@@ -95,7 +95,7 @@ func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchi
 			}
 		}
 
-		if updateModels.UpdateEmployeeModels != nil {
+		if updateModels.UpdateEmployeeModels != nil && !utils.IsEmpty(updateModels.UpdateEmployeeModels) {
 			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingFranchiseeEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err

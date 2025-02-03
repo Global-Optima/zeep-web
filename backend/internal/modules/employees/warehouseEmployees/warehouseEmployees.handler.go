@@ -82,11 +82,10 @@ func (h *WarehouseEmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 
 	var input employeesTypes.CreateEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		utils.SendBadRequestError(c, err.Error())
 		return
 	}
 
-	// Check if the role is manageable by the current user
 	if !data.CanManageRole(role, input.Role) {
 		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
 		return

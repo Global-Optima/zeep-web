@@ -3,11 +3,10 @@ package employees
 import (
 	"errors"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -149,10 +148,6 @@ func (r *employeeRepository) UpdateEmployee(id uint, updateModels *types.UpdateE
 }
 
 func (r *employeeRepository) UpdateEmployeeWithAssociations(tx *gorm.DB, id uint, updateModels *types.UpdateEmployeeModels) error {
-
-	if updateModels == nil {
-		return types.ErrNothingToUpdate
-	}
 
 	if updateModels.Employee != nil && !utils.IsEmpty(updateModels.Employee) {
 		err := tx.Model(&data.Employee{}).Where("id = ?", id).Updates(updateModels.Employee).Error

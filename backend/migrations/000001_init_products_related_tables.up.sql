@@ -380,7 +380,7 @@ CREATE TABLE
 		phone valid_phone,
 		email VARCHAR(255),
 		hashed_password VARCHAR(255) NOT NULL,
-		is_active BOOLEAN NOT NULL,
+		is_active BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
