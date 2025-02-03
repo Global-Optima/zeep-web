@@ -5,9 +5,9 @@ import type { CreateStoreDTO, StoresFilter, UpdateStoreDTO } from '../models/sto
 import type { StoreDTO } from '../models/stores.models'
 
 class StoreService {
-	async getStores(filter?: StoresFilter) {
+	async getPaginated(filter?: StoresFilter) {
 		try {
-			const response = await apiClient.get<PaginatedResponse<StoreDTO[]>>('/stores/all', {
+			const response = await apiClient.get<PaginatedResponse<StoreDTO[]>>('/stores', {
 				params: buildRequestFilter(filter),
 			})
 			return response.data
@@ -17,7 +17,7 @@ class StoreService {
 		}
 	}
 
-	async getAllStores(filter?: StoresFilter) {
+	async getAll(filter?: StoresFilter) {
 		try {
 			const response = await apiClient.get<StoreDTO[]>('/stores/all', {
 				params: buildRequestFilter(filter),

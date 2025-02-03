@@ -101,7 +101,7 @@ const onLoginEmployee = (dto: EmployeeLoginDTO) => {
 						<!-- Back Button -->
 						<button
 							@click="selectedRole = null"
-							class="flex items-center gap-2 mb-4 text-gray-700 hover:text-gray-900 transition-all duration-200"
+							class="flex items-center gap-2 mb-4 text-gray-600 hover:text-gray-900 transition-all duration-200"
 						>
 							<ArrowLeft class="w-4 h-4" />
 							Назад

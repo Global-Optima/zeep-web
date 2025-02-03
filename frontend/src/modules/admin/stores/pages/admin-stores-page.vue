@@ -31,15 +31,12 @@ import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
 // Reactive filter object
-const filter = ref<StoresFilter>({
-  searchTerm: '',
-  isFranchise: undefined,
-})
+const filter = ref<StoresFilter>({})
 
 // Query stores data
 const { data: stores } = useQuery({
   queryKey: computed(() => ['stores', filter.value]),
-  queryFn: () => storesService.getStores(filter.value),
+  queryFn: () => storesService.getPaginated(filter.value),
 })
 
 // Update filter handler

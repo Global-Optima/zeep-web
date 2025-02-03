@@ -1,7 +1,7 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
-import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
 import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
 import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
+import type { StockMaterialsDTO } from '../../stock-materials/models/stock-materials.model'
 
 export enum StockRequestStatus {
 	CREATED = 'CREATED',
@@ -12,6 +12,16 @@ export enum StockRequestStatus {
 	REJECTED_BY_WAREHOUSE = 'REJECTED_BY_WAREHOUSE',
 	ACCEPTED_WITH_CHANGE = 'ACCEPTED_WITH_CHANGE',
 }
+
+export const STOCK_REQUEST_STATUS_OPTIONS = [
+	{ label: 'Созданные', value: StockRequestStatus.CREATED },
+	{ label: 'Обработанные', value: StockRequestStatus.PROCESSED },
+	{ label: 'В доставке', value: StockRequestStatus.IN_DELIVERY },
+	{ label: 'Завершённые', value: StockRequestStatus.COMPLETED },
+	{ label: 'Отклонённые магазином', value: StockRequestStatus.REJECTED_BY_STORE },
+	{ label: 'Отклонённые складом', value: StockRequestStatus.REJECTED_BY_WAREHOUSE },
+	{ label: 'Принятые с изменениями', value: StockRequestStatus.ACCEPTED_WITH_CHANGE },
+]
 
 export const STOCK_REQUEST_STATUS_COLOR: Record<StockRequestStatus, string> = {
 	[StockRequestStatus.CREATED]: 'bg-blue-100 text-blue-800', // Informative
