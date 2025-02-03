@@ -173,7 +173,7 @@ CREATE TABLE
 		name VARCHAR(255) NOT NULL,
 		facility_address_id INT REFERENCES facility_addresses (id),
 		franchisee_id INT REFERENCES franchisees (id) ON DELETE CASCADE,
-		status VARCHAR(20) DEFAULT 'ACTIVE',
+		is_active BOOLEAN DEFAULT TRUE,
 		contact_phone valid_phone,
 		contact_email VARCHAR(255),
 		store_hours VARCHAR(255),

@@ -2,6 +2,7 @@ package warehouse
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -15,7 +16,7 @@ type WarehouseRepository interface {
 
 	CreateWarehouse(warehouse *data.Warehouse, facilityAddress *data.FacilityAddress) error
 	GetWarehouseByID(id uint) (*data.Warehouse, error)
-	GetAllWarehouses(pagination *utils.Pagination) ([]data.Warehouse, error)
+	GetAllWarehouses(filter *types.WarehouseFilter) ([]data.Warehouse, error)
 	GetAllWarehousesForNotifications() ([]data.Warehouse, error)
 	UpdateWarehouse(warehouse *data.Warehouse) error
 	DeleteWarehouse(id uint) error
@@ -78,15 +79,25 @@ func (r *warehouseRepository) GetWarehouseByID(id uint) (*data.Warehouse, error)
 	return &warehouse, nil
 }
 
-func (r *warehouseRepository) GetAllWarehouses(pagination *utils.Pagination) ([]data.Warehouse, error) {
+func (r *warehouseRepository) GetAllWarehouses(filter *types.WarehouseFilter) ([]data.Warehouse, error) {
 	var warehouses []data.Warehouse
 
 	query := r.db.Preload("FacilityAddress").Model(&data.Warehouse{})
-	if _, err := utils.ApplyPagination(query, pagination, &data.Warehouse{}); err != nil {
-		return nil, fmt.Errorf("failed to apply pagination: %w", err)
+
+	if filter == nil {
+		return nil, fmt.Errorf("filter is nil")
 	}
 
-	if err := query.Find(&warehouses).Error; err != nil {
+	if filter.Name != nil {
+		query = query.Where("name = ?", *filter.Name)
+	}
+
+	if filter.Search != nil {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("name ILIKE ?", searchTerm)
+	}
+
+	if err := query.Scopes(filter.Sort.SortGorm()).Find(&warehouses).Error; err != nil {
 		return nil, err
 	}
 

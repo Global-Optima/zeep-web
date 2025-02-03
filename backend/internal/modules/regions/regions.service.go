@@ -14,6 +14,7 @@ type RegionService interface {
 	DeleteRegion(id uint) error
 	GetRegionByID(id uint) (*types.RegionDTO, error)
 	GetRegions(filter *types.RegionFilter) ([]types.RegionDTO, error)
+	GetAllRegions(filter *types.RegionFilter) ([]types.RegionDTO, error)
 	IsRegionWarehouse(regionID, warehouseID uint) *handlerErrors.HandlerError
 	CheckRegionWarehouse(c *gin.Context) (uint, *handlerErrors.HandlerError)
 	CheckRegionWarehouseWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError)
@@ -63,6 +64,21 @@ func (s *regionService) GetRegionByID(id uint) (*types.RegionDTO, error) {
 
 func (s *regionService) GetRegions(filter *types.RegionFilter) ([]types.RegionDTO, error) {
 	regions, err := s.repo.GetRegions(filter)
+	if err != nil {
+		return nil, err
+	}
+	dtos := make([]types.RegionDTO, len(regions))
+	for i, region := range regions {
+		dtos[i] = types.RegionDTO{
+			ID:   region.ID,
+			Name: region.Name,
+		}
+	}
+	return dtos, nil
+}
+
+func (s *regionService) GetAllRegions(filter *types.RegionFilter) ([]types.RegionDTO, error) {
+	regions, err := s.repo.GetAllRegions(filter)
 	if err != nil {
 		return nil, err
 	}

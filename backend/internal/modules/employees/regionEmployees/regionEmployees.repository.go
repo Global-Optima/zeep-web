@@ -2,6 +2,7 @@ package employees
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -13,19 +14,23 @@ import (
 type RegionEmployeeRepository interface {
 	GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]data.RegionEmployee, error)
 	GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error)
-	UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateModels) error
+	UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateRegionEmployeeModels) error
 }
 
 type regionEmployeeRepository struct {
-	db *gorm.DB
+	db           *gorm.DB
+	employeeRepo employees.EmployeeRepository
 }
 
-func NewRegionEmployeeRepository(db *gorm.DB) RegionEmployeeRepository {
-	return &regionEmployeeRepository{db: db}
+func NewRegionEmployeeRepository(db *gorm.DB, employeeRepo employees.EmployeeRepository) RegionEmployeeRepository {
+	return &regionEmployeeRepository{
+		db:           db,
+		employeeRepo: employeeRepo,
+	}
 }
 
 func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]data.RegionEmployee, error) {
-	var employees []data.RegionEmployee
+	var regionEmployees []data.RegionEmployee
 	query := r.db.Model(&data.RegionEmployee{}).
 		Where("region_id = ?", regionID).Preload("Employee")
 
@@ -50,11 +55,11 @@ func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *emp
 		return nil, err
 	}
 
-	err = query.Find(&employees).Error
+	err = query.Find(&regionEmployees).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve region managers: %w", err)
 	}
-	return employees, nil
+	return regionEmployees, nil
 }
 
 func (r *regionEmployeeRepository) GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error) {
@@ -70,11 +75,33 @@ func (r *regionEmployeeRepository) GetRegionEmployeeByID(id, regionID uint) (*da
 }
 
 // TODO add employee update to all submodules
-func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateModels) error {
+func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateRegionEmployeeModels) error {
 	if updateModels == nil {
 		return employeesTypes.ErrNothingToUpdate
 	}
-	return r.db.Model(&data.RegionEmployee{}).
-		Where("id = ? AND region_id = ?", id, regionID).
-		Updates(updateModels.RegionEmployee).Error
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+
+		if updateModels.RegionEmployee != nil {
+			err := tx.Model(&data.StoreEmployee{}).
+				Where("id = ? AND region_id = ?", id, regionID).
+				Updates(updateModels.RegionEmployee).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		if updateModels.UpdateEmployeeModels != nil {
+			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, updateModels.RegionEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

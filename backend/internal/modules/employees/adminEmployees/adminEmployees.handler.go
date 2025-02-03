@@ -6,28 +6,22 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/adminEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )
 
 type AdminEmployeeHandler struct {
-	service           AdminEmployeeService
-	employeeService   employees.EmployeeService
-	auditService      audit.AuditService
-	franchiseeService franchisees.FranchiseeService
-	regionService     regions.RegionService
+	service         AdminEmployeeService
+	employeeService employees.EmployeeService
+	auditService    audit.AuditService
 }
 
-func NewAdminEmployeeHandler(service AdminEmployeeService, employeeService employees.EmployeeService, auditService audit.AuditService, franchiseeService franchisees.FranchiseeService, regionService regions.RegionService) *AdminEmployeeHandler {
+func NewAdminEmployeeHandler(service AdminEmployeeService, employeeService employees.EmployeeService, auditService audit.AuditService) *AdminEmployeeHandler {
 	return &AdminEmployeeHandler{
-		service:           service,
-		employeeService:   employeeService,
-		auditService:      auditService,
-		franchiseeService: franchiseeService,
-		regionService:     regionService,
+		service:         service,
+		employeeService: employeeService,
+		auditService:    auditService,
 	}
 }
 
@@ -44,7 +38,7 @@ func (h *AdminEmployeeHandler) CreateAdminEmployee(c *gin.Context) {
 			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 			return
 		}
-		utils.SendInternalServerError(c, "failed to create franchisee employee")
+		utils.SendInternalServerError(c, "failed to create admin employee")
 		return
 	}
 
@@ -57,7 +51,7 @@ func (h *AdminEmployeeHandler) CreateAdminEmployee(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "franchisee employee created successfully")
+	utils.SendSuccessCreatedResponse(c, "admin employee created successfully")
 }
 
 func (h *AdminEmployeeHandler) GetAdminEmployees(c *gin.Context) {

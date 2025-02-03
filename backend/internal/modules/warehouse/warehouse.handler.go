@@ -1,6 +1,7 @@
 package warehouse
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"net/http"
 	"strconv"
 
@@ -106,15 +107,17 @@ func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
 }
 
 func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
-	pagination := utils.ParsePagination(c)
+	var filter types.WarehouseFilter
 
-	warehouses, err := h.service.GetAllWarehouses(pagination)
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+
+	warehouses, err := h.service.GetAllWarehouses(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, warehouses, pagination)
+	utils.SendSuccessResponse(c, warehouses)
 }
 
 func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {

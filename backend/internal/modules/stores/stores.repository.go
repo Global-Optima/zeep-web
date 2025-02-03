@@ -6,7 +6,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -37,24 +36,19 @@ func NewStoreRepository(db *gorm.DB) StoreRepository {
 func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, error) {
 	var stores []data.Store
 
-	query := r.db.Preload("FacilityAddress").Where("status = ?", ACTIVE_STORE_STATUS).Preload("FacilityAddress")
+	query := r.db.Preload("FacilityAddress").Where("is_active = ?", true).Preload("FacilityAddress")
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("name ILIKE ? OR contact_phone ILIKE = ? OR contact_email ILIKE = ? OR CAST(id AS TEXT) = ?",
-			searchTerm, searchTerm, searchTerm, searchTerm)
+		query = query.Where("name ILIKE ? OR contact_phone ILIKE = ? OR contact_email ILIKE = ?",
+			searchTerm, searchTerm, searchTerm)
 	}
 
-	if filter.IsFranchise != nil {
-		query = query.Where("is_franchise = ?", *filter.IsFranchise)
+	if filter.IsFranchisee != nil {
+		query = query.Where("is_franchisee = ?", *filter.IsFranchisee)
 	}
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &stores)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := query.Find(&stores).Error; err != nil {
+	if err := query.Scopes(filter.Sort.SortGorm()).Find(&stores).Error; err != nil {
 		return nil, err
 	}
 	return stores, nil

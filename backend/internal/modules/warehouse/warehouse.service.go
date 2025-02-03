@@ -16,7 +16,7 @@ type WarehouseService interface {
 
 	CreateWarehouse(req types.CreateWarehouseDTO) (*types.WarehouseResponse, error)
 	GetWarehouseByID(id uint) (*types.WarehouseResponse, error)
-	GetAllWarehouses(pagination *utils.Pagination) ([]types.WarehouseResponse, error)
+	GetAllWarehouses(filter *types.WarehouseFilter) ([]types.WarehouseResponse, error)
 	UpdateWarehouse(id uint, req types.UpdateWarehouseDTO) (*types.WarehouseResponse, error)
 	DeleteWarehouse(id uint) error
 }
@@ -73,8 +73,8 @@ func (s *warehouseService) GetWarehouseByID(id uint) (*types.WarehouseResponse, 
 	return types.ToWarehouseResponse(*warehouse), nil
 }
 
-func (s *warehouseService) GetAllWarehouses(pagination *utils.Pagination) ([]types.WarehouseResponse, error) {
-	warehouses, err := s.repo.GetAllWarehouses(pagination)
+func (s *warehouseService) GetAllWarehouses(filter *types.WarehouseFilter) ([]types.WarehouseResponse, error) {
+	warehouses, err := s.repo.GetAllWarehouses(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch all warehouses: %w", err)
 	}

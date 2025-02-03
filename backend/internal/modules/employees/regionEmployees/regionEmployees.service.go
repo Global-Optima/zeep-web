@@ -25,7 +25,7 @@ type regionEmployeeService struct {
 	logger       *zap.SugaredLogger
 }
 
-func NewEmployeeService(repo RegionEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) RegionEmployeeService {
+func NewRegionEmployeeService(repo RegionEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) RegionEmployeeService {
 	return &regionEmployeeService{
 		repo:         repo,
 		employeeRepo: employeeRepo,

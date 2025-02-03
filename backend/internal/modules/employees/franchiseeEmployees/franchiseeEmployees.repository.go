@@ -2,6 +2,7 @@ package employees
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -13,19 +14,23 @@ import (
 type FranchiseeEmployeeRepository interface {
 	GetFranchiseeEmployees(franchiseeID uint, filter *employeesTypes.EmployeesFilter) ([]data.FranchiseeEmployee, error)
 	GetFranchiseeEmployeeByID(id, franchiseeID uint) (*data.FranchiseeEmployee, error)
-	UpdateFranchiseeEmployee(id uint, franchiseeID uint, updateModels *types.UpdateModels) error
+	UpdateFranchiseeEmployee(id uint, franchiseeID uint, updateModels *types.UpdateFranchiseeEmployeeModels) error
 }
 
 type franchiseeEmployeeRepository struct {
-	db *gorm.DB
+	db           *gorm.DB
+	employeeRepo employees.EmployeeRepository
 }
 
-func NewFranchiseeEmployeeRepository(db *gorm.DB) FranchiseeEmployeeRepository {
-	return &franchiseeEmployeeRepository{db: db}
+func NewFranchiseeEmployeeRepository(db *gorm.DB, employeeRepo employees.EmployeeRepository) FranchiseeEmployeeRepository {
+	return &franchiseeEmployeeRepository{
+		db:           db,
+		employeeRepo: employeeRepo,
+	}
 }
 
 func (r *franchiseeEmployeeRepository) GetFranchiseeEmployees(franchiseeID uint, filter *employeesTypes.EmployeesFilter) ([]data.FranchiseeEmployee, error) {
-	var employees []data.FranchiseeEmployee
+	var franchiseeEmployees []data.FranchiseeEmployee
 	query := r.db.Model(&data.FranchiseeEmployee{}).
 		Where("franchisee_id = ?", franchiseeID).Preload("Employee")
 
@@ -50,11 +55,11 @@ func (r *franchiseeEmployeeRepository) GetFranchiseeEmployees(franchiseeID uint,
 		return nil, err
 	}
 
-	err = query.Find(&employees).Error
+	err = query.Find(&franchiseeEmployees).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve franchisee employees: %w", err)
 	}
-	return employees, nil
+	return franchiseeEmployees, nil
 }
 
 func (r *franchiseeEmployeeRepository) GetFranchiseeEmployeeByID(id, franchiseeID uint) (*data.FranchiseeEmployee, error) {
@@ -69,11 +74,33 @@ func (r *franchiseeEmployeeRepository) GetFranchiseeEmployeeByID(id, franchiseeI
 	return &franchiseeEmployee, nil
 }
 
-func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchiseeID uint, updateModels *types.UpdateModels) error {
+func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchiseeID uint, updateModels *types.UpdateFranchiseeEmployeeModels) error {
 	if updateModels == nil {
 		return employeesTypes.ErrNothingToUpdate
 	}
-	return r.db.Model(&data.FranchiseeEmployee{}).
-		Where("id = ? AND franchisee_id = ?", id, franchiseeID).
-		Updates(updateModels.FranchiseeEmployee).Error
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+
+		if updateModels.FranchiseeEmployee != nil {
+			err := tx.Model(&data.StoreEmployee{}).
+				Where("id = ? AND franchisee_id = ?", id, franchiseeID).
+				Updates(updateModels.FranchiseeEmployee).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		if updateModels.UpdateEmployeeModels != nil {
+			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, updateModels.FranchiseeEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

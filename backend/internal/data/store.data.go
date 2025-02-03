@@ -14,7 +14,8 @@ type Store struct {
 	FacilityAddressID uint            `gorm:"index;not null"`
 	FacilityAddress   FacilityAddress `gorm:"foreignKey:FacilityAddressID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	FranchiseeID      *uint           `gorm:"index"`
-	Franchisee        *Franchisee     `gorm:"foreignKey:FranchiseeID"`
+	Franchisee        *Franchisee     `gorm:"foreignKey:FranchiseeID" sort:"franchisees"`
+	IsActive          bool            `gorm:"default:true" sort:"isActive"`
 	ContactPhone      string          `gorm:"size:16"`
 	ContactEmail      string          `gorm:"size:255"`
 	StoreHours        string          `gorm:"size:255"`
