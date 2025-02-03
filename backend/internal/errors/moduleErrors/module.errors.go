@@ -16,11 +16,11 @@ type ModuleError struct {
 	details []string
 }
 
-func (h ModuleError) Error() string {
-	if len(h.details) > 0 {
-		return fmt.Sprintf("%s: %s", h.err.Error(), strings.Join(h.details, "; "))
+func (m ModuleError) Error() string {
+	if len(m.details) > 0 {
+		return fmt.Sprintf("%s: %s", m.err.Error(), strings.Join(m.details, "; "))
 	}
-	return h.err.Error()
+	return m.err.Error()
 }
 
 func (m ModuleError) Details() []string {

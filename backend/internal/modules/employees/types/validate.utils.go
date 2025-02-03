@@ -63,7 +63,7 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 }
 
 func PrepareUpdateFields(input *UpdateEmployeeDTO) (*UpdateEmployeeModels, error) {
-	var employee *data.Employee
+	employee := &data.Employee{}
 	if input.FirstName != nil {
 		employee.FirstName = *input.FirstName
 	}

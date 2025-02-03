@@ -3,6 +3,7 @@ package orders
 import (
 	"bytes"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 	"image"
 	"image/color"
 	"image/draw"
@@ -128,6 +129,13 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 }
 
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
+	censorValidator := censor.GetCensorValidator()
+
+	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
 
 	validations, err := s.ValidationResults(storeID, storeProductSizeIDs, storeAdditiveIDs)

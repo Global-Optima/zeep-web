@@ -65,7 +65,8 @@ func (r *warehouseEmployeeRepository) GetWarehouseEmployees(warehouseID uint, fi
 func (r *warehouseEmployeeRepository) GetWarehouseEmployeeByID(id, warehouseID uint) (*data.WarehouseEmployee, error) {
 	var warehouseEmployee data.WarehouseEmployee
 	err := r.db.Model(&data.WarehouseEmployee{}).
-		Preload("Employee").
+		Preload("Employee.Workdays").
+		Preload("Warehouse.FacilityAddress").
 		Where("id = ? AND warehouse_id = ?", id, warehouseID).
 		First(&warehouseEmployee).Error
 	if err != nil {
@@ -80,9 +81,13 @@ func (r *warehouseEmployeeRepository) UpdateWarehouseEmployee(id uint, warehouse
 	}
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var existingWarehouseEmployee data.WarehouseEmployee
+		r.db.Model(&data.WarehouseEmployee{}).
+			Where("id = ? AND warehouse_id = ?", id, warehouseID).
+			First(&existingWarehouseEmployee)
 
-		if updateModels.WarehouseEmployee != nil {
-			err := tx.Model(&data.StoreEmployee{}).
+		if updateModels.WarehouseEmployee != nil && !utils.IsEmpty(updateModels.WarehouseEmployee) {
+			err := tx.Model(&data.WarehouseEmployee{}).
 				Where("id = ? AND warehouse_id = ?", id, warehouseID).
 				Updates(updateModels.WarehouseEmployee).Error
 			if err != nil {
@@ -90,8 +95,8 @@ func (r *warehouseEmployeeRepository) UpdateWarehouseEmployee(id uint, warehouse
 			}
 		}
 
-		if updateModels.UpdateEmployeeModels != nil {
-			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, updateModels.WarehouseEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+		if updateModels.UpdateEmployeeModels != nil && !utils.IsEmpty(updateModels.UpdateEmployeeModels) {
+			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingWarehouseEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err
 			}

@@ -2,10 +2,9 @@ package employees
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
@@ -32,7 +31,8 @@ func NewStoreEmployeeRepository(db *gorm.DB, employeeRepo employees.EmployeeRepo
 func (r *storeEmployeeRepository) GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]data.StoreEmployee, error) {
 	var storeEmployees []data.StoreEmployee
 	query := r.db.Model(&data.StoreEmployee{}).
-		Where("store_id = ?", storeID).Preload("Employee")
+		Where("store_id = ?", storeID).
+		Preload("Employee")
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)
@@ -65,7 +65,8 @@ func (r *storeEmployeeRepository) GetStoreEmployees(storeID uint, filter *employ
 func (r *storeEmployeeRepository) GetStoreEmployeeByID(id, storeID uint) (*data.StoreEmployee, error) {
 	var storeEmployee data.StoreEmployee
 	err := r.db.Model(&data.StoreEmployee{}).
-		Preload("Employee").
+		Preload("Employee.Workdays").
+		Preload("Store.FacilityAddress").
 		Where("id = ? AND store_id = ?", id, storeID).
 		First(&storeEmployee).Error
 	if err != nil {
@@ -80,6 +81,10 @@ func (r *storeEmployeeRepository) UpdateStoreEmployee(id uint, storeID uint, upd
 	}
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var existingStoreEmployee data.StoreEmployee
+		r.db.Model(&data.StoreEmployee{}).
+			Where("id = ? AND store_id = ?", id, storeID).
+			First(&existingStoreEmployee)
 
 		if updateModels.StoreEmployee != nil {
 			err := tx.Model(&data.StoreEmployee{}).
@@ -91,7 +96,7 @@ func (r *storeEmployeeRepository) UpdateStoreEmployee(id uint, storeID uint, upd
 		}
 
 		if updateModels.UpdateEmployeeModels != nil {
-			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, updateModels.StoreEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingStoreEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err
 			}

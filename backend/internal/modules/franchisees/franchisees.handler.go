@@ -154,7 +154,7 @@ func (h *FranchiseeHandler) GetMyFranchisee(c *gin.Context) {
 
 func (h *FranchiseeHandler) GetFranchisees(c *gin.Context) {
 	var filter types.FranchiseeFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Franchisee{}); err != nil {
 		utils.SendBadRequestError(c, "invalid filter parameters")
 		return
 	}

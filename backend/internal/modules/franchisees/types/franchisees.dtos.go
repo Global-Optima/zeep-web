@@ -20,6 +20,5 @@ type FranchiseeDTO struct {
 
 type FranchiseeFilter struct {
 	utils.BaseFilter
-	Name   *string `form:"name,omitempty"`
 	Search *string `form:"search,omitempty"`
 }

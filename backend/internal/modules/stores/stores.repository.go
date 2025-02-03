@@ -45,7 +45,11 @@ func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, 
 	}
 
 	if filter.IsFranchisee != nil {
-		query = query.Where("is_franchisee = ?", *filter.IsFranchisee)
+		if *filter.IsFranchisee {
+			query = query.Where("franchisee_id IS NOT NULL")
+		} else {
+			query = query.Where("franchisee_id IS NULL")
+		}
 	}
 
 	if err := query.Scopes(filter.Sort.SortGorm()).Find(&stores).Error; err != nil {

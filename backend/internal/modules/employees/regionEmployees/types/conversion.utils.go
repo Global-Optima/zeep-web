@@ -8,9 +8,21 @@ import (
 )
 
 func MapToRegionEmployeeDTO(regionEmployee *data.RegionEmployee) *RegionEmployeeDTO {
-	dto := &RegionEmployeeDTO{
-		EmployeeDTO: *employeesTypes.MapToEmployeeDTO(&regionEmployee.Employee),
-		Region:      *regionsTypes.MapRegionToDTO(&regionEmployee.Region),
+	regionEmployee.Employee.RegionEmployee = regionEmployee
+	return &RegionEmployeeDTO{
+		ID:              regionEmployee.ID,
+		BaseEmployeeDTO: *employeesTypes.MapToBaseEmployeeDTO(&regionEmployee.Employee),
+		EmployeeID:      regionEmployee.Employee.ID,
+	}
+}
+
+func MapToRegionEmployeeDetailsDTO(regionEmployee *data.RegionEmployee) *RegionEmployeeDetailsDTO {
+	regionEmployee.Employee.RegionEmployee = regionEmployee
+	dto := &RegionEmployeeDetailsDTO{
+		ID:                     regionEmployee.ID,
+		BaseEmployeeDetailsDTO: *employeesTypes.MapToBaseEmployeeDetailsDTO(&regionEmployee.Employee),
+		EmployeeID:             regionEmployee.EmployeeID,
+		Region:                 *regionsTypes.MapRegionToDTO(&regionEmployee.Region),
 	}
 	return dto
 }

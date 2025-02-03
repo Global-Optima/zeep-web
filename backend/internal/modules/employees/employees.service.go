@@ -13,7 +13,8 @@ import (
 type EmployeeService interface {
 	CreateEmployee(employee *data.Employee) (uint, error)
 
-	GetEmployeeByID(id uint) (*types.EmployeeDTO, error)
+	GetEmployeeByID(id uint) (*types.EmployeeDetailsDTO, error)
+	GetEmployees(filter *types.EmployeesFilter) ([]types.EmployeeDTO, error)
 	UpdateEmployeeInfo(employeeID uint, dto *types.UpdateEmployeeDTO) error
 	ReassignEmployeeType(employeeID uint, dto *types.ReassignEmployeeTypeDTO) error
 	DeleteTypedEmployee(employeeID, workplaceID uint, employeeType data.EmployeeType) error
@@ -63,14 +64,14 @@ func (s *employeeService) CreateEmployee(employee *data.Employee) (uint, error) 
 	return id, nil
 }
 
-func (s *employeeService) GetEmployeeByID(id uint) (*types.EmployeeDTO, error) {
+func (s *employeeService) GetEmployeeByID(id uint) (*types.EmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid store employee ID")
 	}
 
 	employee, err := s.repo.GetEmployeeByID(id)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to retrieve employee for store employee with ID = %d: %w", id, err)
+		wrappedErr := fmt.Errorf("failed to retrieve employee with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
@@ -79,7 +80,27 @@ func (s *employeeService) GetEmployeeByID(id uint) (*types.EmployeeDTO, error) {
 		return nil, errors.New("employee not found")
 	}
 
-	return types.MapToEmployeeDTO(employee), nil
+	return types.MapToEmployeeDetailsDTO(employee), nil
+}
+
+func (s *employeeService) GetEmployees(filter *types.EmployeesFilter) ([]types.EmployeeDTO, error) {
+	employees, err := s.repo.GetEmployees(filter)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve employees")
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if employees == nil {
+		return nil, errors.New("employee not found")
+	}
+
+	dtos := make([]types.EmployeeDTO, len(employees))
+	for i, employee := range employees {
+		dtos[i] = *types.MapToEmployeeDTO(&employee)
+	}
+
+	return dtos, nil
 }
 
 func (s *employeeService) UpdateEmployeeInfo(employeeID uint, dto *types.UpdateEmployeeDTO) error {

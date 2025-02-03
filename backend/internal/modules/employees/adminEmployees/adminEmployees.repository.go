@@ -58,7 +58,7 @@ func (r *adminEmployeeRepository) GetAdminEmployees(filter *types.EmployeesFilte
 func (r *adminEmployeeRepository) GetAdminEmployeeByID(id uint) (*data.AdminEmployee, error) {
 	var adminEmployee data.AdminEmployee
 	err := r.db.Model(&data.AdminEmployee{}).
-		Preload("Employee").
+		Preload("Employee.Workdays").
 		Where("id = ?", id).
 		First(&adminEmployee).Error
 	if err != nil {

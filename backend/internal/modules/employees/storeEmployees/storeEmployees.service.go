@@ -14,7 +14,7 @@ import (
 type StoreEmployeeService interface {
 	CreateStoreEmployee(storeID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]types.StoreEmployeeDTO, error)
-	GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDTO, error)
+	GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDetailsDTO, error)
 	UpdateStoreEmployee(id, storeID uint, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error
 }
 
@@ -59,7 +59,7 @@ func (s *storeEmployeeService) GetStoreEmployees(storeID uint, filter *employees
 	return dtos, nil
 }
 
-func (s *storeEmployeeService) GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDTO, error) {
+func (s *storeEmployeeService) GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid store employee ID")
 	}
@@ -75,7 +75,7 @@ func (s *storeEmployeeService) GetStoreEmployeeByID(id, storeID uint) (*types.St
 		return nil, errors.New("employee not found")
 	}
 
-	return types.MapToStoreEmployeeDTO(employee), nil
+	return types.MapToStoreEmployeeDetailsDTO(employee), nil
 }
 
 func (s *storeEmployeeService) UpdateStoreEmployee(id, storeID uint, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error {

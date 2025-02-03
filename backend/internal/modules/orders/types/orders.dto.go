@@ -18,7 +18,7 @@ type OrdersFilterQuery struct {
 
 type CreateOrderDTO struct {
 	CustomerID        *uint               `json:"customerId,omitempty"`
-	CustomerName      string              `json:"customerName"`
+	CustomerName      string              `json:"customerName" binding:"required,regexp=^[a-zA-ZәӘіІңҢғҒүҮұҰқҚөӨһҺ\\s]+$"`
 	EmployeeID        *uint               `json:"employeeId,omitempty"`
 	DeliveryAddressID *uint               `json:"deliveryAddressId"`
 	Suborders         []CreateSubOrderDTO `json:"subOrders"`

@@ -14,7 +14,7 @@ import (
 type AdminEmployeeService interface {
 	CreateAdminEmployee(dto *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetAdminEmployees(filter *employeesTypes.EmployeesFilter) ([]types.AdminEmployeeDTO, error)
-	GetAdminEmployeeByID(id uint) (*types.AdminEmployeeDTO, error)
+	GetAdminEmployeeByID(id uint) (*types.AdminEmployeeDetailsDTO, error)
 }
 
 type adminEmployeeService struct {
@@ -73,7 +73,7 @@ func (s *adminEmployeeService) GetAdminEmployees(filter *employeesTypes.Employee
 	return dtos, nil
 }
 
-func (s *adminEmployeeService) GetAdminEmployeeByID(id uint) (*types.AdminEmployeeDTO, error) {
+func (s *adminEmployeeService) GetAdminEmployeeByID(id uint) (*types.AdminEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid admin employee ID")
 	}
@@ -89,5 +89,5 @@ func (s *adminEmployeeService) GetAdminEmployeeByID(id uint) (*types.AdminEmploy
 		return nil, errors.New("employee not found")
 	}
 
-	return types.MapToAdminEmployeeDTO(employee), nil
+	return types.MapToAdminEmployeeDetailsDTO(employee), nil
 }

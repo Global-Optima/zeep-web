@@ -55,10 +55,6 @@ func (r *franchiseeRepository) GetFranchisees(filter *types.FranchiseeFilter) ([
 	var franchisees []data.Franchisee
 	query := r.db.Model(&data.Franchisee{})
 
-	if filter.Name != nil {
-		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
-	}
-
 	if filter.Search != nil {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where("name ILIKE ? OR description ILIKE ?", searchTerm, searchTerm)
@@ -82,10 +78,6 @@ func (r *franchiseeRepository) GetAllFranchisees(filter *types.FranchiseeFilter)
 
 	if filter == nil {
 		return nil, fmt.Errorf("filter is nil")
-	}
-
-	if filter.Name != nil {
-		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
 	}
 
 	if filter.Search != nil {

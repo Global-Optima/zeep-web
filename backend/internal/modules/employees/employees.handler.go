@@ -67,6 +67,39 @@ func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 	utils.SendSuccessResponse(c, roles)
 }
 
+func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid employee ID")
+		return
+	}
+
+	employee, err := h.service.GetEmployeeByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve employee")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employee)
+}
+
+func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
+	var filter types.EmployeesFilter
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Employee{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
+
+	employee, err := h.service.GetEmployees(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve employee")
+		return
+	}
+
+	utils.SendSuccessResponse(c, employee)
+}
+
 func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
 	if err != nil {
