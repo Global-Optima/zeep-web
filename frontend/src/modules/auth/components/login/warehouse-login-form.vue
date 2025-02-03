@@ -1,10 +1,10 @@
 <template>
-	<Card class="">
-		<CardHeader>
+	<Card class="border-none">
+		<CardHeader class="p-0">
 			<CardTitle class="text-lg sm:text-xl">Вход для сотрудников склада</CardTitle>
 			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
 		</CardHeader>
-		<CardContent>
+		<CardContent class="mt-6 p-0">
 			<form
 				class="space-y-6 w-full"
 				@submit="onSubmit"
@@ -39,7 +39,7 @@
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="warehouse in warehouses?.data"
+										v-for="warehouse in warehouses"
 										:key="warehouse.id"
 										:value="warehouse.id.toString()"
 										class="text-sm sm:text-base"
@@ -153,8 +153,8 @@ import {
   SelectValue
 } from '@/core/components/ui/select'
 import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import { warehouseService } from '@/modules/admin/warehouses/services/warehouse.service'
 import { authService } from '@/modules/auth/services/auth.service'
-import { warehouseService } from "@/modules/warehouse/services/warehouse.service"
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
@@ -178,8 +178,8 @@ const { values, isSubmitting, handleSubmit } = useForm({
 })
 
 const { data: warehouses, isLoading: warehousesLoading, isError: warehousesError } = useQuery({
-  queryKey: ['warehouses'],
-  queryFn: () => warehouseService.getWarehouses(),
+  queryKey: ['warehouses-all'],
+  queryFn: () => warehouseService.getAll(),
 })
 
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({

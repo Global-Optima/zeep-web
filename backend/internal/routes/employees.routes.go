@@ -260,9 +260,6 @@ func (r *Router) RegisterEmployeesRoutes(
 	}
 }
 
-func (r *Router) RegisterAdminEmployeeRoutes(handler adminEmployees.AdminEmployeeHandler) {
-
-}
 
 func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.EmployeeRoutes.Group("/orders")

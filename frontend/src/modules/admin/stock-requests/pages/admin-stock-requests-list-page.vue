@@ -1,0 +1,68 @@
+<template>
+	<div>
+		<!-- Toolbar -->
+		<AdminStockRequestsToolbar
+			:filter="filter"
+			@update:filter="updateFilter"
+		/>
+
+		<!-- Main Content -->
+		<Card>
+			<CardContent class="mt-4">
+				<p
+					v-if="!stockRequestsResponse || stockRequestsResponse.data.length === 0"
+					class="text-muted-foreground"
+				>
+					Запросы на склад не найдены
+				</p>
+
+				<AdminStockRequestsList
+					v-else
+					:requests="stockRequestsResponse.data"
+				/>
+			</CardContent>
+			<CardFooter class="flex justify-end">
+				<PaginationWithMeta
+					v-if="stockRequestsResponse"
+					:meta="stockRequestsResponse.pagination"
+					@update:page="updatePage"
+					@update:pageSize="updatePageSize"
+				/>
+			</CardFooter>
+		</Card>
+	</div>
+</template>
+
+<script setup lang="ts">
+import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
+import { Card, CardContent } from '@/core/components/ui/card'
+import CardFooter from '@/core/components/ui/card/CardFooter.vue'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
+import AdminStockRequestsList from '@/modules/admin/stock-requests/components/list/admin-stock-requests-list.vue'
+import AdminStockRequestsToolbar from '@/modules/admin/stock-requests/components/list/admin-stock-requests-toolbar.vue'
+import { ALL_STOCK_REQUESTS_STATUSES, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
+import { stockRequestsService } from '@/modules/admin/stock-requests/services/stock-requests.service'
+import { useQuery } from '@tanstack/vue-query'
+import { computed, ref } from 'vue'
+
+const filter = ref<GetStockRequestsFilter>({
+  statuses: ALL_STOCK_REQUESTS_STATUSES
+});
+
+const { data: stockRequestsResponse } = useQuery({
+  queryKey: computed(() => ['stock-requests', filter.value]),
+  queryFn: () => stockRequestsService.getStockRequests(filter.value),
+});
+
+function updateFilter(updatedFilter: GetStockRequestsFilter) {
+  filter.value = { ...filter.value, ...updatedFilter };
+}
+
+function updatePage(page: number) {
+  updateFilter({ page, pageSize: DEFAULT_PAGINATION_META.pageSize });
+}
+
+function updatePageSize(pageSize: number) {
+  updateFilter({ pageSize, page: DEFAULT_PAGINATION_META.page });
+}
+</script>

@@ -49,6 +49,28 @@ class AuthService {
 		}
 	}
 
+	async getRegionAccounts(regionId: number) {
+		try {
+			return apiClient
+				.get<EmployeeAccount[]>(`${this.baseUrl}/employees/region/${regionId}`)
+				.then(res => res.data)
+		} catch (error) {
+			console.error(`Failed to get region accounts:`, error)
+			throw error
+		}
+	}
+
+	async getFranchiseeAccounts(franchiseeId: number) {
+		try {
+			return apiClient
+				.get<EmployeeAccount[]>(`${this.baseUrl}/employees/franchisee/${franchiseeId}`)
+				.then(res => res.data)
+		} catch (error) {
+			console.error(`Failed to get franchisee accounts:`, error)
+			throw error
+		}
+	}
+
 	async logoutEmployee() {
 		try {
 			return apiClient.post(`${this.baseUrl}/employees/logout`).then(res => res.data)

@@ -55,10 +55,6 @@ func (r *regionRepository) GetRegions(filter *types.RegionFilter) ([]data.Region
 	var regions []data.Region
 	query := r.db.Model(&data.Region{})
 
-	if filter.Name != nil {
-		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
-	}
-
 	if filter.Search != nil {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where("name ILIKE ?", searchTerm)
@@ -82,10 +78,6 @@ func (r *regionRepository) GetAllRegions(filter *types.RegionFilter) ([]data.Reg
 
 	if filter == nil {
 		return nil, fmt.Errorf("fitler is nil")
-	}
-
-	if filter.Name != nil {
-		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
 	}
 
 	if filter.Search != nil {

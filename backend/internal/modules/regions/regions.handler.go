@@ -1,12 +1,13 @@
 package regions
 
 import (
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 type RegionHandler struct {
@@ -135,7 +136,9 @@ func (h *RegionHandler) GetRegionByID(c *gin.Context) {
 
 func (h *RegionHandler) GetRegions(c *gin.Context) {
 	var filter types.RegionFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+
+	if err != nil {
 		utils.SendBadRequestError(c, "invalid filter parameters")
 		return
 	}
@@ -152,6 +155,10 @@ func (h *RegionHandler) GetAllRegions(c *gin.Context) {
 	var filter types.RegionFilter
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid filter parameters")
+		return
+	}
 
 	warehouses, err := h.service.GetAllRegions(&filter)
 	if err != nil {

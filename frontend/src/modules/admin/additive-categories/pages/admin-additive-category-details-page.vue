@@ -26,7 +26,7 @@ const { toast } = useToast()
 const categoryId = route.params.id as string
 
 const { data: categoryDetails } = useQuery({
-	queryKey: computed(() => ['admin-additive-categories-details', categoryId]),
+	queryKey: computed(() => ['admin-additive-categories-update', categoryId]),
 	queryFn: () => additivesService.getAdditiveCategoryById(Number(categoryId)),
 	enabled: !isNaN(Number(categoryId)),
 })
@@ -42,7 +42,7 @@ const updateMutation = useMutation({
 	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-additive-categories'] })
-		queryClient.invalidateQueries({ queryKey: ['admin-additive-categories-details', categoryId] })
+		queryClient.invalidateQueries({ queryKey: ['admin-additive-categories-update', categoryId] })
 		toast({
 			title: 'Успех!',
 			description: 'Данные категории успешно обновлены.',

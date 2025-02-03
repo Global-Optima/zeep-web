@@ -80,7 +80,7 @@ import { Input } from '@/core/components/ui/input'
 import { Label } from '@/core/components/ui/label'
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
 import type { StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
-import type { StockRequestStockMaterialDTO } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
+import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { ref } from 'vue'
 
 const { open, initialFilter } = defineProps<{ open: boolean, initialFilter?: StockMaterialsFilter}>()

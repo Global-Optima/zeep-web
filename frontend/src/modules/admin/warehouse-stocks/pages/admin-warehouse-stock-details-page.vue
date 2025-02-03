@@ -4,6 +4,7 @@
 		:initialData="stockData"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
+		readonly
 	/>
 </template>
 

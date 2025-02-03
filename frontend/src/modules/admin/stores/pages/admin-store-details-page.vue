@@ -11,8 +11,8 @@
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminStoreDetailsForm from '@/modules/admin/stores/components/details/admin-store-details-form.vue'
-import type { UpdateStoreDTO } from '@/modules/stores/models/stores-dto.model'
-import { storesService } from '@/modules/stores/services/stores.service'
+import type { UpdateStoreDTO } from '@/modules/admin/stores/models/stores-dto.model'
+import { storesService } from '@/modules/admin/stores/services/stores.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

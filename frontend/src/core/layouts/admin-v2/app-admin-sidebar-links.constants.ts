@@ -4,8 +4,10 @@ import {
 	Apple,
 	Blocks,
 	ChartBar,
+	Globe,
 	LayoutList,
 	ListPlus,
+	MapPinned,
 	Package,
 	PackageCheck,
 	Ruler,
@@ -132,6 +134,12 @@ export const adminNavItems: SidebarNavItem[] = [
 		routeKey: 'ADMIN_WAREHOUSE_DELIVERIES',
 		icon: PackageCheck,
 		accessRoles: [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE],
+	},
+	{
+		name: 'Регионы',
+		routeKey: 'ADMIN_REGIONS',
+		icon: MapPinned,
+		accessRoles: [EmployeeRole.ADMIN],
 	},
 	// Collapsible groups
 	{

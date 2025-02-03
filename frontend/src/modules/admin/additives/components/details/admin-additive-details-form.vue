@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -12,13 +12,18 @@ import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
-import AdminSelectAdditiveCategory from '@/modules/admin/additive-categories/components/admin-select-additive-category.vue'
 import type { AdditiveCategoryDTO, AdditiveDetailsDTO, BaseAdditiveCategoryDTO, SelectedIngredientDTO, UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
-import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
+
+// Async Components
+const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
+  import('@/modules/admin/additive-categories/components/admin-select-additive-category.vue'))
+const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
+const AdminSelectUnit = defineAsyncComponent(() =>
+  import('@/modules/admin/units/components/admin-select-unit.vue'))
 
 interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   name: string
@@ -26,22 +31,23 @@ interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   category: string
 }
 
-const {additive} = defineProps<{additive: AdditiveDetailsDTO}>()
+const { additive, readonly = false } = defineProps<{
+  additive: AdditiveDetailsDTO
+  readonly?: boolean
+}>()
 
 const emits = defineEmits<{
   onSubmit: [dto: UpdateAdditiveDTO]
   onCancel: []
 }>()
 
-const {toast} = useToast()
+const { toast } = useToast()
 
-// Reactive State for Category Selection
+// Reactive State
 const selectedCategory = ref<BaseAdditiveCategoryDTO | null>(additive.category)
 const openCategoryDialog = ref(false)
-
 const selectedUnit = ref<UnitDTO | null>(additive.unit)
 const openUnitDialog = ref(false)
-
 const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(additive.ingredients.map(i => ({
   ingredientId: i.ingredient.id,
   quantity: i.quantity,
@@ -50,7 +56,6 @@ const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(additive.ingredie
   category: i.ingredient.category.name,
 })))
 const openIngredientsDialog = ref(false)
-
 
 // Validation Schema
 const createAdditiveSchema = toTypedSchema(
@@ -81,20 +86,21 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
-  if (!selectedCategory.value?.id) return
-  if (!selectedUnit.value?.id) return
+  if (readonly) return
+
+  if (!selectedCategory.value?.id || !selectedUnit.value?.id) return
   if (selectedIngredients.value.length === 0) {
-    return toast({description: "Технологическая карта должна иметь минимум 1 ингредиент"})
+    return toast({ description: "Технологическая карта должна иметь минимум 1 ингредиент" })
   }
   if (selectedIngredients.value.some(i => i.quantity <= 0)) {
-    return toast({description: "Технологическая карта не может иметь количество 0"})
+    return toast({ description: "Технологическая карта не может иметь количество 0" })
   }
 
   const dto: UpdateAdditiveDTO = {
     ...formValues,
     additiveCategoryId: selectedCategory.value.id,
     unitId: selectedUnit.value.id,
-    ingredients: selectedIngredients.value.map(i => ({ingredientId: i.ingredientId, quantity: i.quantity}))
+    ingredients: selectedIngredients.value.map(i => ({ ingredientId: i.ingredientId, quantity: i.quantity }))
   }
 
   emits('onSubmit', dto)
@@ -146,10 +152,13 @@ function removeIngredient(index: number) {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Обновить {{ additive.name}}
+				{{ additive.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				v-if="!readonly"
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -171,7 +180,9 @@ function removeIngredient(index: number) {
 				<Card>
 					<CardHeader>
 						<CardTitle>Детали добавки</CardTitle>
-						<CardDescription>Заполните название, описание и цену добавки.</CardDescription>
+						<CardDescription v-if="!readonly"
+							>Заполните название, описание и цену добавки.</CardDescription
+						>
 					</CardHeader>
 					<CardContent>
 						<div class="gap-6 grid">
@@ -188,6 +199,7 @@ function removeIngredient(index: number) {
 											type="text"
 											v-bind="componentField"
 											placeholder="Введите название добавки"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -207,6 +219,7 @@ function removeIngredient(index: number) {
 											v-bind="componentField"
 											placeholder="Краткое описание добавки"
 											class="min-h-32"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -227,6 +240,7 @@ function removeIngredient(index: number) {
 												type="number"
 												v-bind="componentField"
 												placeholder="Введите цену добавки"
+												:readonly="readonly"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -245,6 +259,7 @@ function removeIngredient(index: number) {
 												type="text"
 												v-bind="componentField"
 												placeholder="500"
+												:readonly="readonly"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -260,11 +275,15 @@ function removeIngredient(index: number) {
 						<div class="flex justify-between items-start">
 							<div>
 								<CardTitle>Технологическая карта</CardTitle>
-								<CardDescription class="mt-2">
+								<CardDescription
+									v-if="!readonly"
+									class="mt-2"
+								>
 									Выберите инргредиент и его количество
 								</CardDescription>
 							</div>
 							<Button
+								v-if="!readonly"
 								variant="outline"
 								@click="openIngredientsDialog = true"
 							>
@@ -280,7 +299,7 @@ function removeIngredient(index: number) {
 									<TableHead>Категория</TableHead>
 									<TableHead>Количество</TableHead>
 									<TableHead>Размер</TableHead>
-									<TableHead></TableHead>
+									<TableHead v-if="!readonly"></TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -290,7 +309,6 @@ function removeIngredient(index: number) {
 								>
 									<TableCell>{{ ingredient.name }}</TableCell>
 									<TableCell>{{ ingredient.category }}</TableCell>
-
 									<TableCell class="flex items-center gap-2">
 										<Input
 											type="number"
@@ -298,10 +316,14 @@ function removeIngredient(index: number) {
 											:min="0"
 											placeholder="Введите количество"
 											class="w-16"
+											:readonly="readonly"
 										/>
 									</TableCell>
 									<TableCell>{{ ingredient.unit }}</TableCell>
-									<TableCell class="text-center">
+									<TableCell
+										v-if="!readonly"
+										class="text-center"
+									>
 										<Button
 											variant="ghost"
 											size="icon"
@@ -323,7 +345,7 @@ function removeIngredient(index: number) {
 				<Card>
 					<CardHeader>
 						<CardTitle>Медиа</CardTitle>
-						<CardDescription>Загрузите изображение добавки.</CardDescription>
+						<CardDescription v-if="!readonly">Загрузите изображение добавки.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<FormField
@@ -338,6 +360,7 @@ function removeIngredient(index: number) {
 										type="text"
 										v-bind="componentField"
 										placeholder="Вставьте ссылку на изображение"
+										:readonly="readonly"
 									/>
 								</FormControl>
 								<FormMessage />
@@ -350,17 +373,25 @@ function removeIngredient(index: number) {
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию топпинга.</CardDescription>
+						<CardDescription v-if="!readonly">Выберите категорию топпинга.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div>
-							<Button
-								variant="link"
-								class="mt-0 p-0 h-fit text-primary underline"
-								@click="openCategoryDialog = true"
-							>
-								{{ selectedCategory?.name || 'Категория не выбрана' }}
-							</Button>
+							<template v-if="!readonly">
+								<Button
+									variant="link"
+									class="mt-0 p-0 h-fit text-primary underline"
+									@click="openCategoryDialog = true"
+								>
+									{{ selectedCategory?.name || 'Категория не выбрана' }}
+								</Button>
+							</template>
+							<template v-else>
+								<span
+									class="text-muted-foreground"
+									>{{ selectedCategory?.name || 'Категория не выбрана' }}</span
+								>
+							</template>
 						</div>
 					</CardContent>
 				</Card>
@@ -368,25 +399,36 @@ function removeIngredient(index: number) {
 				<Card>
 					<CardHeader>
 						<CardTitle>Единица измерения</CardTitle>
-						<CardDescription>Выберите единицу измерения</CardDescription>
+						<CardDescription v-if="!readonly">Выберите единицу измерения</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div>
-							<Button
-								variant="link"
-								class="mt-0 p-0 h-fit text-primary underline"
-								@click="openUnitDialog = true"
-							>
-								{{ selectedUnit?.name || 'Единица измерения не выбрана' }}
-							</Button>
+							<template v-if="!readonly">
+								<Button
+									variant="link"
+									class="mt-0 p-0 h-fit text-primary underline"
+									@click="openUnitDialog = true"
+								>
+									{{ selectedUnit?.name || 'Единица измерения не выбрана' }}
+								</Button>
+							</template>
+							<template v-else>
+								<span
+									class="text-muted-foreground"
+									>{{ selectedUnit?.name || 'Единица измерения не выбрана' }}</span
+								>
+							</template>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
 		</div>
 
-		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<!-- Mobile Footer -->
+		<div
+			v-if="!readonly"
+			class="flex justify-center items-center gap-2 md:hidden"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"
@@ -399,20 +441,23 @@ function removeIngredient(index: number) {
 			>
 		</div>
 
+		<!-- Dialogs -->
 		<AdminIngredientsSelectDialog
+			v-if="!readonly"
 			:open="openIngredientsDialog"
 			@close="openIngredientsDialog = false"
 			@select="addIngredient"
 		/>
 
-		<!-- Category Dialog -->
 		<AdminSelectAdditiveCategory
+			v-if="!readonly"
 			:open="openCategoryDialog"
 			@close="openCategoryDialog = false"
 			@select="selectCategory"
 		/>
 
 		<AdminSelectUnit
+			v-if="!readonly"
 			:open="openUnitDialog"
 			@close="openUnitDialog = false"
 			@select="selectUnit"
