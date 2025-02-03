@@ -1,39 +1,40 @@
 <template>
 	<Card class="border-none">
 		<CardHeader class="p-0">
-			<CardTitle class="text-lg sm:text-xl">Вход для сотрудника кафе</CardTitle>
-			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
+			<CardTitle class="text-lg sm:text-xl"> Вход для сотрудника регионального склада </CardTitle>
+			<CardDescription> Введите ваши учетные данные для входа в систему </CardDescription>
 		</CardHeader>
 		<CardContent class="mt-6 p-0">
 			<form
 				class="space-y-6 w-full"
 				@submit="onSubmit"
 			>
+				<!-- Region Selection -->
 				<FormField
 					v-slot="{ componentField }"
 					name="selectedStoreId"
 				>
 					<FormItem>
-						<FormLabel class="text-sm sm:text-base">Заведение</FormLabel>
+						<FormLabel class="text-sm sm:text-base">Регион</FormLabel>
 						<FormControl>
 							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
 									<template v-if="storesLoading">
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Загрузка кафе..."
+											placeholder="Загрузка регионов..."
 										/>
 									</template>
 									<template v-else-if="storesError">
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Ошибка загрузки кафе"
+											placeholder="Ошибка загрузки регионов"
 										/>
 									</template>
 									<template v-else>
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Выберите кафе"
+											placeholder="Выберите регион"
 										/>
 									</template>
 								</SelectTrigger>
@@ -53,12 +54,13 @@
 					</FormItem>
 				</FormField>
 
+				<!-- Employee Selection (dependent on the region) -->
 				<FormField
 					v-slot="{ componentField }"
 					name="selectedEmployeeEmail"
 				>
 					<FormItem v-if="values.selectedStoreId">
-						<FormLabel class="text-sm sm:text-base">Выберите сотрудника</FormLabel>
+						<FormLabel class="text-sm sm:text-base">Сотрудник</FormLabel>
 						<FormControl>
 							<Select v-bind="componentField">
 								<SelectTrigger class="w-full">
@@ -77,7 +79,7 @@
 									<template v-else>
 										<SelectValue
 											class="text-sm sm:text-base"
-											placeholder="Сотрудники"
+											placeholder="Выберите сотрудника"
 										/>
 									</template>
 								</SelectTrigger>
@@ -97,6 +99,7 @@
 					</FormItem>
 				</FormField>
 
+				<!-- Password Field -->
 				<FormField
 					v-slot="{ componentField }"
 					name="password"
@@ -106,7 +109,7 @@
 						<FormControl>
 							<Input
 								type="password"
-								placeholder="Введите пароль сотрудника"
+								placeholder="Введите пароль"
 								v-bind="componentField"
 								class="text-sm sm:text-base"
 								required
@@ -116,6 +119,7 @@
 					</FormItem>
 				</FormField>
 
+				<!-- Submit Button -->
 				<Button
 					:disabled="isSubmitting"
 					type="submit"
@@ -129,6 +133,12 @@
 </template>
 
 <script setup lang="ts">
+import { useQuery } from '@tanstack/vue-query'
+import { toTypedSchema } from '@vee-validate/zod'
+import { useForm } from 'vee-validate'
+import { computed } from 'vue'
+import * as z from 'zod'
+
 import { Button } from '@/core/components/ui/button'
 import {
   Card,
@@ -142,7 +152,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import {
@@ -150,54 +160,68 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/core/components/ui/select'
+
+import { regionsService } from '@/modules/admin/regions/services/regions.service'
 import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
-import { storesService } from "@/modules/stores/services/stores.service"
-import { useQuery } from '@tanstack/vue-query'
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm } from 'vee-validate'
-import { computed } from 'vue'
-import * as z from 'zod'
 
+// Объявление событий компонента
 const emits = defineEmits<{
-  'login': [payload: EmployeeLoginDTO]
+  login: [payload: EmployeeLoginDTO]
 }>()
 
+// Определение схемы валидации с использованием Zod
 const formSchema = toTypedSchema(
   z.object({
-    selectedStoreId: z.coerce.number().min(1, {message: "Пожалуйста, выберите магазин"}),
-    selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
-    password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
+    selectedStoreId: z.coerce
+      .number()
+      .min(1, { message: 'Пожалуйста, выберите регион' }),
+    selectedEmployeeEmail: z.string().min(1, {
+      message: 'Пожалуйста, выберите сотрудника',
+    }),
+    password: z.string().min(2, 'Пароль должен содержать не менее 2 символов'),
   })
 )
 
+// Настройка формы с VeeValidate
 const { values, isSubmitting, handleSubmit } = useForm({
   validationSchema: formSchema,
 })
 
-
-const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
-  queryKey: ['stores-all'],
-  queryFn: () => storesService.getAllStores(),
+// Получение списка регионов
+const {
+  data: stores,
+  isLoading: storesLoading,
+  isError: storesError,
+} = useQuery({
+  queryKey: ['regions-all'],
+  queryFn: () => regionsService.getAllRegions(),
 })
 
-const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
-  queryKey: computed(() => ['store-employees', values.selectedStoreId]),
-  queryFn: () => authService.getStoreAccounts(values.selectedStoreId!),
+// Получение списка сотрудников для выбранного региона
+const {
+  data: employees,
+  isLoading: employeesLoading,
+  isError: employeesError,
+} = useQuery({
+  queryKey: computed(() => ['region-employees', values.selectedStoreId]),
+  queryFn: () => authService.getRegionAccounts(values.selectedStoreId!),
   enabled: computed(() => Boolean(values.selectedStoreId)),
   initialData: [],
 })
 
-const onSubmit = handleSubmit((values) => {
+// Обработка отправки формы
+const onSubmit = handleSubmit((formValues) => {
   const dto: EmployeeLoginDTO = {
-    email: values.selectedEmployeeEmail,
-    password: values.password,
+    email: formValues.selectedEmployeeEmail,
+    password: formValues.password,
   }
-
-  emits("login", dto)
+  emits('login', dto)
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Добавьте любые специфические стили для компонента */
+</style>
