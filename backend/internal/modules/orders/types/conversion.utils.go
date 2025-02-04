@@ -38,7 +38,7 @@ func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices 
 	return data.Order{
 		CustomerID:        createOrderDTO.CustomerID,
 		CustomerName:      createOrderDTO.CustomerName,
-		EmployeeID:        createOrderDTO.EmployeeID,
+		StoreEmployeeID:   createOrderDTO.StoreEmployeeID,
 		StoreID:           createOrderDTO.StoreID,
 		DeliveryAddressID: createOrderDTO.DeliveryAddressID,
 		Status:            data.OrderStatusPreparing,
@@ -51,7 +51,7 @@ func ConvertOrderToDTO(order *data.Order) OrderDTO {
 		ID:                order.ID,
 		CustomerID:        order.CustomerID,
 		CustomerName:      &order.CustomerName,
-		EmployeeID:        order.EmployeeID,
+		StoreEmployeeID:   order.StoreEmployeeID,
 		StoreID:           order.StoreID,
 		DeliveryAddressID: order.DeliveryAddressID,
 		Status:            order.Status,

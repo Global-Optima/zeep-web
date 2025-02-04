@@ -12,7 +12,7 @@ type CreateEmployeeDTO struct {
 	Email     string                      `json:"email" binding:"required"`
 	Role      data.EmployeeRole           `json:"role" binding:"required"`
 	Password  string                      `json:"password" binding:"required"`
-	IsActive  bool                        `json:"isActive" binding:"required"`
+	IsActive  bool                        `json:"isActive"`
 	Workdays  []CreateOrReplaceWorkdayDTO `json:"workdays" binding:"dive"`
 }
 

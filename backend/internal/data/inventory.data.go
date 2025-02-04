@@ -30,7 +30,8 @@ type Warehouse struct {
 	BaseEntity
 	FacilityAddressID uint            `gorm:"not null;index"`
 	RegionID          uint            `gorm:"not null;index"`
-	FacilityAddress   FacilityAddress `gorm:"foreignKey:FacilityAddressID;constraint:OnDelete:CASCADE"`
+	Region            Region          `gorm:"foreignKey:RegionID;constraint:OnDelete:RESTRICT"`
+	FacilityAddress   FacilityAddress `gorm:"foreignKey:FacilityAddressID;constraint:OnDelete:RESTRICT"`
 	Name              string          `gorm:"size:255;not null" sort:"name"`
 }
 

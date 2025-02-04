@@ -55,7 +55,7 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 		Email:          input.Email,
 		Phone:          utils.FormatPhoneInput(input.Phone),
 		HashedPassword: hashedPassword,
-		IsActive:       input.IsActive,
+		IsActive:       &input.IsActive,
 		Workdays:       workdays,
 	}
 
@@ -71,7 +71,7 @@ func PrepareUpdateFields(input *UpdateEmployeeDTO) (*UpdateEmployeeModels, error
 		employee.LastName = *input.LastName
 	}
 	if input.IsActive != nil {
-		employee.IsActive = *input.IsActive
+		employee.IsActive = input.IsActive
 	}
 
 	workdays := make([]data.EmployeeWorkday, len(input.Workdays))

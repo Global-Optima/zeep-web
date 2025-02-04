@@ -2,6 +2,7 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 )
 
@@ -12,10 +13,10 @@ type SuppliersModule struct {
 	Handler *supplier.SupplierHandler
 }
 
-func NewSuppliersModule(base *common.BaseModule) *SuppliersModule {
+func NewSuppliersModule(base *common.BaseModule, auditService audit.AuditService) *SuppliersModule {
 	repo := supplier.NewSupplierRepository(base.DB)
 	service := supplier.NewSupplierService(repo)
-	handler := supplier.NewSupplierHandler(service)
+	handler := supplier.NewSupplierHandler(service, auditService)
 
 	base.Router.RegisterSupplierRoutes(handler)
 

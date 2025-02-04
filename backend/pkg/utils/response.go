@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
@@ -29,32 +28,32 @@ func SendSuccessResponseWithPagination(c *gin.Context, data interface{}, paginat
 }
 
 // TODO create single func SendResponseWithStatus()
-func SendMessageWithStatus(c *gin.Context, componentName string, status int) {
+func SendMessageWithStatus(c *gin.Context, message string, status int) {
 	c.JSON(status, gin.H{
-		"message": localization.TranslateResponse(status, componentName),
+		"message": message,
 	})
 }
 
-func SendErrorWithStatus(c *gin.Context, componentName string, status int) {
+func SendErrorWithStatus(c *gin.Context, message string, status int) {
 	c.JSON(status, gin.H{
-		"error": localization.TranslateResponse(status, componentName),
+		"error": message,
 	})
 }
 
-func SendInternalServerError(c *gin.Context, componentName string) {
-	SendErrorWithStatus(c, componentName, http.StatusInternalServerError)
+func SendInternalServerError(c *gin.Context, message string) {
+	SendErrorWithStatus(c, message, http.StatusInternalServerError)
 }
 
-func SendBadRequestError(c *gin.Context, componentName string) {
-	SendErrorWithStatus(c, componentName, http.StatusBadRequest)
+func SendBadRequestError(c *gin.Context, message string) {
+	SendErrorWithStatus(c, message, http.StatusBadRequest)
 }
 
-func SendNotFoundError(c *gin.Context, componentName string) {
-	SendErrorWithStatus(c, componentName, http.StatusNotFound)
+func SendNotFoundError(c *gin.Context, message string) {
+	SendErrorWithStatus(c, message, http.StatusNotFound)
 }
 
-func SendSuccessCreatedResponse(c *gin.Context, componentName string) {
-	SendMessageWithStatus(c, componentName, http.StatusCreated)
+func SendSuccessCreatedResponse(c *gin.Context, message string) {
+	SendMessageWithStatus(c, message, http.StatusCreated)
 }
 
 func SendDetailedError(c *gin.Context, err error, details ...string) {

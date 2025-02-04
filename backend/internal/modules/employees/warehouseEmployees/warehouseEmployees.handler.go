@@ -86,7 +86,6 @@ func (h *WarehouseEmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 		return
 	}
 
-	// Check if the role is manageable by the current user
 	if !data.CanManageRole(role, input.Role) {
 		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
 		return

@@ -73,7 +73,10 @@ func (r *warehouseRepository) CreateWarehouse(warehouse *data.Warehouse, facilit
 
 func (r *warehouseRepository) GetWarehouseByID(id uint) (*data.Warehouse, error) {
 	var warehouse data.Warehouse
-	if err := r.db.Preload("FacilityAddress").First(&warehouse, id).Error; err != nil {
+	if err := r.db.
+		Preload("FacilityAddress").
+		Preload("Region").
+		First(&warehouse, id).Error; err != nil {
 		return nil, err
 	}
 	return &warehouse, nil
@@ -82,14 +85,16 @@ func (r *warehouseRepository) GetWarehouseByID(id uint) (*data.Warehouse, error)
 func (r *warehouseRepository) GetAllWarehouses(filter *types.WarehouseFilter) ([]data.Warehouse, error) {
 	var warehouses []data.Warehouse
 
-	query := r.db.Preload("FacilityAddress").Model(&data.Warehouse{})
+	query := r.db.Model(&data.Warehouse{}).
+		Preload("FacilityAddress").
+		Preload("Region")
 
 	if filter == nil {
 		return nil, fmt.Errorf("filter is nil")
 	}
 
-	if filter.Name != nil {
-		query = query.Where("name = ?", *filter.Name)
+	if filter.RegionID != nil {
+		query = query.Where("region_id = ?", *filter.RegionID)
 	}
 
 	if filter.Search != nil {
@@ -107,7 +112,9 @@ func (r *warehouseRepository) GetAllWarehouses(filter *types.WarehouseFilter) ([
 func (r *warehouseRepository) GetAllWarehousesForNotifications() ([]data.Warehouse, error) {
 	var warehouses []data.Warehouse
 
-	query := r.db.Preload("FacilityAddress").Model(&data.Warehouse{})
+	query := r.db.Model(&data.Warehouse{}).
+		Preload("FacilityAddress").
+		Preload("Region")
 
 	if err := query.Find(&warehouses).Error; err != nil {
 		return nil, err

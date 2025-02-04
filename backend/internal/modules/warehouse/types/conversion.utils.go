@@ -1,6 +1,9 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	regionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
+)
 
 func ConvertToListStoresResponse(stores []data.Store) []ListStoresResponse {
 	response := make([]ListStoresResponse, len(stores))
@@ -15,8 +18,9 @@ func ConvertToListStoresResponse(stores []data.Store) []ListStoresResponse {
 
 func ToWarehouseResponse(warehouse data.Warehouse) *WarehouseResponse {
 	return &WarehouseResponse{
-		ID:   warehouse.ID,
-		Name: warehouse.Name,
+		ID:     warehouse.ID,
+		Name:   warehouse.Name,
+		Region: *regionsTypes.MapRegionToDTO(&warehouse.Region),
 		FacilityAddress: FacilityAddressDTO{
 			Address:   warehouse.FacilityAddress.Address,
 			Longitude: warehouse.FacilityAddress.Longitude,

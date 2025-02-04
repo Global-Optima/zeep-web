@@ -207,12 +207,12 @@ func (r *Router) RegisterEmployeesRoutes(
 		router.GET("/current", handler.GetCurrentEmployee)
 		router.GET("/roles", handler.GetAllRoles)
 		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(), handler.UpdatePassword)
-		router.PUT("/reassign", middleware.EmployeeRoleMiddleware(), handler.ReassignEmployeeType)
+		router.PUT("/:id/reassign/", middleware.EmployeeRoleMiddleware(), handler.ReassignEmployeeType)
 
 		storeEmployeeRouter := router.Group("/store")
 		{
-			storeEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), storeEmployeeHandler.GetStoreEmployees)
-			storeEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), storeEmployeeHandler.GetStoreEmployeeByID)
+			storeEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), storeEmployeeHandler.GetStoreEmployees)
+			storeEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), storeEmployeeHandler.GetStoreEmployeeByID)
 			storeEmployeeRouter.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), storeEmployeeHandler.CreateStoreEmployee)
 			storeEmployeeRouter.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), storeEmployeeHandler.UpdateStoreEmployee)
 			storeEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), storeEmployeeHandler.DeleteStoreEmployee)
@@ -220,8 +220,8 @@ func (r *Router) RegisterEmployeesRoutes(
 
 		warehouseEmployeeRouter := router.Group("/warehouse") // warehouse and region managers
 		{
-			warehouseEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.RegionReadPermissions...), warehouseEmployeeHandler.GetWarehouseEmployees)
-			warehouseEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.RegionReadPermissions...), warehouseEmployeeHandler.GetWarehouseEmployeeByID)
+			warehouseEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseEmployeeHandler.GetWarehouseEmployees)
+			warehouseEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseEmployeeHandler.GetWarehouseEmployeeByID)
 			warehouseEmployeeRouter.POST("", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseEmployeeHandler.CreateWarehouseEmployee)
 			warehouseEmployeeRouter.PUT("/:id", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseEmployeeHandler.UpdateWarehouseEmployee)
 			warehouseEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseEmployeeHandler.DeleteWarehouseEmployee)
@@ -259,7 +259,6 @@ func (r *Router) RegisterEmployeesRoutes(
 		}
 	}
 }
-
 
 func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.EmployeeRoutes.Group("/orders")
