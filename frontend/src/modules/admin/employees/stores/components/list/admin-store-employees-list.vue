@@ -63,7 +63,7 @@ const router = useRouter()
 
 // Navigate to employee details
 const goToEmployee = (employeeId: number) => {
-  router.push(`/admin/store-employees/${employeeId}`)
+  router.push(`/admin/employees/store/${employeeId}`)
 }
 
 // Format phone number for display

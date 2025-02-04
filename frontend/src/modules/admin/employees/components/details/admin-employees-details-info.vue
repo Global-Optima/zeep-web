@@ -17,7 +17,7 @@
 			<Button
 				size="icon"
 				variant="ghost"
-				@click="$router.push(`/admin/store-employees/${employee.id}/update`)"
+				@click="$router.push(`/admin/employees/store/${employee.id}/update`)"
 			>
 				<Pencil class="w-6 h-6 text-gray-500" />
 			</Button>

@@ -18,8 +18,8 @@ export enum EmployeeRole {
 	BARISTA = 'BARISTA',
 	WAREHOUSE_MANAGER = 'WAREHOUSE_MANAGER',
 	WAREHOUSE_EMPLOYEE = 'WAREHOUSE_EMPLOYEE',
-	FRANCHISE_MANAGER = 'FRANCHISE_MANAGER',
-	FRANCHISE_OWNER = 'FRANCHISE_OWNER',
+	FRANCHISEE_MANAGER = 'FRANCHISEE_MANAGER',
+	FRANCHISEE_OWNER = 'FRANCHISEE_OWNER',
 	REGION_WAREHOUSE_MANAGER = 'REGION_WAREHOUSE_MANAGER',
 }
 
@@ -33,13 +33,13 @@ export enum EmployeeType {
 
 export const EMPLOYEE_ROLES_FORMATTED: Record<EmployeeRole, string> = {
 	[EmployeeRole.ADMIN]: 'Администратор',
-	[EmployeeRole.OWNER]: 'CEO',
+	[EmployeeRole.OWNER]: 'Владелец',
 	[EmployeeRole.STORE_MANAGER]: 'Менеджер кафе',
 	[EmployeeRole.BARISTA]: 'Бариста',
 	[EmployeeRole.WAREHOUSE_MANAGER]: 'Менеджер склада',
 	[EmployeeRole.WAREHOUSE_EMPLOYEE]: 'Сотрудник склада',
-	[EmployeeRole.FRANCHISE_MANAGER]: 'Менеджер франшизы',
-	[EmployeeRole.FRANCHISE_OWNER]: 'Владелец франшизы',
+	[EmployeeRole.FRANCHISEE_MANAGER]: 'Менеджер франшизы',
+	[EmployeeRole.FRANCHISEE_OWNER]: 'Владелец франшизы',
 	[EmployeeRole.REGION_WAREHOUSE_MANAGER]: 'Региональный менеджер склада',
 }
 

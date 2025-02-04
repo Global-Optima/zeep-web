@@ -5,7 +5,7 @@
 		v-else
 		default-value="details"
 	>
-		<TabsList class="grid grid-cols-2 mx-auto mb-6 w-full max-w-6xl">
+		<TabsList class="grid grid-cols-3 mx-auto mb-6 w-full max-w-6xl">
 			<TabsTrigger
 				class="py-2"
 				value="details"
@@ -15,6 +15,11 @@
 				class="py-2"
 				value="variants"
 				>Склады</TabsTrigger
+			>
+			<TabsTrigger
+				class="py-2"
+				value="employees"
+				>Сотрудники</TabsTrigger
 			>
 		</TabsList>
 		<TabsContent value="details">
@@ -27,6 +32,13 @@
 
 		<TabsContent value="variants">
 			<AdminRegionWarehouses
+				:region="regionDetails"
+				@on-cancel="handleCancel"
+			/>
+		</TabsContent>
+
+		<TabsContent value="employees">
+			<AdminRegionEmployees
 				:region="regionDetails"
 				@on-cancel="handleCancel"
 			/>
@@ -44,6 +56,7 @@ import {
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import type { UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import AdminRegionDetailsForm from '@/modules/admin/regions/components/details/admin-region-details-form.vue'
+import AdminRegionEmployees from '@/modules/admin/regions/components/details/admin-region-employees.vue'
 import AdminRegionWarehouses from '@/modules/admin/regions/components/details/admin-region-warehouses.vue'
 import type { UpdateRegionDTO } from '@/modules/admin/regions/models/regions.model'
 import { regionsService } from '@/modules/admin/regions/services/regions.service'
