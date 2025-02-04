@@ -32,7 +32,9 @@ func NewFranchiseeEmployeeRepository(db *gorm.DB, employeeRepo employees.Employe
 func (r *franchiseeEmployeeRepository) GetFranchiseeEmployees(franchiseeID uint, filter *employeesTypes.EmployeesFilter) ([]data.FranchiseeEmployee, error) {
 	var franchiseeEmployees []data.FranchiseeEmployee
 	query := r.db.Model(&data.FranchiseeEmployee{}).
-		Where("franchisee_id = ?", franchiseeID).Preload("Employee")
+		Where("franchisee_id = ?", franchiseeID).
+		Preload("Employee").
+		Joins("JOIN employees ON employees.id = franchisee_employees.employee_id")
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)
@@ -45,7 +47,7 @@ func (r *franchiseeEmployeeRepository) GetFranchiseeEmployees(franchiseeID uint,
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where(
-			"first_name ILIKE ? OR last_name ILIKE ? OR phone ILIKE ? OR email ILIKE ?",
+			"employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.phone ILIKE ? OR employees.email ILIKE ?",
 			searchTerm, searchTerm, searchTerm, searchTerm,
 		)
 	}

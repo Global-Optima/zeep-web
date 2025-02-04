@@ -32,7 +32,9 @@ func NewRegionEmployeeRepository(db *gorm.DB, employeeRepo employees.EmployeeRep
 func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]data.RegionEmployee, error) {
 	var regionEmployees []data.RegionEmployee
 	query := r.db.Model(&data.RegionEmployee{}).
-		Where("region_id = ?", regionID).Preload("Employee")
+		Where("region_id = ?", regionID).
+		Preload("Employee").
+		Joins("employees ON employees.id = region_employees.employee_id")
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)
@@ -45,7 +47,7 @@ func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *emp
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where(
-			"first_name ILIKE ? OR last_name ILIKE ? OR phone ILIKE ? OR email ILIKE ?",
+			"employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.phone ILIKE ? OR employees.email ILIKE ?",
 			searchTerm, searchTerm, searchTerm, searchTerm,
 		)
 	}
@@ -75,7 +77,6 @@ func (r *regionEmployeeRepository) GetRegionEmployeeByID(id, regionID uint) (*da
 	return &regionEmployee, nil
 }
 
-// TODO add employee update to all submodules
 func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateRegionEmployeeModels) error {
 	if updateModels == nil {
 		return employeesTypes.ErrNothingToUpdate
