@@ -1,4 +1,4 @@
-import type { EmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
+import type { EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 
 export function getEmployeeFullName(employee: EmployeeDTO) {
 	return `${employee.firstName} ${employee.lastName}`

@@ -9,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -84,6 +85,7 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
 	}
 	if len(filter.Statuses) > 0 {
+		logrus.Println("STTTATAUSSS", filter.Statuses)
 		query = query.Where("status IN (?)", filter.Statuses)
 	}
 	if filter.StartDate != nil {

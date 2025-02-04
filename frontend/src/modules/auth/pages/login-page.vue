@@ -5,7 +5,7 @@ import { ref } from 'vue'
 
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
-import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import AdminLoginForm from '@/modules/auth/components/login/admin-login-form.vue'
 import FranchiseeLoginForm from '@/modules/auth/components/login/franchisee-login-form.vue'
 import RegionLoginForm from '@/modules/auth/components/login/region-login-form.vue'

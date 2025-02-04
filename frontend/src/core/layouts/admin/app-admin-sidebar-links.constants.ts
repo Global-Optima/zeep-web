@@ -1,5 +1,5 @@
 import type { RouteKey } from '@/core/config/routes.config'
-import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import {
 	Apple,
 	Blocks,
@@ -49,12 +49,18 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Аналитика',
 		routeKey: 'ADMIN_DASHBOARD',
 		icon: ChartBar,
-		accessRoles: [EmployeeRole.ADMIN],
+		accessRoles: [
+			EmployeeRole.ADMIN,
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.WAREHOUSE_MANAGER,
+			EmployeeRole.WAREHOUSE_EMPLOYEE,
+		],
 	},
 	{
-		name: 'Аналитика',
-		routeKey: 'ADMIN_STORE_DASHBOARD',
-		icon: ChartBar,
+		name: 'Сотрудники',
+		routeKey: 'ADMIN_STORE_EMPLOYEES',
+		icon: Users,
 		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
 	},
 	{

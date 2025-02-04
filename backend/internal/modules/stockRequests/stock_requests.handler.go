@@ -3,9 +3,10 @@ package stockRequests
 import (
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
-	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
@@ -35,7 +36,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	if len(req.StockMaterials) == 0 {	
+	if len(req.StockMaterials) == 0 {
 		utils.SendBadRequestError(c, "The cart cannot be empty")
 		return
 	}
@@ -57,44 +58,59 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.GetStockRequestsFilter
+	var requests = make([]types.StockRequestResponse, 0)
 
+	// Check user access roles
 	storeID, storeErr := h.franchiseeService.CheckFranchiseeStore(c)
 	warehouseID, warehouseErr := h.regionService.CheckRegionWarehouse(c)
 
+	// If user has neither store nor warehouse access, return unauthorized
 	if storeErr != nil && warehouseErr != nil {
 		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
+	// Parse filters
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockRequest{}); err != nil {
 		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
 	}
 
-	var requests []types.StockRequestResponse
-	var err error
-
+	// Fetch requests for Store users
 	if storeErr == nil {
 		filter.StoreID = &storeID
-		requests, err = h.service.GetStockRequests(filter)
+		storeRequests, err := h.service.GetStockRequests(filter)
+		if err != nil {
+			utils.SendInternalServerError(c, "Failed to fetch stock requests")
+			return
+		}
+		requests = append(requests, storeRequests...)
 	}
 
+	// Fetch requests for Warehouse users
 	if warehouseErr == nil {
 		filter.WarehouseID = &warehouseID
-		err = types.ValidateWarehouseStatuses(filter.Statuses)
-		if err != nil {
+
+		// Validate warehouse statuses
+		if err := types.ValidateWarehouseStatuses(filter.Statuses); err != nil {
 			utils.SendBadRequestError(c, err.Error())
 			return
 		}
-		filter.Statuses = types.DefaultWarehouseStasuses()
-		requests, err = h.service.GetStockRequests(filter)
+
+		// Apply default warehouse statuses if none are provided
+		if len(filter.Statuses) == 0 {
+			filter.Statuses = types.DefaultWarehouseStatuses()
+		}
+
+		warehouseRequests, err := h.service.GetStockRequests(filter)
+		if err != nil {
+			utils.SendInternalServerError(c, "Failed to fetch stock requests")
+			return
+		}
+		requests = append(requests, warehouseRequests...)
 	}
 
-	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch stock requests")
-		return
-	}
-
+	// Always return an array, even if empty
 	utils.SendSuccessResponseWithPagination(c, requests, filter.Pagination)
 }
 

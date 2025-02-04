@@ -11,7 +11,7 @@ import {
 import { getRouteName } from '@/core/config/routes.config'
 import AppAdminHeader from '@/core/layouts/admin-v2/app-admin-header.vue'
 import AppAdminSidebar from '@/core/layouts/admin-v2/app-admin-sidebar.vue'
-import { EMPLOYEE_ROLES_FORMATTED } from '@/modules/admin/store-employees/models/employees.models'
+import { EMPLOYEE_ROLES_FORMATTED } from '@/modules/admin/employees/models/employees.models'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { ChevronsUpDown, Coffee, Store, TvMinimal } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
