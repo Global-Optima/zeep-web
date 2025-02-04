@@ -123,6 +123,10 @@ func (r *storeRepository) GetStoresByFranchisee(franchiseeID uint, filter *types
 		query = query.Where("franchisee_id = ?", franchiseeID)
 	}
 
+	if franchiseeID != 0 {
+		query = query.Where("franchisee_id = ?", franchiseeID)
+	}
+
 	if filter == nil {
 		return nil, errors.New("filter is nil")
 	}
