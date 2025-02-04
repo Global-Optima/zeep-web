@@ -1,5 +1,5 @@
 <template>
-	<AdminStoreEmployeesUpdateForm
+	<AdminFranchiseesEmployeesUpdateForm
 		v-if="employee"
 		:employee="employee"
 		@on-submit="handleUpdate"
@@ -11,10 +11,9 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
-import type { UpdateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
-import AdminStoreEmployeesUpdateForm from '@/modules/admin/employees/stores/components/update/admin-store-employees-update-form.vue'
-import type { UpdateStoreEmployeeDTO } from '@/modules/admin/employees/stores/models/store-employees.model'
-import { storeEmployeeService } from '@/modules/admin/employees/stores/services/store-employees.service'
+import AdminFranchiseesEmployeesUpdateForm from '@/modules/admin/employees/franchisees/components/update/admin-franchisees-employees-update-form.vue'
+import type { UpdateFranchiseeEmployeeDTO } from '@/modules/admin/employees/franchisees/models/franchisees-employees.model'
+import { franchiseeEmployeeService } from '@/modules/admin/employees/franchisees/services/franchisee-employees.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -26,13 +25,13 @@ const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-	queryKey: ['store-employee', employeeId],
-	queryFn: () => storeEmployeeService.getStoreEmployeeById(Number(employeeId)),
+	queryKey: ['franchisee-employee', employeeId],
+	queryFn: () => franchiseeEmployeeService.getFranchiseeEmployeeById(Number(employeeId)),
 	enabled: !!employeeId,
 })
 
 const updateMutation = useMutation({
-	mutationFn: (newStoreData: UpdateStoreEmployeeDTO) => storeEmployeeService.updateStoreEmployee(Number(employeeId), newStoreData),
+	mutationFn: (newStoreData: UpdateFranchiseeEmployeeDTO) => franchiseeEmployeeService.updateFranchiseeEmployee(Number(employeeId), newStoreData),
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
@@ -40,8 +39,8 @@ const updateMutation = useMutation({
 		})
 	},
 	onSuccess: () => {
-		queryClient.invalidateQueries({ queryKey: ['store-employees'] })
-		queryClient.invalidateQueries({ queryKey: ['store-employee', employeeId] })
+		queryClient.invalidateQueries({ queryKey: ['franchisee-employees'] })
+		queryClient.invalidateQueries({ queryKey: ['franchisee-employee', employeeId] })
 		toast({
 			title: 'Успех!',
 			description: 'Данные сотрудника успешно обновлены.',
@@ -56,7 +55,7 @@ const updateMutation = useMutation({
 	},
 })
 
-function handleUpdate(dto: UpdateEmployeeDTO) {
+function handleUpdate(dto: UpdateFranchiseeEmployeeDTO) {
 	if (!employeeId) {
 		toast({
 			title: 'Ошибка',
