@@ -23,7 +23,7 @@
 					:supplier="supplier"
 					@on-submit="onUpdateSupplier"
 					@on-cancel="onCancel"
-					readonly
+					:readonly="!canUpdate"
 				/>
 			</TabsContent>
 
@@ -33,7 +33,7 @@
 					:stock-materials="stockMaterials"
 					@on-submit="onUpdateSupplierMaterials"
 					@on-cancel="onCancel"
-					readonly
+					:readonly="!canUpdate"
 				/>
 			</TabsContent>
 		</Tabs>
@@ -48,6 +48,8 @@ import {
   TabsTrigger,
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminSupplierDetailsForm from '@/modules/admin/suppliers/components/details/admin-supplier-details-form.vue'
 import AdminSupplierMaterialsForm from '@/modules/admin/suppliers/components/details/admin-supplier-materials-form.vue'
 import type { UpdateSupplierDTO, UpdateSupplierMaterialDTO, UpsertSupplierMaterialsDTO } from '@/modules/admin/suppliers/models/suppliers.model'
@@ -59,6 +61,8 @@ const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+
+const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const supplierId = route.params.id as string
 
