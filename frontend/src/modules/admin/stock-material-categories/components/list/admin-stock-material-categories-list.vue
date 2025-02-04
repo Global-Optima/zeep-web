@@ -4,7 +4,10 @@
 			<TableRow>
 				<TableHead class="p-4">Название</TableHead>
 				<TableHead class="p-4">Описание</TableHead>
-				<TableHead class="p-4"></TableHead>
+				<TableHead
+					v-if="canDelete"
+					class="p-4"
+				></TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -24,6 +27,7 @@
 
 				<TableCell class="flex justify-end">
 					<Button
+						v-if="canDelete"
 						variant="ghost"
 						size="icon"
 						@click="e => onDeleteClick(e, category.id)"
@@ -47,16 +51,19 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import { stockMaterialCategoryService } from '@/modules/admin/stock-material-categories/services/stock-materials.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-
 const { categories} = defineProps<{categories: StockMaterialCategoryDTO[]}>()
 
 const router = useRouter();
 const queryClient = useQueryClient()
+
+const canDelete = useHasRole([EmployeeRole.ADMIN])
 
 const { mutate: deleteMutation } = useMutation({
 	mutationFn: (id: number) => stockMaterialCategoryService.delete(id),

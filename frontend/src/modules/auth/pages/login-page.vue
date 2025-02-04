@@ -31,7 +31,7 @@ const roleComponents: Record<string, unknown> = {
 const roles = [
   { key: 'Store', label: 'Кафе' },
   { key: 'Warehouse', label: 'Центральный склад' },
-  { key: 'Region', label: 'Региональный склад' },
+  { key: 'Region', label: 'Регионы' },
   { key: 'Franchise', label: 'Франчайзи' },
   { key: 'Admin', label: 'Администратор' }
 ]
