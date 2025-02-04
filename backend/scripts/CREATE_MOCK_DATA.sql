@@ -1142,14 +1142,14 @@ VALUES
     (
         1,
         8,
-        'FRANCHISE_OWNER',
+        'FRANCHISEE_OWNER',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         1,
         9,
-        'FRANCHISE_MANAGER',
+        'FRANCHISEE_MANAGER',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );

@@ -24,12 +24,12 @@
 				<AdminEmployeesDetailsStats
 					title="Отработанные часы"
 					:value="employeeStats.hoursWorked"
-					:icon="Clock"
+					:icon="Timer"
 				/>
 				<AdminEmployeesDetailsStats
 					title="Завершенные задачи"
 					:value="employeeStats.tasksCompleted"
-					:icon="CheckCircle"
+					:icon="CheckCheck"
 				/>
 			</div>
 
@@ -80,10 +80,10 @@ import AdminEmployeesDetailsAudits from '@/modules/admin/employees/components/de
 import AdminEmployeesDetailsInfo from '@/modules/admin/employees/components/details/admin-employees-details-info.vue'
 import AdminEmployeesDetailsShifts from '@/modules/admin/employees/components/details/admin-employees-details-shifts.vue'
 import AdminEmployeesDetailsStats from '@/modules/admin/employees/components/details/admin-employees-details-stats.vue'
+import { franchiseeEmployeeService } from '@/modules/admin/employees/franchisees/services/franchisee-employees.service'
 import { employeeAuditService } from '@/modules/admin/employees/services/employees-audit.service'
-import { storeEmployeeService } from '@/modules/admin/employees/stores/services/store-employees.service'
 import { useQuery } from '@tanstack/vue-query'
-import { CheckCircle, Clock, DollarSign } from 'lucide-vue-next'
+import { CheckCheck, DollarSign, Timer } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -102,13 +102,13 @@ const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-	queryKey: ['store-employee', employeeId],
-	queryFn: () => storeEmployeeService.getStoreEmployeeById(Number(employeeId)),
+	queryKey: ['franchisee-employee', employeeId],
+	queryFn: () => franchiseeEmployeeService.getFranchiseeEmployeeById(Number(employeeId)),
 	enabled: !isNaN(Number(employeeId)),
 })
 
 const { data: employeeAudits } = useQuery({
-	queryKey: ['employee-audits', employeeId],
+	queryKey: ['franchisee-audits', employeeId],
 	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employeeId) }),
 	enabled: !isNaN(Number(employeeId)),
 })
