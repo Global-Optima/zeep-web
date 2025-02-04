@@ -48,15 +48,15 @@ type UpdateStoreDTO struct {
 }
 
 type StoreDTO struct {
-	ID              uint                             `json:"id"`
-	Name            string                           `json:"name"`
-	Franchisee      *franchiseesTypes.FranchiseeDTO  `json:"franchisee,omitempty"`
-	Warehouse       warehouseTypes.WarehouseResponse `json:"warehouse"`
-	FacilityAddress *FacilityAddressDTO              `json:"facilityAddress"`
-	IsActive        bool                             `json:"isActive"`
-	ContactPhone    string                           `json:"contactPhone"`
-	ContactEmail    string                           `json:"contactEmail"`
-	StoreHours      string                           `json:"storeHours"`
+	ID              uint                            `json:"id"`
+	Name            string                          `json:"name"`
+	Franchisee      *franchiseesTypes.FranchiseeDTO `json:"franchisee,omitempty"`
+	Warehouse       warehouseTypes.WarehouseDTO     `json:"warehouse"`
+	FacilityAddress *FacilityAddressDTO             `json:"facilityAddress"`
+	IsActive        bool                            `json:"isActive"`
+	ContactPhone    string                          `json:"contactPhone"`
+	ContactEmail    string                          `json:"contactEmail"`
+	StoreHours      string                          `json:"storeHours"`
 }
 
 type StoreFilter struct {
