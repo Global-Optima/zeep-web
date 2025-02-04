@@ -13,7 +13,7 @@
       "recipeSteps": "Recipe steps *{{.Name}}* were created",
       "store": "Store *{{.Name}}* was created",
       "warehouse": "Warehouse *{{.Name}}* was created",
-      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was created in store *{{.StoreName}}*",
+      "storeStock": "Store warehouse stock *{{.Name}}* was created in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was created"
     },
     "update": {
@@ -29,7 +29,7 @@
       "recipeSteps": "Recipe steps *{{.Name}}* were updated",
       "store": "Store *{{.Name}}* was updated",
       "warehouse": "Warehouse *{{.Name}}* was updated",
-      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was updated in store *{{.StoreName}}*",
+      "storeStock": "Store warehouse stock *{{.Name}}* was updated in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was updated"
     },
     "delete": {
@@ -45,7 +45,7 @@
       "recipeSteps": "Recipe steps *{{.Name}}* were deleted",
       "store": "Store *{{.Name}}* was deleted",
       "warehouse": "Warehouse *{{.Name}}* was deleted",
-      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
+      "storeStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was deleted"
     }
   },

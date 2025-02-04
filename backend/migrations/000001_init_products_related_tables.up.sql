@@ -166,6 +166,27 @@ CREATE TABLE  franchisees (
     deleted_at TIMESTAMPTZ
     );
 
+	-- Regions Table
+CREATE TABLE  regions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+    );
+
+-- Warehouses Table
+CREATE TABLE
+	 warehouses (
+		id SERIAL PRIMARY KEY,
+		facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE RESTRICT,
+        region_id INT NOT NULL REFERENCES regions (id) ON DELETE RESTRICT,
+		name VARCHAR(255) NOT NULL,
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
+
 -- Store Table
 CREATE TABLE
 	 stores (
@@ -173,6 +194,7 @@ CREATE TABLE
 		name VARCHAR(255) NOT NULL,
 		facility_address_id INT REFERENCES facility_addresses (id),
 		franchisee_id INT REFERENCES franchisees (id) ON DELETE CASCADE,
+		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
 		is_active BOOLEAN DEFAULT TRUE,
 		contact_phone valid_phone,
 		contact_email VARCHAR(255),
@@ -301,57 +323,25 @@ CREATE UNIQUE INDEX unique_additive_ingredient
     ON additive_ingredients (ingredient_id, additive_id)
     WHERE deleted_at IS NULL;
 
--- Regions Table
-CREATE TABLE  regions (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMPTZ
-    );
 
--- Warehouses Table
-CREATE TABLE
-	 warehouses (
-		id SERIAL PRIMARY KEY,
-		facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE RESTRICT,
-        region_id INT NOT NULL REFERENCES regions (id) ON DELETE RESTRICT,
-		name VARCHAR(255) NOT NULL,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
 
--- StoreWarehouses Table
-CREATE TABLE
-	 store_warehouses (
+
+	
+-- Store Stocks Table (Previously StoreWarehouseStocks)
+CREATE TABLE 
+ 	store_stocks (
 		id SERIAL PRIMARY KEY,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-		warehouse_id INT NOT NULL REFERENCES warehouses (id) ON DELETE CASCADE,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMPTZ
-	);
-
-CREATE UNIQUE INDEX unique_store_warehouse
-    ON store_warehouses (store_id, warehouse_id)
-    WHERE deleted_at IS NULL;
-
--- StoreWarehouseStock Table
-CREATE TABLE
-	 store_warehouse_stocks (
-		id SERIAL PRIMARY KEY,
-		store_warehouse_id INT NOT NULL REFERENCES store_warehouses (id) ON DELETE CASCADE,
 		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
-		low_stock_threshold DECIMAL(10, 2) NOT NULL CHECK (low_stock_threshold > 0),
-		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity >= 0),
+		low_stock_threshold DECIMAL(10,2) NOT NULL CHECK (low_stock_threshold > 0),
+		quantity DECIMAL(10,2) NOT NULL CHECK (quantity >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
-	);
+);
 
-CREATE UNIQUE INDEX unique_store_warehouse_stock
-    ON store_warehouse_stocks (store_warehouse_id, ingredient_id)
+CREATE UNIQUE INDEX unique_store_stock
+    ON store_stocks (store_id, ingredient_id)
     WHERE deleted_at IS NULL;
 
 -- Customer Table
@@ -498,7 +488,7 @@ CREATE TYPE component_name AS ENUM (
     'RECIPE_STEPS',
     'STORE',
     'WAREHOUSE',
-    'STORE_WAREHOUSE_STOCK',
+    'STORE_STOCK',
     'INGREDIENT',
     'INGREDIENT_CATEGORY',
     'STOCK_REQUEST',
@@ -714,7 +704,6 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		stock_request_id INT NOT NULL REFERENCES stock_requests (id) ON DELETE CASCADE,
 		stock_material_id INT NOT NULL REFERENCES stock_materials(id) ON DELETE CASCADE,
-		ingredient_id INT NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
 		quantity DECIMAL(10, 2) NOT NULL CHECK (quantity > 0),
 		delivered_date TIMESTAMPTZ,
 		expiration_date TIMESTAMPTZ,
@@ -725,7 +714,7 @@ CREATE TABLE
 
 -- Prevent duplicate ingredients in the same stock request
 CREATE UNIQUE INDEX unique_stock_request_ingredient
-    ON stock_request_ingredients (stock_request_id, ingredient_id)
+    ON stock_request_ingredients (stock_request_id, stock_material_id)
     WHERE deleted_at IS NULL;
 
 -- Suppliers Table

@@ -2,6 +2,7 @@ package warehouse
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -31,24 +32,21 @@ func NewWarehouseRepository(db *gorm.DB) WarehouseRepository {
 }
 
 func (r *warehouseRepository) AssignStoreToWarehouse(storeID, warehouseID uint) error {
-	storeWarehouse := data.StoreWarehouse{
-		StoreID:     storeID,
-		WarehouseID: warehouseID,
-	}
-	return r.db.Create(&storeWarehouse).Error
+	return r.db.Model(&data.Store{}).
+		Where("id = ?", storeID).
+		Update("warehouse_id", warehouseID).Error
 }
 
 func (r *warehouseRepository) ReassignStoreToWarehouse(storeID, newWarehouseID uint) error {
-	return r.db.Model(&data.StoreWarehouse{}).
-		Where("store_id = ?", storeID).
+	return r.db.Model(&data.Store{}).
+		Where("id = ?", storeID).
 		Update("warehouse_id", newWarehouseID).Error
 }
 
 func (r *warehouseRepository) GetAllStoresByWarehouse(warehouseID uint, pagination *utils.Pagination) ([]data.Store, error) {
 	var stores []data.Store
 
-	query := r.db.Joins("JOIN store_warehouses ON stores.id = store_warehouses.store_id").
-		Where("store_warehouses.warehouse_id = ?", warehouseID)
+	query := r.db.Preload("Warehouse").Where("warehouse_id = ?", warehouseID)
 
 	if _, err := utils.ApplyPagination(query, pagination, &data.Store{}); err != nil {
 		return nil, fmt.Errorf("failed to apply pagination: %w", err)

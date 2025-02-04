@@ -1,9 +1,10 @@
 package warehouse
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"net/http"
 	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -110,6 +111,10 @@ func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
 	var filter types.WarehouseFilter
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+	if err != nil {
+		utils.SendBadRequestError(c, "400")
+		return
+	}
 
 	warehouses, err := h.service.GetAllWarehouses(&filter)
 	if err != nil {

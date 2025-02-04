@@ -52,6 +52,10 @@ func (r *storeRepository) GetAllStores(filter *types.StoreFilter) ([]data.Store,
 			searchTerm, searchTerm, searchTerm)
 	}
 
+	if filter.WarehouseID != nil {
+		query = query.Where("warehouse_id = ?", filter.WarehouseID)
+	}
+
 	if filter.IsFranchisee != nil {
 		if *filter.IsFranchisee {
 			query = query.Where("franchisee_id IS NOT NULL")

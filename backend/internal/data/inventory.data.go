@@ -35,25 +35,6 @@ type Warehouse struct {
 	Name              string          `gorm:"size:255;not null" sort:"name"`
 }
 
-type StoreWarehouse struct {
-	BaseEntity
-	StoreID              uint                  `gorm:"not null;index"`
-	Store                Store                 `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE" sort:"stores"`
-	WarehouseID          uint                  `gorm:"not null;index"`
-	Warehouse            Warehouse             `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE" sort:"warehouses"`
-	StoreWarehouseStocks []StoreWarehouseStock `gorm:"foreignKey:StoreWarehouseID;constraint:OnDelete:CASCADE"`
-}
-
-type StoreWarehouseStock struct {
-	BaseEntity
-	StoreWarehouseID  uint           `gorm:"not null;index"`
-	StoreWarehouse    StoreWarehouse `gorm:"foreignKey:StoreWarehouseID;constraint:OnDelete:CASCADE"`
-	IngredientID      uint           `gorm:"not null;index"`
-	Ingredient        Ingredient     `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE" sort:"ingredients"`
-	LowStockThreshold float64        `gorm:"type:decimal(10,2);not null;check:low_stock_threshold > 0" sort:"lowStockThreshold"`
-	Quantity          float64        `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"quantity"`
-}
-
 type StockRequest struct {
 	BaseEntity
 	StoreID          uint                     `gorm:"not null;index"` // Links to Store
@@ -71,8 +52,6 @@ type StockRequestIngredient struct {
 	BaseEntity
 	StockRequestID  uint          `gorm:"not null;index"`
 	StockRequest    StockRequest  `gorm:"foreignKey:StockRequestID;constraint:OnDelete:CASCADE"`
-	IngredientID    uint          `gorm:"not null;index"`
-	Ingredient      Ingredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	StockMaterialID uint          `gorm:"not null;index"` // Selected stock material
 	StockMaterial   StockMaterial `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
 	Quantity        float64       `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
