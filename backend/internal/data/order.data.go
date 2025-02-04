@@ -21,7 +21,8 @@ type Order struct {
 	BaseEntity
 	CustomerID        *uint           `gorm:"index"`
 	CustomerName      string          `gorm:"size:255" sort:"customerName"`
-	EmployeeID        *uint           `gorm:"index"`
+	StoreEmployeeID   *uint           `gorm:"index"`
+	StoreEmployee     *StoreEmployee  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	StoreID           uint            `gorm:"index"`
 	Store             Store           `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	DeliveryAddressID *uint           `gorm:"index"`
