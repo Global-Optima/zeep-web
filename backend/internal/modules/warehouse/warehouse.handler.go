@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
@@ -121,8 +122,12 @@ func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
 
 	regionID, errH := contexts.GetRegionId(c)
 	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
+		if errors.Is(errH, contexts.ErrEmptyRegionID) {
+			regionID = 0
+		} else {
+			utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+			return
+		}
 	}
 
 	warehouses, err := h.service.GetWarehousesByRegion(regionID, &filter)

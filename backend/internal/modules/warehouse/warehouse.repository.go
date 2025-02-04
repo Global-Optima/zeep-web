@@ -102,8 +102,11 @@ func (r *warehouseRepository) GetWarehousesByRegion(regionID uint, filter *types
 
 	query := r.db.Model(&data.Warehouse{}).
 		Preload("FacilityAddress").
-		Preload("Region").
-		Where("region_id = ?", regionID)
+		Preload("Region")
+
+	if regionID != 0 {
+		query.Where("region_id = ?", regionID)
+	}
 
 	if filter == nil {
 		return nil, fmt.Errorf("filter is nil")

@@ -98,11 +98,12 @@ func (h *StoreHandler) GetStoresByFranchisee(c *gin.Context) {
 
 	franchiseeID, errH := contexts.GetFranchiseeId(c)
 	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		if errors.Is(errH, contexts.ErrEmptyFranchiseeID) {
 			franchiseeID = 0
+		} else {
+			utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+			return
 		}
-		return
 	}
 
 	store, err := h.service.GetStoresByFranchisee(franchiseeID, &filter)
