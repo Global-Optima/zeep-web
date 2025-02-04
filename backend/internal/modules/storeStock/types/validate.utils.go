@@ -16,7 +16,7 @@ func ParseStockParamsWithPagination(c *gin.Context) (*GetStockFilterQuery, error
 
 	params.Pagination = utils.ParsePagination(c)
 
-	params.Sort, err = utils.ParseSortParamsForModel(c, &data.StoreWarehouseStock{})
+	params.Sort, err = utils.ParseSortParamsForModel(c, &data.StoreStock{})
 	if err != nil {
 		return nil, err
 	}

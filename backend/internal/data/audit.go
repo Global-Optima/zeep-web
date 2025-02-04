@@ -1,11 +1,12 @@
 package data
 
 import (
+	"net/http"
+
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/audit"
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	"gorm.io/datatypes"
-	"net/http"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -39,7 +40,7 @@ const (
 	RecipeStepsComponent           ComponentName = "RECIPE_STEPS"
 	StoreComponent                 ComponentName = "STORE"
 	WarehouseComponent             ComponentName = "WAREHOUSE"
-	StoreWarehouseStockComponent   ComponentName = "STORE_WAREHOUSE_STOCK"
+	StoreStockComponent            ComponentName = "STORE_STOCK"
 	IngredientComponent            ComponentName = "INGREDIENT"
 	IngredientCategoryComponent    ComponentName = "INGREDIENT_CATEGORY"
 	StockRequestComponent          ComponentName = "STOCK_REQUEST"

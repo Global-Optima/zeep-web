@@ -5,7 +5,7 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 )
 
-func MapToStockDTO(stock data.StoreWarehouseStock) StoreStockDTO {
+func MapToStockDTO(stock data.StoreStock) StoreStockDTO {
 	return StoreStockDTO{
 		ID:                stock.ID,
 		Name:              stock.Ingredient.Name,
@@ -16,9 +16,9 @@ func MapToStockDTO(stock data.StoreWarehouseStock) StoreStockDTO {
 	}
 }
 
-func AddToStock(dto AddStoreStockDTO, storeWarehouseID uint) *data.StoreWarehouseStock {
-	return &data.StoreWarehouseStock{
-		StoreWarehouseID:  storeWarehouseID,
+func AddToStock(dto AddStoreStockDTO, storeID uint) *data.StoreStock {
+	return &data.StoreStock{
+		StoreID:           storeID,
 		Quantity:          dto.Quantity,
 		LowStockThreshold: dto.LowStockThreshold,
 		IngredientID:      dto.IngredientID,

@@ -1,7 +1,9 @@
-package storeWarehouses
+package storeStock
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
@@ -9,30 +11,29 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"go.uber.org/zap"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-type StoreWarehouseHandler struct {
-	service           StoreWarehouseService
+type StoreStockHandler struct {
+	service           StoreStockService
 	auditService      audit.AuditService
 	ingredientService ingredients.IngredientService
 	franchiseeService franchisees.FranchiseeService
 	logger            *zap.SugaredLogger
 }
 
-func NewStoreWarehouseHandler(
-	service StoreWarehouseService,
+func NewStoreStockHandler(
+	service StoreStockService,
 	ingredientService ingredients.IngredientService,
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
 	logger *zap.SugaredLogger,
-) *StoreWarehouseHandler {
-	return &StoreWarehouseHandler{
+) *StoreStockHandler {
+	return &StoreStockHandler{
 		service:           service,
 		ingredientService: ingredientService,
 		auditService:      auditService,
@@ -41,7 +42,7 @@ func NewStoreWarehouseHandler(
 	}
 }
 
-func (h *StoreWarehouseHandler) GetAvailableIngredientsToAdd(c *gin.Context) {
+func (h *StoreStockHandler) GetAvailableIngredientsToAdd(c *gin.Context) {
 	var filter ingredientTypes.IngredientFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Ingredient{}); err != nil {
 		utils.SendBadRequestError(c, "Invalid query parameters")
@@ -63,7 +64,7 @@ func (h *StoreWarehouseHandler) GetAvailableIngredientsToAdd(c *gin.Context) {
 	utils.SendSuccessResponseWithPagination(c, ingredientsList, filter.Pagination)
 }
 
-func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
+func (h *StoreStockHandler) AddStoreStock(c *gin.Context) {
 	var dto types.AddStoreStockDTO
 
 	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
@@ -89,7 +90,7 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 		return
 	}
 
-	action := types.CreateStoreWarehouseStockAuditFactory(
+	action := types.CreateStoreStockAuditFactory(
 		&data.BaseDetails{
 			ID:   id,
 			Name: ingredient.Name,
@@ -105,7 +106,7 @@ func (h *StoreWarehouseHandler) AddStoreWarehouseStock(c *gin.Context) {
 	})
 }
 
-func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
+func (h *StoreStockHandler) AddMultipleStoreStock(c *gin.Context) {
 	var dto types.AddMultipleStoreStockDTO
 
 	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
@@ -145,7 +146,7 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 			continue
 		}
 
-		action := types.CreateStoreWarehouseStockAuditFactory(
+		action := types.CreateStoreStockAuditFactory(
 			&data.BaseDetails{
 				ID:   stock.ID,
 				Name: stock.Name,
@@ -164,7 +165,7 @@ func (h *StoreWarehouseHandler) AddMultipleStoreWarehouseStock(c *gin.Context) {
 	})
 }
 
-func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
+func (h *StoreStockHandler) GetStoreStockList(c *gin.Context) {
 	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
@@ -172,7 +173,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 	}
 
 	stockFilter := &types.GetStockFilterQuery{}
-	if err := utils.ParseQueryWithBaseFilter(c, stockFilter, &data.StoreWarehouseStock{}); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, stockFilter, &data.StoreStock{}); err != nil {
 		utils.SendBadRequestError(c, "failed to parse pagination parameters")
 		return
 	}
@@ -186,7 +187,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockList(c *gin.Context) {
 	utils.SendSuccessResponseWithPagination(c, stockList, stockFilter.GetPagination())
 }
 
-func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
+func (h *StoreStockHandler) GetStoreStockById(c *gin.Context) {
 	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
@@ -208,7 +209,7 @@ func (h *StoreWarehouseHandler) GetStoreWarehouseStockById(c *gin.Context) {
 	utils.SendSuccessResponse(c, stock)
 }
 
-func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
+func (h *StoreStockHandler) UpdateStoreStockById(c *gin.Context) {
 	var input types.UpdateStoreStockDTO
 
 	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
@@ -240,7 +241,7 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	action := types.UpdateStoreWarehouseStockAuditFactory(
+	action := types.UpdateStoreStockAuditFactory(
 		&data.BaseDetails{
 			ID:   uint(stockId),
 			Name: stock.Name,
@@ -254,7 +255,7 @@ func (h *StoreWarehouseHandler) UpdateStoreWarehouseStockById(c *gin.Context) {
 	utils.SendSuccessResponse(c, gin.H{"message": "stock updated successfully"})
 }
 
-func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
+func (h *StoreStockHandler) DeleteStoreStockById(c *gin.Context) {
 	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
@@ -279,7 +280,7 @@ func (h *StoreWarehouseHandler) DeleteStoreWarehouseStockById(c *gin.Context) {
 		return
 	}
 
-	action := types.DeleteStoreWarehouseStockAuditFactory(
+	action := types.DeleteStoreStockAuditFactory(
 		&data.BaseDetails{
 			ID:   uint(stockId),
 			Name: stock.Name,

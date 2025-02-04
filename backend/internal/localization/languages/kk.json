@@ -13,7 +13,7 @@
       "recipeSteps": "Рецепт қадамдары *{{.Name}}* жасалды",
       "store": "Дүкен *{{.Name}}* жасалды",
       "warehouse": "Қойма *{{.Name}}* жасалды",
-      "storeWarehouseStock": "Дүкеннің қоймасында *{{.StoreName}}* қор *{{.Name}}* жасалды",
+      "storeStock": "Дүкеннің қоймасында *{{.StoreName}}* қор *{{.Name}}* жасалды",
       "ingredient": "Ингредиент *{{.Name}}* жасалды"
     },
     "update": {
@@ -29,7 +29,7 @@
       "recipeSteps": "Рецепт қадамдары *{{.Name}}* жаңартылды",
       "store": "Дүкен *{{.Name}}* жаңартылды",
       "warehouse": "Қойма *{{.Name}}* жаңартылды",
-      "storeWarehouseStock": "Дүкеннің қоймасындағы *{{.StoreName}}* қор *{{.Name}}* жаңартылды",
+      "storeStock": "Дүкеннің қоймасындағы *{{.StoreName}}* қор *{{.Name}}* жаңартылды",
       "ingredient": "Ингредиент *{{.Name}}* жаңартылды"
     },
     "delete": {
@@ -45,7 +45,7 @@
       "recipeSteps": "Рецепт қадамдары *{{.Name}}* жойылды",
       "store": "Дүкен *{{.Name}}* жойылды",
       "warehouse": "Қойма *{{.Name}}* жойылды",
-      "storeWarehouseStock": "Дүкеннен *{{.StoreName}}* қойма қоры *{{.Name}}* жойылды",
+      "storeStock": "Дүкеннен *{{.StoreName}}* қойма қоры *{{.Name}}* жойылды",
       "ingredient": "Ингредиент *{{.Name}}* жойылды"
     }
   },

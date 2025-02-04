@@ -1,19 +1,20 @@
-package storeWarehouses
+package storeStock
 
 import (
 	"fmt"
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"time"
+
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
-type StoreWarehouseService interface {
+type StoreStockService interface {
 	GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]ingredientTypes.IngredientDTO, error)
 	AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)
 	AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) ([]uint, error)
@@ -23,28 +24,28 @@ type StoreWarehouseService interface {
 	UpdateStockById(storeId, stockId uint, input *types.UpdateStoreStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
 
-	CheckStockNotifications(storeID uint, stock data.StoreWarehouseStock) error
+	CheckStockNotifications(storeID uint, stock data.StoreStock) error
 }
 
-type storeWarehouseService struct {
-	repo                StoreWarehouseRepository
+type storeStockService struct {
+	repo                StoreStockRepository
 	notificationService notifications.NotificationService
 	logger              *zap.SugaredLogger
 }
 
-func NewStoreWarehouseService(repo StoreWarehouseRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) StoreWarehouseService {
-	return &storeWarehouseService{
+func NewStoreStockService(repo StoreStockRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) StoreStockService {
+	return &storeStockService{
 		repo:                repo,
 		notificationService: notificationService,
 		logger:              logger,
 	}
 }
 
-func (s *storeWarehouseService) AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) ([]uint, error) {
+func (s *storeStockService) AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) ([]uint, error) {
 	var IDs []uint
 
 	// Start a transaction
-	err := s.repo.WithTransaction(func(txRepo storeWarehouseRepository) error {
+	err := s.repo.WithTransaction(func(txRepo storeStockRepository) error {
 		for _, stock := range dto.IngredientStocks {
 			// Add or update stock for each ingredient
 			id, err := txRepo.AddOrUpdateStock(storeId, &stock)
@@ -73,7 +74,7 @@ func (s *storeWarehouseService) AddMultipleStock(storeId uint, dto *types.AddMul
 	return IDs, nil
 }
 
-func (s *storeWarehouseService) AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error) {
+func (s *storeStockService) AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error) {
 	id, err := s.repo.AddStock(storeId, dto)
 	if err != nil {
 		wrappedErr := utils.WrapError("error adding new stock element", err)
@@ -89,7 +90,7 @@ func (s *storeWarehouseService) AddStock(storeId uint, dto *types.AddStoreStockD
 	return id, nil
 }
 
-func (s *storeWarehouseService) GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StoreStockDTO, error) {
+func (s *storeStockService) GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StoreStockDTO, error) {
 	stockList, err := s.repo.GetStockList(storeId, query)
 	if err != nil {
 		wrappedErr := utils.WrapError("error getting store stock list", err)
@@ -105,7 +106,7 @@ func (s *storeWarehouseService) GetStockList(storeId uint, query *types.GetStock
 	return dtos, nil
 }
 
-func (s *storeWarehouseService) GetStockListByIDs(storeId uint, IDs []uint) ([]types.StoreStockDTO, error) {
+func (s *storeStockService) GetStockListByIDs(storeId uint, IDs []uint) ([]types.StoreStockDTO, error) {
 	stockList, err := s.repo.GetStockListByIDs(storeId, IDs)
 	if err != nil {
 		wrappedErr := utils.WrapError("error getting store stock list", err)
@@ -121,7 +122,7 @@ func (s *storeWarehouseService) GetStockListByIDs(storeId uint, IDs []uint) ([]t
 	return dtos, nil
 }
 
-func (s *storeWarehouseService) GetStockById(storeId, stockId uint) (*types.StoreStockDTO, error) {
+func (s *storeStockService) GetStockById(storeId, stockId uint) (*types.StoreStockDTO, error) {
 	stock, err := s.repo.GetStockById(storeId, stockId)
 	if err != nil {
 		wrappedErr := utils.WrapError("error getting stock", err)
@@ -134,7 +135,7 @@ func (s *storeWarehouseService) GetStockById(storeId, stockId uint) (*types.Stor
 	return &stockDto, nil
 }
 
-func (s *storeWarehouseService) UpdateStockById(storeId, stockId uint, input *types.UpdateStoreStockDTO) error {
+func (s *storeStockService) UpdateStockById(storeId, stockId uint, input *types.UpdateStoreStockDTO) error {
 	err := s.repo.UpdateStock(storeId, stockId, input)
 	if err != nil {
 		wrappedErr := utils.WrapError("error updating stock", err)
@@ -150,7 +151,7 @@ func (s *storeWarehouseService) UpdateStockById(storeId, stockId uint, input *ty
 	return nil
 }
 
-func (s *storeWarehouseService) DeleteStockById(storeId, stockId uint) error {
+func (s *storeStockService) DeleteStockById(storeId, stockId uint) error {
 	err := s.repo.DeleteStockById(storeId, stockId)
 	if err != nil {
 		wrappedErr := utils.WrapError("error deleting stock", err)
@@ -160,7 +161,7 @@ func (s *storeWarehouseService) DeleteStockById(storeId, stockId uint) error {
 	return nil
 }
 
-func (s *storeWarehouseService) GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]ingredientTypes.IngredientDTO, error) {
+func (s *storeStockService) GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]ingredientTypes.IngredientDTO, error) {
 	ingredients, err := s.repo.GetAvailableIngredientsToAdd(storeID, filter)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to fetch available ingredients to add for store: %d: %w", storeID, err)
@@ -171,12 +172,12 @@ func (s *storeWarehouseService) GetAvailableIngredientsToAdd(storeID uint, filte
 	return ingredientTypes.ConvertToIngredientResponseDTOs(ingredients), nil
 }
 
-func (s *storeWarehouseService) CheckStockNotifications(storeID uint, stock data.StoreWarehouseStock) error {
+func (s *storeStockService) CheckStockNotifications(storeID uint, stock data.StoreStock) error {
 	if stock.Quantity <= stock.LowStockThreshold {
 		details := &details.StoreWarehouseRunOutDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           storeID,
-				FacilityName: stock.StoreWarehouse.Store.Name,
+				FacilityName: stock.Store.Name,
 			},
 			StockItem:   stock.Ingredient.Name,
 			StockItemID: stock.ID,
@@ -193,7 +194,7 @@ func (s *storeWarehouseService) CheckStockNotifications(storeID uint, stock data
 		details := &details.StockExpirationDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           storeID,
-				FacilityName: stock.StoreWarehouse.Store.Name,
+				FacilityName: stock.Store.Name,
 			},
 			ItemName:       stock.Ingredient.Name,
 			ExpirationDate: closestExpirationDate.Format("2006-01-02"),
@@ -207,7 +208,7 @@ func (s *storeWarehouseService) CheckStockNotifications(storeID uint, stock data
 	return nil
 }
 
-func (s *storeWarehouseService) checkStockAndNotify(storeId, stockId uint) error {
+func (s *storeStockService) checkStockAndNotify(storeId, stockId uint) error {
 	updatedStock, err := s.repo.GetStockById(storeId, stockId)
 	if err != nil {
 		s.logger.Errorf("failed to fetch stock for %d: %v", stockId, err)
@@ -223,7 +224,7 @@ func (s *storeWarehouseService) checkStockAndNotify(storeId, stockId uint) error
 		details := &details.StoreWarehouseRunOutDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           storeId,
-				FacilityName: updatedStock.StoreWarehouse.Store.Name,
+				FacilityName: updatedStock.Store.Name,
 			},
 			StockItem:   updatedStock.Ingredient.Name,
 			StockItemID: updatedStock.IngredientID,
