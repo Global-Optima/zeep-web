@@ -206,8 +206,8 @@ import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import { Switch } from '@/core/components/ui/switch'
 import { getEmployeeShortName } from '@/core/utils/user-formatting.utils'
-import type { UpdateFranchiseeEmployeeDTO } from '@/modules/admin/employees/franchisees/models/franchisees-employees.model'
 import { EmployeeRole, type EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
+import type { UpdateWarehouseEmployeeDTO } from '@/modules/admin/employees/warehouses/models/warehouse-employees.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
 const {employee} = defineProps<{
@@ -215,13 +215,13 @@ const {employee} = defineProps<{
 }>()
 
 const emit = defineEmits<{
-	(e: 'onSubmit', formValues: UpdateFranchiseeEmployeeDTO): void
+	(e: 'onSubmit', formValues: UpdateWarehouseEmployeeDTO): void
 	(e: 'onCancel'): void
 }>()
 
 const roles = ref([
-	{ value: EmployeeRole.FRANCHISE_MANAGER, label: 'Менеджер' },
-	{ value: EmployeeRole.FRANCHISE_OWNER, label: 'Владелец' },
+	{ value: EmployeeRole.WAREHOUSE_MANAGER, label: 'Менеджер' },
+	{ value: EmployeeRole.WAREHOUSE_EMPLOYEE, label: 'Сотрудник склада' },
 ]);
 
 const schema = toTypedSchema(

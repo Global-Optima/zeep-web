@@ -237,7 +237,7 @@ func (r *Router) RegisterEmployeesRoutes(
 			franchiseeEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(data.RoleFranchiseOwner), franchiseeEmployeeHandler.DeleteFranchiseeEmployee) // franchise owner
 		}
 
-		regionEmployeeRouter := router.Group("/region", middleware.EmployeeRoleMiddleware())
+		regionEmployeeRouter := router.Group("/region")
 		{
 			regionEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(data.RoleOwner), regionEmployeeHandler.GetRegionEmployees)
 			regionEmployeeRouter.GET("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner), regionEmployeeHandler.GetRegionEmployeeByID)
@@ -246,7 +246,7 @@ func (r *Router) RegisterEmployeesRoutes(
 			regionEmployeeRouter.DELETE("/:employeeId", middleware.EmployeeRoleMiddleware(), regionEmployeeHandler.DeleteRegionEmployee)
 		}
 
-		adminEmployeeRouter := router.Group("/admin", middleware.EmployeeRoleMiddleware())
+		adminEmployeeRouter := router.Group("/admin")
 		{
 			adminEmployeeRouter.GET("", middleware.EmployeeRoleMiddleware(), adminEmployeeHandler.GetAdminEmployees)
 			adminEmployeeRouter.POST("", middleware.EmployeeRoleMiddleware(), adminEmployeeHandler.CreateAdminEmployee)

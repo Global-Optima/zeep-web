@@ -18,3 +18,15 @@ export interface WarehouseFilter extends PaginationParams {
 	search?: string
 	regionId?: number
 }
+
+export interface CreateWarehouseDTO {
+	facilityAddress: {
+		address: string
+	}
+	regionId: number
+	name: string
+}
+
+export interface UpdateWarehouseDTO {
+	name?: string
+}

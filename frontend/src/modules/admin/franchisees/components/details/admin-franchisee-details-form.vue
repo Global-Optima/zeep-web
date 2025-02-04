@@ -93,7 +93,7 @@ const onCancel = () => {
 		<Card>
 			<CardHeader>
 				<CardTitle>Редактирование франчайзи</CardTitle>
-				<CardDescription>Измените название или описание франчайзи.</CardDescription>
+				<CardDescription>Измените детали франчайзи.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form

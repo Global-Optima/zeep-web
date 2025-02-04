@@ -1,8 +1,5 @@
 <template>
-	<div
-		v-if="employee"
-		class="mx-auto w-full max-w-7xl"
-	>
+	<div class="mx-auto w-full max-w-7xl">
 		<div class="flex items-center gap-4">
 			<Button
 				variant="outline"
@@ -13,18 +10,8 @@
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Активности сотрудника {{ getEmployeeShortName(employee) }}
+				Аудит сотрудника
 			</h1>
-
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
-				<Button
-					variant="outline"
-					type="button"
-					@click="$router.back"
-				>
-					Отменить
-				</Button>
-			</div>
 		</div>
 
 		<Card class="mt-4">
@@ -66,12 +53,10 @@ import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWi
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import { getEmployeeShortName } from '@/core/utils/user-formatting.utils'
 import AdminStoreEmployeesAuditList from '@/modules/admin/employees/components/audit/admin-store-employees-audit-list.vue'
 import AdminStoreEmployeesAuditToolbar from '@/modules/admin/employees/components/audit/admin-store-employees-audit-toolbar.vue'
 import type { EmployeeAuditFilter } from '@/modules/admin/employees/models/employees-audit.models'
 import { employeeAuditService } from '@/modules/admin/employees/services/employees-audit.service'
-import { employeesService } from '@/modules/admin/employees/services/employees.service'
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
@@ -81,12 +66,6 @@ const filter = ref<EmployeeAuditFilter>({})
 
 const route = useRoute()
 const employeeId = route.params.id as string
-
-const { data: employee } = useQuery({
-  queryKey: ['employee', employeeId],
-	queryFn: () => employeesService.getEmployeeById(Number(employeeId)),
-  enabled: !!employeeId,
-})
 
 const { data: employeeAudits } = useQuery({
   queryKey: computed(() => ['employee-audits', {...filter.value, employeeId}]),

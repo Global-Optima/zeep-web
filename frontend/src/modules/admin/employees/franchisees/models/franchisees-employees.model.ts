@@ -2,6 +2,7 @@ import type {
 	BaseEmployeeDetailsDTO,
 	BaseEmployeeDTO,
 	EmployeeRole,
+	EmployeesFilter,
 	UpdateEmployeeDTO,
 } from '@/modules/admin/employees/models/employees.models'
 import type { FranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
@@ -20,4 +21,8 @@ export interface FranchiseeEmployeeDetailsDTO extends BaseEmployeeDetailsDTO {
 	id: number
 	employeeId: number
 	franchisee: FranchiseeDTO
+}
+
+export interface FranchiseEmployeeFilter extends EmployeesFilter {
+	franchiseeId?: number
 }

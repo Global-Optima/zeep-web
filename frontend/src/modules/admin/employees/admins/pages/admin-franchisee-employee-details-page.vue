@@ -53,7 +53,7 @@
 
 						<Button
 							variant="outline"
-							@click="$router.push(`/admin/store-employees/${employeeId}/audit`)"
+							@click="$router.push(`/admin/employees/${employeeId}/audit`)"
 							>Еще</Button
 						>
 					</div>

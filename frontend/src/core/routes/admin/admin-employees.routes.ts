@@ -62,6 +62,66 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 			),
 	},
 
+	// Regions
+	ADMIN_REGION_EMPLOYEES: {
+		path: 'employees/region',
+		meta: {
+			title: 'Все сотрудники региональных складов',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/regions/pages/admin-region-employees-page.vue'),
+	},
+	ADMIN_REGION_EMPLOYEE_DETAILS: {
+		path: 'employees/region/:id',
+		meta: {
+			title: 'Детали сотрудника регионального склада',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/regions/pages/admin-region-employee-details-page.vue'),
+	},
+	ADMIN_REGION_EMPLOYEE_UPDATE: {
+		path: 'employees/region/:id/update',
+		meta: {
+			title: 'Обновить сотрудника регионального склада',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/regions/pages/admin-region-employee-update-page.vue'),
+	},
+
+	// Warehouse
+	ADMIN_WAREHOUSE_EMPLOYEES: {
+		path: 'employees/warehouse',
+		meta: {
+			title: 'Все сотрудники складов',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/warehouses/pages/admin-warehouse-employees-page.vue'),
+	},
+	ADMIN_WAREHOUSE_EMPLOYEE_DETAILS: {
+		path: 'employees/warehouse/:id',
+		meta: {
+			title: 'Детали сотрудника склада',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/employees/warehouses/pages/admin-warehouse-employee-details-page.vue'
+			),
+	},
+	ADMIN_WAREHOUSE_EMPLOYEE_UPDATE: {
+		path: 'employees/warehouse/:id/update',
+		meta: {
+			title: 'Обновить сотрудника склада',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/warehouses/pages/admin-warehouse-employee-update-page.vue'),
+	},
+
 	ADMIN_EMPLOYEE_AUDIT: {
 		path: 'employees/:id/audit',
 		meta: {
