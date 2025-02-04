@@ -34,7 +34,7 @@ func (h *RecipeHandler) GetRecipeSteps(c *gin.Context) {
 
 	recipeSteps, err := h.service.GetRecipeStepsByProductID(productID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve recipe steps")
+		utils.SendInternalServerError(c, "Не удалось получить шаги рецепта")
 		return
 	}
 
@@ -46,18 +46,18 @@ func (h *RecipeHandler) GetRecipeStepDetails(c *gin.Context) {
 
 	recipeStepID, err := strconv.ParseUint(recipeStepIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid recipe step ID")
+		utils.SendBadRequestError(c, "Неверный ID шага рецепта")
 		return
 	}
 
 	recipeStepDetails, err := h.service.GetRecipeStepByID(uint(recipeStepID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve recipe step details")
+		utils.SendInternalServerError(c, "Не удалось получить детали шага рецепта")
 		return
 	}
 
 	if recipeStepDetails == nil {
-		utils.SendNotFoundError(c, "Recipe step not found")
+		utils.SendNotFoundError(c, "Шаг рецепта не найден")
 		return
 	}
 
@@ -79,13 +79,13 @@ func (h *RecipeHandler) CreateRecipeSteps(c *gin.Context) {
 
 	_, err := h.service.CreateOrReplaceRecipeSteps(productID, input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create recipe steps")
+		utils.SendInternalServerError(c, "Не удалось создать шаги рецепта")
 		return
 	}
 
 	recipeSteps, err := h.service.GetRecipeStepsByProductID(productID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create recipe steps: recipe step not found")
+		utils.SendInternalServerError(c, "Не удалось создать шаги рецепта: шаг рецепта не найден")
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *RecipeHandler) CreateRecipeSteps(c *gin.Context) {
 	for _, recipeStep := range recipeSteps {
 		matchedDTO, exists := dtoMap[recipeStep.Step]
 		if !exists {
-			utils.SendInternalServerError(c, fmt.Sprintf("No matching DTO found for step %d", recipeStep.Step))
+			utils.SendInternalServerError(c, fmt.Sprintf("Не найдено соответствие для шага %d", recipeStep.Step))
 			return
 		}
 
@@ -120,7 +120,7 @@ func (h *RecipeHandler) CreateRecipeSteps(c *gin.Context) {
 		}()
 	}
 
-	utils.SendMessageWithStatus(c, "Recipe steps created successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "Шаги рецепта успешно созданы", http.StatusCreated)
 }
 
 func (h *RecipeHandler) UpdateRecipeSteps(c *gin.Context) {
@@ -138,13 +138,13 @@ func (h *RecipeHandler) UpdateRecipeSteps(c *gin.Context) {
 
 	_, err := h.service.CreateOrReplaceRecipeSteps(productID, input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update recipe step")
+		utils.SendInternalServerError(c, "Не удалось обновить шаг рецепта")
 		return
 	}
 
 	recipeSteps, err := h.service.GetRecipeStepsByProductID(productID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create recipe steps: recipe step not found")
+		utils.SendInternalServerError(c, "Не удалось создать шаги рецепта: шаг рецепта не найден")
 		return
 	}
 
@@ -159,7 +159,7 @@ func (h *RecipeHandler) UpdateRecipeSteps(c *gin.Context) {
 	for i, recipeStep := range recipeSteps {
 		matchedDTO, exists := dtoMap[recipeStep.Step]
 		if !exists {
-			utils.SendInternalServerError(c, fmt.Sprintf("No matching DTO found for step %d", recipeStep.Step))
+			utils.SendInternalServerError(c, fmt.Sprintf("Не найдено соответствие для шага %d", recipeStep.Step))
 			return
 		}
 
@@ -177,7 +177,7 @@ func (h *RecipeHandler) UpdateRecipeSteps(c *gin.Context) {
 		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
 	}()
 
-	utils.SendMessageWithStatus(c, "Recipe step updated successfully", http.StatusOK)
+	utils.SendMessageWithStatus(c, "Шаг рецепта успешно обновлен", http.StatusOK)
 }
 
 func (h *RecipeHandler) DeleteRecipeSteps(c *gin.Context) {
@@ -189,13 +189,13 @@ func (h *RecipeHandler) DeleteRecipeSteps(c *gin.Context) {
 
 	err := h.service.DeleteRecipeStep(productID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete recipe step")
+		utils.SendInternalServerError(c, "Не удалось удалить шаг рецепта")
 		return
 	}
 
 	recipeSteps, err := h.service.GetRecipeStepsByProductID(productID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create recipe steps: recipe step not found")
+		utils.SendInternalServerError(c, "Не удалось создать шаги рецепта: шаг рецепта не найден")
 		return
 	}
 
@@ -215,7 +215,7 @@ func (h *RecipeHandler) DeleteRecipeSteps(c *gin.Context) {
 		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
 	}()
 
-	utils.SendMessageWithStatus(c, "Recipe step deleted successfully", http.StatusOK)
+	utils.SendMessageWithStatus(c, "Шаг рецепта успешно удален", http.StatusOK)
 }
 
 func getProductID(c *gin.Context) (uint, *handlerErrors.HandlerError) {

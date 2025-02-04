@@ -36,7 +36,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	products, err := h.service.GetProducts(&filter)
 
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve products")
+		utils.SendInternalServerError(c, "Не удалось получить список продуктов")
 		return
 	}
 
@@ -48,18 +48,18 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 
 	productID, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		utils.SendBadRequestError(c, "Неверный ID продукта")
 		return
 	}
 
 	productDetails, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		utils.SendInternalServerError(c, "Не удалось получить данные продукта")
 		return
 	}
 
 	if productDetails == nil {
-		utils.SendNotFoundError(c, "Product not found")
+		utils.SendNotFoundError(c, "Продукт не найден")
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 
 	id, err := h.service.CreateProduct(&input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		utils.SendInternalServerError(c, "Не удалось создать продукт")
 		return
 	}
 
@@ -90,7 +90,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "Продукт успешно создан", http.StatusCreated)
 }
 
 func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
@@ -98,13 +98,13 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 
 	productID, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		utils.SendBadRequestError(c, "Неверный ID продукта")
 		return
 	}
 
 	productSizes, err := h.service.GetProductSizesByProductID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product sizes")
+		utils.SendInternalServerError(c, "Не удалось получить размеры продукта")
 		return
 	}
 
@@ -116,13 +116,13 @@ func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
 
 	productID, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		utils.SendBadRequestError(c, "Неверный ID продукта")
 		return
 	}
 
 	productSize, err := h.service.GetProductSizeDetailsByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product sizes")
+		utils.SendInternalServerError(c, "Не удалось получить размер продукта")
 		return
 	}
 
@@ -133,13 +133,13 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 	var input types.CreateProductSizeDTO
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON+err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
 	id, err := h.service.CreateProductSize(&input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		utils.SendInternalServerError(c, "Не удалось создать размер продукта")
 		return
 	}
 
@@ -153,13 +153,13 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "Размер продукта успешно создан", http.StatusCreated)
 }
 
 func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		utils.SendBadRequestError(c, "Неверный ID продукта")
 		return
 	}
 
@@ -171,13 +171,13 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product details: product not found")
+		utils.SendInternalServerError(c, "Не удалось обновить данные продукта: продукт не найден")
 		return
 	}
 
 	err = h.service.UpdateProduct(uint(productID), input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product details")
+		utils.SendInternalServerError(c, "Не удалось обновить данные продукта")
 		return
 	}
 
@@ -193,13 +193,13 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
+	utils.SendMessageWithStatus(c, "Продукт успешно обновлен", http.StatusOK)
 }
 
 func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		utils.SendBadRequestError(c, "Неверный ID размера продукта")
 		return
 	}
 
@@ -211,19 +211,19 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 
 	existingProductSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product size: product size not found")
+		utils.SendInternalServerError(c, "Не удалось обновить размер продукта: размер не найден")
 		return
 	}
 
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
-		utils.SendBadRequestError(c, "Store ID is not present")
+		utils.SendBadRequestError(c, "Отсутствует ID магазина")
 		return
 	}
 
 	err = h.service.UpdateProductSize(storeID, uint(productSizeID), input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product size")
+		utils.SendInternalServerError(c, "Не удалось обновить размер продукта")
 		return
 	}
 
@@ -239,25 +239,25 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
+	utils.SendMessageWithStatus(c, "Размер продукта успешно обновлен", http.StatusOK)
 }
 
 func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		utils.SendBadRequestError(c, "Неверный ID продукта")
 		return
 	}
 
 	existingProduct, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete product details: product not found")
+		utils.SendInternalServerError(c, "Не удалось удалить продукт: продукт не найден")
 		return
 	}
 
 	err = h.service.DeleteProduct(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete product")
+		utils.SendInternalServerError(c, "Не удалось удалить продукт")
 		return
 	}
 
@@ -272,25 +272,25 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product size deleted successfully", http.StatusOK)
+	utils.SendMessageWithStatus(c, "Продукт успешно удален", http.StatusOK)
 }
 
 func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product size ID")
+		utils.SendBadRequestError(c, "Неверный ID размера продукта")
 		return
 	}
 
 	existingProduct, err := h.service.GetProductByID(uint(productSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete product size: product size not found")
+		utils.SendInternalServerError(c, "Не удалось удалить размер продукта: размер не найден")
 		return
 	}
 
 	err = h.service.DeleteProduct(uint(productSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete product size")
+		utils.SendInternalServerError(c, "Не удалось удалить размер продукта")
 		return
 	}
 
@@ -305,5 +305,5 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product deleted successfully", http.StatusOK)
+	utils.SendMessageWithStatus(c, "Размер продукта успешно удален", http.StatusOK)
 }

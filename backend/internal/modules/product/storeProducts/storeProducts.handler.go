@@ -51,18 +51,18 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 
 	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StoreProductID")
+		utils.SendBadRequestError(c, "Неверный StoreProductID")
 		return
 	}
 
 	productDetails, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store product details")
+		utils.SendInternalServerError(c, "Не удалось получить данные продукта для магазина")
 		return
 	}
 
 	if productDetails == nil {
-		utils.SendNotFoundError(c, "store product not found")
+		utils.SendNotFoundError(c, "Продукт для магазина не найден")
 		return
 	}
 
@@ -85,12 +85,12 @@ func (h *StoreProductHandler) GetAvailableProductsToAdd(c *gin.Context) {
 
 	productDetails, err := h.service.GetAvailableProductsToAdd(storeID, &filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve products list to add for store")
+		utils.SendInternalServerError(c, "Не удалось получить список продуктов для добавления в магазин")
 		return
 	}
 
 	if productDetails == nil {
-		utils.SendNotFoundError(c, "products not found")
+		utils.SendNotFoundError(c, "Продукты не найдены")
 		return
 	}
 
@@ -106,12 +106,12 @@ func (h *StoreProductHandler) GetStoreProductCategories(c *gin.Context) {
 
 	categories, err := h.service.GetStoreProductCategories(storeID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store product categories")
+		utils.SendInternalServerError(c, "Не удалось получить категории продуктов для магазина")
 		return
 	}
 
 	if categories == nil {
-		utils.SendNotFoundError(c, "store product categories not found")
+		utils.SendNotFoundError(c, "Категории продуктов для магазина не найдены")
 		return
 	}
 
@@ -134,12 +134,12 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 
 	productDetails, err := h.service.GetStoreProducts(storeID, &filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store product details")
+		utils.SendInternalServerError(c, "Не удалось получить данные продуктов для магазина")
 		return
 	}
 
 	if productDetails == nil {
-		utils.SendNotFoundError(c, "store product not found")
+		utils.SendNotFoundError(c, "Продукты для магазина не найдены")
 		return
 	}
 
@@ -155,18 +155,18 @@ func (h *StoreProductHandler) GetStoreProductSizeByID(c *gin.Context) {
 
 	storeProductSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StoreProductSizeID")
+		utils.SendBadRequestError(c, "Неверный StoreProductSizeID")
 		return
 	}
 
 	storeProductSize, err := h.service.GetStoreProductSizeByID(storeID, uint(storeProductSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store product size details")
+		utils.SendInternalServerError(c, "Не удалось получить данные размера продукта для магазина")
 		return
 	}
 
 	if storeProductSize == nil {
-		utils.SendNotFoundError(c, "store product size not found")
+		utils.SendNotFoundError(c, "Размер продукта для магазина не найден")
 		return
 	}
 
@@ -188,13 +188,13 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.productService.GetProductByID(dto.ProductID)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
+		utils.SendInternalServerError(c, "Не удалось создать продукт для магазина: продукт не найден")
 		return
 	}
 
 	id, err := h.service.CreateStoreProduct(storeID, &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product")
+		utils.SendInternalServerError(c, "Не удалось создать продукт для магазина")
 		return
 	}
 
@@ -209,7 +209,7 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "Продукт для магазина успешно создан", http.StatusCreated)
 }
 
 func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
@@ -228,14 +228,14 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 
 	ids, err := h.service.CreateMultipleStoreProducts(storeID, dtos)
 	if err != nil {
-		msg := fmt.Sprintf("failed to create %d store products", dtoLength)
+		msg := fmt.Sprintf("Не удалось создать %d продуктов для магазина", dtoLength)
 		utils.SendInternalServerError(c, msg)
 		return
 	}
 
 	storeProducts, err := h.service.GetStoreProductsByStoreProductIDs(storeID, ids)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve created store products: product not found")
+		utils.SendInternalServerError(c, "Не удалось получить созданные продукты для магазина")
 		return
 	}
 
@@ -246,17 +246,17 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 	}
 
 	actions := make([]shared.AuditAction, 0, len(storeProducts))
-	for _, product := range storeProducts {
-		matchedDTO, exists := dtoMap[product.ProductID]
+	for _, storeProduct := range storeProducts {
+		matchedDTO, exists := dtoMap[storeProduct.ProductID]
 		if !exists {
-			h.logger.Errorf("Failed to match product with DTO for product ID: %d", product.ProductID)
+			h.logger.Errorf("Не удалось сопоставить продукт с DTO для продукта ID: %d", storeProduct.ProductID)
 			continue
 		}
 
 		action := types.CreateStoreProductAuditFactory(
 			&data.BaseDetails{
-				ID:   product.ID,
-				Name: product.Name,
+				ID:   storeProduct.ID,
+				Name: storeProduct.Name,
 			},
 			matchedDTO, storeID,
 		)
@@ -267,7 +267,7 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
 	}()
 
-	msg := fmt.Sprintf("%d store product(s) created successfully", dtoLength)
+	msg := fmt.Sprintf("%d продукт(ов) для магазина успешно создано", dtoLength)
 	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
 }
 
@@ -276,7 +276,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 
 	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StoreProductID")
+		utils.SendBadRequestError(c, "Неверный StoreProductID")
 		return
 	}
 
@@ -293,13 +293,13 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
+		utils.SendInternalServerError(c, "Не удалось создать продукт для магазина: продукт не найден")
 		return
 	}
 
 	err = h.service.UpdateStoreProduct(storeID, uint(storeProductID), &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to update store product")
+		utils.SendInternalServerError(c, "Не удалось обновить продукт для магазина")
 		return
 	}
 
@@ -314,7 +314,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "Продукт для магазина успешно обновлен", http.StatusCreated)
 }
 
 func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
@@ -332,7 +332,7 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
+		utils.SendInternalServerError(c, "Не удалось создать продукт для магазина: продукт не найден")
 		return
 	}
 
@@ -346,7 +346,7 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 
 	err = h.service.DeleteStoreProduct(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to delete store product")
+		utils.SendInternalServerError(c, "Не удалось удалить продукт для магазина")
 		return
 	}
 
@@ -354,5 +354,5 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)
+	utils.SendMessageWithStatus(c, "Продукт для магазина успешно удален", http.StatusCreated)
 }

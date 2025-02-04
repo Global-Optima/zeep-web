@@ -27,10 +27,10 @@ var DefaultLocalizedErrorMessages = &LocalizedMessage{
 }
 
 type LocalizedResponse struct {
-	Message   LocalizedMessage `json:"message"`
-	Status    int              `json:"status"`
-	Timestamp time.Time        `json:"timestamp"`
-	Path      string           `json:"path"`
+	Message   *LocalizedMessage `json:"message"`
+	Status    int               `json:"status"`
+	Timestamp time.Time         `json:"timestamp"`
+	Path      string            `json:"path"`
 }
 
 func TranslateResponse(c *gin.Context, status int, componentName data.ComponentName) *LocalizedResponse {
@@ -48,8 +48,12 @@ func TranslateResponse(c *gin.Context, status int, componentName data.ComponentN
 		localizedMessages = DefaultLocalizedErrorMessages
 	}
 
+	return NewLocalizedResponse(c, localizedMessages, status)
+}
+
+func NewLocalizedResponse(c *gin.Context, localizedMessages *LocalizedMessage, status int) *LocalizedResponse {
 	return &LocalizedResponse{
-		Message:   *localizedMessages,
+		Message:   localizedMessages,
 		Status:    status,
 		Timestamp: utils.ToUTC(time.Now()),
 		Path:      c.FullPath(),
