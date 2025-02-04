@@ -88,9 +88,8 @@ func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
 func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
 	var filter types.WarehouseFilter
 
-	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
-	if err != nil {
-		utils.SendBadRequestError(c, "400")
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 
@@ -101,6 +100,23 @@ func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, warehouses)
+}
+
+func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
+	var filter types.WarehouseFilter
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	warehouses, err := h.service.GetWarehouses(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve warehouses")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, warehouses, filter.Pagination)
 }
 
 func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {

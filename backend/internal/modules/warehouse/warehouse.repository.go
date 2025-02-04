@@ -16,9 +16,10 @@ type WarehouseRepository interface {
 
 	CreateWarehouse(warehouse *data.Warehouse, facilityAddress *data.FacilityAddress) error
 	GetWarehouseByID(id uint) (*data.Warehouse, error)
+	GetWarehouses(filter *types.WarehouseFilter) ([]data.Warehouse, error)
 	GetAllWarehouses(filter *types.WarehouseFilter) ([]data.Warehouse, error)
 	GetAllWarehousesForNotifications() ([]data.Warehouse, error)
-	UpdateWarehouse(warehouse *data.Warehouse) error
+	UpdateWarehouse(id uint, warehouse *data.Warehouse) error
 	DeleteWarehouse(id uint) error
 }
 
@@ -100,6 +101,39 @@ func (r *warehouseRepository) GetAllWarehouses(filter *types.WarehouseFilter) ([
 	return warehouses, nil
 }
 
+func (r *warehouseRepository) GetWarehouses(filter *types.WarehouseFilter) ([]data.Warehouse, error) {
+	var warehouses []data.Warehouse
+
+	query := r.db.Model(&data.Warehouse{}).
+		Preload("FacilityAddress").
+		Preload("Region")
+
+	if filter == nil {
+		return nil, fmt.Errorf("filter is nil")
+	}
+
+	if filter.RegionID != nil {
+		query = query.Where("region_id = ?", *filter.RegionID)
+	}
+
+	if filter.Search != nil {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("name ILIKE ?", searchTerm)
+	}
+
+	var err error
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Warehouse{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := query.Find(&warehouses).Error; err != nil {
+		return nil, err
+	}
+
+	return warehouses, nil
+}
+
 func (r *warehouseRepository) GetAllWarehousesForNotifications() ([]data.Warehouse, error) {
 	var warehouses []data.Warehouse
 
@@ -114,8 +148,8 @@ func (r *warehouseRepository) GetAllWarehousesForNotifications() ([]data.Warehou
 	return warehouses, nil
 }
 
-func (r *warehouseRepository) UpdateWarehouse(warehouse *data.Warehouse) error {
-	return r.db.Save(warehouse).Error
+func (r *warehouseRepository) UpdateWarehouse(id uint, warehouse *data.Warehouse) error {
+	return r.db.Where("id = ?", id).Updates(warehouse).Error
 }
 
 func (r *warehouseRepository) DeleteWarehouse(id uint) error {

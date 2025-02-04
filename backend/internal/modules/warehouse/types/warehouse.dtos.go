@@ -22,7 +22,9 @@ type CreateWarehouseDTO struct {
 }
 
 type UpdateWarehouseDTO struct {
-	Name string `json:"name" binding:"required"`
+	Name              *string `json:"name"`
+	RegionID          *uint   `json:"regionId"`
+	FacilityAddressID *uint   `json:"facilityAddressId"`
 }
 
 type FacilityAddressDTO struct {
