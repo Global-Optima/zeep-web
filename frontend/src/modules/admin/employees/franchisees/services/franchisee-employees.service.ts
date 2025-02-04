@@ -6,17 +6,15 @@ import { type PaginatedResponse } from '@/core/utils/pagination.utils'
 import type {
 	FranchiseeEmployeeDetailsDTO,
 	FranchiseeEmployeeDTO,
+	FranchiseEmployeeFilter,
 	UpdateFranchiseeEmployeeDTO,
 } from '@/modules/admin/employees/franchisees/models/franchisees-employees.model'
-import type {
-	CreateEmployeeDTO,
-	EmployeesFilter,
-} from '@/modules/admin/employees/models/employees.models'
+import type { CreateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 
 class FranchiseeEmployeeService {
 	private readonly baseUrl = '/employees/franchisee'
 
-	async getFranchiseeEmployees(filter?: EmployeesFilter) {
+	async getFranchiseeEmployees(filter?: FranchiseEmployeeFilter) {
 		const response = await apiClient.get<PaginatedResponse<FranchiseeEmployeeDTO[]>>(this.baseUrl, {
 			params: buildRequestFilter(filter),
 		})

@@ -87,7 +87,7 @@ const onCancel = () => {
 		<Card>
 			<CardHeader>
 				<CardTitle>Редактирование региона</CardTitle>
-				<CardDescription>Измените название региона.</CardDescription>
+				<CardDescription>Измените детали региона.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form

@@ -64,6 +64,18 @@ export const adminNavItems: SidebarNavItem[] = [
 		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
 	},
 	{
+		name: 'Сотрудники',
+		routeKey: 'ADMIN_FRANCHISEE_EMPLOYEES',
+		icon: Users,
+		accessRoles: [EmployeeRole.FRANCHISEE_OWNER, EmployeeRole.FRANCHISEE_MANAGER],
+	},
+	{
+		name: 'Сотрудники',
+		routeKey: 'ADMIN_REGION_EMPLOYEES',
+		icon: Users,
+		accessRoles: [EmployeeRole.OWNER],
+	},
+	{
 		name: 'Заказы',
 		routeKey: 'ADMIN_STORE_ORDERS',
 		icon: ShoppingCart,
@@ -97,6 +109,12 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Магазины',
 		routeKey: 'ADMIN_STORES',
 		icon: Store,
+		accessRoles: [EmployeeRole.ADMIN],
+	},
+	{
+		name: 'Склады',
+		routeKey: 'ADMIN_WAREHOUSES',
+		icon: Warehouse,
 		accessRoles: [EmployeeRole.ADMIN],
 	},
 	{
