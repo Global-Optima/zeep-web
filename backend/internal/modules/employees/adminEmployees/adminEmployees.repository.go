@@ -25,7 +25,8 @@ func NewAdminEmployeeRepository(db *gorm.DB) AdminEmployeeRepository {
 
 func (r *adminEmployeeRepository) GetAdminEmployees(filter *types.EmployeesFilter) ([]data.AdminEmployee, error) {
 	var employees []data.AdminEmployee
-	query := r.db.Model(&data.AdminEmployee{}).Preload("Employee")
+	query := r.db.Model(&data.AdminEmployee{}).
+		Joins("JOIN employees ON employees.id = admin_employees.employee_id")
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)
@@ -38,7 +39,7 @@ func (r *adminEmployeeRepository) GetAdminEmployees(filter *types.EmployeesFilte
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where(
-			"first_name ILIKE ? OR last_name ILIKE ? OR phone ILIKE ? OR email ILIKE ?",
+			"employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.phone ILIKE ? OR employees.email ILIKE ?",
 			searchTerm, searchTerm, searchTerm, searchTerm,
 		)
 	}

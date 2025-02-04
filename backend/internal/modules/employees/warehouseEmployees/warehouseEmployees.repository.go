@@ -32,7 +32,8 @@ func NewWarehouseEmployeeRepository(db *gorm.DB, warehouseRepo employees.Employe
 func (r *warehouseEmployeeRepository) GetWarehouseEmployees(warehouseID uint, filter *employeesTypes.EmployeesFilter) ([]data.WarehouseEmployee, error) {
 	var warehouseEmployees []data.WarehouseEmployee
 	query := r.db.Model(&data.WarehouseEmployee{}).
-		Where("warehouse_id = ?", warehouseID).Preload("Employee")
+		Where("warehouse_id = ?", warehouseID).
+		Joins("JOIN employees ON employees.id = warehouse_employees.employee_id")
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)
@@ -45,7 +46,7 @@ func (r *warehouseEmployeeRepository) GetWarehouseEmployees(warehouseID uint, fi
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where(
-			"first_name ILIKE ? OR last_name ILIKE ? OR phone ILIKE ? OR email ILIKE ?",
+			"employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.phone ILIKE ? OR employees.email ILIKE ?",
 			searchTerm, searchTerm, searchTerm, searchTerm,
 		)
 	}
