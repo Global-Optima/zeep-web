@@ -1,10 +1,9 @@
 import type { RouteKey } from '@/core/config/routes.config'
-import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import {
 	Apple,
 	Blocks,
 	ChartBar,
-	Globe,
 	LayoutList,
 	ListPlus,
 	MapPinned,

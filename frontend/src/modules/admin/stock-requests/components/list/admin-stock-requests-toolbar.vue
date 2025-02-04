@@ -22,8 +22,9 @@
 			<Button
 				variant="outline"
 				disabled
-				>Экспорт</Button
 			>
+				Экспорт
+			</Button>
 			<Button @click="onCreateClick">Создать</Button>
 		</div>
 	</div>
@@ -34,8 +35,8 @@ import MultiSelectFilter from '@/core/components/multi-select-filter/MultiSelect
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { STOCK_REQUEST_STATUS_OPTIONS, StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
-import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
@@ -51,20 +52,8 @@ const selectedStatuses = ref<StockRequestStatus[]>(props.filter?.statuses ?? [])
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
-// Handle search input changes
-watch(debouncedSearchTerm, (newValue) => {
-  localFilter.value.search = newValue
-  emit('update:filter', { ...props.filter, search: newValue.trim() })
-})
-
-// Handle status selection changes
-watch(selectedStatuses, (newStatuses) => {
-  emit('update:filter', { ...props.filter, statuses: newStatuses.length ? newStatuses : undefined })
-})
-
 const { currentEmployee } = useEmployeeAuthStore()
 
-// Dynamically filter statuses based on employee role
 const filteredStatusOptions = computed(() => {
   if (!currentEmployee || !currentEmployee.role) return []
 
@@ -80,6 +69,24 @@ const filteredStatusOptions = computed(() => {
   }
 
   return []
+})
+
+const filteredSelectedStatuses = computed(() => {
+  return selectedStatuses.value.filter(status =>
+    filteredStatusOptions.value.some(option => option.value === status)
+  )
+})
+
+watch(debouncedSearchTerm, (newValue) => {
+  localFilter.value.search = newValue
+  emit('update:filter', { ...props.filter, search: newValue.trim() })
+})
+
+watch(filteredSelectedStatuses, (newStatuses) => {
+  emit('update:filter', {
+    ...props.filter,
+    statuses: newStatuses.length ? newStatuses : undefined
+  })
 })
 
 const onCreateClick = () => {

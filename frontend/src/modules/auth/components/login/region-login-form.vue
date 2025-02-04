@@ -163,8 +163,8 @@ import {
   SelectValue,
 } from '@/core/components/ui/select'
 
+import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { regionsService } from '@/modules/admin/regions/services/regions.service'
-import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
 
 // Объявление событий компонента

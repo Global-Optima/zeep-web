@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { isAxiosError } from 'axios'
 import { getRouteName, ROUTES } from './core/config/routes.config'
 import { DEFAULT_TITLE, TITLE_TEMPLATE } from './core/constants/seo.constants'
-import { employeesService } from './modules/admin/store-employees/services/employees.service'
+import { employeesService } from './modules/admin/employees/services/employees.service'
 import { useEmployeeAuthStore } from './modules/auth/store/employee-auth.store'
 
 export const router = createRouter({

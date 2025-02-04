@@ -79,7 +79,7 @@ func ValidateWarehouseStatuses(inputStatuses []data.StockRequestStatus) error {
 	return nil
 }
 
-func DefaultWarehouseStasuses() []data.StockRequestStatus {
+func DefaultWarehouseStatuses() []data.StockRequestStatus {
 	return []data.StockRequestStatus{
 		data.StockRequestProcessed,
 		data.StockRequestInDelivery,

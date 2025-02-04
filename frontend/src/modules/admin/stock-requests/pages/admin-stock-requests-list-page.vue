@@ -40,14 +40,12 @@ import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminStockRequestsList from '@/modules/admin/stock-requests/components/list/admin-stock-requests-list.vue'
 import AdminStockRequestsToolbar from '@/modules/admin/stock-requests/components/list/admin-stock-requests-toolbar.vue'
-import { ALL_STOCK_REQUESTS_STATUSES, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
+import { type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { stockRequestsService } from '@/modules/admin/stock-requests/services/stock-requests.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
-const filter = ref<GetStockRequestsFilter>({
-  statuses: ALL_STOCK_REQUESTS_STATUSES
-});
+const filter = ref<GetStockRequestsFilter>({});
 
 const { data: stockRequestsResponse } = useQuery({
   queryKey: computed(() => ['stock-requests', filter.value]),

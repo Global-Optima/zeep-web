@@ -7,7 +7,8 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 			title: 'Все сотрудники кафе',
 			requiresAuth: true,
 		},
-		component: () => import('@/modules/admin/store-employees/pages/admin-store-employees-page.vue'),
+		component: () =>
+			import('@/modules/admin/employees/stores/pages/admin-store-employees-page.vue'),
 	},
 	ADMIN_STORE_EMPLOYEE_DETAILS: {
 		path: 'store-employees/:id',
@@ -16,16 +17,7 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 			requiresAuth: true,
 		},
 		component: () =>
-			import('@/modules/admin/store-employees/pages/admin-store-employee-details-page.vue'),
-	},
-	ADMIN_STORE_EMPLOYEE_AUDIT: {
-		path: 'store-employees/:id/audit',
-		meta: {
-			title: 'Аудит сотруника',
-			requiresAuth: true,
-		},
-		component: () =>
-			import('@/modules/admin/store-employees/pages/admin-store-employee-audit-page.vue'),
+			import('@/modules/admin/employees/stores/pages/admin-store-employee-details-page.vue'),
 	},
 	ADMIN_STORE_EMPLOYEE_UPDATE: {
 		path: 'store-employees/:id/update',
@@ -34,6 +26,15 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 			requiresAuth: true,
 		},
 		component: () =>
-			import('@/modules/admin/store-employees/pages/admin-store-employee-update-page.vue'),
+			import('@/modules/admin/employees/stores/pages/admin-store-employee-update-page.vue'),
+	},
+
+	ADMIN_EMPLOYEE_AUDIT: {
+		path: 'employees/:id/audit',
+		meta: {
+			title: 'Аудит сотруника',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/employees/pages/admin-employees-audit-page.vue'),
 	},
 } satisfies AppRouteRecord

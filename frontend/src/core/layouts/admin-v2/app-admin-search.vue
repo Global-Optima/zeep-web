@@ -10,7 +10,7 @@ import {
 } from '@/core/components/ui/command'
 import { getRouteName, type RouteKey } from '@/core/config/routes.config'
 import { adminSearchItems } from '@/core/layouts/admin/app-admin-search-links.constants'
-import type { EmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
+import type { EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { Search } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'

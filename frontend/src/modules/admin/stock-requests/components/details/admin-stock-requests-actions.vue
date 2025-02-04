@@ -53,7 +53,7 @@ import {
 
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
-import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { AxiosError } from 'axios'
 import { useRouter } from 'vue-router'
 
