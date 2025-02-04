@@ -1,5 +1,5 @@
 <template>
-	<p v-if="!regionDetails">Топпинг не найден</p>
+	<p v-if="!regionDetails">Регион не найден</p>
 
 	<Tabs
 		v-else
@@ -14,7 +14,7 @@
 			<TabsTrigger
 				class="py-2"
 				value="variants"
-				>Товары</TabsTrigger
+				>Склады</TabsTrigger
 			>
 		</TabsList>
 		<TabsContent value="details">

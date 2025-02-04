@@ -8,6 +8,7 @@ import { ADMIN_SUPPLIERS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-suppl
 import { ADMIN_UNITS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-units.routes'
 import type { AppRouteRecord, ParentRoutePage } from '../routes.types'
 import { ADMIN_EMPLOYEES_CHILDREN_ROUTES } from './admin-employees.routes'
+import { ADMIN_FRANCHISEES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-franchisees.routes'
 
 export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_ADDITIVES_CHILDREN_ROUTES,
@@ -18,6 +19,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_EMPLOYEES_CHILDREN_ROUTES,
 	...ADMIN_SUPPLIERS_CHILDREN_ROUTES,
 	...ADMIN_REGIONS_CHILDREN_ROUTES,
+	...ADMIN_FRANCHISEES_CHILDREN_ROUTES,
 
 	ADMIN_NOTIFICATIONS: {
 		path: 'notifications',

@@ -155,7 +155,6 @@ const onCancel = () => {
 									:checked="value"
 									@update:checked="handleChange"
 									:disabled="readonly"
-									:class="{ 'cursor-not-allowed opacity-50': readonly }"
 								/>
 							</FormControl>
 						</FormItem>

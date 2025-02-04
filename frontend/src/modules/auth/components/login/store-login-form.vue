@@ -131,26 +131,26 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/core/components/ui/card'
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from '@/core/components/ui/select'
 import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { storesService } from "@/modules/admin/stores/services/stores.service"
@@ -180,7 +180,7 @@ const { values, isSubmitting, handleSubmit } = useForm({
 
 const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
   queryKey: ['stores-all'],
-  queryFn: () => storesService.getAllStores(),
+  queryFn: () => storesService.getAll(),
 })
 
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({

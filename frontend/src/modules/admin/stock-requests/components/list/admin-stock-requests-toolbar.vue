@@ -13,7 +13,7 @@
 
 			<MultiSelectFilter
 				title="Статусы"
-				:options="statusOptions"
+				:options="filteredStatusOptions"
 				v-model="selectedStatuses"
 			/>
 		</div>
@@ -34,7 +34,9 @@ import MultiSelectFilter from '@/core/components/multi-select-filter/MultiSelect
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import { StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
+import { STOCK_REQUEST_STATUS_OPTIONS, StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
+import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
+import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -46,37 +48,41 @@ const router = useRouter()
 const localFilter = ref({ ...props.filter })
 
 const selectedStatuses = ref<StockRequestStatus[]>(props.filter?.statuses ?? [])
-
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
+// Handle search input changes
 watch(debouncedSearchTerm, (newValue) => {
   localFilter.value.search = newValue
-  emit('update:filter', {
-    ...props.filter,
-    search: newValue.trim()
-  })
+  emit('update:filter', { ...props.filter, search: newValue.trim() })
 })
 
+// Handle status selection changes
 watch(selectedStatuses, (newStatuses) => {
-  emit('update:filter', {
-    ...props.filter,
-    statuses: newStatuses.length ? newStatuses : undefined,
-  })
+  emit('update:filter', { ...props.filter, statuses: newStatuses.length ? newStatuses : undefined })
 })
 
-// Make options based on role
-const statusOptions = [
-  { label: 'Созданные', value: StockRequestStatus.CREATED },
-  { label: 'Обработанные', value: StockRequestStatus.PROCESSED },
-  { label: 'В доставке', value: StockRequestStatus.IN_DELIVERY },
-  { label: 'Завершённые', value: StockRequestStatus.COMPLETED },
-  { label: 'Отклонённые магазином', value: StockRequestStatus.REJECTED_BY_STORE },
-  { label: 'Отклонённые складом', value: StockRequestStatus.REJECTED_BY_WAREHOUSE },
-  { label: 'Принятые с изменениями', value: StockRequestStatus.ACCEPTED_WITH_CHANGE },
-]
+const { currentEmployee } = useEmployeeAuthStore()
+
+// Dynamically filter statuses based on employee role
+const filteredStatusOptions = computed(() => {
+  if (!currentEmployee || !currentEmployee.role) return []
+
+  const warehouseRoles: EmployeeRole[] = [EmployeeRole.WAREHOUSE_EMPLOYEE, EmployeeRole.WAREHOUSE_MANAGER]
+  const storeRoles: EmployeeRole[] = [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA]
+
+  if (warehouseRoles.includes(currentEmployee.role)) {
+    return STOCK_REQUEST_STATUS_OPTIONS.filter(status => status.value !== StockRequestStatus.CREATED)
+  }
+
+  if (storeRoles.includes(currentEmployee.role)) {
+    return STOCK_REQUEST_STATUS_OPTIONS
+  }
+
+  return []
+})
 
 const onCreateClick = () => {
-  router.push({name: getRouteName("ADMIN_STORE_STOCK_REQUESTS_CREATE")})
+  router.push({ name: getRouteName('ADMIN_STORE_STOCK_REQUESTS_CREATE') })
 }
 </script>

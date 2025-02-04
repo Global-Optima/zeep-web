@@ -163,7 +163,7 @@ import {
   SelectValue,
 } from '@/core/components/ui/select'
 
-import { franchiseeService } from '@/modules/admin/franchisee/services/franchisee.service'
+import { franchiseeService } from '@/modules/admin/franchisees/services/franchisee.service'
 import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
 
@@ -196,8 +196,8 @@ const {
   isLoading: storesLoading,
   isError: storesError,
 } = useQuery({
-  queryKey: ['stores'],
-  queryFn: () => franchiseeService.getAllFranchisees(),
+  queryKey: ['franchisees-all'],
+  queryFn: () => franchiseeService.getAll(),
 })
 
 // Получение списка сотрудников для выбранного филиала

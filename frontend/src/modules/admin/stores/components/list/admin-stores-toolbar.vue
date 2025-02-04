@@ -46,10 +46,10 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
@@ -67,12 +67,12 @@ const emit = defineEmits(['update:filter'])
 const localFilter = ref({ ...props.filter })
 
 // Search term with debouncing
-const searchTerm = ref(localFilter.value.searchTerm || '')
+const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 // Watch debounced search term and emit updates
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.searchTerm = newValue
+	localFilter.value.search = newValue
 	emit('update:filter', { searchTerm: newValue.trim() })
 })
 
