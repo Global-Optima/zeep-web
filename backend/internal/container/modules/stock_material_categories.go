@@ -2,6 +2,7 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
 )
 
@@ -12,10 +13,10 @@ type StockMaterialCategoriesModule struct {
 	Handler *stockMaterialCategory.StockMaterialCategoryHandler
 }
 
-func NewStockMaterialCategoriesModule(base *common.BaseModule) *StockMaterialCategoriesModule {
+func NewStockMaterialCategoriesModule(base *common.BaseModule, auditService audit.AuditService) *StockMaterialCategoriesModule {
 	repo := stockMaterialCategory.NewStockMaterialCategoryRepository(base.DB)
 	service := stockMaterialCategory.NewStockMaterialCategoryService(repo)
-	handler := stockMaterialCategory.NewStockMaterialCategoryHandler(service)
+	handler := stockMaterialCategory.NewStockMaterialCategoryHandler(service, auditService)
 
 	base.Router.RegisterStockMaterialCategoryRoutes(handler)
 

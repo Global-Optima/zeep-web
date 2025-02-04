@@ -164,7 +164,7 @@ func (h *FranchiseeHandler) GetFranchisees(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to retrieve franchisees")
 		return
 	}
-	utils.SendSuccessResponse(c, franchisees)
+	utils.SendSuccessResponseWithPagination(c, franchisees, filter.Pagination)
 }
 
 func (h *FranchiseeHandler) GetAllFranchisees(c *gin.Context) {

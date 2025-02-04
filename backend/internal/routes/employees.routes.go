@@ -142,6 +142,7 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.EmployeeRoutes.Group("/stores")
 	{
 		router.GET("/:id", handler.GetStoreByID)
+		router.GET("", handler.GetStores)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStore)       // franchise owner, manager
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStore)    // franchise owner, manager
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStore) // franchise owner, manager
@@ -363,6 +364,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 
 		stockRoutes := router.Group("/stocks")
 		{
+			stockRoutes.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetAvailableToAddStockMaterials)
 			stockRoutes.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetStocks) // Region and warehouses all roles
 			stockRoutes.GET("/:stockMaterialId", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetStockMaterialDetails)
 			stockRoutes.PUT("/:stockMaterialId", middleware.EmployeeRoleMiddleware(data.WarehousePermissions...), warehouseStockHandler.UpdateStock)       // Warehouse all roles

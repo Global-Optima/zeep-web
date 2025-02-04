@@ -203,7 +203,7 @@ func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []t
 func (r *warehouseStockRepository) AddToWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error {
 	stock := &data.WarehouseStock{}
 	if err := r.db.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).First(stock).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			stock = &data.WarehouseStock{
 				WarehouseID:     warehouseID,
 				StockMaterialID: stockMaterialID,

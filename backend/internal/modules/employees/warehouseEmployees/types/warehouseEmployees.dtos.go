@@ -21,6 +21,6 @@ type WarehouseEmployeeDTO struct {
 type WarehouseEmployeeDetailsDTO struct {
 	ID uint `json:"id"`
 	employeesTypes.BaseEmployeeDetailsDTO
-	EmployeeID uint                             `json:"employeeId"`
-	Warehouse  warehouseTypes.WarehouseResponse `json:"warehouse"`
+	EmployeeID uint                        `json:"employeeId"`
+	Warehouse  warehouseTypes.WarehouseDTO `json:"warehouse"`
 }

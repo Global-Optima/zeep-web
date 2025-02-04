@@ -130,7 +130,7 @@ func (s *employeeService) ReassignEmployeeType(employeeID uint, dto *types.Reass
 		return fmt.Errorf("%w: invalid employee ID: %d", types.ErrValidation, employeeID)
 	}
 
-	err := s.repo.ReassignEmployeeType(employeeID, dto.EmployeeType, dto.WorkplaceID)
+	err := s.repo.ReassignEmployeeType(employeeID, dto)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to reassign employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)

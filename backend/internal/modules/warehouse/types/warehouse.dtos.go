@@ -35,7 +35,7 @@ type FacilityAddressDTO struct {
 	Latitude  *float64 `json:"latitude,omitempty"`
 }
 
-type WarehouseResponse struct {
+type WarehouseDTO struct {
 	ID              uint                   `json:"id"`
 	Name            string                 `json:"name"`
 	Region          regionsTypes.RegionDTO `json:"region"`

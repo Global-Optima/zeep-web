@@ -53,7 +53,7 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 			FacilityAddress: facilityAddress,
 			StoreHours:      request.Store.StoreHours,
 		},
-		Warehouse:      *warehouseTypes.ToWarehouseResponse(request.Warehouse),
+		Warehouse:      *warehouseTypes.ToWarehouseDTO(request.Warehouse),
 		Status:         request.Status,
 		StockMaterials: items,
 		CreatedAt:      request.CreatedAt,

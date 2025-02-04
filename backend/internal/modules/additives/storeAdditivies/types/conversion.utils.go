@@ -4,7 +4,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-	"github.com/sirupsen/logrus"
 )
 
 func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
@@ -61,8 +60,6 @@ func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []S
 			})
 		}
 	}
-
-	logrus.Info(storeAdditives)
 
 	return storeAdditives
 }

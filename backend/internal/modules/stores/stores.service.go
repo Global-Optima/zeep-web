@@ -14,6 +14,7 @@ type StoreService interface {
 	GetAllStores(filter *types.StoreFilter) ([]types.StoreDTO, error)
 	GetAllStoresForNotifications() ([]types.StoreDTO, error)
 	GetStoreByID(storeID uint) (*types.StoreDTO, error)
+	GetStores(filter *types.StoreFilter) ([]types.StoreDTO, error)
 	UpdateStore(storeId uint, storeDTO types.UpdateStoreDTO) (*types.StoreDTO, error)
 	DeleteStore(storeID uint, hardDelete bool) error
 }
@@ -65,7 +66,7 @@ func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.
 }
 
 func (s *storeService) GetAllStores(filter *types.StoreFilter) ([]types.StoreDTO, error) {
-	stores, err := s.repo.GetAllStores(*filter)
+	stores, err := s.repo.GetAllStores(filter)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +107,20 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 	}
 
 	return types.MapToStoreDTO(store), nil
+}
+
+func (s *storeService) GetStores(filter *types.StoreFilter) ([]types.StoreDTO, error) {
+	stores, err := s.repo.GetStores(filter)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to get stores: %w", err)
+		return nil, wrappedErr
+	}
+
+	storeDTOs := make([]types.StoreDTO, len(stores))
+	for i, store := range stores {
+		storeDTOs[i] = *types.MapToStoreDTO(&store)
+	}
+	return storeDTOs, nil
 }
 
 func (s *storeService) UpdateStore(storeId uint, updateStoreDto types.UpdateStoreDTO) (*types.StoreDTO, error) {

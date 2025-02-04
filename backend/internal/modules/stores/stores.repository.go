@@ -2,6 +2,7 @@ package stores
 
 import (
 	"errors"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -15,10 +16,11 @@ const (
 )
 
 type StoreRepository interface {
-	GetAllStores(filter types.StoreFilter) ([]data.Store, error)
+	GetAllStores(filter *types.StoreFilter) ([]data.Store, error)
 	GetAllStoresForNotifications() ([]data.Store, error)
 	CreateStore(store *data.Store) (*data.Store, error)
 	GetStoreByID(storeID uint) (*data.Store, error)
+	GetStores(filter *types.StoreFilter) ([]data.Store, error)
 	UpdateStore(store *data.Store) (*data.Store, error)
 	DeleteStore(storeID uint, hardDelete bool) error
 	CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error)
@@ -33,12 +35,16 @@ func NewStoreRepository(db *gorm.DB) StoreRepository {
 	return &storeRepository{db: db}
 }
 
-func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, error) {
+func (r *storeRepository) GetAllStores(filter *types.StoreFilter) ([]data.Store, error) {
 	var stores []data.Store
 
 	query := r.db.Preload("FacilityAddress").
 		Preload("Franchisee").
-		Where("is_active = ?", true).Preload("FacilityAddress")
+		Preload("FacilityAddress")
+
+	if filter == nil {
+		return nil, errors.New("filter is nil")
+	}
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
@@ -92,6 +98,44 @@ func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
 		return nil, err
 	}
 	return &store, nil
+}
+
+func (r *storeRepository) GetStores(filter *types.StoreFilter) ([]data.Store, error) {
+	var stores []data.Store
+	query := r.db.Model(&data.Store{}).
+		Preload("FacilityAddress").
+		Preload("Franchisee")
+
+	if filter == nil {
+		return nil, errors.New("filter is nil")
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("name ILIKE ? OR contact_phone ILIKE = ? OR contact_email ILIKE = ?",
+			searchTerm, searchTerm, searchTerm)
+	}
+
+	if filter.IsFranchisee != nil {
+		if *filter.IsFranchisee {
+			query = query.Where("franchisee_id IS NOT NULL")
+		} else {
+			query = query.Where("franchisee_id IS NULL")
+		}
+	}
+
+	if filter.FranchiseeID != nil {
+		query = query.Where("franchisee_id = ?", *filter.FranchiseeID)
+	}
+
+	var err error
+	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Store{})
+	if err != nil {
+		return nil, err
+	}
+	query.Find(&stores)
+
+	return stores, nil
 }
 
 func (r *storeRepository) UpdateStore(store *data.Store) (*data.Store, error) {

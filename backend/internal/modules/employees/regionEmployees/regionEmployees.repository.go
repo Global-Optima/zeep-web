@@ -34,7 +34,7 @@ func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *emp
 	query := r.db.Model(&data.RegionEmployee{}).
 		Where("region_id = ?", regionID).
 		Preload("Employee").
-		Joins("employees ON employees.id = region_employees.employee_id")
+		Joins("JOIN employees ON employees.id = region_employees.employee_id")
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)

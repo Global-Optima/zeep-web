@@ -83,6 +83,23 @@ func (h *StoreHandler) GetStoreByID(c *gin.Context) {
 	utils.SendSuccessResponse(c, store)
 }
 
+func (h *StoreHandler) GetStores(c *gin.Context) {
+	var filter types.StoreFilter
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Store{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
+
+	store, err := h.service.GetStores(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve stores")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, store, filter.Pagination)
+}
+
 func (h *StoreHandler) UpdateStore(c *gin.Context) {
 	var dto types.UpdateStoreDTO
 
