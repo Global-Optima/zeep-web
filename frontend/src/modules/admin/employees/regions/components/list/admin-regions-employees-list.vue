@@ -80,7 +80,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 const STATUS_FORMATTED: Record<string, string> = {
   active: 'Активен',
-  disabled: 'Отключен',
+  disabled: 'Неактивный',
 }
 </script>
 

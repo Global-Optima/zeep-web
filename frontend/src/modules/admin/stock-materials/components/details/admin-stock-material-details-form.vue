@@ -225,7 +225,6 @@ const onPrintBarcode = async () => {
 											/>
 
 											<Button
-												v-if="!readonly"
 												variant="outline"
 												@click="onPrintBarcode"
 												class="gap-2"

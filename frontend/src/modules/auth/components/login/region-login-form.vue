@@ -1,7 +1,7 @@
 <template>
 	<Card class="border-none">
 		<CardHeader class="p-0">
-			<CardTitle class="text-lg sm:text-xl"> Вход для сотрудника регионального склада </CardTitle>
+			<CardTitle class="text-lg sm:text-xl"> Вход для регионального сотрудника</CardTitle>
 			<CardDescription> Введите ваши учетные данные для входа в систему </CardDescription>
 		</CardHeader>
 		<CardContent class="mt-6 p-0">

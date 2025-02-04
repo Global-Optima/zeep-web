@@ -6,12 +6,14 @@
 		:stockMaterial="additiveDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
-    readonly
+		:readonly="!canUpdate"
 	/>
 </template>
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminStockMaterialDetailsForm from '@/modules/admin/stock-materials/components/details/admin-stock-material-details-form.vue'
 import type { UpdateStockMaterialDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
@@ -24,6 +26,8 @@ const route = useRoute()
 const { toast } = useToast()
 
 const stockMaterialId = route.params.id as string
+
+const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const { data: additiveDetails } = useQuery({
 	queryKey: ['admin-stock-material-details', stockMaterialId],
