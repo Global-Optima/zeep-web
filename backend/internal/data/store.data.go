@@ -14,12 +14,26 @@ type Store struct {
 	FacilityAddressID uint            `gorm:"index;not null"`
 	FacilityAddress   FacilityAddress `gorm:"foreignKey:FacilityAddressID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	FranchiseeID      *uint           `gorm:"index"`
-	Franchisee        *Franchisee     `gorm:"foreignKey:FranchiseeID"`
+	Franchisee        *Franchisee     `gorm:"foreignKey:FranchiseeID" sort:"franchisees"`
+	WarehouseID       uint            `gorm:"not null;index"` // New Warehouse Reference
+	Warehouse         Warehouse       `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
+	IsActive          bool            `gorm:"default:true" sort:"isActive"`
 	ContactPhone      string          `gorm:"size:16"`
 	ContactEmail      string          `gorm:"size:255"`
 	StoreHours        string          `gorm:"size:255"`
 	Additives         []StoreAdditive `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	Products          []StoreProduct  `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	Stocks            []StoreStock    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"` // Linked Store Stocks
+}
+
+type StoreStock struct {
+	BaseEntity
+	StoreID           uint       `gorm:"not null;index"`
+	Store             Store      `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	IngredientID      uint       `gorm:"not null;index"`
+	Ingredient        Ingredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE" sort:"ingredients"`
+	LowStockThreshold float64    `gorm:"type:decimal(10,2);not null;check:low_stock_threshold > 0" sort:"lowStockThreshold"`
+	Quantity          float64    `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"quantity"`
 }
 
 type StoreAdditive struct {

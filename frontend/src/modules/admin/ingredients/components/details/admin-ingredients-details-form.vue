@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
+import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -8,20 +9,25 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import AdminSelectIngredientCategory from '@/modules/admin/ingredient-categories/components/admin-select-ingredient-category.vue'
 import type { IngredientCategoryDTO, IngredientsDTO, UpdateIngredientDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronLeft } from 'lucide-vue-next'
-import { ref } from 'vue'
 
-const {ingredient} = defineProps<{ingredient: IngredientsDTO}>()
+// Async Components
+const AdminSelectIngredientCategory = defineAsyncComponent(() =>
+  import('@/modules/admin/ingredient-categories/components/admin-select-ingredient-category.vue'))
+const AdminSelectUnit = defineAsyncComponent(() =>
+  import('@/modules/admin/units/components/admin-select-unit.vue'))
+
+const { ingredient, readonly = false } = defineProps<{
+  ingredient: IngredientsDTO
+  readonly?: boolean
+}>()
 
 const emits = defineEmits<{
   onSubmit: [dto: UpdateIngredientDTO]
   onCancel: []
 }>()
-
 
 // Validation Schema
 const updateIngredientSchema = toTypedSchema(
@@ -54,6 +60,8 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
+  if (readonly) return
+
   const dto: UpdateIngredientDTO = {
     name: formValues.name,
     calories: formValues.calories,
@@ -77,6 +85,7 @@ const openCategoryDialog = ref(false)
 const selectedCategory = ref<IngredientCategoryDTO | null>(ingredient.category)
 
 function selectCategory(category: IngredientCategoryDTO) {
+  if (readonly) return
   selectedCategory.value = category
   openCategoryDialog.value = false
   setFieldValue('categoryId', category.id)
@@ -86,6 +95,7 @@ const openUnitDialog = ref(false)
 const selectedUnit = ref<UnitDTO | null>(ingredient.unit)
 
 function selectUnit(unit: UnitDTO) {
+  if (readonly) return
   selectedUnit.value = unit
   openUnitDialog.value = false
   setFieldValue('unitId', unit.id)
@@ -108,7 +118,10 @@ function selectUnit(unit: UnitDTO) {
 				{{ ingredient.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				v-if="!readonly"
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -125,12 +138,12 @@ function selectUnit(unit: UnitDTO) {
 
 		<!-- Main Content -->
 		<div class="gap-4 grid md:grid-cols-[1fr_250px] lg:grid-cols-3">
-			<!-- LEFT side: Product Details (Name, Description) -->
+			<!-- LEFT side: Product Details -->
 			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
 				<Card>
 					<CardHeader>
 						<CardTitle>Детали ингредиента</CardTitle>
-						<CardDescription>Заполните информацию об ингредиенте.</CardDescription>
+						<CardDescription v-if="!readonly">Заполните информацию об ингредиенте.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div class="gap-6 grid">
@@ -147,13 +160,14 @@ function selectUnit(unit: UnitDTO) {
 											type="text"
 											v-bind="componentField"
 											placeholder="Введите название ингредиента"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							</FormField>
 
-							<!-- Calories, Fat, Carbs, Proteins -->
+							<!-- Nutrition Values -->
 							<div class="flex gap-4">
 								<FormField
 									name="calories"
@@ -167,6 +181,7 @@ function selectUnit(unit: UnitDTO) {
 												type="number"
 												v-bind="componentField"
 												placeholder="Введите калории"
+												:readonly="readonly"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -184,6 +199,7 @@ function selectUnit(unit: UnitDTO) {
 												type="number"
 												v-bind="componentField"
 												placeholder="Введите жиры"
+												:readonly="readonly"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -204,6 +220,7 @@ function selectUnit(unit: UnitDTO) {
 												type="number"
 												v-bind="componentField"
 												placeholder="Введите углеводы"
+												:readonly="readonly"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -221,6 +238,7 @@ function selectUnit(unit: UnitDTO) {
 												type="number"
 												v-bind="componentField"
 												placeholder="Введите белки"
+												:readonly="readonly"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -228,7 +246,7 @@ function selectUnit(unit: UnitDTO) {
 								</FormField>
 							</div>
 
-							<!-- Expiration Date -->
+							<!-- Expiration -->
 							<FormField
 								name="expirationInDays"
 								v-slot="{ componentField }"
@@ -241,6 +259,7 @@ function selectUnit(unit: UnitDTO) {
 											type="number"
 											v-bind="componentField"
 											placeholder="Введите дни хранения"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -251,46 +270,62 @@ function selectUnit(unit: UnitDTO) {
 				</Card>
 			</div>
 
-			<!-- RIGHT side: Media & Category -->
+			<!-- RIGHT side: Category & Unit -->
 			<div class="items-start gap-4 grid auto-rows-max">
+				<!-- Unit Card -->
 				<Card>
-					<!-- Category Card -->
 					<CardHeader>
 						<CardTitle>Размер</CardTitle>
-						<CardDescription>Выберите размер ингредиента</CardDescription>
+						<CardDescription v-if="!readonly">Выберите размер ингредиента</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<FormField name="categoryId">
 							<FormItem>
-								<Button
-									variant="link"
-									class="mt-0 p-0 h-fit text-primary underline"
-									@click="openUnitDialog = true"
-								>
-									{{ selectedUnit?.name || 'Размер не выбран' }}
-								</Button>
+								<template v-if="!readonly">
+									<Button
+										variant="link"
+										class="mt-0 p-0 h-fit text-primary underline"
+										@click="openUnitDialog = true"
+									>
+										{{ selectedUnit?.name || 'Размер не выбран' }}
+									</Button>
+								</template>
+								<template v-else>
+									<span
+										class="text-muted-foreground"
+										>{{ selectedUnit?.name || 'Размер не выбран' }}</span
+									>
+								</template>
 								<FormMessage />
 							</FormItem>
 						</FormField>
 					</CardContent>
 				</Card>
 
+				<!-- Category Card -->
 				<Card>
-					<!-- Category Card -->
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию ингредиента</CardDescription>
+						<CardDescription v-if="!readonly">Выберите категорию ингредиента</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<FormField name="categoryId">
 							<FormItem>
-								<Button
-									variant="link"
-									class="mt-0 p-0 h-fit text-primary underline"
-									@click="openCategoryDialog = true"
-								>
-									{{ selectedCategory?.name || 'Категория не выбрана' }}
-								</Button>
+								<template v-if="!readonly">
+									<Button
+										variant="link"
+										class="mt-0 p-0 h-fit text-primary underline"
+										@click="openCategoryDialog = true"
+									>
+										{{ selectedCategory?.name || 'Категория не выбрана' }}
+									</Button>
+								</template>
+								<template v-else>
+									<span
+										class="text-muted-foreground"
+										>{{ selectedCategory?.name || 'Категория не выбрана' }}</span
+									>
+								</template>
 								<FormMessage />
 							</FormItem>
 						</FormField>
@@ -299,32 +334,36 @@ function selectUnit(unit: UnitDTO) {
 			</div>
 		</div>
 
+		<!-- Mobile Footer -->
+		<div
+			v-if="!readonly"
+			class="flex justify-center items-center gap-2 md:hidden"
+		>
+			<Button
+				variant="outline"
+				@click="onCancel"
+				>Отменить</Button
+			>
+			<Button
+				type="submit"
+				@click="onSubmit"
+				>Сохранить</Button
+			>
+		</div>
+
+		<!-- Dialogs -->
 		<AdminSelectIngredientCategory
+			v-if="!readonly"
 			:open="openCategoryDialog"
 			@close="openCategoryDialog = false"
 			@select="selectCategory"
 		/>
 
 		<AdminSelectUnit
+			v-if="!readonly"
 			:open="openUnitDialog"
 			@close="openUnitDialog = false"
 			@select="selectUnit"
 		/>
-
-		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
-			<Button
-				variant="outline"
-				@click="onCancel"
-			>
-				Отменить
-			</Button>
-			<Button
-				type="submit"
-				@click="onSubmit"
-			>
-				Сохранить
-			</Button>
-		</div>
 	</div>
 </template>

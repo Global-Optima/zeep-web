@@ -581,24 +581,25 @@ VALUES
     );
 
 -- Insert into Store
-INSERT INTO
-    stores (
-        name,
-        facility_address_id,
-        franchisee_id,
-        status,
-        contact_phone,
-        contact_email,
-        store_hours,
-        created_at,
-        updated_at
-    )
+INSERT INTO stores (
+    name,
+    facility_address_id,
+    franchisee_id,
+    warehouse_id,  -- Directly linking store to warehouse
+    is_active,
+    contact_phone,
+    contact_email,
+    store_hours,
+    created_at,
+    updated_at
+)
 VALUES
     (
         'Центральное Кафе',
         3,
         NULL,
-        'ACTIVE',
+        1, -- Assigned to 'Алматинский склад'
+        true,
         '+79001112233',
         'central@example.com',
         '8:00-20:00',
@@ -609,7 +610,8 @@ VALUES
         'Кафе на Углу',
         4,
         1,
-        'ACTIVE',
+        2, -- Assigned to 'Астанинский склад'
+        true,
         '+79002223344',
         'corner@example.com',
         '9:00-22:00',
@@ -620,7 +622,8 @@ VALUES
         'Маленькое Кафе',
         5,
         2,
-        'ACTIVE',
+        1, -- Assigned to 'Алматинский склад'
+        true,
         '+79003334455',
         'smallstore@example.com',
         '8:00-18:00',
@@ -631,13 +634,15 @@ VALUES
         'Городское Кафе',
         6,
         NULL,
-        'ACTIVE',
+        2, -- Assigned to 'Астанинский склад'
+        true,
         '+79004445566',
         'citycoffee@example.com',
         '7:00-23:00',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
+
 
 -- Insert into StoreAdditives store 1 additives are loaded later in the script
 INSERT INTO
@@ -1142,14 +1147,14 @@ VALUES
     (
         1,
         8,
-        'FRANCHISE_OWNER',
+        'FRANCHISEE_OWNER',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
     (
         1,
         9,
-        'FRANCHISE_MANAGER',
+        'FRANCHISEE_MANAGER',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
@@ -1303,224 +1308,75 @@ VALUES
     (50.00, 2, '2024-06-30 23:59:59+00'),
     (25.00, 3, '2024-04-30 23:59:59+00');
 
-INSERT INTO
-    store_warehouses (store_id, warehouse_id)
+INSERT INTO store_stocks (
+    store_id,
+    ingredient_id,
+    quantity,
+    low_stock_threshold,
+    created_at,
+    updated_at
+)
 VALUES
-    (1, 1),
-    (2, 2),
-    (3, 1),
-    (4, 2);
-
--- Insert into StoreWarehouseStocks
-INSERT INTO
-    store_warehouse_stocks (
-        store_warehouse_id,
-        ingredient_id,
-        quantity,
-        low_stock_threshold,
-        created_at,
-        updated_at
-    )
-VALUES
-    -- Store 1 Stocks
-    (
-        1,
-        1,
-        100,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
+    -- Store 1 Stocks (Центральное Кафе)
+    (1, 1, 100, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
     (1, 2, 50, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (
-        1,
-        3,
-        70,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Chocolate
-    (
-        1,
-        5,
-        90,
-        20,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Honey
-    (
-        1,
-        6,
-        50,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Vanilla
-    -- Store 2 Stocks
-    (
-        2,
-        1,
-        80,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
+    (1, 3, 70, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
+    (1, 5, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Honey
+    (1, 6, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
+    -- Store 2 Stocks (Кафе на Углу)
+    (2, 1, 80, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
     (2, 2, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (
-        2,
-        7,
-        60,
-        15,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Mint
-    (
-        2,
-        8,
-        90,
-        20,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Coconut Milk
-    (
-        2,
-        10,
-        50,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Lemon Juice
-    -- Store 3 Stocks
-    (
-        3,
-        1,
-        100,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
-    (
-        3,
-        3,
-        70,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Chocolate
-    (
-        3,
-        5,
-        90,
-        20,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Honey
-    (
-        3,
-        12,
-        40,
-        5,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Ginger
-    (
-        3,
-        14,
-        60,
-        15,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Cocoa Powder
-    -- Store 4 Stocks
-    (
-        4,
-        1,
-        120,
-        20,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
-    (
-        4,
-        2,
-        60,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Sugar
-    (
-        4,
-        7,
-        50,
-        15,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Mint
+    (2, 7, 60, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Mint
+    (2, 8, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Coconut Milk
+    (2, 10, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Lemon Juice
+    -- Store 3 Stocks (Маленькое Кафе)
+    (3, 1, 100, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (3, 3, 70, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
+    (3, 5, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Honey
+    (3, 12, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Ginger
+    (3, 14, 60, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cocoa Powder
+    -- Store 4 Stocks (Городское Кафе)
+    (4, 1, 120, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (4, 2, 60, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    (4, 7, 50, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Mint
     (4, 9, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Ice Cubes
-    (
-        4,
-        14,
-        50,
-        10,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
+    (4, 14, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Cocoa Powder
 
--- Cocoa Powder
-WITH
-    wh AS (
-        SELECT
-            sw.id AS store_warehouse_id,
-            sw.store_id
-        FROM
-            store_warehouses sw
-    )
-INSERT INTO
-    store_warehouse_stocks (
-        store_warehouse_id,
-        ingredient_id,
-        quantity,
-        low_stock_threshold,
-        created_at,
-        updated_at
-    )
+
+WITH store_list AS (
+    SELECT id AS store_id FROM stores
+)
+INSERT INTO store_stocks (
+    store_id,
+    ingredient_id,
+    quantity,
+    low_stock_threshold,
+    created_at,
+    updated_at
+)
 SELECT
-    wh.store_warehouse_id,
+    sl.store_id,
     i.id AS ingredient_id,
-    25 AS quantity, -- Например, начальный остаток 25
+    25 AS quantity, -- Example initial stock amount
     10 AS low_stock_threshold,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-FROM
-    (
-        SELECT
-            sa.store_id,
-            ai.ingredient_id
-        FROM
-            store_additives sa
-            JOIN additive_ingredients ai ON ai.additive_id = sa.additive_id
-        UNION
-        SELECT
-            sp.store_id,
-            psi.ingredient_id
-        FROM
-            store_products sp
-            JOIN store_product_sizes sps ON sps.store_product_id = sp.id
-            JOIN product_size_ingredients psi ON psi.product_size_id = sps.product_size_id
-    ) AS needed
-    JOIN wh ON wh.store_id = needed.store_id
-    JOIN ingredients i ON i.id = needed.ingredient_id
-WHERE
-    NOT EXISTS (
-        SELECT
-            1
-        FROM
-            store_warehouse_stocks s
-        WHERE
-            s.store_warehouse_id = wh.store_warehouse_id
-            AND s.ingredient_id = i.id
-            AND s.deleted_at IS NULL
-    );
+FROM (
+    SELECT sa.store_id, ai.ingredient_id
+    FROM store_additives sa
+    JOIN additive_ingredients ai ON ai.additive_id = sa.additive_id
+    UNION
+    SELECT sp.store_id, psi.ingredient_id
+    FROM store_products sp
+    JOIN store_product_sizes sps ON sps.store_product_id = sp.id
+    JOIN product_size_ingredients psi ON psi.product_size_id = sps.product_size_id
+) AS needed
+JOIN store_list sl ON sl.store_id = needed.store_id
+JOIN ingredients i ON i.id = needed.ingredient_id
+WHERE NOT EXISTS (
+    SELECT 1 FROM store_stocks s
+    WHERE s.store_id = sl.store_id AND s.ingredient_id = i.id AND s.deleted_at IS NULL
+);
 
 -- Insert stock material categories
 INSERT INTO
@@ -1836,83 +1692,26 @@ VALUES
         CURRENT_TIMESTAMP
     );
 
-INSERT INTO
-    stock_request_ingredients (
-        stock_request_id,
-        ingredient_id,
-        stock_material_id,
-        quantity,
-        created_at,
-        updated_at
-    )
+INSERT INTO stock_request_ingredients (
+    stock_request_id,
+    stock_material_id,
+    quantity,
+    created_at,
+    updated_at
+)
 VALUES
     -- StockRequest 1 (Store 1 -> Warehouse 1)
-    (
-        1,
-        1,
-        2,
-        10.0,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Sugar
-    (
-        1,
-        2,
-        1,
-        20.0,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
-    -- StockRequest 2 (Store 2 -> Warehouse 2)
-    (
-        2,
-        3,
-        3,
-        5.0,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Chocolate
-    (
-        2,
-        4,
-        4,
-        2.0,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Cinnamon
-    -- StockRequest 3 (Store 3 -> Warehouse 3)
-    (
-        3,
-        5,
-        5,
-        1.0,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Vanilla
-    (
-        3,
-        1,
-        2,
-        15.0,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Sugar
-    -- StockRequest 4 (Store 4 -> Warehouse 4)
-    (
-        4,
-        2,
-        1,
-        10.0,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ), -- Milk
-    (
-        4,
-        3,
-        3,
-        8.0,
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
+    (1, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+    (1, 1, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
 
--- Chocolate
+    -- StockRequest 2 (Store 2 -> Warehouse 2)
+    (2, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
+    (2, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
+
+    -- StockRequest 3 (Store 3 -> Warehouse 3)
+    (3, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
+    (3, 2, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
+
+    -- StockRequest 4 (Store 4 -> Warehouse 4)
+    (4, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate

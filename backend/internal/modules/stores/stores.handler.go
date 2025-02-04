@@ -1,6 +1,9 @@
 package stores
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -12,21 +15,23 @@ import (
 )
 
 type StoreHandler struct {
-	service      StoreService
-	auditService audit.AuditService
+	service           StoreService
+	franchiseeService franchisees.FranchiseeService
+	auditService      audit.AuditService
 }
 
-func NewStoreHandler(service StoreService, auditService audit.AuditService) *StoreHandler {
+func NewStoreHandler(service StoreService, franchiseeService franchisees.FranchiseeService, auditService audit.AuditService) *StoreHandler {
 	return &StoreHandler{
-		service:      service,
-		auditService: auditService,
+		service:           service,
+		franchiseeService: franchiseeService,
+		auditService:      auditService,
 	}
 }
 
 func (h *StoreHandler) GetAllStores(c *gin.Context) {
 	var filter types.StoreFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Store{}); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
 		return
 	}
 
@@ -36,7 +41,7 @@ func (h *StoreHandler) GetAllStores(c *gin.Context) {
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, stores, filter.Pagination)
+	utils.SendSuccessResponse(c, stores)
 }
 
 func (h *StoreHandler) CreateStore(c *gin.Context) {
@@ -81,6 +86,33 @@ func (h *StoreHandler) GetStoreByID(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, store)
+}
+
+func (h *StoreHandler) GetStoresByFranchisee(c *gin.Context) {
+	var filter types.StoreFilter
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Store{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
+
+	franchiseeID, errH := contexts.GetFranchiseeId(c)
+	if errH != nil {
+		if errors.Is(errH, contexts.ErrEmptyFranchiseeID) {
+			franchiseeID = 0
+		} else {
+			utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+			return
+		}
+	}
+
+	store, err := h.service.GetStoresByFranchisee(franchiseeID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve stores")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, store, filter.Pagination)
 }
 
 func (h *StoreHandler) UpdateStore(c *gin.Context) {

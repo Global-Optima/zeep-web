@@ -9,8 +9,11 @@ import (
 	"image/png"
 	"sync"
 
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
+
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
 	"github.com/golang/freetype/truetype"
 	"github.com/jung-kurt/gofpdf"
 
@@ -26,7 +29,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
 )
 
@@ -58,17 +60,24 @@ type orderService struct {
 	orderRepo           OrderRepository
 	storeProductRepo    storeProducts.StoreProductRepository
 	storeAdditiveRepo   storeAdditives.StoreAdditiveRepository
-	storeWarehouseRepo  storeWarehouses.StoreWarehouseRepository
+	storeStockRepo      storeStock.StoreStockRepository
 	notificationService notifications.NotificationService
 	logger              *zap.SugaredLogger
 }
 
-func NewOrderService(orderRepo OrderRepository, storeProductRepo storeProducts.StoreProductRepository, storeAdditiveRepo storeAdditives.StoreAdditiveRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) OrderService {
+func NewOrderService(
+	orderRepo OrderRepository,
+	storeProductRepo storeProducts.StoreProductRepository,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
+	storeStockRepo storeStock.StoreStockRepository,
+	notificationService notifications.NotificationService,
+	logger *zap.SugaredLogger,
+) OrderService {
 	return &orderService{
 		orderRepo:           orderRepo,
 		storeProductRepo:    storeProductRepo,
 		storeAdditiveRepo:   storeAdditiveRepo,
-		storeWarehouseRepo:  storeWarehouseRepo,
+		storeStockRepo:      storeStockRepo,
 		notificationService: notificationService,
 		logger:              logger,
 	}
@@ -128,6 +137,13 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 }
 
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
+	censorValidator := censor.GetCensorValidator()
+
+	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
 
 	validations, err := s.ValidationResults(storeID, storeProductSizeIDs, storeAdditiveIDs)
@@ -188,7 +204,7 @@ func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
 			return wrappedErr
 		}
 
-		stockMap := make(map[uint]*data.StoreWarehouseStock)
+		stockMap := make(map[uint]*data.StoreStock)
 
 		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
 		if err != nil {
@@ -383,7 +399,7 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 			return nil, wrappedErr
 		}
 
-		stockMap := make(map[uint]*data.StoreWarehouseStock)
+		stockMap := make(map[uint]*data.StoreStock)
 
 		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
 		if err != nil {
@@ -422,9 +438,9 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 	return &response, nil
 }
 
-func (s *orderService) deductProductSizeIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreWarehouseStock) error {
+func (s *orderService) deductProductSizeIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreStock) error {
 	for _, suborder := range order.Suborders {
-		updatedStocks, err := s.storeWarehouseRepo.DeductStockByProductSizeTechCart(order.StoreID, suborder.StoreProductSizeID)
+		updatedStocks, err := s.storeStockRepo.DeductStockByProductSizeTechCart(order.StoreID, suborder.StoreProductSizeID)
 		if err != nil {
 			return fmt.Errorf("failed to deduct from store stock: %w", err)
 		}
@@ -441,10 +457,10 @@ func (s *orderService) deductProductSizeIngredientsFromStock(order *data.Order, 
 	return nil
 }
 
-func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreWarehouseStock) error {
+func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreStock) error {
 	for _, suborder := range order.Suborders {
 		for _, storeAdditive := range suborder.SuborderAdditives {
-			updatedStocks, err := s.storeWarehouseRepo.DeductStockByAdditiveTechCart(order.StoreID, storeAdditive.StoreAdditiveID)
+			updatedStocks, err := s.storeStockRepo.DeductStockByAdditiveTechCart(order.StoreID, storeAdditive.StoreAdditiveID)
 			if err != nil {
 				return fmt.Errorf("failed to deduct from store stock: %w", err)
 			}
@@ -462,7 +478,7 @@ func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, sto
 	return nil
 }
 
-func (s *orderService) notifyLowStockIngredients(order *data.Order, stockMap map[uint]*data.StoreWarehouseStock) {
+func (s *orderService) notifyLowStockIngredients(order *data.Order, stockMap map[uint]*data.StoreStock) {
 	for _, stock := range stockMap {
 		if stock.Quantity <= stock.LowStockThreshold {
 			details := &details.StoreWarehouseRunOutDetails{

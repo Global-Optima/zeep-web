@@ -7,6 +7,7 @@
 		:product="productDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
+		readonly
 	/>
 </template>
 

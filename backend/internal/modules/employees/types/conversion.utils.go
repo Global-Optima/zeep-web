@@ -6,7 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
+func MapToBaseEmployeeDTO(employee *data.Employee) *BaseEmployeeDTO {
 	var employeeType data.EmployeeType = ""
 	var role data.EmployeeRole = ""
 	switch {
@@ -27,18 +27,41 @@ func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
 		role = employee.AdminEmployee.Role
 	}
 
-	dto := &EmployeeDTO{
-		ID:        employee.ID,
+	return &BaseEmployeeDTO{
 		FirstName: employee.FirstName,
 		LastName:  employee.LastName,
-		Phone:     utils.FormatPhoneOutput(employee.Phone),
+		Phone:     employee.Phone,
 		Email:     employee.Email,
 		Type:      employeeType,
 		Role:      role,
-		IsActive:  employee.IsActive,
+		IsActive:  *employee.IsActive,
 	}
+}
 
-	return dto
+func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
+	return &EmployeeDTO{
+		ID:              employee.ID,
+		BaseEmployeeDTO: *MapToBaseEmployeeDTO(employee),
+	}
+}
+
+func MapToBaseEmployeeDetailsDTO(employee *data.Employee) *BaseEmployeeDetailsDTO {
+	workdays := make([]EmployeeWorkdayDTO, len(employee.Workdays))
+
+	for i, workday := range employee.Workdays {
+		workdays[i] = *MapToEmployeeWorkdayDTO(&workday)
+	}
+	return &BaseEmployeeDetailsDTO{
+		BaseEmployeeDTO: *MapToBaseEmployeeDTO(employee),
+		Workdays:        workdays,
+	}
+}
+
+func MapToEmployeeDetailsDTO(employee *data.Employee) *EmployeeDetailsDTO {
+	return &EmployeeDetailsDTO{
+		ID:                     employee.ID,
+		BaseEmployeeDetailsDTO: *MapToBaseEmployeeDetailsDTO(employee),
+	}
 }
 
 func CreateToEmployee(dto *CreateEmployeeDTO) (*data.Employee, error) {

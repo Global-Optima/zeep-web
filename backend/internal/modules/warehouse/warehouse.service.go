@@ -11,13 +11,13 @@ import (
 
 type WarehouseService interface {
 	AssignStoreToWarehouse(req types.AssignStoreToWarehouseRequest) error
-	ReassignStore(storeID uint, req types.ReassignStoreRequest) error
 	GetAllStoresByWarehouse(warehouseID uint, pagination *utils.Pagination) ([]types.ListStoresResponse, error)
 
-	CreateWarehouse(req types.CreateWarehouseDTO) (*types.WarehouseResponse, error)
-	GetWarehouseByID(id uint) (*types.WarehouseResponse, error)
-	GetAllWarehouses(pagination *utils.Pagination) ([]types.WarehouseResponse, error)
-	UpdateWarehouse(id uint, req types.UpdateWarehouseDTO) (*types.WarehouseResponse, error)
+	CreateWarehouse(req types.CreateWarehouseDTO) (*types.WarehouseDTO, error)
+	GetWarehouseByID(id uint) (*types.WarehouseDTO, error)
+	GetWarehousesByRegion(regionID uint, filter *types.WarehouseFilter) ([]types.WarehouseDTO, error)
+	GetAllWarehouses(filter *types.WarehouseFilter) ([]types.WarehouseDTO, error)
+	UpdateWarehouse(id uint, req types.UpdateWarehouseDTO) (*types.WarehouseDTO, error)
 	DeleteWarehouse(id uint) error
 }
 
@@ -33,10 +33,6 @@ func (s *warehouseService) AssignStoreToWarehouse(req types.AssignStoreToWarehou
 	return s.repo.AssignStoreToWarehouse(req.StoreID, req.WarehouseID)
 }
 
-func (s *warehouseService) ReassignStore(storeID uint, req types.ReassignStoreRequest) error {
-	return s.repo.ReassignStoreToWarehouse(storeID, req.WarehouseID)
-}
-
 func (s *warehouseService) GetAllStoresByWarehouse(warehouseID uint, pagination *utils.Pagination) ([]types.ListStoresResponse, error) {
 	stores, err := s.repo.GetAllStoresByWarehouse(warehouseID, pagination)
 	if err != nil {
@@ -45,7 +41,7 @@ func (s *warehouseService) GetAllStoresByWarehouse(warehouseID uint, pagination 
 	return types.ConvertToListStoresResponse(stores), nil
 }
 
-func (s *warehouseService) CreateWarehouse(req types.CreateWarehouseDTO) (*types.WarehouseResponse, error) {
+func (s *warehouseService) CreateWarehouse(req types.CreateWarehouseDTO) (*types.WarehouseDTO, error) {
 	facilityAddress := types.ToFacilityAddressModel(req.FacilityAddress)
 	warehouse := types.ToWarehouseModel(req, 0)
 
@@ -58,10 +54,10 @@ func (s *warehouseService) CreateWarehouse(req types.CreateWarehouseDTO) (*types
 		return nil, fmt.Errorf("failed to fetch created warehouse: %w", err)
 	}
 
-	return types.ToWarehouseResponse(*createdWarehouse), nil
+	return types.ToWarehouseDTO(*createdWarehouse), nil
 }
 
-func (s *warehouseService) GetWarehouseByID(id uint) (*types.WarehouseResponse, error) {
+func (s *warehouseService) GetWarehouseByID(id uint) (*types.WarehouseDTO, error) {
 	warehouse, err := s.repo.GetWarehouseByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -70,35 +66,41 @@ func (s *warehouseService) GetWarehouseByID(id uint) (*types.WarehouseResponse, 
 		return nil, fmt.Errorf("failed to fetch warehouse: %w", err)
 	}
 
-	return types.ToWarehouseResponse(*warehouse), nil
+	return types.ToWarehouseDTO(*warehouse), nil
 }
 
-func (s *warehouseService) GetAllWarehouses(pagination *utils.Pagination) ([]types.WarehouseResponse, error) {
-	warehouses, err := s.repo.GetAllWarehouses(pagination)
+func (s *warehouseService) GetAllWarehouses(filter *types.WarehouseFilter) ([]types.WarehouseDTO, error) {
+	warehouses, err := s.repo.GetAllWarehouses(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch all warehouses: %w", err)
 	}
 
-	responses := make([]types.WarehouseResponse, len(warehouses))
+	responses := make([]types.WarehouseDTO, len(warehouses))
 	for i, warehouse := range warehouses {
-		responses[i] = *types.ToWarehouseResponse(warehouse)
+		responses[i] = *types.ToWarehouseDTO(warehouse)
 	}
 
 	return responses, nil
 }
 
-func (s *warehouseService) UpdateWarehouse(id uint, req types.UpdateWarehouseDTO) (*types.WarehouseResponse, error) {
-	warehouse, err := s.repo.GetWarehouseByID(id)
+func (s *warehouseService) GetWarehousesByRegion(regionID uint, filter *types.WarehouseFilter) ([]types.WarehouseDTO, error) {
+	warehouses, err := s.repo.GetWarehousesByRegion(regionID, filter)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("warehouse with ID %d not found", id)
-		}
-		return nil, fmt.Errorf("failed to fetch warehouse: %w", err)
+		return nil, fmt.Errorf("failed to fetch warehouses: %w", err)
 	}
 
-	warehouse.Name = req.Name
+	responses := make([]types.WarehouseDTO, len(warehouses))
+	for i, warehouse := range warehouses {
+		responses[i] = *types.ToWarehouseDTO(warehouse)
+	}
 
-	if err := s.repo.UpdateWarehouse(warehouse); err != nil {
+	return responses, nil
+}
+
+func (s *warehouseService) UpdateWarehouse(id uint, dto types.UpdateWarehouseDTO) (*types.WarehouseDTO, error) {
+	warehouse := types.UpdateWarehouseToModel(&dto)
+
+	if err := s.repo.UpdateWarehouse(id, warehouse); err != nil {
 		return nil, fmt.Errorf("failed to update warehouse: %w", err)
 	}
 
@@ -107,7 +109,7 @@ func (s *warehouseService) UpdateWarehouse(id uint, req types.UpdateWarehouseDTO
 		return nil, fmt.Errorf("failed to fetch updated warehouse: %w", err)
 	}
 
-	return types.ToWarehouseResponse(*updatedWarehouse), nil
+	return types.ToWarehouseDTO(*updatedWarehouse), nil
 }
 
 func (s *warehouseService) DeleteWarehouse(id uint) error {

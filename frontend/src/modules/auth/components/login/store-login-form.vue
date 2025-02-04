@@ -1,10 +1,10 @@
 <template>
-	<Card class="">
-		<CardHeader>
+	<Card class="border-none">
+		<CardHeader class="p-0">
 			<CardTitle class="text-lg sm:text-xl">Вход для сотрудника кафе</CardTitle>
 			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
 		</CardHeader>
-		<CardContent>
+		<CardContent class="mt-6 p-0">
 			<form
 				class="space-y-6 w-full"
 				@submit="onSubmit"
@@ -39,7 +39,7 @@
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="store in stores?.data ?? []"
+										v-for="store in stores"
 										:key="store.id"
 										:value="store.id.toString()"
 										class="text-sm sm:text-base"
@@ -152,9 +152,9 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
+import { storesService } from "@/modules/admin/stores/services/stores.service"
 import { authService } from '@/modules/auth/services/auth.service'
-import { storesService } from "@/modules/stores/services/stores.service"
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
@@ -179,8 +179,8 @@ const { values, isSubmitting, handleSubmit } = useForm({
 
 
 const { data: stores, isLoading: storesLoading, isError: storesError } = useQuery({
-  queryKey: ['stores'],
-  queryFn: () => storesService.getStores({pageSize: 1000}),
+  queryKey: ['stores-all'],
+  queryFn: () => storesService.getAll(),
 })
 
 const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({

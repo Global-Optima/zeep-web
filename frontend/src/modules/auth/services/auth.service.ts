@@ -2,7 +2,7 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import type {
 	EmployeeAccount,
 	EmployeeLoginDTO,
-} from '@/modules/admin/store-employees/models/employees.models'
+} from '@/modules/admin/employees/models/employees.models'
 
 class AuthService {
 	private readonly baseUrl = '/auth'
@@ -45,6 +45,28 @@ class AuthService {
 				.then(res => res.data)
 		} catch (error) {
 			console.error(`Failed to get admin accounts:`, error)
+			throw error
+		}
+	}
+
+	async getRegionAccounts(regionId: number) {
+		try {
+			return apiClient
+				.get<EmployeeAccount[]>(`${this.baseUrl}/employees/region/${regionId}`)
+				.then(res => res.data)
+		} catch (error) {
+			console.error(`Failed to get region accounts:`, error)
+			throw error
+		}
+	}
+
+	async getFranchiseeAccounts(franchiseeId: number) {
+		try {
+			return apiClient
+				.get<EmployeeAccount[]>(`${this.baseUrl}/employees/franchisee/${franchiseeId}`)
+				.then(res => res.data)
+		} catch (error) {
+			console.error(`Failed to get franchisee accounts:`, error)
 			throw error
 		}
 	}

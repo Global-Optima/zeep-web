@@ -13,7 +13,7 @@
       "recipeSteps": "Recipe steps *{{.Name}}* were created",
       "store": "Store *{{.Name}}* was created",
       "warehouse": "Warehouse *{{.Name}}* was created",
-      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was created in store *{{.StoreName}}*",
+      "storeStock": "Store warehouse stock *{{.Name}}* was created in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was created"
     },
     "update": {
@@ -29,7 +29,7 @@
       "recipeSteps": "Recipe steps *{{.Name}}* were updated",
       "store": "Store *{{.Name}}* was updated",
       "warehouse": "Warehouse *{{.Name}}* was updated",
-      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was updated in store *{{.StoreName}}*",
+      "storeStock": "Store warehouse stock *{{.Name}}* was updated in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was updated"
     },
     "delete": {
@@ -45,10 +45,19 @@
       "recipeSteps": "Recipe steps *{{.Name}}* were deleted",
       "store": "Store *{{.Name}}* was deleted",
       "warehouse": "Warehouse *{{.Name}}* was deleted",
-      "storeWarehouseStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
+      "storeStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was deleted"
     }
-  }, 
+  },
+  "responses": {
+    "500": "An unexpected error occurred. Please try again later.",
+    "404": "The requested resource was not found.",
+    "403": "Access denied. You do not have permission to view this resource.",
+    "401": "You need to log in to access this resource.",
+    "400": "Bad request. The server could not understand the data sent. Please check your input and try again.",
+    "200": "The request was successfully processed.",
+    "201": "The resource was successfully created."
+  },
   "notification": {
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
       "stockRequestStatus": {

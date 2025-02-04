@@ -8,8 +8,8 @@
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminStoreCreateForm from '@/modules/admin/stores/components/create/admin-store-create-form.vue'
-import type { CreateStoreDTO } from '@/modules/stores/models/stores-dto.model'
-import { storesService } from '@/modules/stores/services/stores.service'
+import type { CreateStoreDTO } from '@/modules/admin/stores/models/stores-dto.model'
+import { storesService } from '@/modules/admin/stores/services/stores.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
 

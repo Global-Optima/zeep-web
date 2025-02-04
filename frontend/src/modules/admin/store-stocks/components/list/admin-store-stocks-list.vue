@@ -106,8 +106,8 @@ import {
 
 import { PackagePlus } from 'lucide-vue-next'
 
-import type { StockRequestStockMaterialDTO } from '@/modules/admin/store-stock-requests/models/stock-requests.model'
-import { stockRequestsService } from '@/modules/admin/store-stock-requests/services/stock-requests.service'
+import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
+import { stockRequestsService } from '@/modules/admin/stock-requests/services/stock-requests.service'
 
 import AdminStockMaterialWithQuantitySelectDialog from '@/modules/admin/stock-materials/components/admin-stock-material-with-quantity-select-dialog.vue'
 import type { StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'

@@ -1,11 +1,12 @@
 package types
 
+import (
+	regionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
+
 type AssignStoreToWarehouseRequest struct {
 	StoreID     uint `json:"storeId" binding:"required"`
-	WarehouseID uint `json:"warehouseId" binding:"required"`
-}
-
-type ReassignStoreRequest struct {
 	WarehouseID uint `json:"warehouseId" binding:"required"`
 }
 
@@ -21,7 +22,9 @@ type CreateWarehouseDTO struct {
 }
 
 type UpdateWarehouseDTO struct {
-	Name string `json:"name" binding:"required"`
+	Name              *string `json:"name"`
+	RegionID          *uint   `json:"regionId"`
+	FacilityAddressID *uint   `json:"facilityAddressId"`
 }
 
 type FacilityAddressDTO struct {
@@ -30,10 +33,16 @@ type FacilityAddressDTO struct {
 	Latitude  *float64 `json:"latitude,omitempty"`
 }
 
-type WarehouseResponse struct {
-	ID              uint               `json:"id"`
-	Name            string             `json:"name"`
-	FacilityAddress FacilityAddressDTO `json:"facilityAddress"`
-	CreatedAt       string             `json:"createdAt"`
-	UpdatedAt       string             `json:"updatedAt"`
+type WarehouseDTO struct {
+	ID              uint                   `json:"id"`
+	Name            string                 `json:"name"`
+	Region          regionsTypes.RegionDTO `json:"region"`
+	FacilityAddress FacilityAddressDTO     `json:"facilityAddress"`
+	CreatedAt       string                 `json:"createdAt"`
+	UpdatedAt       string                 `json:"updatedAt"`
+}
+
+type WarehouseFilter struct {
+	utils.BaseFilter
+	Search *string `form:"search"`
 }

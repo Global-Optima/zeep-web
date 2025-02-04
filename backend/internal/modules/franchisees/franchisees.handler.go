@@ -2,6 +2,7 @@ package franchisees
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -137,9 +138,23 @@ func (h *FranchiseeHandler) GetFranchiseeByID(c *gin.Context) {
 	utils.SendSuccessResponse(c, franchisee)
 }
 
+func (h *FranchiseeHandler) GetMyFranchisee(c *gin.Context) {
+	franchiseeID, errH := contexts.GetFranchiseeId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+	}
+
+	franchisee, err := h.service.GetFranchiseeByID(franchiseeID)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve franchisee")
+		return
+	}
+	utils.SendSuccessResponse(c, franchisee)
+}
+
 func (h *FranchiseeHandler) GetFranchisees(c *gin.Context) {
 	var filter types.FranchiseeFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Franchisee{}); err != nil {
 		utils.SendBadRequestError(c, "invalid filter parameters")
 		return
 	}
@@ -149,5 +164,19 @@ func (h *FranchiseeHandler) GetFranchisees(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to retrieve franchisees")
 		return
 	}
-	utils.SendSuccessResponse(c, franchisees)
+	utils.SendSuccessResponseWithPagination(c, franchisees, filter.Pagination)
+}
+
+func (h *FranchiseeHandler) GetAllFranchisees(c *gin.Context) {
+	var filter types.FranchiseeFilter
+
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+
+	warehouses, err := h.service.GetAllFranchisees(&filter)
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	utils.SendSuccessResponse(c, warehouses)
 }

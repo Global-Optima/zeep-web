@@ -6,6 +6,7 @@
 		:initialAdditive="storeAdditiveDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
+    readonly
 	/>
 </template>
 

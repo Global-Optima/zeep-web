@@ -16,7 +16,7 @@ type StoreProductRepository interface {
 	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
-	GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
+	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
 	UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error
@@ -151,7 +151,7 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	return storeProducts, nil
 }
 
-func (r *storeProductRepository) GetProductsListToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error) {
+func (r *storeProductRepository) GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error) {
 	var products []data.Product
 
 	query := r.db.

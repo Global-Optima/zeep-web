@@ -2,6 +2,7 @@ package employees
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -13,21 +14,27 @@ import (
 type RegionEmployeeRepository interface {
 	GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]data.RegionEmployee, error)
 	GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error)
-	UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateModels) error
+	UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateRegionEmployeeModels) error
 }
 
 type regionEmployeeRepository struct {
-	db *gorm.DB
+	db           *gorm.DB
+	employeeRepo employees.EmployeeRepository
 }
 
-func NewRegionEmployeeRepository(db *gorm.DB) RegionEmployeeRepository {
-	return &regionEmployeeRepository{db: db}
+func NewRegionEmployeeRepository(db *gorm.DB, employeeRepo employees.EmployeeRepository) RegionEmployeeRepository {
+	return &regionEmployeeRepository{
+		db:           db,
+		employeeRepo: employeeRepo,
+	}
 }
 
 func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]data.RegionEmployee, error) {
-	var employees []data.RegionEmployee
+	var regionEmployees []data.RegionEmployee
 	query := r.db.Model(&data.RegionEmployee{}).
-		Where("region_id = ?", regionID).Preload("Employee")
+		Where("region_id = ?", regionID).
+		Preload("Employee").
+		Joins("JOIN employees ON employees.id = region_employees.employee_id")
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)
@@ -40,7 +47,7 @@ func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *emp
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where(
-			"first_name ILIKE ? OR last_name ILIKE ? OR phone ILIKE ? OR email ILIKE ?",
+			"employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.phone ILIKE ? OR employees.email ILIKE ?",
 			searchTerm, searchTerm, searchTerm, searchTerm,
 		)
 	}
@@ -50,17 +57,18 @@ func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *emp
 		return nil, err
 	}
 
-	err = query.Find(&employees).Error
+	err = query.Find(&regionEmployees).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve region managers: %w", err)
 	}
-	return employees, nil
+	return regionEmployees, nil
 }
 
 func (r *regionEmployeeRepository) GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error) {
 	var regionEmployee data.RegionEmployee
 	err := r.db.Model(&data.RegionEmployee{}).
-		Preload("Employee").
+		Preload("Employee.Workdays").
+		Preload("Region").
 		Where("id = ? AND region_id = ?", id, regionID).
 		First(&regionEmployee).Error
 	if err != nil {
@@ -69,12 +77,37 @@ func (r *regionEmployeeRepository) GetRegionEmployeeByID(id, regionID uint) (*da
 	return &regionEmployee, nil
 }
 
-// TODO add employee update to all submodules
-func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateModels) error {
+func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateRegionEmployeeModels) error {
 	if updateModels == nil {
 		return employeesTypes.ErrNothingToUpdate
 	}
-	return r.db.Model(&data.RegionEmployee{}).
-		Where("id = ? AND region_id = ?", id, regionID).
-		Updates(updateModels.RegionEmployee).Error
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var existingRegionEmployee data.RegionEmployee
+		r.db.Model(&data.RegionEmployee{}).
+			Where("id = ? AND region_id = ?", id, regionID).
+			First(&existingRegionEmployee)
+
+		if updateModels.RegionEmployee != nil && !utils.IsEmpty(updateModels.RegionEmployee) {
+			err := tx.Model(&data.RegionEmployee{}).
+				Where("id = ? AND region_id = ?", id, regionID).
+				Updates(updateModels.RegionEmployee).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		if updateModels.UpdateEmployeeModels != nil && !utils.IsEmpty(updateModels.UpdateEmployeeModels) {
+			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingRegionEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

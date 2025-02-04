@@ -101,14 +101,14 @@ func (r *warehouseStockRepository) TransferStock(sourceWarehouseID, targetWareho
 
 	for _, item := range items {
 		err := tx.Model(&data.WarehouseStock{}).
-			Where("warehouse_id = ? AND stock_material_id = ?", sourceWarehouseID, item.IngredientID).
+			Where("warehouse_id = ? AND stock_material_id = ?", sourceWarehouseID, item.StockMaterialID).
 			Update("quantity", gorm.Expr("quantity - ?", item.Quantity)).Error
 		if err != nil {
 			return fmt.Errorf("failed to deduct stock from source: %w", err)
 		}
 
 		err = tx.Model(&data.WarehouseStock{}).
-			Where("warehouse_id = ? AND stock_material_id = ?", targetWarehouseID, item.IngredientID).
+			Where("warehouse_id = ? AND stock_material_id = ?", targetWarehouseID, item.StockMaterialID).
 			Update("quantity", gorm.Expr("quantity + ?", item.Quantity)).Error
 		if err != nil {
 			return fmt.Errorf("failed to add stock to target: %w", err)
@@ -190,7 +190,6 @@ func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []t
 		expirationDate := deliveredDate.AddDate(0, 0, stockMaterial.ExpirationPeriodInDays)
 
 		converted[i] = data.StockRequestIngredient{
-			IngredientID:   stockMaterial.IngredientID,
 			Quantity:       item.Quantity,
 			DeliveredDate:  deliveredDate,
 			ExpirationDate: expirationDate,
@@ -203,7 +202,7 @@ func (r *warehouseStockRepository) ConvertInventoryItemsToStockRequest(items []t
 func (r *warehouseStockRepository) AddToWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error {
 	stock := &data.WarehouseStock{}
 	if err := r.db.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).First(stock).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			stock = &data.WarehouseStock{
 				WarehouseID:     warehouseID,
 				StockMaterialID: stockMaterialID,
@@ -594,7 +593,7 @@ func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint,
 
 	// Step 1: Retrieve WarehouseID linked to the provided StoreID
 	if err := r.db.
-		Model(&data.StoreWarehouse{}).
+		Model(&data.Store{}).
 		Select("warehouse_id").
 		Where("store_id = ?", storeID).
 		Limit(1).

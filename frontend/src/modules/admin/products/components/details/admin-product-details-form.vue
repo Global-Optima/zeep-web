@@ -4,17 +4,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
+import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
+import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
 
-import AdminSelectProductCategory from '@/modules/admin/product-categories/components/admin-select-product-category.vue'
-import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
-import { ref } from 'vue'
+// Lazy-load the dialog component
+const AdminSelectProductCategory = defineAsyncComponent(() =>
+  import('@/modules/admin/product-categories/components/admin-select-product-category.vue')
+)
 
-const { productDetails } = defineProps<{
+const props = defineProps<{
   productDetails: ProductDetailsDTO
+  readonly?: boolean // Optional readonly flag
 }>()
 
 const emits = defineEmits<{
@@ -36,13 +40,13 @@ const createProductSchema = toTypedSchema(
   })
 )
 
-const { handleSubmit, isSubmitting, isFieldDirty, setFieldValue } = useForm<UpdateProductDTO>({
+const { handleSubmit, isSubmitting, isFieldDirty, setFieldValue, resetForm } = useForm<UpdateProductDTO>({
   validationSchema: createProductSchema,
   initialValues: {
-    name: productDetails.name,
-    description: productDetails.description,
-    imageUrl: productDetails.imageUrl,
-    categoryId: productDetails.category.id
+    name: props.productDetails.name,
+    description: props.productDetails.description,
+    imageUrl: props.productDetails.imageUrl,
+    categoryId: props.productDetails.category.id
   }
 })
 
@@ -51,16 +55,19 @@ const onSubmit = handleSubmit((values) => {
 })
 
 function onCancel() {
+  resetForm()
   emits('onCancel')
 }
 
 const openCategoryDialog = ref(false)
-const selectedCategory = ref<ProductCategoryDTO | null>(productDetails.category)
+const selectedCategory = ref<ProductCategoryDTO | null>(props.productDetails.category)
 
 function selectCategory(category: ProductCategoryDTO) {
-  selectedCategory.value = category
-  openCategoryDialog.value = false
-  setFieldValue('categoryId', category.id)
+  if (!props.readonly) {
+    selectedCategory.value = category
+    openCategoryDialog.value = false
+    setFieldValue('categoryId', category.id)
+  }
 }
 </script>
 
@@ -80,12 +87,13 @@ function selectCategory(category: ProductCategoryDTO) {
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
 			</Button>
-
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
 				{{ productDetails.name }}
 			</h1>
-
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+				v-if="!readonly"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -108,9 +116,7 @@ function selectCategory(category: ProductCategoryDTO) {
 				<Card>
 					<CardHeader>
 						<CardTitle>Основная информация</CardTitle>
-						<CardDescription>
-							Заполните основные сведения о продукте (название и описание).
-						</CardDescription>
+						<CardDescription> Заполните основные сведения о продукте. </CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div class="gap-6 grid">
@@ -126,12 +132,12 @@ function selectCategory(category: ProductCategoryDTO) {
 											type="text"
 											placeholder="Например, Латте"
 											v-bind="componentField"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							</FormField>
-
 							<FormField
 								v-slot="{ componentField }"
 								name="description"
@@ -144,6 +150,7 @@ function selectCategory(category: ProductCategoryDTO) {
 											placeholder="Краткое описание продукта"
 											class="min-h-32"
 											v-bind="componentField"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -153,7 +160,6 @@ function selectCategory(category: ProductCategoryDTO) {
 					</CardContent>
 				</Card>
 			</div>
-
 			<div class="items-start gap-4 grid auto-rows-max">
 				<Card>
 					<CardHeader>
@@ -176,6 +182,7 @@ function selectCategory(category: ProductCategoryDTO) {
 											type="text"
 											placeholder="https://example.com/image.jpg"
 											v-bind="componentField"
+											:readonly="readonly"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -184,7 +191,6 @@ function selectCategory(category: ProductCategoryDTO) {
 						</div>
 					</CardContent>
 				</Card>
-
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
@@ -192,21 +198,32 @@ function selectCategory(category: ProductCategoryDTO) {
 					</CardHeader>
 					<CardContent>
 						<div>
-							<Button
-								variant="link"
-								class="mt-0 p-0 h-fit text-primary underline"
-								type="button"
-								@click="openCategoryDialog = true"
-							>
-								{{ selectedCategory?.name || 'Категория не выбрана' }}
-							</Button>
+							<template v-if="!readonly">
+								<Button
+									variant="link"
+									class="mt-0 p-0 h-fit text-primary underline"
+									type="button"
+									@click="openCategoryDialog = true"
+									:disabled="readonly"
+								>
+									{{ selectedCategory?.name || 'Категория не выбрана' }}
+								</Button>
+							</template>
+							<template v-else>
+								<span
+									class="text-muted-foreground"
+									>{{ selectedCategory?.name || 'Категория не выбрана' }}</span
+								>
+							</template>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
 		</div>
-
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div
+			class="flex justify-center items-center gap-2 md:hidden"
+			v-if="!readonly"
+		>
 			<Button
 				variant="outline"
 				type="button"
@@ -224,6 +241,7 @@ function selectCategory(category: ProductCategoryDTO) {
 	</form>
 
 	<AdminSelectProductCategory
+		v-if="!readonly"
 		:open="openCategoryDialog"
 		@close="openCategoryDialog = false"
 		@select="selectCategory"

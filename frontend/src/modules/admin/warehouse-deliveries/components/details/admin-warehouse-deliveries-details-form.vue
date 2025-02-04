@@ -109,8 +109,6 @@ import type { WarehouseDeliveryDTO } from '@/modules/admin/warehouse-stocks/mode
 import { format } from 'date-fns'
 import { ChevronLeft } from 'lucide-vue-next'
 
-// Props
-
 const { delivery } = defineProps<{
 	delivery: WarehouseDeliveryDTO
 }>()

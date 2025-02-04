@@ -1,6 +1,7 @@
 package stockMaterialCategory
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -10,11 +11,15 @@ import (
 )
 
 type StockMaterialCategoryHandler struct {
-	service StockMaterialCategoryService
+	service      StockMaterialCategoryService
+	auditService audit.AuditService
 }
 
-func NewStockMaterialCategoryHandler(service StockMaterialCategoryService) *StockMaterialCategoryHandler {
-	return &StockMaterialCategoryHandler{service: service}
+func NewStockMaterialCategoryHandler(service StockMaterialCategoryService, auditService audit.AuditService) *StockMaterialCategoryHandler {
+	return &StockMaterialCategoryHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
 func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
@@ -24,11 +29,21 @@ func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.Create(dto)
+	id, err := h.service.Create(dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to create stock material category")
 		return
 	}
+
+	action := types.CreateStockMaterialAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: dto.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "stock material created successfully")
 }
@@ -80,10 +95,26 @@ func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
 		return
 	}
 
+	response, err := h.service.GetByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch stock material category")
+		return
+	}
+
 	if err := h.service.Update(uint(id), dto); err != nil {
 		utils.SendInternalServerError(c, "Failed to update stock material category")
 		return
 	}
+
+	action := types.UpdateStockMaterialAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: response.Name,
+		}, &dto)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(204) // No Content
 }
@@ -95,10 +126,26 @@ func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
 		return
 	}
 
+	response, err := h.service.GetByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "Failed to fetch stock material category")
+		return
+	}
+
 	if err := h.service.Delete(uint(id)); err != nil {
 		utils.SendInternalServerError(c, "Failed to delete stock material category")
 		return
 	}
+
+	action := types.DeleteStockMaterialAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: response.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(204) // No Content
 }

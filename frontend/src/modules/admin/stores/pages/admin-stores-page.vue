@@ -25,21 +25,18 @@
 import { Card, CardContent } from '@/core/components/ui/card'
 import AdminStoresList from '@/modules/admin/stores/components/list/admin-stores-list.vue'
 import AdminStoresToolbar from '@/modules/admin/stores/components/list/admin-stores-toolbar.vue'
-import type { StoresFilter } from '@/modules/stores/models/stores-dto.model'
-import { storesService } from '@/modules/stores/services/stores.service'
+import type { StoresFilter } from '@/modules/admin/stores/models/stores-dto.model'
+import { storesService } from '@/modules/admin/stores/services/stores.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
 // Reactive filter object
-const filter = ref<StoresFilter>({
-  searchTerm: '',
-  isFranchise: undefined,
-})
+const filter = ref<StoresFilter>({})
 
 // Query stores data
 const { data: stores } = useQuery({
   queryKey: computed(() => ['stores', filter.value]),
-  queryFn: () => storesService.getStores(filter.value),
+  queryFn: () => storesService.getPaginated(filter.value),
 })
 
 // Update filter handler

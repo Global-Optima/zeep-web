@@ -6,6 +6,7 @@
 		:ingredientCategory="categoryDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
+		readonly
 	/>
 </template>
 

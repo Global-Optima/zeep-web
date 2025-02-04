@@ -3,6 +3,7 @@ package modules
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 )
 
@@ -13,10 +14,10 @@ type StoresModule struct {
 	Handler *stores.StoreHandler
 }
 
-func NewStoresModule(base *common.BaseModule, auditService audit.AuditService) *StoresModule {
+func NewStoresModule(base *common.BaseModule, franchiseeService franchisees.FranchiseeService, auditService audit.AuditService) *StoresModule {
 	repo := stores.NewStoreRepository(base.DB)
 	service := stores.NewStoreService(repo)
-	handler := stores.NewStoreHandler(service, auditService)
+	handler := stores.NewStoreHandler(service, franchiseeService, auditService)
 
 	base.Router.RegisterStoresRoutes(handler)
 	base.Router.RegisterCommonStoresRoutes(handler)

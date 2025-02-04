@@ -3,6 +3,7 @@ package data
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"slices"
 	"strings"
 	"time"
 )
@@ -58,8 +59,8 @@ const (
 type FranchiseeEmployeeRole = EmployeeRole
 
 const (
-	RoleFranchiseManager FranchiseeEmployeeRole = "FRANCHISE_MANAGER"
-	RoleFranchiseOwner   FranchiseeEmployeeRole = "FRANCHISE_OWNER"
+	RoleFranchiseManager FranchiseeEmployeeRole = "FRANCHISEE_MANAGER"
+	RoleFranchiseOwner   FranchiseeEmployeeRole = "FRANCHISEE_OWNER"
 )
 
 type RegionManagerRole = EmployeeRole
@@ -101,15 +102,25 @@ func CanManageRole(currentRole, targetRole EmployeeRole) bool {
 }
 
 var (
-	FranchiseeReadPermissions = []EmployeeRole{
+	AdminPermissions = []EmployeeRole{
+		RoleAdmin,
 		RoleOwner,
+	}
+	FranchiseePermissions = []EmployeeRole{
 		RoleFranchiseManager,
 		RoleFranchiseOwner,
 	}
-	RegionReadPermissions = []EmployeeRole{
+	FranchiseeReadPermissions = append(
+		FranchiseePermissions,
 		RoleOwner,
+	)
+	RegionPermissions = []EmployeeRole{
 		RoleRegionWarehouseManager,
 	}
+	RegionReadPermissions = append(
+		RegionPermissions,
+		RoleOwner,
+	)
 	WarehouseManagementPermissions = []EmployeeRole{
 		RoleRegionWarehouseManager,
 		RoleWarehouseManager,
@@ -119,25 +130,43 @@ var (
 		RoleOwner,
 		RoleWarehouseEmployee,
 	)
-	WarehouseWorkerPermissions = []EmployeeRole{
+	WarehousePermissions = []EmployeeRole{
 		RoleWarehouseManager,
 		RoleWarehouseEmployee,
 	}
-	StoreManagementPermissions = []EmployeeRole{
-		RoleFranchiseManager,
+	StoreManagementPermissions = append(
+		FranchiseePermissions,
 		RoleStoreManager,
-	}
-	StoreWorkerPermissions = []EmployeeRole{
+	)
+	StorePermissions = []EmployeeRole{
 		RoleStoreManager,
 		RoleBarista,
 	}
 	StoreReadPermissions = append(
 		StoreManagementPermissions,
 		RoleBarista,
-		RoleFranchiseOwner,
-		RoleOwner,
+	)
+	StoreAndWarehousePermissions = append(
+		StorePermissions,
+		WarehousePermissions...,
 	)
 )
+
+func GetEmployeeTypeByRole(role EmployeeRole) EmployeeType {
+	switch {
+	case slices.Contains(FranchiseePermissions, role):
+		return FranchiseeEmployeeType
+	case slices.Contains(RegionPermissions, role):
+		return RegionEmployeeType
+	case slices.Contains(WarehousePermissions, role):
+		return WarehouseEmployeeType
+	case slices.Contains(StorePermissions, role):
+		return StoreEmployeeType
+	case slices.Contains(AdminPermissions, role):
+		return AdminEmployeeType
+	}
+	return ""
+}
 
 func IsAllowableRole(employeeType EmployeeType, role EmployeeRole) bool {
 	roles, exists := EmployeeTypeRoleMap[employeeType]
@@ -233,7 +262,7 @@ type Employee struct {
 	Phone              string              `gorm:"size:16;not null"`
 	Email              string              `gorm:"size:255;not null" sort:"email"`
 	HashedPassword     string              `gorm:"size:255;not null"`
-	IsActive           bool                `gorm:"default:true" sort:"isActive"`
+	IsActive           *bool               `gorm:"not null" sort:"isActive"`
 	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
 	RegionEmployee     *RegionEmployee     `gorm:"foreignKey:EmployeeID"`

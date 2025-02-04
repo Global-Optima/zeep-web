@@ -23,13 +23,16 @@ const createAdditiveCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
     description: z.string().min(1, 'Введите описание категории'),
-    isMultipleSelect: z.boolean().optional().describe('Введите можно ли выбирать несколько топпингов в этой категории'),
+    isMultipleSelect: z.boolean(),
   })
 )
 
 // Form Setup
 const { handleSubmit, resetForm } = useForm<CreateAdditiveCategoryDTO>({
   validationSchema: createAdditiveCategorySchema,
+  initialValues: {
+    isMultipleSelect: true
+  }
 })
 
 // Handlers

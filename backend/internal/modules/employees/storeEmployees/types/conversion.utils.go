@@ -8,9 +8,21 @@ import (
 )
 
 func MapToStoreEmployeeDTO(storeEmployee *data.StoreEmployee) *StoreEmployeeDTO {
-	dto := &StoreEmployeeDTO{
-		EmployeeDTO: *employeesTypes.MapToEmployeeDTO(&storeEmployee.Employee),
-		Store:       *storeTypes.MapToStoreDTO(&storeEmployee.Store),
+	storeEmployee.Employee.StoreEmployee = storeEmployee
+	return &StoreEmployeeDTO{
+		ID:              storeEmployee.ID,
+		BaseEmployeeDTO: *employeesTypes.MapToBaseEmployeeDTO(&storeEmployee.Employee),
+		EmployeeID:      storeEmployee.Employee.ID,
+	}
+}
+
+func MapToStoreEmployeeDetailsDTO(storeEmployee *data.StoreEmployee) *StoreEmployeeDetailsDTO {
+	storeEmployee.Employee.StoreEmployee = storeEmployee
+	dto := &StoreEmployeeDetailsDTO{
+		ID:                     storeEmployee.ID,
+		BaseEmployeeDetailsDTO: *employeesTypes.MapToBaseEmployeeDetailsDTO(&storeEmployee.Employee),
+		EmployeeID:             storeEmployee.EmployeeID,
+		Store:                  *storeTypes.MapToStoreDTO(&storeEmployee.Store),
 	}
 	return dto
 }

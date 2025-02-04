@@ -1,3 +1,110 @@
+<script setup lang="ts">
+import { toTypedSchema } from '@vee-validate/zod'
+import { useForm } from 'vee-validate'
+import { computed } from 'vue'
+import * as z from 'zod'
+
+// UI Components
+import { Button } from '@/core/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/core/components/ui/card'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/core/components/ui/form'
+import { Input } from '@/core/components/ui/input'
+import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
+import type {
+  UpdateWarehouseStockDTO,
+  WarehouseStockMaterialDetailsDTO,
+} from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
+import { ChevronLeft, Printer } from 'lucide-vue-next'
+
+// Props
+const props = defineProps<{
+  initialData: WarehouseStockMaterialDetailsDTO
+  readonly?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'onSubmit', formValues: UpdateWarehouseStockDTO): void
+  (e: 'onCancel'): void
+}>()
+
+// Predefined Material Info Array
+const materialInfo = computed(() => [
+  { label: 'Категория', value: props.initialData.stockMaterial.category.name },
+  { label: 'Упаковка', value: `${props.initialData.stockMaterial.size} ${props.initialData.stockMaterial.unit.name}` },
+  {
+    label: 'Срок годности',
+    value: `${props.initialData.stockMaterial.expirationPeriodInDays} дней`
+  },
+  { label: 'Штрихкод', value: props.initialData.stockMaterial.barcode },
+  {
+    label: 'Ранняя дата истечения срока годности',
+    value: props.initialData.earliestExpirationDate ? formatDate(new Date(props.initialData.earliestExpirationDate)) : "Доставки товара отсутствуют",
+  },
+])
+
+const onPrintBarcode = async () => {
+  if (props.readonly) return
+  await stockMaterialsService.getStockMaterialsBarcodeFile(props.initialData.stockMaterial.id);
+}
+
+// Date Formatter Utility
+function formatDate(date: Date): string {
+  return new Date(date).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+// Zod Schema for Validation
+const schema = toTypedSchema(
+  z.object({
+    quantity: z.coerce
+      .number()
+      .min(1, 'Количество должно быть не менее 1')
+      .refine((value) => Number.isInteger(value), 'Количество должно быть целым числом'),
+    expirationDate: z.string().optional()
+  })
+)
+
+// Form Handling
+const { handleSubmit } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    quantity: props.initialData.quantity,
+    expirationDate: props.initialData.earliestExpirationDate?.split('T')[0],
+  },
+})
+
+// Event Handlers
+const onSubmit = handleSubmit((formValues) => {
+  if (props.readonly) return
+
+  const dto: UpdateWarehouseStockDTO = {
+    quantity: formValues.quantity,
+    expirationDate: formValues.expirationDate ? new Date(formValues.expirationDate) : undefined,
+  }
+
+  emit('onSubmit', dto)
+})
+
+const onCancel = () => {
+  emit('onCancel')
+}
+</script>
+
 <template>
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-4xl">
 		<!-- Header -->
@@ -14,7 +121,10 @@
 				{{ initialData.stockMaterial.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+				v-if="!readonly"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -46,7 +156,7 @@
 
 					<li class="flex items-center gap-2">
 						<span>Штрихкод: </span>
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-3">
 							<span class="font-medium">{{ initialData.stockMaterial.barcode }}</span>
 							<Button
 								variant="outline"
@@ -83,7 +193,7 @@
 									type="number"
 									placeholder="Введите безопасный запас"
 									:model-value="initialData.stockMaterial.safetyStock"
-									disabled
+									readonly
 								/>
 							</FormControl>
 							<FormMessage />
@@ -101,6 +211,7 @@
 									type="number"
 									v-bind="componentField"
 									placeholder="Введите количество"
+									:readonly="readonly"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -111,7 +222,10 @@
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div
+			class="flex justify-center items-center gap-2 md:hidden"
+			v-if="!readonly"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"
@@ -125,103 +239,3 @@
 		</div>
 	</div>
 </template>
-
-<script setup lang="ts">
-import { Button } from '@/core/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/core/components/ui/card'
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/core/components/ui/form'
-import { Input } from '@/core/components/ui/input'
-import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
-import type {
-  UpdateWarehouseStockDTO,
-  WarehouseStockMaterialDetailsDTO,
-} from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
-import { toTypedSchema } from '@vee-validate/zod'
-import { ChevronLeft, Printer } from 'lucide-vue-next'
-import { useForm } from 'vee-validate'
-import { computed } from 'vue'
-import * as z from 'zod'
-// Props
-const {initialData} = defineProps<{
-  initialData: WarehouseStockMaterialDetailsDTO
-}>()
-
-const emit = defineEmits<{
-  (e: 'onSubmit', formValues: UpdateWarehouseStockDTO): void
-  (e: 'onCancel'): void
-}>()
-
-// Predefined Material Info Array
-const materialInfo = computed(() =>[
-  { label: 'Категория', value: initialData.stockMaterial.category.name },
-  { label: 'Упаковка', value: `${initialData.stockMaterial.size} ${initialData.stockMaterial.unit.name}` },
-  {
-    label: 'Срок годности',
-    value: `${initialData.stockMaterial.expirationPeriodInDays} дней`
-  },
-  { label: 'Штрихкод', value: initialData.stockMaterial.barcode },
-  {
-    label: 'Ранняя дата истечения срока годности',
-    value: initialData.earliestExpirationDate ? formatDate(new Date(initialData.earliestExpirationDate)) : "Доставки товара отсутвуют",
-  },
-])
-
-const onPrintBarcode = async () => {
-  await stockMaterialsService.getStockMaterialsBarcodeFile(initialData.stockMaterial.id);
-}
-
-// Date Formatter Utility
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
-
-// Zod Schema for Validation
-const schema = toTypedSchema(
-  z.object({
-    quantity: z.coerce
-      .number()
-      .min(1, 'Количество должно быть не менее 1')
-      .refine((value) => Number.isInteger(value), 'Количество должно быть целым числом'),
-    expirationDate: z.string().optional()
-  })
-)
-
-// Form Handling
-const { handleSubmit } = useForm({
-  validationSchema: schema,
-  initialValues: {
-    quantity: initialData.quantity,
-    expirationDate: initialData.earliestExpirationDate?.split('T')[0],
-  },
-})
-
-// Event Handlers
-const onSubmit = handleSubmit((formValues) => {
-  const dto: UpdateWarehouseStockDTO = {
-    quantity: formValues.quantity,
-    expirationDate: formValues.expirationDate ? new Date(formValues.expirationDate) : undefined,
-  }
-
-  emit('onSubmit', dto)
-})
-
-const onCancel = () => {
-  emit('onCancel')
-}
-</script>

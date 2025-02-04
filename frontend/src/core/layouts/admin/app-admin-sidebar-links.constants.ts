@@ -1,11 +1,13 @@
 import type { RouteKey } from '@/core/config/routes.config'
-import { EmployeeRole } from '@/modules/admin/store-employees/models/employees.models'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import {
 	Apple,
 	Blocks,
+	Building2,
 	ChartBar,
 	LayoutList,
 	ListPlus,
+	MapPinned,
 	Package,
 	PackageCheck,
 	Ruler,
@@ -47,13 +49,37 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Аналитика',
 		routeKey: 'ADMIN_DASHBOARD',
 		icon: ChartBar,
-		accessRoles: [EmployeeRole.ADMIN],
+		accessRoles: [
+			EmployeeRole.ADMIN,
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.WAREHOUSE_MANAGER,
+			EmployeeRole.WAREHOUSE_EMPLOYEE,
+		],
 	},
 	{
-		name: 'Аналитика',
-		routeKey: 'ADMIN_STORE_DASHBOARD',
-		icon: ChartBar,
+		name: 'Сотрудники',
+		routeKey: 'ADMIN_STORE_EMPLOYEES',
+		icon: Users,
 		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
+	},
+	{
+		name: 'Сотрудники',
+		routeKey: 'ADMIN_FRANCHISEE_EMPLOYEES',
+		icon: Users,
+		accessRoles: [EmployeeRole.FRANCHISEE_OWNER, EmployeeRole.FRANCHISEE_MANAGER],
+	},
+	{
+		name: 'Сотрудники',
+		routeKey: 'ADMIN_REGION_EMPLOYEES',
+		icon: Users,
+		accessRoles: [EmployeeRole.OWNER],
+	},
+	{
+		name: 'Сотрудники',
+		routeKey: 'ADMIN_WAREHOUSE_EMPLOYEES',
+		icon: Users,
+		accessRoles: [EmployeeRole.WAREHOUSE_EMPLOYEE, EmployeeRole.WAREHOUSE_MANAGER],
 	},
 	{
 		name: 'Заказы',
@@ -89,7 +115,17 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Магазины',
 		routeKey: 'ADMIN_STORES',
 		icon: Store,
-		accessRoles: [EmployeeRole.ADMIN],
+		accessRoles: [
+			EmployeeRole.ADMIN,
+			EmployeeRole.FRANCHISEE_MANAGER,
+			EmployeeRole.FRANCHISEE_OWNER,
+		],
+	},
+	{
+		name: 'Склады',
+		routeKey: 'ADMIN_WAREHOUSES',
+		icon: Warehouse,
+		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.REGION_WAREHOUSE_MANAGER],
 	},
 	{
 		name: 'Размеры',
@@ -133,7 +169,18 @@ export const adminNavItems: SidebarNavItem[] = [
 		icon: PackageCheck,
 		accessRoles: [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE],
 	},
-	// Collapsible groups
+	{
+		name: 'Регионы',
+		routeKey: 'ADMIN_REGIONS',
+		icon: MapPinned,
+		accessRoles: [EmployeeRole.ADMIN],
+	},
+	{
+		name: 'Франчайзи',
+		routeKey: 'ADMIN_FRANCHISEES',
+		icon: Building2,
+		accessRoles: [EmployeeRole.ADMIN],
+	},
 	{
 		label: 'Товары',
 		icon: Package,
@@ -195,19 +242,31 @@ export const adminNavItems: SidebarNavItem[] = [
 	{
 		label: 'Складские товары',
 		icon: Package,
-		accessRoles: [EmployeeRole.ADMIN],
+		accessRoles: [
+			EmployeeRole.ADMIN,
+			EmployeeRole.WAREHOUSE_EMPLOYEE,
+			EmployeeRole.WAREHOUSE_MANAGER,
+		],
 		items: [
 			{
 				name: 'Список',
 				routeKey: 'ADMIN_STOCK_MATERIALS',
 				icon: Package,
-				accessRoles: [EmployeeRole.ADMIN],
+				accessRoles: [
+					EmployeeRole.ADMIN,
+					EmployeeRole.WAREHOUSE_EMPLOYEE,
+					EmployeeRole.WAREHOUSE_MANAGER,
+				],
 			},
 			{
 				name: 'Категории',
 				routeKey: 'ADMIN_STOCK_MATERIAL_CATEGORIES',
 				icon: LayoutList,
-				accessRoles: [EmployeeRole.ADMIN],
+				accessRoles: [
+					EmployeeRole.ADMIN,
+					EmployeeRole.WAREHOUSE_EMPLOYEE,
+					EmployeeRole.WAREHOUSE_MANAGER,
+				],
 			},
 		],
 	},

@@ -13,6 +13,14 @@ type UpdateRegionEmployeeDTO struct {
 }
 
 type RegionEmployeeDTO struct {
-	employeesTypes.EmployeeDTO
-	Region regionsTypes.RegionDTO
+	ID uint `json:"id"`
+	employeesTypes.BaseEmployeeDTO
+	EmployeeID uint `json:"employeeId"`
+}
+
+type RegionEmployeeDetailsDTO struct {
+	ID uint `json:"id"`
+	employeesTypes.BaseEmployeeDetailsDTO
+	EmployeeID uint                   `json:"employeeId"`
+	Region     regionsTypes.RegionDTO `json:"region"`
 }

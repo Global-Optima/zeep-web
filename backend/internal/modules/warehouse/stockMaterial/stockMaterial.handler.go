@@ -2,6 +2,7 @@ package stockMaterial
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
 
@@ -12,11 +13,15 @@ import (
 )
 
 type StockMaterialHandler struct {
-	service StockMaterialService
+	service      StockMaterialService
+	auditService audit.AuditService
 }
 
-func NewStockMaterialHandler(service StockMaterialService) *StockMaterialHandler {
-	return &StockMaterialHandler{service: service}
+func NewStockMaterialHandler(service StockMaterialService, auditService audit.AuditService) *StockMaterialHandler {
+	return &StockMaterialHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
 func (h *StockMaterialHandler) GetAllStockMaterials(c *gin.Context) {
@@ -69,6 +74,16 @@ func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
 		return
 	}
 
+	action := types.CreateStockMaterialAuditFactory(
+		&data.BaseDetails{
+			ID:   stockMaterialResponse.ID,
+			Name: stockMaterialResponse.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
+
 	utils.SendSuccessResponse(c, stockMaterialResponse)
 }
 
@@ -86,6 +101,12 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		return
 	}
 
+	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve stockMaterial")
+		return
+	}
+
 	err = h.service.UpdateStockMaterial(uint(stockMaterialID), &req)
 	if err != nil {
 		if err.Error() == "StockMaterial not found" {
@@ -95,6 +116,16 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		}
 		return
 	}
+
+	action := types.UpdateStockMaterialAuditFactory(
+		&data.BaseDetails{
+			ID:   stockMaterialResponse.ID,
+			Name: stockMaterialResponse.Name,
+		}, &req)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, "Updated stock material successfully")
 }
@@ -107,6 +138,12 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 		return
 	}
 
+	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve stockMaterial")
+		return
+	}
+
 	err = h.service.DeleteStockMaterial(uint(stockMaterialID))
 	if err != nil {
 		if err.Error() == "StockMaterial not found" {
@@ -116,6 +153,16 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 		}
 		return
 	}
+
+	action := types.DeleteStockMaterialAuditFactory(
+		&data.BaseDetails{
+			ID:   stockMaterialResponse.ID,
+			Name: stockMaterialResponse.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusNoContent)
 }

@@ -19,6 +19,7 @@ func NewFranchiseesModule(base *common.BaseModule, auditService audit.AuditServi
 	handler := franchisees.NewFranchiseeHandler(service, auditService)
 
 	base.Router.RegisterFranchiseeRoutes(handler)
+	base.Router.RegisterCommonFranchiseesRoutes(handler)
 
 	return &FranchiseesModule{
 		BaseModule: base,

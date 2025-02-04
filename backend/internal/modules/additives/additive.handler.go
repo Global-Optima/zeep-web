@@ -158,8 +158,6 @@ func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 		return
 	}
 
-	filter.Pagination = utils.ParsePagination(c)
-
 	additives, err := h.service.GetAdditives(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch additives")

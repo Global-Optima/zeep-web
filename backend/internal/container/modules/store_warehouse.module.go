@@ -6,15 +6,15 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/scheduler"
 )
 
 type StoreWarehouseModule struct {
-	Repo    storeWarehouses.StoreWarehouseRepository
-	Service storeWarehouses.StoreWarehouseService
-	Handler *storeWarehouses.StoreWarehouseHandler
+	Repo    storeStock.StoreStockRepository
+	Service storeStock.StoreStockService
+	Handler *storeStock.StoreStockHandler
 }
 
 func NewStoreWarehouseModule(
@@ -26,9 +26,9 @@ func NewStoreWarehouseModule(
 	storeService stores.StoreService,
 	cronManager *scheduler.CronManager,
 ) *StoreWarehouseModule {
-	repo := storeWarehouses.NewStoreWarehouseRepository(base.DB)
-	service := storeWarehouses.NewStoreWarehouseService(repo, notificationService, base.Logger)
-	handler := storeWarehouses.NewStoreWarehouseHandler(service, ingredientService, auditService, franchiseeService, base.Logger)
+	repo := storeStock.NewStoreStockRepository(base.DB)
+	service := storeStock.NewStoreStockService(repo, notificationService, base.Logger)
+	handler := storeStock.NewStoreStockHandler(service, ingredientService, auditService, franchiseeService, base.Logger)
 
 	base.Router.RegisterStoreWarehouseRoutes(handler)
 

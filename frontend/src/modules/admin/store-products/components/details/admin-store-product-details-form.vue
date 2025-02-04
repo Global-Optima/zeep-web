@@ -1,66 +1,59 @@
 <script setup lang="ts">
-import { useToast } from '@/core/components/ui/toast'
-import { computed, onMounted, reactive, watch } from 'vue'
-
 import { Button } from '@/core/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/core/components/ui/card'
+import { Card, CardContent } from '@/core/components/ui/card'
 import { Input } from '@/core/components/ui/input'
+import { Label } from '@/core/components/ui/label'
 import { Switch } from '@/core/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
-
-import { Label } from '@/core/components/ui/label'
+import { useToast } from '@/core/components/ui/toast'
 import type { StoreProductDetailsDTO, UpdateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { ProductDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
+import { computed, onMounted, reactive, watch } from 'vue'
 
 const props = defineProps<{
-  initialStoreProduct: StoreProductDetailsDTO
-  product: ProductDetailsDTO
-}>()
+  initialStoreProduct: StoreProductDetailsDTO;
+  product: ProductDetailsDTO;
+  readonly?: boolean;
+}>();
 
 const emits = defineEmits<{
-  onSubmit: [dto: UpdateStoreProductDTO]
-  onCancel: []
-}>()
+  onSubmit: [dto: UpdateStoreProductDTO];
+  onCancel: [];
+}>();
 
 interface ProductSizeLocal {
-  id: number
-  name: string
-  basePrice: number
-  storePrice: number
+  id: number;
+  name: string;
+  basePrice: number;
+  storePrice: number;
 }
 
 interface StoreProductLocal {
-  isAvailable: boolean
-  sizes: ProductSizeLocal[]
+  isAvailable: boolean;
+  sizes: ProductSizeLocal[];
 }
 
 const storeProductLocal = reactive<StoreProductLocal>({
   isAvailable: false,
   sizes: [],
-})
+});
 
-const {toast} = useToast()
+const { toast } = useToast();
 
 onMounted(() => {
-  initStoreProductLocal()
-})
+  initStoreProductLocal();
+});
 
 watch(
   () => [props.initialStoreProduct, props.product],
   () => {
-    initStoreProductLocal()
+    initStoreProductLocal();
   }
-)
+);
 
 function initStoreProductLocal() {
-  storeProductLocal.isAvailable = props.initialStoreProduct.isAvailable
+  storeProductLocal.isAvailable = props.initialStoreProduct.isAvailable;
 
   storeProductLocal.sizes = props.initialStoreProduct.sizes.map((storeSz) => {
     return {
@@ -68,18 +61,20 @@ function initStoreProductLocal() {
       name: storeSz.name,
       basePrice: storeSz.basePrice,
       storePrice: storeSz.storePrice,
-    }
-  })
+    };
+  });
 }
 
-const hasSizes = computed(() => storeProductLocal.sizes.length > 0)
+const hasSizes = computed(() => storeProductLocal.sizes.length > 0);
 
 function removeSize(index: number) {
-  storeProductLocal.sizes.splice(index, 1)
+  if (props.readonly) return;
+  storeProductLocal.sizes.splice(index, 1);
 }
 
 function onResetSizes() {
-  const existingIDs = storeProductLocal.sizes.map((sz) => sz.id)
+  if (props.readonly) return;
+  const existingIDs = storeProductLocal.sizes.map((sz) => sz.id);
 
   props.product.sizes.forEach((pSz) => {
     if (!existingIDs.includes(pSz.id)) {
@@ -88,15 +83,16 @@ function onResetSizes() {
         name: pSz.name,
         basePrice: pSz.basePrice,
         storePrice: pSz.basePrice,
-      })
+      });
     }
-  })
+  });
 }
 
 function onSubmit() {
+  if (props.readonly) return;
   if (!storeProductLocal.sizes.length) {
-    toast({description:'Вы должны добавить хотя бы один размер для сохранения.'})
-    return
+    toast({ description: 'Вы должны добавить хотя бы один размер для сохранения.' });
+    return;
   }
 
   const payload: UpdateStoreProductDTO = {
@@ -105,12 +101,12 @@ function onSubmit() {
       productSizeID: sz.id,
       storePrice: sz.storePrice,
     })),
-  }
-  emits('onSubmit', payload)
+  };
+  emits('onSubmit', payload);
 }
 
 function onCancel() {
-  emits('onCancel')
+  emits('onCancel');
 }
 </script>
 
@@ -126,9 +122,12 @@ function onCancel() {
 				<span class="sr-only">Назад</span>
 			</Button>
 
-			<h1 class="font-semibold text-xl tracking-tight shrink-0">Обновить товар</h1>
+			<h1 class="font-semibold text-xl tracking-tight shrink-0">{{ props.product.name }}</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				v-if="!props.readonly"
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+			>
 				<Button
 					variant="outline"
 					@click="onCancel"
@@ -143,21 +142,7 @@ function onCancel() {
 		</div>
 
 		<Card>
-			<CardHeader>
-				<div class="flex justify-between">
-					<div>
-						<CardTitle>{{ props.product.name }}</CardTitle>
-						<CardDescription class="mt-1">{{ props.product.category.name }}</CardDescription>
-					</div>
-					<Button
-						variant="outline"
-						@click="onResetSizes"
-						>Сбросить размеры к исходным</Button
-					>
-				</div>
-			</CardHeader>
-
-			<CardContent class="space-y-4">
+			<CardContent class="space-y-4 mt-5">
 				<div class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg">
 					<div class="flex flex-col space-y-1">
 						<Label class="font-medium"> Товар доступен к продаже </Label>
@@ -168,6 +153,7 @@ function onCancel() {
 
 					<Switch
 						:checked="storeProductLocal.isAvailable"
+						:disabled="props.readonly"
 						@update:checked="c => storeProductLocal.isAvailable = c"
 					/>
 				</div>
@@ -178,7 +164,7 @@ function onCancel() {
 							<TableHead>Размер</TableHead>
 							<TableHead>Базовая цена</TableHead>
 							<TableHead>Цена в магазине</TableHead>
-							<TableHead>Удалить</TableHead>
+							<TableHead v-if="!props.readonly">Удалить</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -194,9 +180,10 @@ function onCancel() {
 										type="number"
 										class="w-24"
 										v-model.number="size.storePrice"
+										:readonly="props.readonly"
 									/>
 								</TableCell>
-								<TableCell>
+								<TableCell v-if="!props.readonly">
 									<Button
 										variant="ghost"
 										size="icon"
@@ -212,27 +199,13 @@ function onCancel() {
 								<TableCell
 									colspan="4"
 									class="text-center text-gray-500"
+									>Нет размеров</TableCell
 								>
-									Нет размеров
-								</TableCell>
 							</TableRow>
 						</template>
 					</TableBody>
 				</Table>
 			</CardContent>
 		</Card>
-
-		<div class="flex justify-center items-center gap-2 md:hidden mt-4">
-			<Button
-				variant="outline"
-				@click="onCancel"
-				>Отменить</Button
-			>
-			<Button
-				type="submit"
-				@click="onSubmit"
-				>Сохранить</Button
-			>
-		</div>
 	</div>
 </template>

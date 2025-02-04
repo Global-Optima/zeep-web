@@ -6,11 +6,14 @@
 		:category="categoryDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
+		:readonly="!canCreate"
 	/>
 </template>
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminStockMaterialCategoryDetailsForm from '@/modules/admin/stock-material-categories/components/details/admin-stock-material-category-details-form.vue'
 import type { UpdateStockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import { stockMaterialCategoryService } from '@/modules/admin/stock-material-categories/services/stock-materials.service'
@@ -24,6 +27,8 @@ const queryClient = useQueryClient()
 const { toast } = useToast()
 
 const categoryId = route.params.id as string
+
+const canCreate = useHasRole([EmployeeRole.ADMIN])
 
 const { data: categoryDetails } = useQuery({
 	queryKey: computed(() => ['admin-stock-material-categories-details', categoryId]),

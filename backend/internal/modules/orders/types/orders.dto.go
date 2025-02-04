@@ -18,8 +18,8 @@ type OrdersFilterQuery struct {
 
 type CreateOrderDTO struct {
 	CustomerID        *uint               `json:"customerId,omitempty"`
-	CustomerName      string              `json:"customerName"`
-	EmployeeID        *uint               `json:"employeeId,omitempty"`
+	CustomerName      string              `json:"customerName" binding:"required,regexp=^[a-zA-ZәӘіІңҢғҒүҮұҰқҚөӨһҺ\\s]+$"`
+	StoreEmployeeID   *uint               `json:"storeEmployeeId,omitempty"`
 	DeliveryAddressID *uint               `json:"deliveryAddressId"`
 	Suborders         []CreateSubOrderDTO `json:"subOrders"`
 
@@ -45,7 +45,7 @@ type OrderDTO struct {
 	ID                uint             `json:"id"`
 	CustomerID        *uint            `json:"customerId,omitempty"`
 	CustomerName      *string          `json:"customerName"`
-	EmployeeID        *uint            `json:"employeeId,omitempty"`
+	StoreEmployeeID   *uint            `json:"storeEmployeeId,omitempty"`
 	StoreID           uint             `json:"storeId"`
 	DeliveryAddressID *uint            `json:"deliveryAddressId,omitempty"`
 	Status            data.OrderStatus `json:"status"`

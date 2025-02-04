@@ -2,8 +2,10 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
@@ -18,14 +20,20 @@ type WarehousesModule struct {
 }
 
 func NewWarehousesModule(
-	base *common.BaseModule, stockMaterialRepo stockMaterial.StockMaterialRepository, notificationService notifications.NotificationService, cronManager *scheduler.CronManager, franchiseeService franchisees.FranchiseeService,
+	base *common.BaseModule,
+	stockMaterialRepo stockMaterial.StockMaterialRepository,
+	notificationService notifications.NotificationService,
+	cronManager *scheduler.CronManager,
+	regionService regions.RegionService,
+	franchiseeService franchisees.FranchiseeService,
+	auditService audit.AuditService,
 ) *WarehousesModule {
 	repo := warehouse.NewWarehouseRepository(base.DB)
 	warehouseStockRepo := warehouseStock.NewWarehouseStockRepository(base.DB)
 	warehouseStockService := warehouseStock.NewWarehouseStockService(warehouseStockRepo, stockMaterialRepo, notificationService, base.Logger)
 	warehouseStockHandler := warehouseStock.NewWarehouseStockHandler(warehouseStockService, franchiseeService)
 	service := warehouse.NewWarehouseService(repo)
-	handler := warehouse.NewWarehouseHandler(service)
+	handler := warehouse.NewWarehouseHandler(service, regionService, auditService)
 
 	base.Router.RegisterWarehouseRoutes(handler, warehouseStockHandler)
 	base.Router.RegisterCommonWarehousesRoutes(handler)

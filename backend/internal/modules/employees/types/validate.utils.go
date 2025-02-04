@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+type UpdateEmployeeModels struct {
+	Employee *data.Employee
+	Workdays []data.EmployeeWorkday
+}
+
 func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 	if strings.TrimSpace(input.LastName) == "" || strings.TrimSpace(input.FirstName) == "" {
 		return nil, fmt.Errorf("%w: employee name cannot contain empty values", ErrValidation)
@@ -50,16 +55,15 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 		Email:          input.Email,
 		Phone:          utils.FormatPhoneInput(input.Phone),
 		HashedPassword: hashedPassword,
-		IsActive:       input.IsActive,
+		IsActive:       &input.IsActive,
 		Workdays:       workdays,
 	}
 
 	return employee, nil
 }
 
-func PrepareUpdateFields(input *UpdateEmployeeDTO) *data.Employee {
+func PrepareUpdateFields(input *UpdateEmployeeDTO) (*UpdateEmployeeModels, error) {
 	employee := &data.Employee{}
-
 	if input.FirstName != nil {
 		employee.FirstName = *input.FirstName
 	}
@@ -67,13 +71,27 @@ func PrepareUpdateFields(input *UpdateEmployeeDTO) *data.Employee {
 		employee.LastName = *input.LastName
 	}
 	if input.IsActive != nil {
-		employee.IsActive = *input.IsActive
+		employee.IsActive = input.IsActive
 	}
 
-	return employee
+	workdays := make([]data.EmployeeWorkday, len(input.Workdays))
+	if len(input.Workdays) > 0 {
+		for i, workday := range input.Workdays {
+			employeeWorkday, err := ValidateWorkday(&workday)
+			if err != nil {
+				return nil, err
+			}
+			workdays[i] = *employeeWorkday
+		}
+	}
+
+	return &UpdateEmployeeModels{
+		Employee: employee,
+		Workdays: workdays,
+	}, nil
 }
 
-func ValidateWorkday(dto *CreateWorkdayDTO) (*data.EmployeeWorkday, error) {
+func ValidateWorkday(dto *CreateOrReplaceWorkdayDTO) (*data.EmployeeWorkday, error) {
 	var workday data.EmployeeWorkday
 	weekday, err := data.ToWeekday(dto.Day)
 	if err != nil {
@@ -92,42 +110,4 @@ func ValidateWorkday(dto *CreateWorkdayDTO) (*data.EmployeeWorkday, error) {
 	workday.EndAt = dto.EndAt
 
 	return &workday, nil
-}
-
-func ValidateEmployeeWorkday(input *CreateEmployeeWorkdayDTO) (*data.EmployeeWorkday, error) {
-	workday, err := ValidateWorkday(&CreateWorkdayDTO{
-		Day:     input.Day,
-		StartAt: input.StartAt,
-		EndAt:   input.EndAt,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if input.EmployeeID == 0 {
-		return nil, fmt.Errorf("%w: employee ID cannot be zero", ErrValidation)
-	}
-	workday.EmployeeID = input.EmployeeID
-
-	return workday, nil
-}
-
-func WorkdaysUpdateFields(input *UpdateEmployeeWorkdayDTO) (*data.EmployeeWorkday, error) {
-	workday := &data.EmployeeWorkday{}
-
-	if input.StartAt != nil {
-		if err := utils.ValidateTime(*input.StartAt); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrValidation, err)
-		}
-		workday.StartAt = *input.StartAt
-	}
-
-	if input.EndAt != nil {
-		if err := utils.ValidateTime(*input.EndAt); err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrValidation, err)
-		}
-		workday.EndAt = *input.EndAt
-	}
-
-	return workday, nil
 }

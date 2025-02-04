@@ -9,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -28,9 +29,9 @@ type StockRequestRepository interface {
 	AddDetails(stockRequestID uint, details []types.StockRequestDetails) error
 
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) (*data.WarehouseStock, error)
-	AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error
+	AddToStoreStock(storeID, stockMaterialID uint, quantityInPackages float64) error
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
-	GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error)
+	GetStoreWarehouse(storeID uint) (*data.Store, error)
 
 	GetLastStockRequestDate(storeID uint) (*time.Time, error)
 
@@ -84,6 +85,7 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
 	}
 	if len(filter.Statuses) > 0 {
+		logrus.Println("STTTATAUSSS", filter.Statuses)
 		query = query.Where("status IN (?)", filter.Statuses)
 	}
 	if filter.StartDate != nil {
@@ -169,7 +171,7 @@ func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouse
 	return &updatedStock, nil
 }
 
-func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, stockMaterialID uint, quantityInPackages float64) error {
+func (r *stockRequestRepository) AddToStoreStock(storeID, stockMaterialID uint, quantityInPackages float64) error {
 	var stockMaterial data.StockMaterial
 	if err := r.db.Preload("Ingredient.Unit").
 		Where("id = ?", stockMaterialID).First(&stockMaterial).Error; err != nil {
@@ -183,8 +185,8 @@ func (r *stockRequestRepository) AddToStoreWarehouseStock(storeWarehouseID, stoc
 		quantityInUnits = stockMaterial.Size
 	}
 
-	return r.db.Model(&data.StoreWarehouseStock{}).
-		Where("store_warehouse_id = ? AND ingredient_id = ?", storeWarehouseID, stockMaterial.IngredientID).
+	return r.db.Model(&data.StoreStock{}).
+		Where("store_id = ? AND ingredient_id = ?", storeID, stockMaterial.IngredientID).
 		Update("quantity", gorm.Expr("quantity + ?", quantityInUnits)).Error
 }
 
@@ -223,9 +225,9 @@ func (r *stockRequestRepository) GetWarehouseStockQuantity(warehouseID, stockMat
 	return stock.Quantity, nil
 }
 
-func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.StoreWarehouse, error) {
-	var storeWarehouse data.StoreWarehouse
-	err := r.db.Model(&data.StoreWarehouse{}).Preload("Store").Where("store_id = ?", storeID).First(&storeWarehouse).Error
+func (r *stockRequestRepository) GetStoreWarehouse(storeID uint) (*data.Store, error) {
+	var storeWarehouse data.Store
+	err := r.db.Model(&data.Store{}).Preload("Warehouse").Where("id = ?", storeID).First(&storeWarehouse).Error
 	if err != nil {
 		return nil, err
 	}

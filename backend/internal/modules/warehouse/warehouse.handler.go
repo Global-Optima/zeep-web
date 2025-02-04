@@ -1,8 +1,14 @@
 package warehouse
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -10,11 +16,17 @@ import (
 )
 
 type WarehouseHandler struct {
-	service WarehouseService
+	service       WarehouseService
+	regionService regions.RegionService
+	auditService  audit.AuditService
 }
 
-func NewWarehouseHandler(service WarehouseService) *WarehouseHandler {
-	return &WarehouseHandler{service: service}
+func NewWarehouseHandler(service WarehouseService, regionService regions.RegionService, auditService audit.AuditService) *WarehouseHandler {
+	return &WarehouseHandler{
+		service:       service,
+		regionService: regionService,
+		auditService:  auditService,
+	}
 }
 
 func (h *WarehouseHandler) AssignStoreToWarehouse(c *gin.Context) {
@@ -30,28 +42,6 @@ func (h *WarehouseHandler) AssignStoreToWarehouse(c *gin.Context) {
 	}
 
 	utils.SendMessageWithStatus(c, "Store assigned to warehouse successfully", http.StatusOK)
-}
-
-func (h *WarehouseHandler) ReassignStore(c *gin.Context) {
-	storeIDStr := c.Param("storeId")
-	storeID, err := strconv.ParseUint(storeIDStr, 10, 32)
-	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store ID")
-		return
-	}
-
-	var req types.ReassignStoreRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
-		return
-	}
-
-	if err := h.service.ReassignStore(uint(storeID), req); err != nil {
-		utils.SendInternalServerError(c, "failed to reassign store")
-		return
-	}
-
-	utils.SendMessageWithStatus(c, "Store reassigned successfully", http.StatusOK)
 }
 
 func (h *WarehouseHandler) GetAllStoresByWarehouse(c *gin.Context) {
@@ -106,15 +96,47 @@ func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
 }
 
 func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
-	pagination := utils.ParsePagination(c)
+	var filter types.WarehouseFilter
 
-	warehouses, err := h.service.GetAllWarehouses(pagination)
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	warehouses, err := h.service.GetAllWarehouses(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	utils.SendSuccessResponseWithPagination(c, warehouses, pagination)
+	utils.SendSuccessResponse(c, warehouses)
+}
+
+func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
+	var filter types.WarehouseFilter
+
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		return
+	}
+
+	regionID, errH := contexts.GetRegionId(c)
+	if errH != nil {
+		if errors.Is(errH, contexts.ErrEmptyRegionID) {
+			regionID = 0
+		} else {
+			utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+			return
+		}
+	}
+
+	warehouses, err := h.service.GetWarehousesByRegion(regionID, &filter)
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve warehouses")
+		return
+	}
+
+	utils.SendSuccessResponseWithPagination(c, warehouses, filter.Pagination)
 }
 
 func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {

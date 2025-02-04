@@ -11,27 +11,34 @@ import { Input } from '@/core/components/ui/input'
 import type { UnitDTO, UpdateUnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
-// Emits
-const emits = defineEmits<{
-  onSubmit: [dto: UpdateUnitDTO]
-  onCancel: []
+// Props & Events
+const props = defineProps<{
+  unit: UnitDTO
+  readonly?: boolean
 }>()
 
-const {unit} = defineProps<{unit: UnitDTO}>()
+const emits = defineEmits<{
+  (e: 'onSubmit', dto: UpdateUnitDTO): void
+  (e: 'onCancel'): void
+}>()
 
-const createAdditiveCategorySchema = toTypedSchema(
+// Validation Schema
+const createUnitSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
     conversionFactor: z.number().min(0.001, 'Введите множитель'),
   })
 )
 
+// Form Setup
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: createAdditiveCategorySchema,
-  initialValues: unit
+  validationSchema: createUnitSchema,
+  initialValues: props.unit
 })
 
+// Handlers
 const onSubmit = handleSubmit((formValues) => {
+  if (props.readonly) return
   emits('onSubmit', formValues)
 })
 
@@ -54,10 +61,13 @@ const onCancel = () => {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Создать категорию добавки
+				{{ unit.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+				v-if="!readonly"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -75,8 +85,8 @@ const onCancel = () => {
 		<!-- Main Content -->
 		<Card>
 			<CardHeader>
-				<CardTitle>Детали категории добавки</CardTitle>
-				<CardDescription>Заполните информацию о категории добавки.</CardDescription>
+				<CardTitle>Детали размера</CardTitle>
+				<CardDescription>Заполните информацию о размере.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div class="gap-6 grid">
@@ -92,6 +102,7 @@ const onCancel = () => {
 									id="name"
 									type="text"
 									v-bind="componentField"
+									:readonly="readonly"
 									placeholder="Введите название категории добавки"
 								/>
 							</FormControl>
@@ -99,6 +110,7 @@ const onCancel = () => {
 						</FormItem>
 					</FormField>
 
+					<!-- Conversion Factor -->
 					<FormField
 						name="conversionFactor"
 						v-slot="{ componentField }"
@@ -110,6 +122,7 @@ const onCancel = () => {
 									id="conversionFactor"
 									type="number"
 									v-bind="componentField"
+									:readonly="readonly"
 									placeholder="Введите множитель"
 								/>
 							</FormControl>
@@ -121,7 +134,10 @@ const onCancel = () => {
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div
+			class="flex justify-center items-center gap-2 md:hidden"
+			v-if="!readonly"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"

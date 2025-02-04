@@ -12,8 +12,10 @@ import type { IngredientCategoryDTO, UpdateIngredientCategoryDTO } from '@/modul
 import type { CreateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
-// Props and Emits
-const {ingredientCategory} = defineProps<{ingredientCategory: IngredientCategoryDTO}>()
+const { ingredientCategory, readonly = false } = defineProps<{
+  ingredientCategory: IngredientCategoryDTO
+  readonly?: boolean
+}>()
 
 const emits = defineEmits<{
   onSubmit: [dto: UpdateIngredientCategoryDTO]
@@ -36,6 +38,7 @@ const { handleSubmit, resetForm } = useForm<CreateProductCategoryDTO>({
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
+  if (readonly) return
   emits('onSubmit', formValues)
 })
 
@@ -61,7 +64,10 @@ const onCancel = () => {
 				{{ ingredientCategory.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				v-if="!readonly"
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -82,7 +88,7 @@ const onCancel = () => {
 		<Card>
 			<CardHeader>
 				<CardTitle>Детали категории</CardTitle>
-				<CardDescription>Заполните информацию о категории.</CardDescription>
+				<CardDescription v-if="!readonly">Заполните информацию о категории.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div class="gap-6 grid">
@@ -99,6 +105,7 @@ const onCancel = () => {
 									type="text"
 									v-bind="componentField"
 									placeholder="Введите название категории"
+									:readonly="readonly"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -118,6 +125,7 @@ const onCancel = () => {
 									type="text"
 									v-bind="componentField"
 									placeholder="Введите описание категории"
+									:readonly="readonly"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -127,8 +135,11 @@ const onCancel = () => {
 			</CardContent>
 		</Card>
 
-		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<!-- Mobile Footer -->
+		<div
+			v-if="!readonly"
+			class="flex justify-center items-center gap-2 md:hidden"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"

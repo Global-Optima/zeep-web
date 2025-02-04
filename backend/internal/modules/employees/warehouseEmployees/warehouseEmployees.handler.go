@@ -4,7 +4,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"net/http"
 	"strconv"
@@ -16,20 +15,18 @@ import (
 )
 
 type WarehouseEmployeeHandler struct {
-	service           WarehouseEmployeeService
-	employeeService   employees.EmployeeService
-	auditService      audit.AuditService
-	franchiseeService franchisees.FranchiseeService
-	regionService     regions.RegionService
+	service         WarehouseEmployeeService
+	employeeService employees.EmployeeService
+	regionService   regions.RegionService
+	auditService    audit.AuditService
 }
 
-func NewWarehouseEmployeeHandler(service WarehouseEmployeeService, employeeService employees.EmployeeService, auditService audit.AuditService, franchiseeService franchisees.FranchiseeService, regionService regions.RegionService) *WarehouseEmployeeHandler {
+func NewWarehouseEmployeeHandler(service WarehouseEmployeeService, employeeService employees.EmployeeService, regionService regions.RegionService, auditService audit.AuditService) *WarehouseEmployeeHandler {
 	return &WarehouseEmployeeHandler{
-		service:           service,
-		employeeService:   employeeService,
-		auditService:      auditService,
-		franchiseeService: franchiseeService,
-		regionService:     regionService,
+		service:         service,
+		employeeService: employeeService,
+		regionService:   regionService,
+		auditService:    auditService,
 	}
 }
 
@@ -89,7 +86,6 @@ func (h *WarehouseEmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 		return
 	}
 
-	// Check if the role is manageable by the current user
 	if !data.CanManageRole(role, input.Role) {
 		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
 		return

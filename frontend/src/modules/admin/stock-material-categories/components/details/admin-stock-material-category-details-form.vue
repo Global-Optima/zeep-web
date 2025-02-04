@@ -11,8 +11,10 @@ import { Input } from '@/core/components/ui/input'
 import type { StockMaterialCategoryDTO, UpdateStockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
-// Props and Emits
-const {category} = defineProps<{category: StockMaterialCategoryDTO}>()
+const { category, readonly = false } = defineProps<{
+  category: StockMaterialCategoryDTO
+  readonly?: boolean
+}>()
 
 const emits = defineEmits<{
   onSubmit: [dto: UpdateStockMaterialCategoryDTO]
@@ -35,6 +37,7 @@ const { handleSubmit, resetForm } = useForm({
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
+  if (readonly) return
   emits('onSubmit', formValues)
 })
 
@@ -60,7 +63,10 @@ const onCancel = () => {
 				{{ category.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				v-if="!readonly"
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+			>
 				<Button
 					variant="outline"
 					type="button"
@@ -81,7 +87,7 @@ const onCancel = () => {
 		<Card>
 			<CardHeader>
 				<CardTitle>Детали категории</CardTitle>
-				<CardDescription>Заполните информацию о категории.</CardDescription>
+				<CardDescription v-if="!readonly">Заполните информацию о категории.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div class="gap-6 grid">
@@ -98,6 +104,7 @@ const onCancel = () => {
 									type="text"
 									v-bind="componentField"
 									placeholder="Введите название категории"
+									:readonly="readonly"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -117,6 +124,7 @@ const onCancel = () => {
 									type="text"
 									v-bind="componentField"
 									placeholder="Введите описание категории"
+									:readonly="readonly"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -126,8 +134,11 @@ const onCancel = () => {
 			</CardContent>
 		</Card>
 
-		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<!-- Mobile Footer -->
+		<div
+			v-if="!readonly"
+			class="flex justify-center items-center gap-2 md:hidden"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"

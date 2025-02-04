@@ -6,26 +6,27 @@ import (
 )
 
 type CreateEmployeeDTO struct {
-	FirstName string             `json:"firstName" binding:"required"`
-	LastName  string             `json:"lastName" binding:"required"`
-	Phone     string             `json:"phone"`
-	Email     string             `json:"email" binding:"required"`
-	Role      data.EmployeeRole  `json:"role" binding:"required"`
-	Password  string             `json:"password" binding:"required"`
-	IsActive  bool               `json:"isActive" binding:"required"`
-	Workdays  []CreateWorkdayDTO `json:"workdays" binding:"dive"`
+	FirstName string                      `json:"firstName" binding:"required"`
+	LastName  string                      `json:"lastName" binding:"required"`
+	Phone     string                      `json:"phone"`
+	Email     string                      `json:"email" binding:"required"`
+	Role      data.EmployeeRole           `json:"role" binding:"required"`
+	Password  string                      `json:"password" binding:"required"`
+	IsActive  bool                        `json:"isActive"`
+	Workdays  []CreateOrReplaceWorkdayDTO `json:"workdays" binding:"dive"`
 }
 
-type CreateWorkdayDTO struct {
+type CreateOrReplaceWorkdayDTO struct {
 	Day     string `json:"day" binding:"required"`
 	StartAt string `json:"startAt" binding:"required"`
 	EndAt   string `json:"endAt" binding:"required"`
 }
 
 type UpdateEmployeeDTO struct {
-	FirstName *string `json:"firstName,omitempty"`
-	LastName  *string `json:"lastName,omitempty"`
-	IsActive  *bool   `json:"isActive"`
+	FirstName *string                     `json:"firstName,omitempty"`
+	LastName  *string                     `json:"lastName,omitempty"`
+	IsActive  *bool                       `json:"isActive"`
+	Workdays  []CreateOrReplaceWorkdayDTO `json:"workdays" binding:"dive"`
 }
 
 type ReassignEmployeeTypeDTO struct {
@@ -34,8 +35,7 @@ type ReassignEmployeeTypeDTO struct {
 	WorkplaceID  uint              `json:"workplaceId" binding:"required"`
 }
 
-type EmployeeDTO struct {
-	ID        uint              `json:"id"`
+type BaseEmployeeDTO struct {
 	FirstName string            `json:"firstName"`
 	LastName  string            `json:"lastName"`
 	Phone     string            `json:"phone"`
@@ -43,6 +43,21 @@ type EmployeeDTO struct {
 	Type      data.EmployeeType `json:"type"`
 	Role      data.EmployeeRole `json:"role"`
 	IsActive  bool              `json:"isActive"`
+}
+
+type EmployeeDTO struct {
+	ID uint `json:"id"`
+	BaseEmployeeDTO
+}
+
+type BaseEmployeeDetailsDTO struct {
+	BaseEmployeeDTO
+	Workdays []EmployeeWorkdayDTO `json:"workdays"`
+}
+
+type EmployeeDetailsDTO struct {
+	ID uint `json:"id"`
+	BaseEmployeeDetailsDTO
 }
 
 type EmployeeAccountDTO struct {
@@ -63,14 +78,9 @@ type EmployeeTypeRoles struct {
 
 type EmployeesFilter struct {
 	utils.BaseFilter
-	Role     *string `form:"role,omitempty"`
-	IsActive *bool   `form:"isActive,omitempty"`
-	Search   *string `form:"search,omitempty"`
-}
-
-type CreateEmployeeWorkdayDTO struct {
-	CreateWorkdayDTO
-	EmployeeID uint `json:"employeeId"`
+	Role     *data.EmployeeRole `form:"role,omitempty"`
+	IsActive *bool              `form:"isActive,omitempty"`
+	Search   *string            `form:"search,omitempty"`
 }
 
 type EmployeeWorkdayDTO struct {
@@ -79,9 +89,4 @@ type EmployeeWorkdayDTO struct {
 	StartAt    string `json:"startAt"`
 	EndAt      string `json:"endAt"`
 	EmployeeID uint   `json:"employeeId"`
-}
-
-type UpdateEmployeeWorkdayDTO struct {
-	StartAt *string `json:"startAt,omitempty"`
-	EndAt   *string `json:"endAt,omitempty"`
 }

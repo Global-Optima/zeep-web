@@ -19,6 +19,7 @@ func NewRegionsModule(base *common.BaseModule, auditService audit.AuditService) 
 	handler := regions.NewRegionHandler(service, auditService)
 
 	base.Router.RegisterRegionRoutes(handler)
+	base.Router.RegisterCommonRegionsRoutes(handler)
 
 	return &RegionsModule{
 		BaseModule: base,

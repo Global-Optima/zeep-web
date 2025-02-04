@@ -17,6 +17,5 @@ type RegionDTO struct {
 
 type RegionFilter struct {
 	utils.BaseFilter
-	Name   *string `form:"name,omitempty"`
 	Search *string `form:"search,omitempty"`
 }

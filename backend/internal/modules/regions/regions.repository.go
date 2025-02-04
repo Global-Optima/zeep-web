@@ -1,6 +1,7 @@
 package regions
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -14,6 +15,7 @@ type RegionRepository interface {
 	DeleteRegion(id uint) error
 	GetRegionByID(id uint) (*data.Region, error)
 	GetRegions(filter *types.RegionFilter) ([]data.Region, error)
+	GetAllRegions(filter *types.RegionFilter) ([]data.Region, error)
 	IsRegionWarehouse(regionID uint, warehouseID uint) (bool, error)
 }
 
@@ -53,10 +55,6 @@ func (r *regionRepository) GetRegions(filter *types.RegionFilter) ([]data.Region
 	var regions []data.Region
 	query := r.db.Model(&data.Region{})
 
-	if filter.Name != nil {
-		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
-	}
-
 	if filter.Search != nil {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where("name ILIKE ?", searchTerm)
@@ -69,6 +67,25 @@ func (r *regionRepository) GetRegions(filter *types.RegionFilter) ([]data.Region
 	}
 
 	if err := query.Find(&regions).Error; err != nil {
+		return nil, err
+	}
+	return regions, nil
+}
+
+func (r *regionRepository) GetAllRegions(filter *types.RegionFilter) ([]data.Region, error) {
+	var regions []data.Region
+	query := r.db.Model(&data.Region{})
+
+	if filter == nil {
+		return nil, fmt.Errorf("fitler is nil")
+	}
+
+	if filter.Search != nil {
+		searchTerm := "%" + *filter.Search + "%"
+		query = query.Where("name ILIKE ?", searchTerm)
+	}
+
+	if err := query.Scopes(filter.Sort.SortGorm()).Find(&regions).Error; err != nil {
 		return nil, err
 	}
 	return regions, nil

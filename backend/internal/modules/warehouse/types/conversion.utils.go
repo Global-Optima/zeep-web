@@ -1,6 +1,9 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	regionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
+)
 
 func ConvertToListStoresResponse(stores []data.Store) []ListStoresResponse {
 	response := make([]ListStoresResponse, len(stores))
@@ -13,10 +16,11 @@ func ConvertToListStoresResponse(stores []data.Store) []ListStoresResponse {
 	return response
 }
 
-func ToWarehouseResponse(warehouse data.Warehouse) *WarehouseResponse {
-	return &WarehouseResponse{
-		ID:   warehouse.ID,
-		Name: warehouse.Name,
+func ToWarehouseDTO(warehouse data.Warehouse) *WarehouseDTO {
+	return &WarehouseDTO{
+		ID:     warehouse.ID,
+		Name:   warehouse.Name,
+		Region: *regionsTypes.MapRegionToDTO(&warehouse.Region),
 		FacilityAddress: FacilityAddressDTO{
 			Address:   warehouse.FacilityAddress.Address,
 			Longitude: warehouse.FacilityAddress.Longitude,
@@ -41,4 +45,20 @@ func ToWarehouseModel(dto CreateWarehouseDTO, facilityAddressID uint) data.Wareh
 		RegionID:          dto.RegionID,
 		Name:              dto.Name,
 	}
+}
+
+func UpdateWarehouseToModel(dto *UpdateWarehouseDTO) *data.Warehouse {
+	warehouse := &data.Warehouse{}
+
+	if dto.FacilityAddressID != nil {
+		warehouse.FacilityAddressID = *dto.FacilityAddressID
+	}
+	if dto.RegionID != nil {
+		warehouse.RegionID = *dto.RegionID
+	}
+	if dto.Name != nil {
+		warehouse.Name = *dto.Name
+	}
+
+	return warehouse
 }

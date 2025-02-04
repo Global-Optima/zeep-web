@@ -6,6 +6,7 @@
 		:additive="additiveDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
+		readonly
 	/>
 </template>
 

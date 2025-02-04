@@ -7,8 +7,21 @@ import (
 )
 
 func MapToAdminEmployeeDTO(adminEmployee *data.AdminEmployee) *AdminEmployeeDTO {
+	adminEmployee.Employee.AdminEmployee = adminEmployee
 	dto := &AdminEmployeeDTO{
-		EmployeeDTO: *employeesTypes.MapToEmployeeDTO(&adminEmployee.Employee),
+		ID:              adminEmployee.ID,
+		BaseEmployeeDTO: *employeesTypes.MapToBaseEmployeeDTO(&adminEmployee.Employee),
+		EmployeeID:      adminEmployee.Employee.ID,
+	}
+	return dto
+}
+
+func MapToAdminEmployeeDetailsDTO(adminEmployee *data.AdminEmployee) *AdminEmployeeDetailsDTO {
+	adminEmployee.Employee.AdminEmployee = adminEmployee
+	dto := &AdminEmployeeDetailsDTO{
+		ID:                     adminEmployee.ID,
+		BaseEmployeeDetailsDTO: *employeesTypes.MapToBaseEmployeeDetailsDTO(&adminEmployee.Employee),
+		EmployeeID:             adminEmployee.Employee.ID,
 	}
 	return dto
 }

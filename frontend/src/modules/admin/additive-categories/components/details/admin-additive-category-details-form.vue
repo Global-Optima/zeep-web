@@ -12,32 +12,37 @@ import Switch from '@/core/components/ui/switch/Switch.vue'
 import type { AdditiveCategoryDTO, UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
+// Props
+const props = defineProps<{
+  category: AdditiveCategoryDTO
+  readonly?: boolean
+}>()
+
 // Emits
 const emits = defineEmits<{
   onSubmit: [dto: UpdateAdditiveCategoryDTO]
   onCancel: []
 }>()
 
-const {category} = defineProps<{category: AdditiveCategoryDTO}>()
-
 // Validation Schema
 const createAdditiveCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
     description: z.string().min(1, 'Введите описание категории'),
-    isMultipleSelect: z.boolean().optional().describe('Введите можно ли выбирать несколько топпингов в этой категории'),
+    isMultipleSelect: z.boolean().optional().describe('Можно ли выбирать несколько топпингов в этой категории'),
   })
 )
 
 // Form Setup
 const { handleSubmit, resetForm } = useForm<UpdateAdditiveCategoryDTO>({
   validationSchema: createAdditiveCategorySchema,
-  initialValues: category
+  initialValues: props.category
 })
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
-  emits('onSubmit', {...formValues, isMultipleSelect: formValues.isMultipleSelect ?? false})
+  if (props.readonly) return // Prevent submission in readonly mode
+  emits('onSubmit', { ...formValues, isMultipleSelect: formValues.isMultipleSelect ?? false })
 })
 
 const onCancel = () => {
@@ -59,19 +64,24 @@ const onCancel = () => {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Создать категорию добавки
+				{{ category.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div
+				class="md:flex items-center gap-2 hidden md:ml-auto"
+				v-if="!readonly"
+			>
 				<Button
 					variant="outline"
 					type="button"
 					@click="onCancel"
+					:disabled="readonly"
 					>Отменить</Button
 				>
 				<Button
 					type="submit"
 					@click="onSubmit"
+					:disabled="readonly"
 					>Сохранить</Button
 				>
 			</div>
@@ -97,6 +107,7 @@ const onCancel = () => {
 									id="name"
 									type="text"
 									v-bind="componentField"
+									:readonly="readonly"
 									placeholder="Введите название категории добавки"
 								/>
 							</FormControl>
@@ -116,6 +127,7 @@ const onCancel = () => {
 									id="description"
 									type="text"
 									v-bind="componentField"
+									:readonly="readonly"
 									placeholder="Введите описание категории добавки"
 								/>
 							</FormControl>
@@ -132,7 +144,7 @@ const onCancel = () => {
 							class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
 						>
 							<div class="flex flex-col space-y-0.5">
-								<FormLabel class="font-medium text-base"> Множественный выбор </FormLabel>
+								<FormLabel class="font-medium text-base">Множественный выбор</FormLabel>
 								<FormDescription class="text-sm">
 									Укажите можно ли выбрать несколько топпингов в этой категории при заказе
 								</FormDescription>
@@ -142,6 +154,7 @@ const onCancel = () => {
 								<Switch
 									:checked="value"
 									@update:checked="handleChange"
+									:disabled="readonly"
 								/>
 							</FormControl>
 						</FormItem>
@@ -151,7 +164,10 @@ const onCancel = () => {
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div
+			class="flex justify-center items-center gap-2 md:hidden"
+			v-if="!readonly"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"

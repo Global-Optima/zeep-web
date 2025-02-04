@@ -15,7 +15,7 @@ import (
 type RegionEmployeeService interface {
 	CreateRegionEmployee(regionID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]types.RegionEmployeeDTO, error)
-	GetRegionEmployeeByID(id, regionID uint) (*types.RegionEmployeeDTO, error)
+	GetRegionEmployeeByID(id, regionID uint) (*types.RegionEmployeeDetailsDTO, error)
 	UpdateRegionEmployee(id, regionID uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error
 }
 
@@ -25,7 +25,7 @@ type regionEmployeeService struct {
 	logger       *zap.SugaredLogger
 }
 
-func NewEmployeeService(repo RegionEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) RegionEmployeeService {
+func NewRegionEmployeeService(repo RegionEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) RegionEmployeeService {
 	return &regionEmployeeService{
 		repo:         repo,
 		employeeRepo: employeeRepo,
@@ -69,13 +69,13 @@ func (s *regionEmployeeService) GetRegionEmployees(regionID uint, filter *employ
 		return nil, wrappedErr
 	}
 	dtos := make([]types.RegionEmployeeDTO, len(regionEmployees))
-	for i, employee := range regionEmployees {
-		dtos[i] = *types.MapToRegionEmployeeDTO(&employee)
+	for i, regionEmployee := range regionEmployees {
+		dtos[i] = *types.MapToRegionEmployeeDTO(&regionEmployee)
 	}
 	return dtos, nil
 }
 
-func (s *regionEmployeeService) GetRegionEmployeeByID(id, regionID uint) (*types.RegionEmployeeDTO, error) {
+func (s *regionEmployeeService) GetRegionEmployeeByID(id, regionID uint) (*types.RegionEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid region manager ID")
 	}
@@ -91,7 +91,7 @@ func (s *regionEmployeeService) GetRegionEmployeeByID(id, regionID uint) (*types
 		return nil, errors.New("employee not found")
 	}
 
-	return types.MapToRegionEmployeeDTO(employee), nil
+	return types.MapToRegionEmployeeDetailsDTO(employee), nil
 }
 
 func (s *regionEmployeeService) UpdateRegionEmployee(id, regionID uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error {

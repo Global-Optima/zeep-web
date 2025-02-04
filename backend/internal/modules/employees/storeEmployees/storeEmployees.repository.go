@@ -2,9 +2,9 @@ package employees
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
@@ -13,21 +13,27 @@ import (
 type StoreEmployeeRepository interface {
 	GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]data.StoreEmployee, error)
 	GetStoreEmployeeByID(id, storeID uint) (*data.StoreEmployee, error)
-	UpdateStoreEmployee(id uint, storeID uint, updateModels *types.UpdateModels) error
+	UpdateStoreEmployee(id uint, storeID uint, updateModels *types.UpdateStoreEmployeeModels) error
 }
 
 type storeEmployeeRepository struct {
-	db *gorm.DB
+	db           *gorm.DB
+	employeeRepo employees.EmployeeRepository
 }
 
-func NewStoreEmployeeRepository(db *gorm.DB) StoreEmployeeRepository {
-	return &storeEmployeeRepository{db: db}
+func NewStoreEmployeeRepository(db *gorm.DB, employeeRepo employees.EmployeeRepository) StoreEmployeeRepository {
+	return &storeEmployeeRepository{
+		db:           db,
+		employeeRepo: employeeRepo,
+	}
 }
 
 func (r *storeEmployeeRepository) GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]data.StoreEmployee, error) {
-	var employees []data.StoreEmployee
+	var storeEmployees []data.StoreEmployee
 	query := r.db.Model(&data.StoreEmployee{}).
-		Where("store_id = ?", storeID).Preload("Employee")
+		Where("store_id = ?", storeID).
+		Preload("Employee").
+		Joins("JOIN employees ON employees.id = store_employees.employee_id")
 
 	if filter.IsActive != nil {
 		query = query.Where("is_active = ?", *filter.IsActive)
@@ -40,7 +46,7 @@ func (r *storeEmployeeRepository) GetStoreEmployees(storeID uint, filter *employ
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where(
-			"first_name ILIKE ? OR last_name ILIKE ? OR phone ILIKE ? OR email ILIKE ?",
+			"employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.phone ILIKE ? OR employees.email ILIKE ?",
 			searchTerm, searchTerm, searchTerm, searchTerm,
 		)
 	}
@@ -50,17 +56,18 @@ func (r *storeEmployeeRepository) GetStoreEmployees(storeID uint, filter *employ
 		return nil, err
 	}
 
-	err = query.Find(&employees).Error
+	err = query.Find(&storeEmployees).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve store employees: %w", err)
 	}
-	return employees, nil
+	return storeEmployees, nil
 }
 
 func (r *storeEmployeeRepository) GetStoreEmployeeByID(id, storeID uint) (*data.StoreEmployee, error) {
 	var storeEmployee data.StoreEmployee
 	err := r.db.Model(&data.StoreEmployee{}).
-		Preload("Employee").
+		Preload("Employee.Workdays").
+		Preload("Store.FacilityAddress").
 		Where("id = ? AND store_id = ?", id, storeID).
 		First(&storeEmployee).Error
 	if err != nil {
@@ -69,11 +76,37 @@ func (r *storeEmployeeRepository) GetStoreEmployeeByID(id, storeID uint) (*data.
 	return &storeEmployee, nil
 }
 
-func (r *storeEmployeeRepository) UpdateStoreEmployee(id uint, storeID uint, updateModels *types.UpdateModels) error {
-	if updateModels.StoreEmployee == nil {
+func (r *storeEmployeeRepository) UpdateStoreEmployee(id uint, storeID uint, updateModels *types.UpdateStoreEmployeeModels) error {
+	if updateModels == nil {
 		return employeesTypes.ErrNothingToUpdate
 	}
-	return r.db.Model(&data.StoreEmployee{}).
-		Where("id = ? AND store_id = ?", id, storeID).
-		Updates(updateModels.StoreEmployee).Error
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var existingStoreEmployee data.StoreEmployee
+		r.db.Model(&data.StoreEmployee{}).
+			Where("id = ? AND store_id = ?", id, storeID).
+			First(&existingStoreEmployee)
+
+		if updateModels.StoreEmployee != nil {
+			err := tx.Model(&data.StoreEmployee{}).
+				Where("id = ? AND store_id = ?", id, storeID).
+				Updates(updateModels.StoreEmployee).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		if updateModels.UpdateEmployeeModels != nil {
+			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingStoreEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

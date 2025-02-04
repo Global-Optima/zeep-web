@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
-	"github.com/sirupsen/logrus"
 	"math"
 	"reflect"
 	"strconv"
@@ -274,7 +273,6 @@ func isSortableField(field string, model interface{}) bool {
 
 				// If it's an embedded struct, navigate into it
 				if sf.Type.Kind() == reflect.Struct {
-					logrus.Infof("STRUCT")
 					currentType = sf.Type
 					break
 				} else {

@@ -11,18 +11,18 @@ import (
 )
 
 type EmployeeService interface {
-	GetEmployeeByID(id uint) (*types.EmployeeDTO, error)
+	CreateEmployee(employee *data.Employee) (uint, error)
+
+	GetEmployeeByID(id uint) (*types.EmployeeDetailsDTO, error)
+	GetEmployees(filter *types.EmployeesFilter) ([]types.EmployeeDTO, error)
 	UpdateEmployeeInfo(employeeID uint, dto *types.UpdateEmployeeDTO) error
 	ReassignEmployeeType(employeeID uint, dto *types.ReassignEmployeeTypeDTO) error
 	DeleteTypedEmployee(employeeID, workplaceID uint, employeeType data.EmployeeType) error
 	UpdatePassword(employeeID uint, input *types.UpdatePasswordDTO) error
 
 	GetAllRoles() ([]types.EmployeeTypeRoles, error)
-	CreateEmployeeWorkDay(dto *types.CreateEmployeeWorkdayDTO) (uint, error)
 	GetEmployeeWorkday(workdayID uint) (*types.EmployeeWorkdayDTO, error)
 	GetEmployeeWorkdays(employeeID uint) ([]types.EmployeeWorkdayDTO, error)
-	UpdateEmployeeWorkday(workdayID uint, dto *types.UpdateEmployeeWorkdayDTO) error
-	DeleteEmployeeWorkday(workdayID uint) error
 
 	GetAllWarehouseEmployees(warehouseID uint) ([]types.EmployeeAccountDTO, error)
 	GetAllStoreEmployees(storeID uint) ([]types.EmployeeAccountDTO, error)
@@ -43,14 +43,35 @@ func NewEmployeeService(repo EmployeeRepository, logger *zap.SugaredLogger) Empl
 	}
 }
 
-func (s *employeeService) GetEmployeeByID(id uint) (*types.EmployeeDTO, error) {
+func (s *employeeService) CreateEmployee(employee *data.Employee) (uint, error) {
+	existingEmployee, err := s.repo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	if existingEmployee != nil {
+		return 0, types.ErrEmployeeAlreadyExists
+	}
+
+	id, err := s.repo.CreateEmployee(employee)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to create store employee", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
+	return id, nil
+}
+
+func (s *employeeService) GetEmployeeByID(id uint) (*types.EmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid store employee ID")
 	}
 
 	employee, err := s.repo.GetEmployeeByID(id)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to retrieve employee for store employee with ID = %d: %w", id, err)
+		wrappedErr := fmt.Errorf("failed to retrieve employee with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
@@ -59,7 +80,27 @@ func (s *employeeService) GetEmployeeByID(id uint) (*types.EmployeeDTO, error) {
 		return nil, errors.New("employee not found")
 	}
 
-	return types.MapToEmployeeDTO(employee), nil
+	return types.MapToEmployeeDetailsDTO(employee), nil
+}
+
+func (s *employeeService) GetEmployees(filter *types.EmployeesFilter) ([]types.EmployeeDTO, error) {
+	employees, err := s.repo.GetEmployees(filter)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve employees")
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if employees == nil {
+		return nil, errors.New("employee not found")
+	}
+
+	dtos := make([]types.EmployeeDTO, len(employees))
+	for i, employee := range employees {
+		dtos[i] = *types.MapToEmployeeDTO(&employee)
+	}
+
+	return dtos, nil
 }
 
 func (s *employeeService) UpdateEmployeeInfo(employeeID uint, dto *types.UpdateEmployeeDTO) error {
@@ -67,9 +108,14 @@ func (s *employeeService) UpdateEmployeeInfo(employeeID uint, dto *types.UpdateE
 		return fmt.Errorf("%w: invalid employee ID: %d", types.ErrValidation, employeeID)
 	}
 
-	employee := types.PrepareUpdateFields(dto)
+	updateModels, err := types.PrepareUpdateFields(dto)
+	if err != nil {
+		wrappedErr := fmt.Errorf("%w: %v", types.ErrValidation, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
 
-	err := s.repo.UpdateEmployee(employeeID, employee)
+	err = s.repo.UpdateEmployee(employeeID, updateModels)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to update employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
@@ -84,7 +130,7 @@ func (s *employeeService) ReassignEmployeeType(employeeID uint, dto *types.Reass
 		return fmt.Errorf("%w: invalid employee ID: %d", types.ErrValidation, employeeID)
 	}
 
-	err := s.repo.ReassignEmployeeType(employeeID, dto.EmployeeType, dto.WorkplaceID)
+	err := s.repo.ReassignEmployeeType(employeeID, dto)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to reassign employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
@@ -134,8 +180,12 @@ func (s *employeeService) UpdatePassword(employeeID uint, input *types.UpdatePas
 		return fmt.Errorf("failed to hash new password: %v", err)
 	}
 
+	updateModels := types.UpdateEmployeeModels{
+		Employee: employee,
+	}
+
 	employee.HashedPassword = hashedPassword
-	if err := s.repo.UpdateEmployee(employeeID, employee); err != nil {
+	if err := s.repo.UpdateEmployee(employeeID, &updateModels); err != nil {
 		wrappedErr := fmt.Errorf("failed to update password for employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
@@ -155,38 +205,6 @@ func (s *employeeService) GetAllRoles() ([]types.EmployeeTypeRoles, error) {
 	}
 
 	return employeeTypeRoles, nil
-}
-
-func (s *employeeService) CreateEmployeeWorkDay(dto *types.CreateEmployeeWorkdayDTO) (uint, error) {
-	errMsg := "failed to create employee work day"
-
-	workday, err := types.ValidateEmployeeWorkday(dto)
-	if err != nil {
-		wrappedErr := utils.WrapError(errMsg, err)
-		s.logger.Error(wrappedErr)
-		return 0, err
-	}
-
-	existingWorkday, err := s.repo.GetEmployeeWorkdayByEmployeeAndDay(workday.EmployeeID, workday.Day)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		wrappedErr := utils.WrapError(errMsg, err)
-		s.logger.Error(wrappedErr)
-		return 0, err
-	}
-	if existingWorkday != nil {
-		err = fmt.Errorf("%w: not unique workday for employeeID %d in %v ", types.ErrWorkdayAlreadyExists, dto.EmployeeID, dto.Day)
-		wrappedErr := utils.WrapError(errMsg, err)
-		s.logger.Error(wrappedErr)
-		return 0, err
-	}
-
-	id, err := s.repo.CreateEmployeeWorkday(workday)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to create employee workday", err)
-		s.logger.Error(wrappedErr)
-		return 0, wrappedErr
-	}
-	return id, nil
 }
 
 func (s *employeeService) GetEmployeeWorkday(workdayID uint) (*types.EmployeeWorkdayDTO, error) {
@@ -214,33 +232,6 @@ func (s *employeeService) GetEmployeeWorkdays(employeeID uint) ([]types.Employee
 	}
 
 	return dtos, nil
-}
-
-func (s *employeeService) UpdateEmployeeWorkday(workdayID uint, dto *types.UpdateEmployeeWorkdayDTO) error {
-	workday, err := types.WorkdaysUpdateFields(dto)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to update employee workday", err)
-		s.logger.Error(wrappedErr)
-		return wrappedErr
-	}
-
-	err = s.repo.UpdateEmployeeWorkdayById(workdayID, workday)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to update employee workday", err)
-		s.logger.Error(wrappedErr)
-		return wrappedErr
-	}
-	return nil
-}
-
-func (s *employeeService) DeleteEmployeeWorkday(workdayID uint) error {
-	err := s.repo.DeleteEmployeeWorkday(workdayID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to delete employee workday", err)
-		s.logger.Error(wrappedErr)
-		return wrappedErr
-	}
-	return nil
 }
 
 func (s *employeeService) GetAllWarehouseEmployees(warehouseID uint) ([]types.EmployeeAccountDTO, error) {

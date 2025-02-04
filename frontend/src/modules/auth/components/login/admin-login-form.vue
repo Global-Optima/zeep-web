@@ -1,12 +1,11 @@
 <template>
-	<Card>
-		<CardHeader>
-			<CardTitle class="text-lg sm:text-xl">Вход для администраторов и руководителей</CardTitle>
-			<CardDescription
-				>Введите ваши учетные данные для доступа к системе управления</CardDescription
-			>
+	<Card class="border-none">
+		<CardHeader class="p-0">
+			<CardTitle class="text-lg sm:text-xl">Вход для администраторов</CardTitle>
+			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
 		</CardHeader>
-		<CardContent>
+
+		<CardContent class="mt-6 p-0">
 			<form
 				class="space-y-6 w-full"
 				@submit="onSubmit"
@@ -77,6 +76,7 @@
 				<Button
 					:disabled="isSubmitting"
 					type="submit"
+					size="lg"
 					class="w-full"
 				>
 					Войти
@@ -93,7 +93,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from '@/core/components/ui/card'
 import {
   FormControl,
@@ -110,13 +110,12 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
 import { useQuery } from '@tanstack/vue-query'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
-
 const emits = defineEmits<{
   'login': [payload: EmployeeLoginDTO]
 }>()

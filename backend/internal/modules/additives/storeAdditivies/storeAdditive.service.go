@@ -7,7 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
-	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
+	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
@@ -121,9 +121,9 @@ func (s *storeAdditiveService) GetAdditivesListToAdd(storeID uint, filter *addit
 		return nil, wrappedError
 	}
 
-	var additiveDTOs []additiveTypes.AdditiveDTO
-	for _, additive := range additives {
-		additiveDTOs = append(additiveDTOs, *additiveTypes.ConvertToAdditiveDTO(&additive))
+	additiveDTOs := make([]additiveTypes.AdditiveDTO, len(additives))
+	for i, additive := range additives {
+		additiveDTOs[i] = *additiveTypes.ConvertToAdditiveDTO(&additive)
 	}
 
 	return additiveDTOs, nil

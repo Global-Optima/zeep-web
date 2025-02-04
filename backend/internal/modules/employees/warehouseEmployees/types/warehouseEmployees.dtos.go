@@ -13,6 +13,14 @@ type UpdateWarehouseEmployeeDTO struct {
 }
 
 type WarehouseEmployeeDTO struct {
-	employeesTypes.EmployeeDTO
-	Warehouse warehouseTypes.WarehouseResponse
+	ID uint `json:"id"`
+	employeesTypes.BaseEmployeeDTO
+	EmployeeID uint `json:"employeeId"`
+}
+
+type WarehouseEmployeeDetailsDTO struct {
+	ID uint `json:"id"`
+	employeesTypes.BaseEmployeeDetailsDTO
+	EmployeeID uint                        `json:"employeeId"`
+	Warehouse  warehouseTypes.WarehouseDTO `json:"warehouse"`
 }

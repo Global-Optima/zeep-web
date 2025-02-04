@@ -15,7 +15,7 @@
 				<TabsTrigger
 					class="py-2"
 					value="variants"
-					>Варианты</TabsTrigger
+					>Размеры</TabsTrigger
 				>
 			</TabsList>
 			<TabsContent value="details">
@@ -30,6 +30,7 @@
 				<AdminProductsVariants
 					:product-details="productDetails"
 					@on-cancel="onCancel"
+					readonly
 				/>
 			</TabsContent>
 		</Tabs>
@@ -45,7 +46,7 @@ import {
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminProductDetailsForm from '@/modules/admin/products/components/details/admin-product-details-form.vue'
-import AdminProductsVariants from '@/modules/admin/products/components/details/admin-products-variants.vue'
+import AdminProductsVariants from '@/modules/admin/products/components/details/admin-product-sizes.vue'
 import type { UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
