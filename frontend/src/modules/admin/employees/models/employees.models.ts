@@ -40,7 +40,7 @@ export const EMPLOYEE_ROLES_FORMATTED: Record<EmployeeRole, string> = {
 	[EmployeeRole.WAREHOUSE_EMPLOYEE]: 'Сотрудник склада',
 	[EmployeeRole.FRANCHISEE_MANAGER]: 'Менеджер франшизы',
 	[EmployeeRole.FRANCHISEE_OWNER]: 'Владелец франшизы',
-	[EmployeeRole.REGION_WAREHOUSE_MANAGER]: 'Региональный менеджер склада',
+	[EmployeeRole.REGION_WAREHOUSE_MANAGER]: 'Региональный менеджер',
 }
 
 export interface CreateOrReplaceWorkdayDTO {

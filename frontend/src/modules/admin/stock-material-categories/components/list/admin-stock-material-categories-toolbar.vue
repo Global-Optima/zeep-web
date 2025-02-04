@@ -21,7 +21,12 @@
 			>
 				Экспорт
 			</Button>
-			<Button @click="addProductCategory"> Добавить </Button>
+			<Button
+				v-if="canCreate"
+				@click="addProductCategory"
+			>
+				Добавить
+			</Button>
 		</div>
 	</div>
 </template>
@@ -30,12 +35,16 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { StockMaterialCategoryFilterDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+const canCreate = useHasRole([EmployeeRole.ADMIN])
 
 const props = defineProps<{ filter: StockMaterialCategoryFilterDTO }>()
 const emit = defineEmits(['update:filter'])

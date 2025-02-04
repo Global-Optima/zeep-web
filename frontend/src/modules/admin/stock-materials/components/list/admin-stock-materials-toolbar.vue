@@ -21,7 +21,12 @@
 			>
 				Экспорт
 			</Button>
-			<Button @click="addStore"> Добавить </Button>
+			<Button
+				v-if="canCreate"
+				@click="addStore"
+			>
+				Добавить
+			</Button>
 		</div>
 	</div>
 </template>
@@ -30,6 +35,8 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
@@ -39,6 +46,8 @@ const props = defineProps<{ filter: StockMaterialsFilter }>()
 const emit = defineEmits(['update:filter'])
 
 const router = useRouter()
+
+const canCreate = useHasRole([EmployeeRole.ADMIN])
 
 const localFilter = ref({ ...props.filter })
 
@@ -51,6 +60,7 @@ watch(debouncedSearchTerm, (newValue) => {
 })
 
 const addStore = () => {
+  if (!canCreate) return
 	router.push({ name: getRouteName('ADMIN_STOCK_MATERIAL_CREATE') })
 }
 </script>

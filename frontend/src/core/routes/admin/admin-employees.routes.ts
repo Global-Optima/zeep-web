@@ -66,7 +66,7 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 	ADMIN_REGION_EMPLOYEES: {
 		path: 'employees/region',
 		meta: {
-			title: 'Все сотрудники региональных складов',
+			title: 'Все региональные сотрудники',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -75,7 +75,7 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 	ADMIN_REGION_EMPLOYEE_DETAILS: {
 		path: 'employees/region/:id',
 		meta: {
-			title: 'Детали сотрудника регионального склада',
+			title: 'Детали регионального сотрудника',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -84,7 +84,7 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 	ADMIN_REGION_EMPLOYEE_UPDATE: {
 		path: 'employees/region/:id/update',
 		meta: {
-			title: 'Обновить сотрудника регионального склада',
+			title: 'Обновить регионального сотрудника',
 			requiresAuth: true,
 		},
 		component: () =>
