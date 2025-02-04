@@ -11,7 +11,6 @@ import (
 
 type WarehouseService interface {
 	AssignStoreToWarehouse(req types.AssignStoreToWarehouseRequest) error
-	ReassignStore(storeID uint, req types.ReassignStoreRequest) error
 	GetAllStoresByWarehouse(warehouseID uint, pagination *utils.Pagination) ([]types.ListStoresResponse, error)
 
 	CreateWarehouse(req types.CreateWarehouseDTO) (*types.WarehouseDTO, error)
@@ -32,10 +31,6 @@ func NewWarehouseService(repo WarehouseRepository) WarehouseService {
 
 func (s *warehouseService) AssignStoreToWarehouse(req types.AssignStoreToWarehouseRequest) error {
 	return s.repo.AssignStoreToWarehouse(req.StoreID, req.WarehouseID)
-}
-
-func (s *warehouseService) ReassignStore(storeID uint, req types.ReassignStoreRequest) error {
-	return s.repo.ReassignStoreToWarehouse(storeID, req.WarehouseID)
 }
 
 func (s *warehouseService) GetAllStoresByWarehouse(warehouseID uint, pagination *utils.Pagination) ([]types.ListStoresResponse, error) {

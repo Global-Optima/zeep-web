@@ -51,6 +51,7 @@ func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.
 	store := &data.Store{
 		Name:              createStoreDto.Name,
 		FranchiseeID:      createStoreDto.FranchiseID,
+		WarehouseID:       createStoreDto.WarehouseID,
 		ContactPhone:      createStoreDto.ContactPhone,
 		ContactEmail:      createStoreDto.ContactEmail,
 		StoreHours:        createStoreDto.StoreHours,

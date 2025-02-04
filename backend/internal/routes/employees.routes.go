@@ -24,7 +24,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units"
@@ -294,16 +294,16 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 	}
 }
 
-func (r *Router) RegisterStoreWarehouseRoutes(handler *storeWarehouses.StoreWarehouseHandler) {
+func (r *Router) RegisterStoreWarehouseRoutes(handler *storeStock.StoreStockHandler) {
 	router := r.EmployeeRoutes.Group("/store-warehouse-stock") // Franchise and store all roles
 	{
 		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAvailableIngredientsToAdd)
-		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreWarehouseStockList)
-		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreWarehouseStockById)
-		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.AddStoreWarehouseStock)
-		router.POST("/multiple", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.AddMultipleStoreWarehouseStock)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.UpdateStoreWarehouseStockById)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.DeleteStoreWarehouseStockById)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreStockList)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreStockById)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.AddStoreStock)
+		router.POST("/multiple", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.AddMultipleStoreStock)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.UpdateStoreStockById)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.DeleteStoreStockById)
 	}
 }
 
@@ -359,7 +359,6 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 		storeRoutes := router.Group("/stores")
 		{
 			storeRoutes.POST("", handler.AssignStoreToWarehouse)                                                                                       //TODO On considerations
-			storeRoutes.PUT("/:storeId", handler.ReassignStore)                                                                                        //TODO On considerations
 			storeRoutes.GET("/:warehouseId", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetAllStoresByWarehouse) // Store and warehouse
 		}
 
@@ -405,7 +404,6 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 
 func (r *Router) RegisterAnalyticRoutes(handler *analytics.AnalyticsHandler) {
 	router := r.EmployeeRoutes.Group("/analytics")
-	// Pasha don't do this, this is bullshit
 	{
 		router.GET("/summary", handler.GetSummary)
 		router.GET("/sales-by-month", handler.GetSalesByMonth)

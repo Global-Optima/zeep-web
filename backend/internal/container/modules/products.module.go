@@ -9,7 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
 )
 
 type ProductsModule struct {
@@ -26,7 +26,7 @@ func NewProductsModule(
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
 	ingredientRepo ingredients.IngredientRepository,
-	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository,
+	storeStockRepo storeStock.StoreStockRepository,
 	notificationService notifications.NotificationService,
 ) *ProductsModule {
 	repo := product.NewProductRepository(base.DB)
@@ -34,7 +34,7 @@ func NewProductsModule(
 	handler := product.NewProductHandler(service, auditService)
 
 	recipeModule := NewRecipeModule(base, auditService)
-	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeWarehouseRepo)
+	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeStockRepo)
 
 	base.Router.RegisterProductRoutes(handler)
 
@@ -85,14 +85,14 @@ func NewStoreProductsModule(
 	franchiseeService franchisees.FranchiseeService,
 	productRepo product.ProductRepository,
 	ingredientRepo ingredients.IngredientRepository,
-	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository,
+	storeStockRepo storeStock.StoreStockRepository,
 ) *StoreProductsModule {
 	repo := storeProducts.NewStoreProductRepository(base.DB)
 	service := storeProducts.NewStoreProductService(
 		repo,
 		productRepo,
 		ingredientRepo,
-		storeProducts.NewTransactionManager(base.DB, repo, storeWarehouseRepo),
+		storeProducts.NewTransactionManager(base.DB, repo, storeStockRepo),
 		base.Logger)
 	handler := storeProducts.NewStoreProductHandler(service, productService, franchiseeService, auditService, base.Logger)
 

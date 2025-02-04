@@ -9,6 +9,9 @@ func UpdateStoreFields(store *data.Store, dto UpdateStoreDTO) {
 	if dto.FranchiseID != nil {
 		store.FranchiseeID = dto.FranchiseID
 	}
+	if dto.WarehouseID != nil {
+		store.WarehouseID = *dto.WarehouseID
+	}
 	if dto.ContactPhone != "" {
 		store.ContactPhone = dto.ContactPhone
 	}

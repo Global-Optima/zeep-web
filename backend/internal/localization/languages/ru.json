@@ -13,7 +13,7 @@
 			"recipeSteps": "Этапы рецепта *{{.Name}}* были созданы",
 			"store": "Магазин *{{.Name}}* был создан",
 			"warehouse": "Склад *{{.Name}}* был создан",
-			"storeWarehouseStock": "Складской запас *{{.Name}}* был создан в магазине *{{.StoreName}}*",
+			"storeStock": "Складской запас *{{.Name}}* был создан в магазине *{{.StoreName}}*",
 			"ingredient": "Ингредиент *{{.Name}}* был создан"
 		},
 		"update": {
@@ -29,7 +29,7 @@
 			"recipeSteps": "Этапы рецепта *{{.Name}}* были обновлены",
 			"store": "Магазин *{{.Name}}* был обновлен",
 			"warehouse": "Склад *{{.Name}}* был обновлен",
-			"storeWarehouseStock": "Складской запас *{{.Name}}* был обновлен в магазине *{{.StoreName}}*",
+			"storeStock": "Складской запас *{{.Name}}* был обновлен в магазине *{{.StoreName}}*",
 			"ingredient": "Ингредиент *{{.Name}}* был обновлен"
 		},
 		"delete": {
@@ -45,7 +45,7 @@
 			"recipeSteps": "Этапы рецепта *{{.Name}}* были удалены",
 			"store": "Магазин *{{.Name}}* был удален",
 			"warehouse": "Склад *{{.Name}}* был удален",
-			"storeWarehouseStock": "Складской запас *{{.Name}}* был убран из магазина *{{.StoreName}}*",
+			"storeStock": "Складской запас *{{.Name}}* был убран из магазина *{{.StoreName}}*",
 			"ingredient": "Ингредиент *{{.Name}}* был удален"
 		}
 	},
