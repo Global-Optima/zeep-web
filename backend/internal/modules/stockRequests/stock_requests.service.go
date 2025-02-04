@@ -57,14 +57,14 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		return 0, fmt.Errorf("an open cart already exists for this store")
 	}
 
-	storeWarehouse, err := s.repo.GetStoreWarehouse(storeID)
+	store, err := s.repo.GetStoreWarehouse(storeID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to fetch store warehouse for store ID %d: %w", storeID, err)
 	}
 
 	stockRequest := &data.StockRequest{
 		StoreID:     storeID,
-		WarehouseID: storeWarehouse.WarehouseID,
+		WarehouseID: store.WarehouseID,
 		Status:      data.StockRequestCreated,
 	}
 
@@ -81,7 +81,6 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 
 		ingredients = append(ingredients, data.StockRequestIngredient{
 			StockRequestID:  stockRequest.ID,
-			IngredientID:    stockMaterial.IngredientID,
 			StockMaterialID: item.StockMaterialID,
 			Quantity:        item.Quantity,
 		})
@@ -93,10 +92,10 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 
 	details := &details.NewStockRequestDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           storeWarehouse.WarehouseID,
-			FacilityName: storeWarehouse.Store.Name,
+			ID:           store.WarehouseID,
+			FacilityName: store.Name,
 		},
-		RequesterName: storeWarehouse.Store.Name,
+		RequesterName: store.Name,
 		RequestID:     stockRequest.ID,
 	}
 
@@ -298,12 +297,12 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) error {
 		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestCompleted)
 	}
 
-	storeWarehouse, err := s.repo.GetStoreWarehouse(request.StoreID)
+	store, err := s.repo.GetStoreWarehouse(request.StoreID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch store warehouse: %w", err)
 	}
 
-	if err := s.handleCompletedStatus(request, storeWarehouse.ID); err != nil {
+	if err := s.handleCompletedStatus(request, store.ID); err != nil {
 		return err
 	}
 
@@ -334,7 +333,7 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 		return fmt.Errorf("failed to fetch stock request: %w", err)
 	}
 
-	storeWarehouse, err := s.repo.GetStoreWarehouse(request.StoreID)
+	store, err := s.repo.GetStoreWarehouse(request.StoreID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch store warehouse: %w", err)
 	}
@@ -343,7 +342,7 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 		return fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestAcceptedWithChange)
 	}
 
-	if err := s.handleAcceptedWithChange(request, storeWarehouse.ID, dto.Items, dto.Comment); err != nil {
+	if err := s.handleAcceptedWithChange(request, store.ID, dto.Items, dto.Comment); err != nil {
 		return err
 	}
 
@@ -419,7 +418,7 @@ func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, 
 			return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 
-		if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
+		if err := s.repo.AddToStoreStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
 			return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 	}
@@ -459,14 +458,13 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 		}
 
 		if item.Quantity > 0 {
-			if err := s.repo.AddToStoreWarehouseStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
+			if err := s.repo.AddToStoreStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
 				return fmt.Errorf("failed to add stock to store warehouse for stock material ID %d: %w", item.StockMaterialID, err)
 			}
 		}
 
 		updatedIngredients = append(updatedIngredients, data.StockRequestIngredient{
 			StockRequestID:  request.ID,
-			IngredientID:    stockMaterial.IngredientID,
 			StockMaterialID: item.StockMaterialID,
 			Quantity:        item.Quantity,
 		})
@@ -535,7 +533,6 @@ func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.S
 		}
 		ingredients = append(ingredients, data.StockRequestIngredient{
 			StockRequestID:  request.ID,
-			IngredientID:    stockMaterial.IngredientID,
 			StockMaterialID: item.StockMaterialID,
 			Quantity:        item.Quantity,
 		})
@@ -612,8 +609,7 @@ func (s *stockRequestService) AddStockMaterialToCart(storeID uint, dto types.Sto
 
 	newIngredient := data.StockRequestIngredient{
 		StockRequestID:  cart.ID,
-		StockMaterialID: dto.StockMaterialID,
-		IngredientID:    stockMaterial.IngredientID,
+		StockMaterialID: stockMaterial.ID,
 		Quantity:        dto.Quantity,
 	}
 	err = s.repo.AddIngredientsToStockRequest([]data.StockRequestIngredient{newIngredient})
@@ -625,13 +621,13 @@ func (s *stockRequestService) AddStockMaterialToCart(storeID uint, dto types.Sto
 }
 
 func (s *stockRequestService) createNewCart(storeID uint) (*data.StockRequest, error) {
-	storeWarehouse, err := s.repo.GetStoreWarehouse(storeID)
+	store, err := s.repo.GetStoreWarehouse(storeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch corresponding warehouse, %s", err.Error())
 	}
 	newCart := &data.StockRequest{
 		StoreID:     storeID,
-		WarehouseID: storeWarehouse.WarehouseID,
+		WarehouseID: store.WarehouseID,
 		Status:      data.StockRequestCreated,
 	}
 

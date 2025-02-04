@@ -2,8 +2,9 @@ package stores
 
 import (
 	"errors"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"strings"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
@@ -40,6 +41,9 @@ func (r *storeRepository) GetAllStores(filter *types.StoreFilter) ([]data.Store,
 
 	query := r.db.Preload("FacilityAddress").
 		Preload("Franchisee").
+		Preload("Warehouse").
+		Preload("Warehouse.Region").
+		Preload("Warehouse.FacilityAddress").
 		Preload("FacilityAddress")
 
 	if filter == nil {
@@ -50,6 +54,10 @@ func (r *storeRepository) GetAllStores(filter *types.StoreFilter) ([]data.Store,
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where("name ILIKE ? OR contact_phone ILIKE = ? OR contact_email ILIKE = ?",
 			searchTerm, searchTerm, searchTerm)
+	}
+
+	if filter.WarehouseID != nil {
+		query = query.Where("warehouse_id = ?", filter.WarehouseID)
 	}
 
 	if filter.IsFranchisee != nil {
@@ -75,7 +83,10 @@ func (r *storeRepository) GetAllStoresForNotifications() ([]data.Store, error) {
 
 	query := r.db.Preload("FacilityAddress").
 		Preload("FacilityAddress").
-		Preload("Franchisee")
+		Preload("Franchisee").
+		Preload("Warehouse").
+		Preload("Warehouse.Region").
+		Preload("Warehouse.FacilityAddress")
 
 	if err := query.Find(&stores).Error; err != nil {
 		return nil, err
@@ -94,6 +105,9 @@ func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
 	var store data.Store
 	if err := r.db.Preload("FacilityAddress").
 		Preload("Franchisee").
+		Preload("Warehouse").
+		Preload("Warehouse.Region").
+		Preload("Warehouse.FacilityAddress").
 		Where("id = ?", storeID).First(&store).Error; err != nil {
 		return nil, err
 	}
@@ -104,7 +118,10 @@ func (r *storeRepository) GetStores(filter *types.StoreFilter) ([]data.Store, er
 	var stores []data.Store
 	query := r.db.Model(&data.Store{}).
 		Preload("FacilityAddress").
-		Preload("Franchisee")
+		Preload("Franchisee").
+		Preload("Warehouse").
+		Preload("Warehouse.Region").
+		Preload("Warehouse.FacilityAddress")
 
 	if filter == nil {
 		return nil, errors.New("filter is nil")

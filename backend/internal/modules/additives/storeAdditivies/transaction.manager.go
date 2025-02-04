@@ -2,8 +2,8 @@ package storeAdditives
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
-	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
+	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -13,16 +13,16 @@ type TransactionManager interface {
 }
 
 type transactionManager struct {
-	db                 *gorm.DB
-	storeAdditiveRepo  StoreAdditiveRepository
-	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository
+	db                *gorm.DB
+	storeAdditiveRepo StoreAdditiveRepository
+	storeStockRepo    storeStock.StoreStockRepository
 }
 
-func NewTransactionManager(db *gorm.DB, storeAdditiveRepo StoreAdditiveRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository) TransactionManager {
+func NewTransactionManager(db *gorm.DB, storeAdditiveRepo StoreAdditiveRepository, storeStockRepo storeStock.StoreStockRepository) TransactionManager {
 	return &transactionManager{
-		db:                 db,
-		storeAdditiveRepo:  storeAdditiveRepo,
-		storeWarehouseRepo: storeWarehouseRepo,
+		db:                db,
+		storeAdditiveRepo: storeAdditiveRepo,
+		storeStockRepo:    storeStockRepo,
 	}
 }
 
@@ -41,7 +41,7 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			return err
 		}
 
-		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
+		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
 		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
 			return err
@@ -62,7 +62,7 @@ func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditi
 			return err
 		}
 
-		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
+		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
 		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
 			return err
@@ -76,7 +76,7 @@ func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditi
 	return nil
 }
 
-func (m *transactionManager) addStocks(storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
+func (m *transactionManager) addStocks(storeWarehouseRepo storeStock.StoreStockRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
 	for _, dto := range dtos {
 		_, err := storeWarehouseRepo.AddStock(storeID, &dto)
 		if err != nil {

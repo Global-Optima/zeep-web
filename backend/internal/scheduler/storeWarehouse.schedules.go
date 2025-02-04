@@ -1,19 +1,19 @@
 package scheduler
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"go.uber.org/zap"
 )
 
 type StoreWarehouseCronTasks struct {
-	storeWarehouseService storeWarehouses.StoreWarehouseService
-	storeWarehouseRepo    storeWarehouses.StoreWarehouseRepository
+	storeWarehouseService storeStock.StoreStockService
+	storeWarehouseRepo    storeStock.StoreStockRepository
 	storeService          stores.StoreService
 	logger                *zap.SugaredLogger
 }
 
-func NewStoreWarehouseCronTasks(storeWarehouseService storeWarehouses.StoreWarehouseService, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, storeService stores.StoreService, logger *zap.SugaredLogger) *StoreWarehouseCronTasks {
+func NewStoreWarehouseCronTasks(storeWarehouseService storeStock.StoreStockService, storeWarehouseRepo storeStock.StoreStockRepository, storeService stores.StoreService, logger *zap.SugaredLogger) *StoreWarehouseCronTasks {
 	return &StoreWarehouseCronTasks{
 		storeWarehouseService: storeWarehouseService,
 		storeWarehouseRepo:    storeWarehouseRepo,

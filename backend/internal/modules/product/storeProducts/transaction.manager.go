@@ -5,8 +5,8 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses"
-	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeWarehouses/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
+	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
 	"gorm.io/gorm"
 )
 
@@ -17,16 +17,16 @@ type TransactionManager interface {
 }
 
 type transactionManager struct {
-	db                 *gorm.DB
-	storeProductRepo   StoreProductRepository
-	storeWarehouseRepo storeWarehouses.StoreWarehouseRepository
+	db               *gorm.DB
+	storeProductRepo StoreProductRepository
+	storeStockRepo   storeStock.StoreStockRepository
 }
 
-func NewTransactionManager(db *gorm.DB, storeProductRepo StoreProductRepository, storeWarehouseRepo storeWarehouses.StoreWarehouseRepository) TransactionManager {
+func NewTransactionManager(db *gorm.DB, storeProductRepo StoreProductRepository, storeStockRepo storeStock.StoreStockRepository) TransactionManager {
 	return &transactionManager{
-		db:                 db,
-		storeProductRepo:   storeProductRepo,
-		storeWarehouseRepo: storeWarehouseRepo,
+		db:               db,
+		storeProductRepo: storeProductRepo,
+		storeStockRepo:   storeStockRepo,
 	}
 }
 
@@ -41,7 +41,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
+		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
 		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
 			return err
@@ -70,7 +70,7 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 			return err
 		}
 
-		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
+		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
 		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 		if err := sp.UpdateStoreProductByID(storeID, storeProductID, updateModels); err != nil {
 			return err
 		}
-		storeWarehouseRepo := m.storeWarehouseRepo.CloneWithTransaction(tx)
+		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
 		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
 			return err
@@ -103,7 +103,7 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 	return nil
 }
 
-func (m *transactionManager) addStocks(storeWarehouseRepo storeWarehouses.StoreWarehouseRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
+func (m *transactionManager) addStocks(storeWarehouseRepo storeStock.StoreStockRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
 	for _, dto := range dtos {
 		_, err := storeWarehouseRepo.AddStock(storeID, &dto)
 		if err != nil {
