@@ -350,6 +350,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 		warehouseRoutes := router.Group("")
 		{
 			warehouseRoutes.GET("/:warehouseId", handler.GetWarehouseByID)
+			warehouseRoutes.GET("", handler.GetWarehouses)
 			warehouseRoutes.POST("", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.CreateWarehouse)                // region
 			warehouseRoutes.PUT("/:warehouseId", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.UpdateWarehouse)    // region
 			warehouseRoutes.DELETE("/:warehouseId", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.DeleteWarehouse) // region
@@ -364,7 +365,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 
 		stockRoutes := router.Group("/stocks")
 		{
-			stockRoutes.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetAvailableToAddStockMaterials)
+			stockRoutes.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), warehouseStockHandler.GetAvailableToAddStockMaterials)
 			stockRoutes.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetStocks) // Region and warehouses all roles
 			stockRoutes.GET("/:stockMaterialId", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetStockMaterialDetails)
 			stockRoutes.PUT("/:stockMaterialId", middleware.EmployeeRoleMiddleware(data.WarehousePermissions...), warehouseStockHandler.UpdateStock)       // Warehouse all roles
