@@ -1,6 +1,7 @@
 package supplier
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
 
@@ -11,11 +12,15 @@ import (
 )
 
 type SupplierHandler struct {
-	service SupplierService
+	service      SupplierService
+	auditService audit.AuditService
 }
 
-func NewSupplierHandler(service SupplierService) *SupplierHandler {
-	return &SupplierHandler{service}
+func NewSupplierHandler(service SupplierService, auditService audit.AuditService) *SupplierHandler {
+	return &SupplierHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
 func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
@@ -35,6 +40,16 @@ func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
 		utils.SendInternalServerError(c, "fail to create supplier")
 		return
 	}
+
+	action := types.CreateSupplierAuditFactory(
+		&data.BaseDetails{
+			ID:   response.ID,
+			Name: response.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendResponseWithStatus(c, response, http.StatusCreated)
 }
@@ -73,11 +88,27 @@ func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
 		return
 	}
 
+	supplier, err := h.service.GetSupplierByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve supplier")
+		return
+	}
+
 	err = h.service.UpdateSupplier(uint(id), updateDTO)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to update supplier")
 		return
 	}
+
+	action := types.UpdateSupplierAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: supplier.Name,
+		}, &updateDTO)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "supplier updated successfully", http.StatusOK)
 }
@@ -89,11 +120,27 @@ func (h *SupplierHandler) DeleteSupplier(c *gin.Context) {
 		return
 	}
 
+	supplier, err := h.service.GetSupplierByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve supplier")
+		return
+	}
+
 	err = h.service.DeleteSupplier(uint(id))
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to delete supplier")
 		return
 	}
+
+	action := types.DeleteSupplierAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: supplier.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendMessageWithStatus(c, "supplier deleted successfully", http.StatusOK)
 }
