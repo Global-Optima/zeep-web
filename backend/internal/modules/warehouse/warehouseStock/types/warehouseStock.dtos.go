@@ -29,7 +29,7 @@ type TransferInventoryRequest struct {
 type WarehouseDeliveryDTO struct {
 	ID           uint                                `json:"id"`
 	Supplier     supplierTypes.SupplierResponse      `json:"supplier"`
-	Warehouse    warehouseTypes.WarehouseResponse    `json:"warehouse"`
+	Warehouse    warehouseTypes.WarehouseDTO         `json:"warehouse"`
 	Materials    []WarehouseDeliveryStockMaterialDTO `json:"materials"`
 	DeliveryDate time.Time                           `json:"deliveryDate"`
 }

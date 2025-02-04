@@ -16,8 +16,8 @@ func ConvertToListStoresResponse(stores []data.Store) []ListStoresResponse {
 	return response
 }
 
-func ToWarehouseResponse(warehouse data.Warehouse) *WarehouseResponse {
-	return &WarehouseResponse{
+func ToWarehouseDTO(warehouse data.Warehouse) *WarehouseDTO {
+	return &WarehouseDTO{
 		ID:     warehouse.ID,
 		Name:   warehouse.Name,
 		Region: *regionsTypes.MapRegionToDTO(&warehouse.Region),

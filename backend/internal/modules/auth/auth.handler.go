@@ -7,7 +7,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type AuthenticationHandler struct {
@@ -130,8 +129,6 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 		utils.SendErrorWithStatus(c, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
-
-	logrus.Info(tokenPair.AccessToken)
 
 	claims := &types.EmployeeClaims{}
 	if err := types.ValidateEmployeeJWT(tokenPair.AccessToken, claims, types.TokenAccess); err != nil {

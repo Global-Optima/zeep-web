@@ -22,7 +22,7 @@ func MapToWarehouseEmployeeDetailsDTO(warehouseEmployee *data.WarehouseEmployee)
 		ID:                     warehouseEmployee.ID,
 		BaseEmployeeDetailsDTO: *employeesTypes.MapToBaseEmployeeDetailsDTO(&warehouseEmployee.Employee),
 		EmployeeID:             warehouseEmployee.EmployeeID,
-		Warehouse:              *warehouseTypes.ToWarehouseResponse(warehouseEmployee.Warehouse),
+		Warehouse:              *warehouseTypes.ToWarehouseDTO(warehouseEmployee.Warehouse),
 	}
 	return dto
 }

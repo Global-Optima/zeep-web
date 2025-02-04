@@ -24,7 +24,7 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 		response[i] = WarehouseDeliveryDTO{
 			ID:           delivery.ID,
 			Supplier:     supplierTypes.ToSupplierResponse(delivery.Supplier),
-			Warehouse:    *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
+			Warehouse:    *warehouseTypes.ToWarehouseDTO(delivery.Warehouse),
 			Materials:    materials,
 			DeliveryDate: delivery.DeliveryDate,
 		}
@@ -47,7 +47,7 @@ func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) WarehouseDelive
 	return WarehouseDeliveryDTO{
 		ID:           delivery.ID,
 		Supplier:     supplierTypes.ToSupplierResponse(delivery.Supplier),
-		Warehouse:    *warehouseTypes.ToWarehouseResponse(delivery.Warehouse),
+		Warehouse:    *warehouseTypes.ToWarehouseDTO(delivery.Warehouse),
 		Materials:    materials,
 		DeliveryDate: delivery.DeliveryDate,
 	}

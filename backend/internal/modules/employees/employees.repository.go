@@ -7,7 +7,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +17,7 @@ type EmployeeRepository interface {
 	GetEmployees(filter *types.EmployeesFilter) ([]data.Employee, error)
 	UpdateEmployee(id uint, updateModels *types.UpdateEmployeeModels) error
 	UpdateEmployeeWithAssociations(tx *gorm.DB, id uint, updateModels *types.UpdateEmployeeModels) error
-	ReassignEmployeeType(employeeID uint, newType data.EmployeeType, workplaceID uint) error
+	ReassignEmployeeType(employeeID uint, dto *types.ReassignEmployeeTypeDTO) error
 
 	DeleteTypedEmployeeById(employeeID, workplaceID uint, employeeType data.EmployeeType) error
 	GetEmployeeByEmailOrPhone(email string, phone string) (*data.Employee, error)
@@ -176,32 +175,31 @@ func (r *employeeRepository) UpdateEmployeeWithAssociations(tx *gorm.DB, id uint
 	return nil
 }
 
-func (r *employeeRepository) ReassignEmployeeType(employeeID uint, newType data.EmployeeType, workplaceID uint) error {
+func (r *employeeRepository) ReassignEmployeeType(employeeID uint, dto *types.ReassignEmployeeTypeDTO) error {
 	employee, err := r.GetEmployeeByID(employeeID)
 	if err != nil {
 		return err
 	}
 
-	logrus.Info(employee.GetType())
 	typeMappings := map[data.EmployeeType]struct {
 		deleteModel interface{}
 		createModel interface{}
 	}{
 		data.StoreEmployeeType: {
 			deleteModel: &data.StoreEmployee{},
-			createModel: &data.StoreEmployee{EmployeeID: employeeID, StoreID: workplaceID},
+			createModel: &data.StoreEmployee{EmployeeID: employeeID, Role: dto.Role, StoreID: dto.WorkplaceID},
 		},
 		data.WarehouseEmployeeType: {
 			deleteModel: &data.WarehouseEmployee{},
-			createModel: &data.WarehouseEmployee{EmployeeID: employeeID, WarehouseID: workplaceID},
+			createModel: &data.WarehouseEmployee{EmployeeID: employeeID, Role: dto.Role, WarehouseID: dto.WorkplaceID},
 		},
 		data.RegionEmployeeType: {
 			deleteModel: &data.RegionEmployee{},
-			createModel: &data.RegionEmployee{EmployeeID: employeeID, RegionID: workplaceID},
+			createModel: &data.RegionEmployee{EmployeeID: employeeID, Role: dto.Role, RegionID: dto.WorkplaceID},
 		},
 		data.FranchiseeEmployeeType: {
 			deleteModel: &data.FranchiseeEmployee{},
-			createModel: &data.FranchiseeEmployee{EmployeeID: employeeID, FranchiseeID: workplaceID},
+			createModel: &data.FranchiseeEmployee{EmployeeID: employeeID, Role: dto.Role, FranchiseeID: dto.WorkplaceID},
 		},
 	}
 
@@ -213,8 +211,8 @@ func (r *employeeRepository) ReassignEmployeeType(employeeID uint, newType data.
 		} else {
 			return types.ErrUnsupportedEmployeeType
 		}
+		if newTypeMapping, ok := typeMappings[dto.EmployeeType]; ok {
 
-		if newTypeMapping, ok := typeMappings[newType]; ok {
 			if err := tx.Create(newTypeMapping.createModel).Error; err != nil {
 				return err
 			}

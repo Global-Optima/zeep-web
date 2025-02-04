@@ -142,6 +142,7 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	router := r.EmployeeRoutes.Group("/stores")
 	{
 		router.GET("/:id", handler.GetStoreByID)
+		router.GET("", handler.GetStores)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStore)       // franchise owner, manager
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStore)    // franchise owner, manager
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStore) // franchise owner, manager
