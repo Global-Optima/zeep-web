@@ -14,10 +14,10 @@ func InitNotificationRegistry() {
 		func() details.NotificationDetails {
 			return &details.CentralCatalogUpdateDetails{}
 		},
-		func(baseDetails details.NotificationDetails) (localization.LocalizedMessages, error) {
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
 			catalogDetails, ok := baseDetails.(*details.CentralCatalogUpdateDetails)
 			if !ok {
-				return localization.LocalizedMessages{}, fmt.Errorf("invalid details type for CENTRAL_CATALOG_UPDATE")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for CENTRAL_CATALOG_UPDATE")
 			}
 			return details.BuildCentralCatalogUpdateMessage(catalogDetails)
 		},
@@ -28,10 +28,10 @@ func InitNotificationRegistry() {
 		func() details.NotificationDetails {
 			return &details.NewOrderNotificationDetails{}
 		},
-		func(baseDetails details.NotificationDetails) (localization.LocalizedMessages, error) {
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
 			orderDetails, ok := baseDetails.(*details.NewOrderNotificationDetails)
 			if !ok {
-				return localization.LocalizedMessages{}, fmt.Errorf("invalid details type for NEW_ORDER")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for NEW_ORDER")
 			}
 			return details.BuildNewOrderMessage(orderDetails)
 		},
@@ -42,10 +42,10 @@ func InitNotificationRegistry() {
 		func() details.NotificationDetails {
 			return &details.NewStockRequestDetails{}
 		},
-		func(baseDetails details.NotificationDetails) (localization.LocalizedMessages, error) {
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
 			stockRequestDetails, ok := baseDetails.(*details.NewStockRequestDetails)
 			if !ok {
-				return localization.LocalizedMessages{}, fmt.Errorf("invalid details type for NEW_STOCK_REQUEST")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for NEW_STOCK_REQUEST")
 			}
 			return details.BuildNewStockRequestMessage(stockRequestDetails)
 		},
@@ -56,10 +56,10 @@ func InitNotificationRegistry() {
 		func() details.NotificationDetails {
 			return &details.OutOfStockDetails{}
 		},
-		func(baseDetails details.NotificationDetails) (localization.LocalizedMessages, error) {
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
 			outOfStockDetails, ok := baseDetails.(*details.OutOfStockDetails)
 			if !ok {
-				return localization.LocalizedMessages{}, fmt.Errorf("invalid details type for OUT_OF_STOCK")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for OUT_OF_STOCK")
 			}
 			return details.BuildOutOfStockMessage(outOfStockDetails)
 		},
@@ -70,10 +70,10 @@ func InitNotificationRegistry() {
 		func() details.NotificationDetails {
 			return &details.PriceChangeNotificationDetails{}
 		},
-		func(baseDetails details.NotificationDetails) (localization.LocalizedMessages, error) {
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
 			priceChangeDetails, ok := baseDetails.(*details.PriceChangeNotificationDetails)
 			if !ok {
-				return localization.LocalizedMessages{}, fmt.Errorf("invalid details type for PRICE_CHANGE")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for PRICE_CHANGE")
 			}
 			return details.BuildPriceChangeMessage(priceChangeDetails)
 		},
@@ -84,10 +84,10 @@ func InitNotificationRegistry() {
 		func() details.NotificationDetails {
 			return &details.StockExpirationDetails{}
 		},
-		func(baseDetails details.NotificationDetails) (localization.LocalizedMessages, error) {
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
 			stockExpirationDetails, ok := baseDetails.(*details.StockExpirationDetails)
 			if !ok {
-				return localization.LocalizedMessages{}, fmt.Errorf("invalid details type for STOCK_EXPIRATION")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for STOCK_EXPIRATION")
 			}
 			return details.BuildStockExpirationMessage(stockExpirationDetails)
 		},
@@ -98,10 +98,10 @@ func InitNotificationRegistry() {
 		func() details.NotificationDetails {
 			return &details.StockRequestStatusUpdatedDetails{}
 		},
-		func(baseDetails details.NotificationDetails) (localization.LocalizedMessages, error) {
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
 			requestDetails, ok := baseDetails.(*details.StockRequestStatusUpdatedDetails)
 			if !ok {
-				return localization.LocalizedMessages{}, fmt.Errorf("invalid details type for STOCK_REQUEST_STATUS_UPDATED")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for STOCK_REQUEST_STATUS_UPDATED")
 			}
 			return details.BuildStockRequestStatusUpdatedMessage(requestDetails)
 		},
@@ -112,10 +112,10 @@ func InitNotificationRegistry() {
 		func() details.NotificationDetails {
 			return &details.StoreWarehouseRunOutDetails{}
 		},
-		func(baseDetails details.NotificationDetails) (localization.LocalizedMessages, error) {
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
 			warehouseDetails, ok := baseDetails.(*details.StoreWarehouseRunOutDetails)
 			if !ok {
-				return localization.LocalizedMessages{}, fmt.Errorf("invalid details type for STORE_WAREHOUSE_RUN_OUT")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for STORE_WAREHOUSE_RUN_OUT")
 			}
 			return details.BuildStoreWarehouseRunOutMessage(warehouseDetails)
 		},

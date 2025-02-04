@@ -36,9 +36,9 @@ func BuildOutOfStockDetails(facilityID uint, facilityName, itemName string) (*Ou
 	}, nil
 }
 
-func BuildOutOfStockMessage(details *OutOfStockDetails) (localization.LocalizedMessages, error) {
+func BuildOutOfStockMessage(details *OutOfStockDetails) (localization.LocalizedMessage, error) {
 	if details == nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
+		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
 	key := localization.FormTranslationKey("notification", data.WAREHOUSE_OUT_OF_STOCK.ToString())
@@ -48,7 +48,7 @@ func BuildOutOfStockMessage(details *OutOfStockDetails) (localization.LocalizedM
 		"ItemName":     details.ItemName,
 	})
 	if err != nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("failed to build OutOfStock message: %w", err)
+		return localization.LocalizedMessage{}, fmt.Errorf("failed to build OutOfStock message: %w", err)
 	}
 
 	return *messages, nil

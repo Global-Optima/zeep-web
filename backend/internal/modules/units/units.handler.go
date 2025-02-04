@@ -1,6 +1,7 @@
 package units
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
 
@@ -11,11 +12,15 @@ import (
 )
 
 type UnitHandler struct {
-	service UnitService
+	service      UnitService
+	auditService audit.AuditService
 }
 
-func NewUnitHandler(service UnitService) *UnitHandler {
-	return &UnitHandler{service: service}
+func NewUnitHandler(service UnitService, auditService audit.AuditService) *UnitHandler {
+	return &UnitHandler{
+		service:      service,
+		auditService: auditService,
+	}
 }
 
 func (h *UnitHandler) CreateUnit(c *gin.Context) {
@@ -25,11 +30,21 @@ func (h *UnitHandler) CreateUnit(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.Create(dto)
+	id, err := h.service.Create(dto)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.CreateUnitAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: dto.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "unit created successfully")
 }
@@ -79,10 +94,26 @@ func (h *UnitHandler) UpdateUnit(c *gin.Context) {
 		return
 	}
 
+	unit, err := h.service.GetByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
 	if err := h.service.Update(uint(id), dto); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.UpdateUnitAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: unit.Name,
+		}, &dto)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
@@ -94,10 +125,26 @@ func (h *UnitHandler) DeleteUnit(c *gin.Context) {
 		return
 	}
 
+	unit, err := h.service.GetByID(uint(id))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
 	if err := h.service.Delete(uint(id)); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.DeleteUnitAuditFactory(
+		&data.BaseDetails{
+			ID:   uint(id),
+			Name: unit.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }

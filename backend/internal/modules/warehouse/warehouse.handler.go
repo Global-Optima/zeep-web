@@ -69,11 +69,21 @@ func (h *WarehouseHandler) CreateWarehouse(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateWarehouse(dto)
+	warehouse, err := h.service.CreateWarehouse(dto)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.CreateWarehouseAuditFactory(
+		&data.BaseDetails{
+			ID:   warehouse.ID,
+			Name: warehouse.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "warehouse created successfully")
 }
@@ -153,11 +163,27 @@ func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {
 		return
 	}
 
+	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
 	updated, err := h.service.UpdateWarehouse(uint(warehouseID), dto)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.UpdateWarehouseAuditFactory(
+		&data.BaseDetails{
+			ID:   warehouse.ID,
+			Name: warehouse.Name,
+		}, &dto)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 	utils.SendSuccessResponse(c, updated)
@@ -171,10 +197,26 @@ func (h *WarehouseHandler) DeleteWarehouse(c *gin.Context) {
 		return
 	}
 
+	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
 	if err := h.service.DeleteWarehouse(uint(warehouseID)); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.DeleteWarehouseAuditFactory(
+		&data.BaseDetails{
+			ID:   warehouse.ID,
+			Name: warehouse.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }

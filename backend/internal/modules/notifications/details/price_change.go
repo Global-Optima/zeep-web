@@ -40,9 +40,9 @@ func BuildPriceChangeDetails(facilityID uint, facilityName, productName string, 
 	}, nil
 }
 
-func BuildPriceChangeMessage(details *PriceChangeNotificationDetails) (localization.LocalizedMessages, error) {
+func BuildPriceChangeMessage(details *PriceChangeNotificationDetails) (localization.LocalizedMessage, error) {
 	if details == nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
+		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
 	key := localization.FormTranslationKey("notification", data.PRICE_CHANGE.ToString())
@@ -54,7 +54,7 @@ func BuildPriceChangeMessage(details *PriceChangeNotificationDetails) (localizat
 		"NewPrice":     details.NewPrice,
 	})
 	if err != nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("failed to build PriceChange message: %w", err)
+		return localization.LocalizedMessage{}, fmt.Errorf("failed to build PriceChange message: %w", err)
 	}
 
 	return *messages, nil

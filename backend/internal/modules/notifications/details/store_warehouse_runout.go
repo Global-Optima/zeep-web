@@ -37,9 +37,9 @@ func BuildStoreWarehouseRunOutDetails(facilityID, stockItemID uint, facilityName
 	}, nil
 }
 
-func BuildStoreWarehouseRunOutMessage(details *StoreWarehouseRunOutDetails) (localization.LocalizedMessages, error) {
+func BuildStoreWarehouseRunOutMessage(details *StoreWarehouseRunOutDetails) (localization.LocalizedMessage, error) {
 	if details == nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
+		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
 	key := localization.FormTranslationKey("notification", data.STORE_WAREHOUSE_RUN_OUT.ToString())
@@ -50,7 +50,7 @@ func BuildStoreWarehouseRunOutMessage(details *StoreWarehouseRunOutDetails) (loc
 		"StockItemID":  details.StockItemID,
 	})
 	if err != nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("failed to build StoreWarehouseRunOut message: %w", err)
+		return localization.LocalizedMessage{}, fmt.Errorf("failed to build StoreWarehouseRunOut message: %w", err)
 	}
 
 	return *messages, err

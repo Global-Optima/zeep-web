@@ -10,12 +10,12 @@ import (
 
 type NotificationRegistry struct {
 	DetailsFactory func() details.NotificationDetails
-	MessageBuilder func(details.NotificationDetails) (localization.LocalizedMessages, error)
+	MessageBuilder func(details.NotificationDetails) (localization.LocalizedMessage, error)
 }
 
 var notificationRegistry = map[data.NotificationEventType]NotificationRegistry{}
 
-func RegisterNotification(eventType data.NotificationEventType, factory func() details.NotificationDetails, builder func(details.NotificationDetails) (localization.LocalizedMessages, error)) {
+func RegisterNotification(eventType data.NotificationEventType, factory func() details.NotificationDetails, builder func(details.NotificationDetails) (localization.LocalizedMessage, error)) {
 	if _, exists := notificationRegistry[eventType]; exists {
 		panic(fmt.Errorf("notification type already registered: %s", eventType))
 	}

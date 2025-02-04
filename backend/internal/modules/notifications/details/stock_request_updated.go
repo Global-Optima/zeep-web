@@ -57,12 +57,12 @@ func BuildStockRequestStatusUpdatedDetails(facilityID, stockRequestID uint, faci
 	}, nil
 }
 
-func BuildStockRequestStatusUpdatedMessage(details *StockRequestStatusUpdatedDetails) (localization.LocalizedMessages, error) {
+func BuildStockRequestStatusUpdatedMessage(details *StockRequestStatusUpdatedDetails) (localization.LocalizedMessage, error) {
 	if details == nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
+		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
-	localizedMessages := localization.LocalizedMessages{}
+	localizedMessages := localization.LocalizedMessage{}
 
 	languages := map[string]*string{
 		"en": &localizedMessages.En,
@@ -73,7 +73,7 @@ func BuildStockRequestStatusUpdatedMessage(details *StockRequestStatusUpdatedDet
 	for lang, msg := range languages {
 		translatedStatus, err := TranslateStockRequestStatus(data.StockRequestStatus(details.RequestStatus), lang)
 		if err != nil {
-			return localization.LocalizedMessages{}, fmt.Errorf("failed to translate stock request status for language %s: %w", lang, err)
+			return localization.LocalizedMessage{}, fmt.Errorf("failed to translate stock request status for language %s: %w", lang, err)
 		}
 
 		key := localization.FormTranslationKey("notification", data.STOCK_REQUEST_STATUS_UPDATED.ToString())
@@ -84,7 +84,7 @@ func BuildStockRequestStatusUpdatedMessage(details *StockRequestStatusUpdatedDet
 			"StockRequestID": details.StockRequestID,
 		})
 		if err != nil {
-			return localization.LocalizedMessages{}, fmt.Errorf("failed to build %s message: %w", lang, err)
+			return localization.LocalizedMessage{}, fmt.Errorf("failed to build %s message: %w", lang, err)
 		}
 
 		*msg = getMessageForLang(lang, *translatedMessage)

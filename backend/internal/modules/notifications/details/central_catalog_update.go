@@ -41,8 +41,8 @@ func BuildCentralCatalogUpdateDetails(facilityID uint, facilityName string, chan
 	}, nil
 }
 
-func BuildCentralCatalogUpdateChanges(changes []CentralCatalogChange) (localization.LocalizedMessages, error) {
-	localizedMessages := localization.LocalizedMessages{}
+func BuildCentralCatalogUpdateChanges(changes []CentralCatalogChange) (localization.LocalizedMessage, error) {
+	localizedMessages := localization.LocalizedMessage{}
 
 	languages := map[string]*string{
 		"en": &localizedMessages.En,
@@ -56,7 +56,7 @@ func BuildCentralCatalogUpdateChanges(changes []CentralCatalogChange) (localizat
 		for _, change := range changes {
 			message, err := localization.Translate(change.Key, change.Params)
 			if err != nil {
-				return localization.LocalizedMessages{}, fmt.Errorf("failed to localize change %s for language %s: %w", change.Key, lang, err)
+				return localization.LocalizedMessage{}, fmt.Errorf("failed to localize change %s for language %s: %w", change.Key, lang, err)
 			}
 
 			switch lang {
@@ -75,17 +75,17 @@ func BuildCentralCatalogUpdateChanges(changes []CentralCatalogChange) (localizat
 	return localizedMessages, nil
 }
 
-func BuildCentralCatalogUpdateMessage(details *CentralCatalogUpdateDetails) (localization.LocalizedMessages, error) {
+func BuildCentralCatalogUpdateMessage(details *CentralCatalogUpdateDetails) (localization.LocalizedMessage, error) {
 	if details == nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
+		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
 	changesSummary, err := BuildCentralCatalogUpdateChanges(details.Changes)
 	if err != nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("failed to build changes summary: %w", err)
+		return localization.LocalizedMessage{}, fmt.Errorf("failed to build changes summary: %w", err)
 	}
 
-	localizedMessages := localization.LocalizedMessages{}
+	localizedMessages := localization.LocalizedMessage{}
 
 	languages := map[string]*string{
 		"en": &localizedMessages.En,
@@ -101,7 +101,7 @@ func BuildCentralCatalogUpdateMessage(details *CentralCatalogUpdateDetails) (loc
 			"Changes":      changesSummaryField(lang, changesSummary),
 		})
 		if err != nil {
-			return localization.LocalizedMessages{}, fmt.Errorf("failed to build %s message: %w", lang, err)
+			return localization.LocalizedMessage{}, fmt.Errorf("failed to build %s message: %w", lang, err)
 		}
 
 		*msg = getMessageForLang(lang, *translatedMessage)
@@ -110,7 +110,7 @@ func BuildCentralCatalogUpdateMessage(details *CentralCatalogUpdateDetails) (loc
 	return localizedMessages, nil
 }
 
-func changesSummaryField(lang string, changes localization.LocalizedMessages) string {
+func changesSummaryField(lang string, changes localization.LocalizedMessage) string {
 	switch lang {
 	case "en":
 		return changes.En
@@ -123,7 +123,7 @@ func changesSummaryField(lang string, changes localization.LocalizedMessages) st
 	}
 }
 
-func getMessageForLang(lang string, message localization.LocalizedMessages) string {
+func getMessageForLang(lang string, message localization.LocalizedMessage) string {
 	switch lang {
 	case "en":
 		return message.En
