@@ -25,7 +25,11 @@
 			>
 				Экспорт
 			</Button>
-			<Button @click="onCreateClick">Создать</Button>
+			<Button
+				v-if="canCreateStockRequest"
+				@click="onCreateClick"
+				>Создать</Button
+			>
 		</div>
 	</div>
 </template>
@@ -35,6 +39,7 @@ import MultiSelectFilter from '@/core/components/multi-select-filter/MultiSelect
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { STOCK_REQUEST_STATUS_OPTIONS, StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
@@ -45,6 +50,8 @@ import { useRouter } from 'vue-router'
 const props = defineProps<{ filter?: GetStockRequestsFilter }>()
 const emit = defineEmits(['update:filter'])
 const router = useRouter()
+
+const canCreateStockRequest = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
 
 const localFilter = ref({ ...props.filter })
 
@@ -90,6 +97,7 @@ watch(filteredSelectedStatuses, (newStatuses) => {
 })
 
 const onCreateClick = () => {
+  if (!canCreateStockRequest) return
   router.push({ name: getRouteName('ADMIN_STORE_STOCK_REQUESTS_CREATE') })
 }
 </script>
