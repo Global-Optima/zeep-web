@@ -1,4 +1,4 @@
-import type { EmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
+import type { EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { defineStore } from 'pinia'
 import { computed, ref, type Ref } from 'vue'
 

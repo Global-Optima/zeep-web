@@ -10,7 +10,7 @@ import {
 } from '@/core/components/ui/dropdown-menu'
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
-import { EMPLOYEE_ROLES_FORMATTED, type EmployeeDTO } from '@/modules/admin/store-employees/models/employees.models'
+import { EMPLOYEE_ROLES_FORMATTED, type EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
 import { useMutation } from '@tanstack/vue-query'
 import { User } from 'lucide-vue-next'

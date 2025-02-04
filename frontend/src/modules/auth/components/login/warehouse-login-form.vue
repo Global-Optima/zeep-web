@@ -152,7 +152,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import type { EmployeeLoginDTO } from '@/modules/admin/store-employees/models/employees.models'
+import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { warehouseService } from '@/modules/admin/warehouses/services/warehouse.service'
 import { authService } from '@/modules/auth/services/auth.service'
 import { useQuery } from '@tanstack/vue-query'

@@ -10,7 +10,6 @@ import { router } from './router'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
-import directives from './core/directives'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -29,6 +28,5 @@ app.use(VueQueryPlugin, {
 		},
 	}),
 })
-app.use(directives)
 
 app.mount('#app')
