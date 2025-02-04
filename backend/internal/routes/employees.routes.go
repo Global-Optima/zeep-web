@@ -358,7 +358,6 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 		storeRoutes := router.Group("/stores")
 		{
 			storeRoutes.POST("", handler.AssignStoreToWarehouse)                                                                                       //TODO On considerations
-			storeRoutes.PUT("/:storeId", handler.ReassignStore)                                                                                        //TODO On considerations
 			storeRoutes.GET("/:warehouseId", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetAllStoresByWarehouse) // Store and warehouse
 		}
 

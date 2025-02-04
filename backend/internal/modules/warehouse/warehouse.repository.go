@@ -12,7 +12,6 @@ import (
 
 type WarehouseRepository interface {
 	AssignStoreToWarehouse(storeID, warehouseID uint) error
-	ReassignStoreToWarehouse(storeID, newWarehouseID uint) error
 	GetAllStoresByWarehouse(warehouseID uint, pagination *utils.Pagination) ([]data.Store, error)
 
 	CreateWarehouse(warehouse *data.Warehouse, facilityAddress *data.FacilityAddress) error
@@ -35,12 +34,6 @@ func (r *warehouseRepository) AssignStoreToWarehouse(storeID, warehouseID uint) 
 	return r.db.Model(&data.Store{}).
 		Where("id = ?", storeID).
 		Update("warehouse_id", warehouseID).Error
-}
-
-func (r *warehouseRepository) ReassignStoreToWarehouse(storeID, newWarehouseID uint) error {
-	return r.db.Model(&data.Store{}).
-		Where("id = ?", storeID).
-		Update("warehouse_id", newWarehouseID).Error
 }
 
 func (r *warehouseRepository) GetAllStoresByWarehouse(warehouseID uint, pagination *utils.Pagination) ([]data.Store, error) {
