@@ -2,8 +2,10 @@ package censor
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"unicode/utf8"
 )
@@ -42,7 +44,13 @@ type Dictionaries struct {
 var dictionaries *Dictionaries
 
 func LoadDictionaries(filename string) (*Dictionaries, error) {
-	file, err := os.Open(filename)
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get working directory: %w", err)
+	}
+	filePath := filepath.Join(workingDir, filename)
+
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
