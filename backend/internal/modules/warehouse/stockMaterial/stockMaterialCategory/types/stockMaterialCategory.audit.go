@@ -7,11 +7,11 @@ import (
 
 var (
 	CreateStockMaterialAuditFactory = shared.NewAuditActionBaseFactory(
-		data.CreateOperation, data.StockMaterialComponent)
+		data.CreateOperation, data.StockMaterialCategoryComponent)
 
 	UpdateStockMaterialAuditFactory = shared.NewAuditActionExtendedFactory(
-		data.UpdateOperation, data.StockMaterialComponent, &UpdateStockMaterialDTO{})
+		data.UpdateOperation, data.StockMaterialCategoryComponent, &UpdateStockMaterialCategoryDTO{})
 
 	DeleteStockMaterialAuditFactory = shared.NewAuditActionBaseFactory(
-		data.DeleteOperation, data.StockMaterialComponent)
+		data.DeleteOperation, data.StockMaterialCategoryComponent)
 )

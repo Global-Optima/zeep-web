@@ -33,6 +33,7 @@ func (r *franchiseeEmployeeRepository) GetFranchiseeEmployees(franchiseeID uint,
 	var franchiseeEmployees []data.FranchiseeEmployee
 	query := r.db.Model(&data.FranchiseeEmployee{}).
 		Where("franchisee_id = ?", franchiseeID).
+		Preload("Employee").
 		Joins("JOIN employees ON employees.id = franchisee_employees.employee_id")
 
 	if filter.IsActive != nil {

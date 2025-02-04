@@ -26,6 +26,7 @@ func NewAdminEmployeeRepository(db *gorm.DB) AdminEmployeeRepository {
 func (r *adminEmployeeRepository) GetAdminEmployees(filter *types.EmployeesFilter) ([]data.AdminEmployee, error) {
 	var employees []data.AdminEmployee
 	query := r.db.Model(&data.AdminEmployee{}).
+		Preload("Employee").
 		Joins("JOIN employees ON employees.id = admin_employees.employee_id")
 
 	if filter.IsActive != nil {

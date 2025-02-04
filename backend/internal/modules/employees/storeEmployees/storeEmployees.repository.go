@@ -32,6 +32,7 @@ func (r *storeEmployeeRepository) GetStoreEmployees(storeID uint, filter *employ
 	var storeEmployees []data.StoreEmployee
 	query := r.db.Model(&data.StoreEmployee{}).
 		Where("store_id = ?", storeID).
+		Preload("Employee").
 		Joins("JOIN employees ON employees.id = store_employees.employee_id")
 
 	if filter.IsActive != nil {
