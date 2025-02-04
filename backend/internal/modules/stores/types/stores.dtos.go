@@ -1,6 +1,9 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	franchiseesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type FacilityAddressDTO struct {
 	ID        uint    `json:"id"`
@@ -42,18 +45,19 @@ type UpdateStoreDTO struct {
 }
 
 type StoreDTO struct {
-	ID              uint                `json:"id"`
-	Name            string              `json:"name"`
-	FranchiseID     *uint               `json:"franchiseId"`
-	FacilityAddress *FacilityAddressDTO `json:"facilityAddress"`
-	IsActive        bool                `json:"isActive"`
-	ContactPhone    string              `json:"contactPhone"`
-	ContactEmail    string              `json:"contactEmail"`
-	StoreHours      string              `json:"storeHours"`
+	ID              uint                            `json:"id"`
+	Name            string                          `json:"name"`
+	Franchisee      *franchiseesTypes.FranchiseeDTO `json:"franchisee,omitempty"`
+	FacilityAddress *FacilityAddressDTO             `json:"facilityAddress"`
+	IsActive        bool                            `json:"isActive"`
+	ContactPhone    string                          `json:"contactPhone"`
+	ContactEmail    string                          `json:"contactEmail"`
+	StoreHours      string                          `json:"storeHours"`
 }
 
 type StoreFilter struct {
 	utils.BaseFilter
 	IsFranchisee *bool   `form:"isFranchise"`
+	FranchiseeID *uint   `form:"franchiseeID"`
 	Search       *string `form:"search"`
 }

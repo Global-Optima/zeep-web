@@ -82,7 +82,7 @@ func (h *WarehouseEmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 
 	var input employeesTypes.CreateEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
 		return
 	}
 

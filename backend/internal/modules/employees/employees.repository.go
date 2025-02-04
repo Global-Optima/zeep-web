@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -181,6 +182,7 @@ func (r *employeeRepository) ReassignEmployeeType(employeeID uint, newType data.
 		return err
 	}
 
+	logrus.Info(employee.GetType())
 	typeMappings := map[data.EmployeeType]struct {
 		deleteModel interface{}
 		createModel interface{}
@@ -210,10 +212,6 @@ func (r *employeeRepository) ReassignEmployeeType(employeeID uint, newType data.
 			}
 		} else {
 			return types.ErrUnsupportedEmployeeType
-		}
-
-		if err := tx.Model(&data.Employee{}).Where("id = ?", employeeID).Update("type", newType).Error; err != nil {
-			return err
 		}
 
 		if newTypeMapping, ok := typeMappings[newType]; ok {

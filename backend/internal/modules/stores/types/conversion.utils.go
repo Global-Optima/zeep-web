@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	franchiseesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 )
 
 func MapToStoreDTO(store *data.Store) *StoreDTO {
@@ -12,11 +13,16 @@ func MapToStoreDTO(store *data.Store) *StoreDTO {
 		Longitude: safeFloat(store.FacilityAddress.Longitude),
 		Latitude:  safeFloat(store.FacilityAddress.Latitude),
 	}
-	
+
+	var franchisee *franchiseesTypes.FranchiseeDTO = nil
+	if store.Franchisee != nil {
+		franchisee = franchiseesTypes.ConvertFranchiseeToDTO(store.Franchisee)
+	}
+
 	return &StoreDTO{
 		ID:              store.ID,
 		Name:            store.Name,
-		FranchiseID:     store.FranchiseeID,
+		Franchisee:      franchisee,
 		ContactPhone:    store.ContactPhone,
 		ContactEmail:    store.ContactEmail,
 		StoreHours:      store.StoreHours,

@@ -314,7 +314,7 @@ CREATE TABLE  regions (
 CREATE TABLE
 	 warehouses (
 		id SERIAL PRIMARY KEY,
-		facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE CASCADE,
+		facility_address_id INT NOT NULL REFERENCES facility_addresses (id) ON DELETE RESTRICT,
         region_id INT NOT NULL REFERENCES regions (id) ON DELETE RESTRICT,
 		name VARCHAR(255) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -436,7 +436,7 @@ CREATE TABLE  region_employees (
 
 CREATE UNIQUE INDEX unique_region_employee ON region_employees (employee_id, deleted_at) WHERE deleted_at IS NULL;
 
-CREATE TYPE franchisee_employee_role AS ENUM ('FRANCHISE_MANAGER', 'FRANCHISE_OWNER');
+CREATE TYPE franchisee_employee_role AS ENUM ('FRANCHISEE_MANAGER', 'FRANCHISEE_OWNER');
 
 -- Franchisee Employees Table
 CREATE TABLE  franchisee_employees (

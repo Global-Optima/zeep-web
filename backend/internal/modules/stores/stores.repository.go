@@ -36,7 +36,9 @@ func NewStoreRepository(db *gorm.DB) StoreRepository {
 func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, error) {
 	var stores []data.Store
 
-	query := r.db.Preload("FacilityAddress").Where("is_active = ?", true).Preload("FacilityAddress")
+	query := r.db.Preload("FacilityAddress").
+		Preload("Franchisee").
+		Where("is_active = ?", true).Preload("FacilityAddress")
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
@@ -52,6 +54,10 @@ func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, 
 		}
 	}
 
+	if filter.FranchiseeID != nil {
+		query = query.Where("franchisee_id = ?", *filter.FranchiseeID)
+	}
+
 	if err := query.Scopes(filter.Sort.SortGorm()).Find(&stores).Error; err != nil {
 		return nil, err
 	}
@@ -61,7 +67,9 @@ func (r *storeRepository) GetAllStores(filter types.StoreFilter) ([]data.Store, 
 func (r *storeRepository) GetAllStoresForNotifications() ([]data.Store, error) {
 	var stores []data.Store
 
-	query := r.db.Preload("FacilityAddress").Preload("FacilityAddress")
+	query := r.db.Preload("FacilityAddress").
+		Preload("FacilityAddress").
+		Preload("Franchisee")
 
 	if err := query.Find(&stores).Error; err != nil {
 		return nil, err
@@ -78,7 +86,9 @@ func (r *storeRepository) CreateStore(store *data.Store) (*data.Store, error) {
 
 func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
 	var store data.Store
-	if err := r.db.Preload("FacilityAddress").Where("id = ?", storeID).First(&store).Error; err != nil {
+	if err := r.db.Preload("FacilityAddress").
+		Preload("Franchisee").
+		Where("id = ?", storeID).First(&store).Error; err != nil {
 		return nil, err
 	}
 	return &store, nil

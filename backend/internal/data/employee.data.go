@@ -59,8 +59,8 @@ const (
 type FranchiseeEmployeeRole = EmployeeRole
 
 const (
-	RoleFranchiseManager FranchiseeEmployeeRole = "FRANCHISE_MANAGER"
-	RoleFranchiseOwner   FranchiseeEmployeeRole = "FRANCHISE_OWNER"
+	RoleFranchiseManager FranchiseeEmployeeRole = "FRANCHISEE_MANAGER"
+	RoleFranchiseOwner   FranchiseeEmployeeRole = "FRANCHISEE_OWNER"
 )
 
 type RegionManagerRole = EmployeeRole
