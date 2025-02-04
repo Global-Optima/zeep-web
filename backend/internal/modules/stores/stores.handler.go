@@ -1,7 +1,9 @@
 package stores
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -94,9 +96,12 @@ func (h *StoreHandler) GetStoresByFranchisee(c *gin.Context) {
 		return
 	}
 
-	franchiseeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
+	franchiseeID, errH := contexts.GetFranchiseeId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		if errors.Is(errH, contexts.ErrEmptyFranchiseeID) {
+			franchiseeID = 0
+		}
 		return
 	}
 

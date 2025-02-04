@@ -1,6 +1,7 @@
 package warehouse
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"net/http"
@@ -118,7 +119,7 @@ func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
 		return
 	}
 
-	regionID, errH := h.regionService.CheckRegionWarehouse(c)
+	regionID, errH := contexts.GetRegionId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
