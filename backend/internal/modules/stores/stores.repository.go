@@ -21,7 +21,7 @@ type StoreRepository interface {
 	GetAllStoresForNotifications() ([]data.Store, error)
 	CreateStore(store *data.Store) (*data.Store, error)
 	GetStoreByID(storeID uint) (*data.Store, error)
-	GetStores(filter *types.StoreFilter) ([]data.Store, error)
+	GetStoresByFranchisee(franchiseeID uint, filter *types.StoreFilter) ([]data.Store, error)
 	UpdateStore(store *data.Store) (*data.Store, error)
 	DeleteStore(storeID uint, hardDelete bool) error
 	CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error)
@@ -68,10 +68,6 @@ func (r *storeRepository) GetAllStores(filter *types.StoreFilter) ([]data.Store,
 		}
 	}
 
-	if filter.FranchiseeID != nil {
-		query = query.Where("franchisee_id = ?", *filter.FranchiseeID)
-	}
-
 	if err := query.Scopes(filter.Sort.SortGorm()).Find(&stores).Error; err != nil {
 		return nil, err
 	}
@@ -114,14 +110,15 @@ func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
 	return &store, nil
 }
 
-func (r *storeRepository) GetStores(filter *types.StoreFilter) ([]data.Store, error) {
+func (r *storeRepository) GetStoresByFranchisee(franchiseeID uint, filter *types.StoreFilter) ([]data.Store, error) {
 	var stores []data.Store
 	query := r.db.Model(&data.Store{}).
 		Preload("FacilityAddress").
 		Preload("Franchisee").
 		Preload("Warehouse").
 		Preload("Warehouse.Region").
-		Preload("Warehouse.FacilityAddress")
+		Preload("Warehouse.FacilityAddress").
+		Where("franchisee_id = ?", franchiseeID)
 
 	if filter == nil {
 		return nil, errors.New("filter is nil")
@@ -139,10 +136,6 @@ func (r *storeRepository) GetStores(filter *types.StoreFilter) ([]data.Store, er
 		} else {
 			query = query.Where("franchisee_id IS NULL")
 		}
-	}
-
-	if filter.FranchiseeID != nil {
-		query = query.Where("franchisee_id = ?", *filter.FranchiseeID)
 	}
 
 	var err error

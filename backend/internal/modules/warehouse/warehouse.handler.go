@@ -1,6 +1,8 @@
 package warehouse
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"net/http"
 	"strconv"
 
@@ -12,11 +14,17 @@ import (
 )
 
 type WarehouseHandler struct {
-	service WarehouseService
+	service       WarehouseService
+	regionService regions.RegionService
+	auditService  audit.AuditService
 }
 
-func NewWarehouseHandler(service WarehouseService) *WarehouseHandler {
-	return &WarehouseHandler{service: service}
+func NewWarehouseHandler(service WarehouseService, regionService regions.RegionService, auditService audit.AuditService) *WarehouseHandler {
+	return &WarehouseHandler{
+		service:       service,
+		regionService: regionService,
+		auditService:  auditService,
+	}
 }
 
 func (h *WarehouseHandler) AssignStoreToWarehouse(c *gin.Context) {
@@ -110,7 +118,13 @@ func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
 		return
 	}
 
-	warehouses, err := h.service.GetWarehouses(&filter)
+	regionID, errH := h.regionService.CheckRegionWarehouse(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	warehouses, err := h.service.GetWarehousesByRegion(regionID, &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve warehouses")
 		return
