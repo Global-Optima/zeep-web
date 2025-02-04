@@ -2,7 +2,7 @@
 	<div class="flex items-center bg-white p-6 border rounded-xl">
 		<div class="bg-green-100 p-3 rounded-full">
 			<component
-				:is="iconComponent"
+				:is="icon"
 				class="w-6 h-6 text-primary"
 			/>
 		</div>
@@ -14,25 +14,12 @@
 </template>
 
 <script setup lang="ts">
-import { CheckCircle, Clock, DollarSign } from 'lucide-vue-next'
-import { computed } from 'vue'
+import type { LucideIcon } from 'lucide-vue-next'
 
-const props = defineProps<{
+
+defineProps<{
   title: string;
   value: string;
-  icon: string;
+  icon: LucideIcon;
 }>();
-
-const iconComponent = computed(() => {
-  switch (props.icon) {
-    case 'dollar-sign':
-      return DollarSign;
-    case 'clock':
-      return Clock;
-    case 'check-circle':
-      return CheckCircle;
-    default:
-      return null;
-  }
-});
 </script>

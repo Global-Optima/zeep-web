@@ -16,20 +16,20 @@
 
 		<div class="flex flex-col gap-4 w-full md:w-2/3">
 			<div class="gap-6 grid grid-cols-1 sm:grid-cols-3">
-				<AdminStoreEmployeesDetailsStats
+				<AdminEmployeesDetailsStats
 					title="Общие продажи"
 					:value="employeeStats.totalSales"
-					icon="dollar-sign"
+					:icon="DollarSign"
 				/>
-				<AdminStoreEmployeesDetailsStats
+				<AdminEmployeesDetailsStats
 					title="Отработанные часы"
 					:value="employeeStats.hoursWorked"
-					icon="clock"
+					:icon="Timer"
 				/>
-				<AdminStoreEmployeesDetailsStats
+				<AdminEmployeesDetailsStats
 					title="Завершенные задачи"
 					:value="employeeStats.tasksCompleted"
-					icon="check-circle"
+					:icon="CheckCheck"
 				/>
 			</div>
 
@@ -39,7 +39,7 @@
 					<CardDescription>Просмотр смен сотрудника</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<AdminStoreEmployeesDetailsShifts :shifts="employeeShifts" />
+					<AdminEmployeesDetailsShifts :shifts="employeeShifts" />
 				</CardContent>
 			</Card>
 
@@ -78,11 +78,12 @@ import {
 import { formatPrice } from '@/core/utils/price.utils'
 import AdminEmployeesDetailsAudits from '@/modules/admin/employees/components/details/admin-employees-details-audits.vue'
 import AdminEmployeesDetailsInfo from '@/modules/admin/employees/components/details/admin-employees-details-info.vue'
+import AdminEmployeesDetailsShifts from '@/modules/admin/employees/components/details/admin-employees-details-shifts.vue'
+import AdminEmployeesDetailsStats from '@/modules/admin/employees/components/details/admin-employees-details-stats.vue'
+import { franchiseeEmployeeService } from '@/modules/admin/employees/franchisees/services/franchisee-employees.service'
 import { employeeAuditService } from '@/modules/admin/employees/services/employees-audit.service'
-import AdminStoreEmployeesDetailsShifts from '@/modules/admin/employees/stores/components/details/admin-store-employees-details-shifts.vue'
-import AdminStoreEmployeesDetailsStats from '@/modules/admin/employees/stores/components/details/admin-store-employees-details-stats.vue'
-import { storeEmployeeService } from '@/modules/admin/employees/stores/services/store-employees.service'
 import { useQuery } from '@tanstack/vue-query'
+import { CheckCheck, DollarSign, Timer } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -101,13 +102,13 @@ const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-	queryKey: ['store-employee', employeeId],
-	queryFn: () => storeEmployeeService.getStoreEmployeeById(Number(employeeId)),
+	queryKey: ['franchisee-employee', employeeId],
+	queryFn: () => franchiseeEmployeeService.getFranchiseeEmployeeById(Number(employeeId)),
 	enabled: !isNaN(Number(employeeId)),
 })
 
 const { data: employeeAudits } = useQuery({
-	queryKey: ['employee-audits', employeeId],
+	queryKey: ['franchisee-audits', employeeId],
 	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employeeId) }),
 	enabled: !isNaN(Number(employeeId)),
 })
