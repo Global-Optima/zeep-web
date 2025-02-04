@@ -62,7 +62,6 @@ type StoreDTO struct {
 type StoreFilter struct {
 	utils.BaseFilter
 	IsFranchisee *bool   `form:"isFranchise"`
-	FranchiseeID *uint   `form:"franchiseeID"`
 	WarehouseID  *uint   `json:"warehouseId"`
 	Search       *string `form:"search"`
 }

@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -12,14 +13,16 @@ import (
 )
 
 type StoreHandler struct {
-	service      StoreService
-	auditService audit.AuditService
+	service           StoreService
+	franchiseeService franchisees.FranchiseeService
+	auditService      audit.AuditService
 }
 
-func NewStoreHandler(service StoreService, auditService audit.AuditService) *StoreHandler {
+func NewStoreHandler(service StoreService, franchiseeService franchisees.FranchiseeService, auditService audit.AuditService) *StoreHandler {
 	return &StoreHandler{
-		service:      service,
-		auditService: auditService,
+		service:           service,
+		franchiseeService: franchiseeService,
+		auditService:      auditService,
 	}
 }
 
@@ -83,7 +86,7 @@ func (h *StoreHandler) GetStoreByID(c *gin.Context) {
 	utils.SendSuccessResponse(c, store)
 }
 
-func (h *StoreHandler) GetStores(c *gin.Context) {
+func (h *StoreHandler) GetStoresByFranchisee(c *gin.Context) {
 	var filter types.StoreFilter
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Store{}); err != nil {
@@ -91,7 +94,13 @@ func (h *StoreHandler) GetStores(c *gin.Context) {
 		return
 	}
 
-	store, err := h.service.GetStores(&filter)
+	franchiseeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	store, err := h.service.GetStoresByFranchisee(franchiseeID, &filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve stores")
 		return
