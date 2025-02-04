@@ -117,8 +117,11 @@ func (r *storeRepository) GetStoresByFranchisee(franchiseeID uint, filter *types
 		Preload("Franchisee").
 		Preload("Warehouse").
 		Preload("Warehouse.Region").
-		Preload("Warehouse.FacilityAddress").
-		Where("franchisee_id = ?", franchiseeID)
+		Preload("Warehouse.FacilityAddress")
+
+	if franchiseeID != 0 {
+		query = query.Where("franchisee_id = ?", franchiseeID)
+	}
 
 	if filter == nil {
 		return nil, errors.New("filter is nil")
