@@ -27,6 +27,7 @@ COPY --from=builder /app/server .
 COPY --from=builder /app/.env .env
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/internal/localization ./internal/localization
+COPY --from=builder /app/pkg/utils/censor/dictionaries.json ./pkg/utils/censor/dictionaries.json
 
 # Expose the application port
 EXPOSE 8080

@@ -11,23 +11,6 @@
 				type="search"
 				class="bg-white w-full md:w-64"
 			/>
-			<!-- Filter Menu -->
-			<DropdownMenu>
-				<DropdownMenuTrigger as-child>
-					<Button
-						variant="outline"
-						class="whitespace-nowrap"
-					>
-						Фильтр
-						<ChevronDown class="ml-2 w-4 h-4" />
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem @click="setFranchiseFilter(undefined)">Все</DropdownMenuItem>
-					<DropdownMenuItem @click="setFranchiseFilter(true)">Франшиза</DropdownMenuItem>
-					<DropdownMenuItem @click="setFranchiseFilter(false)">Не франшиза</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
 		</div>
 
 		<!-- Right Side: Export and Add Store Buttons -->
@@ -45,17 +28,10 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
 import type { StoresFilter } from '@/modules/admin/stores/models/stores-dto.model'
 import { useDebounce } from '@vueuse/core'
-import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -75,12 +51,6 @@ watch(debouncedSearchTerm, (newValue) => {
 	localFilter.value.search = newValue
 	emit('update:filter', { searchTerm: newValue.trim() })
 })
-
-// Update franchise filter
-function setFranchiseFilter(isFranchise: boolean | undefined) {
-	localFilter.value.isFranchise = isFranchise
-	emit('update:filter', { isFranchise })
-}
 
 // Navigate to add store page
 const router = useRouter()
