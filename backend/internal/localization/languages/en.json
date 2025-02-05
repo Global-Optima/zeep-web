@@ -14,7 +14,8 @@
       "store": "Store *{{.Name}}* was created",
       "warehouse": "Warehouse *{{.Name}}* was created",
       "storeStock": "Store warehouse stock *{{.Name}}* was created in store *{{.StoreName}}*",
-      "ingredient": "Ingredient *{{.Name}}* was created"
+      "ingredient": "Ingredient *{{.Name}}* was created",
+      "stockRequest": "New stock request created in store *{{.Name}}*."
     },
     "update": {
       "product": "Product *{{.Name}}* was updated",
@@ -30,7 +31,8 @@
       "store": "Store *{{.Name}}* was updated",
       "warehouse": "Warehouse *{{.Name}}* was updated",
       "storeStock": "Store warehouse stock *{{.Name}}* was updated in store *{{.StoreName}}*",
-      "ingredient": "Ingredient *{{.Name}}* was updated"
+      "ingredient": "Ingredient *{{.Name}}* was updated",
+      "stockRequest": "Stock request was updated in *{{.Name}}*."
     },
     "delete": {
       "product": "Product *{{.Name}}* was deleted",
@@ -46,7 +48,8 @@
       "store": "Store *{{.Name}}* was deleted",
       "warehouse": "Warehouse *{{.Name}}* was deleted",
       "storeStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
-      "ingredient": "Ingredient *{{.Name}}* was deleted"
+      "ingredient": "Ingredient *{{.Name}}* was deleted",
+      "stockRequest": " *{{.Name}}* deleted stock request."
     }
   },
   "responses": {

@@ -296,6 +296,8 @@ func (r *stockRequestRepository) DeleteStockRequest(requestID uint) error {
 func (r *stockRequestRepository) GetOpenCartByStoreID(storeID uint) (*data.StockRequest, error) {
 	var request data.StockRequest
 	err := r.db.Model(&data.StockRequest{}).
+		Preload("Store").
+		Preload("Warehouse").
 		Preload("Warehouse.FacilityAddress").
 		Preload("Store.FacilityAddress").
 		Preload("Ingredients.StockMaterial").

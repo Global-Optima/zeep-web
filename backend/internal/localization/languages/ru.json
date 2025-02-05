@@ -14,7 +14,8 @@
 			"store": "Магазин *{{.Name}}* был создан",
 			"warehouse": "Склад *{{.Name}}* был создан",
 			"storeStock": "Складской запас *{{.Name}}* был создан в магазине *{{.StoreName}}*",
-			"ingredient": "Ингредиент *{{.Name}}* был создан"
+			"ingredient": "Ингредиент *{{.Name}}* был создан",
+			"stockRequest": "В кафе *{{.Name}}* был сделан новый запрос на склад."
 		},
 		"update": {
 			"product": "Продукт *{{.Name}}* был обновлен",
@@ -30,7 +31,8 @@
 			"store": "Магазин *{{.Name}}* был обновлен",
 			"warehouse": "Склад *{{.Name}}* был обновлен",
 			"storeStock": "Складской запас *{{.Name}}* был обновлен в магазине *{{.StoreName}}*",
-			"ingredient": "Ингредиент *{{.Name}}* был обновлен"
+			"ingredient": "Ингредиент *{{.Name}}* был обновлен",
+			"stockRequest": "Запрос на склад был обновлен в *{{.Name}}*."
 		},
 		"delete": {
 			"product": "Продукт *{{.Name}}* был удален",
@@ -46,7 +48,8 @@
 			"store": "Магазин *{{.Name}}* был удален",
 			"warehouse": "Склад *{{.Name}}* был удален",
 			"storeStock": "Складской запас *{{.Name}}* был убран из магазина *{{.StoreName}}*",
-			"ingredient": "Ингредиент *{{.Name}}* был удален"
+			"ingredient": "Ингредиент *{{.Name}}* был удален",
+			"stockRequest": "Запрос на склад был удален в *{{.Name}}*."
 		}
 	},
 	"responses": {
@@ -80,7 +83,7 @@
 			"imageUrlChange": "URL изображения обновлен с {{.OldImageURL}} на {{.NewImageURL}}"
 		},
 
-		"stockExpiration": "*{{.ItemName}}* истекает *{{.ExpirationDate}}*.",
+		"stockExpiration": "*{{.ItemName}}* срок годности истекает *{{.ExpirationDate}}*.",
 		"warehouseOutOfStock": "*{{.ItemName}}* заканчивается на складе.",
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",
 		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."

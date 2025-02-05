@@ -160,7 +160,7 @@ func (s *notificationService) NotifyStockExpiration(details details.Notification
 		return err
 	}
 
-	s.createNotificationAsync(data.WAREHOUSE_STOCK_EXPIRATION, data.MEDIUM, notificationDetails, details.GetBaseDetails())
+	s.createNotificationAsync(data.STOCK_EXPIRATION, data.MEDIUM, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 

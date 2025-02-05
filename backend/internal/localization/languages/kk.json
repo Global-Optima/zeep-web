@@ -14,7 +14,9 @@
       "store": "Дүкен *{{.Name}}* жасалды",
       "warehouse": "Қойма *{{.Name}}* жасалды",
       "storeStock": "Дүкеннің қоймасында *{{.StoreName}}* қор *{{.Name}}* жасалды",
-      "ingredient": "Ингредиент *{{.Name}}* жасалды"
+      "ingredient": "Ингредиент *{{.Name}}* жасалды",
+      "stockRequest": "*{{.Name}}* жаңа қор сұранысын жасады."
+
     },
     "update": {
       "product": "Өнім *{{.Name}}* жаңартылды",
@@ -30,7 +32,8 @@
       "store": "Дүкен *{{.Name}}* жаңартылды",
       "warehouse": "Қойма *{{.Name}}* жаңартылды",
       "storeStock": "Дүкеннің қоймасындағы *{{.StoreName}}* қор *{{.Name}}* жаңартылды",
-      "ingredient": "Ингредиент *{{.Name}}* жаңартылды"
+      "ingredient": "Ингредиент *{{.Name}}* жаңартылды",
+      "stockRequest": "*{{.Name}}* қор сұранысын жаңартты."
     },
     "delete": {
       "product": "Өнім *{{.Name}}* жойылды",
@@ -46,7 +49,8 @@
       "store": "Дүкен *{{.Name}}* жойылды",
       "warehouse": "Қойма *{{.Name}}* жойылды",
       "storeStock": "Дүкеннен *{{.StoreName}}* қойма қоры *{{.Name}}* жойылды",
-      "ingredient": "Ингредиент *{{.Name}}* жойылды"
+      "ingredient": "Ингредиент *{{.Name}}* жойылды",
+      "stockRequest": " *{{.Name}}* қор сұранысын өшірді."
     }
   },
   "responses": {
@@ -80,7 +84,7 @@
       "imageUrlChange": "Сурет URL {{.OldImageURL}}-ден {{.NewImageURL}}-ке жаңартылды"
     },
 
-    "stockExpiration": "*{{.ItemName}}* мерзімі *{{.ExpirationDate}}* аяқталады.",
+    "stockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
     "warehouseOutOfStock": "*{{.ItemName}}* қоймада аз қалды.",
     "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
     "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді."
