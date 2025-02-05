@@ -1,13 +1,14 @@
 package franchisees
 
 import (
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 type FranchiseeHandler struct {
@@ -171,6 +172,10 @@ func (h *FranchiseeHandler) GetAllFranchisees(c *gin.Context) {
 	var filter types.FranchiseeFilter
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid filter parameters")
+		return
+	}
 
 	warehouses, err := h.service.GetAllFranchisees(&filter)
 	if err != nil {
