@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
-import type { OrderDTO } from '@/modules/orders/models/orders.models'
+import type { OrderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { computed } from 'vue'
 
 // Props

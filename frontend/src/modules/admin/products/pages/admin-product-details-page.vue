@@ -30,7 +30,6 @@
 				<AdminProductsVariants
 					:product-details="productDetails"
 					@on-cancel="onCancel"
-					readonly
 				/>
 			</TabsContent>
 		</Tabs>

@@ -3,7 +3,7 @@
 		<!-- Main Layout -->
 		<div class="flex items-start w-full h-full">
 			<!-- In Progress Orders Section -->
-			<OrderSection
+			<AdminOrdersDisplayList
 				title="В работе"
 				:orders="inProgressOrders"
 				:currentPageIndex="inProgressPageIndex"
@@ -14,7 +14,7 @@
 			/>
 
 			<!-- Ready Orders Section -->
-			<OrderSection
+			<AdminOrdersDisplayList
 				title="Готовы"
 				:orders="readyOrders"
 				:currentPageIndex="readyPageIndex"
@@ -28,9 +28,9 @@
 </template>
 
 <script setup lang="ts">
-import OrderSection from '@/modules/kiosk/display/components/kiosk-orders-display-list.vue'
-import { useOrderEventsService } from '@/modules/kiosk/orders/services/orders-event.service'
-import { OrderStatus } from '@/modules/orders/models/orders.models'
+import { useOrderEventsService } from '@/modules/admin/store-orders/barista/hooks/use-orders-event.hook'
+import AdminOrdersDisplayList from '@/modules/admin/store-orders/display/components/admin-orders-display-list.vue'
+import { OrderStatus } from '@/modules/admin/store-orders/models/orders.models'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 // Constants

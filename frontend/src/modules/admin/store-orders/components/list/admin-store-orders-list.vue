@@ -68,7 +68,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { formatPrice } from '@/core/utils/price.utils'
-import { OrderStatus, type OrderDTO } from '@/modules/orders/models/orders.models'
+import { OrderStatus, type OrderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 

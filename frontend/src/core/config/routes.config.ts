@@ -1,4 +1,8 @@
 import { ADMIN_CHILDREN_ROUTES, ADMIN_ROUTES_CONFIG } from '@/core/routes/admin/admin.routes'
+import {
+	EVENT_ORDERS_CHILDREN_ROUTES,
+	EVENT_ORDERS_ROUTES_CONFIG,
+} from '@/core/routes/event-orders.routes'
 import { KIOSK_CHILDREN_ROUTES, KIOSK_ROUTES_CONFIG } from '@/core/routes/kiosk.routes'
 import type { RouteRecordRaw } from 'vue-router'
 import { AUTH_CHILDREN_ROUTES, AUTH_ROUTES_CONFIG } from '../routes/auth.routes'
@@ -10,6 +14,7 @@ const PARENT_ROUTES_RECORDS = addNameToChildrenInParent([
 	AUTH_ROUTES_CONFIG,
 	ERRORS_ROUTES_CONFIG,
 	ADMIN_ROUTES_CONFIG,
+	EVENT_ORDERS_ROUTES_CONFIG,
 ] as const)
 
 const CHILDREN_ROUTES_RECORDS = addNameToChildren([
@@ -17,6 +22,7 @@ const CHILDREN_ROUTES_RECORDS = addNameToChildren([
 	AUTH_CHILDREN_ROUTES,
 	ERRORS_CHILDREN_ROUTES,
 	ADMIN_CHILDREN_ROUTES,
+	EVENT_ORDERS_CHILDREN_ROUTES,
 ])
 
 function addNameToChildrenInParent(parentRoutes: ParentRoutePage[]): ParentRoutePage[] {

@@ -167,7 +167,7 @@ const emits = defineEmits<{
 
 const formSchema = toTypedSchema(
   z.object({
-    selectedStoreId: z.coerce.number().min(1, {message: "Пожалуйста, выберите магазин"}),
+    selectedStoreId: z.coerce.number().min(1, {message: "Пожалуйста, выберите кафе"}),
     selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
     password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
   })

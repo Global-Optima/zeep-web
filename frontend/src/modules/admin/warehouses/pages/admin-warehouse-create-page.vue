@@ -7,6 +7,7 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import AdminWarehouseCreateForm from '@/modules/admin/warehouses/components/create/admin-warehouse-create-form.vue'
 import type { CreateWarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 import { warehouseService } from '@/modules/admin/warehouses/services/warehouse.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'

@@ -44,7 +44,6 @@ const currentProductStore = useCurrentProductStore()
 }>();
 
  const selectProduct = () => {
-  // router.push({name: getRouteName("KIOSK_DETAILS"), params: {id: product.id}})
   currentProductStore.openModal(product.id)
 };
 </script>

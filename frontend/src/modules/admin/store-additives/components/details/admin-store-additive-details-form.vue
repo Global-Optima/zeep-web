@@ -27,7 +27,7 @@ const updateStoreAdditiveSchema = toTypedSchema(
     storePrice: z
       .number()
       .min(0, 'Цена не может быть меньше 0')
-      .describe('Введите новую цену в магазине'),
+      .describe('Введите новую цену в кафе'),
   })
 )
 
@@ -92,7 +92,7 @@ const onCancel = () => {
 		<Card>
 			<CardHeader>
 				<CardTitle>Детали добавки</CardTitle>
-				<CardDescription v-if="!readonly">Измените цену добавки для магазина.</CardDescription>
+				<CardDescription v-if="!readonly">Измените цену добавки для кафе.</CardDescription>
 			</CardHeader>
 			<CardContent class="space-y-6">
 				<!-- Base Price -->
@@ -116,13 +116,13 @@ const onCancel = () => {
 					v-slot="{ componentField }"
 				>
 					<FormItem>
-						<FormLabel>Цена в магазине</FormLabel>
+						<FormLabel>Цена в кафе</FormLabel>
 						<FormControl>
 							<Input
 								id="storePrice"
 								type="number"
 								v-bind="componentField"
-								placeholder="Введите цену в магазине"
+								placeholder="Введите цену в кафе"
 								:readonly="readonly"
 							/>
 						</FormControl>

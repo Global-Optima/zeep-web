@@ -10,7 +10,7 @@
 				v-if="!storeProductsResponse || storeProductsResponse.data.length === 0"
 				class="text-muted-foreground"
 			>
-				Товары магазина не найдены
+				Товары кафе не найдены
 			</p>
 
 			<AdminStoreProductsList

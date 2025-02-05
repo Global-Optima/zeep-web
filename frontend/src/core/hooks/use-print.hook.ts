@@ -1,5 +1,4 @@
 // usePrinter.ts
-
 export interface PrintOptions {
 	/**
 	 * Optional callback invoked before printing starts.
@@ -10,11 +9,6 @@ export interface PrintOptions {
 	 * Optional callback invoked after printing completes.
 	 */
 	afterPrint?: () => void
-
-	/**
-	 * If true, the PDF prints automatically without showing the print dialog.
-	 */
-	immediatePrint?: boolean
 }
 
 export interface UsePrinter {
@@ -26,60 +20,111 @@ export interface UsePrinter {
 	print: (content: Blob, options?: PrintOptions) => Promise<void>
 }
 
+function isPDFBlob(content: Blob): boolean {
+	return content instanceof Blob && content.type === 'application/pdf'
+}
+
+function isAndroid(): boolean {
+	return /Android/i.test(navigator.userAgent)
+}
+
 export function usePrinter(): UsePrinter {
 	const print = async (content: Blob, options?: PrintOptions): Promise<void> => {
-		if (!(content instanceof Blob) || content.type !== 'application/pdf') {
+		if (!isPDFBlob(content)) {
 			throw new Error('Invalid content: Only PDF blobs are supported.')
 		}
 
-		const { beforePrint, afterPrint, immediatePrint = false } = options || {}
+		const { beforePrint, afterPrint } = options || {}
+		const pdfUrl = URL.createObjectURL(content)
+
+		let cleanupCalled = false
+		const cleanup = () => {
+			if (cleanupCalled) return
+			cleanupCalled = true
+
+			URL.revokeObjectURL(pdfUrl)
+			if (afterPrint) afterPrint()
+		}
 
 		try {
 			if (beforePrint) beforePrint()
 
-			// Create an object URL for the PDF blob
-			const pdfUrl = URL.createObjectURL(content)
-
-			// Create a hidden iframe
-			const iframe = document.createElement('iframe')
-			iframe.style.position = 'absolute'
-			iframe.style.width = '0'
-			iframe.style.height = '0'
-			iframe.style.border = '0'
-			iframe.style.visibility = 'hidden'
-			document.body.appendChild(iframe)
-
-			// Load the PDF in the iframe
-			iframe.src = pdfUrl
-
-			iframe.onload = () => {
-				const iframeWindow = iframe.contentWindow
-				if (!iframeWindow) {
-					throw new Error('Failed to access iframe window.')
+			// Only detect Android. If true, open in a new tab.
+			if (isAndroid()) {
+				/**
+				 * Many Android devices/browsers will not show a print dialog
+				 * and instead will just download the file when we use `print()`.
+				 * We open the PDF in a new tab to at least allow the user to print manually.
+				 */
+				const newTab = window.open(pdfUrl, '_blank', 'noopener,noreferrer')
+				if (!newTab) {
+					throw new Error('Failed to open a new tab for printing.')
 				}
 
-				iframeWindow.focus()
-
-				if (immediatePrint) {
-					// 🚀 Attempt seamless printing without a dialog
-					iframeWindow.print()
-					iframeWindow.onafterprint = () => {
-						cleanup()
-					}
-				} else {
-					// Normal print flow
-					iframeWindow.print()
-					iframeWindow.onafterprint = () => {
+				// Attempt to call print on load
+				newTab.onload = () => {
+					try {
+						newTab.focus()
+						newTab.print()
+					} catch (error) {
+						console.error('Print Error on new tab:', error)
+					} finally {
 						cleanup()
 					}
 				}
-			}
 
-			// Cleanup function
-			const cleanup = () => {
-				document.body.removeChild(iframe)
-				URL.revokeObjectURL(pdfUrl) // Free memory
-				if (afterPrint) afterPrint()
+				// Fallback if onload doesn’t fire within 2 seconds
+				setTimeout(() => {
+					if (!cleanupCalled) {
+						try {
+							newTab.focus()
+							newTab.print()
+						} catch (error) {
+							console.error('Print Error in fallback:', error)
+						} finally {
+							cleanup()
+						}
+					}
+				}, 2000)
+			} else {
+				// Default approach for non-Android devices: print via an iframe
+				const iframe = document.createElement('iframe')
+				iframe.style.position = 'absolute'
+				iframe.style.width = '0'
+				iframe.style.height = '0'
+				iframe.style.border = '0'
+				iframe.style.visibility = 'hidden'
+				iframe.src = pdfUrl
+
+				document.body.appendChild(iframe)
+
+				iframe.onload = () => {
+					try {
+						const iframeWindow = iframe.contentWindow
+						if (!iframeWindow) {
+							throw new Error('Failed to access iframe window.')
+						}
+						iframeWindow.focus()
+						iframeWindow.print()
+
+						// Cleanup after user closes the print dialog
+						iframeWindow.onafterprint = () => {
+							cleanup()
+							// Remove iframe from DOM
+							if (iframe.parentNode) {
+								iframe.parentNode.removeChild(iframe)
+							}
+						}
+					} catch (error) {
+						console.error('Iframe Print Error:', error)
+						if (iframe.parentNode) {
+							iframe.parentNode.removeChild(iframe)
+						}
+						// As a last resort, open the PDF in a new tab
+						window.open(pdfUrl, '_blank', 'noopener,noreferrer')
+						cleanup()
+					}
+				}
 			}
 		} catch (error) {
 			console.error('Print Error:', error)

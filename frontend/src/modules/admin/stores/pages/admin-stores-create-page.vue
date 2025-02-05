@@ -22,21 +22,21 @@ const createMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Создание...',
-			description: 'Пожалуйста, подождите, создается новый магазин.',
+			description: 'Пожалуйста, подождите, создается новый кафе.',
 		})
 	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['stores'] })
 		toast({
 			title: 'Успех!',
-			description: 'Магазин успешно создан.',
+			description: 'Кафе успешно создан.',
 		})
 		router.push({ name: 'ADMIN_STORES' })
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при создании магазина.',
+			description: 'Произошла ошибка при создании кафе.',
 			variant: 'destructive',
 		})
 	},

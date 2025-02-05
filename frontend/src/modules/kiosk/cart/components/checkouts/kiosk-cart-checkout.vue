@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
+import type { CreateOrderDTO } from '@/modules/admin/store-orders/models/orders.models'
+import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { useResetKioskState } from '@/modules/kiosk/hooks/use-reset-kiosk.hook'
-import type { CreateOrderDTO } from '@/modules/orders/models/orders.models'
-import { ordersService } from '@/modules/orders/services/orders.service'
 import { useMutation } from '@tanstack/vue-query'
 import { ChevronRight } from 'lucide-vue-next'
 import { defineAsyncComponent, ref } from 'vue'
@@ -32,12 +32,8 @@ const { cartItems, clearCart } = useCartStore();
 // Mutation for creating the order
 const createOrderMutation = useMutation({
   mutationFn: (orderDTO: CreateOrderDTO) => ordersService.createOrder(orderDTO),
-  onSuccess: (response) => {
-    stepState.value.orderId = response.orderId;
-    stepState.value.qrCodeUrl = `/api/v1/orders/${response.orderId}/receipt`;
-  },
   onError: () => {
-    toast({title: "Ошибка при создании заказа"});
+    toast({description: "Ошибка при создании заказа"});
   },
 });
 

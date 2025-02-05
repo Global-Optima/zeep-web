@@ -40,7 +40,7 @@ const createStockMaterialSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название материала'),
     description: z.string().optional(),
-    safetyStock: z.coerce.number().min(1, 'Безопасный запас должен быть больше 0'),
+    safetyStock: z.coerce.number().min(1, 'Безопасный запас упаковок должен быть больше 0'),
     size: z.coerce.number().min(1, 'Введите размер упаковки'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
@@ -222,13 +222,13 @@ const onGenerateBarcodeClick = async () => {
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Безопасный запас</FormLabel>
+									<FormLabel>Безопасный запас упаковок</FormLabel>
 									<FormControl>
 										<Input
 											id="safetyStock"
 											type="number"
 											v-bind="componentField"
-											placeholder="Введите безопасный запас"
+											placeholder="Введите безопасный запас упаковок"
 										/>
 									</FormControl>
 									<FormMessage />

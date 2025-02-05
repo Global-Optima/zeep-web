@@ -6,7 +6,7 @@ import AppAdminHeader from '@/core/layouts/admin/app-admin-header.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
 import { EmployeeRole, EmployeeType } from '@/modules/admin/employees/models/employees.models'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
-import { Coffee, Store, TvMinimal } from 'lucide-vue-next'
+import { Kanban, Store, TvMinimal } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -15,15 +15,15 @@ const router = useRouter()
 const {currentEmployee} = useEmployeeAuthStore()
 
 const onDisplayClick = () => {
-	router.push({name: getRouteName('KIOSK_ORDERS_DISPLAY')})
+	router.push({name: getRouteName("EVENT_ORDERS_DISPLAY")})
 }
 
 const onKioskClick = () => {
-	router.push({name: getRouteName('KIOSK_HOME')})
+	router.replace({name: getRouteName('KIOSK_HOME')})
 }
 
 const onBaristaClick = () => {
-	router.push({name: getRouteName('KIOSK_ORDERS')})
+	router.push({name: getRouteName("EVENT_ORDERS_BARISTA")})
 }
 
 const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.BARISTA, EmployeeRole.STORE_MANAGER].includes(currentEmployee.role) : false )
@@ -49,7 +49,7 @@ const layoutLabel = computed(() => {
 </script>
 
 <template>
-	<div class="flex bg-white w-full min-h-screen">
+	<div class="flex bg-white pt-safe w-full min-h-screen">
 		<div class="md:block relative hidden bg-muted/40 border-r">
 			<div class="top-0 sticky flex flex-col gap-2 h-full max-h-screen">
 				<div class="flex items-center px-4 lg:px-6 border-b h-14 lg:h-[60px]">
@@ -89,11 +89,12 @@ const layoutLabel = computed(() => {
 						@click="onBaristaClick"
 						class="flex items-center gap-3 mb-2 py-5 w-full"
 					>
-						<Coffee class="w-5 h-5" />
-						<p class="text-base">Бариста</p>
+						<Kanban class="w-5 h-5" />
+						<p class="text-base">Заказы</p>
 					</Button>
 
 					<Button
+						variant="outline"
 						@click="onKioskClick"
 						class="flex items-center gap-3 py-5 w-full"
 					>
