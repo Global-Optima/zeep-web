@@ -27,6 +27,7 @@ import type {
   WarehouseStockMaterialDetailsDTO,
 } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { ChevronLeft, Printer } from 'lucide-vue-next'
+import { usePrinter } from '@/core/hooks/use-print.hook'
 
 // Props
 const props = defineProps<{
@@ -54,9 +55,12 @@ const materialInfo = computed(() => [
   },
 ])
 
+const {print} = usePrinter()
+
 const onPrintBarcode = async () => {
   if (props.readonly) return
-  await stockMaterialsService.getStockMaterialsBarcodeFile(props.initialData.stockMaterial.id);
+  const blob = await stockMaterialsService.getStockMaterialsBarcodeFile(props.initialData.stockMaterial.id);
+  print(blob)
 }
 
 // Date Formatter Utility
