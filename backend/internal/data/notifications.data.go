@@ -16,7 +16,7 @@ const (
 	NEW_ORDER                    NotificationEventType = "NEW_ORDER"
 	STORE_WAREHOUSE_RUN_OUT      NotificationEventType = "STORE_WAREHOUSE_RUN_OUT"
 	CENTRAL_CATALOG_UPDATE       NotificationEventType = "CENTRAL_CATALOG_UPDATE"
-	WAREHOUSE_STOCK_EXPIRATION   NotificationEventType = "WAREHOUSE_STOCK_EXPIRATION"
+	STOCK_EXPIRATION             NotificationEventType = "STOCK_EXPIRATION"
 	WAREHOUSE_OUT_OF_STOCK       NotificationEventType = "WAREHOUSE_OUT_OF_STOCK"
 	NEW_STOCK_REQUEST            NotificationEventType = "NEW_STOCK_REQUEST"
 	PRICE_CHANGE                 NotificationEventType = "PRICE_CHANGE"

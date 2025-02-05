@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 
@@ -19,13 +20,19 @@ type StockRequestHandler struct {
 	service           StockRequestService
 	franchiseeService franchisees.FranchiseeService
 	regionService     regions.RegionService
+	auditService      audit.AuditService
 }
 
-func NewStockRequestHandler(service StockRequestService, franchiseeService franchisees.FranchiseeService, regionService regions.RegionService) *StockRequestHandler {
+func NewStockRequestHandler(service StockRequestService,
+	franchiseeService franchisees.FranchiseeService,
+	regionService regions.RegionService,
+	auditService audit.AuditService,
+) *StockRequestHandler {
 	return &StockRequestHandler{
 		service:           service,
 		franchiseeService: franchiseeService,
 		regionService:     regionService,
+		auditService:      auditService,
 	}
 }
 
@@ -47,11 +54,25 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateStockRequest(storeID, req)
+	id, storeName, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to create stock requests: %s", err.Error()))
 		return
 	}
+
+	action := types.CreateStockRequestAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: storeName,
+		},
+		&types.AuditPayloads{
+			CreateStockRequestDTO: &req,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "stock request created successfully")
 }
@@ -150,10 +171,25 @@ func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AcceptStockRequestWithChange(uint(stockRequestID), dto); err != nil {
+	request, err := h.service.AcceptStockRequestWithChange(uint(stockRequestID), dto)
+	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{
+			AcceptWithChangeRequestStatusDTO: &dto,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
@@ -170,10 +206,25 @@ func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RejectStockRequestByStore(uint(stockRequestID), dto); err != nil {
+	request, err := h.service.RejectStockRequestByStore(uint(stockRequestID), dto)
+	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{
+			RejectStockRequestStatusDTO: &dto,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
@@ -190,10 +241,25 @@ func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RejectStockRequestByWarehouse(uint(stockRequestID), dto); err != nil {
+	request, err := h.service.RejectStockRequestByWarehouse(uint(stockRequestID), dto)
+	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Warehouse.Name,
+		},
+		&types.AuditPayloads{
+			RejectStockRequestStatusDTO: &dto,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
@@ -204,10 +270,23 @@ func (h *StockRequestHandler) SetProcessedStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.SetProcessedStatus(uint(stockRequestID)); err != nil {
+	request, err := h.service.SetProcessedStatus(uint(stockRequestID))
+	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
@@ -218,10 +297,23 @@ func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.SetInDeliveryStatus(uint(stockRequestID)); err != nil {
+	request, err := h.service.SetInDeliveryStatus(uint(stockRequestID))
+	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Warehouse.Name,
+		},
+		&types.AuditPayloads{},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
@@ -232,10 +324,23 @@ func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.SetCompletedStatus(uint(stockRequestID)); err != nil {
+	request, err := h.service.SetCompletedStatus(uint(stockRequestID))
+	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
@@ -257,10 +362,25 @@ func (h *StockRequestHandler) UpdateStockRequest(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateStockRequest(uint(stockRequestID), req); err != nil {
+	request, err := h.service.UpdateStockRequest(uint(stockRequestID), req)
+	if err != nil {
 		utils.SendInternalServerError(c, "Failed to update stock request ingredients: "+err.Error())
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{
+			StockMaterials: req,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessResponse(c, gin.H{"message": "Stock request ingredients updated successfully"})
 }
@@ -271,11 +391,22 @@ func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteStockRequest(uint(stockRequestID))
+	request, err := h.service.DeleteStockRequest(uint(stockRequestID))
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to delete stock request")
 		return
 	}
+
+	action := types.DeleteStockRequestAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
@@ -309,11 +440,25 @@ func (h *StockRequestHandler) AddStockMaterialToCart(c *gin.Context) {
 		return
 	}
 
-	err := h.service.AddStockMaterialToCart(uint(storeID), dto)
+	request, err := h.service.AddStockMaterialToCart(uint(storeID), dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed too add to cart")
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   request.ID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{
+			StockMaterials: []types.StockRequestStockMaterialDTO{dto},
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }
