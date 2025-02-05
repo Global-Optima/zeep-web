@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	ERROR_MESSAGE_BINDING_JSON  = "Неверный ввод: ошибка привязки JSON данных"
-	ERROR_MESSAGE_BINDING_QUERY = "Ошибка привязки параметров запроса"
+	ERROR_MESSAGE_BINDING_JSON  = "Неверный ввод данных"
+	ERROR_MESSAGE_BINDING_QUERY = "Неверные параметры запроса"
 )
 
 func SendSuccessResponse(c *gin.Context, data interface{}) {
