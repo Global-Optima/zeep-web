@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"log"
 	"net"
 	"os"
@@ -13,8 +12,11 @@ import (
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
+	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -162,12 +164,12 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
 
-	/*apiRouter := routes.NewRouter(router, "/api", "/test")
+	apiRouter := routes.NewRouter(router, "/api", "/test")
 
 	dbHandler := &database.DBHandler{DB: db}
 
 	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
-	appContainer.MustInitModules()*/
+	appContainer.MustInitModules()
 
 	return router
 }
@@ -188,7 +190,7 @@ func truncateTables(db *gorm.DB) {
 func loadMockData(db *gorm.DB) {
 	_, b, _, _ := runtime.Caller(0)
 	baseDir := filepath.Join(filepath.Dir(b), "../../..")
-	sqlFilePath := filepath.Join(baseDir, "scripts", "CREATE_TEST_DATA.sql")
+	sqlFilePath := filepath.Join(baseDir, "scripts", "CREATE_MOCK_DATA.sql")
 
 	sqlContent, err := os.ReadFile(sqlFilePath)
 	if err != nil {
