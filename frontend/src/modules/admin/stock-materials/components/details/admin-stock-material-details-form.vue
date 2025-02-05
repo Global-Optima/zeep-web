@@ -29,6 +29,7 @@ import type {
 } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
+import { usePrinter } from "@/core/hooks/use-print.hook"
 
 // Props
 const { stockMaterial, readonly = false } = defineProps<{
@@ -114,9 +115,13 @@ function selectIngredient(ingredient: IngredientsDTO) {
   setFieldValue('ingredientId', ingredient.id)
 }
 
+const {print} = usePrinter()
+
 const onPrintBarcode = async () => {
   if (readonly) return
-  await stockMaterialsService.getBarcodeFile(stockMaterial.id)
+  const barcodeBlob = await stockMaterialsService.getBarcodeFile(stockMaterial.id)
+
+  await print(barcodeBlob, {immediatePrint: true})
 }
 </script>
 
