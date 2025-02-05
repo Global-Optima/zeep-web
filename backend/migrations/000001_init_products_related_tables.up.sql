@@ -625,7 +625,7 @@ CREATE TABLE
 		customer_id INT REFERENCES customers (id) ON DELETE SET NULL,
 		display_number INT NOT NULL,
 		customer_name VARCHAR(255) NOT NULL,
-		employee_id INT REFERENCES employees (id) ON DELETE SET NULL,
+		store_employee_id INT REFERENCES store_employees (id) ON DELETE SET NULL,
 		store_id INT REFERENCES stores (id) NOT NULL,
 		delivery_address_id INT REFERENCES customer_addresses (id) ON DELETE SET NULL,
 		status VARCHAR(50) NOT NULL,

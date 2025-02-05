@@ -165,7 +165,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, wrappedErr
 	}
 
-	details := &details.NewOrderNotificationDetails{
+	notificationDetails := &details.NewOrderNotificationDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           order.StoreID,
 			FacilityName: order.Store.Name,
@@ -173,7 +173,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		CustomerName: createOrderDTO.CustomerName,
 		OrderID:      order.ID,
 	}
-	err = s.notificationService.NotifyNewOrder(details)
+	err = s.notificationService.NotifyNewOrder(notificationDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed to notify new order: %w", err)
 	}
@@ -329,7 +329,7 @@ func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, erro
 
 	// Create a new PDF with custom page size:
 	// Use gofpdf.NewCustom so we can specify exact dimensions.
-	pdf := gofpdf.NewCustom(&gofpdf.InitType{
+	pdfFile := gofpdf.NewCustom(&gofpdf.InitType{
 		UnitStr: "mm",
 		Size: gofpdf.SizeType{
 			Wd: imgWidthMM + (2 * marginMM),
@@ -337,18 +337,18 @@ func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, erro
 		},
 		FontDirStr: "",
 	})
-	pdf.SetAutoPageBreak(false, 0)
-	pdf.AddPage()
+	pdfFile.SetAutoPageBreak(false, 0)
+	pdfFile.AddPage()
 
 	// Register and place the image
 	imgOptions := gofpdf.ImageOptions{
 		ImageType: "PNG",
 		ReadDpi:   true,
 	}
-	pdf.RegisterImageOptionsReader("barcode.png", imgOptions, &imgBuf)
+	pdfFile.RegisterImageOptionsReader("barcode.png", imgOptions, &imgBuf)
 
 	// Place image with the margin as an offset
-	pdf.ImageOptions(
+	pdfFile.ImageOptions(
 		"barcode.png",
 		marginMM,    // x-pos
 		marginMM,    // y-pos
@@ -362,7 +362,7 @@ func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, erro
 
 	// 9. Output PDF as byte slice
 	var pdfBuf bytes.Buffer
-	if err := pdf.Output(&pdfBuf); err != nil {
+	if err := pdfFile.Output(&pdfBuf); err != nil {
 		return nil, fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
@@ -481,7 +481,7 @@ func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, sto
 func (s *orderService) notifyLowStockIngredients(order *data.Order, stockMap map[uint]*data.StoreStock) {
 	for _, stock := range stockMap {
 		if stock.Quantity <= stock.LowStockThreshold {
-			details := &details.StoreWarehouseRunOutDetails{
+			notificationDetails := &details.StoreWarehouseRunOutDetails{
 				BaseNotificationDetails: details.BaseNotificationDetails{
 					ID:           order.StoreID,
 					FacilityName: order.Store.Name,
@@ -489,7 +489,7 @@ func (s *orderService) notifyLowStockIngredients(order *data.Order, stockMap map
 				StockItem:   stock.Ingredient.Name,
 				StockItemID: stock.IngredientID,
 			}
-			err := s.notificationService.NotifyStoreWarehouseRunOut(details)
+			err := s.notificationService.NotifyStoreWarehouseRunOut(notificationDetails)
 			if err != nil {
 				s.logger.Errorf("failed to send notification: %v", err)
 			}
@@ -505,7 +505,7 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 		return nil, wrappedErr
 	}
 
-	details := pdf.PDFReceiptDetails{
+	detailsPDF := pdf.PDFReceiptDetails{
 		OrderID:   order.ID,
 		StoreID:   order.StoreID,
 		OrderDate: order.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -526,10 +526,10 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 			})
 		}
 
-		details.SubOrders = append(details.SubOrders, pdfSuborder)
+		detailsPDF.SubOrders = append(detailsPDF.SubOrders, pdfSuborder)
 	}
 
-	return pdf.GeneratePDFReceipt(details)
+	return pdf.GeneratePDFReceipt(detailsPDF)
 }
 
 func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error) {

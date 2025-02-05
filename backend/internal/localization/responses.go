@@ -2,7 +2,6 @@ package localization
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"time"
@@ -55,7 +54,7 @@ func NewLocalizedResponse(c *gin.Context, localizedMessages *LocalizedMessage, s
 	return &LocalizedResponse{
 		Message:   localizedMessages,
 		Status:    status,
-		Timestamp: utils.ToUTC(time.Now()),
+		Timestamp: time.Now().UTC(),
 		Path:      c.FullPath(),
 	}
 }

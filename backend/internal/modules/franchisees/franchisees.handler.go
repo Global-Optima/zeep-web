@@ -170,7 +170,10 @@ func (h *FranchiseeHandler) GetFranchisees(c *gin.Context) {
 func (h *FranchiseeHandler) GetAllFranchisees(c *gin.Context) {
 	var filter types.FranchiseeFilter
 
-	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
 
 	warehouses, err := h.service.GetAllFranchisees(&filter)
 	if err != nil {
