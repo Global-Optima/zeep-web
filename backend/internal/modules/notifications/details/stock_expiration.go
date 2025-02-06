@@ -43,7 +43,7 @@ func BuildStockExpirationMessage(details *StockExpirationDetails) (localization.
 		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
-	key := localization.FormTranslationKey("notification", data.WAREHOUSE_STOCK_EXPIRATION.ToString())
+	key := localization.FormTranslationKey("notification", data.STOCK_EXPIRATION.ToString())
 	messages, err := localization.Translate(key, map[string]interface{}{
 		"FacilityName":   details.FacilityName,
 		"ID":             details.ID,

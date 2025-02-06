@@ -80,7 +80,7 @@ func InitNotificationRegistry() {
 	)
 
 	RegisterNotification(
-		data.WAREHOUSE_STOCK_EXPIRATION,
+		data.STOCK_EXPIRATION,
 		func() details.NotificationDetails {
 			return &details.StockExpirationDetails{}
 		},

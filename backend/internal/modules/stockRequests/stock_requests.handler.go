@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 
@@ -19,13 +20,19 @@ type StockRequestHandler struct {
 	service           StockRequestService
 	franchiseeService franchisees.FranchiseeService
 	regionService     regions.RegionService
+	auditService      audit.AuditService
 }
 
-func NewStockRequestHandler(service StockRequestService, franchiseeService franchisees.FranchiseeService, regionService regions.RegionService) *StockRequestHandler {
+func NewStockRequestHandler(service StockRequestService,
+	franchiseeService franchisees.FranchiseeService,
+	regionService regions.RegionService,
+	auditService audit.AuditService,
+) *StockRequestHandler {
 	return &StockRequestHandler{
 		service:           service,
 		franchiseeService: franchiseeService,
 		regionService:     regionService,
+		auditService:      auditService,
 	}
 }
 
@@ -47,11 +54,25 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateStockRequest(storeID, req)
+	id, storeName, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.CreateStockRequestAuditFactory(
+		&data.BaseDetails{
+			ID:   id,
+			Name: storeName,
+		},
+		&types.AuditPayloads{
+			CreateStockRequestDTO: &req,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response201StockRequest)
 }
@@ -144,10 +165,25 @@ func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AcceptStockRequestWithChange(stockRequestID, dto); err != nil {
+	request, err := h.service.AcceptStockRequestWithChange(stockRequestID, dto)
+	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{
+			AcceptWithChangeRequestStatusDTO: &dto,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
@@ -165,10 +201,25 @@ func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RejectStockRequestByStore(stockRequestID, dto); err != nil {
+	request, err := h.service.RejectStockRequestByStore(stockRequestID, dto)
+	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{
+			RejectStockRequestStatusDTO: &dto,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
@@ -185,10 +236,25 @@ func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RejectStockRequestByWarehouse(uint(stockRequestID), dto); err != nil {
+	request, err := h.service.RejectStockRequestByWarehouse(stockRequestID, dto)
+	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Warehouse.Name,
+		},
+		&types.AuditPayloads{
+			RejectStockRequestStatusDTO: &dto,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
@@ -200,10 +266,23 @@ func (h *StockRequestHandler) SetProcessedStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.SetProcessedStatus(uint(stockRequestID)); err != nil {
+	request, err := h.service.SetProcessedStatus(stockRequestID)
+	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
@@ -215,10 +294,23 @@ func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.SetInDeliveryStatus(stockRequestID); err != nil {
+	request, err := h.service.SetInDeliveryStatus(stockRequestID)
+	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Warehouse.Name,
+		},
+		&types.AuditPayloads{},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
@@ -230,10 +322,23 @@ func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.SetCompletedStatus(stockRequestID); err != nil {
+	request, err := h.service.SetCompletedStatus(uint(stockRequestID))
+	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
@@ -256,10 +361,25 @@ func (h *StockRequestHandler) UpdateStockRequest(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateStockRequest(stockRequestID, req); err != nil {
+	request, err := h.service.UpdateStockRequest(stockRequestID, req)
+	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{
+			StockMaterials: req,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
@@ -271,11 +391,22 @@ func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteStockRequest(stockRequestID)
+	request, err := h.service.DeleteStockRequest(stockRequestID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.DeleteStockRequestAuditFactory(
+		&data.BaseDetails{
+			ID:   stockRequestID,
+			Name: request.Store.Name,
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestDelete)
 }
@@ -309,11 +440,25 @@ func (h *StockRequestHandler) AddStockMaterialToCart(c *gin.Context) {
 		return
 	}
 
-	err := h.service.AddStockMaterialToCart(storeID, dto)
+	request, err := h.service.AddStockMaterialToCart(storeID, dto)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
+
+	action := types.UpdateStockRequestStatusAuditFactory(
+		&data.BaseDetails{
+			ID:   request.ID,
+			Name: request.Store.Name,
+		},
+		&types.AuditPayloads{
+			StockMaterials: []types.StockRequestStockMaterialDTO{dto},
+		},
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response201StockRequest)
 }
