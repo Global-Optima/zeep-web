@@ -27,8 +27,6 @@ func SendSuccessResponseWithPagination(c *gin.Context, data interface{}, paginat
 	})
 }
 
-// TODO create func SendCustomResponseWithStatus(c *gin.Context, localizedMessages *localization.LocalizedMessage, status int)
-
 func SendMessageWithStatus(c *gin.Context, message string, status int) {
 	c.JSON(status, gin.H{
 		"message": message,

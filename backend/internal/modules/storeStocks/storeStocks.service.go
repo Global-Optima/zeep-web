@@ -1,4 +1,4 @@
-package storeStock
+package storeStocks
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )

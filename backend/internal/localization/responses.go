@@ -2,7 +2,9 @@ package localization
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -14,9 +16,12 @@ type LocalizedErrorInterface interface {
 }
 
 const (
-	RESPONSES_KEY      = "responses"
-	COMPONENT_NAME_KEY = "Component"
-	NO_COMPONENT       = ""
+	RESPONSES_KEY = "responses"
+)
+
+var (
+	ErrMessageBindingJSON  = NewResponseKey(http.StatusBadRequest, "json")
+	ErrMessageBindingQuery = NewResponseKey(http.StatusBadRequest, "query")
 )
 
 var DefaultLocalizedErrorMessages = &LocalizedMessage{
@@ -32,22 +37,44 @@ type LocalizedResponse struct {
 	Path      string            `json:"path"`
 }
 
-func TranslateResponse(c *gin.Context, status int, componentName data.ComponentName) *LocalizedResponse {
+type ResponseKey struct {
+	Status        int
+	ComponentName data.ComponentName
+	OptionalKeys  []string
+}
+
+func NewResponseKey(status int, componentName data.ComponentName, optionalKeys ...string) *ResponseKey {
+	return &ResponseKey{
+		Status:        status,
+		ComponentName: componentName,
+		OptionalKeys:  optionalKeys,
+	}
+}
+
+func translateResponseWithStatus(c *gin.Context, status int) *LocalizedResponse {
+	localizedMessages, err := translateCommonResponse(status)
+	if err != nil {
+		localizedMessages = DefaultLocalizedErrorMessages
+	}
+	return NewLocalizedResponse(c, localizedMessages, status)
+}
+
+func translateResponseWithKey(c *gin.Context, responseKey *ResponseKey) *LocalizedResponse {
 	var localizedMessages *LocalizedMessage
 	var err error
 
-	if componentName != "" {
-		localizedMessages, err = translateComponentResponse(status, componentName)
+	if responseKey.ComponentName != "" {
+		localizedMessages, err = translateComponentResponse(responseKey)
 	}
 
-	if err != nil || componentName == "" {
-		localizedMessages, err = translateCommonResponse(status)
+	if err != nil || responseKey.ComponentName == "" {
+		localizedMessages, err = translateCommonResponse(responseKey.Status)
 	}
 	if err != nil {
 		localizedMessages = DefaultLocalizedErrorMessages
 	}
 
-	return NewLocalizedResponse(c, localizedMessages, status)
+	return NewLocalizedResponse(c, localizedMessages, responseKey.Status)
 }
 
 func NewLocalizedResponse(c *gin.Context, localizedMessages *LocalizedMessage, status int) *LocalizedResponse {
@@ -59,12 +86,29 @@ func NewLocalizedResponse(c *gin.Context, localizedMessages *LocalizedMessage, s
 	}
 }
 
-func translateComponentResponse(status int, componentName data.ComponentName) (*LocalizedMessage, error) {
-	return Translate(FormTranslationKey(RESPONSES_KEY, strconv.Itoa(status), "-", componentName.ToString()),
+func translateComponentResponse(responseKey *ResponseKey) (*LocalizedMessage, error) {
+	return Translate(formResponseTranslationKey(responseKey),
 		map[string]interface{}{})
 }
 
 func translateCommonResponse(status int) (*LocalizedMessage, error) {
 	return Translate(FormTranslationKey(RESPONSES_KEY, strconv.Itoa(status)),
 		map[string]interface{}{})
+}
+
+func formResponseTranslationKey(responseKey *ResponseKey) string {
+	key := FormTranslationKey(RESPONSES_KEY, strconv.Itoa(responseKey.Status))
+	key += "-" + ToCamelCase(responseKey.ComponentName.ToString())
+	for _, optionalKey := range responseKey.OptionalKeys {
+		key += "-" + optionalKey
+	}
+	return key
+}
+
+func SendLocalizedResponseWithKey(c *gin.Context, responseKey *ResponseKey) {
+	utils.SendResponseWithStatus(c, translateResponseWithKey(c, responseKey), responseKey.Status)
+}
+
+func SendLocalizedResponseWithStatus(c *gin.Context, status int) {
+	utils.SendResponseWithStatus(c, translateResponseWithStatus(c, status), status)
 }

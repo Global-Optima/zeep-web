@@ -3,6 +3,7 @@ package orders
 import (
 	"bytes"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"image"
 	"image/color"
 	"image/draw"
@@ -13,7 +14,6 @@ import (
 
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
 	"github.com/golang/freetype/truetype"
 	"github.com/jung-kurt/gofpdf"
 
@@ -60,7 +60,7 @@ type orderService struct {
 	orderRepo           OrderRepository
 	storeProductRepo    storeProducts.StoreProductRepository
 	storeAdditiveRepo   storeAdditives.StoreAdditiveRepository
-	storeStockRepo      storeStock.StoreStockRepository
+	storeStockRepo      storeStocks.StoreStockRepository
 	notificationService notifications.NotificationService
 	logger              *zap.SugaredLogger
 }
@@ -69,7 +69,7 @@ func NewOrderService(
 	orderRepo OrderRepository,
 	storeProductRepo storeProducts.StoreProductRepository,
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
-	storeStockRepo storeStock.StoreStockRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
 	notificationService notifications.NotificationService,
 	logger *zap.SugaredLogger,
 ) OrderService {

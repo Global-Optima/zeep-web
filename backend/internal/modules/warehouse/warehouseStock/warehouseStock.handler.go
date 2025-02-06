@@ -94,7 +94,7 @@ func (h *WarehouseStockHandler) GetDeliveries(c *gin.Context) {
 func (h *WarehouseStockHandler) GetDeliveryByID(c *gin.Context) {
 	deliveryID, err := utils.ParseParam(c, "id")
 	if err != nil {
-		utils.SendBadRequestInvalidParam(c, "delivery ID", err)
+		utils.SendBadRequestError(c, "invalid delivery ID")
 		return
 	}
 

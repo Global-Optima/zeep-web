@@ -10,10 +10,9 @@ import (
 
 type PriceChangeNotificationDetails struct {
 	BaseNotificationDetails
-	ProductSizeID uint    `json:"productSizeId"`
-	ProductName   string  `json:"productName"`
-	OldPrice      float64 `json:"oldPrice"`
-	NewPrice      float64 `json:"newPrice"`
+	ProductName string  `json:"productName"`
+	OldPrice    float64 `json:"oldPrice"`
+	NewPrice    float64 `json:"newPrice"`
 }
 
 func (p *PriceChangeNotificationDetails) ToDetails() ([]byte, error) {

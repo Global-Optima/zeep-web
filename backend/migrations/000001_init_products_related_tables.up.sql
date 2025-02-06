@@ -496,7 +496,8 @@ CREATE TYPE component_name AS ENUM (
     'STOCK_MATERIAL_CATEGORY',
     'WAREHOUSE_STOCK',
     'SUPPLIER',
-    'UNIT'
+    'UNIT',
+    'ORDER'
     );
 
 

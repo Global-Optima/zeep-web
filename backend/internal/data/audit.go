@@ -49,6 +49,7 @@ const (
 	WarehouseStockComponent        ComponentName = "WAREHOUSE_STOCK"
 	SupplierComponent              ComponentName = "SUPPLIER"
 	UnitComponent                  ComponentName = "UNIT"
+	OrderComponent                 ComponentName = "ORDER"
 )
 
 func (o OperationType) ToString() string {

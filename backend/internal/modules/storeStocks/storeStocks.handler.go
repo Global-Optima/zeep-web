@@ -1,7 +1,6 @@
-package storeStock
+package storeStocks
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -13,7 +12,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -45,7 +45,7 @@ func NewStoreStockHandler(
 func (h *StoreStockHandler) GetAvailableIngredientsToAdd(c *gin.Context) {
 	var filter ingredientTypes.IngredientFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Ingredient{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (h *StoreStockHandler) GetAvailableIngredientsToAdd(c *gin.Context) {
 
 	ingredientsList, err := h.service.GetAvailableIngredientsToAdd(storeID, &filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch ingredients")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
@@ -74,19 +74,19 @@ func (h *StoreStockHandler) AddStoreStock(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	ingredient, err := h.ingredientService.GetIngredientByID(dto.IngredientID)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to add new stock: ingredient not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
 	id, err := h.service.AddStock(storeID, &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to add new stock")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
@@ -101,9 +101,7 @@ func (h *StoreStockHandler) AddStoreStock(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{
-		"message": fmt.Sprintf("store warehouse stock with id %d successfully created", id),
-	})
+	localization.SendLocalizedResponseWithKey(c, types.Response201StoreStock)
 }
 
 func (h *StoreStockHandler) AddMultipleStoreStock(c *gin.Context) {
@@ -116,19 +114,19 @@ func (h *StoreStockHandler) AddMultipleStoreStock(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	IDs, err := h.service.AddMultipleStock(storeID, &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to add new multiple stocks")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
 	stockList, err := h.service.GetStockListByIDs(storeID, IDs)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve added stock: ingredient not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
@@ -160,9 +158,7 @@ func (h *StoreStockHandler) AddMultipleStoreStock(c *gin.Context) {
 		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{
-		"message": "success",
-	})
+	localization.SendLocalizedResponseWithKey(c, types.Response201StoreStockMultiple)
 }
 
 func (h *StoreStockHandler) GetStoreStockList(c *gin.Context) {
@@ -174,13 +170,13 @@ func (h *StoreStockHandler) GetStoreStockList(c *gin.Context) {
 
 	stockFilter := &types.GetStockFilterQuery{}
 	if err := utils.ParseQueryWithBaseFilter(c, stockFilter, &data.StoreStock{}); err != nil {
-		utils.SendBadRequestError(c, "failed to parse pagination parameters")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	stockList, err := h.service.GetStockList(storeID, stockFilter)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to to retrieve stock list")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
@@ -196,13 +192,13 @@ func (h *StoreStockHandler) GetStoreStockById(c *gin.Context) {
 
 	stockId, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse stock id")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreStock)
 		return
 	}
 
 	stock, err := h.service.GetStockById(storeID, uint(stockId))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve stock")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
@@ -220,24 +216,24 @@ func (h *StoreStockHandler) UpdateStoreStockById(c *gin.Context) {
 
 	stockId, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse stock id")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreStock)
 		return
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, "failed to bind json body")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	stock, err := h.service.GetStockById(storeID, uint(stockId))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to add update stock: stock not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
 	err = h.service.UpdateStockById(storeID, uint(stockId), &input)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to update stock")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
@@ -252,7 +248,7 @@ func (h *StoreStockHandler) UpdateStoreStockById(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "stock updated successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200StoreStockUpdate)
 }
 
 func (h *StoreStockHandler) DeleteStoreStockById(c *gin.Context) {
@@ -264,19 +260,19 @@ func (h *StoreStockHandler) DeleteStoreStockById(c *gin.Context) {
 
 	stockId, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid store warehouse stock id")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreStock)
 		return
 	}
 
 	stock, err := h.service.GetStockById(storeID, uint(stockId))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to add update stock: stock not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
 	err = h.service.DeleteStockById(storeID, uint(stockId))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to delete stock")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}
 
@@ -291,5 +287,5 @@ func (h *StoreStockHandler) DeleteStoreStockById(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "stock deleted successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200StoreStockDelete)
 }

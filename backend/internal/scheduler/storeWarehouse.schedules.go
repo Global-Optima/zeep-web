@@ -1,19 +1,19 @@
 package scheduler
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"go.uber.org/zap"
 )
 
 type StoreWarehouseCronTasks struct {
-	storeWarehouseService storeStock.StoreStockService
-	storeWarehouseRepo    storeStock.StoreStockRepository
+	storeWarehouseService storeStocks.StoreStockService
+	storeWarehouseRepo    storeStocks.StoreStockRepository
 	storeService          stores.StoreService
 	logger                *zap.SugaredLogger
 }
 
-func NewStoreWarehouseCronTasks(storeWarehouseService storeStock.StoreStockService, storeWarehouseRepo storeStock.StoreStockRepository, storeService stores.StoreService, logger *zap.SugaredLogger) *StoreWarehouseCronTasks {
+func NewStoreWarehouseCronTasks(storeWarehouseService storeStocks.StoreStockService, storeWarehouseRepo storeStocks.StoreStockRepository, storeService stores.StoreService, logger *zap.SugaredLogger) *StoreWarehouseCronTasks {
 	return &StoreWarehouseCronTasks{
 		storeWarehouseService: storeWarehouseService,
 		storeWarehouseRepo:    storeWarehouseRepo,
@@ -25,7 +25,7 @@ func NewStoreWarehouseCronTasks(storeWarehouseService storeStock.StoreStockServi
 func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
 	tasks.logger.Info("Running CheckStockNotifications...")
 
-	stores, err := tasks.storeService.GetAllStoresForNotifications()
+	storesList, err := tasks.storeService.GetAllStoresForNotifications()
 	if err != nil {
 		tasks.logger.Errorf("Failed to fetch stores: %v", err)
 		return
@@ -33,7 +33,7 @@ func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
 
 	processedStocks := make(map[uint]bool)
 
-	for _, store := range stores {
+	for _, store := range storesList {
 		stockList, err := tasks.storeWarehouseRepo.GetAllStockList(store.ID)
 		if err != nil {
 			tasks.logger.Errorf("Failed to fetch stock list for store %d: %v", store.ID, err)
