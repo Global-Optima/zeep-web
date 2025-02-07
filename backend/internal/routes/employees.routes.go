@@ -208,7 +208,7 @@ func (r *Router) RegisterEmployeesRoutes(
 		router.GET("/current", handler.GetCurrentEmployee)
 		router.GET("/roles", handler.GetAllRoles)
 		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(), handler.UpdatePassword)
-		router.PUT("/:id/reassign/", middleware.EmployeeRoleMiddleware(), handler.ReassignEmployeeType)
+		router.PUT("/:id/reassign", middleware.EmployeeRoleMiddleware(), handler.ReassignEmployeeType)
 
 		storeEmployeeRouter := router.Group("/store")
 		{

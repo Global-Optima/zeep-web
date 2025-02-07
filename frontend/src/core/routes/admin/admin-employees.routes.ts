@@ -130,4 +130,13 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/admin/employees/pages/admin-employees-audit-page.vue'),
 	},
+	ADMIN_EMPLOYEE_REASSIGN_TYPE: {
+		path: 'employees/:id/reassign',
+		meta: {
+			title: 'Сменить тип сотрудник',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/pages/admin-employee-reassign-type-page.vue'),
+	},
 } satisfies AppRouteRecord

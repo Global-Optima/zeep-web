@@ -5,7 +5,7 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите склад</DialogTitle>
+				<DialogTitle>Выберите кафе</DialogTitle>
 			</DialogHeader>
 
 			<div>
@@ -23,7 +23,7 @@
 						v-if="!additives || additives.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Склады не найдены
+						Кафе не найдены
 					</p>
 
 					<ul v-else>
@@ -65,13 +65,13 @@ import { useQuery } from '@tanstack/vue-query'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
-
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
-import type { WarehouseDTO, WarehouseFilter } from '@/modules/admin/warehouses/models/warehouse.model'
-import { warehouseService } from '@/modules/admin/warehouses/services/warehouse.service'
+import type { StoresFilter } from '@/modules/admin/stores/models/stores-dto.model'
+import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
+import { storesService } from '@/modules/admin/stores/services/stores.service'
 
 const {open} = defineProps<{
   open: boolean;
@@ -79,7 +79,7 @@ const {open} = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', additive: WarehouseDTO): void;
+  (e: 'select', additive: StoreDTO): void;
 }>()
 
 const searchTerm = ref('')
@@ -88,7 +88,7 @@ const debouncedSearchTerm = useDebounce(
   500
 )
 
-const filter = ref<WarehouseFilter>({
+const filter = ref<StoresFilter>({
   page: 1,
   pageSize: 10,
   search: ''
@@ -103,10 +103,10 @@ watch(debouncedSearchTerm, (newValue) => {
 
 const { data: additives, refetch } = useQuery({
   queryKey: computed(() => [
-  'admin-warehouses',
+  'admin-stores',
   filter.value
 ]),
-  queryFn: () => warehouseService.getPaginated(filter.value),
+  queryFn: () => storesService.getPaginated(filter.value),
 })
 
 
@@ -119,7 +119,7 @@ function loadMore() {
   }
 }
 
-function selectMaterial(additive: WarehouseDTO) {
+function selectMaterial(additive: StoreDTO) {
   emit('select', additive)
   onClose()
 }

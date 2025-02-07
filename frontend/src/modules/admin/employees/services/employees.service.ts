@@ -6,6 +6,7 @@ import type {
 	EmployeeDetailsDTO,
 	EmployeeDTO,
 	EmployeesFilter,
+	ReassignEmployeeTypeDTO,
 	UpdateEmployeeDTO,
 } from '@/modules/admin/employees/models/employees.models'
 import { type PaginatedResponse } from '../../../../core/utils/pagination.utils'
@@ -30,6 +31,11 @@ class EmployeeService {
 
 	async updateEmployee(id: number, dto: UpdateEmployeeDTO) {
 		const response = await apiClient.put<void>(`/employees/${id}`, dto)
+		return response.data
+	}
+
+	async reassignEmployeeType(id: number, dto: ReassignEmployeeTypeDTO) {
+		const response = await apiClient.put<void>(`/employees/${id}/reassign`, dto)
 		return response.data
 	}
 

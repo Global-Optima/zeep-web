@@ -24,7 +24,7 @@
 				</Button>
 				<Button
 					type="submit"
-					@click="handleSubmit"
+					@click="submitForm"
 				>
 					Сохранить
 				</Button>
@@ -172,7 +172,7 @@
 			</Button>
 			<Button
 				type="submit"
-				@click="handleSubmit"
+				@click="submitForm"
 			>
 				Сохранить
 			</Button>
