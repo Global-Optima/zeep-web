@@ -26,7 +26,7 @@ type CreateOrderDTO struct {
 	StoreID uint
 }
 
-type CustomerName struct {
+type ValidateCustomerNameDTO struct {
 	CustomerName string `json:"customerName" binding:"required"`
 }
 

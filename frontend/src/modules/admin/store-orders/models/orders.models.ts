@@ -28,6 +28,10 @@ export interface CreateOrderDTO {
 	subOrders: CreateSubOrderDTO[]
 }
 
+export interface CheckCustomerName {
+	customerName: string
+}
+
 export interface OrderStatusesCountDTO {
 	ALL: number
 	PREPARING: number

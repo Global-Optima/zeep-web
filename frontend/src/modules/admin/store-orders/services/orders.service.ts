@@ -3,6 +3,7 @@ import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import { saveAs } from 'file-saver'
 import type {
+	CheckCustomerName,
 	CreateOrderDTO,
 	OrderDTO,
 	OrdersExportFilterQuery,
@@ -29,6 +30,15 @@ class OrderService {
 			return apiClient.post<{ orderId: number }>('/orders', orderDTO).then(res => res.data)
 		} catch (error) {
 			console.error('Failed to create order:', error)
+			throw error
+		}
+	}
+
+	async checkCustomerName(orderDTO: CheckCustomerName) {
+		try {
+			return apiClient.post<void>('/orders/check-name', orderDTO).then(res => res.data)
+		} catch (error) {
+			console.error('Failed to validate customer name:', error)
 			throw error
 		}
 	}

@@ -2,12 +2,13 @@ package orders
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/localization"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -85,7 +86,7 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) CheckCustomerName(c *gin.Context) {
-	var dto types.CustomerName
+	var dto types.ValidateCustomerNameDTO
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
@@ -97,7 +98,7 @@ func (h *OrderHandler) CheckCustomerName(c *gin.Context) {
 		return
 	}
 
-	localization.SendLocalizedResponseWithStatus(c, http.StatusCreated)
+	localization.SendLocalizedResponseWithStatus(c, http.StatusOK)
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
