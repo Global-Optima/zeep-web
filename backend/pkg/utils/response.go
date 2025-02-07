@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	ERROR_MESSAGE_BINDING_JSON  = "invalid input: failed to bind json body"
-	ERROR_MESSAGE_BINDING_QUERY = "failed to bind query parameters"
+	ERROR_MESSAGE_BINDING_JSON  = "Неверный ввод данных"
+	ERROR_MESSAGE_BINDING_QUERY = "Неверные параметры запроса"
 )
 
 func SendSuccessResponse(c *gin.Context, data interface{}) {
@@ -27,7 +27,6 @@ func SendSuccessResponseWithPagination(c *gin.Context, data interface{}, paginat
 	})
 }
 
-// TODO create single func SendResponseWithStatus()
 func SendMessageWithStatus(c *gin.Context, message string, status int) {
 	c.JSON(status, gin.H{
 		"message": message,

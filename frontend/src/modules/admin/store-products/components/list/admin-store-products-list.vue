@@ -84,7 +84,7 @@ const {storeProducts} = defineProps<{storeProducts: StoreProductDTO[]}>()
 const {mutate: deleteStoreProduct} = useMutation({
 		mutationFn: (id: number) => storeProductsService.deleteStoreProduct(id),
 		onSuccess: () => {
-			toast({title: "Товар удален из магазина"})
+			toast({title: "Товар удален из кафе"})
 			queryClient.invalidateQueries({queryKey: ['admin-store-products']})
 		},
 		onError: () => {

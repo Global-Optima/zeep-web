@@ -7,7 +7,6 @@
 		:product="productDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
-		readonly
 	/>
 </template>
 
@@ -46,7 +45,7 @@ const updateMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных товара магазина. Пожалуйста, подождите.',
+			description: 'Обновление данных товара кафе. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -54,13 +53,13 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-store-product-details', storeProductId] })
 		toast({
 			title: 'Успех!',
-			description: 'Данные товара магазина успешно обновлены.',
+			description: 'Данные товара кафе успешно обновлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении данных товара магазина.',
+			description: 'Произошла ошибка при обновлении данных товара кафе.',
 			variant: 'destructive',
 		})
 	},

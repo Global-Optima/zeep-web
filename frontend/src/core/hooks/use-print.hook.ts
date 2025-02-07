@@ -1,16 +1,8 @@
 // usePrinter.ts
-
-export type PrintContent = string | Blob
-
 export interface PrintOptions {
 	/**
-	 * Optional CSS styles to apply to the printed content.
-	 */
-	styles?: string
-
-	/**
 	 * Optional callback invoked before printing starts.
-	 */ 
+	 */
 	beforePrint?: () => void
 
 	/**
@@ -21,145 +13,119 @@ export interface PrintOptions {
 
 export interface UsePrinter {
 	/**
-	 * Prints the given content (image URL or file Blob).
-	 * @param content The image URL or file Blob to print.
+	 * Prints the given content (PDF Blob only).
+	 * @param content The PDF Blob to print.
 	 * @param options Optional printing configurations.
 	 */
-	print: (content: PrintContent, options?: PrintOptions) => Promise<void>
+	print: (content: Blob, options?: PrintOptions) => Promise<void>
+}
+
+function isPDFBlob(content: Blob): boolean {
+	return content instanceof Blob && content.type === 'application/pdf'
+}
+
+function isAndroid(): boolean {
+	return /Android/i.test(navigator.userAgent)
 }
 
 export function usePrinter(): UsePrinter {
-	const blobToDataURL = (blob: Blob): Promise<string> => {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader()
-			reader.onload = () => {
-				if (typeof reader.result === 'string') {
-					resolve(reader.result)
-				} else {
-					reject(new Error('Failed to convert blob to Data URL.'))
-				}
-			}
-			reader.onerror = () => {
-				reject(new Error('Error reading the blob.'))
-			}
-			reader.readAsDataURL(blob)
-		})
-	}
+	const print = async (content: Blob, options?: PrintOptions): Promise<void> => {
+		if (!isPDFBlob(content)) {
+			throw new Error('Invalid content: Only PDF blobs are supported.')
+		}
 
-	const isImageURL = (url: string): boolean => {
-		return /\.(jpeg|jpg|gif|png|bmp|webp|svg)$/.test(url.toLowerCase())
-	}
+		const { beforePrint, afterPrint } = options || {}
+		const pdfUrl = URL.createObjectURL(content)
 
-	const print = async (content: PrintContent, options?: PrintOptions): Promise<void> => {
-		const { styles = '', beforePrint, afterPrint } = options || {}
+		let cleanupCalled = false
+		const cleanup = () => {
+			if (cleanupCalled) return
+			cleanupCalled = true
+
+			URL.revokeObjectURL(pdfUrl)
+			if (afterPrint) afterPrint()
+		}
 
 		try {
 			if (beforePrint) beforePrint()
 
-			let contentToPrint = ''
-
-			if (typeof content === 'string') {
-				if (isImageURL(content)) {
-					contentToPrint = `<img src="${content}" style="max-width: 100%; height: auto;" />`
-				} else {
-					// For non-image URLs, attempt to embed in iframe (e.g., PDF)
-					contentToPrint = `<iframe src="${content}" style="width: 100%; height: 100%;" frameborder="0"></iframe>`
-				}
-			} else if (content instanceof Blob) {
-				const dataURL = await blobToDataURL(content)
-				const mimeType = content.type
-				if (mimeType.startsWith('image/')) {
-					contentToPrint = `<img src="${dataURL}" style="max-width: 100%; height: auto;" />`
-				} else if (mimeType === 'application/pdf') {
-					contentToPrint = `<iframe src="${dataURL}" style="width: 100%; height: 100%;" frameborder="0"></iframe>`
-				} else {
-					throw new Error(`Unsupported file type: ${mimeType}`)
-				}
-			} else {
-				throw new Error('Unsupported content type.')
-			}
-
-			// Create a hidden iframe for printing
-			const iframe = document.createElement('iframe')
-			iframe.style.position = 'fixed'
-			iframe.style.right = '0'
-			iframe.style.bottom = '0'
-			iframe.style.width = '0'
-			iframe.style.height = '0'
-			iframe.style.border = '0'
-			iframe.style.visibility = 'hidden'
-			iframe.id = `print-iframe-${Date.now()}`
-			document.body.appendChild(iframe)
-
-			const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
-			if (!iframeDoc) {
-				throw new Error('Failed to access iframe document.')
-			}
-
-			iframeDoc.open()
-			iframeDoc.write(`
-        <html>
-          <head>
-            <title>Print Preview</title>
-            <style>
-              /* Append any custom styles passed in by the user */
-              ${styles}
-
-              /* Ensure no extra page margins */
-              @page {
-                margin: 0;
-              }
-
-              @media print {
-                html, body {
-                  margin: 0;
-                  padding: 0;
-                }
-                img, iframe {
-                  max-width: 100%;
-                  height: auto;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            ${contentToPrint}
-          </body>
-        </html>
-      `)
-			iframeDoc.close()
-
-			// Wait for the iframe content to load
-			await new Promise<void>((resolve, reject) => {
-				const iframeWindow = iframe.contentWindow
-				if (!iframeWindow) {
-					reject(new Error('Failed to access iframe window.'))
-					return
+			// Only detect Android. If true, open in a new tab.
+			if (isAndroid()) {
+				/**
+				 * Many Android devices/browsers will not show a print dialog
+				 * and instead will just download the file when we use `print()`.
+				 * We open the PDF in a new tab to at least allow the user to print manually.
+				 */
+				const newTab = window.open(pdfUrl, '_blank', 'noopener,noreferrer')
+				if (!newTab) {
+					throw new Error('Failed to open a new tab for printing.')
 				}
 
-				const handleLoad = () => {
-					// Trigger the print dialog
-					iframeWindow.focus()
-					iframeWindow.print()
-
-					// Cleanup after print
-					iframeWindow.onafterprint = () => {
-						resolve()
+				// Attempt to call print on load
+				newTab.onload = () => {
+					try {
+						newTab.focus()
+						newTab.print()
+					} catch (error) {
+						console.error('Print Error on new tab:', error)
+					} finally {
+						cleanup()
 					}
 				}
 
-				// If the content is an iframe (like a PDF), use .addEventListener('load')
-				iframe.addEventListener('load', handleLoad)
-
-				// Fallback if 'load' doesn't fire
+				// Fallback if onload doesn’t fire within 2 seconds
 				setTimeout(() => {
-					resolve()
-				}, 5000)
-			})
+					if (!cleanupCalled) {
+						try {
+							newTab.focus()
+							newTab.print()
+						} catch (error) {
+							console.error('Print Error in fallback:', error)
+						} finally {
+							cleanup()
+						}
+					}
+				}, 2000)
+			} else {
+				// Default approach for non-Android devices: print via an iframe
+				const iframe = document.createElement('iframe')
+				iframe.style.position = 'absolute'
+				iframe.style.width = '0'
+				iframe.style.height = '0'
+				iframe.style.border = '0'
+				iframe.style.visibility = 'hidden'
+				iframe.src = pdfUrl
 
-			document.body.removeChild(iframe)
+				document.body.appendChild(iframe)
 
-			if (afterPrint) afterPrint()
+				iframe.onload = () => {
+					try {
+						const iframeWindow = iframe.contentWindow
+						if (!iframeWindow) {
+							throw new Error('Failed to access iframe window.')
+						}
+						iframeWindow.focus()
+						iframeWindow.print()
+
+						// Cleanup after user closes the print dialog
+						iframeWindow.onafterprint = () => {
+							cleanup()
+							// Remove iframe from DOM
+							if (iframe.parentNode) {
+								iframe.parentNode.removeChild(iframe)
+							}
+						}
+					} catch (error) {
+						console.error('Iframe Print Error:', error)
+						if (iframe.parentNode) {
+							iframe.parentNode.removeChild(iframe)
+						}
+						// As a last resort, open the PDF in a new tab
+						window.open(pdfUrl, '_blank', 'noopener,noreferrer')
+						cleanup()
+					}
+				}
+			}
 		} catch (error) {
 			console.error('Print Error:', error)
 			throw error

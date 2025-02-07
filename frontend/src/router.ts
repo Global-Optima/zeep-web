@@ -1,6 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
-
 import { isAxiosError } from 'axios'
+import { createRouter, createWebHistory } from 'vue-router'
 import { getRouteName, ROUTES } from './core/config/routes.config'
 import { DEFAULT_TITLE, TITLE_TEMPLATE } from './core/constants/seo.constants'
 import { employeesService } from './modules/admin/employees/services/employees.service'
@@ -9,22 +8,29 @@ import { useEmployeeAuthStore } from './modules/auth/store/employee-auth.store'
 export const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	scrollBehavior() {
-		return { top: 0 }
+		return { top: 0, behavior: 'smooth' }
 	},
 	routes: ROUTES,
 })
 
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach(async (to, from, next) => {
 	const { setCurrentEmployee } = useEmployeeAuthStore()
 
+	// Prevent navigating outside /kiosk
+	const isLeavingKiosk = from.path.startsWith('/kiosk') && !to.path.startsWith('/kiosk')
+	if (isLeavingKiosk) {
+		return next(false) // Block navigation outside kiosk
+	}
+
+	// Allow login route without authentication
 	if (to.name === getRouteName('LOGIN')) {
 		return next()
 	}
 
+	// Authentication check for protected routes
 	if (to.meta?.requiresAuth) {
 		try {
 			const currentEmployee = await employeesService.getCurrentEmployee()
-
 			if (!currentEmployee) {
 				return next({ name: getRouteName('LOGIN') })
 			}
@@ -41,6 +47,7 @@ router.beforeEach(async (to, _from, next) => {
 		}
 	}
 
+	// Update document title
 	document.title = to.meta?.title ? TITLE_TEMPLATE(to.meta.title as string) : DEFAULT_TITLE
 
 	return next()

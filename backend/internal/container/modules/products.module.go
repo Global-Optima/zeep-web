@@ -9,7 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 )
 
 type ProductsModule struct {
@@ -26,7 +26,7 @@ func NewProductsModule(
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
 	ingredientRepo ingredients.IngredientRepository,
-	storeStockRepo storeStock.StoreStockRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
 	notificationService notifications.NotificationService,
 ) *ProductsModule {
 	repo := product.NewProductRepository(base.DB)
@@ -85,7 +85,7 @@ func NewStoreProductsModule(
 	franchiseeService franchisees.FranchiseeService,
 	productRepo product.ProductRepository,
 	ingredientRepo ingredients.IngredientRepository,
-	storeStockRepo storeStock.StoreStockRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
 ) *StoreProductsModule {
 	repo := storeProducts.NewStoreProductRepository(base.DB)
 	service := storeProducts.NewStoreProductService(

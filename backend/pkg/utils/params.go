@@ -20,11 +20,3 @@ func ParseParam(c *gin.Context, paramName string) (uint, error) {
 
 	return uint(id), nil
 }
-
-func SendBadRequestInvalidParam(c *gin.Context, paramName string, err error) bool {
-	if err != nil {
-		SendBadRequestError(c, err.Error())
-		return true
-	}
-	return false
-}

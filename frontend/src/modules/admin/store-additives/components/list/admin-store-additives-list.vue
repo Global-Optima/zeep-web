@@ -76,7 +76,7 @@ const {additives} = defineProps<{additives: StoreAdditiveDTO[]}>()
 const {mutate: deleteStoreAdditive} = useMutation({
 		mutationFn: (id: number) => storeAdditivesService.deleteStoreAdditive(id),
 		onSuccess: () => {
-			toast({title: "Топпинг удален из магазина"})
+			toast({title: "Топпинг удален из кафе"})
 			queryClient.invalidateQueries({queryKey: ['admin-store-additives']})
 		},
 		onError: () => {

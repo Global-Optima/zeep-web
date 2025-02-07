@@ -51,7 +51,7 @@ func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendResponseWithStatus(c, response, http.StatusCreated)
+	utils.SendSuccessCreatedResponse(c, "supplier created successfully")
 }
 
 func (h *SupplierHandler) GetSupplierByID(c *gin.Context) {

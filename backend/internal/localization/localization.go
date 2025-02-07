@@ -12,7 +12,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-type LocalizedMessages struct {
+type LocalizedMessage struct {
 	En string `json:"en"`
 	Ru string `json:"ru"`
 	Kk string `json:"kk"`
@@ -87,8 +87,8 @@ func InitLocalizer() error {
 	return nil
 }
 
-func Translate(messageID string, data map[string]interface{}) (*LocalizedMessages, error) {
-	localizedMessages := &LocalizedMessages{}
+func Translate(messageID string, data map[string]interface{}) (*LocalizedMessage, error) {
+	localizedMessages := &LocalizedMessage{}
 
 	localizeCfg := &i18n.LocalizeConfig{
 		MessageID:    messageID,

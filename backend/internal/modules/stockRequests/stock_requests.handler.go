@@ -2,7 +2,6 @@ package stockRequests
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
@@ -10,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -39,12 +39,12 @@ func NewStockRequestHandler(service StockRequestService,
 func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 	var req types.CreateStockRequestDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid body")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	if len(req.StockMaterials) == 0 {
-		utils.SendBadRequestError(c, "The cart cannot be empty")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockRequest)
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 
 	id, storeName, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("Failed to create stock requests: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -74,79 +74,72 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "stock request created successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response201StockRequest)
 }
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.GetStockRequestsFilter
 	var requests = make([]types.StockRequestResponse, 0)
 
-	// Check user access roles
 	storeID, storeErr := h.franchiseeService.CheckFranchiseeStore(c)
 	warehouseID, warehouseErr := h.regionService.CheckRegionWarehouse(c)
 
-	// If user has neither store nor warehouse access, return unauthorized
 	if storeErr != nil && warehouseErr != nil {
-		utils.SendErrorWithStatus(c, "Unauthorized access", http.StatusForbidden)
+		localization.SendLocalizedResponseWithKey(c, types.Response403StockRequest)
 		return
 	}
 
-	// Parse filters
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockRequest{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
-	// Fetch requests for Store users
 	if storeErr == nil {
 		filter.StoreID = &storeID
 		storeRequests, err := h.service.GetStockRequests(filter)
 		if err != nil {
-			utils.SendInternalServerError(c, "Failed to fetch stock requests")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 			return
 		}
 		requests = append(requests, storeRequests...)
 	}
 
-	// Fetch requests for Warehouse users
 	if warehouseErr == nil {
 		filter.WarehouseID = &warehouseID
 
-		// Validate warehouse statuses
 		if err := types.ValidateWarehouseStatuses(filter.Statuses); err != nil {
-			utils.SendBadRequestError(c, err.Error())
+			localization.SendLocalizedResponseWithKey(c, types.Response400StockRequest)
 			return
 		}
 
-		// Apply default warehouse statuses if none are provided
 		if len(filter.Statuses) == 0 {
 			filter.Statuses = types.DefaultWarehouseStatuses()
 		}
 
 		warehouseRequests, err := h.service.GetStockRequests(filter)
 		if err != nil {
-			utils.SendInternalServerError(c, "Failed to fetch stock requests")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 			return
 		}
 		requests = append(requests, warehouseRequests...)
 	}
 
-	// Always return an array, even if empty
 	utils.SendSuccessResponseWithPagination(c, requests, filter.Pagination)
 }
 
 func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	request, err := h.service.GetStockRequestByID(uint(stockRequestID))
+	request, err := h.service.GetStockRequestByID(stockRequestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.SendNotFoundError(c, "Stock request not found")
+			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		} else {
-			utils.SendInternalServerError(c, "Failed to fetch stock request")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		}
 		return
 	}
@@ -156,24 +149,25 @@ func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
 
 func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	var dto types.AcceptWithChangeRequestStatusDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid payload for acceptance with change")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	if len(dto.Items) == 0 {
-		utils.SendBadRequestError(c, "The cart cannot be empty")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockRequest)
 		return
 	}
 
-	request, err := h.service.AcceptStockRequestWithChange(uint(stockRequestID), dto)
+	request, err := h.service.AcceptStockRequestWithChange(stockRequestID, dto)
 	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -191,24 +185,25 @@ func (h *StockRequestHandler) AcceptWithChangeStatus(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
 
 func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	var dto types.RejectStockRequestStatusDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid payload for rejection by store")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	request, err := h.service.RejectStockRequestByStore(uint(stockRequestID), dto)
+	request, err := h.service.RejectStockRequestByStore(stockRequestID, dto)
 	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -226,24 +221,24 @@ func (h *StockRequestHandler) RejectStoreStatus(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
 
 func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
 		return
 	}
 
 	var dto types.RejectStockRequestStatusDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid payload for rejection by warehouse")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	request, err := h.service.RejectStockRequestByWarehouse(uint(stockRequestID), dto)
+	request, err := h.service.RejectStockRequestByWarehouse(stockRequestID, dto)
 	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -261,18 +256,19 @@ func (h *StockRequestHandler) RejectWarehouseStatus(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
 
 func (h *StockRequestHandler) SetProcessedStatus(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	request, err := h.service.SetProcessedStatus(uint(stockRequestID))
+	request, err := h.service.SetProcessedStatus(stockRequestID)
 	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -288,18 +284,19 @@ func (h *StockRequestHandler) SetProcessedStatus(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
 
 func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	request, err := h.service.SetInDeliveryStatus(uint(stockRequestID))
+	request, err := h.service.SetInDeliveryStatus(stockRequestID)
 	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -315,18 +312,19 @@ func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
 
 func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	request, err := h.service.SetCompletedStatus(uint(stockRequestID))
 	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("Failed to update status: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -342,29 +340,30 @@ func (h *StockRequestHandler) SetCompletedStatus(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
 
 func (h *StockRequestHandler) UpdateStockRequest(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	var req []types.StockRequestStockMaterialDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, "Invalid input: "+err.Error())
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	if len(req) == 0 {
-		utils.SendBadRequestError(c, "The cart cannot be empty")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockRequest)
 		return
 	}
 
-	request, err := h.service.UpdateStockRequest(uint(stockRequestID), req)
+	request, err := h.service.UpdateStockRequest(stockRequestID, req)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update stock request ingredients: "+err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -382,18 +381,19 @@ func (h *StockRequestHandler) UpdateStockRequest(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Stock request ingredients updated successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestUpdate)
 }
 
 func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
 	stockRequestID, err := utils.ParseParam(c, "requestId")
-	if utils.SendBadRequestInvalidParam(c, "requestId", err) {
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	request, err := h.service.DeleteStockRequest(uint(stockRequestID))
+	request, err := h.service.DeleteStockRequest(stockRequestID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete stock request")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -408,7 +408,7 @@ func (h *StockRequestHandler) DeleteStockRequest(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockRequestDelete)
 }
 
 func (h *StockRequestHandler) GetLastCreatedStockRequest(c *gin.Context) {
@@ -418,9 +418,9 @@ func (h *StockRequestHandler) GetLastCreatedStockRequest(c *gin.Context) {
 		return
 	}
 
-	request, err := h.service.GetLastCreatedStockRequest(uint(storeID))
+	request, err := h.service.GetLastCreatedStockRequest(storeID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch the last cart")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -436,13 +436,13 @@ func (h *StockRequestHandler) AddStockMaterialToCart(c *gin.Context) {
 
 	var dto types.StockRequestStockMaterialDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid payload")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	request, err := h.service.AddStockMaterialToCart(uint(storeID), dto)
+	request, err := h.service.AddStockMaterialToCart(storeID, dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed too add to cart")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 
@@ -460,5 +460,5 @@ func (h *StockRequestHandler) AddStockMaterialToCart(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response201StockRequest)
 }

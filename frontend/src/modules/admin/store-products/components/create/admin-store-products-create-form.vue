@@ -144,7 +144,7 @@ function removeProduct(index: number) {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Создать товар в магазине
+				Создать товар в кафе
 			</h1>
 
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
@@ -196,7 +196,7 @@ function removeProduct(index: number) {
 									<TableHead>Размер</TableHead>
 									<TableHead>Включён</TableHead>
 									<TableHead>Базовая цена</TableHead>
-									<TableHead>Цена в магазине</TableHead>
+									<TableHead>Цена в кафе</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>

@@ -36,13 +36,12 @@ import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminStoreOrdersList from '@/modules/admin/store-orders/components/list/admin-store-orders-list.vue'
 import AdminStoreOrdersToolbar from '@/modules/admin/store-orders/components/list/admin-store-orders-toolbar.vue'
-import type { OrdersFilterQuery } from '@/modules/orders/models/orders.models'
-import { ordersService } from '@/modules/orders/services/orders.service'
+import type { OrdersFilterQuery } from '@/modules/admin/store-orders/models/orders.models'
+import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
 const filter = ref<OrdersFilterQuery>({})
-
 
 const { data: storeOrders } = useQuery({
   queryKey: computed(() => ['store-orders', filter.value]),

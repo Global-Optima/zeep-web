@@ -160,6 +160,7 @@ function selectCategory(category: ProductCategoryDTO) {
 					</CardContent>
 				</Card>
 			</div>
+      
 			<div class="items-start gap-4 grid auto-rows-max">
 				<Card>
 					<CardHeader>

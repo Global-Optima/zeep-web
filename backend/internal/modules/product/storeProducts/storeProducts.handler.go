@@ -1,7 +1,6 @@
 package storeProducts
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -13,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -51,18 +51,18 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 
 	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StoreProductID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
 	productDetails, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store product details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
 	if productDetails == nil {
-		utils.SendNotFoundError(c, "store product not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *StoreProductHandler) GetAvailableProductsToAdd(c *gin.Context) {
 	var filter productTypes.ProductsFilterDto
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
@@ -85,12 +85,12 @@ func (h *StoreProductHandler) GetAvailableProductsToAdd(c *gin.Context) {
 
 	productDetails, err := h.service.GetAvailableProductsToAdd(storeID, &filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve products list to add for store")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
 	if productDetails == nil {
-		utils.SendNotFoundError(c, "products not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -106,12 +106,12 @@ func (h *StoreProductHandler) GetStoreProductCategories(c *gin.Context) {
 
 	categories, err := h.service.GetStoreProductCategories(storeID)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store product categories")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
 	if categories == nil {
-		utils.SendNotFoundError(c, "store product categories not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 	var filter types.StoreProductsFilterDTO
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StoreProduct{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
@@ -134,12 +134,12 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 
 	productDetails, err := h.service.GetStoreProducts(storeID, &filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store product details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
 	if productDetails == nil {
-		utils.SendNotFoundError(c, "store product not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -155,18 +155,18 @@ func (h *StoreProductHandler) GetStoreProductSizeByID(c *gin.Context) {
 
 	storeProductSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StoreProductSizeID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
 	storeProductSize, err := h.service.GetStoreProductSizeByID(storeID, uint(storeProductSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve store product size details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
 	if storeProductSize == nil {
-		utils.SendNotFoundError(c, "store product size not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -176,7 +176,7 @@ func (h *StoreProductHandler) GetStoreProductSizeByID(c *gin.Context) {
 func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 	var dto types.CreateStoreProductDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
@@ -188,13 +188,13 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.productService.GetProductByID(dto.ProductID)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
 	id, err := h.service.CreateStoreProduct(storeID, &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
@@ -209,17 +209,16 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "store product created successfully", http.StatusCreated)
+	localization.SendLocalizedResponseWithKey(c, types.Response201StoreProduct)
 }
 
 func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 	var dtos []types.CreateStoreProductDTO
 	if err := c.ShouldBindJSON(&dtos); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
-	dtoLength := len(dtos)
 	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
@@ -228,14 +227,13 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 
 	ids, err := h.service.CreateMultipleStoreProducts(storeID, dtos)
 	if err != nil {
-		msg := fmt.Sprintf("failed to create %d store products", dtoLength)
-		utils.SendInternalServerError(c, msg)
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
 	storeProducts, err := h.service.GetStoreProductsByStoreProductIDs(storeID, ids)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve created store products: product not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
@@ -246,17 +244,17 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 	}
 
 	actions := make([]shared.AuditAction, 0, len(storeProducts))
-	for _, product := range storeProducts {
-		matchedDTO, exists := dtoMap[product.ProductID]
+	for _, storeProduct := range storeProducts {
+		matchedDTO, exists := dtoMap[storeProduct.ProductID]
 		if !exists {
-			h.logger.Errorf("Failed to match product with DTO for product ID: %d", product.ProductID)
+			h.logger.Errorf("Не удалось сопоставить продукт с DTO для продукта ID: %d", storeProduct.ProductID)
 			continue
 		}
 
 		action := types.CreateStoreProductAuditFactory(
 			&data.BaseDetails{
-				ID:   product.ID,
-				Name: product.Name,
+				ID:   storeProduct.ID,
+				Name: storeProduct.Name,
 			},
 			matchedDTO, storeID,
 		)
@@ -267,8 +265,7 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 		_ = h.auditService.RecordMultipleEmployeeActions(c, actions)
 	}()
 
-	msg := fmt.Sprintf("%d store product(s) created successfully", dtoLength)
-	utils.SendMessageWithStatus(c, msg, http.StatusCreated)
+	localization.SendLocalizedResponseWithKey(c, types.Response201StoreProductMultiple)
 }
 
 func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
@@ -276,12 +273,12 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 
 	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StoreProductID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
@@ -293,13 +290,13 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
 	err = h.service.UpdateStoreProduct(storeID, uint(storeProductID), &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to update store product")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
@@ -314,13 +311,13 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "store product updated successfully", http.StatusCreated)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StoreProductUpdate)
 }
 
 func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, types.ErrInvalidStoreProductID.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
@@ -332,7 +329,7 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create store product: product not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
@@ -346,7 +343,7 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 
 	err = h.service.DeleteStoreProduct(storeID, uint(storeProductID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to delete store product")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
 
@@ -354,5 +351,5 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "store product deleted successfully", http.StatusCreated)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StoreProductDelete)
 }

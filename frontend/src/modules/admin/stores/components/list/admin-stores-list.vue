@@ -28,7 +28,7 @@
 				<!-- Status -->
 				<TableCell class="p-4">
 					<span
-						v-if="store.isFranchise"
+						v-if="store.franchisee"
 						:class="[
                 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs bg-green-100 text-green-80',
               ]"

@@ -12,7 +12,7 @@ import type {
 class RegionsService {
 	private readonly baseUrl: string = '/regions'
 
-	async getAllRegions(filter?: AllRegionsFilter) {
+	async getAll(filter?: AllRegionsFilter) {
 		try {
 			const response = await apiClient.get<RegionDTO[]>('/regions/all', {
 				params: buildRequestFilter(filter),

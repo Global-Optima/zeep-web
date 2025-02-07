@@ -7,9 +7,10 @@ import { ADMIN_REGIONS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-regions
 import { ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-stock-materials.routes'
 import { ADMIN_SUPPLIERS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-suppliers.routes'
 import { ADMIN_UNITS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-units.routes'
+import { ADMIN_WAREHOUSES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-warehouses.routes'
 import type { AppRouteRecord, ParentRoutePage } from '../routes.types'
 import { ADMIN_EMPLOYEES_CHILDREN_ROUTES } from './admin-employees.routes'
-import { ADMIN_WAREHOUSES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-warehouses.routes'
+import { ADMIN_STORE_ORDERS_CHILDREN_ROUTES } from './admin-orders.routes'
 
 export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_ADDITIVES_CHILDREN_ROUTES,
@@ -21,7 +22,8 @@ export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_SUPPLIERS_CHILDREN_ROUTES,
 	...ADMIN_REGIONS_CHILDREN_ROUTES,
 	...ADMIN_FRANCHISEES_CHILDREN_ROUTES,
-  ...ADMIN_WAREHOUSES_CHILDREN_ROUTES,
+	...ADMIN_WAREHOUSES_CHILDREN_ROUTES,
+	...ADMIN_STORE_ORDERS_CHILDREN_ROUTES,
 
 	ADMIN_NOTIFICATIONS: {
 		path: 'notifications',
@@ -42,23 +44,16 @@ export const ADMIN_CHILDREN_ROUTES = {
 	ADMIN_STORE_DASHBOARD: {
 		path: 'store-analytics',
 		meta: {
-			title: 'Аналитика магазина',
+			title: 'Аналитика кафе',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/dashboard/pages/admin-dashboard-page.vue'),
 	},
-	ADMIN_STORE_ORDERS: {
-		path: 'store-orders',
-		meta: {
-			title: 'Заказы магазина',
-			requiresAuth: true,
-		},
-		component: () => import('@/modules/admin/store-orders/pages/admin-store-orders-page.vue'),
-	},
+
 	ADMIN_STORE_STOCKS: {
 		path: 'store-stocks',
 		meta: {
-			title: 'Склад Магазина',
+			title: 'Склад кафе',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/store-stocks/pages/admin-store-stocks-page.vue'),
@@ -75,7 +70,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 	ADMIN_CREATE_STORE_STOCKS: {
 		path: 'store-stocks/create',
 		meta: {
-			title: 'Добавить в склад магазина',
+			title: 'Добавить в склад кафе',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -84,7 +79,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 	ADMIN_STORES: {
 		path: 'stores',
 		meta: {
-			title: 'Магазины',
+			title: 'Кафе',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/stores/pages/admin-stores-page.vue'),
@@ -92,7 +87,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 	ADMIN_STORE_CREATE: {
 		path: 'stores/create',
 		meta: {
-			title: 'Добавить магазин',
+			title: 'Добавить кафе',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/stores/pages/admin-stores-create-page.vue'),
@@ -100,7 +95,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 	ADMIN_STORE_DETAILS: {
 		path: 'stores/:id',
 		meta: {
-			title: 'Детали магазина',
+			title: 'Детали кафе',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/stores/pages/admin-store-details-page.vue'),

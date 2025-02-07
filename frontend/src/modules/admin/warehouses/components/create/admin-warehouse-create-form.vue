@@ -35,9 +35,6 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createRegionSchema,
 })
 
-// State
-const isSubmitting = ref(false)
-
 // Handlers
 const onSubmit = handleSubmit(async (formValues) => {
   emits('onSubmit', {name: formValues.name, facilityAddress: {address: formValues.address}, regionId: formValues.regionId})
@@ -85,7 +82,6 @@ function selectRegion(region: RegionDTO) {
 				<Button
 					type="submit"
 					@click="onSubmit"
-					:disabled="isSubmitting"
 					>Сохранить</Button
 				>
 			</div>
@@ -93,72 +89,76 @@ function selectRegion(region: RegionDTO) {
 
 		<!-- Main Content -->
 		<div class="gap-4 grid md:grid-cols-[1fr_250px] lg:grid-cols-3">
-			<Card>
-				<CardHeader>
-					<CardTitle>Детали региона</CardTitle>
-					<CardDescription>Введите детали нового склада.</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<form
-						@submit="onSubmit"
-						class="gap-6 grid"
-					>
-						<FormField
-							name="name"
-							v-slot="{ componentField }"
+			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
+				<Card>
+					<CardHeader>
+						<CardTitle>Детали региона</CardTitle>
+						<CardDescription>Введите детали нового склада.</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<form
+							@submit="onSubmit"
+							class="gap-6 grid"
 						>
-							<FormItem>
-								<FormLabel>Название региона</FormLabel>
-								<FormControl>
-									<Input
-										id="name"
-										type="text"
-										v-bind="componentField"
-										placeholder="Введите название региона"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
+							<FormField
+								name="name"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Название региона</FormLabel>
+									<FormControl>
+										<Input
+											id="name"
+											type="text"
+											v-bind="componentField"
+											placeholder="Введите название региона"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
 
-						<FormField
-							name="address"
-							v-slot="{ componentField }"
-						>
-							<FormItem>
-								<FormLabel>Адрес</FormLabel>
-								<FormControl>
-									<Input
-										id="address"
-										type="text"
-										v-bind="componentField"
-										placeholder="Введите адрес склада"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-					</form>
-				</CardContent>
-			</Card>
+							<FormField
+								name="address"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Адрес</FormLabel>
+									<FormControl>
+										<Input
+											id="address"
+											type="text"
+											v-bind="componentField"
+											placeholder="Введите адрес склада"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+						</form>
+					</CardContent>
+				</Card>
+			</div>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>Регион</CardTitle>
-					<CardDescription>Выберите регион склада</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div>
-						<Button
-							variant="link"
-							class="mt-0 p-0 h-fit text-primary underline"
-							@click="openRegionDialog = true"
-						>
-							{{ selectedRegion?.name || 'Регион не выбран' }}
-						</Button>
-					</div>
-				</CardContent>
-			</Card>
+			<div class="items-start gap-4 grid auto-rows-max">
+				<Card>
+					<CardHeader>
+						<CardTitle>Регион</CardTitle>
+						<CardDescription>Выберите регион склада</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div>
+							<Button
+								variant="link"
+								class="mt-0 p-0 h-fit text-primary underline"
+								@click="openRegionDialog = true"
+							>
+								{{ selectedRegion?.name || 'Регион не выбран' }}
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 
 		<!-- Footer -->
@@ -171,7 +171,6 @@ function selectRegion(region: RegionDTO) {
 			<Button
 				type="submit"
 				@click="onSubmit"
-				:disabled="isSubmitting"
 				>Сохранить</Button
 			>
 		</div>

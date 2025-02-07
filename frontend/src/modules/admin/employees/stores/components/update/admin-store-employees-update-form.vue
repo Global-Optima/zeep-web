@@ -24,7 +24,7 @@
 				</Button>
 				<Button
 					type="submit"
-					@click="handleSubmit"
+					@click="submitForm"
 				>
 					Сохранить
 				</Button>
@@ -156,6 +156,7 @@
 									@update:checked="handleChange"
 								/>
 							</FormControl>
+							<FormMessage />
 						</FormItem>
 					</FormField>
 				</form>
@@ -172,7 +173,7 @@
 			</Button>
 			<Button
 				type="submit"
-				@click="handleSubmit"
+				@click="submitForm"
 			>
 				Сохранить
 			</Button>
@@ -181,11 +182,6 @@
 </template>
 
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm } from 'vee-validate'
-import { ref } from 'vue'
-import * as z from 'zod'
-
 import { Button } from '@/core/components/ui/button'
 import {
   Card,
@@ -207,7 +203,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/core/components/ui/switch'
 import { getEmployeeShortName } from '@/core/utils/user-formatting.utils'
 import { EmployeeRole, type EmployeeDTO, type UpdateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
+import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
+import { useForm } from 'vee-validate'
+import { ref } from 'vue'
+import * as z from 'zod'
 
 const {employee} = defineProps<{
 	employee: EmployeeDTO

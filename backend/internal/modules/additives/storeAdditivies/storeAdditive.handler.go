@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -46,15 +47,16 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
+
 	productSizeID, err := strconv.ParseUint(c.Param("productSizeId"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid productSizeID")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	var filter types.StoreAdditiveCategoriesFilter
 	if err := c.ShouldBindQuery(&filter); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON+err.Error())
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
@@ -64,7 +66,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 			utils.SendSuccessResponse(c, []types.StoreAdditiveCategoryDTO{})
 			return
 		}
-		utils.SendInternalServerError(c, "Failed to retrieve store additives")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
@@ -81,13 +83,13 @@ func (h *StoreAdditiveHandler) GetAdditivesListToAdd(c *gin.Context) {
 	}
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Additive{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	storeAdditives, err := h.service.GetAdditivesListToAdd(storeID, &filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch additives")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
@@ -104,13 +106,13 @@ func (h *StoreAdditiveHandler) GetStoreAdditives(c *gin.Context) {
 	}
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StoreAdditive{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	storeAdditives, err := h.service.GetStoreAdditives(storeID, &filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch additives")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
@@ -126,7 +128,7 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 
 	var dtos []types.CreateStoreAdditiveDTO
 	if err := c.ShouldBindJSON(&dtos); err != nil {
-		utils.SendBadRequestError(c, "Invalid input data")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
@@ -137,13 +139,13 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 
 	ids, err := h.service.CreateStoreAdditives(storeID, dtos)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create additive")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
 	stockList, err := h.service.GetStoreAdditivesByIDs(storeID, ids)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create additives: additive not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
@@ -178,7 +180,7 @@ func (h *StoreAdditiveHandler) CreateStoreAdditives(c *gin.Context) {
 		}()
 	}
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Additive created successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response201StoreAdditive)
 }
 
 func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
@@ -190,24 +192,24 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 
 	storeAdditiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store id")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreAdditive)
 		return
 	}
 
 	storeAdditive, err := h.service.GetStoreAdditiveByID(storeID, uint(storeAdditiveID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update additive: additive not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
 	var dto types.UpdateStoreAdditiveDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid input data")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	if err := h.service.UpdateStoreAdditive(storeID, uint(storeAdditiveID), &dto); err != nil {
-		utils.SendInternalServerError(c, "Failed to update additive")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
@@ -222,7 +224,7 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Additive updated successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200StoreAdditiveUpdate)
 }
 
 func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
@@ -234,18 +236,18 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 
 	storeAdditiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store additive ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreAdditive)
 		return
 	}
 
 	storeAdditive, err := h.service.GetStoreAdditiveByID(storeID, uint(storeAdditiveID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update additive: additive not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
 	if err := h.service.DeleteStoreAdditive(storeID, uint(storeAdditiveID)); err != nil {
-		utils.SendInternalServerError(c, "Failed to delete additive")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 
@@ -260,7 +262,7 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Additive deleted successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200StoreAdditiveDelete)
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditiveByID(c *gin.Context) {
@@ -272,13 +274,13 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveByID(c *gin.Context) {
 
 	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid store additive ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StoreAdditive)
 		return
 	}
 
 	additive, err := h.service.GetStoreAdditiveByID(storeID, uint(additiveID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch store additive")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
 

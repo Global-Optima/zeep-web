@@ -1,146 +1,205 @@
 <template>
-	<div class="flex flex-col gap-6 mx-auto w-full md:w-2/3">
-		<Card>
-			<CardHeader>
-				<CardTitle>{{ 'Создать магазин' }}</CardTitle>
-				<CardDescription> Заполните форму ниже, чтобы создать магазин. </CardDescription>
-			</CardHeader>
-			<CardContent>
-				<form
-					@submit="submitForm"
-					class="gap-6 grid"
+	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-4xl">
+		<!-- Header -->
+		<div class="flex items-center gap-4">
+			<Button
+				variant="outline"
+				size="icon"
+				@click="handleCancel"
+			>
+				<ChevronLeft class="w-5 h-5" />
+				<span class="sr-only">Назад</span>
+			</Button>
+			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
+				Создать кафе
+			</h1>
+
+			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+				<Button
+					variant="outline"
+					type="button"
+					@click="handleCancel"
+					>Отменить</Button
 				>
-					<!-- Store Name and Is Franchise -->
-					<div class="flex items-end gap-4">
-						<div class="flex-grow">
+				<Button
+					type="submit"
+					@click="submitForm"
+				>
+					Сохранить
+				</Button>
+			</div>
+		</div>
+
+		<!-- Main Content -->
+		<div class="gap-4 grid md:grid-cols-[1fr_250px] lg:grid-cols-3">
+			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
+				<Card>
+					<CardHeader>
+						<CardTitle>Детали кафе</CardTitle>
+						<CardDescription> Заполните форму ниже, чтобы создать кафе. </CardDescription>
+					</CardHeader>
+					<CardContent>
+						<form
+							@submit="submitForm"
+							class="gap-6 grid"
+						>
+							<!-- Store Name and Is Franchise -->
 							<FormField
 								name="name"
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Название магазина</FormLabel>
+									<FormLabel>Название кафе</FormLabel>
 									<FormControl>
 										<Input
 											v-bind="componentField"
-											placeholder="Введите название магазина"
+											placeholder="Введите название кафе"
 										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							</FormField>
-						</div>
 
-						<div>
+							<!-- Facility Address -->
 							<FormField
-								name="isFranchise"
-								v-slot="{ value, handleChange }"
+								name="facilityAddress.address"
+								v-slot="{ componentField }"
 							>
-								<FormItem class="flex items-center gap-3 mb-3">
-									<Switch
-										id="is-franchise"
-										:checked="value"
-										@update:checked="handleChange"
-									/>
-									<Label
-										class="!m-0"
-										for="is-franchise"
-										>Франшиза</Label
+								<FormItem>
+									<FormLabel>Адрес кафе</FormLabel>
+									<FormControl>
+										<Input
+											v-bind="componentField"
+											placeholder="Введите адрес"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
+
+							<!-- Contact Phone and Email -->
+							<div class="flex gap-4">
+								<div class="w-1/2">
+									<FormField
+										name="contactPhone"
+										v-slot="{ componentField }"
 									>
+										<FormItem>
+											<FormLabel>Контактный телефон</FormLabel>
+											<FormControl>
+												<Input
+													v-bind="componentField"
+													placeholder="+7 (___) ___-__-__"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									</FormField>
+								</div>
+								<div class="w-1/2">
+									<FormField
+										name="contactEmail"
+										v-slot="{ componentField }"
+									>
+										<FormItem>
+											<FormLabel>Контактный Email</FormLabel>
+											<FormControl>
+												<Input
+													type="email"
+													v-bind="componentField"
+													placeholder="example@example.com"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									</FormField>
+								</div>
+							</div>
+							<!-- Store Hours -->
+							<FormField
+								name="storeHours"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Часы работы</FormLabel>
+									<FormControl>
+										<Input
+											v-bind="componentField"
+											placeholder="Введите часы работы (например, 9:00-18:00)"
+										/>
+									</FormControl>
+									<FormMessage />
 								</FormItem>
 							</FormField>
-						</div>
-					</div>
-					<!-- Facility Address -->
-					<FormField
-						name="facilityAddress.address"
-						v-slot="{ componentField }"
-					>
-						<FormItem>
-							<FormLabel>Адрес магазина</FormLabel>
-							<FormControl>
-								<Input
-									v-bind="componentField"
-									placeholder="Введите адрес"
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					</FormField>
+						</form>
+					</CardContent>
+				</Card>
+			</div>
 
-					<!-- Contact Phone and Email -->
-					<div class="flex gap-4">
-						<div class="w-1/2">
-							<FormField
-								name="contactPhone"
-								v-slot="{ componentField }"
+			<div class="items-start gap-4 grid auto-rows-max">
+				<Card>
+					<CardHeader>
+						<CardTitle>Франчайзи (опционально)</CardTitle>
+						<CardDescription>Выберите франчайзи</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div>
+							<Button
+								variant="link"
+								class="mt-0 p-0 h-fit text-primary underline"
+								@click="openFranchiseeDialog = true"
 							>
-								<FormItem>
-									<FormLabel>Контактный телефон</FormLabel>
-									<FormControl>
-										<Input
-											v-bind="componentField"
-											placeholder="+7 (___) ___-__-__"
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							</FormField>
+								{{ selectedFranchisee?.name || 'Франчайзи не выбран' }}
+							</Button>
 						</div>
-						<div class="w-1/2">
-							<FormField
-								name="contactEmail"
-								v-slot="{ componentField }"
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Склад</CardTitle>
+						<CardDescription>Выберите склад</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div>
+							<Button
+								variant="link"
+								class="mt-0 p-0 h-fit text-primary underline"
+								@click="openWarehouseDialog = true"
 							>
-								<FormItem>
-									<FormLabel>Контактный Email</FormLabel>
-									<FormControl>
-										<Input
-											type="email"
-											v-bind="componentField"
-											placeholder="example@example.com"
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							</FormField>
+								{{ selectedWarehouse?.name || 'Склад не выбран' }}
+							</Button>
 						</div>
-					</div>
-					<!-- Store Hours -->
-					<FormField
-						name="storeHours"
-						v-slot="{ componentField }"
-					>
-						<FormItem>
-							<FormLabel>Часы работы</FormLabel>
-							<FormControl>
-								<Input
-									v-bind="componentField"
-									placeholder="Введите часы работы (например, 9:00-18:00)"
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					</FormField>
-					<!-- Action Buttons -->
-					<div class="flex gap-4 mt-6">
-						<Button
-							:disabled="!meta.valid"
-							type="submit"
-							class="flex-1"
-						>
-							Создать
-						</Button>
-						<Button
-							variant="outline"
-							class="flex-1"
-							@click="handleCancel"
-						>
-							Отмена
-						</Button>
-					</div>
-				</form>
-			</CardContent>
-		</Card>
+					</CardContent>
+				</Card>
+			</div>
+		</div>
+
+		<!-- Footer -->
+		<div class="flex justify-center items-center gap-2 md:hidden">
+			<Button
+				variant="outline"
+				@click="handleCancel"
+				>Отменить</Button
+			>
+			<Button
+				type="submit"
+				@click="submitForm"
+				>Сохранить</Button
+			>
+		</div>
+
+		<AdminSelectFranchiseeDialog
+			:open="openFranchiseeDialog"
+			@close="openFranchiseeDialog = false"
+			@select="selectFranchisee"
+		/>
+
+		<AdminSelectWarehouseDialog
+			:open="openWarehouseDialog"
+			@close="openWarehouseDialog = false"
+			@select="selectWarehouse"
+		/>
 	</div>
 </template>
 
@@ -161,11 +220,15 @@ import {
   FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import { Label } from '@/core/components/ui/label'
-import { Switch } from '@/core/components/ui/switch'
+import AdminSelectFranchiseeDialog from '@/modules/admin/franchisees/components/admin-select-franchisee-dialog.vue'
+import type { FranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
 import type { CreateStoreDTO } from '@/modules/admin/stores/models/stores-dto.model'
+import AdminSelectWarehouseDialog from '@/modules/admin/warehouses/components/admin-select-warehouse-dialog.vue'
+import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 import { toTypedSchema } from '@vee-validate/zod'
+import { ChevronLeft } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
+import { ref } from 'vue'
 import * as z from 'zod'
 
 
@@ -185,22 +248,55 @@ const schema = toTypedSchema(
 		contactPhone: z.string().min(7, 'Телефон должен содержать минимум 7 символов'),
 		contactEmail: z.string().email('Введите действительный адрес электронной почты'),
 		storeHours: z.string().min(5, 'Часы работы должны быть указаны'),
+    warehouseId: z.number().min(1, 'Введите склад'),
+    franchiseId: z.number().optional()
 	}),
 )
 
 // Initialize form
-const { handleSubmit, resetForm, meta } = useForm<CreateStoreDTO>({
+const { handleSubmit, resetForm, setFieldValue } = useForm({
 	validationSchema: schema,
 })
 
 // Submit form
 const submitForm = handleSubmit((formValues) => {
-	emit('onSubmit', formValues)
+  const dto: CreateStoreDTO = {
+    name: formValues.name,
+    warehouseId: formValues.warehouseId,
+    facilityAddress: {
+      address: formValues.facilityAddress.address
+    },
+    isActive: true,
+    contactPhone: formValues.contactPhone,
+    contactEmail: formValues.contactEmail,
+    storeHours: formValues.storeHours,
+    franchiseId:  formValues.franchiseId
+  }
+
+	emit('onSubmit', dto)
 })
 
 // Handle cancel
 const handleCancel = () => {
   resetForm()
 	emit('onCancel')
+}
+
+const openWarehouseDialog = ref(false)
+const selectedWarehouse = ref<WarehouseDTO | null>(null)
+
+function selectWarehouse(warehouse: WarehouseDTO) {
+  selectedWarehouse.value = warehouse
+  openWarehouseDialog.value = false
+  setFieldValue('warehouseId', warehouse.id)
+}
+
+const openFranchiseeDialog = ref(false)
+const selectedFranchisee = ref<FranchiseeDTO | null>(null)
+
+function selectFranchisee(franchisee: FranchiseeDTO) {
+  selectedFranchisee.value = franchisee
+  openFranchiseeDialog.value = false
+  setFieldValue('franchiseId', franchisee.id)
 }
 </script>

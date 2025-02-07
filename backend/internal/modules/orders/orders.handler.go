@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
@@ -27,7 +30,7 @@ func NewOrderHandler(service OrderService) *OrderHandler {
 func (h *OrderHandler) GetOrders(c *gin.Context) {
 	var filter types.OrdersFilterQuery
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Order{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
@@ -69,7 +72,7 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil || orderID == 0 {
-		utils.SendBadRequestError(c, "invalid order ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -82,10 +85,26 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 	utils.SendSuccessResponse(c, subOrders)
 }
 
+func (h *OrderHandler) CheckCustomerName(c *gin.Context) {
+	var dto types.ValidateCustomerNameDTO
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	if err := censor.GetCensorValidator().ValidateText(dto.CustomerName); err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400OrderCustomerName)
+		return
+	}
+
+	localization.SendLocalizedResponseWithStatus(c, http.StatusOK)
+}
+
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	var orderDTO types.CreateOrderDTO
 	if err := c.ShouldBindJSON(&orderDTO); err != nil {
-		utils.SendBadRequestError(c, "invalid input data")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
@@ -97,7 +116,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("failed to create order: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500OrderCreate)
 		return
 	}
 
@@ -115,13 +134,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 	orderID, errH := utils.ParseParam(c, "orderId")
 	if errH != nil {
-		utils.SendBadRequestError(c, "invalid order ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
 	subOrderID, errH := utils.ParseParam(c, "subOrderId")
 	if errH != nil {
-		utils.SendBadRequestError(c, "invalid suborder ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -140,14 +159,14 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 
 	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 
-	utils.SendMessageWithStatus(c, "Sub order completed", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
 }
 
 func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
 	suborderIDParam := c.Param("subOrderId")
 	suborderID, err := strconv.ParseUint(suborderIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid suborder ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -168,7 +187,7 @@ func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
 func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {
 	subOrderID, errH := utils.ParseParam(c, "subOrderId")
 	if errH != nil {
-		utils.SendBadRequestError(c, "invalid suborder ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -194,7 +213,7 @@ func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 	orderIDStr := c.Param("orderId")
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil || orderID == 0 {
-		utils.SendBadRequestError(c, "invalid order ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -256,7 +275,7 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 	orderID, err := strconv.ParseUint(c.Param("orderId"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid order ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -267,7 +286,7 @@ func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 	}
 
 	if orderDetails == nil {
-		utils.SendNotFoundError(c, "Order not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -277,7 +296,7 @@ func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 func (h *OrderHandler) ExportOrders(c *gin.Context) {
 	var filter types.OrdersExportFilterQuery
 	if err := c.ShouldBindQuery(&filter); err != nil {
-		utils.SendBadRequestError(c, "Invalid filter parameters")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 

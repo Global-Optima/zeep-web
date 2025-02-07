@@ -76,7 +76,7 @@ const userRole = computed(() => currentEmployee?.role)
 // Predefined array for request details
 const requestDetails = computed(() => [
   { label: 'Номер заявки', value: props.request.requestId },
-  { label: 'Магазин', value: props.request.store.name },
+  { label: 'Кафе', value: props.request.store.name },
   { label: 'Склад', value: props.request.warehouse.name },
   { label: 'Статус', value: STOCK_REQUEST_STATUS_FORMATTED[props.request.status] },
   {

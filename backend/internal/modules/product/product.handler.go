@@ -1,10 +1,10 @@
 package product
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"net/http"
 	"strconv"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -29,14 +29,13 @@ func NewProductHandler(service ProductService, auditService audit.AuditService) 
 func (h *ProductHandler) GetProducts(c *gin.Context) {
 	var filter types.ProductsFilterDto
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Product{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	products, err := h.service.GetProducts(&filter)
-
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve products")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -48,18 +47,18 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 
 	productID, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
 	}
 
 	productDetails, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
 	if productDetails == nil {
-		utils.SendNotFoundError(c, "Product not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -70,13 +69,13 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	var input types.CreateProductDTO
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	id, err := h.service.CreateProduct(&input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -90,7 +89,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
+	localization.SendLocalizedResponseWithKey(c, types.Response201Product)
 }
 
 func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
@@ -98,13 +97,13 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 
 	productID, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
 	}
 
 	productSizes, err := h.service.GetProductSizesByProductID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product sizes")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -116,13 +115,13 @@ func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
 
 	productID, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
 	}
 
 	productSize, err := h.service.GetProductSizeDetailsByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product sizes")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -133,13 +132,13 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 	var input types.CreateProductSizeDTO
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON+err.Error())
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	id, err := h.service.CreateProductSize(&input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve product details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -153,31 +152,31 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product created successfully", http.StatusCreated)
+	localization.SendLocalizedResponseWithKey(c, types.Response201Product)
 }
 
 func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
 	}
 
 	var input *types.UpdateProductDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	existingProduct, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product details: product not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
 	err = h.service.UpdateProduct(uint(productID), input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -193,37 +192,31 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductUpdate)
 }
 
 func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
 	}
 
 	var input *types.UpdateProductSizeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	existingProductSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product size: product size not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendBadRequestError(c, "Store ID is not present")
-		return
-	}
-
-	err = h.service.UpdateProductSize(storeID, uint(productSizeID), input)
+	err = h.service.UpdateProductSize(uint(productSizeID), input)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update product size")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -239,25 +232,25 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product updated successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductUpdate)
 }
 
 func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
 	}
 
 	existingProduct, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete product details: product not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
 	err = h.service.DeleteProduct(uint(productID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete product")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -272,25 +265,25 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product size deleted successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductDelete)
 }
 
 func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid product size ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
 	}
 
 	existingProduct, err := h.service.GetProductByID(uint(productSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete product size: product size not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
 	err = h.service.DeleteProduct(uint(productSizeID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete product size")
+		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
 	}
 
@@ -305,5 +298,5 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "product deleted successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductDelete)
 }

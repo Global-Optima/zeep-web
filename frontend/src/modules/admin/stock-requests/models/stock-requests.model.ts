@@ -18,7 +18,7 @@ export const STOCK_REQUEST_STATUS_OPTIONS = [
 	{ label: 'Обработанные', value: StockRequestStatus.PROCESSED },
 	{ label: 'В доставке', value: StockRequestStatus.IN_DELIVERY },
 	{ label: 'Завершённые', value: StockRequestStatus.COMPLETED },
-	{ label: 'Отклонённые магазином', value: StockRequestStatus.REJECTED_BY_STORE },
+	{ label: 'Отклонённые кафе', value: StockRequestStatus.REJECTED_BY_STORE },
 	{ label: 'Отклонённые складом', value: StockRequestStatus.REJECTED_BY_WAREHOUSE },
 	{ label: 'Принятые с изменениями', value: StockRequestStatus.ACCEPTED_WITH_CHANGE },
 ]
@@ -38,7 +38,7 @@ export const STOCK_REQUEST_STATUS_FORMATTED: Record<StockRequestStatus, string> 
 	[StockRequestStatus.PROCESSED]: 'Обработан',
 	[StockRequestStatus.IN_DELIVERY]: 'В доставке',
 	[StockRequestStatus.COMPLETED]: 'Завершён',
-	[StockRequestStatus.REJECTED_BY_STORE]: 'Отклонён магазином',
+	[StockRequestStatus.REJECTED_BY_STORE]: 'Отклонён кафе',
 	[StockRequestStatus.REJECTED_BY_WAREHOUSE]: 'Отклонён складом',
 	[StockRequestStatus.ACCEPTED_WITH_CHANGE]: 'Принят с изменениями',
 }

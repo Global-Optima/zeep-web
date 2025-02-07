@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { Input } from '@/core/components/ui/input'
 import AdminOrdersExport from '@/modules/admin/store-orders/components/admin-orders-export.vue'
-import type { OrdersFilterQuery } from '@/modules/orders/models/orders.models'
+import type { OrdersFilterQuery } from '@/modules/admin/store-orders/models/orders.models'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 

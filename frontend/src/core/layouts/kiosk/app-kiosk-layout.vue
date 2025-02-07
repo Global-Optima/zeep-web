@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getRouteName, type RouteKey } from '@/core/config/routes.config'
+import { getRouteName } from '@/core/config/routes.config'
 import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
 import { useSelectedProductStore } from "@/modules/kiosk/products/stores/current-product.store"
 import { defineAsyncComponent, onBeforeUnmount, onMounted } from 'vue'
@@ -8,8 +8,6 @@ import { useRouter } from 'vue-router'
 const KioskDetailsModal = defineAsyncComponent(() =>
   import('@/modules/kiosk/products/components/details/kiosk-details-modal.vue')
 );
-
-const pagesOmitRedirect: RouteKey[] = [ 'KIOSK_ORDERS', 'KIOSK_ORDERS_DISPLAY']
 
 const router = useRouter()
 const productStore = useSelectedProductStore()
@@ -27,9 +25,6 @@ const resetInactivityTimer = () => {
     clearTimeout(inactivityTimeout)
   }
   inactivityTimeout = setTimeout(() => {
-    const currentRouteName = router.currentRoute.value.name
-    if (pagesOmitRedirect.some(page => page === currentRouteName)) return
-
     resetAppStates()
     router.push({ name: getRouteName('KIOSK_LANDING') })
   }, inactivityDuration)
