@@ -5,7 +5,7 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите топпинг</DialogTitle>
+				<DialogTitle>Выберите франчайзи</DialogTitle>
 			</DialogHeader>
 
 			<div>
@@ -23,7 +23,7 @@
 						v-if="!additives || additives.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Топпинги не найдены
+						Франчайзи не найдены
 					</p>
 
 					<ul v-else>
@@ -33,16 +33,7 @@
 							class="flex justify-between items-center hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
 							@click="selectMaterial(additive)"
 						>
-							<div class="flex items-center gap-2">
-								<img
-									:src="additive.imageUrl"
-									class="bg-gray-100 p-1 rounded-md w-16 h-16 object-contain"
-								/>
-								<span>{{ additive.name }}</span>
-							</div>
-							<span class="text-gray-500 text-sm">
-								{{ additive.category.name }}
-							</span>
+							<span>{{ additive.name }}</span>
 						</li>
 					</ul>
 				</div>
@@ -78,8 +69,8 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
-import type { AdditiveDTO, AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
-import { additivesService } from '@/modules/admin/additives/services/additives.service'
+import type { FranchiseeDTO, FranchiseeFilterDTO } from '@/modules/admin/franchisees/models/franchisee.model'
+import { franchiseeService } from '@/modules/admin/franchisees/services/franchisee.service'
 
 const {open} = defineProps<{
   open: boolean;
@@ -87,7 +78,7 @@ const {open} = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', additive: AdditiveDTO): void;
+  (e: 'select', additive: FranchiseeDTO): void;
 }>()
 
 const searchTerm = ref('')
@@ -96,7 +87,7 @@ const debouncedSearchTerm = useDebounce(
   500
 )
 
-const filter = ref<AdditiveFilterQuery>({
+const filter = ref<FranchiseeFilterDTO>({
   page: 1,
   pageSize: 10,
   search: ''
@@ -111,10 +102,10 @@ watch(debouncedSearchTerm, (newValue) => {
 
 const { data: additives, refetch } = useQuery({
   queryKey: computed(() => [
-  'admin-additives',
+  'admin-franchisees',
   filter.value
 ]),
-  queryFn: () => additivesService.getAdditives(filter.value),
+  queryFn: () => franchiseeService.getPaginated(filter.value),
 })
 
 
@@ -127,7 +118,7 @@ function loadMore() {
   }
 }
 
-function selectMaterial(additive: AdditiveDTO) {
+function selectMaterial(additive: FranchiseeDTO) {
   emit('select', additive)
   onClose()
 }

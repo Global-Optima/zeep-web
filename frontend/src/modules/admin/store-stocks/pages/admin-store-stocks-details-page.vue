@@ -35,7 +35,7 @@ const updateMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных запасов магазина. Пожалуйста, подождите.',
+			description: 'Обновление данных запасов кафе. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -43,7 +43,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['store-stock', storeStockId] })
 		toast({
 			title: 'Успех!',
-			description: 'Данные запасов магазина успешно обновлены.',
+			description: 'Данные запасов кафе успешно обновлены.',
 		})
 	},
 	onError: () => {

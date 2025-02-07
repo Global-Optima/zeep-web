@@ -93,7 +93,7 @@ function removeAdditive(index: number) {
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
 			</Button>
-			<h1 class="font-semibold text-xl tracking-tight shrink-0">Добавить добавки в магазин</h1>
+			<h1 class="font-semibold text-xl tracking-tight shrink-0">Добавить добавки в кафе</h1>
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
 				<Button
 					variant="outline"
@@ -133,7 +133,7 @@ function removeAdditive(index: number) {
 						<TableRow>
 							<TableHead>Название</TableHead>
 							<TableHead>Базовая цена</TableHead>
-							<TableHead>Цена в магазине</TableHead>
+							<TableHead>Цена в кафе</TableHead>
 							<TableHead>Удалить</TableHead>
 						</TableRow>
 					</TableHeader>

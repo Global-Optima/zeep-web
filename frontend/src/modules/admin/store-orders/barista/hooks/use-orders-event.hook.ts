@@ -1,23 +1,28 @@
-import type { OrderDTO, OrderStatus } from '@/modules/orders/models/orders.models'
+import type { OrderDTO, OrderStatus } from '@/modules/admin/store-orders/models/orders.models'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useWebSocket } from '@vueuse/core'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, reactive, ref, watchEffect } from 'vue'
 
 interface OrderFilterOptions {
 	status?: OrderStatus
 }
 
-const allOrders = ref<OrderDTO[]>([])
+const state = reactive<{
+	allOrders: OrderDTO[]
+}>({
+	allOrders: [],
+})
 
 const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'
 
 export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	const queryClient = useQueryClient()
 	const url = `${wsUrl}/orders/ws`
+
 	const localFilter = ref({ ...filter })
 
 	const {
-		status,
+		status: socketStatus,
 		data: messageEvent,
 		send,
 		open,
@@ -55,12 +60,12 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	})
 
 	const filteredOrders = computed(() => {
-		if (!localFilter.value.status) return allOrders.value
-		return allOrders.value.filter(order => order.status === localFilter.value.status)
+		if (!localFilter.value.status) return state.allOrders
+		return state.allOrders.filter(order => order.status === localFilter.value.status)
 	})
 
-	function setFilter(filter: OrderFilterOptions) {
-		localFilter.value = { ...localFilter.value, ...filter }
+	function setFilter(newFilter: OrderFilterOptions) {
+		localFilter.value = { ...localFilter.value, ...newFilter }
 	}
 
 	function invalidateOrderStatuses() {
@@ -68,29 +73,29 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	}
 
 	function handleInitialData(initialOrders: OrderDTO[]) {
-		allOrders.value = sortOrders(initialOrders)
+		state.allOrders = sortOrders(initialOrders)
 		invalidateOrderStatuses()
 	}
 
-	function handleOrderCreated(order: OrderDTO) {
-		allOrders.value.unshift(order)
-		allOrders.value = sortOrders(allOrders.value)
+	function handleOrderCreated(newOrder: OrderDTO) {
+		state.allOrders.unshift(newOrder)
+		state.allOrders = sortOrders([...state.allOrders])
 		invalidateOrderStatuses()
 	}
 
-	function handleOrderUpdated(order: OrderDTO) {
-		const idx = allOrders.value.findIndex(o => o.id === order.id)
+	function handleOrderUpdated(updated: OrderDTO) {
+		const idx = state.allOrders.findIndex(o => o.id === updated.id)
 		if (idx !== -1) {
-			allOrders.value[idx] = order
+			state.allOrders[idx] = { ...state.allOrders[idx], ...updated }
 		} else {
-			allOrders.value.unshift(order)
+			state.allOrders.unshift(updated)
 		}
-		allOrders.value = sortOrders(allOrders.value)
+		state.allOrders = sortOrders([...state.allOrders])
 		invalidateOrderStatuses()
 	}
 
 	function handleOrderDeleted(orderId: number) {
-		allOrders.value = allOrders.value.filter(o => o.id !== orderId)
+		state.allOrders = state.allOrders.filter(o => o.id !== orderId)
 		invalidateOrderStatuses()
 	}
 
@@ -101,7 +106,7 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	}
 
 	return {
-		status,
+		status: socketStatus,
 		filteredOrders,
 		setFilter,
 		send,

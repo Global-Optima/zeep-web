@@ -23,20 +23,20 @@ const createMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Создание...',
-			description: 'Добавление новых запасов магазина. Пожалуйста, подождите.',
+			description: 'Добавление новых запасов кафе. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['store-stocks'] })
 		toast({
 			title: 'Успех!',
-			description: 'Запасы магазина успешно добавлены.',
+			description: 'Запасы кафе успешно добавлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при добавлении запасов магазина.',
+			description: 'Произошла ошибка при добавлении запасов кафе.',
 			variant: 'destructive',
 		})
 	},

@@ -6,7 +6,6 @@
 		:unit="unitDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
-		readonly
 	/>
 </template>
 

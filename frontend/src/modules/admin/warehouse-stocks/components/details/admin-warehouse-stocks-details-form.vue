@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { usePrinter } from '@/core/hooks/use-print.hook'
 import { stockMaterialsService } from '@/modules/admin/stock-materials/services/stock-materials.service'
 import type {
   UpdateWarehouseStockDTO,
@@ -47,16 +48,19 @@ const materialInfo = computed(() => [
     label: 'Срок годности',
     value: `${props.initialData.stockMaterial.expirationPeriodInDays} дней`
   },
-  { label: 'Штрихкод', value: props.initialData.stockMaterial.barcode },
   {
     label: 'Ранняя дата истечения срока годности',
     value: props.initialData.earliestExpirationDate ? formatDate(new Date(props.initialData.earliestExpirationDate)) : "Доставки товара отсутствуют",
   },
+  { label: 'Штрихкод', value: props.initialData.stockMaterial.barcode },
 ])
+
+const {print} = usePrinter()
 
 const onPrintBarcode = async () => {
   if (props.readonly) return
-  await stockMaterialsService.getStockMaterialsBarcodeFile(props.initialData.stockMaterial.id);
+  const blob = await stockMaterialsService.getStockMaterialsBarcodeFile(props.initialData.stockMaterial.id);
+  print(blob)
 }
 
 // Date Formatter Utility
@@ -142,8 +146,20 @@ const onCancel = () => {
 		<!-- Stock Material Info -->
 		<Card>
 			<CardHeader>
-				<CardTitle>Информация о материале</CardTitle>
-				<CardDescription>Полная информация о материале</CardDescription>
+				<div class="flex justify-between items-start gap-4">
+					<div>
+						<CardTitle>Информация о материале</CardTitle>
+						<CardDescription class="mt-1.5">Полная информация о материале</CardDescription>
+					</div>
+					<Button
+						variant="outline"
+						@click="onPrintBarcode"
+						class="gap-2"
+					>
+						<Printer class="text-gray-800 size-4" />
+						<span>Штрихкод</span>
+					</Button>
+				</div>
 			</CardHeader>
 			<CardContent>
 				<ul class="space-y-2">
@@ -152,21 +168,6 @@ const onCancel = () => {
 						:key="info.label"
 					>
 						<span>{{ info.label }}:</span> <span class="font-medium">{{ info.value }}</span>
-					</li>
-
-					<li class="flex items-center gap-2">
-						<span>Штрихкод: </span>
-						<div class="flex items-center gap-3">
-							<span class="font-medium">{{ initialData.stockMaterial.barcode }}</span>
-							<Button
-								variant="outline"
-								@click="onPrintBarcode"
-								class="gap-2"
-							>
-								<Printer class="text-gray-800 size-4" />
-								<span>Печать</span>
-							</Button>
-						</div>
 					</li>
 				</ul>
 			</CardContent>
@@ -187,11 +188,11 @@ const onCancel = () => {
 				>
 					<FormField name="safetyStock">
 						<FormItem>
-							<FormLabel>Безопасный запас</FormLabel>
+							<FormLabel>Безопасный запас упаковок</FormLabel>
 							<FormControl>
 								<Input
 									type="number"
-									placeholder="Введите безопасный запас"
+									placeholder="Введите безопасный запас упаковок"
 									:model-value="initialData.stockMaterial.safetyStock"
 									readonly
 								/>

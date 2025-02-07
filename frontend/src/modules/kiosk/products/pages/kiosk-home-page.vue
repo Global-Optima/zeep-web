@@ -23,7 +23,7 @@
 			/>
 
 			<!-- Search Bar for tablet and larger screens -->
-			<div class="sm:block hidden pt-4 pr-4 pl-3">
+			<div class="sm:block hidden pt-4 pr-4 pb-3 pl-3">
 				<KioskHomeToolbarTablet
 					:search-term="searchTerm"
 					@update:search-term="onUpdateSearchTerm"
@@ -31,7 +31,7 @@
 			</div>
 
 			<!-- Products Grid -->
-			<section class="flex-1 pt-3 pr-4 pb-4 pl-3 overflow-y-auto no-scrollbar">
+			<section class="flex-1 pr-4 pb-4 pl-3 overflow-y-auto no-scrollbar">
 				<div
 					v-if="products?.data.length === 0"
 					class="flex justify-center items-center h-20 text-gray-500"

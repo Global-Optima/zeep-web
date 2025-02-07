@@ -1,4 +1,4 @@
-import AppDefaultLayout from '../layouts/default/app-default-layout.vue'
+import AppDefaultLayout from '@/core/layouts/default/app-default-layout.vue'
 import type { AppRouteRecord, ParentRoutePage } from './routes.types'
 
 export const ERRORS_CHILDREN_ROUTES = {

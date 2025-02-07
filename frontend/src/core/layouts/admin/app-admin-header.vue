@@ -14,7 +14,7 @@
 
 			<SheetContent
 				side="left"
-				class="flex flex-col"
+				class="flex flex-col pt-safe"
 				:include-close-button="false"
 			>
 				<AppAdminSidebar />
@@ -34,20 +34,12 @@
 						@click="onBaristaClick"
 						class="flex items-center gap-3 mb-1 py-6 w-full"
 					>
-						<Store class="w-5 h-5" />
-						<p class="text-base">Бариста</p>
+						<Kanban class="w-5 h-5" />
+						<p class="text-base">Заказы</p>
 					</Button>
 
 					<Button
 						variant="outline"
-						@click="onBaristaClick"
-						class="flex items-center gap-3 mb-1 py-6 w-full"
-					>
-						<Store class="w-5 h-5" />
-						<p class="text-base">Бариста</p>
-					</Button>
-
-					<Button
 						@click="onKioskClick"
 						class="flex items-center gap-3 py-6 w-full"
 					>
@@ -78,23 +70,22 @@ import AppAdminNotificationsPopover from '@/core/layouts/admin/app-admin-notific
 import AppAdminSearch from '@/core/layouts/admin/app-admin-search.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
-import { Menu, Store, TvMinimal } from 'lucide-vue-next'
+import { Kanban, Menu, Store, TvMinimal } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-
 const {currentEmployee} = useEmployeeAuthStore()
 
 const router = useRouter()
 
 const onKioskClick = () => {
-	router.push({name: getRouteName('KIOSK_HOME')})
+	router.replace({name: getRouteName('KIOSK_HOME')})
 }
 
 const onBaristaClick = () => {
-	router.push({name: getRouteName('KIOSK_ORDERS')})
+	router.push({name: getRouteName("EVENT_ORDERS_BARISTA")})
 }
 
 const onDisplayClick = () => {
-	router.push({name: getRouteName('KIOSK_ORDERS_DISPLAY')})
+	router.push({name: getRouteName("EVENT_ORDERS_DISPLAY")})
 }
 </script>
 

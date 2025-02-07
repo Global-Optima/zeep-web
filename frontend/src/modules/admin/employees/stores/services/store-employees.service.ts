@@ -2,20 +2,18 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 
 import { type PaginatedResponse } from '@/core/utils/pagination.utils'
-import type {
-	CreateEmployeeDTO,
-	EmployeesFilter,
-} from '@/modules/admin/employees/models/employees.models'
+import type { CreateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import type {
 	StoreEmployeeDetailsDTO,
 	StoreEmployeeDTO,
+	StoreEmployeeFilter,
 	UpdateStoreEmployeeDTO,
 } from '@/modules/admin/employees/stores/models/store-employees.model'
 
 class StoreEmployeeService {
 	private readonly baseUrl = '/employees/store'
 
-	async getStoreEmployees(filter?: EmployeesFilter) {
+	async getStoreEmployees(filter?: StoreEmployeeFilter) {
 		const response = await apiClient.get<PaginatedResponse<StoreEmployeeDTO[]>>(this.baseUrl, {
 			params: buildRequestFilter(filter),
 		})

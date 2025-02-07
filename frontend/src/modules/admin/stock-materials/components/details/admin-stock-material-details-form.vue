@@ -21,6 +21,7 @@ const AdminSelectUnit = defineAsyncComponent(() =>
   import('@/modules/admin/units/components/admin-select-unit.vue'))
 
 // Types
+import { usePrinter } from "@/core/hooks/use-print.hook"
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import type {
@@ -57,7 +58,7 @@ const updateStockMaterialSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название материала'),
     description: z.string().min(1, 'Введите описание'),
-    safetyStock: z.coerce.number().min(1, 'Безопасный запас должен быть больше 0'),
+    safetyStock: z.coerce.number().min(1, 'Безопасный запас упаковок должен быть больше 0'),
     size: z.coerce.number().min(1, 'Введите размер упаковки'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
@@ -114,9 +115,13 @@ function selectIngredient(ingredient: IngredientsDTO) {
   setFieldValue('ingredientId', ingredient.id)
 }
 
+const {print} = usePrinter()
+
 const onPrintBarcode = async () => {
   if (readonly) return
-  await stockMaterialsService.getBarcodeFile(stockMaterial.id)
+  const barcodeBlob = await stockMaterialsService.getBarcodeFile(stockMaterial.id)
+
+  await print(barcodeBlob)
 }
 </script>
 
@@ -263,13 +268,13 @@ const onPrintBarcode = async () => {
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Безопасный запас</FormLabel>
+									<FormLabel>Безопасный запас упаковок</FormLabel>
 									<FormControl>
 										<Input
 											id="safetyStock"
 											type="number"
 											v-bind="componentField"
-											placeholder="Введите безопасный запас"
+											placeholder="Введите безопасный запас упаковок"
 											:readonly="readonly"
 										/>
 									</FormControl>
