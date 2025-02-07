@@ -43,7 +43,6 @@ const { toast } = useToast()
 const {mutate: loginEmployee} = useMutation({
 		mutationFn: (dto: EmployeeLoginDTO) => authService.loginEmployee(dto),
 		onSuccess: () => {
-			toast({title: "Вы вошли в систему"})
 			router.push({name: getRouteName("ADMIN_DASHBOARD")})
 		},
 		onError: () => {
