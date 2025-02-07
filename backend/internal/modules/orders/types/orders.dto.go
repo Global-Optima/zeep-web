@@ -26,6 +26,10 @@ type CreateOrderDTO struct {
 	StoreID uint
 }
 
+type CustomerName struct {
+	CustomerName string `json:"customerName" binding:"required"`
+}
+
 type OrderStatusesCountDTO struct {
 	ALL         int64 `json:"ALL"`
 	PREPARING   int64 `json:"PREPARING"`

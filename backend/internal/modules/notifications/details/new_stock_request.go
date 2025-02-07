@@ -37,9 +37,9 @@ func BuildNewStockRequestDetails(facilityID uint, facilityName, requesterName st
 	}, nil
 }
 
-func BuildNewStockRequestMessage(details *NewStockRequestDetails) (localization.LocalizedMessages, error) {
+func BuildNewStockRequestMessage(details *NewStockRequestDetails) (localization.LocalizedMessage, error) {
 	if details == nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
+		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
 	key := localization.FormTranslationKey("notification", data.NEW_STOCK_REQUEST.ToString())
@@ -50,7 +50,7 @@ func BuildNewStockRequestMessage(details *NewStockRequestDetails) (localization.
 		"RequestID":     details.RequestID,
 	})
 	if err != nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("failed to build NewStockRequest message: %w", err)
+		return localization.LocalizedMessage{}, fmt.Errorf("failed to build NewStockRequest message: %w", err)
 	}
 
 	return *messages, nil

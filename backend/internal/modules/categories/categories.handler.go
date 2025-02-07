@@ -2,10 +2,10 @@ package categories
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -24,18 +24,17 @@ func NewCategoryHandler(service CategoryService, auditService audit.AuditService
 }
 
 func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
-
 	var filter types.ProductCategoriesFilterDTO
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.ProductCategory{})
 	if err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	categories, err := h.service.GetCategories(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve categories")
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
 
@@ -45,13 +44,13 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid category ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
 		return
 	}
 
 	category, err := h.service.GetCategoryByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
 
@@ -61,13 +60,13 @@ func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 	var dto types.CreateProductCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
 		return
 	}
 
 	id, err := h.service.CreateCategory(&dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
 
@@ -82,31 +81,31 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "category created successfully", http.StatusCreated)
+	localization.SendLocalizedResponseWithKey(c, types.Response201ProductCategory)
 }
 
 func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid category ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
 		return
 	}
 
 	var dto types.UpdateProductCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	existingCategory, err := h.service.GetCategoryByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update category: category not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
 
 	err = h.service.UpdateCategory(uint(id), &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to update category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
 
@@ -122,24 +121,24 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "category updated successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductCategoryUpdate)
 }
 
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid category ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
 		return
 	}
 
 	existingCategory, err := h.service.GetCategoryByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete category: category not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
 
 	if err := h.service.DeleteCategory(uint(id)); err != nil {
-		utils.SendInternalServerError(c, "Failed to delete category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
 
@@ -154,5 +153,5 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "Category deleted successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductCategoryDelete)
 }

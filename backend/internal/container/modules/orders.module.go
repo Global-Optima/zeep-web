@@ -6,7 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 )
 
 type OrdersModule struct {
@@ -16,7 +16,7 @@ type OrdersModule struct {
 	Handler *orders.OrderHandler
 }
 
-func NewOrdersModule(base *common.BaseModule, productRepo storeProducts.StoreProductRepository, additiveRepo storeAdditives.StoreAdditiveRepository, storeStockRepo storeStock.StoreStockRepository, notificationService notifications.NotificationService) *OrdersModule {
+func NewOrdersModule(base *common.BaseModule, productRepo storeProducts.StoreProductRepository, additiveRepo storeAdditives.StoreAdditiveRepository, storeStockRepo storeStocks.StoreStockRepository, notificationService notifications.NotificationService) *OrdersModule {
 	repo := orders.NewOrderRepository(base.DB)
 	service := orders.NewOrderService(repo, productRepo, additiveRepo, storeStockRepo, notificationService, base.Logger)
 	handler := orders.NewOrderHandler(service)

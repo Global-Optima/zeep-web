@@ -10,14 +10,14 @@ import (
 )
 
 type NotificationDTO struct {
-	ID        uint                           `json:"id"`
-	EventType data.NotificationEventType     `json:"eventType"`
-	Priority  data.NotificationPriority      `json:"priority"`
-	Messages  localization.LocalizedMessages `json:"messages"`
-	Details   json.RawMessage                `json:"details"`
-	IsRead    bool                           `json:"isRead"`
-	CreatedAt time.Time                      `json:"createdAt"`
-	UpdatedAt time.Time                      `json:"updatedAt"`
+	ID        uint                          `json:"id"`
+	EventType data.NotificationEventType    `json:"eventType"`
+	Priority  data.NotificationPriority     `json:"priority"`
+	Messages  localization.LocalizedMessage `json:"messages"`
+	Details   json.RawMessage               `json:"details"`
+	IsRead    bool                          `json:"isRead"`
+	CreatedAt time.Time                     `json:"createdAt"`
+	UpdatedAt time.Time                     `json:"updatedAt"`
 }
 
 type GetNotificationsFilter struct {

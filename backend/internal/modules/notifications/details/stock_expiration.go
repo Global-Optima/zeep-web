@@ -38,9 +38,9 @@ func BuildStockExpirationDetails(facilityID uint, facilityName, itemName, expira
 	}, nil
 }
 
-func BuildStockExpirationMessage(details *StockExpirationDetails) (localization.LocalizedMessages, error) {
+func BuildStockExpirationMessage(details *StockExpirationDetails) (localization.LocalizedMessage, error) {
 	if details == nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
+		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
 	key := localization.FormTranslationKey("notification", data.STOCK_EXPIRATION.ToString())
@@ -51,7 +51,7 @@ func BuildStockExpirationMessage(details *StockExpirationDetails) (localization.
 		"ExpirationDate": details.ExpirationDate,
 	})
 	if err != nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("failed to build StockExpiration message: %w", err)
+		return localization.LocalizedMessage{}, fmt.Errorf("failed to build StockExpiration message: %w", err)
 	}
 
 	return *messages, nil

@@ -7,7 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 )
 
 type AdditivesModule struct {
@@ -23,7 +23,7 @@ func NewAdditivesModule(
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
 	ingredientRepo ingredients.IngredientRepository,
-	storeStockRepo storeStock.StoreStockRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
 ) *AdditivesModule {
 	repo := additives.NewAdditiveRepository(base.DB)
 	service := additives.NewAdditiveService(repo, base.Logger)
@@ -55,7 +55,7 @@ func NewStoreAdditivesModule(
 	franchiseeService franchisees.FranchiseeService,
 	auditService audit.AuditService,
 	ingredientRepo ingredients.IngredientRepository,
-	storeStockRepo storeStock.StoreStockRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
 ) *StoreAdditivesModule {
 	repo := storeAdditives.NewStoreAdditiveRepository(base.DB)
 	service := storeAdditives.NewStoreAdditiveService(

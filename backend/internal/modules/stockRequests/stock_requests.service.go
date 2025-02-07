@@ -54,7 +54,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		return 0, "", fmt.Errorf("failed to check for open cart: %w", err)
 	}
 	if existingRequest != nil {
-		return 0, "", fmt.Errorf("an open cart already exists for this store")
+		return 0, "", fmt.Errorf("открытая корзина запроса уже существует")
 	}
 
 	store, err := s.repo.GetStoreWarehouse(storeID)

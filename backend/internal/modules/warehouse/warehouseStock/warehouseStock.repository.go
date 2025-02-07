@@ -293,7 +293,11 @@ func (r *warehouseStockRepository) findEarliestMaterialExpirationDate(materials 
 		}
 	}
 
-	utcTime := utils.ToUTC(*earliest)
+	if earliest == nil {
+		return nil
+	}
+
+	utcTime := earliest.UTC()
 	return &utcTime
 }
 
@@ -313,7 +317,7 @@ func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMater
 		return nil, nil
 	}
 
-	UTCTime := utils.ToUTC(earliestExpirationDate.Time)
+	UTCTime := earliestExpirationDate.Time.UTC()
 	return &UTCTime, nil
 }
 
@@ -321,7 +325,7 @@ func (r *warehouseStockRepository) aggregateWarehouseStocks(
 	warehouseStocks []data.WarehouseStock,
 	materialMap map[uint][]data.SupplierWarehouseDeliveryMaterial,
 ) []data.AggregatedWarehouseStock {
-	aggregatedStocks := []data.AggregatedWarehouseStock{}
+	var aggregatedStocks []data.AggregatedWarehouseStock
 
 	for _, stock := range warehouseStocks {
 		materials := materialMap[stock.StockMaterialID]

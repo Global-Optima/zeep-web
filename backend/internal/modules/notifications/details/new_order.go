@@ -38,9 +38,9 @@ func BuildNewOrderDetails(facilityID uint, facilityName, customerName string, or
 	}, nil
 }
 
-func BuildNewOrderMessage(details *NewOrderNotificationDetails) (localization.LocalizedMessages, error) {
+func BuildNewOrderMessage(details *NewOrderNotificationDetails) (localization.LocalizedMessage, error) {
 	if details == nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("details cannot be nil")
+		return localization.LocalizedMessage{}, fmt.Errorf("details cannot be nil")
 	}
 
 	key := localization.FormTranslationKey("notification", data.NEW_ORDER.ToString())
@@ -51,7 +51,7 @@ func BuildNewOrderMessage(details *NewOrderNotificationDetails) (localization.Lo
 		"OrderID":      details.OrderID,
 	})
 	if err != nil {
-		return localization.LocalizedMessages{}, fmt.Errorf("failed to build NewOrder message: %w", err)
+		return localization.LocalizedMessage{}, fmt.Errorf("failed to build NewOrder message: %w", err)
 	}
 
 	return *messages, nil
