@@ -5,18 +5,19 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 )
 
-type UpdateAuditDTOs struct {
-	*UpdateWarehouseStockDTO
-	*AdjustWarehouseStock
+type WarehouseStockPayloads struct {
+	UpdateWarehouseStockDTO   *UpdateWarehouseStockDTO    `json:"updateWarehouseStockDTO,omitempty"`
+	AddWarehouseStockMaterial []AddWarehouseStockMaterial `json:"addWarehouseStockMaterial,omitempty"`
+	ReceiveWarehouseDelivery  *ReceiveWarehouseDelivery   `json:"receiveWarehouseDelivery,omitempty"`
 }
 
 var (
-	CreateStockMaterialAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
-		data.CreateOperation, data.WarehouseStockComponent, &AddWarehouseStockMaterial{})
+	UpdateWarehouseStockAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
+		data.UpdateOperation, data.WarehouseStockComponent, &WarehouseStockPayloads{})
 
-	UpdateStockMaterialAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
-		data.UpdateOperation, data.WarehouseStockComponent, &UpdateAuditDTOs{})
+	UpdateReceiveWarehouseDeliveryAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
+		data.UpdateOperation, data.WarehouseStockComponent, &WarehouseStockPayloads{})
 
-	DeleteStockMaterialAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
-		data.DeleteOperation, data.WarehouseStockComponent, struct{}{})
+	UpdateAddWarehouseStockAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
+		data.UpdateOperation, data.WarehouseStockComponent, &WarehouseStockPayloads{})
 )

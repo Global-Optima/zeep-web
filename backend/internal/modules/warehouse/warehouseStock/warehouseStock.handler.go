@@ -6,20 +6,35 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
 )
 
 type WarehouseStockHandler struct {
 	service           WarehouseStockService
 	franchiseeService franchisees.FranchiseeService
+	warehouseService  warehouse.WarehouseService
+	auditService      audit.AuditService
 }
 
-func NewWarehouseStockHandler(service WarehouseStockService, franchiseeService franchisees.FranchiseeService) *WarehouseStockHandler {
-	return &WarehouseStockHandler{service: service, franchiseeService: franchiseeService}
+func NewWarehouseStockHandler(
+	service WarehouseStockService,
+	franchiseeService franchisees.FranchiseeService,
+	warehouseService warehouse.WarehouseService,
+	auditService audit.AuditService,
+) *WarehouseStockHandler {
+	return &WarehouseStockHandler{
+		service:           service,
+		franchiseeService: franchiseeService,
+		warehouseService:  warehouseService,
+		auditService:      auditService,
+	}
 }
 
 func (h *WarehouseStockHandler) ReceiveInventory(c *gin.Context) {
@@ -44,6 +59,8 @@ func (h *WarehouseStockHandler) ReceiveInventory(c *gin.Context) {
 		utils.SendInternalServerError(c, "failed to receive inventory: "+err.Error())
 		return
 	}
+
+	h.recordUpdateWarehouseStockAudit(c, warehouseID, &types.WarehouseStockPayloads{ReceiveWarehouseDelivery: &req})
 
 	utils.SendMessageWithStatus(c, "inventory received successfully", http.StatusOK)
 }
@@ -228,6 +245,8 @@ func (h *WarehouseStockHandler) UpdateStock(c *gin.Context) {
 		return
 	}
 
+	h.recordUpdateWarehouseStockAudit(c, warehouseID, &types.WarehouseStockPayloads{UpdateWarehouseStockDTO: &dto})
+
 	utils.SendMessageWithStatus(c, "Stock updated successfully", http.StatusOK)
 }
 
@@ -249,5 +268,27 @@ func (h *WarehouseStockHandler) AddWarehouseStocks(c *gin.Context) {
 		return
 	}
 
+	h.recordUpdateWarehouseStockAudit(c, warehouseID, &types.WarehouseStockPayloads{AddWarehouseStockMaterial: req})
+
 	utils.SendMessageWithStatus(c, "Warehouse stocks added successfully", http.StatusCreated)
+}
+
+func (h *WarehouseStockHandler) recordUpdateWarehouseStockAudit(c *gin.Context, warehouseID uint, payload *types.WarehouseStockPayloads) {
+	warehouse, err := h.warehouseService.GetWarehouseByID(warehouseID)
+	if err != nil {
+		logger.GetZapSugaredLogger().Errorf("failed to fetch warehouse with ID: %d", warehouseID)
+	}
+
+	action := types.UpdateAddWarehouseStockAuditFactory(
+		&data.BaseDetails{
+			ID:   warehouseID,
+			Name: warehouse.Name,
+		},
+		payload,
+		warehouse.ID,
+	)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 }
