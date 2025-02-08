@@ -14,10 +14,4 @@ type WarehouseStockPayloads struct {
 var (
 	UpdateWarehouseStockAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
 		data.UpdateOperation, data.WarehouseStockComponent, &WarehouseStockPayloads{})
-
-	UpdateReceiveWarehouseDeliveryAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
-		data.UpdateOperation, data.WarehouseStockComponent, &WarehouseStockPayloads{})
-
-	UpdateAddWarehouseStockAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
-		data.UpdateOperation, data.WarehouseStockComponent, &WarehouseStockPayloads{})
 )

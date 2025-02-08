@@ -279,7 +279,7 @@ func (h *WarehouseStockHandler) recordUpdateWarehouseStockAudit(c *gin.Context, 
 		logger.GetZapSugaredLogger().Errorf("failed to fetch warehouse with ID: %d", warehouseID)
 	}
 
-	action := types.UpdateAddWarehouseStockAuditFactory(
+	action := types.UpdateWarehouseStockAuditFactory(
 		&data.BaseDetails{
 			ID:   warehouseID,
 			Name: warehouse.Name,
