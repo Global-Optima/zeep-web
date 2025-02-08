@@ -1,7 +1,9 @@
 package storeStocks
 
 import (
+	"database/sql"
 	"fmt"
+	"time"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 
@@ -26,6 +28,8 @@ type StoreStockRepository interface {
 	CloneWithTransaction(tx *gorm.DB) storeStockRepository
 	DeductStockByProductSizeTechCart(storeID, productSizeID uint) ([]data.StoreStock, error)
 	DeductStockByAdditiveTechCart(storeID, additiveID uint) ([]data.StoreStock, error)
+
+	FindEarliestExpirationForIngredient(ingredientID, storeID uint) (*time.Time, error)
 }
 
 type storeStockRepository struct {
@@ -497,4 +501,29 @@ func (r *storeStockRepository) deductAdditiveIngredientStock(tx *gorm.DB, storeI
 
 	existingStock.Quantity = newQuantity
 	return &existingStock, nil
+}
+
+func (r *storeStockRepository) FindEarliestExpirationForIngredient(ingredientID, storeID uint) (*time.Time, error) {
+	var earliestExpirationDate sql.NullTime
+
+	err := r.db.Model(&data.StockRequestIngredient{}).
+		Joins("JOIN stock_requests ON stock_requests.id = stock_request_ingredients.stock_request_id").
+		Joins("JOIN stock_materials ON stock_materials.id = stock_request_ingredients.stock_material_id").
+		Select("MIN(stock_request_ingredients.expiration_date) AS earliest_expiration_date").
+		Where("stock_requests.store_id = ? AND stock_materials.ingredient_id = ?", storeID, ingredientID).
+		Scan(&earliestExpirationDate).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to fetch earliest expiration date for ingredient ID %d: %w", ingredientID, err)
+	}
+
+	if !earliestExpirationDate.Valid {
+		return nil, nil
+	}
+
+	utcTime := earliestExpirationDate.Time.UTC()
+	return &utcTime, nil
 }
