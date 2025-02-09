@@ -3,12 +3,13 @@ package orders
 import (
 	"bytes"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/png"
 	"sync"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
@@ -47,6 +48,8 @@ type OrderService interface {
 	GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, error)
 	ExportOrders(filter *types.OrdersExportFilterQuery) ([]types.OrderExportDTO, error)
 	GenerateSuborderBarcodePDF(suborderID uint) ([]byte, error)
+
+	AcceptSubOrder(subOrderID uint) error
 }
 
 type orderValidationResults struct {
@@ -154,8 +157,9 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	}
 
 	createOrderDTO.StoreID = storeID
-	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO,
-		validations.ProductPrices, validations.AdditivePrices)
+	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, validations.ProductPrices, validations.AdditivePrices)
+
+	order.Status = data.OrderStatusPending
 	order.Total = total
 
 	err = s.orderRepo.CreateOrder(&order)
@@ -268,6 +272,9 @@ func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, erro
 	if suborder == nil {
 		return nil, fmt.Errorf("no suborder found for ID %d", suborderID)
 	}
+	// if suborder.Status != data.SubOrderStatusPending {
+	// 	return nil, fmt.Errorf("barcode generation allowed only for pending suborders")
+	// }
 
 	// 2. Encode the barcode data using Code-128
 	barcodeData := fmt.Sprintf("suborder-%d", suborder.ID)
@@ -541,6 +548,7 @@ func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountD
 	}
 
 	dto := types.OrderStatusesCountDTO{
+		PENDING:     countsMap[data.OrderStatusPending],
 		PREPARING:   countsMap[data.OrderStatusPreparing],
 		COMPLETED:   countsMap[data.OrderStatusCompleted],
 		IN_DELIVERY: countsMap[data.OrderStatusInDelivery],
@@ -548,7 +556,7 @@ func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountD
 		CANCELLED:   countsMap[data.OrderStatusCancelled],
 	}
 
-	dto.ALL = dto.PREPARING + dto.COMPLETED + dto.IN_DELIVERY + dto.DELIVERED + dto.CANCELLED
+	dto.ALL = dto.PENDING + dto.PREPARING + dto.COMPLETED + dto.IN_DELIVERY + dto.DELIVERED + dto.CANCELLED
 
 	return dto, nil
 }
@@ -681,4 +689,62 @@ func (s *orderService) ExportOrders(filter *types.OrdersExportFilterQuery) ([]ty
 	}
 
 	return exports, nil
+}
+
+func (s *orderService) AcceptOrder(orderID uint) error {
+	order, err := s.orderRepo.GetOrderById(orderID)
+	if err != nil {
+		return err
+	}
+
+	if order.Status != data.OrderStatusPending {
+		return fmt.Errorf("order %d is not in a pending state", orderID)
+	}
+
+	return s.orderRepo.UpdateOrderStatus(orderID, data.OrderStatusPreparing)
+}
+
+func (s *orderService) AcceptSubOrder(subOrderID uint) error {
+	suborder, err := s.orderRepo.GetSuborderByID(subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve suborder: %w", err)
+	}
+	if suborder == nil {
+		return fmt.Errorf("suborder %d not found", subOrderID)
+	}
+
+	if suborder.Status != data.SubOrderStatusPending {
+		return fmt.Errorf("suborder %d is not pending", subOrderID)
+	}
+
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusPreparing); err != nil {
+		return fmt.Errorf("failed to update suborder status: %w", err)
+	}
+
+	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
+	}
+
+	suborders, err := s.orderRepo.GetSubOrdersByOrderID(order.ID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch suborders for order %d: %w", order.ID, err)
+	}
+
+	allAccepted := true
+	for _, so := range suborders {
+		if so.Status == data.SubOrderStatusPending {
+			allAccepted = false
+			break
+		}
+	}
+
+	// If all suborders have been accepted (i.e. transitioned to PREPARING or later)
+	// and the order is still in the PENDING state, update the order's status.
+	if allAccepted && order.Status == data.OrderStatusPending {
+		if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
+			return fmt.Errorf("failed to update order status: %w", err)
+		}
+	}
+	return nil
 }

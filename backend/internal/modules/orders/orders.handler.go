@@ -334,3 +334,26 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 	c.Header("Content-Length", fmt.Sprintf("%d", len(excelData)))
 	c.Data(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelData)
 }
+
+func (h *OrderHandler) AcceptSubOrder(c *gin.Context) {
+	subOrderID, err := utils.ParseParam(c, "subOrderId")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
+		return
+	}
+
+	if err := h.service.AcceptSubOrder(uint(subOrderID)); err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to accept suborder: %v", err))
+		return
+	}
+
+	// Optionally fetch the updated order to broadcast the new status.
+	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	if err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to fetch updated order: %v", err))
+		return
+	}
+
+	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
+	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
+}

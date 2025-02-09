@@ -32,6 +32,7 @@ type ValidateCustomerNameDTO struct {
 
 type OrderStatusesCountDTO struct {
 	ALL         int64 `json:"ALL"`
+	PENDING     int64 `json:"PENDING"`
 	PREPARING   int64 `json:"PREPARING"`
 	COMPLETED   int64 `json:"COMPLETED"`
 	IN_DELIVERY int64 `json:"IN_DELIVERY"`

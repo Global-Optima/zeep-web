@@ -183,6 +183,7 @@ func (r *orderRepository) GetStatusesCount(storeID uint) (map[data.OrderStatus]i
 	}
 
 	statusCount := map[data.OrderStatus]int64{
+		data.OrderStatusPending:    0,
 		data.OrderStatusPreparing:  0,
 		data.OrderStatusCompleted:  0,
 		data.OrderStatusInDelivery: 0,
@@ -225,7 +226,7 @@ func (r *orderRepository) DeleteOrder(orderID uint) error {
 
 func (r *orderRepository) GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error) {
 	var suborders []data.Suborder
-	err := r.db.Preload("StoreAdditives").Where("order_id = ?", orderID).Find(&suborders).Error
+	err := r.db.Preload("SuborderAdditives").Where("order_id = ?", orderID).Find(&suborders).Error
 	if err != nil {
 		return nil, err
 	}

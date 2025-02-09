@@ -3,6 +3,7 @@ package data
 type OrderStatus string
 
 const (
+	OrderStatusPending    OrderStatus = "PENDING"
 	OrderStatusPreparing  OrderStatus = "PREPARING"
 	OrderStatusCompleted  OrderStatus = "COMPLETED"
 	OrderStatusInDelivery OrderStatus = "IN_DELIVERY"
@@ -13,6 +14,7 @@ const (
 type SubOrderStatus string
 
 const (
+	SubOrderStatusPending   SubOrderStatus = "PENDING"
 	SubOrderStatusPreparing SubOrderStatus = "PREPARING"
 	SubOrderStatusCompleted SubOrderStatus = "COMPLETED"
 )
