@@ -80,16 +80,30 @@ func InitNotificationRegistry() {
 	)
 
 	RegisterNotification(
-		data.STOCK_EXPIRATION,
+		data.STORE_STOCK_EXPIRATION,
 		func() details.NotificationDetails {
-			return &details.StockExpirationDetails{}
+			return &details.StoreStockExpirationDetails{}
 		},
 		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
-			stockExpirationDetails, ok := baseDetails.(*details.StockExpirationDetails)
+			storeStockExpirationDetails, ok := baseDetails.(*details.StoreStockExpirationDetails)
 			if !ok {
-				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for STOCK_EXPIRATION")
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for STORE_STOCK_EXPIRATION")
 			}
-			return details.BuildStockExpirationMessage(stockExpirationDetails)
+			return details.BuildStockExpirationMessage(storeStockExpirationDetails)
+		},
+	)
+
+	RegisterNotification(
+		data.WAREHOUSE_STOCK_EXPIRATION,
+		func() details.NotificationDetails {
+			return &details.WarehouseStockExpirationDetails{}
+		},
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
+			warehouseStockExpirationDetails, ok := baseDetails.(*details.WarehouseStockExpirationDetails)
+			if !ok {
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for WAREHOUSE_STOCK_EXPIRATION")
+			}
+			return details.BuildWarehouseStockExpirationMessage(warehouseStockExpirationDetails)
 		},
 	)
 
