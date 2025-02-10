@@ -12,7 +12,7 @@ import (
 type AdminEmployeeRepository interface {
 	GetAdminEmployees(filter *types.EmployeesFilter) ([]data.AdminEmployee, error)
 	GetAdminEmployeeByID(id uint) (*data.AdminEmployee, error)
-	GetAllAdminEmployees() ([]data.Employee, error)
+	GetAllAdminEmployees() ([]data.AdminEmployee, error)
 }
 
 type adminEmployeeRepository struct {
@@ -81,11 +81,12 @@ func (r *adminEmployeeRepository) GetEmployeeByID(employeeID uint) (*data.Employ
 	return &employee, err
 }
 
-func (r *adminEmployeeRepository) GetAllAdminEmployees() ([]data.Employee, error) {
-	var employees []data.Employee
-	adminRoles := []data.EmployeeRole{data.RoleAdmin}
-	err := r.db.Model(&data.Employee{}).
-		Where("role IN (?)", adminRoles).
+func (r *adminEmployeeRepository) GetAllAdminEmployees() ([]data.AdminEmployee, error) {
+	var employees []data.AdminEmployee
+
+	err := r.db.Model(&data.AdminEmployee{}).
+		Joins("INNER JOIN employees ON admin_employees.employee_id = employees.id").
+		Preload("Employee").
 		Find(&employees).Error
 
 	if err != nil {

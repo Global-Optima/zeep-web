@@ -1,16 +1,17 @@
 package employees
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/franchiseeEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -35,7 +36,7 @@ func (h *FranchiseeEmployeeHandler) DeleteFranchiseeEmployee(c *gin.Context) {
 	employeeIDParam := c.Param("employeeId")
 	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400FranchiseeEmployee)
 		return
 	}
 
@@ -47,7 +48,7 @@ func (h *FranchiseeEmployeeHandler) DeleteFranchiseeEmployee(c *gin.Context) {
 
 	employee, err := h.employeeService.GetEmployeeByID(uint(employeeID))
 	if err != nil {
-		utils.SendBadRequestError(c, "failed to delete franchisee employee: employee not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeDelete)
 		return
 	}
 
@@ -58,7 +59,7 @@ func (h *FranchiseeEmployeeHandler) DeleteFranchiseeEmployee(c *gin.Context) {
 
 	err = h.employeeService.DeleteTypedEmployee(uint(employeeID), franchiseeID, data.FranchiseeEmployeeType)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to delete franchisee employee")
+		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeDelete)
 		return
 	}
 
@@ -71,7 +72,7 @@ func (h *FranchiseeEmployeeHandler) DeleteFranchiseeEmployee(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, "franchisee employee deleted successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response200FranchiseeEmployeeDelete)
 }
 
 func (h *FranchiseeEmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
@@ -83,7 +84,7 @@ func (h *FranchiseeEmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 
 	var input employeesTypes.CreateEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
@@ -95,10 +96,10 @@ func (h *FranchiseeEmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 	id, err := h.service.CreateFranchiseeEmployee(franchiseeID, &input)
 	if err != nil {
 		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
-			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 			return
 		}
-		utils.SendInternalServerError(c, "failed to create franchisee employee")
+		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeCreate)
 		return
 	}
 
@@ -111,14 +112,14 @@ func (h *FranchiseeEmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "franchisee employee created successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response201FranchiseeEmployee)
 }
 
 func (h *FranchiseeEmployeeHandler) GetFranchiseeEmployeeByID(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400FranchiseeEmployee)
 		return
 	}
 
@@ -130,12 +131,12 @@ func (h *FranchiseeEmployeeHandler) GetFranchiseeEmployeeByID(c *gin.Context) {
 
 	employee, err := h.service.GetFranchiseeEmployeeByID(uint(id), storeID)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve franchisee employee details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeGet)
 		return
 	}
 
 	if employee == nil {
-		utils.SendErrorWithStatus(c, "employee not found", http.StatusNotFound)
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -152,13 +153,13 @@ func (h *FranchiseeEmployeeHandler) GetFranchiseeEmployees(c *gin.Context) {
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.FranchiseeEmployee{})
 	if err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	franchiseeEmployees, err := h.service.GetFranchiseeEmployees(franchiseeID, &filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve franchisee employees")
+		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeGet)
 		return
 	}
 
@@ -168,7 +169,7 @@ func (h *FranchiseeEmployeeHandler) GetFranchiseeEmployees(c *gin.Context) {
 func (h *FranchiseeEmployeeHandler) UpdateFranchiseeEmployee(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400FranchiseeEmployee)
 		return
 	}
 
@@ -180,13 +181,13 @@ func (h *FranchiseeEmployeeHandler) UpdateFranchiseeEmployee(c *gin.Context) {
 
 	var input types.UpdateFranchiseeEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, "invalid input")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	franchiseeEmployee, err := h.service.GetFranchiseeEmployeeByID(uint(id), franchiseeID)
 	if err != nil {
-		utils.SendBadRequestError(c, "failed to update franchisee employee: employee not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeGet)
 		return
 	}
 	if !data.CanManageRole(role, franchiseeEmployee.Role) {
@@ -195,7 +196,7 @@ func (h *FranchiseeEmployeeHandler) UpdateFranchiseeEmployee(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateFranchiseeEmployee(uint(id), franchiseeID, &input, role); err != nil {
-		utils.SendInternalServerError(c, "failed to update franchisee employee")
+		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeUpdate)
 		return
 	}
 
@@ -208,5 +209,22 @@ func (h *FranchiseeEmployeeHandler) UpdateFranchiseeEmployee(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "franchisee employee updated successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200FranchiseeEmployeeUpdate)
+}
+
+func (h *FranchiseeEmployeeHandler) GetFranchiseeAccounts(c *gin.Context) {
+	franchiseeIdStr := c.Param("id")
+	franchiseeID, err := strconv.ParseUint(franchiseeIdStr, 10, 64)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400FranchiseeEmployee)
+		return
+	}
+
+	franchiseeEmployees, err := h.service.GetAllFranchiseeEmployees(uint(franchiseeID))
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeGet)
+		return
+	}
+
+	utils.SendSuccessResponse(c, franchiseeEmployees)
 }

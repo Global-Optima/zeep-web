@@ -468,7 +468,7 @@ CREATE TABLE
     );
 
 CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
-CREATE TYPE operation_type AS ENUM ('CREATE', 'UPDATE', 'DELETE');
+CREATE TYPE operation_type AS ENUM ('GET', 'CREATE', 'UPDATE', 'DELETE');
 CREATE TYPE component_name AS ENUM (
     'FRANCHISEE',
     'REGION',

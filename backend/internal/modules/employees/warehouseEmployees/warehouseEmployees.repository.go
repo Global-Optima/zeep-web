@@ -14,6 +14,7 @@ import (
 type WarehouseEmployeeRepository interface {
 	GetWarehouseEmployees(warehouseID uint, filter *employeesTypes.EmployeesFilter) ([]data.WarehouseEmployee, error)
 	GetWarehouseEmployeeByID(id, warehouseID uint) (*data.WarehouseEmployee, error)
+	GetAllWarehouseEmployees(warehouseID uint) ([]data.WarehouseEmployee, error)
 	UpdateWarehouseEmployee(id uint, warehouseID uint, update *types.UpdateWarehouseEmployeeModels) error
 }
 
@@ -75,6 +76,22 @@ func (r *warehouseEmployeeRepository) GetWarehouseEmployeeByID(id, warehouseID u
 		return nil, fmt.Errorf("failed to retrieve warehouse employee by ID: %w", err)
 	}
 	return &warehouseEmployee, nil
+}
+
+func (r *warehouseEmployeeRepository) GetAllWarehouseEmployees(warehouseID uint) ([]data.WarehouseEmployee, error) {
+	var warehouseEmployees []data.WarehouseEmployee
+
+	err := r.db.Model(&data.WarehouseEmployee{}).
+		Joins("INNER JOIN employees ON warehouse_employees.employee_id = employees.id").
+		Where("warehouse_id = ?", warehouseID).
+		Preload("Employee").
+		Find(&warehouseEmployees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return warehouseEmployees, nil
 }
 
 func (r *warehouseEmployeeRepository) UpdateWarehouseEmployee(id uint, warehouseID uint, updateModels *types.UpdateWarehouseEmployeeModels) error {
