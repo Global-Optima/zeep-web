@@ -19,7 +19,6 @@ export interface RegionEmployeeDTO extends BaseEmployeeDTO {
 
 export interface RegionEmployeeDetailsDTO extends BaseEmployeeDetailsDTO {
 	id: number
-	employeeId: number
 	region: RegionDTO
 }
 

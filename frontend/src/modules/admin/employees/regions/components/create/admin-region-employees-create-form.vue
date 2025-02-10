@@ -230,8 +230,7 @@ const emit = defineEmits<{
 }>()
 
 const roles = ref([
-	{ value: EmployeeRole.WAREHOUSE_MANAGER, label: 'Менеджер' },
-	{ value: EmployeeRole.WAREHOUSE_EMPLOYEE, label: 'Сотрудник склада' },
+	{ value: EmployeeRole.REGION_WAREHOUSE_MANAGER, label: 'Менеджер' },
 ]);
 
 const schema = toTypedSchema(

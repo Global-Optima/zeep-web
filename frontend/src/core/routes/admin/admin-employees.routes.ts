@@ -71,7 +71,7 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 			),
 	},
 	ADMIN_FRANCHISEE_EMPLOYEE_CREATE: {
-		path: 'regions/:regionId/employees/create',
+		path: 'franchisees/:franchiseeId/employees/create',
 		meta: {
 			title: 'Создать сотрудника франчайзи',
 			requiresAuth: true,
