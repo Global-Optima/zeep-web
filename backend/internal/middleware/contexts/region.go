@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
-	"strconv"
 )
 
 var (
@@ -15,56 +14,40 @@ var (
 )
 
 // GetRegionId returns the retrieved id and HandlerError
-func GetRegionId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
+func GetRegionId(c *gin.Context) (*uint, *handlerErrors.HandlerError) {
 	claims, err := GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		return 0, ErrUnauthorizedAccess
+		return nil, ErrUnauthorizedAccess
 	}
 
 	var regionID uint
 	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
 		if claims.EmployeeType != data.RegionEmployeeType {
-			return 0, ErrInvalidEmployeeType
+			return nil, ErrInvalidEmployeeType
 		}
 		regionID = claims.WorkplaceID
 	} else {
-		regionIdStr := c.Query("regionId")
-		if regionIdStr == "" {
-			return 0, ErrEmptyRegionID
-		}
-		id, err := strconv.ParseUint(regionIdStr, 10, 64)
-		if err != nil {
-			return 0, ErrInvalidRegionID
-		}
-		regionID = uint(id)
+		return nil, nil
 	}
 
-	return regionID, nil
+	return &regionID, nil
 }
 
-func GetRegionIdWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError) {
+func GetRegionIdWithRole(c *gin.Context) (*uint, data.EmployeeRole, *handlerErrors.HandlerError) {
 	claims, err := GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		return 0, "", ErrUnauthorizedAccess
+		return nil, "", ErrUnauthorizedAccess
 	}
 
 	var regionID uint
 	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
 		if claims.EmployeeType != data.RegionEmployeeType {
-			return 0, "", ErrInvalidEmployeeType
+			return nil, "", ErrInvalidEmployeeType
 		}
 		regionID = claims.WorkplaceID
 	} else {
-		regionIdStr := c.Query("regionId")
-		if regionIdStr == "" {
-			return 0, "", ErrEmptyRegionID
-		}
-		id, err := strconv.ParseUint(regionIdStr, 10, 64)
-		if err != nil {
-			return 0, "", ErrInvalidRegionID
-		}
-		regionID = uint(id)
+		return nil, claims.Role, nil
 	}
 
-	return regionID, claims.Role, nil
+	return &regionID, claims.Role, nil
 }
