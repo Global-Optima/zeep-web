@@ -771,39 +771,28 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 		return nil, fmt.Errorf("failed to fetch suborders for order %d: %w", order.ID, err)
 	}
 
-	if nextStatus == data.SubOrderStatusCompleted {
-		allCompleted := true
-		for _, so := range suborders {
-			if so.Status != data.SubOrderStatusCompleted {
-				allCompleted = false
-				break
-			}
-		}
-		if allCompleted {
-			var newOrderStatus data.OrderStatus
-			// Example logic: if the order has a delivery address, mark it as IN_DELIVERY;
-			// otherwise, mark it as COMPLETED.
-			if order.DeliveryAddressID != nil {
-				newOrderStatus = data.OrderStatusInDelivery
-			} else {
-				newOrderStatus = data.OrderStatusCompleted
-			}
-			if err := s.orderRepo.UpdateOrderStatus(order.ID, newOrderStatus); err != nil {
-				return nil, fmt.Errorf("failed to update order status: %w", err)
-			}
-		}
-	} else if nextStatus == data.SubOrderStatusPreparing {
-		allNotPending := true
-		for _, so := range suborders {
-			if so.Status == data.SubOrderStatusPending {
-				allNotPending = false
-				break
-			}
-		}
+	hasPreparing, allCompleted := evaluateSuborderStatuses(suborders)
 
-		if allNotPending && order.Status == data.OrderStatusPending {
+	if hasPreparing {
+		if order.Status != data.OrderStatusPreparing {
 			if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
-				return nil, fmt.Errorf("failed to update order status: %w", err)
+				return nil, fmt.Errorf("failed to update order status to pending: %w", err)
+			}
+		}
+	} else if allCompleted {
+		var newOrderStatus data.OrderStatus
+		if order.DeliveryAddressID != nil {
+			newOrderStatus = data.OrderStatusInDelivery
+		} else {
+			newOrderStatus = data.OrderStatusCompleted
+		}
+		if err := s.orderRepo.UpdateOrderStatus(order.ID, newOrderStatus); err != nil {
+			return nil, fmt.Errorf("failed to update order status to completed: %w", err)
+		}
+	} else {
+		if order.Status != data.OrderStatusPreparing {
+			if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
+				return nil, fmt.Errorf("failed to update order status to preparing: %w", err)
 			}
 		}
 	}
@@ -814,4 +803,18 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 	}
 	dto := types.ConvertSuborderToDTO(updatedSuborder)
 	return &dto, nil
+}
+
+func evaluateSuborderStatuses(suborders []data.Suborder) (hasPreparing bool, allCompleted bool) {
+	hasPreparing = false
+	allCompleted = true
+	for _, so := range suborders {
+		if so.Status == data.SubOrderStatusPreparing {
+			hasPreparing = true
+		}
+		if so.Status != data.SubOrderStatusCompleted {
+			allCompleted = false
+		}
+	}
+	return
 }
