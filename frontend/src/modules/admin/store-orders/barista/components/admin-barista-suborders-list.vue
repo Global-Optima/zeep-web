@@ -48,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import { cn } from '@/core/utils/tailwind.utils'
 import { SubOrderStatus, type SuborderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { Check, Clock } from 'lucide-vue-next'
 import { computed, toRefs } from 'vue'
@@ -79,12 +80,12 @@ const hasSuborders = computed(() => suborders.value && suborders.value.length > 
  * Computes dynamic classes for styling each suborder based on its status.
  */
 function suborderClasses(suborder: SuborderDTO) {
-  return [
-    'flex justify-between items-start gap-2 bg-white p-4 rounded-xl cursor-pointer border',
+  return cn(
+    'flex items-start justify-between gap-2 p-4 rounded-xl cursor-pointer border transition-all duration-200 bg-white',
     selectedSuborder.value?.id === suborder.id ? '!border-primary' : 'border-transparent',
-    suborder.status === SubOrderStatus.PENDING ? 'bg-gray-100' : '',
-    suborder.status === SubOrderStatus.PREPARING ? 'border-blue-400' : '',
+    suborder.status === SubOrderStatus.PENDING ? '' : '',
+    suborder.status === SubOrderStatus.PREPARING ? 'bg-blue-50 bg-opacity-50 border-blue-200' : '',
     suborder.status === SubOrderStatus.COMPLETED ? 'bg-green-50 bg-opacity-50 border-green-200' : '',
-  ]
+  )
 }
 </script>

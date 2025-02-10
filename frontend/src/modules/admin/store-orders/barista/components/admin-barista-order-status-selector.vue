@@ -81,7 +81,7 @@ function onReloadClick() {
  */
 function statusButtonClasses(status: Status) {
   return [
-    'flex items-center gap-2 px-5 py-2 rounded-xl text-lg whitespace-nowrap',
+    'flex items-center gap-2 px-5 py-2 rounded-xl text-base whitespace-nowrap',
     status.label === selectedStatus.value.label ? 'bg-primary text-primary-foreground' : ''
   ]
 }
