@@ -22,7 +22,6 @@ const AdminSelectUnit = defineAsyncComponent(() =>
 
 // Types
 import { usePrinter } from "@/core/hooks/use-print.hook"
-import { usePrinter } from "@/core/hooks/use-print.hook"
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import type {
@@ -59,7 +58,6 @@ const updateStockMaterialSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название материала'),
     description: z.string().min(1, 'Введите описание'),
-    safetyStock: z.coerce.number().min(1, 'Безопасный запас упаковок должен быть больше 0'),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас упаковок должен быть больше 0'),
     size: z.coerce.number().min(1, 'Введите размер упаковки'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
@@ -116,8 +114,6 @@ function selectIngredient(ingredient: IngredientsDTO) {
   openIngredientDialog.value = false
   setFieldValue('ingredientId', ingredient.id)
 }
-
-const {print} = usePrinter()
 
 const {print} = usePrinter()
 
@@ -272,13 +268,11 @@ const onPrintBarcode = async () => {
 							>
 								<FormItem>
 									<FormLabel>Безопасный запас упаковок</FormLabel>
-									<FormLabel>Безопасный запас упаковок</FormLabel>
 									<FormControl>
 										<Input
 											id="safetyStock"
 											type="number"
 											v-bind="componentField"
-											placeholder="Введите безопасный запас упаковок"
 											placeholder="Введите безопасный запас упаковок"
 											:readonly="readonly"
 										/>
