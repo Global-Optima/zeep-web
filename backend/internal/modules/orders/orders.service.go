@@ -3,7 +3,6 @@ package orders
 import (
 	"bytes"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"image"
 	"image/color"
 	"image/draw"
