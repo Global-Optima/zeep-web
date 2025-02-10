@@ -1,17 +1,25 @@
 <template>
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-6xl">
-		<div class="flex items-center gap-4">
-			<Button
-				variant="outline"
-				size="icon"
-				@click="onCancel"
-			>
-				<ChevronLeft class="w-5 h-5" />
-				<span class="sr-only">Назад</span>
-			</Button>
-			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Сотрудники региона {{ region.name }}
-			</h1>
+		<div class="flex justify-between items-center gap-4">
+			<div class="flex items-center gap-4">
+				<Button
+					variant="outline"
+					size="icon"
+					@click="onCancel"
+				>
+					<ChevronLeft class="w-5 h-5" />
+					<span class="sr-only">Назад</span>
+				</Button>
+				<h1
+					class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0"
+				>
+					Сотрудники региона {{ region.name }}
+				</h1>
+			</div>
+
+			<div>
+				<Button @click="onAddClick"> Создать </Button>
+			</div>
 		</div>
 
 		<Card>
@@ -52,12 +60,15 @@ import type { WarehouseFilter } from '@/modules/admin/warehouses/models/warehous
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const {region} = defineProps<{region: RegionDTO}>()
 
 const emits = defineEmits<{
   (e: 'onCancel'): void
 }>()
+
+const router = useRouter()
 
 const onCancel = () => {
   emits('onCancel')
@@ -69,6 +80,10 @@ const { data: regionsResponse } = useQuery({
   queryKey: computed(() => ['admin-region-employees', region.id]),
   queryFn: () => regionEmployeeService.getRegionEmployees({...filter.value, regionId: region.id}),
 })
+
+const onAddClick = () => {
+  router.push(`/admin/regions/${region.id}/employees/create`)
+}
 
 function updateFilter(updatedFilter: WarehouseFilter) {
   filter.value = {...filter.value, ...updatedFilter}

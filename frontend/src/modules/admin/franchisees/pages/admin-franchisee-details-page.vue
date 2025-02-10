@@ -5,7 +5,7 @@
 		v-else
 		default-value="details"
 	>
-		<TabsList class="grid grid-cols-2 mx-auto mb-6 w-full max-w-6xl">
+		<TabsList class="grid grid-cols-3 mx-auto mb-6 w-full max-w-6xl">
 			<TabsTrigger
 				class="py-2"
 				value="details"
@@ -15,6 +15,11 @@
 				class="py-2"
 				value="variants"
 				>Кафе</TabsTrigger
+			>
+			<TabsTrigger
+				class="py-2"
+				value="employees"
+				>Сотрудники</TabsTrigger
 			>
 		</TabsList>
 		<TabsContent value="details">
@@ -31,6 +36,13 @@
 				@on-cancel="handleCancel"
 			/>
 		</TabsContent>
+
+		<TabsContent value="employees">
+			<AdminFranchiseeEmployees
+				:franchisee="regionDetails"
+				@on-cancel="handleCancel"
+			/>
+		</TabsContent>
 	</Tabs>
 </template>
 
@@ -43,6 +55,7 @@ import {
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminFranchiseeDetailsForm from '@/modules/admin/franchisees/components/details/admin-franchisee-details-form.vue'
+import AdminFranchiseeEmployees from '@/modules/admin/franchisees/components/details/admin-franchisee-employees.vue'
 import AdminFranchiseeStores from '@/modules/admin/franchisees/components/details/admin-franchisee-stores.vue'
 import type { UpdateFranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
 import { franchiseeService } from '@/modules/admin/franchisees/services/franchisee.service'

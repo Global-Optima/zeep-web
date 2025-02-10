@@ -11,7 +11,6 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
-import type { UpdateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import AdminStoreEmployeesUpdateForm from '@/modules/admin/employees/stores/components/update/admin-store-employees-update-form.vue'
 import type { UpdateStoreEmployeeDTO } from '@/modules/admin/employees/stores/models/store-employees.model'
 import { storeEmployeeService } from '@/modules/admin/employees/stores/services/store-employees.service'
@@ -56,7 +55,7 @@ const updateMutation = useMutation({
 	},
 })
 
-function handleUpdate(dto: UpdateEmployeeDTO) {
+function handleUpdate(dto: UpdateStoreEmployeeDTO) {
 	if (!employeeId) {
 		toast({
 			title: 'Ошибка',

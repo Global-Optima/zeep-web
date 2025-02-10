@@ -21,8 +21,10 @@ class RegionEmployeeService {
 		return response.data
 	}
 
-	async createRegionEmployee(dto: CreateEmployeeDTO) {
-		const response = await apiClient.post<void>(this.baseUrl, dto)
+	async createRegionEmployee(dto: CreateEmployeeDTO, regionId: number) {
+		const response = await apiClient.post<void>(this.baseUrl, dto, {
+			params: { regionId: regionId },
+		})
 		return response.data
 	}
 
