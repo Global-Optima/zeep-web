@@ -77,6 +77,19 @@ class OrderService {
 		}
 	}
 
+	async toggleNextStatus(subOrderId: number) {
+		try {
+			const response = await apiClient.put<SuborderDTO>(
+				`/orders/suborders/${subOrderId}/status-change`,
+				{},
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to change sub-order status:', error)
+			throw error
+		}
+	}
+
 	async completeSubOrderById(subOrderId: number) {
 		try {
 			const response = await apiClient.put<SuborderDTO>(

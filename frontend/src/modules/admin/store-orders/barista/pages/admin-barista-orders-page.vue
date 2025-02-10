@@ -41,6 +41,7 @@ const displayedStatuses = computed(() => {
   const counts = orderCountsByStatus.value;
   return [
     { label: 'Все', count: Object.values(counts).reduce((sum, count) => sum + count, 0), status: undefined },
+    { label: 'В ожидании', count: counts[OrderStatus.PENDING] || 0, status: OrderStatus.PENDING },
     { label: 'Активные', count: counts[OrderStatus.PREPARING] || 0, status: OrderStatus.PREPARING },
     { label: 'Завершенные', count: counts[OrderStatus.COMPLETED] || 0, status: OrderStatus.COMPLETED },
     { label: 'В доставке', count: counts[OrderStatus.IN_DELIVERY] || 0, status: OrderStatus.IN_DELIVERY },
@@ -75,22 +76,17 @@ function selectSuborder(suborder: SuborderDTO) {
 
 // Mark a suborder as completed
 async function toggleSuborderStatus(suborder: SuborderDTO) {
-  if (suborder.status === SubOrderStatus.COMPLETED) return;
   if (!selectedOrder.value) return;
 
   try {
-    await ordersService.completeSubOrder(selectedOrder.value.id, suborder.id);
-    suborder.status = SubOrderStatus.COMPLETED;
-
-    // Check if all suborders are now completed
+    await ordersService.toggleNextStatus(suborder.id);
     if (areAllSubordersCompleted(selectedOrder.value)) {
-      selectedOrder.value.status = OrderStatus.COMPLETED;
       selectedOrder.value = null;
       selectedSuborder.value = null;
     }
   } catch (error) {
     console.error('Failed to complete suborder:', error);
-    toast({ description: 'Не удалось завершить подзаказ', variant: 'destructive' });
+    toast({ description: 'Не удалось изменить статус подзаказа', variant: 'destructive' });
   }
 }
 
@@ -147,7 +143,7 @@ useBarcodeScanner({
   onScan: async (suborderIdStr: string) => {
     try {
       const suborderId = Number(suborderIdStr);
-      const updatedSuborder = await ordersService.completeSubOrderById(suborderId);
+      const updatedSuborder = await ordersService.toggleNextStatus(suborderId);
 
       const localOrder = filteredOrders.value.find((o) => o.id === updatedSuborder.orderId);
       if (localOrder) {
@@ -166,11 +162,11 @@ useBarcodeScanner({
       }
 
       toast({
-        description: `Подзаказ ${updatedSuborder.productSize.productName} ${updatedSuborder.productSize.sizeName} был выполнен`,
+        description: `Статус подзаказа ${updatedSuborder.productSize.productName} ${updatedSuborder.productSize.sizeName} был изменен` ,
       });
     } catch (error) {
       console.error('Barcode Scan Error:', error);
-      toast({ description: 'Не удалось завершить подзаказ', variant: 'destructive' });
+      toast({ description: 'Не удалось изменить статус подзаказа', variant: 'destructive' });
     }
   },
   onError: (err: Error) => {
