@@ -31,9 +31,9 @@ func (tasks *WarehouseStockCronTasks) CheckWarehouseStockNotifications() {
 		return
 	}
 
-	processedStocks := make(map[uint]bool)
-
 	for _, warehouse := range warehouses {
+		processedStocks := make(map[uint]bool)
+
 		tasks.logger.Infof("Processing warehouse ID: %d, Name: %s", warehouse.ID, warehouse.Name)
 
 		stocks, err := tasks.warehouseStockRepo.GetWarehouseStocksForNotifications(warehouse.ID)

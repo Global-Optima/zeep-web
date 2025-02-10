@@ -234,7 +234,8 @@
 			"imageUrlChange": "URL изображения обновлен с {{.OldImageURL}} на {{.NewImageURL}}"
 		},
 
-		"stockExpiration": "*{{.ItemName}}* срок годности истекает *{{.ExpirationDate}}*.",
+		"storeStockExpiration": "*{{.ItemName}}* срок годности истекает *{{.ExpirationDate}}*.",
+		"warehouseStockExpiration": "*{{.ItemName}}* срок годности истекает *{{.ExpirationDate}}*.",
 		"warehouseOutOfStock": "*{{.ItemName}}* заканчивается на складе.",
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",
 		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."

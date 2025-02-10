@@ -14,7 +14,8 @@ type NotificationService interface {
 	NotifyNewOrder(details details.NotificationDetails) error
 	NotifyStoreWarehouseRunOut(details details.NotificationDetails) error
 	NotifyCentralCatalogUpdate(details details.NotificationDetails) error
-	NotifyStockExpiration(details details.NotificationDetails) error
+	NotifyStoreStockExpiration(details details.NotificationDetails) error
+	NotifyWarehouseStockExpiration(details details.NotificationDetails) error
 	NotifyOutOfStock(details details.NotificationDetails) error
 	NotifyNewStockRequest(details details.NotificationDetails) error
 	NotifyPriceChange(details details.NotificationDetails) error
@@ -154,13 +155,23 @@ func (s *notificationService) NotifyCentralCatalogUpdate(details details.Notific
 	return nil
 }
 
-func (s *notificationService) NotifyStockExpiration(details details.NotificationDetails) error {
+func (s *notificationService) NotifyStoreStockExpiration(details details.NotificationDetails) error {
 	notificationDetails, err := details.ToDetails()
 	if err != nil {
 		return err
 	}
 
-	s.createNotificationAsync(data.STOCK_EXPIRATION, data.MEDIUM, notificationDetails, details.GetBaseDetails())
+	s.createNotificationAsync(data.STORE_STOCK_EXPIRATION, data.MEDIUM, notificationDetails, details.GetBaseDetails())
+	return nil
+}
+
+func (s *notificationService) NotifyWarehouseStockExpiration(details details.NotificationDetails) error {
+	notificationDetails, err := details.ToDetails()
+	if err != nil {
+		return err
+	}
+
+	s.createNotificationAsync(data.WAREHOUSE_STOCK_EXPIRATION, data.HIGH, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 

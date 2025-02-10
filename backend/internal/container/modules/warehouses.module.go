@@ -28,17 +28,19 @@ func NewWarehousesModule(
 	franchiseeService franchisees.FranchiseeService,
 	auditService audit.AuditService,
 ) *WarehousesModule {
-	repo := warehouse.NewWarehouseRepository(base.DB)
+	warehouseRepo := warehouse.NewWarehouseRepository(base.DB)
 	warehouseStockRepo := warehouseStock.NewWarehouseStockRepository(base.DB)
+
 	warehouseStockService := warehouseStock.NewWarehouseStockService(warehouseStockRepo, stockMaterialRepo, notificationService, base.Logger)
-	warehouseStockHandler := warehouseStock.NewWarehouseStockHandler(warehouseStockService, franchiseeService)
-	service := warehouse.NewWarehouseService(repo)
-	handler := warehouse.NewWarehouseHandler(service, regionService, auditService)
+	warehouseService := warehouse.NewWarehouseService(warehouseRepo)
 
-	base.Router.RegisterWarehouseRoutes(handler, warehouseStockHandler)
-	base.Router.RegisterCommonWarehousesRoutes(handler)
+	warehouseHandler := warehouse.NewWarehouseHandler(warehouseService, regionService, auditService)
+	warehouseStockHandler := warehouseStock.NewWarehouseStockHandler(warehouseStockService, franchiseeService, warehouseService, auditService)
 
-	warehouseStockCronTasks := scheduler.NewWarehouseStockCronTasks(repo, warehouseStockService, warehouseStockRepo, base.Logger)
+	base.Router.RegisterWarehouseRoutes(warehouseHandler, warehouseStockHandler)
+	base.Router.RegisterCommonWarehousesRoutes(warehouseHandler)
+
+	warehouseStockCronTasks := scheduler.NewWarehouseStockCronTasks(warehouseRepo, warehouseStockService, warehouseStockRepo, base.Logger)
 	err := cronManager.RegisterJob(scheduler.DailyJob, func() {
 		warehouseStockCronTasks.CheckWarehouseStockNotifications()
 	})
@@ -49,8 +51,8 @@ func NewWarehousesModule(
 
 	return &WarehousesModule{
 		BaseModule: base,
-		Repo:       repo,
-		Service:    service,
-		Handler:    handler,
+		Repo:       warehouseRepo,
+		Service:    warehouseService,
+		Handler:    warehouseHandler,
 	}
 }
