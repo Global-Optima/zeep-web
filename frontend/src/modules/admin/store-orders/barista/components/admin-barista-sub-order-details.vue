@@ -64,14 +64,14 @@
 					<button
 						@click="toggleSuborderStatus(suborder)"
 						:disabled="disabledCompleteButton"
-						:class="[
+						:class="cn(
               'flex-1 px-4 py-4 rounded-xl text-primary-foreground font-medium',
               suborder.status === SubOrderStatus.COMPLETED
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : suborder.status === SubOrderStatus.PENDING
                 ? 'bg-blue-500'
                 : 'bg-primary'
-            ]"
+              )"
 					>
 						{{ completeButtonText }}
 					</button>
@@ -92,6 +92,7 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import { useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
+import { cn } from '@/core/utils/tailwind.utils'
 import { SubOrderStatus, type SuborderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { Plus, Printer } from 'lucide-vue-next'
 import { computed } from 'vue'

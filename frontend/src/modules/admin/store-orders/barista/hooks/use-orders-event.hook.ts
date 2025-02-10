@@ -18,11 +18,9 @@ const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'
 
 export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-
 	const { printBarcode } = useBarcodePrinter()
 	const { toast } = useToast()
 	const url = `${wsUrl}/orders/ws?timezone=${timezone}`
-
 	const localFilter = ref({ ...filter })
 
 	// WebSocket connection setup
@@ -45,15 +43,14 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 		},
 		onDisconnected: () => {
 			toast({
-				title: 'Соединение прервано.',
-				description: 'Соединение с сервером прервано.',
+				title: 'Соединение прервано',
+				description: 'Соединение с сервером было потеряно.',
 			})
 		},
 	})
 
 	watchEffect(() => {
 		if (!messageEvent.value) return
-
 		try {
 			const msg = JSON.parse(messageEvent.value)
 			switch (msg.type) {
@@ -103,13 +100,11 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 			DELIVERED: 0,
 			CANCELLED: 0,
 		}
-
 		state.allOrders.forEach(order => {
 			if (counts[order.status] !== undefined) {
 				counts[order.status]++
 			}
 		})
-
 		return counts
 	})
 
@@ -120,25 +115,21 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 
 	// Handle initial data from WebSocket
 	function handleInitialData(initialOrders: OrderDTO[]) {
-		state.allOrders = sortOrders(initialOrders)
+		state.allOrders = sortOrders(initialOrders.map(order => reactive(order)))
 	}
 
 	// Handle newly created orders
 	async function handleOrderCreated(newOrder: OrderDTO) {
-		state.allOrders.unshift(newOrder)
+		const reactiveOrder = reactive(newOrder)
+		state.allOrders.unshift(reactiveOrder)
 		state.allOrders = sortOrders([...state.allOrders])
 
 		try {
 			await Promise.all(
-				newOrder.subOrders.map(async subOrder => {
+				reactiveOrder.subOrders.map(async subOrder => {
 					const productName = `${subOrder.productSize.productName} ${subOrder.productSize.sizeName}`
 					const barcode = `suborder-${subOrder.id}`
 					await printBarcode(productName, barcode, { showModal: false })
-
-					toast({
-						title: 'Штрих-код напечатан',
-						description: `Штрих-код для "${productName}" успешно напечатан.`,
-					})
 				}),
 			)
 		} catch (error) {
@@ -155,24 +146,18 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	function handleOrderUpdated(updated: OrderDTO) {
 		const idx = state.allOrders.findIndex(o => o.id === updated.id)
 		if (idx !== -1) {
-			state.allOrders[idx] = { ...state.allOrders[idx], ...updated }
+			// Update individual properties instead of replacing the entire object
+			Object.assign(state.allOrders[idx], updated)
+			state.allOrders[idx].subOrders = updated.subOrders.map(subOrder => reactive(subOrder))
 		} else {
-			state.allOrders.unshift(updated)
+			state.allOrders.unshift(reactive(updated))
 		}
 		state.allOrders = sortOrders([...state.allOrders])
-		toast({
-			title: 'Заказ обновлен',
-			description: `Заказ с ${updated.id} успешно обновлен.`,
-		})
 	}
 
 	// Handle deleted orders
 	function handleOrderDeleted(orderId: number) {
 		state.allOrders = state.allOrders.filter(o => o.id !== orderId)
-		toast({
-			title: 'Заказ удален',
-			description: `Заказ с ${orderId} успешно удален.`,
-		})
 	}
 
 	// Sort orders by creation time
