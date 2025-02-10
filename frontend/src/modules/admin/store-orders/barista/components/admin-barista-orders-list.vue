@@ -16,9 +16,9 @@
 				<div class="flex flex-col w-full">
 					<!-- Order ID and Name -->
 					<div class="flex justify-between">
-						<div class="text-lg">
+						<div class="text-base">
 							<p class="text-gray-600">#{{ order.id }}</p>
-							<p class="font-medium">
+							<p class="mt-1 font-medium">
 								{{ order.customerName }}
 							</p>
 						</div>
@@ -47,7 +47,7 @@
 					</div>
 
 					<!-- Progress Bar for Suborders -->
-					<div class="relative bg-gray-200 mt-4 rounded-sm w-full h-4 overflow-hidden">
+					<div class="relative bg-slate-200 mt-4 rounded-[6px] w-full h-4 overflow-hidden">
 						<div
 							class="h-full transition-all duration-300 ease-in-out"
 							:class="progressBarClasses(order)"
@@ -56,7 +56,7 @@
 					</div>
 
 					<!-- Progress Count -->
-					<p class="mt-1 text-gray-500 text-xs text-right">
+					<p class="mt-2 text-gray-500 text-xs">
 						{{ completedSubOrders(order) }} / {{ order.subOrdersQuantity }} выполнено
 					</p>
 				</div>
@@ -123,7 +123,20 @@ function progressBarClasses(order: OrderDTO) {
   if (order.status === OrderStatus.PREPARING) return 'bg-blue-500'
   if (order.status === OrderStatus.IN_DELIVERY) return 'bg-yellow-500'
   if (order.status === OrderStatus.COMPLETED) return 'bg-green-600'
-  return 'bg-gray-300'
+  return 'bg-slate-100'
+}
+
+/**
+ * 🎨 Determines the styling for each order card.
+ */
+function orderClasses(order: OrderDTO) {
+  return cn(
+    'flex items-start gap-2 p-4 rounded-xl cursor-pointer border transition-all duration-200 bg-white',
+    selectedOrder.value?.id === order.id ? '!border-primary' : 'border-transparent',
+    order.status === OrderStatus.PENDING ? '' : '',
+    order.status === OrderStatus.PREPARING ? 'bg-blue-50 bg-opacity-50 border-blue-200' : '',
+    order.status === OrderStatus.COMPLETED ? 'bg-green-50 bg-opacity-50 border-green-200' : '',
+  )
 }
 
 /**
@@ -133,29 +146,17 @@ const sortedOrders = computed(() => {
   return [...orders.value].sort((a, b) => {
     const orderStatusPriority: Record<OrderStatus, number> = {
       [OrderStatus.PENDING]: 1,
-      [OrderStatus.PREPARING]: 2,
-      [OrderStatus.IN_DELIVERY]: 3,
-      [OrderStatus.COMPLETED]: 4,
-      [OrderStatus.DELIVERED]: 5,
-      [OrderStatus.CANCELLED]: 6
+      [OrderStatus.PREPARING]: 1,
+      [OrderStatus.IN_DELIVERY]: 1,
+      [OrderStatus.COMPLETED]: 2,
+      [OrderStatus.DELIVERED]: 2,
+      [OrderStatus.CANCELLED]: 2
     }
 
     return orderStatusPriority[a.status] - orderStatusPriority[b.status]
   })
 })
 
-/**
- * 🎨 Determines the styling for each order card.
- */
-function orderClasses(order: OrderDTO) {
-  return cn(
-    'flex items-start gap-2 p-4 rounded-xl cursor-pointer border transition-all duration-200 bg-white',
-    selectedOrder.value?.id === order.id ? 'border-primary' : 'border-transparent',
-    order.status === OrderStatus.PENDING ? '' : '',
-    order.status === OrderStatus.PREPARING ? 'border-blue-400' : '',
-    order.status === OrderStatus.COMPLETED ? 'bg-green-50 bg-opacity-50 border-green-200' : '',
-  )
-}
 
 /**
  * ⏳ Estimates the total preparation time.
