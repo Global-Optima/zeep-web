@@ -15,6 +15,7 @@ type StoreEmployeeService interface {
 	CreateStoreEmployee(storeID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]types.StoreEmployeeDTO, error)
 	GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDetailsDTO, error)
+	GetAllStoreEmployees(storeID uint) ([]employeesTypes.EmployeeAccountDTO, error)
 	UpdateStoreEmployee(id, storeID uint, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error
 }
 
@@ -76,6 +77,26 @@ func (s *storeEmployeeService) GetStoreEmployeeByID(id, storeID uint) (*types.St
 	}
 
 	return types.MapToStoreEmployeeDetailsDTO(employee), nil
+}
+
+func (s *storeEmployeeService) GetAllStoreEmployees(storeID uint) ([]employeesTypes.EmployeeAccountDTO, error) {
+	if storeID == 0 {
+		return nil, utils.WrapError("invalid store ID", employeesTypes.ErrValidation)
+	}
+
+	storeEmployees, err := s.repo.GetAllStoreEmployees(storeID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all store employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]employeesTypes.EmployeeAccountDTO, len(storeEmployees))
+	for i, storeEmployee := range storeEmployees {
+		dtos[i] = *employeesTypes.MapToEmployeeAccountDTO(&storeEmployee.Employee)
+	}
+
+	return dtos, nil
 }
 
 func (s *storeEmployeeService) UpdateStoreEmployee(id, storeID uint, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error {

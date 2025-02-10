@@ -210,3 +210,20 @@ func (h *RegionEmployeeHandler) UpdateRegionEmployee(c *gin.Context) {
 
 	utils.SendSuccessResponse(c, gin.H{"message": "region manager updated successfully"})
 }
+
+func (h *RegionEmployeeHandler) GetRegionAccounts(c *gin.Context) {
+	regionIdStr := c.Param("id")
+	regionID, err := strconv.ParseUint(regionIdStr, 10, 64)
+	if err != nil {
+		utils.SendBadRequestError(c, "invalid region ID")
+		return
+	}
+
+	regionEmployees, err := h.service.GetAllRegionEmployees(uint(regionID))
+	if err != nil {
+		utils.SendInternalServerError(c, "failed to retrieve region employees")
+		return
+	}
+
+	utils.SendSuccessResponse(c, regionEmployees)
+}

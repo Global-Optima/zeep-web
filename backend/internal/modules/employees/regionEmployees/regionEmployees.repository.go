@@ -14,6 +14,7 @@ import (
 type RegionEmployeeRepository interface {
 	GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]data.RegionEmployee, error)
 	GetRegionEmployeeByID(id, regionID uint) (*data.RegionEmployee, error)
+	GetAllRegionEmployees(regionID uint) ([]data.RegionEmployee, error)
 	UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateRegionEmployeeModels) error
 }
 
@@ -75,6 +76,22 @@ func (r *regionEmployeeRepository) GetRegionEmployeeByID(id, regionID uint) (*da
 		return nil, fmt.Errorf("failed to retrieve region manager by ID: %w", err)
 	}
 	return &regionEmployee, nil
+}
+
+func (r *regionEmployeeRepository) GetAllRegionEmployees(regionID uint) ([]data.RegionEmployee, error) {
+	var regionEmployees []data.RegionEmployee
+
+	err := r.db.Model(&data.RegionEmployee{}).
+		Joins("INNER JOIN employees ON region_employees.employee_id = employees.id").
+		Where("region_id = ?", regionID).
+		Preload("Employee").
+		Find(&regionEmployees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return regionEmployees, nil
 }
 
 func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID uint, updateModels *types.UpdateRegionEmployeeModels) error {

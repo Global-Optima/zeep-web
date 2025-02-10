@@ -16,6 +16,7 @@ type WarehouseEmployeeService interface {
 	CreateWarehouseEmployee(warehouseID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetWarehouseEmployees(warehouseID uint, filter *employeesTypes.EmployeesFilter) ([]types.WarehouseEmployeeDTO, error)
 	GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDetailsDTO, error)
+	GetAllWarehouseEmployees(warehouseID uint) ([]employeesTypes.EmployeeAccountDTO, error)
 	UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error
 }
 
@@ -95,6 +96,26 @@ func (s *warehouseEmployeeService) GetWarehouseEmployeeByID(id, warehouseID uint
 	}
 
 	return types.MapToWarehouseEmployeeDetailsDTO(employee), nil
+}
+
+func (s *warehouseEmployeeService) GetAllWarehouseEmployees(warehouseID uint) ([]employeesTypes.EmployeeAccountDTO, error) {
+	if warehouseID == 0 {
+		return nil, utils.WrapError("invalid warehouse ID", employeesTypes.ErrValidation)
+	}
+
+	warehouseEmployees, err := s.repo.GetAllWarehouseEmployees(warehouseID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all warehouse employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]employeesTypes.EmployeeAccountDTO, len(warehouseEmployees))
+	for i, warehouseEmployee := range warehouseEmployees {
+		dtos[i] = *employeesTypes.MapToEmployeeAccountDTO(&warehouseEmployee.Employee)
+	}
+
+	return dtos, nil
 }
 
 func (s *warehouseEmployeeService) UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error {
