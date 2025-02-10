@@ -179,7 +179,8 @@
       "imageUrlChange": "Сурет URL {{.OldImageURL}}-ден {{.NewImageURL}}-ке жаңартылды"
     },
 
-    "stockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
+    "storeStockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
+    "warehouseStockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
     "warehouseOutOfStock": "*{{.ItemName}}* қоймада аз қалды.",
     "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
     "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді."

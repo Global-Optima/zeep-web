@@ -9,7 +9,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -63,7 +62,10 @@ func (r *stockRequestRepository) DeleteStockRequestIngredient(ingredientID uint)
 func (r *stockRequestRepository) UpdateStockRequestIngredientDates(stockRequestIngredientID uint, dates *types.UpdateIngredientDates) error {
 	return r.db.Model(&data.StockRequestIngredient{}).
 		Where("id = ?", stockRequestIngredientID).
-		Updates(dates).Error
+		Updates(&data.StockRequestIngredient{
+			DeliveredDate:  dates.DeliveredDate,
+			ExpirationDate: dates.ExpirationDate,
+		}).Error
 }
 
 func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsFilter) ([]data.StockRequest, error) {
@@ -85,7 +87,6 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
 	}
 	if len(filter.Statuses) > 0 {
-		logrus.Println("STTTATAUSSS", filter.Statuses)
 		query = query.Where("status IN (?)", filter.Statuses)
 	}
 	if filter.StartDate != nil {

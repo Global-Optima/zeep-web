@@ -230,10 +230,18 @@ func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock 
 		}
 	}
 
-	closestExpirationDate := stock.UpdatedAt.Add(time.Duration(stock.StockMaterial.ExpirationPeriodInDays) * 24 * time.Hour)
+	closestExpirationDate, err := s.repo.FindEarliestExpirationDateForStock(stock.StockMaterialID, warehouseID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch earliest expiration date for stock: %v", err)
+	}
+
+	if closestExpirationDate == nil {
+		defaultClosestExpirationDate := stock.UpdatedAt.Add(time.Duration(stock.StockMaterial.ExpirationPeriodInDays) * 24 * time.Hour)
+		closestExpirationDate = &defaultClosestExpirationDate
+	}
 
 	if closestExpirationDate.Before(time.Now().Add(7 * 24 * time.Hour)) { // Expiration within 7 days
-		details := &details.StockExpirationDetails{
+		details := &details.WarehouseStockExpirationDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           warehouseID,
 				FacilityName: stock.Warehouse.Name,
@@ -241,7 +249,7 @@ func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock 
 			ItemName:       stock.StockMaterial.Name,
 			ExpirationDate: closestExpirationDate.Format("2006-01-02"),
 		}
-		err := s.notificationService.NotifyStockExpiration(details)
+		err := s.notificationService.NotifyWarehouseStockExpiration(details)
 		if err != nil {
 			return fmt.Errorf("failed to send stock expiration notification: %v", err)
 		}

@@ -31,9 +31,9 @@ func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
 		return
 	}
 
-	processedStocks := make(map[uint]bool)
-
 	for _, store := range storesList {
+		processedStocks := make(map[uint]bool)
+
 		stockList, err := tasks.storeWarehouseRepo.GetAllStockList(store.ID)
 		if err != nil {
 			tasks.logger.Errorf("Failed to fetch stock list for store %d: %v", store.ID, err)
