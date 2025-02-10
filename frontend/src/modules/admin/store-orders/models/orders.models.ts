@@ -2,6 +2,7 @@ import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 export enum OrderStatus {
+  PENDING = 'PENDING',
 	PREPARING = 'PREPARING',
 	COMPLETED = 'COMPLETED',
 	IN_DELIVERY = 'IN_DELIVERY',
@@ -10,6 +11,7 @@ export enum OrderStatus {
 }
 
 export enum SubOrderStatus {
+	PENDING = 'PENDING',
 	PREPARING = 'PREPARING',
 	COMPLETED = 'COMPLETED',
 }

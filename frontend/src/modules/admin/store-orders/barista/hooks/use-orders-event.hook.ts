@@ -17,9 +17,11 @@ const state = reactive<{
 const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'
 
 export function useOrderEventsService(filter: OrderFilterOptions = {}) {
+	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
 	const { printBarcode } = useBarcodePrinter()
 	const { toast } = useToast()
-	const url = `${wsUrl}/orders/ws`
+	const url = `${wsUrl}/orders/ws?timezone=${timezone}`
 
 	const localFilter = ref({ ...filter })
 
@@ -94,6 +96,7 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	// Reactive computation of order counts by status
 	const orderCountsByStatus = computed<Record<OrderStatus, number>>(() => {
 		const counts: Record<OrderStatus, number> = {
+			PENDING: 0,
 			PREPARING: 0,
 			COMPLETED: 0,
 			IN_DELIVERY: 0,
@@ -131,8 +134,6 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 					const productName = `${subOrder.productSize.productName} ${subOrder.productSize.sizeName}`
 					const barcode = `suborder-${subOrder.id}`
 					await printBarcode(productName, barcode, { showModal: false })
-
-					console.log('PRINTEDDDD', barcode)
 
 					toast({
 						title: 'Штрих-код напечатан',
@@ -184,7 +185,7 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	return {
 		status: socketStatus,
 		filteredOrders,
-		orderCountsByStatus, // Return the reactive order counts
+		orderCountsByStatus,
 		setFilter,
 		send,
 		open,
