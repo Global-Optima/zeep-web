@@ -25,13 +25,19 @@
 			</button>
 		</div>
 
-		<div></div>
+		<Button
+			size="icon"
+			variant="outline"
+			@click="onReloadClick"
+		>
+			<RefreshCcw class="size-5" />
+		</Button>
 	</header>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, RefreshCcw } from 'lucide-vue-next'
 import { toRefs } from 'vue'
 
 interface Status {
@@ -50,6 +56,7 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: 'selectStatus', status: Status): void;
   (e: 'back'): void;
+  (e: 'reload'): void;
 }>()
 
 const { statuses, selectedStatus } = toRefs(props)
@@ -63,6 +70,10 @@ function selectStatus(status: Status) {
 
 function onBackClick() {
   emits('back')
+}
+
+function onReloadClick() {
+  emits('reload')
 }
 
 /**

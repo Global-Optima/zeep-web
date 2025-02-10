@@ -89,9 +89,8 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { usePrinter } from '@/core/hooks/use-print.hook'
+import { useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
 import { SubOrderStatus, type SuborderDTO } from '@/modules/admin/store-orders/models/orders.models'
-import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 import { Plus, Printer } from 'lucide-vue-next'
 import { computed, toRefs } from 'vue'
 
@@ -131,12 +130,14 @@ const disabledCompleteButton = computed(() =>
 /**
  * Use your printer hook
  */
-const { print } = usePrinter()
+const { printBarcode } = useBarcodePrinter()
 
 async function printQrCode() {
   if (suborder.value) {
-    const blob = await ordersService.getSuborderBarcodeFile(suborder.value.id)
-    await print(blob)
+    const subOrderValue = suborder.value
+    const productName = `${subOrderValue.productSize.productName} ${subOrderValue.productSize.sizeName}`
+    const barcode = `suborder-${subOrderValue.id}`
+		await printBarcode(productName, barcode, {showModal: true})
   }
 }
 </script>

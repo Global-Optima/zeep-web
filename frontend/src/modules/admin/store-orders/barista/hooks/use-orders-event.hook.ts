@@ -1,5 +1,6 @@
+import { useToast } from '@/core/components/ui/toast'
+import { useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
 import type { OrderDTO, OrderStatus } from '@/modules/admin/store-orders/models/orders.models'
-import { useQueryClient } from '@tanstack/vue-query'
 import { useWebSocket } from '@vueuse/core'
 import { computed, reactive, ref, watchEffect } from 'vue'
 
@@ -16,11 +17,13 @@ const state = reactive<{
 const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'
 
 export function useOrderEventsService(filter: OrderFilterOptions = {}) {
-	const queryClient = useQueryClient()
+	const { printBarcode } = useBarcodePrinter()
+	const { toast } = useToast()
 	const url = `${wsUrl}/orders/ws`
 
 	const localFilter = ref({ ...filter })
 
+	// WebSocket connection setup
 	const {
 		status: socketStatus,
 		data: messageEvent,
@@ -30,7 +33,20 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	} = useWebSocket(url, {
 		immediate: true,
 		autoReconnect: true,
-		onError: err => console.error('WebSocket error:', err),
+		onError: err => {
+			console.error('Ошибка WebSocket:', err)
+			toast({
+				title: 'Ошибка соединения',
+				description: 'Не удалось подключиться к серверу.',
+				variant: 'destructive',
+			})
+		},
+		onDisconnected: () => {
+			toast({
+				title: 'Соединение прервано.',
+				description: 'Соединение с сервером прервано.',
+			})
+		},
 	})
 
 	watchEffect(() => {
@@ -52,37 +68,89 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 					handleOrderDeleted(msg.payload)
 					break
 				default:
-					console.warn('Unknown event type:', msg.type)
+					console.warn('Неизвестный тип события:', msg.type)
+					toast({
+						title: 'Неизвестное событие',
+						description: `Получен неизвестный тип события: ${msg.type}`,
+						variant: 'destructive',
+					})
 			}
 		} catch (err) {
-			console.error('Failed to parse incoming message:', err)
+			console.error('Не удалось разобрать входящее сообщение:', err)
+			toast({
+				title: 'Ошибка обработки данных',
+				description: 'Не удалось обработать данные от сервера.',
+				variant: 'destructive',
+			})
 		}
 	})
 
+	// Computed property for filtered orders
 	const filteredOrders = computed(() => {
 		if (!localFilter.value.status) return state.allOrders
 		return state.allOrders.filter(order => order.status === localFilter.value.status)
 	})
 
+	// Reactive computation of order counts by status
+	const orderCountsByStatus = computed<Record<OrderStatus, number>>(() => {
+		const counts: Record<OrderStatus, number> = {
+			PREPARING: 0,
+			COMPLETED: 0,
+			IN_DELIVERY: 0,
+			DELIVERED: 0,
+			CANCELLED: 0,
+		}
+
+		state.allOrders.forEach(order => {
+			if (counts[order.status] !== undefined) {
+				counts[order.status]++
+			}
+		})
+
+		return counts
+	})
+
+	// Set filter options
 	function setFilter(newFilter: OrderFilterOptions) {
 		localFilter.value = { ...localFilter.value, ...newFilter }
 	}
 
-	function invalidateOrderStatuses() {
-		queryClient.invalidateQueries({ queryKey: ['order-statuses'] })
-	}
-
+	// Handle initial data from WebSocket
 	function handleInitialData(initialOrders: OrderDTO[]) {
 		state.allOrders = sortOrders(initialOrders)
-		invalidateOrderStatuses()
 	}
 
-	function handleOrderCreated(newOrder: OrderDTO) {
+	// Handle newly created orders
+	async function handleOrderCreated(newOrder: OrderDTO) {
 		state.allOrders.unshift(newOrder)
 		state.allOrders = sortOrders([...state.allOrders])
-		invalidateOrderStatuses()
+
+		try {
+			await Promise.all(
+				newOrder.subOrders.map(async subOrder => {
+					const productName = `${subOrder.productSize.productName} ${subOrder.productSize.sizeName}`
+					const barcode = `suborder-${subOrder.id}`
+					await printBarcode(productName, barcode, { showModal: false })
+
+					console.log('PRINTEDDDD', barcode)
+
+					toast({
+						title: 'Штрих-код напечатан',
+						description: `Штрих-код для "${productName}" успешно напечатан.`,
+					})
+				}),
+			)
+		} catch (error) {
+			console.error('Ошибка при печати штрих-кода:', error)
+			toast({
+				title: 'Ошибка печати',
+				description: 'Не удалось напечатать один или несколько штрих-кодов.',
+				variant: 'destructive',
+			})
+		}
 	}
 
+	// Handle updated orders
 	function handleOrderUpdated(updated: OrderDTO) {
 		const idx = state.allOrders.findIndex(o => o.id === updated.id)
 		if (idx !== -1) {
@@ -91,14 +159,22 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 			state.allOrders.unshift(updated)
 		}
 		state.allOrders = sortOrders([...state.allOrders])
-		invalidateOrderStatuses()
+		toast({
+			title: 'Заказ обновлен',
+			description: `Заказ с ${updated.id} успешно обновлен.`,
+		})
 	}
 
+	// Handle deleted orders
 	function handleOrderDeleted(orderId: number) {
 		state.allOrders = state.allOrders.filter(o => o.id !== orderId)
-		invalidateOrderStatuses()
+		toast({
+			title: 'Заказ удален',
+			description: `Заказ с ${orderId} успешно удален.`,
+		})
 	}
 
+	// Sort orders by creation time
 	function sortOrders(orderList: OrderDTO[]): OrderDTO[] {
 		return orderList.sort(
 			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -108,6 +184,7 @@ export function useOrderEventsService(filter: OrderFilterOptions = {}) {
 	return {
 		status: socketStatus,
 		filteredOrders,
+		orderCountsByStatus, // Return the reactive order counts
 		setFilter,
 		send,
 		open,

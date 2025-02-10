@@ -14,253 +14,170 @@ import {
   type SuborderDTO,
 } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
-import { useQuery } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-/**
- * Status type for your top-level filter buttons
- */
-interface Status {
-  label: string
-  count: number
-  status?: OrderStatus
-}
+const router = useRouter();
+const { toast } = useToast();
 
-const router = useRouter()
-const { toast } = useToast()
+// Selected items in the UI
+const selectedOrder = ref<OrderDTO | null>(null);
+const selectedSuborder = ref<SuborderDTO | null>(null);
 
-/**
- * Selected items in the UI
- */
-const selectedOrder = ref<OrderDTO | null>(null)
-const selectedSuborder = ref<SuborderDTO | null>(null)
-
-/**
- * Keep track of the currently selected status.
- * This correlates with an `OrderStatus` filter in your list.
- */
-const selectedStatus = ref<Status>({
+// Keep track of the currently selected status
+const selectedStatus = ref<{ label: string; count: number; status?: OrderStatus }>({
   label: 'Все',
   count: 0,
-  status: undefined
-})
+  status: undefined,
+});
 
-/**
- * Default statuses (shown until fetched data arrives)
- */
-const defaultStatuses = ref<Status[]>([
-  { label: 'Все', count: 0 },
-  { label: 'Активные', count: 0 },
-  { label: 'Завершенные', count: 0 },
-  { label: 'В доставке', count: 0 },
-])
-
-/* ============================
-   Fetching Status Counts
-============================ */
-async function fetchStatuses(): Promise<Status[]> {
-  const data = await ordersService.getStatusesCount()
-  return [
-    { label: 'Все',         count: data.ALL,        status: undefined },
-    { label: 'Активные',    count: data.PREPARING,  status: OrderStatus.PREPARING },
-    { label: 'Завершенные', count: data.COMPLETED,  status: OrderStatus.COMPLETED },
-    { label: 'В доставке',  count: data.IN_DELIVERY, status: OrderStatus.IN_DELIVERY },
-  ]
-}
-
-/**
- * useQuery for status counts.
- * You might call `refetch()` or rely on invalidation when orders change.
- */
-const { data: fetchedStatuses } = useQuery({
-  queryKey: ['order-statuses'],
-  queryFn: fetchStatuses,
-})
-
-/* ============================
-   Real-Time Order Handling
-============================ */
-const { filteredOrders, setFilter } = useOrderEventsService({
+// Real-Time Order Handling
+const { filteredOrders, orderCountsByStatus, setFilter } = useOrderEventsService({
   status: selectedStatus.value.status,
-})
+});
 
-/**
- * If you’d like to automatically update the filter whenever `selectedStatus` changes,
- * you can watch it. Alternatively, you can call onSelectStatus() as you do now.
- */
+// Map orderCountsByStatus to the displayed statuses format
+const displayedStatuses = computed(() => {
+  const counts = orderCountsByStatus.value;
+  return [
+    { label: 'Все', count: Object.values(counts).reduce((sum, count) => sum + count, 0), status: undefined },
+    { label: 'Активные', count: counts[OrderStatus.PREPARING] || 0, status: OrderStatus.PREPARING },
+    { label: 'Завершенные', count: counts[OrderStatus.COMPLETED] || 0, status: OrderStatus.COMPLETED },
+    { label: 'В доставке', count: counts[OrderStatus.IN_DELIVERY] || 0, status: OrderStatus.IN_DELIVERY },
+  ];
+});
+
+// Watch for changes in selectedStatus and update the filter
 watch(
   () => selectedStatus.value.status,
   (newStatus) => {
-    setFilter({ status: newStatus })
+    setFilter({ status: newStatus });
   }
-)
+);
 
-/* ============================
-   Computed: Displayed Statuses
-============================ */
-const displayedStatuses = computed<Status[]>(() => {
-  return fetchedStatuses.value || defaultStatuses.value
-})
+// Utility function to check if all suborders are completed
+function areAllSubordersCompleted(order: OrderDTO): boolean {
+  return order.subOrders.every((so) => so.status === SubOrderStatus.COMPLETED);
+}
 
-/* ============================
-   Selection / Navigation
-============================ */
-/**
- * Select an Order from the list
- */
+// Select an Order from the list
 function selectOrder(order: OrderDTO) {
-  if (selectedOrder.value?.id === order.id) return
-  selectedOrder.value = order
-  selectedSuborder.value = null
+  if (selectedOrder.value?.id === order.id) return;
+  selectedOrder.value = order;
+  selectedSuborder.value = null;
 }
 
-/**
- * Select a Suborder
- */
+// Select a Suborder
 function selectSuborder(suborder: SuborderDTO) {
-  if (selectedSuborder.value?.id === suborder.id) return
-  selectedSuborder.value = suborder
+  if (selectedSuborder.value?.id === suborder.id) return;
+  selectedSuborder.value = suborder;
 }
 
-/**
- * Mark a suborder as completed.
- * If *all* suborders are done, mark the entire order completed and reset selection.
- */
+// Mark a suborder as completed
 async function toggleSuborderStatus(suborder: SuborderDTO) {
-  if (suborder.status === SubOrderStatus.COMPLETED) return
-  if (!selectedOrder.value) return
+  if (suborder.status === SubOrderStatus.COMPLETED) return;
+  if (!selectedOrder.value) return;
 
   try {
-    await ordersService.completeSubOrder(selectedOrder.value.id, suborder.id)
-    suborder.status = SubOrderStatus.COMPLETED
+    await ordersService.completeSubOrder(selectedOrder.value.id, suborder.id);
+    suborder.status = SubOrderStatus.COMPLETED;
 
     // Check if all suborders are now completed
-    const allDone = selectedOrder.value.subOrders.every(
-      (so) => so.status === SubOrderStatus.COMPLETED
-    )
-
-    if (allDone) {
-      selectedOrder.value.status = OrderStatus.COMPLETED
-      // If we’re currently filtering by an "active" status, the order
-      // will vanish from the list, so clear the selected order/suborder
-      selectedOrder.value = null
-      selectedSuborder.value = null
+    if (areAllSubordersCompleted(selectedOrder.value)) {
+      selectedOrder.value.status = OrderStatus.COMPLETED;
+      selectedOrder.value = null;
+      selectedSuborder.value = null;
     }
   } catch (error) {
-    console.error('Failed to complete suborder:', error)
-    toast({ description: 'Не удалось завершить подзаказ', variant: 'destructive' })
+    console.error('Failed to complete suborder:', error);
+    toast({ description: 'Не удалось завершить подзаказ', variant: 'destructive' });
   }
 }
 
-/**
- * Handle the back button
- */
+// Handle the back button
 function onBackClick() {
-  router.push({ name: getRouteName('ADMIN_DASHBOARD') })
+  router.push({ name: getRouteName('ADMIN_DASHBOARD') });
 }
 
-/**
- * Handle status selection (e.g. "Все", "Активные", etc.)
- */
-async function onSelectStatus(status: Status) {
-  selectedStatus.value = status
-  // Clear the current selections
-  selectedOrder.value = null
-  selectedSuborder.value = null
-
-  setFilter({ status: status.status })
-
-  await scrollToTop()
+// Handle reload
+function onReloadClick() {
+  window.location.reload();
 }
 
-/**
- * Scroll to the top smoothly
- */
-async function scrollToTop() {
+// Handle status selection
+function onSelectStatus(status: { label: string; count: number; status?: OrderStatus }) {
+  selectedStatus.value = status;
+  selectedOrder.value = null;
+  selectedSuborder.value = null;
+  setFilter({ status: status.status });
+  scrollToTop();
+}
+
+// Scroll to the top smoothly
+function scrollToTop() {
   if (typeof window !== 'undefined' && window.scrollTo) {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
-/**
- * If an order’s data changes (via websockets or barcode scan),
- * we want to ensure the selected order/suborder still exist
- * in the current filtered list. Otherwise, clear them.
- */
+// Ensure selected order/suborder still exist in the filtered list
 watch(
   () => filteredOrders.value,
   () => {
-    if (!selectedOrder.value) return
+    if (!selectedOrder.value) return;
 
-    const exists = filteredOrders.value.some(o => o.id === selectedOrder.value?.id)
+    const exists = filteredOrders.value.some((o) => o.id === selectedOrder.value?.id);
     if (!exists) {
-      // The selected order is no longer in the list, clear it
-      selectedOrder.value = null
-      selectedSuborder.value = null
+      selectedOrder.value = null;
+      selectedSuborder.value = null;
     } else if (selectedOrder.value && selectedSuborder.value) {
-      // Ensure the suborder is still in the order
       const subExists = selectedOrder.value.subOrders.some(
-        so => so.id === selectedSuborder.value?.id
-      )
+        (so) => so.id === selectedSuborder.value?.id
+      );
       if (!subExists) {
-        selectedSuborder.value = null
+        selectedSuborder.value = null;
       }
     }
   }
-)
+);
 
-/* ============================
-   Barcode Scanner Integration
-============================ */
+// Barcode Scanner Integration
 useBarcodeScanner({
   prefix: 'suborder-',
   onScan: async (suborderIdStr: string) => {
     try {
-      const suborderId = Number(suborderIdStr)
-      // 1) Complete suborder on the server; returns updated suborder
-      const updatedSuborder = await ordersService.completeSubOrderById(suborderId)
+      const suborderId = Number(suborderIdStr);
+      const updatedSuborder = await ordersService.completeSubOrderById(suborderId);
 
-      // 2) Update local data for the matching Order in the filtered list
-      const localOrder = filteredOrders.value.find(
-        (o) => o.id === updatedSuborder.orderId
-      )
+      const localOrder = filteredOrders.value.find((o) => o.id === updatedSuborder.orderId);
       if (localOrder) {
-        // Locate the suborder
-        const localSub = localOrder.subOrders.find(
-          (so) => so.id === updatedSuborder.id
-        )
-        // Update suborder status
+        const localSub = localOrder.subOrders.find((so) => so.id === updatedSuborder.id);
         if (localSub) {
-          localSub.status = updatedSuborder.status
-        }
-        // If all suborders completed, mark order as completed
-        const allDone = localOrder.subOrders.every(
-          (so) => so.status === SubOrderStatus.COMPLETED
-        )
-        if (allDone) {
-          localOrder.status = OrderStatus.COMPLETED
+          localSub.status = updatedSuborder.status;
         }
 
-        // Select them in the UI if desired
-        selectedOrder.value = localOrder
-        selectedSuborder.value = localSub ?? null
+        // Check if all suborders are now completed
+        if (areAllSubordersCompleted(localOrder)) {
+          localOrder.status = OrderStatus.COMPLETED;
+        }
+
+        selectedOrder.value = localOrder;
+        selectedSuborder.value = localSub ?? null;
       }
 
-      // 3) Show success toast
       toast({
         description: `Подзаказ ${updatedSuborder.productSize.productName} ${updatedSuborder.productSize.sizeName} был выполнен`,
-      })
+      });
     } catch (error) {
-      console.error('Barcode Scan Error:', error)
-      toast({ description: 'Не удалось завершить подзаказ', variant: 'destructive' })
+      console.error('Barcode Scan Error:', error);
+      toast({ description: 'Не удалось завершить подзаказ', variant: 'destructive' });
     }
   },
   onError: (err: Error) => {
-    console.error('Barcode Scan Error:', err)
-    toast({ description: 'Произошла ошибка при сканировании', variant: 'destructive' })
+    console.error('Barcode Scan Error:', err);
+    toast({ description: 'Произошла ошибка при сканировании', variant: 'destructive' });
   },
-})
+});
 </script>
 
 <template>
@@ -271,8 +188,8 @@ useBarcodeScanner({
 			:selectedStatus="selectedStatus"
 			@selectStatus="onSelectStatus"
 			@back="onBackClick"
+			@reload="onReloadClick"
 		/>
-
 		<!-- Main Layout -->
 		<div class="relative grid grid-cols-4 bg-gray-100 pb-4 w-full h-[calc(100vh-74px)]">
 			<!-- Left: Orders List -->
@@ -281,14 +198,12 @@ useBarcodeScanner({
 				:selectedOrder="selectedOrder"
 				@selectOrder="selectOrder"
 			/>
-
 			<!-- Middle: Suborders List -->
 			<AdminBaristaSubordersList
 				:suborders="selectedOrder?.subOrders || null"
 				:selectedSuborder="selectedSuborder"
 				@selectSuborder="selectSuborder"
 			/>
-
 			<!-- Right: SubOrder Details -->
 			<AdminBaristaSubOrderDetails
 				:suborder="selectedSuborder"

@@ -118,7 +118,6 @@ function selectIngredient(ingredient: IngredientsDTO) {
 const {print} = usePrinter()
 
 const onPrintBarcode = async () => {
-  if (readonly) return
   const barcodeBlob = await stockMaterialsService.getBarcodeFile(stockMaterial.id)
 
   await print(barcodeBlob)
