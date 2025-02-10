@@ -118,7 +118,6 @@ function selectIngredient(ingredient: IngredientsDTO) {
 const {print} = usePrinter()
 
 const onPrintBarcode = async () => {
-  if (readonly) return
   const barcodeBlob = await stockMaterialsService.getBarcodeFile(stockMaterial.id)
 
   await print(barcodeBlob)
@@ -143,7 +142,7 @@ const onPrintBarcode = async () => {
 
 			<div
 				v-if="!readonly"
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 			>
 				<Button
 					variant="outline"
@@ -234,7 +233,7 @@ const onPrintBarcode = async () => {
 												@click="onPrintBarcode"
 												class="gap-2"
 											>
-												<Printer class="text-gray-800 size-4" />
+												<Printer class="size-4 text-gray-800" />
 												<span>Печать</span>
 											</Button>
 										</div>
@@ -385,7 +384,7 @@ const onPrintBarcode = async () => {
 		<!-- Footer -->
 		<div
 			v-if="!readonly"
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 		>
 			<Button
 				variant="outline"

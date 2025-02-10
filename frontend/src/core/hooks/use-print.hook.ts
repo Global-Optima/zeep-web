@@ -1,4 +1,5 @@
-// usePrinter.ts
+import printJS from 'print-js'
+
 export interface PrintOptions {
 	/**
 	 * Optional callback invoked before printing starts.
@@ -9,6 +10,12 @@ export interface PrintOptions {
 	 * Optional callback invoked after printing completes.
 	 */
 	afterPrint?: () => void
+
+	/**
+	 * Determines whether Print.js shows its "printing" modal dialog.
+	 * Default is `true` if not specified.
+	 */
+	showModal?: boolean
 }
 
 export interface UsePrinter {
@@ -34,7 +41,7 @@ export function usePrinter(): UsePrinter {
 			throw new Error('Invalid content: Only PDF blobs are supported.')
 		}
 
-		const { beforePrint, afterPrint } = options || {}
+		const { beforePrint, afterPrint, showModal = true } = options || {}
 		const pdfUrl = URL.createObjectURL(content)
 
 		let cleanupCalled = false
@@ -43,25 +50,23 @@ export function usePrinter(): UsePrinter {
 			cleanupCalled = true
 
 			URL.revokeObjectURL(pdfUrl)
-			if (afterPrint) afterPrint()
+			if (afterPrint) {
+				afterPrint()
+			}
 		}
 
 		try {
+			// 1) Call the beforePrint callback if provided
 			if (beforePrint) beforePrint()
 
-			// Only detect Android. If true, open in a new tab.
+			// 2) Handle Android separately (per original logic)
 			if (isAndroid()) {
-				/**
-				 * Many Android devices/browsers will not show a print dialog
-				 * and instead will just download the file when we use `print()`.
-				 * We open the PDF in a new tab to at least allow the user to print manually.
-				 */
 				const newTab = window.open(pdfUrl, '_blank', 'noopener,noreferrer')
 				if (!newTab) {
-					throw new Error('Failed to open a new tab for printing.')
+					throw new Error('Failed to open a new tab for printing (Android).')
 				}
 
-				// Attempt to call print on load
+				// Attempt to print once the tab loads
 				newTab.onload = () => {
 					try {
 						newTab.focus()
@@ -87,47 +92,19 @@ export function usePrinter(): UsePrinter {
 					}
 				}, 2000)
 			} else {
-				// Default approach for non-Android devices: print via an iframe
-				const iframe = document.createElement('iframe')
-				iframe.style.position = 'absolute'
-				iframe.style.width = '0'
-				iframe.style.height = '0'
-				iframe.style.border = '0'
-				iframe.style.visibility = 'hidden'
-				iframe.src = pdfUrl
-
-				document.body.appendChild(iframe)
-
-				iframe.onload = () => {
-					try {
-						const iframeWindow = iframe.contentWindow
-						if (!iframeWindow) {
-							throw new Error('Failed to access iframe window.')
-						}
-						iframeWindow.focus()
-						iframeWindow.print()
-
-						// Cleanup after user closes the print dialog
-						iframeWindow.onafterprint = () => {
-							cleanup()
-							// Remove iframe from DOM
-							if (iframe.parentNode) {
-								iframe.parentNode.removeChild(iframe)
-							}
-						}
-					} catch (error) {
-						console.error('Iframe Print Error:', error)
-						if (iframe.parentNode) {
-							iframe.parentNode.removeChild(iframe)
-						}
-						// As a last resort, open the PDF in a new tab
-						window.open(pdfUrl, '_blank', 'noopener,noreferrer')
+				// 3) For non-Android, use Print.js
+				printJS({
+					printable: pdfUrl,
+					type: 'pdf',
+					showModal: showModal,
+					onLoadingEnd: () => {
 						cleanup()
-					}
-				}
+					},
+				})
 			}
 		} catch (error) {
 			console.error('Print Error:', error)
+			cleanup()
 			throw error
 		}
 	}
