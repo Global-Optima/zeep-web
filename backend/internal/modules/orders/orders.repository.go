@@ -292,11 +292,14 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 	var order data.Order
 
 	err := r.db.
-		Joins("JOIN suborders ON suborders.order_id = orders.id").
-		Where("suborders.id = ?", subOrderID).
+		Preload("Suborders").
+		Preload("Suborders.StoreProductSize").
+		Preload("Suborders.StoreProductSize.ProductSize").
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
+		Joins("JOIN suborders ON suborders.order_id = orders.id").
+		Where("suborders.id = ?", subOrderID).
 		First(&order).Error
 
 	if err != nil {
@@ -351,7 +354,18 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 
 func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, error) {
 	var suborder data.Suborder
-	err := r.db.Where("id = ?", suborderID).First(&suborder).Error
+
+	err := r.db.
+		Preload("StoreProductSize").
+		Preload("StoreProductSize.ProductSize").
+		Preload("StoreProductSize.ProductSize.Product").
+		Preload("StoreProductSize.ProductSize.Unit").
+		Preload("SuborderAdditives").
+		Preload("SuborderAdditives.StoreAdditive").
+		Preload("SuborderAdditives.StoreAdditive.Additive").
+		Where("id = ?", suborderID).
+		First(&suborder).Error
+
 	if err != nil {
 		return nil, err
 	}

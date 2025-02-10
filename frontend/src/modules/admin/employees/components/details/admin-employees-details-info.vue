@@ -48,14 +48,14 @@ import { ArrowRightLeft, Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-const {employee} = defineProps<{employee: BaseEmployeeDetailsDTO}>()
+const {employee} = defineProps<{employee: BaseEmployeeDetailsDTO & {id: number}}>()
 
 const router = useRouter()
 
 const showReassignButton = useHasRole([EmployeeRole.ADMIN])
 
 const onUpdateEmployeeClick = () => {
-  router.push(`/admin/employees/${employee.type.toLowerCase()}/${employee.employeeId}/update`)
+  router.push(`/admin/employees/${employee.type.toLowerCase()}/${employee.id}/update`)
 }
 
 const onReassignEmployeeClick = () => {

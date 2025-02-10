@@ -49,10 +49,18 @@
 
 <script setup lang="ts">
 import { cn } from '@/core/utils/tailwind.utils'
-import { SubOrderStatus, type SuborderDTO } from '@/modules/admin/store-orders/models/orders.models'
+import {
+  type SuborderDTO,
+  SubOrderStatus,
+} from '@/modules/admin/store-orders/models/orders.models'
 import { Check, Clock } from 'lucide-vue-next'
 import { computed, toRefs } from 'vue'
 
+/**
+ * Props
+ * - `suborders`: an array of SuborderDTO or null if no order is selected
+ * - `selectedSuborder`: the currently selected suborder (if any)
+ */
 const props = defineProps<{
   suborders: SuborderDTO[] | null;
   selectedSuborder: SuborderDTO | null;
@@ -65,24 +73,27 @@ const emits = defineEmits<{
 const { suborders, selectedSuborder } = toRefs(props)
 
 /**
- * Selects a suborder and emits the event.
+ * Check if there are suborders to display.
+ */
+const hasSuborders = computed(() => suborders.value && suborders.value.length > 0)
+
+/**
+ * Emit an event to the parent when a suborder is clicked.
  */
 function selectSuborder(suborder: SuborderDTO) {
   emits('selectSuborder', suborder)
 }
 
 /**
- * Checks if there are any suborders.
- */
-const hasSuborders = computed(() => suborders.value && suborders.value.length > 0)
-
-/**
- * Computes dynamic classes for styling each suborder based on its status.
+ * Dynamically style each suborder card based on status and selection.
  */
 function suborderClasses(suborder: SuborderDTO) {
   return cn(
     'flex items-start justify-between gap-2 p-4 rounded-xl cursor-pointer border transition-all duration-200 bg-white',
+    // Highlight if it's the selected suborder
     selectedSuborder.value?.id === suborder.id ? '!border-primary' : 'border-transparent',
+
+    // Optionally style suborders by status
     suborder.status === SubOrderStatus.PENDING ? '' : '',
     suborder.status === SubOrderStatus.PREPARING ? 'bg-blue-50 bg-opacity-50 border-blue-200' : '',
     suborder.status === SubOrderStatus.COMPLETED ? 'bg-green-50 bg-opacity-50 border-green-200' : '',

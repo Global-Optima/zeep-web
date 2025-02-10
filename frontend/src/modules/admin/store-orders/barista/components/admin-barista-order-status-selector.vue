@@ -2,6 +2,7 @@
 	<header
 		class="top-0 left-0 z-20 sticky flex justify-between items-center bg-white p-4 border-b w-full overflow-x-auto no-scrollbar"
 	>
+		<!-- Back Button -->
 		<Button
 			size="icon"
 			variant="outline"
@@ -25,6 +26,7 @@
 			</button>
 		</div>
 
+		<!-- Reload Button -->
 		<Button
 			size="icon"
 			variant="outline"
@@ -40,46 +42,56 @@ import { Button } from '@/core/components/ui/button'
 import { ChevronLeft, RefreshCcw } from 'lucide-vue-next'
 import { toRefs } from 'vue'
 
-interface Status {
+interface StatusOption {
   label: string;
   count: number;
+  // If needed, you could add: status?: OrderStatus
 }
 
 /**
- * Define props & emits using script setup
+ * Define our props.
+ * - `statuses`: an array of statuses, each with a `label` and `count`.
+ * - `selectedStatus`: the currently active/selected status filter.
  */
 const props = defineProps<{
-  statuses: Status[];
-  selectedStatus: Status;
+  statuses: StatusOption[];
+  selectedStatus: StatusOption;
 }>()
 
+/**
+ * Define our emits:
+ * - `selectStatus`: user clicks a status button
+ * - `back`: user clicks the Back button
+ * - `reload`: user clicks the Reload button
+ */
 const emits = defineEmits<{
-  (e: 'selectStatus', status: Status): void;
+  (e: 'selectStatus', status: StatusOption): void;
   (e: 'back'): void;
   (e: 'reload'): void;
 }>()
 
 const { statuses, selectedStatus } = toRefs(props)
 
-/**
- * Emit events
- */
-function selectStatus(status: Status) {
+/** Emit an event when a status is chosen */
+function selectStatus(status: StatusOption) {
   emits('selectStatus', status)
 }
 
+/** Emit the back event (to navigate away) */
 function onBackClick() {
   emits('back')
 }
 
+/** Emit the reload event (to refresh data/page) */
 function onReloadClick() {
   emits('reload')
 }
 
 /**
- * Helper to style each status button:
+ * Helper to style each status button,
+ * highlighting the selected one.
  */
-function statusButtonClasses(status: Status) {
+function statusButtonClasses(status: StatusOption) {
   return [
     'flex items-center gap-2 px-5 py-2 rounded-xl text-base whitespace-nowrap',
     status.label === selectedStatus.value.label ? 'bg-primary text-primary-foreground' : ''
@@ -87,9 +99,10 @@ function statusButtonClasses(status: Status) {
 }
 
 /**
- * Helper to style the count badge:
+ * Helper to style the count badge,
+ * also highlighting it if selected.
  */
-function statusCountClasses(status: Status) {
+function statusCountClasses(status: StatusOption) {
   return [
     'bg-gray-100 px-2 py-1 rounded-sm text-black text-xs',
     status.label === selectedStatus.value.label ? 'bg-green-700 text-primary-foreground' : ''

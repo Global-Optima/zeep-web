@@ -14,7 +14,7 @@
 				Обновить {{ getEmployeeShortName(employee) }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -67,42 +67,6 @@
 									<Input
 										v-bind="componentField"
 										placeholder="Введите фамилию"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-					</div>
-
-					<div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
-						<FormField
-							name="email"
-							v-slot="{ componentField }"
-						>
-							<FormItem>
-								<FormLabel>Электронная почта</FormLabel>
-								<FormControl>
-									<Input
-										type="email"
-										v-bind="componentField"
-										placeholder="example@example.com"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-
-						<FormField
-							name="phone"
-							v-slot="{ componentField }"
-						>
-							<FormItem>
-								<FormLabel>Телефон</FormLabel>
-								<FormControl>
-									<Input
-										type="tel"
-										v-bind="componentField"
-										placeholder="+7 (___) ___-__-__"
 									/>
 								</FormControl>
 								<FormMessage />
@@ -163,7 +127,7 @@
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="handleCancel"
@@ -228,8 +192,6 @@ const schema = toTypedSchema(
 	z.object({
 		firstName: z.string().min(2, 'Имя должно содержать минимум 2 символа').max(50, 'Имя должно содержать не более 50 символов'),
 		lastName: z.string().min(2, 'Фамилия должна содержать минимум 2 символа').max(50, 'Фамилия должна содержать не более 50 символов'),
-		email: z.string().email('Введите действительный адрес электронной почты'),
-		phone: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
 		role: z.nativeEnum(EmployeeRole),
     isActive: z.boolean(),
 	})

@@ -6,15 +6,17 @@
 		:additive="additiveDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
-		readonly
+		:readonly="!canUpdateAdditives"
 	/>
 </template>
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import AdminAdditiveDetailsForm from '@/modules/admin/additives/components/details/admin-additive-details-form.vue'
 import type { UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -22,6 +24,8 @@ const router = useRouter()
 const queryClient = useQueryClient()
 const route = useRoute()
 const { toast } = useToast()
+
+const canUpdateAdditives = useHasRole([EmployeeRole.ADMIN])
 
 const additiveId = route.params.id as string
 
