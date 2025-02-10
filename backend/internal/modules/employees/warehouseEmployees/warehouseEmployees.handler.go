@@ -2,6 +2,7 @@ package employees
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -32,40 +33,46 @@ func NewWarehouseEmployeeHandler(service WarehouseEmployeeService, employeeServi
 }
 
 func (h *WarehouseEmployeeHandler) DeleteWarehouseEmployee(c *gin.Context) {
-	employeeIDParam := c.Param("employeeId")
-	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
+	warehouseEmployeeIDParam := c.Param("id")
+	warehouseEmployeeID, err := strconv.ParseUint(warehouseEmployeeIDParam, 10, 64)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400WarehouseEmployee)
 		return
 	}
 
-	warehouseID, role, errH := h.regionService.CheckRegionWarehouseWithRole(c)
+	filter, errH := contexts.GetWarehouseContextFilter(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	employee, err := h.employeeService.GetEmployeeByID(uint(employeeID))
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusUnauthorized)
+		return
+	}
+
+	warehouseEmployee, err := h.service.GetWarehouseEmployeeByID(uint(warehouseEmployeeID), filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseEmployeeDelete)
 		return
 	}
 
-	if !data.CanManageRole(role, employee.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+	if !data.CanManageRole(claims.Role, warehouseEmployee.Role) {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
-	err = h.employeeService.DeleteTypedEmployee(uint(employeeID), warehouseID, data.WarehouseEmployeeType)
+	err = h.employeeService.DeleteTypedEmployee(warehouseEmployee.EmployeeID, warehouseEmployee.Warehouse.ID, data.WarehouseEmployeeType)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseEmployeeDelete)
 		return
 	}
 
 	action := types.DeleteWarehouseEmployeeAuditFactory(&data.BaseDetails{
-		ID:   uint(employeeID),
-		Name: employee.FirstName + " " + employee.LastName,
-	}, struct{}{}, warehouseID)
+		ID:   uint(warehouseEmployeeID),
+		Name: warehouseEmployee.FirstName + " " + warehouseEmployee.LastName,
+	}, struct{}{}, warehouseEmployee.Warehouse.ID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
@@ -88,7 +95,7 @@ func (h *WarehouseEmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 	}
 
 	if !data.CanManageRole(role, input.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
@@ -122,13 +129,13 @@ func (h *WarehouseEmployeeHandler) GetWarehouseEmployeeByID(c *gin.Context) {
 		return
 	}
 
-	warehouseID, errH := h.regionService.CheckRegionWarehouse(c)
+	filter, errH := contexts.GetWarehouseContextFilter(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	employee, err := h.service.GetWarehouseEmployeeByID(uint(id), warehouseID)
+	employee, err := h.service.GetWarehouseEmployeeByID(uint(id), filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseEmployeeGet)
 		return
@@ -173,29 +180,35 @@ func (h *WarehouseEmployeeHandler) UpdateWarehouseEmployee(c *gin.Context) {
 		return
 	}
 
-	warehouseID, role, errH := h.regionService.CheckRegionWarehouseWithRole(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
 	var input types.UpdateWarehouseEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	warehouseEmployee, err := h.service.GetWarehouseEmployeeByID(uint(id), warehouseID)
+	filter, errH := contexts.GetWarehouseContextFilter(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusUnauthorized)
+		return
+	}
+
+	warehouseEmployee, err := h.service.GetWarehouseEmployeeByID(uint(id), filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseEmployeeGet)
 		return
 	}
-	if !data.CanManageRole(role, warehouseEmployee.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+	if !data.CanManageRole(claims.Role, warehouseEmployee.Role) {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
-	err = h.service.UpdateWarehouseEmployee(uint(id), warehouseID, &input, role)
+	err = h.service.UpdateWarehouseEmployee(uint(id), filter, &input, claims.Role)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseEmployeeUpdate)
 		return
@@ -204,7 +217,7 @@ func (h *WarehouseEmployeeHandler) UpdateWarehouseEmployee(c *gin.Context) {
 	action := types.UpdateWarehouseEmployeeAuditFactory(&data.BaseDetails{
 		ID:   uint(id),
 		Name: warehouseEmployee.FirstName + " " + warehouseEmployee.LastName,
-	}, &input, warehouseID)
+	}, &input, warehouseEmployee.Warehouse.ID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)

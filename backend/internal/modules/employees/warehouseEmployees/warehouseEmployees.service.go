@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/warehouseEmployees/types"
@@ -15,9 +16,9 @@ import (
 type WarehouseEmployeeService interface {
 	CreateWarehouseEmployee(warehouseID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetWarehouseEmployees(warehouseID uint, filter *employeesTypes.EmployeesFilter) ([]types.WarehouseEmployeeDTO, error)
-	GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDetailsDTO, error)
+	GetWarehouseEmployeeByID(id uint, filter *contexts.WarehouseContextFilter) (*types.WarehouseEmployeeDetailsDTO, error)
 	GetAllWarehouseEmployees(warehouseID uint) ([]employeesTypes.EmployeeAccountDTO, error)
-	UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error
+	UpdateWarehouseEmployee(id uint, filter *contexts.WarehouseContextFilter, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error
 }
 
 type warehouseEmployeeService struct {
@@ -79,12 +80,12 @@ func (s *warehouseEmployeeService) GetWarehouseEmployees(warehouseID uint, filte
 	return dtos, nil
 }
 
-func (s *warehouseEmployeeService) GetWarehouseEmployeeByID(id, warehouseID uint) (*types.WarehouseEmployeeDetailsDTO, error) {
+func (s *warehouseEmployeeService) GetWarehouseEmployeeByID(id uint, filter *contexts.WarehouseContextFilter) (*types.WarehouseEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid warehouse employee ID")
 	}
 
-	employee, err := s.repo.GetWarehouseEmployeeByID(id, warehouseID)
+	employee, err := s.repo.GetWarehouseEmployeeByID(id, filter)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to retrieve warehouse employee with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
@@ -118,10 +119,10 @@ func (s *warehouseEmployeeService) GetAllWarehouseEmployees(warehouseID uint) ([
 	return dtos, nil
 }
 
-func (s *warehouseEmployeeService) UpdateWarehouseEmployee(id, warehouseID uint, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error {
+func (s *warehouseEmployeeService) UpdateWarehouseEmployee(id uint, filter *contexts.WarehouseContextFilter, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error {
 	updateFields, err := types.WarehouseEmployeeUpdateFields(input, role)
 	if err != nil {
 		return err
 	}
-	return s.repo.UpdateWarehouseEmployee(id, warehouseID, updateFields)
+	return s.repo.UpdateWarehouseEmployee(id, filter, updateFields)
 }
