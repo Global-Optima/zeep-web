@@ -65,9 +65,11 @@
 						@click="toggleSuborderStatus(suborder)"
 						:disabled="disabledCompleteButton"
 						:class="[
-              'flex-1 px-4 py-4 rounded-xl text-primary-foreground',
+              'flex-1 px-4 py-4 rounded-xl text-primary-foreground font-medium',
               suborder.status === SubOrderStatus.COMPLETED
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : suborder.status === SubOrderStatus.PENDING
+                ? 'bg-blue-500'
                 : 'bg-primary'
             ]"
 					>
@@ -92,20 +94,13 @@ import { Button } from '@/core/components/ui/button'
 import { useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
 import { SubOrderStatus, type SuborderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { Plus, Printer } from 'lucide-vue-next'
-import { computed, toRefs } from 'vue'
+import { computed } from 'vue'
 
-/**
- * Define props
- */
-const props = defineProps<{
+
+const {suborder} = defineProps<{
   suborder: SuborderDTO | null;
 }>()
 
-const { suborder } = toRefs(props)
-
-/**
- * Define emits
- */
 const emits = defineEmits<{
   (e: 'toggleSuborderStatus', suborder: SuborderDTO): void;
 }>()
@@ -114,30 +109,30 @@ function toggleSuborderStatus(s: SuborderDTO) {
   emits('toggleSuborderStatus', s)
 }
 
-/**
- * Computed properties for the "Complete" button state
- */
-const completeButtonText = computed(() =>
-  suborder.value?.status === SubOrderStatus.COMPLETED
-    ? 'Выполнено'
-    : 'Выполнить'
-)
+const completeButtonText = computed(() => {
+  switch (suborder?.status) {
+    case SubOrderStatus.PENDING:
+      return 'Начать приготовление'
+    case SubOrderStatus.PREPARING:
+      return 'Завершить'
+    case SubOrderStatus.COMPLETED:
+      return 'Выполнено'
+    default:
+      return 'Обновить статус'
+  }
+})
 
 const disabledCompleteButton = computed(() =>
-  suborder.value?.status === SubOrderStatus.COMPLETED
+  suborder?.status === SubOrderStatus.COMPLETED
 )
 
-/**
- * Use your printer hook
- */
 const { printBarcode } = useBarcodePrinter()
 
 async function printQrCode() {
-  if (suborder.value) {
-    const subOrderValue = suborder.value
-    const productName = `${subOrderValue.productSize.productName} ${subOrderValue.productSize.sizeName}`
-    const barcode = `suborder-${subOrderValue.id}`
-		await printBarcode(productName, barcode, {showModal: true})
+  if (suborder) {
+    const productName = `${suborder.productSize.productName} ${suborder.productSize.sizeName}`
+    const barcode = `suborder-${suborder.id}`
+    await printBarcode(productName, barcode, { showModal: true })
   }
 }
 </script>
