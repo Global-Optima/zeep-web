@@ -80,7 +80,7 @@
 		<!-- If no suborder is selected, show a placeholder -->
 		<p
 			v-else
-			class="mt-2 text-center text-gray-400 text-sm"
+			class="mt-2 text-gray-400 text-sm text-center"
 		>
 			Выберите подзаказ
 		</p>

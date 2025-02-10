@@ -14,6 +14,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 type OperationType string
 
 const (
+	GetOperation    OperationType = "GET"
 	CreateOperation OperationType = "CREATE"
 	UpdateOperation OperationType = "UPDATE"
 	DeleteOperation OperationType = "DELETE"

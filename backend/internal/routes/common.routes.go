@@ -2,7 +2,11 @@ package routes
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	adminEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/adminEmployees"
+	franchiseeEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/franchiseeEmployees"
+	regionEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees"
+	storeEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees"
+	warehouseEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/warehouseEmployees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
@@ -29,14 +33,20 @@ func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandle
 	}
 }
 
-func (r *Router) RegisterEmployeeAccountRoutes(handler *employees.EmployeeHandler) {
+func (r *Router) RegisterEmployeeAccountRoutes(
+	storeEmployeeHandler *storeEmployees.StoreEmployeeHandler,
+	warehouseEmployeeHandler *warehouseEmployees.WarehouseEmployeeHandler,
+	franchiseeEmployeeHandler *franchiseeEmployees.FranchiseeEmployeeHandler,
+	regionEmployeeHandler *regionEmployees.RegionEmployeeHandler,
+	adminEmployeeHandler *adminEmployees.AdminEmployeeHandler,
+) {
 	router := r.CommonRoutes.Group("/auth/employees")
 	{
-		router.GET("/store/:id", handler.GetStoreAccounts)
-		router.GET("region/:id", handler.GetRegionAccounts)
-		router.GET("franchisee/:id", handler.GetFranchiseeAccounts)
-		router.GET("/warehouse/:id", handler.GetWarehouseAccounts)
-		router.GET("/admins", handler.GetAdminAccounts)
+		router.GET("/store/:id", storeEmployeeHandler.GetStoreAccounts)
+		router.GET("region/:id", regionEmployeeHandler.GetRegionAccounts)
+		router.GET("franchisee/:id", franchiseeEmployeeHandler.GetFranchiseeAccounts)
+		router.GET("/warehouse/:id", warehouseEmployeeHandler.GetWarehouseAccounts)
+		router.GET("/admins", adminEmployeeHandler.GetAdminAccounts)
 	}
 }
 

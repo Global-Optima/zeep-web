@@ -25,12 +25,6 @@ type EmployeeRepository interface {
 	GetEmployeeWorkdayByEmployeeAndDay(employeeID uint, day data.Weekday) (*data.EmployeeWorkday, error)
 	GetEmployeeWorkdayByID(workdayID uint) (*data.EmployeeWorkday, error)
 	GetEmployeeWorkdaysByEmployeeID(employeeID uint) ([]data.EmployeeWorkday, error)
-
-	GetAllStoreEmployees(storeID uint) ([]data.Employee, error)
-	GetAllRegionEmployees(regionID uint) ([]data.Employee, error)
-	GetAllFranchiseeEmployees(franchiseeID uint) ([]data.Employee, error)
-	GetAllWarehouseEmployees(warehouseID uint) ([]data.Employee, error)
-	GetAllAdminEmployees() ([]data.Employee, error)
 }
 
 type employeeRepository struct {
@@ -299,78 +293,4 @@ func (r *employeeRepository) GetEmployeeWorkdaysByEmployeeID(employeeID uint) ([
 		return nil, err
 	}
 	return workdays, nil
-}
-
-func (r *employeeRepository) GetAllStoreEmployees(storeID uint) ([]data.Employee, error) {
-	var employees []data.Employee
-
-	err := r.db.Model(&data.Employee{}).
-		Joins("INNER JOIN store_employees ON store_employees.employee_id = employees.id").
-		Where("store_employees.store_id = ?", storeID).
-		Find(&employees).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return employees, nil
-}
-
-func (r *employeeRepository) GetAllWarehouseEmployees(warehouseID uint) ([]data.Employee, error) {
-	var employees []data.Employee
-
-	err := r.db.Model(&data.Employee{}).
-		Joins("INNER JOIN warehouse_employees ON warehouse_employees.employee_id = employees.id").
-		Where("warehouse_employees.warehouse_id = ?", warehouseID).
-		Find(&employees).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return employees, nil
-}
-
-func (r *employeeRepository) GetAllAdminEmployees() ([]data.Employee, error) {
-	var employees []data.Employee
-
-	err := r.db.Model(&data.Employee{}).
-		Joins("INNER JOIN admin_employees ON admin_employees.employee_id = employees.id").
-		Find(&employees).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return employees, nil
-}
-
-func (r *employeeRepository) GetAllRegionEmployees(regionID uint) ([]data.Employee, error) {
-	var employees []data.Employee
-
-	err := r.db.Model(&data.Employee{}).
-		Joins("INNER JOIN region_employees ON region_employees.employee_id = employees.id").
-		Where("region_employees.region_id = ?", regionID).
-		Find(&employees).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return employees, nil
-}
-
-func (r *employeeRepository) GetAllFranchiseeEmployees(franchiseeID uint) ([]data.Employee, error) {
-	var employees []data.Employee
-
-	err := r.db.Model(&data.Employee{}).
-		Joins("INNER JOIN franchisee_employees ON franchisee_employees.employee_id = employees.id").
-		Where("franchisee_employees.franchisee_id = ?", franchiseeID).
-		Find(&employees).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return employees, nil
 }

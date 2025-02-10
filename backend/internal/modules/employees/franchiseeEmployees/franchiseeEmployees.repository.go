@@ -14,6 +14,7 @@ import (
 type FranchiseeEmployeeRepository interface {
 	GetFranchiseeEmployees(franchiseeID uint, filter *employeesTypes.EmployeesFilter) ([]data.FranchiseeEmployee, error)
 	GetFranchiseeEmployeeByID(id, franchiseeID uint) (*data.FranchiseeEmployee, error)
+	GetAllFranchiseeEmployees(franchiseeID uint) ([]data.FranchiseeEmployee, error)
 	UpdateFranchiseeEmployee(id uint, franchiseeID uint, updateModels *types.UpdateFranchiseeEmployeeModels) error
 }
 
@@ -75,6 +76,22 @@ func (r *franchiseeEmployeeRepository) GetFranchiseeEmployeeByID(id, franchiseeI
 		return nil, fmt.Errorf("failed to retrieve franchisee employee by ID: %w", err)
 	}
 	return &franchiseeEmployee, nil
+}
+
+func (r *franchiseeEmployeeRepository) GetAllFranchiseeEmployees(franchiseeID uint) ([]data.FranchiseeEmployee, error) {
+	var franchiseeEmployees []data.FranchiseeEmployee
+
+	err := r.db.Model(&data.FranchiseeEmployee{}).
+		Joins("INNER JOIN employees ON franchisee_employees.employee_id = employees.id").
+		Where("franchisee_id = ?", franchiseeID).
+		Preload("Employee").
+		Find(&franchiseeEmployees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return franchiseeEmployees, nil
 }
 
 func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchiseeID uint, updateModels *types.UpdateFranchiseeEmployeeModels) error {
