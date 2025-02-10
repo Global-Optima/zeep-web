@@ -28,6 +28,15 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/employees/stores/pages/admin-store-employee-update-page.vue'),
 	},
+	ADMIN_STORE_EMPLOYEE_CREATE: {
+		path: 'stores/:storeId/employees/create',
+		meta: {
+			title: 'Создать сотрудника кафе',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/stores/pages/admin-store-employee-create-page.vue'),
+	},
 
 	// Franchisee
 	ADMIN_FRANCHISEE_EMPLOYEES: {
@@ -61,6 +70,17 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 				'@/modules/admin/employees/franchisees/pages/admin-franchisee-employee-update-page.vue'
 			),
 	},
+	ADMIN_FRANCHISEE_EMPLOYEE_CREATE: {
+		path: 'regions/:regionId/employees/create',
+		meta: {
+			title: 'Создать сотрудника франчайзи',
+			requiresAuth: true,
+		},
+		component: () =>
+			import(
+				'@/modules/admin/employees/franchisees/pages/admin-franchisee-employee-create-page.vue'
+			),
+	},
 
 	// Regions
 	ADMIN_REGION_EMPLOYEES: {
@@ -89,6 +109,15 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 		},
 		component: () =>
 			import('@/modules/admin/employees/regions/pages/admin-region-employee-update-page.vue'),
+	},
+	ADMIN_REGION_EMPLOYEE_CREATE: {
+		path: 'regions/:regionId/employees/create',
+		meta: {
+			title: 'Создать сотрудника региона',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/regions/pages/admin-region-employee-create-page.vue'),
 	},
 
 	// Warehouse
@@ -120,6 +149,15 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 		},
 		component: () =>
 			import('@/modules/admin/employees/warehouses/pages/admin-warehouse-employee-update-page.vue'),
+	},
+	ADMIN_WAREHOUSE_EMPLOYEE_CREATE: {
+		path: 'warehouses/:warehouseId/employees/create',
+		meta: {
+			title: 'Создать сотрудника склада',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/warehouses/pages/admin-warehouse-employee-create-page.vue'),
 	},
 
 	ADMIN_EMPLOYEE_AUDIT: {

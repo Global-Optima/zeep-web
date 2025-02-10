@@ -54,10 +54,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import type { FranchiseeEmployeeDTO } from '@/modules/admin/employees/franchisees/models/franchisees-employees.model'
 import { EMPLOYEE_ROLES_FORMATTED } from '@/modules/admin/employees/models/employees.models'
-import type { StoreEmployeeDTO } from '@/modules/admin/employees/stores/models/store-employees.model'
 
-const {employees} = defineProps<{employees: StoreEmployeeDTO[]}>()
+const {employees} = defineProps<{employees: FranchiseeEmployeeDTO[]}>()
 
 const router = useRouter()
 

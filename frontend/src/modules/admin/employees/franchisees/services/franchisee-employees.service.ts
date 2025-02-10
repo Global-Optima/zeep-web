@@ -21,8 +21,10 @@ class FranchiseeEmployeeService {
 		return response.data
 	}
 
-	async createFranchiseeEmployee(dto: CreateEmployeeDTO) {
-		const response = await apiClient.post<void>(this.baseUrl, dto)
+	async createFranchiseeEmployee(dto: CreateEmployeeDTO, franchiseeId: number) {
+		const response = await apiClient.post<void>(this.baseUrl, dto, {
+			params: { franchiseeId: franchiseeId },
+		})
 		return response.data
 	}
 
