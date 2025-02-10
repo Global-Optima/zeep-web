@@ -33,8 +33,8 @@ func NewFranchiseeEmployeeHandler(service FranchiseeEmployeeService, employeeSer
 }
 
 func (h *FranchiseeEmployeeHandler) DeleteFranchiseeEmployee(c *gin.Context) {
-	employeeIDParam := c.Param("employeeId")
-	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
+	franchiseeEmployeeIDParam := c.Param("id")
+	franchiseeEmployeeID, err := strconv.ParseUint(franchiseeEmployeeIDParam, 10, 64)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400FranchiseeEmployee)
 		return
@@ -46,27 +46,27 @@ func (h *FranchiseeEmployeeHandler) DeleteFranchiseeEmployee(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.employeeService.GetEmployeeByID(uint(employeeID))
+	franchiseeEmployee, err := h.service.GetFranchiseeEmployeeByID(uint(franchiseeEmployeeID), franchiseeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeDelete)
 		return
 	}
 
-	if !data.CanManageRole(role, employee.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+	if !data.CanManageRole(role, franchiseeEmployee.Role) {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
-	err = h.employeeService.DeleteTypedEmployee(uint(employeeID), franchiseeID, data.FranchiseeEmployeeType)
+	err = h.employeeService.DeleteTypedEmployee(uint(franchiseeEmployeeID), franchiseeEmployee.Franchisee.ID, data.FranchiseeEmployeeType)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeDelete)
 		return
 	}
 
 	action := types.DeleteFranchiseeEmployeeAuditFactory(&data.BaseDetails{
-		ID:   uint(employeeID),
-		Name: employee.FirstName + " " + employee.LastName,
-	}, struct{}{}, franchiseeID)
+		ID:   uint(franchiseeEmployeeID),
+		Name: franchiseeEmployee.FirstName + " " + franchiseeEmployee.LastName,
+	}, struct{}{}, franchiseeEmployee.Franchisee.ID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
@@ -89,11 +89,16 @@ func (h *FranchiseeEmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 	}
 
 	if !data.CanManageRole(role, input.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
-	id, err := h.service.CreateFranchiseeEmployee(franchiseeID, &input)
+	if franchiseeID == nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400FranchiseeEmployee)
+		return
+	}
+
+	id, err := h.service.CreateFranchiseeEmployee(*franchiseeID, &input)
 	if err != nil {
 		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
 			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
@@ -106,7 +111,7 @@ func (h *FranchiseeEmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 	action := types.CreateFranchiseeEmployeeAuditFactory(&data.BaseDetails{
 		ID:   id,
 		Name: input.FirstName + " " + input.LastName,
-	}, &input, franchiseeID)
+	}, &input, *franchiseeID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
@@ -123,13 +128,13 @@ func (h *FranchiseeEmployeeHandler) GetFranchiseeEmployeeByID(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := contexts.GetFranchiseeId(c)
+	franchiseeID, errH := contexts.GetFranchiseeId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	employee, err := h.service.GetFranchiseeEmployeeByID(uint(id), storeID)
+	employee, err := h.service.GetFranchiseeEmployeeByID(uint(id), franchiseeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeGet)
 		return
@@ -151,13 +156,18 @@ func (h *FranchiseeEmployeeHandler) GetFranchiseeEmployees(c *gin.Context) {
 		return
 	}
 
+	if franchiseeID == nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400FranchiseeEmployee)
+		return
+	}
+
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.FranchiseeEmployee{})
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
-	franchiseeEmployees, err := h.service.GetFranchiseeEmployees(franchiseeID, &filter)
+	franchiseeEmployees, err := h.service.GetFranchiseeEmployees(*franchiseeID, &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeGet)
 		return
@@ -203,7 +213,7 @@ func (h *FranchiseeEmployeeHandler) UpdateFranchiseeEmployee(c *gin.Context) {
 	action := types.UpdateFranchiseeEmployeeAuditFactory(&data.BaseDetails{
 		ID:   uint(id),
 		Name: franchiseeEmployee.FirstName + " " + franchiseeEmployee.LastName,
-	}, &input, franchiseeID)
+	}, &input, franchiseeEmployee.Franchisee.ID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)

@@ -19,7 +19,6 @@ export interface StoreEmployeeDTO extends BaseEmployeeDTO {
 
 export interface StoreEmployeeDetailsDTO extends BaseEmployeeDetailsDTO {
 	id: number
-	employeeId: number
 	store: StoreDTO
 }
 

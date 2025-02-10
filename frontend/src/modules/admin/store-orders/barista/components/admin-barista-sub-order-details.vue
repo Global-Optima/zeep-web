@@ -1,4 +1,3 @@
-<!-- SuborderDetails.vue -->
 <template>
 	<section class="col-span-2 border-r h-full overflow-y-auto no-scrollbar">
 		<p class="top-0 z-10 sticky bg-gray-100 py-3 font-medium text-center">Детали подзаказа</p>
@@ -59,17 +58,19 @@
 					<p class="mt-1 text-gray-700">2 мин</p>
 				</div>
 
-				<!-- Complete Button -->
+				<!-- Complete (or Next Status) Button -->
 				<div class="flex items-center gap-2 mt-4">
 					<button
 						@click="toggleSuborderStatus(suborder)"
 						:disabled="disabledCompleteButton"
-						:class="[
-              'flex-1 px-4 py-4 rounded-xl text-primary-foreground',
+						:class="cn(
+              'flex-1 px-4 py-4 rounded-xl text-primary-foreground font-medium',
               suborder.status === SubOrderStatus.COMPLETED
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : suborder.status === SubOrderStatus.PENDING
+                ? 'bg-blue-500'
                 : 'bg-primary'
-            ]"
+            )"
 					>
 						{{ completeButtonText }}
 					</button>
@@ -90,54 +91,72 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import { useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
-import { SubOrderStatus, type SuborderDTO } from '@/modules/admin/store-orders/models/orders.models'
+import { cn } from '@/core/utils/tailwind.utils'
+import {
+  SubOrderStatus,
+  type SuborderDTO
+} from '@/modules/admin/store-orders/models/orders.models'
 import { Plus, Printer } from 'lucide-vue-next'
-import { computed, toRefs } from 'vue'
+import { computed } from 'vue'
 
 /**
- * Define props
+ * Define props:
+ * - suborder: a single SuborderDTO or null (if none is selected).
+ *   This suborder is assumed to be "deeply reactive" from the parent.
  */
 const props = defineProps<{
   suborder: SuborderDTO | null;
 }>()
 
-const { suborder } = toRefs(props)
-
 /**
- * Define emits
+ * Define events:
+ * - toggleSuborderStatus: inform the parent to toggle status.
  */
 const emits = defineEmits<{
   (e: 'toggleSuborderStatus', suborder: SuborderDTO): void;
 }>()
 
+/**
+ * Emit an event to the parent to toggle the suborder's status.
+ */
 function toggleSuborderStatus(s: SuborderDTO) {
   emits('toggleSuborderStatus', s)
 }
 
 /**
- * Computed properties for the "Complete" button state
+ * Dynamically compute the button label.
  */
-const completeButtonText = computed(() =>
-  suborder.value?.status === SubOrderStatus.COMPLETED
-    ? 'Выполнено'
-    : 'Выполнить'
-)
+const completeButtonText = computed(() => {
+  if (!props.suborder) return 'Обновить статус'
+  switch (props.suborder.status) {
+    case SubOrderStatus.PENDING:
+      return 'Начать приготовление'
+    case SubOrderStatus.PREPARING:
+      return 'Завершить'
+    case SubOrderStatus.COMPLETED:
+      return 'Выполнено'
+    default:
+      return 'Обновить статус'
+  }
+})
 
+/**
+ * Disable the complete button if the suborder is already completed.
+ */
 const disabledCompleteButton = computed(() =>
-  suborder.value?.status === SubOrderStatus.COMPLETED
+  props.suborder?.status === SubOrderStatus.COMPLETED
 )
 
 /**
- * Use your printer hook
+ * A hook to print a barcode for this suborder.
  */
 const { printBarcode } = useBarcodePrinter()
 
 async function printQrCode() {
-  if (suborder.value) {
-    const subOrderValue = suborder.value
-    const productName = `${subOrderValue.productSize.productName} ${subOrderValue.productSize.sizeName}`
-    const barcode = `suborder-${subOrderValue.id}`
-		await printBarcode(productName, barcode, {showModal: true})
+  if (props.suborder) {
+    const productName = `${props.suborder.productSize.productName} ${props.suborder.productSize.sizeName}`
+    const barcode = `suborder-${props.suborder.id}`
+    await printBarcode(productName, barcode, { showModal: true })
   }
 }
 </script>

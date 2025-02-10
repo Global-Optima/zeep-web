@@ -41,14 +41,6 @@ const statisticCards = [
     icon: Activity,
   },
 ]
-
-const now = new Date();
-      const offsetMinutes = now.getTimezoneOffset(); // Offset in minutes (positive if behind UTC)
-      const offsetHours = Math.abs(Math.floor(offsetMinutes / 60));
-      const offsetMins = Math.abs(offsetMinutes % 60);
-      const sign = offsetMinutes > 0 ? '-' : '+';
-console.log(`${sign}${String(offsetHours).padStart(2, '0')}:${String(offsetMins).padStart(2, '0')}`);
-console.log("TIMEZZZONEEE", Intl.DateTimeFormat().resolvedOptions().timeZone)
 </script>
 
 <template>

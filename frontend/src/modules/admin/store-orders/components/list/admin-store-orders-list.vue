@@ -5,8 +5,8 @@
 				<TableHead class="p-4">Создано</TableHead>
 				<TableHead class="p-4">Заказчик</TableHead>
 				<TableHead class="p-4">Сумма</TableHead>
-				<!-- <TableHead class="hidden p-4 md:table-cell">Оплата</TableHead> -->
-				<TableHead class="hidden p-4 md:table-cell">Статус</TableHead>
+				<!-- <TableHead class="hidden md:table-cell p-4">Оплата</TableHead> -->
+				<TableHead class="hidden md:table-cell p-4">Статус</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -26,7 +26,7 @@
 				</TableCell>
 
 				<!-- TODO: add paid cell back -->
-				<!-- <TableCell class="hidden p-4 md:table-cell">
+				<!-- <TableCell class="hidden md:table-cell p-4">
 					<div
 						v-if="order?.isPaid"
 						class="flex items-center gap-2 text-green-500"
@@ -43,7 +43,7 @@
 					</div>
 				</TableCell> -->
 
-				<TableCell class="hidden p-4 md:table-cell">
+				<TableCell class="hidden md:table-cell p-4">
 					<p
 						:class="[
                 'inline-flex w-fit items-center rounded-md px-2.5 py-1 text-xs',
@@ -79,6 +79,7 @@ const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'dd MMMM yyyy', { locale: ru })
 }
 const ORDER_STATUS_COLOR: Record<OrderStatus, string> = {
+  [OrderStatus.PENDING]: 'bg-purple-100 text-purple-800',
   [OrderStatus.PREPARING]: 'bg-yellow-100 text-yellow-800',
   [OrderStatus.COMPLETED]: 'bg-green-200 text-green-900',
   [OrderStatus.IN_DELIVERY]: 'bg-orange-100 text-orange-800',
@@ -87,6 +88,7 @@ const ORDER_STATUS_COLOR: Record<OrderStatus, string> = {
 }
 
 const ORDER_STATUS_FORMATTED: Record<OrderStatus, string> = {
+  [OrderStatus.PENDING]: 'В ожидании',
   [OrderStatus.PREPARING]: 'Готовится',
   [OrderStatus.COMPLETED]: 'Завершен',
   [OrderStatus.IN_DELIVERY]: 'Доставляется',

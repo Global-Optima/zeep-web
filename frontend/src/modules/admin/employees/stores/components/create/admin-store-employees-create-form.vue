@@ -11,7 +11,7 @@
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Обновить {{ getEmployeeShortName(employee) }}
+				Создать сотрудника
 			</h1>
 
 			<div class="hidden md:flex items-center gap-2 md:ml-auto">
@@ -33,8 +33,8 @@
 
 		<Card>
 			<CardHeader>
-				<CardTitle>Обновить сотрудника</CardTitle>
-				<CardDescription> Заполните форму ниже, чтобы обновить данные сотрудника. </CardDescription>
+				<CardTitle>Создайте сотрудника кафе</CardTitle>
+				<CardDescription> Заполните форму ниже, чтобы создать данные сотрудника. </CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form
@@ -73,6 +73,59 @@
 							</FormItem>
 						</FormField>
 					</div>
+
+					<div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
+						<FormField
+							name="email"
+							v-slot="{ componentField }"
+						>
+							<FormItem>
+								<FormLabel>Электронная почта</FormLabel>
+								<FormControl>
+									<Input
+										type="email"
+										v-bind="componentField"
+										placeholder="example@example.com"
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+
+						<FormField
+							name="phone"
+							v-slot="{ componentField }"
+						>
+							<FormItem>
+								<FormLabel>Телефон</FormLabel>
+								<FormControl>
+									<Input
+										type="tel"
+										v-bind="componentField"
+										placeholder="+7 (___) ___-__-__"
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+					</div>
+
+					<FormField
+						name="password"
+						v-slot="{ componentField }"
+					>
+						<FormItem>
+							<FormLabel>Пароль</FormLabel>
+							<FormControl>
+								<Input
+									type="password"
+									v-bind="componentField"
+                  placeholder='Пароль'
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					</FormField>
 
 					<FormField
 						name="role"
@@ -120,6 +173,7 @@
 									@update:checked="handleChange"
 								/>
 							</FormControl>
+							<FormMessage />
 						</FormItem>
 					</FormField>
 				</form>
@@ -145,11 +199,6 @@
 </template>
 
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm } from 'vee-validate'
-import { ref } from 'vue'
-import * as z from 'zod'
-
 import { Button } from '@/core/components/ui/button'
 import {
   Card,
@@ -169,23 +218,20 @@ import {
 import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import { Switch } from '@/core/components/ui/switch'
-import { getEmployeeShortName } from '@/core/utils/user-formatting.utils'
-import type { UpdateFranchiseeEmployeeDTO } from '@/modules/admin/employees/franchisees/models/franchisees-employees.model'
-import { EmployeeRole, type EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
+import { EmployeeRole, type CreateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
+import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
-
-const {employee} = defineProps<{
-	employee: EmployeeDTO
-}>()
-
+import { useForm } from 'vee-validate'
+import { ref } from 'vue'
+import * as z from 'zod'
 const emit = defineEmits<{
-	(e: 'onSubmit', formValues: UpdateFranchiseeEmployeeDTO): void
+	(e: 'onSubmit', formValues: CreateEmployeeDTO): void
 	(e: 'onCancel'): void
 }>()
 
 const roles = ref([
-	{ value: EmployeeRole.FRANCHISEE_MANAGER, label: 'Менеджер' },
-	{ value: EmployeeRole.FRANCHISEE_OWNER, label: 'Владелец' },
+	{ value: EmployeeRole.STORE_MANAGER, label: 'Менеджер' },
+	{ value: EmployeeRole.BARISTA, label: 'Бариста' },
 ]);
 
 const schema = toTypedSchema(
@@ -193,17 +239,30 @@ const schema = toTypedSchema(
 		firstName: z.string().min(2, 'Имя должно содержать минимум 2 символа').max(50, 'Имя должно содержать не более 50 символов'),
 		lastName: z.string().min(2, 'Фамилия должна содержать минимум 2 символа').max(50, 'Фамилия должна содержать не более 50 символов'),
 		role: z.nativeEnum(EmployeeRole),
+		email: z.string().email('Введите действительный адрес электронной почты'),
+		phone: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
+    password: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
     isActive: z.boolean(),
 	})
 );
 
 const { handleSubmit } = useForm({
 	validationSchema: schema,
-	initialValues: employee,
 })
 
 const submitForm = handleSubmit((formValues) => {
-	emit('onSubmit', formValues)
+  const dto: CreateEmployeeDTO = {
+    firstName: formValues.firstName,
+    lastName: formValues.lastName,
+    role: formValues.role,
+    email: formValues.email,
+    phone: formValues.phone,
+    password: formValues.password,
+    isActive: formValues.isActive,
+    workdays: []
+  }
+
+	emit('onSubmit', dto)
 })
 
 const handleCancel = () => {

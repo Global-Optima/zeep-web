@@ -80,7 +80,7 @@ import AdminEmployeesDetailsAudits from '@/modules/admin/employees/components/de
 import AdminEmployeesDetailsInfo from '@/modules/admin/employees/components/details/admin-employees-details-info.vue'
 import AdminEmployeesDetailsShifts from '@/modules/admin/employees/components/details/admin-employees-details-shifts.vue'
 import AdminEmployeesDetailsStats from '@/modules/admin/employees/components/details/admin-employees-details-stats.vue'
-import { franchiseeEmployeeService } from '@/modules/admin/employees/franchisees/services/franchisee-employees.service'
+import { regionEmployeeService } from '@/modules/admin/employees/regions/services/region-employees.service'
 import { employeeAuditService } from '@/modules/admin/employees/services/employees-audit.service'
 import { useQuery } from '@tanstack/vue-query'
 import { CheckCheck, DollarSign, Timer } from 'lucide-vue-next'
@@ -102,13 +102,13 @@ const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-	queryKey: ['franchisee-employee', employeeId],
-	queryFn: () => franchiseeEmployeeService.getFranchiseeEmployeeById(Number(employeeId)),
+	queryKey: ['region-employee', employeeId],
+	queryFn: () => regionEmployeeService.getRegionEmployeeById(Number(employeeId)),
 	enabled: !isNaN(Number(employeeId)),
 })
 
 const { data: employeeAudits } = useQuery({
-	queryKey: ['franchisee-audits', employeeId],
+	queryKey: ['region-audits', employeeId],
 	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employeeId) }),
 	enabled: !isNaN(Number(employeeId)),
 })

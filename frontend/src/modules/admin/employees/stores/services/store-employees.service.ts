@@ -20,8 +20,10 @@ class StoreEmployeeService {
 		return response.data
 	}
 
-	async createStoreEmployee(dto: CreateEmployeeDTO) {
-		const response = await apiClient.post<void>(this.baseUrl, dto)
+	async createStoreEmployee(dto: CreateEmployeeDTO, storeId: number) {
+		const response = await apiClient.post<void>(this.baseUrl, dto, {
+			params: { storeId: storeId },
+		})
 		return response.data
 	}
 

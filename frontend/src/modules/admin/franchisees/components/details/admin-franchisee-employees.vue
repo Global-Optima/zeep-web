@@ -13,7 +13,7 @@
 				<h1
 					class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0"
 				>
-					Сотрудники склада {{ warehouse.name }}
+					Сотрудники франчайзи {{ franchisee.name }}
 				</h1>
 			</div>
 
@@ -28,9 +28,9 @@
 					v-if="!regionsResponse || regionsResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Сотрудники склада не найдены
+					Сотрудники региона не найдены
 				</p>
-				<AdminWarehousesEmployeesList
+				<AdminFranchiseesEmployeesList
 					v-else
 					:employees="regionsResponse.data"
 				/>
@@ -52,39 +52,39 @@ import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWi
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import AdminWarehousesEmployeesList from '@/modules/admin/employees/warehouses/components/list/admin-warehouses-employees-list.vue'
-import type { WarehouseEmployeeFilter } from '@/modules/admin/employees/warehouses/models/warehouse-employees.model'
-import { warehouseEmployeeService } from '@/modules/admin/employees/warehouses/services/warehouse-employees.service'
-import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
+import AdminFranchiseesEmployeesList from '@/modules/admin/employees/franchisees/components/list/admin-franchisees-employees-list.vue'
+import type { FranchiseEmployeeFilter } from '@/modules/admin/employees/franchisees/models/franchisees-employees.model'
+import { franchiseeEmployeeService } from '@/modules/admin/employees/franchisees/services/franchisee-employees.service'
+import type { FranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const {warehouse} = defineProps<{warehouse: WarehouseDTO}>()
+const {franchisee} = defineProps<{franchisee: FranchiseeDTO}>()
 
 const emits = defineEmits<{
   (e: 'onCancel'): void
 }>()
 
+const router = useRouter()
+
 const onCancel = () => {
   emits('onCancel')
 }
 
-const router = useRouter()
-
-const filter = ref<WarehouseEmployeeFilter>({})
+const filter = ref<FranchiseEmployeeFilter>({})
 
 const { data: regionsResponse } = useQuery({
-  queryKey: computed(() => ['admin-warehouse-employees', warehouse.id]),
-  queryFn: () => warehouseEmployeeService.getWarehouseEmployees({...filter.value, warehouseId: warehouse.id}),
+  queryKey: computed(() => ['admin-franchisee-employees', franchisee.id]),
+  queryFn: () => franchiseeEmployeeService.getFranchiseeEmployees({...filter.value, franchiseeId: franchisee.id}),
 })
 
 const onAddClick = () => {
-  router.push(`/admin/warehouses/${warehouse.id}/employees/create`)
+  router.push(`/admin/franchisees/${franchisee.id}/employees/create`)
 }
 
-function updateFilter(updatedFilter: WarehouseEmployeeFilter) {
+function updateFilter(updatedFilter: FranchiseEmployeeFilter) {
   filter.value = {...filter.value, ...updatedFilter}
 }
 

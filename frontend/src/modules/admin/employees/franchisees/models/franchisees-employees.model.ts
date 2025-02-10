@@ -19,7 +19,6 @@ export interface FranchiseeEmployeeDTO extends BaseEmployeeDTO {
 
 export interface FranchiseeEmployeeDetailsDTO extends BaseEmployeeDetailsDTO {
 	id: number
-	employeeId: number
 	franchisee: FranchiseeDTO
 }
 

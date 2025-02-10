@@ -19,7 +19,6 @@ export interface WarehouseEmployeeDTO extends BaseEmployeeDTO {
 
 export interface WarehouseEmployeeDetailsDTO extends BaseEmployeeDetailsDTO {
 	id: number
-	employeeId: number
 	warehouse: WarehouseDTO
 }
 

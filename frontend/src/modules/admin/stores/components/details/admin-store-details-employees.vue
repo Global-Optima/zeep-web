@@ -1,17 +1,25 @@
 <template>
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-6xl">
-		<div class="flex items-center gap-4">
-			<Button
-				variant="outline"
-				size="icon"
-				@click="onCancel"
-			>
-				<ChevronLeft class="w-5 h-5" />
-				<span class="sr-only">Назад</span>
-			</Button>
-			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Сотрудники кафе {{ store.name }}
-			</h1>
+		<div class="flex justify-between items-center gap-4">
+			<div class="flex items-center gap-4">
+				<Button
+					variant="outline"
+					size="icon"
+					@click="onCancel"
+				>
+					<ChevronLeft class="w-5 h-5" />
+					<span class="sr-only">Назад</span>
+				</Button>
+				<h1
+					class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0"
+				>
+					Сотрудники кафе {{ store.name }}
+				</h1>
+			</div>
+
+			<div>
+				<Button @click="onAddClick"> Создать </Button>
+			</div>
 		</div>
 
 		<Card>
@@ -51,6 +59,7 @@ import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const {store} = defineProps<{store: StoreDTO}>()
 
@@ -58,9 +67,7 @@ const emits = defineEmits<{
   (e: 'onCancel'): void
 }>()
 
-const onCancel = () => {
-  emits('onCancel')
-}
+const router = useRouter()
 
 const filter = ref<StoreEmployeeFilter>({})
 
@@ -68,6 +75,14 @@ const { data: regionsResponse } = useQuery({
   queryKey: computed(() => ['admin-store-employees', store.id]),
   queryFn: () => storeEmployeeService.getStoreEmployees({...filter.value, storeId: store.id}),
 })
+
+const onCancel = () => {
+  emits('onCancel')
+}
+
+const onAddClick = () => {
+  router.push(`/admin/stores/${store.id}/employees/create`)
+}
 
 function updateFilter(updatedFilter: StoreEmployeeFilter) {
   filter.value = {...filter.value, ...updatedFilter}

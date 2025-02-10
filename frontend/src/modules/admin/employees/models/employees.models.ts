@@ -44,11 +44,11 @@ export const EMPLOYEE_ROLES_FORMATTED: Record<EmployeeRole, string> = {
 }
 
 export const EMPLOYEE_TYPES_FORMATTED: Record<EmployeeType, string> = {
-  [EmployeeType.STORE]: 'Кафе',
-  [EmployeeType.WAREHOUSE]: 'Склад',
-  [EmployeeType.FRANCHISEE]: 'Франшиза',
-  [EmployeeType.REGION]: 'Регион',
-  [EmployeeType.ADMIN]: 'Администрация',
+	[EmployeeType.STORE]: 'Кафе',
+	[EmployeeType.WAREHOUSE]: 'Склад',
+	[EmployeeType.FRANCHISEE]: 'Франшиза',
+	[EmployeeType.REGION]: 'Регион',
+	[EmployeeType.ADMIN]: 'Администрация',
 }
 
 export interface CreateOrReplaceWorkdayDTO {
@@ -105,6 +105,7 @@ export interface EmployeeWorkdayDTO {
 
 export interface BaseEmployeeDetailsDTO extends BaseEmployeeDTO {
 	workdays: EmployeeWorkdayDTO[]
+	employeeId: number
 }
 
 export interface EmployeeDetailsDTO extends BaseEmployeeDetailsDTO {

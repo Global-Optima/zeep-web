@@ -15,56 +15,57 @@ var (
 )
 
 // GetRegionId returns the retrieved id and HandlerError
-func GetRegionId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
+func GetRegionId(c *gin.Context) (*uint, *handlerErrors.HandlerError) {
 	claims, err := GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		return 0, ErrUnauthorizedAccess
+		return nil, ErrUnauthorizedAccess
 	}
 
 	var regionID uint
 	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
 		if claims.EmployeeType != data.RegionEmployeeType {
-			return 0, ErrInvalidEmployeeType
+			return nil, ErrInvalidEmployeeType
 		}
 		regionID = claims.WorkplaceID
 	} else {
 		regionIdStr := c.Query("regionId")
+		//TODO change
 		if regionIdStr == "" {
-			return 0, ErrEmptyRegionID
+			return nil, nil
 		}
 		id, err := strconv.ParseUint(regionIdStr, 10, 64)
 		if err != nil {
-			return 0, ErrInvalidRegionID
+			return nil, ErrInvalidStoreID
 		}
 		regionID = uint(id)
 	}
-
-	return regionID, nil
+	return &regionID, nil
 }
 
-func GetRegionIdWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError) {
+func GetRegionIdWithRole(c *gin.Context) (*uint, data.EmployeeRole, *handlerErrors.HandlerError) {
 	claims, err := GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		return 0, "", ErrUnauthorizedAccess
+		return nil, "", ErrUnauthorizedAccess
 	}
 
 	var regionID uint
 	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
 		if claims.EmployeeType != data.RegionEmployeeType {
-			return 0, "", ErrInvalidEmployeeType
+			return nil, "", ErrInvalidEmployeeType
 		}
 		regionID = claims.WorkplaceID
 	} else {
 		regionIdStr := c.Query("regionId")
+		//TODO change
 		if regionIdStr == "" {
-			return 0, "", ErrEmptyRegionID
+			return nil, claims.Role, nil
 		}
 		id, err := strconv.ParseUint(regionIdStr, 10, 64)
 		if err != nil {
-			return 0, "", ErrInvalidRegionID
+			return nil, "", ErrInvalidStoreID
 		}
 		regionID = uint(id)
 	}
 
-	return regionID, claims.Role, nil
+	return &regionID, claims.Role, nil
 }

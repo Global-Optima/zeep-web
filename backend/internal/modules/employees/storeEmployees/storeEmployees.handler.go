@@ -2,6 +2,7 @@ package employees
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"net/http"
 	"strconv"
 
@@ -33,40 +34,46 @@ func NewStoreEmployeeHandler(service StoreEmployeeService, employeeService emplo
 }
 
 func (h *StoreEmployeeHandler) DeleteStoreEmployee(c *gin.Context) {
-	employeeIDParam := c.Param("employeeId")
-	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
+	storeEmployeeIDParam := c.Param("id")
+	storeEmployeeID, err := strconv.ParseUint(storeEmployeeIDParam, 10, 64)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreEmployee)
 		return
 	}
 
-	storeID, role, errH := h.franchiseeService.CheckFranchiseeStoreWithRole(c)
+	filter, errH := contexts.GetStoreContextFilter(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	employee, err := h.employeeService.GetEmployeeByID(uint(employeeID))
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusUnauthorized)
+		return
+	}
+
+	storeEmployee, err := h.service.GetStoreEmployeeByID(uint(storeEmployeeID), filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreEmployeeDelete)
 		return
 	}
 
-	if !data.CanManageRole(role, employee.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+	if !data.CanManageRole(claims.Role, storeEmployee.Role) {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
-	err = h.employeeService.DeleteTypedEmployee(uint(employeeID), storeID, data.StoreEmployeeType)
+	err = h.employeeService.DeleteTypedEmployee(uint(storeEmployeeID), storeEmployee.Store.ID, data.StoreEmployeeType)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreEmployeeDelete)
 		return
 	}
 
 	action := types.DeleteStoreEmployeeAuditFactory(&data.BaseDetails{
-		ID:   uint(employeeID),
-		Name: employee.FirstName + " " + employee.LastName,
-	}, struct{}{}, storeID)
+		ID:   uint(storeEmployeeID),
+		Name: storeEmployee.FirstName + " " + storeEmployee.LastName,
+	}, struct{}{}, storeEmployee.Store.ID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
@@ -89,7 +96,7 @@ func (h *StoreEmployeeHandler) CreateStoreEmployee(c *gin.Context) {
 	}
 
 	if !data.CanManageRole(role, input.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
@@ -123,13 +130,13 @@ func (h *StoreEmployeeHandler) GetStoreEmployeeByID(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
+	filter, errH := contexts.GetStoreContextFilter(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	employee, err := h.service.GetStoreEmployeeByID(uint(id), storeID)
+	employee, err := h.service.GetStoreEmployeeByID(uint(id), filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreEmployeeGet)
 		return
@@ -174,7 +181,13 @@ func (h *StoreEmployeeHandler) UpdateStoreEmployee(c *gin.Context) {
 		return
 	}
 
-	storeID, role, errH := h.franchiseeService.CheckFranchiseeStoreWithRole(c)
+	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusUnauthorized)
+		return
+	}
+
+	filter, errH := contexts.GetStoreContextFilter(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
@@ -186,13 +199,18 @@ func (h *StoreEmployeeHandler) UpdateStoreEmployee(c *gin.Context) {
 		return
 	}
 
-	storeEmployee, err := h.service.GetStoreEmployeeByID(uint(id), storeID)
+	storeEmployee, err := h.service.GetStoreEmployeeByID(uint(id), filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreEmployeeGet)
 		return
 	}
 
-	err = h.service.UpdateStoreEmployee(uint(id), storeID, &input, role)
+	if !data.CanManageRole(claims.Role, storeEmployee.Role) {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
+		return
+	}
+
+	err = h.service.UpdateStoreEmployee(uint(id), filter, &input, claims.Role)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreEmployeeUpdate)
 		return
@@ -201,7 +219,7 @@ func (h *StoreEmployeeHandler) UpdateStoreEmployee(c *gin.Context) {
 	action := types.UpdateStoreEmployeeAuditFactory(&data.BaseDetails{
 		ID:   uint(id),
 		Name: storeEmployee.FirstName + " " + storeEmployee.LastName,
-	}, &input, storeID)
+	}, &input, storeEmployee.Store.ID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
