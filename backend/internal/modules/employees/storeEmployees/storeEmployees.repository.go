@@ -3,6 +3,7 @@ package employees
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -12,9 +13,9 @@ import (
 
 type StoreEmployeeRepository interface {
 	GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]data.StoreEmployee, error)
-	GetStoreEmployeeByID(id, storeID uint) (*data.StoreEmployee, error)
+	GetStoreEmployeeByID(id uint, filter *contexts.StoreContextFilter) (*data.StoreEmployee, error)
 	GetAllStoreEmployees(storeID uint) ([]data.StoreEmployee, error)
-	UpdateStoreEmployee(id uint, storeID uint, updateModels *types.UpdateStoreEmployeeModels) error
+	UpdateStoreEmployee(id uint, filter *contexts.StoreContextFilter, updateModels *types.UpdateStoreEmployeeModels) error
 }
 
 type storeEmployeeRepository struct {
@@ -64,33 +65,46 @@ func (r *storeEmployeeRepository) GetStoreEmployees(storeID uint, filter *employ
 	return storeEmployees, nil
 }
 
-func (r *storeEmployeeRepository) GetStoreEmployeeByID(id, storeID uint) (*data.StoreEmployee, error) {
+func (r *storeEmployeeRepository) GetStoreEmployeeByID(id uint, filter *contexts.StoreContextFilter) (*data.StoreEmployee, error) {
 	var storeEmployee data.StoreEmployee
-	err := r.db.Model(&data.StoreEmployee{}).
+	query := r.db.Model(&data.StoreEmployee{}).
 		Preload("Employee.Workdays").
 		Preload("Store.FacilityAddress").
-		Where("id = ? AND store_id = ?", id, storeID).
-		First(&storeEmployee).Error
+		Preload("Store.Warehouse.FacilityAddress").
+		Preload("Store.Warehouse.Region").
+		Where("id = ?", id)
+
+	if filter != nil {
+		if filter.StoreID != nil {
+			query = query.Where("store_id = ?", *filter.StoreID)
+		}
+		if filter.FranchiseeID != nil {
+			query = query.Joins("JOIN stores ON stores.id = store_employees.store_id").
+				Where("stores.franchise_id = ?", *filter.FranchiseeID)
+		}
+	}
+
+	err := query.First(&storeEmployee).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve store employee by ID: %w", err)
 	}
 	return &storeEmployee, nil
 }
 
-func (r *storeEmployeeRepository) UpdateStoreEmployee(id uint, storeID uint, updateModels *types.UpdateStoreEmployeeModels) error {
+func (r *storeEmployeeRepository) UpdateStoreEmployee(id uint, filter *contexts.StoreContextFilter, updateModels *types.UpdateStoreEmployeeModels) error {
 	if updateModels == nil {
 		return employeesTypes.ErrNothingToUpdate
 	}
 
-	err := r.db.Transaction(func(tx *gorm.DB) error {
-		var existingStoreEmployee data.StoreEmployee
-		r.db.Model(&data.StoreEmployee{}).
-			Where("id = ? AND store_id = ?", id, storeID).
-			First(&existingStoreEmployee)
+	existingStoreEmployee, err := r.GetStoreEmployeeByID(id, filter)
+	if err != nil {
+		return err
+	}
 
+	err = r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels.StoreEmployee != nil {
 			err := tx.Model(&data.StoreEmployee{}).
-				Where("id = ? AND store_id = ?", id, storeID).
+				Where("id = ?", id).
 				Updates(updateModels.StoreEmployee).Error
 			if err != nil {
 				return err

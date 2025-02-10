@@ -1,16 +1,17 @@
 package employees
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -32,10 +33,10 @@ func NewRegionEmployeeHandler(service RegionEmployeeService, employeeService emp
 }
 
 func (h *RegionEmployeeHandler) DeleteRegionEmployee(c *gin.Context) {
-	employeeIDParam := c.Param("employeeId")
-	employeeID, err := strconv.ParseUint(employeeIDParam, 10, 64)
+	regionEmployeeIDParam := c.Param("id")
+	regionEmployeeID, err := strconv.ParseUint(regionEmployeeIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
 		return
 	}
 
@@ -45,33 +46,33 @@ func (h *RegionEmployeeHandler) DeleteRegionEmployee(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.employeeService.GetEmployeeByID(uint(employeeID))
+	regionEmployee, err := h.service.GetRegionEmployeeByID(uint(regionEmployeeID), regionID)
 	if err != nil {
-		utils.SendBadRequestError(c, "failed to delete region employee: employee not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeGet)
 		return
 	}
 
-	if !data.CanManageRole(role, employee.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+	if !data.CanManageRole(role, regionEmployee.Role) {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
-	err = h.employeeService.DeleteTypedEmployee(uint(employeeID), regionID, data.RegionEmployeeType)
+	err = h.employeeService.DeleteTypedEmployee(uint(regionEmployeeID), regionEmployee.Region.ID, data.RegionEmployeeType)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to delete region employee")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeDelete)
 		return
 	}
 
 	action := types.DeleteRegionEmployeeAuditFactory(&data.BaseDetails{
-		ID:   uint(employeeID),
-		Name: employee.FirstName + " " + employee.LastName,
-	}, struct{}{}, regionID)
+		ID:   uint(regionEmployeeID),
+		Name: regionEmployee.FirstName + " " + regionEmployee.LastName,
+	}, struct{}{}, regionEmployee.Region.ID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, "region employee deleted successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response200RegionEmployeeDelete)
 }
 
 func (h *RegionEmployeeHandler) CreateRegionEmployee(c *gin.Context) {
@@ -81,44 +82,49 @@ func (h *RegionEmployeeHandler) CreateRegionEmployee(c *gin.Context) {
 		return
 	}
 
+	if regionID == nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
+		return
+	}
+
 	var input employeesTypes.CreateEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	if !data.CanManageRole(role, input.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
-	id, err := h.service.CreateRegionEmployee(regionID, &input)
+	id, err := h.service.CreateRegionEmployee(*regionID, &input)
 	if err != nil {
 		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
-			utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+			localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
 			return
 		}
-		utils.SendInternalServerError(c, "failed to create region employee")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeCreate)
 		return
 	}
 
 	action := types.CreateRegionEmployeeAuditFactory(&data.BaseDetails{
 		ID:   id,
 		Name: input.FirstName + " " + input.LastName,
-	}, &input, regionID)
+	}, &input, *regionID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "region employee created successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response201RegionEmployee)
 }
 
 func (h *RegionEmployeeHandler) GetRegionEmployeeByID(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
 		return
 	}
 
@@ -130,12 +136,12 @@ func (h *RegionEmployeeHandler) GetRegionEmployeeByID(c *gin.Context) {
 
 	employee, err := h.service.GetRegionEmployeeByID(uint(id), warehouseID)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve warehouse employee details")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeGet)
 		return
 	}
 
 	if employee == nil {
-		utils.SendErrorWithStatus(c, "employee not found", http.StatusNotFound)
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -150,15 +156,20 @@ func (h *RegionEmployeeHandler) GetRegionEmployees(c *gin.Context) {
 		return
 	}
 
-	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.RegionEmployee{})
-	if err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+	if regionID == nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
 		return
 	}
 
-	regionEmployees, err := h.service.GetRegionEmployees(regionID, &filter)
+	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.RegionEmployee{})
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve region managers")
+		localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
+		return
+	}
+
+	regionEmployees, err := h.service.GetRegionEmployees(*regionID, &filter)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeGet)
 		return
 	}
 
@@ -168,7 +179,7 @@ func (h *RegionEmployeeHandler) GetRegionEmployees(c *gin.Context) {
 func (h *RegionEmployeeHandler) UpdateRegionEmployee(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
 		return
 	}
 
@@ -180,48 +191,49 @@ func (h *RegionEmployeeHandler) UpdateRegionEmployee(c *gin.Context) {
 
 	var input types.UpdateRegionEmployeeDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, "invalid input")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	regionEmployee, err := h.service.GetRegionEmployeeByID(uint(id), regionID)
 	if err != nil {
-		utils.SendBadRequestError(c, "failed to update region manager: employee not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
+
 	if !data.CanManageRole(role, regionEmployee.Role) {
-		utils.SendErrorWithStatus(c, employeesTypes.ErrNotAllowedToManageTheRole.Error(), http.StatusForbidden)
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		return
 	}
 
 	if err := h.service.UpdateRegionEmployee(uint(id), regionID, &input, role); err != nil {
-		utils.SendInternalServerError(c, "failed to update region manager")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeUpdate)
 		return
 	}
 
 	action := types.UpdateRegionEmployeeAuditFactory(&data.BaseDetails{
 		ID:   uint(id),
 		Name: regionEmployee.FirstName + " " + regionEmployee.LastName,
-	}, &input, regionID)
+	}, &input, regionEmployee.Region.ID)
 
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "region manager updated successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200RegionEmployeeUpdate)
 }
 
 func (h *RegionEmployeeHandler) GetRegionAccounts(c *gin.Context) {
 	regionIdStr := c.Param("id")
 	regionID, err := strconv.ParseUint(regionIdStr, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid region ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
 		return
 	}
 
 	regionEmployees, err := h.service.GetAllRegionEmployees(uint(regionID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve region employees")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeGet)
 		return
 	}
 

@@ -1,6 +1,7 @@
 package franchisees
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -143,9 +144,15 @@ func (h *FranchiseeHandler) GetMyFranchisee(c *gin.Context) {
 	franchiseeID, errH := contexts.GetFranchiseeId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
 	}
 
-	franchisee, err := h.service.GetFranchiseeByID(franchiseeID)
+	if franchiseeID == nil {
+		utils.SendErrorWithStatus(c, "nil franchisee ID", http.StatusBadRequest)
+		return
+	}
+
+	franchisee, err := h.service.GetFranchiseeByID(*franchiseeID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve franchisee")
 		return
