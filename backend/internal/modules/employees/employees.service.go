@@ -23,12 +23,6 @@ type EmployeeService interface {
 	GetAllRoles() ([]types.EmployeeTypeRoles, error)
 	GetEmployeeWorkday(workdayID uint) (*types.EmployeeWorkdayDTO, error)
 	GetEmployeeWorkdays(employeeID uint) ([]types.EmployeeWorkdayDTO, error)
-
-	GetAllWarehouseEmployees(warehouseID uint) ([]types.EmployeeAccountDTO, error)
-	GetAllStoreEmployees(storeID uint) ([]types.EmployeeAccountDTO, error)
-	GetAllRegionEmployees(regionID uint) ([]types.EmployeeAccountDTO, error)
-	GetAllFranchiseeEmployees(franchiseeID uint) ([]types.EmployeeAccountDTO, error)
-	GetAllAdminEmployees() ([]types.EmployeeAccountDTO, error)
 }
 
 type employeeService struct {
@@ -229,102 +223,6 @@ func (s *employeeService) GetEmployeeWorkdays(employeeID uint) ([]types.Employee
 	dtos := make([]types.EmployeeWorkdayDTO, len(workdays))
 	for i, workday := range workdays {
 		dtos[i] = *types.MapToEmployeeWorkdayDTO(&workday)
-	}
-
-	return dtos, nil
-}
-
-func (s *employeeService) GetAllWarehouseEmployees(warehouseID uint) ([]types.EmployeeAccountDTO, error) {
-	if warehouseID == 0 {
-		return nil, utils.WrapError("invalid warehouse ID", types.ErrValidation)
-	}
-
-	warehouseEmployees, err := s.repo.GetAllWarehouseEmployees(warehouseID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve all warehouse employees", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	dtos := make([]types.EmployeeAccountDTO, len(warehouseEmployees))
-	for i, employee := range warehouseEmployees {
-		dtos[i] = *types.MapToEmployeeAccountDTO(&employee)
-	}
-
-	return dtos, nil
-}
-
-func (s *employeeService) GetAllStoreEmployees(storeID uint) ([]types.EmployeeAccountDTO, error) {
-	if storeID == 0 {
-		return nil, utils.WrapError("invalid store ID", types.ErrValidation)
-	}
-
-	storeEmployees, err := s.repo.GetAllStoreEmployees(storeID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve all store employees", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	dtos := make([]types.EmployeeAccountDTO, len(storeEmployees))
-	for i, storeEmployee := range storeEmployees {
-		dtos[i] = *types.MapToEmployeeAccountDTO(&storeEmployee)
-	}
-
-	return dtos, nil
-}
-
-func (s *employeeService) GetAllRegionEmployees(regionID uint) ([]types.EmployeeAccountDTO, error) {
-	if regionID == 0 {
-		return nil, utils.WrapError("invalid region ID", types.ErrValidation)
-	}
-
-	storeEmployees, err := s.repo.GetAllRegionEmployees(regionID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve all region employees", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	dtos := make([]types.EmployeeAccountDTO, len(storeEmployees))
-	for i, storeEmployee := range storeEmployees {
-		dtos[i] = *types.MapToEmployeeAccountDTO(&storeEmployee)
-	}
-
-	return dtos, nil
-}
-
-func (s *employeeService) GetAllFranchiseeEmployees(franchiseeID uint) ([]types.EmployeeAccountDTO, error) {
-	if franchiseeID == 0 {
-		return nil, utils.WrapError("invalid franchisee ID", types.ErrValidation)
-	}
-
-	storeEmployees, err := s.repo.GetAllFranchiseeEmployees(franchiseeID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve all franchisee employees", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	dtos := make([]types.EmployeeAccountDTO, len(storeEmployees))
-	for i, storeEmployee := range storeEmployees {
-		dtos[i] = *types.MapToEmployeeAccountDTO(&storeEmployee)
-	}
-
-	return dtos, nil
-}
-
-func (s *employeeService) GetAllAdminEmployees() ([]types.EmployeeAccountDTO, error) {
-	adminEmployees, err := s.repo.GetAllAdminEmployees()
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve all admin employees", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	dtos := make([]types.EmployeeAccountDTO, len(adminEmployees))
-	for i, employee := range adminEmployees {
-		dtos[i] = *types.MapToEmployeeAccountDTO(&employee)
 	}
 
 	return dtos, nil

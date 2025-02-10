@@ -13,6 +13,7 @@ import (
 type StoreEmployeeRepository interface {
 	GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]data.StoreEmployee, error)
 	GetStoreEmployeeByID(id, storeID uint) (*data.StoreEmployee, error)
+	GetAllStoreEmployees(storeID uint) ([]data.StoreEmployee, error)
 	UpdateStoreEmployee(id uint, storeID uint, updateModels *types.UpdateStoreEmployeeModels) error
 }
 
@@ -109,4 +110,20 @@ func (r *storeEmployeeRepository) UpdateStoreEmployee(id uint, storeID uint, upd
 		return err
 	}
 	return nil
+}
+
+func (r *storeEmployeeRepository) GetAllStoreEmployees(storeID uint) ([]data.StoreEmployee, error) {
+	var storeEmployees []data.StoreEmployee
+
+	err := r.db.Model(&data.StoreEmployee{}).
+		Joins("INNER JOIN employees ON store_employees.employee_id = employees.id").
+		Where("store_id = ?", storeID).
+		Preload("Employee").
+		Find(&storeEmployees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return storeEmployees, nil
 }
