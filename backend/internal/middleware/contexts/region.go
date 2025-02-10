@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
+	"strconv"
 )
 
 var (
@@ -64,7 +65,6 @@ func GetRegionIdWithRole(c *gin.Context) (*uint, data.EmployeeRole, *handlerErro
 			return nil, "", ErrInvalidStoreID
 		}
 		regionID = uint(id)
-		return nil, claims.Role, nil
 	}
 
 	return &regionID, claims.Role, nil
