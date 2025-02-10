@@ -52,13 +52,21 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
+	var filter types.GetBaristaOrdersFilter
+
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
+		return
+	}
+
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
+	filter.StoreID = &storeID
 
-	orders, err := h.service.GetAllBaristaOrders(uint(storeID))
+	orders, err := h.service.GetAllBaristaOrders(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch orders")
 		return
@@ -249,11 +257,13 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 }
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
+	var filter types.GetBaristaOrdersFilter
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
+	filter.StoreID = &storeID
 
 	conn, err := UpgradeConnection(c)
 	if err != nil {
@@ -261,7 +271,7 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 		return
 	}
 
-	initialOrders, err := h.service.GetAllBaristaOrders(uint(storeID))
+	initialOrders, err := h.service.GetAllBaristaOrders(filter)
 
 	if err != nil {
 		log.Printf("Failed to fetch initial orders for store %d: %v", storeID, err)
@@ -356,4 +366,25 @@ func (h *OrderHandler) AcceptSubOrder(c *gin.Context) {
 
 	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
+}
+
+func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
+	subOrderID, err := utils.ParseParam(c, "subOrderId")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
+		return
+	}
+
+	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(uint(subOrderID))
+	if err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to update suborder status: %v", err))
+		return
+	}
+
+	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	if err == nil {
+		BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
+	}
+
+	utils.SendSuccessResponse(c, updatedSuborderDTO)
 }
