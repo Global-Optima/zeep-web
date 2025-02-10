@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
+	"strconv"
 )
 
 var (
@@ -27,7 +28,16 @@ func GetFranchiseeId(c *gin.Context) (*uint, *handlerErrors.HandlerError) {
 		}
 		franchiseeID = claims.WorkplaceID
 	} else {
-		return nil, nil
+		franchiseeIdStr := c.Query("franchiseeId")
+		//TODO change
+		if franchiseeIdStr == "" {
+			return nil, nil
+		}
+		id, err := strconv.ParseUint(franchiseeIdStr, 10, 64)
+		if err != nil {
+			return nil, ErrInvalidStoreID
+		}
+		franchiseeID = uint(id)
 	}
 
 	return &franchiseeID, nil
@@ -46,7 +56,16 @@ func GetFranchiseeIdWithRole(c *gin.Context) (*uint, data.EmployeeRole, *handler
 		}
 		franchiseeID = claims.WorkplaceID
 	} else {
-		return nil, claims.Role, nil
+		franchiseeIdStr := c.Query("franchiseeId")
+		//TODO change
+		if franchiseeIdStr == "" {
+			return nil, claims.Role, nil
+		}
+		id, err := strconv.ParseUint(franchiseeIdStr, 10, 64)
+		if err != nil {
+			return nil, "", ErrInvalidStoreID
+		}
+		franchiseeID = uint(id)
 	}
 
 	return &franchiseeID, claims.Role, nil

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
+	"strconv"
 )
 
 var (
@@ -27,9 +28,17 @@ func GetRegionId(c *gin.Context) (*uint, *handlerErrors.HandlerError) {
 		}
 		regionID = claims.WorkplaceID
 	} else {
-		return nil, nil
+		regionIdStr := c.Query("regionId")
+		//TODO change
+		if regionIdStr == "" {
+			return nil, nil
+		}
+		id, err := strconv.ParseUint(regionIdStr, 10, 64)
+		if err != nil {
+			return nil, ErrInvalidStoreID
+		}
+		regionID = uint(id)
 	}
-
 	return &regionID, nil
 }
 
@@ -46,7 +55,16 @@ func GetRegionIdWithRole(c *gin.Context) (*uint, data.EmployeeRole, *handlerErro
 		}
 		regionID = claims.WorkplaceID
 	} else {
-		return nil, claims.Role, nil
+		regionIdStr := c.Query("regionId")
+		//TODO change
+		if regionIdStr == "" {
+			return nil, claims.Role, nil
+		}
+		id, err := strconv.ParseUint(regionIdStr, 10, 64)
+		if err != nil {
+			return nil, "", ErrInvalidStoreID
+		}
+		regionID = uint(id)
 	}
 
 	return &regionID, claims.Role, nil
