@@ -275,7 +275,9 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.GET("/:orderId/receipt", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GeneratePDFReceipt)                      // Store manager and barista
 		router.GET("/:orderId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrderDetails)                             // all franchise, stores
 
-		router.GET("/export", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.ExportOrders)                            // franchise and store management
+		router.GET("/export", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.ExportOrders) // franchise and store management
+		router.PUT("/suborders/:subOrderId/status-change", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.ChangeSubOrderStatus)
+		router.PUT("/suborders/:subOrderId/accept", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.AcceptSubOrder)
 		router.PUT("/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteSubOrderByBarcode) // Store manager and barista
 		router.GET("/suborders/:subOrderId/barcode", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetSuborderBarcode)         // Store manager and barista
 	}

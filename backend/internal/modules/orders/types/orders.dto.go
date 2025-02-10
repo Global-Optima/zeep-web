@@ -32,6 +32,7 @@ type ValidateCustomerNameDTO struct {
 
 type OrderStatusesCountDTO struct {
 	ALL         int64 `json:"ALL"`
+	PENDING     int64 `json:"PENDING"`
 	PREPARING   int64 `json:"PREPARING"`
 	COMPLETED   int64 `json:"COMPLETED"`
 	IN_DELIVERY int64 `json:"IN_DELIVERY"`
@@ -157,4 +158,10 @@ type OrderExportDTO struct {
 	StoreName       string                   `json:"storeName"`
 	Suborders       []SuborderDTO            `json:"suborders"`
 	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"`
+}
+
+type GetBaristaOrdersFilter struct {
+	StoreID          *uint   `form:"storeId" binding:"omitempty"`
+	TimeZoneLocation *string `form:"timezone" binding:"omitempty"`
+	TimeZoneOffset   *uint   `form:"timezoneOffset" binding:"omitempty"`
 }

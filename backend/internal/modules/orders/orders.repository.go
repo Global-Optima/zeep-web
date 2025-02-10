@@ -13,7 +13,7 @@ import (
 
 type OrderRepository interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error)
-	GetAllBaristaOrders(storeID uint) ([]data.Order, error)
+	GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]data.Order, error)
 	GetOrderById(orderID uint) (*data.Order, error)
 	CreateOrder(order *data.Order) error
 	UpdateOrderStatus(orderID uint, status data.OrderStatus) error
@@ -138,19 +138,45 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 	return orders, nil
 }
 
-func (r *orderRepository) GetAllBaristaOrders(storeID uint) ([]data.Order, error) {
+func (r *orderRepository) GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]data.Order, error) {
 	var orders []data.Order
 
-	now := time.Now().UTC()
+	var location *time.Location
+	var now time.Time
 
-	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, time.UTC)
+	// Determine which location to use.
+	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
+		var err error
+		location, err = time.LoadLocation(*filter.TimeZoneLocation)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load timezone: %w", err)
+		}
+		now = time.Now().In(location)
+	} else if filter.TimeZoneOffset != nil {
+		offsetSeconds := int(*filter.TimeZoneOffset) * 60
+		location = time.FixedZone("offset", offsetSeconds)
+		now = time.Now().UTC().In(location)
+	} else {
+		location = time.UTC
+		now = time.Now().UTC()
+	}
 
-	query := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
+
+	startOfTodayUTC := startOfToday.UTC()
+	endOfTodayUTC := endOfToday.UTC()
+
+	if filter.StoreID == nil {
+		return nil, fmt.Errorf("storeID is required")
+	}
+
+	query := r.db.
+		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
-		Where("store_id = ?", storeID).
-		Where("created_at >= ? AND created_at <= ?", startOfToday, endOfToday)
+		Where("store_id = ?", *filter.StoreID).
+		Where("created_at >= ? AND created_at <= ?", startOfTodayUTC, endOfTodayUTC)
 
 	err := query.Order("created_at asc").Find(&orders).Error
 	if err != nil {
@@ -183,6 +209,7 @@ func (r *orderRepository) GetStatusesCount(storeID uint) (map[data.OrderStatus]i
 	}
 
 	statusCount := map[data.OrderStatus]int64{
+		data.OrderStatusPending:    0,
 		data.OrderStatusPreparing:  0,
 		data.OrderStatusCompleted:  0,
 		data.OrderStatusInDelivery: 0,
@@ -225,7 +252,7 @@ func (r *orderRepository) DeleteOrder(orderID uint) error {
 
 func (r *orderRepository) GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error) {
 	var suborders []data.Suborder
-	err := r.db.Preload("StoreAdditives").Where("order_id = ?", orderID).Find(&suborders).Error
+	err := r.db.Preload("SuborderAdditives").Where("order_id = ?", orderID).Find(&suborders).Error
 	if err != nil {
 		return nil, err
 	}

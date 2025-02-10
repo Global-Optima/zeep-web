@@ -27,7 +27,7 @@ func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices 
 			suborders = append(suborders, data.Suborder{
 				StoreProductSizeID: productDTO.StoreProductSizeID,
 				Price:              suborderTotal,
-				Status:             data.SubOrderStatusPreparing,
+				Status:             data.SubOrderStatusPending,
 				SuborderAdditives:  storeAdditives,
 			})
 
@@ -41,7 +41,7 @@ func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices 
 		StoreEmployeeID:   createOrderDTO.StoreEmployeeID,
 		StoreID:           createOrderDTO.StoreID,
 		DeliveryAddressID: createOrderDTO.DeliveryAddressID,
-		Status:            data.OrderStatusPreparing,
+		Status:            data.OrderStatusPending,
 		Suborders:         suborders,
 	}, total
 }

@@ -3,12 +3,13 @@ package orders
 import (
 	"bytes"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/png"
 	"sync"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
@@ -34,7 +35,7 @@ import (
 
 type OrderService interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error)
-	GetAllBaristaOrders(storeID uint) ([]types.OrderDTO, error)
+	GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]types.OrderDTO, error)
 	GetSubOrders(orderID uint) ([]types.SuborderDTO, error)
 	GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error)
 	CreateOrder(storeId uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
@@ -47,6 +48,9 @@ type OrderService interface {
 	GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, error)
 	ExportOrders(filter *types.OrdersExportFilterQuery) ([]types.OrderExportDTO, error)
 	GenerateSuborderBarcodePDF(suborderID uint) ([]byte, error)
+
+	AcceptSubOrder(subOrderID uint) error
+	AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDTO, error)
 }
 
 type orderValidationResults struct {
@@ -103,8 +107,8 @@ func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderD
 	return orderDTOs, nil
 }
 
-func (s *orderService) GetAllBaristaOrders(storeID uint) ([]types.OrderDTO, error) {
-	orders, err := s.orderRepo.GetAllBaristaOrders(storeID)
+func (s *orderService) GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]types.OrderDTO, error) {
+	orders, err := s.orderRepo.GetAllBaristaOrders(filter)
 
 	if err != nil {
 		wrappedErr := fmt.Errorf("error getting barista orders: %w", err)
@@ -154,8 +158,9 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	}
 
 	createOrderDTO.StoreID = storeID
-	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO,
-		validations.ProductPrices, validations.AdditivePrices)
+	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, validations.ProductPrices, validations.AdditivePrices)
+
+	order.Status = data.OrderStatusPending
 	order.Total = total
 
 	err = s.orderRepo.CreateOrder(&order)
@@ -268,6 +273,9 @@ func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, erro
 	if suborder == nil {
 		return nil, fmt.Errorf("no suborder found for ID %d", suborderID)
 	}
+	// if suborder.Status != data.SubOrderStatusPending {
+	// 	return nil, fmt.Errorf("barcode generation allowed only for pending suborders")
+	// }
 
 	// 2. Encode the barcode data using Code-128
 	barcodeData := fmt.Sprintf("suborder-%d", suborder.ID)
@@ -541,6 +549,7 @@ func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountD
 	}
 
 	dto := types.OrderStatusesCountDTO{
+		PENDING:     countsMap[data.OrderStatusPending],
 		PREPARING:   countsMap[data.OrderStatusPreparing],
 		COMPLETED:   countsMap[data.OrderStatusCompleted],
 		IN_DELIVERY: countsMap[data.OrderStatusInDelivery],
@@ -548,7 +557,7 @@ func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountD
 		CANCELLED:   countsMap[data.OrderStatusCancelled],
 	}
 
-	dto.ALL = dto.PREPARING + dto.COMPLETED + dto.IN_DELIVERY + dto.DELIVERED + dto.CANCELLED
+	dto.ALL = dto.PENDING + dto.PREPARING + dto.COMPLETED + dto.IN_DELIVERY + dto.DELIVERED + dto.CANCELLED
 
 	return dto, nil
 }
@@ -681,4 +690,128 @@ func (s *orderService) ExportOrders(filter *types.OrdersExportFilterQuery) ([]ty
 	}
 
 	return exports, nil
+}
+
+func (s *orderService) AcceptSubOrder(subOrderID uint) error {
+	suborder, err := s.orderRepo.GetSuborderByID(subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve suborder: %w", err)
+	}
+	if suborder == nil {
+		return fmt.Errorf("suborder %d not found", subOrderID)
+	}
+
+	if suborder.Status != data.SubOrderStatusPending {
+		return fmt.Errorf("suborder %d is not pending", subOrderID)
+	}
+
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusPreparing); err != nil {
+		return fmt.Errorf("failed to update suborder status: %w", err)
+	}
+
+	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
+	}
+
+	suborders, err := s.orderRepo.GetSubOrdersByOrderID(order.ID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch suborders for order %d: %w", order.ID, err)
+	}
+
+	allAccepted := true
+	for _, so := range suborders {
+		if so.Status == data.SubOrderStatusPending {
+			allAccepted = false
+			break
+		}
+	}
+
+	// If all suborders have been accepted (i.e. transitioned to PREPARING or later)
+	// and the order is still in the PENDING state, update the order's status.
+	if allAccepted && order.Status == data.OrderStatusPending {
+		if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
+			return fmt.Errorf("failed to update order status: %w", err)
+		}
+	}
+	return nil
+}
+
+var allowedTransitions = map[data.SubOrderStatus]data.SubOrderStatus{
+	data.SubOrderStatusPending:   data.SubOrderStatusPreparing,
+	data.SubOrderStatusPreparing: data.SubOrderStatusCompleted,
+}
+
+func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDTO, error) {
+	suborder, err := s.orderRepo.GetSuborderByID(subOrderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve suborder: %w", err)
+	}
+	if suborder == nil {
+		return nil, fmt.Errorf("suborder %d not found", subOrderID)
+	}
+
+	currentStatus := suborder.Status
+	nextStatus, ok := allowedTransitions[currentStatus]
+	if !ok {
+		return nil, fmt.Errorf("no allowed transition from status %s", currentStatus)
+	}
+
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, nextStatus); err != nil {
+		return nil, fmt.Errorf("failed to update suborder status: %w", err)
+	}
+
+	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
+	}
+
+	suborders, err := s.orderRepo.GetSubOrdersByOrderID(order.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch suborders for order %d: %w", order.ID, err)
+	}
+
+	if nextStatus == data.SubOrderStatusCompleted {
+		allCompleted := true
+		for _, so := range suborders {
+			if so.Status != data.SubOrderStatusCompleted {
+				allCompleted = false
+				break
+			}
+		}
+		if allCompleted {
+			var newOrderStatus data.OrderStatus
+			// Example logic: if the order has a delivery address, mark it as IN_DELIVERY;
+			// otherwise, mark it as COMPLETED.
+			if order.DeliveryAddressID != nil {
+				newOrderStatus = data.OrderStatusInDelivery
+			} else {
+				newOrderStatus = data.OrderStatusCompleted
+			}
+			if err := s.orderRepo.UpdateOrderStatus(order.ID, newOrderStatus); err != nil {
+				return nil, fmt.Errorf("failed to update order status: %w", err)
+			}
+		}
+	} else if nextStatus == data.SubOrderStatusPreparing {
+		allNotPending := true
+		for _, so := range suborders {
+			if so.Status == data.SubOrderStatusPending {
+				allNotPending = false
+				break
+			}
+		}
+
+		if allNotPending && order.Status == data.OrderStatusPending {
+			if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
+				return nil, fmt.Errorf("failed to update order status: %w", err)
+			}
+		}
+	}
+
+	updatedSuborder, err := s.orderRepo.GetSuborderByID(subOrderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch updated suborder: %w", err)
+	}
+	dto := types.ConvertSuborderToDTO(updatedSuborder)
+	return &dto, nil
 }
