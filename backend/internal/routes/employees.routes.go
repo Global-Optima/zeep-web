@@ -143,9 +143,9 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	{
 		router.GET("/:id", handler.GetStoreByID)
 		router.GET("", handler.GetStoresByFranchisee)
-		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStore)       // franchise owner, manager
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStore)    // franchise owner, manager
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStore) // franchise owner, manager
+		router.POST("", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.CreateStore)       // franchise owner, manager
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.UpdateStore)    // franchise owner, manager
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.DeleteStore) // franchise owner, manager
 	}
 }
 
