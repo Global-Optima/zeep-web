@@ -35,9 +35,9 @@ import (
 
 type OrderService interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error)
-	GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]types.OrderDTO, error)
+	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]types.OrderDTO, error)
 	GetSubOrders(orderID uint) ([]types.SuborderDTO, error)
-	GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error)
+	GetStatusesCount(filter types.OrdersTimeZoneFilter) (types.OrderStatusesCountDTO, error)
 	CreateOrder(storeId uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
 	CompleteSubOrder(orderID, subOrderID uint) error
 	CompleteSubOrderByBarcode(subOrderID uint) (*types.SuborderDTO, error)
@@ -107,7 +107,7 @@ func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderD
 	return orderDTOs, nil
 }
 
-func (s *orderService) GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]types.OrderDTO, error) {
+func (s *orderService) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetAllBaristaOrders(filter)
 
 	if err != nil {
@@ -540,8 +540,8 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	return pdf.GeneratePDFReceipt(detailsPDF)
 }
 
-func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error) {
-	countsMap, err := s.orderRepo.GetStatusesCount(storeID)
+func (s *orderService) GetStatusesCount(filter types.OrdersTimeZoneFilter) (types.OrderStatusesCountDTO, error) {
+	countsMap, err := s.orderRepo.GetStatusesCount(filter)
 	if err != nil {
 		wrappedErr := fmt.Errorf("error couting statuses: %w", err)
 		s.logger.Error(wrappedErr.Error())

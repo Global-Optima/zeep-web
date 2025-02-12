@@ -160,7 +160,7 @@ type OrderExportDTO struct {
 	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"`
 }
 
-type GetBaristaOrdersFilter struct {
+type OrdersTimeZoneFilter struct {
 	StoreID          *uint   `form:"storeId" binding:"omitempty"`
 	TimeZoneLocation *string `form:"timezone" binding:"omitempty"`
 	TimeZoneOffset   *uint   `form:"timezoneOffset" binding:"omitempty"`
