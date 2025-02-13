@@ -135,7 +135,11 @@ func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
 		return
 	}
 
-	warehouses, err := h.service.GetWarehousesByRegion(regionID, &filter)
+	if regionID != nil {
+		filter.RegionID = regionID
+	}
+
+	warehouses, err := h.service.GetWarehouses(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve warehouses")
 		return

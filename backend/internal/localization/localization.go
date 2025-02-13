@@ -6,10 +6,25 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"unicode"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
+)
+
+const (
+	Kazakh  Locale = "kk"
+	Russian Locale = "ru"
+	English Locale = "en"
+
+	DEFAULT_LOCALE = Russian
+)
+
+var (
+	localizerInitOnce sync.Once
+	localizers        = make(map[Locale]*i18n.Localizer)
+	defaultLocalizer  *i18n.Localizer
 )
 
 type LocalizedMessage struct {
@@ -39,51 +54,53 @@ func ToLocale(localeStr string) Locale {
 	return DEFAULT_LOCALE
 }
 
-const (
-	Kazakh  Locale = "kk"
-	Russian Locale = "ru"
-	English Locale = "en"
+func InitLocalizer(path *string) error {
+	var localizerInitError error
+	localizerInitOnce.Do(func() {
+		bundle := i18n.NewBundle(language.English)
+		bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
 
-	DEFAULT_LOCALE = Russian
-)
-
-var localizers = make(map[Locale]*i18n.Localizer)
-var defaultLocalizer *i18n.Localizer
-
-func InitLocalizer() error {
-	bundle := i18n.NewBundle(language.English)
-	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
-
-	// Resolve absolute path
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
-	}
-	dir := filepath.Join(workingDir, "internal/localization/languages")
-
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		return fmt.Errorf("failed to read directory %s: %w", dir, err)
-	}
-
-	for _, file := range files {
-		if filepath.Ext(file.Name()) == ".json" {
-			_, err := bundle.LoadMessageFile(filepath.Join(dir, file.Name()))
+		var dir string
+		// Resolve absolute path
+		if path != nil {
+			dir = *path
+		} else {
+			workingDir, err := os.Getwd()
 			if err != nil {
-				return fmt.Errorf("failed to load message file %s: %w", file.Name(), err)
+				localizerInitError = fmt.Errorf("failed to get working directory: %w", err)
+				return
+			}
+			dir = filepath.Join(workingDir, "internal/localization/languages")
+		}
+
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			localizerInitError = fmt.Errorf("failed to read directory %s: %w", dir, err)
+			return
+		}
+
+		for _, file := range files {
+			if filepath.Ext(file.Name()) == ".json" {
+				_, err := bundle.LoadMessageFile(filepath.Join(dir, file.Name()))
+				if err != nil {
+					localizerInitError = fmt.Errorf("failed to load message file %s: %w", file.Name(), err)
+					return
+				}
 			}
 		}
-	}
 
-	for _, locale := range []Locale{Kazakh, Russian, English} {
-		if locale == DEFAULT_LOCALE {
-			defaultLocalizer = i18n.NewLocalizer(bundle, DEFAULT_LOCALE.ToString())
-			localizers[locale] = defaultLocalizer
-			continue
+		for _, locale := range []Locale{Kazakh, Russian, English} {
+			if locale == DEFAULT_LOCALE {
+				defaultLocalizer = i18n.NewLocalizer(bundle, DEFAULT_LOCALE.ToString())
+				localizers[locale] = defaultLocalizer
+				continue
+			}
+			localizers[locale] = i18n.NewLocalizer(bundle, locale.ToString())
 		}
-		localizers[locale] = i18n.NewLocalizer(bundle, locale.ToString())
+	})
+	if localizerInitError != nil {
+		return localizerInitError
 	}
-
 	return nil
 }
 
