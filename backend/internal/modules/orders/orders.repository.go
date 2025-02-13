@@ -13,13 +13,13 @@ import (
 
 type OrderRepository interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error)
-	GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]data.Order, error)
+	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]data.Order, error)
 	GetOrderById(orderID uint) (*data.Order, error)
 	CreateOrder(order *data.Order) error
 	UpdateOrderStatus(orderID uint, status data.OrderStatus) error
 	DeleteOrder(orderID uint) error
 
-	GetStatusesCount(storeID uint) (map[data.OrderStatus]int64, error)
+	GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error)
 
 	GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error)
 	UpdateSubOrderStatus(subOrderID uint, status data.SubOrderStatus) error
@@ -138,7 +138,7 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 	return orders, nil
 }
 
-func (r *orderRepository) GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]data.Order, error) {
+func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]data.Order, error) {
 	var orders []data.Order
 
 	var location *time.Location
@@ -186,21 +186,46 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.GetBaristaOrdersFilte
 	return orders, nil
 }
 
-func (r *orderRepository) GetStatusesCount(storeID uint) (map[data.OrderStatus]int64, error) {
+func (r *orderRepository) GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error) {
 	var counts []struct {
 		Status data.OrderStatus
 		Count  int64
 	}
 
-	now := time.Now().UTC()
+	var location *time.Location
+	var now time.Time
 
-	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, time.UTC)
+	// Determine which location to use.
+	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
+		var err error
+		location, err = time.LoadLocation(*filter.TimeZoneLocation)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load timezone: %w", err)
+		}
+		now = time.Now().In(location)
+	} else if filter.TimeZoneOffset != nil {
+		offsetSeconds := int(*filter.TimeZoneOffset) * 60
+		location = time.FixedZone("offset", offsetSeconds)
+		now = time.Now().UTC().In(location)
+	} else {
+		location = time.UTC
+		now = time.Now().UTC()
+	}
+
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
+
+	startOfTodayUTC := startOfToday.UTC()
+	endOfTodayUTC := endOfToday.UTC()
+
+	if filter.StoreID == nil {
+		return nil, fmt.Errorf("storeID is required")
+	}
 
 	query := r.db.Model(&data.Order{}).
 		Select("status, COUNT(*) as count").
-		Where("store_id = ?", storeID).
-		Where("created_at >= ? AND created_at <= ?", startOfToday, endOfToday).
+		Where("store_id = ?", filter.StoreID).
+		Where("created_at >= ? AND created_at <= ?", startOfTodayUTC, endOfTodayUTC).
 		Group("status")
 
 	err := query.Find(&counts).Error
