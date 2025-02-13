@@ -1,8 +1,8 @@
 <template>
-	<div class="relative px-12 pt-safe pb-44 no-scrollbar">
+	<div class="relative pt-safe pb-44 no-scrollbar">
 		<!-- Header Section -->
 		<section
-			class="top-0 left-0 fixed flex justify-between items-center gap-4 bg-white/30 backdrop-blur-md px-12 py-5 sm:py-7 w-full"
+			class="top-0 left-0 fixed flex justify-between items-center gap-4 bg-white/30 backdrop-blur-md px-4 py-5 sm:py-7 w-full"
 		>
 			<button @click="goBack">
 				<Icon
@@ -16,13 +16,13 @@
 			<button @click="clearCart">
 				<Icon
 					icon="mingcute:delete-line"
-					class="text-2xl text-destructive sm:text-4xl"
+					class="text-destructive text-2xl sm:text-4xl"
 				/>
 			</button>
 		</section>
 
 		<!-- Cart Items -->
-		<section class="flex flex-col gap-1 sm:gap-2 pt-28">
+		<section class="flex flex-col gap-1 sm:gap-2 px-4 pt-20 sm:pt-28">
 			<div
 				v-for="cartItem in cartItemsArray"
 				:key="cartItem.key"
@@ -50,7 +50,7 @@
 			class="bottom-10 left-0 fixed flex justify-center w-full"
 		>
 			<div
-				class="flex items-center gap-12 bg-primary backdrop-blur-md sm:px-4 sm:py-4 p-3 pl-8 sm:pl-10 rounded-full text-white p"
+				class="flex items-center gap-12 bg-primary backdrop-blur-md p-3 sm:px-4 sm:py-4 pl-8 sm:pl-10 rounded-full text-white p"
 			>
 				<div>
 					<p class="text-sm sm:text-lg">Итого ({{ cartStore.totalItems }})</p>
@@ -71,9 +71,9 @@
 			<p class="font-medium text-xl sm:text-2xl">Ваша корзина пуста</p>
 			<button
 				@click="goBack"
-				class="bg-primary mt-4 px-6 py-4 rounded-2xl text-base text-primary-foreground sm:text-xl"
+				class="bg-primary mt-4 px-6 py-4 rounded-2xl text-primary-foreground text-base sm:text-xl"
 			>
-				Вернуться к покупкам
+				Вернуться в меню
 			</button>
 		</div>
 
@@ -96,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
@@ -120,7 +121,7 @@ const totalPrice = computed(() => cartStore.totalPrice);
 const selectedCartItem = ref<CartItem | null>(null);
 
 const goBack = () => {
-  router.back();
+  router.push({name: getRouteName("KIOSK_HOME")});
 };
 
 const clearCart = () => {

@@ -4,7 +4,6 @@ import {
 	Apple,
 	Blocks,
 	Building2,
-	ChartBar,
 	LayoutList,
 	ListPlus,
 	MapPinned,
@@ -45,17 +44,23 @@ export const isCollapsibleNavItem = (item: SidebarNavItem): item is CollapsibleN
 
 export const adminNavItems: SidebarNavItem[] = [
 	// Normal links
+	// {
+	// 	name: 'Аналитика',
+	// 	routeKey: 'ADMIN_DASHBOARD',
+	// 	icon: ChartBar,
+	// 	accessRoles: [
+	// 		EmployeeRole.ADMIN,
+	// 		EmployeeRole.STORE_MANAGER,
+	// 		EmployeeRole.BARISTA,
+	// 		EmployeeRole.WAREHOUSE_MANAGER,
+	// 		EmployeeRole.WAREHOUSE_EMPLOYEE,
+	// 	],
+	// },
 	{
-		name: 'Аналитика',
-		routeKey: 'ADMIN_DASHBOARD',
-		icon: ChartBar,
-		accessRoles: [
-			EmployeeRole.ADMIN,
-			EmployeeRole.STORE_MANAGER,
-			EmployeeRole.BARISTA,
-			EmployeeRole.WAREHOUSE_MANAGER,
-			EmployeeRole.WAREHOUSE_EMPLOYEE,
-		],
+		name: 'Администраторы',
+		routeKey: 'ADMIN_ADMIN_EMPLOYEES',
+		icon: Users,
+		accessRoles: [EmployeeRole.ADMIN],
 	},
 	{
 		name: 'Сотрудники',
@@ -122,6 +127,18 @@ export const adminNavItems: SidebarNavItem[] = [
 		accessRoles: [EmployeeRole.ADMIN, EmployeeRole.REGION_WAREHOUSE_MANAGER],
 	},
 	{
+		name: 'Регионы',
+		routeKey: 'ADMIN_REGIONS',
+		icon: MapPinned,
+		accessRoles: [EmployeeRole.ADMIN],
+	},
+	{
+		name: 'Франчайзи',
+		routeKey: 'ADMIN_FRANCHISEES',
+		icon: Building2,
+		accessRoles: [EmployeeRole.ADMIN],
+	},
+	{
 		name: 'Размеры',
 		routeKey: 'ADMIN_UNITS',
 		icon: Ruler,
@@ -162,18 +179,6 @@ export const adminNavItems: SidebarNavItem[] = [
 		routeKey: 'ADMIN_WAREHOUSE_DELIVERIES',
 		icon: PackageCheck,
 		accessRoles: [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE],
-	},
-	{
-		name: 'Регионы',
-		routeKey: 'ADMIN_REGIONS',
-		icon: MapPinned,
-		accessRoles: [EmployeeRole.ADMIN],
-	},
-	{
-		name: 'Франчайзи',
-		routeKey: 'ADMIN_FRANCHISEES',
-		icon: Building2,
-		accessRoles: [EmployeeRole.ADMIN],
 	},
 	{
 		label: 'Товары',

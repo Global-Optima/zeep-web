@@ -10,8 +10,8 @@
 		<!-- Product Details -->
 		<div class="flex-1">
 			<div class="flex justify-between items-start gap-4">
-				<p class="flex-1 text-base sm:text-2xl">{{ item.product.name }}, {{ item.size.name }}</p>
-				<Pencil class="w-7 h-7 text-gray-500" />
+				<p class="flex-1 text-lg sm:text-2xl">{{ item.product.name }}, {{ item.size.name }}</p>
+				<Pencil class="size-5 text-gray-500" />
 			</div>
 
 			<div class="mt-2">
@@ -23,8 +23,8 @@
 				</div>
 			</div>
 
-			<div class="flex justify-between items-center mt-2">
-				<p class="font-medium text-lg sm:text-3xl">
+			<div class="flex justify-between items-start mt-2">
+				<p class="font-medium text-xl sm:text-3xl">
 					{{ formatPrice(itemTotalPrice) }}
 				</p>
 
@@ -32,12 +32,9 @@
 				<div class="flex items-center gap-2">
 					<button
 						@click="decrement"
-						class="bg-gray-200 p-1 sm:p-3 rounded-xl"
+						class="bg-gray-200 p-2 sm:p-3 rounded-xl"
 					>
-						<Icon
-							icon="mingcute:minimize-line"
-							class="text-lg sm:text-2xl"
-						/>
+						<Minus class="size-5" />
 					</button>
 
 					<span class="mx-1 sm:mx-2 text-base sm:text-2xl">
@@ -46,12 +43,9 @@
 
 					<button
 						@click="increment"
-						class="bg-gray-200 p-1 sm:p-3 rounded-xl"
+						class="bg-gray-200 p-2 sm:p-3 rounded-xl"
 					>
-						<Icon
-							icon="mingcute:add-line"
-							class="text-lg sm:text-xl"
-						/>
+						<Plus class="size-5" />
 					</button>
 				</div>
 			</div>
@@ -64,8 +58,7 @@
 <script setup lang="ts">
 import { formatPrice } from '@/core/utils/price.utils'
 import { useCartStore, type CartItem } from "@/modules/kiosk/cart/stores/cart.store"
-import { Icon } from '@iconify/vue'
-import { Pencil } from 'lucide-vue-next'
+import { Minus, Pencil, Plus } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 const props = defineProps<{

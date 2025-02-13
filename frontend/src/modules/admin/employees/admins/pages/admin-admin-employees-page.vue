@@ -1,5 +1,5 @@
 <template>
-	<AdminFranchiseesEmployeesToolbar
+	<AdminAdminEmployeesToolbar
 		:filter="filter"
 		@update:filter="updateFilter"
 	/>
@@ -12,7 +12,7 @@
 			>
 				Сотрудники не найдены
 			</p>
-			<AdminFranchiseesEmployeesList
+			<AdminAdminEmployeesList
 				v-else
 				:employees="employees.data"
 			/>
@@ -32,9 +32,9 @@
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import AdminFranchiseesEmployeesList from '@/modules/admin/employees/franchisees/components/list/admin-franchisees-employees-list.vue'
-import AdminFranchiseesEmployeesToolbar from '@/modules/admin/employees/franchisees/components/list/admin-franchisees-employees-toolbar.vue'
-import { franchiseeEmployeeService } from '@/modules/admin/employees/franchisees/services/franchisee-employees.service'
+import AdminAdminEmployeesList from '@/modules/admin/employees/admins/components/list/admin-admin-employees-list.vue'
+import AdminAdminEmployeesToolbar from '@/modules/admin/employees/admins/components/list/admin-admin-employees-toolbar.vue'
+import { adminEmployeeService } from '@/modules/admin/employees/admins/services/admin-employees.service'
 import type { EmployeesFilter } from '@/modules/admin/employees/models/employees.models'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
@@ -42,8 +42,8 @@ import { computed, ref } from 'vue'
 const filter = ref<EmployeesFilter>({})
 
 const { data: employees } = useQuery({
-  queryKey: computed(() => ['franchisee-employees', filter.value]),
-  queryFn: () => franchiseeEmployeeService.getFranchiseeEmployees(filter.value),
+  queryKey: computed(() => ['admin-employees', filter.value]),
+  queryFn: () => adminEmployeeService.getAdminEmployees(filter.value),
 })
 
 function updateFilter(updatedFilter: EmployeesFilter) {

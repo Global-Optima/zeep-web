@@ -160,10 +160,40 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 			import('@/modules/admin/employees/warehouses/pages/admin-warehouse-employee-create-page.vue'),
 	},
 
+	// Admin Employees
+	ADMIN_ADMIN_EMPLOYEES: {
+		path: 'employees/admin',
+		meta: {
+			title: 'Все администраторы',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/admins/pages/admin-admin-employees-page.vue'),
+	},
+	ADMIN_ADMIN_EMPLOYEE_DETAILS: {
+		path: 'employees/admin/:id',
+		meta: {
+			title: 'Детали администратора',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/admins/pages/admin-admin-employee-details-page.vue'),
+	},
+	ADMIN_ADMIN_EMPLOYEE_CREATE: {
+		path: 'employees/admin/create',
+		meta: {
+			title: 'Создать администратора',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/employees/admins/pages/admin-admin-employee-create-page.vue'),
+	},
+
+	// Common
 	ADMIN_EMPLOYEE_AUDIT: {
 		path: 'employees/:id/audit',
 		meta: {
-			title: 'Аудит сотруника',
+			title: 'Аудит сотрудника',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/employees/pages/admin-employees-audit-page.vue'),
@@ -171,7 +201,7 @@ export const ADMIN_EMPLOYEES_CHILDREN_ROUTES = {
 	ADMIN_EMPLOYEE_REASSIGN_TYPE: {
 		path: 'employees/:id/reassign',
 		meta: {
-			title: 'Сменить тип сотрудник',
+			title: 'Сменить тип сотрудника',
 			requiresAuth: true,
 		},
 		component: () =>
