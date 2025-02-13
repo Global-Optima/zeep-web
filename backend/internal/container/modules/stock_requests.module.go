@@ -2,8 +2,9 @@ package modules
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
@@ -22,10 +23,11 @@ func NewStockRequestsModule(
 	regionService regions.RegionService,
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
 	notificationService notifications.NotificationService,
+	auditService audit.AuditService,
 ) *StockRequestsModule {
 	repo := stockRequests.NewStockRequestRepository(base.DB)
 	service := stockRequests.NewStockRequestService(repo, stockMaterialRepo, notificationService)
-	handler := stockRequests.NewStockRequestHandler(service, franchiseeService, regionService)
+	handler := stockRequests.NewStockRequestHandler(service, franchiseeService, regionService, auditService)
 
 	base.Router.RegisterStockRequestRoutes(handler)
 

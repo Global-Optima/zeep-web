@@ -34,6 +34,8 @@ type WarehouseStockRepository interface {
 	UpdateExpirationDate(stockMaterialID, warehouseID uint, newExpirationDate time.Time) error
 
 	GetAvailableToAddStockMaterials(storeID uint, filter *types.AvailableStockMaterialFilter) ([]data.StockMaterial, error)
+
+	FindEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error)
 }
 
 type warehouseStockRepository struct {
@@ -266,7 +268,7 @@ func (r *warehouseStockRepository) GetWarehouseStockMaterialDetails(stockMateria
 		return nil, fmt.Errorf("failed to fetch warehouse stock: %w", err)
 	}
 
-	earliestExpirationDate, err := r.findEarliestExpirationDateForStock(stockMaterialID, warehouseID)
+	earliestExpirationDate, err := r.FindEarliestExpirationDateForStock(stockMaterialID, warehouseID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch earliest expiration date: %w", err)
 	}
@@ -293,11 +295,15 @@ func (r *warehouseStockRepository) findEarliestMaterialExpirationDate(materials 
 		}
 	}
 
-	utcTime := utils.ToUTC(*earliest)
+	if earliest == nil {
+		return nil
+	}
+
+	utcTime := earliest.UTC()
 	return &utcTime
 }
 
-func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error) {
+func (r *warehouseStockRepository) FindEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error) {
 	var earliestExpirationDate sql.NullTime
 	err := r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
 		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.id = supplier_warehouse_delivery_materials.delivery_id").
@@ -306,6 +312,9 @@ func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMater
 		Scan(&earliestExpirationDate).Error
 
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to fetch earliest expiration date for stock material ID %d: %w", stockMaterialID, err)
 	}
 
@@ -313,7 +322,7 @@ func (r *warehouseStockRepository) findEarliestExpirationDateForStock(stockMater
 		return nil, nil
 	}
 
-	UTCTime := utils.ToUTC(earliestExpirationDate.Time)
+	UTCTime := earliestExpirationDate.Time.UTC()
 	return &UTCTime, nil
 }
 
@@ -321,7 +330,7 @@ func (r *warehouseStockRepository) aggregateWarehouseStocks(
 	warehouseStocks []data.WarehouseStock,
 	materialMap map[uint][]data.SupplierWarehouseDeliveryMaterial,
 ) []data.AggregatedWarehouseStock {
-	aggregatedStocks := []data.AggregatedWarehouseStock{}
+	var aggregatedStocks []data.AggregatedWarehouseStock
 
 	for _, stock := range warehouseStocks {
 		materials := materialMap[stock.StockMaterialID]
@@ -595,7 +604,7 @@ func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint,
 	if err := r.db.
 		Model(&data.Store{}).
 		Select("warehouse_id").
-		Where("store_id = ?", storeID).
+		Where("id = ?", storeID).
 		Limit(1).
 		Scan(&warehouseID).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch warehouse for store: %w", err)

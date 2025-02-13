@@ -1,7 +1,8 @@
 import type {
-  BaseEmployeeDetailsDTO,
-  BaseEmployeeDTO,
+	BaseEmployeeDetailsDTO,
+	BaseEmployeeDTO,
 	EmployeeRole,
+	EmployeesFilter,
 	UpdateEmployeeDTO,
 } from '@/modules/admin/employees/models/employees.models'
 import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
@@ -18,6 +19,9 @@ export interface StoreEmployeeDTO extends BaseEmployeeDTO {
 
 export interface StoreEmployeeDetailsDTO extends BaseEmployeeDetailsDTO {
 	id: number
-	employeeId: number
 	store: StoreDTO
+}
+
+export interface StoreEmployeeFilter extends EmployeesFilter {
+	storeId?: number
 }

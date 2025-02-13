@@ -14,6 +14,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 type OperationType string
 
 const (
+	GetOperation    OperationType = "GET"
 	CreateOperation OperationType = "CREATE"
 	UpdateOperation OperationType = "UPDATE"
 	DeleteOperation OperationType = "DELETE"
@@ -49,6 +50,7 @@ const (
 	WarehouseStockComponent        ComponentName = "WAREHOUSE_STOCK"
 	SupplierComponent              ComponentName = "SUPPLIER"
 	UnitComponent                  ComponentName = "UNIT"
+	OrderComponent                 ComponentName = "ORDER"
 )
 
 func (o OperationType) ToString() string {

@@ -7,12 +7,12 @@ export interface StoresFilter extends PaginationParams {
 
 export interface CreateStoreDTO {
 	name: string
-	isFranchise: boolean
+	franchiseId?: number
+	warehouseId: number
 	facilityAddress: {
 		address: string
-		longitude?: number
-		latitude?: number
 	}
+	isActive: boolean
 	contactPhone: string
 	contactEmail: string
 	storeHours: string
@@ -20,12 +20,12 @@ export interface CreateStoreDTO {
 
 export interface UpdateStoreDTO {
 	name: string
-	isFranchise: boolean
+	franchiseId?: number
+	warehouseId?: number
 	facilityAddress: {
 		address: string
-		longitude?: number
-		latitude?: number
 	}
+	isActive: boolean
 	contactPhone: string
 	contactEmail: string
 	storeHours: string

@@ -59,9 +59,9 @@ func ConvertToEmployeeAuditDTO(audit *data.EmployeeAudit) (*EmployeeAuditDTO, er
 	}, nil
 }
 
-func MapLocalizedMessages(audit *data.EmployeeAudit, details data.AuditDetails) (*localization.LocalizedMessages, error) {
+func MapLocalizedMessages(audit *data.EmployeeAudit, details data.AuditDetails) (*localization.LocalizedMessage, error) {
 	var err error
-	var messages *localization.LocalizedMessages
+	var messages *localization.LocalizedMessage
 
 	key := localization.FormTranslationKey(AUDIT_TRANSLATION_KEY, audit.OperationType.ToString(), audit.ComponentName.ToString())
 

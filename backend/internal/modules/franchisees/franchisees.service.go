@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/gin-gonic/gin"
+	"slices"
 )
 
 type FranchiseeService interface {
@@ -95,13 +96,17 @@ func (s *franchiseeService) CheckFranchiseeStore(c *gin.Context) (uint, *handler
 		return 0, errH
 	}
 
-	if claims.Role == data.RoleFranchiseManager || claims.Role == data.RoleFranchiseOwner {
+	if slices.Contains(data.FranchiseePermissions, claims.Role) {
 		franchiseeID, errH := contexts.GetFranchiseeId(c)
 		if errH != nil {
 			return 0, errH
 		}
 
-		errH = s.IsFranchiseeStore(franchiseeID, storeID)
+		if franchiseeID == nil {
+			return storeID, nil
+		}
+
+		errH = s.IsFranchiseeStore(*franchiseeID, storeID)
 		if errH != nil {
 			return 0, errH
 		}
@@ -128,7 +133,11 @@ func (s *franchiseeService) CheckFranchiseeStoreWithRole(c *gin.Context) (uint, 
 			return 0, "", errH
 		}
 
-		errH = s.IsFranchiseeStore(franchiseeID, storeID)
+		if franchiseeID == nil {
+			return storeID, claims.Role, nil
+		}
+
+		errH = s.IsFranchiseeStore(*franchiseeID, storeID)
 		if errH != nil {
 			return 0, "", errH
 		}

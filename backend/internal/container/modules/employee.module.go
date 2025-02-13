@@ -30,13 +30,19 @@ func NewEmployeesModule(
 	service := employees.NewEmployeeService(repo, base.Logger)
 	handler := employees.NewEmployeeHandler(service, auditService, franchiseeService, regionService)
 
-	base.Router.RegisterEmployeeAccountRoutes(handler)
-
 	storeEmployeesModule := NewStoreEmployeesModule(base, service, franchiseeService, auditService, repo)
 	warehouseEmployeeModule := NewWarehouseEmployeesModule(base, service, regionService, auditService, repo)
 	franchiseeEmployeesModule := NewFranchiseeEmployeesModule(base, service, franchiseeService, auditService, repo)
 	regionEmployeesModule := NewRegionEmployeesModule(base, service, regionService, auditService, repo)
 	adminEmployeesModule := NewAdminEmployeesModule(base, service, auditService, repo)
+
+	base.Router.RegisterEmployeeAccountRoutes(
+		storeEmployeesModule.Handler,
+		warehouseEmployeeModule.Handler,
+		franchiseeEmployeesModule.Handler,
+		regionEmployeesModule.Handler,
+		adminEmployeesModule.Handler,
+	)
 
 	base.Router.RegisterEmployeesRoutes(
 		handler,

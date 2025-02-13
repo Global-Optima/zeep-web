@@ -24,7 +24,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units"
@@ -143,9 +143,9 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	{
 		router.GET("/:id", handler.GetStoreByID)
 		router.GET("", handler.GetStoresByFranchisee)
-		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStore)       // franchise owner, manager
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStore)    // franchise owner, manager
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStore) // franchise owner, manager
+		router.POST("", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.CreateStore)       // franchise owner, manager
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.UpdateStore)    // franchise owner, manager
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.DeleteStore) // franchise owner, manager
 	}
 }
 
@@ -208,7 +208,7 @@ func (r *Router) RegisterEmployeesRoutes(
 		router.GET("/current", handler.GetCurrentEmployee)
 		router.GET("/roles", handler.GetAllRoles)
 		router.PUT("/:id/password", middleware.EmployeeRoleMiddleware(), handler.UpdatePassword)
-		router.PUT("/:id/reassign/", middleware.EmployeeRoleMiddleware(), handler.ReassignEmployeeType)
+		router.PUT("/:id/reassign", middleware.EmployeeRoleMiddleware(), handler.ReassignEmployeeType)
 
 		storeEmployeeRouter := router.Group("/store")
 		{
@@ -264,7 +264,8 @@ func (r *Router) RegisterEmployeesRoutes(
 func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.EmployeeRoutes.Group("/orders")
 	{
-		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateOrder)                                             // Store manager and barista
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateOrder)
+		router.POST("/check-name", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CheckCustomerName)                            // Store manager and barista		// Store manager and barista
 		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrders)                                            // all franchise, stores
 		router.GET("/ws", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.ServeWS)                                               // Store manager and barista
 		router.PUT("/:orderId/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteSubOrder) // Store manager and barista
@@ -274,7 +275,9 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.GET("/:orderId/receipt", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GeneratePDFReceipt)                      // Store manager and barista
 		router.GET("/:orderId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrderDetails)                             // all franchise, stores
 
-		router.GET("/export", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.ExportOrders)                            // franchise and store management
+		router.GET("/export", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.ExportOrders) // franchise and store management
+		router.PUT("/suborders/:subOrderId/status-change", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.ChangeSubOrderStatus)
+		router.PUT("/suborders/:subOrderId/accept", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.AcceptSubOrder)
 		router.PUT("/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteSubOrderByBarcode) // Store manager and barista
 		router.GET("/suborders/:subOrderId/barcode", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetSuborderBarcode)         // Store manager and barista
 	}
@@ -294,7 +297,7 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 	}
 }
 
-func (r *Router) RegisterStoreWarehouseRoutes(handler *storeStock.StoreStockHandler) {
+func (r *Router) RegisterStoreWarehouseRoutes(handler *storeStocks.StoreStockHandler) {
 	router := r.EmployeeRoutes.Group("/store-warehouse-stock") // Franchise and store all roles
 	{
 		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAvailableIngredientsToAdd)

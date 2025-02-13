@@ -7,7 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
-	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
@@ -180,15 +180,15 @@ func (s *storeAdditiveService) DeleteStoreAdditive(storeID, storeAdditiveID uint
 	return nil
 }
 
-func (s *storeAdditiveService) formAddStockDTOsFromIngredients(additiveIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
+func (s *storeAdditiveService) formAddStockDTOsFromIngredients(additiveIDs []uint) ([]storeStocksTypes.AddStoreStockDTO, error) {
 	ingredientsList, err := s.ingredientsRepo.GetIngredientsForAdditives(additiveIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)
 	}
 
-	addStockDTOs := make([]storeWarehousesTypes.AddStoreStockDTO, len(ingredientsList))
+	addStockDTOs := make([]storeStocksTypes.AddStoreStockDTO, len(ingredientsList))
 	for i, ingredient := range ingredientsList {
-		addStockDTOs[i] = storeWarehousesTypes.AddStoreStockDTO{
+		addStockDTOs[i] = storeStocksTypes.AddStoreStockDTO{
 			IngredientID:      ingredient.ID,
 			Quantity:          0,
 			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,

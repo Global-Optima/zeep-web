@@ -1,13 +1,15 @@
 package franchisees
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 type FranchiseeHandler struct {
@@ -142,9 +144,15 @@ func (h *FranchiseeHandler) GetMyFranchisee(c *gin.Context) {
 	franchiseeID, errH := contexts.GetFranchiseeId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
 	}
 
-	franchisee, err := h.service.GetFranchiseeByID(franchiseeID)
+	if franchiseeID == nil {
+		utils.SendErrorWithStatus(c, "nil franchisee ID", http.StatusBadRequest)
+		return
+	}
+
+	franchisee, err := h.service.GetFranchiseeByID(*franchiseeID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve franchisee")
 		return
@@ -170,7 +178,10 @@ func (h *FranchiseeHandler) GetFranchisees(c *gin.Context) {
 func (h *FranchiseeHandler) GetAllFranchisees(c *gin.Context) {
 	var filter types.FranchiseeFilter
 
-	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{}); err != nil {
+		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		return
+	}
 
 	warehouses, err := h.service.GetAllFranchisees(&filter)
 	if err != nil {

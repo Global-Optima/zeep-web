@@ -43,6 +43,14 @@ export const EMPLOYEE_ROLES_FORMATTED: Record<EmployeeRole, string> = {
 	[EmployeeRole.REGION_WAREHOUSE_MANAGER]: 'Региональный менеджер',
 }
 
+export const EMPLOYEE_TYPES_FORMATTED: Record<EmployeeType, string> = {
+	[EmployeeType.STORE]: 'Кафе',
+	[EmployeeType.WAREHOUSE]: 'Склад',
+	[EmployeeType.FRANCHISEE]: 'Франшиза',
+	[EmployeeType.REGION]: 'Регион',
+	[EmployeeType.ADMIN]: 'Администрация',
+}
+
 export interface CreateOrReplaceWorkdayDTO {
 	day: string
 	startAt: string
@@ -97,6 +105,7 @@ export interface EmployeeWorkdayDTO {
 
 export interface BaseEmployeeDetailsDTO extends BaseEmployeeDTO {
 	workdays: EmployeeWorkdayDTO[]
+	employeeId: number
 }
 
 export interface EmployeeDetailsDTO extends BaseEmployeeDetailsDTO {
@@ -112,4 +121,10 @@ export interface EmployeesFilter extends PaginationParams {
 	role?: EmployeeRole
 	isActive?: boolean
 	search?: string
+}
+
+export interface ReassignEmployeeTypeDTO {
+	employeeType: EmployeeType
+	role: EmployeeRole
+	workplaceId: number
 }

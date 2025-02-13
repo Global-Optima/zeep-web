@@ -6,9 +6,14 @@ import (
 	"strings"
 )
 
+const ALLOWED_SYMBOLS = `^[a-zA-ZәӘіІңҢғҒүҮұҰқҚөӨһҺ\-_]+$`
+
 func (c *TextCensorValidator) ValidateText(text string) error {
 	nText := normalizeText(text)
 	dicts := GetDictionaries()
+
+	re := regexp.MustCompile(ALLOWED_SYMBOLS)
+	re.MatchString(text)
 
 	if c.RuDetector.IsProfane(nText) {
 		return fmt.Errorf("ru: input contains inappropriate words")
@@ -38,5 +43,7 @@ func containsProfanity(text string, pattern *regexp.Regexp) bool {
 }
 
 func normalizeText(text string) string {
-	return strings.ToLower(strings.TrimSpace(text))
+	text = strings.ToLower(strings.TrimSpace(text))
+	re := regexp.MustCompile(`[-_]`)
+	return re.ReplaceAllString(text, "")
 }

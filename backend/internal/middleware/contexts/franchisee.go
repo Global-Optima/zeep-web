@@ -15,56 +15,58 @@ var (
 )
 
 // GetFranchiseeId returns the retrieved id and HandlerError
-func GetFranchiseeId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
+func GetFranchiseeId(c *gin.Context) (*uint, *handlerErrors.HandlerError) {
 	claims, err := GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		return 0, ErrUnauthorizedAccess
+		return nil, ErrUnauthorizedAccess
 	}
 
 	var franchiseeID uint
 	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
 		if claims.EmployeeType != data.FranchiseeEmployeeType {
-			return 0, ErrInvalidEmployeeType
+			return nil, ErrInvalidEmployeeType
 		}
 		franchiseeID = claims.WorkplaceID
 	} else {
 		franchiseeIdStr := c.Query("franchiseeId")
+		//TODO change
 		if franchiseeIdStr == "" {
-			return 0, ErrEmptyFranchiseeID
+			return nil, nil
 		}
 		id, err := strconv.ParseUint(franchiseeIdStr, 10, 64)
 		if err != nil {
-			return 0, ErrInvalidFranchiseeID
+			return nil, ErrInvalidStoreID
 		}
 		franchiseeID = uint(id)
 	}
 
-	return franchiseeID, nil
+	return &franchiseeID, nil
 }
 
-func GetFranchiseeIdWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors.HandlerError) {
+func GetFranchiseeIdWithRole(c *gin.Context) (*uint, data.EmployeeRole, *handlerErrors.HandlerError) {
 	claims, err := GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		return 0, "", ErrUnauthorizedAccess
+		return nil, "", ErrUnauthorizedAccess
 	}
 
 	var franchiseeID uint
 	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
 		if claims.EmployeeType != data.FranchiseeEmployeeType {
-			return 0, "", ErrInvalidEmployeeType
+			return nil, "", ErrInvalidEmployeeType
 		}
 		franchiseeID = claims.WorkplaceID
 	} else {
 		franchiseeIdStr := c.Query("franchiseeId")
+		//TODO change
 		if franchiseeIdStr == "" {
-			return 0, "", ErrEmptyFranchiseeID
+			return nil, claims.Role, nil
 		}
 		id, err := strconv.ParseUint(franchiseeIdStr, 10, 64)
 		if err != nil {
-			return 0, "", ErrInvalidFranchiseeID
+			return nil, "", ErrInvalidStoreID
 		}
 		franchiseeID = uint(id)
 	}
 
-	return franchiseeID, claims.Role, nil
+	return &franchiseeID, claims.Role, nil
 }

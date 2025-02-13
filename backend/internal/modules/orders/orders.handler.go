@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
@@ -27,7 +30,7 @@ func NewOrderHandler(service OrderService) *OrderHandler {
 func (h *OrderHandler) GetOrders(c *gin.Context) {
 	var filter types.OrdersFilterQuery
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Order{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
@@ -49,13 +52,21 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
+	var filter types.OrdersTimeZoneFilter
+
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
+		return
+	}
+
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
+	filter.StoreID = &storeID
 
-	orders, err := h.service.GetAllBaristaOrders(uint(storeID))
+	orders, err := h.service.GetAllBaristaOrders(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch orders")
 		return
@@ -69,7 +80,7 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil || orderID == 0 {
-		utils.SendBadRequestError(c, "invalid order ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -82,10 +93,26 @@ func (h *OrderHandler) GetSubOrders(c *gin.Context) {
 	utils.SendSuccessResponse(c, subOrders)
 }
 
+func (h *OrderHandler) CheckCustomerName(c *gin.Context) {
+	var dto types.ValidateCustomerNameDTO
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	if err := censor.GetCensorValidator().ValidateText(dto.CustomerName); err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400OrderCustomerName)
+		return
+	}
+
+	localization.SendLocalizedResponseWithStatus(c, http.StatusOK)
+}
+
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	var orderDTO types.CreateOrderDTO
 	if err := c.ShouldBindJSON(&orderDTO); err != nil {
-		utils.SendBadRequestError(c, "invalid input data")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
@@ -97,7 +124,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("failed to create order: %s", err.Error()))
+		localization.SendLocalizedResponseWithKey(c, types.Response500OrderCreate)
 		return
 	}
 
@@ -115,13 +142,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 	orderID, errH := utils.ParseParam(c, "orderId")
 	if errH != nil {
-		utils.SendBadRequestError(c, "invalid order ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
 	subOrderID, errH := utils.ParseParam(c, "subOrderId")
 	if errH != nil {
-		utils.SendBadRequestError(c, "invalid suborder ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -140,14 +167,14 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 
 	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 
-	utils.SendMessageWithStatus(c, "Sub order completed", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
 }
 
 func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
 	suborderIDParam := c.Param("subOrderId")
 	suborderID, err := strconv.ParseUint(suborderIDParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid suborder ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -168,7 +195,7 @@ func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
 func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {
 	subOrderID, errH := utils.ParseParam(c, "subOrderId")
 	if errH != nil {
-		utils.SendBadRequestError(c, "invalid suborder ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -194,7 +221,7 @@ func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 	orderIDStr := c.Param("orderId")
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil || orderID == 0 {
-		utils.SendBadRequestError(c, "invalid order ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -214,13 +241,21 @@ func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 
 // Get count of orders grouped by statuses
 func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
+	var filter types.OrdersTimeZoneFilter
+
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
+		return
+	}
+
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
+	filter.StoreID = &storeID
 
-	statusesWithCounts, err := h.service.GetStatusesCount(uint(storeID))
+	statusesWithCounts, err := h.service.GetStatusesCount(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch statuses count")
 		return
@@ -230,11 +265,13 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 }
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
+	var filter types.OrdersTimeZoneFilter
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
+	filter.StoreID = &storeID
 
 	conn, err := UpgradeConnection(c)
 	if err != nil {
@@ -242,7 +279,7 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 		return
 	}
 
-	initialOrders, err := h.service.GetAllBaristaOrders(uint(storeID))
+	initialOrders, err := h.service.GetAllBaristaOrders(filter)
 
 	if err != nil {
 		log.Printf("Failed to fetch initial orders for store %d: %v", storeID, err)
@@ -256,7 +293,7 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 	orderID, err := strconv.ParseUint(c.Param("orderId"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid order ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -267,7 +304,7 @@ func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 	}
 
 	if orderDetails == nil {
-		utils.SendNotFoundError(c, "Order not found")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 		return
 	}
 
@@ -277,7 +314,7 @@ func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 func (h *OrderHandler) ExportOrders(c *gin.Context) {
 	var filter types.OrdersExportFilterQuery
 	if err := c.ShouldBindQuery(&filter); err != nil {
-		utils.SendBadRequestError(c, "Invalid filter parameters")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
@@ -314,4 +351,48 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(excelData)))
 	c.Data(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelData)
+}
+
+func (h *OrderHandler) AcceptSubOrder(c *gin.Context) {
+	subOrderID, err := utils.ParseParam(c, "subOrderId")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
+		return
+	}
+
+	if err := h.service.AcceptSubOrder(uint(subOrderID)); err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to accept suborder: %v", err))
+		return
+	}
+
+	// Optionally fetch the updated order to broadcast the new status.
+	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	if err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to fetch updated order: %v", err))
+		return
+	}
+
+	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
+	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
+}
+
+func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
+	subOrderID, err := utils.ParseParam(c, "subOrderId")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
+		return
+	}
+
+	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(uint(subOrderID))
+	if err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to update suborder status: %v", err))
+		return
+	}
+
+	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	if err == nil {
+		BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
+	}
+
+	utils.SendSuccessResponse(c, updatedSuborderDTO)
 }

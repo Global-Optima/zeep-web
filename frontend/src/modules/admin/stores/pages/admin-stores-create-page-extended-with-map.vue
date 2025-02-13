@@ -4,9 +4,9 @@
 		<div class="w-full md:w-2/3">
 			<Card>
 				<CardHeader>
-					<CardTitle>{{ isEditing ? 'Обновить магазин' : 'Создать магазин' }}</CardTitle>
+					<CardTitle>{{ isEditing ? 'Обновить кафе' : 'Создать кафе' }}</CardTitle>
 					<CardDescription>
-						Заполните форму ниже, чтобы {{ isEditing ? 'обновить' : 'создать' }} магазин.
+						Заполните форму ниже, чтобы {{ isEditing ? 'обновить' : 'создать' }} кафе.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -20,11 +20,11 @@
 							v-slot="{ field, errorMessage }"
 						>
 							<FormItem>
-								<FormLabel>Название магазина</FormLabel>
+								<FormLabel>Название кафе</FormLabel>
 								<FormControl>
 									<Input
 										v-model="field.value"
-										placeholder="Введите название магазина"
+										placeholder="Введите название кафе"
 									/>
 								</FormControl>
 								<FormMessage v-if="errorMessage">{{ errorMessage }}</FormMessage>
@@ -92,7 +92,7 @@
 								<FormControl>
 									<Textarea
 										v-model="field.value"
-										placeholder="Краткое описание магазина"
+										placeholder="Краткое описание кафе"
 									/>
 								</FormControl>
 								<FormMessage v-if="errorMessage">{{ errorMessage }}</FormMessage>
@@ -124,8 +124,8 @@
 			<!-- Map Integration -->
 			<Card>
 				<CardHeader>
-					<CardTitle>Расположение магазина</CardTitle>
-					<CardDescription>Выберите местоположение магазина на карте</CardDescription>
+					<CardTitle>Расположение кафе</CardTitle>
+					<CardDescription>Выберите местоположение кафе на карте</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<AdminStoresCreateMap v-model="store.location" />

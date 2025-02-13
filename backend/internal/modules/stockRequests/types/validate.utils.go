@@ -97,7 +97,7 @@ type StockRequestDetails struct {
 	ActualQuantity       float64 `json:"actualQuantity,omitempty"`
 }
 
-func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
+func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessage {
 	key := "stockRequestComments.unexpectedMaterial"
 	translations, err := localization.Translate(key, map[string]interface{}{
 		"MaterialName":   details.MaterialName,
@@ -111,7 +111,7 @@ func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localiza
 	return translations
 }
 
-func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessages {
+func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localization.LocalizedMessage {
 	key := "stockRequestComments.quantityMismatch"
 	translations, err := localization.Translate(key, map[string]interface{}{
 		"OriginalMaterialName": details.OriginalMaterialName,
@@ -127,15 +127,15 @@ func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localizati
 }
 
 func CombineComments(
-	mismatchComments []localization.LocalizedMessages,
-	unexpectedComments []localization.LocalizedMessages,
-) *localization.LocalizedMessages {
+	mismatchComments []localization.LocalizedMessage,
+	unexpectedComments []localization.LocalizedMessage,
+) *localization.LocalizedMessage {
 	if len(mismatchComments) == 0 && len(unexpectedComments) == 0 {
 		logger.GetZapSugaredLogger().Warn("No comments to combine")
 		return nil
 	}
 
-	var combinedComments localization.LocalizedMessages
+	var combinedComments localization.LocalizedMessage
 
 	for _, mismismatchComment := range mismatchComments {
 		combinedComments.En += mismismatchComment.En + "\n"

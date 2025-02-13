@@ -141,26 +141,26 @@ import * as z from 'zod'
 
 import { Button } from '@/core/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/core/components/ui/card'
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/core/components/ui/select'
 
 import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
@@ -197,7 +197,7 @@ const {
   isError: storesError,
 } = useQuery({
   queryKey: ['regions-all'],
-  queryFn: () => regionsService.getAllRegions(),
+  queryFn: () => regionsService.getAll(),
 })
 
 // Получение списка сотрудников для выбранного региона

@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"regexp"
-	"time"
 )
 
 const TIME_REGEXP = `^([0-1][0-9]|2[0-3]):([0-5][0-9])(:([0-5][0-9]))?$`
@@ -15,8 +14,4 @@ func ValidateTime(s string) error {
 	}
 
 	return nil
-}
-
-func ToUTC(t time.Time) time.Time {
-	return t.UTC()
 }

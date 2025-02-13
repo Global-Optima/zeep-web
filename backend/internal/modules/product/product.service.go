@@ -20,21 +20,21 @@ type ProductService interface {
 	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDetailsDTO, error)
 	GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error)
 	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
-	UpdateProductSize(storeID, productSizeID uint, dto *types.UpdateProductSizeDTO) error
+	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
 	DeleteProductSize(productSizeID uint) error
 }
 
 type productService struct {
-	repo              ProductRepository
-	noticationService notifications.NotificationService
-	logger            *zap.SugaredLogger
+	repo                ProductRepository
+	notificationService notifications.NotificationService
+	logger              *zap.SugaredLogger
 }
 
-func NewProductService(repo ProductRepository, noticationService notifications.NotificationService, logger *zap.SugaredLogger) ProductService {
+func NewProductService(repo ProductRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) ProductService {
 	return &productService{
-		repo:              repo,
-		logger:            logger,
-		noticationService: noticationService,
+		repo:                repo,
+		logger:              logger,
+		notificationService: notificationService,
 	}
 }
 
@@ -92,14 +92,14 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 }
 
 func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) error {
-	product := types.UpdateProductToModel(dto)
-
 	productBefore, err := s.repo.GetProductByID(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to fetch product: %w", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
+
+	product := types.UpdateProductToModel(dto, productBefore)
 
 	err = s.repo.UpdateProduct(productID, product)
 	if err != nil {
@@ -110,7 +110,7 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 
 	changes := types.GenerateProductChanges(productBefore, dto)
 
-	details := &details.CentralCatalogUpdateDetails{
+	notificationDetails := &details.CentralCatalogUpdateDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           productID,
 			FacilityName: "Central Catalog",
@@ -118,17 +118,18 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		Changes: changes,
 	}
 
-	err = s.noticationService.NotifyCentralCatalogUpdate(details)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to send notification: %w", err)
-		s.logger.Error(wrappedErr)
-		return wrappedErr
+	if len(changes) != 0 {
+		err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to send notification: %w", err)
+			s.logger.Error(wrappedErr)
+		}
 	}
 
 	return nil
 }
 
-func (s *productService) UpdateProductSize(storeID, productSizeID uint, dto *types.UpdateProductSizeDTO) error {
+func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
 	if dto.IsDefault != nil && !*dto.IsDefault {
 		wrappedErr := fmt.Errorf("failed to update product size: cannot set isDefault to false")
 		s.logger.Error(wrappedErr)
@@ -151,16 +152,15 @@ func (s *productService) UpdateProductSize(storeID, productSizeID uint, dto *typ
 	}
 
 	if dto.BasePrice != nil && productSize.BasePrice != *dto.BasePrice {
-		details := &details.PriceChangeNotificationDetails{
+		notificationDetails := &details.PriceChangeNotificationDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
-				ID: storeID,
+				ID: productSizeID,
 			},
-			ProductSizeID: productSize.ID,
-			ProductName:   productSize.Product.Name,
-			OldPrice:      productSize.BasePrice,
-			NewPrice:      *dto.BasePrice,
+			ProductName: productSize.Product.Name,
+			OldPrice:    productSize.BasePrice,
+			NewPrice:    *dto.BasePrice,
 		}
-		err = s.noticationService.NotifyPriceChange(details)
+		err = s.notificationService.NotifyPriceChange(notificationDetails)
 		if err != nil {
 			return fmt.Errorf("failed to notify price change: %w", err)
 		}

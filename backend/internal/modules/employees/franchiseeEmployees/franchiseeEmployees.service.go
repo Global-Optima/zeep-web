@@ -15,8 +15,9 @@ import (
 type FranchiseeEmployeeService interface {
 	CreateFranchiseeEmployee(franchiseeID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetFranchiseeEmployees(franchiseeID uint, filter *employeesTypes.EmployeesFilter) ([]types.FranchiseeEmployeeDTO, error)
-	GetFranchiseeEmployeeByID(id, franchiseeID uint) (*types.FranchiseeEmployeeDetailsDTO, error)
-	UpdateFranchiseeEmployee(id, franchiseeID uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error
+	GetFranchiseeEmployeeByID(id uint, franchiseeID *uint) (*types.FranchiseeEmployeeDetailsDTO, error)
+	GetAllFranchiseeEmployees(franchiseeID uint) ([]employeesTypes.EmployeeAccountDTO, error)
+	UpdateFranchiseeEmployee(id uint, franchiseeID *uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error
 }
 
 type franchiseeEmployeeService struct {
@@ -75,7 +76,7 @@ func (s *franchiseeEmployeeService) GetFranchiseeEmployees(franchiseeID uint, fi
 	return dtos, nil
 }
 
-func (s *franchiseeEmployeeService) GetFranchiseeEmployeeByID(id, franchiseeID uint) (*types.FranchiseeEmployeeDetailsDTO, error) {
+func (s *franchiseeEmployeeService) GetFranchiseeEmployeeByID(id uint, franchiseeID *uint) (*types.FranchiseeEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid franchise employee ID")
 	}
@@ -94,7 +95,27 @@ func (s *franchiseeEmployeeService) GetFranchiseeEmployeeByID(id, franchiseeID u
 	return types.MapToFranchiseeEmployeeDetailsDTO(employee), nil
 }
 
-func (s *franchiseeEmployeeService) UpdateFranchiseeEmployee(id, franchiseeID uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error {
+func (s *franchiseeEmployeeService) GetAllFranchiseeEmployees(franchiseeID uint) ([]employeesTypes.EmployeeAccountDTO, error) {
+	if franchiseeID == 0 {
+		return nil, utils.WrapError("invalid franchisee ID", employeesTypes.ErrValidation)
+	}
+
+	franchiseeEmployees, err := s.repo.GetAllFranchiseeEmployees(franchiseeID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all franchisee employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]employeesTypes.EmployeeAccountDTO, len(franchiseeEmployees))
+	for i, franchiseeEmployee := range franchiseeEmployees {
+		dtos[i] = *employeesTypes.MapToEmployeeAccountDTO(&franchiseeEmployee.Employee)
+	}
+
+	return dtos, nil
+}
+
+func (s *franchiseeEmployeeService) UpdateFranchiseeEmployee(id uint, franchiseeID *uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error {
 	updateFields, err := types.FranchiseeEmployeeUpdateFields(input, role)
 	if err != nil {
 		return err

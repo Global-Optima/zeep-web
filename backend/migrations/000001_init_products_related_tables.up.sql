@@ -468,7 +468,7 @@ CREATE TABLE
     );
 
 CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
-CREATE TYPE operation_type AS ENUM ('CREATE', 'UPDATE', 'DELETE');
+CREATE TYPE operation_type AS ENUM ('GET', 'CREATE', 'UPDATE', 'DELETE');
 CREATE TYPE component_name AS ENUM (
     'FRANCHISEE',
     'REGION',
@@ -496,7 +496,8 @@ CREATE TYPE component_name AS ENUM (
     'STOCK_MATERIAL_CATEGORY',
     'WAREHOUSE_STOCK',
     'SUPPLIER',
-    'UNIT'
+    'UNIT',
+    'ORDER'
     );
 
 
@@ -625,7 +626,7 @@ CREATE TABLE
 		customer_id INT REFERENCES customers (id) ON DELETE SET NULL,
 		display_number INT NOT NULL,
 		customer_name VARCHAR(255) NOT NULL,
-		employee_id INT REFERENCES employees (id) ON DELETE SET NULL,
+		store_employee_id INT REFERENCES store_employees (id) ON DELETE SET NULL,
 		store_id INT REFERENCES stores (id) NOT NULL,
 		delivery_address_id INT REFERENCES customer_addresses (id) ON DELETE SET NULL,
 		status VARCHAR(50) NOT NULL,

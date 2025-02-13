@@ -44,7 +44,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_STORE_PRODUCTS: {
 		path: 'store-products',
 		meta: {
-			title: 'Товары Магазина',
+			title: 'Товары кафе',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/store-products/pages/admin-store-products-page.vue'),
@@ -52,7 +52,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_STORE_PRODUCT_DETAILS: {
 		path: 'store-products/:id',
 		meta: {
-			title: 'Детали товара магазина',
+			title: 'Детали товара кафе',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -61,7 +61,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_STORE_PRODUCT_CREATE: {
 		path: 'store-products/create',
 		meta: {
-			title: 'Добавить товар в магазин',
+			title: 'Добавить товар в кафе',
 			requiresAuth: true,
 		},
 		component: () =>

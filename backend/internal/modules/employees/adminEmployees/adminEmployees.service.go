@@ -15,6 +15,7 @@ type AdminEmployeeService interface {
 	CreateAdminEmployee(dto *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetAdminEmployees(filter *employeesTypes.EmployeesFilter) ([]types.AdminEmployeeDTO, error)
 	GetAdminEmployeeByID(id uint) (*types.AdminEmployeeDetailsDTO, error)
+	GetAllAdminEmployees() ([]employeesTypes.EmployeeAccountDTO, error)
 }
 
 type adminEmployeeService struct {
@@ -70,6 +71,22 @@ func (s *adminEmployeeService) GetAdminEmployees(filter *employeesTypes.Employee
 	for i, employee := range adminEmployees {
 		dtos[i] = *types.MapToAdminEmployeeDTO(&employee)
 	}
+	return dtos, nil
+}
+
+func (s *adminEmployeeService) GetAllAdminEmployees() ([]employeesTypes.EmployeeAccountDTO, error) {
+	adminEmployees, err := s.repo.GetAllAdminEmployees()
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all admin employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]employeesTypes.EmployeeAccountDTO, len(adminEmployees))
+	for i, adminEmployee := range adminEmployees {
+		dtos[i] = *employeesTypes.MapToEmployeeAccountDTO(&adminEmployee.Employee)
+	}
+
 	return dtos, nil
 }
 

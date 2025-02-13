@@ -11,7 +11,7 @@
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Магазины франчайзи {{ franchisee.name }}
+				Кафе франчайзи {{ franchisee.name }}
 			</h1>
 		</div>
 
@@ -22,7 +22,7 @@
 					v-if="!storesResponse || storesResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Магазины франчайзи не найдены
+					Кафе франчайзи не найдены
 				</p>
 				<AdminStoresList
 					v-else

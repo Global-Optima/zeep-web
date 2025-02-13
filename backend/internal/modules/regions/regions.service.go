@@ -120,7 +120,11 @@ func (s *regionService) CheckRegionWarehouse(c *gin.Context) (uint, *handlerErro
 			return 0, errH
 		}
 
-		errH = s.IsRegionWarehouse(regionID, warehouseID)
+		if regionID == nil {
+			return warehouseID, nil
+		}
+
+		errH = s.IsRegionWarehouse(*regionID, warehouseID)
 		if errH != nil {
 			return 0, errH
 		}
@@ -147,7 +151,11 @@ func (s *regionService) CheckRegionWarehouseWithRole(c *gin.Context) (uint, data
 			return 0, "", errH
 		}
 
-		errH = s.IsRegionWarehouse(regionID, warehouseID)
+		if regionID == nil {
+			return warehouseID, claims.Role, nil
+		}
+
+		errH = s.IsRegionWarehouse(*regionID, warehouseID)
 		if errH != nil {
 			return 0, "", errH
 		}

@@ -2,6 +2,7 @@ package employees
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/warehouseEmployees/types"
 
@@ -13,8 +14,9 @@ import (
 
 type WarehouseEmployeeRepository interface {
 	GetWarehouseEmployees(warehouseID uint, filter *employeesTypes.EmployeesFilter) ([]data.WarehouseEmployee, error)
-	GetWarehouseEmployeeByID(id, warehouseID uint) (*data.WarehouseEmployee, error)
-	UpdateWarehouseEmployee(id uint, warehouseID uint, update *types.UpdateWarehouseEmployeeModels) error
+	GetWarehouseEmployeeByID(id uint, filter *contexts.WarehouseContextFilter) (*data.WarehouseEmployee, error)
+	GetAllWarehouseEmployees(warehouseID uint) ([]data.WarehouseEmployee, error)
+	UpdateWarehouseEmployee(id uint, filter *contexts.WarehouseContextFilter, update *types.UpdateWarehouseEmployeeModels) error
 }
 
 type warehouseEmployeeRepository struct {
@@ -64,33 +66,60 @@ func (r *warehouseEmployeeRepository) GetWarehouseEmployees(warehouseID uint, fi
 	return warehouseEmployees, nil
 }
 
-func (r *warehouseEmployeeRepository) GetWarehouseEmployeeByID(id, warehouseID uint) (*data.WarehouseEmployee, error) {
+func (r *warehouseEmployeeRepository) GetWarehouseEmployeeByID(id uint, filter *contexts.WarehouseContextFilter) (*data.WarehouseEmployee, error) {
 	var warehouseEmployee data.WarehouseEmployee
-	err := r.db.Model(&data.WarehouseEmployee{}).
+	query := r.db.Model(&data.WarehouseEmployee{}).
 		Preload("Employee.Workdays").
 		Preload("Warehouse.FacilityAddress").
-		Where("id = ? AND warehouse_id = ?", id, warehouseID).
-		First(&warehouseEmployee).Error
-	if err != nil {
+		Preload("Warehouse.Region").
+		Where("id = ?", id)
+
+	if filter != nil {
+		if filter.WarehouseID != nil {
+			query.Where("warehouse_id = ?", *filter.WarehouseID)
+		}
+
+		if filter.RegionID != nil {
+			query.Joins("JOIN regions ON warehouses.id = warehouse_employees.warehouse_id")
+			query.Where("warehouses.region_id = ?", *filter.RegionID)
+		}
+	}
+	if err := query.First(&warehouseEmployee).Error; err != nil {
 		return nil, fmt.Errorf("failed to retrieve warehouse employee by ID: %w", err)
 	}
 	return &warehouseEmployee, nil
 }
 
-func (r *warehouseEmployeeRepository) UpdateWarehouseEmployee(id uint, warehouseID uint, updateModels *types.UpdateWarehouseEmployeeModels) error {
+func (r *warehouseEmployeeRepository) GetAllWarehouseEmployees(warehouseID uint) ([]data.WarehouseEmployee, error) {
+	var warehouseEmployees []data.WarehouseEmployee
+
+	err := r.db.Model(&data.WarehouseEmployee{}).
+		Joins("INNER JOIN employees ON warehouse_employees.employee_id = employees.id").
+		Where("warehouse_id = ?", warehouseID).
+		Preload("Employee").
+		Find(&warehouseEmployees).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return warehouseEmployees, nil
+}
+
+func (r *warehouseEmployeeRepository) UpdateWarehouseEmployee(id uint, filter *contexts.WarehouseContextFilter, updateModels *types.UpdateWarehouseEmployeeModels) error {
 	if updateModels == nil {
 		return employeesTypes.ErrNothingToUpdate
 	}
 
-	err := r.db.Transaction(func(tx *gorm.DB) error {
-		var existingWarehouseEmployee data.WarehouseEmployee
-		r.db.Model(&data.WarehouseEmployee{}).
-			Where("id = ? AND warehouse_id = ?", id, warehouseID).
-			First(&existingWarehouseEmployee)
+	existingWarehouseEmployee, err := r.GetWarehouseEmployeeByID(id, filter)
+	if err != nil {
+		return err
+	}
 
+	err = r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels.WarehouseEmployee != nil && !utils.IsEmpty(updateModels.WarehouseEmployee) {
 			err := tx.Model(&data.WarehouseEmployee{}).
-				Where("id = ? AND warehouse_id = ?", id, warehouseID).
+				Where("id = ?", id).
 				Updates(updateModels.WarehouseEmployee).Error
 			if err != nil {
 				return err

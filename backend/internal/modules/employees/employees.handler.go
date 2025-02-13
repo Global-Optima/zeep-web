@@ -1,14 +1,15 @@
 package employees
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"net/http"
 	"strconv"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -34,23 +35,23 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Employee)
 		return
 	}
 
 	var input types.UpdatePasswordDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	err = h.service.UpdatePassword(uint(id), &input)
 	if err != nil {
 		if err.Error() == "incorrect old password" || err.Error() == "password validation failed" {
-			utils.SendBadRequestError(c, "passwords mismatch")
+			localization.SendLocalizedResponseWithKey(c, types.Response400Employee)
 			return
 		}
-		utils.SendInternalServerError(c, "failed to update password")
+		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeUpdatePassword)
 		return
 	}
 
@@ -60,7 +61,7 @@ func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 	roles, err := h.service.GetAllRoles()
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve roles")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusInternalServerError)
 		return
 	}
 
@@ -70,13 +71,13 @@ func (h *EmployeeHandler) GetAllRoles(c *gin.Context) {
 func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Employee)
 		return
 	}
 
 	employee, err := h.service.GetEmployeeByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve employee")
+		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeGet)
 		return
 	}
 
@@ -87,13 +88,13 @@ func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
 	var filter types.EmployeesFilter
 
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Employee{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	employee, err := h.service.GetEmployees(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve employee")
+		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeGet)
 		return
 	}
 
@@ -103,13 +104,13 @@ func (h *EmployeeHandler) GetEmployees(c *gin.Context) {
 func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		utils.SendErrorWithStatus(c, "failed to retrieve claims", http.StatusUnauthorized)
+		localization.SendLocalizedResponseWithKey(c, types.Response401Employee)
 		return
 	}
 
 	employee, err := h.service.GetEmployeeByID(claims.EmployeeClaimsData.ID)
 	if err != nil {
-		utils.SendErrorWithStatus(c, "failed to retrieve employee", http.StatusUnauthorized)
+		localization.SendLocalizedResponseWithKey(c, types.Response401Employee)
 		return
 	}
 
@@ -119,25 +120,25 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 func (h *EmployeeHandler) ReassignEmployeeType(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Employee)
 		return
 	}
 
 	var dto types.ReassignEmployeeTypeDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	employee, err := h.service.GetEmployeeByID(uint(id))
 	if err != nil {
-		utils.SendBadRequestError(c, "failed to reassign employee type: employee not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Employee)
 		return
 	}
 
 	err = h.service.ReassignEmployeeType(uint(id), &dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to reassign employee type")
+		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeReassignType)
 		return
 	}
 
@@ -159,13 +160,13 @@ func (h *EmployeeHandler) GetEmployeeWorkday(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Employee)
 		return
 	}
 
 	workday, err := h.service.GetEmployeeWorkday(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve workday")
+		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeGetWorkday)
 		return
 	}
 
@@ -177,14 +178,14 @@ func (h *EmployeeHandler) GetEmployeeWorkdays(c *gin.Context) {
 
 	id, err := strconv.ParseUint(c.Query("employeeId"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid employee ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Employee)
 		return
 	}
 	employeeID = uint(id)
 
 	workdays, err := h.service.GetEmployeeWorkdays(employeeID)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve workdays")
+		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeGetWorkdays)
 		return
 	}
 
@@ -194,93 +195,15 @@ func (h *EmployeeHandler) GetEmployeeWorkdays(c *gin.Context) {
 func (h *EmployeeHandler) GetMyWorkdays(c *gin.Context) {
 	claims, err := contexts.GetEmployeeClaimsFromCtx(c)
 	if err != nil {
-		utils.SendErrorWithStatus(c, "failed to retrieve employee context", http.StatusUnauthorized)
+		localization.SendLocalizedResponseWithKey(c, types.Response401Employee)
 		return
 	}
 
 	workdays, err := h.service.GetEmployeeWorkdays(claims.EmployeeClaimsData.ID)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve workdays")
+		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeGetWorkdays)
 		return
 	}
 
 	utils.SendSuccessResponse(c, workdays)
-}
-
-func (h *EmployeeHandler) GetWarehouseAccounts(c *gin.Context) {
-	warehouseIdStr := c.Param("id")
-	warehouseID, err := strconv.ParseUint(warehouseIdStr, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid warehouse ID")
-		return
-	}
-
-	warehouseEmployees, err := h.service.GetAllWarehouseEmployees(uint(warehouseID))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve warehouse employees")
-		return
-	}
-
-	utils.SendSuccessResponse(c, warehouseEmployees)
-}
-
-func (h *EmployeeHandler) GetStoreAccounts(c *gin.Context) {
-	storeIdStr := c.Param("id")
-	storeID, err := strconv.ParseUint(storeIdStr, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid store ID")
-		return
-	}
-
-	storeEmployees, err := h.service.GetAllStoreEmployees(uint(storeID))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve store employees")
-		return
-	}
-
-	utils.SendSuccessResponse(c, storeEmployees)
-}
-
-func (h *EmployeeHandler) GetRegionAccounts(c *gin.Context) {
-	regionIdStr := c.Param("id")
-	regionID, err := strconv.ParseUint(regionIdStr, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid region ID")
-		return
-	}
-
-	regionEmployees, err := h.service.GetAllRegionEmployees(uint(regionID))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve region employees")
-		return
-	}
-
-	utils.SendSuccessResponse(c, regionEmployees)
-}
-
-func (h *EmployeeHandler) GetFranchiseeAccounts(c *gin.Context) {
-	franchiseeIdStr := c.Param("id")
-	franchiseeID, err := strconv.ParseUint(franchiseeIdStr, 10, 64)
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid franchisee ID")
-		return
-	}
-
-	franchiseeEmployees, err := h.service.GetAllFranchiseeEmployees(uint(franchiseeID))
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve franchisee employees")
-		return
-	}
-
-	utils.SendSuccessResponse(c, franchiseeEmployees)
-}
-
-func (h *EmployeeHandler) GetAdminAccounts(c *gin.Context) {
-	adminEmployees, err := h.service.GetAllAdminEmployees()
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve admin employees")
-		return
-	}
-
-	utils.SendSuccessResponse(c, adminEmployees)
 }

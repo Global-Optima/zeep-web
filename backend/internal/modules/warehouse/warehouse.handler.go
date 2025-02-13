@@ -4,7 +4,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
-	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
@@ -69,11 +68,21 @@ func (h *WarehouseHandler) CreateWarehouse(c *gin.Context) {
 		return
 	}
 
-	_, err := h.service.CreateWarehouse(dto)
+	warehouse, err := h.service.CreateWarehouse(dto)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.CreateWarehouseAuditFactory(
+		&data.BaseDetails{
+			ID:   warehouse.ID,
+			Name: warehouse.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	utils.SendSuccessCreatedResponse(c, "warehouse created successfully")
 }
@@ -122,15 +131,15 @@ func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
 
 	regionID, errH := contexts.GetRegionId(c)
 	if errH != nil {
-		if errors.Is(errH, contexts.ErrEmptyRegionID) {
-			regionID = 0
-		} else {
-			utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-			return
-		}
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
 	}
 
-	warehouses, err := h.service.GetWarehousesByRegion(regionID, &filter)
+	if regionID != nil {
+		filter.RegionID = regionID
+	}
+
+	warehouses, err := h.service.GetWarehouses(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve warehouses")
 		return
@@ -153,11 +162,27 @@ func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {
 		return
 	}
 
+	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
 	updated, err := h.service.UpdateWarehouse(uint(warehouseID), dto)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.UpdateWarehouseAuditFactory(
+		&data.BaseDetails{
+			ID:   warehouse.ID,
+			Name: warehouse.Name,
+		}, &dto)
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 	utils.SendSuccessResponse(c, updated)
@@ -171,10 +196,26 @@ func (h *WarehouseHandler) DeleteWarehouse(c *gin.Context) {
 		return
 	}
 
+	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
+	if err != nil {
+		utils.SendInternalServerError(c, err.Error())
+		return
+	}
+
 	if err := h.service.DeleteWarehouse(uint(warehouseID)); err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}
+
+	action := types.DeleteWarehouseAuditFactory(
+		&data.BaseDetails{
+			ID:   warehouse.ID,
+			Name: warehouse.Name,
+		})
+
+	go func() {
+		_ = h.auditService.RecordEmployeeAction(c, &action)
+	}()
 
 	c.Status(http.StatusOK)
 }

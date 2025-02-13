@@ -76,13 +76,13 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 					size="icon"
 					class="rounded-md"
 				>
-					<BellIcon class="text-gray-800 size-4" />
+					<BellIcon class="size-4 text-gray-800" />
 					<span class="sr-only">Переключить уведомления</span>
 				</Button>
 
 				<span
 					v-if="notificationIds.length > 0"
-					class="top-1.5 right-1.5 absolute flex justify-center items-center bg-emerald-500 rounded-full text-white text-xs -translate-y-1/2 translate-x-1/2 size-4"
+					class="top-1.5 right-1.5 absolute flex justify-center items-center bg-emerald-500 rounded-full size-4 text-white text-xs -translate-y-1/2 translate-x-1/2"
 				>
 					{{ notificationIds.length }}
 				</span>
@@ -125,7 +125,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 					<div class="flex-1">
 						<p class="text-sm">
 							<span
-								class="line-clamp-2 font-medium text-gray-700"
+								class="font-medium text-gray-700 line-clamp-2"
 								v-html="formatLocalizedMessage(notification.messages.ru)"
 							></span>
 						</p>
@@ -145,7 +145,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 				<!-- No Unread Notifications -->
 				<p
 					v-if="!notificationsResponse?.data?.length"
-					class="text-center text-gray-500 text-sm"
+					class="text-gray-500 text-sm text-center"
 				>
 					Нет новых уведомлений
 				</p>
@@ -157,6 +157,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 					size="sm"
 					variant="link"
 					@click="onSeeAllClick"
+          class='text-gray-600'
 				>
 					Посмотреть все
 				</Button>

@@ -2,8 +2,8 @@ package storeAdditives
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock"
-	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStock/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
+	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -15,10 +15,10 @@ type TransactionManager interface {
 type transactionManager struct {
 	db                *gorm.DB
 	storeAdditiveRepo StoreAdditiveRepository
-	storeStockRepo    storeStock.StoreStockRepository
+	storeStockRepo    storeStocks.StoreStockRepository
 }
 
-func NewTransactionManager(db *gorm.DB, storeAdditiveRepo StoreAdditiveRepository, storeStockRepo storeStock.StoreStockRepository) TransactionManager {
+func NewTransactionManager(db *gorm.DB, storeAdditiveRepo StoreAdditiveRepository, storeStockRepo storeStocks.StoreStockRepository) TransactionManager {
 	return &transactionManager{
 		db:                db,
 		storeAdditiveRepo: storeAdditiveRepo,
@@ -76,7 +76,7 @@ func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditi
 	return nil
 }
 
-func (m *transactionManager) addStocks(storeWarehouseRepo storeStock.StoreStockRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
+func (m *transactionManager) addStocks(storeWarehouseRepo storeStocks.StoreStockRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
 	for _, dto := range dtos {
 		_, err := storeWarehouseRepo.AddStock(storeID, &dto)
 		if err != nil {

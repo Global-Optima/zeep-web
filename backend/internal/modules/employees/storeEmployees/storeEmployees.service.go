@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -14,8 +15,9 @@ import (
 type StoreEmployeeService interface {
 	CreateStoreEmployee(storeID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]types.StoreEmployeeDTO, error)
-	GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDetailsDTO, error)
-	UpdateStoreEmployee(id, storeID uint, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error
+	GetStoreEmployeeByID(id uint, filter *contexts.StoreContextFilter) (*types.StoreEmployeeDetailsDTO, error)
+	GetAllStoreEmployees(storeID uint) ([]employeesTypes.EmployeeAccountDTO, error)
+	UpdateStoreEmployee(id uint, filter *contexts.StoreContextFilter, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error
 }
 
 type storeEmployeeService struct {
@@ -59,12 +61,12 @@ func (s *storeEmployeeService) GetStoreEmployees(storeID uint, filter *employees
 	return dtos, nil
 }
 
-func (s *storeEmployeeService) GetStoreEmployeeByID(id, storeID uint) (*types.StoreEmployeeDetailsDTO, error) {
+func (s *storeEmployeeService) GetStoreEmployeeByID(id uint, filter *contexts.StoreContextFilter) (*types.StoreEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid store employee ID")
 	}
 
-	employee, err := s.repo.GetStoreEmployeeByID(id, storeID)
+	employee, err := s.repo.GetStoreEmployeeByID(id, filter)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to retrieve store employee for store employee with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
@@ -78,10 +80,30 @@ func (s *storeEmployeeService) GetStoreEmployeeByID(id, storeID uint) (*types.St
 	return types.MapToStoreEmployeeDetailsDTO(employee), nil
 }
 
-func (s *storeEmployeeService) UpdateStoreEmployee(id, storeID uint, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error {
+func (s *storeEmployeeService) GetAllStoreEmployees(storeID uint) ([]employeesTypes.EmployeeAccountDTO, error) {
+	if storeID == 0 {
+		return nil, utils.WrapError("invalid store ID", employeesTypes.ErrValidation)
+	}
+
+	storeEmployees, err := s.repo.GetAllStoreEmployees(storeID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all store employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]employeesTypes.EmployeeAccountDTO, len(storeEmployees))
+	for i, storeEmployee := range storeEmployees {
+		dtos[i] = *employeesTypes.MapToEmployeeAccountDTO(&storeEmployee.Employee)
+	}
+
+	return dtos, nil
+}
+
+func (s *storeEmployeeService) UpdateStoreEmployee(id uint, filter *contexts.StoreContextFilter, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error {
 	updateFields, err := types.StoreEmployeeUpdateFields(input, role)
 	if err != nil {
 		return err
 	}
-	return s.repo.UpdateStoreEmployee(id, storeID, updateFields)
+	return s.repo.UpdateStoreEmployee(id, filter, updateFields)
 }

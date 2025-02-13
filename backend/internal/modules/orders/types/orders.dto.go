@@ -18,7 +18,7 @@ type OrdersFilterQuery struct {
 
 type CreateOrderDTO struct {
 	CustomerID        *uint               `json:"customerId,omitempty"`
-	CustomerName      string              `json:"customerName" binding:"required,regexp=^[a-zA-ZәӘіІңҢғҒүҮұҰқҚөӨһҺ\\s]+$"`
+	CustomerName      string              `json:"customerName" binding:"required"`
 	StoreEmployeeID   *uint               `json:"storeEmployeeId,omitempty"`
 	DeliveryAddressID *uint               `json:"deliveryAddressId"`
 	Suborders         []CreateSubOrderDTO `json:"subOrders"`
@@ -26,8 +26,13 @@ type CreateOrderDTO struct {
 	StoreID uint
 }
 
+type ValidateCustomerNameDTO struct {
+	CustomerName string `json:"customerName" binding:"required"`
+}
+
 type OrderStatusesCountDTO struct {
 	ALL         int64 `json:"ALL"`
+	PENDING     int64 `json:"PENDING"`
 	PREPARING   int64 `json:"PREPARING"`
 	COMPLETED   int64 `json:"COMPLETED"`
 	IN_DELIVERY int64 `json:"IN_DELIVERY"`
@@ -153,4 +158,10 @@ type OrderExportDTO struct {
 	StoreName       string                   `json:"storeName"`
 	Suborders       []SuborderDTO            `json:"suborders"`
 	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"`
+}
+
+type OrdersTimeZoneFilter struct {
+	StoreID          *uint   `form:"storeId" binding:"omitempty"`
+	TimeZoneLocation *string `form:"timezone" binding:"omitempty"`
+	TimeZoneOffset   *uint   `form:"timezoneOffset" binding:"omitempty"`
 }

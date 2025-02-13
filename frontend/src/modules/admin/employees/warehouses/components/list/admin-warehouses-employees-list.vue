@@ -71,7 +71,6 @@ const formatPhoneNumber = (phone: string) => {
   return phone.replace(/(\+7)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 ($2) $3-$4-$5')
 }
 
-
 // Status colors and formatted text
 const STATUS_COLOR: Record<string, string> = {
   active: 'bg-green-100 text-green-800',

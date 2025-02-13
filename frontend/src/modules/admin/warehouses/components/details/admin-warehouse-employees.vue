@@ -1,17 +1,25 @@
 <template>
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-6xl">
-		<div class="flex items-center gap-4">
-			<Button
-				variant="outline"
-				size="icon"
-				@click="onCancel"
-			>
-				<ChevronLeft class="w-5 h-5" />
-				<span class="sr-only">Назад</span>
-			</Button>
-			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Сотрудники склада {{ warehouse.name }}
-			</h1>
+		<div class="flex justify-between items-center gap-4">
+			<div class="flex items-center gap-4">
+				<Button
+					variant="outline"
+					size="icon"
+					@click="onCancel"
+				>
+					<ChevronLeft class="w-5 h-5" />
+					<span class="sr-only">Назад</span>
+				</Button>
+				<h1
+					class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0"
+				>
+					Сотрудники склада {{ warehouse.name }}
+				</h1>
+			</div>
+
+			<div>
+				<Button @click="onAddClick"> Создать </Button>
+			</div>
 		</div>
 
 		<Card>
@@ -51,6 +59,7 @@ import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.m
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const {warehouse} = defineProps<{warehouse: WarehouseDTO}>()
 
@@ -62,12 +71,18 @@ const onCancel = () => {
   emits('onCancel')
 }
 
+const router = useRouter()
+
 const filter = ref<WarehouseEmployeeFilter>({})
 
 const { data: regionsResponse } = useQuery({
   queryKey: computed(() => ['admin-warehouse-employees', warehouse.id]),
   queryFn: () => warehouseEmployeeService.getWarehouseEmployees({...filter.value, warehouseId: warehouse.id}),
 })
+
+const onAddClick = () => {
+  router.push(`/admin/warehouses/${warehouse.id}/employees/create`)
+}
 
 function updateFilter(updatedFilter: WarehouseEmployeeFilter) {
   filter.value = {...filter.value, ...updatedFilter}

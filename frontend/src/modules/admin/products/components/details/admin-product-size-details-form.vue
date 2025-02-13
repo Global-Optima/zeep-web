@@ -163,11 +163,6 @@ function removeIngredient(index: number) {
   ingredients.value.splice(index, 1)
 }
 
-function toggleDefault(index: number) {
-  if (readonly) return
-  additives.value[index].isDefault = !additives.value[index].isDefault
-}
-
 const onSubmit = handleSubmit((formValues) => {
   if (readonly) return
   additivesError.value = validateAdditives(additives.value)

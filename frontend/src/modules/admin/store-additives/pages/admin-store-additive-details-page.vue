@@ -6,7 +6,6 @@
 		:initialAdditive="storeAdditiveDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
-    readonly
 	/>
 </template>
 
@@ -38,7 +37,7 @@ const updateMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных добавки магазина. Пожалуйста, подождите.',
+			description: 'Обновление данных добавки кафе. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -46,13 +45,13 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-store-additive-details', storeAdditiveId] })
 		toast({
 			title: 'Успех!',
-			description: 'Данные добавки магазина успешно обновлены.',
+			description: 'Данные добавки кафе успешно обновлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении данных добавки магазина.',
+			description: 'Произошла ошибка при обновлении данных добавки кафе.',
 			variant: 'destructive',
 		})
 	},

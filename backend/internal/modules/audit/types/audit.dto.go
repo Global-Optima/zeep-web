@@ -11,15 +11,15 @@ import (
 )
 
 type EmployeeAuditDTO struct {
-	ID                         uint                           `json:"id"`
-	Timestamp                  time.Time                      `json:"timestamp"`
-	OperationType              data.OperationType             `json:"operationType"`
-	ComponentName              data.ComponentName             `json:"componentName"`
-	LocalizedMessages          localization.LocalizedMessages `json:"localizedMessages"`
-	IPAddress                  string                         `json:"ipAddress"`
-	ResourceURL                string                         `json:"resourceUrl"`
-	Method                     string                         `json:"method"`
-	Details                    json.RawMessage                `json:"details"`
+	ID                         uint                          `json:"id"`
+	Timestamp                  time.Time                     `json:"timestamp"`
+	OperationType              data.OperationType            `json:"operationType"`
+	ComponentName              data.ComponentName            `json:"componentName"`
+	LocalizedMessages          localization.LocalizedMessage `json:"localizedMessages"`
+	IPAddress                  string                        `json:"ipAddress"`
+	ResourceURL                string                        `json:"resourceUrl"`
+	Method                     string                        `json:"method"`
+	Details                    json.RawMessage               `json:"details"`
 	employeesTypes.EmployeeDTO `json:"employee"`
 }
 

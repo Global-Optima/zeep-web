@@ -10,7 +10,7 @@
 				v-if="!storeAdditivesResponse || storeAdditivesResponse.data.length === 0"
 				class="text-muted-foreground"
 			>
-				Топпинги магазина не найдены
+				Топпинги кафе не найдены
 			</p>
 
 			<AdminStoreAdditivesList

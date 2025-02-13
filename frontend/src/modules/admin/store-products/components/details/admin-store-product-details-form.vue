@@ -146,9 +146,7 @@ function onCancel() {
 				<div class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg">
 					<div class="flex flex-col space-y-1">
 						<Label class="font-medium"> Товар доступен к продаже </Label>
-						<p class="text-gray-500 text-sm">
-							Укажите доступен ли этот товар для продажи в магазине
-						</p>
+						<p class="text-gray-500 text-sm">Укажите доступен ли этот товар для продажи в кафе</p>
 					</div>
 
 					<Switch
@@ -163,7 +161,7 @@ function onCancel() {
 						<TableRow>
 							<TableHead>Размер</TableHead>
 							<TableHead>Базовая цена</TableHead>
-							<TableHead>Цена в магазине</TableHead>
+							<TableHead>Цена в кафе</TableHead>
 							<TableHead v-if="!props.readonly">Удалить</TableHead>
 						</TableRow>
 					</TableHeader>

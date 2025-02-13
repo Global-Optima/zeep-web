@@ -15,8 +15,9 @@ import (
 type RegionEmployeeService interface {
 	CreateRegionEmployee(regionID uint, input *employeesTypes.CreateEmployeeDTO) (uint, error)
 	GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]types.RegionEmployeeDTO, error)
-	GetRegionEmployeeByID(id, regionID uint) (*types.RegionEmployeeDetailsDTO, error)
-	UpdateRegionEmployee(id, regionID uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error
+	GetRegionEmployeeByID(id uint, regionID *uint) (*types.RegionEmployeeDetailsDTO, error)
+	GetAllRegionEmployees(regionID uint) ([]employeesTypes.EmployeeAccountDTO, error)
+	UpdateRegionEmployee(id uint, regionID *uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error
 }
 
 type regionEmployeeService struct {
@@ -75,7 +76,7 @@ func (s *regionEmployeeService) GetRegionEmployees(regionID uint, filter *employ
 	return dtos, nil
 }
 
-func (s *regionEmployeeService) GetRegionEmployeeByID(id, regionID uint) (*types.RegionEmployeeDetailsDTO, error) {
+func (s *regionEmployeeService) GetRegionEmployeeByID(id uint, regionID *uint) (*types.RegionEmployeeDetailsDTO, error) {
 	if id == 0 {
 		return nil, errors.New("invalid region manager ID")
 	}
@@ -94,7 +95,27 @@ func (s *regionEmployeeService) GetRegionEmployeeByID(id, regionID uint) (*types
 	return types.MapToRegionEmployeeDetailsDTO(employee), nil
 }
 
-func (s *regionEmployeeService) UpdateRegionEmployee(id, regionID uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error {
+func (s *regionEmployeeService) GetAllRegionEmployees(regionID uint) ([]employeesTypes.EmployeeAccountDTO, error) {
+	if regionID == 0 {
+		return nil, utils.WrapError("invalid region ID", employeesTypes.ErrValidation)
+	}
+
+	regionEmployees, err := s.repo.GetAllRegionEmployees(regionID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve all region employees", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]employeesTypes.EmployeeAccountDTO, len(regionEmployees))
+	for i, regionEmployee := range regionEmployees {
+		dtos[i] = *employeesTypes.MapToEmployeeAccountDTO(&regionEmployee.Employee)
+	}
+
+	return dtos, nil
+}
+
+func (s *regionEmployeeService) UpdateRegionEmployee(id uint, regionID *uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error {
 	updateFields, err := types.RegionEmployeeUpdateFields(input, role)
 	if err != nil {
 		return err
