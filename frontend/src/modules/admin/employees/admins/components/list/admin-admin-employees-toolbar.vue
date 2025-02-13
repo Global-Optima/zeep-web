@@ -37,6 +37,7 @@
 				disabled
 				>Экспорт</Button
 			>
+			<Button @click="onCreateClick"> Создать </Button>
 		</div>
 	</div>
 </template>
@@ -45,14 +46,18 @@
 import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
+import { getRouteName } from '@/core/config/routes.config'
 import type { EmployeesFilter } from '@/modules/admin/employees/models/employees.models'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Props and Emit
 const props = defineProps<{ filter: EmployeesFilter }>()
 const emit = defineEmits(['update:filter'])
+
+const router = useRouter()
 
 // Local Filter
 const localFilter = ref({ ...props.filter })
@@ -78,5 +83,9 @@ const applyFilter = (filterType: string) => {
 		localFilter.value.isActive = false
 	}
 	emit('update:filter', { ...localFilter.value })
+}
+
+const onCreateClick = () => {
+  router.push({name: getRouteName("ADMIN_ADMIN_EMPLOYEE_CREATE")})
 }
 </script>

@@ -77,7 +77,7 @@ const schema = toTypedSchema(
   z.object({
     quantity: z.coerce
       .number()
-      .min(1, 'Количество должно быть не менее 1')
+			.min(0, 'Количество должно быть не менее 0')
       .refine((value) => Number.isInteger(value), 'Количество должно быть целым числом'),
     expirationDate: z.string().optional()
   })
@@ -126,7 +126,7 @@ const onCancel = () => {
 			</h1>
 
 			<div
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
 				<Button
@@ -156,7 +156,7 @@ const onCancel = () => {
 						@click="onPrintBarcode"
 						class="gap-2"
 					>
-						<Printer class="text-gray-800 size-4" />
+						<Printer class="size-4 text-gray-800" />
 						<span>Штрихкод</span>
 					</Button>
 				</div>
@@ -224,7 +224,7 @@ const onCancel = () => {
 
 		<!-- Footer -->
 		<div
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 			v-if="!readonly"
 		>
 			<Button

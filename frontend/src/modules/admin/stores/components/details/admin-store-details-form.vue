@@ -16,7 +16,7 @@
 
 			<div
 				v-if="!readonly"
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 			>
 				<Button
 					variant="outline"
@@ -150,7 +150,7 @@
 						<CardDescription>Выберите франчайзи</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div v-if="!readonly">
+						<div class="flex items-center gap-4">
 							<Button
 								variant="link"
 								class="mt-0 p-0 h-fit text-primary underline"
@@ -158,9 +158,13 @@
 							>
 								{{ selectedFranchisee?.name || 'Франчайзи не выбран' }}
 							</Button>
-						</div>
-						<div v-else>
-							<span>{{ selectedFranchisee?.name || 'Франчайзи не выбран' }}</span>
+
+							<button
+								v-if="selectedFranchisee"
+								@click="selectFranchisee(null)"
+							>
+								<X class="size-4 text-gray-600" />
+							</button>
 						</div>
 					</CardContent>
 				</Card>
@@ -191,7 +195,7 @@
 		<!-- Footer -->
 		<div
 			v-if="!readonly"
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 		>
 			<Button
 				variant="outline"
@@ -242,7 +246,7 @@ import type { UpdateStoreDTO } from '@/modules/admin/stores/models/stores-dto.mo
 import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
 import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 import { toTypedSchema } from '@vee-validate/zod'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, X } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
@@ -297,7 +301,7 @@ const submitForm = handleSubmit((formValues) => {
     contactPhone: formValues.contactPhone,
     contactEmail: formValues.contactEmail,
     storeHours: formValues.storeHours,
-    franchiseId:  formValues.franchiseId
+    franchiseId:  formValues.franchiseId ?? null
   }
   emit('onSubmit', dto)
 })
@@ -315,8 +319,14 @@ function selectWarehouse(warehouse: WarehouseDTO) {
   setFieldValue('warehouseId', warehouse.id)
 }
 
-function selectFranchisee(franchisee: FranchiseeDTO) {
-  selectedFranchisee.value = franchisee;
+function selectFranchisee(franchisee: FranchiseeDTO | null) {
+  if (!franchisee) {
+    selectedFranchisee.value = null
+    setFieldValue('franchiseId', undefined)
+    return
+  }
+
+  selectedFranchisee.value = franchisee
   openFranchiseeDialog.value = false
   setFieldValue('franchiseId', franchisee.id)
 }

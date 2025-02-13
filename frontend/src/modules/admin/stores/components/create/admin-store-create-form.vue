@@ -14,7 +14,7 @@
 				Создать кафе
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -143,7 +143,7 @@
 						<CardDescription>Выберите франчайзи</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div>
+						<div class="flex items-center gap-4">
 							<Button
 								variant="link"
 								class="mt-0 p-0 h-fit text-primary underline"
@@ -151,6 +151,13 @@
 							>
 								{{ selectedFranchisee?.name || 'Франчайзи не выбран' }}
 							</Button>
+
+							<button
+								v-if="selectedFranchisee"
+								@click="selectFranchisee(null)"
+							>
+								<X class="size-4 text-gray-600" />
+							</button>
 						</div>
 					</CardContent>
 				</Card>
@@ -176,7 +183,7 @@
 		</div>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="handleCancel"
@@ -226,7 +233,7 @@ import type { CreateStoreDTO } from '@/modules/admin/stores/models/stores-dto.mo
 import AdminSelectWarehouseDialog from '@/modules/admin/warehouses/components/admin-select-warehouse-dialog.vue'
 import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 import { toTypedSchema } from '@vee-validate/zod'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, X } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import { ref } from 'vue'
 import * as z from 'zod'
@@ -294,7 +301,13 @@ function selectWarehouse(warehouse: WarehouseDTO) {
 const openFranchiseeDialog = ref(false)
 const selectedFranchisee = ref<FranchiseeDTO | null>(null)
 
-function selectFranchisee(franchisee: FranchiseeDTO) {
+function selectFranchisee(franchisee: FranchiseeDTO | null) {
+  if (!franchisee) {
+    selectedFranchisee.value = null
+    setFieldValue('franchiseId', undefined)
+    return
+  }
+
   selectedFranchisee.value = franchisee
   openFranchiseeDialog.value = false
   setFieldValue('franchiseId', franchisee.id)
