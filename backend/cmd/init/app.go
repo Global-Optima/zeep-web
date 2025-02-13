@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
+	"go.uber.org/zap"
 	"log"
 	"time"
 
@@ -98,12 +99,13 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 }
 
 // Temporary init: for testing purposes
-func InitializeStorage(cfg *config.Config) storage.StorageRepository {
+func InitializeStorage(cfg *config.Config, logger *zap.SugaredLogger) storage.StorageRepository {
 	storageRepo, err := storage.NewStorageRepository(
 		cfg.S3.Endpoint,
 		cfg.S3.AccessKey,
 		cfg.S3.SecretKey,
 		cfg.S3.BucketName,
+		logger,
 	)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage repository: %v", err)
@@ -131,7 +133,7 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 
 	redisClient := InitializeRedis(cfg)
 
-	storageRepo := InitializeStorage(cfg) // temp
+	storageRepo := InitializeStorage(cfg, logger.GetZapSugaredLogger()) // temp
 
 	// kafkaManager := InitializeKafka(cfg)
 

@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,7 +20,7 @@ import (
 )
 
 type StorageRepository interface {
-	GetLogger() *logrus.Logger
+	GetLogger() *zap.SugaredLogger
 	UploadFile(key string, fileData []byte) (string, error)
 	DeleteFile(key string) error
 	GetFileURL(key string) (string, error)
@@ -32,24 +33,10 @@ type storageRepository struct {
 	s3Client   *s3.S3
 	bucketName string
 	s3Endpoint string
-	logger     *logrus.Logger
+	logger     *zap.SugaredLogger
 }
 
-func NewLogger() *logrus.Logger {
-	logger := logrus.New()
-	logger.SetFormatter(&logrus.TextFormatter{
-		ForceColors:      true,
-		DisableTimestamp: false,
-		FullTimestamp:    true,
-		TimestampFormat:  "2006-01-02 15:04:05",
-	})
-	logger.Out = os.Stdout
-
-	return logger
-}
-
-func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (StorageRepository, error) {
-	logger := NewLogger()
+func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string, logger *zap.SugaredLogger) (StorageRepository, error) {
 	logger.Info("Initializing S3 session...")
 
 	sess, err := session.NewSession(&aws.Config{
@@ -98,6 +85,21 @@ func (r *storageRepository) GetFileURL(key string) (string, error) {
 	return fmt.Sprintf("%s/%s/%s", r.s3Client.Endpoint, r.bucketName, url.PathEscape(key)), nil
 }
 
+func (r *storageRepository) GetPresignedURL(key string) (string, error) {
+	req, _ := r.s3Client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(r.bucketName),
+		Key:    aws.String(key),
+	})
+
+	presignedURL, err := req.Presign(15 * time.Minute)
+	if err != nil {
+		r.logger.Errorf("Unable to sign the request for key %s: %s", key, err.Error())
+		return "", err
+	}
+
+	return presignedURL, nil
+}
+
 func (r *storageRepository) FileExists(key string) (bool, error) {
 	_, err := r.s3Client.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(r.bucketName),
@@ -114,7 +116,7 @@ func (r *storageRepository) FileExists(key string) (bool, error) {
 	return true, nil
 }
 
-func (r *storageRepository) GetLogger() *logrus.Logger {
+func (r *storageRepository) GetLogger() *zap.SugaredLogger {
 	return r.logger
 }
 
@@ -143,7 +145,7 @@ func (r *storageRepository) ListBuckets() ([]types.BucketInfo, error) {
 
 	result, err := r.s3Client.ListBuckets(nil)
 	if err != nil {
-		r.logger.WithError(err).Error("Unable to list buckets")
+		r.logger.With(err).Error("Unable to list buckets")
 		return nil, fmt.Errorf("unable to list buckets: %w", err)
 	}
 
@@ -153,7 +155,7 @@ func (r *storageRepository) ListBuckets() ([]types.BucketInfo, error) {
 			Name:      aws.StringValue(b.Name),
 			CreatedOn: aws.TimeValue(b.CreationDate),
 		})
-		r.logger.WithFields(logrus.Fields{
+		r.logger.With(logrus.Fields{
 			"bucketName": aws.StringValue(b.Name),
 			"createdOn":  aws.TimeValue(b.CreationDate),
 		}).Info("Bucket found")
