@@ -2,10 +2,8 @@ package orders
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"sync"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
@@ -17,7 +15,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
 	"go.uber.org/zap"
-	"golang.org/x/image/font"
 )
 
 type OrderService interface {
@@ -73,12 +70,6 @@ func NewOrderService(
 		logger:              logger,
 	}
 }
-
-var (
-	fontFace      font.Face
-	fontInitError error
-	fontInitOnce  sync.Once
-)
 
 func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetOrders(filter)

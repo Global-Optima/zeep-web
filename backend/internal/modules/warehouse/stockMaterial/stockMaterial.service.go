@@ -3,11 +3,8 @@ package stockMaterial
 import (
 	"errors"
 	"fmt"
-	"sync"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"golang.org/x/image/font"
 )
 
 type StockMaterialService interface {
@@ -32,12 +29,6 @@ func NewStockMaterialService(repo StockMaterialRepository) StockMaterialService 
 		repo: repo,
 	}
 }
-
-var (
-	fontFace      font.Face
-	fontInitError error
-	fontInitOnce  sync.Once
-)
 
 func (s *stockMaterialService) GetAllStockMaterials(filter *types.StockMaterialFilter) ([]types.StockMaterialsDTO, error) {
 	stockMaterials, err := s.repo.GetAllStockMaterials(filter)
