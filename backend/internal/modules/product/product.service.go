@@ -92,14 +92,14 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 }
 
 func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) error {
-	product := types.UpdateProductToModel(dto)
-
 	productBefore, err := s.repo.GetProductByID(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to fetch product: %w", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
+
+	product := types.UpdateProductToModel(dto, productBefore)
 
 	err = s.repo.UpdateProduct(productID, product)
 	if err != nil {
@@ -118,11 +118,12 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		Changes: changes,
 	}
 
-	err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to send notification: %w", err)
-		s.logger.Error(wrappedErr)
-		return wrappedErr
+	if len(changes) != 0 {
+		err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to send notification: %w", err)
+			s.logger.Error(wrappedErr)
+		}
 	}
 
 	return nil

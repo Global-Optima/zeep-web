@@ -604,7 +604,7 @@ func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint,
 	if err := r.db.
 		Model(&data.Store{}).
 		Select("warehouse_id").
-		Where("store_id = ?", storeID).
+		Where("id = ?", storeID).
 		Limit(1).
 		Scan(&warehouseID).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch warehouse for store: %w", err)
