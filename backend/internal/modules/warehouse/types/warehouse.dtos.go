@@ -44,5 +44,6 @@ type WarehouseDTO struct {
 
 type WarehouseFilter struct {
 	utils.BaseFilter
-	Search *string `form:"search"`
+	RegionID *uint   `form:"regionId"`
+	Search   *string `form:"search"`
 }
