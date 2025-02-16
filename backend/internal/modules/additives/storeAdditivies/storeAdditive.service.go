@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
@@ -30,6 +31,7 @@ type StoreAdditiveService interface {
 type storeAdditiveService struct {
 	repo               StoreAdditiveRepository
 	ingredientsRepo    ingredients.IngredientRepository
+	storageRepo        storage.StorageRepository
 	transactionManager TransactionManager
 	logger             *zap.SugaredLogger
 }
@@ -37,12 +39,14 @@ type storeAdditiveService struct {
 func NewStoreAdditiveService(
 	repo StoreAdditiveRepository,
 	ingredientsRepo ingredients.IngredientRepository,
+	storageRepo storage.StorageRepository,
 	transactionManager TransactionManager,
 	logger *zap.SugaredLogger,
 ) StoreAdditiveService {
 	return &storeAdditiveService{
 		repo:               repo,
 		ingredientsRepo:    ingredientsRepo,
+		storageRepo:        storageRepo,
 		transactionManager: transactionManager,
 		logger:             logger,
 	}
@@ -106,8 +110,14 @@ func (s *storeAdditiveService) GetStoreAdditives(storeID uint, filter *additiveT
 	}
 
 	storeAdditiveDTOs := make([]types.StoreAdditiveDTO, len(storeAdditives))
-	for i, additive := range storeAdditives {
-		storeAdditiveDTOs[i] = *types.ConvertToStoreAdditiveDTO(&additive)
+	for i, storeAdditive := range storeAdditives {
+		key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, storeAdditive.Additive.ImageURL)
+		imageUrl, err := s.storageRepo.GetFileURL(key)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to retrieve store additive image url for additiveID = %d: %w", storeAdditive.Additive.ID, err)
+			s.logger.Error(wrappedErr)
+		}
+		storeAdditiveDTOs[i] = *types.ConvertToStoreAdditiveDTO(&storeAdditive, imageUrl)
 	}
 
 	return storeAdditiveDTOs, nil
@@ -123,7 +133,13 @@ func (s *storeAdditiveService) GetAdditivesListToAdd(storeID uint, filter *addit
 
 	additiveDTOs := make([]additiveTypes.AdditiveDTO, len(additives))
 	for i, additive := range additives {
-		additiveDTOs[i] = *additiveTypes.ConvertToAdditiveDTO(&additive)
+		key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, additive.ImageURL)
+		imageUrl, err := s.storageRepo.GetFileURL(key)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to retrieve additive image url for additiveID = %d: %w", additive.ID, err)
+			s.logger.Error(wrappedErr)
+		}
+		additiveDTOs[i] = *additiveTypes.ConvertToAdditiveDTO(&additive, imageUrl)
 	}
 
 	return additiveDTOs, nil
@@ -138,8 +154,14 @@ func (s *storeAdditiveService) GetStoreAdditivesByIDs(storeID uint, IDs []uint) 
 	}
 
 	storeAdditiveDTOs := make([]types.StoreAdditiveDTO, len(storeAdditives))
-	for i, additive := range storeAdditives {
-		storeAdditiveDTOs[i] = *types.ConvertToStoreAdditiveDTO(&additive)
+	for i, storeAdditive := range storeAdditives {
+		key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, storeAdditive.Additive.ImageURL)
+		imageUrl, err := s.storageRepo.GetFileURL(key)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to retrieve store additive image url for additiveID = %d: %w", storeAdditive.ID, err)
+			s.logger.Error(wrappedErr)
+		}
+		storeAdditiveDTOs[i] = *types.ConvertToStoreAdditiveDTO(&storeAdditive, imageUrl)
 	}
 
 	return storeAdditiveDTOs, nil
@@ -153,7 +175,14 @@ func (s *storeAdditiveService) GetStoreAdditiveByID(storeID, storeAdditiveID uin
 		return nil, wrappedError
 	}
 
-	return types.ConvertToStoreAdditiveDetailsDTO(storeAdditive), nil
+	key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, storeAdditive.Additive.ImageURL)
+	imageUrl, err := s.storageRepo.GetFileURL(key)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve store additive image url for additiveID = %d: %w", storeAdditive.ID, err)
+		s.logger.Error(wrappedErr)
+	}
+	
+	return types.ConvertToStoreAdditiveDetailsDTO(storeAdditive, imageUrl), nil
 }
 
 func (s *storeAdditiveService) UpdateStoreAdditive(storeID, storeAdditiveID uint, dto *types.UpdateStoreAdditiveDTO) error {

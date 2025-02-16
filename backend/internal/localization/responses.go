@@ -22,6 +22,8 @@ const (
 var (
 	ErrMessageBindingJSON  = NewResponseKey(http.StatusBadRequest, "json")
 	ErrMessageBindingQuery = NewResponseKey(http.StatusBadRequest, "query")
+	ErrMessageGettingImage = NewResponseKey(http.StatusInternalServerError, "image", "upload")
+	ErrMessageGettingVideo = NewResponseKey(http.StatusInternalServerError, "video", "upload")
 )
 
 var DefaultLocalizedErrorMessages = &LocalizedMessage{

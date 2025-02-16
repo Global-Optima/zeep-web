@@ -2,6 +2,9 @@ package additives
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
+	"mime/multipart"
+	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -18,20 +21,22 @@ type AdditiveService interface {
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
 	GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]types.AdditiveDTO, error)
-	CreateAdditive(dto *types.CreateAdditiveDTO) (uint, error)
-	UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) error
+	CreateAdditive(dto *types.CreateAdditiveDTO, img *multipart.FileHeader) (uint, error)
+	UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO, img *multipart.FileHeader) error
 	DeleteAdditive(additiveID uint) error
 }
 
 type additiveService struct {
-	repo   AdditiveRepository
-	logger *zap.SugaredLogger
+	repo        AdditiveRepository
+	storageRepo storage.StorageRepository
+	logger      *zap.SugaredLogger
 }
 
-func NewAdditiveService(repo AdditiveRepository, logger *zap.SugaredLogger) AdditiveService {
+func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepository, logger *zap.SugaredLogger) AdditiveService {
 	return &additiveService{
-		repo:   repo,
-		logger: logger,
+		repo:        repo,
+		storageRepo: storageRepo,
+		logger:      logger,
 	}
 }
 
@@ -125,7 +130,13 @@ func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]typ
 
 	var additiveDTOs []types.AdditiveDTO
 	for _, additive := range additives {
-		additiveDTOs = append(additiveDTOs, *types.ConvertToAdditiveDTO(&additive))
+		key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, additive.ImageURL)
+		imageUrl, err := s.storageRepo.GetFileURL(key)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to retrieve additive image url for additiveID = %d: %w", additive.ID, err)
+			s.logger.Error(wrappedErr)
+		}
+		additiveDTOs = append(additiveDTOs, *types.ConvertToAdditiveDTO(&additive, imageUrl))
 	}
 
 	return additiveDTOs, nil
@@ -141,14 +152,40 @@ func (s *additiveService) GetAdditivesByIDs(additiveIDs []uint) ([]types.Additiv
 
 	var additiveDTOs []types.AdditiveDTO
 	for _, additive := range additives {
-		additiveDTOs = append(additiveDTOs, *types.ConvertToAdditiveDTO(&additive))
+		key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, additive.ImageURL)
+		imageUrl, err := s.storageRepo.GetFileURL(key)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to retrieve additive image url for additiveID = %d: %w", additive.ID, err)
+			s.logger.Error(wrappedErr)
+		}
+		additiveDTOs = append(additiveDTOs, *types.ConvertToAdditiveDTO(&additive, imageUrl))
 	}
 
 	return additiveDTOs, nil
 }
 
-func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, error) {
+func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO, img *multipart.FileHeader) (uint, error) {
 	additive := types.ConvertToAdditiveModel(dto)
+
+	exists, err := s.repo.CheckAdditiveExists(dto.Name)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to check additive: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	if exists {
+		wrappedErr := fmt.Errorf("%w: additive with the name %s already exists", types.ErrAdditiveAlreadyExists, dto.Name)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
+	imageUrl, _, err := s.storageRepo.ConvertAndUploadMedia(img, nil)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to upload image: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	additive.ImageURL = imageUrl
 
 	id, err := s.repo.CreateAdditive(additive)
 	if err != nil {
@@ -160,8 +197,32 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 	return id, nil
 }
 
-func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) error {
+func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO, img *multipart.FileHeader) error {
 	updateModels := types.ConvertToUpdatedAdditiveModels(dto)
+
+	if strings.TrimSpace(dto.Name) != "" {
+		exists, err := s.repo.CheckAdditiveExists(dto.Name)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to check additive: %w", err)
+			s.logger.Error(wrappedErr)
+			return wrappedErr
+		}
+		if exists {
+			wrappedErr := fmt.Errorf("%w: additive with the name %s already exists", types.ErrAdditiveAlreadyExists, dto.Name)
+			s.logger.Error(wrappedErr)
+			return wrappedErr
+		}
+	}
+
+	if img != nil {
+		imageUrl, _, err := s.storageRepo.ConvertAndUploadMedia(img, nil)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to upload image: %w", err)
+			s.logger.Error(wrappedErr)
+			return wrappedErr
+		}
+		updateModels.Additive.ImageURL = imageUrl
+	}
 
 	if err := s.repo.UpdateAdditiveWithAssociations(additiveID, updateModels); err != nil {
 		wrappedErr := utils.WrapError("failed to update additive with associations", err)
@@ -192,5 +253,12 @@ func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDetai
 		return nil, fmt.Errorf("additive with ID %d not found", additiveID)
 	}
 
-	return types.ConvertToAdditiveDetailsDTO(additive), nil
+	key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, additive.ImageURL)
+	imageUrl, err := s.storageRepo.GetFileURL(key)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve additive image url for additiveID = %d: %w", additive.ID, err)
+		s.logger.Error(wrappedErr)
+	}
+
+	return types.ConvertToAdditiveDetailsDTO(additive, imageUrl), nil
 }

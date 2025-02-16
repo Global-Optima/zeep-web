@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
@@ -24,12 +25,13 @@ func NewAdditivesModule(
 	franchiseeService franchisees.FranchiseeService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
+	storageRepo storage.StorageRepository,
 ) *AdditivesModule {
 	repo := additives.NewAdditiveRepository(base.DB)
-	service := additives.NewAdditiveService(repo, base.Logger)
+	service := additives.NewAdditiveService(repo, storageRepo, base.Logger)
 	handler := additives.NewAdditiveHandler(service, auditService)
 
-	storeAdditivesModule := NewStoreAdditivesModule(base, service, franchiseeService, auditService, ingredientRepo, storeStockRepo)
+	storeAdditivesModule := NewStoreAdditivesModule(base, service, franchiseeService, auditService, ingredientRepo, storeStockRepo, storageRepo)
 
 	base.Router.RegisterAdditivesRoutes(handler)
 
@@ -56,11 +58,13 @@ func NewStoreAdditivesModule(
 	auditService audit.AuditService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
+	storageRepo storage.StorageRepository,
 ) *StoreAdditivesModule {
 	repo := storeAdditives.NewStoreAdditiveRepository(base.DB)
 	service := storeAdditives.NewStoreAdditiveService(
 		repo,
 		ingredientRepo,
+		storageRepo,
 		storeAdditives.NewTransactionManager(base.DB, repo, storeStockRepo),
 		base.Logger)
 

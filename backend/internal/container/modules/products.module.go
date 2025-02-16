@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
@@ -27,14 +28,15 @@ func NewProductsModule(
 	franchiseeService franchisees.FranchiseeService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
+	storageRepo storage.StorageRepository,
 	notificationService notifications.NotificationService,
 ) *ProductsModule {
 	repo := product.NewProductRepository(base.DB)
-	service := product.NewProductService(repo, notificationService, base.Logger)
+	service := product.NewProductService(repo, notificationService, storageRepo, base.Logger)
 	handler := product.NewProductHandler(service, auditService)
 
 	recipeModule := NewRecipeModule(base, auditService)
-	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeStockRepo)
+	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeStockRepo, storageRepo)
 
 	base.Router.RegisterProductRoutes(handler)
 
@@ -86,12 +88,14 @@ func NewStoreProductsModule(
 	productRepo product.ProductRepository,
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
+	storageRepo storage.StorageRepository,
 ) *StoreProductsModule {
 	repo := storeProducts.NewStoreProductRepository(base.DB)
 	service := storeProducts.NewStoreProductService(
 		repo,
 		productRepo,
 		ingredientRepo,
+		storageRepo,
 		storeProducts.NewTransactionManager(base.DB, repo, storeStockRepo),
 		base.Logger)
 	handler := storeProducts.NewStoreProductHandler(service, productService, franchiseeService, auditService, base.Logger)

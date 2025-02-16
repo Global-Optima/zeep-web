@@ -12,6 +12,7 @@ import (
 )
 
 type ProductRepository interface {
+	CheckProductExists(productName string) (bool, error)
 	CreateProduct(product *data.Product) (uint, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
 	GetProductByID(productID uint) (*data.Product, error)
@@ -32,6 +33,18 @@ type productRepository struct {
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
+}
+
+func (p *productRepository) CheckProductExists(productName string) (bool, error) {
+	var product data.Product
+	err := p.db.Where(&data.Product{Name: productName}).First(&product).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.ProductSize, error) {

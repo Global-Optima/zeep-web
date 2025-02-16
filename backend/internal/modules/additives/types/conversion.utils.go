@@ -19,7 +19,6 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 		Name:               dto.Name,
 		Description:        dto.Description,
 		BasePrice:          dto.BasePrice,
-		ImageURL:           dto.ImageURL,
 		UnitID:             dto.UnitID,
 		Size:               dto.Size,
 		AdditiveCategoryID: dto.AdditiveCategoryID,
@@ -49,9 +48,6 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) *AdditiveModels {
 	}
 	if dto.BasePrice != nil {
 		additive.BasePrice = *dto.BasePrice
-	}
-	if dto.ImageURL != nil {
-		additive.ImageURL = *dto.ImageURL
 	}
 	if dto.Size != nil {
 		additive.Size = *dto.Size
@@ -109,14 +105,14 @@ func ConvertToAdditiveCategoryResponseDTO(model *data.AdditiveCategory) *Additiv
 	}
 }
 
-func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
+func ConvertToAdditiveDTO(additive *data.Additive, imageUrl string) *AdditiveDTO {
 	return &AdditiveDTO{
 		ID:              additive.ID,
-		BaseAdditiveDTO: *ConvertToBaseAdditiveDTO(additive),
+		BaseAdditiveDTO: *ConvertToBaseAdditiveDTO(additive, imageUrl),
 	}
 }
 
-func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
+func ConvertToAdditiveDetailsDTO(additive *data.Additive, imageUrl string) *AdditiveDetailsDTO {
 	ingredients := make([]AdditiveIngredientDTO, len(additive.Ingredients))
 	for i, additiveIngredient := range additive.Ingredients {
 		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
@@ -124,17 +120,17 @@ func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
 	}
 
 	return &AdditiveDetailsDTO{
-		AdditiveDTO: *ConvertToAdditiveDTO(additive),
+		AdditiveDTO: *ConvertToAdditiveDTO(additive, imageUrl),
 		Ingredients: ingredients,
 	}
 }
 
-func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
+func ConvertToBaseAdditiveDTO(additive *data.Additive, imageUrl string) *BaseAdditiveDTO {
 	return &BaseAdditiveDTO{
 		Name:        additive.Name,
 		Description: additive.Description,
 		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageURL,
+		ImageURL:    imageUrl,
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		Category:    *ConvertToCategoryDTO(&additive.Category),

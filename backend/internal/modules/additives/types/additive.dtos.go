@@ -93,14 +93,13 @@ type UpdateAdditiveCategoryDTO struct {
 }
 
 type UpdateAdditiveDTO struct {
-	Name               string                  `json:"name" binding:"omitempty"`
-	Description        string                  `json:"description" binding:"omitempty"`
-	BasePrice          *float64                `json:"basePrice" binding:"omitempty,gte=0"`
-	ImageURL           *string                 `json:"imageUrl" binding:"omitempty"`
-	Size               *int                    `json:"size" binding:"omitempty,gt=0"`
-	UnitID             *uint                   `json:"unitId" binding:"omitempty,gt=0"`
-	AdditiveCategoryID *uint                   `json:"additiveCategoryId" binding:"omitempty,gt=0"`
-	Ingredients        []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	Name               string                  `form:"name" binding:"omitempty"`
+	Description        string                  `form:"description" binding:"omitempty"`
+	BasePrice          *float64                `form:"basePrice" binding:"omitempty,gte=0"`
+	Size               *int                    `form:"size" binding:"omitempty,gt=0"`
+	UnitID             *uint                   `form:"unitId" binding:"omitempty,gt=0"`
+	AdditiveCategoryID *uint                   `form:"additiveCategoryId" binding:"omitempty,gt=0"`
+	Ingredients        []SelectedIngredientDTO `form:"ingredients" binding:"omitempty,dive"`
 }
 
 type AdditiveCategoryResponseDTO struct {
@@ -111,14 +110,13 @@ type AdditiveCategoryResponseDTO struct {
 }
 
 type CreateAdditiveDTO struct {
-	Name               string                  `json:"name" binding:"required"`
-	Description        string                  `json:"description" binding:"required"`
-	BasePrice          float64                 `json:"basePrice" binding:"required,gte=0"`
-	ImageURL           string                  `json:"imageUrl" binding:"omitempty"`
-	Size               int                     `json:"size" binding:"required,gt=0"`
-	UnitID             uint                    `json:"unitId" binding:"required,gt=0"`
-	AdditiveCategoryID uint                    `json:"additiveCategoryId" binding:"required,gt=0"`
-	Ingredients        []SelectedIngredientDTO `json:"ingredients" binding:"required,dive"`
+	Name               string                  `form:"name" binding:"required"`
+	Description        string                  `form:"description" binding:"required"`
+	BasePrice          float64                 `form:"basePrice" binding:"required,gte=0"`
+	Size               int                     `form:"size" binding:"required,gt=0"`
+	UnitID             uint                    `form:"unitId" binding:"required,gt=0"`
+	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"required,gt=0"`
+	Ingredients        []SelectedIngredientDTO `json:"-"`
 }
 
 type SelectedIngredientDTO struct {

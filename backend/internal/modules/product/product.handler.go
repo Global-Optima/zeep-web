@@ -2,6 +2,8 @@ package product
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
@@ -68,12 +70,24 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	var input types.CreateProductDTO
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBind(&input); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	id, err := h.service.CreateProduct(&input)
+	img, err := media.GetImageWithFormFile(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
+		return
+	}
+
+	vid, err := media.GetVideoWithFormFile(c)
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingVideo)
+		return
+	}
+
+	id, err := h.service.CreateProduct(&input, img, vid)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
@@ -163,8 +177,20 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	}
 
 	var input *types.UpdateProductDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBind(&input); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	img, err := media.GetImageWithFormFile(c)
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
+		return
+	}
+
+	vid, err := media.GetVideoWithFormFile(c)
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingVideo)
 		return
 	}
 
@@ -174,7 +200,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateProduct(uint(productID), input)
+	err = h.service.UpdateProduct(uint(productID), input, img, vid)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return

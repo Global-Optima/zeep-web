@@ -6,10 +6,10 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 )
 
-func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
+func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive, imageUrl string) *StoreAdditiveDTO {
 	return &StoreAdditiveDTO{
 		ID:              storeAdditive.ID,
-		BaseAdditiveDTO: *additiveTypes.ConvertToBaseAdditiveDTO(&storeAdditive.Additive),
+		BaseAdditiveDTO: *additiveTypes.ConvertToBaseAdditiveDTO(&storeAdditive.Additive, imageUrl),
 		AdditiveID:      storeAdditive.AdditiveID,
 		StorePrice:      getStorePrice(storeAdditive),
 	}
@@ -22,7 +22,7 @@ func getStorePrice(storeAdditive *data.StoreAdditive) float64 {
 	return storeAdditive.Additive.BasePrice
 }
 
-func ConvertToStoreAdditiveDetailsDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDetailsDTO {
+func ConvertToStoreAdditiveDetailsDTO(storeAdditive *data.StoreAdditive, imageUrl string) *StoreAdditiveDetailsDTO {
 	ingredients := make([]additiveTypes.AdditiveIngredientDTO, len(storeAdditive.Additive.Ingredients))
 	for i, additiveIngredient := range storeAdditive.Additive.Ingredients {
 		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
@@ -30,7 +30,7 @@ func ConvertToStoreAdditiveDetailsDTO(storeAdditive *data.StoreAdditive) *StoreA
 	}
 
 	return &StoreAdditiveDetailsDTO{
-		StoreAdditiveDTO: *ConvertToStoreAdditiveDTO(storeAdditive),
+		StoreAdditiveDTO: *ConvertToStoreAdditiveDTO(storeAdditive, imageUrl),
 		Ingredients:      ingredients,
 	}
 }

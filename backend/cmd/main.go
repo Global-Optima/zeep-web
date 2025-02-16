@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
-
 	initializer "github.com/Global-Optima/zeep-web/backend/cmd/init"
+	"log"
 )
 
 func main() {

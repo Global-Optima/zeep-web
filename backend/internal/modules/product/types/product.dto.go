@@ -59,10 +59,9 @@ type ProductSizeAdditiveDTO struct {
 }
 
 type CreateProductDTO struct {
-	Name        string `json:"name" binding:"required,min=2,max=100"`
-	Description string `json:"description" binding:"max=500"`
-	ImageURL    string `json:"imageUrl" binding:"omitempty,url"`
-	CategoryID  uint   `json:"categoryId" binding:"omitempty"`
+	Name        string `form:"name" binding:"required,min=2,max=100"`
+	Description string `form:"description" binding:"max=500"`
+	CategoryID  uint   `form:"categoryId" binding:"omitempty"`
 }
 
 type SelectedAdditiveDTO struct {
@@ -89,7 +88,6 @@ type CreateProductSizeDTO struct {
 type UpdateProductDTO struct {
 	Name        string `json:"name" binding:"omitempty,min=2,max=100"`
 	Description string `json:"description" binding:"omitempty,max=500"`
-	ImageURL    string `json:"imageUrl" binding:"omitempty,url"`
 	CategoryID  uint   `json:"categoryId" binding:"omitempty,gt=0"`
 }
 

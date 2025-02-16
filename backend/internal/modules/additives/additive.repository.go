@@ -11,6 +11,7 @@ import (
 )
 
 type AdditiveRepository interface {
+	CheckAdditiveExists(additiveName string) (bool, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
@@ -31,6 +32,22 @@ type additiveRepository struct {
 
 func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
+}
+
+func (r *additiveRepository) CheckAdditiveExists(additiveName string) (bool, error) {
+	var addtive data.Additive
+
+	err := r.db.Model(&data.Additive{}).
+		Where(&data.Additive{Name: additiveName}).
+		First(&addtive).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {

@@ -1,8 +1,13 @@
 package additives
 
 import (
+	"encoding/json"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -171,12 +176,30 @@ func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 
 func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	var dto types.CreateAdditiveDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := c.ShouldBind(&dto); err != nil {
+		logrus.Info(err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	id, err := h.service.CreateAdditive(&dto)
+	ingredientsJSON := c.PostForm("ingredients")
+	if ingredientsJSON == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing ingredients field"})
+		return
+	}
+
+	if err := json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ingredients JSON"})
+		return
+	}
+
+	img, err := media.GetImageWithFormFile(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
+		return
+	}
+
+	id, err := h.service.CreateAdditive(&dto, img)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Additive)
 		return
@@ -204,8 +227,14 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 	}
 
 	var dto types.UpdateAdditiveDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := c.ShouldBind(&dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	img, err := media.GetImageWithFormFile(c)
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
 
@@ -215,7 +244,7 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateAdditive(uint(additiveID), &dto); err != nil {
+	if err := h.service.UpdateAdditive(uint(additiveID), &dto, img); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Additive)
 		return
 	}

@@ -2,6 +2,12 @@ package product
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"mime/multipart"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
@@ -13,8 +19,8 @@ import (
 type ProductService interface {
 	GetProductByID(productID uint) (*types.ProductDetailsDTO, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDetailsDTO, error)
-	CreateProduct(product *types.CreateProductDTO) (uint, error)
-	UpdateProduct(productID uint, dto *types.UpdateProductDTO) error
+	CreateProduct(dto *types.CreateProductDTO, img, vid *multipart.FileHeader) (uint, error)
+	UpdateProduct(productID uint, dto *types.UpdateProductDTO, img, vid *multipart.FileHeader) error
 	DeleteProduct(productID uint) error
 
 	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDetailsDTO, error)
@@ -27,13 +33,15 @@ type ProductService interface {
 type productService struct {
 	repo                ProductRepository
 	notificationService notifications.NotificationService
+	storageRepo         storage.StorageRepository
 	logger              *zap.SugaredLogger
 }
 
-func NewProductService(repo ProductRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) ProductService {
+func NewProductService(repo ProductRepository, notificationService notifications.NotificationService, storageRepo storage.StorageRepository, logger *zap.SugaredLogger) ProductService {
 	return &productService{
 		repo:                repo,
 		logger:              logger,
+		storageRepo:         storageRepo,
 		notificationService: notificationService,
 	}
 }
@@ -48,7 +56,13 @@ func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.P
 
 	productDTOs := make([]types.ProductDetailsDTO, len(products))
 	for i, product := range products {
-		productDTOs[i] = *types.MapToProductDetailsDTO(&product)
+		key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, product.ImageURL)
+		imageUrl, err := s.storageRepo.GetFileURL(key)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to retrieve product image url for productID = %d: %w", product.ID, err)
+			s.logger.Error(wrappedErr)
+		}
+		productDTOs[i] = *types.MapToProductDetailsDTO(&product, imageUrl, product.VideoURL)
 	}
 
 	return productDTOs, nil
@@ -62,11 +76,46 @@ func (s *productService) GetProductByID(productID uint) (*types.ProductDetailsDT
 		return nil, wrappedErr
 	}
 
-	return types.MapToProductDetailsDTO(product), nil
+	key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, product.ImageURL)
+	imageUrl, err := s.storageRepo.GetFileURL(key)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve product image url for productID = %d: %w", productID, err)
+		s.logger.Error(wrappedErr)
+	}
+
+	return types.MapToProductDetailsDTO(product, imageUrl, product.VideoURL), nil
 }
 
-func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error) {
+func (s *productService) CreateProduct(
+	dto *types.CreateProductDTO,
+	img *multipart.FileHeader,
+	vid *multipart.FileHeader,
+) (uint, error) {
+	startTime := time.Now()
+	fmt.Println("[TIMER] Processing started...")
+
 	product := types.CreateToProductModel(dto)
+
+	exists, err := s.repo.CheckProductExists(dto.Name)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to check product: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	if exists {
+		wrappedErr := fmt.Errorf("%w: product with the name %s already exists", types.ErrProductAlreadyExists, dto.Name)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
+	imageUrl, videoUrl, err := s.storageRepo.ConvertAndUploadMedia(img, vid)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to convert and upload media for productID = %d: %w", product.ID, err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	product.ImageURL = imageUrl
+	product.VideoURL = videoUrl
 
 	productID, err := s.repo.CreateProduct(product)
 	if err != nil {
@@ -74,6 +123,8 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 		s.logger.Error(wrappedErr)
 		return 0, wrappedErr
 	}
+
+	fmt.Printf("[TIMER] Total process finished. Took %v\n", time.Since(startTime))
 
 	return productID, nil
 }
@@ -91,7 +142,21 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 	return productSizeID, nil
 }
 
-func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) error {
+func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO, img, vid *multipart.FileHeader) error {
+	if strings.TrimSpace(dto.Name) != "" {
+		exists, err := s.repo.CheckProductExists(dto.Name)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to check product: %w", err)
+			s.logger.Error(wrappedErr)
+			return wrappedErr
+		}
+		if exists {
+			wrappedErr := fmt.Errorf("%w: product with the name %s already exists", types.ErrProductAlreadyExists, dto.Name)
+			s.logger.Error(wrappedErr)
+			return wrappedErr
+		}
+	}
+
 	product := types.UpdateProductToModel(dto)
 
 	productBefore, err := s.repo.GetProductByID(productID)
@@ -100,6 +165,15 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
+
+	imageUrl, videoUrl, err := s.storageRepo.ConvertAndUploadMedia(img, vid)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to convert and upload media for productID = %d: %w", productID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+	product.ImageURL = imageUrl
+	product.VideoURL = videoUrl
 
 	err = s.repo.UpdateProduct(productID, product)
 	if err != nil {
@@ -178,6 +252,16 @@ func (s *productService) GetProductSizesByProductID(productID uint) ([]types.Pro
 
 	dtos := make([]types.ProductSizeDetailsDTO, len(productSizes))
 	for i, productSize := range productSizes {
+		for _, productSizeAdditive := range productSize.Additives {
+			key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, productSizeAdditive.Additive.ImageURL)
+			imageUrl, err := s.storageRepo.GetFileURL(key)
+			if err != nil {
+				wrappedErr := fmt.Errorf("failed to retrieve product image url for productID = %d: %w", productID, err)
+				s.logger.Error(wrappedErr)
+			}
+			productSizeAdditive.Additive.ImageURL = imageUrl
+		}
+
 		dtos[i] = types.MapToProductSizeDetails(productSize)
 	}
 
@@ -214,4 +298,39 @@ func (s *productService) DeleteProductSize(productSizeID uint) error {
 		return wrappedErr
 	}
 	return nil
+}
+
+func (s *productService) getPresignedURLsConcurrently(products []data.Product) []string {
+	numProducts := len(products)
+	imageUrls := make([]string, numProducts)
+
+	var wg sync.WaitGroup
+	errChan := make(chan error, numProducts)
+
+	for i, product := range products {
+		wg.Add(1)
+
+		go func(idx int, imageKey string) {
+			defer wg.Done()
+
+			presignedURL, err := s.storageRepo.GetPresignedURL(imageKey)
+			if err != nil {
+				s.logger.Errorf("Failed to get presigned URL for image %s: %v", imageKey, err)
+				errChan <- err // Send error to channel
+				return
+			}
+
+			imageUrls[idx] = presignedURL
+		}(i, product.ImageURL)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	// Check for errors (if needed, handle them based on your use case)
+	if len(errChan) > 0 {
+		s.logger.Warnf("Some presigned URLs failed to generate.")
+	}
+
+	return imageUrls
 }
