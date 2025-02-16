@@ -1,7 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"log"
+	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/viper"
 )
@@ -49,6 +52,25 @@ func LoadConfig(file string) (*Config, error) {
 	cfg.IsTest = cfg.Env == EnvTest
 
 	return cfg, nil
+}
+
+func LoadTestConfig(optionalPath ...string) (*Config, error) {
+	viper.Set("ENV", EnvTest)
+
+	var testEnvPath string
+	if len(optionalPath) > 0 && optionalPath[0] != "" {
+		testEnvPath = optionalPath[0]
+	} else {
+		_, callerFile, _, ok := runtime.Caller(1)
+		if !ok {
+			return nil, fmt.Errorf("failed to get caller information")
+		}
+
+		dir := filepath.Dir(callerFile)
+		testEnvPath = filepath.Join(dir, "test.env")
+	}
+	log.Printf("Loading test config from: %s", testEnvPath)
+	return LoadConfig(testEnvPath)
 }
 
 func GetConfig() *Config {

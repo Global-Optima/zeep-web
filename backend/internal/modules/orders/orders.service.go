@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
@@ -124,6 +125,10 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
 		s.logger.Error(err)
 		return nil, err
+	}
+
+	if len(createOrderDTO.Suborders) == 0 {
+		return nil, fmt.Errorf("order can not be empty")
 	}
 
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)

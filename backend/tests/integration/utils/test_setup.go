@@ -18,7 +18,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -31,6 +30,11 @@ type TestEnvironment struct {
 
 func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	cfg := loadConfig()
+
+	if err := logger.InitLoggers("debug", "logs/test_gin.log", "logs/test_service.log", cfg.IsTest); err != nil {
+		log.Fatalf("Failed to initialize test loggers: %v", err)
+	}
+
 	db := setupDatabase(cfg, t)
 	setupRedis(cfg, t)
 	router := setupRouter(db)
@@ -45,24 +49,26 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 }
 
 func loadConfig() *config.Config {
+	var cfg *config.Config
+
 	_, b, _, _ := runtime.Caller(0)
-	baseDir := filepath.Join(filepath.Dir(b), "../../..")
-	envFilePath := filepath.Join(baseDir, "tests", ".env")
+	baseDir := filepath.Join(filepath.Dir(b), "../../../")
+	envFilePath := filepath.Join(baseDir, "tests", "test.env")
 
 	if _, err := os.Stat(envFilePath); err == nil {
-		err := godotenv.Load(envFilePath)
+		cfg, err = config.LoadTestConfig(envFilePath)
 		if err != nil {
-			log.Fatalf("Failed to load .env file! Details: %s", err)
+			log.Fatalf("Failed to load test.env file! Details: %s", err)
 		}
-		log.Println("Loaded configuration from .env file")
+		log.Println("Loaded configuration from test.env file")
 	} else {
-		log.Println(".env file not found. Loading configuration from environment variables")
+		log.Println("test.env file not found. Loading configuration from environment variables")
+		cfg, err = LoadConfigFromEnv()
+		if err != nil {
+			log.Fatalf("Failed to load configuration from environment variables! Details: %s", err)
+		}
 	}
 
-	cfg, err := LoadConfigFromEnv()
-	if err != nil {
-		log.Fatalf("Failed to load configuration from environment variables! Details: %s", err)
-	}
 	return cfg
 }
 
@@ -162,6 +168,7 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 
 func setupRouter(db *gorm.DB) *gin.Engine {
 	router := gin.New()
+
 	router.Use(logger.ZapLoggerMiddleware())
 
 	apiRouter := routes.NewRouter(router, "/api", "/test")

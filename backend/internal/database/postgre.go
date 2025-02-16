@@ -2,12 +2,14 @@ package database
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"path/filepath"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/golang-migrate/migrate/v4"
 	postgresMigration "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -19,13 +21,22 @@ type DBHandler struct {
 	DB *gorm.DB
 }
 
+var migrationsPath = "migrations"
+
 func InitDB(dsn string) (*DBHandler, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
-	if err := applyMigrations(db, "migrations"); err != nil {
+	cfg := config.GetConfig()
+	if cfg.IsTest {
+		if err := ResetDatabase(db, migrationsPath); err != nil {
+			return nil, fmt.Errorf("failed to reset database: %w", err)
+		}
+	}
+
+	if err := applyMigrations(db, migrationsPath); err != nil {
 		return nil, fmt.Errorf("failed to apply migrations: %w", err)
 	}
 
@@ -39,6 +50,13 @@ func InitDB(dsn string) (*DBHandler, error) {
 
 	log.Println("Database connected and migrations applied successfully.")
 	return &DBHandler{DB: db}, nil
+}
+
+func ResetDatabase(db *gorm.DB, migrationsPath string) error {
+	if err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;").Error; err != nil {
+		return fmt.Errorf("failed to reset schema: %w", err)
+	}
+	return applyMigrations(db, migrationsPath)
 }
 
 func applyMigrations(db *gorm.DB, migrationsPath string) error {
@@ -83,6 +101,24 @@ func determineSourceURL(migrationsPath string) string {
 	sourceURL := "file://" + absPath
 	if cfg.IsDevelopment {
 		sourceURL = "file://" + migrationsPath
+	}
+
+	if cfg.IsTest {
+		candidatePaths := []string{
+			"../../migrations", // two levels up
+			"../migrations",    // one level up
+			"migrations",       // same directory
+		}
+		if callerDir, ok := utils.GetCallerDir(2); ok {
+			if foundPath := utils.SearchForCandidatePath(callerDir, candidatePaths); foundPath != "" {
+				sourceURL = "file://" + foundPath
+				log.Printf("Test environment: using migrations folder: %s", foundPath)
+			} else {
+				log.Printf("Test environment: no candidate migrations folder found; using default: %s", sourceURL)
+			}
+		} else {
+			log.Printf("Test environment: failed to determine caller directory; using default migrations path: %s", sourceURL)
+		}
 	}
 
 	return sourceURL
