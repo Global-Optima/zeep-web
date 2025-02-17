@@ -14,7 +14,7 @@
 				{{ initialData.name }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -83,7 +83,7 @@
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"
@@ -136,7 +136,7 @@ const schema = toTypedSchema(
 	z.object({
 		quantity: z.coerce
 			.number()
-			.min(1, 'Количество должно быть не менее 1')
+			.min(0, 'Количество должно быть не менее 0')
 			.refine((value) => Number.isInteger(value), 'Количество должно быть целым числом'),
 		lowStockThreshold: z.coerce.number()
 			.min(0, 'Порог малого запаса не может быть отрицательным')

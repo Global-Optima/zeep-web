@@ -14,7 +14,7 @@
 				Добавить на склад
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -64,7 +64,7 @@
 						<TableRow v-if="selectedIngredients.length === 0">
 							<TableCell
 								colspan="5"
-								class="py-5 text-center text-gray-500"
+								class="py-5 text-gray-500 text-center"
 							>
 								Нет добавленных ингредиентов
 							</TableCell>
@@ -106,7 +106,7 @@
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"

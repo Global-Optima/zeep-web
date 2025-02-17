@@ -20,7 +20,7 @@ export interface CreateStoreDTO {
 
 export interface UpdateStoreDTO {
 	name: string
-	franchiseId?: number
+	franchiseId?: number | null
 	warehouseId?: number
 	facilityAddress: {
 		address: string
