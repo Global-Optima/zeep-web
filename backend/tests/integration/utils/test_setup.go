@@ -197,7 +197,7 @@ func truncateTables(db *gorm.DB) {
 func loadMockData(db *gorm.DB) {
 	_, b, _, _ := runtime.Caller(0)
 	baseDir := filepath.Join(filepath.Dir(b), "../../..")
-	sqlFilePath := filepath.Join(baseDir, "scripts", "CREATE_MOCK_DATA.sql")
+	sqlFilePath := filepath.Join(baseDir, "scripts", "CREATE_TEST_DATA.sql")
 
 	sqlContent, err := os.ReadFile(sqlFilePath)
 	if err != nil {

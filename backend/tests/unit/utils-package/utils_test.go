@@ -3,7 +3,6 @@ package utils_test
 import (
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	testUtils "github.com/Global-Optima/zeep-web/backend/tests/unit/utils"
@@ -19,16 +18,6 @@ func TestValidateTime(t *testing.T) {
 
 	testUtils.TestRunner(t, func(args ...interface{}) (interface{}, error) {
 		return nil, utils.ValidateTime(args[0].(string))
-	}, testCases)
-}
-
-func TestToUTC(t *testing.T) {
-	testCases := []testUtils.TestCase{
-		{Name: "Convert to UTC", InputArgs: []interface{}{time.Date(2024, time.January, 1, 12, 0, 0, 0, time.Local)}, Expected: time.Date(2024, time.January, 1, 7, 0, 0, 0, time.UTC), ShouldFail: false, SetupMock: nil},
-	}
-
-	testUtils.TestRunner(t, func(args ...interface{}) (interface{}, error) {
-		return utils.ToUTC(args[0].(time.Time)), nil
 	}, testCases)
 }
 

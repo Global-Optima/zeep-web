@@ -16,7 +16,7 @@ func TestUnitEndpoints(t *testing.T) {
 			{
 				Description: "Should create a new unit",
 				Method:      http.MethodPost,
-				URL:         "/units",
+				URL:         "/api/v1/units",
 				Body: map[string]interface{}{
 					"name":             "Kilogram",
 					"conversionFactor": 1.0,

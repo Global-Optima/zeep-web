@@ -123,8 +123,8 @@ VALUES
 -- 22. Insert into store_stocks
 INSERT INTO store_stocks (store_id, ingredient_id, low_stock_threshold, quantity)
 VALUES 
-  (1, 1, 10, 100),
-  (1, 2, 5, 50);
+  (1, 1, 10, 1000),
+  (1, 2, 5, 500);
 
 -- 23. Insert into customers
 INSERT INTO customers (first_name, last_name, password, phone, is_verified, is_banned)
