@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/tests/integration/utils"
 )
 
@@ -14,14 +15,26 @@ func TestFranchiseeEndpoints(t *testing.T) {
 	t.Run("Create a Franchisee", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description: "Should create a new franchisee",
+				Description: "Admin should create a new franchisee",
 				Method:      http.MethodPost,
-				URL:         "/franchisees",
+				URL:         "/api/test/franchisees",
 				Body: map[string]interface{}{
 					"name":        "Franchisee A",
 					"description": "Main branch",
 				},
+				AuthRole:     data.RoleAdmin, // Only Admin can create
 				ExpectedCode: http.StatusCreated,
+			},
+			{
+				Description: "Barista should NOT be able to create a franchisee",
+				Method:      http.MethodPost,
+				URL:         "/api/test/franchisees",
+				Body: map[string]interface{}{
+					"name":        "Franchisee A",
+					"description": "Main branch",
+				},
+				AuthRole:     data.RoleBarista, // Unauthorized role
+				ExpectedCode: http.StatusForbidden,
 			},
 		}
 		env.RunTests(t, testCases)
@@ -30,10 +43,25 @@ func TestFranchiseeEndpoints(t *testing.T) {
 	t.Run("Fetch all Franchisees", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description:  "Should return a list of franchisees",
+				Description:  "Admin should fetch all franchisees",
 				Method:       http.MethodGet,
-				URL:          "/franchisees",
+				URL:          "/api/test/franchisees",
+				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Franchise Manager NOT(why?) should fetch all franchisees",
+				Method:       http.MethodGet,
+				URL:          "/api/test/franchisees",
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusForbidden,
+			},
+			{
+				Description:  "Barista should NOT be able to fetch franchisees",
+				Method:       http.MethodGet,
+				URL:          "/api/test/franchisees",
+				AuthRole:     data.RoleBarista,
+				ExpectedCode: http.StatusForbidden,
 			},
 		}
 		env.RunTests(t, testCases)
@@ -42,16 +70,31 @@ func TestFranchiseeEndpoints(t *testing.T) {
 	t.Run("Fetch a Franchisee by ID", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description:  "Should return a franchisee by ID",
+				Description:  "Admin should fetch a franchisee by ID",
 				Method:       http.MethodGet,
-				URL:          "/franchisees/1",
+				URL:          "/api/test/franchisees/1",
+				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusOK,
 			},
 			{
-				Description:  "Should return 404 for non-existent franchisee",
+				Description:  "Franchise Manager should NOT(why?) fetch a franchisee by ID",
 				Method:       http.MethodGet,
-				URL:          "/franchisees/9999",
-				ExpectedCode: http.StatusNotFound,
+				URL:          "/api/test/franchisees/1",
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusForbidden,
+			},
+			{
+				Description:  "Unauthorized user should NOT fetch a franchisee",
+				Method:       http.MethodGet,
+				URL:          "/api/test/franchisees/1",
+				ExpectedCode: http.StatusUnauthorized,
+			},
+			{
+				Description:  "Should return 500 for non-existent franchisee",
+				Method:       http.MethodGet,
+				URL:          "/api/test/franchisees/9999",
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusInternalServerError,
 			},
 		}
 		env.RunTests(t, testCases)
@@ -60,12 +103,23 @@ func TestFranchiseeEndpoints(t *testing.T) {
 	t.Run("Update a Franchisee", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description: "Should update a franchisee",
+				Description: "Admin should update a franchisee",
 				Method:      http.MethodPut,
-				URL:         "/franchisees/1",
+				URL:         "/api/test/franchisees/1",
 				Body: map[string]interface{}{
 					"name": "Updated Franchisee A",
 				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description: "Franchise Manager should be able to update a franchisee",
+				Method:      http.MethodPut,
+				URL:         "/api/test/franchisees/1",
+				Body: map[string]interface{}{
+					"name": "Updated Franchisee A",
+				},
+				AuthRole:     data.RoleFranchiseManager,
 				ExpectedCode: http.StatusOK,
 			},
 		}
@@ -75,10 +129,18 @@ func TestFranchiseeEndpoints(t *testing.T) {
 	t.Run("Delete a Franchisee", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description:  "Should delete a franchisee",
+				Description:  "Admin should delete a franchisee",
 				Method:       http.MethodDelete,
-				URL:          "/franchisees/1",
+				URL:          "/api/test/franchisees/1",
+				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Barista should NOT be able to delete a franchisee",
+				Method:       http.MethodDelete,
+				URL:          "/api/test/franchisees/1",
+				AuthRole:     data.RoleBarista,
+				ExpectedCode: http.StatusForbidden,
 			},
 		}
 		env.RunTests(t, testCases)

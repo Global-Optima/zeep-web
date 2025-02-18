@@ -133,32 +133,50 @@ VALUES
   ('Alice', 'Smith', 'hashedpass', '+2222222222', true, false);
 
 
--- 24. Insert into employees
+-- 24. Insert multiple employees for different roles (using the given hashed password)
 INSERT INTO employees (first_name, last_name, phone, email, hashed_password, is_active)
 VALUES 
-  ('Alice', 'Smith', '+2222222222', 'alice@test.com', 'hashedpass', true);
+  ('Alice', 'Smith', '+2222222222', 'alice@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- STORE_MANAGER
+  ('Bob', 'Johnson', '+3333333333', 'bob@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- BARISTA
+  ('Charlie', 'Williams', '+4444444444', 'charlie@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- STORE_MANAGER
+  ('David', 'Brown', '+5555555555', 'david@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- BARISTA
+  ('Emma', 'Davis', '+6666666666', 'emma@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- WAREHOUSE_MANAGER
+  ('Frank', 'Wilson', '+7777777777', 'frank@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- WAREHOUSE_EMPLOYEE
+  ('Grace', 'Moore', '+8888888888', 'grace@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- REGION_WAREHOUSE_MANAGER
+  ('Henry', 'Taylor', '+9999999999', 'henry@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- FRANCHISEE_MANAGER
+  ('Ivy', 'Anderson', '+1010101010', 'ivy@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true),  -- FRANCHISEE_OWNER
+  ('Jack', 'Thomas', '+1111111111', 'jack@test.com', '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy', true);  -- ADMIN
 
--- 25. Insert into store_employees
+-- 25. Insert store employees
 INSERT INTO store_employees (employee_id, store_id, role)
 VALUES 
   (1, 1, 'STORE_MANAGER'),
-  (1, 2, 'STORE_MANAGER');
+  (2, 1, 'BARISTA'),
+  (3, 2, 'STORE_MANAGER'),
+  (4, 2, 'BARISTA');
 
--- 26. Insert into warehouse_employees
+-- 26. Insert warehouse employees
 INSERT INTO warehouse_employees (employee_id, warehouse_id, role)
-VALUES (1, 1, 'WAREHOUSE_MANAGER');
+VALUES 
+  (5, 1, 'WAREHOUSE_MANAGER'),
+  (6, 1, 'WAREHOUSE_EMPLOYEE');
 
--- 27. Insert into region_employees
+-- 27. Insert region employees
 INSERT INTO region_employees (employee_id, region_id, role)
-VALUES (1, 1, 'REGION_WAREHOUSE_MANAGER');
+VALUES 
+  (7, 1, 'REGION_WAREHOUSE_MANAGER');
 
--- 28. Insert into franchisee_employees
-INSERT INTO franchisee_employees (franchisee_id, employee_id, role)
-VALUES (1, 1, 'FRANCHISEE_MANAGER');
+-- 28. Insert franchisee employees
+INSERT INTO franchisee_employees (employee_id, franchisee_id, role)
+VALUES 
+  (8, 1, 'FRANCHISEE_MANAGER'),
+  (9, 1, 'FRANCHISEE_OWNER');
 
--- 29. Insert into admin_employees
+-- 29. Insert admin employees
 INSERT INTO admin_employees (employee_id, role)
-VALUES (1, 'ADMIN');
+VALUES 
+  (10, 'ADMIN'),
+  (1, 'OWNER');
 
 -- 30. Insert into employee_work_tracks
 INSERT INTO employee_work_tracks (start_work_at, end_work_at, employee_id)

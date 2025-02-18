@@ -23,9 +23,16 @@ var (
 
 func NewTestContainer() *container.Container {
 	once.Do(func() {
-		cfg, err := config.LoadTestConfig()
+		var cfg *config.Config
+		var err error
+
+		cfg, err = config.LoadTestConfig()
 		if err != nil {
-			log.Fatalf("Failed to load test configuration: %v", err)
+			log.Println("failed to load test configuration from file, trying to load from env...")
+			cfg, err = LoadConfigFromEnv()
+			if err != nil {
+				log.Fatalf("Failed to load test configuration: %v", err)
+			}
 		}
 
 		if err := logger.InitLoggers("debug", "logs/test_gin.log", "logs/test_service.log", cfg.IsDevelopment); err != nil {

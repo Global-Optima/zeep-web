@@ -14,6 +14,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
@@ -26,6 +27,7 @@ type TestEnvironment struct {
 	Router *gin.Engine
 	DB     *gorm.DB
 	Config *config.Config
+	Tokens map[string]string
 }
 
 func NewTestEnvironment(t *testing.T) *TestEnvironment {
@@ -45,6 +47,7 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 		Router: router,
 		DB:     db,
 		Config: cfg,
+		Tokens: make(map[string]string),
 	}
 }
 
@@ -172,6 +175,7 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	router.Use(logger.ZapLoggerMiddleware())
 
 	apiRouter := routes.NewRouter(router, "/api", "/test")
+	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
 	dbHandler := &database.DBHandler{DB: db}
 
