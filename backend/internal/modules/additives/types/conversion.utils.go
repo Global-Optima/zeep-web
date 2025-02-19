@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/pkg/errors"
 	"strings"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -34,10 +35,10 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 	return additive
 }
 
-func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) *AdditiveModels {
+func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) (*AdditiveModels, error) {
 	additive := &data.Additive{}
 	if dto == nil {
-		return nil
+		return nil, errors.New("dto cannot be nil")
 	}
 
 	if strings.TrimSpace(dto.Name) != "" {
@@ -72,7 +73,7 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) *AdditiveModels {
 	return &AdditiveModels{
 		Additive:    additive,
 		Ingredients: ingredients,
-	}
+	}, nil
 }
 
 func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.AdditiveCategory {
@@ -105,14 +106,14 @@ func ConvertToAdditiveCategoryResponseDTO(model *data.AdditiveCategory) *Additiv
 	}
 }
 
-func ConvertToAdditiveDTO(additive *data.Additive, imageUrl string) *AdditiveDTO {
+func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 	return &AdditiveDTO{
 		ID:              additive.ID,
-		BaseAdditiveDTO: *ConvertToBaseAdditiveDTO(additive, imageUrl),
+		BaseAdditiveDTO: *ConvertToBaseAdditiveDTO(additive),
 	}
 }
 
-func ConvertToAdditiveDetailsDTO(additive *data.Additive, imageUrl string) *AdditiveDetailsDTO {
+func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
 	ingredients := make([]AdditiveIngredientDTO, len(additive.Ingredients))
 	for i, additiveIngredient := range additive.Ingredients {
 		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
@@ -120,17 +121,17 @@ func ConvertToAdditiveDetailsDTO(additive *data.Additive, imageUrl string) *Addi
 	}
 
 	return &AdditiveDetailsDTO{
-		AdditiveDTO: *ConvertToAdditiveDTO(additive, imageUrl),
+		AdditiveDTO: *ConvertToAdditiveDTO(additive),
 		Ingredients: ingredients,
 	}
 }
 
-func ConvertToBaseAdditiveDTO(additive *data.Additive, imageUrl string) *BaseAdditiveDTO {
+func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 	return &BaseAdditiveDTO{
 		Name:        additive.Name,
 		Description: additive.Description,
 		BasePrice:   additive.BasePrice,
-		ImageURL:    imageUrl,
+		ImageURL:    additive.ImageURL.GetURL(),
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		Category:    *ConvertToCategoryDTO(&additive.Category),
@@ -181,7 +182,7 @@ func ConvertToBaseAdditiveCategoryItem(additive *data.Additive, categoryID uint)
 		Name:        additive.Name,
 		Description: additive.Description,
 		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageURL,
+		ImageURL:    additive.ImageURL.GetURL(),
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		CategoryID:  categoryID,

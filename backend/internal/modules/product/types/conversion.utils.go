@@ -19,17 +19,17 @@ type ProductSizeModels struct {
 	Ingredients []data.ProductSizeIngredient
 }
 
-func MapToBaseProductDTO(product *data.Product, imageUrl, videoUrl string) BaseProductDTO {
+func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 	return BaseProductDTO{
 		Name:        product.Name,
 		Description: product.Description,
-		ImageURL:    imageUrl,
-		VideoURL:    videoUrl,
+		ImageURL:    product.ImageURL.GetURL(),
+		VideoURL:    product.VideoURL.GetURL(),
 		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
 
-func MapToProductDetailsDTO(product *data.Product, imageUrl, videoUrl string) *ProductDetailsDTO {
+func MapToProductDetailsDTO(product *data.Product) *ProductDetailsDTO {
 	var sizes []ProductSizeDTO
 
 	for _, size := range product.ProductSizes {
@@ -37,17 +37,17 @@ func MapToProductDetailsDTO(product *data.Product, imageUrl, videoUrl string) *P
 	}
 
 	return &ProductDetailsDTO{
-		ProductDTO: MapToProductDTO(*product, imageUrl, videoUrl),
+		ProductDTO: MapToProductDTO(*product),
 		Sizes:      sizes,
 	}
 }
 
-func MapToProductDTO(product data.Product, imageUrl, videoUrl string) ProductDTO {
+func MapToProductDTO(product data.Product) ProductDTO {
 	basePrice, productSizeCount := ProductAdditionalInfo(product)
 
 	return ProductDTO{
 		ID:               product.ID,
-		BaseProductDTO:   MapToBaseProductDTO(&product, imageUrl, videoUrl),
+		BaseProductDTO:   MapToBaseProductDTO(&product),
 		BasePrice:        basePrice,
 		ProductSizeCount: productSizeCount,
 	}
@@ -90,7 +90,7 @@ func MapToProductSizeDTO(productSize data.ProductSize) ProductSizeDTO {
 
 func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditive) ProductSizeAdditiveDTO {
 	return ProductSizeAdditiveDTO{
-		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive, productSizeAdditive.Additive.ImageURL),
+		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive),
 		IsDefault:   productSizeAdditive.IsDefault,
 	}
 }

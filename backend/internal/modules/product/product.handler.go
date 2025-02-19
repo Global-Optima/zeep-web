@@ -2,12 +2,12 @@ package product
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
@@ -68,26 +68,35 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 }
 
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
-	var input types.CreateProductDTO
+	var dto types.CreateProductDTO
 
-	if err := c.ShouldBind(&input); err != nil {
+	err := c.Request.ParseMultipartForm(30 << 20)
+	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		logrus.Info("Multipart form parsing failed: ", err)
 		return
 	}
 
-	img, err := media.GetImageWithFormFile(c)
+	err = c.ShouldBind(&dto)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		logrus.Info(err)
+		return
+	}
+
+	dto.Image, err = media.GetImageWithFormFile(c)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
 
-	vid, err := media.GetVideoWithFormFile(c)
+	dto.Video, err = media.GetVideoWithFormFile(c)
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingVideo)
 		return
 	}
 
-	id, err := h.service.CreateProduct(&input, img, vid)
+	id, err := h.service.CreateProduct(&dto)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
@@ -96,7 +105,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	action := types.CreateProductAuditFactory(
 		&data.BaseDetails{
 			ID:   id,
-			Name: input.Name,
+			Name: dto.Name,
 		})
 
 	go func() {
@@ -176,31 +185,25 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	var input *types.UpdateProductDTO
-	if err := c.ShouldBind(&input); err != nil {
+	var dto *types.UpdateProductDTO
+	if err := c.ShouldBind(&dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	img, err := media.GetImageWithFormFile(c)
+	dto.Image, err = media.GetImageWithFormFile(c)
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
 
-	vid, err := media.GetVideoWithFormFile(c)
+	/*dto.Video, err = media.GetVideoWithFormFile(c)
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingVideo)
 		return
-	}
+	}*/
 
-	existingProduct, err := h.service.GetProductByID(uint(productID))
-	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
-		return
-	}
-
-	err = h.service.UpdateProduct(uint(productID), input, img, vid)
+	existingProduct, err := h.service.UpdateProduct(uint(productID), dto)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
@@ -211,7 +214,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 			ID:   uint(productID),
 			Name: existingProduct.Name,
 		},
-		input,
+		dto,
 	)
 
 	go func() {
@@ -268,13 +271,7 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.GetProductByID(uint(productID))
-	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
-		return
-	}
-
-	err = h.service.DeleteProduct(uint(productID))
+	existingProduct, err := h.service.DeleteProduct(uint(productID))
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return
@@ -307,7 +304,7 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteProduct(uint(productSizeID))
+	err = h.service.DeleteProductSize(uint(productSizeID))
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
 		return

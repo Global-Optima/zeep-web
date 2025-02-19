@@ -19,7 +19,7 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 
 	return &StoreProductDTO{
 		ID:                    sp.ID,
-		BaseProductDTO:        productTypes.BaseProductDTO{}, //productTypes.MapToBaseProductDTO(&sp.Product, "imageUrl"),
+		BaseProductDTO:        productTypes.MapToBaseProductDTO(&sp.Product),
 		ProductID:             sp.ProductID,
 		ProductSizeCount:      productSizeCount,
 		BasePrice:             basePrice,

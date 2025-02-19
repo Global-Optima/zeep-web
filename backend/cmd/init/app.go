@@ -3,6 +3,7 @@ package init
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/limiters"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 	"go.uber.org/zap"
 	"log"
@@ -70,7 +71,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
-
+	router.Use(limiters.LimitRequestBody(30 * 1024 * 1024))
 	router.Use(gin.Recovery())
 
 	router.Use(cors.New(cors.Config{

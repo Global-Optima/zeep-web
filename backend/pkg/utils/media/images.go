@@ -12,18 +12,9 @@ import (
 	"path/filepath"
 )
 
-type FileData struct {
-	Filename string
-	Data     []byte
-}
-
-type FilesDataPair struct {
-	OriginalFileData  *FileData
-	ConvertedFileData *FileData
-}
-
 const (
-	MAX_FILE_SIZE = 5 * 1024 * 1024 //5MB
+	WEBP_FORMAT_KEY = ".webp"
+	MAX_IMAGE_SIZE  = 5 * 1024 * 1024 //5MB
 )
 
 func ConvertToWebp(img *image.Image) ([]byte, error) {
@@ -43,24 +34,19 @@ func GetImageWithFormFile(c *gin.Context) (*multipart.FileHeader, error) {
 		return nil, err
 	}
 
-	if file.Size > MAX_FILE_SIZE {
+	if file.Size > MAX_IMAGE_SIZE {
 		return nil, fmt.Errorf("image file too large")
 	}
 
 	return file, nil
 }
 
-func ConvertImageToRawAndWebp(fileHeader *multipart.FileHeader) (*FilesDataPair, error) {
+func ConvertImageToRawAndWebp(fileHeader *multipart.FileHeader) (*FilesPair, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %v", err)
 	}
-	defer func(file multipart.File) {
-		err := file.Close()
-		if err != nil {
-
-		}
-	}(file)
+	defer file.Close()
 
 	rawBytes, err := io.ReadAll(file)
 	if err != nil {
@@ -72,29 +58,32 @@ func ConvertImageToRawAndWebp(fileHeader *multipart.FileHeader) (*FilesDataPair,
 		return nil, fmt.Errorf("failed to decode image: %v", err)
 	}
 
-	uniqueName := GenerateUniqueName()
-
 	ext := filepath.Ext(fileHeader.Filename)
 	if ext == "" {
 		return nil, fmt.Errorf("unable to determine file extension")
 	}
 
-	rawFileName := uniqueName + ext
-	webpFileName := uniqueName + ".webp"
+	uniqueName := GenerateUniqueName()
+
+	zipBytes, err := ZipSingleFile(uniqueName+ext, rawBytes)
+	if err != nil {
+		return nil, err
+	}
 
 	webpBytes, err := ConvertToWebp(&img)
 	if err != nil {
 		return nil, err
 	}
 
-	return &FilesDataPair{
-		OriginalFileData: &FileData{
-			Filename: rawFileName,
-			Data:     rawBytes,
+	return &FilesPair{
+		CommonFileName: uniqueName,
+		OriginalFile: &FileData{
+			Ext:  ZIP_FORMAT_KEY,
+			Data: zipBytes,
 		},
-		ConvertedFileData: &FileData{
-			Filename: webpFileName,
-			Data:     webpBytes,
+		ConvertedFile: &FileData{
+			Ext:  WEBP_FORMAT_KEY,
+			Data: webpBytes,
 		},
 	}, nil
 }

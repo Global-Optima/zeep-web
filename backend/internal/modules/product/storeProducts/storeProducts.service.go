@@ -128,13 +128,7 @@ func (s *storeProductService) GetAvailableProductsToAdd(storeID uint, filter *pr
 
 	productDTOs := make([]productTypes.ProductDetailsDTO, len(productsList))
 	for i, productItem := range productsList {
-		key := fmt.Sprintf("%s/%s", storage.IMAGES_CONVERTED_STORAGE_REPO_KEY, productItem.ImageURL)
-		imageUrl, err := s.storageRepo.GetFileURL(key)
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to retrieve product image url for productID = %d: %w", productItem.ID, err)
-			s.logger.Error(wrappedErr)
-		}
-		productDTOs[i] = *productTypes.MapToProductDetailsDTO(&productItem, imageUrl, productItem.VideoURL)
+		productDTOs[i] = *productTypes.MapToProductDetailsDTO(&productItem)
 	}
 
 	return productDTOs, nil

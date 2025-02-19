@@ -6,6 +6,7 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"mime/multipart"
 )
 
 type BaseProductDTO struct {
@@ -61,7 +62,9 @@ type ProductSizeAdditiveDTO struct {
 type CreateProductDTO struct {
 	Name        string `form:"name" binding:"required,min=2,max=100"`
 	Description string `form:"description" binding:"max=500"`
-	CategoryID  uint   `form:"categoryId" binding:"omitempty"`
+	CategoryID  uint   `form:"categoryId" binding:"required"`
+	Image       *multipart.FileHeader
+	Video       *multipart.FileHeader
 }
 
 type SelectedAdditiveDTO struct {
@@ -89,6 +92,8 @@ type UpdateProductDTO struct {
 	Name        string `json:"name" binding:"omitempty,min=2,max=100"`
 	Description string `json:"description" binding:"omitempty,max=500"`
 	CategoryID  uint   `json:"categoryId" binding:"omitempty,gt=0"`
+	Image       *multipart.FileHeader
+	Video       *multipart.FileHeader
 }
 
 type UpdateProductSizeDTO struct {

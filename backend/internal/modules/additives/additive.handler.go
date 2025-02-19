@@ -184,22 +184,23 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 
 	ingredientsJSON := c.PostForm("ingredients")
 	if ingredientsJSON == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing ingredients field"})
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	if err := json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ingredients JSON"})
+	err := json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	img, err := media.GetImageWithFormFile(c)
+	dto.Image, err = media.GetImageWithFormFile(c)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
 
-	id, err := h.service.CreateAdditive(&dto, img)
+	id, err := h.service.CreateAdditive(&dto)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Additive)
 		return
@@ -232,19 +233,14 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		return
 	}
 
-	img, err := media.GetImageWithFormFile(c)
+	dto.Image, err = media.GetImageWithFormFile(c)
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
 
-	additive, err := h.service.GetAdditiveByID(uint(additiveID))
+	additive, err := h.service.UpdateAdditive(uint(additiveID), &dto)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Additive)
-		return
-	}
-
-	if err := h.service.UpdateAdditive(uint(additiveID), &dto, img); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500Additive)
 		return
 	}

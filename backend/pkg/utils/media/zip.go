@@ -5,6 +5,8 @@ import (
 	"bytes"
 )
 
+const ZIP_FORMAT_KEY = ".zip"
+
 func ZipSingleFile(filenameInsideZip string, fileData []byte) ([]byte, error) {
 	buf := new(bytes.Buffer)
 

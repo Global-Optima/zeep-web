@@ -4,6 +4,7 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"mime/multipart"
 )
 
 type AdditiveCategoriesFilterQuery struct {
@@ -100,6 +101,7 @@ type UpdateAdditiveDTO struct {
 	UnitID             *uint                   `form:"unitId" binding:"omitempty,gt=0"`
 	AdditiveCategoryID *uint                   `form:"additiveCategoryId" binding:"omitempty,gt=0"`
 	Ingredients        []SelectedIngredientDTO `form:"ingredients" binding:"omitempty,dive"`
+	Image              *multipart.FileHeader
 }
 
 type AdditiveCategoryResponseDTO struct {
@@ -117,6 +119,7 @@ type CreateAdditiveDTO struct {
 	UnitID             uint                    `form:"unitId" binding:"required,gt=0"`
 	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"required,gt=0"`
 	Ingredients        []SelectedIngredientDTO `json:"-"`
+	Image              *multipart.FileHeader
 }
 
 type SelectedIngredientDTO struct {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -11,6 +12,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
@@ -37,6 +39,8 @@ type StorageRepository interface {
 		vidFileHeader *multipart.FileHeader,
 	) (convertedImageFileName, convertedVideoFileName string, err error)
 	DeleteFile(key string) error
+	MarkFileAsDeleted(key string) error
+	MarkImagesAsDeleted(key data.S3ImageKey)
 	GetFileURL(key string) (string, error)
 	GetPresignedURL(key string) (string, error)
 	FileExists(key string) (bool, error)
@@ -53,6 +57,14 @@ type storageRepository struct {
 
 func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string, logger *zap.SugaredLogger) (StorageRepository, error) {
 	logger.Info("Initializing S3 session...")
+
+	data.InitS3KeysBuilder(&data.S3Info{
+		BucketName:            bucketName,
+		S3Endpoint:            endpoint,
+		OriginalImagesPrefix:  IMAGES_ORIGINAL_STORAGE_REPO_KEY,
+		ConvertedImagesPrefix: IMAGES_CONVERTED_STORAGE_REPO_KEY,
+		ConvertedVideosPrefix: VIDEOS_CONVERTED_STORAGE_REPO_KEY,
+	})
 
 	sess, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
@@ -74,13 +86,13 @@ func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string, log
 }
 
 func (r *storageRepository) UploadFile(key string, reader io.Reader) (string, error) {
-	data, err := io.ReadAll(reader)
+	fileData, err := io.ReadAll(reader)
 	if err != nil {
 		r.logger.Errorf("Error reading from the provided io.Reader: %v", err)
 		return "", err
 	}
 
-	body := bytes.NewReader(data)
+	body := bytes.NewReader(fileData)
 
 	_, err = r.s3Client.PutObject(&s3.PutObjectInput{
 		Bucket: aws.String(r.bucketName),
@@ -102,6 +114,47 @@ func (r *storageRepository) DeleteFile(key string) error {
 		Key:    aws.String(key),
 	})
 	return err
+}
+
+func (r *storageRepository) MarkFileAsDeleted(key string) error {
+	_, err := r.s3Client.PutObjectTagging(&s3.PutObjectTaggingInput{
+		Bucket: aws.String(r.bucketName),
+		Key:    aws.String(key),
+		Tagging: &s3.Tagging{
+			TagSet: []*s3.Tag{
+				{
+					Key:   aws.String("status"),
+					Value: aws.String("deleted"),
+				},
+			},
+		},
+	})
+	if err != nil {
+		var awsErr awserr.Error
+		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
+			r.logger.Errorf("Failed to tag file '%s' as deleted: %s", key, err.Error())
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *storageRepository) MarkImagesAsDeleted(key data.S3ImageKey) {
+	if err := r.MarkFileAsDeleted(key.GetConvertedImageObjectKey()); err != nil {
+		var awsErr awserr.Error
+		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
+			wrappedErr := fmt.Errorf("failed to delete converted additive '%s': %w", key.GetConvertedImageObjectKey(), err)
+			r.logger.Error(wrappedErr)
+		}
+	}
+
+	if err := r.MarkFileAsDeleted(key.GetOriginalImageObjectKey()); err != nil {
+		var awsErr awserr.Error
+		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
+			wrappedErr := fmt.Errorf("failed to delete original image '%s': %w", key.GetOriginalImageObjectKey(), err)
+			r.logger.Error(wrappedErr)
+		}
+	}
 }
 
 func (r *storageRepository) GetFileURL(key string) (string, error) {
@@ -143,26 +196,33 @@ func (r *storageRepository) GetLogger() *zap.SugaredLogger {
 	return r.logger
 }
 
-// temp method for testing purposes
 func (r *storageRepository) DownloadFile(key string) ([]byte, error) {
 	resp, err := r.s3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(r.bucketName),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to download file: %w", err)
+		wrappedErr := fmt.Errorf("failed to download file: %w", err)
+		r.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			r.logger.Error(err)
+		}
+	}(resp.Body)
 
 	var buf bytes.Buffer
 	if _, err := io.Copy(&buf, resp.Body); err != nil {
-		return nil, fmt.Errorf("failed to read file data: %w", err)
+		wrappedErr := fmt.Errorf("failed to read file data: %w", err)
+		r.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
 	return buf.Bytes(), nil
 }
 
-// temp method for testing purposes
 func (r *storageRepository) ListBuckets() ([]types.BucketInfo, error) {
 	r.logger.Info("Listing S3 buckets...")
 
@@ -190,152 +250,109 @@ func (r *storageRepository) ListBuckets() ([]types.BucketInfo, error) {
 func (r *storageRepository) ConvertAndUploadMedia(
 	imgFileHeader *multipart.FileHeader,
 	vidFileHeader *multipart.FileHeader,
-) (convertedImageFileName, convertedVideoFileName string, err error) {
-	startTime := time.Now()
-	fmt.Println("[TIMER] Processing started...")
-
-	convertGroup := new(errgroup.Group)
-	var filesPair *media.FilesDataPair
-	var originalVideoFile multipart.File
-	var convertedVideoFile io.Reader
-	var originalVideoFileName string
-	var pr2 *io.PipeReader
-	var pw2 *io.PipeWriter
+) (imageKey, videoKey string, err error) {
+	group := new(errgroup.Group)
+	var (
+		filesPair   *media.FilesPair
+		videoReader io.Reader
+		videoName   string
+		imageMutex  sync.Mutex
+	)
 
 	if imgFileHeader != nil {
-		convertGroup.Go(func() error {
-			start := time.Now()
-			fmt.Println("[TIMER] Image conversion started...")
-
-			filesPair, err = media.ConvertImageToRawAndWebp(imgFileHeader)
+		group.Go(func() error {
+			convertedFiles, err := r.convertImage(imgFileHeader)
 			if err != nil {
-				return fmt.Errorf("image conversion failed: %w", err)
+				return err
 			}
-
-			fmt.Printf("[TIMER] Image conversion finished. Took %v\n", time.Since(start))
+			imageMutex.Lock()
+			filesPair = convertedFiles
+			imageMutex.Unlock()
 			return nil
 		})
 	}
 
 	if vidFileHeader != nil {
-		convertGroup.Go(func() error {
-			start := time.Now()
-			fmt.Println("[TIMER] Video conversion started...")
-
+		group.Go(func() error {
 			var err error
-			originalVideoFileName, convertedVideoFileName = media.GenerateVideoFilenames(vidFileHeader.Filename)
-
-			originalVideoFile, err = vidFileHeader.Open()
-			if err != nil {
-				return fmt.Errorf("failed to open video file: %w", err)
-			}
-
-			pr1, pw1 := io.Pipe()
-			pr2, pw2 = io.Pipe()
-
-			convertGroup.Go(func() error {
-				defer pw1.Close()
-				defer pw2.Close()
-
-				fmt.Println("[TIMER] Streaming video file to pipes...")
-
-				multiWriter := io.MultiWriter(pw1, pw2)
-				_, err := io.Copy(multiWriter, originalVideoFile)
-				if err != nil {
-					r.logger.Error("Error streaming video to pipes:", err)
-					return err
-				}
-
-				fmt.Println("[TIMER] Finished streaming video to pipes.")
-				return nil
-			})
-
-			convertGroup.Go(func() error {
-				defer pw1.Close()
-				ffmpegErr := media.StreamConvertVideoToMP4(pr1, pw1)
-				if ffmpegErr != nil {
-					r.logger.Error("FFmpeg error while converting video:", ffmpegErr)
-					return ffmpegErr
-				}
-				return nil
-			})
-
-			convertedVideoFile = pr1
-			fmt.Printf("[TIMER] Video conversion setup finished. Took %v\n", time.Since(start))
-			return nil
+			videoReader, videoName, err = r.validateVideo(vidFileHeader)
+			return err
 		})
 	}
 
-	if err := convertGroup.Wait(); err != nil {
+	if err := group.Wait(); err != nil {
 		r.logger.Error("Failed conversion tasks:", err)
 		return "", "", fmt.Errorf("conversion failed: %w", err)
 	}
 
-	fmt.Println("[TIMER] All conversions successful, starting uploads...")
-
-	uploadGroup := new(errgroup.Group)
-
 	if filesPair != nil {
-		uploadGroup.Go(func() error {
-			start := time.Now()
-			fmt.Println("[TIMER] Uploading original image started...")
-
-			key := fmt.Sprintf("%s/%s", IMAGES_ORIGINAL_STORAGE_REPO_KEY, filesPair.OriginalFileData.Filename)
-			_, err := r.UploadFile(key, bytes.NewReader(filesPair.OriginalFileData.Data))
-			if err != nil {
-				r.logger.Error("Failed to upload original image:", err)
-				return err
-			}
-
-			fmt.Printf("[TIMER] Uploading original image finished. Took %v\n", time.Since(start))
-			return nil
-		})
-
-		uploadGroup.Go(func() error {
-			start := time.Now()
-			fmt.Println("[TIMER] Uploading converted image started...")
-
-			key := fmt.Sprintf("%s/%s", IMAGES_CONVERTED_STORAGE_REPO_KEY, filesPair.ConvertedFileData.Filename)
-			_, err := r.UploadFile(key, bytes.NewReader(filesPair.ConvertedFileData.Data))
-			if err != nil {
-				r.logger.Error("Failed to upload converted image:", err)
-				return err
-			}
-
-			convertedImageFileName = filesPair.ConvertedFileData.Filename
-			fmt.Printf("[TIMER] Uploading converted image finished. Took %v\n", time.Since(start))
-			return nil
-		})
+		imageKey, err = r.uploadConvertedImages(filesPair, group)
+		if err != nil {
+			return "", "", err
+		}
 	}
 
-	if vidFileHeader != nil {
-		uploadGroup.Go(func() error {
-			start := time.Now()
-			fmt.Println("[TIMER] Uploading original video started...")
-
-			key := fmt.Sprintf("%s/%s", VIDEOS_ORIGINAL_STORAGE_REPO_KEY, originalVideoFileName)
-			_, err := r.UploadFile(key, pr2)
-
-			fmt.Printf("[TIMER] Uploading original video finished. Took %v\n", time.Since(start))
-			return err
-		})
-
-		uploadGroup.Go(func() error {
-			start := time.Now()
-			fmt.Println("[TIMER] Uploading converted video started...")
-
-			key := fmt.Sprintf("%s/%s", VIDEOS_CONVERTED_STORAGE_REPO_KEY, convertedVideoFileName)
-			_, err := r.UploadFile(key, convertedVideoFile)
-
-			fmt.Printf("[TIMER] Uploading converted video finished. Took %v\n", time.Since(start))
-			return err
-		})
+	if videoReader != nil {
+		videoKey, err = r.uploadVideo(videoReader, videoName, group)
+		if err != nil {
+			return "", "", err
+		}
 	}
 
-	if err := uploadGroup.Wait(); err != nil {
+	if err := group.Wait(); err != nil {
 		return "", "", fmt.Errorf("upload failed: %w", err)
 	}
 
-	fmt.Printf("[TIMER] Total process finished. Took %v\n", time.Since(startTime))
-	return convertedImageFileName, convertedVideoFileName, err
+	return imageKey, videoKey, nil
+}
+
+func (r *storageRepository) convertImage(imgFileHeader *multipart.FileHeader) (*media.FilesPair, error) {
+	convertedFiles, err := media.ConvertImageToRawAndWebp(imgFileHeader)
+	if err != nil {
+		return nil, fmt.Errorf("image conversion failed: %w", err)
+	}
+	return convertedFiles, nil
+}
+
+func (r *storageRepository) validateVideo(vidFileHeader *multipart.FileHeader) (io.Reader, string, error) {
+	videoName := media.GenerateUniqueName() + media.MP4_FORMAT_KEY
+	videoReader, err := media.ValidateMP4(vidFileHeader)
+	if err != nil {
+		return nil, "", fmt.Errorf("video validation failed: %w", err)
+	}
+	return videoReader, videoName, nil
+}
+
+func (r *storageRepository) uploadConvertedImages(filesPair *media.FilesPair, group *errgroup.Group) (string, error) {
+	uploadFile := func(key string, data []byte) error {
+		_, err := r.UploadFile(key, bytes.NewReader(data))
+		if err != nil {
+			return fmt.Errorf("failed to upload file %s: %w", key, err)
+		}
+		return nil
+	}
+
+	group.Go(func() error {
+		key := fmt.Sprintf("%s/%s", IMAGES_ORIGINAL_STORAGE_REPO_KEY, filesPair.GetOriginalFileName())
+		return uploadFile(key, filesPair.OriginalFile.Data)
+	})
+
+	group.Go(func() error {
+		key := fmt.Sprintf("%s/%s", IMAGES_CONVERTED_STORAGE_REPO_KEY, filesPair.GetConvertedFileName())
+		return uploadFile(key, filesPair.ConvertedFile.Data)
+	})
+
+	return filesPair.GetConvertedFileName(), nil
+}
+
+func (r *storageRepository) uploadVideo(videoReader io.Reader, videoName string, group *errgroup.Group) (string, error) {
+	group.Go(func() error {
+		key := fmt.Sprintf("%s/%s", VIDEOS_CONVERTED_STORAGE_REPO_KEY, videoName)
+		_, err := r.UploadFile(key, videoReader)
+		if err != nil {
+			return fmt.Errorf("failed to upload video to S3: %w", err)
+		}
+		return nil
+	})
+	return videoName, nil
 }
