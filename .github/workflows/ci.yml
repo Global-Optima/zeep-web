@@ -44,6 +44,10 @@ jobs:
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpassword
           POSTGRES_DB: testdb
+          REDIS_HOST: redis
+          REDIS_PORT: 6379
+          REDIS_DB: 0
+          REDIS_PASSWORD: ""
         ports:
           - 5432:5432
         options: >-
