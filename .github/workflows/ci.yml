@@ -41,11 +41,9 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          DB_USER: testuser
-          DB_PASSWORD: testpassword
-          DB_NAME: testdb
-          DB_HOST: localhost
-          DB_PORT: 5432
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
         ports:
           - 5432:5432
         options: >-
@@ -57,7 +55,6 @@ jobs:
       redis:
         image: redis:latest
         env:
-          REDIS_HOST: localhost
           REDIS_PORT: 6379
           REDIS_DB: 0
           REDIS_PASSWORD: ""
