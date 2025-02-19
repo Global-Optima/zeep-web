@@ -19,7 +19,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -105,7 +104,6 @@ func LoadConfigFromEnv() (*config.Config, error) {
 			Password: getEnv("DB_PASSWORD", "defaultpassword"),
 			Name:     getEnv("DB_NAME", "defaultdb"),
 		},
-
 		Redis: config.RedisConfig{
 			Host:     redisHost,
 			Port:     redisPort,
@@ -151,11 +149,11 @@ func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.Password, cfg.Database.Name,
 	)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	dbHandler, err := database.InitDB(dsn)
 	if err != nil {
 		t.Fatalf("Failed to initialize test database! Details: %v", err)
 	}
-	return db
+	return dbHandler.DB
 }
 
 func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
@@ -165,20 +163,17 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 	}
 
 	utils.InitCache(redisClient.Client, redisClient.Ctx)
-
 	return redisClient
 }
 
 func setupRouter(db *gorm.DB) *gin.Engine {
 	router := gin.New()
-
 	router.Use(logger.ZapLoggerMiddleware())
 
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
 	dbHandler := &database.DBHandler{DB: db}
-
 	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
 	appContainer.MustInitModules()
 
