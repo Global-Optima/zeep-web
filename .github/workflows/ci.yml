@@ -44,10 +44,6 @@ jobs:
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpassword
           POSTGRES_DB: testdb
-          REDIS_HOST: redis
-          REDIS_PORT: 6379
-          REDIS_DB: 0
-          REDIS_PASSWORD: ""
         ports:
           - 5432:5432
         options: >-
@@ -58,6 +54,10 @@ jobs:
       
       redis:
         image: redis:latest
+        env:
+          REDIS_PORT: 6379
+          REDIS_DB: 0
+          REDIS_PASSWORD: ""
         ports:
           - 6379:6379
         options: >-
@@ -71,8 +71,10 @@ jobs:
       DB_NAME: testdb
       DB_HOST: localhost
       DB_PORT: 5432
-      REDIS_HOST: localhost
+  
       REDIS_PORT: 6379
+      REDIS_DB: 0
+      REDIS_PASSWORD: ""
     defaults:
       run:
         working-directory: ./backend
