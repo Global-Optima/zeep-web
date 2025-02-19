@@ -21,7 +21,12 @@ type DBHandler struct {
 	DB *gorm.DB
 }
 
-var migrationsPath = "migrations"
+const (
+	maxOpenConns          = 25
+	maxIdleConns          = 25
+	connMaxLifetime       = time.Hour
+	defaultMigrationsPath = "migrations"
+)
 
 func InitDB(dsn string) (*DBHandler, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -31,12 +36,12 @@ func InitDB(dsn string) (*DBHandler, error) {
 
 	cfg := config.GetConfig()
 	if cfg.IsTest {
-		if err := ResetDatabase(db, migrationsPath); err != nil {
+		if err := ResetDatabase(db, defaultMigrationsPath); err != nil {
 			return nil, fmt.Errorf("failed to reset database: %w", err)
 		}
 	}
 
-	if err := applyMigrations(db, migrationsPath); err != nil {
+	if err := applyMigrations(db, defaultMigrationsPath); err != nil {
 		return nil, fmt.Errorf("failed to apply migrations: %w", err)
 	}
 
@@ -44,9 +49,9 @@ func InitDB(dsn string) (*DBHandler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get SQL DB from gorm DB: %w", err)
 	}
-	sqlDB.SetMaxOpenConns(25)
-	sqlDB.SetMaxIdleConns(25)
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetMaxOpenConns(maxOpenConns)
+	sqlDB.SetMaxIdleConns(maxIdleConns)
+	sqlDB.SetConnMaxLifetime(connMaxLifetime)
 
 	log.Println("Database connected and migrations applied successfully.")
 	return &DBHandler{DB: db}, nil
@@ -105,9 +110,9 @@ func determineSourceURL(migrationsPath string) string {
 
 	if cfg.IsTest {
 		candidatePaths := []string{
-			"../../migrations", // two levels up
-			"../migrations",    // one level up
-			"migrations",       // same directory
+			"../../" + defaultMigrationsPath, // two levels up
+			"../" + defaultMigrationsPath,    // one level up
+			defaultMigrationsPath,            // same directory
 		}
 		if callerDir, ok := utils.GetCallerDir(2); ok {
 			if foundPath := utils.SearchForCandidatePath(callerDir, candidatePaths); foundPath != "" {
