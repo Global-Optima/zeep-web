@@ -40,6 +40,11 @@ func (s *storeService) CreateStore(createStoreDto *types.CreateStoreDTO) (uint, 
 	}
 
 	store, err := types.CreateStoreFields(createStoreDto)
+	if err != nil {
+		wrappedErr := fmt.Errorf("error creating store: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
 
 	if existingFacilityAddress != nil {
 		store.FacilityAddress = *existingFacilityAddress

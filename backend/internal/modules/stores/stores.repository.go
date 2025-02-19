@@ -164,7 +164,7 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels.Store != nil {
-			query := r.db.Model(&data.Store{}).Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}})
+			query := tx.Model(&data.Store{}).Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}})
 
 			if updateModels.Store.FranchiseeID == nil {
 				query.UpdateColumn("franchisee_id", gorm.Expr("franchisee_id - ?", nil))
@@ -177,7 +177,7 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 		}
 
 		if updateModels.FacilityAddress != nil {
-			query := r.db.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingStore.FacilityAddress.ID}}).
+			query := tx.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingStore.FacilityAddress.ID}}).
 				Updates(updateModels.FacilityAddress)
 			tx = query
 			if tx.Error != nil {
