@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -58,9 +59,19 @@ func InitDB(dsn string) (*DBHandler, error) {
 }
 
 func ResetDatabase(db *gorm.DB, migrationsPath string) error {
-	if err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;").Error; err != nil {
+	if err := db.Exec("DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;").Error; err != nil {
 		return fmt.Errorf("failed to reset schema: %w", err)
 	}
+
+	if info, err := os.Stat(migrationsPath); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("migrations path does not exist: %s", migrationsPath)
+		}
+		return fmt.Errorf("failed to check migrations path: %w", err)
+	} else if !info.IsDir() {
+		return fmt.Errorf("migrations path is not a directory: %s", migrationsPath)
+	}
+
 	return applyMigrations(db, migrationsPath)
 }
 
@@ -122,7 +133,7 @@ func determineSourceURL(migrationsPath string) string {
 				log.Printf("Test environment: no candidate migrations folder found; using default: %s", sourceURL)
 			}
 		} else {
-			log.Printf("Test environment: failed to determine caller directory; using default migrations path: %s", sourceURL)
+			log.Fatalf("Test environment: failed to determine caller directory; using default migrations path: %s", sourceURL)
 		}
 	}
 
