@@ -40,10 +40,10 @@ func InitDB(dsn string) (*DBHandler, error) {
 		if err := ResetDatabase(db, defaultMigrationsPath); err != nil {
 			return nil, fmt.Errorf("failed to reset database: %w", err)
 		}
-	}
-
-	if err := applyMigrations(db, defaultMigrationsPath); err != nil {
-		return nil, fmt.Errorf("failed to apply migrations: %w", err)
+	} else {
+		if err := applyMigrations(db, defaultMigrationsPath); err != nil {
+			return nil, fmt.Errorf("failed to apply migrations: %w", err)
+		}
 	}
 
 	sqlDB, err := db.DB()
