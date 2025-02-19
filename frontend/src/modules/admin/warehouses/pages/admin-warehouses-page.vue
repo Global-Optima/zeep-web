@@ -32,7 +32,6 @@
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import AdminRegionsToolbar from '@/modules/admin/regions/components/list/admin-regions-toolbar.vue'
 import AdminWarehousesList from '@/modules/admin/warehouses/components/list/admin-warehouses-list.vue'
 import AdminWarehousesToolbar from '@/modules/admin/warehouses/components/list/admin-warehouses-toolbar.vue'
 import type { WarehouseFilter } from '@/modules/admin/warehouses/models/warehouse.model'

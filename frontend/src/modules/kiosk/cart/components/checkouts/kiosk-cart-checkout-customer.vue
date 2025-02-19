@@ -41,7 +41,6 @@ const generateUniqueName = () => {
 // Form Hook
 const form = useForm({
   validationSchema: formSchema,
-  initialValues: { customerName: '' },
 });
 
 const handleSubmit = form.handleSubmit((values) => {
@@ -59,7 +58,7 @@ const handleSubmit = form.handleSubmit((values) => {
 			class="space-y-8 bg-white sm:p-12 !rounded-[40px] sm:max-w-3xl text-black"
 		>
 			<DialogHeader>
-				<DialogTitle class="font-medium text-center text-gray-900 sm:text-4xl">
+				<DialogTitle class="font-medium text-gray-900 sm:text-4xl text-center">
 					Укажите ваше имя для заказа
 				</DialogTitle>
 			</DialogHeader>
@@ -78,7 +77,7 @@ const handleSubmit = form.handleSubmit((values) => {
 							<Input
 								type="text"
 								placeholder="Введите ваше имя"
-								class="border-gray-300 sm:px-6 sm:py-8 border rounded-lg w-full sm:text-2xl"
+								class="sm:px-6 sm:py-8 border border-gray-300 rounded-lg w-full sm:text-2xl"
 								v-bind="componentField"
 							/>
 						</FormControl>

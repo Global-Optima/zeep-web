@@ -93,7 +93,7 @@
     "404": "The requested resource was not found.",
     "403": "Access denied. You do not have permission to view this resource.",
     "401": "You need to log in to access this resource.",
-    "400": "Bad request. The server could not understand the data sent. Please check your input and try again.",
+    "400": "Bad request. Please check your input and try again.",
     "400-json": "Invalid data input",
     "400-query": "Invalid query parameters",
     "200": "The request was successfully processed.",

@@ -1,43 +1,27 @@
 package orders
 
 import (
-	"bytes"
 	"fmt"
-	"image"
-	"image/color"
-	"image/draw"
-	"image/png"
-	"sync"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
-	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
-	"github.com/golang/freetype/truetype"
-	"github.com/jung-kurt/gofpdf"
-
-	"go.uber.org/zap"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/gofont/goregular"
-	"golang.org/x/image/math/fixed"
-
-	"github.com/boombuler/barcode"
-	"github.com/boombuler/barcode/code128"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
+	"go.uber.org/zap"
 )
 
 type OrderService interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error)
-	GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]types.OrderDTO, error)
+	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]types.OrderDTO, error)
 	GetSubOrders(orderID uint) ([]types.SuborderDTO, error)
-	GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error)
+	GetStatusesCount(filter types.OrdersTimeZoneFilter) (types.OrderStatusesCountDTO, error)
 	CreateOrder(storeId uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
 	CompleteSubOrder(orderID, subOrderID uint) error
 	CompleteSubOrderByBarcode(subOrderID uint) (*types.SuborderDTO, error)
@@ -87,12 +71,6 @@ func NewOrderService(
 	}
 }
 
-var (
-	fontFace      font.Face
-	fontInitError error
-	fontInitOnce  sync.Once
-)
-
 func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetOrders(filter)
 	if err != nil {
@@ -107,7 +85,7 @@ func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderD
 	return orderDTOs, nil
 }
 
-func (s *orderService) GetAllBaristaOrders(filter types.GetBaristaOrdersFilter) ([]types.OrderDTO, error) {
+func (s *orderService) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetAllBaristaOrders(filter)
 
 	if err != nil {
@@ -242,29 +220,7 @@ func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
 	return nil
 }
 
-// initFont ensures we parse the font only once (thread-safe).
-func initFont() {
-	fontInitOnce.Do(func() {
-		f, err := truetype.Parse(goregular.TTF)
-		if err != nil {
-			fontInitError = fmt.Errorf("failed to parse goregular font: %w", err)
-			return
-		}
-
-		// Adjust Size as needed. This is a typical 12pt usage.
-		fontFace = truetype.NewFace(f, &truetype.Options{
-			Size: 12,
-		})
-	})
-}
-
 func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, error) {
-	// Initialize font first
-	initFont()
-	if fontInitError != nil {
-		return nil, fontInitError
-	}
-
 	// 1. Fetch suborder from repository
 	suborder, err := s.orderRepo.GetSuborderByID(suborderID)
 	if err != nil {
@@ -279,102 +235,8 @@ func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, erro
 
 	// 2. Encode the barcode data using Code-128
 	barcodeData := fmt.Sprintf("suborder-%d", suborder.ID)
-	bcode, err := code128.Encode(barcodeData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to encode barcode data %q: %w", barcodeData, err)
-	}
 
-	// 3. Scale barcode to fit exactly within the image dimensions
-	//    Suppose we want the final label to be 300px wide x 120px tall
-	const labelWidth = 300
-	const labelHeight = 120
-	scaledBcode, err := barcode.Scale(bcode, labelWidth, labelHeight-20) // leave space for text
-	if err != nil {
-		return nil, fmt.Errorf("failed to scale barcode: %w", err)
-	}
-
-	// 4. Create a blank image with a white background
-	finalImg := image.NewRGBA(image.Rect(0, 0, labelWidth, labelHeight))
-	draw.Draw(finalImg, finalImg.Bounds(), &image.Uniform{color.White}, image.Point{}, draw.Src)
-
-	// 5. Draw barcode on the image
-	bcBounds := scaledBcode.Bounds()
-	draw.Draw(finalImg, bcBounds, scaledBcode, image.Point{}, draw.Over)
-
-	// 6. Draw the text under the barcode
-	drawer := &font.Drawer{
-		Dst:  finalImg,
-		Src:  image.NewUniform(color.Black),
-		Face: fontFace, // Make sure fontFace is defined somewhere
-	}
-	textWidth := drawer.MeasureString(barcodeData).Ceil()
-	textX := (labelWidth - textWidth) / 2
-	textY := labelHeight - 5
-
-	drawer.Dot = fixed.Point26_6{
-		X: fixed.I(textX),
-		Y: fixed.I(textY),
-	}
-	drawer.DrawString(barcodeData)
-
-	// 7. Encode image as PNG in memory
-	var imgBuf bytes.Buffer
-	if err := png.Encode(&imgBuf, finalImg); err != nil {
-		return nil, fmt.Errorf("failed to encode final PNG: %w", err)
-	}
-
-	// 8. Convert PNG to PDF
-	//    Instead of using "A4", we define a small custom page size:
-	//
-	//    1 pixel = ~0.264583 mm
-	//    labelWidth (300 px)  ~ 79.375 mm
-	//    labelHeight (120 px) ~ 31.75 mm
-	//
-	//    Add a small margin around your label if needed.
-	const marginMM = 5.0
-	imgWidthMM := float64(labelWidth) * 0.264583
-	imgHeightMM := float64(labelHeight) * 0.264583
-
-	// Create a new PDF with custom page size:
-	// Use gofpdf.NewCustom so we can specify exact dimensions.
-	pdfFile := gofpdf.NewCustom(&gofpdf.InitType{
-		UnitStr: "mm",
-		Size: gofpdf.SizeType{
-			Wd: imgWidthMM + (2 * marginMM),
-			Ht: imgHeightMM + (2 * marginMM),
-		},
-		FontDirStr: "",
-	})
-	pdfFile.SetAutoPageBreak(false, 0)
-	pdfFile.AddPage()
-
-	// Register and place the image
-	imgOptions := gofpdf.ImageOptions{
-		ImageType: "PNG",
-		ReadDpi:   true,
-	}
-	pdfFile.RegisterImageOptionsReader("barcode.png", imgOptions, &imgBuf)
-
-	// Place image with the margin as an offset
-	pdfFile.ImageOptions(
-		"barcode.png",
-		marginMM,    // x-pos
-		marginMM,    // y-pos
-		imgWidthMM,  // image width in mm
-		imgHeightMM, // image height in mm
-		false,       // flow: false = free-floating
-		imgOptions,
-		0,
-		"",
-	)
-
-	// 9. Output PDF as byte slice
-	var pdfBuf bytes.Buffer
-	if err := pdfFile.Output(&pdfBuf); err != nil {
-		return nil, fmt.Errorf("failed to generate PDF: %w", err)
-	}
-
-	return pdfBuf.Bytes(), nil
+	return utils.GenerateBarcodePDF(barcodeData)
 }
 
 func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.SuborderDTO, error) {
@@ -540,8 +402,8 @@ func (s *orderService) GeneratePDFReceipt(orderID uint) ([]byte, error) {
 	return pdf.GeneratePDFReceipt(detailsPDF)
 }
 
-func (s *orderService) GetStatusesCount(storeID uint) (types.OrderStatusesCountDTO, error) {
-	countsMap, err := s.orderRepo.GetStatusesCount(storeID)
+func (s *orderService) GetStatusesCount(filter types.OrdersTimeZoneFilter) (types.OrderStatusesCountDTO, error) {
+	countsMap, err := s.orderRepo.GetStatusesCount(filter)
 	if err != nil {
 		wrappedErr := fmt.Errorf("error couting statuses: %w", err)
 		s.logger.Error(wrappedErr.Error())

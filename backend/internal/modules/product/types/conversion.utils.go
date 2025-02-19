@@ -151,20 +151,25 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	return productSize
 }
 
-func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
-	product := &data.Product{}
+func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) *data.Product {
 	if dto == nil {
 		return product
 	}
 
 	if strings.TrimSpace(dto.Name) != "" {
-		product.Name = dto.Name
+		if dto.Name != product.Name {
+			product.Name = dto.Name
+		}
 	}
 	if strings.TrimSpace(dto.Description) != "" {
-		product.Description = dto.Description
+		if dto.Description != product.Description {
+			product.Description = dto.Description
+		}
 	}
 	if dto.CategoryID != 0 {
-		product.CategoryID = dto.CategoryID
+		if dto.CategoryID != product.CategoryID {
+			product.CategoryID = dto.CategoryID
+		}
 	}
 	return product
 }
@@ -251,16 +256,16 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []detai
 		})
 	}*/
 
-	// if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
-	// 	key := "notification.centralCatalogUpdateDetails.categoryChange"
-	// 	changes = append(changes, details.CentralCatalogChange{
-	// 		Key: key,
-	// 		Params: map[string]interface{}{
-	// 			"OldCategoryID": before.CategoryID,
-	// 			"NewCategoryID": dto.CategoryID,
-	// 		},
-	// 	})
-	// }
+	if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
+		key := "notification.centralCatalogUpdateDetails.categoryChange"
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldCategoryID": before.CategoryID,
+				"NewCategoryID": dto.CategoryID,
+			},
+		})
+	}
 
 	return changes
 }

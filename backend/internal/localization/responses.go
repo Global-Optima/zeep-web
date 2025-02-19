@@ -53,24 +53,24 @@ func NewResponseKey(status int, componentName data.ComponentName, optionalKeys .
 	}
 }
 
-func translateResponseWithStatus(c *gin.Context, status int) *LocalizedResponse {
-	localizedMessages, err := translateCommonResponse(status)
+func TranslateResponseWithStatus(c *gin.Context, status int) *LocalizedResponse {
+	localizedMessages, err := TranslateCommonResponse(status)
 	if err != nil {
 		localizedMessages = DefaultLocalizedErrorMessages
 	}
 	return NewLocalizedResponse(c, localizedMessages, status)
 }
 
-func translateResponseWithKey(c *gin.Context, responseKey *ResponseKey) *LocalizedResponse {
+func TranslateResponseWithKey(c *gin.Context, responseKey *ResponseKey) *LocalizedResponse {
 	var localizedMessages *LocalizedMessage
 	var err error
 
 	if responseKey.ComponentName != "" {
-		localizedMessages, err = translateComponentResponse(responseKey)
+		localizedMessages, err = TranslateComponentResponse(responseKey)
 	}
 
 	if err != nil || responseKey.ComponentName == "" {
-		localizedMessages, err = translateCommonResponse(responseKey.Status)
+		localizedMessages, err = TranslateCommonResponse(responseKey.Status)
 	}
 	if err != nil {
 		localizedMessages = DefaultLocalizedErrorMessages
@@ -88,29 +88,33 @@ func NewLocalizedResponse(c *gin.Context, localizedMessages *LocalizedMessage, s
 	}
 }
 
-func translateComponentResponse(responseKey *ResponseKey) (*LocalizedMessage, error) {
-	return Translate(formResponseTranslationKey(responseKey),
+func TranslateComponentResponse(responseKey *ResponseKey) (*LocalizedMessage, error) {
+	return Translate(FormResponseTranslationKey(responseKey),
 		map[string]interface{}{})
 }
 
-func translateCommonResponse(status int) (*LocalizedMessage, error) {
+func TranslateCommonResponse(status int) (*LocalizedMessage, error) {
 	return Translate(FormTranslationKey(RESPONSES_KEY, strconv.Itoa(status)),
 		map[string]interface{}{})
 }
 
-func formResponseTranslationKey(responseKey *ResponseKey) string {
+func FormResponseTranslationKey(responseKey *ResponseKey) string {
+	if responseKey == nil {
+		return ""
+	}
+
 	key := FormTranslationKey(RESPONSES_KEY, strconv.Itoa(responseKey.Status))
 	key += "-" + ToCamelCase(responseKey.ComponentName.ToString())
 	for _, optionalKey := range responseKey.OptionalKeys {
-		key += "-" + optionalKey
+		key += "-" + ToCamelCase(optionalKey)
 	}
 	return key
 }
 
 func SendLocalizedResponseWithKey(c *gin.Context, responseKey *ResponseKey) {
-	utils.SendResponseWithStatus(c, translateResponseWithKey(c, responseKey), responseKey.Status)
+	utils.SendResponseWithStatus(c, TranslateResponseWithKey(c, responseKey), responseKey.Status)
 }
 
 func SendLocalizedResponseWithStatus(c *gin.Context, status int) {
-	utils.SendResponseWithStatus(c, translateResponseWithStatus(c, status), status)
+	utils.SendResponseWithStatus(c, TranslateResponseWithStatus(c, status), status)
 }

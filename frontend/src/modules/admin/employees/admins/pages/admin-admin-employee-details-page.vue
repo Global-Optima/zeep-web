@@ -15,24 +15,6 @@
 		</div>
 
 		<div class="flex flex-col gap-4 w-full md:w-2/3">
-			<div class="gap-6 grid grid-cols-1 sm:grid-cols-3">
-				<AdminEmployeesDetailsStats
-					title="Общие продажи"
-					:value="employeeStats.totalSales"
-					:icon="DollarSign"
-				/>
-				<AdminEmployeesDetailsStats
-					title="Отработанные часы"
-					:value="employeeStats.hoursWorked"
-					:icon="Timer"
-				/>
-				<AdminEmployeesDetailsStats
-					title="Завершенные задачи"
-					:value="employeeStats.tasksCompleted"
-					:icon="CheckCheck"
-				/>
-			</div>
-
 			<Card>
 				<CardHeader>
 					<CardTitle> График рабочих смен</CardTitle>
@@ -75,23 +57,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/core/components/ui/card'
-import { formatPrice } from '@/core/utils/price.utils'
+import { adminEmployeeService } from '@/modules/admin/employees/admins/services/admin-employees.service'
 import AdminEmployeesDetailsAudits from '@/modules/admin/employees/components/details/admin-employees-details-audits.vue'
 import AdminEmployeesDetailsInfo from '@/modules/admin/employees/components/details/admin-employees-details-info.vue'
 import AdminEmployeesDetailsShifts from '@/modules/admin/employees/components/details/admin-employees-details-shifts.vue'
-import AdminEmployeesDetailsStats from '@/modules/admin/employees/components/details/admin-employees-details-stats.vue'
-import { franchiseeEmployeeService } from '@/modules/admin/employees/franchisees/services/franchisee-employees.service'
 import { employeeAuditService } from '@/modules/admin/employees/services/employees-audit.service'
 import { useQuery } from '@tanstack/vue-query'
-import { CheckCheck, DollarSign, Timer } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-
-interface Stat {
-  totalSales: string;
-  hoursWorked: string;
-  tasksCompleted: string;
-}
 
 interface Shift {
   date: string;
@@ -102,21 +75,15 @@ const route = useRoute()
 const employeeId = route.params.id as string
 
 const { data: employee } = useQuery({
-	queryKey: ['franchisee-employee', employeeId],
-	queryFn: () => franchiseeEmployeeService.getFranchiseeEmployeeById(Number(employeeId)),
+	queryKey: ['admin-employee', employeeId],
+	queryFn: () => adminEmployeeService.getAdminEmployeeById(Number(employeeId)),
 	enabled: !isNaN(Number(employeeId)),
 })
 
 const { data: employeeAudits } = useQuery({
-	queryKey: ['franchisee-audits', employeeId],
+	queryKey: ['admin-audits', employeeId],
 	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employeeId) }),
 	enabled: !isNaN(Number(employeeId)),
-})
-
-const employeeStats = ref<Stat>({
-  totalSales: formatPrice(3500000),
-  hoursWorked: '1 200 часов',
-  tasksCompleted: '350 задач',
 })
 
 const employeeShifts = ref<Shift[]>([

@@ -122,7 +122,11 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 		panic(err)
 	}
 
-	if err := localization.InitLocalizer(); err != nil {
+	if err := utils.InitBarcodeFont(); err != nil {
+		log.Fatalf("Failed to initialize Barcode font: %v", err)
+	}
+
+	if err := localization.InitLocalizer(nil); err != nil {
 		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
 	}
 

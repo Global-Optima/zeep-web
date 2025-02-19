@@ -52,7 +52,7 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
-	var filter types.GetBaristaOrdersFilter
+	var filter types.OrdersTimeZoneFilter
 
 	if err := c.ShouldBindQuery(&filter); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
@@ -241,13 +241,21 @@ func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
 
 // Get count of orders grouped by statuses
 func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
+	var filter types.OrdersTimeZoneFilter
+
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
+		return
+	}
+
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
+	filter.StoreID = &storeID
 
-	statusesWithCounts, err := h.service.GetStatusesCount(uint(storeID))
+	statusesWithCounts, err := h.service.GetStatusesCount(filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch statuses count")
 		return
@@ -257,7 +265,7 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 }
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
-	var filter types.GetBaristaOrdersFilter
+	var filter types.OrdersTimeZoneFilter
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())

@@ -63,7 +63,7 @@ type GetWarehouseStockFilterQuery struct {
 }
 
 type UpdateWarehouseStockDTO struct {
-	Quantity       *float64   `json:"quantity" binding:"omitempty,gt=0"`
+	Quantity       *float64   `json:"quantity" binding:"omitempty,gte=0"`
 	ExpirationDate *time.Time `json:"expirationDate" binding:"omitempty"`
 }
 

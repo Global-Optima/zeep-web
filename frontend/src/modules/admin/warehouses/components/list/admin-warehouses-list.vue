@@ -3,6 +3,8 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Название</TableHead>
+				<TableHead>Регион</TableHead>
+				<TableHead>Адрес</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -13,6 +15,8 @@
 				class="hover:bg-slate-50 cursor-pointer"
 			>
 				<TableCell class="py-4 font-medium">{{ warehouse.name }}</TableCell>
+				<TableCell>{{ warehouse.region.name }}</TableCell>
+				<TableCell>{{ warehouse.facilityAddress.address }}</TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>
@@ -29,7 +33,6 @@ import {
 } from '@/core/components/ui/table'
 import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 import { useRouter } from 'vue-router'
-
 const {warehouses} = defineProps<{warehouses: WarehouseDTO[]}>()
 
 const router = useRouter();

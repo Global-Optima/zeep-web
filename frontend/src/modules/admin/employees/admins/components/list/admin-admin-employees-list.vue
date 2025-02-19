@@ -54,16 +54,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import type { AdminEmployeeDTO } from '@/modules/admin/employees/admins/models/admin-employees.model'
 import { EMPLOYEE_ROLES_FORMATTED } from '@/modules/admin/employees/models/employees.models'
-import type { StoreEmployeeDTO } from '@/modules/admin/employees/stores/models/store-employees.model'
 
-const {employees} = defineProps<{employees: StoreEmployeeDTO[]}>()
+const {employees} = defineProps<{employees: AdminEmployeeDTO[]}>()
 
 const router = useRouter()
 
 // Navigate to employee details
 const goToEmployee = (employeeId: number) => {
-  router.push(`/admin/employees/franchisee/${employeeId}`)
+  router.push(`/admin/employees/admin/${employeeId}`)
 }
 
 // Format phone number for display
