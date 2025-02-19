@@ -92,10 +92,25 @@ jobs:
           DB_USER=testuser
           DB_PASSWORD=testpassword
           DB_NAME=testdb
+          
           REDIS_HOST=localhost
           REDIS_PORT=6379
           REDIS_DB=0
           REDIS_PASSWORD=
+
+          DEFAULT_PAGE=1
+          DEFAULT_PAGE_SIZE=10
+          MAX_PAGE_SIZE=100
+          DEFAULT_SORT_PARAMETER="createdAt"
+          DEFAULT_SORT_DIRECTION="DESC"
+
+          JWT_CUSTOMER_SECRET_KEY="SECRET_KEY_FOR_CUSTOMERS"
+          JWT_EMPLOYEE_SECRET_KEY="SECRET_KEY_FOR_EMPLOYEES"
+
+          JWT_EMPLOYEE_ACCESS_TOKEN_TTL=24h
+          JWT_EMPLOYEE_REFRESH_TOKEN_TTL=168h #7 days
+          JWT_CUSTOMER_ACCESS_TOKEN_TTL=24h
+          JWT_CUSTOMER_REFRESH_TOKEN_TTL=720h #30 days
           EOF
 
       - name: Set up Go
