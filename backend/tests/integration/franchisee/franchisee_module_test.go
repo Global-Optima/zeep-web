@@ -19,7 +19,7 @@ func TestFranchiseeEndpoints(t *testing.T) {
 				Method:      http.MethodPost,
 				URL:         "/api/test/franchisees",
 				Body: map[string]interface{}{
-					"name":        "Franchisee A",
+					"name":        "Franchisee C",
 					"description": "Main branch",
 				},
 				AuthRole:     data.RoleAdmin, // Only Admin can create
@@ -35,6 +35,28 @@ func TestFranchiseeEndpoints(t *testing.T) {
 				},
 				AuthRole:     data.RoleBarista, // Unauthorized role
 				ExpectedCode: http.StatusForbidden,
+			},
+			{
+				Description: "Admin should NOT create a franchisee with an empty name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/franchisees",
+				Body: map[string]interface{}{
+					"name":        "",
+					"description": "Branch with empty name",
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest, // Expected failure due to empty name
+			},
+			{
+				Description: "Admin should NOT create a franchisee with a duplicate name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/franchisees",
+				Body: map[string]interface{}{
+					"name":        "Franchisee A", // Duplicate of the first test case
+					"description": "Duplicate branch",
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusInternalServerError, // Expected failure due to duplicate name
 			},
 		}
 		env.RunTests(t, testCases)

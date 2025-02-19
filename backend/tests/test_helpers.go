@@ -15,46 +15,67 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	defaultDBPort        = 5432
+	defaultDBHost        = "localhost"
+	defaultDBUser        = "defaultuser"
+	defaultDBPassword    = "defaultpassword"
+	defaultDBName        = "defaultdb"
+	defaultRedisPort     = 6379
+	defaultRedisHost     = "localhost"
+	defaultRedisDB       = 0
+	defaultRedisPassword = ""
+	testDataFileName     = "CREATE_TEST_DATA.sql"
+	scriptsDir           = "scripts"
+	maxHostLength        = 253
+)
+
 func LoadConfigFromEnv() (*config.Config, error) {
-	port, err := strconv.Atoi(getEnv("DB_PORT", "5432"))
+	cfg := &config.Config{
+		Database: loadDBConfig(),
+		Redis:    loadRedisConfig(),
+	}
+	return cfg, nil
+}
+
+func loadDBConfig() config.DatabaseConfig {
+	port, err := strconv.Atoi(getEnv("DB_PORT", strconv.Itoa(defaultDBPort)))
 	if err != nil {
-		log.Printf("Invalid DB_PORT value; using default 5432. Error: %v", err)
-		port = 5432
+		log.Printf("Invalid DB_PORT value; using default %d. Error: %v", defaultDBPort, err)
+		port = defaultDBPort
 	}
 
-	redisDB, err := strconv.Atoi(getEnv("REDIS_DB", "0"))
+	return config.DatabaseConfig{
+		Host:     getEnv("DB_HOST", defaultDBHost),
+		Port:     port,
+		User:     getEnv("DB_USER", defaultDBUser),
+		Password: getEnv("DB_PASSWORD", defaultDBPassword),
+		Name:     getEnv("DB_NAME", defaultDBName),
+	}
+}
+
+func loadRedisConfig() config.RedisConfig {
+	redisDB, err := strconv.Atoi(getEnv("REDIS_DB", strconv.Itoa(defaultRedisDB)))
 	if err != nil {
-		log.Printf("Invalid REDIS_DB value; using default 0. Error: %v", err)
-		redisDB = 0
+		log.Printf("Invalid REDIS_DB value; using default %d. Error: %v", defaultRedisDB, err)
+		redisDB = defaultRedisDB
 	}
 
-	redisHost := getEnv("REDIS_HOST", "localhost")
+	redisPort, err := strconv.Atoi(getEnv("REDIS_PORT", strconv.Itoa(defaultRedisPort)))
+	if err != nil {
+		log.Printf("Invalid REDIS_PORT value; using default %d. Error: %v", defaultRedisPort, err)
+		redisPort = defaultRedisPort
+	}
+
+	redisHost := getEnv("REDIS_HOST", defaultRedisHost)
 	redisHost = validateRedisHost(redisHost)
 
-	redisPort, err := strconv.Atoi(getEnv("REDIS_PORT", "6379"))
-	if err != nil {
-		log.Printf("Invalid REDIS_PORT value; using default 6379. Error: %v", err)
-		redisPort = 6379
+	return config.RedisConfig{
+		Host:     redisHost,
+		Port:     redisPort,
+		Password: getEnv("REDIS_PASSWORD", defaultRedisPassword),
+		DB:       redisDB,
 	}
-
-	cfg := &config.Config{
-		Database: config.DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     port,
-			User:     getEnv("DB_USER", "defaultuser"),
-			Password: getEnv("DB_PASSWORD", "defaultpassword"),
-			Name:     getEnv("DB_NAME", "defaultdb"),
-		},
-
-		Redis: config.RedisConfig{
-			Host:     redisHost,
-			Port:     redisPort,
-			Password: getEnv("REDIS_PASSWORD", ""),
-			DB:       redisDB,
-		},
-	}
-
-	return cfg, nil
 }
 
 func getEnv(key, defaultValue string) string {
@@ -68,8 +89,8 @@ func getEnv(key, defaultValue string) string {
 
 func validateRedisHost(redisHost string) string {
 	if redisHost == "" {
-		log.Println("REDIS_HOST is empty; using default 'localhost'")
-		return "localhost"
+		log.Printf("REDIS_HOST is empty; using default '%s'", defaultRedisHost)
+		return defaultRedisHost
 	}
 
 	if net.ParseIP(redisHost) != nil {
@@ -78,9 +99,9 @@ func validateRedisHost(redisHost string) string {
 
 	if strings.Contains(redisHost, ":") {
 		hostPart := strings.Split(redisHost, ":")[0]
-		if hostPart == "" || len(hostPart) > 253 {
-			log.Printf("Invalid REDIS_HOST value '%s'; using 'localhost'", redisHost)
-			return "localhost"
+		if hostPart == "" || len(hostPart) > maxHostLength {
+			log.Printf("Invalid REDIS_HOST value '%s'; using '%s'", redisHost, defaultRedisHost)
+			return defaultRedisHost
 		}
 	}
 
@@ -94,7 +115,7 @@ func LoadTestData(db *gorm.DB) error {
 	}
 
 	baseDir := filepath.Dir(callerFile)
-	sqlPath := filepath.Join(baseDir, "..", "scripts", "CREATE_TEST_DATA.sql")
+	sqlPath := filepath.Join(baseDir, "..", scriptsDir, testDataFileName)
 	sqlPath = filepath.Clean(sqlPath)
 
 	if _, err := os.Stat(sqlPath); err != nil {
