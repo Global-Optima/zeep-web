@@ -82,6 +82,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Create test.env file
+        run: |
+          mkdir -p tests
+          cat <<EOF > tests/test.env
+          ENV=test
+          DB_HOST=localhost
+          DB_PORT=5432
+          DB_USER=testuser
+          DB_PASSWORD=testpassword
+          DB_NAME=testdb
+          REDIS_HOST=localhost
+          REDIS_PORT=6379
+          REDIS_DB=0
+          REDIS_PASSWORD=
+          EOF
+
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
