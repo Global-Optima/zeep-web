@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
@@ -126,6 +127,10 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, err
 	}
 
+	if len(createOrderDTO.Suborders) == 0 {
+		return nil, fmt.Errorf("order can not be empty")
+	}
+
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
 
 	validations, err := s.ValidationResults(storeID, storeProductSizeIDs, storeAdditiveIDs)
@@ -158,7 +163,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	}
 	err = s.notificationService.NotifyNewOrder(notificationDetails)
 	if err != nil {
-		return nil, fmt.Errorf("failed to notify new order: %w", err)
+		s.logger.Errorf("failed to notify new order: %w", err)
 	}
 
 	return &order, nil
@@ -221,7 +226,6 @@ func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
 }
 
 func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, error) {
-	// 1. Fetch suborder from repository
 	suborder, err := s.orderRepo.GetSuborderByID(suborderID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve suborder (id=%d): %w", suborderID, err)
@@ -233,7 +237,6 @@ func (s *orderService) GenerateSuborderBarcodePDF(suborderID uint) ([]byte, erro
 	// 	return nil, fmt.Errorf("barcode generation allowed only for pending suborders")
 	// }
 
-	// 2. Encode the barcode data using Code-128
 	barcodeData := fmt.Sprintf("suborder-%d", suborder.ID)
 
 	return utils.GenerateBarcodePDF(barcodeData)
@@ -459,7 +462,7 @@ func ValidateStoreAdditives(storeID uint, storeAdditiveIDs []uint, repo storeAdd
 		}
 
 		price := storeAdditive.Additive.BasePrice
-		if storeAdditive.StorePrice == nil {
+		if storeAdditive.StorePrice != nil {
 			price = *storeAdditive.StorePrice
 		}
 		prices[id] = price
@@ -484,7 +487,7 @@ func ValidateStoreProductSizes(storeID uint, storeProductSizeIDs []uint, repo st
 		}
 
 		price := storeProductSize.ProductSize.BasePrice
-		if storeProductSize.StorePrice == nil {
+		if storeProductSize.StorePrice != nil {
 			price = *storeProductSize.StorePrice
 		}
 
