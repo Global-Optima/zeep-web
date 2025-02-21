@@ -73,3 +73,7 @@ func GetTestDB() *gorm.DB {
 func GetOrdersModule() *modules.OrdersModule {
 	return NewTestContainer().Orders
 }
+
+func GetWarehouseModule() *modules.WarehousesModule {
+	return NewTestContainer().Warehouses
+}
