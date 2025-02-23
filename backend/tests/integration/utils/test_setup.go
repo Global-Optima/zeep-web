@@ -189,7 +189,9 @@ func truncateTables(db *gorm.DB) {
 	var tables []string
 	db.Raw("SELECT tablename FROM pg_tables WHERE schemaname = 'public'").Scan(&tables)
 	for _, table := range tables {
-		db.Exec(fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE;", table))
+		if err := db.Exec(fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE;", table)).Error; err != nil {
+			fmt.Printf("Error truncating table %s: %v\n", table, err)
+		}
 	}
 }
 
