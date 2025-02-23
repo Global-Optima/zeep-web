@@ -3,67 +3,61 @@ package stores
 import (
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
 	"gorm.io/gorm"
 )
 
 type StoreService interface {
-	CreateStore(storeDTO types.CreateStoreDTO) (*types.StoreDTO, error)
+	CreateStore(storeDTO *types.CreateStoreDTO) (uint, error)
 	GetAllStores(filter *types.StoreFilter) ([]types.StoreDTO, error)
 	GetAllStoresForNotifications() ([]types.StoreDTO, error)
 	GetStoreByID(storeID uint) (*types.StoreDTO, error)
-	GetStoresByFranchisee(franchiseeID *uint, filter *types.StoreFilter) ([]types.StoreDTO, error)
-	UpdateStore(storeId uint, storeDTO types.UpdateStoreDTO) (*types.StoreDTO, error)
+	GetStores(filter *types.StoreFilter) ([]types.StoreDTO, error)
+	UpdateStore(storeId uint, storeDTO *types.UpdateStoreDTO) error
 	DeleteStore(storeID uint, hardDelete bool) error
 }
 
 type storeService struct {
-	repo StoreRepository
+	repo   StoreRepository
+	logger *zap.SugaredLogger
 }
 
-func NewStoreService(repo StoreRepository) StoreService {
-	return &storeService{repo: repo}
+func NewStoreService(repo StoreRepository, logger *zap.SugaredLogger) StoreService {
+	return &storeService{
+		repo:   repo,
+		logger: logger,
+	}
 }
 
-func (s *storeService) CreateStore(createStoreDto types.CreateStoreDTO) (*types.StoreDTO, error) {
-	var facilityAddress *data.FacilityAddress
+func (s *storeService) CreateStore(createStoreDto *types.CreateStoreDTO) (uint, error) {
 	existingFacilityAddress, err := s.repo.GetFacilityAddressByAddress(createStoreDto.FacilityAddress.Address)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("error checking existing facility address: %w", err)
+		wrappedErr := fmt.Errorf("error checking existing facility address: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
+	store, err := types.CreateStoreFields(createStoreDto)
+	if err != nil {
+		wrappedErr := fmt.Errorf("error creating store: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
 	}
 
 	if existingFacilityAddress != nil {
-		facilityAddress = existingFacilityAddress
-	} else {
-		facilityAddress = &data.FacilityAddress{
-			Address:   createStoreDto.FacilityAddress.Address,
-			Longitude: createStoreDto.FacilityAddress.Longitude,
-			Latitude:  createStoreDto.FacilityAddress.Latitude,
-		}
-		facilityAddress, err = s.repo.CreateFacilityAddress(facilityAddress)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create facility address: %w", err)
-		}
+		store.FacilityAddress = *existingFacilityAddress
 	}
 
-	store := &data.Store{
-		Name:              createStoreDto.Name,
-		FranchiseeID:      createStoreDto.FranchiseID,
-		WarehouseID:       createStoreDto.WarehouseID,
-		ContactPhone:      createStoreDto.ContactPhone,
-		ContactEmail:      createStoreDto.ContactEmail,
-		StoreHours:        createStoreDto.StoreHours,
-		FacilityAddressID: facilityAddress.ID,
-	}
-
-	createdStore, err := s.repo.CreateStore(store)
+	id, err := s.repo.CreateStore(store)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create store: %w", err)
+		wrappedErr := fmt.Errorf("failed to create store: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
 	}
 
-	return types.MapToStoreDTO(createdStore), nil
+	return id, nil
 }
 
 func (s *storeService) GetAllStores(filter *types.StoreFilter) ([]types.StoreDTO, error) {
@@ -110,8 +104,8 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 	return types.MapToStoreDTO(store), nil
 }
 
-func (s *storeService) GetStoresByFranchisee(franchiseeID *uint, filter *types.StoreFilter) ([]types.StoreDTO, error) {
-	stores, err := s.repo.GetStoresByFranchisee(franchiseeID, filter)
+func (s *storeService) GetStores(filter *types.StoreFilter) ([]types.StoreDTO, error) {
+	stores, err := s.repo.GetStores(filter)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to get stores: %w", err)
 		return nil, wrappedErr
@@ -124,28 +118,36 @@ func (s *storeService) GetStoresByFranchisee(franchiseeID *uint, filter *types.S
 	return storeDTOs, nil
 }
 
-func (s *storeService) UpdateStore(storeId uint, updateStoreDto types.UpdateStoreDTO) (*types.StoreDTO, error) {
-	store, err := s.repo.GetStoreByID(storeId)
+func (s *storeService) UpdateStore(storeID uint, updateStoreDto *types.UpdateStoreDTO) error {
+	updateModels, err := types.UpdateStoreFields(updateStoreDto)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("store not found")
-		}
-		return nil, err
+		wrappedErr := fmt.Errorf("validation failed trying to update store: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
-	types.UpdateStoreFields(store, updateStoreDto)
-	updatedStore, err := s.repo.UpdateStore(store)
+	err = s.repo.UpdateStore(storeID, updateModels)
 	if err != nil {
-		return nil, err
+		wrappedErr := fmt.Errorf("failed to update store: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
-	return types.MapToStoreDTO(updatedStore), nil
+	return nil
 }
 
 func (s *storeService) DeleteStore(storeID uint, hardDelete bool) error {
 	if storeID == 0 {
-		return errors.New("store ID is required for deletion")
+		wrappedErr := fmt.Errorf("store ID is required for deletion")
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 
-	return s.repo.DeleteStore(storeID, hardDelete)
+	if err := s.repo.DeleteStore(storeID, hardDelete); err != nil {
+		wrappedErr := fmt.Errorf("failed to delete store: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	return nil
 }

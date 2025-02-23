@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/pkg/errors"
 	"strings"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -19,7 +20,6 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 		Name:               dto.Name,
 		Description:        dto.Description,
 		BasePrice:          dto.BasePrice,
-		ImageURL:           dto.ImageURL,
 		UnitID:             dto.UnitID,
 		Size:               dto.Size,
 		AdditiveCategoryID: dto.AdditiveCategoryID,
@@ -35,10 +35,10 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 	return additive
 }
 
-func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) *AdditiveModels {
+func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) (*AdditiveModels, error) {
 	additive := &data.Additive{}
 	if dto == nil {
-		return nil
+		return nil, errors.New("dto cannot be nil")
 	}
 
 	if strings.TrimSpace(dto.Name) != "" {
@@ -49,9 +49,6 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) *AdditiveModels {
 	}
 	if dto.BasePrice != nil {
 		additive.BasePrice = *dto.BasePrice
-	}
-	if dto.ImageURL != nil {
-		additive.ImageURL = *dto.ImageURL
 	}
 	if dto.Size != nil {
 		additive.Size = *dto.Size
@@ -76,7 +73,7 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) *AdditiveModels {
 	return &AdditiveModels{
 		Additive:    additive,
 		Ingredients: ingredients,
-	}
+	}, nil
 }
 
 func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.AdditiveCategory {
@@ -134,7 +131,7 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 		Name:        additive.Name,
 		Description: additive.Description,
 		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageURL,
+		ImageURL:    additive.ImageURL.GetURL(),
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		Category:    *ConvertToCategoryDTO(&additive.Category),
@@ -185,7 +182,7 @@ func ConvertToBaseAdditiveCategoryItem(additive *data.Additive, categoryID uint)
 		Name:        additive.Name,
 		Description: additive.Description,
 		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageURL,
+		ImageURL:    additive.ImageURL.GetURL(),
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		CategoryID:  categoryID,

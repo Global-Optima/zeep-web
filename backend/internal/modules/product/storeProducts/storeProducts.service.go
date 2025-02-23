@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
 
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
@@ -34,6 +35,7 @@ type storeProductService struct {
 	repo               StoreProductRepository
 	productRepo        product.ProductRepository
 	ingredientsRepo    ingredients.IngredientRepository
+	storageRepo        storage.StorageRepository
 	transactionManager TransactionManager
 	logger             *zap.SugaredLogger
 }
@@ -42,6 +44,7 @@ func NewStoreProductService(
 	repo StoreProductRepository,
 	productRepo product.ProductRepository,
 	ingredientRepo ingredients.IngredientRepository,
+	storageRepo storage.StorageRepository,
 	transactionManager TransactionManager,
 	logger *zap.SugaredLogger,
 ) StoreProductService {
@@ -49,6 +52,7 @@ func NewStoreProductService(
 		repo:               repo,
 		productRepo:        productRepo,
 		ingredientsRepo:    ingredientRepo,
+		storageRepo:        storageRepo,
 		transactionManager: transactionManager,
 		logger:             logger,
 	}

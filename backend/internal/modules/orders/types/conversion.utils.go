@@ -140,7 +140,7 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 					ID:          sub.StoreProductSize.ProductSize.Product.ID,
 					Name:        sub.StoreProductSize.ProductSize.Product.Name,
 					Description: sub.StoreProductSize.ProductSize.Product.Description,
-					ImageURL:    sub.StoreProductSize.ProductSize.Product.ImageURL,
+					ImageURL:    sub.StoreProductSize.ProductSize.Product.ImageURL.GetURL(),
 				},
 			},
 			StoreAdditives: storeAdditives,

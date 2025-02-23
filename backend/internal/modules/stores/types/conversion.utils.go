@@ -8,13 +8,12 @@ import (
 
 func MapToStoreDTO(store *data.Store) *StoreDTO {
 
-	facilityAddressDTO := &FacilityAddressDTO{
-		ID:        store.FacilityAddress.ID,
-		Address:   store.FacilityAddress.Address,
-		Longitude: safeFloat(store.FacilityAddress.Longitude),
-		Latitude:  safeFloat(store.FacilityAddress.Latitude),
-	}
+	facilityAddressDTO := MapToFacilityAddressDTO(&store.FacilityAddress)
 
+	var isActive = false
+	if store.IsActive != nil && *store.IsActive {
+		isActive = true
+	}
 	var franchisee *franchiseesTypes.FranchiseeDTO = nil
 	if store.Franchisee != nil {
 		franchisee = franchiseesTypes.ConvertFranchiseeToDTO(store.Franchisee)
@@ -26,11 +25,29 @@ func MapToStoreDTO(store *data.Store) *StoreDTO {
 		ID:              store.ID,
 		Name:            store.Name,
 		Franchisee:      franchisee,
+		IsActive:        isActive,
 		Warehouse:       *warehouse,
 		ContactPhone:    store.ContactPhone,
 		ContactEmail:    store.ContactEmail,
 		StoreHours:      store.StoreHours,
 		FacilityAddress: facilityAddressDTO,
+	}
+}
+
+func MapToFacilityAddressDTO(facilityAddress *data.FacilityAddress) *FacilityAddressDTO {
+	return &FacilityAddressDTO{
+		ID:        facilityAddress.ID,
+		Address:   facilityAddress.Address,
+		Longitude: safeFloat(facilityAddress.Longitude),
+		Latitude:  safeFloat(facilityAddress.Latitude),
+	}
+}
+
+func MapToFacilityAddressModel(dto *CreateOrUpdateFacilityAddressDTO) *data.FacilityAddress {
+	return &data.FacilityAddress{
+		Address:   dto.Address,
+		Longitude: dto.Longitude,
+		Latitude:  dto.Latitude,
 	}
 }
 
