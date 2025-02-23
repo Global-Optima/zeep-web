@@ -81,8 +81,6 @@ const decrement = (e: Event) => {
 // Computed property for item total price
 const itemTotalPrice = computed(() => {
   const storePrice = props.item.size.storePrice;
-  console.log("STORE PRICEEE", props.item.size)
-  console.log("STORE ADTIIVESSS", props.item.additives)
 
   const additivesPrice = props.item.additives.reduce(
     (sum, additive) => sum + additive.storePrice,
