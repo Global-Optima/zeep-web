@@ -1,10 +1,8 @@
 package container
 
 import (
-	"fmt"
 	"sync"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
@@ -52,22 +50,6 @@ func NewContainer(dbHandler *database.DBHandler, router *routes.Router, logger *
 }
 
 func (c *Container) mustInit() {
-	var err error
-	cfg := config.GetConfig()
-
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Database.Host,
-		cfg.Database.Port,
-		cfg.Database.User,
-		cfg.Database.Password,
-		cfg.Database.Name,
-	)
-
-	c.DbHandler, err = database.InitDB(dsn)
-	if err != nil {
-		c.logger.Fatal("Failed to initialize database", zap.Error(err))
-	}
-
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
 	cronManager := scheduler.NewCronManager(c.logger)
 
@@ -103,6 +85,5 @@ func (c *Container) MustInitModules() {
 }
 
 func (c *Container) GetDB() *gorm.DB {
-	c.MustInitModules()
 	return c.DbHandler.DB
 }

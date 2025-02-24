@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var container = tests.NewTestContainer()
+
 func uintPtr(u uint) *uint {
 	return &u
 }
@@ -38,7 +40,6 @@ func deleteTestStockRequest(t *testing.T, service stockRequests.StockRequestServ
 }
 
 func setupTest(t *testing.T) stockRequests.StockRequestService {
-	container := tests.NewTestContainer()
 	db := container.GetDB()
 	if err := tests.TruncateAllTables(db); err != nil {
 		t.Fatalf("TruncateAllTables error: %v", err)

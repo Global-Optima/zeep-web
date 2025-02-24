@@ -36,15 +36,16 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 		log.Fatalf("Failed to initialize test loggers: %v", err)
 	}
 
-	db := setupDatabase(cfg, t)
+	dbHandler := setupDatabase(cfg, t)
 	setupRedis(cfg, t)
-	router := setupRouter(db)
+	router := setupRouter(dbHandler)
 
-	truncateAndLoadMockData(db)
+	truncateAndLoadMockData(dbHandler.DB)
+	log.Println("Mock data loaded successfully")
 
 	return &TestEnvironment{
 		Router: router,
-		DB:     db,
+		DB:     dbHandler.DB,
 		Config: cfg,
 		Tokens: make(map[string]string),
 	}
@@ -62,9 +63,11 @@ func loadConfig() *config.Config {
 		if err != nil {
 			log.Fatalf("Failed to load test.env file! Details: %s", err)
 		}
+
 		log.Println("Loaded configuration from test.env file")
 	} else {
 		log.Println("test.env file not found. Loading configuration from environment variables")
+
 		cfg, err = LoadConfigFromEnv()
 		if err != nil {
 			log.Fatalf("Failed to load configuration from environment variables! Details: %s", err)
@@ -145,7 +148,7 @@ func validateRedisHost(redisHost string) string {
 	return redisHost
 }
 
-func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
+func setupDatabase(cfg *config.Config, t *testing.T) *database.DBHandler {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.Password, cfg.Database.Name,
 	)
@@ -153,7 +156,9 @@ func setupDatabase(cfg *config.Config, t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("Failed to initialize test database! Details: %v", err)
 	}
-	return dbHandler.DB
+
+	log.Println("Integration tests setup: Database connected")
+	return dbHandler
 }
 
 func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
@@ -166,16 +171,15 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 	return redisClient
 }
 
-func setupRouter(db *gorm.DB) *gin.Engine {
+func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
 
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
-	dbHandler := &database.DBHandler{DB: db}
-	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
-	appContainer.MustInitModules()
+	testContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
+	testContainer.MustInitModules()
 
 	return router
 }
@@ -185,16 +189,29 @@ func truncateAndLoadMockData(db *gorm.DB) {
 	loadMockData(db)
 }
 
-func truncateTables(db *gorm.DB) {
+func truncateTables(db *gorm.DB) error {
 	var tables []string
-	db.Raw("SELECT tablename FROM pg_tables WHERE schemaname = 'public'").Scan(&tables)
+	if err := db.Raw("SELECT tablename FROM pg_tables WHERE schemaname = 'public'").Scan(&tables).Error; err != nil {
+		return fmt.Errorf("failed to get table names: %w", err)
+	}
+	// Build a list of tables to truncate (excluding schema_migrations).
+	var toTruncate []string
 	for _, table := range tables {
-		if err := db.Exec(fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE;", table)).Error; err != nil {
-			fmt.Printf("Error truncating table %s: %v\n", table, err)
+		if table == "schema_migrations" {
+			continue
+		}
+		toTruncate = append(toTruncate, table)
+	}
+	// Execute a single TRUNCATE statement for all tables
+	if len(toTruncate) > 0 {
+		query := fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE;",
+			strings.Join(toTruncate, ", "))
+		if err := db.Exec(query).Error; err != nil {
+			return fmt.Errorf("failed to truncate tables: %w", err)
 		}
 	}
+	return nil
 }
-
 func loadMockData(db *gorm.DB) {
 	_, b, _, _ := runtime.Caller(0)
 	baseDir := filepath.Join(filepath.Dir(b), "../../..")

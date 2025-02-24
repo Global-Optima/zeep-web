@@ -13,16 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func uintPtr(u uint) *uint {
-	return &u
-}
+var container = tests.NewTestContainer()
 
 func stringPtr(s string) *string {
 	return &s
 }
 
 func setupStoreStockTest(t *testing.T) storeStocks.StoreStockService {
-	container := tests.NewTestContainer()
 	db := container.GetDB()
 	if err := tests.TruncateAllTables(db); err != nil {
 		t.Fatalf("TruncateAllTables error: %v", err)
