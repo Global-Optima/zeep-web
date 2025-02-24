@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -75,7 +76,7 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrStoreProductNotFound
+			return nil, moduleErrors.ErrNotFound
 		}
 		return nil, err
 	}

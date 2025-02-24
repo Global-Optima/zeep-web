@@ -40,7 +40,8 @@ VALUES
 INSERT INTO products (name, description, image_url, video_url, category_id)
 VALUES 
   ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1),
-  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2);
+  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2),
+  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1);
 
 -- 8. Insert into recipe_steps (for Espresso)
 INSERT INTO recipe_steps (product_id, step, name, description, image_url)
@@ -52,7 +53,8 @@ VALUES
 INSERT INTO product_sizes (name, unit_id, base_price, size, is_default, product_id)
 VALUES 
   ('S', 1, 2.50, 250, true, 1),
-  ('M', 1, 3.50, 350, false, 1);
+  ('M', 1, 3.50, 350, false, 1),
+  ('S', 2, 4.50, 245, true, 3);
 
 -- 10. Insert into additives
 INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_url)

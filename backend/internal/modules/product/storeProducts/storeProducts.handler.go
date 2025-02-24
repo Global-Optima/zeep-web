@@ -1,7 +1,9 @@
 package storeProducts
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
@@ -58,8 +60,14 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 
 	productDetails, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrNotFound):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
+			return
+		}
 	}
 
 	if productDetails == nil {
@@ -357,8 +365,14 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrNotFound):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
+			return
+		}
 	}
 
 	action := types.DeleteStoreProductAuditFactory(
