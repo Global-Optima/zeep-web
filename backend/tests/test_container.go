@@ -77,3 +77,11 @@ func GetOrdersModule() *modules.OrdersModule {
 func GetWarehouseModule() *modules.WarehousesModule {
 	return NewTestContainer().Warehouses
 }
+
+func GetStockMaterialModule() *modules.StockMaterialsModule {
+	return NewTestContainer().StockMaterials
+}
+
+func GetStockMaterialCategoryModule() *modules.StockMaterialCategoriesModule {
+	return NewTestContainer().StockMaterialCategories
+}
