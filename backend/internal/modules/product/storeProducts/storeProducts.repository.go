@@ -17,6 +17,7 @@ type StoreProductRepository interface {
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
+	GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]data.StoreProduct, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
 	UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error
@@ -143,6 +144,29 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	if err != nil {
 		return nil, err
 	}
+
+	if err := query.Find(&storeProducts).Error; err != nil {
+		return nil, err
+	}
+
+	return storeProducts, nil
+}
+
+func (r *storeProductRepository) GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]data.StoreProduct, error) {
+	var storeProducts []data.StoreProduct
+
+	query := r.db.Model(&data.StoreProduct{}).
+		Where("store_id = ?", storeID).
+		Where("id NOT IN (?)", excludedStoreProductIDs).
+		Order("RANDOM()").
+		Limit(5).
+		Preload("Product.ProductSizes").
+		Preload("Product.Category").
+		Preload("StoreProductSizes.ProductSize.Unit").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
 
 	if err := query.Find(&storeProducts).Error; err != nil {
 		return nil, err

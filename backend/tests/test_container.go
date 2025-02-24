@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 	"log"
 	"sync"
 	"time"
@@ -58,7 +59,11 @@ func NewTestContainer() *container.Container {
 
 		apiRouter := routes.NewRouter(r, "/api", "/test")
 
-		testContainer = container.NewContainer(dbHandler, apiRouter, sugarLog)
+		mockStorageRepo, err := mockStorage.NewMockStorageRepository(sugarLog)
+		if err != nil {
+			sugarLog.Fatalf("Failed to initialize mock storage repository: %v", err)
+		}
+		testContainer = container.NewContainer(dbHandler, &mockStorageRepo, apiRouter, sugarLog)
 		testContainer.MustInitModules()
 
 		time.Sleep(100 * time.Millisecond)
