@@ -34,11 +34,6 @@ func createTestStockRequest(t *testing.T, service stockRequests.StockRequestServ
 	return id
 }
 
-func deleteTestStockRequest(t *testing.T, service stockRequests.StockRequestService, id uint) {
-	_, err := service.DeleteStockRequest(id)
-	assert.NoError(t, err, "DeleteStockRequest should succeed")
-}
-
 func setupTest(t *testing.T) stockRequests.StockRequestService {
 	db := container.GetDB()
 	if err := tests.TruncateAllTables(db); err != nil {

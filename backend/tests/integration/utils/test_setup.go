@@ -197,7 +197,9 @@ func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
 }
 
 func truncateAndLoadMockData(db *gorm.DB) {
-	truncateTables(db)
+	if err := truncateTables(db); err != nil {
+		log.Fatalf("Failed to truncate tables: %v", err)
+	}
 	loadMockData(db)
 }
 
@@ -241,7 +243,9 @@ func loadMockData(db *gorm.DB) {
 }
 
 func (env *TestEnvironment) Close() {
-	truncateTables(env.DB)
+	if err := truncateTables(env.DB); err != nil {
+		log.Printf("Failed to truncate tables: %v", err)
+	}
 	mockDB, _ := env.DB.DB()
 	if err := mockDB.Close(); err != nil {
 		fmt.Printf("Error closing the database connection: %v\n", err)
