@@ -140,20 +140,11 @@ func TruncateAllTables(db *gorm.DB) error {
 	if err := db.Raw("SELECT tablename FROM pg_tables WHERE schemaname = 'public'").Scan(&tables).Error; err != nil {
 		return fmt.Errorf("failed to get table names: %w", err)
 	}
-	// Build a list of tables to truncate (excluding schema_migrations).
-	var toTruncate []string
+
 	for _, table := range tables {
-		if table == "schema_migrations" {
-			continue
-		}
-		toTruncate = append(toTruncate, table)
-	}
-	// Execute a single TRUNCATE statement for all tables
-	if len(toTruncate) > 0 {
-		query := fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE;",
-			strings.Join(toTruncate, ", "))
+		query := fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE;", table)
 		if err := db.Exec(query).Error; err != nil {
-			return fmt.Errorf("failed to truncate tables: %w", err)
+			return fmt.Errorf("failed to truncate table %s: %w", table, err)
 		}
 	}
 	return nil
