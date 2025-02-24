@@ -11,12 +11,13 @@ import (
 )
 
 const (
-	MP4_FORMAT_KEY = ".mp4"
-	MAX_VIDEO_SIZE = 20 * 1024 * 1024
+	VIDEO_FORM_DATA_KEY = "video"
+	MP4_FORMAT_KEY      = ".mp4"
+	MAX_VIDEO_SIZE      = 20 * 1024 * 1024
 )
 
 func GetVideoWithFormFile(c *gin.Context) (*multipart.FileHeader, error) {
-	file, err := c.FormFile("video")
+	file, err := c.FormFile(VIDEO_FORM_DATA_KEY)
 	if err != nil {
 		return nil, err
 	}

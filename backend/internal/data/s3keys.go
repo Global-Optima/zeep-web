@@ -3,6 +3,8 @@ package data
 import (
 	"fmt"
 	"net/url"
+	"path/filepath"
+	"strings"
 )
 
 var s3info = &S3Info{}
@@ -59,7 +61,9 @@ func (s S3ImageKey) GetOriginalImageObjectKey() string {
 	if s == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/%s", s3info.OriginalImagesPrefix, url.PathEscape(s.ToString()))
+	key := s.ToString()
+	originalFileKey := strings.TrimSuffix(key, filepath.Ext(key)) + s3info.OriginalImagesPrefix
+	return fmt.Sprintf("%s/%s", s3info.OriginalImagesPrefix, url.PathEscape(originalFileKey))
 }
 
 type S3VideoKey string

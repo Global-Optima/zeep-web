@@ -85,6 +85,7 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProduct)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProduct)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProduct)
+		router.DELETE("sizes/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProductSize)
 		router.POST("/sizes", middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
 		router.PUT("/sizes/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
 	}

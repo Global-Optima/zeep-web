@@ -51,8 +51,8 @@ VALUES
 -- 9. Insert into product_sizes
 INSERT INTO product_sizes (name, unit_id, base_price, size, is_default, product_id)
 VALUES 
-  ('Small', 1, 2.50, 250, true, 1),
-  ('Medium', 1, 3.50, 350, false, 1);
+  ('S', 1, 2.50, 250, true, 1),
+  ('M', 1, 3.50, 350, false, 1);
 
 -- 10. Insert into additives
 INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_url)

@@ -89,9 +89,9 @@ type CreateProductSizeDTO struct {
 }
 
 type UpdateProductDTO struct {
-	Name        string `json:"name" binding:"omitempty,min=2,max=100"`
-	Description string `json:"description" binding:"omitempty,max=500"`
-	CategoryID  uint   `json:"categoryId" binding:"omitempty,gt=0"`
+	Name        string `form:"name" binding:"omitempty,min=2,max=100"`
+	Description string `form:"description" binding:"omitempty,max=500"`
+	CategoryID  uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
 }

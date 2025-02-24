@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 	"log"
 	"net"
 	"os"
@@ -34,6 +36,16 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 
 	if err := logger.InitLoggers("debug", "logs/test_gin.log", "logs/test_service.log", cfg.IsTest); err != nil {
 		log.Fatalf("Failed to initialize test loggers: %v", err)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		logger.GetZapSugaredLogger().Fatalf("Failed to get current working directory: %v", err)
+	}
+	projectRoot := filepath.Join(wd, "..", "..", "..")
+	localizationLanguagesPath := filepath.Join(projectRoot, "internal/localization/languages")
+	if err := localization.InitLocalizer(&localizationLanguagesPath); err != nil {
+		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
 	}
 
 	db := setupDatabase(cfg, t)
@@ -174,7 +186,12 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
 	dbHandler := &database.DBHandler{DB: db}
-	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
+	zapLogger := logger.GetZapSugaredLogger()
+	storageRepo, err := mockStorage.NewMockStorageRepository(zapLogger)
+	if err != nil {
+		log.Fatalf("Failed to initialize mock storage repository: %v", err)
+	}
+	appContainer := container.NewContainer(dbHandler, &storageRepo, apiRouter, zapLogger)
 	appContainer.MustInitModules()
 
 	return router

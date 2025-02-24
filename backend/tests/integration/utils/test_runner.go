@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,6 +19,8 @@ type TestCase struct {
 	Method       string
 	URL          string
 	Body         interface{}
+	FormData     map[string]string
+	Files        map[string][]*multipart.FileHeader
 	Headers      map[string]string
 	ExpectedCode int
 	ExpectedBody interface{}
@@ -27,17 +30,51 @@ type TestCase struct {
 func (env *TestEnvironment) RunTests(t *testing.T, testCases []TestCase) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
-			var reqBody io.Reader
-			if tc.Body != nil {
-				bodyBytes, err := json.Marshal(tc.Body)
-				if err != nil {
-					t.Fatalf("❌ Failed to marshal body: %v", err)
+			var req *http.Request
+			var err error
+
+			// Check if test case includes file uploads (multipart form-data)
+			if len(tc.Files) > 0 || tc.FormData != nil {
+				// Create multipart form-data request
+				var buf bytes.Buffer
+				writer := multipart.NewWriter(&buf)
+
+				// Attach form fields
+				for key, val := range tc.FormData {
+					_ = writer.WriteField(key, val)
 				}
-				reqBody = bytes.NewReader(bodyBytes)
+
+				// Attach file uploads
+				for fieldName, fileHeaders := range tc.Files {
+					for _, fileHeader := range fileHeaders {
+						file, err := fileHeader.Open()
+						if err != nil {
+							t.Fatalf("failed to open test file: %v", err)
+						}
+						defer file.Close()
+
+						part, err := writer.CreateFormFile(fieldName, fileHeader.Filename)
+						if err != nil {
+							t.Fatalf("failed to create form file: %v", err)
+						}
+						_, _ = io.Copy(part, file)
+					}
+				}
+
+				_ = writer.Close()
+
+				req, err = http.NewRequest(tc.Method, tc.URL, &buf)
+				req.Header.Set("Content-Type", writer.FormDataContentType())
+			} else {
+				// Default JSON request
+				body, _ := json.Marshal(tc.Body)
+				req, err = http.NewRequest(tc.Method, tc.URL, bytes.NewReader(body))
+				req.Header.Set("Content-Type", "application/json")
 			}
 
-			req := httptest.NewRequest(tc.Method, tc.URL, reqBody)
-			req.Header.Set("Content-Type", "application/json")
+			if err != nil {
+				t.Fatalf("failed to create request: %v", err)
+			}
 
 			if tc.AuthRole != "" {
 				token := env.GetAuthToken(tc.AuthRole)

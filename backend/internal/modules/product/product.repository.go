@@ -3,6 +3,7 @@ package product
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
@@ -80,7 +81,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, moduleErrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to fetch ProductSize ID %d: %w", productSizeID, err)
 	}
@@ -137,7 +138,7 @@ func (r *productRepository) GetProductByID(productID uint) (*data.Product, error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, gorm.ErrRecordNotFound
+			return nil, moduleErrors.ErrNotFound
 		}
 		return nil, err
 	}
