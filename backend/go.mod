@@ -5,12 +5,16 @@ go 1.22.2
 toolchain go1.23.2
 
 require (
+	github.com/HugoSmits86/nativewebp v0.9.3
 	github.com/IBM/sarama v1.43.3
 	github.com/TwiN/go-away v1.6.14
+	github.com/abema/go-mp4 v1.4.1
+	github.com/disintegration/imaging v1.6.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
+	github.com/google/uuid v1.6.0
 	github.com/nicksnyder/go-i18n/v2 v2.4.1
 	github.com/nyaruka/phonenumbers v1.4.3
 	github.com/pkg/errors v0.9.1
@@ -51,7 +55,6 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
@@ -126,7 +129,7 @@ require (
 	golang.org/x/crypto v0.31.0
 	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sync v0.10.0
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0
 	google.golang.org/protobuf v1.34.2 // indirect
