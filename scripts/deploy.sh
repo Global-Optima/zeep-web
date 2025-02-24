@@ -3,9 +3,9 @@
 # ====================
 # Configuration
 # ====================
-ENV_FILE="/root/.env"
-COMPOSE_FILE="/root/docker-compose.yml"
-LOG_FILE="/root/scripts/deployment.log"
+ENV_FILE="../.env"
+COMPOSE_FILE="../docker-compose.yml"
+LOG_FILE="../deployment.log"
 
 # ====================
 # Secure Script Execution
@@ -65,20 +65,23 @@ log "🚀 Starting deployment process..."
 
 # Step 1: Pull the latest images (optional but recommended for production)
 log "⬇️ Pulling the latest images..."
-docker compose --env-file "$ENV_FILE" pull --parallel || handle_error "Failed to pull the latest images."
+docker compose pull --parallel || handle_error "Failed to pull the latest images."
 
 # Step 2: Stop and remove existing containers
 log "🛑 Stopping and removing existing containers..."
-docker compose --env-file "$ENV_FILE" down --remove-orphans || handle_error "Failed to stop and remove existing containers."
+docker compose down --remove-orphans || handle_error "Failed to stop and remove existing containers."
 
 # Step 3: Build and start new containers
 log "⚙️ Building and starting new containers..."
-docker compose --env-file "$ENV_FILE" up --build -d --force-recreate || handle_error "Failed to build and start new containers."
+docker compose up --build -d --force-recreate || handle_error "Failed to build and start new containers."
 
 # Step 4: Verify container status
 log "🔍 Verifying container status..."
-if ! docker ps --format "table {{.Names}}\t{{.Status}}"; then
-    handle_error "Failed to verify container status."
+docker compose ps --format "table {{.Service}}\t{{.State}}\t{{.Health}}" || handle_error "Failed to verify container status."
+
+# Ensure all required services are healthy
+if ! docker compose ps | grep -q 'healthy'; then
+    handle_error "One or more services failed to start properly."
 fi
 
 log "✅ Deployment completed successfully."
@@ -88,13 +91,13 @@ log "✅ Deployment completed successfully."
 # ====================
 log "🧹 Performing post-deployment cleanup..."
 
-# Check if cleanup is necessary before running it
-if docker system df | grep -q 'Reclaimable'; then
-    log "♻️ Removing unused Docker resources..."
+# Ask before pruning Docker resources
+read -p "♻️ Do you want to remove unused Docker resources? (y/N): " answer
+if [[ "$answer" =~ ^[Yy]$ ]]; then
     docker system prune -f --volumes || handle_error "Failed to clean up unused resources."
+    log "✅ Docker cleanup completed."
 else
-    log "🟢 No cleanup needed."
+    log "🟢 Skipping cleanup."
 fi
 
-log "🏁 Post-deployment cleanup completed successfully."
-log "🚀 Deployment finished successfully!"
+log "🏁 Deployment finished successfully!"
