@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"runtime"
 
@@ -55,6 +56,7 @@ func LoadConfig(file string) (*Config, error) {
 }
 
 func LoadTestConfig(optionalPath ...string) (*Config, error) {
+	viper.Reset()
 	viper.Set("ENV", EnvTest)
 
 	var testEnvPath string
@@ -65,11 +67,18 @@ func LoadTestConfig(optionalPath ...string) (*Config, error) {
 		if !ok {
 			return nil, fmt.Errorf("failed to get caller information")
 		}
-
 		dir := filepath.Dir(callerFile)
 		testEnvPath = filepath.Join(dir, "test.env")
 	}
+
 	log.Printf("Loading test config from: %s", testEnvPath)
+
+	if _, err := os.Stat(testEnvPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("configuration file does not exist: %s", testEnvPath)
+	} else if err != nil {
+		return nil, fmt.Errorf("error checking configuration file: %w", err)
+	}
+
 	return LoadConfig(testEnvPath)
 }
 

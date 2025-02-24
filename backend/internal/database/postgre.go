@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -21,7 +22,12 @@ type DBHandler struct {
 	DB *gorm.DB
 }
 
-var migrationsPath = "migrations"
+const (
+	maxOpenConns          = 25
+	maxIdleConns          = 25
+	connMaxLifetime       = time.Hour
+	defaultMigrationsPath = "migrations"
+)
 
 func InitDB(dsn string) (*DBHandler, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -31,31 +37,51 @@ func InitDB(dsn string) (*DBHandler, error) {
 
 	cfg := config.GetConfig()
 	if cfg.IsTest {
-		if err := ResetDatabase(db, migrationsPath); err != nil {
+		if err := ResetDatabase(db, defaultMigrationsPath); err != nil {
 			return nil, fmt.Errorf("failed to reset database: %w", err)
 		}
-	}
-
-	if err := applyMigrations(db, migrationsPath); err != nil {
-		return nil, fmt.Errorf("failed to apply migrations: %w", err)
+	} else {
+		if err := applyMigrations(db, defaultMigrationsPath); err != nil {
+			return nil, fmt.Errorf("failed to apply migrations: %w", err)
+		}
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get SQL DB from gorm DB: %w", err)
 	}
-	sqlDB.SetMaxOpenConns(25)
-	sqlDB.SetMaxIdleConns(25)
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetMaxOpenConns(maxOpenConns)
+	sqlDB.SetMaxIdleConns(maxIdleConns)
+	sqlDB.SetConnMaxLifetime(connMaxLifetime)
 
 	log.Println("Database connected and migrations applied successfully.")
 	return &DBHandler{DB: db}, nil
 }
 
 func ResetDatabase(db *gorm.DB, migrationsPath string) error {
-	if err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;").Error; err != nil {
+	if err := db.Exec("DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;").Error; err != nil {
 		return fmt.Errorf("failed to reset schema: %w", err)
 	}
+
+	cfg := config.GetConfig()
+	if cfg.IsTest {
+		sourceURL := determineSourceURL(migrationsPath)
+		if sourceURL == "" {
+			log.Println("Test environment: no valid migrations folder found; skipping migrations")
+			return nil // Skip applying migrations in test mode if none is found.
+		}
+		migrationsPath = sourceURL[len("file://"):]
+	} else {
+		if info, err := os.Stat(migrationsPath); err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("migrations path does not exist: %s", migrationsPath)
+			}
+			return fmt.Errorf("failed to check migrations path: %w", err)
+		} else if !info.IsDir() {
+			return fmt.Errorf("migrations path is not a directory: %s", migrationsPath)
+		}
+	}
+
 	return applyMigrations(db, migrationsPath)
 }
 
@@ -91,37 +117,40 @@ func applyMigrations(db *gorm.DB, migrationsPath string) error {
 
 func determineSourceURL(migrationsPath string) string {
 	cfg := config.GetConfig()
-	absPath, err := filepath.Abs(migrationsPath)
-	if err != nil {
-		log.Fatalf("failed to get absolute path of migrations: %v", err)
-	}
-
-	absPath = filepath.ToSlash(absPath)
-
-	sourceURL := "file://" + absPath
-	if cfg.IsDevelopment {
-		sourceURL = "file://" + migrationsPath
-	}
 
 	if cfg.IsTest {
+		log.Println("Test environment: searching for migrations folder...")
+
 		candidatePaths := []string{
-			"../../migrations", // two levels up
-			"../migrations",    // one level up
-			"migrations",       // same directory
+			"../../../" + defaultMigrationsPath, // two levels up
+			"../../" + defaultMigrationsPath,    // two levels up
+			"../" + defaultMigrationsPath,       // one level up
+			"./" + defaultMigrationsPath,        // same directory
 		}
 		if callerDir, ok := utils.GetCallerDir(2); ok {
 			if foundPath := utils.SearchForCandidatePath(callerDir, candidatePaths); foundPath != "" {
-				sourceURL = "file://" + foundPath
+				sourceURL := "file://" + foundPath
 				log.Printf("Test environment: using migrations folder: %s", foundPath)
-			} else {
-				log.Printf("Test environment: no candidate migrations folder found; using default: %s", sourceURL)
+				return sourceURL
 			}
+			log.Printf("Test environment: no candidate migrations folder found; using provided migrations path: %s", migrationsPath)
 		} else {
-			log.Printf("Test environment: failed to determine caller directory; using default migrations path: %s", sourceURL)
+			log.Printf("Test environment: failed to determine caller directory; using provided migrations path: %s", migrationsPath)
 		}
 	}
 
-	return sourceURL
+	if cfg.IsDevelopment {
+		log.Println("Development environment: using provided migrations path")
+		return "file://" + migrationsPath
+	}
+
+	absPath, err := filepath.Abs(migrationsPath)
+	if err != nil {
+		log.Printf("failed to get absolute path of migrations: %v", err)
+		absPath = migrationsPath // fallback to provided path
+	}
+	absPath = filepath.ToSlash(absPath)
+	return "file://" + absPath
 }
 
 type BaseRepository interface {

@@ -17,26 +17,27 @@ type TextCensorValidator struct {
 
 var censorValidator *TextCensorValidator
 
+func initCensorValidator(dicts *Dictionaries) *TextCensorValidator {
+	return &TextCensorValidator{
+		EnDetector: goaway.NewProfanityDetector().
+			WithCustomDictionary(dicts.English.Dictionary, dicts.English.FalsePositives, dicts.English.FalseNegatives).
+			WithCustomCharacterReplacements(ConvertReplacements(dicts.English.CharacterReplacements)),
+		RuDetector: goaway.NewProfanityDetector().
+			WithCustomDictionary(dicts.Russian.Dictionary, dicts.Russian.FalsePositives, dicts.Russian.FalseNegatives).
+			WithCustomCharacterReplacements(ConvertReplacements(dicts.Russian.CharacterReplacements)),
+		KkDetector: goaway.NewProfanityDetector().
+			WithCustomDictionary(dicts.Kazakh.Dictionary, dicts.Kazakh.FalsePositives, dicts.Kazakh.FalseNegatives).
+			WithCustomCharacterReplacements(ConvertReplacements(dicts.Kazakh.CharacterReplacements)),
+	}
+}
+
 func InitializeCensor() error {
 	dicts, err := LoadDictionaries("pkg/utils/censor/dictionaries.json")
 	if err != nil {
 		return err
 	}
 
-	censorValidator = &TextCensorValidator{}
-
-	censorValidator.EnDetector = goaway.NewProfanityDetector().
-		WithCustomDictionary(dicts.English.Dictionary, dicts.English.FalsePositives, dicts.English.FalseNegatives).
-		WithCustomCharacterReplacements(ConvertReplacements(dicts.English.CharacterReplacements))
-
-	censorValidator.RuDetector = goaway.NewProfanityDetector().
-		WithCustomDictionary(dicts.Russian.Dictionary, dicts.Russian.FalsePositives, dicts.Russian.FalseNegatives).
-		WithCustomCharacterReplacements(ConvertReplacements(dicts.Russian.CharacterReplacements))
-
-	censorValidator.KkDetector = goaway.NewProfanityDetector().
-		WithCustomDictionary(dicts.Kazakh.Dictionary, dicts.Kazakh.FalsePositives, dicts.Kazakh.FalseNegatives).
-		WithCustomCharacterReplacements(ConvertReplacements(dicts.Kazakh.CharacterReplacements))
-
+	censorValidator = initCensorValidator(dicts)
 	return nil
 }
 
@@ -78,19 +79,6 @@ func InitializeCensorForTests() error {
 		return fmt.Errorf("failed to load dictionaries from %s: %w", dictPath, err)
 	}
 
-	censorValidator = &TextCensorValidator{}
-
-	censorValidator.EnDetector = goaway.NewProfanityDetector().
-		WithCustomDictionary(dicts.English.Dictionary, dicts.English.FalsePositives, dicts.English.FalseNegatives).
-		WithCustomCharacterReplacements(ConvertReplacements(dicts.English.CharacterReplacements))
-
-	censorValidator.RuDetector = goaway.NewProfanityDetector().
-		WithCustomDictionary(dicts.Russian.Dictionary, dicts.Russian.FalsePositives, dicts.Russian.FalseNegatives).
-		WithCustomCharacterReplacements(ConvertReplacements(dicts.Russian.CharacterReplacements))
-
-	censorValidator.KkDetector = goaway.NewProfanityDetector().
-		WithCustomDictionary(dicts.Kazakh.Dictionary, dicts.Kazakh.FalsePositives, dicts.Kazakh.FalseNegatives).
-		WithCustomCharacterReplacements(ConvertReplacements(dicts.Kazakh.CharacterReplacements))
-
+	censorValidator = initCensorValidator(dicts)
 	return nil
 }

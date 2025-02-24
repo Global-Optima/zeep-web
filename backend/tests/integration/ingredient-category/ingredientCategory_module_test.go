@@ -2,6 +2,7 @@ package ingredientCategories_test
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -13,6 +14,7 @@ func TestIngredientCategoryEndpoints(t *testing.T) {
 	defer env.Close()
 
 	t.Run("Create an Ingredient Category", func(t *testing.T) {
+		longDescription := strings.Repeat("This is a very long description. ", 20)
 		testCases := []utils.TestCase{
 			{
 				Description: "Admin should create a new ingredient category",
@@ -35,6 +37,28 @@ func TestIngredientCategoryEndpoints(t *testing.T) {
 				},
 				AuthRole:     data.RoleBarista,
 				ExpectedCode: http.StatusForbidden,
+			},
+			{
+				Description: "Admin should create a category with special characters in the name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/ingredient-categories",
+				Body: map[string]interface{}{
+					"name":        "Spices!@#$%^&*()_+",
+					"description": "Category with special characters in the name",
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusCreated,
+			},
+			{
+				Description: "Admin should create a category with a long description",
+				Method:      http.MethodPost,
+				URL:         "/api/test/ingredient-categories",
+				Body: map[string]interface{}{
+					"name":        "Long Desc Category",
+					"description": longDescription,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusCreated,
 			},
 		}
 		env.RunTests(t, testCases)

@@ -166,6 +166,11 @@ CREATE TABLE  franchisees (
     deleted_at TIMESTAMPTZ
     );
 
+-- Ensure franchisee names are unique for non-deleted rows
+CREATE UNIQUE INDEX unique_franchisee_name 
+    ON franchisees (name)
+    WHERE deleted_at IS NULL;
+
 	-- Regions Table
 CREATE TABLE  regions (
     id SERIAL PRIMARY KEY,

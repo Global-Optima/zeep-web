@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
@@ -58,7 +59,12 @@ func NewTestContainer() *container.Container {
 
 		apiRouter := routes.NewRouter(r, "/api", "/test")
 
-		testContainer = container.NewContainer(dbHandler, apiRouter, sugarLog)
+		storageRepo, err := storage.NewStorageRepository(cfg.S3.Endpoint, cfg.S3.AccessKey, cfg.S3.SecretKey, cfg.S3.BucketName, logger.GetZapSugaredLogger())
+		if err != nil {
+			storageRepo = nil
+		}
+
+		testContainer = container.NewContainer(dbHandler, &storageRepo, apiRouter, sugarLog)
 		testContainer.MustInitModules()
 
 		time.Sleep(100 * time.Millisecond)
@@ -84,4 +90,12 @@ func GetStockMaterialModule() *modules.StockMaterialsModule {
 
 func GetStockMaterialCategoryModule() *modules.StockMaterialCategoriesModule {
 	return NewTestContainer().StockMaterialCategories
+}
+
+func GetStockRequestsModule() *modules.StockRequestsModule {
+	return NewTestContainer().StockRequests
+}
+
+func GetStoreStocksModule() *modules.StoreStockModule {
+	return NewTestContainer().StoreStocks
 }
