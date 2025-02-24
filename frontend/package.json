@@ -31,7 +31,7 @@
 		"gsap": "^3.12.7",
 		"js-cookie": "^3.0.5",
 		"jsbarcode": "^3.11.6",
-		"jspdf": "^2.5.2",
+		"jspdf": "^3.0.0",
 		"leaflet": "^1.9.4",
 		"lucide-vue-next": "^0.456.0",
 		"md5": "^2.3.0",
