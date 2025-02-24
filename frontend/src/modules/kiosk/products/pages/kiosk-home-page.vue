@@ -1,56 +1,36 @@
 <template>
-	<div class="flex sm:flex-row flex-col pt-safe h-screen">
-		<!-- Sidebar for tablet and larger screens -->
-		<div class="sm:block hidden py-4 pl-4">
-			<KioskHomeSidebarTablet
-				@update:category="onUpdateCategory"
-				:categories="categories ?? []"
-				:selected-category-id="selectedCategoryId"
-			/>
-		</div>
+	<!-- Main Content -->
+	<div class="relative flex flex-col flex-1 pt-safe">
+		<!-- Toolbar for mobile view -->
+		<KioskHomeToolbarMobile
+			v-if="!categoriesLoading"
+			:categories="categories ?? []"
+			:selected-category-id="selectedCategoryId"
+			:search-term="searchTerm"
+			@update:category="onUpdateCategory"
+			@update:search-term="onUpdateSearchTerm"
+		/>
 
-		<!-- Main Content -->
-		<div class="flex flex-col flex-1">
-			<!-- Toolbar for mobile view -->
-			<KioskHomeToolbarMobile
-				v-if="!categoriesLoading"
-				class="block sm:hidden"
-				:categories="categories ?? []"
-				:selected-category-id="selectedCategoryId"
-				:search-term="searchTerm"
-				@update:category="onUpdateCategory"
-				@update:search-term="onUpdateSearchTerm"
-			/>
-
-			<!-- Search Bar for tablet and larger screens -->
-			<div class="sm:block hidden pt-4 pr-4 pb-3 pl-3">
-				<KioskHomeToolbarTablet
-					:search-term="searchTerm"
-					@update:search-term="onUpdateSearchTerm"
-				/>
+		<!-- Products Grid -->
+		<section class="flex-1 pr-4 pb-4 pl-3 overflow-y-auto no-scrollbar">
+			<div
+				v-if="!products || products?.data.length === 0"
+				class="flex justify-center items-center h-20 text-gray-500"
+			>
+				<p class="text-lg">Ничего не найдено</p>
 			</div>
 
-			<!-- Products Grid -->
-			<section class="flex-1 pr-4 pb-4 pl-3 overflow-y-auto no-scrollbar">
-				<div
-					v-if="products?.data.length === 0"
-					class="flex justify-center items-center h-20 text-gray-500"
-				>
-					<p class="text-lg">Ничего не найдено</p>
-				</div>
-
-				<div
-					v-else
-					class="gap-2 sm:gap-2 grid grid-cols-2 sm:grid-cols-3"
-				>
-					<KioskHomeProductCard
-						v-for="product in products?.data ?? []"
-						:key="product.id"
-						:product="product"
-					/>
-				</div>
-			</section>
-		</div>
+			<div
+				v-else
+				class="gap-3 grid grid-cols-2 sm:grid-cols-3"
+			>
+				<KioskHomeProductCard
+					v-for="product in products.data"
+					:key="product.id"
+					:product="product"
+				/>
+			</div>
+		</section>
 
 		<!-- Cart Button for mobile -->
 		<div
@@ -67,9 +47,7 @@ import { storeProductsService } from '@/modules/admin/store-products/services/st
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
-import KioskHomeSidebarTablet from '@/modules/kiosk/products/components/home/kiosk-home-sidebar-tablet.vue'
-import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/kiosk-home-toolbar-mobile.vue'
-import KioskHomeToolbarTablet from '@/modules/kiosk/products/components/home/kiosk-home-toolbar-tablet.vue'
+import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/toolbar/kiosk-home-toolbar-mobile.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'

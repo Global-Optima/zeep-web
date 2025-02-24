@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { getRouteName } from '@/core/config/routes.config'
 import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
+import KioskDetailsModal from '@/modules/kiosk/products/components/details/kiosk-details-modal.vue'
 import { useSelectedProductStore } from "@/modules/kiosk/products/stores/current-product.store"
 import { useNetwork } from '@vueuse/core'
 import { WifiOff } from 'lucide-vue-next'; // ✅ Import Lucide icon
-import { defineAsyncComponent, onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-
-const KioskDetailsModal = defineAsyncComponent(() =>
-  import('@/modules/kiosk/products/components/details/kiosk-details-modal.vue')
-);
 
 const router = useRouter()
 const productStore = useSelectedProductStore()
@@ -60,7 +57,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<div class="relative flex justify-center items-center bg-gray-100 w-full min-h-screen">
+	<div class="relative bg-[#F3F4F9] w-full min-h-screen no-scrollbar">
 		<!-- ✅ Show only this screen when offline -->
 		<div
 			v-if="!isOnline"
@@ -77,7 +74,7 @@ onBeforeUnmount(() => {
 
 		<!-- ✅ Show the normal app content only if online -->
 		<template v-else>
-			<main class="relative w-full h-full">
+			<main class="relative w-full h-full no-scrollbar">
 				<router-view v-slot="{ Component }">
 					<transition
 						name="fade-slide"

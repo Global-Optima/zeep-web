@@ -13,11 +13,12 @@ const handleModalClose = () => {
 </script>
 
 <template>
-	<div class="flex justify-center">
+	<div class="flex justify-center min-h-screen overflow-hidden">
 		<SwipeModal
 			:model-value="isModalOpen"
 			@update:model-value="currentProductStore.closeModal"
 			snapPoint="95dvh"
+			class="bg-white"
 		>
 			<div class="rounded-md w-full h-full no-scrollbar">
 				<KioskDetailsModalContent
@@ -35,7 +36,7 @@ const handleModalClose = () => {
   max-width: 100% !important;
   margin: 0 auto !important;
   background-color: #F5F5F7 !important;
-  border-radius: 3rem 3rem 0 0 !important;
+  border-radius: 48px 48px 0 0 !important;
   overflow: clip !important;
 }
 
@@ -62,7 +63,7 @@ const handleModalClose = () => {
 }
 
 :deep(.swipe-modal-drag-handle-wrapper) {
-  background-color: #F5F5F7;
+  background-color: #FFFFFFFF;
   border: none;
 }
 </style>

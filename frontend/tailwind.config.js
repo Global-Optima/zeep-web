@@ -19,6 +19,9 @@ export const theme = {
 		},
 	},
 	extend: {
+		fontFamily: {
+			sans: ['Gilroy', 'sans-serif'],
+		},
 		colors: {
 			border: 'var(--border)',
 			input: 'var(--input)',
