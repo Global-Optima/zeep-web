@@ -16,7 +16,7 @@ type StoresModule struct {
 
 func NewStoresModule(base *common.BaseModule, franchiseeService franchisees.FranchiseeService, auditService audit.AuditService) *StoresModule {
 	repo := stores.NewStoreRepository(base.DB)
-	service := stores.NewStoreService(repo)
+	service := stores.NewStoreService(repo, base.Logger)
 	handler := stores.NewStoreHandler(service, franchiseeService, auditService)
 
 	base.Router.RegisterStoresRoutes(handler)

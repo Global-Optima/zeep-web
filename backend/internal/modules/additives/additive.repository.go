@@ -11,12 +11,13 @@ import (
 )
 
 type AdditiveRepository interface {
+	CheckAdditiveExists(additiveName string) (bool, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) (uint, error)
 	UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
-	DeleteAdditive(additiveID uint) error
+	DeleteAdditive(additiveID uint) (*data.Additive, error)
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error)
@@ -31,6 +32,22 @@ type additiveRepository struct {
 
 func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
+}
+
+func (r *additiveRepository) CheckAdditiveExists(additiveName string) (bool, error) {
+	var addtive data.Additive
+
+	err := r.db.Model(&data.Additive{}).
+		Where(&data.Additive{Name: additiveName}).
+		First(&addtive).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
@@ -202,8 +219,17 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 	})
 }
 
-func (r *additiveRepository) DeleteAdditive(additiveID uint) error {
-	return r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error
+func (r *additiveRepository) DeleteAdditive(additiveID uint) (*data.Additive, error) {
+	var additive data.Additive
+	if err := r.db.First(&additive, additiveID).Error; err != nil {
+		return nil, err
+	}
+
+	if err := r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error; err != nil {
+		return nil, err
+	}
+
+	return &additive, nil
 }
 
 func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error) {

@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
+import { getSavedBarcodeSettings, useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
 import { cn } from '@/core/utils/tailwind.utils'
 import {
   SubOrderStatus,
@@ -154,9 +154,11 @@ const { printBarcode } = useBarcodePrinter()
 
 async function printQrCode() {
   if (props.suborder) {
+    const currentBaristaBarcodeSettings = getSavedBarcodeSettings()
+
     const productName = `${props.suborder.productSize.productName} ${props.suborder.productSize.sizeName}`
     const barcode = `suborder-${props.suborder.id}`
-    await printBarcode(productName, barcode, { showModal: true })
+    await printBarcode(productName, barcode, currentBaristaBarcodeSettings.width, currentBaristaBarcodeSettings.height, { showModal: true })
   }
 }
 </script>

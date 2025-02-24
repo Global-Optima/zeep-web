@@ -150,8 +150,6 @@ async function toggleSuborderStatus(suborder: SuborderDTO) {
     // Request the next status from the server
     const updatedSuborder = await ordersService.toggleNextStatus(suborder.id)
 
-    console.log("UPDATEEEEDDD", updatedSuborder)
-
     // Immediate local feedback (optional, since WS will update eventually)
     Object.assign(suborder, updatedSuborder)
 
@@ -185,6 +183,7 @@ useBarcodeScanner({
   onScan: async (suborderIdStr: string) => {
     try {
       const suborderId = Number(suborderIdStr)
+      console.log(suborderIdStr)
       const updatedSuborder = await ordersService.toggleNextStatus(suborderId)
 
       // Find the local order in filteredOrders

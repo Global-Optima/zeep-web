@@ -17,7 +17,7 @@ type Store struct {
 	Franchisee        *Franchisee     `gorm:"foreignKey:FranchiseeID" sort:"franchisees"`
 	WarehouseID       uint            `gorm:"not null;index"` // New Warehouse Reference
 	Warehouse         Warehouse       `gorm:"foreignKey:WarehouseID;constraint:OnDelete:CASCADE"`
-	IsActive          bool            `gorm:"default:true" sort:"isActive"`
+	IsActive          *bool           `gorm:"default:true" sort:"isActive"`
 	ContactPhone      string          `gorm:"size:16"`
 	ContactEmail      string          `gorm:"size:255"`
 	StoreHours        string          `gorm:"size:255"`

@@ -2,6 +2,7 @@ package stores
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -19,10 +20,10 @@ const (
 type StoreRepository interface {
 	GetAllStores(filter *types.StoreFilter) ([]data.Store, error)
 	GetAllStoresForNotifications() ([]data.Store, error)
-	CreateStore(store *data.Store) (*data.Store, error)
+	CreateStore(store *data.Store) (uint, error)
 	GetStoreByID(storeID uint) (*data.Store, error)
-	GetStoresByFranchisee(franchiseeID *uint, filter *types.StoreFilter) ([]data.Store, error)
-	UpdateStore(store *data.Store) (*data.Store, error)
+	GetStores(filter *types.StoreFilter) ([]data.Store, error)
+	UpdateStore(storeID uint, updateModels *types.StoreUpdateModels) error
 	DeleteStore(storeID uint, hardDelete bool) error
 	CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error)
 	GetFacilityAddressByAddress(address string) (*data.FacilityAddress, error)
@@ -90,11 +91,11 @@ func (r *storeRepository) GetAllStoresForNotifications() ([]data.Store, error) {
 	return stores, nil
 }
 
-func (r *storeRepository) CreateStore(store *data.Store) (*data.Store, error) {
+func (r *storeRepository) CreateStore(store *data.Store) (uint, error) {
 	if err := r.db.Create(store).Error; err != nil {
-		return nil, err
+		return 0, err
 	}
-	return store, nil
+	return store.ID, nil
 }
 
 func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
@@ -110,7 +111,7 @@ func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
 	return &store, nil
 }
 
-func (r *storeRepository) GetStoresByFranchisee(franchiseeID *uint, filter *types.StoreFilter) ([]data.Store, error) {
+func (r *storeRepository) GetStores(filter *types.StoreFilter) ([]data.Store, error) {
 	var stores []data.Store
 	query := r.db.Model(&data.Store{}).
 		Preload("FacilityAddress").
@@ -118,10 +119,6 @@ func (r *storeRepository) GetStoresByFranchisee(franchiseeID *uint, filter *type
 		Preload("Warehouse").
 		Preload("Warehouse.Region").
 		Preload("Warehouse.FacilityAddress")
-
-	if franchiseeID != nil {
-		query = query.Where("franchisee_id = ?", *franchiseeID)
-	}
 
 	if filter == nil {
 		return nil, errors.New("filter is nil")
@@ -141,6 +138,10 @@ func (r *storeRepository) GetStoresByFranchisee(franchiseeID *uint, filter *type
 		}
 	}
 
+	if filter.FranchiseeID != nil {
+		query = query.Where("franchisee_id = ?", *filter.FranchiseeID)
+	}
+
 	var err error
 	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Store{})
 	if err != nil {
@@ -151,11 +152,46 @@ func (r *storeRepository) GetStoresByFranchisee(franchiseeID *uint, filter *type
 	return stores, nil
 }
 
-func (r *storeRepository) UpdateStore(store *data.Store) (*data.Store, error) {
-	if err := r.db.Save(store).Error; err != nil {
-		return nil, err
+func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpdateModels) error {
+	if updateModels == nil {
+		return fmt.Errorf("nothing to update")
 	}
-	return store, nil
+
+	existingStore, err := r.GetStoreByID(storeID)
+	if err != nil {
+		return err
+	}
+
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+		if updateModels.Store != nil {
+			query := tx.Model(&data.Store{}).Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}})
+
+			if updateModels.Store.FranchiseeID == nil {
+				query.UpdateColumn("franchisee_id", gorm.Expr("franchisee_id - ?", nil))
+			}
+
+			tx = query.Updates(updateModels.Store)
+			if err := tx.Error; err != nil {
+				return err
+			}
+		}
+
+		if updateModels.FacilityAddress != nil {
+			query := tx.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingStore.FacilityAddress.ID}}).
+				Updates(updateModels.FacilityAddress)
+			tx = query
+			if tx.Error != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *storeRepository) DeleteStore(storeID uint, hardDelete bool) error {

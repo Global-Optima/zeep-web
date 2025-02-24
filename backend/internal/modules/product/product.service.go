@@ -2,20 +2,22 @@ package product
 
 import (
 	"fmt"
-
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
 type ProductService interface {
 	GetProductByID(productID uint) (*types.ProductDetailsDTO, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDetailsDTO, error)
-	CreateProduct(product *types.CreateProductDTO) (uint, error)
-	UpdateProduct(productID uint, dto *types.UpdateProductDTO) error
-	DeleteProduct(productID uint) error
+	CreateProduct(dto *types.CreateProductDTO) (uint, error)
+	UpdateProduct(productID uint, dto *types.UpdateProductDTO) (*types.ProductDTO, error)
+	DeleteProduct(productID uint) (*data.Product, error)
 
 	GetProductSizesByProductID(productID uint) ([]types.ProductSizeDetailsDTO, error)
 	GetProductSizeDetailsByID(productID uint) (*types.ProductSizeDetailsDTO, error)
@@ -27,13 +29,15 @@ type ProductService interface {
 type productService struct {
 	repo                ProductRepository
 	notificationService notifications.NotificationService
+	storageRepo         storage.StorageRepository
 	logger              *zap.SugaredLogger
 }
 
-func NewProductService(repo ProductRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) ProductService {
+func NewProductService(repo ProductRepository, notificationService notifications.NotificationService, storageRepo storage.StorageRepository, logger *zap.SugaredLogger) ProductService {
 	return &productService{
 		repo:                repo,
 		logger:              logger,
+		storageRepo:         storageRepo,
 		notificationService: notificationService,
 	}
 }
@@ -68,6 +72,28 @@ func (s *productService) GetProductByID(productID uint) (*types.ProductDetailsDT
 func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error) {
 	product := types.CreateToProductModel(dto)
 
+	exists, err := s.repo.CheckProductExists(dto.Name)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to check product: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	if exists {
+		wrappedErr := fmt.Errorf("%w: product with the name %s already exists", types.ErrProductAlreadyExists, dto.Name)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
+	imageUrl, videoUrl, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, dto.Video)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to convert and upload media for productID = %d: %w", product.ID, err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	product.ImageURL = data.S3ImageKey(imageUrl)
+	product.VideoURL = data.S3VideoKey(videoUrl)
+	logrus.Info(imageUrl, videoUrl)
+
 	productID, err := s.repo.CreateProduct(product)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to create product: %w", err)
@@ -91,24 +117,44 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 	return productSizeID, nil
 }
 
-func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) error {
-	productBefore, err := s.repo.GetProductByID(productID)
+func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) (*types.ProductDTO, error) {
+
+	product := types.UpdateProductToModel(dto)
+
+	oldProduct, err := s.repo.GetProductByID(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to fetch product: %w", err)
 		s.logger.Error(wrappedErr)
-		return wrappedErr
+		return nil, wrappedErr
 	}
 
-	product := types.UpdateProductToModel(dto, productBefore)
+	imageKey, videoKey, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, dto.Video)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to convert and upload media for productID = %d: %w", productID, err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	product.ImageURL = data.S3ImageKey(imageKey)
+	product.VideoURL = data.S3VideoKey(videoKey)
 
 	err = s.repo.UpdateProduct(productID, product)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to update product: %w", err)
 		s.logger.Error(wrappedErr)
-		return wrappedErr
+		return nil, wrappedErr
 	}
 
-	changes := types.GenerateProductChanges(productBefore, dto)
+	go func() {
+		if dto.Image != nil {
+			s.storageRepo.MarkImagesAsDeleted(product.ImageURL)
+		}
+
+		if dto.Video != nil {
+			_ = s.storageRepo.MarkFileAsDeleted(product.VideoURL.GetConvertedVideoObjectKey())
+		}
+	}()
+
+	changes := types.GenerateProductChanges(oldProduct, dto)
 
 	notificationDetails := &details.CentralCatalogUpdateDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
@@ -118,15 +164,14 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		Changes: changes,
 	}
 
-	if len(changes) != 0 {
-		err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to send notification: %w", err)
-			s.logger.Error(wrappedErr)
-		}
+	err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to send notification: %w", err)
+		s.logger.Error(wrappedErr)
 	}
 
-	return nil
+	oldProductDto := types.MapToProductDTO(*oldProduct)
+	return &oldProductDto, nil
 }
 
 func (s *productService) UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error {
@@ -197,14 +242,24 @@ func (s *productService) GetProductSizeDetailsByID(productID uint) (*types.Produ
 	return &dto, nil
 }
 
-func (s *productService) DeleteProduct(productID uint) error {
-	err := s.repo.DeleteProduct(productID)
+func (s *productService) DeleteProduct(productID uint) (*data.Product, error) {
+	product, err := s.repo.DeleteProduct(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to delete product: %w", err)
 		s.logger.Error(wrappedErr)
-		return wrappedErr
+		return nil, wrappedErr
 	}
-	return nil
+
+	go func() {
+		if product.ImageURL != "" {
+			s.storageRepo.MarkImagesAsDeleted(product.ImageURL)
+		}
+
+		if product.VideoURL != "" {
+			_ = s.storageRepo.MarkFileAsDeleted(product.VideoURL.GetConvertedVideoObjectKey())
+		}
+	}()
+	return product, nil
 }
 
 func (s *productService) DeleteProductSize(productSizeID uint) error {

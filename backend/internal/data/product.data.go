@@ -24,8 +24,8 @@ type Product struct {
 	BaseEntity
 	Name         string          `gorm:"size:100;not null" sort:"name"`
 	Description  string          `gorm:"type:text"`
-	ImageURL     string          `gorm:"size:2048"`
-	VideoURL     string          `gorm:"size:2048"`
+	ImageURL     S3ImageKey      `gorm:"size:2048"`
+	VideoURL     S3VideoKey      `gorm:"size:2048"`
 	CategoryID   uint            `gorm:"index;not null"`
 	Category     ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
 	RecipeSteps  []RecipeStep    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
@@ -124,7 +124,7 @@ type Additive struct {
 	Unit                 Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL" sort:"unit"`
 	AdditiveCategoryID   uint                  `gorm:"index"`
 	Category             AdditiveCategory      `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL" sort:"category"`
-	ImageURL             string                `gorm:"size:2048"`
+	ImageURL             S3ImageKey            `gorm:"size:2048"`
 	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`
 	Ingredients          []AdditiveIngredient  `gorm:"foreignKey:AdditiveID"`
