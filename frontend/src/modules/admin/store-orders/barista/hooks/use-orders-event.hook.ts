@@ -17,7 +17,7 @@ const state = reactive<{ allOrders: OrderDTO[] }>({
 	allOrders: [],
 })
 
-const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'
+const wsUrl = import.meta.env.VITE_WS_URL || 'ws://example:8080/api/v1'
 
 /**
  * Convert a raw OrderDTO into a deeply reactive object.
