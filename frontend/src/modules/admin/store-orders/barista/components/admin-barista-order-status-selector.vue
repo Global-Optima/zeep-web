@@ -27,18 +27,24 @@
 		</div>
 
 		<!-- Reload Button -->
-		<Button
-			size="icon"
-			variant="outline"
-			@click="onReloadClick"
-		>
-			<RefreshCcw class="size-5" />
-		</Button>
+
+		<div class="flex items-center gap-2">
+			<AdminBaristaBarcodeSizesDialog />
+
+			<Button
+				size="icon"
+				variant="outline"
+				@click="onReloadClick"
+			>
+				<RefreshCcw class="size-5" />
+			</Button>
+		</div>
 	</header>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
+import AdminBaristaBarcodeSizesDialog from '@/modules/admin/store-orders/barista/components/admin-barista-barcode-sizes-dialog.vue'
 import { ChevronLeft, RefreshCcw } from 'lucide-vue-next'
 import { toRefs } from 'vue'
 

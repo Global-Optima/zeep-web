@@ -1,5 +1,5 @@
 import { useToast } from '@/core/components/ui/toast'
-import { useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
+import { getSavedBarcodeSettings, useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
 import type {
 	OrderDTO,
 	OrderStatus,
@@ -176,12 +176,20 @@ export function useOrderEventsService(initialFilter: OrderFilterOptions = {}) {
 		const [reactiveOrder, isNew] = upsertOrder(newOrder)
 		if (!isNew) return // If the order was already there, skip printing
 
+		const currentBaristaBarcodeSettings = getSavedBarcodeSettings()
+
 		// Print barcodes for suborders if needed
 		try {
 			await Promise.all(
 				reactiveOrder.subOrders.map(async sub => {
 					const name = `${sub.productSize.productName} ${sub.productSize.sizeName}`
-					await printBarcode(name, `suborder-${sub.id}`, { showModal: false })
+					await printBarcode(
+						name,
+						`suborder-${sub.id}`,
+						currentBaristaBarcodeSettings.width,
+						currentBaristaBarcodeSettings.height,
+						{ showModal: false },
+					)
 					console.log(`Suborder with id ${sub.id} printed`)
 				}),
 			)

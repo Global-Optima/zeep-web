@@ -23,8 +23,8 @@ func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 	return BaseProductDTO{
 		Name:        product.Name,
 		Description: product.Description,
-		ImageURL:    product.ImageURL,
-		VideoURL:    product.VideoURL,
+		ImageURL:    product.ImageURL.GetURL(),
+		VideoURL:    product.VideoURL.GetURL(),
 		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
@@ -119,7 +119,6 @@ func CreateToProductModel(dto *CreateProductDTO) *data.Product {
 	product := &data.Product{
 		Name:        dto.Name,
 		Description: dto.Description,
-		ImageURL:    dto.ImageURL,
 		CategoryID:  dto.CategoryID,
 	}
 
@@ -152,9 +151,11 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	return productSize
 }
 
-func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) *data.Product {
+func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
+	var product = &data.Product{}
+
 	if dto == nil {
-		return product
+		return nil
 	}
 
 	if strings.TrimSpace(dto.Name) != "" {
@@ -165,11 +166,6 @@ func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) *data.Pr
 	if strings.TrimSpace(dto.Description) != "" {
 		if dto.Description != product.Description {
 			product.Description = dto.Description
-		}
-	}
-	if strings.TrimSpace(dto.Description) != "" {
-		if dto.ImageURL != product.ImageURL {
-			product.ImageURL = dto.ImageURL
 		}
 	}
 	if dto.CategoryID != 0 {
@@ -226,7 +222,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 }
 
 func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []details.CentralCatalogChange {
-	changes := []details.CentralCatalogChange{}
+	var changes []details.CentralCatalogChange
 
 	if dto.Name != "" && dto.Name != before.Name {
 		key := "notification.centralCatalogUpdateDetails.nameChange"
@@ -250,7 +246,8 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []detai
 		})
 	}
 
-	if dto.ImageURL != "" && dto.ImageURL != before.ImageURL {
+	//TODO get new imageUrl and notify
+	/*if dto.ImageURL != "" && dto.ImageURL != before.ImageURL {
 		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
@@ -259,7 +256,7 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []detai
 				"NewImageURL": dto.ImageURL,
 			},
 		})
-	}
+	}*/
 
 	if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
 		key := "notification.centralCatalogUpdateDetails.categoryChange"
