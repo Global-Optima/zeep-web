@@ -2,6 +2,9 @@ package config
 
 import (
 	"log"
+	"os"
+	"strings"
+	"sync"
 
 	"github.com/spf13/viper"
 )
@@ -26,34 +29,54 @@ type Config struct {
 	Filtering FilteringConfig `mapstructure:",squash"`
 }
 
-var cfg *Config
+var (
+	cfg  *Config
+	once sync.Once
+)
 
-func LoadConfig(file string) (*Config, error) {
-	viper.SetConfigFile(file)
-	viper.AutomaticEnv()
+func LoadConfig() *Config {
+	once.Do(func() {
+		viper.SetConfigFile(".env") // Load from .env file if available
+		viper.AutomaticEnv()        // Read from system environment variables
+		bindAllEnvVars()            // Automatically bind all env variables
 
-	viper.SetDefault("JWT_CUSTOMER_ACCESS_TOKEN_TTL", DEFAULT_CUSTOMER_ACCESS_TOKEN_TTL)
-	viper.SetDefault("JWT_CUSTOMER_REFRESH_TOKEN_TTL", DEFAULT_CUSTOMER_REFRESH_TOKEN_TTL)
-	viper.SetDefault("JWT_EMPLOYEE_ACCESS_TOKEN_TTL", DEFAULT_EMPLOYEE_ACCESS_TOKEN_TTL)
-	viper.SetDefault("JWT_EMPLOYEE_REFRESH_TOKEN_TTL", DEFAULT_EMPLOYEE_REFRESH_TOKEN_TTL)
+		// Try loading .env file but do NOT fail if it doesn't exist
+		if _, err := os.Stat(".env"); err == nil {
+			err := viper.ReadInConfig()
+			if err != nil {
+				log.Printf("Warning: Failed to read config file: %v. Falling back to env variables.", err)
+			}
+		}
 
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
-	}
+		// Unmarshal environment variables into Config struct
+		var config Config
+		if err := viper.Unmarshal(&config); err != nil {
+			log.Fatalf("Error loading config: %v", err)
+		}
 
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, err
-	}
+		// Determine environment
+		config.IsDevelopment = config.Env == EnvDevelopment
+		config.IsTest = config.Env == EnvTest
 
-	cfg.IsDevelopment = cfg.Env == EnvDevelopment
-	cfg.IsTest = cfg.Env == EnvTest
+		cfg = &config
+	})
 
-	return cfg, nil
+	return cfg
 }
 
+// Automatically bind all environment variables dynamically
+func bindAllEnvVars() {
+	for _, env := range os.Environ() {
+		pair := strings.SplitN(env, "=", 2)
+		key := pair[0]
+		_ = viper.BindEnv(key)
+	}
+}
+
+// GetConfig returns the loaded config instance
 func GetConfig() *Config {
 	if cfg == nil {
-		log.Fatal("Config not loaded")
+		log.Fatal("Config not initialized. Call LoadConfig() first.")
 	}
 	return cfg
 }

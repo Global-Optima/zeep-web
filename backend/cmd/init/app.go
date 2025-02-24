@@ -2,12 +2,13 @@ package init
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/limiters"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 	"go.uber.org/zap"
-	"log"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 
@@ -23,10 +24,7 @@ import (
 )
 
 func InitializeConfig() *config.Config {
-	cfg, err := config.LoadConfig(".env")
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-	}
+	cfg := config.LoadConfig()
 	return cfg
 }
 
