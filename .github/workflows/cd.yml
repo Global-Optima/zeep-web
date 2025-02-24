@@ -1,4 +1,4 @@
-name: CD Pipeline
+name: CD
 
 on:
   push:
@@ -64,7 +64,7 @@ jobs:
         run: golangci-lint run -v --concurrency=2 --timeout=5m
 
       - name: Build Backend
-        run: go build -o app .
+        run: go build -o server cmd/main.go
 
   deploy:
     needs: [frontend, backend]
