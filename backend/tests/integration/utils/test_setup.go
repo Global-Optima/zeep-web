@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
@@ -171,6 +172,15 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 	return redisClient
 }
 
+func setupMockStorage(cfg *config.Config, t *testing.T) *storage.StorageRepository {
+	storageRepo, err := storage.NewStorageRepository(cfg.S3.Endpoint, cfg.S3.AccessKey, cfg.S3.SecretKey, cfg.S3.BucketName, logger.GetZapSugaredLogger())
+	if err != nil {
+		t.Logf("Failed to initialize storage repository: %v", err)
+		storageRepo = nil
+	}
+	return &storageRepo
+}
+
 func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
@@ -178,7 +188,9 @@ func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
-	testContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
+	storageRepo := setupMockStorage(config.GetConfig(), nil)
+
+	testContainer := container.NewContainer(dbHandler, storageRepo, apiRouter, logger.GetZapSugaredLogger())
 	testContainer.MustInitModules()
 
 	return router
