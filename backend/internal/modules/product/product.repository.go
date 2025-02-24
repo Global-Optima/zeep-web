@@ -12,11 +12,12 @@ import (
 )
 
 type ProductRepository interface {
+	CheckProductExists(productName string) (bool, error)
 	CreateProduct(product *data.Product) (uint, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
 	GetProductByID(productID uint) (*data.Product, error)
 	UpdateProduct(id uint, product *data.Product) error
-	DeleteProduct(productID uint) error
+	DeleteProduct(productID uint) (*data.Product, error)
 
 	CreateProductSize(createModels *data.ProductSize) (uint, error)
 	GetProductSizesByProductID(productID uint) ([]data.ProductSize, error)
@@ -32,6 +33,18 @@ type productRepository struct {
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
+}
+
+func (p *productRepository) CheckProductExists(productName string) (bool, error) {
+	var product data.Product
+	err := p.db.Where(&data.Product{Name: productName}).First(&product).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.ProductSize, error) {
@@ -258,10 +271,13 @@ func (r *productRepository) UpdateProduct(productID uint, product *data.Product)
 	})
 }
 
-func (r *productRepository) DeleteProduct(productID uint) error {
+func (r *productRepository) DeleteProduct(productID uint) (*data.Product, error) {
+	var product data.Product
+
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("id = ?", productID).
-			Delete(&data.Product{}).Error; err != nil {
+		if err := tx.Clauses(clause.Returning{}).
+			Where("id = ?", productID).
+			Delete(&product).Error; err != nil {
 			return err
 		}
 
@@ -285,9 +301,9 @@ func (r *productRepository) DeleteProduct(productID uint) error {
 		return nil
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &product, nil
 }
 
 func (r *productRepository) GetProductSizesByProductID(productID uint) ([]data.ProductSize, error) {

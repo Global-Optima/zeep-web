@@ -1,86 +1,106 @@
 import { usePrinter, type PrintOptions } from '@/core/hooks/use-print.hook'
 import JsBarcode from 'jsbarcode'
 import { jsPDF } from 'jspdf'
+import { SAVED_BARISTA_BARCODE_SETTINGS_KEY } from '../constants/barcodes.constants'
+
+export const getSavedBarcodeSettings = (): { width: number; height: number } => {
+	const stored = localStorage.getItem(SAVED_BARISTA_BARCODE_SETTINGS_KEY)
+
+	if (stored) {
+		try {
+			const parsed = JSON.parse(stored)
+
+			if (
+				parsed &&
+				typeof parsed === 'object' &&
+				typeof parsed.width === 'number' &&
+				typeof parsed.height === 'number'
+			) {
+				return { width: parsed.width, height: parsed.height }
+			}
+		} catch (error) {
+			console.error('Error parsing barcode settings from localStorage:', error)
+		}
+	}
+
+	return { width: 100, height: 50 }
+}
 
 export function useGenerateBarcode() {
 	/**
-	 * Generates a barcode as high-res PNG and embeds into PDF (landscape).
-	 * With added margins so it fits nicely and doesn’t get squeezed.
+	 * Generates a barcode as high-res PNG and embeds it into a PDF (correctly scaled for printing).
+	 * @param productName - The name of the product to display above/below the barcode.
+	 * @param barcodeValue - The string value to encode in the barcode.
+	 * @param labelWidthMm - Width of the label in millimeters.
+	 * @param labelHeightMm - Height of the label in millimeters.
+	 * @param dpi - Printer DPI (default: 203 DPI for thermal printers).
 	 */
-	async function generateBarcode(productName: string, barcodeValue: string): Promise<Blob> {
-		// ----------------------------------
-		// 1) Define physical size in mm
-		//    3.88 cm × 2.6 cm => 38.8 mm × 26.0 mm
-		//    orientation: 'landscape' => jsPDF format is [height, width]
-		// ----------------------------------
-		const labelWidthMm = 38.8
-		const labelHeightMm = 26.0
+	async function generateBarcode(
+		productName: string,
+		barcodeValue: string,
+		labelWidthMm: number = 100,
+		labelHeightMm: number = 50,
+		dpi: number = 300,
+	): Promise<Blob> {
+		// -------------------------------
+		// 1) Define Label Size in mm
+		// -------------------------------
+		const pxPerMm = dpi / 25.4 // Conversion factor: DPI to pixels per millimeter
 
-		// We’ll add a margin (e.g., 2 mm) inside the label.
-		// This keeps the barcode from touching edges or being cut off.
-		const marginMm = 4
+		// Compute usable area inside the label (no hardcoded margins)
+		const usableWidthPx = Math.round(labelWidthMm * pxPerMm)
+		const usableHeightPx = Math.round(labelHeightMm * pxPerMm)
 
-		// Calculate the “printable” area inside the margins.
-		const usableWidthMm = labelWidthMm - marginMm * 2
-		const usableHeightMm = labelHeightMm - marginMm * 2
-
-		// ----------------------------------
-		// 2) Create a high-res canvas to generate the barcode
-		// ----------------------------------
-		// ~3.78 px per mm is a rough conversion.
-		// Multiply further by a “scaleFactor” for crispness.
-		const pxPerMm = 3.78
-		const scaleFactor = 3 // you can try 2, 3, 4, etc.
-
-		// Convert the usable mm to pixels (minus margins).
-		const canvasWidthPx = Math.round(usableWidthMm * pxPerMm * scaleFactor)
-		const canvasHeightPx = Math.round(usableHeightMm * pxPerMm * scaleFactor)
-
+		// Create a high-res canvas
 		const canvas = document.createElement('canvas')
-		canvas.width = canvasWidthPx
-		canvas.height = canvasHeightPx
+		canvas.width = usableWidthPx
+		canvas.height = usableHeightPx
 
-		// ----------------------------------
-		// 3) Render the barcode smaller so it fits
-		//    Decrease width, height, and textMargin if needed
-		// ----------------------------------
+		// -------------------------------
+		// 2) Render Barcode (Dynamic Scaling)
+		// -------------------------------
+		const barcodeHeightPx = Math.round(usableHeightPx * 0.7) // 70% of label height for barcode
+		const fontSizePx = Math.round(usableHeightPx * 0.2) // 20% of label height for font size
+		const textMarginPx = Math.round(usableHeightPx * 0.02) // 2% of label height for text margin
+
 		JsBarcode(canvas, barcodeValue, {
 			format: 'CODE128',
 			displayValue: true,
 			text: productName,
 			font: 'monospace',
-			fontSize: 14 * scaleFactor,
-			width: 1.5 * scaleFactor,
-			height: Math.round(canvasHeightPx * 0.5),
-			margin: 4 * scaleFactor,
+			fontSize: fontSizePx,
+			textMargin: textMarginPx,
+			width: Math.max(1, Math.round(usableWidthPx * 0.01)),
+			height: barcodeHeightPx,
+			margin: 20,
 		})
 
-		// ----------------------------------
-		// 4) Create jsPDF instance with the correct size in mm, landscape
-		// ----------------------------------
+		// -------------------------------
+		// 3) Create PDF (Dynamic Orientation)
+		// -------------------------------
+		const isLandscape = labelWidthMm > labelHeightMm
 		const doc = new jsPDF({
-			orientation: 'landscape',
+			orientation: isLandscape ? 'landscape' : 'portrait',
 			unit: 'mm',
-			format: [labelHeightMm, labelWidthMm],
+			format: [labelWidthMm, labelHeightMm],
 		})
 
 		// Convert the barcode canvas to data URL
-		const dataURL = canvas.toDataURL('image/png')
+		const dataURL = canvas.toDataURL('image/png', 100)
 
-		// ----------------------------------
-		// 5) Insert the barcode image with margin into the PDF
-		//    So it doesn’t fill the entire label edge-to-edge
-		// ----------------------------------
-		doc.addImage(
-			dataURL,
-			'PNG',
-			marginMm, // x start
-			marginMm, // y start
-			usableWidthMm, // fit into the “usable” space
-			usableHeightMm,
-		)
+		// -------------------------------
+		// 4) Insert Image into PDF (Centered)
+		// -------------------------------
+		const pdfWidthMm = labelWidthMm
+		const pdfHeightMm = labelHeightMm
 
-		// Output PDF as Blob
+		// Center the barcode image
+		const xStartMm = (pdfWidthMm - labelWidthMm) / 2
+		const yStartMm = (pdfHeightMm - labelHeightMm) / 2
+
+		doc.addImage(dataURL, 'PNG', xStartMm, yStartMm, labelWidthMm, labelHeightMm)
+
+		// Return as a Blob for printing
 		return doc.output('blob')
 	}
 
@@ -92,20 +112,27 @@ export function useBarcodePrinter() {
 	const { generateBarcode } = useGenerateBarcode()
 
 	/**
-	 * Generates and prints a PDF barcode.
-	 * @param productName - The name of the product to display above/below the barcode.
-	 * @param barcodeValue - The string value to encode in the barcode.
-	 * @param options - Optional printing configurations.
+	 * Generates and prints a barcode with dynamic label sizes.
+	 * @param productName - The name to display with the barcode.
+	 * @param barcodeValue - The encoded barcode value.
+	 * @param labelWidthMm - Label width in mm.
+	 * @param labelHeightMm - Label height in mm.
+	 * @param options - Optional print configurations.
 	 */
 	const printBarcode = async (
 		productName: string,
 		barcodeValue: string,
+		labelWidthMm: number = 100,
+		labelHeightMm: number = 50,
 		options?: PrintOptions,
 	) => {
 		try {
-			// Just call the generateBarcode hook without passing custom sizes;
-			// The function already uses the correct label size + 300 DPI.
-			const barcodePdfBlob = await generateBarcode(productName, barcodeValue)
+			const barcodePdfBlob = await generateBarcode(
+				productName,
+				barcodeValue,
+				labelWidthMm,
+				labelHeightMm,
+			)
 			await print(barcodePdfBlob, options)
 		} catch (error) {
 			console.error('Error generating or printing barcode:', error)

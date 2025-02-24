@@ -65,7 +65,7 @@ const processPayment = async () => {
 			class="space-y-8 bg-white sm:p-12 !rounded-[40px] sm:max-w-3xl text-black"
 		>
 			<DialogHeader>
-				<DialogTitle class="font-medium text-center text-gray-900 sm:text-4xl">
+				<DialogTitle class="font-medium text-gray-900 sm:text-4xl text-center">
 					Выберите способ оплаты</DialogTitle
 				>
 			</DialogHeader>
@@ -78,10 +78,10 @@ const processPayment = async () => {
 				<div
 					v-for="option in paymentOptions"
 					:key="option.id"
-					class="flex flex-col justify-center items-center p-6 border rounded-lg cursor-pointer"
+					class="flex flex-col justify-center items-center px-6 py-10 rounded-lg cursor-pointer"
 					:class="{
             'bg-primary text-white': selectedPayment === option.id,
-            'border-gray-300': selectedPayment !== option.id,
+            'bg-gray-100': selectedPayment !== option.id,
           }"
 					@click="selectPaymentMethod(option.id)"
 				>
@@ -89,7 +89,7 @@ const processPayment = async () => {
 						:is="option.icon"
 						class="mb-4 sm:mb-6 w-14 sm:w-24 h-14 sm:h-24"
 					/>
-					<p class="font-medium text-center sm:text-2xl">{{ option.label }}</p>
+					<p class="font-medium sm:text-2xl text-center">{{ option.label }}</p>
 				</div>
 			</div>
 
@@ -99,19 +99,19 @@ const processPayment = async () => {
 				class="flex flex-col justify-center items-center space-y-4"
 			>
 				<Loader class="w-16 h-16 text-primary animate-spin" />
-				<p class="text-2xl text-gray-600">Обработка платежа...</p>
+				<p class="text-gray-600 text-2xl">Обработка платежа...</p>
 			</div>
 
 			<!-- Error Message -->
 			<p
 				v-if="error && !isLoading"
-				class="mt-2 text-base text-center text-red-500 sm:text-2xl"
+				class="mt-2 text-red-500 text-base sm:text-2xl text-center"
 			>
 				{{ error }}
 			</p>
 
 			<!-- Footer Buttons -->
-			<div class="flex justify-center items-center !mt-0 w-full">
+			<div class="flex justify-center items-center mt-4 w-full">
 				<Button
 					variant="ghost"
 					:disabled="isLoading"

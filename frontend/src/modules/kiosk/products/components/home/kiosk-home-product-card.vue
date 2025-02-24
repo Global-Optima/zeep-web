@@ -1,19 +1,19 @@
 <template>
 	<div
-		class="flex flex-col justify-between bg-white p-6 rounded-3xl h-full cursor-pointer"
+		class="flex flex-col justify-between bg-white p-6 rounded-[32px] h-full cursor-pointer"
 		@click="selectProduct"
 		data-testid="product-card"
 	>
 		<div>
 			<img
-				:src="product.imageUrl"
+				:src="'https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png'"
 				alt="Product Image"
 				class="rounded-lg w-full h-44 sm:h-60 object-contain"
 				data-testid="product-image"
 			/>
 
 			<h3
-				class="mt-3 line-clamp-2 min-h-[3rem] text-base sm:text-xl"
+				class="mt-6 text-base sm:text-xl line-clamp-2"
 				data-testid="product-title"
 			>
 				{{ product.name }}
@@ -22,7 +22,7 @@
 
 		<div class="mt-4">
 			<p
-				class="font-medium text-xl sm:text-2xl"
+				class="font-medium text-primary text-xl sm:text-2xl"
 				data-testid="product-price"
 			>
 				{{ formatPrice(product.storePrice) }}

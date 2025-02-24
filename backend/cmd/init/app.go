@@ -3,7 +3,9 @@ package init
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/limiters"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
+	"go.uber.org/zap"
 	"log"
 	"time"
 
@@ -69,7 +71,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
-
+	router.Use(limiters.LimitRequestBody(30 * 1024 * 1024))
 	router.Use(gin.Recovery())
 
 	router.Use(cors.New(cors.Config{
@@ -91,19 +93,20 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	storageHandler := storage.NewStorageHandler(storageRepo)                // temp
 	storage.RegisterStorageRoutes(apiRouter.EmployeeRoutes, storageHandler) // temp
 
-	appContainer := container.NewContainer(dbHandler, apiRouter, logger.GetZapSugaredLogger())
+	appContainer := container.NewContainer(dbHandler, &storageRepo, apiRouter, logger.GetZapSugaredLogger())
 	appContainer.MustInitModules()
 
 	return router
 }
 
 // Temporary init: for testing purposes
-func InitializeStorage(cfg *config.Config) storage.StorageRepository {
+func InitializeStorage(cfg *config.Config, logger *zap.SugaredLogger) storage.StorageRepository {
 	storageRepo, err := storage.NewStorageRepository(
 		cfg.S3.Endpoint,
 		cfg.S3.AccessKey,
 		cfg.S3.SecretKey,
 		cfg.S3.BucketName,
+		logger,
 	)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage repository: %v", err)
@@ -135,7 +138,7 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 
 	redisClient := InitializeRedis(cfg)
 
-	storageRepo := InitializeStorage(cfg) // temp
+	storageRepo := InitializeStorage(cfg, logger.GetZapSugaredLogger()) // temp
 
 	// kafkaManager := InitializeKafka(cfg)
 

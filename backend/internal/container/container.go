@@ -3,6 +3,8 @@ package container
 import (
 	"sync"
 
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
@@ -15,6 +17,7 @@ import (
 type Container struct {
 	once                    sync.Once
 	DbHandler               *database.DBHandler
+	storageRepo             *storage.StorageRepository
 	router                  *routes.Router
 	logger                  *zap.SugaredLogger
 	Additives               *modules.AdditivesModule
@@ -41,11 +44,12 @@ type Container struct {
 	Analytics               *modules.AnalyticsModule
 }
 
-func NewContainer(dbHandler *database.DBHandler, router *routes.Router, logger *zap.SugaredLogger) *Container {
+func NewContainer(dbHandler *database.DBHandler, storageRepo *storage.StorageRepository, router *routes.Router, logger *zap.SugaredLogger) *Container {
 	return &Container{
-		DbHandler: dbHandler,
-		router:    router,
-		logger:    logger,
+		DbHandler:   dbHandler,
+		storageRepo: storageRepo,
+		router:      router,
+		logger:      logger,
 	}
 }
 
@@ -70,8 +74,8 @@ func (c *Container) mustInit() {
 	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service)
 	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Notifications.Service, cronManager, c.Regions.Service, c.Franchisees.Service, c.Audits.Service)
 
-	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, c.Notifications.Service)
-	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo)
+	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo, c.Notifications.Service)
+	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)
 	c.Orders = modules.NewOrdersModule(baseModule, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Notifications.Service)
 	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.Franchisees.Service, c.Regions.Service, c.StockMaterials.Repo, c.Notifications.Service, c.Audits.Service)

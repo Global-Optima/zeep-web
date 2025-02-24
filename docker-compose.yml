@@ -3,16 +3,20 @@ version: '3.8'
 services:
   db:
     container_name: db
-    image: postgres:16-alpine
-    ports:
-      - '5433:5432'
+    image: postgres:16
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # pgAdmin (Optional for Development)
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
@@ -22,8 +26,10 @@ services:
     ports:
       - '8081:80'
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
+  # Redis
   redis:
     container_name: redis
     image: redis:latest
@@ -35,53 +41,58 @@ services:
         '--appendonly',
         'yes',
       ]
-    ports:
-      - '6379:6379'
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DB: ${REDIS_DB}
     volumes:
-      - redis_data:/var/lib/redis/data
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  redisinsight:
-    container_name: redisinsight
-    image: redislabs/redisinsight:latest
-    ports:
-      - '8001:8001'
-
+  # Backend
   backend:
     container_name: backend
     build:
       context: ./backend
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
+      DB_HOST: db
+      DB_PORT: 5432
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      SERVER_PORT: ${SERVER_PORT}
+      SERVER_PORT: 8080
       CLIENT_URL: ${CLIENT_URL}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_DB: ${REDIS_DB}
+      REDIS_DB: 0
     depends_on:
-      - db
-      - redis
-    expose:
-      - '8080'
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - '8080:8080'
 
-  nginx:
-    container_name: nginx
+  # Frontend
+  frontend:
+    container_name: frontend
     build:
-      context: .
-      dockerfile: ./nginx/Dockerfile
+      context: ./frontend
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+      VITE_WS_URL: ${VITE_WS_URL}
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     ports:
       - '80:80'
 
+# Volumes
 volumes:
   db_data:
   redis_data:

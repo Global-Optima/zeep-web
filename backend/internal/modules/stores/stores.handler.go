@@ -3,6 +3,7 @@ package stores
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -51,7 +52,7 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 		return
 	}
 
-	createdStore, err := h.service.CreateStore(storeDTO)
+	id, err := h.service.CreateStore(&storeDTO)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to create store")
 		return
@@ -59,7 +60,7 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 
 	action := types.CreateStoreAuditFactory(
 		&data.BaseDetails{
-			ID:   createdStore.ID,
+			ID:   id,
 			Name: storeDTO.Name,
 		})
 
@@ -67,7 +68,7 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, createdStore)
+	utils.SendSuccessCreatedResponse(c, "store created successfully")
 }
 
 func (h *StoreHandler) GetStoreByID(c *gin.Context) {
@@ -100,8 +101,11 @@ func (h *StoreHandler) GetStoresByFranchisee(c *gin.Context) {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
+	if franchiseeID != nil {
+		filter.FranchiseeID = franchiseeID
+	}
 
-	store, err := h.service.GetStoresByFranchisee(franchiseeID, &filter)
+	store, err := h.service.GetStores(&filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to retrieve stores")
 		return
@@ -130,7 +134,7 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 		return
 	}
 
-	updatedStore, err := h.service.UpdateStore(uint(storeID), dto)
+	err = h.service.UpdateStore(uint(storeID), &dto)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to update store")
 		return
@@ -147,7 +151,7 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, updatedStore)
+	utils.SendMessageWithStatus(c, "store updated successfully", http.StatusOK)
 }
 
 func (h *StoreHandler) DeleteStore(c *gin.Context) {

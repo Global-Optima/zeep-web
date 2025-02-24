@@ -1,104 +1,136 @@
-import { onMounted, onUnmounted, ref, type Ref } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 
-interface BarcodeScannerOptions {
+export interface BarcodeScannerOptions {
+	/**
+	 * The minimum time (in ms) between characters
+	 * to consider them as part of the same scan.
+	 * Default: 30 ms.
+	 */
 	minCharTime?: number
+
+	/**
+	 * Barcode prefix (e.g., 'ABC') that must be present
+	 * for a successful read. If set and not found, the scan is ignored.
+	 */
 	prefix?: string
+
+	/**
+	 * Barcode suffix (e.g., '\n') that ends a scan.
+	 * Default: '\n'
+	 */
 	suffix?: string
-	onScan: (barcode: string) => Promise<void> | void
+
+	/**
+	 * Callback triggered on successful scan.
+	 * @param scannedValue - The final, trimmed barcode.
+	 */
+	onScan?: (scannedValue: string) => void
+
+	/**
+	 * Callback triggered when an error occurs (e.g. parse error).
+	 */
 	onError?: (error: Error) => void
 }
 
-export function useBarcodeScanner(options: BarcodeScannerOptions): {
-	lastScanned: Ref<string | null>
-} {
-	const { minCharTime = 30, prefix = '', suffix = '\n', onScan, onError } = options
+export function useBarcodeScanner(options: BarcodeScannerOptions) {
+	const {
+		minCharTime = 30, // Adjust if scanner sends too fast/slow
+		prefix = '',
+		suffix = '\n',
+		onScan,
+		onError,
+	} = options
 
-	const lastScanned = ref<string | null>(null)
+	// Internal buffer to store scanned characters
 	let buffer = ''
 	let lastTime = 0
-	let timeout: number | null = null
+	let timeoutId: number | null = null
 
-	const handleKeyDown = (event: KeyboardEvent) => {
-		/**
-		 * 1) Only process keystrokes if the user is focused on
-		 *    the element with id="barcode".
-		 */
-		const activeElem = document.activeElement as HTMLElement | null
-		if (!activeElem) {
-			// If we are NOT in the barcode input, ignore.
-			return
-		}
+	/**
+	 * Handles keydown events when scanner inputs barcode.
+	 */
+	function handleKeyDown(event: KeyboardEvent) {
+		// Ignore non-character keys (Shift, Ctrl, Backspace, etc.)
+		if (event.key.length !== 1 && event.key !== 'Enter') return
 
-		// 2) Continue with the barcode logic
+		// Capture the current time
 		const currentTime = Date.now()
 		const timeDiff = currentTime - lastTime
 		lastTime = currentTime
 
-		// If too much time passed, reset the buffer.
-		if (timeDiff > minCharTime) {
+		// If too much time passed, reset the buffer
+		if (timeDiff > minCharTime * 2) {
 			buffer = ''
 		}
 
-		// For non-printable keys (like Shift, Ctrl, Arrow keys),
-		// we only handle the Enter key to finalize the buffer.
-		if (event.key.length !== 1) {
-			if (event.key === 'Enter') {
-				processBuffer()
-			}
+		// If Enter is pressed, finalize the barcode
+		if (event.key === 'Enter') {
+			processBuffer()
 			return
 		}
 
+		// Append character to buffer
 		buffer += event.key
 
-		// If we have an existing timeout, clear it and start a new one.
-		if (timeout) {
-			clearTimeout(timeout)
+		// Restart timeout to finalize the buffer
+		if (timeoutId) {
+			clearTimeout(timeoutId)
 		}
-
-		// If no further keys after a short delay, treat it as a complete scan.
-		timeout = window.setTimeout(() => {
+		timeoutId = window.setTimeout(() => {
 			processBuffer()
 		}, minCharTime * 5)
 	}
 
-	const processBuffer = () => {
+	/**
+	 * Processes the scanned buffer and triggers `onScan`
+	 */
+	function processBuffer() {
 		if (!buffer.length) return
 
-		let barcode = buffer
+		try {
+			console.debug('Raw buffer:', buffer)
 
-		// Remove prefix if present
-		if (prefix && barcode.startsWith(prefix)) {
-			barcode = barcode.substring(prefix.length)
-		}
-		// Remove suffix if present
-		if (suffix && barcode.endsWith(suffix)) {
-			barcode = barcode.slice(0, -suffix.length)
-		}
-
-		if (barcode.length > 0) {
-			try {
-				onScan(barcode)
-				lastScanned.value = barcode
-			} catch (err) {
-				if (onError && err instanceof Error) {
-					onError(err)
-				}
+			// Ensure the buffer starts with the required prefix (if specified)
+			if (prefix && !buffer.startsWith(prefix)) {
+				console.debug('Prefix mismatch:', buffer)
+				buffer = ''
+				return
 			}
-		}
 
-		buffer = ''
+			// Remove prefix if present
+			let scanned = prefix ? buffer.slice(prefix.length) : buffer
+
+			// Remove suffix if present
+			if (suffix && scanned.endsWith(suffix)) {
+				scanned = scanned.slice(0, -suffix.length)
+			}
+
+			// Ensure we have a valid barcode to process
+			if (scanned.length > 0) {
+				console.debug('Processed barcode:', scanned)
+				onScan?.(scanned)
+			}
+		} catch (err) {
+			if (onError && err instanceof Error) {
+				onError(err)
+			}
+		} finally {
+			// Clear the buffer
+			buffer = ''
+		}
 	}
 
+	/**
+	 * Lifecycle hooks
+	 */
 	onMounted(() => {
 		window.addEventListener('keydown', handleKeyDown)
 	})
 
 	onUnmounted(() => {
 		window.removeEventListener('keydown', handleKeyDown)
-		if (timeout) {
-			clearTimeout(timeout)
+		if (timeoutId) {
+			clearTimeout(timeoutId)
 		}
 	})
-
-	return { lastScanned }
 }
