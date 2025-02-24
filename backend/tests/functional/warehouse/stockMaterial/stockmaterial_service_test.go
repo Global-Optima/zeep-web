@@ -8,18 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func stringPtr(s string) *string {
-	return &s
-}
-
-// func uintPtr(u uint) *uint {
-// 	return &u
-// }
-
-func floatPtr(f float64) *float64 {
-	return &f
-}
-
 func TestStockMaterialService_GetStockMaterialByID_WithPreloadedData(t *testing.T) {
 	container := tests.NewTestContainer()
 	db := container.GetDB()
@@ -98,7 +86,7 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 		{
 			name: "Filter by search term",
 			filter: &types.StockMaterialFilter{
-				Search: stringPtr("Coffee"),
+				Search: tests.StringPtr("Coffee"),
 			},
 			expectedCount: 1,
 			expectError:   false,
@@ -106,7 +94,7 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 		{
 			name: "Filter by non-existing term",
 			filter: &types.StockMaterialFilter{
-				Search: stringPtr("NonExisting"),
+				Search: tests.StringPtr("NonExisting"),
 			},
 			expectedCount: 0,
 			expectError:   false,
@@ -271,9 +259,9 @@ func TestStockMaterialService_UpdateStockMaterial_WithPreloadedData(t *testing.T
 			name: "Update existing stock material",
 			id:   1,
 			update: &types.UpdateStockMaterialDTO{
-				Name:        stringPtr("Updated Material"),
-				Description: stringPtr("Updated description"),
-				SafetyStock: floatPtr(150.0),
+				Name:        tests.StringPtr("Updated Material"),
+				Description: tests.StringPtr("Updated description"),
+				SafetyStock: tests.FloatPtr(150.0),
 			},
 			expectError: false,
 		},
@@ -281,7 +269,7 @@ func TestStockMaterialService_UpdateStockMaterial_WithPreloadedData(t *testing.T
 			name: "Update non-existing stock material",
 			id:   999,
 			update: &types.UpdateStockMaterialDTO{
-				Name: stringPtr("Updated Material"),
+				Name: tests.StringPtr("Updated Material"),
 			},
 			expectError: true,
 		},

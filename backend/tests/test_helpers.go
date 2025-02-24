@@ -137,3 +137,15 @@ func BaseFilterWithPagination(page, pageSize int) utils.BaseFilter {
 		},
 	}
 }
+
+func StringPtr(s string) *string {
+	return &s
+}
+
+func UintPtr(u uint) *uint {
+	return &u
+}
+
+func FloatPtr(f float64) *float64 {
+	return &f
+}
