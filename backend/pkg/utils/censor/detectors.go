@@ -2,8 +2,10 @@ package censor
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	goaway "github.com/TwiN/go-away"
@@ -31,8 +33,13 @@ func initCensorValidator(dicts *Dictionaries) *TextCensorValidator {
 	}
 }
 
-func InitializeCensor() error {
-	dicts, err := LoadDictionaries("pkg/utils/censor/dictionaries.json")
+func InitCensor() error {
+	sourceDir, err := getCurrentDirectoryPath()
+	if err != nil {
+		return err
+	}
+	dicts, err := LoadDictionaries(filepath.Join(sourceDir, "dictionaries.json"))
+	logrus.Info(filepath.Join(sourceDir, "dictionaries.json"))
 	if err != nil {
 		return err
 	}
@@ -81,4 +88,12 @@ func InitializeCensorForTests() error {
 
 	censorValidator = initCensorValidator(dicts)
 	return nil
+}
+
+func getCurrentDirectoryPath() (string, error) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		return "", nil
+	}
+	return filepath.Dir(filename), nil
 }
