@@ -58,7 +58,7 @@ const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 // Watch debounced search term and emit updates
 watch(debouncedSearchTerm, (newValue) => {
 	localFilter.value.search = newValue
-	emit('update:filter', { searchTerm: newValue.trim() })
+	emit('update:filter', { search: newValue.trim() })
 })
 
 // Navigate to add store page
