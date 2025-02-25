@@ -12,7 +12,7 @@
 		<LazyImage
 			:src="additive.imageUrl"
 			alt="Изображение добавки"
-			class="w-full h-24 object-contain"
+			class="rounded-md w-full h-24 object-contain"
 		/>
 		<p
 			class="flex-grow mt-3 text-sm sm:text-base"

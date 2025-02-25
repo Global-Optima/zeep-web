@@ -4,7 +4,7 @@
 		<LazyImage
 			:src="item.product.imageUrl"
 			alt="Изображение товара"
-			class="rounded w-16 sm:w-28 h-16 sm:h-28 object-contain"
+			class="rounded-md w-16 sm:w-28 h-16 sm:h-28 object-contain"
 		/>
 
 		<!-- Product Details -->
