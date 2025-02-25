@@ -36,9 +36,9 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
 }
 
-func (p *productRepository) CheckProductExists(productName string) (bool, error) {
+func (r *productRepository) CheckProductExists(productName string) (bool, error) {
 	var product data.Product
-	err := p.db.Where(&data.Product{Name: productName}).First(&product).Error
+	err := r.db.Where(&data.Product{Name: productName}).First(&product).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
