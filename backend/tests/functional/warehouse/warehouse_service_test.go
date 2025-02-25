@@ -7,19 +7,25 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/tests"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
-func TestWarehouseService_GetWarehouseByID_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
-	module := tests.GetWarehouseModule()
+var container = tests.NewTestContainer()
 
+func ResetTestData(t *testing.T) *gorm.DB {
+	db := container.GetDB()
 	if err := tests.TruncateAllTables(db); err != nil {
 		t.Fatalf("Failed to truncate all tables: %v", err)
 	}
 	if err := tests.LoadTestData(db); err != nil {
 		t.Fatalf("Failed to load test data: %v", err)
 	}
+	return db
+}
+
+func TestWarehouseService_GetWarehouseByID_WithPreloadedData(t *testing.T) {
+	_ = ResetTestData(t)
+	module := tests.GetWarehouseModule()
 
 	testCases := []struct {
 		name        string
@@ -60,16 +66,8 @@ func TestWarehouseService_GetWarehouseByID_WithPreloadedData(t *testing.T) {
 
 // i will leave until getWarehouse and getAllWarehouse functions will be decided
 func TestWarehouseService_GetWarehouses_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetWarehouseModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name          string
@@ -84,7 +82,8 @@ func TestWarehouseService_GetWarehouses_WithPreloadedData(t *testing.T) {
 		{
 			name: "Filter by search term",
 			filter: &types.WarehouseFilter{
-				Search: tests.StringPtr("Warehouse"),
+				Search:     tests.StringPtr("Warehouse"),
+				BaseFilter: tests.BaseFilterWithPagination(1, 10),
 			},
 			expectedCount: 1,
 		},
@@ -104,16 +103,8 @@ func TestWarehouseService_GetWarehouses_WithPreloadedData(t *testing.T) {
 }
 
 func TestWarehouseService_UpdateWarehouse_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetWarehouseModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name        string
@@ -161,16 +152,8 @@ func TestWarehouseService_UpdateWarehouse_WithPreloadedData(t *testing.T) {
 }
 
 func TestWarehouseService_DeleteWarehouse_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetWarehouseModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name        string

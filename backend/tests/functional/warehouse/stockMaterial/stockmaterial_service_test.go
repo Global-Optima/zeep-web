@@ -6,19 +6,25 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/tests"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
-func TestStockMaterialService_GetStockMaterialByID_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
-	module := tests.GetStockMaterialModule()
+var container = tests.NewTestContainer()
 
+func ResetTestData(t *testing.T) *gorm.DB {
+	db := container.GetDB()
 	if err := tests.TruncateAllTables(db); err != nil {
 		t.Fatalf("Failed to truncate all tables: %v", err)
 	}
 	if err := tests.LoadTestData(db); err != nil {
 		t.Fatalf("Failed to load test data: %v", err)
 	}
+	return db
+}
+
+func TestStockMaterialService_GetStockMaterialByID_WithPreloadedData(t *testing.T) {
+	_ = ResetTestData(t)
+	module := tests.GetStockMaterialModule()
 
 	testCases := []struct {
 		name        string
@@ -52,7 +58,7 @@ func TestStockMaterialService_GetStockMaterialByID_WithPreloadedData(t *testing.
 				assert.NoError(t, err)
 				assert.NotNil(t, material)
 				assert.Equal(t, tc.id, material.ID)
-				assert.Equal(t, "Coffee Beans Material", material.Name)
+				assert.Equal(t, "Coffee Beans Jacobs", material.Name)
 			}
 		})
 	}
@@ -60,16 +66,8 @@ func TestStockMaterialService_GetStockMaterialByID_WithPreloadedData(t *testing.
 
 // failed test
 func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetStockMaterialModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name          string
@@ -78,15 +76,18 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 		expectError   bool
 	}{
 		{
-			name:          "Get all stock materials without filter",
-			filter:        nil,
-			expectedCount: 1,
+			name: "Get all stock materials without filter",
+			filter: &types.StockMaterialFilter{
+				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+			},
+			expectedCount: 2,
 			expectError:   false,
 		},
 		{
 			name: "Filter by search term",
 			filter: &types.StockMaterialFilter{
-				Search: tests.StringPtr("Coffee"),
+				Search:     tests.StringPtr("Jacobs"),
+				BaseFilter: tests.BaseFilterWithPagination(1, 10),
 			},
 			expectedCount: 1,
 			expectError:   false,
@@ -94,7 +95,8 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 		{
 			name: "Filter by non-existing term",
 			filter: &types.StockMaterialFilter{
-				Search: tests.StringPtr("NonExisting"),
+				Search:     tests.StringPtr("NonExisting"),
+				BaseFilter: tests.BaseFilterWithPagination(1, 10),
 			},
 			expectedCount: 0,
 			expectError:   false,
@@ -110,7 +112,7 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 				assert.NoError(t, err)
 				assert.Len(t, materials, tc.expectedCount)
 				if tc.expectedCount > 0 {
-					assert.Equal(t, "Coffee Beans Material", materials[0].Name)
+					assert.Equal(t, "Coffee Beans Jacobs", materials[0].Name)
 				}
 			}
 		})
@@ -119,16 +121,8 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 
 // test failed
 func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetStockMaterialModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name        string
@@ -238,16 +232,8 @@ func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T
 }
 
 func TestStockMaterialService_UpdateStockMaterial_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetStockMaterialModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name        string
@@ -294,16 +280,8 @@ func TestStockMaterialService_UpdateStockMaterial_WithPreloadedData(t *testing.T
 }
 
 func TestStockMaterialService_DeleteStockMaterial_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetStockMaterialModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name        string
@@ -338,16 +316,8 @@ func TestStockMaterialService_DeleteStockMaterial_WithPreloadedData(t *testing.T
 }
 
 func TestStockMaterialService_DeactivateStockMaterial_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetStockMaterialModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name        string
@@ -383,16 +353,8 @@ func TestStockMaterialService_DeactivateStockMaterial_WithPreloadedData(t *testi
 }
 
 func TestStockMaterialService_BarcodeOperations_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = ResetTestData(t)
 	module := tests.GetStockMaterialModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	t.Run("Get existing barcode", func(t *testing.T) {
 		barcode, err := module.Service.GetStockMaterialBarcode(1)

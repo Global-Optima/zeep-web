@@ -149,5 +149,12 @@ func (r *warehouseRepository) UpdateWarehouse(id uint, warehouse *data.Warehouse
 }
 
 func (r *warehouseRepository) DeleteWarehouse(id uint) error {
-	return r.db.Delete(&data.Warehouse{}, id).Error
+	result := r.db.Delete(&data.Warehouse{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }

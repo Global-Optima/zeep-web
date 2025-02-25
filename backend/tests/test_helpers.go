@@ -156,6 +156,9 @@ func BaseFilterWithPagination(page, pageSize int) utils.BaseFilter {
 			Page:     page,
 			PageSize: pageSize,
 		},
+		Sort: &utils.Sort{
+			Direction: utils.SORT_DEFAULT_QUERY,
+		},
 	}
 }
 
