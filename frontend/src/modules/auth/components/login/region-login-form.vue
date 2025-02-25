@@ -107,7 +107,7 @@
 					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Пароль</FormLabel>
 						<FormControl>
-							<Input
+							<PasswordInput
 								type="password"
 								placeholder="Введите пароль"
 								v-bind="componentField"
@@ -141,28 +141,29 @@ import * as z from 'zod'
 
 import { Button } from '@/core/components/ui/button'
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/core/components/ui/card'
 import {
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/core/components/ui/form'
-import { Input } from '@/core/components/ui/input'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/core/components/ui/select'
 
+import PasswordInput from '@/core/components/password-input/PasswordInput.vue'
+import { easyPasswordValidationSchema } from '@/core/validators/password.validator'
 import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { regionsService } from '@/modules/admin/regions/services/regions.service'
 import { authService } from '@/modules/auth/services/auth.service'
@@ -181,7 +182,7 @@ const formSchema = toTypedSchema(
     selectedEmployeeEmail: z.string().min(1, {
       message: 'Пожалуйста, выберите сотрудника',
     }),
-    password: z.string().min(2, 'Пароль должен содержать не менее 2 символов'),
+    password: easyPasswordValidationSchema,
   })
 )
 

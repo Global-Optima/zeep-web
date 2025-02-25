@@ -117,7 +117,7 @@
 						<FormItem>
 							<FormLabel>Пароль</FormLabel>
 							<FormControl>
-								<Input
+								<PasswordInput
 									type="password"
 									v-bind="componentField"
 									placeholder="Пароль"
@@ -199,6 +199,7 @@
 </template>
 
 <script setup lang="ts">
+import PasswordInput from '@/core/components/password-input/PasswordInput.vue'
 import { Button } from '@/core/components/ui/button'
 import {
   Card,
@@ -218,6 +219,7 @@ import {
 import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import { Switch } from '@/core/components/ui/switch'
+import { passwordValidationSchema } from '@/core/validators/password.validator'
 import { EmployeeRole, type CreateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
@@ -241,7 +243,7 @@ const schema = toTypedSchema(
 		role: z.nativeEnum(EmployeeRole),
 		email: z.string().email('Введите действительный адрес электронной почты'),
 		phone: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
-    password: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
+    password: passwordValidationSchema,
     isActive: z.boolean(),
 	})
 );

@@ -104,7 +104,7 @@
 					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Пароль</FormLabel>
 						<FormControl>
-							<Input
+							<PasswordInput
 								type="password"
 								placeholder="Введите пароль сотрудника"
 								v-bind="componentField"
@@ -129,6 +129,7 @@
 </template>
 
 <script setup lang="ts">
+import PasswordInput from '@/core/components/password-input/PasswordInput.vue'
 import { Button } from '@/core/components/ui/button'
 import {
   Card,
@@ -144,7 +145,6 @@ import {
   FormLabel,
   FormMessage
 } from '@/core/components/ui/form'
-import { Input } from '@/core/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -152,6 +152,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
+import { easyPasswordValidationSchema } from '@/core/validators/password.validator'
 import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { storesService } from "@/modules/admin/stores/services/stores.service"
 import { authService } from '@/modules/auth/services/auth.service'
@@ -169,7 +170,7 @@ const formSchema = toTypedSchema(
   z.object({
     selectedStoreId: z.coerce.number().min(1, {message: "Пожалуйста, выберите кафе"}),
     selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
-    password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
+    password: easyPasswordValidationSchema
   })
 )
 
