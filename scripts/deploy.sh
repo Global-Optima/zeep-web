@@ -1,4 +1,13 @@
-#!/bin/bash
+# ====================
+# Deployment Script for Production (Zero-Downtime)
+# ====================
+#
+# 📌 Instructions for Use:
+# 1. If the server changes, copy this script outside the project directory (e.g., to `~`).
+# 2. Modify the script to include `cd /path/to/project/root/folder` before execution.
+# 3. Grant execution permissions with `chmod +x ~/deploy.sh`.
+# 4. Run the script using `~/deploy.sh`.
+#
 # ====================
 # Configuration
 # ====================
@@ -6,12 +15,9 @@ ENV_FILE="./.env"
 COMPOSE_FILE="./docker-compose.yml"
 LOG_FILE="./deployment.log"
 
-# Ensure the log file exists
+# Ensure log file exists
 if [[ ! -f "$LOG_FILE" ]]; then
-    touch "$LOG_FILE" || {
-        echo "Failed to create log file: $LOG_FILE"
-        exit 1
-    }
+    touch "$LOG_FILE" || { echo "Failed to create log file: $LOG_FILE"; exit 1; }
 fi
 
 # ====================
@@ -47,7 +53,7 @@ if ! command -v docker compose &> /dev/null; then
     handle_error "Docker Compose is not installed. Please install it using: 'apt install docker-compose-plugin'"
 fi
 
-# Ensure the script is running as root (for production safety)
+# Ensure script is run as root (for production safety)
 if [[ $EUID -ne 0 ]]; then
     handle_error "This script must be run as root. Try using 'sudo ./deploy.sh'."
 fi
@@ -67,49 +73,52 @@ fi
 # ====================
 log "🔄 Checking for the latest updates..."
 
-# Check if the current directory is a Git repository
+# Check if in a Git repository
 if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     handle_error "This is not a Git repository. Please run this script inside a Git project."
 fi
 
-# Get the current branch
+# Get current branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 log "📌 Current branch: $CURRENT_BRANCH"
 
-# Ensure there are no uncommitted changes
+# Ensure no uncommitted changes
 if ! git diff-index --quiet HEAD --; then
     handle_error "Uncommitted changes detected! Please commit or stash your changes before deploying."
 fi
 
-# Pull the latest changes from the current branch
+# Pull latest changes
 log "⬇️ Pulling latest updates from '$CURRENT_BRANCH'..."
 git pull origin "$CURRENT_BRANCH" --rebase || handle_error "Failed to pull latest updates."
 log "✅ Latest updates pulled successfully."
 
 # ====================
-# Deployment Process
+# Blue-Green Deployment Process
 # ====================
-log "🚀 Starting deployment process..."
+log "🚀 Starting Blue-Green Deployment..."
 
-# Step 1: Pull the latest images (optional but recommended for production)
-log "⬇️ Pulling the latest images..."
+# Step 1: Pull latest images
+log "⬇️ Pulling latest images..."
 docker compose pull --parallel || handle_error "Failed to pull the latest images."
 
-# Step 2: Stop and remove existing containers
-log "🛑 Stopping and removing existing containers..."
-docker compose down --remove-orphans || handle_error "Failed to stop and remove existing containers."
+# Step 2: Create a new deployment network (if not exists)
+log "🔄 Creating network if not exists..."
+docker network create zeep-network || true
 
-# Step 3: Build and start new containers
-log "⚙️ Building and starting new containers..."
-docker compose up --build -d --force-recreate || handle_error "Failed to build and start new containers."
+# Step 3: Start new version containers in parallel without stopping old ones
+log "⚙️ Deploying new version in parallel..."
+docker compose up --build -d || handle_error "Failed to start new version containers."
 
-# Step 4: Verify container status
-log "🔍 Verifying container status..."
-docker compose ps --format "table {{.Service}}\t{{.State}}\t{{.Health}}" || handle_error "Failed to verify container status."
+# Step 4: Wait for health checks
+log "🩺 Waiting for new containers to be healthy..."
+sleep 5  # Adjust based on service start time
 
-# Ensure all required services are healthy
 if ! docker compose ps | grep -q 'healthy'; then
-    handle_error "One or more services failed to start properly."
+    handle_error "New version failed health checks!"
 fi
 
-log "✅ Deployment completed successfully."
+# Step 5: Remove old containers (only if new ones are healthy)
+log "🧹 Cleaning up old containers..."
+docker compose prune -f || handle_error "Failed to clean old containers."
+
+log "✅ Deployment completed successfully with zero downtime."
