@@ -87,9 +87,8 @@ func (r *storeStockRepository) GetAvailableIngredientsToAdd(storeID uint, filter
 		query = query.Where("calories <= ?", *filter.MaxCalories)
 	}
 
-	query = query.Where("ingredients.id NOT IN (?)", r.db.Model(&data.Store{}).
-		Joins("JOIN store_stocks ON store_stocks.store_id = store_warehouses.id").
-		Select("store_stocks.ingredient_id").
+	query = query.Where("ingredients.id NOT IN (?)", r.db.Model(&data.StoreStock{}).
+		Select("ingredient_id").
 		Where("store_id = ?", storeID))
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Ingredient{})
