@@ -14,4 +14,8 @@ go.work
 go.work.sum
 
 .env
+*.env
+
 config.yml
+
+logs

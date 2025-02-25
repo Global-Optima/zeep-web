@@ -11,13 +11,13 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/scheduler"
 )
 
-type StoreWarehouseModule struct {
+type StoreStockModule struct {
 	Repo    storeStocks.StoreStockRepository
 	Service storeStocks.StoreStockService
 	Handler *storeStocks.StoreStockHandler
 }
 
-func NewStoreWarehouseModule(
+func NewStoreStockModule(
 	base *common.BaseModule,
 	ingredientService ingredients.IngredientService,
 	franchiseeService franchisees.FranchiseeService,
@@ -25,7 +25,7 @@ func NewStoreWarehouseModule(
 	notificationService notifications.NotificationService,
 	storeService stores.StoreService,
 	cronManager *scheduler.CronManager,
-) *StoreWarehouseModule {
+) *StoreStockModule {
 	repo := storeStocks.NewStoreStockRepository(base.DB)
 	service := storeStocks.NewStoreStockService(repo, notificationService, base.Logger)
 	handler := storeStocks.NewStoreStockHandler(service, ingredientService, auditService, franchiseeService, base.Logger)
@@ -41,7 +41,7 @@ func NewStoreWarehouseModule(
 		base.Logger.Errorf("Failed to register warehouse stock cron job: %v", err)
 	}
 
-	return &StoreWarehouseModule{
+	return &StoreStockModule{
 		Repo:    repo,
 		Service: service,
 		Handler: handler,

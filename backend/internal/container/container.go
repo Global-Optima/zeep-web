@@ -1,11 +1,10 @@
 package container
 
 import (
-	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"sync"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
@@ -35,7 +34,7 @@ type Container struct {
 	Products                *modules.ProductsModule
 	Regions                 *modules.RegionsModule
 	Stores                  *modules.StoresModule
-	StoreWarehouses         *modules.StoreWarehouseModule
+	StoreStocks             *modules.StoreStockModule
 	Suppliers               *modules.SuppliersModule
 	StockRequests           *modules.StockRequestsModule
 	Warehouses              *modules.WarehousesModule
@@ -55,22 +54,6 @@ func NewContainer(dbHandler *database.DBHandler, storageRepo *storage.StorageRep
 }
 
 func (c *Container) mustInit() {
-	var err error
-	cfg := config.GetConfig()
-
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Database.Host,
-		cfg.Database.Port,
-		cfg.Database.User,
-		cfg.Database.Password,
-		cfg.Database.Name,
-	)
-
-	c.DbHandler, err = database.InitDB(dsn)
-	if err != nil {
-		c.logger.Fatal("Failed to initialize database", zap.Error(err))
-	}
-
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
 	cronManager := scheduler.NewCronManager(c.logger)
 
@@ -83,7 +66,7 @@ func (c *Container) mustInit() {
 	c.Employees = modules.NewEmployeesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Regions.Service)
 	c.Ingredients = modules.NewIngredientsModule(baseModule, c.Audits.Service)
 	c.Stores = modules.NewStoresModule(baseModule, c.Franchisees.Service, c.Audits.Service)
-	c.StoreWarehouses = modules.NewStoreWarehouseModule(baseModule, c.Ingredients.Service, c.Franchisees.Service, c.Audits.Service, c.Notifications.Service, c.Stores.Service, cronManager)
+	c.StoreStocks = modules.NewStoreStockModule(baseModule, c.Ingredients.Service, c.Franchisees.Service, c.Audits.Service, c.Notifications.Service, c.Stores.Service, cronManager)
 	c.Suppliers = modules.NewSuppliersModule(baseModule, c.Audits.Service)
 	c.StockMaterials = modules.NewStockMaterialsModule(baseModule, c.Audits.Service)
 	c.StockMaterialCategories = modules.NewStockMaterialCategoriesModule(baseModule, c.Audits.Service)
@@ -91,10 +74,10 @@ func (c *Container) mustInit() {
 	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service)
 	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Notifications.Service, cronManager, c.Regions.Service, c.Franchisees.Service, c.Audits.Service)
 
-	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreWarehouses.Repo, *c.storageRepo, c.Notifications.Service)
-	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreWarehouses.Repo, *c.storageRepo)
+	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo, c.Notifications.Service)
+	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)
-	c.Orders = modules.NewOrdersModule(baseModule, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreWarehouses.Repo, c.Notifications.Service)
+	c.Orders = modules.NewOrdersModule(baseModule, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Notifications.Service)
 	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.Franchisees.Service, c.Regions.Service, c.StockMaterials.Repo, c.Notifications.Service, c.Audits.Service)
 	c.Analytics = modules.NewAnalyticsModule(baseModule)
 
@@ -106,6 +89,5 @@ func (c *Container) MustInitModules() {
 }
 
 func (c *Container) GetDB() *gorm.DB {
-	c.MustInitModules()
 	return c.DbHandler.DB
 }
