@@ -106,18 +106,3 @@ if ! docker compose ps | grep -q 'healthy'; then
 fi
 
 log "✅ Deployment completed successfully."
-
-# ====================
-# Post-Deployment Cleanup (Safe & Efficient)
-# ====================
-log "🧹 Performing post-deployment cleanup..."
-# Ask before pruning Docker resources
-read -p "♻️ Do you want to remove unused Docker resources? (y/N): " answer
-if [[ "$answer" =~ ^[Yy]$ ]]; then
-    docker system prune -f --volumes || handle_error "Failed to clean up unused resources."
-    log "✅ Docker cleanup completed."
-else
-    log "🟢 Skipping cleanup."
-fi
-
-log "🏁 Deployment finished successfully!"
