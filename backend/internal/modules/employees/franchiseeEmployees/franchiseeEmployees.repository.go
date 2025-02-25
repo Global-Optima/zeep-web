@@ -87,7 +87,7 @@ func (r *franchiseeEmployeeRepository) GetAllFranchiseeEmployees(franchiseeID ui
 
 	err := r.db.Model(&data.FranchiseeEmployee{}).
 		Joins("INNER JOIN employees ON franchisee_employees.employee_id = employees.id").
-		Where("franchisee_id = ?", franchiseeID).
+		Where("franchisee_id = ? AND employees.is_active = true", franchiseeID).
 		Preload("Employee").
 		Find(&franchiseeEmployees).Error
 

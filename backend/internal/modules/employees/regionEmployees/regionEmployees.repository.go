@@ -87,7 +87,7 @@ func (r *regionEmployeeRepository) GetAllRegionEmployees(regionID uint) ([]data.
 
 	err := r.db.Model(&data.RegionEmployee{}).
 		Joins("INNER JOIN employees ON region_employees.employee_id = employees.id").
-		Where("region_id = ?", regionID).
+		Where("region_id = ? AND employees.is_active = true", regionID).
 		Preload("Employee").
 		Find(&regionEmployees).Error
 

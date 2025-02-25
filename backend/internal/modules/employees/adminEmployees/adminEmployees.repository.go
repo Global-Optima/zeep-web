@@ -86,6 +86,7 @@ func (r *adminEmployeeRepository) GetAllAdminEmployees() ([]data.AdminEmployee, 
 
 	err := r.db.Model(&data.AdminEmployee{}).
 		Joins("INNER JOIN employees ON admin_employees.employee_id = employees.id").
+		Where("employees.is_active = true").
 		Preload("Employee").
 		Find(&employees).Error
 
