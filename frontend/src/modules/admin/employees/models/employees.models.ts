@@ -73,6 +73,7 @@ export interface UpdateEmployeeDTO {
 	lastName?: string
 	isActive?: boolean
 	workdays?: CreateOrReplaceWorkdayDTO[]
+	role?: EmployeeRole
 }
 
 export interface ReassignEmployeeTypeDTO {

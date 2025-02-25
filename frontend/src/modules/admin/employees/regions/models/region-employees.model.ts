@@ -1,14 +1,12 @@
 import type {
 	BaseEmployeeDetailsDTO,
 	BaseEmployeeDTO,
-	EmployeeRole,
 	EmployeesFilter,
 	UpdateEmployeeDTO,
 } from '@/modules/admin/employees/models/employees.models'
 import type { RegionDTO } from '@/modules/admin/regions/models/regions.model'
 
 export interface UpdateRegionEmployeeDTO extends UpdateEmployeeDTO {
-	role?: EmployeeRole
 	regionId?: number
 }
 
