@@ -2,8 +2,6 @@ package init
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/sirupsen/logrus"
 	"log"
 	"time"
 
@@ -129,8 +127,6 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 	if err := localization.InitLocalizer(nil); err != nil {
 		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
 	}
-	Response400StockRequestInsufficientStock := localization.NewResponseKey(400, data.StockRequestComponent, "INSUFFICIENT_STOCK")
-	logrus.Info(localization.FormResponseTranslationKey(Response400StockRequestInsufficientStock))
 
 	if err := censor.InitCensor(); err != nil {
 		logger.GetZapSugaredLogger().Fatalf("Failed to initialize censor: %v", err)
