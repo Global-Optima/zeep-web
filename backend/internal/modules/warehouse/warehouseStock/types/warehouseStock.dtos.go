@@ -69,7 +69,7 @@ type UpdateWarehouseStockDTO struct {
 
 type AddWarehouseStockMaterial struct {
 	StockMaterialID uint    `json:"stockMaterialId" binding:"required"`
-	Quantity        float64 `json:"quantity" binding:"required,gte=0"`
+	Quantity        float64 `json:"quantity" binding:"gte=0"`
 }
 
 type AdjustWarehouseStock struct {
@@ -90,5 +90,7 @@ type StockMaterialResponse struct {
 
 type AvailableStockMaterialFilter struct {
 	utils.BaseFilter
-	Search *string `form:"search"`
+	IngredientID    *uint   `form:"ingredientId"`
+	StockMaterialID *uint   `form:"stockMaterialId"`
+	Search          *string `form:"search"`
 }
