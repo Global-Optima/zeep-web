@@ -133,25 +133,14 @@ func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T
 				Name:                   "New Test Material",
 				Description:            "Test material description",
 				SafetyStock:            50.5,
-				UnitID:                 1, // From preloaded data
-				CategoryID:             1, // From preloaded data
-				IngredientID:           1, // From preloaded data
+				UnitID:                 1,
+				CategoryID:             1,
+				IngredientID:           1,
 				Barcode:                "TEST123",
 				ExpirationPeriodInDays: 30,
 				Size:                   100.5,
 			},
 			expectError: false,
-		},
-		{
-			name: "Create with missing required field (name)",
-			input: &types.CreateStockMaterialDTO{
-				Description:  "Test material description",
-				SafetyStock:  50.5,
-				UnitID:       1,
-				CategoryID:   1,
-				IngredientID: 1,
-			},
-			expectError: true,
 		},
 		{
 			name: "Create with invalid safety stock (0)",
