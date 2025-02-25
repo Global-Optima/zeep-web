@@ -252,16 +252,18 @@ VALUES
   (2, 1, 0.75, now() - interval '1 day');
 
 -- 41. Insert into stock_requests
-INSERT INTO stock_requests (store_id, warehouse_id, status, details, store_comment, warehouse_comment)
-VALUES (1, 1, 'PENDING', '{}', 'Store comment', 'Warehouse comment');
+-- INSERT INTO stock_requests (store_id, warehouse_id, status, details, store_comment, warehouse_comment)
+-- VALUES (1, 1, 'CREATED', '{}', 'Store comment', 'Warehouse comment');
 
 -- 42. Insert into stock_materials
 INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, size, category_id, barcode, expiration_period_in_days, is_active)
-VALUES ('Coffee Beans Material', 'Material for coffee', 1, 50, 1, 100, 1, 'CB001', 365, true);
+VALUES 
+    ('Coffee Beans Jacobs', 'Material for coffee', 1, 50, 1, 100, 1, 'CB001', 365, true),
+    ('Coffee Beans Nescafe', 'Material for coffee', 1, 50, 1, 300, 1, 'CB002', 365, true);
 
 -- 43. Insert into stock_request_ingredients
-INSERT INTO stock_request_ingredients (stock_request_id, stock_material_id, quantity, delivered_date, expiration_date)
-VALUES (1, 1, 20, NOW(), NOW() + INTERVAL '1 year');
+-- INSERT INTO stock_request_ingredients (stock_request_id, stock_material_id, quantity, delivered_date, expiration_date)
+-- VALUES (1, 1, 20, NOW(), NOW() + INTERVAL '1 year');
 
 -- 44. Insert into suppliers
 INSERT INTO suppliers (name, contact_email, contact_phone, city, address)
@@ -277,7 +279,9 @@ VALUES (1, 1, 'CB001', 100, NOW() + INTERVAL '1 year');
 
 -- 47. Insert into warehouse_stocks
 INSERT INTO warehouse_stocks (warehouse_id, stock_material_id, quantity)
-VALUES (1, 1, 200);
+VALUES 
+  (1, 1, 200),
+  (1, 2, 500);
 
 -- 48. Insert into supplier_materials
 INSERT INTO supplier_materials (stock_material_id, supplier_id)

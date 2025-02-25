@@ -14,6 +14,20 @@ import (
 	"gorm.io/gorm"
 )
 
+var container = tests.NewTestContainer()
+
+// resetTestData resets the database by truncating tables and loading mock data.
+func resetTestData(t *testing.T) *gorm.DB {
+	db := container.GetDB()
+	if err := tests.TruncateAllTables(db); err != nil {
+		t.Fatalf("Failed to truncate all tables: %v", err)
+	}
+	if err := tests.LoadTestData(db); err != nil {
+		t.Fatalf("Failed to load test data: %v", err)
+	}
+	return db
+}
+
 func stringPtr(s string) *string {
 	return &s
 }
@@ -28,16 +42,8 @@ func orderStatusPtr(s string) *data.OrderStatus {
 }
 
 func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	testCases := []struct {
 		name            string
@@ -334,16 +340,8 @@ func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
 // }
 
 func TestOrderService_GeneratePDFReceipt(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	// Retrieve an order from store 1 to test.
 	var order data.Order
@@ -357,16 +355,8 @@ func TestOrderService_GeneratePDFReceipt(t *testing.T) {
 }
 
 func TestOrderService_GenerateSuborderBarcodePDF(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	suborderID := uint(1)
 	// barcode text font might lead to a critical errors
@@ -379,16 +369,8 @@ func TestOrderService_GenerateSuborderBarcodePDF(t *testing.T) {
 
 // Test GetOrderBySubOrder function.
 func TestOrderService_GetOrderBySubOrder(t *testing.T) {
-	container := tests.NewTestContainer()
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
-	db := container.GetDB()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	order, err := module.Service.GetOrderBySubOrder(1)
 	assert.NoError(t, err, "GetOrderBySubOrder should not error for an existing suborder")
@@ -397,16 +379,8 @@ func TestOrderService_GetOrderBySubOrder(t *testing.T) {
 
 // Test GetOrderById function.
 func TestOrderService_GetOrderById(t *testing.T) {
-	container := tests.NewTestContainer()
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
-	db := container.GetDB()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	orderDTO, err := module.Service.GetOrderById(1)
 	assert.NoError(t, err, "GetOrderById should not error for an existing order")
@@ -415,16 +389,8 @@ func TestOrderService_GetOrderById(t *testing.T) {
 
 // Test GetOrderDetails function.
 func TestOrderService_GetOrderDetails(t *testing.T) {
-	container := tests.NewTestContainer()
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
-	db := container.GetDB()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	details, err := module.Service.GetOrderDetails(1)
 	assert.NoError(t, err, "GetOrderDetails should not error for an existing order")
@@ -433,16 +399,8 @@ func TestOrderService_GetOrderDetails(t *testing.T) {
 
 // Test ExportOrders function.
 func TestOrderService_ExportOrders(t *testing.T) {
-	container := tests.NewTestContainer()
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
-	db := container.GetDB()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	start := time.Now().Add(-72 * time.Hour)
 	end := time.Now().Add(24 * time.Hour)
@@ -459,16 +417,8 @@ func TestOrderService_ExportOrders(t *testing.T) {
 
 // Test GetSubOrders function.
 func TestOrderService_GetSubOrders(t *testing.T) {
-	container := tests.NewTestContainer()
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
-	db := container.GetDB()
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	suborders, err := module.Service.GetSubOrders(1)
 	assert.NoError(t, err, "GetSubOrders should not error for an existing order")
@@ -477,19 +427,12 @@ func TestOrderService_GetSubOrders(t *testing.T) {
 }
 
 func TestOrderService_CreateOrder_Combined(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
+
 	err := censor.InitializeCensorForTests()
 	if err != nil {
 		t.Fatalf("Failed to initialize censor for tests: %v", err)
-	}
-
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
 	}
 
 	testCases := []struct {
@@ -635,17 +578,8 @@ func insertTestOrderWithTwoSuborders(t *testing.T, db *gorm.DB) (orderID uint, s
 	return order.ID, suborderIDs
 }
 func TestOrderService_CompleteSubOrder_Combined(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
-
-	// Setup: Truncate tables and load test data.
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	// Insert our custom test order.
 	orderID, suborderIDs := insertTestOrderWithTwoSuborders(t, db)
@@ -692,15 +626,8 @@ func TestOrderService_CompleteSubOrder_Combined(t *testing.T) {
 }
 
 func TestOrderService_CompleteSubOrderByBarcode(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	orderID, suborderIDs := insertTestOrderWithTwoSuborders(t, db)
 	assert.Len(t, suborderIDs, 2, "Expected two suborders inserted")
@@ -717,15 +644,8 @@ func TestOrderService_CompleteSubOrderByBarcode(t *testing.T) {
 }
 
 func TestOrderService_AcceptSubOrder(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	// Insert an order with two suborders.
 	_, suborderIDs := insertTestOrderWithTwoSuborders(t, db)
@@ -746,15 +666,8 @@ func TestOrderService_AcceptSubOrder(t *testing.T) {
 }
 
 func TestOrderService_AdvanceSubOrderStatus(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
 
 	// Insert an order with two suborders.
 	orderID, suborderIDs := insertTestOrderWithTwoSuborders(t, db)

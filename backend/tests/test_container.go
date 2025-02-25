@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
@@ -77,4 +78,12 @@ func GetTestDB() *gorm.DB {
 
 func GetOrdersModule() *modules.OrdersModule {
 	return NewTestContainer().Orders
+}
+
+func GetStockRequestsModule() *modules.StockRequestsModule {
+	return NewTestContainer().StockRequests
+}
+
+func GetStoreStocksModule() *modules.StoreStockModule {
+	return NewTestContainer().StoreStocks
 }
