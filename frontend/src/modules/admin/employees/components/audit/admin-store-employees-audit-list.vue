@@ -3,7 +3,6 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Активность</TableHead>
-				<TableHead>Контекст</TableHead>
 				<TableHead>Операция</TableHead>
 				<TableHead>Дата</TableHead>
 				<TableHead>Детали</TableHead>
@@ -18,11 +17,6 @@
 				<!-- Display Activity Message -->
 				<TableCell>
 					<span v-html="formatLocalizedMessage(audit.localizedMessages.ru)"></span>
-				</TableCell>
-
-				<!-- Display Component Name -->
-				<TableCell>
-					{{ formattedComponentName(audit.componentName) }}
 				</TableCell>
 
 				<!-- Display Operation Type -->
@@ -44,7 +38,7 @@
 								size="icon"
 								class="p-0 w-9"
 							>
-								<SquareChartGantt class="text-gray-500 size-5" />
+								<SquareChartGantt class="size-5 text-gray-500" />
 							</Button>
 						</HoverCardTrigger>
 						<HoverCardContent class="bg-gray-50 rounded-xl w-fit text-gray-800 text-sm">
@@ -69,7 +63,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { formatLocalizedMessage } from '@/core/utils/format-localized-messages.utils'
-import { EmployeeAuditComponentName, EmployeeAuditOperationType, FORMATTED_AUDIT_COMPONENTS, FORMATTED_AUDIT_OPERATION, type EmployeeAuditDTO } from '@/modules/admin/employees/models/employees-audit.models'
+import { EmployeeAuditOperationType, FORMATTED_AUDIT_OPERATION, type EmployeeAuditDTO } from '@/modules/admin/employees/models/employees-audit.models'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { SquareChartGantt } from 'lucide-vue-next'
@@ -77,11 +71,6 @@ import { SquareChartGantt } from 'lucide-vue-next'
 defineProps<{
   audits: EmployeeAuditDTO[]
 }>()
-
-// Function to format the component name using the translations
-const formattedComponentName = (componentName: EmployeeAuditComponentName): string => {
-  return FORMATTED_AUDIT_COMPONENTS[componentName] || componentName
-}
 
 // Function to format the operation type using the translations
 const formattedOperationType = (operationType: EmployeeAuditOperationType): string => {
