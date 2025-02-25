@@ -258,7 +258,8 @@
     "centralCatalogUpdateDetails": {
       "nameChange": "Атауы {{.OldName}}-ден {{.NewName}}-ке өзгертілді",
       "descriptionChange": "Сипаттама {{.OldDescription}}-ден {{.NewDescription}}-ке жаңартылды",
-      "imageUrlChange": "Сурет URL {{.OldImageURL}}-ден {{.NewImageURL}}-ке жаңартылды"
+      "imageUrlChange": "Сурет URL {{.OldImageURL}}-ден {{.NewImageURL}}-ке жаңартылды",
+      "categoryChange": "Санат {{.OldCategory}}-ден {{.NewCategory}}-ке өзгертілді"
     },
 
     "storeStockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",

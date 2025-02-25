@@ -259,7 +259,8 @@
 		"centralCatalogUpdateDetails": {
 			"nameChange": "Название изменено с {{.OldName}} на {{.NewName}}",
 			"descriptionChange": "Описание обновлено с {{.OldDescription}} на {{.NewDescription}}",
-			"imageUrlChange": "URL изображения обновлен с {{.OldImageURL}} на {{.NewImageURL}}"
+			"imageUrlChange": "URL изображения обновлен с {{.OldImageURL}} на {{.NewImageURL}}",
+			"categoryChange": "Категория изменена с {{.OldCategory}} на {{.NewCategory}}"
 		},
 
 		"storeStockExpiration": "*{{.ItemName}}* срок годности истекает *{{.ExpirationDate}}*.",
