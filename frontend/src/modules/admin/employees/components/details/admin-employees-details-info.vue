@@ -9,7 +9,7 @@
 
 			<div class="flex items-center gap-1">
 				<Button
-					v-if="showReassignButton"
+					v-if="canUpdate"
 					size="icon"
 					variant="ghost"
 					@click="onReassignEmployeeClick"
@@ -17,6 +17,7 @@
 					<ArrowRightLeft class="size-5 text-gray-500" />
 				</Button>
 				<Button
+					v-if="canUpdate"
 					size="icon"
 					variant="ghost"
 					@click="onUpdateEmployeeClick"
@@ -52,7 +53,7 @@ const {employee} = defineProps<{employee: BaseEmployeeDetailsDTO & {id: number}}
 
 const router = useRouter()
 
-const showReassignButton = useHasRole([EmployeeRole.ADMIN])
+const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const onUpdateEmployeeClick = () => {
   router.push(`/admin/employees/${employee.type.toLowerCase()}/${employee.id}/update`)

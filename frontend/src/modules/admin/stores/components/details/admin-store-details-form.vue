@@ -160,7 +160,7 @@
 							</Button>
 
 							<button
-								v-if="selectedFranchisee"
+								v-if="selectedFranchisee && !readonly"
 								@click="selectFranchisee(null)"
 							>
 								<X class="size-4 text-gray-600" />
@@ -272,7 +272,7 @@ const schema = toTypedSchema(
 		contactEmail: z.string().email('Введите действительный адрес электронной почты'),
 		storeHours: z.string().min(5, 'Часы работы должны быть указаны'),
     warehouseId: z.number().min(1, 'Введите склад'),
-    franchiseId: z.number().optional()
+    franchiseeId: z.number().optional()
 	}),
 )
 
@@ -287,7 +287,7 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
     contactPhone: store.contactPhone,
     contactEmail: store.contactEmail,
     storeHours: store.storeHours,
-    franchiseId: store.franchisee?.id,
+    franchiseeId: store.franchisee?.id,
   }
 })
 
@@ -302,7 +302,7 @@ const submitForm = handleSubmit((formValues) => {
     contactPhone: formValues.contactPhone,
     contactEmail: formValues.contactEmail,
     storeHours: formValues.storeHours,
-    franchiseId:  formValues.franchiseId ?? null
+    franchiseeId:  formValues.franchiseeId ?? null
   }
   emit('onSubmit', dto)
 })
@@ -323,12 +323,12 @@ function selectWarehouse(warehouse: WarehouseDTO) {
 function selectFranchisee(franchisee: FranchiseeDTO | null) {
   if (!franchisee) {
     selectedFranchisee.value = null
-    setFieldValue('franchiseId', undefined)
+    setFieldValue('franchiseeId', undefined)
     return
   }
 
   selectedFranchisee.value = franchisee
   openFranchiseeDialog.value = false
-  setFieldValue('franchiseId', franchisee.id)
+  setFieldValue('franchiseeId', franchisee.id)
 }
 </script>

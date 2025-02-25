@@ -94,6 +94,7 @@ export interface BaseEmployeeDTO {
 
 export interface EmployeeDTO extends BaseEmployeeDTO {
 	id: number
+	typeBasedId: number
 }
 
 export interface EmployeeWorkdayDTO {
@@ -111,6 +112,7 @@ export interface BaseEmployeeDetailsDTO extends BaseEmployeeDTO {
 
 export interface EmployeeDetailsDTO extends BaseEmployeeDetailsDTO {
 	id: number
+	typeBasedId: number
 }
 
 export interface UpdatePasswordDTO {

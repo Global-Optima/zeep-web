@@ -22,6 +22,7 @@
 				:store="storeData"
 				@onSubmit="handleUpdate"
 				@onCancel="handleCancel"
+				:readonly="!canUpdate"
 			/>
 		</TabsContent>
 
@@ -29,6 +30,7 @@
 			<AdminStoreDetailsEmployees
 				:store="storeData"
 				@on-cancel="handleCancel"
+				:readonly="!canUpdate"
 			/>
 		</TabsContent>
 	</Tabs>
@@ -42,6 +44,8 @@ import {
   TabsTrigger,
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminStoreDetailsEmployees from '@/modules/admin/stores/components/details/admin-store-details-employees.vue'
 import AdminStoreDetailsForm from '@/modules/admin/stores/components/details/admin-store-details-form.vue'
 import type { UpdateStoreDTO } from '@/modules/admin/stores/models/stores-dto.model'
@@ -57,6 +61,8 @@ const { toast } = useToast()
 const storeId = route.params.id as string
 
 const queryClient = useQueryClient()
+
+const canUpdate = useHasRole(EmployeeRole.ADMIN)
 
 const { data: storeData } = useQuery({
 	queryKey: ['store', storeId],
