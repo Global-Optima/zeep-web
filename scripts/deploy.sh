@@ -6,6 +6,14 @@ ENV_FILE="./.env"
 COMPOSE_FILE="./docker-compose.yml"
 LOG_FILE="./deployment.log"
 
+# Ensure the log file exists
+if [[ ! -f "$LOG_FILE" ]]; then
+    touch "$LOG_FILE" || {
+        echo "Failed to create log file: $LOG_FILE"
+        exit 1
+    }
+fi
+
 # ====================
 # Secure Script Execution
 # ====================
@@ -76,7 +84,6 @@ fi
 # Pull the latest changes from the current branch
 log "⬇️ Pulling latest updates from '$CURRENT_BRANCH'..."
 git pull origin "$CURRENT_BRANCH" --rebase || handle_error "Failed to pull latest updates."
-
 log "✅ Latest updates pulled successfully."
 
 # ====================
@@ -106,18 +113,3 @@ if ! docker compose ps | grep -q 'healthy'; then
 fi
 
 log "✅ Deployment completed successfully."
-
-# ====================
-# Post-Deployment Cleanup (Safe & Efficient)
-# ====================
-log "🧹 Performing post-deployment cleanup..."
-# Ask before pruning Docker resources
-read -p "♻️ Do you want to remove unused Docker resources? (y/N): " answer
-if [[ "$answer" =~ ^[Yy]$ ]]; then
-    docker system prune -f --volumes || handle_error "Failed to clean up unused resources."
-    log "✅ Docker cleanup completed."
-else
-    log "🟢 Skipping cleanup."
-fi
-
-log "🏁 Deployment finished successfully!"
