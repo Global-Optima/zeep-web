@@ -7,7 +7,7 @@ export interface StoresFilter extends PaginationParams {
 
 export interface CreateStoreDTO {
 	name: string
-	franchiseId?: number
+	franchiseeId?: number
 	warehouseId: number
 	facilityAddress: {
 		address: string
@@ -20,7 +20,7 @@ export interface CreateStoreDTO {
 
 export interface UpdateStoreDTO {
 	name: string
-	franchiseId?: number | null
+	franchiseeId?: number | null
 	warehouseId?: number
 	facilityAddress: {
 		address: string

@@ -18,7 +18,12 @@
 			</div>
 
 			<div>
-				<Button @click="onAddClick"> Создать </Button>
+				<Button
+					v-if="!readonly"
+					@click="onAddClick"
+				>
+					Создать
+				</Button>
 			</div>
 		</div>
 
@@ -61,7 +66,7 @@ import { ChevronLeft } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const {store} = defineProps<{store: StoreDTO}>()
+const {store, readonly} = defineProps<{store: StoreDTO, readonly?: boolean}>()
 
 const emits = defineEmits<{
   (e: 'onCancel'): void

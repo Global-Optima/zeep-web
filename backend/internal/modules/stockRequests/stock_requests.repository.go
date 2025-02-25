@@ -96,17 +96,17 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 		query = query.Where("created_at <= ?", *filter.EndDate)
 	}
 
-	if filter.Search != nil {
-		if *filter.Search != "" {
-			search := "%" + *filter.Search + "%"
-			query = query.Joins("JOIN stock_request_ingredients ON stock_request_ingredients.stock_request_id = stock_requests.id").
-				Joins("JOIN stock_materials ON stock_request_ingredients.stock_material_id = stock_materials.id").
-				Where(`
-				stock_materials.name ILIKE ? OR 
-				stock_materials.description ILIKE ? OR 
-				stock_materials.barcode ILIKE ?
+	if filter.Search != nil && *filter.Search != "" {
+		search := "%" + *filter.Search + "%"
+
+		query = query.
+			Joins("JOIN stock_request_ingredients sri ON sri.stock_request_id = stock_requests.id").
+			Joins("JOIN stock_materials sm ON sri.stock_material_id = sm.id").
+			Where(`
+				LOWER(sm.name) LIKE LOWER(?) OR 
+				LOWER(sm.description) LIKE LOWER(?) OR 
+				LOWER(sm.barcode) LIKE LOWER(?)
 			`, search, search, search)
-		}
 	}
 
 	query = query.Order("created_at DESC")
