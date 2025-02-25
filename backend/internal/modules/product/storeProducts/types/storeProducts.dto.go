@@ -60,6 +60,10 @@ type StoreProductsFilterDTO struct {
 	MinPrice    *float64 `form:"minPrice" binding:"omitempty,gt=0"`
 }
 
+type ExcludedStoreProductsFilterDTO struct {
+	StoreProductIDs []uint `json:"storeProductIds" binding:"required,gt=0"`
+}
+
 type StoreProductSizesFilterDTO struct {
 	utils.BaseFilter
 	CategoryID *uint   `form:"categoryId" binding:"omitempty,gt=0"`

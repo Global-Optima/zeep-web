@@ -41,6 +41,7 @@ func MapToBaseEmployeeDTO(employee *data.Employee) *BaseEmployeeDTO {
 func MapToEmployeeDTO(employee *data.Employee) *EmployeeDTO {
 	return &EmployeeDTO{
 		ID:              employee.ID,
+		TypeBasedID:     getTypeBasedId(employee),
 		BaseEmployeeDTO: *MapToBaseEmployeeDTO(employee),
 	}
 }
@@ -60,8 +61,26 @@ func MapToBaseEmployeeDetailsDTO(employee *data.Employee) *BaseEmployeeDetailsDT
 func MapToEmployeeDetailsDTO(employee *data.Employee) *EmployeeDetailsDTO {
 	return &EmployeeDetailsDTO{
 		ID:                     employee.ID,
+		TypeBasedID:            getTypeBasedId(employee),
 		BaseEmployeeDetailsDTO: *MapToBaseEmployeeDetailsDTO(employee),
 	}
+}
+
+func getTypeBasedId(employee *data.Employee) uint {
+	var typeBasedID uint = 0
+	switch employee.GetType() {
+	case data.StoreEmployeeType:
+		typeBasedID = employee.StoreEmployee.ID
+	case data.WarehouseEmployeeType:
+		typeBasedID = employee.WarehouseEmployee.ID
+	case data.RegionEmployeeType:
+		typeBasedID = employee.RegionEmployee.ID
+	case data.FranchiseeEmployeeType:
+		typeBasedID = employee.FranchiseeEmployee.ID
+	case data.AdminEmployeeType:
+		typeBasedID = employee.AdminEmployee.ID
+	}
+	return typeBasedID
 }
 
 func CreateToEmployee(dto *CreateEmployeeDTO) (*data.Employee, error) {

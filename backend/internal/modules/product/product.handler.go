@@ -1,11 +1,12 @@
 package product
 
 import (
+	"errors"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 
@@ -19,12 +20,14 @@ import (
 type ProductHandler struct {
 	service      ProductService
 	auditService audit.AuditService
+	logger       *zap.SugaredLogger
 }
 
-func NewProductHandler(service ProductService, auditService audit.AuditService) *ProductHandler {
+func NewProductHandler(service ProductService, auditService audit.AuditService, logger *zap.SugaredLogger) *ProductHandler {
 	return &ProductHandler{
 		service:      service,
 		auditService: auditService,
+		logger:       logger,
 	}
 }
 
@@ -37,7 +40,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 
 	products, err := h.service.GetProducts(&filter)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductGet)
 		return
 	}
 
@@ -55,8 +58,14 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 
 	productDetails, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response404Product)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500ProductGet)
+			return
+		}
 	}
 
 	if productDetails == nil {
@@ -72,33 +81,36 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 
 	err := c.Request.ParseMultipartForm(30 << 20)
 	if err != nil {
+		h.logger.Errorf("error parsing multipart form: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-		logrus.Info("Multipart form parsing failed: ", err)
 		return
 	}
 
 	err = c.ShouldBind(&dto)
 	if err != nil {
+		h.logger.Errorf("error binding form-data: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-		logrus.Info(err)
 		return
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)
-	if err != nil {
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		h.logger.Errorf("error binding image: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
 
 	dto.Video, err = media.GetVideoWithFormFile(c)
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		h.logger.Errorf("error binding video: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingVideo)
 		return
 	}
 
 	id, err := h.service.CreateProduct(&dto)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		h.logger.Errorf("error creating product: %v", err)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCreate)
 		return
 	}
 
@@ -120,13 +132,13 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 
 	productID, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductSize)
 		return
 	}
 
 	productSizes, err := h.service.GetProductSizesByProductID(uint(productID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeGet)
 		return
 	}
 
@@ -134,18 +146,24 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
-	productIDParam := c.Param("id")
+	productSizeIDParam := c.Param("id")
 
-	productID, err := strconv.ParseUint(productIDParam, 10, 64)
+	productSizeID, err := strconv.ParseUint(productSizeIDParam, 10, 64)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductSize)
 		return
 	}
 
-	productSize, err := h.service.GetProductSizeDetailsByID(uint(productID))
+	productSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response404ProductSize)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeGet)
+			return
+		}
 	}
 
 	utils.SendSuccessResponse(c, productSize)
@@ -161,7 +179,7 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 
 	id, err := h.service.CreateProductSize(&input)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeCreate)
 		return
 	}
 
@@ -175,7 +193,7 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	localization.SendLocalizedResponseWithKey(c, types.Response201Product)
+	localization.SendLocalizedResponseWithKey(c, types.Response201ProductSize)
 }
 
 func (h *ProductHandler) UpdateProduct(c *gin.Context) {
@@ -197,15 +215,15 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	/*dto.Video, err = media.GetVideoWithFormFile(c)
+	dto.Video, err = media.GetVideoWithFormFile(c)
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingVideo)
 		return
-	}*/
+	}
 
 	existingProduct, err := h.service.UpdateProduct(uint(productID), dto)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductUpdate)
 		return
 	}
 
@@ -227,7 +245,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductSize)
 		return
 	}
 
@@ -239,13 +257,13 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 
 	existingProductSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeUpdate)
 		return
 	}
 
 	err = h.service.UpdateProductSize(uint(productSizeID), input)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeUpdate)
 		return
 	}
 
@@ -261,7 +279,7 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	localization.SendLocalizedResponseWithKey(c, types.Response200ProductUpdate)
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductSizeUpdate)
 }
 
 func (h *ProductHandler) DeleteProduct(c *gin.Context) {
@@ -273,7 +291,7 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.DeleteProduct(uint(productID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductDelete)
 		return
 	}
 
@@ -294,19 +312,19 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductSize)
 		return
 	}
 
 	existingProduct, err := h.service.GetProductByID(uint(productSizeID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeDelete)
 		return
 	}
 
 	err = h.service.DeleteProductSize(uint(productSizeID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500Product)
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeDelete)
 		return
 	}
 
@@ -321,5 +339,5 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	localization.SendLocalizedResponseWithKey(c, types.Response200ProductDelete)
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductSizeDelete)
 }

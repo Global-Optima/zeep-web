@@ -3,6 +3,7 @@ package additives
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
@@ -154,7 +155,7 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("additive with ID %d not found", additiveID)
+			return nil, moduleErrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
@@ -253,7 +254,7 @@ func (r *additiveRepository) GetAdditiveCategoryByID(categoryID uint) (*data.Add
 	err := r.db.Preload("Additives").First(&category, categoryID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, moduleErrors.ErrNotFound
 		}
 		return nil, err
 	}

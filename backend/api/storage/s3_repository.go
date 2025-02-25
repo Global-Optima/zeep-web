@@ -4,8 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"io"
@@ -13,15 +20,6 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
-	"time"
-
-	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -42,7 +40,6 @@ type StorageRepository interface {
 	MarkFileAsDeleted(key string) error
 	MarkImagesAsDeleted(key data.S3ImageKey)
 	GetFileURL(key string) (string, error)
-	GetPresignedURL(key string) (string, error)
 	FileExists(key string) (bool, error)
 	DownloadFile(key string) ([]byte, error)
 	ListBuckets() ([]types.BucketInfo, error)
@@ -143,7 +140,7 @@ func (r *storageRepository) MarkImagesAsDeleted(key data.S3ImageKey) {
 	if err := r.MarkFileAsDeleted(key.GetConvertedImageObjectKey()); err != nil {
 		var awsErr awserr.Error
 		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to delete converted additive '%s': %w", key.GetConvertedImageObjectKey(), err)
+			wrappedErr := fmt.Errorf("failed to delete converted image '%s': %w", key.GetConvertedImageObjectKey(), err)
 			r.logger.Error(wrappedErr)
 		}
 	}
@@ -159,21 +156,6 @@ func (r *storageRepository) MarkImagesAsDeleted(key data.S3ImageKey) {
 
 func (r *storageRepository) GetFileURL(key string) (string, error) {
 	return fmt.Sprintf("%s/%s/%s", r.s3Client.Endpoint, r.bucketName, url.PathEscape(key)), nil
-}
-
-func (r *storageRepository) GetPresignedURL(key string) (string, error) {
-	req, _ := r.s3Client.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(r.bucketName),
-		Key:    aws.String(key),
-	})
-
-	presignedURL, err := req.Presign(15 * time.Minute)
-	if err != nil {
-		r.logger.Errorf("Unable to sign the request for key %s: %s", key, err.Error())
-		return "", err
-	}
-
-	return presignedURL, nil
 }
 
 func (r *storageRepository) FileExists(key string) (bool, error) {

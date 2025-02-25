@@ -1,6 +1,9 @@
 package storeProducts
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
@@ -57,8 +60,14 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 
 	productDetails, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrNotFound):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
+			return
+		}
 	}
 
 	if productDetails == nil {
@@ -144,6 +153,33 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponseWithPagination(c, productDetails, filter.Pagination)
+}
+
+func (h *StoreProductHandler) GetRecommendedStoreProducts(c *gin.Context) {
+	var filter types.ExcludedStoreProductsFilterDTO
+	if err := c.ShouldBindJSON(&filter); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	storeID, errH := contexts.GetStoreId(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	recommendedStoreProducts, err := h.service.GetRecommendedStoreProducts(storeID, filter.StoreProductIDs)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
+		return
+	}
+
+	if recommendedStoreProducts == nil {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+		return
+	}
+
+	utils.SendSuccessResponse(c, recommendedStoreProducts)
 }
 
 func (h *StoreProductHandler) GetStoreProductSizeByID(c *gin.Context) {
@@ -329,8 +365,14 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrNotFound):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
+			return
+		}
 	}
 
 	action := types.DeleteStoreProductAuditFactory(
