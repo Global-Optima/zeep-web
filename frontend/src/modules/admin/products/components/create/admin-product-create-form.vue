@@ -13,6 +13,8 @@ import { useForm } from 'vee-validate'
 import { ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
 
+const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
+
 // Define emits
 const emits = defineEmits<{
   onSubmit: [dto: CreateProductDTO];
@@ -47,7 +49,7 @@ const createProductSchema = toTypedSchema(
 );
 
 // Setup form with vee-validate
-const { handleSubmit, isSubmitting, setFieldValue } = useForm<CreateProductDTO>({
+const { handleSubmit, setFieldValue } = useForm<CreateProductDTO>({
   validationSchema: createProductSchema,
 });
 
@@ -117,6 +119,7 @@ function triggerVideoInput() {
 				size="icon"
 				type="button"
 				@click="onCancel"
+				:disabled="isSubmitting"
 			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
@@ -128,6 +131,7 @@ function triggerVideoInput() {
 				<Button
 					variant="outline"
 					type="button"
+					:disabled="isSubmitting"
 					@click="onCancel"
 					>Отменить</Button
 				>
@@ -336,6 +340,7 @@ function triggerVideoInput() {
 				variant="outline"
 				type="button"
 				@click="onCancel"
+				:disabled="isSubmitting"
 				>Отменить</Button
 			>
 			<Button

@@ -32,9 +32,10 @@ interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   category: string
 }
 
-const { additive, readonly = false } = defineProps<{
+const { additive, readonly = false, isSubmitting } = defineProps<{
   additive: AdditiveDetailsDTO
   readonly?: boolean
+  isSubmitting: boolean
 }>()
 
 const emits = defineEmits<{
@@ -148,6 +149,7 @@ function removeIngredient(index: number) {
 				variant="outline"
 				size="icon"
 				@click="onCancel"
+				:disabled="isSubmitting"
 			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
@@ -164,11 +166,13 @@ function removeIngredient(index: number) {
 					variant="outline"
 					type="button"
 					@click="onCancel"
+					:disabled="isSubmitting"
 					>Отменить</Button
 				>
 				<Button
 					type="submit"
 					@click="onSubmit"
+					:disabled="isSubmitting"
 					>Сохранить</Button
 				>
 			</div>
@@ -436,11 +440,13 @@ function removeIngredient(index: number) {
 			<Button
 				variant="outline"
 				@click="onCancel"
+				:disabled="isSubmitting"
 				>Отменить</Button
 			>
 			<Button
 				type="submit"
 				@click="onSubmit"
+				:disabled="isSubmitting"
 				>Сохранить</Button
 			>
 		</div>

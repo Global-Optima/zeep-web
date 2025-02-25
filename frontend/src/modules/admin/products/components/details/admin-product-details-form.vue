@@ -17,9 +17,10 @@ const AdminSelectProductCategory = defineAsyncComponent(() =>
   import('@/modules/admin/product-categories/components/admin-select-product-category.vue')
 );
 
-const props = defineProps<{
+const {productDetails, readonly, isSubmitting} = defineProps<{
   productDetails: ProductDetailsDTO;
-  readonly?: boolean; // Optional readonly flag
+  readonly?: boolean;
+  isSubmitting: boolean
 }>();
 
 const emits = defineEmits<{
@@ -40,13 +41,13 @@ const createProductSchema = toTypedSchema(
   })
 );
 
-const { handleSubmit, isSubmitting, isFieldDirty, setFieldValue, resetForm } = useForm<UpdateProductDTO>({
+const { handleSubmit, isFieldDirty, setFieldValue, resetForm } = useForm<UpdateProductDTO>({
   validationSchema: createProductSchema,
   initialValues: {
-    name: props.productDetails.name,
-    description: props.productDetails.description,
-    categoryId: props.productDetails.category.id,
-    imageUrl: props.productDetails.imageUrl,
+    name: productDetails.name,
+    description: productDetails.description,
+    categoryId: productDetails.category.id,
+    imageUrl: productDetails.imageUrl,
   },
 });
 
@@ -60,10 +61,10 @@ function onCancel() {
 }
 
 const openCategoryDialog = ref(false);
-const selectedCategory = ref<ProductCategoryDTO | null>(props.productDetails.category);
+const selectedCategory = ref<ProductCategoryDTO | null>(productDetails.category);
 
 function selectCategory(category: ProductCategoryDTO) {
-  if (!props.readonly) {
+  if (!readonly) {
     selectedCategory.value = category;
     openCategoryDialog.value = false;
     setFieldValue('categoryId', category.id);
@@ -83,6 +84,7 @@ function selectCategory(category: ProductCategoryDTO) {
 				size="icon"
 				type="button"
 				@click="onCancel"
+				:disabled="isSubmitting"
 			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
@@ -98,6 +100,7 @@ function selectCategory(category: ProductCategoryDTO) {
 					variant="outline"
 					type="button"
 					@click="onCancel"
+					:disabled="isSubmitting"
 					>Отменить</Button
 				>
 				<Button
@@ -266,6 +269,7 @@ function selectCategory(category: ProductCategoryDTO) {
 				variant="outline"
 				type="button"
 				@click="onCancel"
+				:disabled="isSubmitting"
 				>Отменить</Button
 			>
 			<Button

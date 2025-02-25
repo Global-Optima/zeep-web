@@ -27,6 +27,8 @@ interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   category: string
 }
 
+const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
+
 const emits = defineEmits<{
   onSubmit: [dto: CreateAdditiveDTO]
   onCancel: []
@@ -78,8 +80,8 @@ function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
     const file = target.files[0];
-    setFieldValue('image', file); // Update form field
-    previewImage.value = URL.createObjectURL(file); // Create preview
+    setFieldValue('image', file);
+    previewImage.value = URL.createObjectURL(file);
   }
 }
 
@@ -146,6 +148,7 @@ function removeIngredient(index: number) {
 				variant="outline"
 				size="icon"
 				@click="onCancel"
+				:disabled="isSubmitting"
 			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
@@ -159,11 +162,13 @@ function removeIngredient(index: number) {
 					variant="outline"
 					type="button"
 					@click="onCancel"
+					:disabled="isSubmitting"
 					>Отменить</Button
 				>
 				<Button
 					type="submit"
 					@click="onSubmit"
+					:disabled="isSubmitting"
 					>Сохранить</Button
 				>
 			</div>
@@ -428,11 +433,13 @@ function removeIngredient(index: number) {
 			<Button
 				variant="outline"
 				@click="onCancel"
+				:disabled="isSubmitting"
 				>Отменить</Button
 			>
 			<Button
 				type="submit"
 				@click="onSubmit"
+				:disabled="isSubmitting"
 				>Сохранить</Button
 			>
 		</div>
