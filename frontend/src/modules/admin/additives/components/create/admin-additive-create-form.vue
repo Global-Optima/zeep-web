@@ -5,6 +5,7 @@ import { ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
 
 // UI Components
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
@@ -342,7 +343,7 @@ function removeIngredient(index: number) {
 											v-if="previewImage"
 											class="relative w-full h-48"
 										>
-											<img
+											<LazyImage
 												:src="previewImage"
 												alt="Preview"
 												class="border rounded-lg w-full h-full object-contain"

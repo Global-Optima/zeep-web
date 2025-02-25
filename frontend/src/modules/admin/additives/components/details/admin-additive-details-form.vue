@@ -5,6 +5,7 @@ import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
 
 // UI Components
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
@@ -353,10 +354,10 @@ function removeIngredient(index: number) {
 								v-if="additive.imageUrl"
 								class="relative border rounded-lg w-full h-48 overflow-hidden"
 							>
-								<img
+								<LazyImage
 									:src="additive.imageUrl"
 									alt="Product Image"
-									class="rounded-lg w-full h-full object-cover"
+									class="rounded-lg w-full h-full object-contain"
 								/>
 							</div>
 							<div

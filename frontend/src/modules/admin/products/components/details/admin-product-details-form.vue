@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
@@ -204,7 +205,7 @@ function selectCategory(category: ProductCategoryDTO) {
 								v-if="productDetails.imageUrl"
 								class="relative border rounded-lg w-full h-48 overflow-hidden"
 							>
-								<img
+								<LazyImage
 									:src="productDetails.imageUrl"
 									alt="Product Image"
 									class="rounded-lg w-full h-full object-contain"
