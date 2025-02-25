@@ -64,7 +64,6 @@ func TestStockMaterialService_GetStockMaterialByID_WithPreloadedData(t *testing.
 	}
 }
 
-// failed test
 func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.T) {
 	_ = ResetTestData(t)
 	module := tests.GetStockMaterialModule()
@@ -119,7 +118,6 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 	}
 }
 
-// test failed
 func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T) {
 	_ = ResetTestData(t)
 	module := tests.GetStockMaterialModule()
