@@ -34,9 +34,10 @@
 							@click="selectMaterial(additive)"
 						>
 							<div class="flex items-center gap-2">
-								<img
+								<LazyImage
 									:src="additive.imageUrl"
-									class="bg-gray-100 p-1 rounded-md w-16 h-16 object-contain"
+									alt="Изображение добавки"
+									class="rounded-md size-16 object-contain"
 								/>
 								<span>{{ additive.name }}</span>
 							</div>
@@ -78,6 +79,7 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import type { AdditiveDTO, AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 

@@ -16,10 +16,10 @@
 		>
 			<div class="bg-white shadow-gray-200 shadow-xl px-8 pb-6 rounded-b-[48px] w-full">
 				<div class="flex flex-col justify-center items-center">
-					<img
-						class="w-32 h-52 object-contain"
+					<LazyImage
 						src="https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png"
-						alt=""
+						alt="Изображение товара"
+						class="w-32 h-52 object-contain"
 					/>
 					<p class="mt-7 font-semibold text-3xl">{{ productDetails.name }}</p>
 					<p class="mt-1 text-slate-600 text-lg">{{ productDetails.description }}</p>
@@ -62,7 +62,8 @@
 </template>
 
 <script setup lang="ts">
-  import { formatPrice } from '@/core/utils/price.utils'
+  import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
+import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import type { StoreProductDetailsDTO, StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'

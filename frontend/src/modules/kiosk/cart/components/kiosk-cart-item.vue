@@ -1,9 +1,9 @@
 <template>
 	<div class="flex gap-4 sm:gap-8 bg-white p-4 sm:p-6 rounded-3xl">
 		<!-- Product Image -->
-		<img
+		<LazyImage
 			:src="item.product.imageUrl"
-			alt="Product Image"
+			alt="Изображение товара"
 			class="rounded w-16 sm:w-28 h-16 sm:h-28 object-contain"
 		/>
 
@@ -65,6 +65,7 @@
 </template>
 
 <script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { formatPrice } from '@/core/utils/price.utils'
 import { useCartStore, type CartItem } from "@/modules/kiosk/cart/stores/cart.store"
 import { Minus, Pencil, Plus, Trash } from 'lucide-vue-next'

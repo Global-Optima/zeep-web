@@ -9,11 +9,10 @@
     ]"
 		data-testid="additive-card"
 	>
-		<img
+		<LazyImage
 			:src="additive.imageUrl"
-			alt="Additive Image"
+			alt="Изображение добавки"
 			class="w-full h-24 object-contain"
-			data-testid="additive-image"
 		/>
 		<p
 			class="flex-grow mt-3 text-sm sm:text-base"
@@ -33,7 +32,7 @@
 				{{ isDefault ? formatPrice(0) : formatPrice(additive.storePrice) }}
 			</p>
 			<button
-				class="relative rounded-full w-6 sm:w-8 h-6 sm:h-8 focus:outline-none"
+				class="relative rounded-full focus:outline-none w-6 sm:w-8 h-6 sm:h-8"
 				:class="[
           isSelected ? 'bg-primary' : 'bg-gray-200',
           isDefault ? 'cursor-not-allowed opacity-50' : '',
@@ -52,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 
