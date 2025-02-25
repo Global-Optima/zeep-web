@@ -596,11 +596,9 @@ func (r *warehouseStockRepository) UpdateWarehouseStock(stock *data.WarehouseSto
 }
 
 func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint, filter *types.AvailableStockMaterialFilter) ([]data.StockMaterial, error) {
-
 	var stockMaterials []data.StockMaterial
 	var warehouseID uint
 
-	// Step 1: Retrieve WarehouseID linked to the provided StoreID
 	if err := r.db.
 		Model(&data.Store{}).
 		Select("warehouse_id").
@@ -614,7 +612,6 @@ func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint,
 		return nil, fmt.Errorf("no warehouse found for the given store ID: %d", storeID)
 	}
 
-	// Step 2: Query only stock materials that exist in the warehouse and have a quantity > 0
 	query := r.db.Model(&data.StockMaterial{}).
 		Select("DISTINCT stock_materials.*").
 		Joins("JOIN warehouse_stocks ON warehouse_stocks.stock_material_id = stock_materials.id").
@@ -626,7 +623,6 @@ func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint,
 		Preload("Ingredient.IngredientCategory").
 		Preload("Ingredient.Unit")
 
-	// Step 3: Apply search filter if provided
 	if filter.Search != nil && *filter.Search != "" {
 		search := "%" + *filter.Search + "%"
 		query = query.Where(`
@@ -636,13 +632,19 @@ func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint,
 			search, search, search)
 	}
 
-	// Step 4: Apply pagination and sorting using utility function
+	if filter.IngredientID != nil {
+		query = query.Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
+	}
+
+	if filter.StockMaterialID != nil {
+		query = query.Where("stock_materials.id = ?", *filter.StockMaterialID)
+	}
+
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
 
-	// Step 5: Execute the query and fetch stock materials
 	if err := query.Find(&stockMaterials).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch available stock materials: %w", err)
 	}
