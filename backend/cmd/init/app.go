@@ -128,7 +128,7 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
 	}
 
-	if err := censor.InitializeCensor(); err != nil {
+	if err := censor.InitCensor(); err != nil {
 		logger.GetZapSugaredLogger().Fatalf("Failed to initialize censor: %v", err)
 	}
 

@@ -22,6 +22,7 @@ import {
 import { Input } from '@/core/components/ui/input'
 import type { CreateSupplierDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import { ChevronLeft } from 'lucide-vue-next'
+import { phoneValidationSchema } from '@/core/validators/phone.validator'
 
 // Props & Events
 const emits = defineEmits<{
@@ -34,7 +35,7 @@ const createSupplierSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название поставщика'),
     contactEmail: z.string().email('Введите корректный email').min(1, 'Введите почтовый адрес'),
-    contactPhone: z.string().min(1, 'Введите телефон').regex(/^[0-9+()-\s]+$/, 'Введите корректный телефон'),
+    contactPhone: phoneValidationSchema,
     city: z.string().min(1, 'Введите город'),
     address: z.string().min(1, 'Введите адрес'),
   })
@@ -72,7 +73,7 @@ const onCancel = () => {
 				Создать поставщика
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -194,7 +195,7 @@ const onCancel = () => {
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"

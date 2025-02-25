@@ -92,7 +92,7 @@
 											<FormControl>
 												<Input
 													v-bind="componentField"
-													placeholder="+7 (___) ___-__-__"
+													placeholder="+7XXXXXXXXXX"
 													:readonly="readonly"
 												/>
 											</FormControl>
@@ -160,7 +160,7 @@
 							</Button>
 
 							<button
-								v-if="selectedFranchisee"
+								v-if="selectedFranchisee && !readonly"
 								@click="selectFranchisee(null)"
 							>
 								<X class="size-4 text-gray-600" />
@@ -241,6 +241,7 @@ import {
   FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { phoneValidationSchema } from '@/core/validators/phone.validator'
 import type { FranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
 import type { UpdateStoreDTO } from '@/modules/admin/stores/models/stores-dto.model'
 import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
@@ -267,11 +268,11 @@ const schema = toTypedSchema(
 		facilityAddress: z.object({
 			address: z.string().min(5, 'Адрес должен содержать минимум 5 символов'),
 		}),
-		contactPhone: z.string().min(7, 'Телефон должен содержать минимум 7 символов'),
+		contactPhone: phoneValidationSchema,
 		contactEmail: z.string().email('Введите действительный адрес электронной почты'),
 		storeHours: z.string().min(5, 'Часы работы должны быть указаны'),
     warehouseId: z.number().min(1, 'Введите склад'),
-    franchiseId: z.number().optional()
+    franchiseeId: z.number().optional()
 	}),
 )
 
@@ -286,7 +287,7 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
     contactPhone: store.contactPhone,
     contactEmail: store.contactEmail,
     storeHours: store.storeHours,
-    franchiseId: store.franchisee?.id,
+    franchiseeId: store.franchisee?.id,
   }
 })
 
@@ -301,7 +302,7 @@ const submitForm = handleSubmit((formValues) => {
     contactPhone: formValues.contactPhone,
     contactEmail: formValues.contactEmail,
     storeHours: formValues.storeHours,
-    franchiseId:  formValues.franchiseId ?? null
+    franchiseeId:  formValues.franchiseeId ?? null
   }
   emit('onSubmit', dto)
 })
@@ -322,12 +323,12 @@ function selectWarehouse(warehouse: WarehouseDTO) {
 function selectFranchisee(franchisee: FranchiseeDTO | null) {
   if (!franchisee) {
     selectedFranchisee.value = null
-    setFieldValue('franchiseId', undefined)
+    setFieldValue('franchiseeId', undefined)
     return
   }
 
   selectedFranchisee.value = franchisee
   openFranchiseeDialog.value = false
-  setFieldValue('franchiseId', franchisee.id)
+  setFieldValue('franchiseeId', franchisee.id)
 }
 </script>

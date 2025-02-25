@@ -8,7 +8,7 @@
 				</div>
 
 				<Button
-					v-if="isEditable"
+					v-if="canEdit && isEditable"
 					size="icon"
 					variant="ghost"
 					@click="onUpdateClick"
@@ -59,6 +59,8 @@ import {
   TableHeader,
   TableRow
 } from '@/core/components/ui/table'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { type StockRequestResponse, StockRequestStatus } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
@@ -71,6 +73,7 @@ const {stockRequest} = defineProps<{
 }>()
 
 const isEditable = computed(() => showEditButtonStatuses.includes(stockRequest.status))
+const canEdit = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
 
 const router = useRouter()
 

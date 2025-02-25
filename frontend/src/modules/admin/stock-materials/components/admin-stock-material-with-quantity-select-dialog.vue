@@ -58,7 +58,7 @@
 		</DialogContent>
 
 		<!-- Select Material Dialog -->
-		<AdminStockMaterialsSelectDialog
+		<AdminSelectAvailableToAddStockMaterialsDialog
 			:open="materialDialogOpen"
 			:initial-filter="initialFilter"
 			@close="materialDialogOpen = false"
@@ -78,9 +78,9 @@ import {
 } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 import { Label } from '@/core/components/ui/label'
-import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
 import type { StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
+import AdminSelectAvailableToAddStockMaterialsDialog from '@/modules/admin/warehouse-stocks/components/admin-select-available-to-add-stock-materials-dialog.vue'
 import { ref } from 'vue'
 
 const { open, initialFilter } = defineProps<{ open: boolean, initialFilter?: StockMaterialsFilter}>()

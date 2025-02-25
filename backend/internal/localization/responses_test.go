@@ -39,6 +39,13 @@ func TestResponseKeyBuilding(t *testing.T) {
 			optionalKey: []string{},
 			expectedKey: "responses.201-storeEmployee",
 		},
+		{
+			name:        "400 StoreStock onlyOneRequestPerDay",
+			status:      400,
+			component:   data.StoreStockComponent,
+			optionalKey: []string{"ONLY_ONE_REQUEST_PER_DAY"},
+			expectedKey: "responses.400-storeStock-onlyOneRequestPerDay",
+		},
 	}
 
 	for _, tt := range tests {

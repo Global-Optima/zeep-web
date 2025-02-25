@@ -5,6 +5,16 @@ import (
 )
 
 func MapToCustomerDTO(customer *data.Customer) *CustomerAdminDTO {
+	isVerified, isBanned := false, false
+
+	if customer.IsVerified != nil {
+		isVerified = *customer.IsVerified
+	}
+
+	if customer.IsBanned != nil {
+		isBanned = *customer.IsBanned
+	}
+
 	return &CustomerAdminDTO{
 		CustomerDTO: CustomerDTO{
 			ID:        customer.ID,
@@ -12,7 +22,7 @@ func MapToCustomerDTO(customer *data.Customer) *CustomerAdminDTO {
 			LastName:  customer.LastName,
 			Phone:     customer.Phone,
 		},
-		IsVerified: customer.IsVerified,
-		IsBanned:   customer.IsBanned,
+		IsVerified: isVerified,
+		IsBanned:   isBanned,
 	}
 }

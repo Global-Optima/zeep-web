@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
@@ -11,6 +12,8 @@ import { Camera, ChevronLeft, Video, X } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import { ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
+
+const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
 
 // Define emits
 const emits = defineEmits<{
@@ -46,7 +49,7 @@ const createProductSchema = toTypedSchema(
 );
 
 // Setup form with vee-validate
-const { handleSubmit, isSubmitting, setFieldValue } = useForm<CreateProductDTO>({
+const { handleSubmit, setFieldValue } = useForm<CreateProductDTO>({
   validationSchema: createProductSchema,
 });
 
@@ -116,6 +119,7 @@ function triggerVideoInput() {
 				size="icon"
 				type="button"
 				@click="onCancel"
+				:disabled="isSubmitting"
 			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
@@ -127,6 +131,7 @@ function triggerVideoInput() {
 				<Button
 					variant="outline"
 					type="button"
+					:disabled="isSubmitting"
 					@click="onCancel"
 					>Отменить</Button
 				>
@@ -226,10 +231,10 @@ function triggerVideoInput() {
 											v-if="previewImage"
 											class="relative w-full h-48"
 										>
-											<img
+											<LazyImage
 												:src="previewImage"
 												alt="Preview"
-												class="border rounded-lg w-full h-full object-cover"
+												class="border rounded-lg w-full h-full object-contain"
 											/>
 											<button
 												type="button"
@@ -335,6 +340,7 @@ function triggerVideoInput() {
 				variant="outline"
 				type="button"
 				@click="onCancel"
+				:disabled="isSubmitting"
 				>Отменить</Button
 			>
 			<Button

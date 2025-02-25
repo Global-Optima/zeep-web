@@ -99,8 +99,8 @@
     "200": "The request was successfully processed.",
     "201": "The resource was successfully created.",
 
-    "500-image-upload": "Failed to upload image. Please try again later.",
-    "500-video-upload": "Failed to upload video. Please try again later.",
+    "400-image-upload": "Invalid image data provided. Please check and try again.",
+    "400-video-upload": "Invalid video data provided. Please check and try again.",
 
     "500-order": "An unexpected error occurred with the order. Please try again later.",
     "500-order-create": "An unexpected error occurred while creating the order. Please try again later.",
@@ -110,17 +110,15 @@
     "200-order-update": "Order successfully updated.",
     "200-order-delete": "Order successfully deleted.",
 
-    "500-product": "An unexpected error occurred with the product. Please try again later.",
+    "500-product-get": "An unexpected error occurred while fetching product. Please try again later.",
+    "500-product-create": "An unexpected error occurred while creating product. Please try again later.",
+    "500-product-update": "An unexpected error occurred while updating product. Please try again later.",
+    "500-product-delete": "An unexpected error occurred while deleting product. Please try again later.",
+    "404-product": "Product not found.",
     "400-product": "Invalid product data provided. Please check and try again.",
     "201-product": "Product successfully created.",
     "200-product-update": "Product successfully updated.",
     "200-product-delete": "Product successfully deleted.",
-
-    "500-additive": "An unexpected error occurred with the additive. Please try again later.",
-    "400-additive": "Invalid additive data provided. Please check and try again.",
-    "201-additive": "Additive successfully created.",
-    "200-additive-update": "Additive successfully updated.",
-    "200-additive-delete": "Additive successfully deleted.",
 
     "500-productCategory": "An unexpected error occurred with the product category. Please try again later.",
     "400-productCategory": "Invalid product category data provided. Please check and try again.",
@@ -128,7 +126,31 @@
     "200-productCategory-update": "Product category successfully updated.",
     "200-productCategory-delete": "Product category successfully deleted.",
 
-    "500-additiveCategory": "An unexpected error occurred with the additive category. Please try again later.",
+    "500-productSize-get": "An unexpected error occurred while fetching product size. Please try again later.",
+    "500-productSize-create": "An unexpected error occurred while creating product size. Please try again later.",
+    "500-productSize-update": "An unexpected error occurred while updating product size. Please try again later.",
+    "500-productSize-delete": "An unexpected error occurred while deleting product size. Please try again later.",
+    "404-productSize": "Product size not found.",
+    "400-productSize": "Invalid product size data provided. Please check and try again.",
+    "201-productSize": "Product size successfully created.",
+    "200-productSize-update": "Product size successfully updated.",
+    "200-productSize-delete": "Product size successfully deleted.",
+
+    "500-additive-get": "An unexpected error occurred while fetching additive data. Please try again later.",
+    "500-additive-create": "An unexpected error occurred while creating additive. Please try again later.",
+    "500-additive-update": "An unexpected error occurred while updating additive data. Please try again later.",
+    "500-additive-delete": "An unexpected error occurred while deleting additive data. Please try again later.",
+    "404-additive": "Additive not found.",
+    "400-additive": "Invalid additive data provided. Please check and try again.",
+    "201-additive": "Additive successfully created.",
+    "200-additive-update": "Additive successfully updated.",
+    "200-additive-delete": "Additive successfully deleted.",
+
+    "500-additiveCategory-get": "An unexpected error occurred while fetching additive category data. Please try again later.",
+    "500-additiveCategory-create": "An unexpected error occurred while creating additive category. Please try again later.",
+    "500-additiveCategory-update": "An unexpected error occurred while updating additive category data. Please try again later.",
+    "500-additiveCategory-delete": "An unexpected error occurred while deleting additive category data. Please try again later.",
+    "404-additiveCategory": "Additive category not found.",
     "400-additiveCategory": "Invalid additive category data provided. Please check and try again.",
     "201-additiveCategory": "Additive category successfully created.",
     "200-additiveCategory-update": "Additive category successfully updated.",
@@ -137,6 +159,9 @@
     "500-stockRequests": "An unexpected error occurred with stock requests. Please try again later.",
     "403-stockRequests": "Access denied to the stock request resource.",
     "400-stockRequests": "Invalid stock request data provided. Please check and try again.",
+    "400-stockRequests-insufficientStock": "Insufficient stock to fulfill the request. Please check and try again.",
+    "400-stockRequests-existingRequest": "An open stock request already exists. Please check and try again.",
+    "400-stockRequests-onlyOneRequestPerDay": "Only one request allowed per day. Please fix and use the existing stock request.",
     "201-stockRequests": "Stock request successfully created.",
     "200-stockRequests-update": "Stock request successfully updated.",
     "200-stockRequests-delete": "Stock request successfully deleted.",
@@ -234,7 +259,8 @@
       "centralCatalogUpdateDetails": {
         "nameChange": "Name changed from {{.OldName}} to {{.NewName}}",
         "descriptionChange": "Description updated from {{.OldDescription}} to {{.NewDescription}}",
-        "imageUrlChange": "Image URL updated from {{.OldImageURL}} to {{.NewImageURL}}"
+        "imageUrlChange": "Image URL updated from {{.OldImageURL}} to {{.NewImageURL}}",
+        "categoryChange": "Category updated from {{.OldCategory}} to {{.NewCategory}}"
       },
 
       "storeStockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",

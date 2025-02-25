@@ -5,6 +5,7 @@ import { ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
 
 // UI Components
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
@@ -25,6 +26,8 @@ interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   unit: string
   category: string
 }
+
+const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
 
 const emits = defineEmits<{
   onSubmit: [dto: CreateAdditiveDTO]
@@ -77,8 +80,8 @@ function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
     const file = target.files[0];
-    setFieldValue('image', file); // Update form field
-    previewImage.value = URL.createObjectURL(file); // Create preview
+    setFieldValue('image', file);
+    previewImage.value = URL.createObjectURL(file);
   }
 }
 
@@ -145,6 +148,7 @@ function removeIngredient(index: number) {
 				variant="outline"
 				size="icon"
 				@click="onCancel"
+				:disabled="isSubmitting"
 			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
@@ -158,11 +162,13 @@ function removeIngredient(index: number) {
 					variant="outline"
 					type="button"
 					@click="onCancel"
+					:disabled="isSubmitting"
 					>Отменить</Button
 				>
 				<Button
 					type="submit"
 					@click="onSubmit"
+					:disabled="isSubmitting"
 					>Сохранить</Button
 				>
 			</div>
@@ -342,10 +348,10 @@ function removeIngredient(index: number) {
 											v-if="previewImage"
 											class="relative w-full h-48"
 										>
-											<img
+											<LazyImage
 												:src="previewImage"
 												alt="Preview"
-												class="border rounded-lg w-full h-full object-cover"
+												class="border rounded-lg w-full h-full object-contain"
 											/>
 											<button
 												type="button"
@@ -427,11 +433,13 @@ function removeIngredient(index: number) {
 			<Button
 				variant="outline"
 				@click="onCancel"
+				:disabled="isSubmitting"
 				>Отменить</Button
 			>
 			<Button
 				type="submit"
 				@click="onSubmit"
+				:disabled="isSubmitting"
 				>Сохранить</Button
 			>
 		</div>

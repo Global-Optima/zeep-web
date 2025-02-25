@@ -72,8 +72,9 @@ import { useQuery } from '@tanstack/vue-query'
 import { useDebounce } from '@vueuse/core'
 import { computed, reactive, ref } from 'vue'
 
-const { open } = defineProps<{
+const { open, initialFilter } = defineProps<{
 	open: boolean
+  initialFilter?: AvailableWarehouseStockMaterialsFilter
 }>()
 
 const emit = defineEmits<{
@@ -88,6 +89,7 @@ const localFilter = reactive<Partial<AvailableWarehouseStockMaterialsFilter>>({
 	pageSize: 10,
 })
 const mergedFilter = computed<AvailableWarehouseStockMaterialsFilter>(() => ({
+  ...(initialFilter ?? {}),
 	...localFilter,
 	search: debouncedSearchTerm.value.trim(),
 }))

@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	WEBP_FORMAT_KEY = ".webp"
-	MAX_IMAGE_SIZE  = 5 * 1024 * 1024 //5MB
+	IMAGE_FORM_DATA_KEY = "image"
+	WEBP_FORMAT_KEY     = ".webp"
+	MAX_IMAGE_SIZE      = 5 * 1024 * 1024 //5MB
 )
 
 func ConvertToWebp(img *image.Image) ([]byte, error) {
@@ -29,7 +30,7 @@ func ConvertToWebp(img *image.Image) ([]byte, error) {
 }
 
 func GetImageWithFormFile(c *gin.Context) (*multipart.FileHeader, error) {
-	file, err := c.FormFile("image")
+	file, err := c.FormFile(IMAGE_FORM_DATA_KEY)
 	if err != nil {
 		return nil, err
 	}

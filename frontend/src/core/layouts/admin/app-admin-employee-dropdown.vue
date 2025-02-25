@@ -48,7 +48,7 @@ const onLogoutClick = () => {
 const employeeRoute = computed(() => {
   const routeName = EMPLOYEE_DETAILS_ROUTE_NAMES[currentEmployee.type];
   return routeName
-    ? { name: routeName, params: { id: currentEmployee.id } }
+    ? { name: routeName, params: { id: currentEmployee.typeBasedId } }
     : null;
 });
 

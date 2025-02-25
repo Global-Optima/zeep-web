@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { phoneValidationSchema } from '@/core/validators/phone.validator'
 import type { SupplierDTO, UpdateSupplierDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
@@ -39,7 +40,7 @@ const createSupplierSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название поставщика'),
     contactEmail: z.string().email('Введите корректный email').min(1, 'Введите почтовый адрес'),
-    contactPhone: z.string().min(1, 'Введите телефон').regex(/^[0-9+()-\s]+$/, 'Введите корректный телефон'),
+    contactPhone: phoneValidationSchema,
     city: z.string().min(1, 'Введите город'),
     address: z.string().min(1, 'Введите адрес'),
   })
@@ -80,7 +81,7 @@ const onCancel = () => {
 			</h1>
 
 			<div
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
 				<Button
@@ -209,7 +210,7 @@ const onCancel = () => {
 
 		<!-- Footer -->
 		<div
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 			v-if="!readonly"
 		>
 			<Button

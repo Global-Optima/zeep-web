@@ -1,7 +1,7 @@
 <!-- src/components/ProductImage.vue -->
 <template>
 	<div class="relative overflow-y-auto no-scrollbar">
-		<img
+		<LazyImage
 			:src="imageUrl"
 			:alt="altText"
 			:class="cn('w-full object-cover h-[500px]', imageClass)"
@@ -13,6 +13,7 @@
 </template>
 
 <script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { cn } from '@/core/utils/tailwind.utils'
 
 const {imageUrl, altText, imageClass, overlayClass} = defineProps<{

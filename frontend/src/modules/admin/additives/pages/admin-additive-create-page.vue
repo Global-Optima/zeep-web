@@ -2,6 +2,7 @@
 	<AdminAdditiveCreateForm
 		@onSubmit="handleCreate"
 		@onCancel="handleCancel"
+		:isSubmitting="isPending"
 	/>
 </template>
 
@@ -17,7 +18,7 @@ const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
 
-const createMutation = useMutation({
+const {mutate, isPending} = useMutation({
 	mutationFn: (dto: CreateAdditiveDTO) => additivesService.createAdditive(dto),
 	onMutate: () => {
 		toast({
@@ -43,7 +44,7 @@ const createMutation = useMutation({
 })
 
 function handleCreate(dto: CreateAdditiveDTO) {
-	createMutation.mutate(dto)
+	mutate(dto)
 }
 
 function handleCancel() {

@@ -29,8 +29,8 @@
 
 					<!-- Text Content -->
 					<div class="bottom-64 left-12 z-10 absolute">
-						<p class="text-2xl text-white sm:text-5xl">{{ slide.title }}</p>
-						<p class="mt-2 sm:mt-4 font-medium text-3xl text-white sm:text-5xl">
+						<p class="text-white text-2xl sm:text-5xl">{{ slide.title }}</p>
+						<p class="mt-2 sm:mt-4 font-medium text-white text-3xl sm:text-5xl">
 							{{ formatPrice(slide.price) }}
 						</p>
 					</div>

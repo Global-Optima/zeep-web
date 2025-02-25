@@ -100,7 +100,7 @@ type UpdateAdditiveDTO struct {
 	Size               *int                    `form:"size" binding:"omitempty,gt=0"`
 	UnitID             *uint                   `form:"unitId" binding:"omitempty,gt=0"`
 	AdditiveCategoryID *uint                   `form:"additiveCategoryId" binding:"omitempty,gt=0"`
-	Ingredients        []SelectedIngredientDTO `form:"ingredients" binding:"omitempty,dive"`
+	Ingredients        []SelectedIngredientDTO `json:"-"`
 	Image              *multipart.FileHeader
 }
 

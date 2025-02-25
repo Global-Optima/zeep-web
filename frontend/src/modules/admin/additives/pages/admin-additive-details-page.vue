@@ -7,6 +7,7 @@
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
 		:readonly="!canUpdateAdditives"
+		:isSubmitting="isPending"
 	/>
 </template>
 
@@ -35,7 +36,7 @@ const { data: additiveDetails } = useQuery({
 	enabled: !isNaN(Number(additiveId)),
 })
 
-const updateMutation = useMutation({
+const {mutate, isPending} = useMutation({
 	mutationFn: ({ id, dto }: { id: number; dto: UpdateAdditiveDTO }) =>
 		additivesService.updateAdditive(id, dto),
 	onMutate: () => {
@@ -71,7 +72,7 @@ function handleUpdate(data: UpdateAdditiveDTO) {
 		return router.back()
 	}
 
-	updateMutation.mutate({ id: Number(additiveId), dto: data })
+	mutate({ id: Number(additiveId), dto: data })
 }
 
 function handleCancel() {

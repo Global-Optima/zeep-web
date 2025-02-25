@@ -35,7 +35,7 @@
 
 						<Button
 							variant="outline"
-							@click="$router.push(`/admin/employees/${employeeId}/audit`)"
+							@click="$router.push(`/admin/employees/${employee.employeeId}/audit`)"
 							>Еще</Button
 						>
 					</div>
@@ -63,7 +63,7 @@ import AdminEmployeesDetailsInfo from '@/modules/admin/employees/components/deta
 import AdminEmployeesDetailsShifts from '@/modules/admin/employees/components/details/admin-employees-details-shifts.vue'
 import { employeeAuditService } from '@/modules/admin/employees/services/employees-audit.service'
 import { useQuery } from '@tanstack/vue-query'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 interface Shift {
@@ -82,8 +82,8 @@ const { data: employee } = useQuery({
 
 const { data: employeeAudits } = useQuery({
 	queryKey: ['admin-audits', employeeId],
-	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employeeId) }),
-	enabled: !isNaN(Number(employeeId)),
+	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employee.value?.employeeId) }),
+	enabled: computed(() => Boolean(employee.value?.employeeId)),
 })
 
 const employeeShifts = ref<Shift[]>([

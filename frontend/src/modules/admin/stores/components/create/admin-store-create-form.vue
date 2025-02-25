@@ -89,7 +89,7 @@
 											<FormControl>
 												<Input
 													v-bind="componentField"
-													placeholder="+7 (___) ___-__-__"
+													placeholder="+7XXXXXXXXXX"
 												/>
 											</FormControl>
 											<FormMessage />
@@ -227,6 +227,7 @@ import {
   FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { phoneValidationSchema } from '@/core/validators/phone.validator'
 import AdminSelectFranchiseeDialog from '@/modules/admin/franchisees/components/admin-select-franchisee-dialog.vue'
 import type { FranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
 import type { CreateStoreDTO } from '@/modules/admin/stores/models/stores-dto.model'
@@ -252,11 +253,11 @@ const schema = toTypedSchema(
 		facilityAddress: z.object({
 			address: z.string().min(5, 'Адрес должен содержать минимум 5 символов'),
 		}),
-		contactPhone: z.string().min(7, 'Телефон должен содержать минимум 7 символов'),
+		contactPhone: phoneValidationSchema,
 		contactEmail: z.string().email('Введите действительный адрес электронной почты'),
 		storeHours: z.string().min(5, 'Часы работы должны быть указаны'),
     warehouseId: z.number().min(1, 'Введите склад'),
-    franchiseId: z.number().optional()
+    franchiseeId: z.number().optional()
 	}),
 )
 
@@ -277,7 +278,7 @@ const submitForm = handleSubmit((formValues) => {
     contactPhone: formValues.contactPhone,
     contactEmail: formValues.contactEmail,
     storeHours: formValues.storeHours,
-    franchiseId:  formValues.franchiseId
+    franchiseeId:  formValues.franchiseeId
   }
 
 	emit('onSubmit', dto)
@@ -304,12 +305,12 @@ const selectedFranchisee = ref<FranchiseeDTO | null>(null)
 function selectFranchisee(franchisee: FranchiseeDTO | null) {
   if (!franchisee) {
     selectedFranchisee.value = null
-    setFieldValue('franchiseId', undefined)
+    setFieldValue('franchiseeId', undefined)
     return
   }
 
   selectedFranchisee.value = franchisee
   openFranchiseeDialog.value = false
-  setFieldValue('franchiseId', franchisee.id)
+  setFieldValue('franchiseeId', franchisee.id)
 }
 </script>

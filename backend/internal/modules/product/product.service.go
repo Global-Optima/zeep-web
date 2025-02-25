@@ -2,13 +2,13 @@ package product
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -84,15 +84,16 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 		return 0, wrappedErr
 	}
 
-	imageUrl, videoUrl, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, dto.Video)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to convert and upload media for productID = %d: %w", product.ID, err)
-		s.logger.Error(wrappedErr)
-		return 0, wrappedErr
+	if dto.Image != nil || dto.Video != nil {
+		imageUrl, videoUrl, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, dto.Video)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to convert and upload media for productID = %d: %w", product.ID, err)
+			s.logger.Error(wrappedErr)
+			return 0, wrappedErr
+		}
+		product.ImageURL = data.S3ImageKey(imageUrl)
+		product.VideoURL = data.S3VideoKey(videoUrl)
 	}
-	product.ImageURL = data.S3ImageKey(imageUrl)
-	product.VideoURL = data.S3VideoKey(videoUrl)
-	logrus.Info(imageUrl, videoUrl)
 
 	productID, err := s.repo.CreateProduct(product)
 	if err != nil {
@@ -118,7 +119,6 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 }
 
 func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) (*types.ProductDTO, error) {
-
 	product := types.UpdateProductToModel(dto)
 
 	oldProduct, err := s.repo.GetProductByID(productID)
@@ -156,18 +156,20 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 
 	changes := types.GenerateProductChanges(oldProduct, dto)
 
-	notificationDetails := &details.CentralCatalogUpdateDetails{
-		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           productID,
-			FacilityName: "Central Catalog",
-		},
-		Changes: changes,
-	}
+	if len(changes) != 0 {
+		notificationDetails := &details.CentralCatalogUpdateDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           productID,
+				FacilityName: "Central Catalog",
+			},
+			Changes: changes,
+		}
 
-	err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to send notification: %w", err)
-		s.logger.Error(wrappedErr)
+		err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to send notification: %w", err)
+			s.logger.Error(wrappedErr)
+		}
 	}
 
 	oldProductDto := types.MapToProductDTO(*oldProduct)
