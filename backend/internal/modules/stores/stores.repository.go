@@ -126,7 +126,7 @@ func (r *storeRepository) GetStores(filter *types.StoreFilter) ([]data.Store, er
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("name ILIKE ? OR contact_phone ILIKE = ? OR contact_email ILIKE = ?",
+		query = query.Where("name ILIKE ? OR contact_phone ILIKE ? OR contact_email ILIKE ?",
 			searchTerm, searchTerm, searchTerm)
 	}
 
