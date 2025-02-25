@@ -58,9 +58,23 @@ func (r *stockMaterialCategoryRepository) GetAll(filter types.StockMaterialCateg
 }
 
 func (r *stockMaterialCategoryRepository) Update(id uint, updates data.StockMaterialCategory) error {
-	return r.db.Model(&data.StockMaterialCategory{}).Where("id = ?", id).Updates(updates).Error
+	result := r.db.Model(&data.StockMaterialCategory{}).Where("id = ?", id).Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *stockMaterialCategoryRepository) Delete(id uint) error {
-	return r.db.Delete(&data.StockMaterialCategory{}, id).Error
+	result := r.db.Delete(&data.StockMaterialCategory{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
