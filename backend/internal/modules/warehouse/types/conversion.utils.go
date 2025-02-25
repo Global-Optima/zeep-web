@@ -50,12 +50,22 @@ func ToWarehouseModel(dto CreateWarehouseDTO, facilityAddressID uint) data.Wareh
 func UpdateWarehouseToModel(dto *UpdateWarehouseDTO) *data.Warehouse {
 	warehouse := &data.Warehouse{}
 
-	if dto.FacilityAddressID != nil {
-		warehouse.FacilityAddressID = *dto.FacilityAddressID
+	if dto.FacilityAddress.Address != "" {
+		warehouse.FacilityAddress.Address = dto.FacilityAddress.Address
 	}
+
+	if dto.FacilityAddress.Latitude != nil {
+		warehouse.FacilityAddress.Latitude = dto.FacilityAddress.Latitude
+	}
+
+	if dto.FacilityAddress.Longitude != nil {
+		warehouse.FacilityAddress.Longitude = dto.FacilityAddress.Longitude
+	}
+
 	if dto.RegionID != nil {
 		warehouse.RegionID = *dto.RegionID
 	}
+
 	if dto.Name != nil {
 		warehouse.Name = *dto.Name
 	}
