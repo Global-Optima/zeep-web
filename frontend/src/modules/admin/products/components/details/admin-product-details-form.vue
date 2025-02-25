@@ -207,7 +207,7 @@ function selectCategory(category: ProductCategoryDTO) {
 								<img
 									:src="productDetails.imageUrl"
 									alt="Product Image"
-									class="rounded-lg w-full h-full object-cover"
+									class="rounded-lg w-full h-full object-contain"
 								/>
 							</div>
 							<div

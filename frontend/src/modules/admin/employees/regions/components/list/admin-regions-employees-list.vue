@@ -56,6 +56,7 @@ import {
 } from '@/core/components/ui/table'
 import { EMPLOYEE_ROLES_FORMATTED } from '@/modules/admin/employees/models/employees.models'
 import type { StoreEmployeeDTO } from '@/modules/admin/employees/stores/models/store-employees.model'
+import { formatPhoneNumber } from '@/core/utils/fomat-phone-number.utils'
 
 const {employees} = defineProps<{employees: StoreEmployeeDTO[]}>()
 
@@ -64,12 +65,6 @@ const router = useRouter()
 // Navigate to employee details
 const goToEmployee = (employeeId: number) => {
   router.push(`/admin/employees/region/${employeeId}`)
-}
-
-// Format phone number for display
-//TODO: make format number as common util, and regexp
-const formatPhoneNumber = (phone: string) => {
-  return phone.replace(/(\+7)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 ($2) $3-$4-$5')
 }
 
 // Status colors and formatted text

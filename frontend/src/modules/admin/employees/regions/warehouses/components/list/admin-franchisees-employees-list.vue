@@ -54,6 +54,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { formatPhoneNumber } from '@/core/utils/fomat-phone-number.utils'
 import { EMPLOYEE_ROLES_FORMATTED } from '@/modules/admin/employees/models/employees.models'
 import type { StoreEmployeeDTO } from '@/modules/admin/employees/stores/models/store-employees.model'
 
@@ -65,12 +66,6 @@ const router = useRouter()
 const goToEmployee = (employeeId: number) => {
   router.push(`/admin/employees/franchisee/${employeeId}`)
 }
-
-// Format phone number for display
-const formatPhoneNumber = (phone: string) => {
-  return phone.replace(/(\+7)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 ($2) $3-$4-$5')
-}
-
 
 // Status colors and formatted text
 const STATUS_COLOR: Record<string, string> = {

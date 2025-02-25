@@ -102,7 +102,7 @@
 									<Input
 										type="tel"
 										v-bind="componentField"
-										placeholder="+7 (___) ___-__-__"
+										placeholder="+7XXXXXXXXXX"
 									/>
 								</FormControl>
 								<FormMessage />
@@ -199,6 +199,7 @@
 </template>
 
 <script setup lang="ts">
+import PasswordInput from '@/core/components/password-input/PasswordInput.vue'
 import { Button } from '@/core/components/ui/button'
 import {
   Card,
@@ -219,6 +220,7 @@ import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import { Switch } from '@/core/components/ui/switch'
 import { passwordValidationSchema } from '@/core/validators/password.validator'
+import { phoneValidationSchema } from '@/core/validators/phone.validator'
 import { EmployeeRole, type CreateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
@@ -240,7 +242,7 @@ const schema = toTypedSchema(
 		lastName: z.string().min(2, 'Фамилия должна содержать минимум 2 символа').max(50, 'Фамилия должна содержать не более 50 символов'),
 		role: z.nativeEnum(EmployeeRole),
 		email: z.string().email('Введите действительный адрес электронной почты'),
-		phone: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
+		phone: phoneValidationSchema,
     password: passwordValidationSchema,
     isActive: z.boolean(),
 	})

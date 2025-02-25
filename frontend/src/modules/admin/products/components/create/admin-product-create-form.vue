@@ -229,7 +229,7 @@ function triggerVideoInput() {
 											<img
 												:src="previewImage"
 												alt="Preview"
-												class="border rounded-lg w-full h-full object-cover"
+												class="border rounded-lg w-full h-full object-contain"
 											/>
 											<button
 												type="button"
