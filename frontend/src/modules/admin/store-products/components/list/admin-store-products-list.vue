@@ -2,7 +2,7 @@
 	<Table>
 		<TableHeader>
 			<TableRow>
-				<TableHead class="hidden w-[100px] sm:table-cell"> </TableHead>
+				<TableHead class="hidden sm:table-cell w-[100px]"> </TableHead>
 				<TableHead>Название</TableHead>
 				<TableHead class="hidden md:table-cell">Категория</TableHead>
 				<TableHead>Цена</TableHead>
@@ -18,12 +18,10 @@
 				@click="onProductClick(product.id)"
 			>
 				<TableCell class="hidden sm:table-cell">
-					<img
+					<LazyImage
 						:src="product.imageUrl"
 						alt="Изображение товара"
-						class="bg-gray-100 p-1 rounded-md aspect-square object-contain"
-						height="64"
-						width="64"
+						class="rounded-md size-16 object-contain aspect-square"
 					/>
 				</TableCell>
 				<TableCell class="font-medium">
@@ -36,11 +34,7 @@
 					{{ formatPrice(product.storePrice) }}
 				</TableCell>
 				<TableCell class="hidden md:table-cell">
-					<div
-						:class="[
-								product.isAvailable ? 'text-green-600' : 'text-red-500',
-							]"
-					>
+					<div :class="[product.isAvailable ? 'text-green-600' : 'text-red-500']">
 						{{ product.isAvailable ? 'Доступен' : 'Недоступен' }}
 					</div>
 				</TableCell>
@@ -59,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import Button from '@/core/components/ui/button/Button.vue'
 import {
   Table,
@@ -76,30 +71,28 @@ import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
-const router = useRouter()
-const queryClient = useQueryClient()
+const router = useRouter();
+const queryClient = useQueryClient();
 
-const {storeProducts} = defineProps<{storeProducts: StoreProductDTO[]}>()
+const { storeProducts } = defineProps<{ storeProducts: StoreProductDTO[] }>();
 
-const {mutate: deleteStoreProduct} = useMutation({
-		mutationFn: (id: number) => storeProductsService.deleteStoreProduct(id),
-		onSuccess: () => {
-			toast({title: "Товар удален из кафе"})
-			queryClient.invalidateQueries({queryKey: ['admin-store-products']})
-		},
-		onError: () => {
-      toast({title: "Произошла ошибка при удалении товара"})
-		},
-})
+const { mutate: deleteStoreProduct } = useMutation({
+	mutationFn: (id: number) => storeProductsService.deleteStoreProduct(id),
+	onSuccess: () => {
+		toast({ title: "Товар удален из кафе" });
+		queryClient.invalidateQueries({ queryKey: ['admin-store-products'] });
+	},
+	onError: () => {
+		toast({ title: "Произошла ошибка при удалении товара" });
+	},
+});
 
 const onProductClick = (storeProductId: number) => {
-  router.push(`/admin/store-products/${storeProductId}`);
+	router.push(`/admin/store-products/${storeProductId}`);
 };
 
 const onDeleteProductClick = (e: Event, id: number) => {
-  e.stopPropagation()
-  deleteStoreProduct(id)
-}
+	e.stopPropagation();
+	deleteStoreProduct(id);
+};
 </script>
-
-<style scoped></style>

@@ -5,11 +5,10 @@
 		data-testid="product-card"
 	>
 		<div>
-			<img
-				:src="'https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png'"
-				alt="Product Image"
+			<LazyImage
+				src="https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png"
+				alt="Изображение товара"
 				class="rounded-lg w-full h-44 sm:h-60 object-contain"
-				data-testid="product-image"
 			/>
 
 			<h3
@@ -32,7 +31,8 @@
 </template>
 
 <script setup lang="ts">
- import { formatPrice } from '@/core/utils/price.utils'
+ import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
+import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { useCurrentProductStore } from '@/modules/kiosk/products/components/hooks/use-current-product.hook'
 

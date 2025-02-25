@@ -1,5 +1,6 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import { buildFormData } from '@/core/utils/request-form-data-builder.utils'
 import type {
 	CreateProductCategoryDTO,
 	CreateProductDTO,
@@ -39,12 +40,19 @@ class ProductsService {
 		}
 	}
 
-	async createProduct(data: CreateProductDTO) {
+	async createProduct(product: CreateProductDTO) {
+		const formData = buildFormData<CreateProductDTO>(product)
+
 		try {
-			const response = await apiClient.post<void>(`/products`, data)
+			const response = await apiClient.post('/products', formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			})
+
 			return response.data
 		} catch (error) {
-			console.error('Failed to create product: ', error)
+			console.error('Error creating product:', error)
 			throw error
 		}
 	}

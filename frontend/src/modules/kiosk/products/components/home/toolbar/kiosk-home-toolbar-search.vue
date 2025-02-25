@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="relative flex-grow bg-white bg-clip-padding bg-opacity-70 backdrop-filter backdrop-blur-sm border border-slate-100 rounded-full"
+		class="relative bg-white bg-clip-padding bg-opacity-70 backdrop-filter backdrop-blur-sm border border-slate-100 rounded-full"
 		data-testid="search-input-container"
 	>
 		<!-- Collapsed State (Icon Only) -->

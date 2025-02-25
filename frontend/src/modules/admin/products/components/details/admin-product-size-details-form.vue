@@ -5,6 +5,7 @@ import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
 
 // UI Components
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import Checkbox from '@/core/components/ui/checkbox/Checkbox.vue'
@@ -374,9 +375,10 @@ function selectUnit(unit: UnitDTO) {
 								:key="additive.additiveId"
 							>
 								<TableCell>
-									<img
+									<LazyImage
 										:src="additive.imageUrl"
-										class="bg-gray-100 p-1 rounded-md w-16 h-16 object-contain"
+										alt="Изображение добавки"
+										class="rounded-md size-16 object-contain"
 									/>
 								</TableCell>
 								<TableCell>{{ additive.name }}</TableCell>
@@ -384,7 +386,7 @@ function selectUnit(unit: UnitDTO) {
 								<TableCell>
 									<Checkbox
 										type="checkbox"
-										class="text-center size-6"
+										class="size-6 text-center"
 										:checked="additive.isDefault"
 										:disabled="readonly"
 										@update:checked="v => additive.isDefault = v"
