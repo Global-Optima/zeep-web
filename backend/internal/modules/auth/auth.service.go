@@ -53,8 +53,12 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*types.To
 		return nil, errors.New("this employee is not registered")
 	}
 
+	if employee.IsActive == nil || !*employee.IsActive {
+		return nil, types.ErrInactiveEmployee
+	}
+
 	if err := utils.ComparePassword(employee.HashedPassword, password); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, types.ErrInvalidCredentials
 	}
 
 	employeeData, err := types.MapEmployeeToClaimsData(employee)
@@ -143,8 +147,8 @@ func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDT
 		LastName:   input.LastName,
 		Password:   hashedPassword,
 		Phone:      input.Phone,
-		IsVerified: false,
-		IsBanned:   false,
+		IsVerified: nil,
+		IsBanned:   nil,
 	}
 
 	id, err := s.repo.CreateCustomer(customer)
@@ -171,8 +175,12 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*types.To
 		return nil, errors.New("this Customer is not registered")
 	}
 
+	if customer.IsBanned != nil || !*customer.IsBanned {
+		return nil, types.ErrBannedCustomer
+	}
+
 	if err := utils.ComparePassword(customer.Password, password); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, types.ErrInvalidCredentials
 	}
 
 	employeeData := types.MapCustomerToClaimsData(customer)

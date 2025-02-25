@@ -178,6 +178,7 @@ func (r *storeStockRepository) GetStockList(storeID uint, filter *types.GetStock
 	query := r.db.Model(&data.StoreStock{}).
 		Preload("Ingredient.Unit").
 		Preload("Ingredient.IngredientCategory").
+		Joins("JOIN ingredients ON ingredient_id = ingredients.id").
 		Where("store_id = ?", storeID)
 
 	if filter.LowStockOnly != nil && *filter.LowStockOnly {

@@ -42,7 +42,7 @@ func TestProductEndpoints(t *testing.T) {
 				Method:      http.MethodPost,
 				URL:         "/api/test/products",
 				FormData: map[string]string{
-					"name":        "Americano",
+					"name":        "New Americano",
 					"description": "A smooth coffee with milk",
 					"categoryId":  "2",
 				},
@@ -114,6 +114,18 @@ func TestProductEndpoints(t *testing.T) {
 
 	t.Run("Update a Product", func(t *testing.T) {
 		testCases := []utils.TestCase{
+			{
+				Description: "Update product",
+				Method:      http.MethodPut,
+				URL:         "/api/test/products/1",
+				FormData: map[string]string{
+					"name":        "Updated Latte",
+					"description": "A smooth coffee with milk",
+					"categoryId":  "1",
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
 			{
 				Description: "Update product with an image",
 				Method:      http.MethodPut,
