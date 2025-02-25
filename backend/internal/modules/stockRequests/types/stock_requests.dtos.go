@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -63,3 +64,9 @@ type GetStockRequestsFilter struct {
 
 	Statuses []data.StockRequestStatus `form:"statuses[]"`
 }
+
+var (
+	ErrExistingRequest   = errors.New("existing stock request found")
+	ErrInsufficientStock = errors.New("insufficient stock to fulfill the request")
+	ErrOneRequestPerDay  = errors.New("only one request allowed per day")
+)

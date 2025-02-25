@@ -54,7 +54,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		return 0, "", fmt.Errorf("failed to check for open cart: %w", err)
 	}
 	if existingRequest != nil {
-		return 0, "", fmt.Errorf("открытая корзина запроса уже существует")
+		return 0, "", types.ErrExistingRequest
 	}
 
 	store, err := s.repo.GetStoreWarehouse(storeID)
@@ -388,8 +388,7 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 				return fmt.Errorf("failed to send out of stock notification: %w", err)
 			}
 
-			return fmt.Errorf("insufficient stock for material '%s' (ID: %d). Required: %.2f, Available: %.2f",
-				ingredient.StockMaterial.Name, ingredient.StockMaterialID, ingredient.Quantity, stockQuantity)
+			return types.ErrInsufficientStock
 		}
 
 		updatedStock, err := s.repo.DeductWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity)

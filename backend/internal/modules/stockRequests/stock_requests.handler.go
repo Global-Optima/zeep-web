@@ -56,6 +56,10 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 
 	id, storeName, err := h.service.CreateStockRequest(storeID, req)
 	if err != nil {
+		if errors.Is(err, types.ErrExistingRequest) {
+			localization.SendLocalizedResponseWithKey(c, types.Response400StockRequestExistingRequest)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
@@ -268,6 +272,10 @@ func (h *StockRequestHandler) SetProcessedStatus(c *gin.Context) {
 
 	request, err := h.service.SetProcessedStatus(stockRequestID)
 	if err != nil {
+		if errors.Is(err, types.ErrOneRequestPerDay) {
+			localization.SendLocalizedResponseWithKey(c, types.Response400StockRequestOnlyOneRequestPerDay)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
@@ -296,6 +304,10 @@ func (h *StockRequestHandler) SetInDeliveryStatus(c *gin.Context) {
 
 	request, err := h.service.SetInDeliveryStatus(stockRequestID)
 	if err != nil {
+		if errors.Is(err, types.ErrInsufficientStock) {
+			localization.SendLocalizedResponseWithKey(c, types.Response400StockRequestInsufficientStock)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}

@@ -2,6 +2,7 @@ package product
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -118,7 +119,6 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 }
 
 func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) (*types.ProductDTO, error) {
-
 	product := types.UpdateProductToModel(dto)
 
 	oldProduct, err := s.repo.GetProductByID(productID)
@@ -156,18 +156,20 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 
 	changes := types.GenerateProductChanges(oldProduct, dto)
 
-	notificationDetails := &details.CentralCatalogUpdateDetails{
-		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           productID,
-			FacilityName: "Central Catalog",
-		},
-		Changes: changes,
-	}
+	if len(changes) != 0 {
+		notificationDetails := &details.CentralCatalogUpdateDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           productID,
+				FacilityName: "Central Catalog",
+			},
+			Changes: changes,
+		}
 
-	err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to send notification: %w", err)
-		s.logger.Error(wrappedErr)
+		err = s.notificationService.NotifyCentralCatalogUpdate(notificationDetails)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to send notification: %w", err)
+			s.logger.Error(wrappedErr)
+		}
 	}
 
 	oldProductDto := types.MapToProductDTO(*oldProduct)
