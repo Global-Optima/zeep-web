@@ -13,14 +13,15 @@ const handleModalClose = () => {
 </script>
 
 <template>
-	<div class="flex justify-center min-h-screen overflow-hidden">
+	<div class="flex justify-center overflow-hidden">
 		<SwipeModal
 			:model-value="isModalOpen"
 			@update:model-value="currentProductStore.closeModal"
 			snapPoint="95dvh"
 			class="bg-white"
 		>
-			<div class="rounded-md w-full h-full no-scrollbar">
+			<!-- Scrollable Content -->
+			<div class="relative rounded-md w-full h-full overflow-y-auto no-scrollbar">
 				<KioskDetailsModalContent
 					v-if="currentProductId"
 					:productId="currentProductId"
@@ -52,18 +53,17 @@ const handleModalClose = () => {
   }
 }
 
-
-:deep(.swipe-modal-content>.panel) {
+:deep(.swipe-modal-content > .panel) {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-:deep(.swipe-modal-content>.panel)::-webkit-scrollbar {
-		display: none;
+:deep(.swipe-modal-content > .panel)::-webkit-scrollbar {
+	display: none;
 }
 
 :deep(.swipe-modal-drag-handle-wrapper) {
-  background-color: #FFFFFFFF;
+  background: #fff;
   border: none;
 }
 </style>

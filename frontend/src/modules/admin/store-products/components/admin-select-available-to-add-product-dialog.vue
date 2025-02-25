@@ -37,9 +37,10 @@
 							@click="selectProducts(product)"
 						>
 							<div class="flex items-center gap-2">
-								<img
+								<LazyImage
 									:src="product.imageUrl"
-									class="bg-gray-100 p-1 rounded-md w-16 h-16 object-contain"
+									alt="Изображение товара"
+									class="rounded-md size-16 object-contain"
 								/>
 								<span>{{ product.name }}</span>
 							</div>
@@ -81,6 +82,7 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import type { ProductDetailsDTO, ProductsFilterDTO } from '@/modules/kiosk/products/models/product.model'
 

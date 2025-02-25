@@ -1,5 +1,5 @@
 import { useToast } from '@/core/components/ui/toast'
-import { getSavedBarcodeSettings, useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
+import { getSavedQRSettings, useQRPrinter } from '@/core/hooks/use-qr-print.hook'
 import type {
 	OrderDTO,
 	OrderStatus,
@@ -17,7 +17,7 @@ const state = reactive<{ allOrders: OrderDTO[] }>({
 	allOrders: [],
 })
 
-const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/v1'
+const wsUrl = import.meta.env.VITE_WS_URL || 'ws://example:8080/api/v1'
 
 /**
  * Convert a raw OrderDTO into a deeply reactive object.
@@ -50,7 +50,7 @@ function sortOrders(orderList: OrderDTO[]): OrderDTO[] {
 
 export function useOrderEventsService(initialFilter: OrderFilterOptions = {}) {
 	const { toast } = useToast()
-	const { printBarcode } = useBarcodePrinter()
+	const { printQR } = useQRPrinter()
 
 	// WebSocket URL includes timezone, if desired
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -173,31 +173,31 @@ export function useOrderEventsService(initialFilter: OrderFilterOptions = {}) {
 	 * If it's truly new, print barcodes.
 	 */
 	async function handleOrderCreated(newOrder: OrderDTO) {
+		// Upsert the order (add to state or update)
 		const [reactiveOrder, isNew] = upsertOrder(newOrder)
-		if (!isNew) return // If the order was already there, skip printing
+		if (!isNew) return // If order is not new, skip printing
 
-		const currentBaristaBarcodeSettings = getSavedBarcodeSettings()
+		// Load saved QR settings from storage
+		const currentBaristaQRSettings = getSavedQRSettings()
 
-		// Print barcodes for suborders if needed
 		try {
-			await Promise.all(
-				reactiveOrder.subOrders.map(async sub => {
-					const name = `${sub.productSize.productName} ${sub.productSize.sizeName}`
-					await printBarcode(
-						name,
-						`suborder-${sub.id}`,
-						currentBaristaBarcodeSettings.width,
-						currentBaristaBarcodeSettings.height,
-						{ showModal: false },
-					)
-					console.log(`Suborder with id ${sub.id} printed`)
-				}),
-			)
+			// Use for-loop to ensure sequential printing
+			for (const sub of reactiveOrder.subOrders) {
+				const name = `${sub.productSize.productName} ${sub.productSize.sizeName}`
+				await printQR(
+					name,
+					`suborder-${sub.id}`, // QR code value
+					currentBaristaQRSettings.width,
+					currentBaristaQRSettings.height,
+					{ showModal: false }, // Silent printing
+				)
+				console.log(`✅ Suborder with id ${sub.id} printed`)
+			}
 		} catch (err) {
-			console.error('Ошибка при печати штрих-кода:', err)
+			console.error('Ошибка при печати QR-кода:', err)
 			toast({
 				title: 'Ошибка печати',
-				description: 'Не удалось напечатать один или несколько штрих-кодов.',
+				description: 'Не удалось напечатать один или несколько QR-кодов.',
 				variant: 'destructive',
 			})
 		}

@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import * as z from 'zod'
 
 // UI Components
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import {
@@ -325,9 +326,10 @@ function selectUnit(unit: UnitDTO) {
 								:key="additive.additiveId"
 							>
 								<TableCell>
-									<img
+									<LazyImage
 										:src="additive.imageUrl"
-										class="bg-gray-100 p-1 rounded-md w-16 h-16 object-contain"
+										alt="Изображение добавки"
+										class="rounded-md size-16 object-contain"
 									/>
 								</TableCell>
 								<TableCell>{{ additive.name }}</TableCell>

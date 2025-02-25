@@ -1,5 +1,6 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
+import { buildFormData } from '@/core/utils/request-form-data-builder.utils'
 import type {
 	AdditiveCategoriesFilterQuery,
 	AdditiveCategoryDTO,
@@ -27,7 +28,13 @@ class AdditiveService {
 	}
 
 	async createAdditive(dto: CreateAdditiveDTO) {
-		const response = await apiClient.post<void>('/additives', dto)
+		const formData = buildFormData<CreateAdditiveDTO>(dto)
+
+		const response = await apiClient.post<void>('/additives', formData, {
+			headers: {
+				'Content-Type': 'multipart/form-data',
+			},
+		})
 		return response.data
 	}
 

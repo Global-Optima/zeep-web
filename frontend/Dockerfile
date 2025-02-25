@@ -6,6 +6,10 @@ FROM node:lts-alpine AS builder
 # Set the working directory
 WORKDIR /app
 
+# Build arguments for passing env variables at build time
+ARG VITE_API_URL
+ARG VITE_WS_URL
+
 # Copy only package files first for better caching
 COPY package*.json ./
 
@@ -15,6 +19,10 @@ RUN npm ci
 # Copy the rest of the project files
 COPY . .
 
+# Inject environment variables for Vite build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_WS_URL=$VITE_WS_URL
+
 # Build the production files
 RUN npm run build
 
@@ -23,15 +31,14 @@ RUN npm run build
 # ====================
 FROM nginx:alpine AS final
 
-# Remove default nginx config if you have your own
-RUN rm /etc/nginx/conf.d/default.conf
+# Remove default nginx config if needed
+RUN rm -f /etc/nginx/conf.d/default.conf
 
-# Copy custom nginx configuration if needed
+# Copy custom nginx configuration if available
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy the production build from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
-
 
 # Expose port 80
 EXPOSE 80

@@ -16,11 +16,20 @@ interface Props {
   isOpen: boolean;
 }
 
+const adjectives = [
+    "Веселый", "Бодрый", "Очаровательный", "Крутой", "Сияющий",
+    "Легендарный", "Мудрый", "Загадочный", "Счастливый", "Смелый"
+  ];
+  const nouns = [
+    "Путешественник", "Герой", "Исследователь", "Кофеман", "Маэстро",
+    "Мечтатель", "Сказочник", "Повар", "Джентльмен", "Король"
+  ];
+
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'back'): void;
-  (e: 'proceed', data: {customerName: string}): void;
+  (e: 'proceed', data: { customerName: string }): void;
 }>();
 
 // Form Schema with Zod
@@ -32,19 +41,26 @@ const formSchema = toTypedSchema(
   })
 );
 
-// Unique Name Generator
-const generateUniqueName = () => {
-  const uniqueName = `Покупатель-${Math.floor(Math.random() * 10000)}`;
-  form.setFieldValue('customerName', uniqueName);
-};
-
-// Form Hook
-const form = useForm({
+// Form Hook (Prevent immediate validation on mount)
+const {handleSubmit, setValues} = useForm({
   validationSchema: formSchema,
+  validateOnMount: false,
 });
 
-const handleSubmit = form.handleSubmit((values) => {
-  emit('proceed', {customerName: values.customerName});
+// Unique Name Generator with Beautiful Names
+const generateUniqueName = () => {
+  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+  const number = Math.floor(Math.random() * 10000);
+
+  const uniqueName = `${randomAdjective} ${randomNoun} ${number}`;
+
+  setValues({ customerName: uniqueName });
+};
+
+// Handle Form Submission
+const onSubmit = handleSubmit((values) => {
+  emit('proceed', { customerName: values.customerName });
 });
 </script>
 
@@ -64,7 +80,7 @@ const handleSubmit = form.handleSubmit((values) => {
 			</DialogHeader>
 
 			<form
-				@submit="handleSubmit"
+				@submit="onSubmit"
 				class="space-y-6 !mt-12"
 			>
 				<!-- Customer Name Field -->
@@ -115,7 +131,3 @@ const handleSubmit = form.handleSubmit((values) => {
 		</DialogContent>
 	</Dialog>
 </template>
-
-<style scoped>
-/* Add any custom styles if necessary */
-</style>

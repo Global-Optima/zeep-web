@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -18,7 +18,7 @@ import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import { ChevronLeft, Trash } from 'lucide-vue-next'
+import { Camera, ChevronLeft, Trash, X } from 'lucide-vue-next'
 
 interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   name: string
@@ -52,8 +52,15 @@ const createAdditiveSchema = toTypedSchema(
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
     unitId: z.number().min(0, 'Введите единицу измерения'),
-    imageUrl: z.string().min(1, 'Вставьте картинку добавки'),
     additiveCategoryId: z.coerce.number().min(1, 'Выберите категорию добавки'),
+    image: z.instanceof(File).optional().refine((file) => {
+      if (!file) return true; // Optional field
+      return ['image/jpeg', 'image/png'].includes(file.type);
+    }, 'Поддерживаются только форматы JPEG и PNG').refine((file) => {
+      if (!file) return true;
+      return file.size <= 5 * 1024 * 1024; // Max 5MB
+    }, 'Максимальный размер файла: 5MB'),
+
   })
 )
 
@@ -61,6 +68,23 @@ const createAdditiveSchema = toTypedSchema(
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createAdditiveSchema,
 })
+
+const previewImage = ref<string | null>(null);
+
+const imageInputRef = useTemplateRef("imageInputRef");
+
+function handleImageUpload(event: Event) {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    const file = target.files[0];
+    setFieldValue('image', file); // Update form field
+    previewImage.value = URL.createObjectURL(file); // Create preview
+  }
+}
+
+function triggerImageInput() {
+  imageInputRef.value?.click();
+}
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
@@ -129,7 +153,7 @@ function removeIngredient(index: number) {
 				Создать Добавку
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -277,7 +301,7 @@ function removeIngredient(index: number) {
 											v-model.number="ingredient.quantity"
 											:min="0"
 											placeholder="Введите количество"
-                      class='w-16'
+											class="w-16"
 										/>
 									</TableCell>
 									<TableCell>{{ ingredient.unit }}</TableCell>
@@ -302,23 +326,56 @@ function removeIngredient(index: number) {
 				<!-- Media Block -->
 				<Card>
 					<CardHeader>
-						<CardTitle>Медиа</CardTitle>
-						<CardDescription>Загрузите изображение добавки.</CardDescription>
+						<CardTitle>Изображение</CardTitle>
+						<CardDescription>
+							Загрузите изображение для продукта.<br />
+							Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
+						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<FormField
-							name="imageUrl"
-							v-slot="{ componentField }"
-						>
+						<FormField name="image">
 							<FormItem>
-								<FormLabel>Изображение</FormLabel>
 								<FormControl>
-									<Input
-										id="imageUrl"
-										type="text"
-										v-bind="componentField"
-										placeholder="Вставьте ссылку на изображение"
-									/>
+									<div class="space-y-2">
+										<!-- Preview -->
+										<div
+											v-if="previewImage"
+											class="relative w-full h-48"
+										>
+											<img
+												:src="previewImage"
+												alt="Preview"
+												class="border rounded-lg w-full h-full object-cover"
+											/>
+											<button
+												type="button"
+												class="top-2 right-2 absolute bg-green-600 p-1 rounded-full text-white"
+												@click="previewImage = null; setFieldValue('image', undefined)"
+											>
+												<X class="size-4" />
+											</button>
+										</div>
+
+										<!-- Input -->
+										<div
+											v-if="!previewImage"
+											class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
+											@click="triggerImageInput"
+										>
+											<input
+												ref="imageInputRef"
+												type="file"
+												accept="image/jpeg, image/png"
+												style="display: none;"
+												@change="handleImageUpload"
+											/>
+											<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+												<span class="mb-2"><Camera /></span>
+												Нажмите для загрузки изображения<br />
+												или перетащите файл
+											</p>
+										</div>
+									</div>
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -366,7 +423,7 @@ function removeIngredient(index: number) {
 		</div>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"
