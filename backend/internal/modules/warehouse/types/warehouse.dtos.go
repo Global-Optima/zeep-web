@@ -22,13 +22,13 @@ type CreateWarehouseDTO struct {
 }
 
 type UpdateWarehouseDTO struct {
-	Name              *string `json:"name"`
-	RegionID          *uint   `json:"regionId"`
-	FacilityAddressID *uint   `json:"facilityAddressId"`
+	Name            *string             `json:"name"`
+	RegionID        *uint               `json:"regionId"`
+	FacilityAddress *FacilityAddressDTO `json:"facilityAddress"`
 }
 
 type FacilityAddressDTO struct {
-	Address   string   `json:"address" binding:"required"`
+	Address   string   `json:"address,omitempty"`
 	Longitude *float64 `json:"longitude,omitempty"`
 	Latitude  *float64 `json:"latitude,omitempty"`
 }
