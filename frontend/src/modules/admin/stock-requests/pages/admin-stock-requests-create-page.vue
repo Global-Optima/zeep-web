@@ -8,6 +8,7 @@
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
+import type { LocalizedError } from '@/core/models/errors.model'
 import AdminStockRequestsCreateForm from '@/modules/admin/stock-requests/components/create/admin-stock-requests-create-form.vue'
 import type { CreateStockRequestDTO, StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { stockRequestsService } from '@/modules/admin/stock-requests/services/stock-requests.service'
@@ -35,14 +36,13 @@ const createMutation = useMutation({
 		})
 		router.push({ name: getRouteName('ADMIN_STORE_STOCK_REQUESTS') })
 	},
-	onError: (error: AxiosError<{ error: string }>) => {
-		const message = error.response?.data.error ?? 'Ошибка при создании запроса на склад.'
-		toast({
-			title: 'Ошибка',
-			description: message,
-			variant: 'destructive',
-		})
-	},
+  onError: (error: AxiosError<LocalizedError>) => {
+    toast({
+      title: "Ошибка",
+      description: error.response?.data.message.ru ?? "Ошибка при создании запроса на склад." ,
+      variant: 'destructive',
+    });
+  }
 })
 
 function handleCreate(items: StockRequestStockMaterialDTO[]) {

@@ -58,7 +58,7 @@
 									<FormControl>
 										<Input
 											v-model="field.value"
-											placeholder="+7 (___) ___-__-__"
+											placeholder="+7XXXXXXXXXX"
 										/>
 									</FormControl>
 									<FormMessage v-if="errorMessage">{{ errorMessage }}</FormMessage>
@@ -170,6 +170,7 @@ import {
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
+import { phoneValidationSchema } from '@/core/validators/phone.validator'
 import AdminStoresCreateMap from '@/modules/admin/stores/components/create/admin-stores-create-map.vue'
 import AdminStoresCreateWorkHours from '@/modules/admin/stores/components/create/admin-stores-create-work-hours.vue'
 
@@ -181,7 +182,7 @@ const schema = toTypedSchema(
   z.object({
     name: z.string().min(2, 'Название должно содержать минимум 2 символа').max(100, 'Название должно содержать не более 100 символов'),
     address: z.string().min(5, 'Адрес должен содержать минимум 5 символов'),
-    phone: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
+    phone: phoneValidationSchema,
     email: z.string().email('Введите действительный адрес электронной почты'),
     description: z.string().optional(),
   })

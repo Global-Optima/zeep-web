@@ -23,6 +23,7 @@
 					:product-details="productDetails"
 					@on-submit="onUpdate"
 					@on-cancel="onCancel"
+					:is-submitting="isPending"
 				/>
 			</TabsContent>
 
@@ -64,7 +65,7 @@ const { data: productDetails } = useQuery({
 	enabled: !isNaN(Number(productId)),
 })
 
-const productUpdateMutation = useMutation({
+const {mutate, isPending} = useMutation({
 	mutationFn: ({ id, dto }: { id: number; dto: UpdateProductDTO }) =>
 		productsService.updateProduct(id, dto),
 	onMutate: () => {
@@ -99,7 +100,8 @@ function onUpdate(dto: UpdateProductDTO) {
 		})
 		return router.back()
 	}
-	productUpdateMutation.mutate({ id: Number(productId), dto })
+
+  mutate({ id: Number(productId), dto })
 }
 
 function onCancel() {

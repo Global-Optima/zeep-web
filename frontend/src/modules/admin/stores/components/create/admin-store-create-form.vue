@@ -89,7 +89,7 @@
 											<FormControl>
 												<Input
 													v-bind="componentField"
-													placeholder="+7 (___) ___-__-__"
+													placeholder="+7XXXXXXXXXX"
 												/>
 											</FormControl>
 											<FormMessage />
@@ -213,20 +213,21 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/core/components/ui/card'
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { phoneValidationSchema } from '@/core/validators/phone.validator'
 import AdminSelectFranchiseeDialog from '@/modules/admin/franchisees/components/admin-select-franchisee-dialog.vue'
 import type { FranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
 import type { CreateStoreDTO } from '@/modules/admin/stores/models/stores-dto.model'
@@ -252,7 +253,7 @@ const schema = toTypedSchema(
 		facilityAddress: z.object({
 			address: z.string().min(5, 'Адрес должен содержать минимум 5 символов'),
 		}),
-		contactPhone: z.string().min(7, 'Телефон должен содержать минимум 7 символов'),
+		contactPhone: phoneValidationSchema,
 		contactEmail: z.string().email('Введите действительный адрес электронной почты'),
 		storeHours: z.string().min(5, 'Часы работы должны быть указаны'),
     warehouseId: z.number().min(1, 'Введите склад'),

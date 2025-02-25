@@ -1,14 +1,12 @@
 import type {
 	BaseEmployeeDetailsDTO,
 	BaseEmployeeDTO,
-	EmployeeRole,
 	EmployeesFilter,
 	UpdateEmployeeDTO,
 } from '@/modules/admin/employees/models/employees.models'
 import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 
 export interface UpdateWarehouseEmployeeDTO extends UpdateEmployeeDTO {
-	role?: EmployeeRole
 	warehouseId?: number
 }
 

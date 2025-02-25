@@ -58,8 +58,14 @@ class ProductsService {
 	}
 
 	async updateProduct(id: number, data: UpdateProductDTO) {
+		const formData = buildFormData<UpdateProductDTO>(data)
+
 		try {
-			const response = await apiClient.put<void>(`/products/${id}`, data)
+			const response = await apiClient.put<void>(`/products/${id}`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			})
 			return response.data
 		} catch (error) {
 			console.error(`Failed to update product with ID ${id}: `, error)
