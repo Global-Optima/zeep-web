@@ -8,7 +8,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -84,15 +83,16 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 		return 0, wrappedErr
 	}
 
-	imageUrl, videoUrl, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, dto.Video)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to convert and upload media for productID = %d: %w", product.ID, err)
-		s.logger.Error(wrappedErr)
-		return 0, wrappedErr
+	if dto.Image != nil || dto.Video != nil {
+		imageUrl, videoUrl, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, dto.Video)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to convert and upload media for productID = %d: %w", product.ID, err)
+			s.logger.Error(wrappedErr)
+			return 0, wrappedErr
+		}
+		product.ImageURL = data.S3ImageKey(imageUrl)
+		product.VideoURL = data.S3VideoKey(videoUrl)
 	}
-	product.ImageURL = data.S3ImageKey(imageUrl)
-	product.VideoURL = data.S3VideoKey(videoUrl)
-	logrus.Info(imageUrl, videoUrl)
 
 	productID, err := s.repo.CreateProduct(product)
 	if err != nil {

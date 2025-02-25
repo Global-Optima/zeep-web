@@ -131,7 +131,7 @@ func (r *storeEmployeeRepository) GetAllStoreEmployees(storeID uint) ([]data.Sto
 
 	err := r.db.Model(&data.StoreEmployee{}).
 		Joins("INNER JOIN employees ON store_employees.employee_id = employees.id").
-		Where("store_id = ?", storeID).
+		Where("store_id = ? AND employees.is_active = true", storeID).
 		Preload("Employee").
 		Find(&storeEmployees).Error
 

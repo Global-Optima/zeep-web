@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
@@ -28,7 +29,7 @@ func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, erro
 		workplaceID = 0
 		role = employee.AdminEmployee.Role
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnsupportedEmployeeType, employee.GetType())
+		return nil, fmt.Errorf("%w: %s", employeesTypes.ErrUnsupportedEmployeeType, employee.GetType())
 	}
 
 	employeeData := EmployeeClaimsData{
@@ -42,9 +43,13 @@ func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, erro
 }
 
 func MapCustomerToClaimsData(customer *data.Customer) *CustomerClaimsData {
-	customerData := CustomerClaimsData{
-		ID:         customer.ID,
-		IsVerified: customer.IsVerified,
+	isVerified := false
+	if customer.IsVerified == nil {
+		isVerified = *customer.IsVerified
 	}
-	return &customerData
+
+	return &CustomerClaimsData{
+		ID:         customer.ID,
+		IsVerified: isVerified,
+	}
 }

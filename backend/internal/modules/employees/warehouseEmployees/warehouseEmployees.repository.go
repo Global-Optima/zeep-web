@@ -95,7 +95,7 @@ func (r *warehouseEmployeeRepository) GetAllWarehouseEmployees(warehouseID uint)
 
 	err := r.db.Model(&data.WarehouseEmployee{}).
 		Joins("INNER JOIN employees ON warehouse_employees.employee_id = employees.id").
-		Where("warehouse_id = ?", warehouseID).
+		Where("warehouse_id = ? AND employees.is_active = true", warehouseID).
 		Preload("Employee").
 		Find(&warehouseEmployees).Error
 

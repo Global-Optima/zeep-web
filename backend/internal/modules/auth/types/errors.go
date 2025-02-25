@@ -6,5 +6,7 @@ import (
 )
 
 var (
-	ErrUnsupportedEmployeeType = moduleErrors.NewModuleError(errors.New("unsupported employee type"))
+	ErrInactiveEmployee   = moduleErrors.NewModuleError(errors.New("inactive employee"))
+	ErrBannedCustomer     = moduleErrors.NewModuleError(errors.New("banned customer"))
+	ErrInvalidCredentials = moduleErrors.NewModuleError(errors.New("invalid credentials"))
 )

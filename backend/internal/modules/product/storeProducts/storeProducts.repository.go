@@ -182,7 +182,8 @@ func (r *storeProductRepository) GetAvailableProductsToAdd(storeID uint, filter 
 	query := r.db.
 		Model(&data.Product{}).
 		Preload("Category").
-		Preload("ProductSizes.Unit")
+		Preload("ProductSizes.Unit").
+		Where("EXISTS (SELECT 1 FROM product_sizes WHERE product_sizes.product_id = products.id)")
 
 	if filter.CategoryID != nil {
 		query = query.Where("products.category_id = ?", *filter.CategoryID)
