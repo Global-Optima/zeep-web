@@ -166,11 +166,11 @@ import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import { Switch } from '@/core/components/ui/switch'
 import { getEmployeeShortName } from '@/core/utils/user-formatting.utils'
-import { EmployeeRole, type EmployeeDTO, type UpdateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
+import { EmployeeRole, type BaseEmployeeDTO, type EmployeeDTO, type UpdateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { ChevronLeft } from 'lucide-vue-next'
 
 const props = defineProps<{
-  employee: EmployeeDTO
+  employee: BaseEmployeeDTO
   roles: { value: EmployeeRole; label: string }[]
 }>()
 
