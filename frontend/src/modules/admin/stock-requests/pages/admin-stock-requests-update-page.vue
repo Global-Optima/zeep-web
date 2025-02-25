@@ -9,10 +9,12 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import type { LocalizedError } from '@/core/models/errors.model'
 import AdminStockRequestsUpdateForm from '@/modules/admin/stock-requests/components/update/admin-stock-requests-update-form.vue'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { stockRequestsService } from '@/modules/admin/stock-requests/services/stock-requests.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import type { AxiosError } from 'axios'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -47,13 +49,13 @@ const updateMutation = useMutation({
 		})
 		router.back()
 	},
-	onError: () => {
-		toast({
-			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении материалов запроса на склад.',
-			variant: 'destructive',
-		})
-	},
+  onError: (error: AxiosError<LocalizedError>) => {
+    toast({
+      title: "Ошибка",
+      description: error.response?.data.message.ru ?? "Произошла ошибка при обновлении материалов запроса на склад." ,
+      variant: 'destructive',
+    })
+  }
 })
 
 function handleUpdate(dto: StockRequestStockMaterialDTO[]) {
