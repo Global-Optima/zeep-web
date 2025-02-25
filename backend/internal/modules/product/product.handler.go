@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 
@@ -19,12 +20,14 @@ import (
 type ProductHandler struct {
 	service      ProductService
 	auditService audit.AuditService
+	logger       *zap.SugaredLogger
 }
 
-func NewProductHandler(service ProductService, auditService audit.AuditService) *ProductHandler {
+func NewProductHandler(service ProductService, auditService audit.AuditService, logger *zap.SugaredLogger) *ProductHandler {
 	return &ProductHandler{
 		service:      service,
 		auditService: auditService,
+		logger:       logger,
 	}
 }
 
@@ -78,30 +81,35 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 
 	err := c.Request.ParseMultipartForm(30 << 20)
 	if err != nil {
+		h.logger.Errorf("error parsing multipart form: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	err = c.ShouldBind(&dto)
 	if err != nil {
+		h.logger.Errorf("error binding form-data: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)
-	if err != nil {
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		h.logger.Errorf("error binding image: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
 
 	dto.Video, err = media.GetVideoWithFormFile(c)
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		h.logger.Errorf("error binding video: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingVideo)
 		return
 	}
 
 	id, err := h.service.CreateProduct(&dto)
 	if err != nil {
+		h.logger.Errorf("error creating product: %v", err)
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCreate)
 		return
 	}
