@@ -67,4 +67,5 @@ jobs:
           user: ${{ secrets.STAGING_SSH_USERNAME }}
           private_key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           command: |
-            ./deploy.sh
+            cd ~/zeep-web
+            ~/zeep-web/scripts/deploy.sh
