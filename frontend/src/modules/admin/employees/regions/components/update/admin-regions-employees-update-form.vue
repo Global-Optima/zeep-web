@@ -10,12 +10,12 @@
 
 <script setup lang="ts">
 import AdminEmployeesUpdateForm from '@/modules/admin/employees/components/update/admin-employees-update-form.vue'
-import { EmployeeRole, type EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
+import { EmployeeRole, type BaseEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import type { UpdateRegionEmployeeDTO } from '@/modules/admin/employees/regions/models/region-employees.model'
 import { ref } from 'vue'
 
 defineProps<{
-  employee: EmployeeDTO
+  employee: BaseEmployeeDTO
 }>()
 
 const emit = defineEmits<{
