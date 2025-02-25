@@ -157,7 +157,7 @@ function removeIngredient(index: number) {
 
 			<div
 				v-if="!readonly"
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 			>
 				<Button
 					variant="outline"
@@ -344,28 +344,31 @@ function removeIngredient(index: number) {
 				<!-- Media Block -->
 				<Card>
 					<CardHeader>
-						<CardTitle>Медиа</CardTitle>
-						<CardDescription v-if="!readonly">Загрузите изображение добавки.</CardDescription>
+						<CardTitle>Изображение</CardTitle>
+						<CardDescription> Предварительный просмотр изображения продукта. </CardDescription>
 					</CardHeader>
 					<CardContent>
-						<FormField
-							name="imageUrl"
-							v-slot="{ componentField }"
-						>
-							<FormItem>
-								<FormLabel>Изображение</FormLabel>
-								<FormControl>
-									<Input
-										id="imageUrl"
-										type="text"
-										v-bind="componentField"
-										placeholder="Вставьте ссылку на изображение"
-										:readonly="readonly"
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
+						<div class="space-y-2">
+							<div
+								v-if="additive.imageUrl"
+								class="relative border rounded-lg w-full h-48 overflow-hidden"
+							>
+								<img
+									:src="additive.imageUrl"
+									alt="Product Image"
+									class="rounded-lg w-full h-full object-cover"
+								/>
+							</div>
+							<div
+								v-else
+								class="p-4 border-2 border-gray-300 border-dashed rounded-lg text-center"
+							>
+								<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+									<span class="mb-2">📷</span>
+									Изображение отсутствует
+								</p>
+							</div>
+						</div>
 					</CardContent>
 				</Card>
 
@@ -427,7 +430,7 @@ function removeIngredient(index: number) {
 		<!-- Mobile Footer -->
 		<div
 			v-if="!readonly"
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 		>
 			<Button
 				variant="outline"

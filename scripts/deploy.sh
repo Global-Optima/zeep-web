@@ -1,11 +1,18 @@
 #!/bin/bash
-
 # ====================
 # Configuration
 # ====================
-ENV_FILE="../.env"
-COMPOSE_FILE="../docker-compose.yml"
-LOG_FILE="../deployment.log"
+ENV_FILE="./.env"
+COMPOSE_FILE="./docker-compose.yml"
+LOG_FILE="./deployment.log"
+
+# Ensure the log file exists
+if [[ ! -f "$LOG_FILE" ]]; then
+    touch "$LOG_FILE" || {
+        echo "Failed to create log file: $LOG_FILE"
+        exit 1
+    }
+fi
 
 # ====================
 # Secure Script Execution
@@ -28,7 +35,6 @@ handle_error() {
 # Pre-Deployment Checks
 # ====================
 exec 3>&1  # Store original stdout for logging
-
 log "🔍 Starting pre-deployment checks..."
 
 # Ensure Docker is installed
@@ -56,7 +62,29 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
     handle_error "Missing docker-compose.yml at $COMPOSE_FILE. Please create it and try again."
 fi
 
-log "✅ Pre-deployment checks completed successfully."
+# ====================
+# Pull Latest Updates
+# ====================
+log "🔄 Checking for the latest updates..."
+
+# Check if the current directory is a Git repository
+if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+    handle_error "This is not a Git repository. Please run this script inside a Git project."
+fi
+
+# Get the current branch
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+log "📌 Current branch: $CURRENT_BRANCH"
+
+# Ensure there are no uncommitted changes
+if ! git diff-index --quiet HEAD --; then
+    handle_error "Uncommitted changes detected! Please commit or stash your changes before deploying."
+fi
+
+# Pull the latest changes from the current branch
+log "⬇️ Pulling latest updates from '$CURRENT_BRANCH'..."
+git pull origin "$CURRENT_BRANCH" --rebase || handle_error "Failed to pull latest updates."
+log "✅ Latest updates pulled successfully."
 
 # ====================
 # Deployment Process
@@ -85,19 +113,3 @@ if ! docker compose ps | grep -q 'healthy'; then
 fi
 
 log "✅ Deployment completed successfully."
-
-# ====================
-# Post-Deployment Cleanup (Safe & Efficient)
-# ====================
-log "🧹 Performing post-deployment cleanup..."
-
-# Ask before pruning Docker resources
-read -p "♻️ Do you want to remove unused Docker resources? (y/N): " answer
-if [[ "$answer" =~ ^[Yy]$ ]]; then
-    docker system prune -f --volumes || handle_error "Failed to clean up unused resources."
-    log "✅ Docker cleanup completed."
-else
-    log "🟢 Skipping cleanup."
-fi
-
-log "🏁 Deployment finished successfully!"

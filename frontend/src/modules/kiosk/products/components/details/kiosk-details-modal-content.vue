@@ -1,5 +1,5 @@
 <template>
-	<div class="relative bg-[#F3F4F9] pb-32 min-h-screen text-black">
+	<div class="!relative bg-[#F3F4F9] pb-32 h-full overflow-y-auto text-black no-scrollbar">
 		<!-- Loading State -->
 		<KioskDetailsLoading v-if="isLoading" />
 		<!-- Error State -->
@@ -14,38 +14,41 @@
 			v-else-if="productDetails"
 			class="pb-44"
 		>
-			<div class="bg-white shadow-gray-200 shadow-xl px-8 pb-6 rounded-b-[48px] w-full">
+			<div class="relative bg-white shadow-gray-200 shadow-xl px-8 pb-6 rounded-b-[48px] w-full">
 				<div class="flex flex-col justify-center items-center">
-					<img
-						class="w-32 h-52 object-contain"
+					<LazyImage
 						src="https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png"
-						alt=""
+						alt="Изображение товара"
+						class="w-32 h-52 object-contain"
 					/>
 					<p class="mt-7 font-semibold text-3xl">{{ productDetails.name }}</p>
 					<p class="mt-1 text-slate-600 text-lg">{{ productDetails.description }}</p>
 				</div>
-				<div class="flex justify-between items-center gap-4 mt-12">
-					<!-- Size Selection -->
-					<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-						<KioskDetailsSizes
-							v-for="size in productDetails.sizes"
-							:key="size.id"
-							:size="size"
-							:is-selected="selectedSize?.id === size.id"
-							@click:size="onSizeSelect"
-						/>
-					</div>
-					<!-- Add to Cart Button -->
-					<div class="flex items-center gap-6">
-						<p class="text-3xl">
-							{{ formatPrice(totalPrice) }}
-						</p>
-						<button
-							@click="handleAddToCart"
-							class="flex items-center gap-3 bg-primary p-5 rounded-full text-primary-foreground"
-						>
-							<Plus class="w-6 sm:w-8 h-6 sm:h-8" />
-						</button>
+				<!-- Sticky Section -->
+				<div class="top-0 z-10 sticky bg-white py-4">
+					<div class="flex justify-between items-center gap-4">
+						<!-- Size Selection -->
+						<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+							<KioskDetailsSizes
+								v-for="size in sortedSizes"
+								:key="size.id"
+								:size="size"
+								:is-selected="selectedSize?.id === size.id"
+								@click:size="onSizeSelect"
+							/>
+						</div>
+						<!-- Add to Cart Button -->
+						<div class="flex items-center gap-6">
+							<p class="text-3xl">
+								{{ formatPrice(totalPrice) }}
+							</p>
+							<button
+								@click="handleAddToCart"
+								class="flex items-center gap-3 bg-primary p-5 rounded-full text-primary-foreground"
+							>
+								<Plus class="w-6 sm:w-8 h-6 sm:h-8" />
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -60,9 +63,9 @@
 		</div>
 	</div>
 </template>
-
 <script setup lang="ts">
-  import { formatPrice } from '@/core/utils/price.utils'
+  import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
+import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import type { StoreProductDetailsDTO, StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
@@ -91,6 +94,11 @@ import { computed, onMounted, ref, watch } from 'vue'
   const isLoading = ref<boolean>(true);
   const error = ref<string | null>(null);
 
+  const sortedSizes = computed(() => {
+  return productDetails.value?.sizes
+    ? [...productDetails.value.sizes].sort((a, b) => a.size - b.size)
+    : [];
+});
   // Fetch product details based on productId prop
   const fetchProductDetails = async () => {
   isLoading.value = true;

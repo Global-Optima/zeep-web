@@ -107,6 +107,7 @@ export interface CreateAdditiveDTO {
 	unitId: number
 	additiveCategoryId: number
 	ingredients: SelectedIngredientDTO[]
+	image?: File
 }
 
 // Ingredient DTOs
