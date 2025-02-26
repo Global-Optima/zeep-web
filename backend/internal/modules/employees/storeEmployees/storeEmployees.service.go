@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type StoreEmployeeService interface {
@@ -21,16 +23,16 @@ type StoreEmployeeService interface {
 }
 
 type storeEmployeeService struct {
-	repo            StoreEmployeeRepository
-	employeeService employees.EmployeeService
-	logger          *zap.SugaredLogger
+	repo         StoreEmployeeRepository
+	employeeRepo employees.EmployeeRepository
+	logger       *zap.SugaredLogger
 }
 
-func NewStoreEmployeeService(repo StoreEmployeeRepository, employeeService employees.EmployeeService, logger *zap.SugaredLogger) StoreEmployeeService {
+func NewStoreEmployeeService(repo StoreEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) StoreEmployeeService {
 	return &storeEmployeeService{
-		repo:            repo,
-		employeeService: employeeService,
-		logger:          logger,
+		repo:         repo,
+		employeeRepo: employeeRepo,
+		logger:       logger,
 	}
 }
 
@@ -42,7 +44,24 @@ func (s *storeEmployeeService) CreateStoreEmployee(storeID uint, input *employee
 		return 0, wrappedErr
 	}
 
-	return s.employeeService.CreateEmployee(employee)
+	existingEmployee, err := s.employeeRepo.GetEmployeeByEmailOrPhone(employee.Email, employee.Phone)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		wrappedErr := utils.WrapError("error checking employee uniqueness", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+	if existingEmployee != nil {
+		return 0, moduleErrors.ErrAlreadyExists
+	}
+
+	id, err := s.employeeRepo.CreateEmployee(employee)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to create admin employee", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
+	return id, nil
 }
 
 func (s *storeEmployeeService) GetStoreEmployees(storeID uint, filter *employeesTypes.EmployeesFilter) ([]types.StoreEmployeeDTO, error) {

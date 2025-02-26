@@ -34,16 +34,16 @@ func NewWarehouseEmployeeRepository(db *gorm.DB, warehouseRepo employees.Employe
 func (r *warehouseEmployeeRepository) GetWarehouseEmployees(warehouseID uint, filter *employeesTypes.EmployeesFilter) ([]data.WarehouseEmployee, error) {
 	var warehouseEmployees []data.WarehouseEmployee
 	query := r.db.Model(&data.WarehouseEmployee{}).
-		Where("warehouse_id = ?", warehouseID).
+		Where(&data.WarehouseEmployee{WarehouseID: warehouseID}).
 		Preload("Employee").
 		Joins("JOIN employees ON employees.id = warehouse_employees.employee_id")
 
 	if filter.IsActive != nil {
-		query = query.Where("is_active = ?", *filter.IsActive)
+		query = query.Where(&data.WarehouseEmployee{Employee: data.Employee{IsActive: filter.IsActive}})
 	}
 
 	if filter.Role != nil {
-		query = query.Where("role = ?", *filter.Role)
+		query = query.Where(&data.WarehouseEmployee{Role: *filter.Role})
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
@@ -72,21 +72,23 @@ func (r *warehouseEmployeeRepository) GetWarehouseEmployeeByID(id uint, filter *
 		Preload("Employee.Workdays").
 		Preload("Warehouse.FacilityAddress").
 		Preload("Warehouse.Region").
-		Where("id = ?", id)
+		Where(&data.WarehouseEmployee{BaseEntity: data.BaseEntity{ID: id}})
 
 	if filter != nil {
 		if filter.WarehouseID != nil {
-			query.Where("warehouse_id = ?", *filter.WarehouseID)
+			query.Where(&data.WarehouseEmployee{WarehouseID: id}, *filter.WarehouseID)
 		}
 
 		if filter.RegionID != nil {
-			query.Joins("JOIN regions ON warehouses.id = warehouse_employees.warehouse_id")
-			query.Where("warehouses.region_id = ?", *filter.RegionID)
+			query.Joins("JOIN warehouses ON warehouses.id = warehouse_employees.warehouse_id")
+			query.Where(&data.WarehouseEmployee{Warehouse: data.Warehouse{RegionID: *filter.RegionID}})
 		}
 	}
+
 	if err := query.First(&warehouseEmployee).Error; err != nil {
 		return nil, fmt.Errorf("failed to retrieve warehouse employee by ID: %w", err)
 	}
+
 	return &warehouseEmployee, nil
 }
 
@@ -94,9 +96,9 @@ func (r *warehouseEmployeeRepository) GetAllWarehouseEmployees(warehouseID uint)
 	var warehouseEmployees []data.WarehouseEmployee
 
 	err := r.db.Model(&data.WarehouseEmployee{}).
-		Joins("INNER JOIN employees ON warehouse_employees.employee_id = employees.id").
-		Where("warehouse_id = ? AND employees.is_active = true", warehouseID).
 		Preload("Employee").
+		Joins("INNER JOIN employees ON warehouse_employees.employee_id = employees.id").
+		Where("warehouse_employees.warehouse_id = ? AND employees.is_active = true", warehouseID).
 		Find(&warehouseEmployees).Error
 
 	if err != nil {
@@ -119,7 +121,7 @@ func (r *warehouseEmployeeRepository) UpdateWarehouseEmployee(id uint, filter *c
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels.WarehouseEmployee != nil && !utils.IsEmpty(updateModels.WarehouseEmployee) {
 			err := tx.Model(&data.WarehouseEmployee{}).
-				Where("id = ?", id).
+				Where(&data.WarehouseEmployee{BaseEntity: data.BaseEntity{ID: id}}).
 				Updates(updateModels.WarehouseEmployee).Error
 			if err != nil {
 				return err

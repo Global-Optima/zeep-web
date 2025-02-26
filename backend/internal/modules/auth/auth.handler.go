@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/pkg/errors"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -44,8 +46,14 @@ func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
 
 	tokenPair, err := h.service.CustomerLogin(input.Phone, input.Password)
 	if err != nil {
-		utils.SendErrorWithStatus(c, err.Error(), http.StatusUnauthorized)
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrValidation):
+			utils.SendErrorWithStatus(c, "invalid credentials", http.StatusBadRequest)
+			return
+		default:
+			utils.SendErrorWithStatus(c, "unexpected error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	claims := &types.CustomerClaims{}
@@ -126,13 +134,19 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 
 	tokenPair, err := h.service.EmployeeLogin(input.Email, input.Password)
 	if err != nil {
-		utils.SendErrorWithStatus(c, "invalid credentials", http.StatusUnauthorized)
-		return
+		switch {
+		case errors.Is(err, types.ErrInvalidCredentials):
+			utils.SendErrorWithStatus(c, "invalid credentials", http.StatusBadRequest)
+			return
+		default:
+			utils.SendErrorWithStatus(c, "unexpected error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	claims := &types.EmployeeClaims{}
 	if err := types.ValidateEmployeeJWT(tokenPair.AccessToken, claims, types.TokenAccess); err != nil {
-		utils.SendInternalServerError(c, "failed to validate token "+err.Error())
+		utils.SendInternalServerError(c, "failed to validate token ")
 		return
 	}
 

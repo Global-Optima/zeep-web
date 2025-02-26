@@ -79,8 +79,8 @@ func (s *storeAdditiveService) CreateStoreAdditives(storeID uint, dtos []types.C
 	return ids, nil
 }
 
-func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error) {
-	categories, err := s.repo.GetStoreAdditiveCategories(storeID, productSizeID, filter)
+func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error) {
+	categories, err := s.repo.GetStoreAdditiveCategories(storeID, storeProductSizeID, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve store additives", err)
 		s.logger.Error(wrappedErr)

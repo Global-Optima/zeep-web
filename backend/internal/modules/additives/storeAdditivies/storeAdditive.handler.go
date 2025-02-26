@@ -48,7 +48,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	productSizeID, err := strconv.ParseUint(c.Param("productSizeId"), 10, 64)
+	storeProductSizeID, err := strconv.ParseUint(c.Param("storeProductSizeId"), 10, 64)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
@@ -60,7 +60,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	additivesList, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(productSizeID), &filter)
+	additivesList, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(storeProductSizeID), &filter)
 	if err != nil {
 		if errors.Is(err, types.ErrStoreAdditiveCategoriesNotFound) {
 			utils.SendSuccessResponse(c, []types.StoreAdditiveCategoryDTO{})

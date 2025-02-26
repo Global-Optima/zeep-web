@@ -115,6 +115,10 @@ func TestStoreProductEndpoints(t *testing.T) {
 				URL:         "/api/test/store-products/1?storeId=1",
 				Body: map[string]interface{}{
 					"isAvailable": false,
+					"productSizes": []map[string]interface{}{
+						{"productSizeID": 1, "storePrice": 10.99},
+						{"productSizeID": 2, "storePrice": 12.99},
+					},
 				},
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusOK,
@@ -125,6 +129,10 @@ func TestStoreProductEndpoints(t *testing.T) {
 				URL:         "/api/test/store-products/-1?storeId=1",
 				Body: map[string]interface{}{
 					"isAvailable": false,
+					"productSizes": []map[string]interface{}{
+						{"productSizeID": 1, "storePrice": 10.99},
+						{"productSizeID": 2, "storePrice": 12.99},
+					},
 				},
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusBadRequest,
@@ -135,6 +143,10 @@ func TestStoreProductEndpoints(t *testing.T) {
 				URL:         "/api/test/store-products/1?storeId=1",
 				Body: map[string]interface{}{
 					"isAvailable": false,
+					"productSizes": []map[string]interface{}{
+						{"productSizeID": 1, "storePrice": 10.99},
+						{"productSizeID": 2, "storePrice": 12.99},
+					},
 				},
 				AuthRole:     "",
 				ExpectedCode: http.StatusUnauthorized,

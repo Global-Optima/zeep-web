@@ -3,6 +3,8 @@ package storeProducts
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/sirupsen/logrus"
 
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
@@ -311,13 +313,14 @@ func (s *storeProductService) formAddStockDTOsFromIngredients(productSizeIDs []u
 func (s *storeProductService) validateProductSizesByProductID(productSizeIDs []uint, productID uint) error {
 	productSizes, err := s.productRepo.GetProductSizesByProductID(productID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("%w: %w", types.ErrValidationFailed, err)
+		wrappedErr := fmt.Errorf("%w: %w", moduleErrors.ErrValidation, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
 
+	logrus.Info(productSizes[0].ProductID)
 	if err := types.ValidateStoreProductSizes(productSizeIDs, productSizes); err != nil {
-		wrappedErr := fmt.Errorf("%w: %w", types.ErrValidationFailed, err)
+		wrappedErr := fmt.Errorf("%w: %w", moduleErrors.ErrValidation, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
