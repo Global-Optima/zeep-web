@@ -163,11 +163,22 @@ func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryF
 		query = query.
 			Joins("JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.delivery_id = supplier_warehouse_deliveries.id").
 			Joins("JOIN stock_materials ON supplier_warehouse_delivery_materials.stock_material_id = stock_materials.id").
-			Where(`stock_materials.name ILIKE ? OR 
-				stock_materials.description ILIKE ? OR 
+			Where(`stock_materials.name ILIKE ? OR
+				stock_materials.description ILIKE ? OR
 				stock_materials.barcode ILIKE ? OR
 				suppliers.name ILIKE ?
-			`, search, search, search, search)
+			`, search, search, search, search).
+			Group("supplier_warehouse_deliveries.id")
+	} else {
+		search := "%"
+		query = query.
+			Joins("JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.delivery_id = supplier_warehouse_deliveries.id").
+			Joins("JOIN stock_materials ON supplier_warehouse_delivery_materials.stock_material_id = stock_materials.id").
+			Where(`stock_materials.name ILIKE ? OR
+				stock_materials.description ILIKE ? OR
+				stock_materials.barcode ILIKE ? OR
+				suppliers.name ILIKE ?
+			`, search, search, search, search).Group("supplier_warehouse_deliveries.id")
 	}
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.SupplierWarehouseDelivery{})
@@ -310,7 +321,6 @@ func (r *warehouseStockRepository) FindEarliestExpirationDateForStock(stockMater
 		Where("supplier_warehouse_deliveries.warehouse_id = ? AND supplier_warehouse_delivery_materials.stock_material_id = ?", warehouseID, stockMaterialID).
 		Select("MIN(supplier_warehouse_delivery_materials.expiration_date) AS earliest_expiration_date").
 		Scan(&earliestExpirationDate).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -424,7 +434,7 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	// Filter by expiration-related conditions
 	if filter.IsExpiring != nil && *filter.IsExpiring {
 		query = query.Joins(`
-			LEFT JOIN supplier_warehouse_delivery_materials 
+			LEFT JOIN supplier_warehouse_delivery_materials
 			ON supplier_warehouse_delivery_materials.stock_material_id = warehouse_stocks.stock_material_id
 		`).
 			Where(`
@@ -438,7 +448,7 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	if filter.ExpirationDays != nil {
 		expirationThreshold := time.Now().AddDate(0, 0, *filter.ExpirationDays)
 		query = query.Joins(`
-			LEFT JOIN supplier_warehouse_delivery_materials 
+			LEFT JOIN supplier_warehouse_delivery_materials
 			ON supplier_warehouse_delivery_materials.stock_material_id = warehouse_stocks.stock_material_id
 		`).
 			Where(`
@@ -457,8 +467,8 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 	if filter.Search != nil && *filter.Search != "" {
 		search := "%" + *filter.Search + "%"
 		query = query.Where(`
-			stock_materials.name ILIKE ? OR 
-			stock_materials.description ILIKE ? OR 
+			stock_materials.name ILIKE ? OR
+			stock_materials.description ILIKE ? OR
 			stock_materials.barcode ILIKE ? OR
 			stock_materials.barcode ILIKE ?
 		`, search, search, search, search)
@@ -484,7 +494,6 @@ func (r *warehouseStockRepository) UpdateExpirationDate(stockMaterialID, warehou
 		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.id = supplier_warehouse_delivery_materials.delivery_id").
 		Where("supplier_warehouse_deliveries.warehouse_id = ? AND supplier_warehouse_delivery_materials.stock_material_id = ?", warehouseID, stockMaterialID).
 		Pluck("supplier_warehouse_delivery_materials.id", &deliveryMaterialIDs).Error
-
 	if err != nil {
 		return fmt.Errorf("failed to identify delivery materials to update: %w", err)
 	}
@@ -496,7 +505,6 @@ func (r *warehouseStockRepository) UpdateExpirationDate(stockMaterialID, warehou
 	err = r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
 		Where("id IN ?", deliveryMaterialIDs).
 		Update("expiration_date", newExpirationDate).Error
-
 	if err != nil {
 		return fmt.Errorf("failed to update expiration date: %w", err)
 	}
@@ -532,7 +540,6 @@ func (r *warehouseStockRepository) UpdateStockQuantity(stockMaterialID, warehous
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -584,7 +591,6 @@ func (r *warehouseStockRepository) GetWarehouseStocksForNotifications(warehouseI
 		Preload("Warehouse").
 		Where("warehouse_id = ?", warehouseID).
 		Find(&stocks).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -626,8 +632,8 @@ func (r *warehouseStockRepository) GetAvailableToAddStockMaterials(storeID uint,
 	if filter.Search != nil && *filter.Search != "" {
 		search := "%" + *filter.Search + "%"
 		query = query.Where(`
-			stock_materials.name ILIKE ? OR 
-			stock_materials.description ILIKE ? OR 
+			stock_materials.name ILIKE ? OR
+			stock_materials.description ILIKE ? OR
 			stock_materials.barcode ILIKE ?`,
 			search, search, search)
 	}
