@@ -64,7 +64,6 @@ func TestWarehouseService_GetWarehouseByID_WithPreloadedData(t *testing.T) {
 	}
 }
 
-// i will leave until getWarehouse and getAllWarehouse functions will be decided
 func TestWarehouseService_GetWarehouses_WithPreloadedData(t *testing.T) {
 	_ = ResetTestData(t)
 	module := tests.GetWarehouseModule()

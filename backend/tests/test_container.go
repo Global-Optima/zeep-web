@@ -2,12 +2,12 @@ package tests
 
 import (
 	"fmt"
-	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 	"log"
 	"sync"
 	"time"
 
-	"github.com/Global-Optima/zeep-web/backend/api/storage"
+	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
