@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 
@@ -25,6 +26,7 @@ type StoreProductRepository interface {
 	DeleteStoreProductWithSizes(storeID, storeProductID uint) error
 
 	GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
+	GetSufficientStoreProductSizeById(storeID, storeProductSizeID uint, frozenMap map[uint]float64) (*data.StoreProductSize, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
 	CloneWithTransaction(tx *gorm.DB) StoreProductRepository
@@ -313,6 +315,62 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 	if err != nil {
 		return &storeProductSize, err
 	}
+	return &storeProductSize, nil
+}
+
+func (r *storeProductRepository) GetSufficientStoreProductSizeById(
+	storeID, storeProductSizeID uint, frozenMap map[uint]float64,
+) (*data.StoreProductSize, error) {
+	var storeProductSize data.StoreProductSize
+
+	err := r.db.Model(&data.StoreProductSize{}).
+		Joins("JOIN store_products sp ON store_product_sizes.store_product_id = sp.id").
+		Where("sp.store_id = ? AND store_product_sizes.id = ?", storeID, storeProductSizeID).
+		Preload("StoreProduct.Store").
+		Preload("StoreProduct.Product").
+		Preload("ProductSize").
+		Preload("ProductSize.Unit").
+		Preload("ProductSize.Product").
+		Preload("ProductSize.ProductSizeIngredients").
+		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
+		Preload("ProductSize.Additives.Additive.Category").
+		Preload("ProductSize.Additives.Additive.Unit").
+		First(&storeProductSize).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to load StoreProductSize (ID=%d): %w", storeProductSizeID, err)
+	}
+
+	for _, usage := range storeProductSize.ProductSize.ProductSizeIngredients {
+		needed := usage.Quantity
+
+		var stock data.StoreStock
+		err := r.db.Model(&data.StoreStock{}).
+			Where("store_id = ?", storeID).
+			Where("ingredient_id = ?", usage.IngredientID).
+			First(&stock).Error
+		if err != nil {
+			return nil, fmt.Errorf("failed to find stock for ingredient %d: %w",
+				usage.IngredientID, err)
+		}
+
+		if stock.Quantity < frozenMap[usage.IngredientID] {
+			return nil, fmt.Errorf(
+				"insufficient stock for ingredient %q (ID=%d): already pending %.2f, need %.2f, have left %.2f",
+				usage.Ingredient.Name, usage.IngredientID, frozenMap[usage.IngredientID], needed, stock.Quantity,
+			)
+		}
+
+		effectiveAvailable := stock.Quantity - frozenMap[usage.IngredientID]
+		if effectiveAvailable < needed {
+			return nil, fmt.Errorf(
+				"insufficient stock for ingredient %q (ID=%d): need %.2f, have effective available %.2f",
+				usage.Ingredient.Name, usage.IngredientID, needed, effectiveAvailable,
+			)
+		}
+	}
+
 	return &storeProductSize, nil
 }
 

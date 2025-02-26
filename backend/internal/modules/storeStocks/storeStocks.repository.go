@@ -27,7 +27,7 @@ type StoreStockRepository interface {
 	WithTransaction(txFunc func(txRepo storeStockRepository) error) error
 	CloneWithTransaction(tx *gorm.DB) storeStockRepository
 	DeductStockByProductSizeTechCart(storeID, productSizeID uint) ([]data.StoreStock, error)
-	DeductStockByAdditiveTechCart(storeID, additiveID uint) ([]data.StoreStock, error)
+	DeductStockByAdditiveTechCart(storeID, storeAdditiveID uint) ([]data.StoreStock, error)
 
 	FindEarliestExpirationForIngredient(ingredientID, storeID uint) (*time.Time, error)
 }
@@ -332,13 +332,24 @@ func (r *storeStockRepository) DeleteStockById(storeId, stockId uint) error {
 	return nil
 }
 
-func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, productSizeID uint) ([]data.StoreStock, error) {
+func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, storeProductSizeID uint) ([]data.StoreStock, error) {
 	var store data.Store
 	if err := r.getStoreWithWarehouse(storeID, &store); err != nil {
 		return nil, err
 	}
 
-	productSizeIngredients, err := r.getProductSizeIngredients(productSizeID)
+	var storeProductSize data.StoreProductSize
+
+	err := r.db.Model(&data.StoreProductSize{}).
+		Where("id = ?", storeProductSizeID).First(&storeProductSize).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("store product size not found for store ID %d", storeProductSizeID)
+		}
+		return nil, fmt.Errorf("failed to fetch store product size: %w", err)
+	}
+
+	productSizeIngredients, err := r.getProductSizeIngredients(storeProductSize.ProductSizeID)
 	if err != nil {
 		return nil, err
 	}
@@ -363,13 +374,23 @@ func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, product
 	return updatedStocks, nil
 }
 
-func (r *storeStockRepository) DeductStockByAdditiveTechCart(storeID, additiveID uint) ([]data.StoreStock, error) {
+func (r *storeStockRepository) DeductStockByAdditiveTechCart(storeID, storeAdditiveID uint) ([]data.StoreStock, error) {
 	var store data.Store
 	if err := r.getStoreWithWarehouse(storeID, &store); err != nil {
 		return nil, err
 	}
 
-	additiveIngredients, err := r.getAdditiveIngredients(additiveID)
+	var storeAdditive data.StoreAdditive
+	err := r.db.Model(&data.StoreAdditive{}).
+		Where("id = ?", storeAdditiveID).First(&storeAdditive).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("store additive not found for store ID %d", storeAdditiveID)
+		}
+		return nil, fmt.Errorf("failed to fetch store additive: %w", err)
+	}
+
+	additiveIngredients, err := r.getAdditiveIngredients(storeAdditive.AdditiveID)
 	if err != nil {
 		return nil, err
 	}

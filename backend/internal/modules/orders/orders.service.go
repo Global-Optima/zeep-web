@@ -119,9 +119,23 @@ func (s *orderService) GetSubOrders(orderID uint) ([]types.SuborderDTO, error) {
 	return subOrderDTOs, nil
 }
 
+func ExpandSuborders(suborders []types.CreateSubOrderDTO) []types.CreateSubOrderDTO {
+	var expanded []types.CreateSubOrderDTO
+	for _, s := range suborders {
+		// Repeat each suborder 'quantity' times, but each with quantity=1
+		for range s.Quantity {
+			expanded = append(expanded, types.CreateSubOrderDTO{
+				StoreProductSizeID: s.StoreProductSizeID,
+				Quantity:           1,
+				StoreAdditivesIDs:  s.StoreAdditivesIDs,
+			})
+		}
+	}
+	return expanded
+}
+
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
 	censorValidator := censor.GetCensorValidator()
-
 	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
 		s.logger.Error(err)
 		return nil, err
@@ -131,28 +145,51 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
-	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
+	// 1) Calculate how much is already frozen by existing PENDING/PREPARING orders
+	frozenMap, err := s.orderRepo.CalculateFrozenStock(storeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
+	}
 
-	validations, err := s.ValidationResults(storeID, storeProductSizeIDs, storeAdditiveIDs)
+	// 2) Attempt to create + freeze new suborders usage
+	//    If we can't fulfill them all, it returns an error early
+	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenMap); err != nil {
+		// e.g. \"not enough stock for ingredient X\"
+		return nil, err
+	}
+
+	// 3) If we get here, we have effectively 'reserved' usage in frozenMap
+	//    Next, do your usual 'ValidationResults' to figure out item names & prices
+	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
+	validations, err := s.ValidationResults(
+		storeID,
+		storeProductSizeIDs,
+		storeAdditiveIDs, // we no longer need to pass frozenMap here if it only calculates price,
+		frozenMap,
+	)
 	if err != nil {
 		wrappedErr := fmt.Errorf("validation failed: %w", err)
 		s.logger.Error(wrappedErr.Error())
 		return nil, wrappedErr
 	}
 
+	// 4) Build + save the order
 	createOrderDTO.StoreID = storeID
-	order, total := types.ConvertCreateOrderDTOToOrder(createOrderDTO, validations.ProductPrices, validations.AdditivePrices)
-
+	order, total := types.ConvertCreateOrderDTOToOrder(
+		createOrderDTO,
+		validations.ProductPrices,
+		validations.AdditivePrices,
+	)
 	order.Status = data.OrderStatusPending
 	order.Total = total
 
-	err = s.orderRepo.CreateOrder(&order)
-	if err != nil {
+	if err := s.orderRepo.CreateOrder(&order); err != nil {
 		wrappedErr := fmt.Errorf("error creating order: %w", err)
 		s.logger.Error(wrappedErr.Error())
 		return nil, wrappedErr
 	}
 
+	// optional notification
 	notificationDetails := &details.NewOrderNotificationDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           order.StoreID,
@@ -161,12 +198,152 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		CustomerName: createOrderDTO.CustomerName,
 		OrderID:      order.ID,
 	}
-	err = s.notificationService.NotifyNewOrder(notificationDetails)
-	if err != nil {
+	if err := s.notificationService.NotifyNewOrder(notificationDetails); err != nil {
 		s.logger.Errorf("failed to notify new order: %w", err)
 	}
 
 	return &order, nil
+}
+
+func (s *orderService) ValidationResults(
+	storeID uint,
+	storeProductSizeIDs, storeAdditiveIDs []uint,
+	frozenMap map[uint]float64,
+) (*orderValidationResults, error) {
+	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo, frozenMap)
+	if err != nil {
+		return nil, fmt.Errorf("product validation failed: %w", err)
+	}
+
+	additivePrices, additiveNames, err := ValidateStoreAdditives(storeID, storeAdditiveIDs, s.storeAdditiveRepo, frozenMap)
+	if err != nil {
+		return nil, fmt.Errorf("additive validation failed: %w", err)
+	}
+
+	return &orderValidationResults{
+		ProductPrices:  productPrices,
+		ProductNames:   productNames,
+		AdditivePrices: additivePrices,
+		AdditiveNames:  additiveNames,
+	}, nil
+}
+
+func ValidateStoreAdditives(
+	storeID uint,
+	storeAdditiveIDs []uint,
+	repo storeAdditives.StoreAdditiveRepository,
+	frozenMap map[uint]float64,
+) (map[uint]float64, map[uint]string, error) {
+	prices := make(map[uint]float64)
+	additiveNames := make(map[uint]string)
+
+	for _, addID := range storeAdditiveIDs {
+		storeAdd, err := repo.GetSufficientStoreAdditiveByID(storeID, addID, frozenMap)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error with store additive: %w", err)
+		}
+		if storeAdd == nil {
+			return nil, nil, fmt.Errorf("store additive with ID %d is nil", addID)
+		}
+		if storeAdd.Additive.Name == "" {
+			return nil, nil, fmt.Errorf("store additive with ID %d has an empty name", addID)
+		}
+
+		price := storeAdd.Additive.BasePrice
+		if storeAdd.StorePrice != nil {
+			price = *storeAdd.StorePrice
+		}
+		prices[addID] = price
+		additiveNames[addID] = storeAdd.Additive.Name
+	}
+
+	return prices, additiveNames, nil
+}
+
+func ValidateStoreProductSizes(
+	storeID uint,
+	storeProductSizeIDs []uint,
+	repo storeProducts.StoreProductRepository,
+	frozenMap map[uint]float64,
+) (map[uint]float64, map[uint]string, error) {
+	prices := make(map[uint]float64)
+	productNames := make(map[uint]string)
+
+	for _, psID := range storeProductSizeIDs {
+		storePS, err := repo.GetSufficientStoreProductSizeById(storeID, psID, frozenMap)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error with store product size: %w", err)
+		}
+		if storePS == nil {
+			return nil, nil, fmt.Errorf("store product size with ID %d is nil", psID)
+		}
+		if storePS.ProductSize.Product.Name == "" {
+			return nil, nil, fmt.Errorf("product size with ID %d has an associated product with an empty name", psID)
+		}
+
+		price := storePS.ProductSize.BasePrice
+		if storePS.StorePrice != nil {
+			price = *storePS.StorePrice
+		}
+
+		prices[psID] = price
+		productNames[psID] = storePS.StoreProduct.Product.Name
+	}
+
+	return prices, productNames, nil
+}
+
+func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
+	var storeProductSizeIDs []uint
+	var storeAdditiveIDs []uint
+	for _, product := range createOrderDTO.Suborders {
+		storeProductSizeIDs = append(storeProductSizeIDs, product.StoreProductSizeID)
+		storeAdditiveIDs = append(storeAdditiveIDs, product.StoreAdditivesIDs...)
+	}
+	return storeProductSizeIDs, storeAdditiveIDs
+}
+
+func (s *orderService) CheckAndAccumulateSuborders(
+	storeID uint,
+	suborders []types.CreateSubOrderDTO,
+	frozenMap map[uint]float64,
+) error {
+	// 1) Expand any suborders with quantity > 1 into separate single-quantity items
+	expanded := ExpandSuborders(suborders)
+
+	// 2) For each single suborder, call existing checks
+	for _, sub := range expanded {
+		// A) Product Size
+		sps, err := s.storeProductRepo.GetSufficientStoreProductSizeById(storeID, sub.StoreProductSizeID, frozenMap)
+		if err != nil {
+			return fmt.Errorf(
+				"insufficient stock for store product size %d: %w",
+				sub.StoreProductSizeID, err,
+			)
+		}
+
+		// If success, we 'freeze' that usage. We add the usage from the product size to the frozenMap.
+		for _, usage := range sps.ProductSize.ProductSizeIngredients {
+			frozenMap[usage.IngredientID] += usage.Quantity
+		}
+
+		// B) Additives
+		for _, addID := range sub.StoreAdditivesIDs {
+			sa, err := s.storeAdditiveRepo.GetSufficientStoreAdditiveByID(storeID, addID, frozenMap)
+			if err != nil {
+				return fmt.Errorf(
+					"insufficient stock for store additive %d: %w",
+					addID, err,
+				)
+			}
+			// freeze additive usage
+			for _, ingrUsage := range sa.Additive.Ingredients {
+				frozenMap[ingrUsage.IngredientID] += ingrUsage.Quantity
+			}
+		}
+	}
+
+	return nil
 }
 
 func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
@@ -427,87 +604,6 @@ func (s *orderService) GetStatusesCount(filter types.OrdersTimeZoneFilter) (type
 	return dto, nil
 }
 
-func (s *orderService) ValidationResults(storeID uint, storeProductSizeIDs, storeAdditiveIDs []uint) (*orderValidationResults, error) {
-	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo)
-	if err != nil {
-		return nil, fmt.Errorf("product validation failed: %w", err)
-	}
-
-	additivePrices, additiveNames, err := ValidateStoreAdditives(storeID, storeAdditiveIDs, s.storeAdditiveRepo)
-	if err != nil {
-		return nil, fmt.Errorf("additive validation failed: %w", err)
-	}
-
-	return &orderValidationResults{
-		ProductPrices:  productPrices,
-		ProductNames:   productNames,
-		AdditivePrices: additivePrices,
-		AdditiveNames:  additiveNames,
-	}, nil
-}
-
-func ValidateStoreAdditives(storeID uint, storeAdditiveIDs []uint, repo storeAdditives.StoreAdditiveRepository) (map[uint]float64, map[uint]string, error) {
-	prices := make(map[uint]float64)
-	additiveNames := make(map[uint]string)
-	for _, id := range storeAdditiveIDs {
-		storeAdditive, err := repo.GetStoreAdditiveByID(storeID, id)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid store additive ID: %d", id)
-		}
-		if storeAdditive == nil {
-			return nil, nil, fmt.Errorf("store additive with ID %d is nil", id)
-		}
-		if storeAdditive.Additive.Name == "" {
-			return nil, nil, fmt.Errorf("store additive with ID %d has an empty name", id)
-		}
-
-		price := storeAdditive.Additive.BasePrice
-		if storeAdditive.StorePrice != nil {
-			price = *storeAdditive.StorePrice
-		}
-		prices[id] = price
-		additiveNames[id] = storeAdditive.Additive.Name
-	}
-	return prices, additiveNames, nil
-}
-
-func ValidateStoreProductSizes(storeID uint, storeProductSizeIDs []uint, repo storeProducts.StoreProductRepository) (map[uint]float64, map[uint]string, error) {
-	prices := make(map[uint]float64)
-	productNames := make(map[uint]string)
-	for _, id := range storeProductSizeIDs {
-		storeProductSize, err := repo.GetStoreProductSizeById(storeID, id)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid store product size ID: %d", id)
-		}
-		if storeProductSize == nil {
-			return nil, nil, fmt.Errorf("store product size with ID %d is nil", id)
-		}
-		if storeProductSize.ProductSize.Product.Name == "" {
-			return nil, nil, fmt.Errorf("product size with ID %d has an associated product with an empty name", id)
-		}
-
-		price := storeProductSize.ProductSize.BasePrice
-		if storeProductSize.StorePrice != nil {
-			price = *storeProductSize.StorePrice
-		}
-
-		prices[id] = price
-		productNames[id] = storeProductSize.StoreProduct.Product.Name
-
-	}
-	return prices, productNames, nil
-}
-
-func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
-	var storeProductSizeIDs []uint
-	var storeAdditiveIDs []uint
-	for _, product := range createOrderDTO.Suborders {
-		storeProductSizeIDs = append(storeProductSizeIDs, product.StoreProductSizeID)
-		storeAdditiveIDs = append(storeAdditiveIDs, product.StoreAdditivesIDs...)
-	}
-	return storeProductSizeIDs, storeAdditiveIDs
-}
-
 func (s *orderService) GetOrderBySubOrder(subOrderID uint) (*data.Order, error) {
 	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
 	if err != nil {
@@ -654,6 +750,21 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 		if err := s.orderRepo.UpdateOrderStatus(order.ID, newOrderStatus); err != nil {
 			return nil, fmt.Errorf("failed to update order status to completed: %w", err)
 		}
+
+		stockMap := make(map[uint]*data.StoreStock)
+
+		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
+		if err != nil {
+			return nil, fmt.Errorf("failed to deduct ingredients for products: %w", err)
+		}
+
+		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
+		if err != nil {
+			return nil, fmt.Errorf("failed to deduct ingredients for additives: %w", err)
+		}
+
+		s.notifyLowStockIngredients(order, stockMap)
+
 	} else {
 		if order.Status != data.OrderStatusPreparing {
 			if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
@@ -666,6 +777,7 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch updated suborder: %w", err)
 	}
+
 	dto := types.ConvertSuborderToDTO(updatedSuborder)
 	return &dto, nil
 }

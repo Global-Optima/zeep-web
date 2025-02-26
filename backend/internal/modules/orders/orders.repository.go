@@ -30,6 +30,8 @@ type OrderRepository interface {
 	GetOrderDetails(orderID uint) (*data.Order, error)
 	GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error)
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
+
+	CalculateFrozenStock(storeID uint) (map[uint]float64, error)
 }
 
 type orderRepository struct {
@@ -395,4 +397,51 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 		return nil, err
 	}
 	return &suborder, nil
+}
+
+func (r *orderRepository) CalculateFrozenStock(storeID uint) (map[uint]float64, error) {
+	// This map accumulates total frozen qty per ingredient
+	frozenStock := make(map[uint]float64)
+
+	var activeOrders []data.Order
+	err := r.db.
+		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive.Ingredients.Ingredient").
+		Preload("Suborders.StoreProductSize.ProductSize.ProductSizeIngredients.Ingredient").
+		Where("store_id = ?", storeID).
+		Where("status IN ?", []data.OrderStatus{
+			data.OrderStatusPending,
+			data.OrderStatusPreparing,
+		}).
+		Find(&activeOrders).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to load active orders for store %d: %w", storeID, err)
+	}
+
+	// 2. For each order, loop through suborders that are PENDING/PREPARING
+	//    (Sometimes suborders can finish individually, so only freeze what's not completed.)
+	for _, order := range activeOrders {
+		for _, sub := range order.Suborders {
+			if sub.Status != data.SubOrderStatusPending && sub.Status != data.SubOrderStatusPreparing {
+				continue
+			}
+			// Each suborder has a StoreProductSize -> ProductSize with ProductSizeIngredients
+
+			// 2a) Accumulate product-size ingredient usage
+			for _, usage := range sub.StoreProductSize.ProductSize.ProductSizeIngredients {
+				needed := usage.Quantity
+
+				frozenStock[usage.IngredientID] += needed
+			}
+
+			// 2b) Accumulate additive usage
+			for _, subAdd := range sub.SuborderAdditives {
+				for _, ingrUsage := range subAdd.StoreAdditive.Additive.Ingredients {
+					needed := ingrUsage.Quantity
+					frozenStock[ingrUsage.IngredientID] += needed
+				}
+			}
+		}
+	}
+
+	return frozenStock, nil
 }
