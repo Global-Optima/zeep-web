@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
-	"github.com/sirupsen/logrus"
-
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 
@@ -229,7 +227,7 @@ func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []t
 		}
 	}
 
-	addStockDTOs, err := s.formAddStockDTOsFromIngredients(inputSizeIDs)
+	addStockDTOs, err := s.formAddStockDTOsFromProductSizes(inputSizeIDs)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to create store products", err)
 		s.logger.Error(wrappedErr)
@@ -266,7 +264,7 @@ func (s *storeProductService) UpdateStoreProduct(storeID, storeProductID uint, d
 		}
 	}
 
-	addStockDTOs, err := s.formAddStockDTOsFromIngredients(inputSizeIDs)
+	addStockDTOs, err := s.formAddStockDTOsFromProductSizes(inputSizeIDs)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to update store product: ", err)
 		s.logger.Error(wrappedErr)
@@ -293,7 +291,7 @@ func (s *storeProductService) DeleteStoreProduct(storeID, storeProductID uint) e
 	return nil
 }
 
-func (s *storeProductService) formAddStockDTOsFromIngredients(productSizeIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
+func (s *storeProductService) formAddStockDTOsFromProductSizes(productSizeIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
 	ingredientsList, err := s.ingredientsRepo.GetIngredientsForProductSizes(productSizeIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)
@@ -318,7 +316,6 @@ func (s *storeProductService) validateProductSizesByProductID(productSizeIDs []u
 		return wrappedErr
 	}
 
-	logrus.Info(productSizes[0].ProductID)
 	if err := types.ValidateStoreProductSizes(productSizeIDs, productSizes); err != nil {
 		wrappedErr := fmt.Errorf("%w: %w", moduleErrors.ErrValidation, err)
 		s.logger.Error(wrappedErr)

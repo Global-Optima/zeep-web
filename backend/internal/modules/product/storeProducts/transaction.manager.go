@@ -30,7 +30,7 @@ func NewTransactionManager(db *gorm.DB, storeProductRepo StoreProductRepository,
 	}
 }
 
-func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storeProduct *data.StoreProduct, dtos []storeWarehousesTypes.AddStoreStockDTO) (uint, error) {
+func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storeProduct *data.StoreProduct, stockDTOs []storeWarehousesTypes.AddStoreStockDTO) (uint, error) {
 	var id uint
 	err := m.db.Transaction(func(tx *gorm.DB) error {
 		var err error
@@ -43,7 +43,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 
 		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
-		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+		if err := m.addStocks(&storeWarehouseRepo, storeID, stockDTOs); err != nil {
 			return err
 		}
 
