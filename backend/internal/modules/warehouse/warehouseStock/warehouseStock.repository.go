@@ -157,29 +157,20 @@ func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryF
 		query = query.Where("delivery_date <= ?", *filter.EndDate)
 	}
 
+	search := "%"
 	if filter.Search != nil {
+		search = "%" + *filter.Search + "%"
+	}
 
-		search := "%" + *filter.Search + "%"
-		query = query.
-			Joins("JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.delivery_id = supplier_warehouse_deliveries.id").
-			Joins("JOIN stock_materials ON supplier_warehouse_delivery_materials.stock_material_id = stock_materials.id").
-			Where(`stock_materials.name ILIKE ? OR
+	query = query.
+		Joins("JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.delivery_id = supplier_warehouse_deliveries.id").
+		Joins("JOIN stock_materials ON supplier_warehouse_delivery_materials.stock_material_id = stock_materials.id").
+		Where(`stock_materials.name ILIKE ? OR
 				stock_materials.description ILIKE ? OR
 				stock_materials.barcode ILIKE ? OR
 				suppliers.name ILIKE ?
 			`, search, search, search, search).
-			Group("supplier_warehouse_deliveries.id")
-	} else {
-		search := "%"
-		query = query.
-			Joins("JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.delivery_id = supplier_warehouse_deliveries.id").
-			Joins("JOIN stock_materials ON supplier_warehouse_delivery_materials.stock_material_id = stock_materials.id").
-			Where(`stock_materials.name ILIKE ? OR
-				stock_materials.description ILIKE ? OR
-				stock_materials.barcode ILIKE ? OR
-				suppliers.name ILIKE ?
-			`, search, search, search, search).Group("supplier_warehouse_deliveries.id")
-	}
+		Group("supplier_warehouse_deliveries.id")
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.SupplierWarehouseDelivery{})
 	if err != nil {
