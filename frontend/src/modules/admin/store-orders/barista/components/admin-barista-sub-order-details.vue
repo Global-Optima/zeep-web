@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { getSavedBarcodeSettings, useBarcodePrinter } from '@/core/hooks/use-barcode-print.hook'
+import { getSavedQRSettings, useQRPrinter } from '@/core/hooks/use-qr-print.hook'
 import { cn } from '@/core/utils/tailwind.utils'
 import {
   SubOrderStatus,
@@ -150,15 +150,15 @@ const disabledCompleteButton = computed(() =>
 /**
  * A hook to print a barcode for this suborder.
  */
-const { printBarcode } = useBarcodePrinter()
+const { printQR } = useQRPrinter()
 
 async function printQrCode() {
   if (props.suborder) {
-    const currentBaristaBarcodeSettings = getSavedBarcodeSettings()
+    const currentBaristaBarcodeSettings = getSavedQRSettings()
 
     const productName = `${props.suborder.productSize.productName} ${props.suborder.productSize.sizeName}`
     const barcode = `suborder-${props.suborder.id}`
-    await printBarcode(productName, barcode, currentBaristaBarcodeSettings.width, currentBaristaBarcodeSettings.height, { showModal: true })
+    await printQR(productName, barcode, currentBaristaBarcodeSettings.width, currentBaristaBarcodeSettings.height, { showModal: true })
   }
 }
 </script>

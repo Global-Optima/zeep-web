@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
@@ -14,17 +15,18 @@ import * as z from 'zod'
 // Lazy-load the dialog component
 const AdminSelectProductCategory = defineAsyncComponent(() =>
   import('@/modules/admin/product-categories/components/admin-select-product-category.vue')
-)
+);
 
-const props = defineProps<{
-  productDetails: ProductDetailsDTO
-  readonly?: boolean // Optional readonly flag
-}>()
+const {productDetails, readonly, isSubmitting} = defineProps<{
+  productDetails: ProductDetailsDTO;
+  readonly?: boolean;
+  isSubmitting: boolean
+}>();
 
 const emits = defineEmits<{
-  onSubmit: [dto: UpdateProductDTO]
-  onCancel: []
-}>()
+  onSubmit: [dto: UpdateProductDTO];
+  onCancel: [];
+}>();
 
 const createProductSchema = toTypedSchema(
   z.object({
@@ -33,40 +35,39 @@ const createProductSchema = toTypedSchema(
       .max(100, 'Название не может превышать 100 символов'),
     description: z.string()
       .max(500, 'Описание не может превышать 500 символов'),
-    imageUrl: z.string()
-      .url('Введите корректную ссылку (URL)'),
     categoryId: z.coerce.number()
       .min(1, 'Выберите категорию из списка'),
+    imageUrl: z.string().min(1, 'Вставьте картинку добавки'),
   })
-)
+);
 
-const { handleSubmit, isSubmitting, isFieldDirty, setFieldValue, resetForm } = useForm<UpdateProductDTO>({
+const { handleSubmit, isFieldDirty, setFieldValue, resetForm } = useForm<UpdateProductDTO>({
   validationSchema: createProductSchema,
   initialValues: {
-    name: props.productDetails.name,
-    description: props.productDetails.description,
-    imageUrl: props.productDetails.imageUrl,
-    categoryId: props.productDetails.category.id
-  }
-})
+    name: productDetails.name,
+    description: productDetails.description,
+    categoryId: productDetails.category.id,
+    imageUrl: productDetails.imageUrl,
+  },
+});
 
 const onSubmit = handleSubmit((values) => {
-  emits('onSubmit', values)
-})
+  emits('onSubmit', values);
+});
 
 function onCancel() {
-  resetForm()
-  emits('onCancel')
+  resetForm();
+  emits('onCancel');
 }
 
-const openCategoryDialog = ref(false)
-const selectedCategory = ref<ProductCategoryDTO | null>(props.productDetails.category)
+const openCategoryDialog = ref(false);
+const selectedCategory = ref<ProductCategoryDTO | null>(productDetails.category);
 
 function selectCategory(category: ProductCategoryDTO) {
-  if (!props.readonly) {
-    selectedCategory.value = category
-    openCategoryDialog.value = false
-    setFieldValue('categoryId', category.id)
+  if (!readonly) {
+    selectedCategory.value = category;
+    openCategoryDialog.value = false;
+    setFieldValue('categoryId', category.id);
   }
 }
 </script>
@@ -83,6 +84,7 @@ function selectCategory(category: ProductCategoryDTO) {
 				size="icon"
 				type="button"
 				@click="onCancel"
+				:disabled="isSubmitting"
 			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
@@ -91,35 +93,36 @@ function selectCategory(category: ProductCategoryDTO) {
 				{{ productDetails.name }}
 			</h1>
 			<div
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
 				<Button
 					variant="outline"
 					type="button"
 					@click="onCancel"
+					:disabled="isSubmitting"
+					>Отменить</Button
 				>
-					Отменить
-				</Button>
 				<Button
 					type="submit"
 					:disabled="isSubmitting"
+					>Сохранить</Button
 				>
-					Сохранить
-				</Button>
 			</div>
 		</div>
 
 		<!-- Main Content -->
 		<div class="gap-4 grid md:grid-cols-[1fr_250px] lg:grid-cols-3">
+			<!-- Left Side: Product Details -->
 			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
 				<Card>
 					<CardHeader>
 						<CardTitle>Основная информация</CardTitle>
-						<CardDescription> Заполните основные сведения о продукте. </CardDescription>
+						<CardDescription>Заполните основные сведения о продукте.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div class="gap-6 grid">
+							<!-- Name -->
 							<FormField
 								v-slot="{ componentField }"
 								name="name"
@@ -138,6 +141,8 @@ function selectCategory(category: ProductCategoryDTO) {
 									<FormMessage />
 								</FormItem>
 							</FormField>
+
+							<!-- Description -->
 							<FormField
 								v-slot="{ componentField }"
 								name="description"
@@ -159,43 +164,12 @@ function selectCategory(category: ProductCategoryDTO) {
 						</div>
 					</CardContent>
 				</Card>
-			</div>
-      
-			<div class="items-start gap-4 grid auto-rows-max">
-				<Card>
-					<CardHeader>
-						<CardTitle>Медиа</CardTitle>
-						<CardDescription>
-							Вставьте ссылки на изображение или видео для продукта.
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div class="gap-4 grid">
-							<FormField
-								v-slot="{ componentField }"
-								name="imageUrl"
-								:validate-on-blur="!isFieldDirty"
-							>
-								<FormItem>
-									<FormLabel>Ссылка на изображение</FormLabel>
-									<FormControl>
-										<Input
-											type="text"
-											placeholder="https://example.com/image.jpg"
-											v-bind="componentField"
-											:readonly="readonly"
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							</FormField>
-						</div>
-					</CardContent>
-				</Card>
+
+				<!-- Category Card -->
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию товара</CardDescription>
+						<CardDescription>Категория товара</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div>
@@ -211,33 +185,98 @@ function selectCategory(category: ProductCategoryDTO) {
 								</Button>
 							</template>
 							<template v-else>
-								<span
-									class="text-muted-foreground"
-									>{{ selectedCategory?.name || 'Категория не выбрана' }}</span
-								>
+								<span class="text-muted-foreground">
+									{{ selectedCategory?.name || 'Категория не выбрана' }}
+								</span>
 							</template>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
+
+			<!-- Right Side: Media -->
+			<div class="items-start gap-4 grid auto-rows-max">
+				<!-- Image Preview Card -->
+				<Card>
+					<CardHeader>
+						<CardTitle>Изображение</CardTitle>
+						<CardDescription> Предварительный просмотр изображения продукта. </CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div class="space-y-2">
+							<div
+								v-if="productDetails.imageUrl"
+								class="relative border rounded-lg w-full h-48 overflow-hidden"
+							>
+								<LazyImage
+									:src="productDetails.imageUrl"
+									alt="Product Image"
+									class="rounded-lg w-full h-full object-contain"
+								/>
+							</div>
+							<div
+								v-else
+								class="p-4 border-2 border-gray-300 border-dashed rounded-lg text-center"
+							>
+								<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+									<span class="mb-2">📷</span>
+									Изображение отсутствует
+								</p>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+
+				<!-- Video Preview Card -->
+				<Card>
+					<CardHeader>
+						<CardTitle>Видео</CardTitle>
+						<CardDescription> Предварительный просмотр видео продукта. </CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div class="space-y-2">
+							<div
+								v-if="productDetails.videoUrl"
+								class="relative rounded-lg w-full h-48 overflow-hidden"
+							>
+								<video
+									:src="productDetails.videoUrl"
+									controls
+									class="w-full h-full object-cover"
+								></video>
+							</div>
+							<div
+								v-else
+								class="p-4 border-2 border-gray-300 border-dashed rounded-lg text-center"
+							>
+								<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+									<span class="mb-2">🎥</span>
+									Видео отсутствует
+								</p>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
 		</div>
+
+		<!-- Mobile Action Buttons -->
 		<div
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 			v-if="!readonly"
 		>
 			<Button
 				variant="outline"
 				type="button"
 				@click="onCancel"
+				:disabled="isSubmitting"
+				>Отменить</Button
 			>
-				Отменить
-			</Button>
 			<Button
 				type="submit"
 				:disabled="isSubmitting"
+				>Сохранить</Button
 			>
-				Сохранить
-			</Button>
 		</div>
 	</form>
 

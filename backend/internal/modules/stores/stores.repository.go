@@ -126,7 +126,7 @@ func (r *storeRepository) GetStores(filter *types.StoreFilter) ([]data.Store, er
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("name ILIKE ? OR contact_phone ILIKE = ? OR contact_email ILIKE = ?",
+		query = query.Where("name ILIKE ? OR contact_phone ILIKE ? OR contact_email ILIKE ?",
 			searchTerm, searchTerm, searchTerm)
 	}
 
@@ -163,6 +163,7 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 	}
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
+
 		if updateModels.Store != nil {
 			query := tx.Model(&data.Store{}).Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}})
 
@@ -170,17 +171,14 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 				query.UpdateColumn("franchisee_id", gorm.Expr("franchisee_id - ?", nil))
 			}
 
-			tx = query.Updates(updateModels.Store)
-			if err := tx.Error; err != nil {
+			if err := query.Updates(updateModels.Store).Error; err != nil {
 				return err
 			}
 		}
 
 		if updateModels.FacilityAddress != nil {
-			query := tx.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingStore.FacilityAddress.ID}}).
-				Updates(updateModels.FacilityAddress)
-			tx = query
-			if tx.Error != nil {
+			if err := tx.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingStore.FacilityAddress.ID}}).
+				Updates(updateModels.FacilityAddress).Error; err != nil {
 				return err
 			}
 		}

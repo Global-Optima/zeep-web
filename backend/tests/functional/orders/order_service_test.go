@@ -16,8 +16,8 @@ import (
 
 var container = tests.NewTestContainer()
 
-// ResetTestData resets the database by truncating tables and loading mock data.
-func ResetTestData(t *testing.T) *gorm.DB {
+// resetTestData resets the database by truncating tables and loading mock data.
+func resetTestData(t *testing.T) *gorm.DB {
 	db := container.GetDB()
 	if err := tests.TruncateAllTables(db); err != nil {
 		t.Fatalf("Failed to truncate all tables: %v", err)
@@ -42,7 +42,7 @@ func orderStatusPtr(s string) *data.OrderStatus {
 }
 
 func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
-	_ = ResetTestData(t)
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	testCases := []struct {
@@ -340,7 +340,7 @@ func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
 // }
 
 func TestOrderService_GeneratePDFReceipt(t *testing.T) {
-	db := ResetTestData(t)
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	// Retrieve an order from store 1 to test.
@@ -355,7 +355,7 @@ func TestOrderService_GeneratePDFReceipt(t *testing.T) {
 }
 
 func TestOrderService_GenerateSuborderBarcodePDF(t *testing.T) {
-	_ = ResetTestData(t)
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	suborderID := uint(1)
@@ -369,7 +369,7 @@ func TestOrderService_GenerateSuborderBarcodePDF(t *testing.T) {
 
 // Test GetOrderBySubOrder function.
 func TestOrderService_GetOrderBySubOrder(t *testing.T) {
-	_ = ResetTestData(t)
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	order, err := module.Service.GetOrderBySubOrder(1)
@@ -379,7 +379,7 @@ func TestOrderService_GetOrderBySubOrder(t *testing.T) {
 
 // Test GetOrderById function.
 func TestOrderService_GetOrderById(t *testing.T) {
-	_ = ResetTestData(t)
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	orderDTO, err := module.Service.GetOrderById(1)
@@ -389,7 +389,7 @@ func TestOrderService_GetOrderById(t *testing.T) {
 
 // Test GetOrderDetails function.
 func TestOrderService_GetOrderDetails(t *testing.T) {
-	_ = ResetTestData(t)
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	details, err := module.Service.GetOrderDetails(1)
@@ -399,7 +399,7 @@ func TestOrderService_GetOrderDetails(t *testing.T) {
 
 // Test ExportOrders function.
 func TestOrderService_ExportOrders(t *testing.T) {
-	_ = ResetTestData(t)
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	start := time.Now().Add(-72 * time.Hour)
@@ -417,7 +417,7 @@ func TestOrderService_ExportOrders(t *testing.T) {
 
 // Test GetSubOrders function.
 func TestOrderService_GetSubOrders(t *testing.T) {
-	_ = ResetTestData(t)
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	suborders, err := module.Service.GetSubOrders(1)
@@ -427,7 +427,7 @@ func TestOrderService_GetSubOrders(t *testing.T) {
 }
 
 func TestOrderService_CreateOrder_Combined(t *testing.T) {
-	_ = ResetTestData(t)
+	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	err := censor.InitializeCensorForTests()
@@ -578,7 +578,7 @@ func insertTestOrderWithTwoSuborders(t *testing.T, db *gorm.DB) (orderID uint, s
 	return order.ID, suborderIDs
 }
 func TestOrderService_CompleteSubOrder_Combined(t *testing.T) {
-	db := ResetTestData(t)
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	// Insert our custom test order.
@@ -626,7 +626,7 @@ func TestOrderService_CompleteSubOrder_Combined(t *testing.T) {
 }
 
 func TestOrderService_CompleteSubOrderByBarcode(t *testing.T) {
-	db := ResetTestData(t)
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	orderID, suborderIDs := insertTestOrderWithTwoSuborders(t, db)
@@ -644,7 +644,7 @@ func TestOrderService_CompleteSubOrderByBarcode(t *testing.T) {
 }
 
 func TestOrderService_AcceptSubOrder(t *testing.T) {
-	db := ResetTestData(t)
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	// Insert an order with two suborders.
@@ -666,7 +666,7 @@ func TestOrderService_AcceptSubOrder(t *testing.T) {
 }
 
 func TestOrderService_AdvanceSubOrderStatus(t *testing.T) {
-	db := ResetTestData(t)
+	db := resetTestData(t)
 	module := tests.GetOrdersModule()
 
 	// Insert an order with two suborders.

@@ -2,6 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
+	"go.uber.org/zap"
 	"log"
 	"net"
 	"os"
@@ -38,6 +41,16 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	}
 
 	dbHandler := setupDatabase(cfg, t)
+	wd, err := os.Getwd()
+	if err != nil {
+		logger.GetZapSugaredLogger().Fatalf("Failed to get current working directory: %v", err)
+	}
+	projectRoot := filepath.Join(wd, "..", "..", "..")
+	localizationLanguagesPath := filepath.Join(projectRoot, "internal/localization/languages")
+	if err := localization.InitLocalizer(&localizationLanguagesPath); err != nil {
+		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
+	}
+  
 	setupRedis(cfg, t)
 	router := setupRouter(dbHandler)
 
@@ -172,11 +185,10 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 	return redisClient
 }
 
-func setupMockStorage(cfg *config.Config, t *testing.T) *storage.StorageRepository {
-	storageRepo, err := storage.NewStorageRepository(cfg.S3.Endpoint, cfg.S3.AccessKey, cfg.S3.SecretKey, cfg.S3.BucketName, logger.GetZapSugaredLogger())
+func setupMockStorage(logger *zap.SugaredLogger) *storage.StorageRepository {
+	storageRepo, err := mockStorage.NewMockStorageRepository(logger)
 	if err != nil {
-		t.Logf("Failed to initialize storage repository: %v", err)
-		storageRepo = nil
+		log.Fatalf("Failed to initialize mock storage repository: %v", err)
 	}
 	return &storageRepo
 }
@@ -188,7 +200,7 @@ func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
-	storageRepo := setupMockStorage(config.GetConfig(), nil)
+	storageRepo := setupMockStorage(logger.GetZapSugaredLogger())
 
 	testContainer := container.NewContainer(dbHandler, storageRepo, apiRouter, logger.GetZapSugaredLogger())
 	testContainer.MustInitModules()

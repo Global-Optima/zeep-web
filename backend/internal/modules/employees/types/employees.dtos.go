@@ -46,7 +46,8 @@ type BaseEmployeeDTO struct {
 }
 
 type EmployeeDTO struct {
-	ID uint `json:"id"`
+	ID          uint `json:"id"`
+	TypeBasedID uint `json:"typeBasedId"`
 	BaseEmployeeDTO
 }
 
@@ -56,7 +57,8 @@ type BaseEmployeeDetailsDTO struct {
 }
 
 type EmployeeDetailsDTO struct {
-	ID uint `json:"id"`
+	ID          uint `json:"id"`
+	TypeBasedID uint `json:"typeBasedId"`
 	BaseEmployeeDetailsDTO
 }
 

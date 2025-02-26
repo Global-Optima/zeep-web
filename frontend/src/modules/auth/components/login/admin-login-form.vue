@@ -1,10 +1,72 @@
+<script setup lang="ts">
+import PasswordInput from '@/core/components/password-input/PasswordInput.vue'
+import { Button } from '@/core/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/core/components/ui/card'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/core/components/ui/form'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/core/components/ui/select'
+import { easyPasswordValidationSchema } from '@/core/validators/password.validator'
+import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
+import { authService } from '@/modules/auth/services/auth.service'
+import { useQuery } from '@tanstack/vue-query'
+import { toTypedSchema } from '@vee-validate/zod'
+import { useForm } from 'vee-validate'
+import * as z from 'zod'
+
+const emits = defineEmits<{
+  'login': [payload: EmployeeLoginDTO]
+}>()
+
+// Updated validation schema with Latin-only password rule
+const formSchema = toTypedSchema(
+  z.object({
+    selectedEmployeeEmail: z.string().min(1, { message: "Пожалуйста, выберите сотрудника" }),
+    password: easyPasswordValidationSchema
+  }
+))
+
+const { isSubmitting, handleSubmit } = useForm({
+  validationSchema: formSchema,
+})
+
+const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
+  queryKey: ['admin-employees'],
+  queryFn: () => authService.getAdminsAccounts(),
+  initialData: [],
+})
+
+const onSubmit = handleSubmit((values) => {
+  const dto: EmployeeLoginDTO = {
+    email: values.selectedEmployeeEmail,
+    password: values.password,
+  }
+  emits("login", dto)
+})
+</script>
+
 <template>
 	<Card class="border-none">
 		<CardHeader class="p-0">
 			<CardTitle class="text-lg sm:text-xl">Вход для администраторов</CardTitle>
 			<CardDescription> Введите ваши учетные данные для входа в систему</CardDescription>
 		</CardHeader>
-
 		<CardContent class="mt-6 p-0">
 			<form
 				class="space-y-6 w-full"
@@ -53,7 +115,6 @@
 						<FormMessage />
 					</FormItem>
 				</FormField>
-
 				<FormField
 					v-slot="{ componentField }"
 					name="password"
@@ -61,8 +122,7 @@
 					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Пароль</FormLabel>
 						<FormControl>
-							<Input
-								type="password"
+							<PasswordInput
 								placeholder="Введите ваш пароль"
 								v-bind="componentField"
 								class="text-sm sm:text-base"
@@ -72,7 +132,6 @@
 						<FormMessage />
 					</FormItem>
 				</FormField>
-
 				<Button
 					:disabled="isSubmitting"
 					type="submit"
@@ -85,66 +144,3 @@
 		</CardContent>
 	</Card>
 </template>
-
-<script setup lang="ts">
-import { Button } from '@/core/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/core/components/ui/card'
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/core/components/ui/form'
-import { Input } from '@/core/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/core/components/ui/select'
-import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
-import { authService } from '@/modules/auth/services/auth.service'
-import { useQuery } from '@tanstack/vue-query'
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm } from 'vee-validate'
-import * as z from 'zod'
-const emits = defineEmits<{
-  'login': [payload: EmployeeLoginDTO]
-}>()
-
-const formSchema = toTypedSchema(
-  z.object({
-    selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
-    password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
-  })
-)
-
-const { isSubmitting, handleSubmit } = useForm({
-  validationSchema: formSchema,
-})
-
-const { data: employees, isLoading: employeesLoading, isError: employeesError } = useQuery({
-  queryKey: ['admin-employees'],
-  queryFn: () => authService.getAdminsAccounts(),
-  initialData: [],
-})
-
-const onSubmit = handleSubmit((values) => {
-  const dto: EmployeeLoginDTO = {
-    email: values.selectedEmployeeEmail,
-    password: values.password,
-  }
-
-  emits("login", dto)
-})
-</script>
-
-<style scoped></style>

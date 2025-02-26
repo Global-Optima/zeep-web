@@ -2,6 +2,7 @@ package utils
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -13,14 +14,19 @@ const (
 	CookiePath       = "/"
 )
 
+// Detect if Client URL is using HTTP (no HTTPS)
+func isInsecureMode(clientURL string) bool {
+	return strings.HasPrefix(clientURL, "http://") // Check if URL starts with HTTP
+}
+
 func SetCookie(c *gin.Context, name, value string, expiration time.Duration) {
 	cfg := config.GetConfig()
 
 	secure := true
-	domain := cfg.Server.ClientURL
 	sameSite := http.SameSiteNoneMode
 
-	if cfg.IsDevelopment {
+	// If running in development mode OR using an IP without HTTPS, make cookies less strict
+	if cfg.IsDevelopment || isInsecureMode(cfg.Server.ClientURL) {
 		secure = false
 		sameSite = http.SameSiteLaxMode
 	}
@@ -29,7 +35,6 @@ func SetCookie(c *gin.Context, name, value string, expiration time.Duration) {
 		Name:     name,
 		Value:    value,
 		Path:     CookiePath,
-		Domain:   domain,
 		Expires:  time.Now().Add(expiration),
 		MaxAge:   int(expiration.Seconds()),
 		Secure:   secure,
@@ -48,10 +53,9 @@ func ClearCookie(c *gin.Context, name string) {
 	cfg := config.GetConfig()
 
 	secure := true
-	domain := cfg.Server.ClientURL
 	sameSite := http.SameSiteNoneMode
 
-	if cfg.IsDevelopment {
+	if cfg.IsDevelopment || isInsecureMode(cfg.Server.ClientURL) {
 		secure = false
 		sameSite = http.SameSiteLaxMode
 	}
@@ -60,7 +64,6 @@ func ClearCookie(c *gin.Context, name string) {
 		Name:     name,
 		Value:    "",
 		Path:     CookiePath,
-		Domain:   domain,
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		Secure:   secure,

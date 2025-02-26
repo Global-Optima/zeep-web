@@ -53,7 +53,7 @@
 
 						<Button
 							variant="outline"
-							@click="$router.push(`/admin/employees/${employeeId}/audit`)"
+							@click="$router.push(`/admin/employees/${employee.employeeId}/audit`)"
 							>Еще</Button
 						>
 					</div>
@@ -84,7 +84,7 @@ import { employeeAuditService } from '@/modules/admin/employees/services/employe
 import { storeEmployeeService } from '@/modules/admin/employees/stores/services/store-employees.service'
 import { useQuery } from '@tanstack/vue-query'
 import { CheckCircle, Clock, DollarSign } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 interface Stat {
@@ -109,8 +109,8 @@ const { data: employee } = useQuery({
 
 const { data: employeeAudits } = useQuery({
 	queryKey: ['employee-audits', employeeId],
-	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employeeId) }),
-	enabled: !isNaN(Number(employeeId)),
+	queryFn: () => employeeAuditService.getAudits({ employeeId: Number(employee.value?.employeeId) }),
+	enabled: computed(() => Boolean(employee.value?.employeeId)),
 })
 
 const employeeStats = ref<Stat>({

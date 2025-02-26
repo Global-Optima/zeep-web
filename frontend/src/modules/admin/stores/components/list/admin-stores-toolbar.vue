@@ -21,7 +21,12 @@
 			>
 				Экспорт
 			</Button>
-			<Button @click="addStore"> Добавить </Button>
+			<Button
+				v-if="canCreate"
+				@click="addStore"
+			>
+				Добавить
+			</Button>
 		</div>
 	</div>
 </template>
@@ -30,6 +35,8 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { StoresFilter } from '@/modules/admin/stores/models/stores-dto.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
@@ -42,6 +49,8 @@ const emit = defineEmits(['update:filter'])
 // Local copy of the filter to avoid direct mutation
 const localFilter = ref({ ...props.filter })
 
+const canCreate = useHasRole(EmployeeRole.ADMIN)
+
 // Search term with debouncing
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
@@ -49,7 +58,7 @@ const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 // Watch debounced search term and emit updates
 watch(debouncedSearchTerm, (newValue) => {
 	localFilter.value.search = newValue
-	emit('update:filter', { searchTerm: newValue.trim() })
+	emit('update:filter', { search: newValue.trim() })
 })
 
 // Navigate to add store page

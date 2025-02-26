@@ -37,7 +37,6 @@ jobs:
     defaults:
       run:
         working-directory: ./backend
-    needs: frontend
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -67,4 +66,4 @@ jobs:
           user: ${{ secrets.STAGING_SSH_USERNAME }}
           private_key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           command: |
-            ./deploy.sh
+            ~/deploy.sh

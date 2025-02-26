@@ -33,7 +33,7 @@ type StoreProductSizeDetailsDTO struct {
 type CreateStoreProductDTO struct {
 	ProductID    uint                        `json:"productId" binding:"required,gt=0"`
 	IsAvailable  bool                        `json:"isAvailable" binding:"required"`
-	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"required,dive"`
+	ProductSizes []CreateStoreProductSizeDTO `json:"productSizes" binding:"required,min=1,dive"`
 }
 
 type CreateStoreProductSizeDTO struct {
@@ -43,7 +43,7 @@ type CreateStoreProductSizeDTO struct {
 
 type UpdateStoreProductDTO struct {
 	IsAvailable  *bool                       `json:"isAvailable"`
-	ProductSizes []UpdateStoreProductSizeDTO `json:"productSizes" binding:"omitempty,dive"`
+	ProductSizes []UpdateStoreProductSizeDTO `json:"productSizes" binding:"required,min=1,dive"`
 }
 
 type UpdateStoreProductSizeDTO struct {
@@ -58,6 +58,10 @@ type StoreProductsFilterDTO struct {
 	Search      *string  `form:"search" binding:"omitempty,max=50"`
 	MaxPrice    *float64 `form:"maxPrice" binding:"omitempty,gt=0"`
 	MinPrice    *float64 `form:"minPrice" binding:"omitempty,gt=0"`
+}
+
+type ExcludedStoreProductsFilterDTO struct {
+	StoreProductIDs []uint `json:"storeProductIds" binding:"required,gt=0"`
 }
 
 type StoreProductSizesFilterDTO struct {

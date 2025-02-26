@@ -29,7 +29,7 @@
 		<!-- Reload Button -->
 
 		<div class="flex items-center gap-2">
-			<AdminBaristaBarcodeSizesDialog />
+			<AdminBaristaQrSizesDialog />
 
 			<Button
 				size="icon"
@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import AdminBaristaBarcodeSizesDialog from '@/modules/admin/store-orders/barista/components/admin-barista-barcode-sizes-dialog.vue'
+import AdminBaristaQrSizesDialog from '@/modules/admin/store-orders/barista/components/admin-barista-qr-sizes-dialog.vue'
 import { ChevronLeft, RefreshCcw } from 'lucide-vue-next'
 import { toRefs } from 'vue'
 

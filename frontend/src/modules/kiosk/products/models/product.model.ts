@@ -53,8 +53,9 @@ export interface ProductSizeAdditiveDTO extends AdditiveDTO {
 export interface CreateProductDTO {
 	name: string
 	description: string
-	imageUrl?: string
-	categoryId?: number
+	categoryId: number
+	image?: File
+	video?: File
 }
 
 export interface SelectedAdditiveDTO {

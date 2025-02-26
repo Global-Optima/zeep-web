@@ -10,8 +10,8 @@ type Customer struct {
 	LastName   string            `gorm:"size:255;not null" sort:"lastName"`
 	Password   string            `gorm:"size:255;not null"`
 	Phone      string            `gorm:"size:16;not null"`
-	IsVerified bool              `gorm:"default:false" sort:"isVerified"`
-	IsBanned   bool              `gorm:"default:false" sort:"isBanned"`
+	IsVerified *bool             `gorm:"default:false" sort:"isVerified"`
+	IsBanned   *bool             `gorm:"default:false" sort:"isBanned"`
 	Addresses  []CustomerAddress `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
 	Bonuses    []Bonus           `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
 	Referrals  []Referral        `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`

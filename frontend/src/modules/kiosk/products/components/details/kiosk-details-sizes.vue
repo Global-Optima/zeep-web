@@ -11,8 +11,6 @@
 <script setup lang="ts">
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 
-
-
 const {size, isSelected} = defineProps<{size: StoreProductSizeDetailsDTO, isSelected: boolean}>()
 const emit = defineEmits(["click:size"])
 

@@ -1,7 +1,11 @@
 package stockMaterialCategory
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/pkg/errors"
+	"net/http"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -57,8 +61,14 @@ func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
 
 	response, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch stock material category")
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrNotFound):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+			return
+		default:
+			utils.SendInternalServerError(c, "Failed to fetch stock material category")
+			return
+		}
 	}
 
 	utils.SendSuccessResponse(c, response)

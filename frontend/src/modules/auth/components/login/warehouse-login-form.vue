@@ -104,7 +104,7 @@
 					<FormItem>
 						<FormLabel class="text-sm sm:text-base">Пароль</FormLabel>
 						<FormControl>
-							<Input
+							<PasswordInput
 								type="password"
 								placeholder="Введите пароль сотрудника"
 								v-bind="componentField"
@@ -129,6 +129,7 @@
 </template>
 
 <script setup lang="ts">
+import PasswordInput from '@/core/components/password-input/PasswordInput.vue'
 import { Button } from '@/core/components/ui/button'
 import {
   Card,
@@ -144,7 +145,6 @@ import {
   FormLabel,
   FormMessage
 } from '@/core/components/ui/form'
-import { Input } from '@/core/components/ui/input'
 import {
   Select,
   SelectContent,

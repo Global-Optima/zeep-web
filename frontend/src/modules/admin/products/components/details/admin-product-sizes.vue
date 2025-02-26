@@ -20,10 +20,11 @@
 			</div>
 			<template v-if="!readonly">
 				<Button @click="onAddNewVariantClick">
-					<span class="sm:whitespace-nowrap sm:not-sr-only sr-only">Добавить</span>
+					<span class="sr-only sm:not-sr-only sm:whitespace-nowrap">Добавить</span>
 				</Button>
 			</template>
 		</div>
+
 		<Card>
 			<CardContent class="mt-4">
 				<Table>
@@ -47,13 +48,15 @@
 							<TableCell>
 								{{ formatPrice(variant.basePrice) }}
 							</TableCell>
-							<TableCell>
+							<TableCell class="text-left">
 								<input
-									type="checkbox"
+									type="radio"
+									name="defaultVariant"
+									:value="variant.id"
 									:checked="variant.isDefault"
-									class="w-4 h-4"
+									class="size-5"
 									:disabled="readonly"
-									@click="e => setDefaultVariant(e, variant)"
+									@click.stop="setDefaultVariant(variant)"
 								/>
 							</TableCell>
 						</TableRow>
@@ -85,12 +88,12 @@ import { computed } from 'vue'
 import { useRouter } from "vue-router"
 
 const props = defineProps<{
-productDetails: ProductDetailsDTO
-readonly?: boolean
+  productDetails: ProductDetailsDTO
+  readonly?: boolean
 }>()
 
 const emits = defineEmits<{
-onCancel: []
+  onCancel: []
 }>()
 
 const router = useRouter()
@@ -98,53 +101,54 @@ const queryClient = useQueryClient()
 const { toast } = useToast()
 
 const { data: productSizes } = useQuery({
-queryKey: ['admin-product-sizes', props.productDetails.id],
-queryFn: () => productsService.getProductSizesByProductID(props.productDetails.id),
-enabled: Boolean(props.productDetails.id),
+  queryKey: ['admin-product-sizes', props.productDetails.id],
+  queryFn: () => productsService.getProductSizesByProductID(props.productDetails.id),
+  enabled: Boolean(props.productDetails.id),
 })
 
 const sortedProductSizes = computed(() => {
-return productSizes.value ? [...productSizes.value].sort((a, b) => a.basePrice - b.basePrice) : [];
+  return productSizes.value ? [...productSizes.value].sort((a, b) => a.basePrice - b.basePrice) : [];
 })
 
-const {mutate: updateSize} = useMutation({
-	mutationFn: (props: {productSizeId: number, dto: UpdateProductSizeDTO}) => productsService.updateProductSize(props.productSizeId, props.dto),
-	onSuccess: () => {
+const { mutate: updateSize } = useMutation({
+  mutationFn: (props: { productSizeId: number, dto: UpdateProductSizeDTO }) =>
+    productsService.updateProductSize(props.productSizeId, props.dto),
+  onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['admin-product-sizes', props.productDetails.id] })
-
     toast({
-			title: 'Успех!',
-			description: 'Данные размера товара успешно обновлены.',
-		})
-	},
+      title: 'Успех!',
+      description: 'Размер товара обновлен.',
+    })
+  },
   onError: () => {
-		toast({
-			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении размера товара.',
-			variant: 'destructive',
-		})  }
+    toast({
+      title: 'Ошибка',
+      description: 'Ошибка при обновлении размера товара.',
+      variant: 'destructive',
+    })
+  }
 })
 
-const setDefaultVariant = (e: MouseEvent, size: ProductSizeDTO) => {
-if (!props.readonly) {
-  e.stopPropagation()
-  updateSize({ productSizeId: size.id, dto: { isDefault: !size.isDefault } })
-}
+const setDefaultVariant = (size: ProductSizeDTO) => {
+  if (!props.readonly) {
+    if (!size.isDefault) {
+      updateSize({ productSizeId: size.id, dto: { isDefault: true } })
+    }
+  }
 }
 
 const onVariantClick = (variant: ProductSizeDTO) => {
   router.push(`../product-sizes/${variant.id}?productId=${props.productDetails.id}`)
-
 }
 
 function onCancel() {
-emits('onCancel')
+  emits('onCancel')
 }
 
 const onAddNewVariantClick = () => {
-if (!props.readonly) {
-  router.push(`../product-sizes/create?productId=${props.productDetails.id}`)
-}
+  if (!props.readonly) {
+    router.push(`../product-sizes/create?productId=${props.productDetails.id}`)
+  }
 }
 </script>
 

@@ -50,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { formatPhoneNumber } from '@/core/utils/fomat-phone-number.utils'
 import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
 import { useRouter } from 'vue-router'
 
@@ -61,10 +62,5 @@ const router = useRouter();
 // Navigate to store details
 const goToStore = (storeId: number) => {
   router.push(`/admin/stores/${storeId}`);
-};
-
-// Format phone number
-const formatPhoneNumber = (phone: string) => {
-  return phone.replace(/(\+7)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 ($2) $3-$4-$5');
 };
 </script>

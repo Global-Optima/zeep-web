@@ -1,164 +1,176 @@
 package product_test
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/tests/mockFiles"
+	"mime/multipart"
+	"net/http"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/tests/integration/utils"
-	"github.com/stretchr/testify/suite"
 )
 
-type ProductIntegrationTestSuite struct {
-	suite.Suite
-	Env *utils.TestEnvironment
-}
+func TestProductEndpoints(t *testing.T) {
+	env := utils.NewTestEnvironment(t)
+	defer env.Close()
 
-func (suite *ProductIntegrationTestSuite) SetupSuite() {
-	suite.Env = utils.NewTestEnvironment(suite.T())
-}
+	imageFileHeader := mockFiles.GetMockImageByFileName("test-image-valid.png")
+	videoFileHeader := mockFiles.GetMockVideoByFileName("test-video-valid.mp4")
+	imageFileHeaders := []*multipart.FileHeader{imageFileHeader}
+	videoFileHeaders := []*multipart.FileHeader{videoFileHeader}
 
-func (suite *ProductIntegrationTestSuite) TearDownSuite() {
-	suite.Env.Close()
-}
-func (suite *ProductIntegrationTestSuite) TestGetStoreProducts() {
-	// Test cases for GetStoreProducts endpointfunc (suite *ProductIntegrationTestSuite) TestGetStoreProducts() {
-	testCases := []utils.TestCase{
-		// {
-		// 	Description:  "Valid request with storeId=1 and categoryId=1",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products?storeId=1&categoryId=1",
-		// 	ExpectedCode: 200,
-		// 	ExpectedBody: []map[string]interface{}{
-		// 		{
-		// 			"id":          1,
-		// 			"name":        "Coffee",
-		// 			"description": "Hot brewed coffee",
-		// 			"imageUrl":    "https://example.com/coffee.jpg",
-		// 			"basePrice":   3.25,
-		// 		},
-		// 		{
-		// 			"id":          2,
-		// 			"name":        "Latte",
-		// 			"description": "Coffee with steamed milk",
-		// 			"imageUrl":    "https://example.com/latte.jpg",
-		// 			"basePrice":   4.25,
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	Description:  "Request with search query",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products?storeId=1&categoryId=1&search=Latte",
-		// 	ExpectedCode: 200,
-		// 	ExpectedBody: []map[string]interface{}{
-		// 		{
-		// 			"id":          2,
-		// 			"name":        "Latte",
-		// 			"description": "Coffee with steamed milk",
-		// 			"imageUrl":    "https://example.com/latte.jpg",
-		// 			"basePrice":   4.25,
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	Description:  "Non-existent storeId or categoryId",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products?storeId=999&categoryId=999",
-		// 	ExpectedCode: 200,
-		// 	ExpectedBody: []map[string]interface{}{}, // Empty array expected
-		// },
-		// {
-		// 	Description:  "Invalid storeId format",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products?storeId=abc&categoryId=1",
-		// 	ExpectedCode: 400,
-		// 	ExpectedBody: map[string]interface{}{
-		// 		"error": "Invalid store ID",
-		// 	},
-		// },
-		// {
-		// 	Description:  "Invalid categoryId format",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products?storeId=1&categoryId=abc",
-		// 	ExpectedCode: 400,
-		// 	ExpectedBody: map[string]interface{}{
-		// 		"error": "Invalid category Id",
-		// 	},
-		// },
-	}
+	//products tests
+	t.Run("Create a Product", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description: "Creating new product with an image",
+				Method:      http.MethodPost,
+				URL:         "/api/test/products",
+				FormData: map[string]string{
+					"name":        "Latte",
+					"description": "A smooth coffee with milk",
+					"categoryId":  "2",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusCreated,
+			},
+			{
+				Description: "Creating new product with an image and a video",
+				Method:      http.MethodPost,
+				URL:         "/api/test/products",
+				FormData: map[string]string{
+					"name":        "New Americano",
+					"description": "A smooth coffee with milk",
+					"categoryId":  "2",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+					"video": videoFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusCreated,
+			},
+			{
+				Description: "Barista should NOT be able to create a product",
+				Method:      http.MethodPost,
+				URL:         "/api/test/products",
+				FormData: map[string]string{
+					"name":        "Latte",
+					"description": "A smooth coffee with milk",
+					"categoryId":  "2",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+				},
+				AuthRole:     data.RoleBarista,
+				ExpectedCode: http.StatusForbidden,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 
-	suite.Env.RunTests(suite.T(), testCases)
-}
+	t.Run("Fetch products list", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description:  "Admin should fetch all products",
+				Method:       http.MethodGet,
+				URL:          "/api/test/products",
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Store Manager should fetch all products",
+				Method:       http.MethodGet,
+				URL:          "/api/test/products",
+				AuthRole:     data.RoleStoreManager,
+				ExpectedCode: http.StatusOK,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 
-func (suite *ProductIntegrationTestSuite) TestGetStoreProductDetails() {
-	testCases := []utils.TestCase{
-		// {
-		// 	Description:  "Valid request with storeId=1 and productId=1",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products/1?storeId=1",
-		// 	ExpectedCode: 200,
-		// 	ExpectedBody: map[string]interface{}{
-		// 		"id":          1,
-		// 		"name":        "Coffee",
-		// 		"description": "Hot brewed coffee",
-		// 		"imageUrl":    "https://example.com/coffee.jpg",
-		// 		"sizes": []map[string]interface{}{
-		// 			{
-		// 				"id":        1,
-		// 				"name":      "Small",
-		// 				"basePrice": 3.25,
-		// 				"measure":   "oz",
-		// 			},
-		// 		},
-		// 		"defaultAdditives": []map[string]interface{}{
-		// 			{
-		// 				"id":          1,
-		// 				"name":        "Sugar",
-		// 				"description": "Adds sweetness",
-		// 				"imageUrl":    "https://example.com/sugar.jpg",
-		// 			},
-		// 		},
-		// 		"recipeSteps": []map[string]interface{}{
-		// 			{
-		// 				"id":          1,
-		// 				"description": "Add coffee grounds",
-		// 				"imageUrl":    "https://example.com/step1.jpg",
-		// 				"step":        1,
-		// 			},
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	Description:  "Non-existent storeId or productId",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products/999?storeId=999",
-		// 	ExpectedCode: 404,
-		// 	ExpectedBody: map[string]interface{}{
-		// 		"error": "Product not found",
-		// 	},
-		// },
-		// {
-		// 	Description:  "Invalid storeId format",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products/1?storeId=abc",
-		// 	ExpectedCode: 400,
-		// 	ExpectedBody: map[string]interface{}{
-		// 		"error": "Invalid store ID",
-		// 	},
-		// },
-		// {
-		// 	Description:  "Invalid productId format",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/products/abc?storeId=1",
-		// 	ExpectedCode: 400,
-		// 	ExpectedBody: map[string]interface{}{
-		// 		"error": "Invalid product ID",
-		// 	},
-		// },
-	}
+	t.Run("Fetch a Product by ID", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description:  "Admin should fetch a product by ID",
+				Method:       http.MethodGet,
+				URL:          "/api/test/products/2",
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Should return 404 for non-existent product",
+				Method:       http.MethodGet,
+				URL:          "/api/test/products/9999",
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusNotFound,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 
-	suite.Env.RunTests(suite.T(), testCases)
-}
+	t.Run("Update a Product", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description: "Update product",
+				Method:      http.MethodPut,
+				URL:         "/api/test/products/1",
+				FormData: map[string]string{
+					"name":        "Updated Latte",
+					"description": "A smooth coffee with milk",
+					"categoryId":  "1",
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description: "Update product with an image",
+				Method:      http.MethodPut,
+				URL:         "/api/test/products/1",
+				FormData: map[string]string{
+					"name":        "Updated Latte",
+					"description": "A smooth coffee with milk",
+					"categoryId":  "1",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description: "Update product with an image and a video",
+				Method:      http.MethodPut,
+				URL:         "/api/test/products/1",
+				FormData: map[string]string{
+					"name":        "Updated Latte",
+					"description": "A smooth coffee with milk",
+					"categoryId":  "1",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+					"video": videoFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 
-func TestProductIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(ProductIntegrationTestSuite))
+	t.Run("Delete a Product", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description:  "Admin should delete a product",
+				Method:       http.MethodDelete,
+				URL:          "/api/test/products/1",
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 }

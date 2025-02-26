@@ -24,6 +24,7 @@ type StoreProductService interface {
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]types.StoreProductDetailsDTO, error)
 	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error)
+	GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]types.StoreProductDetailsDTO, error)
 	GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error)
 	CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error)
 	CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error)
@@ -132,6 +133,22 @@ func (s *storeProductService) GetAvailableProductsToAdd(storeID uint, filter *pr
 	}
 
 	return productDTOs, nil
+}
+
+func (s *storeProductService) GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]types.StoreProductDetailsDTO, error) {
+	storeProducts, err := s.repo.GetRecommendedStoreProducts(storeID, excludedStoreProductIDs)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get recommended products to add", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dtos := make([]types.StoreProductDetailsDTO, len(storeProducts))
+	for i, storeProduct := range storeProducts {
+		dtos[i] = types.MapToStoreProductDetailsDTO(&storeProduct)
+	}
+
+	return dtos, nil
 }
 
 func (s *storeProductService) GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error) {

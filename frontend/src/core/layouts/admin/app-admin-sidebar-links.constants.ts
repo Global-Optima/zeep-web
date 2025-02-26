@@ -3,6 +3,7 @@ import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import {
 	Apple,
 	Blocks,
+	BookUser,
 	Building2,
 	LayoutList,
 	ListPlus,
@@ -147,7 +148,7 @@ export const adminNavItems: SidebarNavItem[] = [
 	{
 		name: 'Поставщики',
 		routeKey: 'ADMIN_SUPPLIERS',
-		icon: Truck,
+		icon: BookUser,
 		accessRoles: [EmployeeRole.ADMIN],
 	},
 	{
@@ -159,7 +160,7 @@ export const adminNavItems: SidebarNavItem[] = [
 	{
 		name: 'Поставщики',
 		routeKey: 'ADMIN_WAREHOUSE_SUPPLIERS',
-		icon: Users,
+		icon: BookUser,
 		accessRoles: [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE],
 	},
 	{

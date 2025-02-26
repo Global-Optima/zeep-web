@@ -14,7 +14,7 @@
 				Обновить {{ getEmployeeShortName(employee) }}
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -102,7 +102,7 @@
 									<Input
 										type="tel"
 										v-bind="componentField"
-										placeholder="+7 (___) ___-__-__"
+										placeholder="+7XXXXXXXXXX"
 									/>
 								</FormControl>
 								<FormMessage />
@@ -163,7 +163,7 @@
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="handleCancel"
@@ -209,6 +209,7 @@ import { getEmployeeShortName } from '@/core/utils/user-formatting.utils'
 import type { UpdateFranchiseeEmployeeDTO } from '@/modules/admin/employees/franchisees/models/franchisees-employees.model'
 import { EmployeeRole, type EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { ChevronLeft } from 'lucide-vue-next'
+import { phoneValidationSchema } from '@/core/validators/phone.validator'
 
 const {employee} = defineProps<{
 	employee: EmployeeDTO
@@ -229,7 +230,7 @@ const schema = toTypedSchema(
 		firstName: z.string().min(2, 'Имя должно содержать минимум 2 символа').max(50, 'Имя должно содержать не более 50 символов'),
 		lastName: z.string().min(2, 'Фамилия должна содержать минимум 2 символа').max(50, 'Фамилия должна содержать не более 50 символов'),
 		email: z.string().email('Введите действительный адрес электронной почты'),
-		phone: z.string().min(7, 'Телефон должен содержать минимум 7 символов').max(15, 'Телефон должен содержать не более 15 символов'),
+		phone: phoneValidationSchema,
 		role: z.nativeEnum(EmployeeRole),
     isActive: z.boolean(),
 	})

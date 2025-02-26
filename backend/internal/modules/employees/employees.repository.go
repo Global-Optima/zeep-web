@@ -74,20 +74,33 @@ func (r *employeeRepository) GetEmployees(filter *types.EmployeesFilter) ([]data
 		switch employeeType {
 		case data.WarehouseEmployeeType:
 			query.Joins("JOIN warehouse_employees ON warehouse_employees.employee_id = employees.id").
-				Where("warehouse_employees.role = ?", *filter.Role)
+				Where("warehouse_employees.role = ?", *filter.Role).
+				Preload("WarehouseEmployee")
 		case data.StoreEmployeeType:
 			query.Joins("JOIN store_employees ON store_employees.employee_id = employees.id").
-				Where("store_employees.role = ?", *filter.Role)
+				Where("store_employees.role = ?", *filter.Role).
+				Preload("StoreEmployee")
 		case data.RegionEmployeeType:
 			query.Joins("JOIN region_employees ON region_employees.employee_id = employees.id").
-				Where("region_employees.role = ?", *filter.Role)
+				Where("region_employees.role = ?", *filter.Role).
+				Preload("RegionEmployee")
 		case data.FranchiseeEmployeeType:
 			query.Joins("JOIN franchisee_employees ON franchisee_employees.employee_id = employees.id").
-				Where("franchisee_employees.role = ?", *filter.Role)
+				Where("franchisee_employees.role = ?", *filter.Role).
+				Preload("FranchiseeEmployee")
 		case data.AdminEmployeeType:
 			query.Joins("JOIN store_employees ON store_employees.employee_id = employees.id").
-				Where("store_employees.role = ?", *filter.Role)
+				Where("store_employees.role = ?", *filter.Role).
+				Preload("AdminEmployee")
+		default:
+			return nil, fmt.Errorf("%w: %s", types.ErrUnsupportedEmployeeType, employeeType)
 		}
+	} else {
+		query.Preload("StoreEmployee").
+			Preload("WarehouseEmployee").
+			Preload("RegionEmployee").
+			Preload("FranchiseeEmployee").
+			Preload("AdminEmployee")
 	}
 
 	if filter.IsActive != nil {

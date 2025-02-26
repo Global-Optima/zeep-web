@@ -33,7 +33,7 @@ func NewProductsModule(
 ) *ProductsModule {
 	repo := product.NewProductRepository(base.DB)
 	service := product.NewProductService(repo, notificationService, storageRepo, base.Logger)
-	handler := product.NewProductHandler(service, auditService)
+	handler := product.NewProductHandler(service, auditService, base.Logger)
 
 	recipeModule := NewRecipeModule(base, auditService)
 	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeStockRepo, storageRepo)

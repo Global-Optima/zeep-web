@@ -2,7 +2,7 @@
 	<Table>
 		<TableHeader>
 			<TableRow>
-				<TableHead class="hidden w-[100px] sm:table-cell"></TableHead>
+				<TableHead class="hidden sm:table-cell w-[100px]"></TableHead>
 				<TableHead>Название</TableHead>
 				<TableHead>Категория</TableHead>
 				<TableHead>Начальная цена</TableHead>
@@ -18,12 +18,10 @@
 				class="hover:bg-slate-50 cursor-pointer"
 			>
 				<TableCell class="hidden sm:table-cell">
-					<img
+					<LazyImage
 						:src="product.imageUrl"
 						alt="Изображение товара"
-						class="bg-gray-100 p-1 rounded-md aspect-square object-contain"
-						height="64"
-						width="64"
+						class="rounded-md size-16 object-contain aspect-square"
 					/>
 				</TableCell>
 				<TableCell class="font-medium">{{ product.name }}</TableCell>
@@ -45,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import {
   Table,

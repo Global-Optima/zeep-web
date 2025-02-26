@@ -53,6 +53,7 @@ import {
 
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
+import type { LocalizedError } from '@/core/models/errors.model'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { AxiosError } from 'axios'
 import { useRouter } from 'vue-router'
@@ -161,14 +162,13 @@ const { mutate, isPending } = useMutation({
       router.push({ name: getRouteName(action.redirectRouteKey) })
     }
   },
-  onError:(error: AxiosError<{error: string}>) => {
-    const message =  error.response?.data.error ?? 'Не удалось выполнить действие. Попробуйте снова.'
+  onError: (error: AxiosError<LocalizedError>) => {
     toast({
-      title: 'Ошибка',
-      description: message,
+      title: "Ошибка",
+      description: error.response?.data.message.ru ?? 'Не удалось выполнить действие. Попробуйте снова.' ,
       variant: 'destructive',
-    })
-  },
+    });
+  }
 })
 
 function callHandler(action: StockRequestAction, payload?: RejectStockRequestStatusDTO | AcceptWithChangeRequestStatusDTO): void {

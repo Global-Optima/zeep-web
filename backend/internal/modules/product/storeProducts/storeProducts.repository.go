@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -17,6 +18,7 @@ type StoreProductRepository interface {
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
+	GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]data.StoreProduct, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
 	CreateMultipleStoreProducts(storeProducts []data.StoreProduct) ([]uint, error)
 	UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error
@@ -74,7 +76,7 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrStoreProductNotFound
+			return nil, moduleErrors.ErrNotFound
 		}
 		return nil, err
 	}
@@ -151,13 +153,37 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	return storeProducts, nil
 }
 
+func (r *storeProductRepository) GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]data.StoreProduct, error) {
+	var storeProducts []data.StoreProduct
+
+	query := r.db.Model(&data.StoreProduct{}).
+		Where("store_id = ?", storeID).
+		Where("id NOT IN (?)", excludedStoreProductIDs).
+		Order("RANDOM()").
+		Limit(5).
+		Preload("Product.ProductSizes").
+		Preload("Product.Category").
+		Preload("StoreProductSizes.ProductSize.Unit").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
+		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
+
+	if err := query.Find(&storeProducts).Error; err != nil {
+		return nil, err
+	}
+
+	return storeProducts, nil
+}
+
 func (r *storeProductRepository) GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error) {
 	var products []data.Product
 
 	query := r.db.
 		Model(&data.Product{}).
 		Preload("Category").
-		Preload("ProductSizes.Unit")
+		Preload("ProductSizes.Unit").
+		Where("EXISTS (SELECT 1 FROM product_sizes WHERE product_sizes.product_id = products.id)")
 
 	if filter.CategoryID != nil {
 		query = query.Where("products.category_id = ?", *filter.CategoryID)

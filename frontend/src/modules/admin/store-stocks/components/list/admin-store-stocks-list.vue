@@ -6,7 +6,6 @@
 				<TableHead>Категория</TableHead>
 				<TableHead>Количество</TableHead>
 				<TableHead>Мин. запас</TableHead>
-				<TableHead class="hidden md:table-cell">Единица измерения</TableHead>
 				<TableHead class="hidden md:table-cell">Статус</TableHead>
 				<TableHead class="w-12"></TableHead>
 			</TableRow>
@@ -16,7 +15,7 @@
 			<TableRow v-if="stocks.length === 0">
 				<TableCell
 					colspan="6"
-					class="py-6 text-center text-muted-foreground"
+					class="py-6 text-muted-foreground text-center"
 				>
 					Нет данных
 				</TableCell>
@@ -31,13 +30,8 @@
 			>
 				<TableCell class="font-medium">{{ stock.name }}</TableCell>
 				<TableCell>{{ stock.ingredient.category.name }}</TableCell>
-				<TableCell>{{ stock.quantity }}</TableCell>
+				<TableCell>{{ stock.quantity }} {{ stock.ingredient.unit.name.toLowerCase() }}</TableCell>
 				<TableCell>{{ stock.lowStockThreshold }}</TableCell>
-
-				<!-- Unit name (hidden on small screens) -->
-				<TableCell class="hidden md:table-cell">
-					{{ stock.ingredient.unit.name }}
-				</TableCell>
 
 				<!-- Status badge (hidden on small screens) -->
 				<TableCell class="hidden md:table-cell">
