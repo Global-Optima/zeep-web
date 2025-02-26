@@ -1,9 +1,10 @@
 package productSizes_test
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"net/http"
 	"testing"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
 	"github.com/Global-Optima/zeep-web/backend/tests/integration/utils"
 )
@@ -24,9 +25,8 @@ func TestProductEndpoints(t *testing.T) {
 					"size":        300,
 					"unitId":      1,
 					"basePrice":   4.99,
-					"isDefault":   false,
 					"ingredients": []map[string]interface{}{{"ingredientId": 2, "quantity": 5.0}},
-					"additives":   []map[string]interface{}{{"additiveId": 1, "isDefault": false}},
+					"additives":   []map[string]interface{}{{"additiveId": 1}},
 				},
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusCreated,
@@ -41,9 +41,8 @@ func TestProductEndpoints(t *testing.T) {
 					"size":        300,
 					"unitId":      1,
 					"basePrice":   4.99,
-					"isDefault":   false,
 					"ingredients": []map[string]interface{}{{"ingredientId": 2, "quantity": 5.0}},
-					"additives":   []map[string]interface{}{{"additiveId": 1, "isDefault": false}},
+					"additives":   []map[string]interface{}{{"additiveId": 1}},
 				},
 				AuthRole:     data.RoleBarista,
 				ExpectedCode: http.StatusForbidden,
