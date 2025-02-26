@@ -50,7 +50,7 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	if err := localization.InitLocalizer(&localizationLanguagesPath); err != nil {
 		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
 	}
-
+  
 	setupRedis(cfg, t)
 	router := setupRouter(dbHandler)
 

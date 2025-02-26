@@ -2,13 +2,13 @@ package censor
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"runtime"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	goaway "github.com/TwiN/go-away"
+	"github.com/sirupsen/logrus"
 )
 
 type TextCensorValidator struct {
