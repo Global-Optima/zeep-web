@@ -2,10 +2,11 @@ package tests
 
 import (
 	"fmt"
-	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 	"log"
 	"sync"
 	"time"
+
+	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
@@ -77,6 +78,18 @@ func GetTestDB() *gorm.DB {
 
 func GetOrdersModule() *modules.OrdersModule {
 	return NewTestContainer().Orders
+}
+
+func GetWarehouseModule() *modules.WarehousesModule {
+	return NewTestContainer().Warehouses
+}
+
+func GetStockMaterialModule() *modules.StockMaterialsModule {
+	return NewTestContainer().StockMaterials
+}
+
+func GetStockMaterialCategoryModule() *modules.StockMaterialCategoriesModule {
+	return NewTestContainer().StockMaterialCategories
 }
 
 func GetStockRequestsModule() *modules.StockRequestsModule {

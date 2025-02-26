@@ -181,9 +181,9 @@ func (r *stockRequestRepository) AddToStoreStock(storeID, stockMaterialID uint, 
 
 	var quantityInUnits float64
 	if stockMaterial.Ingredient.UnitID != stockMaterial.UnitID {
-		quantityInUnits = stockMaterial.Ingredient.Unit.ConversionFactor * stockMaterial.Size
+		quantityInUnits = stockMaterial.Ingredient.Unit.ConversionFactor * stockMaterial.Size * quantityInPackages
 	} else {
-		quantityInUnits = stockMaterial.Size
+		quantityInUnits = stockMaterial.Size * quantityInPackages
 	}
 
 	return r.db.Model(&data.StoreStock{}).

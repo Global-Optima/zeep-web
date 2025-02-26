@@ -117,8 +117,4 @@ if ! docker compose ps | grep -q 'healthy'; then
     handle_error "New version failed health checks!"
 fi
 
-# Step 5: Remove old containers (only if new ones are healthy)
-log "🧹 Cleaning up old containers..."
-docker compose prune -f || handle_error "Failed to clean old containers."
-
 log "✅ Deployment completed successfully with zero downtime."
