@@ -74,7 +74,6 @@ type StoreProductSizesFilterDTO struct {
 	Name       *string `form:"price" binding:"omitempty,max=1"`
 	Measure    *string `form:"measure" binding:"omitempty,max=1"`
 	Search     *string `form:"search" binding:"omitempty,max=50"`
-	IsDefault  *bool   `form:"isDefault" binding:"omitempty"`
 	MinSize    *int    `form:"minSize" binding:"omitempty,gt=0"`
 	MaxSize    *int    `form:"maxSize" binding:"omitempty,gt=0"`
 }
