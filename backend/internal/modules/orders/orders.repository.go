@@ -30,6 +30,8 @@ type OrderRepository interface {
 	GetOrderDetails(orderID uint) (*data.Order, error)
 	GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error)
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
+
+	CalculateFrozenStock(storeID uint) (map[uint]float64, error)
 }
 
 type orderRepository struct {
@@ -395,4 +397,57 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 		return nil, err
 	}
 	return &suborder, nil
+}
+
+func (r *orderRepository) CalculateFrozenStock(storeID uint) (map[uint]float64, error) {
+	frozenStock := make(map[uint]float64)
+
+	activeOrders, err := r.loadActiveOrders(storeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load active orders for store %d: %w", storeID, err)
+	}
+
+	for _, order := range activeOrders {
+		for _, sub := range order.Suborders {
+			if !isSuborderActive(sub) {
+				continue
+			}
+			accumulateProductUsage(&frozenStock, sub)
+			accumulateAdditiveUsage(&frozenStock, sub)
+		}
+	}
+
+	return frozenStock, nil
+}
+
+func (r *orderRepository) loadActiveOrders(storeID uint) ([]data.Order, error) {
+	var orders []data.Order
+	err := r.db.
+		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive.Ingredients.Ingredient").
+		Preload("Suborders.StoreProductSize.ProductSize.ProductSizeIngredients.Ingredient").
+		Where("store_id = ?", storeID).
+		Where("status IN ?", []data.OrderStatus{
+			data.OrderStatusPending,
+			data.OrderStatusPreparing,
+		}).
+		Find(&orders).Error
+	return orders, err
+}
+
+func isSuborderActive(sub data.Suborder) bool {
+	return sub.Status == data.SubOrderStatusPending || sub.Status == data.SubOrderStatusPreparing
+}
+
+func accumulateProductUsage(frozenStock *map[uint]float64, sub data.Suborder) {
+	for _, usage := range sub.StoreProductSize.ProductSize.ProductSizeIngredients {
+		(*frozenStock)[usage.IngredientID] += usage.Quantity
+	}
+}
+
+func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
+	for _, subAdd := range sub.SuborderAdditives {
+		for _, ingrUsage := range subAdd.StoreAdditive.Additive.Ingredients {
+			(*frozenStock)[ingrUsage.IngredientID] += ingrUsage.Quantity
+		}
+	}
 }

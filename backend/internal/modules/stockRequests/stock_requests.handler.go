@@ -60,6 +60,12 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 			localization.SendLocalizedResponseWithKey(c, types.Response400StockRequestExistingRequest)
 			return
 		}
+
+		if errors.Is(err, types.ErrOneRequestPerDay) {
+			localization.SendLocalizedResponseWithKey(c, types.Response400StockRequestOnlyOneRequestPerDay)
+			return
+		}
+
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
