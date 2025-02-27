@@ -1018,7 +1018,7 @@ VALUES
         '+79551234567',
         'elena@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1028,7 +1028,7 @@ VALUES
         '+79667778899',
         'sergey@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1038,7 +1038,7 @@ VALUES
         '+79223334455',
         'anna@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1048,7 +1048,7 @@ VALUES
         '+79161234567',
         'ivan@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1058,7 +1058,7 @@ VALUES
         '+79345566778',
         'maria@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1068,7 +1068,7 @@ VALUES
         '+79991234567',
         'oleg@example.com',
         false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1078,7 +1078,7 @@ VALUES
         '+79882233445',
         'tatiana@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1088,7 +1088,7 @@ VALUES
         '+79002221133',
         'alexei@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1098,7 +1098,7 @@ VALUES
         '+79115555666',
         'yulia@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1108,7 +1108,7 @@ VALUES
         '+79553334456',
         'dmitry@example.com',
         false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1118,7 +1118,7 @@ VALUES
         '+79151236817',
         'elenaOrlova@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1128,7 +1128,7 @@ VALUES
         '+79191236817',
         'begisbayev@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );

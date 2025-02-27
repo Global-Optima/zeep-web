@@ -2,8 +2,6 @@ package product
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -97,7 +95,6 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 	}
 
 	productID, err := s.repo.CreateProduct(product)
-	err = errors.New("simulated error")
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to create product: %w", err)
 		s.logger.Error(wrappedErr)
