@@ -35,6 +35,7 @@ type StoreAdditiveCategoryItemDTO struct {
 	additiveTypes.BaseAdditiveCategoryItemDTO
 	AdditiveID uint    `json:"additiveId"`
 	StorePrice float64 `json:"storePrice"`
+	IsDefault  bool    `json:"isDefault"`
 }
 
 type StoreAdditiveCategoryDTO struct {

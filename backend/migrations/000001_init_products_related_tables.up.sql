@@ -262,6 +262,7 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
+        is_default BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -321,10 +322,6 @@ CREATE TABLE
 CREATE UNIQUE INDEX unique_additive_ingredient
     ON additive_ingredients (ingredient_id, additive_id)
     WHERE deleted_at IS NULL;
-
-
-
-
 
 -- Store Stocks Table (Previously StoreWarehouseStocks)
 CREATE TABLE
