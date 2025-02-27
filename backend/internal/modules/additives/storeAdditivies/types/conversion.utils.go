@@ -56,6 +56,7 @@ func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []S
 				BaseAdditiveCategoryItemDTO: *additiveTypes.ConvertToBaseAdditiveCategoryItem(&additive, category.ID),
 				AdditiveID:                  additive.StoreAdditives[0].AdditiveID,
 				StorePrice:                  getStorePrice(&additive.StoreAdditives[0]),
+				IsDefault:                   additive.ProductSizeAdditives[0].IsDefault,
 			})
 		}
 	}

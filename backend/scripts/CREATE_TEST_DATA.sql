@@ -100,10 +100,10 @@ VALUES
   (2, 1, 3.75);
 
 -- 18. Insert into product_size_additives
-INSERT INTO product_size_additives (product_size_id, additive_id)
+INSERT INTO product_size_additives (product_size_id, additive_id, is_default)
 VALUES
-  (1, 1),
-  (1, 2);
+    (1, 1, true),
+    (1, 2, false);
 
 -- 19. Insert into ingredients
 INSERT INTO ingredients (name, calories, fat, carbs, proteins, expiration_in_days, unit_id, category_id)
