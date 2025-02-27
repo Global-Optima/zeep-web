@@ -126,17 +126,12 @@ CREATE TABLE
 		unit_id INT NOT NULL REFERENCES units (id) ON DELETE RESTRICT,
 		base_price DECIMAL(10, 2) NOT NULL CHECK (base_price > 0),
 		size INT NOT NULL,
-		is_default BOOLEAN DEFAULT FALSE,
 		product_id INT NOT NULL REFERENCES products (id) ON DELETE CASCADE,
 		discount_id INT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
-
-CREATE UNIQUE INDEX unique_default_product_size
-    ON product_sizes (product_id)
-    WHERE is_default = true AND deleted_at IS NULL;
 
 -- Additive Table
 CREATE TABLE
@@ -167,7 +162,7 @@ CREATE TABLE  franchisees (
     );
 
 -- Ensure franchisee names are unique for non-deleted rows
-CREATE UNIQUE INDEX unique_franchisee_name 
+CREATE UNIQUE INDEX unique_franchisee_name
     ON franchisees (name)
     WHERE deleted_at IS NULL;
 
@@ -267,7 +262,6 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		product_size_id INT NOT NULL REFERENCES product_sizes (id) ON DELETE CASCADE,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
-        is_default BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -331,9 +325,9 @@ CREATE UNIQUE INDEX unique_additive_ingredient
 
 
 
-	
+
 -- Store Stocks Table (Previously StoreWarehouseStocks)
-CREATE TABLE 
+CREATE TABLE
  	store_stocks (
 		id SERIAL PRIMARY KEY,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
