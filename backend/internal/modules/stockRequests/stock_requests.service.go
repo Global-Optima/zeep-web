@@ -426,7 +426,6 @@ func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, 
 
 func (s *stockRequestService) handleAcceptedWithChange(request *data.StockRequest, storeWarehouseID uint, items []types.StockRequestStockMaterialDTO, comment *string) error {
 	updatedIngredients := []data.StockRequestIngredient{}
-
 	var changeDetails []types.StockRequestDetails
 
 	for _, item := range items {
@@ -444,15 +443,22 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 					Quantity:             originalIngredient.Quantity,
 					ActualQuantity:       item.Quantity,
 				}
-
 				changeDetails = append(changeDetails, details)
+
+				// If accepted quantity is lower, return the difference to the warehouse.
+				if originalIngredient.Quantity > item.Quantity {
+					diff := originalIngredient.Quantity - item.Quantity
+					_, err := s.repo.ReturnWarehouseStock(item.StockMaterialID, request.WarehouseID, diff)
+					if err != nil {
+						return fmt.Errorf("failed to return excess stock for material ID %d: %w", item.StockMaterialID, err)
+					}
+				}
 			}
 		} else {
 			details := types.StockRequestDetails{
 				MaterialName:   stockMaterial.Name,
 				ActualQuantity: item.Quantity,
 			}
-
 			changeDetails = append(changeDetails, details)
 		}
 
@@ -472,7 +478,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 	if len(changeDetails) > 0 {
 		err := s.repo.AddDetails(request.ID, changeDetails)
 		if err != nil {
-			return fmt.Errorf("failed to add details of cahnges for request ID %d: %w", request.ID, err)
+			return fmt.Errorf("failed to add details of changes for request ID %d: %w", request.ID, err)
 		}
 	}
 
@@ -514,6 +520,14 @@ func (s *stockRequestService) handleRejectedByStoreStatus(request *data.StockReq
 			return fmt.Errorf("failed to add rejection comment for request ID %d: %w", request.ID, err)
 		}
 	}
+
+	for _, ingredient := range request.Ingredients {
+		_, err := s.repo.ReturnWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity)
+		if err != nil {
+			return fmt.Errorf("failed to return stock for material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+	}
+
 	fmt.Printf("Stock request rejected, ID: %d, Comment: %s\n", request.ID, utils.StringOrEmpty(comment))
 	return nil
 }

@@ -29,6 +29,7 @@ type StockRequestRepository interface {
 
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) (*data.WarehouseStock, error)
 	AddToStoreStock(storeID, stockMaterialID uint, quantityInPackages float64) error
+	ReturnWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) (*data.WarehouseStock, error)
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.Store, error)
 
@@ -339,4 +340,24 @@ func (r *stockRequestRepository) AddDetails(stockRequestID uint, newDetails []ty
 	}
 
 	return nil
+}
+
+func (r *stockRequestRepository) ReturnWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) (*data.WarehouseStock, error) {
+	var updatedStock data.WarehouseStock
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&data.WarehouseStock{}).
+			Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).
+			Update("quantity", gorm.Expr("quantity + ?", quantity)).Error; err != nil {
+			return fmt.Errorf("failed to return stock quantity: %w", err)
+		}
+		if err := tx.Where("warehouse_id = ? AND stock_material_id = ?", warehouseID, stockMaterialID).
+			First(&updatedStock).Error; err != nil {
+			return fmt.Errorf("failed to fetch updated warehouse stock: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &updatedStock, nil
 }
