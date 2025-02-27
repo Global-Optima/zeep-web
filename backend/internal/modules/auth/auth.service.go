@@ -44,9 +44,8 @@ func NewAuthenticationService(
 func (s *authenticationService) EmployeeLogin(email, password string) (*types.TokenPair, error) {
 	employee, err := s.employeesRepo.GetEmployeeByEmailOrPhone(email, "")
 	if err != nil {
-		wrappedErr := utils.WrapError("invalid credentials", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		s.logger.Error(types.ErrInvalidCredentials)
+		return nil, types.ErrInvalidCredentials
 	}
 
 	if employee == nil {

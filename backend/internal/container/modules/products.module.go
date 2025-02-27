@@ -3,6 +3,8 @@ package modules
 import (
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
+	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
@@ -26,7 +28,9 @@ func NewProductsModule(
 	base *common.BaseModule,
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
+	additiveService additives.AdditiveService,
 	ingredientRepo ingredients.IngredientRepository,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	storageRepo storage.StorageRepository,
 	notificationService notifications.NotificationService,
@@ -36,7 +40,7 @@ func NewProductsModule(
 	handler := product.NewProductHandler(service, auditService, base.Logger)
 
 	recipeModule := NewRecipeModule(base, auditService)
-	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeStockRepo, storageRepo)
+	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeAdditiveRepo, storeStockRepo, storageRepo)
 
 	base.Router.RegisterProductRoutes(handler)
 
@@ -87,6 +91,7 @@ func NewStoreProductsModule(
 	franchiseeService franchisees.FranchiseeService,
 	productRepo product.ProductRepository,
 	ingredientRepo ingredients.IngredientRepository,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	storageRepo storage.StorageRepository,
 ) *StoreProductsModule {
@@ -95,8 +100,9 @@ func NewStoreProductsModule(
 		repo,
 		productRepo,
 		ingredientRepo,
+		storeAdditiveRepo,
 		storageRepo,
-		storeProducts.NewTransactionManager(base.DB, repo, storeStockRepo),
+		storeProducts.NewTransactionManager(base.DB, repo, storeAdditiveRepo, storeStockRepo),
 		base.Logger)
 	handler := storeProducts.NewStoreProductHandler(service, productService, franchiseeService, auditService, base.Logger)
 

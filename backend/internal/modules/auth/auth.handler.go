@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/pkg/errors"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -44,8 +46,14 @@ func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
 
 	tokenPair, err := h.service.CustomerLogin(input.Phone, input.Password)
 	if err != nil {
-		utils.SendErrorWithStatus(c, err.Error(), http.StatusUnauthorized)
-		return
+		switch {
+		case errors.Is(err, moduleErrors.ErrValidation):
+			utils.SendErrorWithStatus(c, "invalid credentials", http.StatusBadRequest)
+			return
+		default:
+			utils.SendErrorWithStatus(c, "unexpected error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	claims := &types.CustomerClaims{}
@@ -97,19 +105,6 @@ func (h *AuthenticationHandler) CustomerRefresh(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) CustomerLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
-	if err != nil {
-		// Token not found in cookie
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &types.CustomerClaims{}
-	if err := types.ValidateCustomerJWT(token, claims, types.TokenAccess); err != nil {
-		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
 	utils.ClearCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
 	utils.ClearCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
 
@@ -126,13 +121,22 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 
 	tokenPair, err := h.service.EmployeeLogin(input.Email, input.Password)
 	if err != nil {
-		utils.SendErrorWithStatus(c, "invalid credentials", http.StatusUnauthorized)
-		return
+		switch {
+		case errors.Is(err, types.ErrInvalidCredentials):
+			utils.SendErrorWithStatus(c, "invalid credentials", http.StatusBadRequest)
+			return
+		case errors.Is(err, types.ErrInactiveEmployee):
+			utils.SendErrorWithStatus(c, "inactive employee", http.StatusForbidden)
+			return
+		default:
+			utils.SendErrorWithStatus(c, "unexpected error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	claims := &types.EmployeeClaims{}
 	if err := types.ValidateEmployeeJWT(tokenPair.AccessToken, claims, types.TokenAccess); err != nil {
-		utils.SendInternalServerError(c, "failed to validate token "+err.Error())
+		utils.SendInternalServerError(c, "failed to validate token ")
 		return
 	}
 
@@ -177,19 +181,6 @@ func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) EmployeeLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-	if err != nil {
-		// Token not found in cookie
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &types.EmployeeClaims{}
-	if err := types.ValidateEmployeeJWT(token, claims, types.TokenAccess); err != nil {
-		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
 	utils.ClearCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 	utils.ClearCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
 

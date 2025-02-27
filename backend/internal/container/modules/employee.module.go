@@ -77,7 +77,7 @@ func NewStoreEmployeesModule(
 ) *StoreEmployeesModule {
 
 	repo := storeEmployees.NewStoreEmployeeRepository(base.DB, employeeRepo)
-	service := storeEmployees.NewStoreEmployeeService(repo, employeeService, base.Logger)
+	service := storeEmployees.NewStoreEmployeeService(repo, employeeRepo, base.Logger)
 	handler := storeEmployees.NewStoreEmployeeHandler(service, employeeService, franchiseeService, auditService)
 
 	return &StoreEmployeesModule{

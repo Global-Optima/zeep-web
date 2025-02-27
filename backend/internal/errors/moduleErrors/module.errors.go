@@ -7,31 +7,34 @@ import (
 
 type ModuleErrorInterface interface {
 	Error() string
-	WithDetails(details ...string) ModuleErrorInterface
-	Details() []string
+	WithDetails(reason string, details ...string) ModuleErrorInterface
+	GetDetails() string
 }
 
 type ModuleError struct {
 	err     error
-	details []string
+	reason  string
+	details string
 }
 
 func (m ModuleError) Error() string {
 	if len(m.details) > 0 {
-		return fmt.Sprintf("%s: %s", m.err.Error(), strings.Join(m.details, "; "))
+		return fmt.Sprintf("%s: %s", m.err.Error(), m.details)
 	}
 	return m.err.Error()
 }
 
-func (m ModuleError) Details() []string {
-	return m.details
-}
+func (m ModuleError) WithDetails(reason string, details ...string) ModuleErrorInterface {
 
-func (m ModuleError) WithDetails(details ...string) ModuleErrorInterface {
 	return &ModuleError{
 		err:     m.err,
-		details: append(m.details, details...),
+		reason:  reason,
+		details: strings.Join(details, "; "),
 	}
+}
+
+func (m ModuleError) GetDetails() string {
+	return m.details
 }
 
 func NewModuleError(err error) *ModuleError {

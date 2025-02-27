@@ -1,7 +1,9 @@
 package employees
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
@@ -100,12 +102,17 @@ func (h *FranchiseeEmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 
 	id, err := h.service.CreateFranchiseeEmployee(*franchiseeID, &input)
 	if err != nil {
-		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
-			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		switch {
+		case errors.Is(err, moduleErrors.ErrAlreadyExists):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			return
+		case errors.Is(err, moduleErrors.ErrValidation):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeCreate)
 			return
 		}
-		localization.SendLocalizedResponseWithKey(c, types.Response500FranchiseeEmployeeCreate)
-		return
 	}
 
 	action := types.CreateFranchiseeEmployeeAuditFactory(&data.BaseDetails{

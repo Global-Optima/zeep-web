@@ -72,15 +72,15 @@ func (r *storeEmployeeRepository) GetStoreEmployeeByID(id uint, filter *contexts
 		Preload("Store.FacilityAddress").
 		Preload("Store.Warehouse.FacilityAddress").
 		Preload("Store.Warehouse.Region").
-		Where("id = ?", id)
+		Where(&data.StoreEmployee{BaseEntity: data.BaseEntity{ID: id}}, id)
 
 	if filter != nil {
 		if filter.StoreID != nil {
-			query = query.Where("store_id = ?", *filter.StoreID)
+			query = query.Where(&data.StoreEmployee{StoreID: *filter.StoreID})
 		}
 		if filter.FranchiseeID != nil {
 			query = query.Joins("JOIN stores ON stores.id = store_employees.store_id").
-				Where("stores.franchise_id = ?", *filter.FranchiseeID)
+				Where(&data.StoreEmployee{Store: data.Store{FranchiseeID: filter.FranchiseeID}})
 		}
 	}
 
@@ -130,9 +130,9 @@ func (r *storeEmployeeRepository) GetAllStoreEmployees(storeID uint) ([]data.Sto
 	var storeEmployees []data.StoreEmployee
 
 	err := r.db.Model(&data.StoreEmployee{}).
-		Joins("INNER JOIN employees ON store_employees.employee_id = employees.id").
-		Where("store_id = ? AND employees.is_active = true", storeID).
 		Preload("Employee").
+		Joins("INNER JOIN employees ON store_employees.employee_id = employees.id").
+		Where("store_employees.store_id = ? AND employees.is_active = true", storeID).
 		Find(&storeEmployees).Error
 
 	if err != nil {

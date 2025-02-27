@@ -16,18 +16,22 @@ type StoreProductDTO struct {
 	IsAvailable           bool    `json:"isAvailable"`
 }
 
+type StoreProductSizeDTO struct {
+	ID uint `json:"id"`
+	productTypes.BaseProductSizeDTO
+	ProductSizeID uint    `json:"productSizeId"`
+	StorePrice    float64 `json:"storePrice"`
+}
+
 type StoreProductDetailsDTO struct {
 	StoreProductDTO
-	Sizes []StoreProductSizeDetailsDTO `json:"sizes"`
+	Sizes []StoreProductSizeDTO `json:"sizes"`
 }
 
 type StoreProductSizeDetailsDTO struct {
-	ID uint `json:"id"`
-	productTypes.BaseProductSizeDTO
-	Additives     []productTypes.ProductSizeAdditiveDTO   `json:"additives"`
-	Ingredients   []productTypes.ProductSizeIngredientDTO `json:"ingredients"`
-	ProductSizeID uint                                    `json:"productSizeId"`
-	StorePrice    float64                                 `json:"storePrice"`
+	StoreProductSizeDTO
+	Additives   []productTypes.ProductSizeAdditiveDTO   `json:"additives"`
+	Ingredients []productTypes.ProductSizeIngredientDTO `json:"ingredients"`
 }
 
 type CreateStoreProductDTO struct {
