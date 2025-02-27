@@ -109,7 +109,6 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 
 	id, err := h.service.CreateProduct(&dto)
 	if err != nil {
-		h.logger.Errorf("error creating product: %v", err)
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCreate)
 		return
 	}
