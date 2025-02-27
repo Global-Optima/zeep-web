@@ -38,6 +38,8 @@ type StockRequestRepository interface {
 	DeleteStockRequest(requestID uint) error
 	GetOpenCartByStoreID(storeID uint) (*data.StockRequest, error)
 	UpdateStockRequestIngredientQuantity(ingredientID uint, quantity float64) error
+
+	CountStockRequestsInLast24Hours(storeID uint) (int64, error)
 }
 
 type stockRequestRepository struct {
@@ -360,4 +362,13 @@ func (r *stockRequestRepository) ReturnWarehouseStock(stockMaterialID, warehouse
 		return nil, err
 	}
 	return &updatedStock, nil
+}
+
+func (r *stockRequestRepository) CountStockRequestsInLast24Hours(storeID uint) (int64, error) {
+	var count int64
+	threshold := time.Now().Add(-24 * time.Hour)
+	err := r.db.Model(&data.StockRequest{}).
+		Where("store_id = ? AND created_at >= ?", storeID, threshold).
+		Count(&count).Error
+	return count, err
 }

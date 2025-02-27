@@ -14,6 +14,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const maxRequestsPerDay int64 = 3
+
 type StockRequestService interface {
 	CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, string, error)
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
@@ -55,6 +57,14 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 	}
 	if existingRequest != nil {
 		return 0, "", types.ErrExistingRequest
+	}
+
+	count, err := s.repo.CountStockRequestsInLast24Hours(storeID)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to count today's stock requests: %w", err)
+	}
+	if count >= maxRequestsPerDay {
+		return 0, "", types.ErrOneRequestPerDay
 	}
 
 	store, err := s.repo.GetStoreWarehouse(storeID)
@@ -210,14 +220,12 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) (*data.StockReq
 	}
 
 	if request.Status == data.StockRequestCreated {
-		lastRequestDate, err := s.repo.GetLastStockRequestDate(request.StoreID)
+		count, err := s.repo.CountStockRequestsInLast24Hours(request.StoreID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch last stock request date: %w", err)
+			return nil, fmt.Errorf("failed to count today's stock requests: %w", err)
 		}
-
-		err = types.ValidateStockRequestRate(lastRequestDate)
-		if err != nil {
-			return nil, err
+		if count > maxRequestsPerDay {
+			return nil, types.ErrOneRequestPerDay
 		}
 	}
 
