@@ -400,10 +400,28 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 }
 
 func (r *orderRepository) CalculateFrozenStock(storeID uint) (map[uint]float64, error) {
-	// This map accumulates total frozen qty per ingredient
 	frozenStock := make(map[uint]float64)
 
-	var activeOrders []data.Order
+	activeOrders, err := r.loadActiveOrders(storeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load active orders for store %d: %w", storeID, err)
+	}
+
+	for _, order := range activeOrders {
+		for _, sub := range order.Suborders {
+			if !isSuborderActive(sub) {
+				continue
+			}
+			accumulateProductUsage(&frozenStock, sub)
+			accumulateAdditiveUsage(&frozenStock, sub)
+		}
+	}
+
+	return frozenStock, nil
+}
+
+func (r *orderRepository) loadActiveOrders(storeID uint) ([]data.Order, error) {
+	var orders []data.Order
 	err := r.db.
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive.Ingredients.Ingredient").
 		Preload("Suborders.StoreProductSize.ProductSize.ProductSizeIngredients.Ingredient").
@@ -412,36 +430,24 @@ func (r *orderRepository) CalculateFrozenStock(storeID uint) (map[uint]float64, 
 			data.OrderStatusPending,
 			data.OrderStatusPreparing,
 		}).
-		Find(&activeOrders).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to load active orders for store %d: %w", storeID, err)
+		Find(&orders).Error
+	return orders, err
+}
+
+func isSuborderActive(sub data.Suborder) bool {
+	return sub.Status == data.SubOrderStatusPending || sub.Status == data.SubOrderStatusPreparing
+}
+
+func accumulateProductUsage(frozenStock *map[uint]float64, sub data.Suborder) {
+	for _, usage := range sub.StoreProductSize.ProductSize.ProductSizeIngredients {
+		(*frozenStock)[usage.IngredientID] += usage.Quantity
 	}
+}
 
-	// 2. For each order, loop through suborders that are PENDING/PREPARING
-	//    (Sometimes suborders can finish individually, so only freeze what's not completed.)
-	for _, order := range activeOrders {
-		for _, sub := range order.Suborders {
-			if sub.Status != data.SubOrderStatusPending && sub.Status != data.SubOrderStatusPreparing {
-				continue
-			}
-			// Each suborder has a StoreProductSize -> ProductSize with ProductSizeIngredients
-
-			// 2a) Accumulate product-size ingredient usage
-			for _, usage := range sub.StoreProductSize.ProductSize.ProductSizeIngredients {
-				needed := usage.Quantity
-
-				frozenStock[usage.IngredientID] += needed
-			}
-
-			// 2b) Accumulate additive usage
-			for _, subAdd := range sub.SuborderAdditives {
-				for _, ingrUsage := range subAdd.StoreAdditive.Additive.Ingredients {
-					needed := ingrUsage.Quantity
-					frozenStock[ingrUsage.IngredientID] += needed
-				}
-			}
+func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
+	for _, subAdd := range sub.SuborderAdditives {
+		for _, ingrUsage := range subAdd.StoreAdditive.Additive.Ingredients {
+			(*frozenStock)[ingrUsage.IngredientID] += ingrUsage.Quantity
 		}
 	}
-
-	return frozenStock, nil
 }

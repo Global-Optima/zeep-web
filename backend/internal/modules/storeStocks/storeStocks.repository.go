@@ -30,6 +30,7 @@ type StoreStockRepository interface {
 	DeductStockByAdditiveTechCart(storeID, storeAdditiveID uint) ([]data.StoreStock, error)
 
 	FindEarliestExpirationForIngredient(ingredientID, storeID uint) (*time.Time, error)
+	GetStockByStoreAndIngredient(storeID, ingredientID uint, stock *data.StoreStock) error
 }
 
 type storeStockRepository struct {
@@ -547,4 +548,17 @@ func (r *storeStockRepository) FindEarliestExpirationForIngredient(ingredientID,
 
 	utcTime := earliestExpirationDate.Time.UTC()
 	return &utcTime, nil
+}
+
+func (r *storeStockRepository) GetStockByStoreAndIngredient(
+	storeID, ingredientID uint,
+	stock *data.StoreStock,
+) error {
+	err := r.db.
+		Where("store_id = ? AND ingredient_id = ?", storeID, ingredientID).
+		First(stock).Error
+	if err != nil {
+		return fmt.Errorf("failed to fetch store stock: %w", err)
+	}
+	return nil
 }

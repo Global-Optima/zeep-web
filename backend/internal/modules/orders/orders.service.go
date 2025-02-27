@@ -145,26 +145,25 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
-	// 1) Calculate how much is already frozen by existing PENDING/PREPARING orders
+	// Calculate how much is already frozen by existing PENDING/PREPARING orders
 	frozenMap, err := s.orderRepo.CalculateFrozenStock(storeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
 	}
 
-	// 2) Attempt to create + freeze new suborders usage
-	//    If we can't fulfill them all, it returns an error early
+	// Attempt to create + freeze new suborders usage
+	// If we can't fulfill them all, it returns an error early
 	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenMap); err != nil {
 		// e.g. \"not enough stock for ingredient X\"
 		return nil, err
 	}
 
-	// 3) If we get here, we have effectively 'reserved' usage in frozenMap
-	//    Next, do your usual 'ValidationResults' to figure out item names & prices
+	// If we get here, we have effectively 'reserved' usage in frozenMap
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
-	validations, err := s.ValidationResults(
+	validations, err := s.StockAndPriceValidationResults(
 		storeID,
 		storeProductSizeIDs,
-		storeAdditiveIDs, // we no longer need to pass frozenMap here if it only calculates price,
+		storeAdditiveIDs,
 		frozenMap,
 	)
 	if err != nil {
@@ -173,7 +172,6 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, wrappedErr
 	}
 
-	// 4) Build + save the order
 	createOrderDTO.StoreID = storeID
 	order, total := types.ConvertCreateOrderDTOToOrder(
 		createOrderDTO,
@@ -189,7 +187,6 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, wrappedErr
 	}
 
-	// optional notification
 	notificationDetails := &details.NewOrderNotificationDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           order.StoreID,
@@ -198,6 +195,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		CustomerName: createOrderDTO.CustomerName,
 		OrderID:      order.ID,
 	}
+
 	if err := s.notificationService.NotifyNewOrder(notificationDetails); err != nil {
 		s.logger.Errorf("failed to notify new order: %w", err)
 	}
@@ -205,7 +203,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	return &order, nil
 }
 
-func (s *orderService) ValidationResults(
+func (s *orderService) StockAndPriceValidationResults(
 	storeID uint,
 	storeProductSizeIDs, storeAdditiveIDs []uint,
 	frozenMap map[uint]float64,
@@ -238,7 +236,7 @@ func ValidateStoreAdditives(
 	additiveNames := make(map[uint]string)
 
 	for _, addID := range storeAdditiveIDs {
-		storeAdd, err := repo.GetSufficientStoreAdditiveByID(storeID, addID, frozenMap)
+		storeAdd, err := repo.GetStoreAdditiveByID(storeID, addID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error with store additive: %w", err)
 		}
@@ -270,7 +268,7 @@ func ValidateStoreProductSizes(
 	productNames := make(map[uint]string)
 
 	for _, psID := range storeProductSizeIDs {
-		storePS, err := repo.GetSufficientStoreProductSizeById(storeID, psID, frozenMap)
+		storePS, err := repo.GetStoreProductSizeById(storeID, psID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error with store product size: %w", err)
 		}
@@ -308,12 +306,12 @@ func (s *orderService) CheckAndAccumulateSuborders(
 	suborders []types.CreateSubOrderDTO,
 	frozenMap map[uint]float64,
 ) error {
-	// 1) Expand any suborders with quantity > 1 into separate single-quantity items
+	// Expand any suborders with quantity > 1 into separate single-quantity items
 	expanded := ExpandSuborders(suborders)
 
-	// 2) For each single suborder, call existing checks
+	// For each single suborder, call existing checks
 	for _, sub := range expanded {
-		// A) Product Size
+		// Product Size
 		sps, err := s.storeProductRepo.GetSufficientStoreProductSizeById(storeID, sub.StoreProductSizeID, frozenMap)
 		if err != nil {
 			return fmt.Errorf(
@@ -327,7 +325,7 @@ func (s *orderService) CheckAndAccumulateSuborders(
 			frozenMap[usage.IngredientID] += usage.Quantity
 		}
 
-		// B) Additives
+		// Additives
 		for _, addID := range sub.StoreAdditivesIDs {
 			sa, err := s.storeAdditiveRepo.GetSufficientStoreAdditiveByID(storeID, addID, frozenMap)
 			if err != nil {
