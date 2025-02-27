@@ -162,11 +162,7 @@ func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (ui
 func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels != nil {
-			if err := r.handleDefaultSizeUpdate(tx, id); err != nil {
-				return err
-			}
-
-			if err := r.updateProductSize(tx, id, *updateModels.ProductSize); err != nil {
+			if err := r.updateProductSize(tx, id, updateModels.ProductSize); err != nil {
 				return err
 			}
 		}
@@ -187,22 +183,7 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 	})
 }
 
-func (r *productRepository) handleDefaultSizeUpdate(tx *gorm.DB, id uint) error {
-	var productSize data.ProductSize
-	if err := tx.Select("product_id").First(&productSize, id).Error; err != nil {
-		return fmt.Errorf("failed to get product size: %w", err)
-	}
-
-	if err := tx.Model(&data.ProductSize{}).
-		Where("product_id = ? AND id != ?", productSize.ProductID, id).
-		Update("is_default", false).Error; err != nil {
-		return fmt.Errorf("failed to update other product sizes: %w", err)
-	}
-
-	return nil
-}
-
-func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize data.ProductSize) error {
+func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize) error {
 	if err := tx.Model(&data.ProductSize{}).
 		Where("id = ?", id).
 		Updates(productSize).Error; err != nil {
@@ -221,6 +202,7 @@ func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, add
 		newAdditives[i] = data.ProductSizeAdditive{
 			ProductSizeID: productSizeID,
 			AdditiveID:    additive.AdditiveID,
+			IsDefault:     additive.IsDefault,
 		}
 	}
 
