@@ -125,6 +125,9 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 		case errors.Is(err, types.ErrInvalidCredentials):
 			utils.SendErrorWithStatus(c, "invalid credentials", http.StatusBadRequest)
 			return
+		case errors.Is(err, types.ErrInactiveEmployee):
+			utils.SendErrorWithStatus(c, "inactive employee", http.StatusForbidden)
+			return
 		default:
 			utils.SendErrorWithStatus(c, "unexpected error", http.StatusInternalServerError)
 			return
