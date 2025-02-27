@@ -44,7 +44,7 @@ const (
 	StoreStockComponent            ComponentName = "STORE_STOCK"
 	IngredientComponent            ComponentName = "INGREDIENT"
 	IngredientCategoryComponent    ComponentName = "INGREDIENT_CATEGORY"
-	StockRequestComponent          ComponentName = "STOCK_REQUEST"
+	StockRequestComponent          ComponentName = "STOCK_REQUESTS"
 	StockMaterialComponent         ComponentName = "STOCK_MATERIAL"
 	StockMaterialCategoryComponent ComponentName = "STOCK_MATERIAL_CATEGORY"
 	WarehouseStockComponent        ComponentName = "WAREHOUSE_STOCK"
