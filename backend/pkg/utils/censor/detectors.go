@@ -8,7 +8,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	goaway "github.com/TwiN/go-away"
-	"github.com/sirupsen/logrus"
 )
 
 type TextCensorValidator struct {
@@ -39,7 +38,6 @@ func InitCensor() error {
 		return err
 	}
 	dicts, err := LoadDictionaries(filepath.Join(sourceDir, "dictionaries.json"))
-	logrus.Info(filepath.Join(sourceDir, "dictionaries.json"))
 	if err != nil {
 		return err
 	}

@@ -2,7 +2,6 @@ package employees
 
 import (
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -30,11 +29,13 @@ func (r *adminEmployeeRepository) GetAdminEmployees(filter *types.EmployeesFilte
 		Joins("JOIN employees ON employees.id = admin_employees.employee_id")
 
 	if filter.IsActive != nil {
-		query = query.Where("is_active = ?", *filter.IsActive)
+		query = query.Where(&data.AdminEmployee{
+			Employee: data.Employee{IsActive: filter.IsActive},
+		})
 	}
 
 	if filter.Role != nil {
-		query = query.Where("role = ?", *filter.Role)
+		query = query.Where(&data.AdminEmployee{Role: *filter.Role})
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
@@ -61,7 +62,9 @@ func (r *adminEmployeeRepository) GetAdminEmployeeByID(id uint) (*data.AdminEmpl
 	var adminEmployee data.AdminEmployee
 	err := r.db.Model(&data.AdminEmployee{}).
 		Preload("Employee.Workdays").
-		Where("id = ?", id).
+		Where(&data.AdminEmployee{
+			BaseEntity: data.BaseEntity{ID: id},
+		}).
 		First(&adminEmployee).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve admin employee by ID: %w", err)
@@ -69,25 +72,13 @@ func (r *adminEmployeeRepository) GetAdminEmployeeByID(id uint) (*data.AdminEmpl
 	return &adminEmployee, nil
 }
 
-func (r *adminEmployeeRepository) GetEmployeeByID(employeeID uint) (*data.Employee, error) {
-	var employee data.Employee
-	err := r.db.Model(&data.Employee{}).
-		Preload("StoreEmployee").
-		Preload("WarehouseEmployee").
-		Preload("RegionEmployee").
-		Preload("FranchiseeEmployee").
-		Preload("AdminEmployee").
-		First(&employee, employeeID).Error
-	return &employee, err
-}
-
 func (r *adminEmployeeRepository) GetAllAdminEmployees() ([]data.AdminEmployee, error) {
 	var employees []data.AdminEmployee
 
 	err := r.db.Model(&data.AdminEmployee{}).
+		Preload("Employee").
 		Joins("INNER JOIN employees ON admin_employees.employee_id = employees.id").
 		Where("employees.is_active = true").
-		Preload("Employee").
 		Find(&employees).Error
 
 	if err != nil {

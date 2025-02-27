@@ -1,6 +1,7 @@
 package employees
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
@@ -8,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
@@ -100,12 +102,17 @@ func (h *RegionEmployeeHandler) CreateRegionEmployee(c *gin.Context) {
 
 	id, err := h.service.CreateRegionEmployee(*regionID, &input)
 	if err != nil {
-		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
-			localization.SendLocalizedResponseWithKey(c, types.Response400RegionEmployee)
+		switch {
+		case errors.Is(err, moduleErrors.ErrAlreadyExists):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			return
+		case errors.Is(err, moduleErrors.ErrValidation):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeCreate)
 			return
 		}
-		localization.SendLocalizedResponseWithKey(c, types.Response500RegionEmployeeCreate)
-		return
 	}
 
 	action := types.CreateRegionEmployeeAuditFactory(&data.BaseDetails{

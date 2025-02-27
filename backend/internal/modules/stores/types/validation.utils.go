@@ -29,13 +29,13 @@ func UpdateStoreFields(dto *UpdateStoreDTO) (*StoreUpdateModels, error) {
 	}
 	if dto.ContactPhone != "" {
 		if !utils.IsValidPhone(dto.ContactPhone, utils.DEFAULT_PHONE_NUMBER_REGION) {
-			return nil, moduleErrors.ErrInvalidPhoneNumber
+			return nil, moduleErrors.ErrValidation.WithDetails("phoneNumber")
 		}
 		store.ContactPhone = dto.ContactPhone
 	}
 	if dto.ContactEmail != "" {
 		if !utils.IsValidEmail(dto.ContactEmail) {
-			return nil, moduleErrors.ErrInvalidEmailAddress
+			return nil, moduleErrors.ErrValidation.WithDetails("email")
 		}
 		store.ContactEmail = dto.ContactEmail
 	}
@@ -61,13 +61,13 @@ func CreateStoreFields(dto *CreateStoreDTO) (*data.Store, error) {
 	store.FacilityAddress = *MapToFacilityAddressModel(&dto.FacilityAddress)
 
 	if !utils.IsValidPhone(dto.ContactPhone, utils.DEFAULT_PHONE_NUMBER_REGION) {
-		return nil, moduleErrors.ErrInvalidPhoneNumber
+		return nil, moduleErrors.ErrValidation.WithDetails("phoneNumber")
 
 	}
 	store.ContactPhone = dto.ContactPhone
 
 	if !utils.IsValidEmail(dto.ContactEmail) {
-		return nil, moduleErrors.ErrInvalidEmailAddress
+		return nil, moduleErrors.ErrValidation.WithDetails("email")
 	}
 	store.ContactEmail = dto.ContactEmail
 

@@ -2,11 +2,10 @@ package storeProducts
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
-	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -50,6 +49,7 @@ func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data
 	err := r.db.Model(&data.ProductCategory{}).
 		Joins("JOIN products ON products.category_id = product_categories.id").
 		Joins("JOIN store_products ON store_products.product_id = products.id").
+		Joins("JOIN store_product_sizes ON store_product_sizes.store_product_id = store_products.id").
 		Where("store_products.store_id = ? AND store_products.is_available = ?", storeID, true).
 		Group("product_categories.id").
 		Find(&categories).Error
@@ -66,10 +66,8 @@ func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductI
 	err := r.db.Model(&data.StoreProduct{}).
 		Where("store_id = ? AND id = ?", storeID, storeProductID).
 		Preload("Product.ProductSizes").
-		Preload("StoreProductSizes.ProductSize.Unit").
 		Preload("Product.Category").
-		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
-		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
+		Preload("StoreProductSizes.ProductSize.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
 		First(&storeProduct).Error
@@ -92,8 +90,6 @@ func (r *storeProductRepository) GetStoreProductsByStoreProductIDs(storeID uint,
 		Preload("Product.ProductSizes").
 		Preload("Product.Category").
 		Preload("StoreProductSizes.ProductSize.Unit").
-		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
-		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
 
@@ -112,8 +108,6 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 		Preload("Product.ProductSizes").
 		Preload("Product.Category").
 		Preload("StoreProductSizes.ProductSize.Unit").
-		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
-		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
 
@@ -164,8 +158,6 @@ func (r *storeProductRepository) GetRecommendedStoreProducts(storeID uint, exclu
 		Preload("Product.ProductSizes").
 		Preload("Product.Category").
 		Preload("StoreProductSizes.ProductSize.Unit").
-		Preload("StoreProductSizes.ProductSize.Additives.Additive.Category").
-		Preload("StoreProductSizes.ProductSize.Additives.Additive.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
 
