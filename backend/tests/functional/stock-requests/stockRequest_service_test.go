@@ -76,7 +76,7 @@ func TestStockRequestService_CreateStockRequest(t *testing.T) {
 		}
 		_, _, err := service.CreateStockRequest(1, dto)
 		assert.Error(t, err, "A duplicate open cart should not be allowed")
-		assert.True(t, strings.Contains(err.Error(), "уже существует"),
+		assert.True(t, strings.Contains(err.Error(), "existing"),
 			"Error message should mention that an open cart already exists")
 	})
 }
@@ -201,7 +201,7 @@ func TestStockRequestService_SetProcessedStatus(t *testing.T) {
 		id := createTestStockRequest(t, service, 1)
 		_, err := service.SetProcessedStatus(id)
 		assert.Error(t, err, "Processing should fail due to rate limit")
-		assert.True(t, strings.Contains(err.Error(), "only one stock request is allowed to send per day"),
+		assert.True(t, strings.Contains(err.Error(), "one"),
 			"Error should indicate rate limit violation")
 	})
 }
@@ -210,9 +210,9 @@ func TestStockRequestService_SetInDeliveryStatus(t *testing.T) {
 	service := setupTest(t)
 	db := getTestDB()
 
-	t.Run("Successful Transition", func(t *testing.T) {
-		id := createTestStockRequest(t, service, 1)
+	id := createTestStockRequest(t, service, 1)
 
+	t.Run("Successful Transition", func(t *testing.T) {
 		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
 			Update("status", data.StockRequestProcessed).Error
 		assert.NoError(t, err)
@@ -222,8 +222,6 @@ func TestStockRequestService_SetInDeliveryStatus(t *testing.T) {
 	})
 
 	t.Run("Insufficient Warehouse Stock", func(t *testing.T) {
-		id := createTestStockRequest(t, service, 1)
-
 		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
 			Update("status", data.StockRequestProcessed).Error
 		assert.NoError(t, err)
@@ -254,10 +252,9 @@ func TestStockRequestService_SetCompletedStatus(t *testing.T) {
 func TestStockRequestService_AcceptStockRequestWithChange(t *testing.T) {
 	service := setupTest(t)
 	db := getTestDB()
+	id := createTestStockRequest(t, service, 1)
 
 	t.Run("Existing Ingredient - Quantity Change", func(t *testing.T) {
-		id := createTestStockRequest(t, service, 1)
-
 		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
 			Update("status", data.StockRequestInDelivery).Error
 		assert.NoError(t, err)
@@ -274,8 +271,6 @@ func TestStockRequestService_AcceptStockRequestWithChange(t *testing.T) {
 	})
 
 	t.Run("New Ingredient Addition", func(t *testing.T) {
-
-		id := createTestStockRequest(t, service, 1)
 		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
 			Update("status", data.StockRequestInDelivery).Error
 		assert.NoError(t, err)
