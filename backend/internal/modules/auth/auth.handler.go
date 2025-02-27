@@ -105,19 +105,6 @@ func (h *AuthenticationHandler) CustomerRefresh(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) CustomerLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
-	if err != nil {
-		// Token not found in cookie
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &types.CustomerClaims{}
-	if err := types.ValidateCustomerJWT(token, claims, types.TokenAccess); err != nil {
-		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
 	utils.ClearCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
 	utils.ClearCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
 
@@ -191,19 +178,6 @@ func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) EmployeeLogout(c *gin.Context) {
-	token, err := utils.GetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-	if err != nil {
-		// Token not found in cookie
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	claims := &types.EmployeeClaims{}
-	if err := types.ValidateEmployeeJWT(token, claims, types.TokenAccess); err != nil {
-		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
 	utils.ClearCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 	utils.ClearCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
 
