@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 type AdditiveService interface {
+	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]uint, error)
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error)
 	CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) (uint, error)
 	UpdateAdditiveCategory(id uint, dto *types.UpdateAdditiveCategoryDTO) error
@@ -39,7 +42,6 @@ func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepo
 }
 
 func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error) {
-	// Fetch raw data from the repository
 	categories, err := s.repo.GetAdditiveCategories(filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve additives", err)
@@ -47,18 +49,33 @@ func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategories
 		return nil, wrappedErr
 	}
 
-	// Handle case where no categories are found
 	if len(categories) == 0 {
 		return []types.AdditiveCategoryDTO{}, nil
 	}
 
-	// Convert raw data into DTOs
 	var categoryDTOs []types.AdditiveCategoryDTO
 	for _, category := range categories {
 		categoryDTOs = append(categoryDTOs, *types.ConvertToAdditiveCategoryDTO(&category))
 	}
 
 	return categoryDTOs, nil
+}
+
+func (s *additiveService) GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]uint, error) {
+	var additiveIDs []uint
+
+	productSizeAdditives, err := s.repo.GetAdditivesByProductSizeIDs(productSizeIDs)
+	if err != nil && !errors.Is(err, moduleErrors.ErrNotFound) {
+		wrappedErr := utils.WrapError("failed to retrieve product size additives", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	for _, productSizeAdditive := range productSizeAdditives {
+		additiveIDs = append(additiveIDs, productSizeAdditive.AdditiveID)
+	}
+
+	return additiveIDs, nil
 }
 
 func (s *additiveService) CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) (uint, error) {

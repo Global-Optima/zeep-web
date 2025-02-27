@@ -1,12 +1,14 @@
 package employees
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
@@ -101,12 +103,17 @@ func (h *WarehouseEmployeeHandler) CreateWarehouseEmployee(c *gin.Context) {
 
 	id, err := h.service.CreateWarehouseEmployee(warehouseID, &input)
 	if err != nil {
-		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
-			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		switch {
+		case errors.Is(err, moduleErrors.ErrAlreadyExists):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			return
+		case errors.Is(err, moduleErrors.ErrValidation):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseEmployeeCreate)
 			return
 		}
-		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseEmployeeCreate)
-		return
 	}
 
 	action := types.CreateWarehouseEmployeeAuditFactory(&data.BaseDetails{

@@ -3,6 +3,7 @@ package storeStocks
 import (
 	"database/sql"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"time"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -111,7 +112,7 @@ func (r *storeStockRepository) AddStock(storeID uint, dto *types.AddStoreStockDT
 		First(&existingStock).Error
 	if err == nil {
 		return 0, fmt.Errorf("%w: stock with ingredient ID %d already exists for store ID %d",
-			types.ErrStockAlreadyExists, dto.IngredientID, storeID)
+			moduleErrors.ErrAlreadyExists, dto.IngredientID, storeID)
 	}
 
 	var ingredient data.Ingredient

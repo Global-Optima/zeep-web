@@ -3,14 +3,15 @@ package storeProducts
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
-
-	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
-	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
+	storeAdditivesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
+	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -36,6 +37,7 @@ type storeProductService struct {
 	repo               StoreProductRepository
 	productRepo        product.ProductRepository
 	ingredientsRepo    ingredients.IngredientRepository
+	storeAdditiveRepo  storeAdditives.StoreAdditiveRepository
 	storageRepo        storage.StorageRepository
 	transactionManager TransactionManager
 	logger             *zap.SugaredLogger
@@ -45,6 +47,7 @@ func NewStoreProductService(
 	repo StoreProductRepository,
 	productRepo product.ProductRepository,
 	ingredientRepo ingredients.IngredientRepository,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storageRepo storage.StorageRepository,
 	transactionManager TransactionManager,
 	logger *zap.SugaredLogger,
@@ -53,6 +56,7 @@ func NewStoreProductService(
 		repo:               repo,
 		productRepo:        productRepo,
 		ingredientsRepo:    ingredientRepo,
+		storeAdditiveRepo:  storeAdditiveRepo,
 		storageRepo:        storageRepo,
 		transactionManager: transactionManager,
 		logger:             logger,
@@ -181,24 +185,30 @@ func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.Create
 		productSizeIDs[i] = size.ProductSizeID
 	}
 
-	ingredientsList, err := s.ingredientsRepo.GetIngredientsForProductSizes(productSizeIDs)
+	addStockDTOs, err := s.formAddStockDTOsFromProductSizes(productSizeIDs)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to create store product: could not get ingredients", err)
+		wrappedErr := utils.WrapError("failed to update store product: ", err)
 		s.logger.Error(wrappedErr)
 		return 0, wrappedErr
 	}
 
-	addStockDTOs := make([]storeWarehousesTypes.AddStoreStockDTO, len(ingredientsList))
-	for i, ingredient := range ingredientsList {
-		addStockDTOs[i] = storeWarehousesTypes.AddStoreStockDTO{
-			IngredientID:      ingredient.ID,
-			Quantity:          0,
-			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
-		}
+	additiveIDs, err := s.storeAdditiveRepo.GetMissingStoreAdditiveIDsForProductSizes(storeID, productSizeIDs)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get additives of store product", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
+	storeAdditiveList := make([]data.StoreAdditive, len(additiveIDs))
+	for _, additiveID := range additiveIDs {
+		storeAdditivesTypes.CreateToStoreAdditive(&storeAdditivesTypes.CreateStoreAdditiveDTO{
+			AdditiveID: additiveID,
+			StorePrice: nil,
+		}, storeID)
 	}
 
 	storeProduct := types.CreateToStoreProduct(dto)
-	id, err := s.transactionManager.CreateStoreProductWithStocks(storeID, storeProduct, addStockDTOs)
+	id, _, err := s.transactionManager.CreateStoreProductWithStocks(storeID, storeProduct, storeAdditiveList, addStockDTOs)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to create store product", err)
 		s.logger.Error(wrappedErr)
@@ -227,20 +237,42 @@ func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []t
 		}
 	}
 
-	addStockDTOs, err := s.formAddStockDTOsFromIngredients(inputSizeIDs)
+	addStockDTOs, err := s.formAddStockDTOsFromProductSizes(inputSizeIDs)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to create store products", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	ids, err := s.transactionManager.CreateMultipleStoreProductsWithStocks(storeID, storeProducts, addStockDTOs)
+	var productSizeIDs []uint
+	for _, dto := range dtos {
+		for _, size := range dto.ProductSizes {
+			productSizeIDs = append(productSizeIDs, size.ProductSizeID)
+		}
+	}
+
+	additiveIDs, err := s.storeAdditiveRepo.GetMissingStoreAdditiveIDsForProductSizes(storeID, productSizeIDs)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get additives of store product", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	storeAdditiveList := make([]data.StoreAdditive, len(additiveIDs))
+	for i, additiveID := range additiveIDs {
+		storeAdditiveList[i] = *storeAdditivesTypes.CreateToStoreAdditive(&storeAdditivesTypes.CreateStoreAdditiveDTO{
+			AdditiveID: additiveID,
+			StorePrice: nil,
+		}, storeID)
+	}
+
+	storeProductIDs, _, err := s.transactionManager.CreateMultipleStoreProductsWithStocks(storeID, storeProducts, storeAdditiveList, addStockDTOs)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to create %d store product: %w", len(dtos), err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
-	return ids, nil
+	return storeProductIDs, nil
 }
 
 func (s *storeProductService) UpdateStoreProduct(storeID, storeProductID uint, dto *types.UpdateStoreProductDTO) error {
@@ -264,7 +296,7 @@ func (s *storeProductService) UpdateStoreProduct(storeID, storeProductID uint, d
 		}
 	}
 
-	addStockDTOs, err := s.formAddStockDTOsFromIngredients(inputSizeIDs)
+	addStockDTOs, err := s.formAddStockDTOsFromProductSizes(inputSizeIDs)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to update store product: ", err)
 		s.logger.Error(wrappedErr)
@@ -291,7 +323,7 @@ func (s *storeProductService) DeleteStoreProduct(storeID, storeProductID uint) e
 	return nil
 }
 
-func (s *storeProductService) formAddStockDTOsFromIngredients(productSizeIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
+func (s *storeProductService) formAddStockDTOsFromProductSizes(productSizeIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
 	ingredientsList, err := s.ingredientsRepo.GetIngredientsForProductSizes(productSizeIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)
@@ -311,13 +343,13 @@ func (s *storeProductService) formAddStockDTOsFromIngredients(productSizeIDs []u
 func (s *storeProductService) validateProductSizesByProductID(productSizeIDs []uint, productID uint) error {
 	productSizes, err := s.productRepo.GetProductSizesByProductID(productID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("%w: %w", types.ErrValidationFailed, err)
+		wrappedErr := fmt.Errorf("%w: %w", moduleErrors.ErrValidation, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
 
 	if err := types.ValidateStoreProductSizes(productSizeIDs, productSizes); err != nil {
-		wrappedErr := fmt.Errorf("%w: %w", types.ErrValidationFailed, err)
+		wrappedErr := fmt.Errorf("%w: %w", moduleErrors.ErrValidation, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}

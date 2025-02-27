@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -11,8 +12,12 @@ import (
 )
 
 func ValidateCustomer(input CustomerRegisterDTO) error {
-	if input.FirstName == "" && input.LastName == "" {
-		return errors.New("customer first name cannot contain empty values")
+	if strings.TrimSpace(input.FirstName) == "" {
+		return moduleErrors.ErrValidation.WithDetails("firstName", "customer first name cannot contain empty values")
+	}
+
+	if strings.TrimSpace(input.LastName) == "" {
+		return moduleErrors.ErrValidation.WithDetails("lastName", "customer last name cannot contain empty values")
 	}
 
 	if !utils.IsValidPhone(input.Phone, "") {
@@ -20,7 +25,7 @@ func ValidateCustomer(input CustomerRegisterDTO) error {
 	}
 
 	if err := utils.IsValidPassword(input.Password); err != nil {
-		return fmt.Errorf("password validation failed: %v", err)
+		return moduleErrors.ErrValidation.WithDetails("password", fmt.Sprintf("password validation failed: %v", err))
 	}
 
 	return nil
@@ -121,7 +126,7 @@ func ValidateEmployeeJWT(tokenString string, claims *EmployeeClaims, tokenType T
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.JWT.EmployeeSecretKey), nil
 	})
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to parse token: %w", err)
 	}

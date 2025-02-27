@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
@@ -12,7 +13,8 @@ func ValidateStoreProductSizes(inputIDs []uint, validProductSizes []data.Product
 
 	for _, inputID := range inputIDs {
 		if _, exists := validProductSizeIDs[inputID]; !exists {
-			return ErrInappropriateProductSizeID
+			return fmt.Errorf("%w: productSize with ID=%d doesnt match the product",
+				ErrInappropriateProductSizeID, inputID)
 		}
 	}
 
