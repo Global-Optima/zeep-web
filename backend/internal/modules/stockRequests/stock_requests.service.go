@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const maxRequestsPerDay int64 = 3
+const maxRequestsPerDay int64 = 1
 
 type StockRequestService interface {
 	CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, string, error)
@@ -224,7 +224,7 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) (*data.StockReq
 		if err != nil {
 			return nil, fmt.Errorf("failed to count today's stock requests: %w", err)
 		}
-		if count > maxRequestsPerDay {
+		if count >= maxRequestsPerDay {
 			return nil, types.ErrOneRequestPerDay
 		}
 	}
