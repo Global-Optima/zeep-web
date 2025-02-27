@@ -4,14 +4,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
-	"net/http"
+	"slices"
 	"strconv"
-)
-
-var (
-	ErrInvalidFranchiseeID = handlerErrors.NewHandlerError(errors.New("invalid franchisee ID"), http.StatusBadRequest)
-	ErrEmptyFranchiseeID   = handlerErrors.NewHandlerError(errors.New("empty franchisee ID"), http.StatusBadRequest)
 )
 
 // GetFranchiseeId returns the retrieved id and HandlerError
@@ -22,14 +16,13 @@ func GetFranchiseeId(c *gin.Context) (*uint, *handlerErrors.HandlerError) {
 	}
 
 	var franchiseeID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
+	if !slices.Contains(data.AdminPermissions, claims.Role) {
 		if claims.EmployeeType != data.FranchiseeEmployeeType {
 			return nil, ErrInvalidEmployeeType
 		}
 		franchiseeID = claims.WorkplaceID
 	} else {
 		franchiseeIdStr := c.Query("franchiseeId")
-		//TODO change
 		if franchiseeIdStr == "" {
 			return nil, nil
 		}
@@ -50,14 +43,13 @@ func GetFranchiseeIdWithRole(c *gin.Context) (*uint, data.EmployeeRole, *handler
 	}
 
 	var franchiseeID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
+	if !slices.Contains(data.AdminPermissions, claims.Role) {
 		if claims.EmployeeType != data.FranchiseeEmployeeType {
 			return nil, "", ErrInvalidEmployeeType
 		}
 		franchiseeID = claims.WorkplaceID
 	} else {
 		franchiseeIdStr := c.Query("franchiseeId")
-		//TODO change
 		if franchiseeIdStr == "" {
 			return nil, claims.Role, nil
 		}

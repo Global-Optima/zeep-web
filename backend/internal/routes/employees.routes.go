@@ -363,7 +363,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 
 		storeRoutes := router.Group("/stores")
 		{
-			storeRoutes.POST("", handler.AssignStoreToWarehouse)                                                                                       //TODO On considerations
+			storeRoutes.POST("", handler.AssignStoreToWarehouse)
 			storeRoutes.GET("/:warehouseId", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetAllStoresByWarehouse) // Store and warehouse
 		}
 
@@ -378,7 +378,6 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 			stockRoutes.GET("/deliveries", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveries)       // Region and warehouses
 			stockRoutes.GET("/deliveries/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveryByID) // Region and warehouses
 
-			//TODO Consider if it needed, consider requests
 			stockRoutes.POST("/transfer", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseStockHandler.TransferInventory) // region manager
 		}
 	}

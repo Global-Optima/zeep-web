@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
+	"slices"
 	"strconv"
 )
 
@@ -14,6 +15,8 @@ var (
 	ErrEmptyStoreID        = handlerErrors.NewHandlerError(errors.New("empty store ID"), http.StatusBadRequest)
 	ErrUnauthorizedAccess  = handlerErrors.NewHandlerError(errors.New("unauthorized access to store"), http.StatusUnauthorized)
 	ErrInvalidEmployeeType = handlerErrors.NewHandlerError(errors.New("invalid employee type"), http.StatusBadRequest)
+
+	storeExternalRoles = append(data.AdminPermissions, data.FranchiseePermissions...)
 )
 
 // GetStoreId returns the retrieved id and HandlerError
@@ -24,7 +27,8 @@ func GetStoreId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
 	}
 
 	var storeID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner && claims.Role != data.RoleFranchiseOwner && claims.Role != data.RoleFranchiseManager {
+
+	if !slices.Contains(storeExternalRoles, claims.Role) {
 		if claims.EmployeeType != data.StoreEmployeeType {
 			return 0, ErrInvalidEmployeeType
 		}
@@ -51,7 +55,7 @@ func GetStoreIdWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerErrors
 	}
 
 	var storeID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner && claims.Role != data.RoleFranchiseOwner && claims.Role != data.RoleFranchiseManager {
+	if !slices.Contains(storeExternalRoles, claims.Role) {
 		if claims.EmployeeType != data.StoreEmployeeType {
 			return 0, "", ErrInvalidEmployeeType
 		}

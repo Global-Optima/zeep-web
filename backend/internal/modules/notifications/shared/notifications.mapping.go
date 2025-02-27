@@ -15,7 +15,6 @@ type NotificationRoleMappingManager struct {
 	mappings []NotificationRoleMapping
 }
 
-// TODO check role mapping
 func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 	if NotificationRoleMappingManagerInstance == nil {
 		NotificationRoleMappingManagerInstance = &NotificationRoleMappingManager{
