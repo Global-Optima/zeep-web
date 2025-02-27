@@ -14,6 +14,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const maxRequestsPerDay int64 = 3
+
 type StockRequestService interface {
 	CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, string, error)
 	GetStockRequests(filter types.GetStockRequestsFilter) ([]types.StockRequestResponse, error)
@@ -55,6 +57,14 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 	}
 	if existingRequest != nil {
 		return 0, "", types.ErrExistingRequest
+	}
+
+	count, err := s.repo.CountStockRequestsInLast24Hours(storeID)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to count today's stock requests: %w", err)
+	}
+	if count >= maxRequestsPerDay {
+		return 0, "", types.ErrOneRequestPerDay
 	}
 
 	store, err := s.repo.GetStoreWarehouse(storeID)
@@ -210,14 +220,12 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) (*data.StockReq
 	}
 
 	if request.Status == data.StockRequestCreated {
-		lastRequestDate, err := s.repo.GetLastStockRequestDate(request.StoreID)
+		count, err := s.repo.CountStockRequestsInLast24Hours(request.StoreID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch last stock request date: %w", err)
+			return nil, fmt.Errorf("failed to count today's stock requests: %w", err)
 		}
-
-		err = types.ValidateStockRequestRate(lastRequestDate)
-		if err != nil {
-			return nil, err
+		if count > maxRequestsPerDay {
+			return nil, types.ErrOneRequestPerDay
 		}
 	}
 
@@ -426,7 +434,6 @@ func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, 
 
 func (s *stockRequestService) handleAcceptedWithChange(request *data.StockRequest, storeWarehouseID uint, items []types.StockRequestStockMaterialDTO, comment *string) error {
 	updatedIngredients := []data.StockRequestIngredient{}
-
 	var changeDetails []types.StockRequestDetails
 
 	for _, item := range items {
@@ -444,15 +451,22 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 					Quantity:             originalIngredient.Quantity,
 					ActualQuantity:       item.Quantity,
 				}
-
 				changeDetails = append(changeDetails, details)
+
+				// If accepted quantity is lower, return the difference to the warehouse.
+				if originalIngredient.Quantity > item.Quantity {
+					diff := originalIngredient.Quantity - item.Quantity
+					_, err := s.repo.ReturnWarehouseStock(item.StockMaterialID, request.WarehouseID, diff)
+					if err != nil {
+						return fmt.Errorf("failed to return excess stock for material ID %d: %w", item.StockMaterialID, err)
+					}
+				}
 			}
 		} else {
 			details := types.StockRequestDetails{
 				MaterialName:   stockMaterial.Name,
 				ActualQuantity: item.Quantity,
 			}
-
 			changeDetails = append(changeDetails, details)
 		}
 
@@ -472,7 +486,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 	if len(changeDetails) > 0 {
 		err := s.repo.AddDetails(request.ID, changeDetails)
 		if err != nil {
-			return fmt.Errorf("failed to add details of cahnges for request ID %d: %w", request.ID, err)
+			return fmt.Errorf("failed to add details of changes for request ID %d: %w", request.ID, err)
 		}
 	}
 
@@ -514,6 +528,14 @@ func (s *stockRequestService) handleRejectedByStoreStatus(request *data.StockReq
 			return fmt.Errorf("failed to add rejection comment for request ID %d: %w", request.ID, err)
 		}
 	}
+
+	for _, ingredient := range request.Ingredients {
+		_, err := s.repo.ReturnWarehouseStock(ingredient.StockMaterialID, request.WarehouseID, ingredient.Quantity)
+		if err != nil {
+			return fmt.Errorf("failed to return stock for material ID %d: %w", ingredient.StockMaterialID, err)
+		}
+	}
+
 	fmt.Printf("Stock request rejected, ID: %d, Comment: %s\n", request.ID, utils.StringOrEmpty(comment))
 	return nil
 }
