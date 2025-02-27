@@ -4,14 +4,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
-	"net/http"
+	"slices"
 	"strconv"
-)
-
-var (
-	ErrInvalidRegionID = handlerErrors.NewHandlerError(errors.New("invalid region ID"), http.StatusBadRequest)
-	ErrEmptyRegionID   = handlerErrors.NewHandlerError(errors.New("empty region ID"), http.StatusBadRequest)
 )
 
 // GetRegionId returns the retrieved id and HandlerError
@@ -22,14 +16,13 @@ func GetRegionId(c *gin.Context) (*uint, *handlerErrors.HandlerError) {
 	}
 
 	var regionID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
+	if !slices.Contains(data.AdminPermissions, claims.Role) {
 		if claims.EmployeeType != data.RegionEmployeeType {
 			return nil, ErrInvalidEmployeeType
 		}
 		regionID = claims.WorkplaceID
 	} else {
 		regionIdStr := c.Query("regionId")
-		//TODO change
 		if regionIdStr == "" {
 			return nil, nil
 		}
@@ -49,14 +42,13 @@ func GetRegionIdWithRole(c *gin.Context) (*uint, data.EmployeeRole, *handlerErro
 	}
 
 	var regionID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner {
+	if !slices.Contains(data.AdminPermissions, claims.Role) {
 		if claims.EmployeeType != data.RegionEmployeeType {
 			return nil, "", ErrInvalidEmployeeType
 		}
 		regionID = claims.WorkplaceID
 	} else {
 		regionIdStr := c.Query("regionId")
-		//TODO change
 		if regionIdStr == "" {
 			return nil, claims.Role, nil
 		}

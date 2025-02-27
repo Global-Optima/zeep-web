@@ -6,12 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"
+	"slices"
 	"strconv"
 )
 
 var (
 	ErrInvalidWarehouseID = handlerErrors.NewHandlerError(errors.New("invalid Warehouse ID"), http.StatusBadRequest)
 	ErrEmptyWarehouseID   = handlerErrors.NewHandlerError(errors.New("empty Warehouse ID"), http.StatusBadRequest)
+
+	warehouseExternalRoles = append(data.AdminPermissions, data.RegionPermissions...)
 )
 
 // GetWarehouseId returns the retrieved id and HandlerError
@@ -22,7 +25,7 @@ func GetWarehouseId(c *gin.Context) (uint, *handlerErrors.HandlerError) {
 	}
 
 	var warehouseID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner && claims.Role != data.RoleRegionWarehouseManager {
+	if !slices.Contains(warehouseExternalRoles, claims.Role) {
 		if claims.EmployeeType != data.WarehouseEmployeeType {
 			return 0, ErrInvalidEmployeeType
 		}
@@ -51,7 +54,7 @@ func GetWarehouseIdWithRole(c *gin.Context) (uint, data.EmployeeRole, *handlerEr
 	}
 
 	var warehouseID uint
-	if claims.Role != data.RoleAdmin && claims.Role != data.RoleOwner && claims.Role != data.RoleRegionWarehouseManager {
+	if !slices.Contains(warehouseExternalRoles, claims.Role) {
 		if claims.EmployeeType != data.WarehouseEmployeeType {
 			return 0, "", ErrInvalidEmployeeType
 		}

@@ -194,6 +194,11 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to add additive", err)
 		s.logger.Error(wrappedErr)
+		go func() {
+			if additive.ImageURL.ToString() != "" {
+				s.storageRepo.DeleteImageFiles(additive.ImageURL)
+			}
+		}()
 		return 0, wrappedErr
 	}
 
@@ -233,6 +238,11 @@ func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAddit
 	if err := s.repo.UpdateAdditiveWithAssociations(additiveID, updateModels); err != nil {
 		wrappedErr := utils.WrapError("failed to update additive with associations", err)
 		s.logger.Error(wrappedErr)
+		go func() {
+			if updateModels.Additive.ImageURL.ToString() != "" {
+				s.storageRepo.DeleteImageFiles(updateModels.Additive.ImageURL)
+			}
+		}()
 		return nil, err
 	}
 

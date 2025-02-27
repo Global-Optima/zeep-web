@@ -2,6 +2,7 @@ package product
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -96,9 +97,19 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 	}
 
 	productID, err := s.repo.CreateProduct(product)
+	err = errors.New("simulated error")
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to create product: %w", err)
 		s.logger.Error(wrappedErr)
+		go func() {
+			if product.ImageURL.ToString() != "" {
+				s.storageRepo.DeleteImageFiles(product.ImageURL)
+			}
+
+			if product.VideoURL.ToString() != "" {
+				_ = s.storageRepo.DeleteFile(product.VideoURL.GetConvertedVideoObjectKey())
+			}
+		}()
 		return 0, wrappedErr
 	}
 
@@ -141,6 +152,15 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to update product: %w", err)
 		s.logger.Error(wrappedErr)
+		go func() {
+			if product.ImageURL.ToString() != "" {
+				s.storageRepo.DeleteImageFiles(product.ImageURL)
+			}
+
+			if product.VideoURL.ToString() != "" {
+				_ = s.storageRepo.DeleteFile(product.VideoURL.GetConvertedVideoObjectKey())
+			}
+		}()
 		return nil, wrappedErr
 	}
 
@@ -154,7 +174,7 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		}
 	}()
 
-	changes := types.GenerateProductChanges(oldProduct, dto)
+	changes := types.GenerateProductChanges(oldProduct, dto, product.ImageURL)
 
 	if len(changes) != 0 {
 		notificationDetails := &details.CentralCatalogUpdateDetails{

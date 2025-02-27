@@ -37,6 +37,7 @@ type StorageRepository interface {
 		vidFileHeader *multipart.FileHeader,
 	) (convertedImageFileName, convertedVideoFileName string, err error)
 	DeleteFile(key string) error
+	DeleteImageFiles(key data.S3ImageKey)
 	MarkFileAsDeleted(key string) error
 	MarkImagesAsDeleted(key data.S3ImageKey)
 	GetFileURL(key string) (string, error)
@@ -113,6 +114,24 @@ func (r *storageRepository) DeleteFile(key string) error {
 	return err
 }
 
+func (r *storageRepository) DeleteImageFiles(key data.S3ImageKey) {
+	if err := r.DeleteFile(key.GetConvertedImageObjectKey()); err != nil {
+		var awsErr awserr.Error
+		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
+			wrappedErr := fmt.Errorf("failed to delete converted image '%s': %w", key.GetConvertedImageObjectKey(), err)
+			r.logger.Error(wrappedErr)
+		}
+	}
+
+	if err := r.DeleteFile(key.GetOriginalImageObjectKey()); err != nil {
+		var awsErr awserr.Error
+		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
+			wrappedErr := fmt.Errorf("failed to delete original image '%s': %w", key.GetOriginalImageObjectKey(), err)
+			r.logger.Error(wrappedErr)
+		}
+	}
+}
+
 func (r *storageRepository) MarkFileAsDeleted(key string) error {
 	_, err := r.s3Client.PutObjectTagging(&s3.PutObjectTaggingInput{
 		Bucket: aws.String(r.bucketName),
@@ -140,7 +159,7 @@ func (r *storageRepository) MarkImagesAsDeleted(key data.S3ImageKey) {
 	if err := r.MarkFileAsDeleted(key.GetConvertedImageObjectKey()); err != nil {
 		var awsErr awserr.Error
 		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to delete converted image '%s': %w", key.GetConvertedImageObjectKey(), err)
+			wrappedErr := fmt.Errorf("failed to mark converted image '%s' as deleted: %w", key.GetConvertedImageObjectKey(), err)
 			r.logger.Error(wrappedErr)
 		}
 	}
@@ -148,7 +167,7 @@ func (r *storageRepository) MarkImagesAsDeleted(key data.S3ImageKey) {
 	if err := r.MarkFileAsDeleted(key.GetOriginalImageObjectKey()); err != nil {
 		var awsErr awserr.Error
 		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to delete original image '%s': %w", key.GetOriginalImageObjectKey(), err)
+			wrappedErr := fmt.Errorf("failed to mark original image '%s' as deleted: %w", key.GetOriginalImageObjectKey(), err)
 			r.logger.Error(wrappedErr)
 		}
 	}

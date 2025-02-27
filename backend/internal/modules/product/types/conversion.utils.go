@@ -221,7 +221,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []details.CentralCatalogChange {
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageURL data.S3Key) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
 	if dto.Name != "" && dto.Name != before.Name {
@@ -246,17 +246,16 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []detai
 		})
 	}
 
-	//TODO get new imageUrl and notify
-	/*if dto.ImageURL != "" && dto.ImageURL != before.ImageURL {
+	if imageURL.ToString() != "" && imageURL != before.ImageURL {
 		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
 			Params: map[string]interface{}{
 				"OldImageURL": before.ImageURL,
-				"NewImageURL": dto.ImageURL,
+				"NewImageURL": imageURL.ToString(),
 			},
 		})
-	}*/
+	}
 
 	// if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
 	// 	key := "notification.centralCatalogUpdateDetails.categoryChange"
