@@ -249,16 +249,5 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageUR
 		})
 	}
 
-	// if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
-	// 	key := "notification.centralCatalogUpdateDetails.categoryChange"
-	// 	changes = append(changes, details.CentralCatalogChange{
-	// 		Key: key,
-	// 		Params: map[string]interface{}{
-	// 			"OldCategoryID": before.CategoryID,
-	// 			"NewCategoryID": dto.CategoryID,
-	// 		},
-	// 	})
-	// }
-
 	return changes
 }

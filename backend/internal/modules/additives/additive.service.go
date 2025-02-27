@@ -196,7 +196,11 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 		s.logger.Error(wrappedErr)
 		go func() {
 			if additive.ImageURL.ToString() != "" {
-				s.storageRepo.DeleteImageFiles(additive.ImageURL)
+				err := s.storageRepo.DeleteImageFiles(additive.ImageURL)
+				if err != nil {
+					wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
+					s.logger.Error(wrappedErr)
+				}
 			}
 		}()
 		return 0, wrappedErr
@@ -240,7 +244,11 @@ func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAddit
 		s.logger.Error(wrappedErr)
 		go func() {
 			if updateModels.Additive.ImageURL.ToString() != "" {
-				s.storageRepo.DeleteImageFiles(updateModels.Additive.ImageURL)
+				err := s.storageRepo.DeleteImageFiles(updateModels.Additive.ImageURL)
+				if err != nil {
+					wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
+					s.logger.Error(wrappedErr)
+				}
 			}
 		}()
 		return nil, err
@@ -248,7 +256,11 @@ func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAddit
 
 	if dto.Image != nil {
 		go func() {
-			s.storageRepo.MarkImagesAsDeleted(oldAdditive.ImageURL)
+			err := s.storageRepo.MarkImagesAsDeleted(oldAdditive.ImageURL)
+			if err != nil {
+				wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
+				s.logger.Error(wrappedErr)
+			}
 		}()
 	}
 
@@ -266,7 +278,11 @@ func (s *additiveService) DeleteAdditive(additiveID uint) error {
 	}
 
 	go func() {
-		s.storageRepo.MarkImagesAsDeleted(additive.ImageURL)
+		err := s.storageRepo.MarkImagesAsDeleted(additive.ImageURL)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
+			s.logger.Error(wrappedErr)
+		}
 	}()
 
 	return nil

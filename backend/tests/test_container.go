@@ -60,7 +60,7 @@ func NewTestContainer() *container.Container {
 
 		apiRouter := routes.NewRouter(r, "/api", "/test")
 
-		mockStorageRepo, err := mockStorage.NewMockStorageRepository(sugarLog)
+		mockStorageRepo, err := mockStorage.NewMockStorageRepository()
 		if err != nil {
 			sugarLog.Fatalf("Failed to initialize mock storage repository: %v", err)
 		}

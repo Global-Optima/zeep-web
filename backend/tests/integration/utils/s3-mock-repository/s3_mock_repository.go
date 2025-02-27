@@ -11,8 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"mime/multipart"
@@ -30,12 +28,9 @@ type mockStorageRepository struct {
 	s3Client   *s3.S3
 	bucketName string
 	s3Endpoint string
-	logger     *zap.SugaredLogger
 }
 
-func NewMockStorageRepository(logger *zap.SugaredLogger) (storage.StorageRepository, error) {
-	logger.Info("Initializing mock S3 session...")
-
+func NewMockStorageRepository() (storage.StorageRepository, error) {
 	data.InitS3KeysBuilder(&data.S3Info{
 		BucketName:            mockBucketName,
 		S3Endpoint:            mockS3Endpoint,
@@ -44,55 +39,76 @@ func NewMockStorageRepository(logger *zap.SugaredLogger) (storage.StorageReposit
 		ConvertedVideosPrefix: storage.VIDEOS_CONVERTED_STORAGE_REPO_KEY,
 	})
 
-	logger.Info("mock S3 session initialized successfully")
 	return &mockStorageRepository{
 		s3Client:   nil,
 		bucketName: mockBucketName,
 		s3Endpoint: mockS3Endpoint,
-		logger:     logger,
 	}, nil
+}
+
+func (r *mockStorageRepository) DeleteImageFiles(key data.S3ImageKey) error {
+	var errList []error
+
+	if err := r.DeleteFile(key.GetConvertedImageObjectKey()); err != nil {
+		var awsErr awserr.Error
+		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
+			errList = append(errList, fmt.Errorf("failed to delete converted image '%s': %w", key.GetConvertedImageObjectKey(), err))
+		}
+	}
+
+	if err := r.DeleteFile(key.GetOriginalImageObjectKey()); err != nil {
+		var awsErr awserr.Error
+		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
+			errList = append(errList, fmt.Errorf("failed to delete original image '%s': %w", key.GetOriginalImageObjectKey(), err))
+		}
+	}
+
+	if len(errList) > 0 {
+		return errors.Join(errList...)
+	}
+	return nil
 }
 
 func (r *mockStorageRepository) UploadFile(key string, reader io.Reader) (string, error) {
 	fileData, err := io.ReadAll(reader)
 	if err != nil {
-		r.logger.Errorf("Error reading from the provided io.Reader: %v", err)
 		return "", err
 	}
 
 	_ = bytes.NewReader(fileData)
 
-	r.logger.Infof("mock file for key %s uploaded", key)
-
 	return key, nil
 }
 
 func (r *mockStorageRepository) DeleteFile(key string) error {
-	r.logger.Infof("mock file for key %s deleted", key)
 	return nil
 }
 
 func (r *mockStorageRepository) MarkFileAsDeleted(key string) error {
-	r.logger.Infof("mock file for key %s marked as deleted", key)
 	return nil
 }
 
-func (r *mockStorageRepository) MarkImagesAsDeleted(key data.S3ImageKey) {
+func (r *mockStorageRepository) MarkImagesAsDeleted(key data.S3ImageKey) error {
+	var errList []error
+
 	if err := r.MarkFileAsDeleted(key.GetConvertedImageObjectKey()); err != nil {
 		var awsErr awserr.Error
 		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to delete converted image '%s': %w", key.GetConvertedImageObjectKey(), err)
-			r.logger.Error(wrappedErr)
+			errList = append(errList, fmt.Errorf("failed to delete converted image '%s': %w", key.GetConvertedImageObjectKey(), err))
 		}
 	}
 
 	if err := r.MarkFileAsDeleted(key.GetOriginalImageObjectKey()); err != nil {
 		var awsErr awserr.Error
 		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to delete original image '%s': %w", key.GetOriginalImageObjectKey(), err)
-			r.logger.Error(wrappedErr)
+			errList = append(errList, fmt.Errorf("failed to delete original image '%s': %w", key.GetOriginalImageObjectKey(), err))
 		}
 	}
+
+	if len(errList) > 0 {
+		return errors.Join(errList...)
+	}
+	return nil
 }
 
 func (r *mockStorageRepository) GetFileURL(key string) (string, error) {
@@ -103,17 +119,11 @@ func (r *mockStorageRepository) FileExists(key string) (bool, error) {
 	return true, nil
 }
 
-func (r *mockStorageRepository) GetLogger() *zap.SugaredLogger {
-	return r.logger
-}
-
 func (r *mockStorageRepository) DownloadFile(key string) ([]byte, error) {
 	return nil, nil
 }
 
 func (r *mockStorageRepository) ListBuckets() ([]types.BucketInfo, error) {
-	r.logger.Info("Listing S3 buckets...")
-
 	b1 := types.BucketInfo{
 		Name:      r.bucketName,
 		CreatedOn: time.Now(),
@@ -128,10 +138,6 @@ func (r *mockStorageRepository) ListBuckets() ([]types.BucketInfo, error) {
 			Name:      aws.StringValue(&b.Name),
 			CreatedOn: aws.TimeValue(&b.CreatedOn),
 		})
-		r.logger.With(logrus.Fields{
-			"bucketName": aws.StringValue(&b.Name),
-			"createdOn":  aws.TimeValue(&b.CreatedOn),
-		}).Info("Bucket found")
 	}
 
 	return buckets, nil
@@ -171,7 +177,6 @@ func (r *mockStorageRepository) ConvertAndUploadMedia(
 	}
 
 	if err := group.Wait(); err != nil {
-		r.logger.Error("Failed conversion tasks:", err)
 		return "", "", fmt.Errorf("conversion failed: %w", err)
 	}
 

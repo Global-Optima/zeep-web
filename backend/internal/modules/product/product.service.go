@@ -103,11 +103,19 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 		s.logger.Error(wrappedErr)
 		go func() {
 			if product.ImageURL.ToString() != "" {
-				s.storageRepo.DeleteImageFiles(product.ImageURL)
+				err := s.storageRepo.DeleteImageFiles(product.ImageURL)
+				if err != nil {
+					wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
+					s.logger.Error(wrappedErr)
+				}
 			}
 
 			if product.VideoURL.ToString() != "" {
-				_ = s.storageRepo.DeleteFile(product.VideoURL.GetConvertedVideoObjectKey())
+				err := s.storageRepo.DeleteFile(product.VideoURL.GetConvertedVideoObjectKey())
+				if err != nil {
+					wrappedErr := fmt.Errorf("failed to delete video file: %w", err)
+					s.logger.Error(wrappedErr)
+				}
 			}
 		}()
 		return 0, wrappedErr
@@ -154,11 +162,19 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		s.logger.Error(wrappedErr)
 		go func() {
 			if product.ImageURL.ToString() != "" {
-				s.storageRepo.DeleteImageFiles(product.ImageURL)
+				err := s.storageRepo.DeleteImageFiles(product.ImageURL)
+				if err != nil {
+					wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
+					s.logger.Error(wrappedErr)
+				}
 			}
 
 			if product.VideoURL.ToString() != "" {
-				_ = s.storageRepo.DeleteFile(product.VideoURL.GetConvertedVideoObjectKey())
+				err := s.storageRepo.DeleteFile(product.VideoURL.GetConvertedVideoObjectKey())
+				if err != nil {
+					wrappedErr := fmt.Errorf("failed to delete video file: %w", err)
+					s.logger.Error(wrappedErr)
+				}
 			}
 		}()
 		return nil, wrappedErr
@@ -166,11 +182,19 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 
 	go func() {
 		if dto.Image != nil {
-			s.storageRepo.MarkImagesAsDeleted(product.ImageURL)
+			err := s.storageRepo.MarkImagesAsDeleted(product.ImageURL)
+			if err != nil {
+				wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
+				s.logger.Error(wrappedErr)
+			}
 		}
 
 		if dto.Video != nil {
-			_ = s.storageRepo.MarkFileAsDeleted(product.VideoURL.GetConvertedVideoObjectKey())
+			err := s.storageRepo.MarkFileAsDeleted(product.VideoURL.GetConvertedVideoObjectKey())
+			if err != nil {
+				wrappedErr := fmt.Errorf("failed to mark file as deleted: %w", err)
+				s.logger.Error(wrappedErr)
+			}
 		}
 	}()
 
@@ -269,11 +293,19 @@ func (s *productService) DeleteProduct(productID uint) (*data.Product, error) {
 
 	go func() {
 		if product.ImageURL != "" {
-			s.storageRepo.MarkImagesAsDeleted(product.ImageURL)
+			err := s.storageRepo.MarkImagesAsDeleted(product.ImageURL)
+			if err != nil {
+				wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
+				s.logger.Error(wrappedErr)
+			}
 		}
 
 		if product.VideoURL != "" {
-			_ = s.storageRepo.MarkFileAsDeleted(product.VideoURL.GetConvertedVideoObjectKey())
+			err = s.storageRepo.MarkFileAsDeleted(product.VideoURL.GetConvertedVideoObjectKey())
+			if err != nil {
+				wrappedErr := fmt.Errorf("failed to mark file as deleted: %w", err)
+				s.logger.Error(wrappedErr)
+			}
 		}
 	}()
 	return product, nil

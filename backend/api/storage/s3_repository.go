@@ -12,8 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"mime/multipart"
@@ -30,16 +28,15 @@ const (
 )
 
 type StorageRepository interface {
-	GetLogger() *zap.SugaredLogger
 	UploadFile(key string, reader io.Reader) (string, error)
 	ConvertAndUploadMedia(
 		imgFileHeader *multipart.FileHeader,
 		vidFileHeader *multipart.FileHeader,
 	) (convertedImageFileName, convertedVideoFileName string, err error)
 	DeleteFile(key string) error
-	DeleteImageFiles(key data.S3ImageKey)
+	DeleteImageFiles(key data.S3ImageKey) error
 	MarkFileAsDeleted(key string) error
-	MarkImagesAsDeleted(key data.S3ImageKey)
+	MarkImagesAsDeleted(key data.S3ImageKey) error
 	GetFileURL(key string) (string, error)
 	FileExists(key string) (bool, error)
 	DownloadFile(key string) ([]byte, error)
@@ -50,11 +47,9 @@ type storageRepository struct {
 	s3Client   *s3.S3
 	bucketName string
 	s3Endpoint string
-	logger     *zap.SugaredLogger
 }
 
-func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string, logger *zap.SugaredLogger) (StorageRepository, error) {
-	logger.Info("Initializing S3 session...")
+func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (StorageRepository, error) {
 
 	data.InitS3KeysBuilder(&data.S3Info{
 		BucketName:            bucketName,
@@ -74,19 +69,16 @@ func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string, log
 		return nil, err
 	}
 
-	logger.Info("S3 session initialized successfully")
 	return &storageRepository{
 		s3Client:   s3.New(sess),
 		bucketName: bucketName,
 		s3Endpoint: endpoint,
-		logger:     logger,
 	}, nil
 }
 
 func (r *storageRepository) UploadFile(key string, reader io.Reader) (string, error) {
 	fileData, err := io.ReadAll(reader)
 	if err != nil {
-		r.logger.Errorf("Error reading from the provided io.Reader: %v", err)
 		return "", err
 	}
 
@@ -99,7 +91,6 @@ func (r *storageRepository) UploadFile(key string, reader io.Reader) (string, er
 		ACL:    aws.String("public-read"),
 	})
 	if err != nil {
-		r.logger.Errorf("Error occurred: %s", err.Error())
 		return "", err
 	}
 
@@ -114,22 +105,27 @@ func (r *storageRepository) DeleteFile(key string) error {
 	return err
 }
 
-func (r *storageRepository) DeleteImageFiles(key data.S3ImageKey) {
+func (r *storageRepository) DeleteImageFiles(key data.S3ImageKey) error {
+	var errList []error
+
 	if err := r.DeleteFile(key.GetConvertedImageObjectKey()); err != nil {
 		var awsErr awserr.Error
 		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to delete converted image '%s': %w", key.GetConvertedImageObjectKey(), err)
-			r.logger.Error(wrappedErr)
+			errList = append(errList, fmt.Errorf("failed to delete converted image '%s': %w", key.GetConvertedImageObjectKey(), err))
 		}
 	}
 
 	if err := r.DeleteFile(key.GetOriginalImageObjectKey()); err != nil {
 		var awsErr awserr.Error
 		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to delete original image '%s': %w", key.GetOriginalImageObjectKey(), err)
-			r.logger.Error(wrappedErr)
+			errList = append(errList, fmt.Errorf("failed to delete original image '%s': %w", key.GetOriginalImageObjectKey(), err))
 		}
 	}
+
+	if len(errList) > 0 {
+		return errors.Join(errList...)
+	}
+	return nil
 }
 
 func (r *storageRepository) MarkFileAsDeleted(key string) error {
@@ -148,29 +144,33 @@ func (r *storageRepository) MarkFileAsDeleted(key string) error {
 	if err != nil {
 		var awsErr awserr.Error
 		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			r.logger.Errorf("Failed to tag file '%s' as deleted: %s", key, err.Error())
 			return err
 		}
 	}
 	return nil
 }
 
-func (r *storageRepository) MarkImagesAsDeleted(key data.S3ImageKey) {
+func (r *storageRepository) MarkImagesAsDeleted(key data.S3ImageKey) error {
+	var errList []error
+
 	if err := r.MarkFileAsDeleted(key.GetConvertedImageObjectKey()); err != nil {
 		var awsErr awserr.Error
-		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to mark converted image '%s' as deleted: %w", key.GetConvertedImageObjectKey(), err)
-			r.logger.Error(wrappedErr)
+		if !errors.As(err, &awsErr) || awsErr.Code() != s3.ErrCodeNoSuchKey {
+			errList = append(errList, fmt.Errorf("failed to mark converted image '%s' as deleted: %w", key.GetConvertedImageObjectKey(), err))
 		}
 	}
 
 	if err := r.MarkFileAsDeleted(key.GetOriginalImageObjectKey()); err != nil {
 		var awsErr awserr.Error
-		if !errors.As(err, &awsErr) && awsErr.Code() == s3.ErrCodeNoSuchKey {
-			wrappedErr := fmt.Errorf("failed to mark original image '%s' as deleted: %w", key.GetOriginalImageObjectKey(), err)
-			r.logger.Error(wrappedErr)
+		if !errors.As(err, &awsErr) || awsErr.Code() != s3.ErrCodeNoSuchKey {
+			errList = append(errList, fmt.Errorf("failed to mark original image '%s' as deleted: %w", key.GetOriginalImageObjectKey(), err))
 		}
 	}
+
+	if len(errList) > 0 {
+		return errors.Join(errList...)
+	}
+	return nil
 }
 
 func (r *storageRepository) GetFileURL(key string) (string, error) {
@@ -193,43 +193,27 @@ func (r *storageRepository) FileExists(key string) (bool, error) {
 	return true, nil
 }
 
-func (r *storageRepository) GetLogger() *zap.SugaredLogger {
-	return r.logger
-}
-
 func (r *storageRepository) DownloadFile(key string) ([]byte, error) {
 	resp, err := r.s3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(r.bucketName),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to download file: %w", err)
-		r.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			r.logger.Error(err)
-		}
-	}(resp.Body)
+	defer resp.Body.Close()
 
 	var buf bytes.Buffer
 	if _, err := io.Copy(&buf, resp.Body); err != nil {
-		wrappedErr := fmt.Errorf("failed to read file data: %w", err)
-		r.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return nil, err
 	}
 
 	return buf.Bytes(), nil
 }
 
 func (r *storageRepository) ListBuckets() ([]types.BucketInfo, error) {
-	r.logger.Info("Listing S3 buckets...")
-
 	result, err := r.s3Client.ListBuckets(nil)
 	if err != nil {
-		r.logger.With(err).Error("Unable to list buckets")
 		return nil, fmt.Errorf("unable to list buckets: %w", err)
 	}
 
@@ -239,10 +223,6 @@ func (r *storageRepository) ListBuckets() ([]types.BucketInfo, error) {
 			Name:      aws.StringValue(b.Name),
 			CreatedOn: aws.TimeValue(b.CreationDate),
 		})
-		r.logger.With(logrus.Fields{
-			"bucketName": aws.StringValue(b.Name),
-			"createdOn":  aws.TimeValue(b.CreationDate),
-		}).Info("Bucket found")
 	}
 
 	return buckets, nil
@@ -282,7 +262,6 @@ func (r *storageRepository) ConvertAndUploadMedia(
 	}
 
 	if err := group.Wait(); err != nil {
-		r.logger.Error("Failed conversion tasks:", err)
 		return "", "", fmt.Errorf("conversion failed: %w", err)
 	}
 
