@@ -22,6 +22,7 @@
 				:warehouse="regionDetails"
 				@onSubmit="handleUpdate"
 				@onCancel="handleCancel"
+				:readonly="!canUpdate"
 			/>
 		</TabsContent>
 
@@ -29,6 +30,7 @@
 			<AdminWarehouseEmployees
 				:warehouse="regionDetails"
 				@on-cancel="handleCancel"
+				:readonly="!canUpdate"
 			/>
 		</TabsContent>
 	</Tabs>
@@ -42,6 +44,8 @@ import {
   TabsTrigger,
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminWarehouseDetailsForm from '@/modules/admin/warehouses/components/details/admin-warehouse-details-form.vue'
 import AdminWarehouseEmployees from '@/modules/admin/warehouses/components/details/admin-warehouse-employees.vue'
 import type { UpdateWarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
@@ -55,6 +59,8 @@ const route = useRoute()
 const { toast } = useToast()
 
 const additiveId = route.params.id as string
+
+const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const { data: regionDetails } = useQuery({
 	queryKey: ['admin-warehouse-details', additiveId],

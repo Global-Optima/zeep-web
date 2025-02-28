@@ -165,7 +165,7 @@ function selectUnit(unit: UnitDTO) {
 </script>
 
 <template>
-	<div class="mx-auto w-full max-w-2xl">
+	<div class="mx-auto w-full max-w-4xl">
 		<!-- Header -->
 		<div class="flex justify-between items-center gap-4 w-full">
 			<div class="flex items-center gap-4">
@@ -240,12 +240,27 @@ function selectUnit(unit: UnitDTO) {
 							</FormItem>
 						</FormField>
 
+						<FormField name="unitId">
+							<FormItem>
+								<FormLabel>Единица измерения</FormLabel>
+								<div
+									@click="openUnitDialog = true"
+									class="flex justify-between items-center gap-4 px-4 py-2 border rounded-md text-sm"
+								>
+									{{ selectedUnit?.name || 'Единица измерения не выбрана' }}
+
+									<ChevronDown class="w-5 h-5 text-gray-500" />
+								</div>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+
 						<FormField
 							name="size"
 							v-slot="{ componentField }"
 						>
 							<FormItem class="flex-1">
-								<FormLabel>Размер</FormLabel>
+								<FormLabel>Размер ({{ selectedUnit?.name.toLowerCase() || 'Не выбран'}})</FormLabel>
 								<FormControl>
 									<Input
 										type="number"
@@ -271,21 +286,6 @@ function selectUnit(unit: UnitDTO) {
 										placeholder="Введите цену"
 									/>
 								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-
-						<FormField name="unitId">
-							<FormItem>
-								<FormLabel>Единица измерения</FormLabel>
-								<div
-									@click="openUnitDialog = true"
-									class="flex justify-between items-center gap-4 px-4 py-2 border rounded-md text-sm"
-								>
-									{{ selectedUnit?.name || 'Размер не выбран' }}
-
-									<ChevronDown class="w-5 h-5 text-gray-500" />
-								</div>
 								<FormMessage />
 							</FormItem>
 						</FormField>
@@ -400,15 +400,16 @@ function selectUnit(unit: UnitDTO) {
 								<TableCell>{{ ingredient.name }}</TableCell>
 								<TableCell>{{ ingredient.category }}</TableCell>
 
-								<TableCell class="flex items-center gap-2">
+								<TableCell class="flex items-center gap-4">
 									<Input
 										type="number"
 										v-model.number="ingredient.quantity"
 										:min="0"
+										class="w-24"
 										placeholder="Введите количество"
 									/>
+									{{ ingredient.unit.toLowerCase() }}
 								</TableCell>
-								<TableCell>{{ ingredient.unit }}</TableCell>
 								<TableCell class="text-center">
 									<Button
 										variant="ghost"

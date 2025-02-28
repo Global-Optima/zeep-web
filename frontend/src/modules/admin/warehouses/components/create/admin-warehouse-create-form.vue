@@ -24,7 +24,7 @@ const emits = defineEmits<{
 // Validation Schema
 const createRegionSchema = toTypedSchema(
   z.object({
-    name: z.string().min(1, 'Введите название региона'),
+    name: z.string().min(1, 'Введите название склада'),
     address: z.string().min(1, 'Введите адрес склада'),
     regionId: z.number().min(1, 'Введите регион склада')
   })
@@ -72,7 +72,7 @@ function selectRegion(region: RegionDTO) {
 				Создать склад
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -92,7 +92,7 @@ function selectRegion(region: RegionDTO) {
 			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
 				<Card>
 					<CardHeader>
-						<CardTitle>Детали региона</CardTitle>
+						<CardTitle>Детали склада</CardTitle>
 						<CardDescription>Введите детали нового склада.</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -105,13 +105,13 @@ function selectRegion(region: RegionDTO) {
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Название региона</FormLabel>
+									<FormLabel>Название</FormLabel>
 									<FormControl>
 										<Input
 											id="name"
 											type="text"
 											v-bind="componentField"
-											placeholder="Введите название региона"
+											placeholder="Введите название"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -162,7 +162,7 @@ function selectRegion(region: RegionDTO) {
 		</div>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"

@@ -17,7 +17,7 @@
 				</h1>
 			</div>
 
-			<div>
+			<div v-if="!readonly">
 				<Button @click="onAddClick"> Создать </Button>
 			</div>
 		</div>
@@ -61,7 +61,7 @@ import { ChevronLeft } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const {warehouse} = defineProps<{warehouse: WarehouseDTO}>()
+const {warehouse, readonly} = defineProps<{warehouse: WarehouseDTO, readonly?: boolean}>()
 
 const emits = defineEmits<{
   (e: 'onCancel'): void
@@ -81,6 +81,7 @@ const { data: regionsResponse } = useQuery({
 })
 
 const onAddClick = () => {
+  if (readonly) return
   router.push(`/admin/warehouses/${warehouse.id}/employees/create`)
 }
 

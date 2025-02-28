@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { getRouteName } from '@/core/config/routes.config'
+import { getRouteName, type RouteKey } from '@/core/config/routes.config'
 import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
-import KioskDetailsModal from '@/modules/kiosk/products/components/details/kiosk-details-modal.vue'
-import { useSelectedProductStore } from "@/modules/kiosk/products/stores/current-product.store"
+import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
 import { useNetwork } from '@vueuse/core'
 import { WifiOff } from 'lucide-vue-next'; // ✅ Import Lucide icon
-import { onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const productStore = useSelectedProductStore()
+// const productStore = useSelectedProductStore()
 const cartStore = useCartStore()
 
 let inactivityTimeout: ReturnType<typeof setTimeout> | null = null
@@ -18,7 +17,7 @@ const inactivityDuration = 300 * 1000 // 5 minutes
 const { isOnline } = useNetwork()
 
 const resetAppStates = () => {
-  productStore.closeBottomSheet()
+  // productStore.closeBottomSheet()
   cartStore.clearCart()
 }
 
@@ -38,6 +37,11 @@ const resetInactivityTimer = () => {
 }
 
 const activityEvents = ['mousemove', 'keydown', 'click', 'touchstart']
+
+const omitShowCartPages: RouteKey[] = ["KIOSK_CART", "KIOSK_LANDING"]
+
+
+const showCart = computed(() => !cartStore.isEmpty && !omitShowCartPages.includes(router.currentRoute.value.name as RouteKey))
 
 onMounted(() => {
   resetInactivityTimer()
@@ -85,7 +89,13 @@ onBeforeUnmount(() => {
 				</router-view>
 			</main>
 
-			<KioskDetailsModal />
+			<!-- <KioskDetailsModal /> -->
+			<div
+				v-if="showCart"
+				class="bottom-8 left-0 fixed flex justify-center w-full"
+			>
+				<KioskHomeCart />
+			</div>
 		</template>
 	</div>
 </template>

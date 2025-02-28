@@ -54,5 +54,5 @@ export interface StockMaterialsFilter extends PaginationParams {
 }
 
 export interface GeneratedStockMaterialBarcode {
-  barcode: string
+	barcode: string
 }
