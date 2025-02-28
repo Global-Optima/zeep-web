@@ -49,7 +49,6 @@ type ProductSize struct {
 	Unit                   Unit    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE" sort:"unit"`
 	BasePrice              float64 `gorm:"not null" sort:"price"`
 	Size                   int     `gorm:"not null"`
-	IsDefault              bool    `gorm:"default:false" sort:"isDefault"`
 	ProductID              uint    `gorm:"index;not null"`
 	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
 	DiscountID             uint

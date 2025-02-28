@@ -56,7 +56,7 @@ func MapToProductDTO(product data.Product) ProductDTO {
 func ProductAdditionalInfo(product data.Product) (float64, int) {
 	var basePrice float64 = 0
 	var productSizesPrices []float64
-	var productSizeCount = len(product.ProductSizes)
+	productSizeCount := len(product.ProductSizes)
 
 	if productSizeCount > 0 {
 		for _, ps := range product.ProductSizes {
@@ -73,7 +73,6 @@ func ProductAdditionalInfo(product data.Product) (float64, int) {
 func MapToBaseProductSizeDTO(productSize data.ProductSize) BaseProductSizeDTO {
 	return BaseProductSizeDTO{
 		Name:      productSize.Name,
-		IsDefault: productSize.IsDefault,
 		Unit:      unitTypes.ToUnitResponse(productSize.Unit),
 		ProductID: productSize.ProductID,
 		Size:      productSize.Size,
@@ -96,8 +95,8 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 }
 
 func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
-	var additives = make([]ProductSizeAdditiveDTO, len(productSize.Additives))
-	var ingredients = make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
+	additives := make([]ProductSizeAdditiveDTO, len(productSize.Additives))
+	ingredients := make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
 
 	for i, productSizeAdditive := range productSize.Additives {
 		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
@@ -132,7 +131,6 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 		UnitID:    dto.UnitID,
 		BasePrice: dto.BasePrice,
 		Size:      dto.Size,
-		IsDefault: dto.IsDefault,
 	}
 
 	for _, additive := range dto.Additives {
@@ -152,7 +150,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 }
 
 func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
-	var product = &data.Product{}
+	product := &data.Product{}
 
 	if dto == nil {
 		return nil
@@ -191,9 +189,6 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	if dto.Size != nil {
 		productSize.Size = *dto.Size
 	}
-	if dto.IsDefault != nil {
-		productSize.IsDefault = *dto.IsDefault
-	}
 
 	var additives []data.ProductSizeAdditive
 	var ingredients []data.ProductSizeIngredient
@@ -221,7 +216,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []details.CentralCatalogChange {
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageURL data.S3Key) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
 	if dto.Name != "" && dto.Name != before.Name {
@@ -246,28 +241,16 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []detai
 		})
 	}
 
-	//TODO get new imageUrl and notify
-	/*if dto.ImageURL != "" && dto.ImageURL != before.ImageURL {
+	if imageURL.ToString() != "" && imageURL != before.ImageURL {
 		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
 			Params: map[string]interface{}{
 				"OldImageURL": before.ImageURL,
-				"NewImageURL": dto.ImageURL,
+				"NewImageURL": imageURL.ToString(),
 			},
 		})
-	}*/
-
-	// if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
-	// 	key := "notification.centralCatalogUpdateDetails.categoryChange"
-	// 	changes = append(changes, details.CentralCatalogChange{
-	// 		Key: key,
-	// 		Params: map[string]interface{}{
-	// 			"OldCategoryID": before.CategoryID,
-	// 			"NewCategoryID": dto.CategoryID,
-	// 		},
-	// 	})
-	// }
+	}
 
 	return changes
 }

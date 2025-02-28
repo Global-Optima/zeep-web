@@ -3,7 +3,6 @@ package storeAdditives
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
@@ -62,7 +61,7 @@ func (s *storeAdditiveService) CreateStoreAdditives(storeID uint, dtos []types.C
 		inputAdditiveIDs[i] = storeAdditives[i].AdditiveID
 	}
 
-	addStockDTO, err := s.formAddStockDTOsFromIngredients(inputAdditiveIDs)
+	addStockDTO, err := s.formAddStockDTOsFromAdditives(inputAdditiveIDs)
 	if err != nil {
 		wrappedErr := fmt.Errorf("error forming additional stock DTOs: %w", err)
 		s.logger.Error(wrappedErr)
@@ -79,8 +78,8 @@ func (s *storeAdditiveService) CreateStoreAdditives(storeID uint, dtos []types.C
 	return ids, nil
 }
 
-func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error) {
-	categories, err := s.repo.GetStoreAdditiveCategories(storeID, productSizeID, filter)
+func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error) {
+	categories, err := s.repo.GetStoreAdditiveCategories(storeID, storeProductSizeID, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve store additives", err)
 		s.logger.Error(wrappedErr)
@@ -184,7 +183,7 @@ func (s *storeAdditiveService) DeleteStoreAdditive(storeID, storeAdditiveID uint
 	return nil
 }
 
-func (s *storeAdditiveService) formAddStockDTOsFromIngredients(additiveIDs []uint) ([]storeStocksTypes.AddStoreStockDTO, error) {
+func (s *storeAdditiveService) formAddStockDTOsFromAdditives(additiveIDs []uint) ([]storeStocksTypes.AddStoreStockDTO, error) {
 	ingredientsList, err := s.ingredientsRepo.GetIngredientsForAdditives(additiveIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)

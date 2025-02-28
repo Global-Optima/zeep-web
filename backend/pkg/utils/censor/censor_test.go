@@ -9,7 +9,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	err := InitCensor()
+	err := InitializeCensorForTests()
 	if err != nil {
 		logrus.Fatal(err)
 		panic("Failed to initialize censor: " + err.Error())

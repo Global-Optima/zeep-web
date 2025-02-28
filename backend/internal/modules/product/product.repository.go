@@ -3,6 +3,7 @@ package product
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -53,7 +54,6 @@ func (r *productRepository) GetProductSizeById(productSizeID uint) (*data.Produc
 	err := r.db.Preload("Product").
 		Preload("Unit").
 		First(&productSize, productSizeID).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -78,7 +78,6 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
 		Preload("ProductSizeIngredients.Ingredient.Unit").
 		First(&productSize, productSizeID).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, moduleErrors.ErrNotFound
@@ -114,7 +113,6 @@ func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data
 
 	err = query.
 		Find(&products).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +133,6 @@ func (r *productRepository) GetProductByID(productID uint) (*data.Product, error
 		Where("id = ?", productID).
 		First(&product).
 		Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, moduleErrors.ErrNotFound
@@ -155,7 +152,6 @@ func (r *productRepository) CreateProduct(product *data.Product) (uint, error) {
 }
 
 func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (uint, error) {
-
 	if err := r.db.Create(productSize).Error; err != nil {
 		return 0, err
 	}
@@ -166,11 +162,7 @@ func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (ui
 func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels != nil {
-			if err := r.handleDefaultSizeUpdate(tx, id, updateModels.ProductSize.IsDefault); err != nil {
-				return err
-			}
-
-			if err := r.updateProductSize(tx, id, *updateModels.ProductSize); err != nil {
+			if err := r.updateProductSize(tx, id, updateModels.ProductSize); err != nil {
 				return err
 			}
 		}
@@ -191,26 +183,7 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 	})
 }
 
-func (r *productRepository) handleDefaultSizeUpdate(tx *gorm.DB, id uint, isDefault bool) error {
-	if !isDefault {
-		return nil
-	}
-
-	var productSize data.ProductSize
-	if err := tx.Select("product_id").First(&productSize, id).Error; err != nil {
-		return fmt.Errorf("failed to get product size: %w", err)
-	}
-
-	if err := tx.Model(&data.ProductSize{}).
-		Where("product_id = ? AND id != ?", productSize.ProductID, id).
-		Update("is_default", false).Error; err != nil {
-		return fmt.Errorf("failed to update other product sizes: %w", err)
-	}
-
-	return nil
-}
-
-func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize data.ProductSize) error {
+func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize) error {
 	if err := tx.Model(&data.ProductSize{}).
 		Where("id = ?", id).
 		Updates(productSize).Error; err != nil {

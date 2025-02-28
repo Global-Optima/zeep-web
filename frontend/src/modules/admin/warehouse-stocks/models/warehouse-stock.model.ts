@@ -28,7 +28,7 @@ export interface GetWarehouseStockFilter extends PaginationParams {
 
 export interface AvailableWarehouseStockMaterialsFilter extends PaginationParams {
 	search?: string
-  ingredientId?: number
+	ingredientId?: number
 }
 
 export interface UpdateWarehouseStockDTO {

@@ -2,6 +2,7 @@ package employees
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
@@ -9,6 +10,8 @@ import (
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+	"net/http"
 	"strconv"
 )
 
@@ -35,12 +38,17 @@ func (h *AdminEmployeeHandler) CreateAdminEmployee(c *gin.Context) {
 
 	id, err := h.service.CreateAdminEmployee(&input)
 	if err != nil {
-		if err.Error() == "invalid email format" || err.Error() == "password validation failed" {
-			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		switch {
+		case errors.Is(err, moduleErrors.ErrAlreadyExists):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			return
+		case errors.Is(err, moduleErrors.ErrValidation):
+			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500AdminEmployeeCreate)
 			return
 		}
-		localization.SendLocalizedResponseWithKey(c, types.Response500AdminEmployeeCreate)
-		return
 	}
 
 	action := types.CreateAdminEmployeeAuditFactory(&data.BaseDetails{

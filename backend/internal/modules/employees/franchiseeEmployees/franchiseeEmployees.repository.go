@@ -33,16 +33,22 @@ func NewFranchiseeEmployeeRepository(db *gorm.DB, employeeRepo employees.Employe
 func (r *franchiseeEmployeeRepository) GetFranchiseeEmployees(franchiseeID uint, filter *employeesTypes.EmployeesFilter) ([]data.FranchiseeEmployee, error) {
 	var franchiseeEmployees []data.FranchiseeEmployee
 	query := r.db.Model(&data.FranchiseeEmployee{}).
-		Where("franchisee_id = ?", franchiseeID).
+		Where(&data.FranchiseeEmployee{
+			FranchiseeID: franchiseeID,
+		}).
 		Preload("Employee").
 		Joins("JOIN employees ON employees.id = franchisee_employees.employee_id")
 
 	if filter.IsActive != nil {
-		query = query.Where("is_active = ?", *filter.IsActive)
+		query = query.Where(&data.FranchiseeEmployee{
+			Employee: data.Employee{IsActive: filter.IsActive},
+		})
 	}
 
 	if filter.Role != nil {
-		query = query.Where("role = ?", *filter.Role)
+		query = query.Where(&data.FranchiseeEmployee{
+			Role: *filter.Role,
+		})
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
@@ -70,10 +76,16 @@ func (r *franchiseeEmployeeRepository) GetFranchiseeEmployeeByID(id uint, franch
 	query := r.db.Model(&data.FranchiseeEmployee{}).
 		Preload("Employee.Workdays").
 		Preload("Franchisee").
-		Where("id = ?", id)
+		Where(&data.FranchiseeEmployee{
+			BaseEntity: data.BaseEntity{
+				ID: id,
+			},
+		})
 
 	if franchiseeID != nil {
-		query = query.Where("franchisee_id = ?", *franchiseeID)
+		query = query.Where(&data.FranchiseeEmployee{
+			FranchiseeID: *franchiseeID,
+		})
 	}
 
 	if err := query.First(&franchiseeEmployee).Error; err != nil {
@@ -86,9 +98,9 @@ func (r *franchiseeEmployeeRepository) GetAllFranchiseeEmployees(franchiseeID ui
 	var franchiseeEmployees []data.FranchiseeEmployee
 
 	err := r.db.Model(&data.FranchiseeEmployee{}).
-		Joins("INNER JOIN employees ON franchisee_employees.employee_id = employees.id").
-		Where("franchisee_id = ? AND employees.is_active = true", franchiseeID).
 		Preload("Employee").
+		Joins("INNER JOIN employees ON franchisee_employees.employee_id = employees.id").
+		Where("franchisee_employees.franchisee_id = ? AND employees.is_active = true", franchiseeID).
 		Find(&franchiseeEmployees).Error
 
 	if err != nil {
@@ -111,7 +123,9 @@ func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchi
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels.FranchiseeEmployee != nil && !utils.IsEmpty(updateModels.FranchiseeEmployee) {
 			err := tx.Model(&data.FranchiseeEmployee{}).
-				Where("id = ?", id).
+				Where(&data.FranchiseeEmployee{
+					BaseEntity: data.BaseEntity{ID: id},
+				}).
 				Updates(updateModels.FranchiseeEmployee).Error
 			if err != nil {
 				return err

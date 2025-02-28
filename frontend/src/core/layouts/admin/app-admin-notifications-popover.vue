@@ -157,7 +157,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 					size="sm"
 					variant="link"
 					@click="onSeeAllClick"
-          class='text-gray-600'
+					class="text-gray-600"
 				>
 					Посмотреть все
 				</Button>

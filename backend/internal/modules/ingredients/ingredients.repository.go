@@ -108,13 +108,21 @@ func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([
 
 func (r *ingredientRepository) GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
+
+	subDirect := r.db.Model(&data.ProductSizeIngredient{}).
+		Select("ingredient_id").
+		Where("product_size_id IN ?", productSizeIDs)
+
+	subAdditive := r.db.Model(&data.ProductSizeAdditive{}).
+		Select("ai.ingredient_id").
+		Joins("JOIN additive_ingredients ai ON ai.additive_id = product_size_additives.additive_id").
+		Where("product_size_additives.product_size_id IN ?", productSizeIDs)
+
 	query := r.db.Model(&data.Ingredient{}).
 		Select("DISTINCT ingredients.*").
 		Preload("Unit").
 		Preload("IngredientCategory").
-		Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
-		Joins("JOIN product_sizes ps ON psi.product_size_id = ps.id").
-		Where("ps.id IN ?", productSizeIDs)
+		Where("ingredients.id IN (?) OR ingredients.id IN (?)", subDirect, subAdditive)
 
 	if err := query.Find(&ingredients).Error; err != nil {
 		return nil, err

@@ -9,7 +9,7 @@
 
 			<div class="flex items-center gap-1">
 				<Button
-					v-if="canUpdate"
+					v-if="showUpdateButtons"
 					size="icon"
 					variant="ghost"
 					@click="onReassignEmployeeClick"
@@ -17,7 +17,7 @@
 					<ArrowRightLeft class="size-5 text-gray-500" />
 				</Button>
 				<Button
-					v-if="canUpdate"
+					v-if="showUpdateButtons"
 					size="icon"
 					variant="ghost"
 					@click="onUpdateEmployeeClick"
@@ -44,7 +44,7 @@
 import { Avatar, AvatarFallback } from '@/core/components/ui/avatar'
 import Button from '@/core/components/ui/button/Button.vue'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
-import { EMPLOYEE_ROLES_FORMATTED, EmployeeRole, type BaseEmployeeDetailsDTO } from '@/modules/admin/employees/models/employees.models'
+import { EMPLOYEE_ROLES_FORMATTED, EmployeeRole, EmployeeType, type BaseEmployeeDetailsDTO } from '@/modules/admin/employees/models/employees.models'
 import { ArrowRightLeft, Pencil } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -54,6 +54,8 @@ const {employee} = defineProps<{employee: BaseEmployeeDetailsDTO & {id: number}}
 const router = useRouter()
 
 const canUpdate = useHasRole([EmployeeRole.ADMIN])
+
+const showUpdateButtons = computed(() => canUpdate.value && employee.type !== EmployeeType.ADMIN)
 
 const onUpdateEmployeeClick = () => {
   router.push(`/admin/employees/${employee.type.toLowerCase()}/${employee.id}/update`)

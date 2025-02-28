@@ -187,7 +187,7 @@ func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAddit
 	{
 		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditives)
 		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAdditivesListToAdd)
-		router.GET("/categories/:productSizeId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditiveCategories)
+		router.GET("/categories/:storeProductSizeId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditiveCategories)
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditiveByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateStoreAdditives)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.UpdateStoreAdditive)
@@ -363,7 +363,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 
 		storeRoutes := router.Group("/stores")
 		{
-			storeRoutes.POST("", handler.AssignStoreToWarehouse)                                                                                       //TODO On considerations
+			storeRoutes.POST("", handler.AssignStoreToWarehouse)
 			storeRoutes.GET("/:warehouseId", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetAllStoresByWarehouse) // Store and warehouse
 		}
 
@@ -378,7 +378,6 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 			stockRoutes.GET("/deliveries", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveries)       // Region and warehouses
 			stockRoutes.GET("/deliveries/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveryByID) // Region and warehouses
 
-			//TODO Consider if it needed, consider requests
 			stockRoutes.POST("/transfer", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseStockHandler.TransferInventory) // region manager
 		}
 	}

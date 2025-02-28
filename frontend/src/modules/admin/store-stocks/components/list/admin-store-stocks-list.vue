@@ -5,7 +5,6 @@
 				<TableHead>Название</TableHead>
 				<TableHead>Категория</TableHead>
 				<TableHead>Количество</TableHead>
-				<TableHead>Мин. запас</TableHead>
 				<TableHead class="hidden md:table-cell">Статус</TableHead>
 				<TableHead class="w-12"></TableHead>
 			</TableRow>
@@ -31,7 +30,6 @@
 				<TableCell class="font-medium">{{ stock.name }}</TableCell>
 				<TableCell>{{ stock.ingredient.category.name }}</TableCell>
 				<TableCell>{{ stock.quantity }} {{ stock.ingredient.unit.name.toLowerCase() }}</TableCell>
-				<TableCell>{{ stock.lowStockThreshold }}</TableCell>
 
 				<!-- Status badge (hidden on small screens) -->
 				<TableCell class="hidden md:table-cell">

@@ -49,8 +49,8 @@ func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []S
 	var storeAdditives []StoreAdditiveCategoryItemDTO
 	// Populate additives if present
 	for _, additive := range category.Additives {
-
 		if len(additive.StoreAdditives) > 0 && len(additive.ProductSizeAdditives) > 0 {
+			additive.StoreAdditives[0].Additive = additive
 			storeAdditives = append(storeAdditives, StoreAdditiveCategoryItemDTO{
 				ID:                          additive.StoreAdditives[0].ID,
 				BaseAdditiveCategoryItemDTO: *additiveTypes.ConvertToBaseAdditiveCategoryItem(&additive, category.ID),

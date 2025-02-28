@@ -33,16 +33,22 @@ func NewRegionEmployeeRepository(db *gorm.DB, employeeRepo employees.EmployeeRep
 func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *employeesTypes.EmployeesFilter) ([]data.RegionEmployee, error) {
 	var regionEmployees []data.RegionEmployee
 	query := r.db.Model(&data.RegionEmployee{}).
-		Where("region_id = ?", regionID).
+		Where(&data.RegionEmployee{
+			RegionID: regionID,
+		}).
 		Preload("Employee").
 		Joins("JOIN employees ON employees.id = region_employees.employee_id")
 
 	if filter.IsActive != nil {
-		query = query.Where("is_active = ?", *filter.IsActive)
+		query = query.Where(&data.RegionEmployee{
+			Employee: data.Employee{IsActive: filter.IsActive},
+		})
 	}
 
 	if filter.Role != nil {
-		query = query.Where("role = ?", *filter.Role)
+		query = query.Where(&data.RegionEmployee{
+			Role: *filter.Role,
+		})
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
@@ -70,10 +76,14 @@ func (r *regionEmployeeRepository) GetRegionEmployeeByID(id uint, regionID *uint
 	query := r.db.Model(&data.RegionEmployee{}).
 		Preload("Employee.Workdays").
 		Preload("Region").
-		Where("id = ?", id)
+		Where(&data.RegionEmployee{
+			BaseEntity: data.BaseEntity{ID: id},
+		})
 
 	if regionID != nil {
-		query.Where("region_id = ?", regionID)
+		query.Where(&data.RegionEmployee{
+			RegionID: *regionID,
+		})
 	}
 	if err := query.First(&regionEmployee).Error; err != nil {
 		return nil, fmt.Errorf("failed to retrieve region manager by ID: %w", err)
@@ -87,8 +97,8 @@ func (r *regionEmployeeRepository) GetAllRegionEmployees(regionID uint) ([]data.
 
 	err := r.db.Model(&data.RegionEmployee{}).
 		Joins("INNER JOIN employees ON region_employees.employee_id = employees.id").
-		Where("region_id = ? AND employees.is_active = true", regionID).
 		Preload("Employee").
+		Where("region_employees.region_id = ? AND employees.is_active = true", regionID).
 		Find(&regionEmployees).Error
 
 	if err != nil {
@@ -111,7 +121,9 @@ func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID *uint,
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels.RegionEmployee != nil && !utils.IsEmpty(updateModels.RegionEmployee) {
 			err := tx.Model(&data.RegionEmployee{}).
-				Where("id = ?", id).
+				Where(&data.RegionEmployee{
+					BaseEntity: data.BaseEntity{ID: id},
+				}).
 				Updates(updateModels.RegionEmployee).Error
 			if err != nil {
 				return err

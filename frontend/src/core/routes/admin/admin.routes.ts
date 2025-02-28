@@ -84,6 +84,15 @@ export const ADMIN_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/admin/stores/pages/admin-stores-page.vue'),
 	},
+	ADMIN_STORE_SETTINGS: {
+		path: 'stores/settings',
+		meta: {
+			title: 'Настройки',
+			requiresAuth: true,
+		},
+		component: () => import('@/modules/admin/settings/stores/pages/admin-store-settings-page.vue'),
+	},
+
 	ADMIN_STORE_CREATE: {
 		path: 'stores/create',
 		meta: {

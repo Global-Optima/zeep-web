@@ -3,6 +3,7 @@ package employees
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/adminEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -47,7 +48,7 @@ func (s *adminEmployeeService) CreateAdminEmployee(input *employeesTypes.CreateE
 		return 0, wrappedErr
 	}
 	if existingEmployee != nil {
-		return 0, employeesTypes.ErrEmployeeAlreadyExists
+		return 0, moduleErrors.ErrAlreadyExists
 	}
 
 	id, err := s.employeeRepo.CreateEmployee(employee)

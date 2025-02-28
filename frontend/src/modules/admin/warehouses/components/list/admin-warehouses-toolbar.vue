@@ -21,7 +21,12 @@
 			>
 				Экспорт
 			</Button>
-			<Button @click="addStore"> Добавить </Button>
+			<Button
+				v-if="canCreate"
+				@click="addStore"
+			>
+				Добавить
+			</Button>
 		</div>
 	</div>
 </template>
@@ -30,7 +35,9 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import type { AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -41,6 +48,8 @@ const emit = defineEmits(['update:filter'])
 const router = useRouter()
 
 const localFilter = ref({ ...props.filter })
+
+const canCreate = useHasRole([EmployeeRole.ADMIN])
 
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)

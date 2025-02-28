@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 type AdditiveService interface {
+	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]uint, error)
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error)
 	CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) (uint, error)
 	UpdateAdditiveCategory(id uint, dto *types.UpdateAdditiveCategoryDTO) error
@@ -39,7 +42,6 @@ func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepo
 }
 
 func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error) {
-	// Fetch raw data from the repository
 	categories, err := s.repo.GetAdditiveCategories(filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve additives", err)
@@ -47,18 +49,33 @@ func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategories
 		return nil, wrappedErr
 	}
 
-	// Handle case where no categories are found
 	if len(categories) == 0 {
 		return []types.AdditiveCategoryDTO{}, nil
 	}
 
-	// Convert raw data into DTOs
 	var categoryDTOs []types.AdditiveCategoryDTO
 	for _, category := range categories {
 		categoryDTOs = append(categoryDTOs, *types.ConvertToAdditiveCategoryDTO(&category))
 	}
 
 	return categoryDTOs, nil
+}
+
+func (s *additiveService) GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]uint, error) {
+	var additiveIDs []uint
+
+	productSizeAdditives, err := s.repo.GetAdditivesByProductSizeIDs(productSizeIDs)
+	if err != nil && !errors.Is(err, moduleErrors.ErrNotFound) {
+		wrappedErr := utils.WrapError("failed to retrieve product size additives", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	for _, productSizeAdditive := range productSizeAdditives {
+		additiveIDs = append(additiveIDs, productSizeAdditive.AdditiveID)
+	}
+
+	return additiveIDs, nil
 }
 
 func (s *additiveService) CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) (uint, error) {
@@ -177,6 +194,15 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to add additive", err)
 		s.logger.Error(wrappedErr)
+		go func() {
+			if additive.ImageURL.ToString() != "" {
+				err := s.storageRepo.DeleteImageFiles(additive.ImageURL)
+				if err != nil {
+					wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
+					s.logger.Error(wrappedErr)
+				}
+			}
+		}()
 		return 0, wrappedErr
 	}
 
@@ -216,12 +242,25 @@ func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAddit
 	if err := s.repo.UpdateAdditiveWithAssociations(additiveID, updateModels); err != nil {
 		wrappedErr := utils.WrapError("failed to update additive with associations", err)
 		s.logger.Error(wrappedErr)
+		go func() {
+			if updateModels.Additive.ImageURL.ToString() != "" {
+				err := s.storageRepo.DeleteImageFiles(updateModels.Additive.ImageURL)
+				if err != nil {
+					wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
+					s.logger.Error(wrappedErr)
+				}
+			}
+		}()
 		return nil, err
 	}
 
 	if dto.Image != nil {
 		go func() {
-			s.storageRepo.MarkImagesAsDeleted(oldAdditive.ImageURL)
+			err := s.storageRepo.MarkImagesAsDeleted(oldAdditive.ImageURL)
+			if err != nil {
+				wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
+				s.logger.Error(wrappedErr)
+			}
 		}()
 	}
 
@@ -239,7 +278,11 @@ func (s *additiveService) DeleteAdditive(additiveID uint) error {
 	}
 
 	go func() {
-		s.storageRepo.MarkImagesAsDeleted(additive.ImageURL)
+		err := s.storageRepo.MarkImagesAsDeleted(additive.ImageURL)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
+			s.logger.Error(wrappedErr)
+		}
 	}()
 
 	return nil

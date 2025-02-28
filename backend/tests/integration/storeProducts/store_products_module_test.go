@@ -66,6 +66,30 @@ func TestStoreProductEndpoints(t *testing.T) {
 		env.RunTests(t, testCases)
 	})
 
+	t.Run("Get Recommended Products for order", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description: "Admin fetches recommended products",
+				Method:      http.MethodGet,
+				URL:         "/api/test/store-products/recommended?storeId=1",
+				Body: map[string]interface{}{
+					"storeProductIds": []uint{1, 2},
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Should fail if no products chosen",
+				Method:       http.MethodGet,
+				URL:          "/api/test/store-products/recommended?storeId=1",
+				Body:         map[string]interface{}{},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
+
 	t.Run("Create Store Product", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
@@ -115,6 +139,10 @@ func TestStoreProductEndpoints(t *testing.T) {
 				URL:         "/api/test/store-products/1?storeId=1",
 				Body: map[string]interface{}{
 					"isAvailable": false,
+					"productSizes": []map[string]interface{}{
+						{"productSizeID": 1, "storePrice": 10.99},
+						{"productSizeID": 2, "storePrice": 12.99},
+					},
 				},
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusOK,
@@ -125,6 +153,10 @@ func TestStoreProductEndpoints(t *testing.T) {
 				URL:         "/api/test/store-products/-1?storeId=1",
 				Body: map[string]interface{}{
 					"isAvailable": false,
+					"productSizes": []map[string]interface{}{
+						{"productSizeID": 1, "storePrice": 10.99},
+						{"productSizeID": 2, "storePrice": 12.99},
+					},
 				},
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusBadRequest,
@@ -135,6 +167,10 @@ func TestStoreProductEndpoints(t *testing.T) {
 				URL:         "/api/test/store-products/1?storeId=1",
 				Body: map[string]interface{}{
 					"isAvailable": false,
+					"productSizes": []map[string]interface{}{
+						{"productSizeID": 1, "storePrice": 10.99},
+						{"productSizeID": 2, "storePrice": 12.99},
+					},
 				},
 				AuthRole:     "",
 				ExpectedCode: http.StatusUnauthorized,

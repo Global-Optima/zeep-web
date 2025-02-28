@@ -1,12 +1,13 @@
 package types
 
 import (
+	"mime/multipart"
+
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"mime/multipart"
 )
 
 type BaseProductDTO struct {
@@ -35,7 +36,6 @@ type BaseProductSizeDTO struct {
 	ProductID uint               `json:"productId"`
 	Unit      unitTypes.UnitsDTO `json:"unit"`
 	Size      int                `json:"size"`
-	IsDefault bool               `json:"isDefault"`
 }
 
 type ProductSizeDTO struct {
@@ -83,7 +83,6 @@ type CreateProductSizeDTO struct {
 	Size        int                     `json:"size" binding:"required,gte=0"`
 	UnitID      uint                    `json:"unitId" binding:"required,gt=0"`
 	BasePrice   float64                 `json:"basePrice" binding:"required,gt=0"`
-	IsDefault   bool                    `json:"isDefault"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"required,dive"`
 }
@@ -101,7 +100,6 @@ type UpdateProductSizeDTO struct {
 	BasePrice   *float64                `json:"basePrice" binding:"omitempty,gt=0"`
 	Size        *int                    `json:"size" binding:"omitempty,gt=0"`
 	UnitID      *uint                   `json:"unitId" binding:"omitempty,gt=0"`
-	IsDefault   *bool                   `json:"isDefault"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }

@@ -12,6 +12,7 @@ import (
 )
 
 type AdditiveRepository interface {
+	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]data.ProductSizeAdditive, error)
 	CheckAdditiveExists(additiveName string) (bool, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
@@ -33,6 +34,27 @@ type additiveRepository struct {
 
 func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
+}
+
+func (r *additiveRepository) GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]data.ProductSizeAdditive, error) {
+	var additives []data.ProductSizeAdditive
+
+	if len(productSizeIDs) == 0 {
+		return additives, nil
+	}
+
+	err := r.db.Model(&data.ProductSizeAdditive{}).
+		Where("product_size_id IN (?)", productSizeIDs).
+		Find(&additives).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return additives, moduleErrors.ErrNotFound
+		}
+		return additives, err
+	}
+
+	return additives, nil
 }
 
 func (r *additiveRepository) CheckAdditiveExists(additiveName string) (bool, error) {
@@ -114,7 +136,7 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name LIKE ? OR additives.description LIKE ?", searchTerm, searchTerm)
+		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ?", searchTerm, searchTerm)
 	}
 
 	if filter.MinPrice != nil {

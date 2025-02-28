@@ -1,13 +1,13 @@
 <!-- src/components/AdditivesSection.vue -->
 <template>
-	<div :class="cn('flex flex-col gap-6 mt-2 px-8', containerClass)">
+	<div :class="cn('flex flex-col gap-8 px-8', containerClass)">
 		<template
 			v-for="category in categories"
 			:key="category.id"
 		>
 			<div v-if="category.additives.length > 0">
-				<p class="font-medium text-lg sm:text-2xl">{{ category.name }}</p>
-				<div class="flex flex-wrap gap-2 mt-4">
+				<p class="font-medium text-3xl">{{ category.name }}</p>
+				<div class="gap-4 grid grid-cols-2 mt-5">
 					<KioskDetailsAdditivesCard
 						v-for="additive in category.additives"
 						:key="additive.additiveId"
