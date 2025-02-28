@@ -90,6 +90,7 @@ func MapToProductSizeDTO(productSize data.ProductSize) ProductSizeDTO {
 func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditive) ProductSizeAdditiveDTO {
 	return ProductSizeAdditiveDTO{
 		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive),
+		IsDefault:   productSizeAdditive.IsDefault,
 	}
 }
 
@@ -135,6 +136,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	for _, additive := range dto.Additives {
 		productSize.Additives = append(productSize.Additives, data.ProductSizeAdditive{
 			AdditiveID: additive.AdditiveID,
+			IsDefault:  additive.IsDefault,
 		})
 	}
 
@@ -194,6 +196,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	for _, additive := range dto.Additives {
 		temp := data.ProductSizeAdditive{
 			AdditiveID: additive.AdditiveID,
+			IsDefault:  additive.IsDefault,
 		}
 		additives = append(additives, temp)
 	}
@@ -213,7 +216,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []details.CentralCatalogChange {
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageURL data.S3Key) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
 	if dto.Name != "" && dto.Name != before.Name {
@@ -238,28 +241,16 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO) []detai
 		})
 	}
 
-	//TODO get new imageUrl and notify
-	/*if dto.ImageURL != "" && dto.ImageURL != before.ImageURL {
+	if imageURL.ToString() != "" && imageURL != before.ImageURL {
 		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
 			Params: map[string]interface{}{
 				"OldImageURL": before.ImageURL,
-				"NewImageURL": dto.ImageURL,
+				"NewImageURL": imageURL.ToString(),
 			},
 		})
-	}*/
-
-	// if dto.CategoryID != 0 && dto.CategoryID != before.CategoryID {
-	// 	key := "notification.centralCatalogUpdateDetails.categoryChange"
-	// 	changes = append(changes, details.CentralCatalogChange{
-	// 		Key: key,
-	// 		Params: map[string]interface{}{
-	// 			"OldCategoryID": before.CategoryID,
-	// 			"NewCategoryID": dto.CategoryID,
-	// 		},
-	// 	})
-	// }
+	}
 
 	return changes
 }

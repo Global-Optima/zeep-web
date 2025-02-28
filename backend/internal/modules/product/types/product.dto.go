@@ -56,6 +56,7 @@ type ProductSizeDetailsDTO struct {
 
 type ProductSizeAdditiveDTO struct {
 	additiveTypes.AdditiveDTO
+	IsDefault bool `json:"isDefault"`
 }
 
 type CreateProductDTO struct {
@@ -68,6 +69,7 @@ type CreateProductDTO struct {
 
 type SelectedAdditiveDTO struct {
 	AdditiveID uint `json:"additiveId" binding:"required"`
+	IsDefault  bool `json:"isDefault"`
 }
 
 type SelectedIngredientDTO struct {

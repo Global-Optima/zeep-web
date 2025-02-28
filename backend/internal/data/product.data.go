@@ -101,6 +101,7 @@ type ProductSizeAdditive struct {
 	BaseEntity
 	ProductSizeID uint        `gorm:"index;not null"`
 	AdditiveID    uint        `gorm:"index;not null"`
+	IsDefault     bool        `gorm:"not null" sort:"isDefault"`
 	ProductSize   ProductSize `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	Additive      Additive    `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 }

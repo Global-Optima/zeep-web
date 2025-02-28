@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
-	"go.uber.org/zap"
 	"log"
 	"net"
 	"os"
@@ -185,10 +184,10 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 	return redisClient
 }
 
-func setupMockStorage(logger *zap.SugaredLogger) *storage.StorageRepository {
-	storageRepo, err := mockStorage.NewMockStorageRepository(logger)
+func setupMockStorage() *storage.StorageRepository {
+	storageRepo, err := mockStorage.NewMockStorageRepository()
 	if err != nil {
-		log.Fatalf("Failed to initialize mock storage repository: %v", err)
+		logger.GetZapSugaredLogger().Fatalf("Failed to initialize mock storage repository: %v", err)
 	}
 	return &storageRepo
 }
@@ -200,7 +199,7 @@ func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
-	storageRepo := setupMockStorage(logger.GetZapSugaredLogger())
+	storageRepo := setupMockStorage()
 
 	testContainer := container.NewContainer(dbHandler, storageRepo, apiRouter, logger.GetZapSugaredLogger())
 	testContainer.MustInitModules()

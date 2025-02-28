@@ -746,37 +746,37 @@ WHERE
 -- L size for Product 11;
 -- Insert into ProductAdditive
 INSERT INTO
-    product_size_additives (product_size_id, additive_id)
+    product_size_additives (product_size_id, additive_id, is_default)
 VALUES
-    (1, 1),
-    (1, 2),
-    (2, 3),
-    (3, 1),
-    (4, 2),
-    (5, 4),
-    (6, 5),
-    (7, 3),
-    (8, 6),
-    (9, 7),
-    (10, 2),
-    (11, 8),
-    (12, 9),
-    (13, 10),
-    (14, 11),
-    (15, 12),
-    (16, 13),
-    (17, 14),
-    (18, 1),
-    (19, 3),
-    (20, 6),
-    (3, 8),
-    (4, 10),
-    (5, 12),
-    (6, 14),
-    (7, 1),
-    (8, 4),
-    (9, 5),
-    (10, 9);
+    (1, 1, true),
+    (1, 2, true),
+    (2, 3, true),
+    (3, 1, true),
+    (4, 2, true),
+    (5, 4, false),
+    (6, 5, false),
+    (7, 3, false),
+    (8, 6, false),
+    (9, 7, true),
+    (10, 2, true),
+    (11, 8, false),
+    (12, 9, true),
+    (13, 10, true),
+    (14, 11, false),
+    (15, 12, false),
+    (16, 13, true),
+    (17, 14, false),
+    (18, 1, false),
+    (19, 3, true),
+    (20, 6, false),
+    (3, 8, false),
+    (4, 10, false),
+    (5, 12, true),
+    (6, 14, false),
+    (7, 1, false),
+    (8, 4, false),
+    (9, 5, false),
+    (10, 9, false);
 
 INSERT INTO store_additives (store_id, additive_id, store_price, created_at, updated_at)
 SELECT DISTINCT
@@ -1018,7 +1018,7 @@ VALUES
         '+79551234567',
         'elena@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1028,7 +1028,7 @@ VALUES
         '+79667778899',
         'sergey@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1038,7 +1038,7 @@ VALUES
         '+79223334455',
         'anna@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1048,7 +1048,7 @@ VALUES
         '+79161234567',
         'ivan@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1058,7 +1058,7 @@ VALUES
         '+79345566778',
         'maria@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1068,7 +1068,7 @@ VALUES
         '+79991234567',
         'oleg@example.com',
         false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1078,7 +1078,7 @@ VALUES
         '+79882233445',
         'tatiana@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1088,7 +1088,7 @@ VALUES
         '+79002221133',
         'alexei@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1098,7 +1098,7 @@ VALUES
         '+79115555666',
         'yulia@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1108,7 +1108,7 @@ VALUES
         '+79553334456',
         'dmitry@example.com',
         false,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1118,7 +1118,7 @@ VALUES
         '+79151236817',
         'elenaOrlova@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ),
@@ -1128,7 +1128,7 @@ VALUES
         '+79191236817',
         'begisbayev@example.com',
         true,
-        '$2a$10$GEmb44LusyHrWXXaz5BKce5N8CvBvz3lPK7CuNS.S86.Quec12Xgy',
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
