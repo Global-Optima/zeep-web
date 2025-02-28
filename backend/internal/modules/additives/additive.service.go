@@ -182,13 +182,15 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 		return 0, wrappedErr
 	}
 
-	imageUrl, _, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, nil)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to upload image: %w", err)
-		s.logger.Error(wrappedErr)
-		return 0, wrappedErr
+	if dto.Image != nil {
+		imageUrl, _, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, nil)
+		if err != nil {
+			wrappedErr := fmt.Errorf("failed to upload image: %w", err)
+			s.logger.Error(wrappedErr)
+			return 0, wrappedErr
+		}
+		additive.ImageURL = data.S3ImageKey(imageUrl)
 	}
-	additive.ImageURL = data.S3ImageKey(imageUrl)
 
 	id, err := s.repo.CreateAdditive(additive)
 	if err != nil {

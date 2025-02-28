@@ -114,7 +114,7 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
 		query = query.Where(
-			"customer_name LIKE ?",
+			"customer_name ILIKE ?",
 			searchTerm,
 		)
 	}
