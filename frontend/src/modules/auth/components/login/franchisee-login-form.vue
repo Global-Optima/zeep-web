@@ -163,7 +163,7 @@ import {
 } from '@/core/components/ui/select'
 
 import PasswordInput from '@/core/components/password-input/PasswordInput.vue'
-import { easyPasswordValidationSchema, passwordValidationSchema } from '@/core/validators/password.validator'
+import { easyPasswordValidationSchema } from '@/core/validators/password.validator'
 import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { franchiseeService } from '@/modules/admin/franchisees/services/franchisee.service'
 import { authService } from '@/modules/auth/services/auth.service'

@@ -7,10 +7,6 @@ import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/m
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { CartItem } from '@/modules/kiosk/cart/stores/cart.store'
-import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
-import KioskDetailsBottomBar from '@/modules/kiosk/products/components/details/kiosk-details-bottom-bar.vue'
-import KioskDetailsProductImage from '@/modules/kiosk/products/components/details/kiosk-details-product-image.vue'
-import KioskDetailsProductInfo from '@/modules/kiosk/products/components/details/kiosk-details-product-info.vue'
 import { X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -169,7 +165,7 @@ const handleUpdate = () => {
 			:include-close-button="false"
 			class="bg-[#F5F5F7] p-0 border-none !rounded-[52px] max-w-[80vw] h-[90vh] overflow-clip"
 		>
-			<div class="relative bg-gray-100 pb-44 w-full text-black overflow-y-auto no-scrollbar">
+			<div class="relative bg-gray-100 pb-44 w-full overflow-y-auto text-black no-scrollbar">
 				<button
 					@click="onClose"
 					class="top-14 right-14 z-10 fixed bg-gray-300 bg-opacity-90 p-3 rounded-full"
@@ -177,39 +173,7 @@ const handleUpdate = () => {
 					<X class="w-8 h-8 text-gray-800" />
 				</button>
 
-				<!-- Product Image -->
-				<KioskDetailsProductImage
-					:imageUrl="productDetails.imageUrl"
-					:altText="productDetails.name"
-					image-class="h-[500px]"
-					overlay-class="h-[500px]"
-				/>
-
-				<!-- Product Information -->
-				<KioskDetailsProductInfo
-					v-if="selectedSize"
-					:name="productDetails.name"
-					:description="productDetails.description"
-					:energy="calculatedEnergy"
-					:ingredients="selectedSize?.ingredients"
-				/>
-
-				<!-- Additives Selection -->
-				<KioskDetailsAdditivesSection
-					:categories="additivesCategories"
-					:isAdditiveSelected="isAdditiveSelected"
-					@toggle-additive="onAdditiveToggle"
-				/>
-
-				<!-- Sizes and Price -->
-				<KioskDetailsBottomBar
-					:sizes="productDetails.sizes"
-					:selectedSizeId="selectedSize.id"
-					:totalPrice="totalPrice"
-					display-icon="update"
-					@select-size="onSizeSelect"
-					@add-to-cart="handleUpdate"
-				/>
+				Временно недоступно
 			</div>
 		</DialogContent>
 	</Dialog>
