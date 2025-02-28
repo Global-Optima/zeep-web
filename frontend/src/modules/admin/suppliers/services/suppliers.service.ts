@@ -8,7 +8,7 @@ import type {
 	SupplierMaterialResponse,
 	SuppliersFilterDTO,
 	UpdateSupplierDTO,
-  UpsertSupplierMaterialsDTO,
+	UpsertSupplierMaterialsDTO,
 } from '../models/suppliers.model'
 
 class SuppliersService {

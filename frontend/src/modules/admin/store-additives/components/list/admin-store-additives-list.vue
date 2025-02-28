@@ -30,7 +30,7 @@
 				<TableCell>
 					{{ additive.category.name }}
 				</TableCell>
-				<TableCell> {{ additive.size }} {{ additive.unit.name }} </TableCell>
+				<TableCell> {{ additive.size }} {{ additive.unit.name.toLowerCase() }} </TableCell>
 				<TableCell>
 					{{ formatPrice(additive.storePrice) }}
 				</TableCell>

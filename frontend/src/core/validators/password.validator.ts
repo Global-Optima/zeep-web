@@ -26,6 +26,6 @@ export const easyPasswordValidationSchema = z
 	.string()
 	.min(2, 'Пароль должен содержать не менее 2 символов')
 	.regex(
-		/^[A-Za-z]+$/,
+		LATIN_AND_SPECIAL_CHARS_REGEX,
 		'Пароль должен содержать только латинские символы и разрешенные специальные символы',
 	)

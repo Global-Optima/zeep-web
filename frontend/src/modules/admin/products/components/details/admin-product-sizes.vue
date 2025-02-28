@@ -33,7 +33,6 @@
 							<TableHead>Название</TableHead>
 							<TableHead>Размер</TableHead>
 							<TableHead>Начальная цена</TableHead>
-							<TableHead>По умолчанию</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -47,17 +46,6 @@
 							<TableCell>{{ variant.size }} {{ variant.unit.name }}</TableCell>
 							<TableCell>
 								{{ formatPrice(variant.basePrice) }}
-							</TableCell>
-							<TableCell class="text-left">
-								<input
-									type="radio"
-									name="defaultVariant"
-									:value="variant.id"
-									:checked="variant.isDefault"
-									class="size-5"
-									:disabled="readonly"
-									@click.stop="setDefaultVariant(variant)"
-								/>
 							</TableCell>
 						</TableRow>
 					</TableBody>
@@ -78,11 +66,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import { useToast } from '@/core/components/ui/toast'
 import { formatPrice } from '@/core/utils/price.utils'
-import type { ProductDetailsDTO, ProductSizeDTO, UpdateProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
+import type { ProductDetailsDTO, ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from "vue-router"
@@ -97,8 +84,6 @@ const emits = defineEmits<{
 }>()
 
 const router = useRouter()
-const queryClient = useQueryClient()
-const { toast } = useToast()
 
 const { data: productSizes } = useQuery({
   queryKey: ['admin-product-sizes', props.productDetails.id],
@@ -110,32 +95,6 @@ const sortedProductSizes = computed(() => {
   return productSizes.value ? [...productSizes.value].sort((a, b) => a.basePrice - b.basePrice) : [];
 })
 
-const { mutate: updateSize } = useMutation({
-  mutationFn: (props: { productSizeId: number, dto: UpdateProductSizeDTO }) =>
-    productsService.updateProductSize(props.productSizeId, props.dto),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['admin-product-sizes', props.productDetails.id] })
-    toast({
-      title: 'Успех!',
-      description: 'Размер товара обновлен.',
-    })
-  },
-  onError: () => {
-    toast({
-      title: 'Ошибка',
-      description: 'Ошибка при обновлении размера товара.',
-      variant: 'destructive',
-    })
-  }
-})
-
-const setDefaultVariant = (size: ProductSizeDTO) => {
-  if (!props.readonly) {
-    if (!size.isDefault) {
-      updateSize({ productSizeId: size.id, dto: { isDefault: true } })
-    }
-  }
-}
 
 const onVariantClick = (variant: ProductSizeDTO) => {
   router.push(`../product-sizes/${variant.id}?productId=${props.productDetails.id}`)

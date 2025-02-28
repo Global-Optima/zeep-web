@@ -72,7 +72,7 @@ const stepsConfig: StepConfig[] = [
       try {
         await checkCustomerNameMutation.mutateAsync(state.customerName);
         return !checkCustomerNameMutation.isError.value; // Proceed only if validation succeeds
-      } catch (error) {
+      } catch {
         throw new Error(checkCustomerNameMutation.error.value?.response?.data.message.ru || "Ошибка при проверке имени клиента");
       }
     },

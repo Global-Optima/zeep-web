@@ -34,7 +34,6 @@ export interface BaseProductSizeDTO {
 	productId: number
 	unit: UnitDTO
 	size: number
-	isDefault: boolean
 }
 
 export interface ProductSizeDTO extends BaseProductSizeDTO {

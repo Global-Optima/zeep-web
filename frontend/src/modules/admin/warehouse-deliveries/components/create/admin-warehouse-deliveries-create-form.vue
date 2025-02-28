@@ -14,7 +14,7 @@
 				Создать Доставку
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -82,7 +82,7 @@
 						<TableRow v-if="materials.length === 0">
 							<TableCell
 								colspan="5"
-								class="py-5 text-center text-muted-foreground"
+								class="py-5 text-muted-foreground text-center"
 							>
 								Нет добавленных материалов
 							</TableCell>
@@ -117,7 +117,7 @@
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"
@@ -208,6 +208,7 @@ const { toast } = useToast()
 function selectSupplier(supplier: SupplierDTO) {
 	selectedSupplier.value = supplier
 	openSupplierDialog.value = false
+  materials.value = []
   stockMaterialFilter.value = {supplierId: supplier.id}
 	toast({
 		title: 'Успех',

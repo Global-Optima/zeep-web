@@ -49,12 +49,15 @@
 						v-slot="{ componentField }"
 					>
 						<FormItem>
-							<FormLabel>Количество</FormLabel>
+							<FormLabel>
+								Количество ({{ initialData.ingredient.unit.name.toLowerCase() }})</FormLabel
+							>
 							<FormControl>
 								<Input
 									type="number"
 									v-bind="componentField"
 									placeholder="Введите количество"
+									step="0.5"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -67,7 +70,10 @@
 						v-slot="{ componentField }"
 					>
 						<FormItem>
-							<FormLabel>Порог малого запаса</FormLabel>
+							<FormLabel
+								>Порог малого запаса ({{ initialData.ingredient.unit.name.toLowerCase()
+								}})</FormLabel
+							>
 							<FormControl>
 								<Input
 									type="number"
@@ -136,8 +142,7 @@ const schema = toTypedSchema(
 	z.object({
 		quantity: z.coerce
 			.number()
-			.min(0, 'Количество должно быть не менее 0')
-			.refine((value) => Number.isInteger(value), 'Количество должно быть целым числом'),
+			.min(0, 'Количество должно быть не менее 0'),
 		lowStockThreshold: z.coerce.number()
 			.min(0, 'Порог малого запаса не может быть отрицательным')
 			.refine((value) => Number.isInteger(value), 'Порог должен быть целым числом'),

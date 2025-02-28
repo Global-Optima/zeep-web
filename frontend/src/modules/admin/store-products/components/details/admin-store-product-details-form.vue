@@ -126,7 +126,7 @@ function onCancel() {
 
 			<div
 				v-if="!props.readonly"
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 			>
 				<Button
 					variant="outline"
@@ -196,7 +196,7 @@ function onCancel() {
 							<TableRow>
 								<TableCell
 									colspan="4"
-									class="text-center text-gray-500"
+									class="text-gray-500 text-center"
 									>Нет размеров</TableCell
 								>
 							</TableRow>

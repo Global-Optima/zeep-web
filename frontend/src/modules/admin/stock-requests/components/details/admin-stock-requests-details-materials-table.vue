@@ -33,7 +33,10 @@
 						:key="index"
 					>
 						<TableCell>{{ item.stockMaterial.name }}</TableCell>
-						<TableCell>{{ item.stockMaterial.size }} {{ item.stockMaterial.unit.name }}</TableCell>
+						<TableCell
+							>{{ item.stockMaterial.size }}
+							{{ item.stockMaterial.unit.name.toLowerCase() }}</TableCell
+						>
 						<TableCell>{{ item.quantity }}</TableCell>
 					</TableRow>
 				</TableBody>

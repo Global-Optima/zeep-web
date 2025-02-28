@@ -6,6 +6,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -142,7 +144,6 @@ func (r *storeStockRepository) AddOrUpdateStock(storeID uint, dto *types.AddStor
 		First(&existingStock).Error
 
 	if err == nil {
-
 		existingStock.Quantity += dto.Quantity
 		existingStock.LowStockThreshold = dto.LowStockThreshold
 		err = r.db.Save(&existingStock).Error

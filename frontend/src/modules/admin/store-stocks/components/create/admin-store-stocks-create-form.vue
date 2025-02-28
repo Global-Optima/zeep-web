@@ -76,22 +76,30 @@
 							<TableCell>{{ ingredient.name }}</TableCell>
 							<TableCell>{{ ingredient.category.name }}</TableCell>
 							<TableCell>
-								<Input
-									type="number"
-									v-model.number="ingredient.quantity"
-									:min="0"
-									:class="{ 'border-red-500': hasError(ingredient, 'quantity') }"
-									placeholder="Введите количество"
-								/>
+								<div class="flex items-center gap-2">
+									<Input
+										type="number"
+										v-model.number="ingredient.quantity"
+										:min="0"
+										class="w-24"
+										:class="{ 'border-red-500': hasError(ingredient, 'quantity') }"
+										placeholder="Введите количество"
+									/>
+									<p>{{ ingredient.unit.name.toLowerCase() }}</p>
+								</div>
 							</TableCell>
 							<TableCell>
-								<Input
-									type="number"
-									v-model.number="ingredient.lowStockThreshold"
-									:min="0"
-									:class="{ 'border-red-500': hasError(ingredient, 'lowStockThreshold') }"
-									placeholder="Введите порог"
-								/>
+								<div class="flex items-center gap-2">
+									<Input
+										type="number"
+										v-model.number="ingredient.lowStockThreshold"
+										:min="0"
+										class="w-24"
+										:class="{ 'border-red-500': hasError(ingredient, 'lowStockThreshold') }"
+										placeholder="Введите порог"
+									/>
+									<p>{{ ingredient.unit.name.toLowerCase() }}</p>
+								</div>
 							</TableCell>
 							<TableCell class="flex justify-center text-center">
 								<Trash
@@ -151,7 +159,6 @@ import { useToast } from '@/core/components/ui/toast'
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
-
 interface CreateStoreStockItem {
 	name: string
 	ingredientId: number

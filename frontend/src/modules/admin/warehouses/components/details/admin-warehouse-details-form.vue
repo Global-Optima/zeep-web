@@ -17,6 +17,7 @@ import { ChevronLeft } from 'lucide-vue-next'
 // Props & Events
 const props = defineProps<{
   warehouse: WarehouseDTO
+  readonly?: boolean
 }>()
 
 const emits = defineEmits<{
@@ -45,6 +46,7 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
 
 // Handlers
 const onSubmit = handleSubmit(async (formValues) => {
+  if (props.readonly)
   emits('onSubmit', {
     name: formValues.name,
     facilityAddress: { address: formValues.address },
@@ -84,16 +86,21 @@ function selectRegion(region: RegionDTO) {
 				Обновить склад - {{ warehouse.name }}
 			</h1>
 
-			<div class="hidden md:flex items-center gap-2 md:ml-auto">
+			<div
+				class="hidden md:flex items-center gap-2 md:ml-auto"
+				v-if="!readonly"
+			>
 				<Button
 					variant="outline"
 					type="button"
 					@click="onCancel"
+					:disabled="readonly"
 					>Отменить</Button
 				>
 				<Button
 					type="submit"
 					@click="onSubmit"
+					:disabled="readonly"
 					>Сохранить</Button
 				>
 			</div>
@@ -123,6 +130,7 @@ function selectRegion(region: RegionDTO) {
 											id="name"
 											type="text"
 											v-bind="componentField"
+											:readonly="readonly"
 											placeholder="Введите название склада"
 										/>
 									</FormControl>
@@ -141,6 +149,7 @@ function selectRegion(region: RegionDTO) {
 											id="address"
 											type="text"
 											v-bind="componentField"
+											:readonly="readonly"
 											placeholder="Введите адрес склада"
 										/>
 									</FormControl>
@@ -164,6 +173,7 @@ function selectRegion(region: RegionDTO) {
 							<Button
 								variant="link"
 								class="mt-0 p-0 h-fit text-primary underline"
+								:disabled="readonly"
 								@click="openRegionDialog = true"
 							>
 								{{ selectedRegion?.name || 'Регион не выбран' }}
@@ -175,15 +185,20 @@ function selectRegion(region: RegionDTO) {
 		</div>
 
 		<!-- Footer -->
-		<div class="md:hidden flex justify-center items-center gap-2">
+		<div
+			v-if="!readonly"
+			class="md:hidden flex justify-center items-center gap-2"
+		>
 			<Button
 				variant="outline"
 				@click="onCancel"
+				:disabled="readonly"
 				>Отменить</Button
 			>
 			<Button
 				type="submit"
 				@click="onSubmit"
+				:disabled="readonly"
 				>Сохранить</Button
 			>
 		</div>

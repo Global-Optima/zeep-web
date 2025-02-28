@@ -280,6 +280,6 @@ const onSubmit = handleSubmit((values) => {
     title: "Успех",
     description: "Размер для принтера штрих-кодов сохранены",
   });
-  isModalOpen.value = false; 
+  isModalOpen.value = false;
 });
 </script>
