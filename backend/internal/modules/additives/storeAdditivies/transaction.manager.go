@@ -78,7 +78,7 @@ func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditi
 
 func (m *transactionManager) addStocks(storeWarehouseRepo storeStocks.StoreStockRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
 	for _, dto := range dtos {
-		_, err := storeWarehouseRepo.AddStock(storeID, &dto)
+		_, err := storeWarehouseRepo.AddOrUpdateStock(storeID, &dto)
 		if err != nil {
 			switch {
 			case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
