@@ -1,6 +1,8 @@
 package storeAdditives
 
 import (
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
@@ -8,7 +10,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
@@ -242,6 +243,10 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 
 	storeAdditive, err := h.service.GetStoreAdditiveByID(storeID, uint(storeAdditiveID))
 	if err != nil {
+		if errors.Is(err, types.ErrStoreAdditiveNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StoreAdditive)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
