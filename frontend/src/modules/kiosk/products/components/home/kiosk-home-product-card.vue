@@ -32,19 +32,23 @@
 
 <script setup lang="ts">
  import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
+import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
-import { useCurrentProductStore } from '@/modules/kiosk/products/components/hooks/use-current-product.hook'
+import { useRouter } from 'vue-router'
 
 // const router = useRouter()
-const currentProductStore = useCurrentProductStore()
+// const currentProductStore = useCurrentProductStore()
+
+const router = useRouter()
 
  const {product} = defineProps<{
   product: StoreProductDTO;
 }>();
 
  const selectProduct = () => {
-  currentProductStore.openModal(product.id)
+  // currentProductStore.openModal(product.id)
+  router.push({name: getRouteName("KIOSK_PRODUCT"), params: {id: product.id}})
 };
 </script>
 

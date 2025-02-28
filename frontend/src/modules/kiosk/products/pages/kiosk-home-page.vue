@@ -33,27 +33,17 @@
 		</section>
 
 		<!-- Cart Button for mobile -->
-		<div
-			v-if="!cartStore.isEmpty"
-			class="right-8 bottom-8 fixed flex justify-center"
-		>
-			<KioskHomeCart />
-		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
-import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
-import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/toolbar/kiosk-home-toolbar-mobile.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
-
-const cartStore = useCartStore()
 
 // Reactive References
 const selectedCategoryId = ref<number | null>(null)

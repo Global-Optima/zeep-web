@@ -11,6 +11,7 @@ import {
 	Package,
 	PackageCheck,
 	Ruler,
+	Settings,
 	ShoppingCart,
 	Store,
 	Truck,
@@ -269,5 +270,11 @@ export const adminNavItems: SidebarNavItem[] = [
 				],
 			},
 		],
+	},
+	{
+		name: 'Настройка',
+		routeKey: 'ADMIN_STORE_SETTINGS',
+		icon: Settings,
+		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
 	},
 ]

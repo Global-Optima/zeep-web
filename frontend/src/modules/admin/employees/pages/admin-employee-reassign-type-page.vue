@@ -47,10 +47,6 @@ const { handleSubmit, setFieldValue } = useForm({
   validationSchema: schema,
 })
 
-// Available Types (Exclude Current Type)
-const availableTypes = computed(() =>
-  Object.values(EmployeeType).filter((type) => type !== employee.value?.type)
-)
 
 // Available Roles Based on Selected Type
 const availableRoles = computed(() => {
@@ -172,7 +168,7 @@ const onSubmit = handleSubmit((values) => {
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
 				Переназначение {{ getEmployeeShortName(employee) }}
 			</h1>
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -218,7 +214,7 @@ const onSubmit = handleSubmit((values) => {
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="type in availableTypes"
+										v-for="type in Object.values(EmployeeType)"
 										:key="type"
 										:value="type"
 									>
@@ -269,7 +265,7 @@ const onSubmit = handleSubmit((values) => {
 								class="flex justify-between items-center gap-4 px-3 py-2 border rounded-md text-sm cursor-pointer"
 							>
 								<span>{{ selectedWorkplace?.name || 'Выберите место работы' }}</span>
-								<ChevronDown class="text-gray-400 size-5" />
+								<ChevronDown class="size-5 text-gray-400" />
 							</div>
 							<FormMessage />
 						</FormItem>
@@ -285,7 +281,7 @@ const onSubmit = handleSubmit((values) => {
 			</CardContent>
 		</Card>
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="handleCancel"
