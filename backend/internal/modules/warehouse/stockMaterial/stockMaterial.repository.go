@@ -103,6 +103,9 @@ func (r *stockMaterialRepository) GetStockMaterialByID(stockMaterialID uint) (*d
 		Preload("Ingredient.Unit").
 		First(&stockMaterial, stockMaterialID).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStockMaterialNotFound
+		}
 		return nil, err
 	}
 	return &stockMaterial, nil
