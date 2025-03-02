@@ -2,8 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/localization"
-	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 	"log"
 	"net"
 	"os"
@@ -12,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -194,6 +195,8 @@ func setupMockStorage() *storage.StorageRepository {
 
 func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
 	router := gin.New()
+	utils.InitValidators()
+	router.Use(middleware.SanitizeMiddleware())
 	router.Use(logger.ZapLoggerMiddleware())
 
 	apiRouter := routes.NewRouter(router, "/api", "/test")
