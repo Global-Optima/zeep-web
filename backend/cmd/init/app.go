@@ -19,7 +19,35 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	// Prometheus imports
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+var (
+	promHttpRequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests",
+		},
+		[]string{"method", "endpoint", "status"},
+	)
+
+	promHttpRequestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_duration_seconds",
+			Help:    "HTTP request latencies in seconds",
+			Buckets: []float64{0.1, 0.5, 1, 2, 5},
+		},
+		[]string{"method", "endpoint"},
+	)
+)
+
+func InitializePrometheus() {
+	prometheus.MustRegister(promHttpRequestsTotal)
+	prometheus.MustRegister(promHttpRequestDuration)
+}
 
 func InitializeConfig() *config.Config {
 	cfg := config.LoadConfig()
@@ -53,15 +81,6 @@ func InitializeRedis(cfg *config.Config) *database.RedisClient {
 	return redisClient
 }
 
-// func InitializeKafka(cfg *config.Config) *kafka.KafkaManager {
-// 	kafkaManager, err := kafka.NewKafkaManager(cfg.Kafka)
-// 	if err != nil {
-// 		log.Fatalf("failed to initialize kafka instance: %v", err)
-// 		return nil
-// 	}
-// 	return kafkaManager
-// }
-
 func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo storage.StorageRepository) *gin.Engine {
 	cfg := config.GetConfig()
 
@@ -81,9 +100,26 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
 
+	router.Use(func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+
+		// Record request count
+		promHttpRequestsTotal.WithLabelValues(
+			c.Request.Method,
+			c.FullPath(),
+			fmt.Sprintf("%d", c.Writer.Status()),
+		).Inc()
+
+		// Record request duration
+		promHttpRequestDuration.WithLabelValues(
+			c.Request.Method,
+			c.FullPath(),
+		).Observe(time.Since(start).Seconds())
+	})
+
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
-	//apiRouter.CustomerRoutes.Use(middleware.CustomerAuth())
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
 	storageHandler := storage.NewStorageHandler(storageRepo)                // temp
@@ -92,10 +128,13 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	appContainer := container.NewContainer(dbHandler, &storageRepo, apiRouter, logger.GetZapSugaredLogger())
 	appContainer.MustInitModules()
 
+	router.GET("/metrics", func(c *gin.Context) {
+		promhttp.Handler().ServeHTTP(c.Writer, c.Request)
+	})
+
 	return router
 }
 
-// Temporary init: for testing purposes
 func InitializeStorage(cfg *config.Config) storage.StorageRepository {
 	storageRepo, err := storage.NewStorageRepository(
 		cfg.S3.Endpoint,
@@ -112,7 +151,7 @@ func InitializeStorage(cfg *config.Config) storage.StorageRepository {
 func InitializeApp() (*gin.Engine, *config.Config) {
 	cfg := InitializeConfig()
 
-	err := logger.InitLoggers("info", "logs/gin.log", "logs/service.log", cfg.IsDevelopment)
+	err := logger.InitLogger("info", "logs/application.log", cfg.IsDevelopment)
 	if err != nil {
 		panic(err)
 	}
@@ -133,11 +172,9 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 
 	redisClient := InitializeRedis(cfg)
 
-	storageRepo := InitializeStorage(cfg) // temp
+	storageRepo := InitializeStorage(cfg)
 
-	// kafkaManager := InitializeKafka(cfg)
-
-	router := InitializeRouter(dbHandler, redisClient, storageRepo) // temp
+	router := InitializeRouter(dbHandler, redisClient, storageRepo)
 
 	return router, cfg
 }
