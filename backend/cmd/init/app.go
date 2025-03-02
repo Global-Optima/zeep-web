@@ -79,6 +79,9 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		MaxAge:           12 * time.Hour,
 	}))
 
+	utils.InitValidators()
+	router.Use(middleware.SanitizeMiddleware())
+
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
