@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -65,6 +66,8 @@ func (s *productService) GetProductByID(productID uint) (*types.ProductDetailsDT
 		return nil, wrappedErr
 	}
 
+	logrus.Info(product.ImageURL.GetOriginalImageObjectKey())
+
 	return types.MapToProductDetailsDTO(product), nil
 }
 
@@ -90,8 +93,8 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 			s.logger.Error(wrappedErr)
 			return 0, wrappedErr
 		}
-		product.ImageURL = data.S3ImageKey(imageUrl)
-		product.VideoURL = data.S3VideoKey(videoUrl)
+		product.ImageURL = data.StorageImageKey(imageUrl)
+		product.VideoURL = data.StorageVideoKey(videoUrl)
 	}
 
 	productID, err := s.repo.CreateProduct(product)
@@ -150,8 +153,8 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
-	product.ImageURL = data.S3ImageKey(imageKey)
-	product.VideoURL = data.S3VideoKey(videoKey)
+	product.ImageURL = data.StorageImageKey(imageKey)
+	product.VideoURL = data.StorageVideoKey(videoKey)
 
 	err = s.repo.UpdateProduct(productID, product)
 	if err != nil {

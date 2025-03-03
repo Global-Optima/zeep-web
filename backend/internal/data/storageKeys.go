@@ -2,91 +2,122 @@ package data
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"net/url"
 	"path/filepath"
 	"strings"
 )
 
-var s3info = &S3Info{}
+var storageKeyInfo = &StorageKeyInfo{}
 
-type S3Info struct {
+type StorageKeyInfo struct {
+	Endpoint              string
+	BucketName            string
 	OriginalImagesPrefix  string
 	ConvertedImagesPrefix string
 	ConvertedVideosPrefix string
-	S3Endpoint            string
-	BucketName            string
 }
 
-type S3Key interface {
+type StorageKey interface {
 	ToString() string
 	GetURL() string
 }
 
-type S3ImageKey string
+type StorageImageKey string
 
-func (s S3ImageKey) ToString() string {
+func (s StorageImageKey) ToString() string {
 	return string(s)
 }
 
-func (s S3ImageKey) GetURL() string {
+func (s StorageImageKey) GetURL() string {
 	if s == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s/%s",
-		s3info.S3Endpoint,
-		s3info.BucketName,
+		storageKeyInfo.Endpoint,
+		storageKeyInfo.BucketName,
 		url.PathEscape(s.GetConvertedImageObjectKey()),
 	)
 }
 
-func (s S3ImageKey) GetOriginalImageURL() string {
+func (s StorageImageKey) GetOriginalImageURL() string {
 	if s == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s/%s",
-		s3info.S3Endpoint,
-		s3info.BucketName,
+		storageKeyInfo.Endpoint,
+		storageKeyInfo.BucketName,
 		url.PathEscape(s.GetOriginalImageObjectKey()),
 	)
 }
 
-func (s S3ImageKey) GetConvertedImageObjectKey() string {
+func (s StorageImageKey) GetConvertedImageObjectKey() string {
 	if s == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/%s", s3info.ConvertedImagesPrefix, url.PathEscape(s.ToString()))
+	return fmt.Sprintf("%s/%s", storageKeyInfo.ConvertedImagesPrefix, url.PathEscape(s.ToString()))
 }
 
-func (s S3ImageKey) GetOriginalImageObjectKey() string {
+func (s StorageImageKey) GetOriginalImageObjectKey() string {
 	if s == "" {
 		return ""
 	}
 	key := s.ToString()
-	originalFileKey := strings.TrimSuffix(key, filepath.Ext(key)) + s3info.OriginalImagesPrefix
-	return fmt.Sprintf("%s/%s", s3info.OriginalImagesPrefix, url.PathEscape(originalFileKey))
+	originalFileKey := strings.TrimSuffix(key, filepath.Ext(key)) + storageKeyInfo.OriginalImagesPrefix
+	return fmt.Sprintf("%s/%s", storageKeyInfo.OriginalImagesPrefix, url.PathEscape(originalFileKey))
 }
 
-type S3VideoKey string
+type StorageVideoKey string
 
-func (s S3VideoKey) ToString() string {
+func (s StorageVideoKey) ToString() string {
 	return string(s)
 }
 
-func (s S3VideoKey) GetURL() string {
+func (s StorageVideoKey) GetURL() string {
 	if s == "" {
 		return ""
 	}
-	key := fmt.Sprintf("%s/%s", s3info.ConvertedVideosPrefix, s.ToString())
-	return fmt.Sprintf("%s/%s/%s", s3info.S3Endpoint, s3info.BucketName, url.PathEscape(key))
+	return fmt.Sprintf("%s/%s/%s",
+		storageKeyInfo.Endpoint,
+		storageKeyInfo.BucketName,
+		url.PathEscape(s.GetConvertedVideoObjectKey()),
+	)
 }
 
-func (s S3VideoKey) GetConvertedVideoObjectKey() string {
+func (s StorageVideoKey) GetConvertedVideoObjectKey() string {
 	if s == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/%s", s3info.ConvertedVideosPrefix, url.PathEscape(s.ToString()))
+	return fmt.Sprintf("%s/%s", storageKeyInfo.ConvertedVideosPrefix, url.PathEscape(s.ToString()))
 }
 
-func InitS3KeysBuilder(info *S3Info) {
-	s3info = info
+func validateStorageKeyInfo(info *StorageKeyInfo) error {
+	if info == nil {
+		return errors.New("storage key info is nil")
+	}
+
+	fields := map[string]string{
+		"Endpoint":              info.Endpoint,
+		"BucketName":            info.BucketName,
+		"OriginalImagesPrefix":  info.OriginalImagesPrefix,
+		"ConvertedImagesPrefix": info.ConvertedImagesPrefix,
+		"ConvertedVideosPrefix": info.ConvertedVideosPrefix,
+	}
+
+	for fieldName, value := range fields {
+		if strings.TrimSpace(value) == "" {
+			return errors.New("invalid value for field: " + fieldName + " (empty or only spaces)")
+		}
+	}
+
+	return nil
+}
+
+func InitStorageKeysBuilder(info *StorageKeyInfo) error {
+	if err := validateStorageKeyInfo(info); err != nil {
+		return err
+	}
+
+	storageKeyInfo = info
+	return nil
 }

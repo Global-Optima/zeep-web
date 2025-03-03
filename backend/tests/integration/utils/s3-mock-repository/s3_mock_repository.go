@@ -31,13 +31,15 @@ type mockStorageRepository struct {
 }
 
 func NewMockStorageRepository() (storage.StorageRepository, error) {
-	data.InitS3KeysBuilder(&data.S3Info{
+	if err := data.InitStorageKeysBuilder(&data.StorageKeyInfo{
 		BucketName:            mockBucketName,
-		S3Endpoint:            mockS3Endpoint,
+		Endpoint:              mockS3Endpoint,
 		OriginalImagesPrefix:  storage.IMAGES_ORIGINAL_STORAGE_REPO_KEY,
 		ConvertedImagesPrefix: storage.IMAGES_CONVERTED_STORAGE_REPO_KEY,
 		ConvertedVideosPrefix: storage.VIDEOS_CONVERTED_STORAGE_REPO_KEY,
-	})
+	}); err != nil {
+		return nil, err
+	}
 
 	return &mockStorageRepository{
 		s3Client:   nil,
@@ -46,7 +48,7 @@ func NewMockStorageRepository() (storage.StorageRepository, error) {
 	}, nil
 }
 
-func (r *mockStorageRepository) DeleteImageFiles(key data.S3ImageKey) error {
+func (r *mockStorageRepository) DeleteImageFiles(key data.StorageImageKey) error {
 	var errList []error
 
 	if err := r.DeleteFile(key.GetConvertedImageObjectKey()); err != nil {
@@ -88,7 +90,7 @@ func (r *mockStorageRepository) MarkFileAsDeleted(key string) error {
 	return nil
 }
 
-func (r *mockStorageRepository) MarkImagesAsDeleted(key data.S3ImageKey) error {
+func (r *mockStorageRepository) MarkImagesAsDeleted(key data.StorageImageKey) error {
 	var errList []error
 
 	if err := r.MarkFileAsDeleted(key.GetConvertedImageObjectKey()); err != nil {

@@ -188,7 +188,7 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 		s.logger.Error(wrappedErr)
 		return 0, wrappedErr
 	}
-	additive.ImageURL = data.S3ImageKey(imageUrl)
+	additive.ImageURL = data.StorageImageKey(imageUrl)
 
 	id, err := s.repo.CreateAdditive(additive)
 	if err != nil {
@@ -236,7 +236,7 @@ func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAddit
 			s.logger.Error(wrappedErr)
 			return nil, wrappedErr
 		}
-		updateModels.Additive.ImageURL = data.S3ImageKey(imageUrl)
+		updateModels.Additive.ImageURL = data.StorageImageKey(imageUrl)
 	}
 
 	if err := s.repo.UpdateAdditiveWithAssociations(additiveID, updateModels); err != nil {

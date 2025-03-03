@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"golang.org/x/sync/errgroup"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"sync"
 )
 
@@ -34,9 +36,9 @@ type StorageRepository interface {
 		vidFileHeader *multipart.FileHeader,
 	) (convertedImageFileName, convertedVideoFileName string, err error)
 	DeleteFile(key string) error
-	DeleteImageFiles(key data.S3ImageKey) error
+	DeleteImageFiles(key data.StorageImageKey) error
 	MarkFileAsDeleted(key string) error
-	MarkImagesAsDeleted(key data.S3ImageKey) error
+	MarkImagesAsDeleted(key data.StorageImageKey) error
 	GetFileURL(key string) (string, error)
 	FileExists(key string) (bool, error)
 	DownloadFile(key string) ([]byte, error)
@@ -51,13 +53,15 @@ type storageRepository struct {
 
 func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (StorageRepository, error) {
 
-	data.InitS3KeysBuilder(&data.S3Info{
+	if err := data.InitStorageKeysBuilder(&data.StorageKeyInfo{
 		BucketName:            bucketName,
-		S3Endpoint:            endpoint,
+		Endpoint:              endpoint,
 		OriginalImagesPrefix:  IMAGES_ORIGINAL_STORAGE_REPO_KEY,
 		ConvertedImagesPrefix: IMAGES_CONVERTED_STORAGE_REPO_KEY,
 		ConvertedVideosPrefix: VIDEOS_CONVERTED_STORAGE_REPO_KEY,
-	})
+	}); err != nil {
+		return nil, err
+	}
 
 	sess, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
@@ -76,7 +80,7 @@ func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (St
 	}, nil
 }
 
-func (r *storageRepository) UploadFile(key string, reader io.Reader) (string, error) {
+func (r *storageRepository) UploadFile(filename string, reader io.Reader) (string, error) {
 	fileData, err := io.ReadAll(reader)
 	if err != nil {
 		return "", err
@@ -84,11 +88,19 @@ func (r *storageRepository) UploadFile(key string, reader io.Reader) (string, er
 
 	body := bytes.NewReader(fileData)
 
+	contentType := mime.TypeByExtension(filepath.Ext(filename))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	key := media.GetFilenameWithoutExt(filename)
+
 	_, err = r.s3Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(r.bucketName),
-		Key:    aws.String(key),
-		Body:   body,
-		ACL:    aws.String("public-read"),
+		Bucket:      aws.String(r.bucketName),
+		Key:         aws.String(key),
+		Body:        body,
+		ACL:         aws.String("public-read"),
+		ContentType: &contentType,
 	})
 	if err != nil {
 		return "", err
@@ -105,7 +117,7 @@ func (r *storageRepository) DeleteFile(key string) error {
 	return err
 }
 
-func (r *storageRepository) DeleteImageFiles(key data.S3ImageKey) error {
+func (r *storageRepository) DeleteImageFiles(key data.StorageImageKey) error {
 	var errList []error
 
 	if err := r.DeleteFile(key.GetConvertedImageObjectKey()); err != nil {
@@ -150,7 +162,7 @@ func (r *storageRepository) MarkFileAsDeleted(key string) error {
 	return nil
 }
 
-func (r *storageRepository) MarkImagesAsDeleted(key data.S3ImageKey) error {
+func (r *storageRepository) MarkImagesAsDeleted(key data.StorageImageKey) error {
 	var errList []error
 
 	if err := r.MarkFileAsDeleted(key.GetConvertedImageObjectKey()); err != nil {
@@ -273,10 +285,13 @@ func (r *storageRepository) ConvertAndUploadMedia(
 	}
 
 	if videoReader != nil {
-		videoKey, err = r.uploadVideo(videoReader, videoName, group)
-		if err != nil {
-			return "", "", err
-		}
+		group.Go(func() error {
+			videoKey, err = r.uploadVideo(videoReader, videoName)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 	}
 
 	if err := group.Wait(); err != nil {
@@ -304,6 +319,8 @@ func (r *storageRepository) validateVideo(vidFileHeader *multipart.FileHeader) (
 }
 
 func (r *storageRepository) uploadConvertedImages(filesPair *media.FilesPair, group *errgroup.Group) (string, error) {
+	var imageKey string
+
 	uploadFile := func(key string, data []byte) error {
 		_, err := r.UploadFile(key, bytes.NewReader(data))
 		if err != nil {
@@ -313,8 +330,8 @@ func (r *storageRepository) uploadConvertedImages(filesPair *media.FilesPair, gr
 	}
 
 	group.Go(func() error {
-		key := fmt.Sprintf("%s/%s", IMAGES_ORIGINAL_STORAGE_REPO_KEY, filesPair.GetOriginalFileName())
-		return uploadFile(key, filesPair.OriginalFile.Data)
+		imageKey = fmt.Sprintf("%s/%s", IMAGES_ORIGINAL_STORAGE_REPO_KEY, filesPair.GetOriginalFileName())
+		return uploadFile(imageKey, filesPair.OriginalFile.Data)
 	})
 
 	group.Go(func() error {
@@ -322,17 +339,15 @@ func (r *storageRepository) uploadConvertedImages(filesPair *media.FilesPair, gr
 		return uploadFile(key, filesPair.ConvertedFile.Data)
 	})
 
-	return filesPair.GetConvertedFileName(), nil
+	return imageKey, nil
 }
 
-func (r *storageRepository) uploadVideo(videoReader io.Reader, videoName string, group *errgroup.Group) (string, error) {
-	group.Go(func() error {
-		key := fmt.Sprintf("%s/%s", VIDEOS_CONVERTED_STORAGE_REPO_KEY, videoName)
-		_, err := r.UploadFile(key, videoReader)
-		if err != nil {
-			return fmt.Errorf("failed to upload video to S3: %w", err)
-		}
-		return nil
-	})
-	return videoName, nil
+func (r *storageRepository) uploadVideo(videoReader io.Reader, videoName string) (string, error) {
+	filename := fmt.Sprintf("%s/%s", VIDEOS_CONVERTED_STORAGE_REPO_KEY, videoName)
+	key, err := r.UploadFile(filename, videoReader)
+	if err != nil {
+		return "", fmt.Errorf("failed to upload video to S3: %w", err)
+	}
+
+	return key, nil
 }
