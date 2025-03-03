@@ -45,7 +45,6 @@ func (r *storeAdditiveRepository) GetMissingStoreAdditiveIDsForProductSizes(
 	storeID uint,
 	productSizeIDs []uint,
 ) ([]uint, error) {
-
 	if len(productSizeIDs) == 0 {
 		return nil, nil
 	}
@@ -134,7 +133,7 @@ func (r *storeAdditiveRepository) GetAdditivesListToAdd(storeID uint, filter *ad
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
+		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ? OR additives.size ILIKE ?", searchTerm, searchTerm, searchTerm)
 	}
 
 	if filter.MinPrice != nil {
@@ -207,6 +206,7 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 
 	return categories, nil
 }
+
 func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*data.StoreAdditive, error) {
 	var storeAdditive *data.StoreAdditive
 
@@ -218,8 +218,10 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeID, storeAdditiveID 
 		Preload("Additive.Ingredients.Ingredient.Unit").
 		Preload("Additive.Ingredients.Ingredient.IngredientCategory").
 		First(&storeAdditive).Error
-
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStoreAdditiveNotFound
+		}
 		return nil, err
 	}
 
@@ -241,7 +243,6 @@ func (r *storeAdditiveRepository) GetSufficientStoreAdditiveByID(
 		Preload("Additive.Ingredients.Ingredient.Unit").
 		Preload("Additive.Ingredients.Ingredient.IngredientCategory").
 		First(&storeAdditive).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get storeAdditive (id=%d): %w", storeAdditiveID, err)
 	}
@@ -355,9 +356,6 @@ func (r *storeAdditiveRepository) UpdateStoreAdditive(storeID, storeAdditiveID u
 }
 
 func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
-
-	err := r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).
+	return r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).
 		Delete(&data.StoreAdditive{}).Error
-
-	return err
 }

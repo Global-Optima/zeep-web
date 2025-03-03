@@ -1,11 +1,13 @@
 package warehouse
 
 import (
+	"errors"
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 
@@ -198,6 +200,9 @@ func (h *WarehouseHandler) DeleteWarehouse(c *gin.Context) {
 
 	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
 	if err != nil {
+		if errors.Is(err, types.ErrWarehouseNotFound) {
+			utils.SendNotFoundError(c, err.Error())
+		}
 		utils.SendInternalServerError(c, err.Error())
 		return
 	}

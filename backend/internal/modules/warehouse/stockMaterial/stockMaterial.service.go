@@ -3,6 +3,7 @@ package stockMaterial
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
@@ -48,10 +49,6 @@ func (s *stockMaterialService) GetStockMaterialByID(stockMaterialID uint) (*type
 	stockMaterial, err := s.repo.GetStockMaterialByID(stockMaterialID)
 	if err != nil {
 		return nil, err
-	}
-
-	if stockMaterial == nil {
-		return nil, errors.New("StockMaterial not found")
 	}
 
 	stockMaterialResponse := types.ConvertStockMaterialToStockMaterialResponse(stockMaterial)
@@ -115,6 +112,7 @@ func (s *stockMaterialService) GetStockMaterialBarcode(stockMaterialID uint) ([]
 
 	return barcodeImage.Bytes(), nil
 }
+
 func (s *stockMaterialService) GenerateStockMaterialBarcodePDF(stockMaterialID uint) ([]byte, error) {
 	stockMaterial, err := s.repo.GetStockMaterialByID(stockMaterialID)
 	if err != nil {

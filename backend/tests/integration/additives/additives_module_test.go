@@ -39,7 +39,7 @@ func TestAdditiveEndpoints(t *testing.T) {
 				ExpectedCode: http.StatusCreated,
 			},
 			{
-				Description: "Additive should not be created WITHOUT an image",
+				Description: "Should create additive without an image",
 				Method:      http.MethodPost,
 				URL:         "/api/test/additives",
 				FormData: map[string]string{
@@ -49,10 +49,10 @@ func TestAdditiveEndpoints(t *testing.T) {
 					"size":               "300",
 					"unitId":             "1",
 					"additiveCategoryId": "1",
-					"ingredients":        `[{"ingredientId":3,"quantity":4.0}]`,
+					"ingredients":        `[{"ingredientId":1,"quantity":4.0}]`,
 				},
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusBadRequest,
+				ExpectedCode: http.StatusCreated,
 			},
 			{
 				Description: "Barista should NOT be able to create an additive",

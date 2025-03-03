@@ -1,8 +1,10 @@
 package categories
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"errors"
 	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -133,6 +135,9 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 
 	existingCategory, err := h.service.GetCategoryByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404ProductCategory)
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
