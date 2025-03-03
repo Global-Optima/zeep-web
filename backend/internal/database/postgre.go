@@ -30,6 +30,8 @@ const (
 )
 
 func InitDB(dsn string) (*DBHandler, error) {
+	fmt.Printf("connecting to dsn: %s", dsn)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
