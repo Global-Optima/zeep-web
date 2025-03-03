@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const maxRequestsPerDay int64 = 3
+const maxRequestsPerDay int64 = 1
 
 type StockRequestService interface {
 	CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, string, error)
@@ -84,8 +84,8 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 
 	ingredients := []data.StockRequestIngredient{}
 	for _, item := range req.StockMaterials {
-		var stockMaterial data.StockMaterial
-		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
+		var material data.StockMaterial
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &material); err != nil {
 			return 0, "", fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 
@@ -100,7 +100,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		return 0, "", fmt.Errorf("failed to add ingredients to stock request ID %d: %w", stockRequest.ID, err)
 	}
 
-	details := &details.NewStockRequestDetails{
+	requestDetails := &details.NewStockRequestDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           store.WarehouseID,
 			FacilityName: store.Name,
@@ -109,7 +109,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		RequestID:     stockRequest.ID,
 	}
 
-	err = s.notificationService.NotifyNewStockRequest(details)
+	err = s.notificationService.NotifyNewStockRequest(requestDetails)
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to send notification: %w", err)
 	}
@@ -158,7 +158,7 @@ func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto type
 		return nil, fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
-	details := &details.StockRequestStatusUpdatedDetails{
+	requestDetails := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           request.WarehouseID,
 			FacilityName: request.Warehouse.Name,
@@ -166,7 +166,7 @@ func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto type
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
 	}
-	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
+	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send notification: %w", err)
 	}
@@ -193,7 +193,7 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 		return nil, fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
-	details := &details.StockRequestStatusUpdatedDetails{
+	requestDetails := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           request.StoreID,
 			FacilityName: request.Store.Name,
@@ -201,7 +201,7 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
 	}
-	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
+	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send notification: %w", err)
 	}
@@ -238,7 +238,7 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) (*data.StockReq
 		return nil, fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
-	details := &details.StockRequestStatusUpdatedDetails{
+	requestDetails := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           request.WarehouseID,
 			FacilityName: request.Warehouse.Name,
@@ -247,7 +247,7 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) (*data.StockReq
 		RequestStatus:  request.Status,
 	}
 
-	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
+	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send notification: %w", err)
 	}
@@ -279,7 +279,7 @@ func (s *stockRequestService) SetInDeliveryStatus(requestID uint) (*data.StockRe
 		return nil, fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
-	details := &details.StockRequestStatusUpdatedDetails{
+	requestDetails := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           request.StoreID,
 			FacilityName: request.Store.Name,
@@ -287,7 +287,7 @@ func (s *stockRequestService) SetInDeliveryStatus(requestID uint) (*data.StockRe
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
 	}
-	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
+	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send notification: %w", err)
 	}
@@ -319,7 +319,7 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) (*data.StockReq
 		return nil, fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
-	details := &details.StockRequestStatusUpdatedDetails{
+	requestDetails := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           request.WarehouseID,
 			FacilityName: request.Warehouse.Name,
@@ -327,7 +327,7 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) (*data.StockReq
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
 	}
-	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
+	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send notification: %w", err)
 	}
@@ -359,7 +359,7 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 		return nil, fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
-	details := &details.StockRequestStatusUpdatedDetails{
+	requestDetails := &details.StockRequestStatusUpdatedDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID:           request.WarehouseID,
 			FacilityName: request.Warehouse.Name,
@@ -367,7 +367,7 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 		StockRequestID: request.ID,
 		RequestStatus:  request.Status,
 	}
-	err = s.notificationService.NotifyStockRequestStatusUpdated(details)
+	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send notification: %w", err)
 	}
@@ -382,7 +382,7 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 			return fmt.Errorf("failed to fetch warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 
-		details := &details.OutOfStockDetails{
+		requestDetails := &details.OutOfStockDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           request.WarehouseID,
 				FacilityName: request.Warehouse.Name,
@@ -391,7 +391,7 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 		}
 
 		if stockQuantity < ingredient.Quantity {
-			err := s.notificationService.NotifyOutOfStock(details)
+			err := s.notificationService.NotifyOutOfStock(requestDetails)
 			if err != nil {
 				return fmt.Errorf("failed to send out of stock notification: %w", err)
 			}
@@ -405,7 +405,7 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 		}
 
 		if updatedStock.Quantity < ingredient.StockMaterial.SafetyStock {
-			err := s.notificationService.NotifyOutOfStock(details)
+			err := s.notificationService.NotifyOutOfStock(requestDetails)
 			if err != nil {
 				return fmt.Errorf("failed to send out of stock notification: %w", err)
 			}
@@ -437,8 +437,8 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 	var changeDetails []types.StockRequestDetails
 
 	for _, item := range items {
-		var stockMaterial data.StockMaterial
-		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
+		var material data.StockMaterial
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &material); err != nil {
 			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 
@@ -446,12 +446,12 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 
 		if originalIngredient != nil {
 			if originalIngredient.Quantity != item.Quantity {
-				details := types.StockRequestDetails{
+				requestDetails := types.StockRequestDetails{
 					OriginalMaterialName: originalIngredient.StockMaterial.Name,
 					Quantity:             originalIngredient.Quantity,
 					ActualQuantity:       item.Quantity,
 				}
-				changeDetails = append(changeDetails, details)
+				changeDetails = append(changeDetails, requestDetails)
 
 				// If accepted quantity is lower, return the difference to the warehouse.
 				if originalIngredient.Quantity > item.Quantity {
@@ -463,11 +463,11 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 				}
 			}
 		} else {
-			details := types.StockRequestDetails{
-				MaterialName:   stockMaterial.Name,
+			requestDetails := types.StockRequestDetails{
+				MaterialName:   material.Name,
 				ActualQuantity: item.Quantity,
 			}
-			changeDetails = append(changeDetails, details)
+			changeDetails = append(changeDetails, requestDetails)
 		}
 
 		if item.Quantity > 0 {
@@ -548,8 +548,8 @@ func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.S
 
 	ingredients := []data.StockRequestIngredient{}
 	for _, item := range items {
-		var stockMaterial data.StockMaterial
-		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &stockMaterial); err != nil {
+		var material data.StockMaterial
+		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &material); err != nil {
 			return nil, fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
 		}
 		ingredients = append(ingredients, data.StockRequestIngredient{
@@ -623,14 +623,14 @@ func (s *stockRequestService) AddStockMaterialToCart(storeID uint, dto types.Sto
 		}
 	}
 
-	stockMaterial, err := s.stockMaterialRepo.GetStockMaterialByID(dto.StockMaterialID)
+	material, err := s.stockMaterialRepo.GetStockMaterialByID(dto.StockMaterialID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stock material for cart")
 	}
 
 	newIngredient := data.StockRequestIngredient{
 		StockRequestID:  cart.ID,
-		StockMaterialID: stockMaterial.ID,
+		StockMaterialID: material.ID,
 		Quantity:        dto.Quantity,
 	}
 	err = s.repo.AddIngredientsToStockRequest([]data.StockRequestIngredient{newIngredient})
