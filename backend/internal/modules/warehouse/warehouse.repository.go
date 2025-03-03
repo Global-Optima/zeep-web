@@ -1,6 +1,7 @@
 package warehouse
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
@@ -69,6 +70,9 @@ func (r *warehouseRepository) GetWarehouseByID(id uint) (*data.Warehouse, error)
 		Preload("FacilityAddress").
 		Preload("Region").
 		First(&warehouse, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrWarehouseNotFound
+		}
 		return nil, err
 	}
 	return &warehouse, nil

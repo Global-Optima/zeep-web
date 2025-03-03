@@ -1,9 +1,10 @@
 package ingredients
 
 import (
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -97,7 +98,7 @@ func (h *IngredientHandler) DeleteIngredient(c *gin.Context) {
 
 	existing, err := h.service.GetIngredientByID(uint(ingredientID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to delete ingredient: ingredient not found")
+		utils.SendNotFoundError(c, "Failed to delete ingredient: ingredient not found")
 		return
 	}
 

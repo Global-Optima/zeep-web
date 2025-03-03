@@ -1,10 +1,12 @@
 package stockMaterial
 
 import (
+	"errors"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"net/http"
 	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
@@ -140,6 +142,9 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 
 	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
 	if err != nil {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
+			utils.SendNotFoundError(c, "stock material not found")
+		}
 		utils.SendInternalServerError(c, "failed to retrieve stockMaterial")
 		return
 	}

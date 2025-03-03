@@ -123,6 +123,7 @@
 
     "500-productCategory": "An unexpected error occurred with the product category. Please try again later.",
     "400-productCategory": "Invalid product category data provided. Please check and try again.",
+    "404-productCategory": "Product category not found.",
     "201-productCategory": "Product category successfully created.",
     "200-productCategory-update": "Product category successfully updated.",
     "200-productCategory-delete": "Product category successfully deleted.",
@@ -175,6 +176,7 @@
     "200-storeProduct-delete": "Product successfully deleted from the store.",
 
     "500-storeAdditive": "An unexpected error occurred with the store additive. Please try again later.",
+    "404-storeAdditive": "Store additive not found",
     "400-storeAdditive": "Invalid store additive data provided. Please check and try again.",
     "201-storeAdditive": "Store additive successfully created.",
     "200-storeAdditive-update": "Store additive successfully updated.",
@@ -275,8 +277,3 @@
     "unexpectedMaterial" : "Unexpected material *{{.MaterialName}}* received *{{.ActualQuantity}}*"
   }
 }
-
-
-
-
-
