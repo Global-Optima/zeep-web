@@ -1,12 +1,10 @@
 package stockMaterialCategory
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
-	"gorm.io/gorm"
 )
 
 type StockMaterialCategoryService interface {
@@ -40,9 +38,6 @@ func (s *stockMaterialCategoryService) Create(dto types.CreateStockMaterialCateg
 func (s *stockMaterialCategoryService) GetByID(id uint) (*types.StockMaterialCategoryResponse, error) {
 	category, err := s.repo.GetByID(id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("stock material category not found")
-		}
 		return nil, fmt.Errorf("failed to fetch stock material category: %w", err)
 	}
 

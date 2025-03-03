@@ -3,6 +3,7 @@ package additives
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -46,7 +47,6 @@ func (r *additiveRepository) GetAdditivesByProductSizeIDs(productSizeIDs []uint)
 	err := r.db.Model(&data.ProductSizeAdditive{}).
 		Where("product_size_id IN (?)", productSizeIDs).
 		Find(&additives).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return additives, moduleErrors.ErrNotFound
@@ -63,7 +63,6 @@ func (r *additiveRepository) CheckAdditiveExists(additiveName string) (bool, err
 	err := r.db.Model(&data.Additive{}).
 		Where(&data.Additive{Name: additiveName}).
 		First(&addtive).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
@@ -174,7 +173,6 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 		Preload("Ingredients.Ingredient.Unit").
 		Preload("Ingredients.Ingredient.IngredientCategory").
 		First(&additive).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, moduleErrors.ErrNotFound
@@ -245,6 +243,9 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 func (r *additiveRepository) DeleteAdditive(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
 	if err := r.db.First(&additive, additiveID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrAdditiveNotFound
+		}
 		return nil, err
 	}
 

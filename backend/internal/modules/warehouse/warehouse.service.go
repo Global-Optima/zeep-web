@@ -60,9 +60,6 @@ func (s *warehouseService) CreateWarehouse(req types.CreateWarehouseDTO) (*types
 func (s *warehouseService) GetWarehouseByID(id uint) (*types.WarehouseDTO, error) {
 	warehouse, err := s.repo.GetWarehouseByID(id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("warehouse with ID %d not found", id)
-		}
 		return nil, fmt.Errorf("failed to fetch warehouse: %w", err)
 	}
 

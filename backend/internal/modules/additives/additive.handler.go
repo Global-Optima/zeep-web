@@ -2,14 +2,15 @@ package additives
 
 import (
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
@@ -285,6 +286,9 @@ func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
 
 	additive, err := h.service.GetAdditiveByID(uint(additiveID))
 	if err != nil {
+		if errors.Is(err, types.ErrAdditiveNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Additive)
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveDelete)
 		return
 	}
