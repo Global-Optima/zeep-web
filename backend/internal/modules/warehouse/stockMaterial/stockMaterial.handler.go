@@ -87,7 +87,7 @@ func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, stockMaterialResponse)
+	localization.SendLocalizedResponseWithKey(c, types.Response201StockMaterial)
 }
 
 func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
@@ -130,7 +130,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, "Updated stock material successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialUpdate)
 }
 
 func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
@@ -152,7 +152,7 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 
 	err = h.service.DeleteStockMaterial(uint(stockMaterialID))
 	if err != nil {
-		if err.Error() == "StockMaterial not found" {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
 		} else {
 			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialDelete)
@@ -170,7 +170,7 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusNoContent)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialDelete)
 }
 
 func (h *StockMaterialHandler) DeactivateStockMaterial(c *gin.Context) {
@@ -191,7 +191,7 @@ func (h *StockMaterialHandler) DeactivateStockMaterial(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialDeactivate)
 }
 
 func (h *StockMaterialHandler) GetStockMaterialBarcode(c *gin.Context) {

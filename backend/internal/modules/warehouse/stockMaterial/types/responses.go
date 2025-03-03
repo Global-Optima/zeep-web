@@ -17,4 +17,9 @@ var (
 	Response500StockMaterialBarcodeGet      = localization.NewResponseKey(500, data.StockMaterialComponent, "barcode-get")
 	Response400StockMaterialBarcodeRequired = localization.NewResponseKey(400, data.StockMaterialComponent, "barcode-required")
 	Response404StockMaterialBarcode         = localization.NewResponseKey(404, data.StockMaterialComponent, "barcode")
+
+	Response201StockMaterial           = localization.NewResponseKey(201, data.StockMaterialComponent)
+	Response200StockMaterialDeactivate = localization.NewResponseKey(200, data.StockMaterialComponent, "deactivate")
+	Response200StockMaterialUpdate     = localization.NewResponseKey(200, data.StockMaterialComponent, data.UpdateOperation.ToString())
+	Response200StockMaterialDelete     = localization.NewResponseKey(200, data.StockMaterialComponent, data.DeleteOperation.ToString())
 )

@@ -74,7 +74,8 @@ func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *ty
 	}
 
 	if stockMaterial == nil {
-		return fmt.Errorf("stock material with ID %d not found", stockMaterialID)
+		return fmt.Errorf("%w: stock material with ID %d not found",
+			types.ErrStockMaterialNotFound, stockMaterialID)
 	}
 
 	updatedStockMaterial, err := types.ValidateAndApplyUpdate(stockMaterial, req)
