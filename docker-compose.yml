@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   db:
     container_name: db
-    image: postgres:latest
+    image: postgres:16
     env_file:
       - .env
     environment:
@@ -16,6 +16,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
+
+  postgres_exporter:
+    container_name: postgres_exporter
+    image: prometheuscommunity/postgres-exporter:latest
+    environment:
+      DATA_SOURCE_NAME: 'postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable'
+    ports:
+      - '9187:9187'
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - app_network
 
@@ -68,8 +81,34 @@ services:
     container_name: backend
     build:
       context: ./backend
+      args:
+        ENV: ${BACKEND_ENV}
+        DB_HOST: ${DB_HOST}
+        DB_PORT: ${DB_PORT}
+        DB_USER: ${DB_USER}
+        DB_PASSWORD: ${DB_PASSWORD}
+        DB_NAME: ${DB_NAME}
+        SERVER_PORT: ${SERVER_PORT}
+        CLIENT_URL: ${CLIENT_URL}
+        JWT_CUSTOMER_SECRET_KEY: ${JWT_CUSTOMER_SECRET_KEY}
+        JWT_EMPLOYEE_SECRET_KEY: ${JWT_EMPLOYEE_SECRET_KEY}
+        JWT_CUSTOMER_ACCESS_TOKEN_TTL: ${JWT_CUSTOMER_ACCESS_TOKEN_TTL}
+        JWT_CUSTOMER_REFRESH_TOKEN_TTL: ${JWT_CUSTOMER_REFRESH_TOKEN_TTL}
+        JWT_EMPLOYEE_ACCESS_TOKEN_TTL: ${JWT_EMPLOYEE_ACCESS_TOKEN_TTL}
+        JWT_EMPLOYEE_REFRESH_TOKEN_TTL: ${JWT_EMPLOYEE_REFRESH_TOKEN_TTL}
+        PSKZ_ACCESS_KEY: ${PSKZ_ACCESS_KEY}
+        PSKZ_SECRET_KEY: ${PSKZ_SECRET_KEY}
+        PSKZ_ENDPOINT: ${PSKZ_ENDPOINT}
+        PSKZ_BUCKETNAME: ${PSKZ_BUCKETNAME}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+        REDIS_DB: ${REDIS_DB}
+        DEFAULT_PAGE: ${DEFAULT_PAGE}
+        DEFAULT_PAGE_SIZE: ${DEFAULT_PAGE_SIZE}
+        MAX_PAGE_SIZE: ${MAX_PAGE_SIZE}
     env_file:
-      - ./backend/.env
+      - .env
     ports:
       - '8080:8080'
     depends_on:
@@ -77,6 +116,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - ./backend/logs:/app/logs
     networks:
       - app_network
 
@@ -98,10 +139,112 @@ services:
     networks:
       - app_network
 
+  # Prometheus (Metrics Collection)
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - '9090:9090'
+    depends_on:
+      - cadvisor
+    networks:
+      - app_network
+
+  blackbox_exporter:
+    container_name: blackbox_exporter
+    image: prom/blackbox-exporter:latest
+    ports:
+      - '9115:9115'
+    volumes:
+      - ./monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml
+    networks:
+      - app_network
+
+  # System Monitoring
+  node_exporter:
+    container_name: node_exporter
+    image: prom/node-exporter:latest
+    ports:
+      - '9100:9100'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.netclass.ignored-devices=^(veth.*)$$'
+      - '--collector.systemd'
+      - '--collector.processes'
+    networks:
+      - app_network
+
+  # Grafana (Visualization)
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    ports:
+      - '3000:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - app_network
+
+  # Loki (Logging)
+  loki:
+    container_name: loki
+    image: grafana/loki:latest
+    volumes:
+      - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml
+      - ./loki-data/wal:/tmp/loki/wal
+      - ./loki-data/index:/tmp/loki/index
+      - ./loki-data/cache:/tmp/loki/cache
+      - ./loki-data/chunks:/tmp/loki/chunks
+      - ./loki-data/compactor:/tmp/loki/compactor
+    ports:
+      - '3100:3100'
+    networks:
+      - app_network
+
+  # Promtail (Log Shipper for Loki)
+  promtail:
+    container_name: promtail
+    image: grafana/promtail:latest
+    volumes:
+      - ./monitoring/promtail-config.yaml:/etc/promtail/config.yml
+      - ./backend/logs:/app/logs
+    depends_on:
+      - loki
+    networks:
+      - app_network
+
+  # cAdvisor (Container Metrics)
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports:
+      - '8082:8080'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - app_network
+
 # Volumes
 volumes:
   db_data:
   redis_data:
+  grafana_data:
 
 # Networks
 networks:

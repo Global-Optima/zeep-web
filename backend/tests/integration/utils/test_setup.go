@@ -2,8 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/localization"
-	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 	"log"
 	"net"
 	"os"
@@ -12,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -35,7 +36,7 @@ type TestEnvironment struct {
 func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	cfg := loadConfig()
 
-	if err := logger.InitLoggers("debug", "logs/test_gin.log", "logs/test_service.log", cfg.IsTest); err != nil {
+	if err := logger.InitLogger("debug", "logs/test_application.log", cfg.IsTest); err != nil {
 		log.Fatalf("Failed to initialize test loggers: %v", err)
 	}
 
