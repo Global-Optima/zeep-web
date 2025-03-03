@@ -90,8 +90,8 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 			s.logger.Error(wrappedErr)
 			return 0, wrappedErr
 		}
-		product.ImageURL = data.S3ImageKey(imageUrl)
-		product.VideoURL = data.S3VideoKey(videoUrl)
+		product.ImageURL = data.StorageImageKey(imageUrl)
+		product.VideoURL = data.StorageVideoKey(videoUrl)
 	}
 
 	productID, err := s.repo.CreateProduct(product)
@@ -150,8 +150,8 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
-	product.ImageURL = data.S3ImageKey(imageKey)
-	product.VideoURL = data.S3VideoKey(videoKey)
+	product.ImageURL = data.StorageImageKey(imageKey)
+	product.VideoURL = data.StorageVideoKey(videoKey)
 
 	err = s.repo.UpdateProduct(productID, product)
 	if err != nil {

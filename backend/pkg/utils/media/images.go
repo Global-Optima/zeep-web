@@ -66,7 +66,7 @@ func ConvertImageToRawAndWebp(fileHeader *multipart.FileHeader) (*FilesPair, err
 
 	uniqueName := GenerateUniqueName()
 
-	zipBytes, err := ZipSingleFile(uniqueName+ext, rawBytes)
+	zipBytes, err := TarGzSingleFile(uniqueName+ext, rawBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func ConvertImageToRawAndWebp(fileHeader *multipart.FileHeader) (*FilesPair, err
 	return &FilesPair{
 		CommonFileName: uniqueName,
 		OriginalFile: &FileData{
-			Ext:  ZIP_FORMAT_KEY,
+			Ext:  TAR_GZ_FORMAT_KEY,
 			Data: zipBytes,
 		},
 		ConvertedFile: &FileData{
