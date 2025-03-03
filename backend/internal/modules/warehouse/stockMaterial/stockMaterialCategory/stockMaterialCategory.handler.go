@@ -1,15 +1,16 @@
 package stockMaterialCategory
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
-	"github.com/Global-Optima/zeep-web/backend/internal/localization"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
+	"github.com/pkg/errors"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -138,6 +139,9 @@ func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
 
 	response, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrStockMaterialCategoryNotFound) {
+			utils.SendNotFoundError(c, "Stock material category not found")
+		}
 		utils.SendInternalServerError(c, "Failed to fetch stock material category")
 		return
 	}

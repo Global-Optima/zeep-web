@@ -1,6 +1,8 @@
 package categories
 
 import (
+	"errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -49,6 +51,9 @@ func (r *categoryRepository) GetCategories(filter *types.ProductCategoriesFilter
 func (r *categoryRepository) GetCategoryByID(id uint) (*data.ProductCategory, error) {
 	var category data.ProductCategory
 	if err := r.db.First(&category, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrCategoryNotFound
+		}
 		return nil, err
 	}
 	return &category, nil

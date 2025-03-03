@@ -2,7 +2,7 @@ package stockMaterialCategory
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+
 	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -36,7 +36,7 @@ func (r *stockMaterialCategoryRepository) GetByID(id uint) (*data.StockMaterialC
 	err := r.db.First(&category, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, moduleErrors.ErrNotFound
+			return nil, types.ErrStockMaterialCategoryNotFound
 		}
 		return nil, err
 	}
