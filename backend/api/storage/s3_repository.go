@@ -53,14 +53,15 @@ type storageRepository struct {
 }
 
 func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (StorageRepository, error) {
-
-	if err := data.InitStorageKeysBuilder(&data.StorageKeyInfo{
+	err := data.InitStorageKeysBuilder(&data.StorageKeyInfo{
 		BucketName:            bucketName,
 		Endpoint:              endpoint,
 		OriginalImagesPrefix:  IMAGES_ORIGINAL_STORAGE_REPO_KEY,
 		ConvertedImagesPrefix: IMAGES_CONVERTED_STORAGE_REPO_KEY,
 		ConvertedVideosPrefix: VIDEOS_CONVERTED_STORAGE_REPO_KEY,
-	}); err != nil {
+	})
+
+	if err != nil {
 		return nil, err
 	}
 

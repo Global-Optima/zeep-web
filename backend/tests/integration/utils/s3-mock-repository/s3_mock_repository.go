@@ -31,13 +31,15 @@ type mockStorageRepository struct {
 }
 
 func NewMockStorageRepository() (storage.StorageRepository, error) {
-	if err := data.InitStorageKeysBuilder(&data.StorageKeyInfo{
+	err := data.InitStorageKeysBuilder(&data.StorageKeyInfo{
 		BucketName:            mockBucketName,
 		Endpoint:              mockS3Endpoint,
 		OriginalImagesPrefix:  storage.IMAGES_ORIGINAL_STORAGE_REPO_KEY,
 		ConvertedImagesPrefix: storage.IMAGES_CONVERTED_STORAGE_REPO_KEY,
 		ConvertedVideosPrefix: storage.VIDEOS_CONVERTED_STORAGE_REPO_KEY,
-	}); err != nil {
+	})
+
+	if err != nil {
 		return nil, err
 	}
 
