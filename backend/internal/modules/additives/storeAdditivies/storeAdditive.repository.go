@@ -355,10 +355,6 @@ func (r *storeAdditiveRepository) UpdateStoreAdditive(storeID, storeAdditiveID u
 	return nil
 }
 
-//	func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
-//		return r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).
-//			Delete(&data.StoreAdditive{}).Error
-//	}
 func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
 	// Check if the store additive is in use in product size additives as a default
 	var count int64
@@ -373,10 +369,12 @@ func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID u
 		Limit(1).
 		Count(&count).Error
 	if err != nil {
+		fmt.Printf("failed to check store additive usage: %s", err)
 		return fmt.Errorf("failed to check store additive usage: %w", err)
 	}
 
 	if count > 0 {
+		fmt.Printf("cannot delete store additive %d: it is in use as a default additive in a product size", storeAdditiveID)
 		return fmt.Errorf("cannot delete store additive %d: it is in use as a default additive in a product size", storeAdditiveID)
 	}
 
