@@ -91,7 +91,11 @@ func (r *storageRepository) UploadFile(filename string, reader io.Reader) (strin
 
 	contentType := mime.TypeByExtension(filepath.Ext(filename))
 	if contentType == "" {
-		contentType = "application/octet-stream"
+		if filepath.Ext(filename) == media.MP4_FORMAT_KEY {
+			contentType = "video/mp4"
+		} else {
+			contentType = "application/octet-stream"
+		}
 	}
 
 	key := media.GetFilenameWithoutExt(filename)
