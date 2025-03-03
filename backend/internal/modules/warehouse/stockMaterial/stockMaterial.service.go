@@ -1,7 +1,6 @@
 package stockMaterial
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
@@ -158,7 +157,7 @@ func (s *stockMaterialService) RetrieveStockMaterialByBarcode(barcode string) (*
 		return nil, err
 	}
 	if stockMaterial == nil {
-		return nil, errors.New("StockMaterial not found with the provided barcode")
+		return nil, types.ErrStockMaterialBarcodeNotFound
 	}
 
 	return types.ConvertStockMaterialToStockMaterialResponse(stockMaterial), nil

@@ -13,19 +13,24 @@ type StoreProductModels struct {
 	StoreProductSizes []data.StoreProductSize
 }
 
-func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
-	basePrice, productSizeCount := productTypes.ProductAdditionalInfo(sp.Product)
-	storePrice, storeProductSizeCount := StoreProductAdditionalInfo(*sp)
+func MapToStoreProductDTO(storeProduct *data.StoreProduct) *StoreProductDTO {
+	basePrice, productSizeCount := productTypes.ProductAdditionalInfo(storeProduct.Product)
+	storePrice, storeProductSizeCount := StoreProductAdditionalInfo(*storeProduct)
+
+	isAvailable := true
+	if storeProduct.IsAvailable != nil && *storeProduct.IsAvailable == false {
+		isAvailable = false
+	}
 
 	return &StoreProductDTO{
-		ID:                    sp.ID,
-		BaseProductDTO:        productTypes.MapToBaseProductDTO(&sp.Product),
-		ProductID:             sp.ProductID,
+		ID:                    storeProduct.ID,
+		BaseProductDTO:        productTypes.MapToBaseProductDTO(&storeProduct.Product),
+		ProductID:             storeProduct.ProductID,
 		ProductSizeCount:      productSizeCount,
 		BasePrice:             basePrice,
 		StoreProductSizeCount: storeProductSizeCount,
 		StorePrice:            storePrice,
-		IsAvailable:           sp.IsAvailable,
+		IsAvailable:           isAvailable,
 	}
 }
 
@@ -101,7 +106,7 @@ func CreateToStoreProduct(dto *CreateStoreProductDTO) *data.StoreProduct {
 
 	return &data.StoreProduct{
 		ProductID:         dto.ProductID,
-		IsAvailable:       dto.IsAvailable,
+		IsAvailable:       &dto.IsAvailable,
 		StoreProductSizes: storeProductSizes,
 	}
 }
@@ -109,9 +114,7 @@ func CreateToStoreProduct(dto *CreateStoreProductDTO) *data.StoreProduct {
 func UpdateToStoreProductModels(dto *UpdateStoreProductDTO) *StoreProductModels {
 	storeProduct := &data.StoreProduct{}
 
-	if dto.IsAvailable != nil {
-		storeProduct.IsAvailable = *dto.IsAvailable
-	}
+	storeProduct.IsAvailable = dto.IsAvailable
 
 	storeProductSizes := make([]data.StoreProductSize, len(dto.ProductSizes))
 	for i, size := range dto.ProductSizes {

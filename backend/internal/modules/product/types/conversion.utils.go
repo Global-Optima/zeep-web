@@ -88,9 +88,13 @@ func MapToProductSizeDTO(productSize data.ProductSize) ProductSizeDTO {
 }
 
 func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditive) ProductSizeAdditiveDTO {
+	isDefault := false
+	if productSizeAdditive.IsDefault != nil {
+		isDefault = *productSizeAdditive.IsDefault
+	}
 	return ProductSizeAdditiveDTO{
 		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive),
-		IsDefault:   productSizeAdditive.IsDefault,
+		IsDefault:   isDefault,
 	}
 }
 
@@ -136,7 +140,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	for _, additive := range dto.Additives {
 		productSize.Additives = append(productSize.Additives, data.ProductSizeAdditive{
 			AdditiveID: additive.AdditiveID,
-			IsDefault:  additive.IsDefault,
+			IsDefault:  &additive.IsDefault,
 		})
 	}
 
@@ -196,7 +200,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	for _, additive := range dto.Additives {
 		temp := data.ProductSizeAdditive{
 			AdditiveID: additive.AdditiveID,
-			IsDefault:  additive.IsDefault,
+			IsDefault:  &additive.IsDefault,
 		}
 		additives = append(additives, temp)
 	}

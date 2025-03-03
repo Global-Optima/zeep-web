@@ -103,8 +103,8 @@ func (s *additiveService) UpdateAdditiveCategory(id uint, dto *types.UpdateAddit
 		return fmt.Errorf("additive category with ID %d not found", id)
 	}
 
-	updatedCategory := types.ConvertToUpdatedAdditiveCategoryModel(dto, existingCategory)
-	if err := s.repo.UpdateAdditiveCategory(updatedCategory); err != nil {
+	updatedCategory := types.ConvertToUpdatedAdditiveCategoryModel(dto)
+	if err := s.repo.UpdateAdditiveCategory(id, updatedCategory); err != nil {
 		wrappedErr := utils.WrapError("failed to update additive category", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr

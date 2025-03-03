@@ -58,7 +58,7 @@ type StoreProduct struct {
 	BaseEntity
 	ProductID         uint               `gorm:"index;not null"`
 	StoreID           uint               `gorm:"index;not null"`
-	IsAvailable       bool               `gorm:"default:true"`
+	IsAvailable       *bool              `gorm:"default:true"`
 	Store             Store              `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	Product           Product            `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"products"`
 	StoreProductSizes []StoreProductSize `gorm:"foreignKey:StoreProductID;constraint:OnDelete:CASCADE"`
