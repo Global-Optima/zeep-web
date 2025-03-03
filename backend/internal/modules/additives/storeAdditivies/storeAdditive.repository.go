@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/pkg/errors"
@@ -355,7 +356,35 @@ func (r *storeAdditiveRepository) UpdateStoreAdditive(storeID, storeAdditiveID u
 	return nil
 }
 
+//	func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
+//		return r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).
+//			Delete(&data.StoreAdditive{}).Error
+//	}
 func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
+	log.Println("\n\n\n")
+	log.Println("storeAdditiveRepository at DeleteStoreAdditive")
+	log.Println("\n\n\n")
+	// Check if the store additive is in use in product size additives as a default
+	var count int64
+	err := r.db.
+		Table("product_size_additives AS psa").
+		Joins("JOIN product_sizes ps ON psa.product_size_id = ps.id").
+		Joins("JOIN store_product_sizes sps ON ps.id = sps.product_size_id").
+		Joins("JOIN store_products sp ON sps.store_product_id = sp.id").
+		Where("psa.is_default = TRUE").
+		Where("psa.additive_id = (SELECT additive_id FROM store_additives WHERE id = ? AND store_id = ?)", storeAdditiveID, storeID).
+		Where("sp.store_id = ?", storeID).
+		Limit(1).
+		Count(&count).Error
+	if err != nil {
+		return fmt.Errorf("failed to check store additive usage: %w", err)
+	}
+
+	if count > 0 {
+		return fmt.Errorf("cannot delete store additive %d: it is in use as a default additive in a product size", storeAdditiveID)
+	}
+
+	// Proceed with deletion if not in use
 	return r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).
 		Delete(&data.StoreAdditive{}).Error
 }
