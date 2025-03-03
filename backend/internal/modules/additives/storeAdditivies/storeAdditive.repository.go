@@ -2,7 +2,6 @@ package storeAdditives
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/pkg/errors"
@@ -361,9 +360,6 @@ func (r *storeAdditiveRepository) UpdateStoreAdditive(storeID, storeAdditiveID u
 //			Delete(&data.StoreAdditive{}).Error
 //	}
 func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
-	log.Println("\n\n\n")
-	log.Println("storeAdditiveRepository at DeleteStoreAdditive")
-	log.Println("\n\n\n")
 	// Check if the store additive is in use in product size additives as a default
 	var count int64
 	err := r.db.
