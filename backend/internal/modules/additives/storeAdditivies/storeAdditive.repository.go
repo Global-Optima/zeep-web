@@ -356,29 +356,35 @@ func (r *storeAdditiveRepository) UpdateStoreAdditive(storeID, storeAdditiveID u
 }
 
 func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
-	// Check if the store additive is in use in product size additives as a default
-	var count int64
+	var exists bool
 	err := r.db.
 		Table("product_size_additives AS psa").
-		Joins("JOIN product_sizes ps ON psa.product_size_id = ps.id").
-		Joins("JOIN store_product_sizes sps ON ps.id = sps.product_size_id").
+		Select("1").
+		Joins("JOIN store_additives sa ON psa.additive_id = sa.additive_id").
+		Joins("JOIN store_product_sizes sps ON psa.product_size_id = sps.product_size_id").
 		Joins("JOIN store_products sp ON sps.store_product_id = sp.id").
 		Where("psa.is_default = TRUE").
-		Where("psa.additive_id = (SELECT additive_id FROM store_additives WHERE id = ? AND store_id = ?)", storeAdditiveID, storeID).
+		Where("sa.id = ? AND sa.store_id = ?", storeAdditiveID, storeID).
 		Where("sp.store_id = ?", storeID).
 		Limit(1).
-		Count(&count).Error
+		Scan(&exists).Error
 	if err != nil {
-		fmt.Printf("failed to check store additive usage: %s", err)
-		return fmt.Errorf("failed to check store additive usage: %w", err)
+		return errors.Wrap(err, "failed to check store additive usage")
 	}
 
-	if count > 0 {
-		fmt.Printf("cannot delete store additive %d: it is in use as a default additive in a product size", storeAdditiveID)
-		return fmt.Errorf("cannot delete store additive %d: it is in use as a default additive in a product size", storeAdditiveID)
+	if exists {
+		return types.ErrStoreAdditiveInUse
 	}
 
 	// Proceed with deletion if not in use
-	return r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).
-		Delete(&data.StoreAdditive{}).Error
+	result := r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).Delete(&data.StoreAdditive{})
+	if result.Error != nil {
+		return errors.Wrap(result.Error, "failed to delete store additive")
+	}
+
+	if result.RowsAffected == 0 {
+		return types.ErrStoreAdditiveNotFound
+	}
+
+	return nil
 }
