@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -285,13 +286,10 @@ func (r *storageRepository) ConvertAndUploadMedia(
 	}
 
 	if videoReader != nil {
-		group.Go(func() error {
-			videoKey, err = r.uploadVideo(videoReader, videoName)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+		videoKey, err = r.uploadVideo(videoReader, videoName, group)
+		if err != nil {
+			return "", "", err
+		}
 	}
 
 	if err := group.Wait(); err != nil {
@@ -319,8 +317,6 @@ func (r *storageRepository) validateVideo(vidFileHeader *multipart.FileHeader) (
 }
 
 func (r *storageRepository) uploadConvertedImages(filesPair *media.FilesPair, group *errgroup.Group) (string, error) {
-	var imageKey string
-
 	uploadFile := func(key string, data []byte) error {
 		_, err := r.UploadFile(key, bytes.NewReader(data))
 		if err != nil {
@@ -329,25 +325,29 @@ func (r *storageRepository) uploadConvertedImages(filesPair *media.FilesPair, gr
 		return nil
 	}
 
+	convertedImageName := filesPair.GetConvertedFileName()
+
 	group.Go(func() error {
-		imageKey = fmt.Sprintf("%s/%s", IMAGES_ORIGINAL_STORAGE_REPO_KEY, filesPair.GetOriginalFileName())
-		return uploadFile(imageKey, filesPair.OriginalFile.Data)
+		key := fmt.Sprintf("%s/%s", IMAGES_ORIGINAL_STORAGE_REPO_KEY, filesPair.GetOriginalFileName())
+		return uploadFile(key, filesPair.OriginalFile.Data)
 	})
 
 	group.Go(func() error {
-		key := fmt.Sprintf("%s/%s", IMAGES_CONVERTED_STORAGE_REPO_KEY, filesPair.GetConvertedFileName())
+		key := fmt.Sprintf("%s/%s", IMAGES_CONVERTED_STORAGE_REPO_KEY, convertedImageName)
 		return uploadFile(key, filesPair.ConvertedFile.Data)
 	})
 
-	return imageKey, nil
+	return strings.TrimSuffix(convertedImageName, filepath.Ext(convertedImageName)), nil
 }
 
-func (r *storageRepository) uploadVideo(videoReader io.Reader, videoName string) (string, error) {
-	filename := fmt.Sprintf("%s/%s", VIDEOS_CONVERTED_STORAGE_REPO_KEY, videoName)
-	key, err := r.UploadFile(filename, videoReader)
-	if err != nil {
-		return "", fmt.Errorf("failed to upload video to S3: %w", err)
-	}
-
-	return key, nil
+func (r *storageRepository) uploadVideo(videoReader io.Reader, videoName string, group *errgroup.Group) (string, error) {
+	group.Go(func() error {
+		key := fmt.Sprintf("%s/%s", VIDEOS_CONVERTED_STORAGE_REPO_KEY, videoName)
+		_, err := r.UploadFile(key, videoReader)
+		if err != nil {
+			return fmt.Errorf("failed to upload video to S3: %w", err)
+		}
+		return nil
+	})
+	return strings.TrimSuffix(videoName, filepath.Ext(videoName)), nil
 }

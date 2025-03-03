@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"net/url"
-	"path/filepath"
 	"strings"
 )
 
@@ -62,9 +61,7 @@ func (s StorageImageKey) GetOriginalImageObjectKey() string {
 	if s == "" {
 		return ""
 	}
-	key := s.ToString()
-	originalFileKey := strings.TrimSuffix(key, filepath.Ext(key)) + storageKeyInfo.OriginalImagesPrefix
-	return fmt.Sprintf("%s/%s", storageKeyInfo.OriginalImagesPrefix, url.PathEscape(originalFileKey))
+	return fmt.Sprintf("%s/%s", storageKeyInfo.OriginalImagesPrefix, url.PathEscape(s.ToString()))
 }
 
 type StorageVideoKey string

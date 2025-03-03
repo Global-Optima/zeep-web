@@ -8,7 +8,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -65,8 +64,6 @@ func (s *productService) GetProductByID(productID uint) (*types.ProductDetailsDT
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
-
-	logrus.Info(product.ImageURL.GetOriginalImageObjectKey())
 
 	return types.MapToProductDetailsDTO(product), nil
 }
