@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
@@ -49,7 +50,11 @@ func ValidateSanitizedString(fl validator.FieldLevel) bool {
 }
 
 func RegisterCustomValidators(validate *validator.Validate) {
-	validate.RegisterValidation("customSanitize", ValidateSanitizedString)
+	err := validate.RegisterValidation("customSanitize", ValidateSanitizedString)
+	if err != nil {
+		fmt.Printf("failed to register custom validator: %v", err)
+		return
+	}
 }
 
 func InitValidators() {
