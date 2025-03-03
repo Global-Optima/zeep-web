@@ -11,27 +11,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// SanitizeMiddleware ensures that all string fields in JSON requests are sanitized.
 func SanitizeMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.Method != http.MethodPost && c.Request.Method != http.MethodPut && c.Request.Method != http.MethodPatch {
+		contentType := c.ContentType()
+
+		// Skip multipart/form-data (file uploads)
+		if contentType == "multipart/form-data" {
 			c.Next()
 			return
 		}
 
-		body, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		// Only process JSON request bodies
+		if contentType != "application/json" {
+			c.Next()
 			return
 		}
 
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-
+		// Read and parse JSON body
 		var requestData map[string]interface{}
-		if err := json.Unmarshal(body, &requestData); err != nil {
+		if err := c.ShouldBindJSON(&requestData); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 			return
 		}
 
+		// Sanitize string fields
 		for key, value := range requestData {
 			if strVal, ok := value.(string); ok {
 				sanitized, valid := utils.SanitizeString(strVal)
@@ -46,12 +50,8 @@ func SanitizeMiddleware() gin.HandlerFunc {
 			}
 		}
 
-		sanitizedBody, err := json.Marshal(requestData)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to process request"})
-			return
-		}
-
+		// Convert back to JSON and reset request body
+		sanitizedBody, _ := json.Marshal(requestData)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(sanitizedBody))
 
 		c.Next()
