@@ -26,7 +26,11 @@
 				disabled
 				>Экспорт</Button
 			>
-			<Button v-if='canCreate' @click="addStore">Добавить</Button>
+			<Button
+				v-if="canCreate"
+				@click="addStore"
+				>Добавить</Button
+			>
 		</div>
 	</div>
 </template>
@@ -64,7 +68,7 @@ const onSelectStore = (store: StoreDTO) => {
   emit('update:filter', { ...props.filter, storeId: store.id})
 }
 
-const canCreate = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
+const canCreate = useHasRole([EmployeeRole.STORE_MANAGER])
 
 // Watch Search Input and Update Filter
 watch(debouncedSearchTerm, (newValue) => {

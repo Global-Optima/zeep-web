@@ -60,7 +60,7 @@ const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 const showForFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
-const canCreate = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
+const canCreate = useHasRole([EmployeeRole.STORE_MANAGER])
 
 const selectedStore = ref<StoreDTO | undefined>(undefined)
 

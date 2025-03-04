@@ -80,14 +80,14 @@ const { data: products } = useQuery({
   queryKey: productsQueryKey,
   queryFn: () =>
     storeProductsService.getStoreProducts({
-       categoryId: selectedCategoryId.value!, search: searchTerm.value, isAvailable: true
+      categoryId: selectedCategoryId.value!, search: searchTerm.value, isAvailable: true,
+      storeId: 0
     }),
   enabled: computed(() => Boolean(selectedCategoryId.value) || searchTerm.value.trim() !== ''),
 })
 
 // Handle Category Update
 function onUpdateCategory(categoryId: number) {
-  // If a search is active, ignore category updates
   if (searchTerm.value.trim() !== '') return
 
   selectedCategoryId.value = categoryId

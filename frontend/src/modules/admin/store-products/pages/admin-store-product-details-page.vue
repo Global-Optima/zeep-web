@@ -7,11 +7,14 @@
 		:product="productDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
+		:readonly="!canUpdate"
 	/>
 </template>
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminStoreProductDetailsForm from '@/modules/admin/store-products/components/details/admin-store-product-details-form.vue'
 import type { UpdateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
@@ -26,6 +29,8 @@ const queryClient = useQueryClient()
 const { toast } = useToast()
 
 const storeProductId = route.params.id as string
+
+const canUpdate = useHasRole([EmployeeRole.STORE_MANAGER])
 
 const { data: storeProductDetails } = useQuery({
 	queryKey: computed(() => ['admin-store-product-details', storeProductId]),

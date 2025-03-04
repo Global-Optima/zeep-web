@@ -60,7 +60,7 @@ export interface StoreProductsFilterDTO extends PaginationParams {
 	search?: string
 	maxPrice?: number
 	minPrice?: number
-	storeId: number
+	storeId?: number
 }
 
 export interface StoreProductSizesFilterDTO extends PaginationParams {
