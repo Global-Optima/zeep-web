@@ -74,7 +74,7 @@ const createProductSizeSchema = toTypedSchema(
   z.object({
     name: z.nativeEnum(ProductSizeNames).describe('Выберите корректный вариант'),
     basePrice: z.number().min(0, 'Введите корректную цену'),
-    size: z.number().min(1, 'Введите корректный размер'),
+    size: z.number().min(0, 'Введите корректный размер'),
     unitId: z.number().min(1, 'Введите корректный размер'),
   })
 )
@@ -247,7 +247,7 @@ function selectUnit(unit: UnitDTO) {
 									@click="openUnitDialog = true"
 									class="flex justify-between items-center gap-4 px-4 py-2 border rounded-md text-sm"
 								>
-									{{ selectedUnit?.name || 'Единица измерения не выбрана' }}
+									{{ selectedUnit?.name || 'Не выбрана' }}
 
 									<ChevronDown class="w-5 h-5 text-gray-500" />
 								</div>
@@ -260,7 +260,9 @@ function selectUnit(unit: UnitDTO) {
 							v-slot="{ componentField }"
 						>
 							<FormItem class="flex-1">
-								<FormLabel>Размер ({{ selectedUnit?.name.toLowerCase() || 'Не выбран'}})</FormLabel>
+								<FormLabel>
+									Размер ({{ selectedUnit?.name.toLowerCase() || 'Не выбрана' }})
+								</FormLabel>
 								<FormControl>
 									<Input
 										type="number"

@@ -2,14 +2,16 @@
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
+import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
 import KioskCartUpdateItem from '@/modules/kiosk/cart/components/kiosk-cart-update-item.vue'
 import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
-import { Trash } from 'lucide-vue-next'
-import { computed, defineEmits, defineProps, ref } from 'vue'
+import { ShoppingBasket, Trash } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Props & Emits
 const props = defineProps<{
@@ -25,9 +27,11 @@ const emits = defineEmits<{
 
 // Cart Store
 const cartStore = useCartStore();
+const router = useRouter()
 
 const cartItemsArray = computed(() => Object.values(cartStore.cartItems));
 const totalPrice = computed(() => cartStore.totalPrice);
+const showCartItems = computed(() => cartStore.totalItems > 0)
 
 // Cart Item Management
 const selectedCartItem = ref<CartItem | null>(null);
@@ -91,6 +95,11 @@ const handleProceed = () => {
     emits('next'); // Proceed only if validation passes
   }
 };
+
+const returnToMenu = () => {
+  emits('toggle', false)
+  router.push({name: getRouteName("KIOSK_HOME")})
+}
 </script>
 
 <template>
@@ -99,6 +108,32 @@ const handleProceed = () => {
 		@update:open="v => emits('toggle', v)"
 	>
 		<DialogContent
+			v-if="!showCartItems"
+			:include-close-button="false"
+			class="p-6 sm:rounded-[36px] min-h-[300px]"
+		>
+			<div class="flex flex-col justify-center items-center space-y-6 h-full">
+				<!-- Icon and message -->
+				<div class="flex flex-col items-center space-y-6 text-center">
+					<ShoppingBasket class="size-16 text-gray-400" />
+					<h2 class="mt-6 font-semibold text-slate-800 text-3xl">Ваша корзина пуста</h2>
+					<p class="mt-6 text-slate-500 text-xl">
+						Добавьте товары из меню, чтобы начать оформление заказа
+					</p>
+				</div>
+
+				<!-- Return button -->
+				<Button
+					class="!mt-8 px-6 h-14 text-2xl"
+					@click="returnToMenu"
+				>
+					Вернуться к меню
+				</Button>
+			</div>
+		</DialogContent>
+
+		<DialogContent
+			v-else
 			:include-close-button="false"
 			class="grid-rows-[auto_minmax(0,1fr)_auto] p-4 sm:rounded-[36px] max-w-2xl max-h-[80dvh]"
 		>

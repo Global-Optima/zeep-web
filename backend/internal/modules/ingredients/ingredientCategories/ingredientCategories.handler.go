@@ -1,11 +1,12 @@
 package ingredientCategories
 
 import (
-	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -26,13 +27,13 @@ func NewIngredientCategoryHandler(service IngredientCategoryService, auditServic
 func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 	var dto types.CreateIngredientCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	id, err := h.service.Create(dto)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryCreate)
 		return
 	}
 
@@ -47,19 +48,19 @@ func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, fmt.Sprintf("id: %d", id))
+	localization.SendLocalizedResponseWithKey(c, types.Response201IngredientCategory)
 }
 
 func (h *IngredientCategoryHandler) GetByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
 	}
 
 	category, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryGet)
 		return
 	}
 
@@ -69,24 +70,24 @@ func (h *IngredientCategoryHandler) GetByID(c *gin.Context) {
 func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
 	}
 
 	var dto types.UpdateIngredientCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "failed to update ingredient category: category not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
 	}
 
 	existingCategory, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to update ingredient category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryUpdate)
 		return
 	}
 
 	if err := h.service.Update(uint(id), dto); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryUpdate)
 		return
 	}
 
@@ -102,24 +103,28 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient category updated successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200IngredientCategoryUpdate)
 }
 
 func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
 	}
 
 	existingCategory, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to update ingredient category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryDelete)
 		return
 	}
 
 	if err := h.service.Delete(uint(id)); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		if errors.Is(err, types.ErrIngredientCategoryIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409IngredientCategoryDeleteInUse)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryDelete)
 		return
 	}
 
@@ -134,19 +139,19 @@ func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient category deleted successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200IngredientCategoryDelete)
 }
 
 func (h *IngredientCategoryHandler) GetAll(c *gin.Context) {
 	var filter types.IngredientCategoryFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.IngredientCategory{}); err != nil {
-		utils.SendBadRequestError(c, "Failed to parse pagination or filtering parameters")
+		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
 	}
 
 	categories, err := h.service.GetAll(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch ingredient categories")
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryGet)
 		return
 	}
 

@@ -1,103 +1,67 @@
-<script setup lang="ts">
-import { Button } from '@/core/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/core/components/ui/card'
-import AdminDashboardDateRangePicker from '@/modules/admin/dashboard/components/admin-dashboard-date-range-picker.vue'
-import AdminDashboardOverview from '@/modules/admin/dashboard/components/admin-dashboard-overview.vue'
-import AdminDashboardRecentSales from '@/modules/admin/dashboard/components/admin-dashboard-recent-sales.vue'
-
-// Import Lucide icons
-import { Activity, DollarSign, ShoppingCart, Users } from 'lucide-vue-next'
-
-// Constant array for statistic cards
-const statisticCards = [
-  {
-    title: 'Общая выручка',
-    value: '$45,231.89',
-    description: '+20.1% с прошлого месяца',
-    icon: DollarSign,
-  },
-  {
-    title: 'Подписки',
-    value: '+2350',
-    description: '+180.1% с прошлого месяца',
-    icon: Users,
-  },
-  {
-    title: 'Продажи',
-    value: '+12,234',
-    description: '+19% с прошлого месяца',
-    icon: ShoppingCart,
-  },
-  {
-    title: 'Активные сейчас',
-    value: '+573',
-    description: '+201 за последний час',
-    icon: Activity,
-  },
-]
-</script>
-
 <template>
-	<div class="flex-1 space-y-4">
-		<!-- Top Bar -->
-		<div class="flex items-center space-x-2">
-			<AdminDashboardDateRangePicker />
-			<Button>Скачать</Button>
-		</div>
-
-		<!-- Statistic Cards -->
-		<div class="space-y-4">
-			<div class="gap-4 grid md:grid-cols-2 lg:grid-cols-4">
-				<Card
-					v-for="(card, index) in statisticCards"
-					:key="index"
-				>
-					<CardHeader class="flex flex-row justify-between items-center space-y-0 pb-2">
-						<CardTitle class="font-medium text-sm">
-							{{ card.title }}
-						</CardTitle>
-						<component
-							:is="card.icon"
-							class="w-4 h-4 text-muted-foreground"
-						/>
-					</CardHeader>
-					<CardContent>
-						<div class="font-bold text-2xl">
-							{{ card.value }}
-						</div>
-						<p class="text-muted-foreground text-xs">
-							{{ card.description }}
-						</p>
-					</CardContent>
-				</Card>
+	<div class="flex justify-center items-center w-full h-[80vh] overflow-hidden">
+		<div
+			class="flex flex-col justify-center items-center space-y-6 bg-white shadow-2xl shadow-gray-200 mx-auto px-10 py-6 rounded-[36px] w-fit"
+		>
+			<!-- Profile Icon with Initials -->
+			<div
+				class="relative flex justify-center items-center bg-gray-200 bg-gradient-to-r rounded-full size-24 font-semibold text-gray-700 text-3xl"
+			>
+				{{ initials }}
 			</div>
 
-			<!-- Overview and Recent Sales -->
-			<div class="gap-4 grid md:grid-cols-2 lg:grid-cols-7">
-				<Card class="col-span-4">
-					<CardHeader>
-						<CardTitle>Обзор</CardTitle>
-					</CardHeader>
-					<CardContent class="pl-2">
-						<AdminDashboardOverview />
-					</CardContent>
-				</Card>
-				<Card class="col-span-3">
-					<CardHeader>
-						<CardTitle>Последние продажи</CardTitle>
-						<CardDescription> Вы сделали 265 продаж в этом месяце. </CardDescription>
-					</CardHeader>
-					<CardContent>
-						<AdminDashboardRecentSales />
-					</CardContent>
-				</Card>
+			<!-- Welcome Message -->
+			<div>
+				<h1 class="font-bold text-gray-900 dark:text-gray-100 text-2xl text-center">
+					Добро пожаловать, {{ currentEmployee?.firstName }}!
+				</h1>
+				<p class="mt-2 text-gray-500 dark:text-gray-300 text-center">
+					Вы вошли как
+					<span class="font-semibold text-gray-800 dark:text-gray-200">{{ formattedRole }}</span>
+				</p>
+			</div>
+
+			<!-- Employee Details -->
+			<div class="bg-gray-50 dark:bg-gray-800 shadow-sm p-4 rounded-lg w-full max-w-md">
+				<div class="flex justify-between items-center text-gray-600 dark:text-gray-300">
+					<span>Телефон:</span>
+					<span
+						class="font-medium text-gray-900 dark:text-gray-100"
+						>{{ currentEmployee?.phone }}</span
+					>
+				</div>
+				<div class="flex justify-between items-center mt-2 text-gray-600 dark:text-gray-300">
+					<span>Email:</span>
+					<span
+						class="font-medium text-gray-900 dark:text-gray-100"
+						>{{ currentEmployee?.email }}</span
+					>
+				</div>
 			</div>
 		</div>
 	</div>
 </template>
+
+<script setup lang="ts">
+import { EMPLOYEE_ROLES_FORMATTED } from '@/modules/admin/employees/models/employees.models'
+import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
+import { computed } from 'vue'
+
+// Получаем текущего пользователя из стора
+const { currentEmployee } = useEmployeeAuthStore()
+
+// Получение инициалов сотрудника
+const initials = computed(() => {
+	return `${currentEmployee?.firstName?.charAt(0) ?? ''}${currentEmployee?.lastName?.charAt(0) ?? ''}`.toUpperCase()
+})
+
+// Форматирование роли и типа сотрудника
+const formattedRole = computed(() => currentEmployee ? EMPLOYEE_ROLES_FORMATTED[currentEmployee.role] : 'Пользователь')
+</script>
+
+<style scoped>
+/* Добавить плавные переходы для более приятного UX */
+div {
+	transition: all 0.3s ease-in-out;
+}
+</style>

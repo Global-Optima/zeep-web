@@ -52,7 +52,7 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 
 	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
 	if err != nil {
-		if err.Error() == "StockMaterial not found" {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
 			utils.SendNotFoundError(c, "StockMaterial not found")
 		} else {
 			utils.SendInternalServerError(c, "failed to retrieve stockMaterial")
@@ -111,7 +111,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 
 	err = h.service.UpdateStockMaterial(uint(stockMaterialID), &req)
 	if err != nil {
-		if err.Error() == "StockMaterial not found" {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
 			utils.SendNotFoundError(c, "StockMaterial not found")
 		} else {
 			utils.SendInternalServerError(c, "failed to update stockMaterial")
@@ -151,7 +151,7 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 
 	err = h.service.DeleteStockMaterial(uint(stockMaterialID))
 	if err != nil {
-		if err.Error() == "StockMaterial not found" {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
 			utils.SendNotFoundError(c, "StockMaterial not found")
 		} else {
 			utils.SendInternalServerError(c, "failed to delete stockMaterial")
@@ -182,7 +182,7 @@ func (h *StockMaterialHandler) DeactivateStockMaterial(c *gin.Context) {
 
 	err = h.service.DeactivateStockMaterial(uint(stockMaterialID))
 	if err != nil {
-		if err.Error() == "StockMaterial not found" {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
 			utils.SendNotFoundError(c, "StockMaterial not found")
 		} else {
 			utils.SendInternalServerError(c, "failed to deactivate stockMaterial")
@@ -234,7 +234,7 @@ func (h *StockMaterialHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
 
 	response, err := h.service.RetrieveStockMaterialByBarcode(barcode)
 	if err != nil {
-		if err.Error() == "StockMaterial not found with the provided barcode" {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
 			utils.SendNotFoundError(c, "StockMaterial not found with the provided barcode")
 		} else {
 			utils.SendInternalServerError(c, "failed to retrieve stockMaterial barcode")

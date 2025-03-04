@@ -40,10 +40,6 @@ func (r *ingredientRepository) UpdateIngredient(ingredientID uint, ingredient *d
 		Updates(ingredient).Error
 }
 
-func (r *ingredientRepository) DeleteIngredient(ingredientID uint) error {
-	return r.db.Where("id = ?", ingredientID).Delete(&data.Ingredient{}).Error
-}
-
 func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingredient, error) {
 	var ingredient data.Ingredient
 	err := r.db.Preload("Unit").
@@ -146,4 +142,47 @@ func (r *ingredientRepository) GetIngredientsForAdditives(additiveIDs []uint) ([
 	}
 
 	return ingredients, nil
+}
+
+func (r *ingredientRepository) DeleteIngredient(ingredientID uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkIngredientReferences(tx, ingredientID); err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&data.Ingredient{}, ingredientID).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func checkIngredientReferences(db *gorm.DB, ingredientID uint) error {
+	var ingredient data.Ingredient
+
+	err := db.
+		Preload("StockMaterials", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		Preload("ProductSizeIngredients", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		Preload("StoreStocks", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		Preload("AdditiveIngredients", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		First(&ingredient, ingredientID).Error
+	if err != nil {
+		return err
+	}
+
+	if len(ingredient.StockMaterials) > 0 || len(ingredient.ProductSizeIngredients) > 0 ||
+		len(ingredient.StoreStocks) > 0 || len(ingredient.AdditiveIngredients) > 0 {
+		return types.ErrIngredientIsInUse
+	}
+
+	return nil
 }

@@ -15,7 +15,7 @@ type UnitsModule struct {
 
 func NewUnitsModule(base *common.BaseModule, auditService audit.AuditService) *UnitsModule {
 	repo := units.NewUnitRepository(base.DB)
-	service := units.NewUnitService(repo)
+	service := units.NewUnitService(repo, base.Logger)
 	handler := units.NewUnitHandler(service, auditService)
 
 	base.Router.RegisterUnitRoutes(handler)

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -23,7 +24,7 @@ type WarehouseStockRepository interface {
 	AddToWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) error
 	DeductFromWarehouseStock(warehouseID, stockMaterialID uint, quantityInPackages float64) (*data.WarehouseStock, error)
 	GetWarehouseStock(filter *types.GetWarehouseStockFilterQuery) ([]data.AggregatedWarehouseStock, error)
-	GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID uint) (*data.AggregatedWarehouseStock, error)
+	GetWarehouseStockMaterialDetails(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*data.AggregatedWarehouseStock, error)
 	AddWarehouseStocks(warehouseID uint, stocks []data.WarehouseStock) error
 
 	UpdateWarehouseStock(stock *data.WarehouseStock) error
@@ -34,7 +35,7 @@ type WarehouseStockRepository interface {
 
 	GetAvailableToAddStockMaterials(storeID uint, filter *types.AvailableStockMaterialFilter) ([]data.StockMaterial, error)
 
-	FindEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error)
+	FindEarliestExpirationDateForStock(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*time.Time, error)
 }
 
 type warehouseStockRepository struct {
@@ -240,13 +241,13 @@ func (r *warehouseStockRepository) GetWarehouseStock(filter *types.GetWarehouseS
 	return aggregatedStocks, nil
 }
 
-func (r *warehouseStockRepository) GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID uint) (*data.AggregatedWarehouseStock, error) {
-	warehouseStock, err := r.getWarehouseStock(stockMaterialID, warehouseID)
+func (r *warehouseStockRepository) GetWarehouseStockMaterialDetails(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*data.AggregatedWarehouseStock, error) {
+	warehouseStock, err := r.getWarehouseStock(stockMaterialID, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch warehouse stock: %w", err)
 	}
 
-	earliestExpirationDate, err := r.FindEarliestExpirationDateForStock(stockMaterialID, warehouseID)
+	earliestExpirationDate, err := r.FindEarliestExpirationDateForStock(stockMaterialID, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch earliest expiration date: %w", err)
 	}
@@ -281,13 +282,32 @@ func (r *warehouseStockRepository) findEarliestMaterialExpirationDate(materials 
 	return &utcTime
 }
 
-func (r *warehouseStockRepository) FindEarliestExpirationDateForStock(stockMaterialID, warehouseID uint) (*time.Time, error) {
+func (r *warehouseStockRepository) FindEarliestExpirationDateForStock(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*time.Time, error) {
 	var earliestExpirationDate sql.NullTime
-	err := r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
-		Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.id = supplier_warehouse_delivery_materials.delivery_id").
-		Where("supplier_warehouse_deliveries.warehouse_id = ? AND supplier_warehouse_delivery_materials.stock_material_id = ?", warehouseID, stockMaterialID).
-		Select("MIN(supplier_warehouse_delivery_materials.expiration_date) AS earliest_expiration_date").
-		Scan(&earliestExpirationDate).Error
+	query := r.db.Model(&data.SupplierWarehouseDeliveryMaterial{}).
+		Where(&data.SupplierWarehouseDeliveryMaterial{StockMaterialID: stockMaterialID}).
+		Select("MIN(supplier_warehouse_delivery_materials.expiration_date) AS earliest_expiration_date")
+
+	if filter != nil {
+		if filter.WarehouseID != nil {
+			query.Where(&data.SupplierWarehouseDeliveryMaterial{
+				Delivery: data.SupplierWarehouseDelivery{
+					WarehouseID: *filter.WarehouseID,
+				},
+			})
+		}
+
+		if filter.RegionID != nil {
+			query.Joins("JOIN supplier_warehouse_deliveries ON supplier_warehouse_deliveries.id = supplier_warehouse_delivery_materials.delivery_id").
+				Where(&data.SupplierWarehouseDeliveryMaterial{
+					Delivery: data.SupplierWarehouseDelivery{
+						Warehouse: data.Warehouse{RegionID: *filter.RegionID},
+					},
+				})
+		}
+	}
+
+	err := query.Scan(&earliestExpirationDate).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -348,17 +368,31 @@ func (r *warehouseStockRepository) getDeliveryMaterials(filter *types.GetWarehou
 	return materials, nil
 }
 
-func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID, warehouseID uint) (*data.WarehouseStock, error) {
+func (r *warehouseStockRepository) getWarehouseStock(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*data.WarehouseStock, error) {
 	var stock data.WarehouseStock
-	err := r.db.Model(&data.WarehouseStock{}).
+	query := r.db.Model(&data.WarehouseStock{}).
 		Preload("StockMaterial").
 		Preload("StockMaterial.Unit").
 		Preload("StockMaterial.Ingredient").
 		Preload("StockMaterial.Ingredient.Unit").
 		Preload("StockMaterial.Ingredient.IngredientCategory").
 		Preload("StockMaterial.StockMaterialCategory").
-		Where("stock_material_id = ? AND warehouse_id = ?", stockMaterialID, warehouseID).
-		First(&stock).Error
+		Where(&data.WarehouseStock{StockMaterialID: stockMaterialID})
+
+	if filter != nil {
+		if filter.WarehouseID != nil {
+			query.Where(&data.WarehouseStock{
+				WarehouseID: *filter.WarehouseID,
+			})
+		}
+
+		if filter.RegionID != nil {
+			query.Joins("JOIN warehouses ON warehouses.id = warehouse_stocks.warehouse_id")
+			query.Where(&data.WarehouseStock{Warehouse: data.Warehouse{RegionID: *filter.RegionID}})
+		}
+	}
+
+	err := query.First(&stock).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch single warehouse stock: %w", err)
 	}

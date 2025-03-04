@@ -43,7 +43,36 @@ func (r *ingredientCategoryRepository) Update(id uint, updates data.IngredientCa
 }
 
 func (r *ingredientCategoryRepository) Delete(id uint) error {
-	return r.db.Delete(&data.IngredientCategory{}, id).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkIngredientCategoryReferences(tx, id); err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&data.IngredientCategory{}, id).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func checkIngredientCategoryReferences(db *gorm.DB, ingredientCategoryID uint) error {
+	var ingredientCategory data.IngredientCategory
+
+	err := db.
+		Preload("Ingredients", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		First(&ingredientCategory, ingredientCategoryID).Error
+	if err != nil {
+		return err
+	}
+
+	if len(ingredientCategory.Ingredients) > 0 {
+		return types.ErrIngredientCategoryIsInUse
+	}
+
+	return nil
 }
 
 func (r *ingredientCategoryRepository) GetAll(filter *types.IngredientCategoryFilter) ([]data.IngredientCategory, error) {

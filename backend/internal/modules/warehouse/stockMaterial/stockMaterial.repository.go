@@ -2,6 +2,7 @@ package stockMaterial
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
@@ -76,9 +77,10 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		if filter.ExpirationInDays != nil {
 			query = query.Where("stock_materials.expiration_period_in_days <= ?", *filter.ExpirationInDays)
 		}
+	} else {
+		return nil, fmt.Errorf("filter is nil")
 	}
 
-	// Apply sorting and pagination
 	query = query.Order("stock_materials.created_at DESC")
 	var err error
 	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
@@ -86,7 +88,6 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		return nil, err
 	}
 
-	// Execute query
 	if err := query.Find(&stockMaterials).Error; err != nil {
 		return nil, err
 	}

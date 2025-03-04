@@ -1,6 +1,8 @@
 package ingredients
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -26,13 +28,13 @@ func NewIngredientHandler(service IngredientService, auditService audit.AuditSer
 func (h *IngredientHandler) CreateIngredient(c *gin.Context) {
 	var dto types.CreateIngredientDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	id, err := h.service.CreateIngredient(&dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create ingredient")
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCreate)
 		return
 	}
 
@@ -47,30 +49,30 @@ func (h *IngredientHandler) CreateIngredient(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient created successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response201IngredientCreate)
 }
 
 func (h *IngredientHandler) UpdateIngredient(c *gin.Context) {
 	ingredientID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ingredient ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Ingredient)
 		return
 	}
 
 	var dto types.UpdateIngredientDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	existingIngredient, err := h.service.GetIngredientByID(uint(ingredientID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to get update ingredient: ingredient not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientUpdate)
 		return
 	}
 
 	if err := h.service.UpdateIngredient(uint(ingredientID), &dto); err != nil {
-		utils.SendInternalServerError(c, "Failed to update ingredient")
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientUpdate)
 		return
 	}
 
@@ -86,24 +88,28 @@ func (h *IngredientHandler) UpdateIngredient(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient updated successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200IngredientUpdate)
 }
 
 func (h *IngredientHandler) DeleteIngredient(c *gin.Context) {
 	ingredientID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ingredient ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Ingredient)
 		return
 	}
 
 	existing, err := h.service.GetIngredientByID(uint(ingredientID))
 	if err != nil {
-		utils.SendNotFoundError(c, "Failed to delete ingredient: ingredient not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response404Ingredient)
 		return
 	}
 
 	if err := h.service.DeleteIngredient(uint(ingredientID)); err != nil {
-		utils.SendInternalServerError(c, "Failed to delete ingredient")
+		if errors.Is(err, types.ErrIngredientIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409IngredientInUse)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientDelete)
 		return
 	}
 
@@ -118,19 +124,19 @@ func (h *IngredientHandler) DeleteIngredient(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "Ingredient deleted successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200IngredientDelete)
 }
 
 func (h *IngredientHandler) GetIngredientByID(c *gin.Context) {
 	ingredientID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ingredient ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Ingredient)
 		return
 	}
 
 	ingredient, err := h.service.GetIngredientByID(uint(ingredientID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch ingredient")
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientDelete)
 		return
 	}
 
@@ -140,13 +146,13 @@ func (h *IngredientHandler) GetIngredientByID(c *gin.Context) {
 func (h *IngredientHandler) GetIngredients(c *gin.Context) {
 	var filter types.IngredientFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Ingredient{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	ingredients, err := h.service.GetIngredients(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch ingredients")
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientDelete)
 		return
 	}
 

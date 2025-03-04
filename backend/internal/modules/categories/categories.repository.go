@@ -73,8 +73,34 @@ func (r *categoryRepository) UpdateCategory(id uint, category *data.ProductCateg
 }
 
 func (r *categoryRepository) DeleteCategory(id uint) error {
-	if err := r.db.Delete(&data.ProductCategory{}, id).Error; err != nil {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkCategoryReferences(tx, id); err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&data.ProductCategory{}, id).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func checkCategoryReferences(db *gorm.DB, categoryID uint) error {
+	var category data.ProductCategory
+
+	err := db.
+		Preload("Products", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		First(&category, categoryID).Error
+	if err != nil {
 		return err
 	}
+
+	if len(category.Products) > 0 {
+		return types.ErrCategoryIsInUse
+	}
+
 	return nil
 }

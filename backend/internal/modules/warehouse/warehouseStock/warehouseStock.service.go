@@ -2,6 +2,7 @@ package warehouseStock
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -22,7 +23,7 @@ type WarehouseStockService interface {
 	AddWarehouseStocks(warehouseID uint, req []types.AddWarehouseStockMaterial) error
 	DeductFromStock(req types.AdjustWarehouseStock) error
 	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
-	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error)
+	GetStockMaterialDetails(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*types.WarehouseStockResponse, error)
 	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
 
 	CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error
@@ -171,8 +172,8 @@ func (s *warehouseStockService) AddWarehouseStocks(warehouseID uint, req []types
 	return nil
 }
 
-func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error) {
-	aggregatedStock, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
+func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*types.WarehouseStockResponse, error) {
+	aggregatedStock, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, filter)
 	if err != nil {
 		s.logger.Errorf("failed to fetch stock material details: %v", err)
 		return nil, types.ErrFetchStockMaterialDetails
@@ -221,7 +222,9 @@ func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock 
 		}
 	}
 
-	closestExpirationDate, err := s.repo.FindEarliestExpirationDateForStock(stock.StockMaterialID, warehouseID)
+	closestExpirationDate, err := s.repo.FindEarliestExpirationDateForStock(stock.StockMaterialID, &contexts.WarehouseContextFilter{
+		WarehouseID: &warehouseID,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to fetch earliest expiration date for stock: %v", err)
 	}

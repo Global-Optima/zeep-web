@@ -76,7 +76,7 @@ func (r *warehouseEmployeeRepository) GetWarehouseEmployeeByID(id uint, filter *
 
 	if filter != nil {
 		if filter.WarehouseID != nil {
-			query.Where(&data.WarehouseEmployee{WarehouseID: id}, *filter.WarehouseID)
+			query.Where(&data.WarehouseEmployee{WarehouseID: *filter.WarehouseID})
 		}
 
 		if filter.RegionID != nil {
