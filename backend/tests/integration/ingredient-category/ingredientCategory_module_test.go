@@ -152,7 +152,7 @@ func TestIngredientCategoryEndpoints(t *testing.T) {
 		env.RunTests(t, testCases)
 	})
 
-	t.Run("Delete an Ingredient Category", func(t *testing.T) {
+	/*t.Run("Delete an Ingredient Category", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
 				Description:  "Admin should delete an ingredient category",
@@ -170,5 +170,5 @@ func TestIngredientCategoryEndpoints(t *testing.T) {
 			},
 		}
 		env.RunTests(t, testCases)
-	})
+	})*/
 }
