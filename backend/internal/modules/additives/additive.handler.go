@@ -203,7 +203,7 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)
-	if err != nil {
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}

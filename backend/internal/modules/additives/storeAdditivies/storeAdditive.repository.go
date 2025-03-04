@@ -133,7 +133,7 @@ func (r *storeAdditiveRepository) GetAdditivesListToAdd(storeID uint, filter *ad
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name LIKE ? OR additives.description LIKE ? OR additives.size LIKE ?", searchTerm, searchTerm, searchTerm)
+		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ? OR additives.size ILIKE ?", searchTerm, searchTerm, searchTerm)
 	}
 
 	if filter.MinPrice != nil {

@@ -29,7 +29,10 @@ product: StoreProductDetailsDTO
 				/>
 			</Button>
 		</DialogTrigger>
-		<DialogContent :include-close-button="false">
+		<DialogContent
+			:include-close-button="false"
+			class="!rounded-3xl"
+		>
 			<DialogHeader>
 				<DialogTitle class="text-2xl">Ингредиенты</DialogTitle>
 			</DialogHeader>

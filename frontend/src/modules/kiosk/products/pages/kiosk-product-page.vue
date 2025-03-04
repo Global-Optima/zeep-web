@@ -102,21 +102,17 @@ const route = useRoute();
 const router = useRouter();
 const cartStore = useCartStore();
 
-// ✅ Product ID
 const productId = computed(() => Number(route.params.id));
 
-// ✅ Go back to Kiosk Home
 const onBackClick = () => router.push({ name: getRouteName('KIOSK_HOME') });
 
-// ✅ Selected Size & Additives
 const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null);
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({});
 
-// ✅ Fetch Product Details with `useQuery`
-const { data: productDetails, isLoading: isFetching, isError, error } = useQuery({
-  queryKey: ['kiosk-product-details', productId],
+const { data: productDetails, isPending: isFetching, isError, error } = useQuery({
+  queryKey: computed(() => ['kiosk-product-details', productId]),
   queryFn: () => storeProductsService.getStoreProduct(productId.value),
-  enabled: productId.value > 0,
+  enabled: computed(() => productId.value > 0),
 });
 
 const sortedSizes = computed(() =>
@@ -129,19 +125,17 @@ watch(sortedSizes, (sizes) => {
   }
 });
 
-// ✅ Fetch Additives with `useQuery`
 const { data: additives } = useQuery({
-  queryKey: ['kiosk-additive-categories', productId],
+  queryKey: computed(() => ['kiosk-additive-categories', selectedSize.value]),
   queryFn: () => {
     if (selectedSize.value) {
       return storeAdditivesService.getStoreAdditiveCategories(selectedSize.value.id)
     }
   },
   initialData: [],
-  enabled: computed(() => !!selectedSize.value), // Runs when size is selected
+  enabled: computed(() => !!selectedSize.value),
 });
 
-// ✅ Compute Total Price
 const totalPrice = computed(() => {
   if (!selectedSize.value) return 0;
   const storePrice = selectedSize.value.storePrice;
@@ -151,14 +145,12 @@ const totalPrice = computed(() => {
   return storePrice + additivePrice;
 });
 
-// ✅ Handle Size Selection
 const onSizeSelect = (size: StoreProductSizeDetailsDTO) => {
   if (selectedSize.value?.id === size.id) return;
   selectedSize.value = size;
   selectedAdditives.value = {};
 };
 
-// ✅ Toggle Additive Selection
 const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[categoryId] || [];
   const isSelected = current.some((a) => a.additiveId === additive.additiveId);
@@ -167,11 +159,9 @@ const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryIte
     : [...current, additive];
 };
 
-// ✅ Check if Additive is Selected
 const isAdditiveSelected = (categoryId: number, additiveId: number): boolean =>
   selectedAdditives.value[categoryId]?.some((a) => a.additiveId === additiveId) || false;
 
-// ✅ Handle Add to Cart
 const handleAddToCart = () => {
   if (!productDetails.value || !selectedSize.value) return;
   const allAdditives = Object.values(selectedAdditives.value).flat();

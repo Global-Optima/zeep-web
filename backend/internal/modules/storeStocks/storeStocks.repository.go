@@ -3,9 +3,8 @@ package storeStocks
 import (
 	"database/sql"
 	"fmt"
-	"time"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"time"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 

@@ -39,7 +39,7 @@ func NewTestContainer() *container.Container {
 			}
 		}
 
-		if err := logger.InitLoggers("debug", "logs/test_gin.log", "logs/test_service.log", cfg.IsDevelopment); err != nil {
+		if err := logger.InitLogger("debug", "logs/test_application.log", cfg.IsDevelopment); err != nil {
 			log.Fatalf("Failed to initialize test loggers: %v", err)
 		}
 		sugarLog := logger.GetZapSugaredLogger()
