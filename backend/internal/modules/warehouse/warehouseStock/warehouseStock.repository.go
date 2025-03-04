@@ -14,7 +14,6 @@ import (
 
 type WarehouseStockRepository interface {
 	RecordDeliveriesAndUpdateStock(delivery data.SupplierWarehouseDelivery, materials []data.SupplierWarehouseDeliveryMaterial, warehouseID uint) error
-	TransferStock(sourceWarehouseID, targetWarehouseID uint, items []data.StockRequestIngredient) error
 
 	GetDeliveryByID(deliveryID uint, delivery *data.SupplierWarehouseDelivery) error
 	GetDeliveries(filter types.WarehouseDeliveryFilter) ([]data.SupplierWarehouseDelivery, error)
@@ -95,29 +94,6 @@ func (r *warehouseStockRepository) updateOrInsertStock(tx *gorm.DB, warehouseID 
 	}
 
 	return nil
-}
-
-func (r *warehouseStockRepository) TransferStock(sourceWarehouseID, targetWarehouseID uint, items []data.StockRequestIngredient) error {
-	tx := r.db.Begin()
-	defer tx.Rollback()
-
-	for _, item := range items {
-		err := tx.Model(&data.WarehouseStock{}).
-			Where("warehouse_id = ? AND stock_material_id = ?", sourceWarehouseID, item.StockMaterialID).
-			Update("quantity", gorm.Expr("quantity - ?", item.Quantity)).Error
-		if err != nil {
-			return fmt.Errorf("failed to deduct stock from source: %w", err)
-		}
-
-		err = tx.Model(&data.WarehouseStock{}).
-			Where("warehouse_id = ? AND stock_material_id = ?", targetWarehouseID, item.StockMaterialID).
-			Update("quantity", gorm.Expr("quantity + ?", item.Quantity)).Error
-		if err != nil {
-			return fmt.Errorf("failed to add stock to target: %w", err)
-		}
-	}
-
-	return tx.Commit().Error
 }
 
 func (r *warehouseStockRepository) GetDeliveryByID(deliveryID uint, delivery *data.SupplierWarehouseDelivery) error {
@@ -214,7 +190,7 @@ func (r *warehouseStockRepository) AddToWarehouseStock(warehouseID, stockMateria
 			}
 			return r.db.Create(stock).Error
 		}
-		return fmt.Errorf("failed to fetch warehouse stock: %w", err)
+		return types.ErrAddWarehouseStockMaterial
 	}
 
 	return r.db.Model(stock).Update("quantity", gorm.Expr("quantity + ?", quantityInPackages)).Error

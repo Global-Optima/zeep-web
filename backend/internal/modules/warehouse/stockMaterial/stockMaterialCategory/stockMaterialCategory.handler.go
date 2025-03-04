@@ -2,7 +2,6 @@ package stockMaterialCategory
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -30,13 +29,13 @@ func NewStockMaterialCategoryHandler(service StockMaterialCategoryService, audit
 func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
 	var dto types.CreateStockMaterialCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid request body")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	id, err := h.service.Create(dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to create stock material category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryCreate)
 		return
 	}
 
@@ -50,13 +49,13 @@ func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "stock material created successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response201StockMaterialCategory)
 }
 
 func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid category ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
@@ -67,7 +66,7 @@ func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
 			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
 			return
 		default:
-			utils.SendInternalServerError(c, "Failed to fetch stock material category")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryGet)
 			return
 		}
 	}
@@ -78,15 +77,14 @@ func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
 func (h *StockMaterialCategoryHandler) GetAll(c *gin.Context) {
 	var filter types.StockMaterialCategoryFilter
 
-	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockMaterialCategory{})
-	if err != nil {
-		utils.SendBadRequestError(c, "Failed to parse queries")
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockMaterialCategory{}); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	categories, err := h.service.GetAll(filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch categories")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryGet)
 		return
 	}
 
@@ -94,26 +92,30 @@ func (h *StockMaterialCategoryHandler) GetAll(c *gin.Context) {
 }
 
 func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid category ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	var dto types.UpdateStockMaterialCategoryDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid body")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	response, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to fetch stock material category")
+		if errors.Is(err, types.ErrStockMaterialCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterialCategory)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryGet)
 		return
 	}
 
 	if err := h.service.Update(uint(id), dto); err != nil {
-		utils.SendInternalServerError(c, "Failed to update stock material category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryUpdate)
 		return
 	}
 
@@ -127,27 +129,28 @@ func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(204) // No Content
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialCategoryUpdate)
 }
 
 func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid category ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	response, err := h.service.GetByID(uint(id))
 	if err != nil {
 		if errors.Is(err, types.ErrStockMaterialCategoryNotFound) {
-			utils.SendNotFoundError(c, "Stock material category not found")
+			utils.SendNotFoundError(c, types.ErrStockMaterialCategoryNotFound.Error())
+		} else {
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryGet)
 		}
-		utils.SendInternalServerError(c, "Failed to fetch stock material category")
 		return
 	}
 
 	if err := h.service.Delete(uint(id)); err != nil {
-		utils.SendInternalServerError(c, "Failed to delete stock material category")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryDelete)
 		return
 	}
 
@@ -161,5 +164,5 @@ func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(204) // No Content
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialCategoryDelete)
 }

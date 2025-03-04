@@ -1,9 +1,11 @@
 package supplier
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"errors"
 	"net/http"
-	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
@@ -26,18 +28,18 @@ func NewSupplierHandler(service SupplierService, auditService audit.AuditService
 func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
 	var createDTO types.CreateSupplierDTO
 	if err := c.ShouldBindJSON(&createDTO); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	if err := types.ValidateCreateSupplierDTO(createDTO); err != nil {
-		utils.SendBadRequestError(c, "invalid request")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	response, err := h.service.CreateSupplier(createDTO)
 	if err != nil {
-		utils.SendInternalServerError(c, "fail to create supplier")
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierCreate)
 		return
 	}
 
@@ -51,19 +53,23 @@ func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "supplier created successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response201Supplier)
 }
 
 func (h *SupplierHandler) GetSupplierByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id <= 0 {
-		utils.SendBadRequestError(c, "invalid ID")
+	supplierID, err := utils.ParseParam(c, "id")
+	if err != nil || supplierID <= 0 {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	response, err := h.service.GetSupplierByID(uint(id))
+	response, err := h.service.GetSupplierByID(uint(supplierID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve supplier")
+		if errors.Is(err, types.ErrSupplierNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Supplier)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierGet)
 		return
 	}
 
@@ -71,38 +77,42 @@ func (h *SupplierHandler) GetSupplierByID(c *gin.Context) {
 }
 
 func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id <= 0 {
-		utils.SendBadRequestError(c, "invalid ID")
+	supplierID, err := utils.ParseParam(c, "id")
+	if err != nil || supplierID <= 0 {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	var updateDTO types.UpdateSupplierDTO
 	if err := c.ShouldBindJSON(&updateDTO); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	if err := types.ValidateUpdateSupplierDTO(updateDTO); err != nil {
-		utils.SendBadRequestError(c, "invalid request")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	supplier, err := h.service.GetSupplierByID(uint(id))
+	supplier, err := h.service.GetSupplierByID(uint(supplierID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve supplier")
+		if errors.Is(err, types.ErrSupplierNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Supplier)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierGet)
 		return
 	}
 
-	err = h.service.UpdateSupplier(uint(id), updateDTO)
+	err = h.service.UpdateSupplier(uint(supplierID), updateDTO)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to update supplier")
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierUpdate)
 		return
 	}
 
 	action := types.UpdateSupplierAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(id),
+			ID:   uint(supplierID),
 			Name: supplier.Name,
 		}, &updateDTO)
 
@@ -110,31 +120,35 @@ func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "supplier updated successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200SupplierUpdate)
 }
 
 func (h *SupplierHandler) DeleteSupplier(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id <= 0 {
-		utils.SendBadRequestError(c, "invalid ID")
+	supplierID, err := utils.ParseParam(c, "id")
+	if err != nil || supplierID <= 0 {
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	supplier, err := h.service.GetSupplierByID(uint(id))
+	supplier, err := h.service.GetSupplierByID(uint(supplierID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve supplier")
+		if errors.Is(err, types.ErrSupplierNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Supplier)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierGet)
 		return
 	}
 
-	err = h.service.DeleteSupplier(uint(id))
+	err = h.service.DeleteSupplier(uint(supplierID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to delete supplier")
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierDelete)
 		return
 	}
 
 	action := types.DeleteSupplierAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(id),
+			ID:   uint(supplierID),
 			Name: supplier.Name,
 		})
 
@@ -142,7 +156,7 @@ func (h *SupplierHandler) DeleteSupplier(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendMessageWithStatus(c, "supplier deleted successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200SupplierDelete)
 }
 
 func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
@@ -150,13 +164,13 @@ func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
 
 	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Supplier{})
 	if err != nil {
-		utils.SendBadRequestError(c, "failed to parse params")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	suppliers, err := h.service.GetSuppliers(filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve suppliers")
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierGet)
 		return
 	}
 
@@ -164,37 +178,37 @@ func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
 }
 
 func (h *SupplierHandler) UpsertMaterialsForSupplier(c *gin.Context) {
-	supplierID, err := strconv.Atoi(c.Param("id"))
+	supplierID, err := utils.ParseParam(c, "id")
 	if err != nil || supplierID <= 0 {
-		utils.SendBadRequestError(c, "Invalid supplier ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	var dto types.UpsertSupplierMaterialsDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "Invalid request body")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	err = h.service.UpsertMaterialsForSupplier(uint(supplierID), dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to upsert materials for supplier")
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierUpsertMaterials)
 		return
 	}
 
-	utils.SendMessageWithStatus(c, "Materials upserted successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200SupplierUpsertMaterial)
 }
 
 func (h *SupplierHandler) GetMaterialsBySupplier(c *gin.Context) {
-	supplierID, err := strconv.Atoi(c.Param("id"))
+	supplierID, err := utils.ParseParam(c, "id")
 	if err != nil || supplierID <= 0 {
-		utils.SendBadRequestError(c, "Invalid supplier ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	materials, err := h.service.GetMaterialsBySupplier(uint(supplierID))
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve materials for the supplier")
+		localization.SendLocalizedResponseWithKey(c, types.Response500SupplierGetMaterials)
 		return
 	}
 
