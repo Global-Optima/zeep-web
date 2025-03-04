@@ -38,8 +38,9 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const props = defineProps<{ filter: AdditiveCategoriesFilterQuery }>()
-const emit = defineEmits(['update:filter'])
-
+const emit = defineEmits<{
+  (event: 'update:filter', value: AdditiveCategoriesFilterQuery): void
+}>()
 const localFilter = ref({ ...props.filter })
 
 const searchTerm = ref(localFilter.value.search || '')

@@ -27,6 +27,7 @@ interface ProductSizeLocal {
   name: string;
   basePrice: number;
   storePrice: number;
+  size: number;
 }
 
 interface StoreProductLocal {
@@ -40,6 +41,8 @@ const storeProductLocal = reactive<StoreProductLocal>({
 });
 
 const { toast } = useToast();
+
+const sortedSizes = computed(() => [...storeProductLocal.sizes].sort((a, b) => a.size - b.size));
 
 onMounted(() => {
   initStoreProductLocal();
@@ -61,6 +64,7 @@ function initStoreProductLocal() {
       name: storeSz.name,
       basePrice: storeSz.basePrice,
       storePrice: storeSz.storePrice,
+      size: storeSz.size
     };
   });
 }
@@ -83,6 +87,7 @@ function onResetSizes() {
         name: pSz.name,
         basePrice: pSz.basePrice,
         storePrice: pSz.basePrice,
+        size: pSz.size
       });
     }
   });
@@ -168,7 +173,7 @@ function onCancel() {
 					<TableBody>
 						<template v-if="hasSizes">
 							<TableRow
-								v-for="(size, i) in storeProductLocal.sizes"
+								v-for="(size, i) in sortedSizes"
 								:key="size.id"
 							>
 								<TableCell>{{ size.name }}</TableCell>
@@ -203,6 +208,15 @@ function onCancel() {
 						</template>
 					</TableBody>
 				</Table>
+
+				<div class="flex justify-center !mt-10">
+					<Button
+						variant="outline"
+						@click="onResetSizes"
+						:disabled="readonly"
+						>Восстановить размеры</Button
+					>
+				</div>
 			</CardContent>
 		</Card>
 	</div>
