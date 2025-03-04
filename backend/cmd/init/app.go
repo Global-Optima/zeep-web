@@ -154,7 +154,7 @@ func InitializeStorage(cfg *config.Config) storage.StorageRepository {
 func InitializeApp() (*gin.Engine, *config.Config) {
 	cfg := InitializeConfig()
 
-	err := logger.InitLogger(cfg.LogLevel, cfg.LogPath, cfg.IsDevelopment)
+	err := logger.InitLogger("error", "logs/application.log", cfg.IsDevelopment)
 	if err != nil {
 		panic(err)
 	}
