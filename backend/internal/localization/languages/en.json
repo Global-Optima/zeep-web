@@ -168,6 +168,16 @@
     "200-stockRequests-update": "Stock request successfully updated.",
     "200-stockRequests-delete": "Stock request successfully deleted.",
 
+    "500-store-create": "An unexpected error occurred while creating store. Please try again later.",
+    "500-store-get": "An unexpected error occurred while fetching store data. Please try again later.",
+    "500-store-update": "An unexpected error occurred while updating store. Please try again later.",
+    "500-store-delete": "An unexpected error occurred while deleting store. Please try again later.",
+    "404-store": "Store not found.",
+    "400-store": "Invalid store data provided. Please check and try again.",
+    "201-store": "Store successfully created.",
+    "200-store-update": "Store successfully updated.",
+    "200-store-delete": "Store successfully deleted.",
+
     "500-storeProduct": "An unexpected error occurred with the store product. Please try again later.",
     "400-storeProduct": "Invalid store product data provided. Please check and try again.",
     "201-storeProduct": "Product successfully added to the store.",
