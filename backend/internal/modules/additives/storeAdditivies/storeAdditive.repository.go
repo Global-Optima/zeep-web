@@ -356,6 +356,39 @@ func (r *storeAdditiveRepository) UpdateStoreAdditive(storeID, storeAdditiveID u
 }
 
 func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID uint) error {
-	return r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).
-		Delete(&data.StoreAdditive{}).Error
+	var exists bool
+	err := r.db.
+		Table("product_size_additives AS psa").
+		Select("1").
+		Joins("JOIN store_additives sa ON psa.additive_id = sa.additive_id").
+		Joins("JOIN store_product_sizes sps ON psa.product_size_id = sps.product_size_id").
+		Joins("JOIN store_products sp ON sps.store_product_id = sp.id").
+		Where("psa.is_default = TRUE").
+		Where("sa.id = ? AND sa.store_id = ?", storeAdditiveID, storeID).
+		Where("sp.store_id = ?", storeID).
+		Where("psa.deleted_at IS NULL").
+		Where("sa.deleted_at IS NULL").
+		Where("sps.deleted_at IS NULL").
+		Where("sp.deleted_at IS NULL").
+		Limit(1).
+		Scan(&exists).Error
+	if err != nil {
+		return errors.Wrap(err, "failed to check store additive usage")
+	}
+
+	if exists {
+		return types.ErrStoreAdditiveInUse
+	}
+
+	// Proceed with deletion if not in use
+	result := r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).Delete(&data.StoreAdditive{})
+	if result.Error != nil {
+		return errors.Wrap(result.Error, "failed to delete store additive")
+	}
+
+	if result.RowsAffected == 0 {
+		return types.ErrStoreAdditiveNotFound
+	}
+
+	return nil
 }
