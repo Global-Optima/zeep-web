@@ -38,7 +38,7 @@ type BaseAdditiveDTO struct {
 	Description string                  `json:"description"`
 	BasePrice   float64                 `json:"basePrice"`
 	ImageURL    string                  `json:"imageUrl"`
-	Size        int                     `json:"size"`
+	Size        float64                 `json:"size"`
 	Unit        unitTypes.UnitsDTO      `json:"unit"`
 	Category    BaseAdditiveCategoryDTO `json:"category"`
 }
@@ -63,7 +63,7 @@ type BaseAdditiveCategoryItemDTO struct {
 	Description string             `json:"description"`
 	BasePrice   float64            `json:"basePrice"`
 	ImageURL    string             `json:"imageUrl"`
-	Size        int                `json:"size"`
+	Size        float64            `json:"size"`
 	Unit        unitTypes.UnitsDTO `json:"unit"`
 	CategoryID  uint               `json:"categoryId"`
 }
@@ -97,7 +97,7 @@ type UpdateAdditiveDTO struct {
 	Name               string                  `form:"name" binding:"omitempty"`
 	Description        string                  `form:"description" binding:"omitempty"`
 	BasePrice          *float64                `form:"basePrice" binding:"omitempty,gte=0"`
-	Size               *int                    `form:"size" binding:"omitempty,gt=0"`
+	Size               *float64                `form:"size" binding:"omitempty,gt=0"`
 	UnitID             *uint                   `form:"unitId" binding:"omitempty,gt=0"`
 	AdditiveCategoryID *uint                   `form:"additiveCategoryId" binding:"omitempty,gt=0"`
 	Ingredients        []SelectedIngredientDTO `json:"-"`
@@ -115,7 +115,7 @@ type CreateAdditiveDTO struct {
 	Name               string                  `form:"name" binding:"required"`
 	Description        string                  `form:"description" binding:"required"`
 	BasePrice          float64                 `form:"basePrice" binding:"required,gte=0"`
-	Size               int                     `form:"size" binding:"required,gt=0"`
+	Size               float64                 `form:"size" binding:"required,gt=0"`
 	UnitID             uint                    `form:"unitId" binding:"required,gt=0"`
 	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"required,gt=0"`
 	Ingredients        []SelectedIngredientDTO `json:"-"`

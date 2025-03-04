@@ -48,7 +48,7 @@ type ProductSize struct {
 	UnitID                 uint    `gorm:"index,not null"`
 	Unit                   Unit    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE" sort:"unit"`
 	BasePrice              float64 `gorm:"not null" sort:"price"`
-	Size                   int     `gorm:"not null"`
+	Size                   float64 `gorm:"not null"`
 	ProductID              uint    `gorm:"index;not null"`
 	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
 	DiscountID             uint
@@ -120,7 +120,7 @@ type Additive struct {
 	Name                 string                `gorm:"size:255;not null;index" sort:"name"`
 	Description          string                `gorm:"type:text"`
 	BasePrice            float64               `gorm:"type:decimal(10,2);default:0" sort:"basePrice"`
-	Size                 int                   `gorm:"not null"`
+	Size                 float64               `gorm:"not null"`
 	UnitID               uint                  `gorm:"index,not null"`
 	Unit                 Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL" sort:"unit"`
 	AdditiveCategoryID   uint                  `gorm:"index"`
