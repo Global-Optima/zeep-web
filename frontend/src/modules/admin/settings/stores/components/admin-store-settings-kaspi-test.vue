@@ -346,9 +346,9 @@ onUnmounted(() => {
 		<!-- Check if we have a valid config -->
 		<div
 			v-if="!kaspiConfig"
-			class="bg-red-50 p-4 border border-red-300 rounded-lg text-red-800 text-center"
+			class="text-red-800"
 		>
-			❌ Настройки не найдены. Перейдите в настройки, чтобы указать IP-адрес и имя интеграции.
+			Настройки не найдены. Перейдите в настройки, чтобы указать IP-адрес и имя интеграции.
 		</div>
 
 		<template v-else>

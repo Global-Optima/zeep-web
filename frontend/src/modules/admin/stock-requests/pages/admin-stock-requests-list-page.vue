@@ -1,13 +1,13 @@
 <template>
+	<!-- Toolbar -->
+	<AdminStockRequestsToolbar
+		:filter="filter"
+		@update:filter="updateFilter"
+	/>
+
 	<AdminListLoader v-if="isPending" />
 
 	<div v-else>
-		<!-- Toolbar -->
-		<AdminStockRequestsToolbar
-			:filter="filter"
-			@update:filter="updateFilter"
-		/>
-
 		<!-- Main Content -->
 		<Card>
 			<CardContent class="mt-4">

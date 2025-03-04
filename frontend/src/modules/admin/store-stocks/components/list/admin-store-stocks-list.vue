@@ -30,7 +30,7 @@
 				class="hover:bg-gray-50 cursor-pointer"
 				@click="handleRowClick(stock.id)"
 			>
-				<TableCell class="font-medium">{{ stock.name }}</TableCell>
+				<TableCell class="py-4 font-medium">{{ stock.name }}</TableCell>
 				<TableCell>{{ stock.ingredient.category.name }}</TableCell>
 				<TableCell>{{ stock.quantity }} {{ stock.ingredient.unit.name.toLowerCase() }}</TableCell>
 
