@@ -1,64 +1,57 @@
 <template>
-	<div class="flex gap-4 sm:gap-8 bg-white p-4 sm:p-6 rounded-3xl">
+	<div class="flex gap-4 sm:gap-8 bg-white shadow-lg shadow-slate-100 p-4 sm:p-6 rounded-[36px]">
 		<!-- Product Image -->
 		<LazyImage
 			:src="item.product.imageUrl"
 			alt="Изображение товара"
-			class="rounded-md w-16 sm:w-28 h-16 sm:h-28 object-contain"
+			class="rounded-md size-24 object-contain"
 		/>
 
 		<!-- Product Details -->
 		<div class="flex-1">
-			<div class="flex justify-between items-start gap-4">
-				<p class="flex-1 text-xl sm:text-3xl">{{ item.product.name }}, {{ item.size.name }}</p>
-				<button class="bg-gray-200 p-2 sm:p-3 rounded-xl">
-					<Pencil
-						class="size-5 text-gray-600"
-						stroke-width="1.6"
-					/>
-				</button>
-			</div>
+			<p class="flex-1 text-3xl">{{ item.product.name }}, {{ item.size.name }}</p>
+			<p class="mt-2 text-xl">{{ itemDescription }}</p>
 
-			<div class="mt-1">
-				<div class="flex flex-col gap-1 sm:gap-2 text-gray-600">
-					<p class="text-xs sm:text-lg">{{ itemDescription }}</p>
-				</div>
-			</div>
+			<p class="mt-4 font-semibold text-4xl">
+				{{ formatPrice(itemTotalPrice) }}
+			</p>
 
-			<div class="flex justify-between items-start mt-2">
-				<p class="font-medium text-xl sm:text-3xl">
-					{{ formatPrice(itemTotalPrice) }}
-				</p>
-
-				<!-- Quantity Controls -->
+			<div class="flex justify-between items-center gap-4 mt-6">
 				<div class="flex items-center gap-2">
 					<button
 						@click="decrement"
-						class="bg-gray-200 p-2 sm:p-3 rounded-xl"
+						class="bg-gray-100 p-4 rounded-2xl"
 					>
 						<Trash
 							v-if="item.quantity === 1"
 							stroke-width="1.6"
-							class="size-5 text-gray-600"
+							class="size-6 text-gray-600"
 						/>
 
 						<Minus
 							v-if="item.quantity > 1"
-							class="size-5 text-gray-600"
+							class="size-6 text-gray-600"
 						/>
 					</button>
 
-					<span class="mx-1 sm:mx-2 text-base sm:text-2xl">
+					<span class="mx-4 font-medium text-3xl">
 						{{ item.quantity }}
 					</span>
 
 					<button
 						@click="increment"
-						class="bg-gray-200 p-2 sm:p-3 rounded-xl"
+						class="bg-gray-100 p-4 rounded-2xl"
 					>
-						<Plus class="size-5 text-gray-600" />
+						<Plus class="size-6 text-gray-600" />
 					</button>
 				</div>
+
+				<button class="bg-gray-100 p-4 rounded-2xl">
+					<Pencil
+						class="size-6 text-gray-600"
+						stroke-width="1.6"
+					/>
+				</button>
 			</div>
 		</div>
 	</div>

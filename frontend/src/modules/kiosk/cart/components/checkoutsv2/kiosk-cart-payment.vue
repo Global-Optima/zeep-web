@@ -2,53 +2,56 @@
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { CreditCard, Loader, QrCode } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { computed, defineEmits, defineProps, ref } from 'vue'
 
-interface Props {
+// Props & Emits
+defineProps<{
   isOpen: boolean;
-}
+  selectedPayment: string;
+}>();
 
-const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'back'): void;
-  (e: 'proceed', data: {paymentMethod: string}): void;
+  (e: 'update:selectedPayment', value: string): void;
+  (e: 'proceed', data: { paymentMethod: string }): void;
 }>();
 
-const selectedPayment = ref<null | string>('');
-const error = ref('');
-const isLoading = ref(false);
-
+// Payment Methods
 const paymentOptions = [
   { id: 'kaspi', label: 'Kaspi QR', icon: QrCode },
   { id: 'card', label: 'Оплата картой', icon: CreditCard },
 ];
 
-// Handle Payment Option Selection
-const selectPaymentMethod = (method: string) => {
-  selectedPayment.value = method;
-  processPayment();
+// State
+const isLoading = ref(false);
+const errorMessage = ref('');
+
+// Computed Properties
+const hasError = computed(() => !!errorMessage.value);
+
+// Methods
+const selectPaymentMethod = async (method: string) => {
+  emit('update:selectedPayment', method);
+  await processPayment(method);
 };
 
-// Simulate Payment Process
-const processPayment = async () => {
+const processPayment = async (method: string) => {
   isLoading.value = true;
-  error.value = '';
+  errorMessage.value = '';
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     const success = Math.random() > 0.3;
 
     if (!success) {
-      selectedPayment.value = null
+      emit('update:selectedPayment', '');
       throw new Error('Ошибка при обработке, попробуйте снова!');
     }
 
-    if (selectedPayment.value) {
-      emit('proceed', {paymentMethod: selectedPayment.value});
-    }
+    emit('proceed', { paymentMethod: method });
   } catch (err) {
-    error.value = (err as Error).message;
+    errorMessage.value = (err as Error).message;
   } finally {
     isLoading.value = false;
   }
@@ -57,17 +60,18 @@ const processPayment = async () => {
 
 <template>
 	<Dialog
-		:open="props.isOpen"
+		:open="isOpen"
 		@update:open="emit('close')"
 	>
 		<DialogContent
 			:include-close-button="false"
 			class="space-y-8 bg-white sm:p-12 !rounded-[40px] sm:max-w-3xl text-black"
 		>
+			<!-- Header -->
 			<DialogHeader>
 				<DialogTitle class="font-medium text-gray-900 sm:text-4xl text-center">
-					Выберите способ оплаты</DialogTitle
-				>
+					Выберите способ оплаты
+				</DialogTitle>
 			</DialogHeader>
 
 			<!-- Payment Options -->
@@ -104,10 +108,10 @@ const processPayment = async () => {
 
 			<!-- Error Message -->
 			<p
-				v-if="error && !isLoading"
+				v-if="hasError && !isLoading"
 				class="mt-2 text-red-500 text-base sm:text-2xl text-center"
 			>
-				{{ error }}
+				{{ errorMessage }}
 			</p>
 
 			<!-- Footer Buttons -->
@@ -115,7 +119,7 @@ const processPayment = async () => {
 				<Button
 					variant="ghost"
 					:disabled="isLoading"
-					@click="$emit('back')"
+					@click="emit('back')"
 					class="sm:px-6 sm:py-8 sm:text-2xl"
 				>
 					Назад

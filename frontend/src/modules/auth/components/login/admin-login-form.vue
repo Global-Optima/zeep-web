@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import { easyPasswordValidationSchema } from '@/core/validators/password.validator'
+import { passwordValidationSchema } from '@/core/validators/password.validator'
 import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
 import { useQuery } from '@tanstack/vue-query'
@@ -38,7 +38,7 @@ const emits = defineEmits<{
 const formSchema = toTypedSchema(
   z.object({
     selectedEmployeeEmail: z.string().min(1, { message: "Пожалуйста, выберите сотрудника" }),
-    password: easyPasswordValidationSchema
+    password: passwordValidationSchema
   }
 ))
 

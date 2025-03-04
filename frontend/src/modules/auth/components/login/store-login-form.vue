@@ -152,7 +152,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
-import { easyPasswordValidationSchema } from '@/core/validators/password.validator'
+import { passwordValidationSchema } from '@/core/validators/password.validator'
 import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { storesService } from "@/modules/admin/stores/services/stores.service"
 import { authService } from '@/modules/auth/services/auth.service'
@@ -170,7 +170,7 @@ const formSchema = toTypedSchema(
   z.object({
     selectedStoreId: z.coerce.number().min(1, {message: "Пожалуйста, выберите кафе"}),
     selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
-    password: easyPasswordValidationSchema
+    password: passwordValidationSchema
   })
 )
 
