@@ -2,6 +2,7 @@ package storeStocks
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -20,7 +21,7 @@ type StoreStockService interface {
 	AddMultipleStock(storeId uint, dto *types.AddMultipleStoreStockDTO) ([]uint, error)
 	GetStockList(storeId uint, query *types.GetStockFilterQuery) ([]types.StoreStockDTO, error)
 	GetStockListByIDs(storeId uint, stockIds []uint) ([]types.StoreStockDTO, error)
-	GetStockById(storeId, stockId uint) (*types.StoreStockDTO, error)
+	GetStockById(stockId uint, filter *contexts.StoreContextFilter) (*types.StoreStockDTO, error)
 	UpdateStockById(storeId, stockId uint, input *types.UpdateStoreStockDTO) error
 	DeleteStockById(storeId, stockId uint) error
 
@@ -122,8 +123,8 @@ func (s *storeStockService) GetStockListByIDs(storeId uint, IDs []uint) ([]types
 	return dtos, nil
 }
 
-func (s *storeStockService) GetStockById(storeId, stockId uint) (*types.StoreStockDTO, error) {
-	stock, err := s.repo.GetStockById(storeId, stockId)
+func (s *storeStockService) GetStockById(stockId uint, filter *contexts.StoreContextFilter) (*types.StoreStockDTO, error) {
+	stock, err := s.repo.GetStockById(stockId, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("error getting stock", err)
 		s.logger.Error(wrappedErr)
@@ -219,7 +220,7 @@ func (s *storeStockService) CheckStockNotifications(storeID uint, stock data.Sto
 }
 
 func (s *storeStockService) checkStockAndNotify(storeId, stockId uint) error {
-	updatedStock, err := s.repo.GetStockById(storeId, stockId)
+	updatedStock, err := s.repo.GetStockById(stockId, &contexts.StoreContextFilter{StoreID: &storeId})
 	if err != nil {
 		s.logger.Errorf("failed to fetch stock for %d: %v", stockId, err)
 		return err

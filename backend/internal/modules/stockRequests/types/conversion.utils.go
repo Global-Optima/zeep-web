@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 	franchiseesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -21,7 +22,7 @@ func ToStockRequestResponse(request *data.StockRequest) StockRequestResponse {
 		}
 	}
 
-	facilityAddress := &storeTypes.FacilityAddressDTO{
+	facilityAddress := &facilityAddressesTypes.FacilityAddressDTO{
 		ID:      request.Store.FacilityAddressID,
 		Address: request.Store.FacilityAddress.Address,
 	}

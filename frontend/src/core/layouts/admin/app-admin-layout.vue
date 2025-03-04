@@ -50,11 +50,11 @@ const layoutLabel = computed(() => {
 
 <template>
 	<div class="flex bg-white pt-safe w-full min-h-screen">
-		<div class="md:block relative hidden bg-muted/40 border-r">
+		<div class="hidden md:block relative bg-muted/40 border-r">
 			<div class="top-0 sticky flex flex-col gap-2 h-full max-h-screen">
 				<div class="flex items-center px-4 lg:px-6 border-b h-14 lg:h-[60px]">
-					<a
-						href="/admin"
+					<router-link
+						:to='{name: getRouteName("ADMIN_DASHBOARD")}'
 						class="flex items-center gap-3 font-semibold"
 					>
 						<div class="flex items-center gap-2">
@@ -64,7 +64,7 @@ const layoutLabel = computed(() => {
 								{{ layoutLabel }}
 							</span>
 						</div>
-					</a>
+					</router-link>
 				</div>
 
 				<div class="flex-1">

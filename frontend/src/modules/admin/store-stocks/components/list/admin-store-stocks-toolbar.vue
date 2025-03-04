@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="flex md:flex-row flex-col justify-between items-start md:items-center space-y-4 md:space-y-0 mb-4"
+		class="flex md:flex-row flex-col justify-between items-start md:items-center gap-2 space-y-4 md:space-y-0 mb-4"
 	>
 		<!-- Left Side: Search Input and Filter Menu -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
@@ -29,6 +29,12 @@
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
+
+			<AdminSelectStoreDropdown
+				v-if="showForFranchisee"
+				:selected-store="selectedStore"
+				@select="onSelectStore"
+			/>
 		</div>
 
 		<!-- Right Side: Export and Add Store Buttons -->
@@ -38,7 +44,11 @@
 				disabled
 				>Экспорт</Button
 			>
-			<Button @click="addStore">Добавить</Button>
+			<Button
+				v-if="canCreate"
+				@click="addStore"
+				>Добавить</Button
+			>
 		</div>
 	</div>
 </template>
@@ -48,7 +58,11 @@ import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { GetStoreWarehouseStockFilterQuery } from '@/modules/admin/store-stocks/models/store-stock.model'
+import AdminSelectStoreDropdown from '@/modules/admin/stores/components/admin-select-store-dropdown.vue'
+import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
@@ -56,7 +70,7 @@ import { useRouter } from 'vue-router'
 
 // Props and Emit
 const props = defineProps<{ filter: GetStoreWarehouseStockFilterQuery }>()
-const emit = defineEmits(['update:filter'])
+const emit = defineEmits<{(e: 'update:filter', value: GetStoreWarehouseStockFilterQuery): void }>()
 
 // Local Filter
 const localFilter = ref({ ...props.filter })
@@ -64,6 +78,16 @@ const localFilter = ref({ ...props.filter })
 // Search Input
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
+
+const showForFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
+const canCreate = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
+
+const selectedStore = ref<StoreDTO | undefined>(undefined)
+
+const onSelectStore = (store: StoreDTO) => {
+  selectedStore.value = store
+  emit('update:filter', { ...props.filter, storeId: store.id})
+}
 
 // Watch Search Input and Update Filter
 watch(debouncedSearchTerm, (newValue) => {

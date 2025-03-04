@@ -122,8 +122,12 @@ type StockMaterialCategory struct {
 
 type Unit struct {
 	BaseEntity
-	Name             string  `gorm:"size:50;not null"`
-	ConversionFactor float64 `gorm:"type:decimal(10,4);not null"` // To base unit
+	Name             string          `gorm:"size:50;not null"`
+	ConversionFactor float64         `gorm:"type:decimal(10,4);not null"` // To base unit
+	StockMaterials   []StockMaterial `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
+	Additives        []Additive      `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
+	ProductSizes     []ProductSize   `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
+	Ingredients      []Ingredient    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
 }
 
 type SupplierMaterial struct {

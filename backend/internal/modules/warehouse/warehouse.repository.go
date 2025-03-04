@@ -1,7 +1,6 @@
 package warehouse
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
@@ -20,7 +19,7 @@ type WarehouseRepository interface {
 	GetWarehouses(filter *types.WarehouseFilter) ([]data.Warehouse, error)
 	GetAllWarehouses(filter *types.WarehouseFilter) ([]data.Warehouse, error)
 	GetAllWarehousesForNotifications() ([]data.Warehouse, error)
-	UpdateWarehouse(id uint, warehouse *data.Warehouse) error
+	UpdateWarehouse(id uint, updateModels *types.WarehouseUpdateModels) error
 	DeleteWarehouse(id uint) error
 }
 
@@ -66,15 +65,15 @@ func (r *warehouseRepository) CreateWarehouse(warehouse *data.Warehouse, facilit
 
 func (r *warehouseRepository) GetWarehouseByID(id uint) (*data.Warehouse, error) {
 	var warehouse data.Warehouse
-	if err := r.db.
+	err := r.db.
 		Preload("FacilityAddress").
 		Preload("Region").
-		First(&warehouse, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrWarehouseNotFound
-		}
+		First(&warehouse, id).Error
+
+	if err != nil {
 		return nil, err
 	}
+
 	return &warehouse, nil
 }
 
@@ -148,8 +147,40 @@ func (r *warehouseRepository) GetAllWarehousesForNotifications() ([]data.Warehou
 	return warehouses, nil
 }
 
-func (r *warehouseRepository) UpdateWarehouse(id uint, warehouse *data.Warehouse) error {
-	return r.db.Where("id = ?", id).Updates(warehouse).Error
+func (r *warehouseRepository) UpdateWarehouse(id uint, updateModels *types.WarehouseUpdateModels) error {
+	if updateModels == nil {
+		return fmt.Errorf("nothing to update")
+	}
+
+	existingWarehouse, err := r.GetWarehouseByID(id)
+	if err != nil {
+		return err
+	}
+
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+
+		if updateModels.Warehouse != nil {
+			query := tx.Model(&data.Warehouse{}).Where(&data.Warehouse{BaseEntity: data.BaseEntity{ID: id}})
+
+			if err := query.Updates(updateModels.Warehouse).Error; err != nil {
+				return err
+			}
+		}
+
+		if updateModels.FacilityAddress != nil {
+			if err := tx.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingWarehouse.FacilityAddress.ID}}).
+				Updates(updateModels.FacilityAddress).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *warehouseRepository) DeleteWarehouse(id uint) error {

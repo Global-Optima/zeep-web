@@ -275,8 +275,10 @@ function selectUnit(unit: UnitDTO) {
 				<!-- Unit Card -->
 				<Card>
 					<CardHeader>
-						<CardTitle>Размер</CardTitle>
-						<CardDescription v-if="!readonly">Выберите размер ингредиента</CardDescription>
+						<CardTitle>Единица измерения</CardTitle>
+						<CardDescription v-if="!readonly"
+							>Выберите единицу измерения ингредиента</CardDescription
+						>
 					</CardHeader>
 					<CardContent>
 						<FormField name="categoryId">

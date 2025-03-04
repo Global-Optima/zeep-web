@@ -3,10 +3,10 @@ package units
 import (
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
-	"gorm.io/gorm"
 )
 
 type UnitService interface {
@@ -18,11 +18,15 @@ type UnitService interface {
 }
 
 type unitService struct {
-	repo UnitRepository
+	repo   UnitRepository
+	logger *zap.SugaredLogger
 }
 
-func NewUnitService(repo UnitRepository) UnitService {
-	return &unitService{repo: repo}
+func NewUnitService(repo UnitRepository, logger *zap.SugaredLogger) UnitService {
+	return &unitService{
+		repo:   repo,
+		logger: logger,
+	}
 }
 
 func (s *unitService) Create(dto types.CreateUnitDTO) (uint, error) {
@@ -32,7 +36,9 @@ func (s *unitService) Create(dto types.CreateUnitDTO) (uint, error) {
 	}
 
 	if err := s.repo.Create(&unit); err != nil {
-		return 0, fmt.Errorf("failed to create unit: %w", err)
+		wrappedErr := fmt.Errorf("failed to create unit: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
 	}
 
 	return unit.ID, nil
@@ -41,7 +47,9 @@ func (s *unitService) Create(dto types.CreateUnitDTO) (uint, error) {
 func (s *unitService) GetAll(filter *types.UnitFilter) ([]types.UnitsDTO, error) {
 	units, err := s.repo.GetAll(filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch units: %w", err)
+		wrappedErr := fmt.Errorf("failed to get units: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 	return types.ToUnitResponses(units), nil
 }
@@ -49,10 +57,12 @@ func (s *unitService) GetAll(filter *types.UnitFilter) ([]types.UnitsDTO, error)
 func (s *unitService) GetByID(id uint) (*types.UnitsDTO, error) {
 	unit, err := s.repo.GetByID(id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("unit not found")
+		if errors.Is(err, types.ErrUnitNotFound) {
+			return nil, err
 		}
-		return nil, fmt.Errorf("failed to fetch unit: %w", err)
+		wrappedErr := fmt.Errorf("failed to get unit: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 	response := types.ToUnitResponse(*unit)
 	return &response, nil
@@ -68,14 +78,19 @@ func (s *unitService) Update(id uint, dto types.UpdateUnitDTO) error {
 	}
 
 	if err := s.repo.Update(id, unit); err != nil {
-		return fmt.Errorf("failed to update unit: %w", err)
+		wrappedErr := fmt.Errorf("failed to update unit: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 	return nil
 }
 
 func (s *unitService) Delete(id uint) error {
-	if err := s.repo.Delete(id); err != nil {
-		return fmt.Errorf("failed to delete unit: %w", err)
+	err := s.repo.Delete(id)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to delete unit: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
 	return nil
 }

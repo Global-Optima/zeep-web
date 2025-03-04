@@ -2,6 +2,7 @@ package warehouseStock
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -15,7 +16,6 @@ import (
 
 type WarehouseStockService interface {
 	ReceiveInventory(warehouseID uint, req types.ReceiveWarehouseDelivery) error
-	TransferInventory(req types.TransferInventoryRequest) error
 	GetDeliveries(filter types.WarehouseDeliveryFilter) ([]types.WarehouseDeliveryDTO, error)
 	GetDeliveryByID(id uint) (*types.WarehouseDeliveryDTO, error)
 
@@ -23,7 +23,7 @@ type WarehouseStockService interface {
 	AddWarehouseStocks(warehouseID uint, req []types.AddWarehouseStockMaterial) error
 	DeductFromStock(req types.AdjustWarehouseStock) error
 	GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error)
-	GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error)
+	GetStockMaterialDetails(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*types.WarehouseStockResponse, error)
 	UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error
 
 	CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error
@@ -57,7 +57,8 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 	}
 	stockMaterials, err := s.stockMaterialRepo.GetStockMaterialsByIDs(stockMaterialIDs)
 	if err != nil {
-		return fmt.Errorf("failed to fetch stock materials: %w", err)
+		s.logger.Errorf("failed to fetch stock materials: %v", err)
+		return types.ErrFetchStockMaterials
 	}
 
 	stockMaterialMap := make(map[uint]*data.StockMaterial)
@@ -72,13 +73,12 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 	}
 
 	materials := make([]data.SupplierWarehouseDeliveryMaterial, len(req.Materials))
-
 	for i, material := range req.Materials {
 		stockMaterial, exists := stockMaterialMap[material.StockMaterialID]
 		if !exists {
-			return fmt.Errorf("stock material with ID %d not found", material.StockMaterialID)
+			s.logger.Errorf("stock material with ID %d not found", material.StockMaterialID)
+			return types.ErrStockMaterialNotFound
 		}
-
 		materials[i] = data.SupplierWarehouseDeliveryMaterial{
 			StockMaterialID: material.StockMaterialID,
 			Barcode:         stockMaterial.Barcode,
@@ -89,20 +89,8 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 
 	err = s.repo.RecordDeliveriesAndUpdateStock(delivery, materials, warehouseID)
 	if err != nil {
-		return fmt.Errorf("failed to receive inventory: %w", err)
-	}
-
-	return nil
-}
-
-func (s *warehouseStockService) TransferInventory(req types.TransferInventoryRequest) error {
-	stockItems, err := s.repo.ConvertInventoryItemsToStockRequest(req.Items)
-	if err != nil {
-		return fmt.Errorf("failed to convert inventory items: %w", err)
-	}
-
-	if err := s.repo.TransferStock(req.SourceWarehouseID, req.TargetWarehouseID, stockItems); err != nil {
-		return fmt.Errorf("failed to transfer stock: %w", err)
+		s.logger.Errorf("failed to receive inventory: %v", err)
+		return types.ErrFailedToRecordDeliveries
 	}
 
 	return nil
@@ -111,7 +99,8 @@ func (s *warehouseStockService) TransferInventory(req types.TransferInventoryReq
 func (s *warehouseStockService) GetDeliveries(filter types.WarehouseDeliveryFilter) ([]types.WarehouseDeliveryDTO, error) {
 	deliveries, err := s.repo.GetDeliveries(filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch deliveries: %w", err)
+		s.logger.Errorf("failed to fetch deliveries: %v", err)
+		return nil, types.ErrFetchDeliveries
 	}
 
 	return types.DeliveriesToDeliveryResponses(deliveries), nil
@@ -119,9 +108,9 @@ func (s *warehouseStockService) GetDeliveries(filter types.WarehouseDeliveryFilt
 
 func (s *warehouseStockService) GetDeliveryByID(id uint) (*types.WarehouseDeliveryDTO, error) {
 	var delivery data.SupplierWarehouseDelivery
-	err := s.repo.GetDeliveryByID(id, &delivery)
-	if err != nil {
-		return nil, err
+	if err := s.repo.GetDeliveryByID(id, &delivery); err != nil {
+		s.logger.Errorf("failed to fetch delivery by ID %d: %v", id, err)
+		return nil, types.ErrFetchDelivery
 	}
 
 	response := types.ToDeliveryResponse(delivery)
@@ -129,40 +118,43 @@ func (s *warehouseStockService) GetDeliveryByID(id uint) (*types.WarehouseDelive
 }
 
 func (s *warehouseStockService) AddWarehouseStockMaterial(req types.AdjustWarehouseStock) error {
-	return s.repo.AddToWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
+	if err := s.repo.AddToWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity); err != nil {
+		s.logger.Errorf("failed to add warehouse stock material: %v", err)
+		return types.ErrAddWarehouseStockMaterial
+	}
+	return nil
 }
 
 func (s *warehouseStockService) DeductFromStock(req types.AdjustWarehouseStock) error {
 	stock, err := s.repo.DeductFromWarehouseStock(req.WarehouseID, req.StockMaterialID, req.Quantity)
 	if err != nil {
-		return fmt.Errorf("failed to deduct from stock: %w", err)
+		s.logger.Errorf("failed to deduct from stock: %v", err)
+		return types.ErrDeductFromStock
 	}
 
-	err = s.checkStockAndNotify(stock)
-	if err != nil {
-		s.logger.Errorf("failed to check stock and notify: %w", err)
+	if err = s.checkStockAndNotify(stock); err != nil {
+		s.logger.Errorf("failed to check stock and notify: %v", err)
 	}
-
 	return nil
 }
 
 func (s *warehouseStockService) GetStock(query *types.GetWarehouseStockFilterQuery) ([]types.WarehouseStockResponse, error) {
 	stocks, err := s.repo.GetWarehouseStock(query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch warehouse stocks: %w", err)
+		s.logger.Errorf("failed to fetch warehouse stocks: %v", err)
+		return nil, types.ErrFetchStock
 	}
 
 	responses := make([]types.WarehouseStockResponse, len(stocks))
 	for i, stock := range stocks {
 		responses[i] = types.ToWarehouseStockResponse(stock)
 	}
-
 	return responses, nil
 }
 
 func (s *warehouseStockService) AddWarehouseStocks(warehouseID uint, req []types.AddWarehouseStockMaterial) error {
 	if len(req) == 0 {
-		return fmt.Errorf("stocks cannot be empty")
+		return types.ErrEmptyStocks
 	}
 
 	var stocks []data.WarehouseStock
@@ -173,49 +165,50 @@ func (s *warehouseStockService) AddWarehouseStocks(warehouseID uint, req []types
 			Quantity:        dto.Quantity,
 		})
 	}
-
-	return s.repo.AddWarehouseStocks(warehouseID, stocks)
+	if err := s.repo.AddWarehouseStocks(warehouseID, stocks); err != nil {
+		s.logger.Errorf("failed to add warehouse stocks: %v", err)
+		return types.ErrAddWarehouseStockMaterial
+	}
+	return nil
 }
 
-func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID, warehouseID uint) (*types.WarehouseStockResponse, error) {
-	aggregatedStock, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, warehouseID)
+func (s *warehouseStockService) GetStockMaterialDetails(stockMaterialID uint, filter *contexts.WarehouseContextFilter) (*types.WarehouseStockResponse, error) {
+	aggregatedStock, err := s.repo.GetWarehouseStockMaterialDetails(stockMaterialID, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch stock material details: %w", err)
+		s.logger.Errorf("failed to fetch stock material details: %v", err)
+		return nil, types.ErrFetchStockMaterialDetails
 	}
-
 	details := types.ToWarehouseStockResponse(*aggregatedStock)
-
 	return &details, nil
 }
 
 func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, dto types.UpdateWarehouseStockDTO) error {
 	if dto.Quantity == nil && dto.ExpirationDate == nil {
-		return fmt.Errorf("nothing to update")
+		return types.ErrNothingToUpdate
 	}
 
 	if dto.Quantity != nil {
 		stock, err := s.repo.UpdateStockQuantity(stockMaterialID, warehouseID, *dto.Quantity)
 		if err != nil {
-			return fmt.Errorf("failed to update stock quantity: %w", err)
+			s.logger.Errorf("failed to update stock quantity: %v", err)
+			return types.ErrUpdateStockQuantity
 		}
-
-		err = s.checkStockAndNotify(stock)
-		if err != nil {
-			s.logger.Errorf("failed to check stock and notify: %w", err)
+		if err = s.checkStockAndNotify(stock); err != nil {
+			s.logger.Errorf("failed to check stock and notify: %v", err)
 		}
 	}
 
 	if dto.ExpirationDate != nil {
-		err := s.repo.UpdateExpirationDate(stockMaterialID, warehouseID, *dto.ExpirationDate)
-		if err != nil {
-			return fmt.Errorf("failed to update expiration date: %w", err)
+		if err := s.repo.UpdateExpirationDate(stockMaterialID, warehouseID, *dto.ExpirationDate); err != nil {
+			s.logger.Errorf("failed to update expiration date: %v", err)
+			return types.ErrUpdateExpiration
 		}
 	}
-
 	return nil
 }
 
 func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error {
+	// Check for low stock notification
 	if stock.Quantity < stock.StockMaterial.SafetyStock {
 		details := &details.OutOfStockDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
@@ -224,24 +217,23 @@ func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock 
 			},
 			ItemName: stock.StockMaterial.Name,
 		}
-		err := s.notificationService.NotifyOutOfStock(details)
-		if err != nil {
+		if err := s.notificationService.NotifyOutOfStock(details); err != nil {
 			return fmt.Errorf("failed to send warehouse runout notification: %v", err)
 		}
 	}
 
-	closestExpirationDate, err := s.repo.FindEarliestExpirationDateForStock(stock.StockMaterialID, warehouseID)
+	closestExpirationDate, err := s.repo.FindEarliestExpirationDateForStock(stock.StockMaterialID, &contexts.WarehouseContextFilter{
+		WarehouseID: &warehouseID,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to fetch earliest expiration date for stock: %v", err)
 	}
-
 	if closestExpirationDate == nil {
 		defaultClosestExpirationDate := stock.UpdatedAt.Add(time.Duration(stock.StockMaterial.ExpirationPeriodInDays) * 24 * time.Hour)
 		closestExpirationDate = &defaultClosestExpirationDate
 	}
-
 	if closestExpirationDate.Before(time.Now().Add(7 * 24 * time.Hour)) { // Expiration within 7 days
-		details := &details.WarehouseStockExpirationDetails{
+		expDetails := &details.WarehouseStockExpirationDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           warehouseID,
 				FacilityName: stock.Warehouse.Name,
@@ -249,12 +241,10 @@ func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock 
 			ItemName:       stock.StockMaterial.Name,
 			ExpirationDate: closestExpirationDate.Format("2006-01-02"),
 		}
-		err := s.notificationService.NotifyWarehouseStockExpiration(details)
-		if err != nil {
+		if err := s.notificationService.NotifyWarehouseStockExpiration(expDetails); err != nil {
 			return fmt.Errorf("failed to send stock expiration notification: %v", err)
 		}
 	}
-
 	return nil
 }
 
@@ -267,30 +257,23 @@ func (s *warehouseStockService) checkStockAndNotify(stock *data.WarehouseStock) 
 			},
 			ItemName: stock.StockMaterial.Name,
 		}
-
-		err := s.notificationService.NotifyOutOfStock(details)
-		if err != nil {
+		if err := s.notificationService.NotifyOutOfStock(details); err != nil {
 			return fmt.Errorf("failed to send out of stock notification: %w", err)
 		}
 	}
-
 	return nil
 }
 
-func (s *warehouseStockService) GetAvailableToAddStockMaterials(
-	storeID uint,
-	query *types.AvailableStockMaterialFilter,
-) ([]stockMaterialTypes.StockMaterialsDTO, error) {
-
+func (s *warehouseStockService) GetAvailableToAddStockMaterials(storeID uint, query *types.AvailableStockMaterialFilter) ([]stockMaterialTypes.StockMaterialsDTO, error) {
 	stocks, err := s.repo.GetAvailableToAddStockMaterials(storeID, query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch available stock materials: %w", err)
+		s.logger.Errorf("failed to fetch available stock materials: %v", err)
+		return nil, types.ErrFetchStockMaterials
 	}
 
-	stockMaterialResponses := make([]stockMaterialTypes.StockMaterialsDTO, 0)
+	var stockMaterialResponses []stockMaterialTypes.StockMaterialsDTO
 	for _, stockMaterial := range stocks {
 		stockMaterialResponses = append(stockMaterialResponses, *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stockMaterial))
 	}
-
 	return stockMaterialResponses, nil
 }

@@ -4,7 +4,7 @@
 			<Button
 				variant="outline"
 				size="sm"
-				class="border-dashed h-8"
+				class="h-9"
 			>
 				<PlusCircle class="mr-2 w-4 h-4" />
 				{{ title }}
@@ -19,7 +19,7 @@
 					>
 						{{ selectedValues.size }}
 					</Badge>
-					<div class="lg:flex space-x-1 hidden">
+					<div class="hidden lg:flex space-x-1">
 						<Badge
 							v-if="selectedValues.size > 2"
 							variant="secondary"

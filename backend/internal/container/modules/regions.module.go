@@ -15,7 +15,7 @@ type RegionsModule struct {
 
 func NewRegionsModule(base *common.BaseModule, auditService audit.AuditService) *RegionsModule {
 	repo := regions.NewRegionRepository(base.DB)
-	service := regions.NewRegionService(repo)
+	service := regions.NewRegionService(repo, base.Logger)
 	handler := regions.NewRegionHandler(service, auditService)
 
 	base.Router.RegisterRegionRoutes(handler)

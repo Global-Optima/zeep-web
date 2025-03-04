@@ -291,7 +291,7 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 		return
 	}
 
-	HandleClient(uint(storeID), conn, initialOrders)
+	HandleClient(storeID, conn, initialOrders)
 }
 
 func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
@@ -301,7 +301,13 @@ func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 		return
 	}
 
-	orderDetails, err := h.service.GetOrderDetails(uint(orderID))
+	filter, errH := contexts.GetStoreContextFilter(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	orderDetails, err := h.service.GetOrderDetails(uint(orderID), filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch order details")
 		return

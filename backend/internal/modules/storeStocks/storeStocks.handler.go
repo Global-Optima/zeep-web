@@ -184,19 +184,19 @@ func (h *StoreStockHandler) GetStoreStockList(c *gin.Context) {
 }
 
 func (h *StoreStockHandler) GetStoreStockById(c *gin.Context) {
-	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
 	stockId, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreStock)
 		return
 	}
 
-	stock, err := h.service.GetStockById(storeID, uint(stockId))
+	filter, errH := contexts.GetStoreContextFilter(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	stock, err := h.service.GetStockById(uint(stockId), filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
@@ -225,7 +225,7 @@ func (h *StoreStockHandler) UpdateStoreStockById(c *gin.Context) {
 		return
 	}
 
-	stock, err := h.service.GetStockById(storeID, uint(stockId))
+	stock, err := h.service.GetStockById(uint(stockId), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
@@ -264,7 +264,7 @@ func (h *StoreStockHandler) DeleteStoreStockById(c *gin.Context) {
 		return
 	}
 
-	stock, err := h.service.GetStockById(storeID, uint(stockId))
+	stock, err := h.service.GetStockById(uint(stockId), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return

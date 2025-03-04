@@ -42,17 +42,23 @@ const onRouteClick = (routeKey: RouteKey) => {
 		</Button>
 
 		<CommandDialog v-model:open="open">
-			<CommandInput placeholder="Поиск по платформе" />
+			<CommandInput
+				placeholder="Поиск по платформе"
+				class="py-7 text-lg"
+			/>
 			<CommandList class="p-1">
-				<CommandEmpty>Ничего не найдено</CommandEmpty>
-				<CommandGroup heading="Страницы">
+				<CommandEmpty class="text-gray-500 text-lg">Ничего не найдено</CommandEmpty>
+				<CommandGroup
+					heading="Страницы"
+					class="!text-base"
+				>
 					<CommandItem
 						v-for="page in pages"
 						:key="page.routeKey"
 						:value="page.name"
 						@click="onRouteClick(page.routeKey)"
 					>
-						<div class="flex items-center gap-4 py-1.5 w-full">
+						<div class="flex items-center gap-4 py-1.5 w-full text-base">
 							{{ page.name }}
 						</div>
 					</CommandItem>

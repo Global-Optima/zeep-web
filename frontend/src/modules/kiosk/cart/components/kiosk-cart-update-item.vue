@@ -12,7 +12,7 @@ import KioskDetailsLoading from '@/modules/kiosk/products/components/details/kio
 import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
 import KioskProductRecipeDialog from '@/modules/kiosk/products/components/details/kiosk-product-recipe-dialog.vue'
 import { ChevronLeft, Pencil } from 'lucide-vue-next'
-import { computed, defineEmits, defineProps, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 // Props & Emits
 const props = defineProps<{

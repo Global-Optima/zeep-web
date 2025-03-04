@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -14,7 +15,7 @@ import (
 
 type StoreProductRepository interface {
 	GetStoreProductCategories(storeID uint) ([]data.ProductCategory, error)
-	GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error)
+	GetStoreProductById(storeProductID uint, filter *contexts.StoreContextFilter) (*data.StoreProduct, error)
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
@@ -63,17 +64,32 @@ func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data
 	return categories, nil
 }
 
-func (r *storeProductRepository) GetStoreProductById(storeID uint, storeProductID uint) (*data.StoreProduct, error) {
+func (r *storeProductRepository) GetStoreProductById(storeProductID uint, filter *contexts.StoreContextFilter) (*data.StoreProduct, error) {
 	var storeProduct data.StoreProduct
-	err := r.db.Model(&data.StoreProduct{}).
-		Where("store_id = ? AND id = ?", storeID, storeProductID).
+	query := r.db.Model(&data.StoreProduct{}).
+		Where(&data.StoreProduct{BaseEntity: data.BaseEntity{ID: storeProductID}}).
 		Preload("Product.ProductSizes").
 		Preload("Product.Category").
 		Preload("StoreProductSizes.ProductSize.Unit").
 		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
-		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
-		First(&storeProduct).Error
+		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
 
+	if filter != nil {
+		if filter.StoreID != nil {
+			query.Where(&data.StoreProduct{StoreID: *filter.StoreID})
+		}
+
+		if filter.FranchiseeID != nil {
+			query.Joins("JOIN stores ON stores.id = store_products.store_id").
+				Where(&data.StoreProduct{
+					Store: data.Store{
+						FranchiseeID: filter.FranchiseeID,
+					},
+				})
+		}
+	}
+
+	err := query.First(&storeProduct).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, moduleErrors.ErrNotFound

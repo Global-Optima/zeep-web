@@ -46,19 +46,19 @@ func NewStoreProductHandler(
 }
 
 func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
-	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
 	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
-	productDetails, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
+	filter, errH := contexts.GetStoreContextFilter(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	productDetails, err := h.service.GetStoreProductById(uint(storeProductID), filter)
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrNotFound):
@@ -324,7 +324,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
+	existingProduct, err := h.service.GetStoreProductById(uint(storeProductID), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
@@ -363,7 +363,7 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.GetStoreProductById(storeID, uint(storeProductID))
+	existingProduct, err := h.service.GetStoreProductById(uint(storeProductID), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrNotFound):

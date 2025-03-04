@@ -14,7 +14,7 @@ export const ERRORS_CHILDREN_ROUTES = {
 		path: 'internal-error',
 		name: 'internal-error',
 		meta: {
-			title: 'Internal server error',
+			title: 'Ошибка сервера',
 		},
 		component: () => import('@/modules/errors/pages/internal-error-page.vue'),
 	},

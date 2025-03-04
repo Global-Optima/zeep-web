@@ -15,7 +15,7 @@ type StockMaterialCategoriesModule struct {
 
 func NewStockMaterialCategoriesModule(base *common.BaseModule, auditService audit.AuditService) *StockMaterialCategoriesModule {
 	repo := stockMaterialCategory.NewStockMaterialCategoryRepository(base.DB)
-	service := stockMaterialCategory.NewStockMaterialCategoryService(repo)
+	service := stockMaterialCategory.NewStockMaterialCategoryService(repo, base.Logger)
 	handler := stockMaterialCategory.NewStockMaterialCategoryHandler(service, auditService)
 
 	base.Router.RegisterStockMaterialCategoryRoutes(handler)

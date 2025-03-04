@@ -2,7 +2,7 @@
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { CreditCard, Loader, QrCode } from 'lucide-vue-next'
-import { computed, defineEmits, defineProps, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 // Props & Emits
 defineProps<{

@@ -1,9 +1,10 @@
 package regions
 
 import (
-	"strconv"
+	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -25,12 +26,12 @@ func NewRegionHandler(service RegionService, auditService audit.AuditService) *R
 func (h *RegionHandler) CreateRegion(c *gin.Context) {
 	var dto types.CreateRegionDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "invalid input")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 	id, err := h.service.CreateRegion(&dto)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create region")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionCreate)
 		return
 	}
 
@@ -40,95 +41,92 @@ func (h *RegionHandler) CreateRegion(c *gin.Context) {
 			Name: dto.Name,
 		},
 	)
-
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "region created successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response201Region)
 }
 
 func (h *RegionHandler) UpdateRegion(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	regionID, err := utils.ParseParam(c, "id")
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid region ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	var dto types.UpdateRegionDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, "invalid input")
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	region, err := h.service.GetRegionByID(uint(id))
+	region, err := h.service.GetRegionByID(uint(regionID))
 	if err != nil {
-		utils.SendNotFoundError(c, "failed to update region: region not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response404Region)
 		return
 	}
 
-	if err := h.service.UpdateRegion(uint(id), &dto); err != nil {
-		utils.SendInternalServerError(c, "failed to update region")
+	if err := h.service.UpdateRegion(uint(regionID), &dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionUpdate)
 		return
 	}
 
 	action := types.UpdateRegionAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(id),
+			ID:   uint(regionID),
 			Name: region.Name,
 		},
 		&dto,
 	)
-
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "region updated successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200RegionUpdate)
 }
 
 func (h *RegionHandler) DeleteRegion(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	regionID, err := utils.ParseParam(c, "id")
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid region ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	region, err := h.service.GetRegionByID(uint(id))
+	region, err := h.service.GetRegionByID(uint(regionID))
 	if err != nil {
-		utils.SendNotFoundError(c, "failed to delete region: region not found")
+		localization.SendLocalizedResponseWithKey(c, types.Response404Region)
 		return
 	}
 
-	if err := h.service.DeleteRegion(uint(id)); err != nil {
-		utils.SendInternalServerError(c, "failed to delete region")
+	if err := h.service.DeleteRegion(uint(regionID)); err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionDelete)
 		return
 	}
 
 	action := types.DeleteRegionAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(id),
+			ID:   uint(regionID),
 			Name: region.Name,
 		},
 	)
-
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, gin.H{"message": "region deleted successfully"})
+	localization.SendLocalizedResponseWithKey(c, types.Response200RegionDelete)
 }
 
 func (h *RegionHandler) GetRegionByID(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	regionID, err := utils.ParseParam(c, "id")
 	if err != nil {
-		utils.SendBadRequestError(c, "invalid region ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
-	region, err := h.service.GetRegionByID(uint(id))
+	region, err := h.service.GetRegionByID(uint(regionID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve region")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionGet)
 		return
 	}
 	utils.SendSuccessResponse(c, region)
@@ -136,16 +134,14 @@ func (h *RegionHandler) GetRegionByID(c *gin.Context) {
 
 func (h *RegionHandler) GetRegions(c *gin.Context) {
 	var filter types.RegionFilter
-	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
-
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid filter parameters")
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Region{}); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	regions, err := h.service.GetRegions(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve regions")
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionGet)
 		return
 	}
 	utils.SendSuccessResponseWithPagination(c, regions, filter.Pagination)
@@ -153,18 +149,15 @@ func (h *RegionHandler) GetRegions(c *gin.Context) {
 
 func (h *RegionHandler) GetAllRegions(c *gin.Context) {
 	var filter types.RegionFilter
-
-	err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{})
-	if err != nil {
-		utils.SendBadRequestError(c, "invalid filter parameters")
+	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Region{}); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
-	warehouses, err := h.service.GetAllRegions(&filter)
+	allRegions, err := h.service.GetAllRegions(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionGet)
 		return
 	}
-
-	utils.SendSuccessResponse(c, warehouses)
+	utils.SendSuccessResponse(c, allRegions)
 }

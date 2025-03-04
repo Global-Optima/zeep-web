@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -30,7 +31,7 @@ type OrderService interface {
 	GetOrderBySubOrder(subOrderID uint) (*data.Order, error)
 	GetOrderById(orderId uint) (types.OrderDTO, error)
 
-	GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, error)
+	GetOrderDetails(orderID uint, filter *contexts.StoreContextFilter) (*types.OrderDetailsDTO, error)
 	ExportOrders(filter *types.OrdersExportFilterQuery) ([]types.OrderExportDTO, error)
 	GenerateSuborderBarcodePDF(suborderID uint) ([]byte, error)
 
@@ -235,7 +236,7 @@ func ValidateStoreAdditives(
 	additiveNames := make(map[uint]string)
 
 	for _, addID := range storeAdditiveIDs {
-		storeAdd, err := repo.GetStoreAdditiveByID(storeID, addID)
+		storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
 		if err != nil {
 			return nil, nil, fmt.Errorf("error with store additive: %w", err)
 		}
@@ -626,8 +627,8 @@ func (s *orderService) GetOrderById(orderId uint) (types.OrderDTO, error) {
 	return orderDTO, nil
 }
 
-func (s *orderService) GetOrderDetails(orderID uint) (*types.OrderDetailsDTO, error) {
-	order, err := s.orderRepo.GetOrderDetails(orderID)
+func (s *orderService) GetOrderDetails(orderID uint, filter *contexts.StoreContextFilter) (*types.OrderDetailsDTO, error) {
+	order, err := s.orderRepo.GetOrderDetails(orderID, filter)
 	if err != nil {
 		return nil, err
 	}

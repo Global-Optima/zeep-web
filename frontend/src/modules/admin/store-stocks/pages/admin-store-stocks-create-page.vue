@@ -7,6 +7,7 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { getRouteName } from '@/core/config/routes.config'
 import AdminStoreStocksCreateForm from '@/modules/admin/store-stocks/components/create/admin-store-stocks-create-form.vue'
 import type { AddMultipleStoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
 import { storeStocksService } from '@/modules/admin/store-stocks/services/store-stocks.service'
@@ -32,6 +33,8 @@ const createMutation = useMutation({
 			title: 'Успех!',
 			description: 'Запасы кафе успешно добавлены.',
 		})
+
+    router.push({ name: getRouteName('ADMIN_STORE_STOCKS') })
 	},
 	onError: () => {
 		toast({
