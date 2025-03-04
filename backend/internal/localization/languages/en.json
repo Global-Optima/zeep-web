@@ -176,6 +176,7 @@
     "200-storeProduct-delete": "Product successfully deleted from the store.",
 
     "500-storeAdditive": "An unexpected error occurred with the store additive. Please try again later.",
+    "409-storeAdditive": "Store additive is used as a default in another product",
     "404-storeAdditive": "Store additive not found",
     "400-storeAdditive": "Invalid store additive data provided. Please check and try again.",
     "201-storeAdditive": "Store additive successfully created.",
