@@ -74,7 +74,7 @@ const createProductSizeSchema = toTypedSchema(
   z.object({
     name: z.nativeEnum(ProductSizeNames).describe('Выберите корректный вариант'),
     basePrice: z.number().min(0, 'Введите корректную цену'),
-    size: z.number().min(1, 'Введите корректный размер'),
+    size: z.number().min(0, 'Введите корректный размер'),
     unitId: z.number().min(1, 'Введите корректный размер'),
   })
 )

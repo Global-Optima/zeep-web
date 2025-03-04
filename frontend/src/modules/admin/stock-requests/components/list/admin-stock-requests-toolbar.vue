@@ -18,8 +18,15 @@
 			/>
 
 			<AdminSelectWarehouseDropdown
+				v-if="showForRegion"
 				:selected-warehouse="selectedWarehouse"
 				@select="onSelectWarehouse"
+			/>
+
+			<AdminSelectStoreDropdown
+				v-if="showForFranchisee"
+				:selected-store="selectedStore"
+				@select="onSelectStore"
 			/>
 		</div>
 
@@ -47,6 +54,8 @@ import { getRouteName } from '@/core/config/routes.config'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { STOCK_REQUEST_STATUS_OPTIONS, StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
+import AdminSelectStoreDropdown from '@/modules/admin/stores/components/admin-select-store-dropdown.vue'
+import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
 import AdminSelectWarehouseDropdown from '@/modules/admin/warehouses/components/admin-select-warehouse-dropdown.vue'
 import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
@@ -62,10 +71,21 @@ const canCreateStockRequest = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRo
 
 const localFilter = ref({ ...props.filter })
 
+const showForRegion = useHasRole([EmployeeRole.REGION_WAREHOUSE_MANAGER])
+
 const selectedStatuses = ref<StockRequestStatus[]>(props.filter?.statuses ?? [])
 const selectedWarehouse = ref<WarehouseDTO | undefined>(undefined)
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
+
+const showForFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
+
+const selectedStore = ref<StoreDTO | undefined>(undefined)
+
+const onSelectStore = (store: StoreDTO) => {
+  selectedStore.value = store
+  emit('update:filter', { ...props.filter, storeId: store.id})
+}
 
 const { currentEmployee } = useEmployeeAuthStore()
 

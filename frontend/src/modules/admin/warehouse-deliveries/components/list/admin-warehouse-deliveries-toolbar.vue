@@ -13,6 +13,7 @@
 			/>
 
 			<AdminSelectWarehouseDropdown
+				v-if="showForRegion"
 				:selected-warehouse="selectedWarehouse"
 				@select="onSelectWarehouse"
 			/>
@@ -25,7 +26,11 @@
 				disabled
 				>Экспорт</Button
 			>
-			<Button @click="addStore">Создать</Button>
+			<Button
+				v-if="canCreate"
+				@click="addStore"
+				>Создать</Button
+			>
 		</div>
 	</div>
 </template>
@@ -34,6 +39,8 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { WarehouseDeliveryFilter } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import AdminSelectWarehouseDropdown from '@/modules/admin/warehouses/components/admin-select-warehouse-dropdown.vue'
 import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
@@ -47,6 +54,9 @@ const emit = defineEmits<{(e: 'update:filter', value: WarehouseDeliveryFilter): 
 
 // Local Filter
 const localFilter = ref({ ...props.filter })
+
+const showForRegion = useHasRole([EmployeeRole.REGION_WAREHOUSE_MANAGER])
+const canCreate = useHasRole([EmployeeRole.WAREHOUSE_EMPLOYEE, EmployeeRole.WAREHOUSE_MANAGER])
 
 // Search Input
 const searchTerm = ref(localFilter.value.search || '')
