@@ -17,11 +17,13 @@ export interface CartItem {
 
 interface CartState {
 	cartItems: { [key: string]: CartItem }
+	isModalOpen: boolean
 }
 
 export const useCartStore = defineStore('ZEEP_CART', {
 	state: (): CartState => ({
 		cartItems: {},
+		isModalOpen: false,
 	}),
 
 	getters: {
@@ -43,6 +45,14 @@ export const useCartStore = defineStore('ZEEP_CART', {
 	},
 
 	actions: {
+		toggleModal() {
+			this.isModalOpen = !this.isModalOpen
+		},
+
+		closeModal() {
+			this.isModalOpen = false
+		},
+
 		generateCartItemKey(
 			product: StoreProductDetailsDTO,
 			size: ProductSizeDTO,

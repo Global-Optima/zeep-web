@@ -124,6 +124,10 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
+		if err == types.ErrInsufficientStock {
+			localization.SendLocalizedResponseWithKey(c, types.Response400InsufficientStock)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500OrderCreate)
 		return
 	}

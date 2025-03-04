@@ -7,19 +7,26 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/tests"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
-func TestStockMaterialCategoryService_Create_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
-	module := tests.GetStockMaterialCategoryModule()
+var container = tests.NewTestContainer()
 
+func ResetTestData(t *testing.T) *gorm.DB {
+	db := container.GetDB()
 	if err := tests.TruncateAllTables(db); err != nil {
 		t.Fatalf("Failed to truncate all tables: %v", err)
 	}
 	if err := tests.LoadTestData(db); err != nil {
 		t.Fatalf("Failed to load test data: %v", err)
 	}
+	return db
+}
+
+func TestStockMaterialCategoryService_Create_WithPreloadedData(t *testing.T) {
+	module := tests.GetStockMaterialCategoryModule()
+
+	_ = ResetTestData(t)
 
 	testCases := []struct {
 		name        string
@@ -76,16 +83,9 @@ func TestStockMaterialCategoryService_Create_WithPreloadedData(t *testing.T) {
 }
 
 func TestStockMaterialCategoryService_GetByID_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
 	module := tests.GetStockMaterialCategoryModule()
 
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
+	_ = ResetTestData(t)
 
 	testCases := []struct {
 		name        string
@@ -127,16 +127,9 @@ func TestStockMaterialCategoryService_GetByID_WithPreloadedData(t *testing.T) {
 }
 
 func TestStockMaterialCategoryService_GetAll_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
 	module := tests.GetStockMaterialCategoryModule()
 
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
+	_ = ResetTestData(t)
 
 	testCases := []struct {
 		name          string
@@ -181,16 +174,9 @@ func TestStockMaterialCategoryService_GetAll_WithPreloadedData(t *testing.T) {
 }
 
 func TestStockMaterialCategoryService_Update_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
 	module := tests.GetStockMaterialCategoryModule()
 
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
+	_ = ResetTestData(t)
 
 	testCases := []struct {
 		name        string
@@ -248,16 +234,9 @@ func TestStockMaterialCategoryService_Update_WithPreloadedData(t *testing.T) {
 }
 
 func TestStockMaterialCategoryService_Delete_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
 	module := tests.GetStockMaterialCategoryModule()
 
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
+	_ = ResetTestData(t)
 
 	testCases := []struct {
 		name        string

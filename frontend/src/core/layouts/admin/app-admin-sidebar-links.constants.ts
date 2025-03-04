@@ -156,13 +156,21 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Запросы на склад',
 		routeKey: 'ADMIN_STORE_STOCK_REQUESTS',
 		icon: Truck,
-		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
+		accessRoles: [
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.REGION_WAREHOUSE_MANAGER,
+		],
 	},
 	{
 		name: 'Поставщики',
 		routeKey: 'ADMIN_WAREHOUSE_SUPPLIERS',
 		icon: BookUser,
-		accessRoles: [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE],
+		accessRoles: [
+			EmployeeRole.WAREHOUSE_MANAGER,
+			EmployeeRole.WAREHOUSE_EMPLOYEE,
+			EmployeeRole.REGION_WAREHOUSE_MANAGER,
+		],
 	},
 	{
 		name: 'Запросы на склад',
@@ -174,13 +182,21 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Запасы',
 		routeKey: 'ADMIN_WAREHOUSE_STOCKS',
 		icon: Blocks,
-		accessRoles: [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE],
+		accessRoles: [
+			EmployeeRole.WAREHOUSE_MANAGER,
+			EmployeeRole.WAREHOUSE_EMPLOYEE,
+			EmployeeRole.REGION_WAREHOUSE_MANAGER,
+		],
 	},
 	{
 		name: 'Доставки',
 		routeKey: 'ADMIN_WAREHOUSE_DELIVERIES',
 		icon: PackageCheck,
-		accessRoles: [EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.WAREHOUSE_EMPLOYEE],
+		accessRoles: [
+			EmployeeRole.WAREHOUSE_MANAGER,
+			EmployeeRole.WAREHOUSE_EMPLOYEE,
+			EmployeeRole.REGION_WAREHOUSE_MANAGER,
+		],
 	},
 	{
 		label: 'Товары',
@@ -247,6 +263,7 @@ export const adminNavItems: SidebarNavItem[] = [
 			EmployeeRole.ADMIN,
 			EmployeeRole.WAREHOUSE_EMPLOYEE,
 			EmployeeRole.WAREHOUSE_MANAGER,
+			EmployeeRole.REGION_WAREHOUSE_MANAGER,
 		],
 		items: [
 			{
