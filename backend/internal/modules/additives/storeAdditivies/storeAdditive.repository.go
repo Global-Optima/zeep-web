@@ -366,6 +366,10 @@ func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID u
 		Where("psa.is_default = TRUE").
 		Where("sa.id = ? AND sa.store_id = ?", storeAdditiveID, storeID).
 		Where("sp.store_id = ?", storeID).
+		Where("psa.deleted_at IS NULL").
+		Where("sa.deleted_at IS NULL").
+		Where("sps.deleted_at IS NULL").
+		Where("sp.deleted_at IS NULL").
 		Limit(1).
 		Scan(&exists).Error
 	if err != nil {
