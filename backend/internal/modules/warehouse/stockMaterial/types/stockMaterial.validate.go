@@ -54,9 +54,7 @@ func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockM
 		stockMaterial.ExpirationPeriodInDays = *req.ExpirationPeriodInDays
 	}
 
-	if req.IsActive != nil {
-		stockMaterial.IsActive = *req.IsActive
-	}
+	stockMaterial.IsActive = req.IsActive
 
 	stockMaterial.UpdatedAt = time.Now()
 

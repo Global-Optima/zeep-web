@@ -21,6 +21,7 @@ type CreateStockMaterialDTO struct {
 	Barcode                string  `json:"barcode"`
 	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
 	Size                   float64 `json:"size"`
+	IsActive               *bool   `json:"isActive"`
 }
 
 type UpdateStockMaterialDTO struct {

@@ -26,11 +26,16 @@ func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDT
 		IngredientID:           req.IngredientID,
 		Barcode:                req.Barcode,
 		ExpirationPeriodInDays: req.ExpirationPeriodInDays,
-		IsActive:               true,
+		IsActive:               req.IsActive,
 	}
 }
 
 func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMaterial) *StockMaterialsDTO {
+	isActive := true
+	if stockMaterial.IsActive != nil {
+		isActive = *stockMaterial.IsActive
+	}
+
 	return &StockMaterialsDTO{
 		ID:          stockMaterial.ID,
 		Name:        stockMaterial.Name,
@@ -50,7 +55,7 @@ func ConvertStockMaterialToStockMaterialResponse(stockMaterial *data.StockMateri
 		Ingredient:             *ingredientTypes.ConvertToIngredientResponseDTO(&stockMaterial.Ingredient),
 		Barcode:                stockMaterial.Barcode,
 		ExpirationPeriodInDays: stockMaterial.ExpirationPeriodInDays,
-		IsActive:               stockMaterial.IsActive,
+		IsActive:               isActive,
 		CreatedAt:              stockMaterial.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:              stockMaterial.UpdatedAt.Format(time.RFC3339),
 	}

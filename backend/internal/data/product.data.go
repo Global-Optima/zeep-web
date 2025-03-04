@@ -101,7 +101,7 @@ type ProductSizeAdditive struct {
 	BaseEntity
 	ProductSizeID uint        `gorm:"index;not null"`
 	AdditiveID    uint        `gorm:"index;not null"`
-	IsDefault     bool        `gorm:"not null" sort:"isDefault"`
+	IsDefault     *bool       `gorm:"not null" sort:"isDefault"`
 	ProductSize   ProductSize `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	Additive      Additive    `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 }
@@ -134,5 +134,5 @@ type AdditiveCategory struct {
 	Name             string     `gorm:"size:100;not null" sort:"name"`
 	Description      string     `gorm:"type:text"`
 	Additives        []Additive `gorm:"foreignKey:AdditiveCategoryID"`
-	IsMultipleSelect bool       `gorm:"default:true" sort:"isMultipleSelect"`
+	IsMultipleSelect *bool      `gorm:"default:true" sort:"isMultipleSelect"`
 }

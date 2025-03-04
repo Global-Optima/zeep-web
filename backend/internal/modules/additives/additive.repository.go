@@ -24,7 +24,7 @@ type AdditiveRepository interface {
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error)
-	UpdateAdditiveCategory(category *data.AdditiveCategory) error
+	UpdateAdditiveCategory(id uint, category *data.AdditiveCategory) error
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error)
 }
@@ -264,8 +264,20 @@ func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCateg
 	return category.ID, nil
 }
 
-func (r *additiveRepository) UpdateAdditiveCategory(category *data.AdditiveCategory) error {
-	return r.db.Save(category).Error
+func (r *additiveRepository) UpdateAdditiveCategory(id uint, category *data.AdditiveCategory) error {
+
+	err := r.db.Model(&data.AdditiveCategory{}).
+		Where(&data.AdditiveCategory{BaseEntity: data.BaseEntity{ID: id}}).
+		Updates(category).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrAdditiveCategoryNotFound
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (r *additiveRepository) DeleteAdditiveCategory(categoryID uint) error {

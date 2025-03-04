@@ -110,7 +110,7 @@ type StockMaterial struct {
 	StockMaterialCategory  StockMaterialCategory `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
 	Barcode                string                `gorm:"unique;size:255"`
 	ExpirationPeriodInDays int                   `gorm:"not null;default:1095" sort:"expirationPeriodInDays"` // 3 years in days
-	IsActive               bool                  `gorm:"not null;default:true" sort:"isActive"`
+	IsActive               *bool                 `gorm:"not null;default:true" sort:"isActive"`
 }
 
 type StockMaterialCategory struct {

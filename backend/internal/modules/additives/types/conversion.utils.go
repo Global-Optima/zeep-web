@@ -80,29 +80,35 @@ func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.Additi
 	return &data.AdditiveCategory{
 		Name:             dto.Name,
 		Description:      dto.Description,
-		IsMultipleSelect: dto.IsMultipleSelect,
+		IsMultipleSelect: &dto.IsMultipleSelect,
 	}
 }
 
-func ConvertToUpdatedAdditiveCategoryModel(dto *UpdateAdditiveCategoryDTO, existing *data.AdditiveCategory) *data.AdditiveCategory {
+func ConvertToUpdatedAdditiveCategoryModel(dto *UpdateAdditiveCategoryDTO) *data.AdditiveCategory {
+	additiveCategory := &data.AdditiveCategory{}
+
 	if dto.Name != nil {
-		existing.Name = *dto.Name
+		additiveCategory.Name = *dto.Name
 	}
 	if dto.Description != nil {
-		existing.Description = *dto.Description
+		additiveCategory.Description = *dto.Description
 	}
-	if dto.IsMultipleSelect != nil {
-		existing.IsMultipleSelect = *dto.IsMultipleSelect
-	}
-	return existing
+
+	additiveCategory.IsMultipleSelect = dto.IsMultipleSelect
+
+	return additiveCategory
 }
 
 func ConvertToAdditiveCategoryResponseDTO(model *data.AdditiveCategory) *AdditiveCategoryResponseDTO {
+	isMultipleSelect := true
+	if model.IsMultipleSelect != nil {
+		isMultipleSelect = *model.IsMultipleSelect
+	}
 	return &AdditiveCategoryResponseDTO{
 		ID:               model.ID,
 		Name:             model.Name,
 		Description:      model.Description,
-		IsMultipleSelect: model.IsMultipleSelect,
+		IsMultipleSelect: isMultipleSelect,
 	}
 }
 
@@ -139,22 +145,31 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 }
 
 func ConvertToCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategoryDTO {
+	isMultipleSelect := true
+	if category.IsMultipleSelect != nil {
+		isMultipleSelect = *category.IsMultipleSelect
+	}
 	return &BaseAdditiveCategoryDTO{
 		ID:               category.ID,
 		Name:             category.Name,
 		Description:      category.Description,
-		IsMultipleSelect: category.IsMultipleSelect,
+		IsMultipleSelect: isMultipleSelect,
 	}
 }
 
 func ConvertToAdditiveCategoryDTO(category *data.AdditiveCategory) *AdditiveCategoryDTO {
 	additives := ConvertToAdditiveCategoryItemDTOs(category)
 
+	isMultipleSelect := true
+	if category.IsMultipleSelect != nil {
+		isMultipleSelect = *category.IsMultipleSelect
+	}
+
 	return &AdditiveCategoryDTO{
 		ID:               category.ID,
 		Name:             category.Name,
 		Description:      category.Description,
-		IsMultipleSelect: category.IsMultipleSelect,
+		IsMultipleSelect: isMultipleSelect,
 		Additives:        additives, // Always initialized as a slice
 	}
 }
