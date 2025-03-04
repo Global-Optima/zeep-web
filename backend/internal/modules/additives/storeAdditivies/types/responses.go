@@ -9,6 +9,7 @@ var (
 	Response500StoreAdditive       = localization.NewResponseKey(500, data.StoreAdditiveComponent)
 	Response400StoreAdditive       = localization.NewResponseKey(400, data.StoreAdditiveComponent)
 	Response404StoreAdditive       = localization.NewResponseKey(404, data.StoreAdditiveComponent)
+	Response409StoreAdditive       = localization.NewResponseKey(409, data.StoreAdditiveComponent)
 	Response200StoreAdditiveUpdate = localization.NewResponseKey(200, data.StoreAdditiveComponent, data.UpdateOperation.ToString())
 	Response200StoreAdditiveDelete = localization.NewResponseKey(200, data.StoreAdditiveComponent, data.DeleteOperation.ToString())
 	Response201StoreAdditive       = localization.NewResponseKey(201, data.StoreAdditiveComponent)
