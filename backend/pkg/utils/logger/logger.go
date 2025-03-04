@@ -55,7 +55,12 @@ func InitLogger(logLevel, logFile string, dev bool) error {
 
 	// Create the final logger
 	logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
-	defer logger.Sync() // ensure logs are flushed before exit
+	defer func() { // ensure logs are flushed before exit
+		if err := logger.Sync(); err != nil {
+			fmt.Printf("Failed to flush logs: %v\n", err)
+		}
+	}()
+
 	zap.ReplaceGlobals(logger)
 
 	// Create a sugared logger for structured logging
