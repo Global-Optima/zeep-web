@@ -1,6 +1,7 @@
 package storeAdditives
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -197,7 +198,7 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 		return
 	}
 
-	storeAdditive, err := h.service.GetStoreAdditiveByID(storeID, uint(storeAdditiveID))
+	storeAdditive, err := h.service.GetStoreAdditiveByID(uint(storeAdditiveID), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
@@ -241,7 +242,7 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 		return
 	}
 
-	storeAdditive, err := h.service.GetStoreAdditiveByID(storeID, uint(storeAdditiveID))
+	storeAdditive, err := h.service.GetStoreAdditiveByID(uint(storeAdditiveID), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		if errors.Is(err, types.ErrStoreAdditiveNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404StoreAdditive)
@@ -275,19 +276,19 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 }
 
 func (h *StoreAdditiveHandler) GetStoreAdditiveByID(c *gin.Context) {
-	storeID, errH := h.franchiseeService.CheckFranchiseeStore(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-
 	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreAdditive)
 		return
 	}
 
-	additive, err := h.service.GetStoreAdditiveByID(storeID, uint(additiveID))
+	filter, errH := contexts.GetStoreContextFilter(c)
+	if errH != nil {
+		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		return
+	}
+
+	additive, err := h.service.GetStoreAdditiveByID(uint(additiveID), filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return

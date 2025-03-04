@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -24,7 +25,7 @@ type StoreAdditiveService interface {
 	GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]additiveTypes.AdditiveDTO, error)
 	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]types.StoreAdditiveDTO, error)
 	GetStoreAdditiveCategoriesByProductSize(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error)
-	GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*types.StoreAdditiveDetailsDTO, error)
+	GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*types.StoreAdditiveDetailsDTO, error)
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
 }
 
@@ -149,8 +150,8 @@ func (s *storeAdditiveService) GetStoreAdditivesByIDs(storeID uint, IDs []uint) 
 	return storeAdditiveDTOs, nil
 }
 
-func (s *storeAdditiveService) GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*types.StoreAdditiveDetailsDTO, error) {
-	storeAdditive, err := s.repo.GetStoreAdditiveByID(storeID, storeAdditiveID)
+func (s *storeAdditiveService) GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*types.StoreAdditiveDetailsDTO, error) {
+	storeAdditive, err := s.repo.GetStoreAdditiveByID(storeAdditiveID, filter)
 	if err != nil {
 		wrappedError := utils.WrapError("failed to retrieve store additive", err)
 		s.logger.Error(wrappedError)

@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/pkg/errors"
@@ -17,7 +18,7 @@ type StoreAdditiveRepository interface {
 	GetMissingStoreAdditiveIDsForProductSizes(storeID uint, productSizeIDs []uint) ([]uint, error)
 	CreateStoreAdditive(storeID uint, dto *types.CreateStoreAdditiveDTO) (uint, error)
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
-	GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*data.StoreAdditive, error)
+	GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
 	GetSufficientStoreAdditiveByID(storeID, storeAdditiveID uint, frozenStock map[uint]float64) (*data.StoreAdditive, error)
 	GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
@@ -207,17 +208,32 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 	return categories, nil
 }
 
-func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeID, storeAdditiveID uint) (*data.StoreAdditive, error) {
+func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error) {
 	var storeAdditive *data.StoreAdditive
 
-	err := r.db.Model(&data.StoreAdditive{}).
-		Where("store_id = ?", storeID).
-		Where("id = ?", storeAdditiveID).
+	query := r.db.Model(&data.StoreAdditive{}).
+		Where(&data.StoreAdditive{BaseEntity: data.BaseEntity{ID: storeAdditiveID}}).
 		Preload("Additive.Category").
 		Preload("Additive.Unit").
 		Preload("Additive.Ingredients.Ingredient.Unit").
-		Preload("Additive.Ingredients.Ingredient.IngredientCategory").
-		First(&storeAdditive).Error
+		Preload("Additive.Ingredients.Ingredient.IngredientCategory")
+
+	if filter != nil {
+		if filter.StoreID != nil {
+			query.Where(&data.StoreAdditive{StoreID: *filter.StoreID})
+		}
+
+		if filter.FranchiseeID != nil {
+			query.Joins("JOIN stores ON stores.id = store_additives.store_id").
+				Where(&data.StoreAdditive{
+					Store: data.Store{
+						FranchiseeID: filter.FranchiseeID,
+					},
+				})
+		}
+	}
+
+	err := query.First(&storeAdditive).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrStoreAdditiveNotFound
