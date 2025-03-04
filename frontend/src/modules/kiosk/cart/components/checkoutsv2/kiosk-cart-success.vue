@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import QRCodeVue3 from 'qrcode-vue3'
-import { defineEmits, defineProps } from 'vue'
 
 // Props & Emits
-const props = defineProps<{
+defineProps<{
   isOpen: boolean;
   qrCodeUrl: string;
 }>();
