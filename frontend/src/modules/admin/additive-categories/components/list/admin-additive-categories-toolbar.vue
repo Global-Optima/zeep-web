@@ -15,7 +15,12 @@
 
 		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<Button variant="outline" disabled> Экспорт </Button>
+			<Button
+				variant="outline"
+				disabled
+			>
+				Экспорт
+			</Button>
 			<Button @click="addProductCategory"> Добавить </Button>
 		</div>
 	</div>
@@ -33,8 +38,9 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const props = defineProps<{ filter: AdditiveCategoriesFilterQuery }>()
-const emit = defineEmits(['update:filter'])
-
+const emit = defineEmits<{
+  (event: 'update:filter', value: AdditiveCategoriesFilterQuery): void
+}>()
 const localFilter = ref({ ...props.filter })
 
 const searchTerm = ref(localFilter.value.search || '')

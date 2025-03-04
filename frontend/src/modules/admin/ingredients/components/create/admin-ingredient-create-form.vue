@@ -244,8 +244,8 @@ function selectUnit(unit: UnitDTO) {
 				<Card>
 					<!-- Category Card -->
 					<CardHeader>
-						<CardTitle>Размер</CardTitle>
-						<CardDescription>Выберите размер ингредиента</CardDescription>
+						<CardTitle>Единица измерения</CardTitle>
+						<CardDescription>Выберите единицу измерения ингредиента</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<FormField name="categoryId">

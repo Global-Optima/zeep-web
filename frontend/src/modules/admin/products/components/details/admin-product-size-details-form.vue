@@ -275,13 +275,35 @@ function selectUnit(unit: UnitDTO) {
 							</FormItem>
 						</FormField>
 
+						<FormField name="unitId">
+							<FormItem class="flex flex-col gap-1">
+								<FormLabel>Единица измерения</FormLabel>
+								<FormControl>
+									<div
+										@click="!readonly && (openUnitDialog = true)"
+										class="flex justify-between items-center gap-4 px-4 py-2 border rounded-md text-sm"
+										:class="{ 'cursor-pointer': !readonly }"
+									>
+										{{ selectedUnit?.name || 'Не выбрана' }}
+										<ChevronDown
+											v-if="!readonly"
+											class="w-5 h-5 text-gray-500"
+										/>
+									</div>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+
 						<!-- Size -->
 						<FormField
 							name="size"
 							v-slot="{ componentField }"
 						>
 							<FormItem class="flex-1">
-								<FormLabel>Размер</FormLabel>
+								<FormLabel>
+									Размер ({{ selectedUnit?.name.toLowerCase() || 'Не выбрана' }})
+								</FormLabel>
 								<FormControl>
 									<Input
 										type="number"
@@ -308,26 +330,6 @@ function selectUnit(unit: UnitDTO) {
 										placeholder="Введите цену"
 										:readonly="readonly"
 									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-
-						<FormField name="unitId">
-							<FormItem class="flex flex-col gap-1">
-								<FormLabel>Единица измерения</FormLabel>
-								<FormControl>
-									<div
-										@click="!readonly && (openUnitDialog = true)"
-										class="flex justify-between items-center gap-4 px-4 py-2 border rounded-md text-sm"
-										:class="{ 'cursor-pointer': !readonly }"
-									>
-										{{ selectedUnit?.name || 'Размер не выбран' }}
-										<ChevronDown
-											v-if="!readonly"
-											class="w-5 h-5 text-gray-500"
-										/>
-									</div>
 								</FormControl>
 								<FormMessage />
 							</FormItem>
