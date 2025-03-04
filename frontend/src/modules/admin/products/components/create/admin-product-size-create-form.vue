@@ -247,7 +247,7 @@ function selectUnit(unit: UnitDTO) {
 									@click="openUnitDialog = true"
 									class="flex justify-between items-center gap-4 px-4 py-2 border rounded-md text-sm"
 								>
-									{{ selectedUnit?.name || 'Единица измерения не выбрана' }}
+									{{ selectedUnit?.name || 'Не выбрана' }}
 
 									<ChevronDown class="w-5 h-5 text-gray-500" />
 								</div>
@@ -260,7 +260,9 @@ function selectUnit(unit: UnitDTO) {
 							v-slot="{ componentField }"
 						>
 							<FormItem class="flex-1">
-								<FormLabel>Размер ({{ selectedUnit?.name.toLowerCase() || 'Не выбран'}})</FormLabel>
+								<FormLabel>
+									Размер ({{ selectedUnit?.name.toLowerCase() || 'Не выбрана' }})
+								</FormLabel>
 								<FormControl>
 									<Input
 										type="number"
