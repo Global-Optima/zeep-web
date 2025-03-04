@@ -15,6 +15,7 @@ export interface AdditiveFilterQuery extends PaginationParams {
 	maxPrice?: number
 	categoryId?: number
 	productSizeId?: number
+	storeId?: number
 }
 
 // Base DTOs

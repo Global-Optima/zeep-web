@@ -16,7 +16,7 @@
 
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите склад</DialogTitle>
+				<DialogTitle>Выберите кафе</DialogTitle>
 			</DialogHeader>
 
 			<div>
@@ -32,15 +32,15 @@
 				<!-- Warehouse List -->
 				<div class="max-h-[50vh] overflow-y-auto">
 					<p
-						v-if="!warehouses || warehouses.data.length === 0"
+						v-if="!stores || stores.data.length === 0"
 						class="py-4 text-muted-foreground text-center"
 					>
-						Склады не найдены
+						Кафе не найдены
 					</p>
 
 					<ul v-else>
 						<li
-							v-for="warehouse in warehouses.data"
+							v-for="warehouse in stores.data"
 							:key="warehouse.id"
 							:class="[
                 'flex items-center px-3 py-2 rounded-lg cursor-pointer',
@@ -90,60 +90,67 @@ import { Input } from '@/core/components/ui/input'
 import { ChevronDown } from 'lucide-vue-next'
 
 // Types and Services
-import type { WarehouseDTO, WarehouseFilter } from '@/modules/admin/warehouses/models/warehouse.model'
-import { warehouseService } from '@/modules/admin/warehouses/services/warehouse.service'
+import type { StoresFilter } from '@/modules/admin/stores/models/stores-dto.model'
+import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
+import { storesService } from '@/modules/admin/stores/services/stores.service'
 
 // Props and Emits
-const {selectedWarehouse,initialFilter, selectFirst = true} = defineProps<{
-  selectedWarehouse?: WarehouseDTO
-  initialFilter?: WarehouseFilter
+const {selectedStore,initialFilter, selectFirst = true} = defineProps<{
+  selectedStore?: StoreDTO
+  initialFilter?: StoresFilter
   selectFirst?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'select', warehouse: WarehouseDTO): void
+  (e: 'select', store: StoreDTO): void
 }>()
 
 // State Management
 const isOpen = ref(false)
 const searchTerm = ref('')
 const debouncedSearchTerm = useDebounce(searchTerm, 500)
-const filter = ref<WarehouseFilter>({
+const filter = ref<StoresFilter>({
   page: 1,
   pageSize: 10,
   search: initialFilter?.search ?? ''
 })
 
 // Query for Warehouses
-const { data: warehouses } = useQuery({
-queryKey: computed(() => ['admin-warehouses', filter.value]),
-queryFn: () => warehouseService.getPaginated(filter.value),
+const { data: stores } = useQuery({
+  queryKey: computed(() => [
+  'admin-stores',
+  filter.value
+]),
+  queryFn: () => storesService.getPaginated(filter.value),
 })
 
 // Computed Properties
 const canLoadMore = computed(() => {
-  if (!warehouses.value) return false
-  const pagination = warehouses.value.pagination
+  if (!stores.value) return false
+  const pagination = stores.value.pagination
   return pagination.pageSize < pagination.totalCount
 })
 
-const buttonLabel = computed(() => selectedWarehouse?.name ?? "Склад не выбран")
+const buttonLabel = computed(() => selectedStore?.name ?? "Кафе не выбран")
 
-const selectedWarehouseId = computed(() => selectedWarehouse?.id)
+const selectedWarehouseId = computed(() => selectedStore?.id)
 
+// Watchers
 watch(debouncedSearchTerm, (newValue) => {
   filter.value.page = 1
   filter.value.search = newValue.trim()
 })
 
-watch(warehouses, (newWarehouses) => {
-  if (selectFirst && newWarehouses?.data.length) {
-    selectWarehouse(newWarehouses.data[0])
+
+watch(stores, (newStores) => {
+  if (selectFirst && newStores?.data.length) {
+    selectWarehouse(newStores.data[0])
   }
 }, { immediate: true })
 
+// Methods
 function loadMore() {
-  if (!warehouses.value) return
+  if (!stores.value) return
   if (filter.value.page) {
     filter.value = {
     ...filter.value,
@@ -152,7 +159,7 @@ function loadMore() {
   }
 }
 
-function selectWarehouse(warehouse: WarehouseDTO) {
+function selectWarehouse(warehouse: StoreDTO) {
   emit('select', warehouse)
   isOpen.value = false
 }

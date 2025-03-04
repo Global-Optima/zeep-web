@@ -92,25 +92,45 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Заказы',
 		routeKey: 'ADMIN_STORE_ORDERS',
 		icon: ShoppingCart,
-		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
+		accessRoles: [
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.FRANCHISEE_MANAGER,
+			EmployeeRole.FRANCHISEE_OWNER,
+		],
 	},
 	{
 		name: 'Склад',
 		routeKey: 'ADMIN_STORE_STOCKS',
 		icon: Warehouse,
-		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
+		accessRoles: [
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.FRANCHISEE_MANAGER,
+			EmployeeRole.FRANCHISEE_OWNER,
+		],
 	},
 	{
 		name: 'Товары',
 		routeKey: 'ADMIN_STORE_PRODUCTS',
 		icon: Package,
-		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
+		accessRoles: [
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.FRANCHISEE_MANAGER,
+			EmployeeRole.FRANCHISEE_OWNER,
+		],
 	},
 	{
 		name: 'Топпинги',
 		routeKey: 'ADMIN_STORE_ADDITIVES',
 		icon: ListPlus,
-		accessRoles: [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA],
+		accessRoles: [
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.FRANCHISEE_MANAGER,
+			EmployeeRole.FRANCHISEE_OWNER,
+		],
 	},
 	{
 		name: 'Кафе',
@@ -160,6 +180,8 @@ export const adminNavItems: SidebarNavItem[] = [
 			EmployeeRole.STORE_MANAGER,
 			EmployeeRole.BARISTA,
 			EmployeeRole.REGION_WAREHOUSE_MANAGER,
+			EmployeeRole.FRANCHISEE_MANAGER,
+			EmployeeRole.FRANCHISEE_OWNER,
 		],
 	},
 	{

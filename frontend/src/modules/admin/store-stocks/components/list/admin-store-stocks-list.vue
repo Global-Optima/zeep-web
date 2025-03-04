@@ -6,7 +6,10 @@
 				<TableHead>Категория</TableHead>
 				<TableHead>Количество</TableHead>
 				<TableHead class="hidden md:table-cell">Статус</TableHead>
-				<TableHead class="w-12"></TableHead>
+				<TableHead
+					class="w-12"
+					v-if="showForStores"
+				></TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -42,7 +45,7 @@
 				</TableCell>
 
 				<!-- "Add to cart" button -->
-				<TableCell>
+				<TableCell v-if="showForStores">
 					<!-- Stop event so row click doesn't fire -->
 					<Button
 						size="icon"
@@ -101,6 +104,8 @@ import { PackagePlus } from 'lucide-vue-next'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { stockRequestsService } from '@/modules/admin/stock-requests/services/stock-requests.service'
 
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminStockMaterialWithQuantitySelectDialog from '@/modules/admin/stock-materials/components/admin-stock-material-with-quantity-select-dialog.vue'
 import type { StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
@@ -114,6 +119,8 @@ const router = useRouter()
 function handleRowClick(stockId: number): void {
   router.push(`/admin/store-stocks/${stockId}`)
 }
+
+const showForStores = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
 
 
 type IngredientStatus = 'in_stock' | 'low_stock' | 'out_of_stock'

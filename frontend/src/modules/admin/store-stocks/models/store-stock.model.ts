@@ -1,3 +1,4 @@
+import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
 
 export interface StoreWarehouseStockDTO {
@@ -9,11 +10,10 @@ export interface StoreWarehouseStockDTO {
 	ingredient: IngredientsDTO
 }
 
-export interface GetStoreWarehouseStockFilterQuery {
+export interface GetStoreWarehouseStockFilterQuery extends PaginationParams {
+	storeId?: number
 	search?: string
 	lowStockOnly?: boolean
-	page?: number
-	pageSize?: number
 }
 
 export interface AddStoreWarehouseStockDTO {
