@@ -22,8 +22,10 @@ const (
 	LogCompress     = true // Compress old log files
 )
 
-var logger *zap.Logger
-var sugaredLogger *zap.SugaredLogger
+var (
+	logger        *zap.Logger
+	sugaredLogger *zap.SugaredLogger
+)
 
 // InitLogger initializes a single logger for the entire application
 func InitLogger(logLevel, logFile string, dev bool) error {
@@ -53,6 +55,7 @@ func InitLogger(logLevel, logFile string, dev bool) error {
 
 	// Create the final logger
 	logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	defer logger.Sync() // ensure logs are flushed before exit
 	zap.ReplaceGlobals(logger)
 
 	// Create a sugared logger for structured logging
@@ -109,12 +112,13 @@ func buildFileEncoder() zapcore.Encoder {
 func ZapLoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
+
+		c.Next() // process the request
+
 		path := c.FullPath()
 		if path == "" {
 			path = c.Request.URL.Path // fallback if no named route
 		}
-
-		c.Next() // process the request
 
 		latency := time.Since(start)
 		status := c.Writer.Status()
@@ -156,8 +160,16 @@ func ZapLoggerMiddleware() gin.HandlerFunc {
 			fields = append(fields, zap.Int64("req_size", c.Request.ContentLength))
 		}
 
+		if len(c.Errors) > 0 {
+			for _, e := range c.Errors {
+				fields = append(fields, zap.Error(e.Err))
+			}
+			logger.Error("HTTP request error", fields...)
+			return // No need to log info/warn if there's an error
+		}
+
 		msg := fmt.Sprintf("%s %s", method, path)
-		logMessage(msg, lvl, fields)
+		go logMessage(msg, lvl, fields) // asynchronous logging🤩
 	}
 }
 

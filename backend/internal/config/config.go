@@ -23,6 +23,9 @@ type Config struct {
 	IsDevelopment bool
 	IsTest        bool
 
+	LogLevel string `mapstructure:"LOG_LEVEL"`
+	LogPath  string `mapstructure:"LOG_PATH"`
+
 	Database  DatabaseConfig  `mapstructure:",squash"`
 	Server    ServerConfig    `mapstructure:",squash"`
 	JWT       JWTConfig       `mapstructure:",squash"`
