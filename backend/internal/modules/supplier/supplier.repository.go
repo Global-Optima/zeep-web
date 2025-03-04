@@ -38,13 +38,16 @@ func (r *supplierRepository) CreateSupplier(supplier *data.Supplier) error {
 func (r *supplierRepository) GetSupplierByID(id uint) (*data.Supplier, error) {
 	var supplier data.Supplier
 	err := r.db.First(&supplier, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, types.ErrSupplierNotFound
+	}
 	return &supplier, err
 }
 
 func (r *supplierRepository) UpdateSupplier(id uint, dto *data.Supplier) error {
 	if err := r.db.Model(&data.Supplier{}).Where("id = ?", id).Updates(dto).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("supplier not found")
+			return types.ErrSupplierNotFound
 		}
 		return err
 	}

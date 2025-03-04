@@ -49,7 +49,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	storeProductSizeID, err := strconv.ParseUint(c.Param("storeProductSizeId"), 10, 64)
+	storeProductSizeID, err := utils.ParseParam(c, "storeProductSizeId")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return

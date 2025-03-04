@@ -2,7 +2,6 @@ package stockMaterialCategory
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -55,7 +54,7 @@ func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
 }
 
 func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterialCategory)
 		return
@@ -95,7 +94,7 @@ func (h *StockMaterialCategoryHandler) GetAll(c *gin.Context) {
 }
 
 func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterialCategory)
 		return
@@ -132,7 +131,7 @@ func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
 }
 
 func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterialCategory)
 		return
