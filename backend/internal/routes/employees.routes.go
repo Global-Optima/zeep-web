@@ -377,8 +377,6 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 			stockRoutes.POST("/receive", middleware.EmployeeRoleMiddleware(data.WarehousePermissions...), warehouseStockHandler.ReceiveInventory)          // Warehouse all roles
 			stockRoutes.GET("/deliveries", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveries)       // Region and warehouses
 			stockRoutes.GET("/deliveries/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), warehouseStockHandler.GetDeliveryByID) // Region and warehouses
-
-			stockRoutes.POST("/transfer", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), warehouseStockHandler.TransferInventory) // region manager
 		}
 	}
 }

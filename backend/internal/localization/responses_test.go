@@ -1,10 +1,11 @@
 package localization
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {

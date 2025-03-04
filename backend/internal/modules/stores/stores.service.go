@@ -3,6 +3,7 @@ package stores
 import (
 	"errors"
 	"fmt"
+
 	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
@@ -96,7 +97,7 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 	store, err := s.repo.GetStoreByID(storeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("store not found")
+			return nil, types.ErrStoreNotFound
 		}
 		return nil, err
 	}

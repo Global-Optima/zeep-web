@@ -2,7 +2,6 @@ package supplier
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
@@ -30,15 +29,15 @@ func NewSupplierService(repo SupplierRepository) SupplierService {
 func (s *supplierService) CreateSupplier(dto types.CreateSupplierDTO) (*types.SupplierResponse, error) {
 	exists, err := s.repo.ExistsByContactPhone(dto.ContactPhone)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check supplier existence: %w", err)
+		return nil, types.ErrFailedRetrieveSupplier
 	}
 	if exists {
-		return nil, errors.New("a supplier with this contact phone already exists")
+		return nil, types.ErrSupplierExists
 	}
 
 	supplier := types.ToSupplier(dto)
 	if err := s.repo.CreateSupplier(&supplier); err != nil {
-		return nil, err
+		return nil, types.ErrFailedCreateSupplier
 	}
 
 	response := types.ToSupplierResponse(supplier)
@@ -48,6 +47,9 @@ func (s *supplierService) CreateSupplier(dto types.CreateSupplierDTO) (*types.Su
 func (s *supplierService) GetSupplierByID(id uint) (types.SupplierResponse, error) {
 	supplier, err := s.repo.GetSupplierByID(id)
 	if err != nil {
+		if errors.Is(err, types.ErrSupplierNotFound) {
+			return types.SupplierResponse{}, types.ErrSupplierNotFound
+		}
 		return types.SupplierResponse{}, err
 	}
 	return types.ToSupplierResponse(*supplier), nil
@@ -72,7 +74,7 @@ func (s *supplierService) UpdateSupplier(id uint, dto types.UpdateSupplierDTO) e
 	}
 
 	if err := s.repo.UpdateSupplier(id, supplier); err != nil {
-		return fmt.Errorf("failed to update supplier with ID %d: %w", id, err)
+		return types.ErrFailedUpdateSupplier
 	}
 
 	return nil
@@ -85,7 +87,7 @@ func (s *supplierService) DeleteSupplier(id uint) error {
 func (s *supplierService) GetSuppliers(filter types.SuppliersFilter) ([]types.SupplierResponse, error) {
 	suppliers, err := s.repo.GetAllSuppliers(filter)
 	if err != nil {
-		return nil, err
+		return nil, types.ErrFailedListSupplier
 	}
 	responses := make([]types.SupplierResponse, len(suppliers))
 	for i, supplier := range suppliers {
@@ -109,7 +111,7 @@ func (s *supplierService) UpsertMaterialsForSupplier(supplierID uint, dto types.
 	}
 
 	if err := s.repo.UpsertSupplierMaterials(supplierID, materials); err != nil {
-		return fmt.Errorf("failed to upsert materials: %w", err)
+		return types.ErrFailedToUpsertMaterials
 	}
 
 	return nil
@@ -118,7 +120,7 @@ func (s *supplierService) UpsertMaterialsForSupplier(supplierID uint, dto types.
 func (s *supplierService) GetMaterialsBySupplier(supplierID uint) ([]types.SupplierMaterialResponse, error) {
 	materials, err := s.repo.GetMaterialsBySupplier(supplierID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch materials: %w", err)
+		return nil, types.ErrFailedToFetchMaterials
 	}
 
 	return types.ToSupplierMaterialResponses(materials), nil
