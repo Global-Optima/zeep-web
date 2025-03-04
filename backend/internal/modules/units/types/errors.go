@@ -22,6 +22,7 @@ var (
 // Module errors
 var (
 	ErrUnitNotFound        = moduleErrors.NewModuleError(errors.New("unit not found"))
+	ErrUnitIsInUse         = moduleErrors.NewModuleError(errors.New("unit is in use"))
 	ErrNothingToUpdate     = moduleErrors.NewModuleError(errors.New("nothing to update"))
 	ErrFailedToApplyFilter = moduleErrors.NewModuleError(errors.New("failed to apply filter"))
 )

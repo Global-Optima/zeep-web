@@ -2,10 +2,11 @@ package units
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"net/http"
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -26,13 +27,13 @@ func NewUnitHandler(service UnitService, auditService audit.AuditService) *UnitH
 func (h *UnitHandler) CreateUnit(c *gin.Context) {
 	var dto types.CreateUnitDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	id, err := h.service.Create(dto)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500UnitCreate)
 		return
 	}
 
@@ -46,19 +47,19 @@ func (h *UnitHandler) CreateUnit(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "unit created successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response201Unit)
 }
 
 func (h *UnitHandler) GetAllUnits(c *gin.Context) {
 	var filter types.UnitFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Unit{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
 	}
 
 	units, err := h.service.GetAll(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500UnitGet)
 		return
 	}
 
@@ -68,13 +69,13 @@ func (h *UnitHandler) GetAllUnits(c *gin.Context) {
 func (h *UnitHandler) GetUnitByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
 	}
 
 	unit, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500UnitGet)
 		return
 	}
 
@@ -84,24 +85,24 @@ func (h *UnitHandler) GetUnitByID(c *gin.Context) {
 func (h *UnitHandler) UpdateUnit(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
 	}
 
 	var dto types.UpdateUnitDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
 	}
 
 	unit, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500UnitUpdate)
 		return
 	}
 
 	if err := h.service.Update(uint(id), dto); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500UnitUpdate)
 		return
 	}
 
@@ -115,24 +116,28 @@ func (h *UnitHandler) UpdateUnit(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200UnitUpdate)
 }
 
 func (h *UnitHandler) DeleteUnit(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
 	}
 
 	unit, err := h.service.GetByID(uint(id))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500UnitDelete)
 		return
 	}
 
 	if err := h.service.Delete(uint(id)); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		if errors.Is(err, types.ErrUnitIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409UnitDeleteInUse)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500UnitDelete)
 		return
 	}
 
@@ -146,5 +151,5 @@ func (h *UnitHandler) DeleteUnit(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200UnitDelete)
 }

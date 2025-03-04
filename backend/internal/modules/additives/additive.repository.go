@@ -269,7 +269,36 @@ func (r *additiveRepository) UpdateAdditiveCategory(category *data.AdditiveCateg
 }
 
 func (r *additiveRepository) DeleteAdditiveCategory(categoryID uint) error {
-	return r.db.Where("id = ?", categoryID).Delete(&data.AdditiveCategory{}).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkAdditiveCategoryReferences(tx, categoryID); err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&data.AdditiveCategory{}, categoryID).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func checkAdditiveCategoryReferences(db *gorm.DB, additiveCategoryID uint) error {
+	var additiveCategory data.AdditiveCategory
+
+	err := db.
+		Preload("Additives", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		First(&additiveCategory, additiveCategoryID).Error
+	if err != nil {
+		return err
+	}
+
+	if len(additiveCategory.Additives) > 0 {
+		return types.ErrAdditiveCategoryIsInUse
+	}
+
+	return nil
 }
 
 func (r *additiveRepository) GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error) {

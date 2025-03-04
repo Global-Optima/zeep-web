@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	ErrAdditiveAlreadyExists = moduleErrors.NewModuleError(errors.New("additive already exists"))
-	ErrAdditiveNotFound      = moduleErrors.NewModuleError(errors.New("additive not found"))
+	ErrAdditiveCategoryIsInUse = moduleErrors.NewModuleError(errors.New("additive category is in use"))
+	ErrAdditiveAlreadyExists   = moduleErrors.NewModuleError(errors.New("additive already exists"))
+	ErrAdditiveNotFound        = moduleErrors.NewModuleError(errors.New("additive not found"))
 
 	ErrAdditiveCategoryNotFound = moduleErrors.NewModuleError(errors.New("additive category not found"))
 )

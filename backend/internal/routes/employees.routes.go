@@ -384,10 +384,12 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 }
 
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
+	var stockRequestReadPermissions = append(data.StoreAndWarehousePermissions, data.RegionPermissions...)
+
 	router := r.EmployeeRoutes.Group("/stock-requests")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetStockRequests)                        // Store and warehouses all roles
-		router.GET("/:requestId", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetStockRequestByID)          // Store and warehouses all roles
+		router.GET("", middleware.EmployeeRoleMiddleware(stockRequestReadPermissions...), handler.GetStockRequests)                              // Store and warehouses all roles
+		router.GET("/:requestId", middleware.EmployeeRoleMiddleware(stockRequestReadPermissions...), handler.GetStockRequestByID)                // Store and warehouses all roles
 		router.GET("/current", middleware.EmployeeRoleMiddleware(data.StoreAndWarehousePermissions...), handler.GetLastCreatedStockRequest)      // Store and warehouses all roles
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateStockRequest)                                 // Store all roles
 		router.POST("/add-material-to-latest-cart", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.AddStockMaterialToCart) // Store all roles

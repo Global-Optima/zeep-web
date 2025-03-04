@@ -82,12 +82,14 @@ type Ingredient struct {
 	Carbs                  float64                 `gorm:"type:decimal(5,2);check:carbs >= 0" sort:"carbs"`
 	Proteins               float64                 `gorm:"type:decimal(5,2);check:proteins >= 0" sort:"proteins"`
 	ExpirationInDays       int                     `gorm:"not null;default:0" sort:"expirationInDays"` // Changed to int
-	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID"`
-	UnitID                 uint                    `gorm:"not null"` // Link to Unit
+	UnitID                 uint                    `gorm:"not null"`                                   // Link to Unit
 	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 	CategoryID             uint                    `gorm:"not null"` // Link to IngredientCategory
 	IngredientCategory     IngredientCategory      `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
 	StockMaterials         []StockMaterial         `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
+	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID"`
+	StoreStocks            []StoreStock            `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	AdditiveIngredients    []AdditiveIngredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 }
 
 type IngredientCategory struct {

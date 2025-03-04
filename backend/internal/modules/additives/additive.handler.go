@@ -126,6 +126,10 @@ func (h *AdditiveHandler) DeleteAdditiveCategory(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteAdditiveCategory(uint(categoryID)); err != nil {
+		if errors.Is(err, types.ErrAdditiveCategoryIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409AdditiveCategoryDeleteInUse)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveCategoryDelete)
 		return
 	}
