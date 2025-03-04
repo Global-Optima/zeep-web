@@ -292,6 +292,16 @@
     "200-regionEmployee-update": "Region employee successfully updated.",
     "200-regionEmployee-delete": "Region employee successfully deleted.",
 
+    "500-region-create": "An unexpected error occurred while creating region. Please try again later.",
+    "500-region-update": "An unexpected error occurred while updating region. Please try again later.",
+    "500-region-get": "An unexpected error occurred while fetching region data. Please try again later.",
+    "500-region-delete": "An unexpected error occurred while deleting region. Please try again later.",
+    "404-region": "Region not found.",
+    "400-region": "Invalid region data provided. Please check and try again.",
+    "201-region": "Region successfully created.",
+    "200-region-update": "Region successfully updated.",
+    "200-region-delete": "Region successfully deleted.",
+
     "500-adminEmployee-get": "An unexpected error occurred while fetching admin employee data. Please try again later.",
     "404-adminEmployee": "Admin employee not found.",
     "403-adminEmployee": "Access to the admin employee is forbidden.",
