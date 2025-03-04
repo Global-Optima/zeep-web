@@ -6,5 +6,6 @@ import (
 )
 
 var (
-	ErrValidation = moduleErrors.NewModuleError(errors.New("input validation failed"))
+	ErrValidation        = moduleErrors.NewModuleError(errors.New("input validation failed"))
+	ErrIngredientIsInUse = moduleErrors.NewModuleError(errors.New("ingredient is in use"))
 )

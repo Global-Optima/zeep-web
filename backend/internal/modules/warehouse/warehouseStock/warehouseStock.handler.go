@@ -208,13 +208,13 @@ func (h *WarehouseStockHandler) GetStockMaterialDetails(c *gin.Context) {
 		return
 	}
 
-	warehouseID, errH := contexts.GetWarehouseId(c)
+	filter, errH := contexts.GetWarehouseContextFilter(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	details, err := h.service.GetStockMaterialDetails(uint(stockMaterialID), warehouseID)
+	details, err := h.service.GetStockMaterialDetails(uint(stockMaterialID), filter)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return

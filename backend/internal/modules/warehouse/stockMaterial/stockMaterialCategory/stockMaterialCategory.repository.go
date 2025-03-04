@@ -74,12 +74,34 @@ func (r *stockMaterialCategoryRepository) Update(id uint, updates data.StockMate
 }
 
 func (r *stockMaterialCategoryRepository) Delete(id uint) error {
-	result := r.db.Delete(&data.StockMaterialCategory{}, id)
-	if result.Error != nil {
-		return result.Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkStockMaterialCategoryReferences(tx, id); err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&data.StockMaterialCategory{}, id).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func checkStockMaterialCategoryReferences(db *gorm.DB, categoryID uint) error {
+	var category data.StockMaterialCategory
+
+	err := db.
+		Preload("StockMaterials", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		First(&category, categoryID).Error
+	if err != nil {
+		return err
 	}
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
+
+	if len(category.StockMaterials) > 0 {
+		return types.ErrStockMaterialCategoryIsInUse
 	}
+
 	return nil
 }

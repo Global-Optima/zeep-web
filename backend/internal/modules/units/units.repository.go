@@ -2,10 +2,10 @@ package units
 
 import (
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -53,6 +53,9 @@ func (r *unitRepository) GetByID(id uint) (*data.Unit, error) {
 	var unit data.Unit
 	err := r.db.First(&unit, id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrUnitNotFound
+		}
 		return nil, err
 	}
 	return &unit, nil
@@ -63,5 +66,44 @@ func (r *unitRepository) Update(id uint, updates data.Unit) error {
 }
 
 func (r *unitRepository) Delete(id uint) error {
-	return r.db.Delete(&data.Unit{}, id).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkUnitReferences(tx, id); err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&data.Unit{}, id).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func checkUnitReferences(db *gorm.DB, unitID uint) error {
+	var unit data.Unit
+
+	err := db.
+		Preload("StockMaterials", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		Preload("Additives", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		Preload("ProductSizes", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		Preload("Ingredients", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id").Limit(1)
+		}).
+		First(&unit, unitID).Error
+	if err != nil {
+		return err
+	}
+
+	if len(unit.StockMaterials) > 0 || len(unit.Additives) > 0 ||
+		len(unit.ProductSizes) > 0 || len(unit.Ingredients) > 0 {
+		return types.ErrUnitIsInUse
+	}
+
+	return nil
 }
