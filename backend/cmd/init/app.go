@@ -98,6 +98,9 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		MaxAge:           12 * time.Hour,
 	}))
 
+	utils.InitValidators()
+	router.Use(middleware.SanitizeMiddleware())
+
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
 
 	router.Use(func(c *gin.Context) {
