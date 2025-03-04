@@ -1,7 +1,7 @@
 <template>
 	<div class="flex justify-center items-center w-full h-[80vh] overflow-hidden">
 		<div
-			class="flex flex-col justify-center items-center space-y-8 bg-white shadow-2xl shadow-gray-200 mx-auto px-10 py-6 rounded-[36px] w-fit"
+			class="flex flex-col justify-center items-center space-y-6 bg-white shadow-2xl shadow-gray-200 mx-auto px-10 py-6 rounded-[36px] w-fit"
 		>
 			<!-- Profile Icon with Initials -->
 			<div
