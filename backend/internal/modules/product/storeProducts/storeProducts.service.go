@@ -5,6 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	storeAdditivesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
@@ -21,7 +22,7 @@ const DEFAULT_LOW_STOCK_THRESHOLD = 50
 
 type StoreProductService interface {
 	GetStoreProductCategories(storeID uint) ([]categoriesTypes.ProductCategoryDTO, error)
-	GetStoreProductById(storeID, storeProductID uint) (*types.StoreProductDetailsDTO, error)
+	GetStoreProductById(storeProductID uint, filter *contexts.StoreContextFilter) (*types.StoreProductDetailsDTO, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]types.StoreProductDetailsDTO, error)
 	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error)
@@ -78,8 +79,8 @@ func (s *storeProductService) GetStoreProductCategories(storeID uint) ([]categor
 	return dtos, nil
 }
 
-func (s *storeProductService) GetStoreProductById(storeID uint, storeProductID uint) (*types.StoreProductDetailsDTO, error) {
-	storeProduct, err := s.repo.GetStoreProductById(storeID, storeProductID)
+func (s *storeProductService) GetStoreProductById(storeProductID uint, filter *contexts.StoreContextFilter) (*types.StoreProductDetailsDTO, error) {
+	storeProduct, err := s.repo.GetStoreProductById(storeProductID, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to get store product by ID", err)
 		s.logger.Error(wrappedErr)
@@ -283,7 +284,7 @@ func (s *storeProductService) UpdateStoreProduct(storeID, storeProductID uint, d
 			inputSizeIDs[i] = productSize.ProductSizeID
 		}
 
-		storeProductDetails, err := s.repo.GetStoreProductById(storeID, storeProductID)
+		storeProductDetails, err := s.repo.GetStoreProductById(storeProductID, &contexts.StoreContextFilter{StoreID: &storeID})
 		if err != nil {
 			wrappedErr := utils.WrapError("failed to update store product", err)
 			s.logger.Error(wrappedErr)

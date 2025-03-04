@@ -3,6 +3,7 @@ package orders
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -27,7 +28,7 @@ type OrderRepository interface {
 	CheckAllSubordersCompleted(orderID, subOrderID uint) (bool, error)
 	GetOrderBySubOrderID(subOrderID uint) (*data.Order, error)
 
-	GetOrderDetails(orderID uint) (*data.Order, error)
+	GetOrderDetails(orderID uint, filter *contexts.StoreContextFilter) (*data.Order, error)
 	GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error)
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
 
@@ -336,15 +337,35 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 	return &order, nil
 }
 
-func (r *orderRepository) GetOrderDetails(orderID uint) (*data.Order, error) {
+func (r *orderRepository) GetOrderDetails(orderID uint, filter *contexts.StoreContextFilter) (*data.Order, error) {
 	var order data.Order
 
-	err := r.db.Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
+	query := r.db.Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("DeliveryAddress").
-		Where("id = ?", orderID).
-		First(&order).Error
+		Where(&data.Order{
+			BaseEntity: data.BaseEntity{
+				ID: orderID,
+			},
+		})
+
+	if filter != nil {
+		if filter.StoreID != nil {
+			query.Where(&data.Order{StoreID: *filter.StoreID})
+		}
+
+		if filter.FranchiseeID != nil {
+			query.Joins("JOIN stores ON stores.id = orders.store_id").
+				Where(&data.Order{
+					Store: data.Store{
+						FranchiseeID: filter.FranchiseeID,
+					},
+				})
+		}
+	}
+
+	err := query.First(&order).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

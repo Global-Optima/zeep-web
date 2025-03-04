@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -21,7 +22,7 @@ type StoreStockRepository interface {
 	AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error)
 	GetStockList(storeID uint, query *types.GetStockFilterQuery) ([]data.StoreStock, error)
 	GetStockListByIDs(storeID uint, IDs []uint) ([]data.StoreStock, error)
-	GetStockById(storeID, stockID uint) (*data.StoreStock, error)
+	GetStockById(stockID uint, filter *contexts.StoreContextFilter) (*data.StoreStock, error)
 	GetAllStockList(storeID uint) ([]data.StoreStock, error)
 	UpdateStock(storeID, stockID uint, dto *types.UpdateStoreStockDTO) error
 	DeleteStockById(storeID, stockID uint) error
@@ -244,28 +245,38 @@ func (r *storeStockRepository) GetStockListByIDs(storeID uint, stockIds []uint) 
 	return storeWarehouseStockList, nil
 }
 
-func (r *storeStockRepository) GetStockById(storeId, stockId uint) (*data.StoreStock, error) {
+func (r *storeStockRepository) GetStockById(stockId uint, filter *contexts.StoreContextFilter) (*data.StoreStock, error) {
 	var StoreWarehouseStock data.StoreStock
-
-	if storeId == 0 {
-		return nil, fmt.Errorf("store stock id cannot be 0")
-	}
 
 	if stockId == 0 {
 		return nil, fmt.Errorf("store stock id cannot be 0")
 	}
 
-	dbQuery := r.db.Model(&data.StoreStock{}).
+	query := r.db.Model(&data.StoreStock{}).
+		Where(&data.StoreStock{BaseEntity: data.BaseEntity{ID: stockId}}).
 		Preload("Store").
 		Preload("Store.Warehouse").
 		Preload("Ingredient").
 		Preload("Ingredient.Unit").
 		Preload("Ingredient.IngredientCategory")
 
-	if err := dbQuery.
-		Where("store_id = ?", storeId).
-		Where("store_stocks.id = ?", stockId).
-		First(&StoreWarehouseStock).Error; err != nil {
+	if filter != nil {
+		if filter.StoreID != nil {
+			query.Where(&data.StoreStock{StoreID: *filter.StoreID})
+		}
+
+		if filter.FranchiseeID != nil {
+			query.Joins("JOIN stores ON stores.id = store_stocks.store_id").
+				Where(&data.StoreStock{
+					Store: data.Store{
+						FranchiseeID: filter.FranchiseeID,
+					},
+				})
+		}
+	}
+
+	err := query.First(&StoreWarehouseStock).Error
+	if err != nil {
 		return nil, err
 	}
 
