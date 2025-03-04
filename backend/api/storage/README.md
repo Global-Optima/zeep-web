@@ -6,29 +6,13 @@ The application leverages an S3-compatible storage service for managing files li
 
 ## File Types and Specifications
 
-Each file type is defined in the `FileType` struct, specifying the file path, extension, and maximum file size. The current configuration is as follows:
+Files' object keys are build without explicit format assigning, objects rely on content-type based on the original file extension
 
-| Volume          | Storage Path       | Extension | Max Size   |
-|-----------------|--------------------|-----------|------------|
-| `profile`       | `images/profile`   | `.png`    | 2 MB       |
-| `product-image` | `images/products`  | `.jpg`    | 5 MB       |
-| `product-video` | `videos/products`  | `.mp4`    | 20 MB      |
-
-### `FileType` Struct
-
-- `Path`: Defines the directory path where files of a specific type are stored.
-- `Extension`: Ensures consistency in file extensions for each file type.
-- `MaxSize`: Limits file size for each type, validated during the upload process.
-
-### `FileTypeMapping` Example
-
-```go
-var FileTypeMapping = map[string]FileType{
-    "profile":       {Path: "images/profile", Extension: ".png", MaxSize: 2 * 1024 * 1024},
-    "product-image": {Path: "images/products", Extension: ".jpg", MaxSize: 5 * 1024 * 1024},
-    "product-video": {Path: "videos/products", Extension: ".mp4", MaxSize: 20 * 1024 * 1024},
-}
-```
+| Volume             | Storage Path       | Content Type        | Max Size |
+|--------------------|--------------------|---------------------|----------|
+| `converted-images` | `images/converted` | `image/webp`        | 5 MB     |
+| `original-images`  | `images/original`  | `application/x-tar` | 5 MB     |
+| `converted-videos` | `videos/products`  | `video/mp4`         | 20 MB    |
 
 ## Core Utilities
 
@@ -94,14 +78,13 @@ var FileTypeMapping = map[string]FileType{
 
 To connect to the S3-compatible storage, ensure the following environment variables are correctly set:
 
-- `PSKZ_ACCESS_KEY`: Access key for storage.
-- `PSKZ_SECRET_KEY`: Secret key for storage.
-- `PSKZ_ENDPOINT`: Endpoint URL.
-- `PSKZ_BUCKETNAME`: The bucket name for file storage.
+- `S3_ACCESS_KEY`: Access key for storage(username for minio).
+- `S3_SECRET_KEY`: Secret key for storage(password for minio).
+- `S3_ENDPOINT`: Endpoint URL.
+- `S3_BUCKET_NAME`: The bucket name for file storage.
 
 ### Important Notes
 
-- **Duplicate Checks**: Before uploading, the handler verifies if the file already exists using `FileExists`.
 - **Size Validation**: Each file’s size is validated against its `MaxSize` to ensure compliance.
 - **Error Handling**: Detailed error responses are provided for common issues like size validation failures, missing files, or duplicate uploads.
 

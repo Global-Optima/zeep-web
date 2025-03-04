@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -141,4 +142,8 @@ func CreateMultipartFileHeader(filePath string) *multipart.FileHeader {
 	}
 
 	return files[0]
+}
+
+func GetFilenameWithoutExt(filename string) string {
+	return strings.TrimSuffix(filename, filepath.Ext(filename))
 }

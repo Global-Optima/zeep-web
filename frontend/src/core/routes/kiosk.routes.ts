@@ -16,13 +16,6 @@ export const KIOSK_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/kiosk/products/pages/kiosk-product-page.vue'),
 	},
-	KIOSK_CART: {
-		path: 'cart',
-		meta: {
-			title: 'Корзина',
-		},
-		component: () => import('@/modules/kiosk/cart/pages/kiosk-cart-page.vue'),
-	},
 	KIOSK_LANDING: {
 		path: 'landing',
 		meta: {
