@@ -1,37 +1,37 @@
 <script setup lang="ts">
-import {
-  Dialog,
-  DialogContent
-} from '@/core/components/ui/dialog'
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
+import { Button } from '@/core/components/ui/button'
+import { Dialog, DialogContent } from '@/core/components/ui/dialog'
+import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { CartItem } from '@/modules/kiosk/cart/stores/cart.store'
-import { X } from 'lucide-vue-next'
-import { computed, onMounted, ref, watch } from 'vue'
+import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
+import KioskDetailsLoading from '@/modules/kiosk/products/components/details/kiosk-details-loading.vue'
+import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
+import KioskProductRecipeDialog from '@/modules/kiosk/products/components/details/kiosk-product-recipe-dialog.vue'
+import { ChevronLeft, Pencil } from 'lucide-vue-next'
+import { computed, defineEmits, defineProps, onMounted, ref, watch } from 'vue'
 
-interface UpdateCartDialogProps {
+// Props & Emits
+const props = defineProps<{
   isOpen: boolean;
   cartItem: CartItem;
-  onClose: () => void;
-  onUpdate: (updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]) => void;
-}
+}>();
 
-const { isOpen, cartItem, onClose, onUpdate } = defineProps<UpdateCartDialogProps>();
+const emits = defineEmits<{
+  (e: 'close'): void;
+  (e: 'update', updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]): void;
+}>();
 
 // Individual state variables
-const productDetails = ref(cartItem.product);
-const selectedSize = ref(cartItem.size);
-const selectedAdditives = ref(
-  cartItem.additives.reduce<Record<number, StoreAdditiveCategoryItemDTO[]>>((acc, additive) => {
-    acc[additive.categoryId] = acc[additive.categoryId] || [];
-    acc[additive.categoryId].push(additive);
-    return acc;
-  }, {})
-);
+const productDetails = ref(props.cartItem.product);
+const selectedSize = ref<StoreProductSizeDetailsDTO>(props.cartItem.size);
+const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({});
 const additivesCategories = ref<StoreAdditiveCategoryDTO[]>([]);
 const isLoading = ref(false);
-const error = ref<string | null>(null);
+const errorMessage = ref<string | null>(null);
 
 // Fetch additives for the selected size
 const fetchAdditives = async () => {
@@ -40,24 +40,24 @@ const fetchAdditives = async () => {
     const fetchedCategories = await storeAdditivesService.getStoreAdditiveCategories(selectedSize.value.id);
 
     // Merge fetched additives with pre-selected ones
-    additivesCategories.value = fetchedCategories.map((category) => ({
+    additivesCategories.value = fetchedCategories.map(category => ({
       ...category,
-      additives: category.additives.map((additive) => ({
+      additives: category.additives.map(additive => ({
         ...additive,
         isSelected: isAdditiveSelected(category.id, additive.additiveId),
       })),
     }));
   } catch {
-    error.value = 'Failed to load additives.';
+    errorMessage.value = 'Ошибка при загрузке добавок';
   } finally {
     isLoading.value = false;
   }
 };
 
-// Reset dialog state and fetch additives
+// Initialize state & fetch additives
 const resetAndFetchAdditives = async () => {
-  selectedSize.value = cartItem.size;
-  selectedAdditives.value = cartItem.additives.reduce<Record<number, StoreAdditiveCategoryItemDTO[]>>((acc, additive) => {
+  selectedSize.value = props.cartItem.size;
+  selectedAdditives.value = props.cartItem.additives.reduce<Record<number, StoreAdditiveCategoryItemDTO[]>>((acc, additive) => {
     acc[additive.categoryId] = acc[additive.categoryId] || [];
     acc[additive.categoryId].push(additive);
     return acc;
@@ -68,8 +68,8 @@ const resetAndFetchAdditives = async () => {
 // Preserve additives across size changes
 const preserveSelectedAdditives = () => {
   const previousAdditives = { ...selectedAdditives.value };
-  Object.keys(previousAdditives).forEach((categoryId) => {
-    const category = additivesCategories.value.find((cat) => cat.id === Number(categoryId));
+  Object.keys(previousAdditives).forEach(categoryId => {
+    const category = additivesCategories.value.find(cat => cat.id === Number(categoryId));
     if (category) {
       selectedAdditives.value[category.id] = previousAdditives[category.id] || [];
     }
@@ -78,13 +78,12 @@ const preserveSelectedAdditives = () => {
 
 // Handle size selection
 const onSizeSelect = async (size: StoreProductSizeDetailsDTO) => {
-  if (selectedSize.value?.id === size.id) return;
+  if (selectedSize.value.id === size.id) return;
   selectedSize.value = size;
-  selectedAdditives.value = []
+  selectedAdditives.value = {};
   await fetchAdditives();
   preserveSelectedAdditives();
 };
-
 
 // Computed total price
 const totalPrice = computed(() => {
@@ -95,90 +94,131 @@ const totalPrice = computed(() => {
   return storePrice + additivePrice;
 });
 
-// Computed energy
-const calculatedEnergy = computed(() => {
-  const baseEnergy = { ccal: 100, proteins: 5, carbs: 20, fats: 2 };
-  const additiveEnergy = Object.values(selectedAdditives.value)
-    .flat()
-    .reduce(
-      (total) => ({
-        ccal: total.ccal + 200,
-        proteins: total.proteins + 20,
-        carbs: total.carbs + 10,
-        fats: total.fats + 5,
-      }),
-      { ccal: 0, proteins: 0, carbs: 0, fats: 0 }
-    );
-
-  return {
-    ccal: baseEnergy.ccal + additiveEnergy.ccal,
-    proteins: baseEnergy.proteins + additiveEnergy.proteins,
-    carbs: baseEnergy.carbs + additiveEnergy.carbs,
-    fats: baseEnergy.fats + additiveEnergy.fats,
-  };
-});
-
 // Check if additive is selected
 const isAdditiveSelected = (categoryId: number, additiveId: number) =>
-  selectedAdditives.value[categoryId]?.some((a) => a.additiveId === additiveId) || false;
+  selectedAdditives.value[categoryId]?.some(a => a.additiveId === additiveId) || false;
 
 // Handle additive selection
 const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[categoryId] || [];
-  const isSelected = current.some((a) => a.additiveId === additive.additiveId);
+  const isSelected = current.some(a => a.additiveId === additive.additiveId);
   selectedAdditives.value[categoryId] = isSelected
-    ? current.filter((a) => a.additiveId !== additive.additiveId)
+    ? current.filter(a => a.additiveId !== additive.additiveId)
     : [...current, additive];
 };
 
+
+const sortedSizes = computed(() =>
+  productDetails.value?.sizes ? [...productDetails.value.sizes].sort((a, b) => a.size - b.size) : []
+);
+
 // Watch for dialog open state and reinitialize
 watch(
-  () => isOpen,
-  async (open) => {
-    if (open) {
-      await resetAndFetchAdditives();
-    }
+  () => props.isOpen,
+  async open => {
+    if (open) await resetAndFetchAdditives();
   }
 );
 
 // On mounted, check and fetch data if dialog is already open
 onMounted(async () => {
-  if (isOpen) {
-    await resetAndFetchAdditives();
-  }
+  if (props.isOpen) await resetAndFetchAdditives();
 });
 
 // Handle update action
 const handleUpdate = () => {
   const updatedAdditives = Object.values(selectedAdditives.value).flat();
-  onUpdate(selectedSize.value, updatedAdditives);
-  onClose();
+  emits('update', selectedSize.value, updatedAdditives);
+  emits('close');
 };
 </script>
 
 <template>
 	<Dialog
 		:open="isOpen"
-		@update:open="onClose"
+		@update:open="emits('close')"
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="bg-[#F5F5F7] p-0 border-none !rounded-[52px] max-w-[80vw] h-[90vh] overflow-clip"
+			class="p-0 border-none !rounded-[52px] max-w-[80vw] h-[90vh] overflow-clip"
 		>
-			<div class="relative bg-gray-100 pb-44 w-full overflow-y-auto text-black no-scrollbar">
-				<button
-					@click="onClose"
-					class="top-14 right-14 z-10 fixed bg-gray-300 bg-opacity-90 p-3 rounded-full"
+			<div class="relative bg-[#F3F4F9] overflow-y-auto text-black no-scrollbar">
+				<!-- Loading State -->
+				<KioskDetailsLoading v-if="isLoading" />
+				<!-- Error State -->
+				<div
+					v-else-if="errorMessage"
+					class="p-4 text-red-500"
 				>
-					<X class="w-8 h-8 text-gray-800" />
-				</button>
+					{{ errorMessage }}
+				</div>
+				<!-- Product Content -->
+				<div
+					v-else
+					class="pb-44"
+				>
+					<div class="bg-white shadow-gray-200 shadow-xl px-8 pb-6 rounded-b-[48px] w-full">
+						<header class="flex justify-between items-center gap-6 pt-6">
+							<Button
+								size="icon"
+								variant="ghost"
+								class="size-14"
+								@click="emits('close')"
+							>
+								<ChevronLeft
+									class="size-14 text-gray-400"
+									stroke-width="1.6"
+								/>
+							</Button>
+							<KioskProductRecipeDialog :product="productDetails" />
+						</header>
 
-				Временно недоступно
+						<div class="flex flex-col justify-center items-center">
+							<LazyImage
+								:src="productDetails.imageUrl || 'https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png'"
+								alt="Изображение товара"
+								class="w-38 h-64 object-contain"
+							/>
+							<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>
+							<p class="mt-2 text-slate-600 text-xl">{{ productDetails.description }}</p>
+						</div>
+
+						<div class="top-0 z-10 sticky bg-white mt-8 pb-6">
+							<div class="flex justify-between items-center gap-4">
+								<!-- Size Selection -->
+								<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+									<KioskDetailsSizes
+										v-for="size in sortedSizes"
+										:key="size.id"
+										:size="size"
+										:is-selected="selectedSize?.id === size.id"
+										@click:size="onSizeSelect"
+									/>
+								</div>
+								<!-- Add to Cart Button -->
+								<div class="flex items-center gap-6">
+									<p class="font-medium text-4xl">{{ formatPrice(totalPrice) }}</p>
+									<button
+										@click="handleUpdate"
+										class="flex items-center gap-3 bg-primary p-5 rounded-full text-primary-foreground"
+									>
+										<Pencil class="size-8 sm:size-12" />
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Additives Selection -->
+					<div class="mt-10">
+						<KioskDetailsAdditivesSection
+							:categories="additivesCategories"
+							:isAdditiveSelected="isAdditiveSelected"
+							@toggle-additive="onAdditiveToggle"
+						/>
+					</div>
+				</div>
 			</div>
 		</DialogContent>
 	</Dialog>
 </template>
-
-<style scoped>
-/* Add any custom styles here */
-</style>

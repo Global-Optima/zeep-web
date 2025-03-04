@@ -216,7 +216,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageURL data.S3Key) []details.CentralCatalogChange {
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageURL data.StorageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
 	if dto.Name != "" && dto.Name != before.Name {

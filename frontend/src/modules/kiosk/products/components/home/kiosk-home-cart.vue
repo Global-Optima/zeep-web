@@ -17,17 +17,14 @@
 </template>
 
 <script setup lang="ts">
-import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { ShoppingBasket } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
 
 const cartStore = useCartStore();
-const router  = useRouter()
 
 const onCartClick = () => {
-  router.push({ name: getRouteName('KIOSK_CART') });
+  cartStore.toggleModal()
 };
 </script>
 

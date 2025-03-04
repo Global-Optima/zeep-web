@@ -16,33 +16,25 @@ const (
 	InfoLevelStr    = "info"
 	WarningLevelStr = "warning"
 	ErrorLevelStr   = "error"
-	LogMaxSize      = 1024
-	LogMaxBackups   = 30
-	LogMaxAge       = 90
-	LogCompress     = true
+	LogMaxSize      = 1024 // Max log file size in MB before rotation
+	LogMaxBackups   = 30   // Max number of old log files to keep
+	LogMaxAge       = 90   // Max days to retain old log files
+	LogCompress     = true // Compress old log files
 )
 
-var (
-	loggerGin            *zap.Logger
-	sugaredLoggerService *zap.SugaredLogger
-)
+var logger *zap.Logger
+var sugaredLogger *zap.SugaredLogger
 
-func InitLoggers(logLevel, ginLogFile, serviceLogFile string, dev bool) error {
+// InitLogger initializes a single logger for the entire application
+func InitLogger(logLevel, logFile string, dev bool) error {
 	level, err := parseLogLevel(logLevel)
 	if err != nil {
 		return err
 	}
 
-	ginLog := &lumberjack.Logger{
-		Filename:   ginLogFile,
-		MaxSize:    LogMaxSize,
-		MaxBackups: LogMaxBackups,
-		MaxAge:     LogMaxAge,
-		Compress:   LogCompress,
-	}
-
-	serviceLog := &lumberjack.Logger{
-		Filename:   serviceLogFile,
+	// Log rotation configuration
+	logWriter := &lumberjack.Logger{
+		Filename:   logFile,
 		MaxSize:    LogMaxSize,
 		MaxBackups: LogMaxBackups,
 		MaxAge:     LogMaxAge,
@@ -52,42 +44,25 @@ func InitLoggers(logLevel, ginLogFile, serviceLogFile string, dev bool) error {
 	consoleEncoder := buildConsoleEncoder(dev)
 	fileEncoder := buildFileEncoder()
 
-	// Console output core
-	consoleCore := zapcore.NewCore(
-		consoleEncoder,
-		zapcore.AddSync(os.Stdout), // console output
-		level,
-	)
+	// Define output cores
+	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), level)
+	fileCore := zapcore.NewCore(fileEncoder, zapcore.AddSync(logWriter), level)
 
-	// File output core
-	ginFileCore := zapcore.NewCore(
-		fileEncoder,
-		zapcore.AddSync(ginLog), // file output
-		level,
-	)
+	// Merge cores so logs go to both file and console
+	core := zapcore.NewTee(consoleCore, fileCore)
 
-	serviceFileCore := zapcore.NewCore(
-		fileEncoder,
-		zapcore.AddSync(serviceLog), // file output
-		level,
-	)
+	// Create the final logger
+	logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	zap.ReplaceGlobals(logger)
 
-	// Tee both cores so logs go to console and file
-	serviceCore := zapcore.NewTee(consoleCore, serviceFileCore)
-	ginCore := zapcore.NewTee(consoleCore, ginFileCore)
+	// Create a sugared logger for structured logging
+	sugaredLogger = logger.Sugar()
 
-	loggerGin = zap.New(ginCore, zap.AddCaller(), zap.AddCallerSkip(1))
-
-	loggerService := zap.New(serviceCore, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
-	zap.ReplaceGlobals(loggerService)
-	sugaredLoggerService = NewSugar("service", loggerService)
-
-	// Test log entry
 	zap.L().Info("Logger initialized", zap.String("level", logLevel))
-
 	return nil
 }
 
+// parseLogLevel converts string log level to zapcore.Level
 func parseLogLevel(logLevel string) (zapcore.Level, error) {
 	switch logLevel {
 	case DebugLevelStr:
@@ -103,6 +78,7 @@ func parseLogLevel(logLevel string) (zapcore.Level, error) {
 	}
 }
 
+// buildConsoleEncoder sets up console output formatting
 func buildConsoleEncoder(dev bool) zapcore.Encoder {
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -113,31 +89,23 @@ func buildConsoleEncoder(dev bool) zapcore.Encoder {
 		encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		return zapcore.NewConsoleEncoder(encoderConfig)
 	}
+
 	encoderConfig.EncodeLevel = zapcore.LowercaseLevelEncoder
 	return zapcore.NewJSONEncoder(encoderConfig)
 }
 
+// buildFileEncoder sets up file output formatting
 func buildFileEncoder() zapcore.Encoder {
-	fileEncoderConfig := zap.NewProductionEncoderConfig()
-	fileEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	fileEncoderConfig.EncodeDuration = zapcore.StringDurationEncoder
-	fileEncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-	fileEncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	encoderConfig.EncodeDuration = zapcore.StringDurationEncoder
+	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 
-	return zapcore.NewJSONEncoder(fileEncoderConfig)
+	return zapcore.NewJSONEncoder(encoderConfig)
 }
 
-func NewSugar(name string, logger *zap.Logger) *zap.SugaredLogger {
-	if logger == nil {
-		logger = zap.NewNop()
-		return logger.Sugar()
-	}
-
-	sugaredLoggerService = logger.Named(name).Sugar()
-
-	return sugaredLoggerService
-}
-
+// ZapLoggerMiddleware logs all HTTP requests in a single log file
 func ZapLoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -166,12 +134,11 @@ func ZapLoggerMiddleware() gin.HandlerFunc {
 			lvl = zap.InfoLevel
 		}
 
-		logger := loggerGin // or zap.L() if you prefer the global
 		if !logger.Core().Enabled(lvl) {
 			return
 		}
 
-		// Add fields
+		// Log fields
 		fields := []zap.Field{
 			zap.Int("status", status),
 			zap.String("method", method),
@@ -184,28 +151,29 @@ func ZapLoggerMiddleware() gin.HandlerFunc {
 			fields = append(fields, zap.String("request_id", requestID))
 		}
 
-		// Request content length (if known)
+		// Log request content length if available
 		if c.Request.ContentLength > 0 {
 			fields = append(fields, zap.Int64("req_size", c.Request.ContentLength))
 		}
+
 		msg := fmt.Sprintf("%s %s", method, path)
 		logMessage(msg, lvl, fields)
 	}
 }
 
+// logMessage logs HTTP requests at the appropriate level
 func logMessage(msg string, lvl zapcore.Level, fields []zap.Field) {
-	// Log the request line with the appropriate level
-
 	switch lvl {
 	case zap.InfoLevel:
-		loggerGin.Info(msg, fields...)
+		logger.Info(msg, fields...)
 	case zap.WarnLevel:
-		loggerGin.Warn(msg, fields...)
+		logger.Warn(msg, fields...)
 	case zap.ErrorLevel:
-		loggerGin.Error(msg, fields...)
+		logger.Error(msg, fields...)
 	}
 }
 
+// GetZapSugaredLogger returns a global sugared logger instance
 func GetZapSugaredLogger() *zap.SugaredLogger {
-	return sugaredLoggerService
+	return sugaredLogger
 }
