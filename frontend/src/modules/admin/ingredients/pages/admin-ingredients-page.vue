@@ -6,12 +6,18 @@
 
 	<Card>
 		<CardContent class="mt-4">
+			<!-- Loading Indicator -->
+			<PageLoader v-if="isPending" />
+
+			<!-- No Data Message -->
 			<p
-				v-if="!ingredientsResponse || ingredientsResponse.data.length === 0"
-				class="text-muted-foreground"
+				v-else-if="!ingredientsResponse || ingredientsResponse.data.length === 0"
+				class="text-muted-foreground text-center h-52 flex items-center justify-center"
 			>
 				Ингредиенты не найдены
 			</p>
+
+			<!-- Ingredients List -->
 			<AdminIngredientsList
 				v-else
 				:ingredients="ingredientsResponse.data"
@@ -29,35 +35,31 @@
 </template>
 
 <script setup lang="ts">
+import PageLoader from "@/core/components/page-loader/PageLoader.vue"
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
+import { usePaginationFilter } from "@/core/hooks/use-pagination-filter.hook"
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminIngredientsList from '@/modules/admin/ingredients/components/list/admin-ingredients-list.vue'
 import AdminIngredientsToolbar from '@/modules/admin/ingredients/components/list/admin-ingredients-toolbar.vue'
 import type { IngredientFilter } from '@/modules/admin/ingredients/models/ingredients.model'
 import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
 import { useQuery } from '@tanstack/vue-query'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
-const filter = ref<IngredientFilter>({})
+// Use pagination filter composable
+const defaultFilter: IngredientFilter = {
+	page: DEFAULT_PAGINATION_META.page,
+	pageSize: DEFAULT_PAGINATION_META.pageSize,
+}
 
-const { data: ingredientsResponse } = useQuery({
-  queryKey: computed(() => ['admin-ingredients', filter.value]),
-  queryFn: () => ingredientsService.getIngredients(filter.value),
+const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter(defaultFilter)
+
+// Fetch data using Vue Query
+const { data: ingredientsResponse, isPending } = useQuery({
+	queryKey: computed(() => ['admin-ingredients', filter.value]),
+	queryFn: () => ingredientsService.getIngredients(filter.value),
 })
-
-function updateFilter(updatedFilter: IngredientFilter) {
-  filter.value = {...filter.value, ...updatedFilter}
-}
-
-function updatePage(page: number) {
-  updateFilter({ pageSize: DEFAULT_PAGINATION_META.pageSize, page: page})
-
-}
-
-function updatePageSize(pageSize: number) {
-  updateFilter({ pageSize: pageSize, page: DEFAULT_PAGINATION_META.page})
-}
 </script>
 
 <style scoped></style>
