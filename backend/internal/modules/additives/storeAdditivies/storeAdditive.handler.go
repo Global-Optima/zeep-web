@@ -252,6 +252,10 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteStoreAdditive(storeID, uint(storeAdditiveID)); err != nil {
+		if errors.Is(err, types.ErrStoreAdditiveInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409StoreAdditive)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
