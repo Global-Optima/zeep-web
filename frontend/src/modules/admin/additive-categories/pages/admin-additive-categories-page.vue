@@ -1,11 +1,12 @@
 <template>
+	<AdminAdditiveCategoriesToolbar
+		:filter="filter"
+		@update:filter="updateFilter"
+	/>
+
 	<AdminListLoader v-if="isPending" />
 
 	<div v-else>
-		<AdminAdditiveCategoriesToolbar
-			:filter="filter"
-			@update:filter="updateFilter"
-		/>
 		<Card>
 			<CardContent class="mt-4">
 				<!-- Loading Indicator -->

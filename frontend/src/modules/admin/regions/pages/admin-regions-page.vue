@@ -1,12 +1,12 @@
 <template>
+	<AdminRegionsToolbar
+		:filter="filter"
+		@update:filter="updateFilter"
+	/>
+
 	<AdminListLoader v-if="isPending" />
 
 	<div v-else>
-		<AdminRegionsToolbar
-			:filter="filter"
-			@update:filter="updateFilter"
-		/>
-
 		<Card>
 			<CardContent class="mt-4">
 				<p
@@ -52,4 +52,5 @@ const { data: regionsResponse, isPending } = useQuery({
 })
 </script>
 
+<style scoped></style>
 <style scoped></style>

@@ -97,8 +97,8 @@ const onSelectWarehouse = (warehouse: WarehouseDTO) => {
 const filteredStatusOptions = computed(() => {
   if (!currentEmployee || !currentEmployee.role) return []
 
-  const warehouseRoles: EmployeeRole[] = [EmployeeRole.WAREHOUSE_EMPLOYEE, EmployeeRole.WAREHOUSE_MANAGER]
-  const storeRoles: EmployeeRole[] = [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA]
+  const warehouseRoles: EmployeeRole[] = [EmployeeRole.WAREHOUSE_EMPLOYEE, EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.REGION_WAREHOUSE_MANAGER]
+  const storeRoles: EmployeeRole[] = [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA, EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER]
 
   if (warehouseRoles.includes(currentEmployee.role)) {
     return STOCK_REQUEST_STATUS_OPTIONS.filter(status => status.value !== StockRequestStatus.CREATED)

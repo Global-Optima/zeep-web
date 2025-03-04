@@ -1,12 +1,12 @@
 <template>
+	<AdminFranchiseesEmployeesToolbar
+		:filter="filter"
+		@update:filter="updateFilter"
+	/>
+
 	<AdminListLoader v-if="isPending" />
 
 	<div v-else>
-		<AdminFranchiseesEmployeesToolbar
-			:filter="filter"
-			@update:filter="updateFilter"
-		/>
-
 		<Card>
 			<CardContent class="mt-4">
 				<p

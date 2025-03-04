@@ -21,7 +21,10 @@
 
 		<!-- Right Side: Export and Add Store Buttons -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
-			<AdminOrdersExport v-if="canExport" />
+			<AdminOrdersExport
+				v-if="canExport"
+				:store-id="filter.storeId"
+			/>
 		</div>
 	</div>
 </template>
