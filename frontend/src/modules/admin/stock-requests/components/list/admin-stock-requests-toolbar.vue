@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="flex md:flex-row flex-col justify-between items-start md:items-center space-y-4 md:space-y-0 mb-4"
+		class="flex md:flex-row flex-col justify-between items-start md:items-center gap-2 space-y-4 md:space-y-0 mb-4"
 	>
 		<!-- Left Side: Filter Menu -->
 		<div class="flex items-center space-x-2 w-full md:w-auto">
@@ -15,6 +15,11 @@
 				title="Статусы"
 				:options="filteredStatusOptions"
 				v-model="selectedStatuses"
+			/>
+
+			<AdminSelectWarehouseDropdown
+				:selected-warehouse="selectedWarehouse"
+				@select="onSelectWarehouse"
 			/>
 		</div>
 
@@ -42,13 +47,15 @@ import { getRouteName } from '@/core/config/routes.config'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { STOCK_REQUEST_STATUS_OPTIONS, StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
+import AdminSelectWarehouseDropdown from '@/modules/admin/warehouses/components/admin-select-warehouse-dropdown.vue'
+import type { WarehouseDTO } from '@/modules/admin/warehouses/models/warehouse.model'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{ filter?: GetStockRequestsFilter }>()
-const emit = defineEmits(['update:filter'])
+const emit = defineEmits<{(e: 'update:filter', value: GetStockRequestsFilter): void }>()
 const router = useRouter()
 
 const canCreateStockRequest = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
@@ -56,10 +63,16 @@ const canCreateStockRequest = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRo
 const localFilter = ref({ ...props.filter })
 
 const selectedStatuses = ref<StockRequestStatus[]>(props.filter?.statuses ?? [])
+const selectedWarehouse = ref<WarehouseDTO | undefined>(undefined)
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 const { currentEmployee } = useEmployeeAuthStore()
+
+const onSelectWarehouse = (warehouse: WarehouseDTO) => {
+  selectedWarehouse.value = warehouse
+  emit('update:filter', { ...props.filter, warehouseId: warehouse.id})
+}
 
 const filteredStatusOptions = computed(() => {
   if (!currentEmployee || !currentEmployee.role) return []
