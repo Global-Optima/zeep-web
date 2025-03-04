@@ -202,15 +202,6 @@
     "200-storeStocks-update": "Store stocks successfully updated.",
     "200-storeStocks-delete": "Store stocks successfully deleted.",
 
-    "500-stockMaterialCategory-create": "An unexpected error occurred while creating stock material category. Please try again later.",
-    "500-stockMaterialCategory-get": "An unexpected error occurred while fetching stock material category. Please try again later.",
-    "500-stockMaterialCategory-update": "An unexpected error occurred while updating stock material category. Please try again later.",
-    "500-stockMaterialCategory-delete": "An unexpected error occurred while deleting stock material category. Please try again later.",
-    "404-stockMaterialCategory": "Stock material category not found.",
-    "400-stockMaterialCategory": "Invalid stock material category data provided. Please check and try again.",
-    "201-stockMaterialCategory": "Stock material category successfully created.",
-    "200-stockMaterialCategory-update": "Stock material category successfully updated.",
-    "200-stockMaterialCategory-delete": "Stock material category successfully deleted.",
 
     "500-storeEmployee-get": "An unexpected error occurred while fetching store employee data. Please try again later.",
     "500-storeEmployee-update": "An unexpected error occurred while updating store employee data. Please try again later.",
