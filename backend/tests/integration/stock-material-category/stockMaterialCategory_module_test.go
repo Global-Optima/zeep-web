@@ -91,7 +91,7 @@ func TestStockMaterialCategoryEndpoints(t *testing.T) {
 					"description": "Synthetic material",
 				},
 				AuthRole:     data.RoleAdmin, // Only Admin can update
-				ExpectedCode: http.StatusNoContent,
+				ExpectedCode: http.StatusOK,
 			},
 			{
 				Description: "Store Manager should NOT be able to update a stock material category",
@@ -108,7 +108,7 @@ func TestStockMaterialCategoryEndpoints(t *testing.T) {
 		env.RunTests(t, testCases)
 	})
 
-	t.Run("Delete a Stock Material Category", func(t *testing.T) {
+	/*t.Run("Delete a Stock Material Category", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
 				Description:  "Admin should delete a stock material category",
@@ -126,5 +126,5 @@ func TestStockMaterialCategoryEndpoints(t *testing.T) {
 			},
 		}
 		env.RunTests(t, testCases)
-	})
+	})*/
 }

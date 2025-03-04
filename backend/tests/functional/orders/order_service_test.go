@@ -391,7 +391,7 @@ func TestOrderService_GetOrderDetails(t *testing.T) {
 	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
-	details, err := module.Service.GetOrderDetails(1)
+	details, err := module.Service.GetOrderDetails(1, nil)
 	assert.NoError(t, err, "GetOrderDetails should not error for an existing order")
 	assert.NotNil(t, details, "Expected order details for an existing order")
 }
