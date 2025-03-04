@@ -1,5 +1,7 @@
 <template>
-	<div class="mx-auto w-full max-w-7xl">
+	<AdminListLoader v-if="isPending" />
+
+	<div v-else>
 		<div class="flex items-center gap-4">
 			<Button
 				variant="outline"
@@ -49,42 +51,30 @@
 </template>
 
 <script setup lang="ts">
+import AdminListLoader from '@/core/components/admin-list-loader/AdminListLoader.vue'
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
-import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
+import { usePaginationFilter } from '@/core/hooks/use-pagination-filter.hook'
 import AdminStoreEmployeesAuditList from '@/modules/admin/employees/components/audit/admin-store-employees-audit-list.vue'
 import AdminStoreEmployeesAuditToolbar from '@/modules/admin/employees/components/audit/admin-store-employees-audit-toolbar.vue'
 import type { EmployeeAuditFilter } from '@/modules/admin/employees/models/employees-audit.models'
 import { employeeAuditService } from '@/modules/admin/employees/services/employees-audit.service'
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-const filter = ref<EmployeeAuditFilter>({})
+const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<EmployeeAuditFilter>({})
 
 const route = useRoute()
 const employeeId = route.params.id as string
 
-const { data: employeeAudits } = useQuery({
+const { data: employeeAudits, isPending } = useQuery({
   queryKey: computed(() => ['employee-audits', {...filter.value, employeeId}]),
 	queryFn: () => employeeAuditService.getAudits({...filter.value, employeeId: Number(employeeId)}),
   enabled: !!employeeId,
 })
-
-function updateFilter(updatedFilter: EmployeeAuditFilter) {
-  filter.value = {...filter.value, ...updatedFilter}
-}
-
-function updatePage(page: number) {
-  updateFilter({ pageSize: DEFAULT_PAGINATION_META.pageSize, page: page})
-
-}
-
-function updatePageSize(pageSize: number) {
-  updateFilter({ pageSize: pageSize, page: DEFAULT_PAGINATION_META.page})
-}
 </script>
 
 <style scoped></style>
