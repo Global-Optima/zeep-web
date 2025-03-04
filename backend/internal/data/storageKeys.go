@@ -2,9 +2,10 @@ package data
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"net/url"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var storageKeyInfo = &StorageKeyInfo{}

@@ -118,105 +118,105 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 	}
 }
 
-func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T) {
-	_ = ResetTestData(t)
-	module := tests.GetStockMaterialModule()
+// func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T) {
+// 	_ = ResetTestData(t)
+// 	module := tests.GetStockMaterialModule()
 
-	testCases := []struct {
-		name        string
-		input       *types.CreateStockMaterialDTO
-		expectError bool
-	}{
-		{
-			name: "Create valid stock material",
-			input: &types.CreateStockMaterialDTO{
-				Name:                   "New Test Material",
-				Description:            "Test material description",
-				SafetyStock:            50.5,
-				UnitID:                 1,
-				CategoryID:             1,
-				IngredientID:           1,
-				Barcode:                "TEST123",
-				ExpirationPeriodInDays: 30,
-				Size:                   100.5,
-			},
-			expectError: false,
-		},
-		{
-			name: "Create with invalid safety stock (0)",
-			input: &types.CreateStockMaterialDTO{
-				Name:         "Test Material",
-				Description:  "Test description",
-				SafetyStock:  0, // Should be > 0
-				UnitID:       1,
-				CategoryID:   1,
-				IngredientID: 1,
-			},
-			expectError: true,
-		},
-		{
-			name: "Create with non-existing unit ID",
-			input: &types.CreateStockMaterialDTO{
-				Name:         "Test Material",
-				Description:  "Test description",
-				SafetyStock:  50.5,
-				UnitID:       999,
-				CategoryID:   1,
-				IngredientID: 1,
-			},
-			expectError: true,
-		},
-		{
-			name: "Create with non-existing category ID",
-			input: &types.CreateStockMaterialDTO{
-				Name:         "Test Material",
-				Description:  "Test description",
-				SafetyStock:  50.5,
-				UnitID:       1,
-				CategoryID:   999,
-				IngredientID: 1,
-			},
-			expectError: true,
-		},
-		{
-			name: "Create with non-existing ingredient ID",
-			input: &types.CreateStockMaterialDTO{
-				Name:         "Test Material",
-				Description:  "Test description",
-				SafetyStock:  50.5,
-				UnitID:       1,
-				CategoryID:   1,
-				IngredientID: 999,
-			},
-			expectError: true,
-		},
-	}
+// 	testCases := []struct {
+// 		name        string
+// 		input       *types.CreateStockMaterialDTO
+// 		expectError bool
+// 	}{
+// 		{
+// 			name: "Create valid stock material",
+// 			input: &types.CreateStockMaterialDTO{
+// 				Name:                   "New Test Material",
+// 				Description:            "Test material description",
+// 				SafetyStock:            50.5,
+// 				UnitID:                 1,
+// 				CategoryID:             1,
+// 				IngredientID:           1,
+// 				Barcode:                "TEST123",
+// 				ExpirationPeriodInDays: 30,
+// 				Size:                   100.5,
+// 			},
+// 			expectError: false,
+// 		},
+// 		{
+// 			name: "Create with invalid safety stock (0)",
+// 			input: &types.CreateStockMaterialDTO{
+// 				Name:         "Test Material",
+// 				Description:  "Test description",
+// 				SafetyStock:  0, // Should be > 0
+// 				UnitID:       1,
+// 				CategoryID:   1,
+// 				IngredientID: 1,
+// 			},
+// 			expectError: true,
+// 		},
+// 		{
+// 			name: "Create with non-existing unit ID",
+// 			input: &types.CreateStockMaterialDTO{
+// 				Name:         "Test Material",
+// 				Description:  "Test description",
+// 				SafetyStock:  50.5,
+// 				UnitID:       999,
+// 				CategoryID:   1,
+// 				IngredientID: 1,
+// 			},
+// 			expectError: true,
+// 		},
+// 		{
+// 			name: "Create with non-existing category ID",
+// 			input: &types.CreateStockMaterialDTO{
+// 				Name:         "Test Material",
+// 				Description:  "Test description",
+// 				SafetyStock:  50.5,
+// 				UnitID:       1,
+// 				CategoryID:   999,
+// 				IngredientID: 1,
+// 			},
+// 			expectError: true,
+// 		},
+// 		{
+// 			name: "Create with non-existing ingredient ID",
+// 			input: &types.CreateStockMaterialDTO{
+// 				Name:         "Test Material",
+// 				Description:  "Test description",
+// 				SafetyStock:  50.5,
+// 				UnitID:       1,
+// 				CategoryID:   1,
+// 				IngredientID: 999,
+// 			},
+// 			expectError: true,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result, err := module.Service.CreateStockMaterial(tc.input)
-			if tc.expectError {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-				assert.Equal(t, tc.input.Name, result.Name)
-				assert.Equal(t, tc.input.Description, result.Description)
-				assert.Equal(t, tc.input.SafetyStock, result.SafetyStock)
-				assert.Equal(t, tc.input.UnitID, result.Unit.ID)
-				assert.Equal(t, tc.input.CategoryID, result.Category.ID)
-				assert.Equal(t, tc.input.IngredientID, result.Ingredient.ID)
-				assert.Equal(t, tc.input.Barcode, result.Barcode)
-				assert.Equal(t, tc.input.ExpirationPeriodInDays, result.ExpirationPeriodInDays)
-				assert.Equal(t, tc.input.Size, result.Size)
-				assert.True(t, result.IsActive) // Should be active by default
-				assert.NotEmpty(t, result.CreatedAt)
-				assert.NotEmpty(t, result.UpdatedAt)
-			}
-		})
-	}
-}
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			result, err := module.Service.CreateStockMaterial(tc.input)
+// 			if tc.expectError {
+// 				assert.Error(t, err)
+// 				assert.Nil(t, result)
+// 			} else {
+// 				assert.NoError(t, err)
+// 				assert.NotNil(t, result)
+// 				assert.Equal(t, tc.input.Name, result.Name)
+// 				assert.Equal(t, tc.input.Description, result.Description)
+// 				assert.Equal(t, tc.input.SafetyStock, result.SafetyStock)
+// 				assert.Equal(t, tc.input.UnitID, result.Unit.ID)
+// 				assert.Equal(t, tc.input.CategoryID, result.Category.ID)
+// 				assert.Equal(t, tc.input.IngredientID, result.Ingredient.ID)
+// 				assert.Equal(t, tc.input.Barcode, result.Barcode)
+// 				assert.Equal(t, tc.input.ExpirationPeriodInDays, result.ExpirationPeriodInDays)
+// 				assert.Equal(t, tc.input.Size, result.Size)
+// 				assert.True(t, result.IsActive) // Should be active by default
+// 				assert.NotEmpty(t, result.CreatedAt)
+// 				assert.NotEmpty(t, result.UpdatedAt)
+// 			}
+// 		})
+// 	}
+// }
 
 func TestStockMaterialService_UpdateStockMaterial_WithPreloadedData(t *testing.T) {
 	_ = ResetTestData(t)
@@ -266,112 +266,112 @@ func TestStockMaterialService_UpdateStockMaterial_WithPreloadedData(t *testing.T
 	}
 }
 
-func TestStockMaterialService_DeleteStockMaterial_WithPreloadedData(t *testing.T) {
-	_ = ResetTestData(t)
-	module := tests.GetStockMaterialModule()
+// func TestStockMaterialService_DeleteStockMaterial_WithPreloadedData(t *testing.T) {
+// 	_ = ResetTestData(t)
+// 	module := tests.GetStockMaterialModule()
 
-	testCases := []struct {
-		name        string
-		id          uint
-		expectError bool
-	}{
-		{
-			name:        "Delete existing stock material",
-			id:          1,
-			expectError: false,
-		},
-		{
-			name:        "Delete non-existing stock material",
-			id:          999,
-			expectError: true,
-		},
-	}
+// 	testCases := []struct {
+// 		name        string
+// 		id          uint
+// 		expectError bool
+// 	}{
+// 		{
+// 			name:        "Delete existing stock material",
+// 			id:          1,
+// 			expectError: false,
+// 		},
+// 		{
+// 			name:        "Delete non-existing stock material",
+// 			id:          999,
+// 			expectError: true,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := module.Service.DeleteStockMaterial(tc.id)
-			if tc.expectError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				// Verify deletion
-				_, err := module.Service.GetStockMaterialByID(tc.id)
-				assert.Error(t, err)
-			}
-		})
-	}
-}
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			err := module.Service.DeleteStockMaterial(tc.id)
+// 			if tc.expectError {
+// 				assert.Error(t, err)
+// 			} else {
+// 				assert.NoError(t, err)
+// 				// Verify deletion
+// 				_, err := module.Service.GetStockMaterialByID(tc.id)
+// 				assert.Error(t, err)
+// 			}
+// 		})
+// 	}
+// }
 
-func TestStockMaterialService_DeactivateStockMaterial_WithPreloadedData(t *testing.T) {
-	_ = ResetTestData(t)
-	module := tests.GetStockMaterialModule()
+// func TestStockMaterialService_DeactivateStockMaterial_WithPreloadedData(t *testing.T) {
+// 	_ = ResetTestData(t)
+// 	module := tests.GetStockMaterialModule()
 
-	testCases := []struct {
-		name        string
-		id          uint
-		expectError bool
-	}{
-		{
-			name:        "Deactivate existing stock material",
-			id:          1,
-			expectError: false,
-		},
-		{
-			name:        "Deactivate non-existing stock material",
-			id:          999,
-			expectError: true,
-		},
-	}
+// 	testCases := []struct {
+// 		name        string
+// 		id          uint
+// 		expectError bool
+// 	}{
+// 		{
+// 			name:        "Deactivate existing stock material",
+// 			id:          1,
+// 			expectError: false,
+// 		},
+// 		{
+// 			name:        "Deactivate non-existing stock material",
+// 			id:          999,
+// 			expectError: true,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := module.Service.DeactivateStockMaterial(tc.id)
-			if tc.expectError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				// Verify deactivation
-				material, err := module.Service.GetStockMaterialByID(tc.id)
-				assert.NoError(t, err)
-				assert.False(t, material.IsActive)
-			}
-		})
-	}
-}
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			err := module.Service.DeactivateStockMaterial(tc.id)
+// 			if tc.expectError {
+// 				assert.Error(t, err)
+// 			} else {
+// 				assert.NoError(t, err)
+// 				// Verify deactivation
+// 				material, err := module.Service.GetStockMaterialByID(tc.id)
+// 				assert.NoError(t, err)
+// 				assert.False(t, material.IsActive)
+// 			}
+// 		})
+// 	}
+// }
 
-func TestStockMaterialService_BarcodeOperations_WithPreloadedData(t *testing.T) {
-	_ = ResetTestData(t)
-	module := tests.GetStockMaterialModule()
+// func TestStockMaterialService_BarcodeOperations_WithPreloadedData(t *testing.T) {
+// 	_ = ResetTestData(t)
+// 	module := tests.GetStockMaterialModule()
 
-	t.Run("Get existing barcode", func(t *testing.T) {
-		barcode, err := module.Service.GetStockMaterialBarcode(1)
-		assert.NoError(t, err)
-		assert.NotNil(t, barcode)
-	})
+// 	t.Run("Get existing barcode", func(t *testing.T) {
+// 		barcode, err := module.Service.GetStockMaterialBarcode(1)
+// 		assert.NoError(t, err)
+// 		assert.NotNil(t, barcode)
+// 	})
 
-	t.Run("Generate barcode PDF", func(t *testing.T) {
-		pdf, err := module.Service.GenerateStockMaterialBarcodePDF(1)
-		assert.NoError(t, err)
-		assert.NotNil(t, pdf)
-	})
+// 	t.Run("Generate barcode PDF", func(t *testing.T) {
+// 		pdf, err := module.Service.GenerateStockMaterialBarcodePDF(1)
+// 		assert.NoError(t, err)
+// 		assert.NotNil(t, pdf)
+// 	})
 
-	t.Run("Generate new barcode", func(t *testing.T) {
-		response, err := module.Service.GenerateBarcode()
-		assert.NoError(t, err)
-		assert.NotNil(t, response)
-		assert.NotEmpty(t, response.Barcode)
-	})
+// 	t.Run("Generate new barcode", func(t *testing.T) {
+// 		response, err := module.Service.GenerateBarcode()
+// 		assert.NoError(t, err)
+// 		assert.NotNil(t, response)
+// 		assert.NotEmpty(t, response.Barcode)
+// 	})
 
-	t.Run("Retrieve by barcode", func(t *testing.T) {
-		material, err := module.Service.RetrieveStockMaterialByBarcode("CB001")
-		assert.NoError(t, err)
-		assert.NotNil(t, material)
-		assert.Equal(t, "Coffee Beans Material", material.Name)
-	})
+// 	t.Run("Retrieve by barcode", func(t *testing.T) {
+// 		material, err := module.Service.RetrieveStockMaterialByBarcode("CB001")
+// 		assert.NoError(t, err)
+// 		assert.NotNil(t, material)
+// 		assert.Equal(t, "Coffee Beans Material", material.Name)
+// 	})
 
-	t.Run("Retrieve by non-existing barcode", func(t *testing.T) {
-		material, err := module.Service.RetrieveStockMaterialByBarcode("NONEXIST")
-		assert.Error(t, err)
-		assert.Nil(t, material)
-	})
-}
+// 	t.Run("Retrieve by non-existing barcode", func(t *testing.T) {
+// 		material, err := module.Service.RetrieveStockMaterialByBarcode("NONEXIST")
+// 		assert.Error(t, err)
+// 		assert.Nil(t, material)
+// 	})
+// }

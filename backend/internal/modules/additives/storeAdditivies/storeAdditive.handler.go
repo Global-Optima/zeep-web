@@ -50,7 +50,7 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	storeProductSizeID, err := strconv.ParseUint(c.Param("storeProductSizeId"), 10, 64)
+	storeProductSizeID, err := utils.ParseParam(c, "storeProductSizeId")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
@@ -253,6 +253,10 @@ func (h *StoreAdditiveHandler) DeleteStoreAdditive(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteStoreAdditive(storeID, uint(storeAdditiveID)); err != nil {
+		if errors.Is(err, types.ErrStoreAdditiveInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409StoreAdditive)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}

@@ -247,7 +247,9 @@ const onPrintBarcode = async () => {
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Размер упаковки</FormLabel>
+									<FormLabel>
+										Размер упаковки ({{ selectedUnit?.name.toLowerCase() || 'Не выбрана' }})
+									</FormLabel>
 									<FormControl>
 										<Input
 											id="safetyStock"

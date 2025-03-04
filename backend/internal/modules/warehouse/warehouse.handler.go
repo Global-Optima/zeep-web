@@ -3,14 +3,12 @@ package warehouse
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -33,22 +31,22 @@ func NewWarehouseHandler(service WarehouseService, regionService regions.RegionS
 func (h *WarehouseHandler) AssignStoreToWarehouse(c *gin.Context) {
 	var req types.AssignStoreToWarehouseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	if err := h.service.AssignStoreToWarehouse(req); err != nil {
-		utils.SendInternalServerError(c, "failed to assign store to warehouse")
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseAssign)
 		return
 	}
 
-	utils.SendMessageWithStatus(c, "Store assigned to warehouse successfully", http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200WarehouseAssign)
 }
 
 func (h *WarehouseHandler) GetAllStoresByWarehouse(c *gin.Context) {
-	warehouseID, err := strconv.ParseUint(c.Param("warehouseId"), 10, 32)
+	warehouseID, err := utils.ParseParam(c, "warehouseId")
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid warehouse ID")
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
@@ -56,7 +54,7 @@ func (h *WarehouseHandler) GetAllStoresByWarehouse(c *gin.Context) {
 
 	stores, err := h.service.GetAllStoresByWarehouse(uint(warehouseID), pagination)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to list stores")
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseGet)
 		return
 	}
 
@@ -66,13 +64,13 @@ func (h *WarehouseHandler) GetAllStoresByWarehouse(c *gin.Context) {
 func (h *WarehouseHandler) CreateWarehouse(c *gin.Context) {
 	var dto types.CreateWarehouseDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	warehouse, err := h.service.CreateWarehouse(dto)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseCreate)
 		return
 	}
 
@@ -81,25 +79,27 @@ func (h *WarehouseHandler) CreateWarehouse(c *gin.Context) {
 			ID:   warehouse.ID,
 			Name: warehouse.Name,
 		})
-
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessCreatedResponse(c, "warehouse created successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response201Warehouse)
 }
 
 func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
-	warehouseIDStr := c.Param("warehouseId")
-	warehouseID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
+	warehouseID, err := utils.ParseParam(c, "warehouseId")
 	if err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		if err == types.ErrWarehouseNotFound {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Warehouse)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseGet)
 		return
 	}
 
@@ -108,15 +108,14 @@ func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
 
 func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
 	var filter types.WarehouseFilter
-
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	warehouses, err := h.service.GetAllWarehouses(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseGet)
 		return
 	}
 
@@ -125,25 +124,23 @@ func (h *WarehouseHandler) GetAllWarehouses(c *gin.Context) {
 
 func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
 	var filter types.WarehouseFilter
-
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Warehouse{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	regionID, errH := contexts.GetRegionId(c)
 	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
+		localization.SendLocalizedResponseWithStatus(c, http.StatusUnauthorized)
 		return
 	}
-
 	if regionID != nil {
 		filter.RegionID = regionID
 	}
 
 	warehouses, err := h.service.GetWarehouses(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve warehouses")
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseGet)
 		return
 	}
 
@@ -151,28 +148,27 @@ func (h *WarehouseHandler) GetWarehouses(c *gin.Context) {
 }
 
 func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {
-	warehouseIDStr := c.Param("warehouseId")
-	warehouseID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
+	warehouseID, err := utils.ParseParam(c, "warehouseId")
 	if err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	var dto types.UpdateWarehouseDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseUpdate)
 		return
 	}
 
 	updated, err := h.service.UpdateWarehouse(uint(warehouseID), dto)
 	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseUpdate)
 		return
 	}
 
@@ -181,34 +177,33 @@ func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {
 			ID:   warehouse.ID,
 			Name: warehouse.Name,
 		}, &dto)
-
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	// localization.SendLocalizedResponseWithKey(c, types.Response200WarehouseUpdate)
 	utils.SendSuccessResponse(c, updated)
 }
 
 func (h *WarehouseHandler) DeleteWarehouse(c *gin.Context) {
-	warehouseIDStr := c.Param("warehouseId")
-	warehouseID, err := strconv.ParseUint(warehouseIDStr, 10, 32)
+	warehouseID, err := utils.ParseParam(c, "warehouseId")
 	if err != nil {
-		utils.SendBadRequestError(c, err.Error())
+		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
 		return
 	}
 
 	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
 	if err != nil {
 		if errors.Is(err, types.ErrWarehouseNotFound) {
-			utils.SendNotFoundError(c, err.Error())
+			localization.SendLocalizedResponseWithKey(c, types.Response404Warehouse)
+			return
 		}
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseDelete)
 		return
 	}
 
 	if err := h.service.DeleteWarehouse(uint(warehouseID)); err != nil {
-		utils.SendInternalServerError(c, err.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseDelete)
 		return
 	}
 
@@ -217,10 +212,9 @@ func (h *WarehouseHandler) DeleteWarehouse(c *gin.Context) {
 			ID:   warehouse.ID,
 			Name: warehouse.Name,
 		})
-
 	go func() {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusOK)
+	localization.SendLocalizedResponseWithKey(c, types.Response200WarehouseDelete)
 }

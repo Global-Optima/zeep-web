@@ -257,7 +257,9 @@ function removeIngredient(index: number) {
 									v-slot="{ componentField }"
 								>
 									<FormItem class="flex-1">
-										<FormLabel>Размер</FormLabel>
+										<FormLabel>
+											Размер ({{ selectedUnit?.name.toLowerCase() || 'Не выбрана' }})
+										</FormLabel>
 										<FormControl>
 											<Input
 												id="size"

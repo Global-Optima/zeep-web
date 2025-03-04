@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions/types"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type RegionService interface {
@@ -21,11 +22,15 @@ type RegionService interface {
 }
 
 type regionService struct {
-	repo RegionRepository
+	repo   RegionRepository
+	logger *zap.SugaredLogger
 }
 
-func NewRegionService(repo RegionRepository) RegionService {
-	return &regionService{repo: repo}
+func NewRegionService(repo RegionRepository, logger *zap.SugaredLogger) RegionService {
+	return &regionService{
+		repo:   repo,
+		logger: logger,
+	}
 }
 
 func (s *regionService) CreateRegion(dto *types.CreateRegionDTO) (uint, error) {
@@ -34,7 +39,8 @@ func (s *regionService) CreateRegion(dto *types.CreateRegionDTO) (uint, error) {
 	}
 	id, err := s.repo.CreateRegion(region)
 	if err != nil {
-		return 0, err
+		s.logger.Error("failed to create region", zap.Error(err))
+		return 0, types.ErrFailedCreateRegion
 	}
 	return id, nil
 }

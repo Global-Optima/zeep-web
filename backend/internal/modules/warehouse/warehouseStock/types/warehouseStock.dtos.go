@@ -20,12 +20,6 @@ type ReceiveWarehouseStockMaterial struct {
 	Quantity        float64 `json:"quantity"`
 }
 
-type TransferInventoryRequest struct {
-	SourceWarehouseID uint                            `json:"sourceWarehouseId" binding:"required"`
-	TargetWarehouseID uint                            `json:"targetWarehouseId" binding:"required"`
-	Items             []ReceiveWarehouseStockMaterial `json:"items" binding:"required"`
-}
-
 type WarehouseDeliveryDTO struct {
 	ID           uint                                `json:"id"`
 	Supplier     supplierTypes.SupplierResponse      `json:"supplier"`

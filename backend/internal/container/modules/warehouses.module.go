@@ -32,7 +32,7 @@ func NewWarehousesModule(
 	warehouseStockRepo := warehouseStock.NewWarehouseStockRepository(base.DB)
 
 	warehouseStockService := warehouseStock.NewWarehouseStockService(warehouseStockRepo, stockMaterialRepo, notificationService, base.Logger)
-	warehouseService := warehouse.NewWarehouseService(warehouseRepo)
+	warehouseService := warehouse.NewWarehouseService(warehouseRepo, base.Logger)
 
 	warehouseHandler := warehouse.NewWarehouseHandler(warehouseService, regionService, auditService)
 	warehouseStockHandler := warehouseStock.NewWarehouseStockHandler(warehouseStockService, franchiseeService, warehouseService, auditService)

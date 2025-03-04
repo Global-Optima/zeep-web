@@ -9,4 +9,5 @@ var (
 	ErrStoreAdditiveAlreadyExists      = moduleErrors.NewModuleError(errors.New("Store additive already exists"))
 	ErrStoreAdditiveCategoriesNotFound = moduleErrors.NewModuleError(errors.New("Store additive categories not found"))
 	ErrStoreAdditiveNotFound           = moduleErrors.NewModuleError(errors.New("Store additive not found"))
+	ErrStoreAdditiveInUse              = moduleErrors.NewModuleError(errors.New("Store additive is in use and cannot be deleted"))
 )
