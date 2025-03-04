@@ -5,13 +5,24 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/go-playground/validator/v10"
+	"golang.org/x/text/unicode/norm"
 )
 
+// SanitizeString trims, normalizes, and validates user input
 func SanitizeString(input string) (string, bool) {
+	// Ensure valid UTF-8 encoding
+	if !utf8.ValidString(input) {
+		return "", false
+	}
+
+	// Normalize text to avoid mixed encoding issues (NFC - Canonical Composition)
+	normalizedUTF8 := norm.NFC.String(input)
+
 	// Remove leading and trailing spaces
-	trimmed := strings.TrimSpace(input)
+	trimmed := strings.TrimSpace(normalizedUTF8)
 
 	// Replace multiple spaces, tabs, and newlines with a single space
 	spaceRegex := regexp.MustCompile(`\s+`)
