@@ -150,6 +150,10 @@ var (
 		StorePermissions,
 		WarehousePermissions...,
 	)
+	FranchiseeAndRegionPermissions = append(
+		FranchiseePermissions,
+		RegionPermissions...,
+	)
 )
 
 func GetEmployeeTypeByRole(role EmployeeRole) EmployeeType {

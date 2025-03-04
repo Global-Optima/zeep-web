@@ -300,7 +300,7 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 }
 
 func (r *Router) RegisterStoreWarehouseRoutes(handler *storeStocks.StoreStockHandler) {
-	router := r.EmployeeRoutes.Group("/store-warehouse-stock") // Franchise and store all roles
+	router := r.EmployeeRoutes.Group("/store-stocks") // Franchise and store all roles
 	{
 		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAvailableIngredientsToAdd)
 		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreStockList)
@@ -384,7 +384,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 }
 
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
-	var stockRequestReadPermissions = append(data.StoreAndWarehousePermissions, data.RegionPermissions...)
+	var stockRequestReadPermissions = append(data.StoreAndWarehousePermissions, data.FranchiseeAndRegionPermissions...)
 
 	router := r.EmployeeRoutes.Group("/stock-requests")
 	{
