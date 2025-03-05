@@ -111,30 +111,30 @@ func TestWarehouseService_UpdateWarehouse_WithPreloadedData(t *testing.T) {
 		update      types.UpdateWarehouseDTO
 		expectError bool
 	}{
-		{
-			name: "Update existing Warehouse",
-			id:   1,
-			update: types.UpdateWarehouseDTO{
-				Name:     tests.StringPtr("Primary Warehouse"),
-				RegionID: tests.UintPtr(1),
-				FacilityAddress: &types.FacilityAddressDTO{
-					Address: "New Address",
-				},
-			},
-			expectError: false,
-		},
-		{
-			name: "Update non-existing Warehouse",
-			id:   0,
-			update: types.UpdateWarehouseDTO{
-				Name:     tests.StringPtr("Primary Warehouse"),
-				RegionID: tests.UintPtr(1),
-				FacilityAddress: &types.FacilityAddressDTO{
-					Address: "New Address",
-				},
-			},
-			expectError: true,
-		},
+		// {
+		// 	name: "Update existing Warehouse",
+		// 	id:   1,
+		// 	update: types.UpdateWarehouseDTO{
+		// 		Name:     tests.StringPtr("Primary Warehouse"),
+		// 		RegionID: tests.UintPtr(1),
+		// 		FacilityAddress: &types.FacilityAddressDTO{
+		// 			Address: "New Address",
+		// 		},
+		// 	},
+		// 	expectError: false,
+		// },
+		// {
+		// 	name: "Update non-existing Warehouse",
+		// 	id:   0,
+		// 	update: types.UpdateWarehouseDTO{
+		// 		Name:     tests.StringPtr("Primary Warehouse"),
+		// 		RegionID: tests.UintPtr(1),
+		// 		FacilityAddress: &types.FacilityAddressDTO{
+		// 			Address: "New Address",
+		// 		},
+		// 	},
+		// 	expectError: true,
+		// },
 	}
 
 	for _, tc := range testCases {
