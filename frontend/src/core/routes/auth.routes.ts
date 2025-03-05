@@ -1,6 +1,5 @@
 import LoginPage from '@/modules/auth/pages/login-page.vue'
 import type { AppRouteRecord, ParentRoutePage } from './routes.types'
-import AppAuthLayout from '../layouts/auth/app-auth-layout.vue'
 
 export const AUTH_CHILDREN_ROUTES = {
 	LOGIN: {
@@ -15,6 +14,6 @@ export const AUTH_CHILDREN_ROUTES = {
 
 export const AUTH_ROUTES_CONFIG: ParentRoutePage = {
 	path: '/',
-	component: AppAuthLayout,
+	component: () => import('@/core/layouts/auth/app-auth-layout.vue'),
 	children: AUTH_CHILDREN_ROUTES,
 }
