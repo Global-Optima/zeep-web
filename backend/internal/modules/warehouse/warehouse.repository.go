@@ -2,6 +2,7 @@ package warehouse
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 
@@ -71,7 +72,10 @@ func (r *warehouseRepository) GetWarehouseByID(id uint) (*data.Warehouse, error)
 		First(&warehouse, id).Error
 
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrWarehouseNotFound
+		}
+		return nil, types.ErrFailedToFetchWarehouse
 	}
 
 	return &warehouse, nil
@@ -127,7 +131,10 @@ func (r *warehouseRepository) GetWarehouses(filter *types.WarehouseFilter) ([]da
 	}
 
 	if err := query.Find(&warehouses).Error; err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrWarehouseNotFound
+		}
+		return nil, types.ErrFailedToFetchWarehouse
 	}
 
 	return warehouses, nil
@@ -189,7 +196,7 @@ func (r *warehouseRepository) DeleteWarehouse(id uint) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
+		return types.ErrWarehouseNotFound
 	}
 	return nil
 }

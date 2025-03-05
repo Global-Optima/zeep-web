@@ -99,7 +99,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	}))
 
 	utils.InitValidators()
-	router.Use(middleware.SanitizeMiddleware())
+	//router.Use(middleware.SanitizeMiddleware())
 
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
 
