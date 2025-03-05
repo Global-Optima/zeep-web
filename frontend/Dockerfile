@@ -1,7 +1,7 @@
 # ====================
 # Build Stage
 # ====================
-FROM node:lts-alpine AS builder
+FROM oven/bun:latest AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -13,8 +13,8 @@ ARG VITE_WS_URL
 # Copy only package files first for better caching
 COPY package*.json ./
 
-# Use npm ci for clean & reproducible builds
-RUN npm ci
+# Install dependencies using bun
+RUN bun install
 
 # Copy the rest of the project files
 COPY . .
@@ -24,7 +24,7 @@ ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_WS_URL=$VITE_WS_URL
 
 # Build the production files
-RUN npm run build
+RUN bun run build
 
 # ====================
 # Final Stage
