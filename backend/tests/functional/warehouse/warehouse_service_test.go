@@ -2,6 +2,7 @@ package functional
 
 import (
 	"fmt"
+	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
@@ -117,7 +118,7 @@ func TestWarehouseService_UpdateWarehouse_WithPreloadedData(t *testing.T) {
 			update: types.UpdateWarehouseDTO{
 				Name:     tests.StringPtr("Primary Warehouse"),
 				RegionID: tests.UintPtr(1),
-				FacilityAddress: &types.FacilityAddressDTO{
+				FacilityAddress: &facilityAddressesTypes.CreateOrUpdateFacilityAddressDTO{
 					Address: "New Address",
 				},
 			},
@@ -129,7 +130,7 @@ func TestWarehouseService_UpdateWarehouse_WithPreloadedData(t *testing.T) {
 			update: types.UpdateWarehouseDTO{
 				Name:     tests.StringPtr("Primary Warehouse"),
 				RegionID: tests.UintPtr(1),
-				FacilityAddress: &types.FacilityAddressDTO{
+				FacilityAddress: &facilityAddressesTypes.CreateOrUpdateFacilityAddressDTO{
 					Address: "New Address",
 				},
 			},

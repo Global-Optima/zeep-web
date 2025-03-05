@@ -1,7 +1,6 @@
 package warehouse
 
 import (
-	"errors"
 	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
