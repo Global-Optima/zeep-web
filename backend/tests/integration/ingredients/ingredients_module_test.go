@@ -141,7 +141,7 @@ func TestIngredientEndpoints(t *testing.T) {
 		env.RunTests(t, testCases)
 	})
 
-	/*t.Run("Delete an Ingredient", func(t *testing.T) {
+	t.Run("Delete an Ingredient", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
 				Description:  "Admin should not delete used ingredient",
@@ -166,5 +166,5 @@ func TestIngredientEndpoints(t *testing.T) {
 			},
 		}
 		env.RunTests(t, testCases)
-	})*/
+	})
 }
