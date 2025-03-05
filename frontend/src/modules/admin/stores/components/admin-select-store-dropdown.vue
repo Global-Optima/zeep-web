@@ -85,7 +85,7 @@ import { computed, ref, watch } from 'vue'
 
 // Components
 import { Button } from '@/core/components/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/core/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 import { ChevronDown } from 'lucide-vue-next'
 

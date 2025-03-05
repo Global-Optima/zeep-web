@@ -15,7 +15,7 @@ import type { UpdateWarehouseDTO, WarehouseDTO } from '@/modules/admin/warehouse
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Props & Events
-const {warehouse, readonly} = defineProps<{
+const props = defineProps<{
   warehouse: WarehouseDTO
   readonly?: boolean
 }>()
@@ -38,17 +38,15 @@ const updateWarehouseSchema = toTypedSchema(
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: updateWarehouseSchema,
   initialValues: {
-    name: warehouse.name,
-    address: warehouse.facilityAddress.address,
-    regionId: warehouse.region.id
+    name: props.warehouse.name,
+    address: props.warehouse.facilityAddress?.address || '',
+    regionId: props.warehouse.region?.id || undefined
   }
 })
 
 // Handlers
 const onSubmit = handleSubmit(async (formValues) => {
-  if (readonly) return
-
-  // Ensure the latest values are used
+  if (props.readonly)
   emits('onSubmit', {
     name: formValues.name,
     facilityAddress: { address: formValues.address },
@@ -57,20 +55,13 @@ const onSubmit = handleSubmit(async (formValues) => {
 })
 
 const onCancel = () => {
-  resetForm({
-    values: {
-      name: warehouse.name,
-      address: warehouse.facilityAddress.address,
-      regionId: warehouse.region.id
-    }
-  })
-
+  resetForm()
   emits('onCancel')
 }
 
 // Region selection dialog
 const openRegionDialog = ref(false)
-const selectedRegion = ref<RegionDTO | null>(warehouse.region || null)
+const selectedRegion = ref<RegionDTO | null>(props.warehouse.region || null)
 
 function selectRegion(region: RegionDTO) {
   selectedRegion.value = region
@@ -125,7 +116,7 @@ function selectRegion(region: RegionDTO) {
 					</CardHeader>
 					<CardContent>
 						<form
-							@submit.prevent="onSubmit"
+							@submit="onSubmit"
 							class="gap-6 grid"
 						>
 							<FormField
@@ -137,6 +128,7 @@ function selectRegion(region: RegionDTO) {
 									<FormControl>
 										<Input
 											id="name"
+											type="text"
 											v-bind="componentField"
 											:readonly="readonly"
 											placeholder="Введите название склада"
@@ -151,13 +143,14 @@ function selectRegion(region: RegionDTO) {
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Название склада</FormLabel>
+									<FormLabel>Адрес</FormLabel>
 									<FormControl>
 										<Input
 											id="address"
+											type="text"
 											v-bind="componentField"
 											:readonly="readonly"
-											placeholder="Введите название склада"
+											placeholder="Введите адрес склада"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -179,7 +172,6 @@ function selectRegion(region: RegionDTO) {
 						<div>
 							<Button
 								variant="link"
-								type="button"
 								class="mt-0 p-0 h-fit text-primary underline"
 								:disabled="readonly"
 								@click="openRegionDialog = true"
@@ -199,7 +191,6 @@ function selectRegion(region: RegionDTO) {
 		>
 			<Button
 				variant="outline"
-				type="button"
 				@click="onCancel"
 				:disabled="readonly"
 				>Отменить</Button

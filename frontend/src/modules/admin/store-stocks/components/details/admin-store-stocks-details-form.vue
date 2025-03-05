@@ -14,21 +14,16 @@
 				{{ initialData.name }}
 			</h1>
 
-			<div
-				class="hidden md:flex items-center gap-2 md:ml-auto"
-				v-if="!readonly"
-			>
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
 					@click="onCancel"
-					:disabled="readonly"
 					>Отменить</Button
 				>
 				<Button
 					type="submit"
 					@click="onSubmit"
-					:disabled="readonly"
 					>Сохранить</Button
 				>
 			</div>
@@ -63,7 +58,6 @@
 									v-bind="componentField"
 									placeholder="Введите количество"
 									step="0.5"
-									:readonly="readonly"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -76,15 +70,15 @@
 						v-slot="{ componentField }"
 					>
 						<FormItem>
-							<FormLabel>
-								Порог малого запаса ({{ initialData.ingredient.unit.name.toLowerCase()}})
-							</FormLabel>
+							<FormLabel
+								>Порог малого запаса ({{ initialData.ingredient.unit.name.toLowerCase()
+								}})</FormLabel
+							>
 							<FormControl>
 								<Input
 									type="number"
 									v-bind="componentField"
 									placeholder="Введите порог малого запаса"
-									:readonly="readonly"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -95,20 +89,15 @@
 		</Card>
 
 		<!-- Footer -->
-		<div
-			class="md:hidden flex justify-center items-center gap-2"
-			v-if="!readonly"
-		>
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"
-				:disabled="readonly"
 				>Отменить</Button
 			>
 			<Button
 				type="submit"
 				@click="onSubmit"
-				:disabled="readonly"
 				>Сохранить</Button
 			>
 		</div>
@@ -137,10 +126,10 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
+
 // Props
 const props = defineProps<{
-	initialData: StoreWarehouseStockDTO,
-  readonly?: boolean
+	initialData: StoreWarehouseStockDTO
 }>()
 
 const emit = defineEmits<{

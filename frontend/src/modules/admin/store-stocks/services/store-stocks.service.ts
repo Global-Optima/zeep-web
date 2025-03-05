@@ -16,7 +16,7 @@ class StoreStockService {
 	async getStoreWarehouseStockList(filter?: GetStoreWarehouseStockFilterQuery) {
 		try {
 			const response = await apiClient.get<PaginatedResponse<StoreWarehouseStockDTO[]>>(
-				'/store-stocks',
+				'/store-warehouse-stock',
 				{
 					params: buildRequestFilter(filter),
 				},
@@ -33,7 +33,7 @@ class StoreStockService {
 	 */
 	async getStoreWarehouseStockById(id: number) {
 		try {
-			const response = await apiClient.get<StoreWarehouseStockDTO>(`/store-stocks/${id}`)
+			const response = await apiClient.get<StoreWarehouseStockDTO>(`/store-warehouse-stock/${id}`)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch store warehouse stock with ID ${id}: `, error)
@@ -46,7 +46,7 @@ class StoreStockService {
 	 */
 	async addStoreWarehouseStock(data: AddStoreWarehouseStockDTO) {
 		try {
-			const response = await apiClient.post<void>('/store-stocks', data)
+			const response = await apiClient.post<void>('/store-warehouse-stock', data)
 			return response.data
 		} catch (error) {
 			console.error('Failed to add store warehouse stock: ', error)
@@ -59,7 +59,7 @@ class StoreStockService {
 	 */
 	async addMultipleStoreWarehouseStock(data: AddMultipleStoreWarehouseStockDTO) {
 		try {
-			const response = await apiClient.post<void>('/store-stocks/multiple', data)
+			const response = await apiClient.post<void>('/store-warehouse-stock/multiple', data)
 			return response.data
 		} catch (error) {
 			console.error('Failed to add multiple store warehouse stock items: ', error)
@@ -72,7 +72,7 @@ class StoreStockService {
 	 */
 	async updateStoreWarehouseStockById(id: number, data: UpdateStoreWarehouseStockDTO) {
 		try {
-			const response = await apiClient.put<void>(`/store-stocks/${id}`, data)
+			const response = await apiClient.put<void>(`/store-warehouse-stock/${id}`, data)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to update store warehouse stock with ID ${id}: `, error)
@@ -85,7 +85,7 @@ class StoreStockService {
 	 */
 	async deleteStoreWarehouseStockById(id: number) {
 		try {
-			const response = await apiClient.delete<void>(`/store-stocks/${id}`)
+			const response = await apiClient.delete<void>(`/store-warehouse-stock/${id}`)
 			return response.data
 		} catch (error) {
 			console.error(`Failed to delete store warehouse stock with ID ${id}: `, error)

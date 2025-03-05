@@ -3,7 +3,6 @@ package types
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
-	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -44,7 +43,7 @@ func UpdateStoreFields(dto *UpdateStoreDTO) (*StoreUpdateModels, error) {
 		store.StoreHours = dto.StoreHours
 	}
 	if dto.FacilityAddress != nil {
-		facilityAddress = facilityAddressesTypes.MapToFacilityAddressModel(dto.FacilityAddress)
+		facilityAddress = MapToFacilityAddressModel(dto.FacilityAddress)
 	}
 
 	return &StoreUpdateModels{
@@ -59,7 +58,7 @@ func CreateStoreFields(dto *CreateStoreDTO) (*data.Store, error) {
 	store.Name = dto.Name
 	store.FranchiseeID = dto.FranchiseeID
 	store.WarehouseID = dto.WarehouseID
-	store.FacilityAddress = *facilityAddressesTypes.MapToFacilityAddressModel(&dto.FacilityAddress)
+	store.FacilityAddress = *MapToFacilityAddressModel(&dto.FacilityAddress)
 
 	if !utils.IsValidPhone(dto.ContactPhone, utils.DEFAULT_PHONE_NUMBER_REGION) {
 		return nil, moduleErrors.ErrValidation.WithDetails("phoneNumber")

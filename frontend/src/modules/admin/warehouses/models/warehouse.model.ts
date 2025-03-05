@@ -29,7 +29,7 @@ export interface CreateWarehouseDTO {
 
 export interface UpdateWarehouseDTO {
 	name?: string
-	regionId?: number
+	regionId: number
 	facilityAddress?: {
 		address?: string
 	}

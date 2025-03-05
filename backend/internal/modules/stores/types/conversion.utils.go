@@ -2,14 +2,13 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 	franchiseesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 )
 
 func MapToStoreDTO(store *data.Store) *StoreDTO {
 
-	facilityAddressDTO := facilityAddressesTypes.MapToFacilityAddressDTO(&store.FacilityAddress)
+	facilityAddressDTO := MapToFacilityAddressDTO(&store.FacilityAddress)
 
 	var isActive = false
 	if store.IsActive != nil && *store.IsActive {
@@ -33,4 +32,28 @@ func MapToStoreDTO(store *data.Store) *StoreDTO {
 		StoreHours:      store.StoreHours,
 		FacilityAddress: facilityAddressDTO,
 	}
+}
+
+func MapToFacilityAddressDTO(facilityAddress *data.FacilityAddress) *FacilityAddressDTO {
+	return &FacilityAddressDTO{
+		ID:        facilityAddress.ID,
+		Address:   facilityAddress.Address,
+		Longitude: safeFloat(facilityAddress.Longitude),
+		Latitude:  safeFloat(facilityAddress.Latitude),
+	}
+}
+
+func MapToFacilityAddressModel(dto *CreateOrUpdateFacilityAddressDTO) *data.FacilityAddress {
+	return &data.FacilityAddress{
+		Address:   dto.Address,
+		Longitude: dto.Longitude,
+		Latitude:  dto.Latitude,
+	}
+}
+
+func safeFloat(f *float64) float64 {
+	if f == nil {
+		return 0
+	}
+	return *f
 }

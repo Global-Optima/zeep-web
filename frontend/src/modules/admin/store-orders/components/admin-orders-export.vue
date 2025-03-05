@@ -17,8 +17,6 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
-const {storeId} = defineProps<{storeId?: number}>()
-
 // Validation schema for the form
 const formSchema = toTypedSchema(
   z.object({
@@ -57,7 +55,6 @@ const { handleSubmit, isFieldDirty } = useForm({
 const onSubmit = handleSubmit(async (values) => {
   const filter: OrdersExportFilterQuery = {
     ...values,
-    storeId: storeId,
     startDate: values.startDate ? new Date(values.startDate).toISOString() : undefined,
     endDate: values.endDate ? new Date(values.endDate).toISOString() : undefined,
   }

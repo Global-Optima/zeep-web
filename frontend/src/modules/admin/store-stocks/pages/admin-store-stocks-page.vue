@@ -4,54 +4,63 @@
 		@update:filter="updateFilter"
 	/>
 
-	<AdminListLoader v-if="isPending" />
+	<Card>
+		<CardContent class="mt-4">
+			<p
+				v-if="!storeStocksResponse || storeStocksResponse.data.length === 0"
+				class="text-muted-foreground"
+			>
+				Складские запасы не найдены
+			</p>
 
-	<div v-else>
-		<Card>
-			<CardContent class="mt-4">
-				<p
-					v-if="!storeStocksResponse || storeStocksResponse.data.length === 0"
-					class="text-muted-foreground"
-				>
-					Складские запасы не найдены
-				</p>
-
-				<AdminStoreStocksList
-					v-else
-					:stocks="storeStocksResponse.data"
-				/>
-			</CardContent>
-			<CardFooter class="flex justify-end">
-				<PaginationWithMeta
-					v-if="storeStocksResponse"
-					:meta="storeStocksResponse.pagination"
-					@update:page="updatePage"
-					@update:pageSize="updatePageSize"
-				/>
-			</CardFooter>
-		</Card>
-	</div>
+			<AdminStoreStocksList
+				v-else
+				:stocks="storeStocksResponse.data"
+			/>
+		</CardContent>
+		<CardFooter class="flex justify-end">
+			<PaginationWithMeta
+				v-if="storeStocksResponse"
+				:meta="storeStocksResponse.pagination"
+				@update:page="updatePage"
+				@update:pageSize="updatePageSize"
+			/>
+		</CardFooter>
+	</Card>
 </template>
 
 <script setup lang="ts">
-import AdminListLoader from '@/core/components/admin-list-loader/AdminListLoader.vue'
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Card, CardContent } from '@/core/components/ui/card'
 import CardFooter from '@/core/components/ui/card/CardFooter.vue'
-import { usePaginationFilter } from '@/core/hooks/use-pagination-filter.hook'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import AdminStoreStocksList from '@/modules/admin/store-stocks/components/list/admin-store-stocks-list.vue'
 import AdminStoreStocksToolbar from '@/modules/admin/store-stocks/components/list/admin-store-stocks-toolbar.vue'
 import type { GetStoreWarehouseStockFilterQuery } from '@/modules/admin/store-stocks/models/store-stock.model'
 import { storeStocksService } from '@/modules/admin/store-stocks/services/store-stocks.service'
 import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
-const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<GetStoreWarehouseStockFilterQuery>({})
+const filter = ref<GetStoreWarehouseStockFilterQuery>({})
 
-const { data: storeStocksResponse, isPending } = useQuery({
+
+const { data: storeStocksResponse } = useQuery({
   queryKey: computed(() => ['store-stocks', filter.value]),
   queryFn: () => storeStocksService.getStoreWarehouseStockList(filter.value)
 })
+
+function updateFilter(updatedFilter: GetStoreWarehouseStockFilterQuery) {
+  filter.value = {...filter.value, ...updatedFilter}
+}
+
+function updatePage(page: number) {
+  updateFilter({ pageSize: DEFAULT_PAGINATION_META.pageSize, page: page})
+
+}
+
+function updatePageSize(pageSize: number) {
+  updateFilter({ pageSize: pageSize, page: DEFAULT_PAGINATION_META.page})
+}
 </script>
 
 <style scoped></style>
