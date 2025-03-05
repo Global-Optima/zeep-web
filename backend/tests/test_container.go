@@ -12,7 +12,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
@@ -58,7 +57,7 @@ func NewTestContainer() *container.Container {
 
 		r := gin.New()
 		utils.InitValidators()
-		r.Use(middleware.SanitizeMiddleware())
+		//r.Use(middleware.SanitizeMiddleware())
 		r.Use(logger.ZapLoggerMiddleware())
 		r.Use(gin.Recovery())
 

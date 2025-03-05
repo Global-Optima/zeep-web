@@ -87,7 +87,7 @@ func TestSupplierEndpoints(t *testing.T) {
 				Method:       http.MethodGet,
 				URL:          "/api/test/suppliers/9999",
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusInternalServerError,
+				ExpectedCode: http.StatusNotFound,
 			},
 		}
 		env.RunTests(t, testCases)

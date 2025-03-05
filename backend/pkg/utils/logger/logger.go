@@ -120,17 +120,13 @@ func ZapLoggerMiddleware() gin.HandlerFunc {
 
 		c.Next() // process the request
 
-		status := c.Writer.Status()
-		if status < 400 {
-			return // skip info logs
-		}
-
 		path := c.FullPath()
 		if path == "" {
 			path = c.Request.URL.Path // fallback if no named route
 		}
 
 		latency := time.Since(start)
+		status := c.Writer.Status()
 		clientIP := c.ClientIP()
 		method := c.Request.Method
 		userAgent := c.Request.UserAgent()

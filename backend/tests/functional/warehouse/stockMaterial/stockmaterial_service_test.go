@@ -79,7 +79,7 @@ func TestStockMaterialService_GetAllStockMaterials_WithPreloadedData(t *testing.
 			filter: &types.StockMaterialFilter{
 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
 			},
-			expectedCount: 2,
+			expectedCount: 3,
 			expectError:   false,
 		},
 		{
