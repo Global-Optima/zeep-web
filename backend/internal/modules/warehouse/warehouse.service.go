@@ -1,6 +1,9 @@
 package warehouse
 
 import (
+	"errors"
+	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -44,10 +47,10 @@ func (s *warehouseService) GetAllStoresByWarehouse(warehouseID uint, pagination 
 }
 
 func (s *warehouseService) CreateWarehouse(req types.CreateWarehouseDTO) (*types.WarehouseDTO, error) {
-	facilityAddress := types.ToFacilityAddressModel(req.FacilityAddress)
+	facilityAddress := facilityAddressesTypes.MapToFacilityAddressModel(&req.FacilityAddress)
 	warehouse := types.ToWarehouseModel(req, 0)
 
-	if err := s.repo.CreateWarehouse(&warehouse, &facilityAddress); err != nil {
+	if err := s.repo.CreateWarehouse(&warehouse, facilityAddress); err != nil {
 		s.logger.Error("failed to create warehouse", zap.Error(err))
 		return nil, types.ErrFailedCreateWarehouse
 	}
@@ -102,9 +105,9 @@ func (s *warehouseService) GetWarehouses(filter *types.WarehouseFilter) ([]types
 }
 
 func (s *warehouseService) UpdateWarehouse(id uint, dto types.UpdateWarehouseDTO) (*types.WarehouseDTO, error) {
-	warehouse := types.UpdateWarehouseToModel(&dto)
+	updateModels := types.UpdateWarehouseToModels(&dto)
 
-	if err := s.repo.UpdateWarehouse(id, warehouse); err != nil {
+	if err := s.repo.UpdateWarehouse(id, updateModels); err != nil {
 		s.logger.Error("failed to update warehouse", zap.Error(err))
 		return nil, types.ErrFailedUpdateWarehouse
 	}

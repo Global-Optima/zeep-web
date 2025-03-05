@@ -7,7 +7,7 @@ export function usePaginationFilter<T extends PaginationParams>(defaultFilter: T
 
 	// Function to update filter reactively
 	function updateFilter(updatedFilter: Partial<T>) {
-		filter.value = updatedFilter
+		filter.value = { ...filter.value, ...updatedFilter }
 	}
 
 	// Function to update pagination page
@@ -20,7 +20,7 @@ export function usePaginationFilter<T extends PaginationParams>(defaultFilter: T
 		filter.value = {
 			...filter.value,
 			pageSize,
-			page: filter.value.page ?? DEFAULT_PAGINATION_META.page,
+			page: DEFAULT_PAGINATION_META.page,
 		}
 	}
 

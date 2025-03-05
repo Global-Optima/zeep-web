@@ -4,11 +4,6 @@ import { Skeleton } from '@/core/components/ui/skeleton'
 
 <template>
 	<div class="flex flex-col gap-4">
-		<div class="flex justify-between items-center gap-2">
-			<Skeleton class="rounded-md w-[256px] h-9" />
-			<Skeleton class="rounded-md w-[200px] h-9" />
-		</div>
-
-		<Skeleton class="rounded-xl w-full h-[300px]" />
+		<Skeleton class="bg-slate-200 rounded-xl w-full h-[500px]" />
 	</div>
 </template>
