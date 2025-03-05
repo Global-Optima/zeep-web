@@ -37,11 +37,11 @@ VALUES
   ('Raw Materials', 'Materials used in production');
 
 -- 7. Insert into products
-INSERT INTO products (name, description, image_url, video_url, category_id)
+INSERT INTO products (name, description, image_url, video_url, category_id, machine_id)
 VALUES
-  ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1),
-  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2),
-  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1);
+  ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1, 'TEST0000111122223333000001'),
+  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2, 'TEST0000111122223333000002'),
+  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1, 'TEST0000111122223333000003');
 
 -- 8. Insert into recipe_steps (for Espresso)
 INSERT INTO recipe_steps (product_id, step, name, description, image_url)
@@ -57,10 +57,10 @@ VALUES
   ('S', 2, 4.50, 245, 3);
 
 -- 10. Insert into additives
-INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_url)
+INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_url, machine_id)
 VALUES
-  ('Extra Milk', 'Additional milk', 0.50, 100, 1, 1, 'http://example.com/milk.png'),
-  ('Vanilla Syrup', 'Sweet vanilla flavor', 0.75, 50, 1, 2, 'http://example.com/vanilla.png');
+  ('Extra Milk', 'Additional milk', 0.50, 100, 1, 1, 'http://example.com/milk.png', 'TEST0000111122223333000009901'),
+  ('Vanilla Syrup', 'Sweet vanilla flavor', 0.75, 50, 1, 2, 'http://example.com/vanilla.png', 'TEST0000111122223333000009902');
 
 -- 11. Insert into franchisees
 INSERT INTO franchisees (name, description)

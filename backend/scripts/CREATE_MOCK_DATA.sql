@@ -203,7 +203,7 @@ VALUES
         'https://png.pngtree.com/png-vector/20240416/ourmid/pngtree-coffee-latte-seen-up-close-png-image_12286454.png',
         'https://example.com/videos/latte.mp4',
         2,
-        "ZEEP0000000011112222000001"
+        'ZEEP0000000011112222000001'
     ),
     (
         'Капучино',
@@ -211,7 +211,7 @@ VALUES
         'https://www.pngplay.com/wp-content/uploads/7/Cappuccino-Coffee-PNG-Clipart-Background.png',
         'https://example.com/videos/cappuccino.mp4',
         2,
-        "ZEEP0000000011112222000002"
+        'ZEEP0000000011112222000002'
     ),
     (
         'Эспрессо',
@@ -219,7 +219,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/previews/023/438/448/non_2x/espresso-coffee-cutout-free-png.png',
         NULL,
         2,
-        "ZEEP0000000011112222000003"
+        'ZEEP0000000011112222000003'
     ),
     (
         'Зеленый чай',
@@ -227,7 +227,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/thumbnails/024/108/075/small_2x/fresh-herbal-tea-cup-with-green-leaves-isolated-on-transparent-background-png.png',
         NULL,
         3,
-        "ZEEP0000000011112222000004"
+        'ZEEP0000000011112222000004'
     ),
     (
         'Черный чай',
@@ -235,7 +235,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/thumbnails/037/280/520/small_2x/ai-generated-black-tea-held-in-a-glass-isolated-on-transparent-background-free-png.png',
         NULL,
         3,
-        "ZEEP0000000011112222000005"
+        'ZEEP0000000011112222000005'
     ),
     (
         'Клубничный смузи',
@@ -243,7 +243,7 @@ VALUES
         'https://png.pngtree.com/png-vector/20240807/ourmid/pngtree-smooth-and-sweet-strawberry-smoothie-ready-to-serve-in-a-cool-png-image_13402854.png',
         NULL,
         4,
-        "ZEEP0000000011112222000006"
+        'ZEEP0000000011112222000006'
     ),
     (
         'Манговый смузи',
@@ -251,7 +251,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/thumbnails/033/321/478/small_2x/mango-smoothie-in-a-glass-isolated-png.png',
         NULL,
         4,
-        "ZEEP0000000011112222000007"
+        'ZEEP0000000011112222000007'
     ),
     (
         'Апельсиновый сок',
@@ -259,7 +259,7 @@ VALUES
         'https://www.pngplay.com/wp-content/uploads/6/Orange-Flavor-Juice-PNG.png',
         NULL,
         5,
-        "ZEEP0000000011112222000008"
+        'ZEEP0000000011112222000008'
     ),
     (
         'Яблочный сок',
@@ -267,7 +267,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/previews/027/145/688/non_2x/apple-juice-ice-surrounded-by-apples-and-leaves-ai-generated-png.png',
         NULL,
         5,
-        "ZEEP0000000011112222000009"
+        'ZEEP0000000011112222000009'
     ),
     (
         'Мохито',
@@ -275,7 +275,7 @@ VALUES
         'https://png.pngtree.com/png-clipart/20231119/original/pngtree-mojito-cocktail-herb-picture-image_13268789.png',
         NULL,
         6,
-        "ZEEP0000000011112222000010"
+        'ZEEP0000000011112222000010'
     ),
     (
         'Кола',
@@ -283,7 +283,7 @@ VALUES
         'https://freepngimg.com/save/2438-coca-cola-bottle-png-image/906x906',
         NULL,
         7,
-        "ZEEP0000000011112222000011"
+        'ZEEP0000000011112222000011'
     ),
     (
         'Энергетический напиток',
@@ -291,7 +291,7 @@ VALUES
         'https://pngimg.com/uploads/red_bull/red_bull_PNG29.png',
         NULL,
         8,
-        "ZEEP0000000011112222000012"
+        'ZEEP0000000011112222000012'
     ),
     (
         'Шоколадный молочный коктейль',
@@ -299,7 +299,7 @@ VALUES
         'https://png.pngtree.com/png-vector/20240603/ourmid/pngtree-hyper-realistic-image-of-chocolate-milkshake-png-image_12614596.png',
         NULL,
         9,
-        "ZEEP0000000011112222000013"
+        'ZEEP0000000011112222000013'
     ),
     (
         'Минеральная вода',
@@ -307,7 +307,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/previews/036/573/060/non_2x/cold-mineral-water-bottle-borjomi-free-png.png',
         NULL,
         10,
-        "ZEEP0000000011112222000014"
+        'ZEEP0000000011112222000014'
     ),
     (
         'Лимонный фраппе',
@@ -315,7 +315,7 @@ VALUES
         'https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-mocha-coffee-frappe-in-glass-png-image_13321780.png',
         NULL,
         11,
-        "ZEEP0000000011112222000015"
+        'ZEEP0000000011112222000015'
     ),
     (
         'Имбирный чай',
@@ -323,7 +323,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/thumbnails/039/336/072/small_2x/ai-generated-a-glass-of-ginger-tea-isolated-on-transparent-background-png.png',
         NULL,
         12,
-        "ZEEP0000000011112222000016"
+        'ZEEP0000000011112222000016'
     ),
     (
         'Чай с мятой',
@@ -331,7 +331,7 @@ VALUES
         'https://www.freepnglogos.com/uploads/tea-png/tea-latte-mix-cafe-17.png',
         NULL,
         12,
-        "ZEEP0000000011112222000017"
+        'ZEEP0000000011112222000017'
     ),
     (
         'Малиновый лимонад',
@@ -339,7 +339,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/thumbnails/036/257/929/small_2x/ai-generated-a-glass-of-strawberry-juice-isolated-on-transparent-background-free-png.png',
         NULL,
         7,
-        "ZEEP0000000011112222000018"
+        'ZEEP0000000011112222000018'
     ),
     (
         'Клубничный чай',
@@ -347,7 +347,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/previews/048/894/947/non_2x/a-strawberry-iced-tea-in-a-plastic-cup-transparent-background-png.png',
         NULL,
         3,
-        "ZEEP0000000011112222000019"
+        'ZEEP0000000011112222000019'
     ),
     (
         'Карамельный латте',
@@ -355,7 +355,7 @@ VALUES
         'https://static.vecteezy.com/system/resources/thumbnails/027/145/750/small_2x/iced-caramel-latte-topped-with-whipped-cream-and-caramel-sauce-perfect-for-drink-catalog-ai-generated-png.png',
         'https://example.com/videos/caramel-latte.mp4',
         2,
-        "ZEEP0000000011112222000020"
+        'ZEEP0000000011112222000020'
     ),
     (
         'Круассан с шоколадом',
@@ -363,7 +363,7 @@ VALUES
         'https://www.pngplay.com/wp-content/uploads/15/Pain-Au-Chocolat-Transparent-PNG.png',
         NULL,
         13,
-        "ZEEP0000000011112222000021"
+        'ZEEP0000000011112222000021'
     ),
     (
         'Круассан с миндалем',
@@ -371,7 +371,7 @@ VALUES
         'https://www.pngplay.com/wp-content/uploads/15/Croissants-Transparent-Image.png',
         NULL,
         13,
-        "ZEEP0000000011112222000022"
+        'ZEEP0000000011112222000022'
     );
 
 -- Insert into RecipeStep
@@ -456,7 +456,8 @@ INSERT INTO
         size,
         unit_id,
         additive_category_id,
-        image_url
+        image_url,
+        machine_id
     )
 VALUES
     (
@@ -466,7 +467,8 @@ VALUES
         20,
         1,
         1,
-        'https://monin.us/cdn/shop/files/750mL-Vanilla.png?v=1724939521&width=1946'
+        'https://monin.us/cdn/shop/files/750mL-Vanilla.png?v=1724939521&width=1946',
+        'ZEEP0000111122223333000001'
     ),
     (
         'Карамельный сироп',
@@ -475,7 +477,8 @@ VALUES
         40,
         3,
         1,
-        'https://www.giffard.com/327-large_default/karamell-sirup.jpg'
+        'https://www.giffard.com/327-large_default/karamell-sirup.jpg',
+        'ZEEP0000111122223333000002'
     ),
     (
         'Взбитые сливки',
@@ -484,7 +487,8 @@ VALUES
         500,
         2,
         3,
-        'https://static.vecteezy.com/system/resources/previews/033/888/680/non_2x/white-whipped-cream-with-ai-generated-free-png.png'
+        'https://static.vecteezy.com/system/resources/previews/033/888/680/non_2x/white-whipped-cream-with-ai-generated-free-png.png',
+        'ZEEP0000111122223333000003'
     ),
     (
         'Корица',
@@ -493,7 +497,8 @@ VALUES
         20,
         1,
         2,
-        'https://png.pngtree.com/png-vector/20240803/ourmid/pngtree-cinnamon-isolated-on-white-background-png-image_13361859.png'
+        'https://png.pngtree.com/png-vector/20240803/ourmid/pngtree-cinnamon-isolated-on-white-background-png-image_13361859.png',
+        'ZEEP0000111122223333000004'
     ),
     (
         'Шоколадная крошка',
@@ -502,7 +507,8 @@ VALUES
         20,
         1,
         3,
-        'https://mlfwajaoc5gr.i.optimole.com/w:1080/h:1080/q:mauto/ig:avif/http://icecreambakery.in/wp-content/uploads/2024/03/Chocolate-Chips-Manufacturer-RPG-Industries-2.png'
+        'https://mlfwajaoc5gr.i.optimole.com/w:1080/h:1080/q:mauto/ig:avif/http://icecreambakery.in/wp-content/uploads/2024/03/Chocolate-Chips-Manufacturer-RPG-Industries-2.png',
+        'ZEEP0000111122223333000005'
     ),
     (
         'Мед',
@@ -511,7 +517,8 @@ VALUES
         20,
         1,
         2,
-        'https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-3d-bowl-of-honey-with-a-driper-on-transparent-background-png-image_13330438.png'
+        'https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-3d-bowl-of-honey-with-a-driper-on-transparent-background-png-image_13330438.png',
+        'ZEEP0000111122223333000006'
     ),
     (
         'Кокосовое молоко',
@@ -520,7 +527,8 @@ VALUES
         20,
         1,
         4,
-        'https://static.vecteezy.com/system/resources/previews/049/642/396/non_2x/coconut-milk-in-a-coconut-shell-with-a-transparent-background-png.png'
+        'https://static.vecteezy.com/system/resources/previews/049/642/396/non_2x/coconut-milk-in-a-coconut-shell-with-a-transparent-background-png.png',
+        'ZEEP0000111122223333000007'
     ),
     (
         'Клубничный сироп',
@@ -529,7 +537,8 @@ VALUES
         20,
         1,
         1,
-        'https://monin.ca/cdn/shop/files/750mL-Strawberry.png?v=1727882931&width=1445'
+        'https://monin.ca/cdn/shop/files/750mL-Strawberry.png?v=1727882931&width=1445',
+        'ZEEP0000111122223333000008'
     ),
     (
         'Мята',
@@ -538,7 +547,8 @@ VALUES
         20,
         1,
         5,
-        'https://static.vecteezy.com/system/resources/thumbnails/047/732/281/small/basil-leaves-in-a-glass-bowl-transparent-background-png.png'
+        'https://static.vecteezy.com/system/resources/thumbnails/047/732/281/small/basil-leaves-in-a-glass-bowl-transparent-background-png.png',
+        'ZEEP0000111122223333000009'
     ),
     (
         'Сахар',
@@ -547,7 +557,8 @@ VALUES
         20,
         1,
         6,
-        'https://static.vecteezy.com/system/resources/thumbnails/044/902/343/small_2x/sweet-delight-enhance-your-recipes-with-sugar-in-bowl-free-png.png'
+        'https://static.vecteezy.com/system/resources/thumbnails/044/902/343/small_2x/sweet-delight-enhance-your-recipes-with-sugar-in-bowl-free-png.png',
+        'ZEEP0000111122223333000010'
     ),
     (
         'Кубики льда',
@@ -556,7 +567,8 @@ VALUES
         20,
         1,
         7,
-        'https://img.pikbest.com/origin/09/14/36/70CpIkbEsTeTk.png!sw800'
+        'https://img.pikbest.com/origin/09/14/36/70CpIkbEsTeTk.png!sw800',
+        'ZEEP0000111122223333000011'
     ),
     (
         'Сироп из клена',
@@ -565,7 +577,8 @@ VALUES
         20,
         1,
         1,
-        'https://png.pngtree.com/png-vector/20240812/ourmid/pngtree-sweet-syrup-drizzling-over-breakfast-treats-png-image_13462282.png'
+        'https://png.pngtree.com/png-vector/20240812/ourmid/pngtree-sweet-syrup-drizzling-over-breakfast-treats-png-image_13462282.png',
+        'ZEEP0000111122223333000012'
     ),
     (
         'Лимонный сок',
@@ -574,7 +587,8 @@ VALUES
         20,
         2,
         2,
-        'https://www.bestlobster.com/test/wp-content/uploads/2021/02/Lemon-PNG-Image.png'
+        'https://www.bestlobster.com/test/wp-content/uploads/2021/02/Lemon-PNG-Image.png',
+        'ZEEP0000111122223333000013'
     ),
     (
         'Какао-порошок',
@@ -583,7 +597,8 @@ VALUES
         15,
         2,
         3,
-        'https://static.vecteezy.com/system/resources/previews/041/042/862/non_2x/ai-generated-heaping-spoonful-of-cocoa-powder-free-png.png'
+        'https://static.vecteezy.com/system/resources/previews/041/042/862/non_2x/ai-generated-heaping-spoonful-of-cocoa-powder-free-png.png',
+        'ZEEP0000111122223333000014'
     );
 
 INSERT INTO
