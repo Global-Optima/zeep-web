@@ -9,12 +9,9 @@
 	<div v-else>
 		<Card>
 			<CardContent class="mt-4">
-				<!-- Loading Indicator -->
-				<PageLoader v-if="isPending" />
-
 				<!-- No Data Message -->
 				<p
-					v-else-if="!additivesResponse || additivesResponse.data.length === 0"
+					v-if="!additivesResponse || additivesResponse.data.length === 0"
 					class="text-muted-foreground text-center"
 				>
 					Топпинги не найдены
@@ -40,7 +37,6 @@
 
 <script setup lang="ts">
 import AdminListLoader from '@/core/components/admin-list-loader/AdminListLoader.vue'
-import PageLoader from '@/core/components/page-loader/PageLoader.vue'
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
 import { usePaginationFilter } from '@/core/hooks/use-pagination-filter.hook'

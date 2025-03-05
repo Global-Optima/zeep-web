@@ -13,7 +13,7 @@
 					v-if="!stores || stores.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Склады не найдены
+					Кафе не найдены
 				</p>
 				<AdminStoresList
 					v-else
