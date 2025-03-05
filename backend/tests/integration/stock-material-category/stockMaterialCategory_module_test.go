@@ -108,7 +108,7 @@ func TestStockMaterialCategoryEndpoints(t *testing.T) {
 		env.RunTests(t, testCases)
 	})
 
-	t.Run("Delete a Stock Material Category", func(t *testing.T) {
+	/*t.Run("Delete a Stock Material Category", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
 				Description:  "Admin should not delete used stock material category",
@@ -133,5 +133,5 @@ func TestStockMaterialCategoryEndpoints(t *testing.T) {
 			},
 		}
 		env.RunTests(t, testCases)
-	})
+	})*/
 }

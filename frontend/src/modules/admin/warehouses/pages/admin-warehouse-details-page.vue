@@ -58,19 +58,18 @@ const queryClient = useQueryClient()
 const route = useRoute()
 const { toast } = useToast()
 
-const additiveId = route.params.id as string
+const warehouseId = route.params.id as string
 
 const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const { data: regionDetails } = useQuery({
-	queryKey: ['admin-warehouse-details', additiveId],
-	queryFn: () => warehouseService.getById(Number(additiveId)),
-	enabled: !isNaN(Number(additiveId)),
+	queryKey: ['admin-warehouse-details', warehouseId],
+	queryFn: () => warehouseService.getById(Number(warehouseId)),
+	enabled: !isNaN(Number(warehouseId)),
 })
 
 const updateMutation = useMutation({
-	mutationFn: ({ id, dto }: { id: number; dto: UpdateWarehouseDTO }) =>
-  warehouseService.update(id, dto),
+	mutationFn: ({ id, dto }: { id: number; dto: UpdateWarehouseDTO }) => warehouseService.update(id, dto),
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
@@ -79,7 +78,7 @@ const updateMutation = useMutation({
 	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-warehouses'] })
-		queryClient.invalidateQueries({ queryKey: ['admin-warehouse-details', additiveId] })
+		queryClient.invalidateQueries({ queryKey: ['admin-warehouse-details', warehouseId] })
 		toast({
 			title: 'Успех!',
 			description: 'Данные склада успешно обновлены.',
@@ -95,7 +94,7 @@ const updateMutation = useMutation({
 })
 
 function handleUpdate(data: UpdateWarehouseDTO) {
-	if (isNaN(Number(additiveId))) {
+	if (isNaN(Number(warehouseId))) {
 		toast({
 			title: 'Ошибка',
 			description: 'Неверный идентификатор склада.',
@@ -103,8 +102,10 @@ function handleUpdate(data: UpdateWarehouseDTO) {
 		})
 		return router.back()
 	}
+  
+  console.log("DTOOO", data)
 
-	updateMutation.mutate({ id: Number(additiveId), dto: data })
+	updateMutation.mutate({ id: Number(warehouseId), dto: data })
 }
 
 function handleCancel() {

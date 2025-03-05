@@ -1,11 +1,13 @@
 <template>
-	<div>
-		<!-- Toolbar -->
-		<AdminStockRequestsToolbar
-			:filter="filter"
-			@update:filter="updateFilter"
-		/>
+	<!-- Toolbar -->
+	<AdminStockRequestsToolbar
+		:filter="filter"
+		@update:filter="updateFilter"
+	/>
 
+	<AdminListLoader v-if="isPending" />
+
+	<div v-else>
 		<!-- Main Content -->
 		<Card>
 			<CardContent class="mt-4">
@@ -34,33 +36,22 @@
 </template>
 
 <script setup lang="ts">
+import AdminListLoader from '@/core/components/admin-list-loader/AdminListLoader.vue'
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Card, CardContent } from '@/core/components/ui/card'
 import CardFooter from '@/core/components/ui/card/CardFooter.vue'
-import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
+import { usePaginationFilter } from '@/core/hooks/use-pagination-filter.hook'
 import AdminStockRequestsList from '@/modules/admin/stock-requests/components/list/admin-stock-requests-list.vue'
 import AdminStockRequestsToolbar from '@/modules/admin/stock-requests/components/list/admin-stock-requests-toolbar.vue'
 import { type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { stockRequestsService } from '@/modules/admin/stock-requests/services/stock-requests.service'
 import { useQuery } from '@tanstack/vue-query'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
-const filter = ref<GetStockRequestsFilter>({});
+const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<GetStockRequestsFilter>({})
 
-const { data: stockRequestsResponse } = useQuery({
+const { data: stockRequestsResponse, isPending } = useQuery({
   queryKey: computed(() => ['stock-requests', filter.value]),
   queryFn: () => stockRequestsService.getStockRequests(filter.value),
 });
-
-function updateFilter(updatedFilter: GetStockRequestsFilter) {
-  filter.value = { ...filter.value, ...updatedFilter };
-}
-
-function updatePage(page: number) {
-  updateFilter({ page, pageSize: DEFAULT_PAGINATION_META.pageSize });
-}
-
-function updatePageSize(pageSize: number) {
-  updateFilter({ pageSize, page: DEFAULT_PAGINATION_META.page });
-}
 </script>
