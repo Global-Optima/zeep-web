@@ -1,12 +1,9 @@
 package warehouse
 
 import (
-	"errors"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 type WarehouseService interface {
@@ -67,12 +64,8 @@ func (s *warehouseService) CreateWarehouse(req types.CreateWarehouseDTO) (*types
 func (s *warehouseService) GetWarehouseByID(id uint) (*types.WarehouseDTO, error) {
 	warehouse, err := s.repo.GetWarehouseByID(id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.logger.Error("warehouse not found", zap.Uint("warehouseID", id))
-			return nil, types.ErrWarehouseNotFound
-		}
 		s.logger.Error("failed to fetch warehouse", zap.Error(err))
-		return nil, types.ErrFailedToFetchWarehouse
+		return nil, err
 	}
 
 	return types.ToWarehouseDTO(*warehouse), nil
@@ -97,7 +90,7 @@ func (s *warehouseService) GetWarehouses(filter *types.WarehouseFilter) ([]types
 	warehouses, err := s.repo.GetWarehouses(filter)
 	if err != nil {
 		s.logger.Error("failed to fetch warehouses", zap.Error(err))
-		return nil, types.ErrFailedToFetchWarehouses
+		return nil, err
 	}
 
 	responses := make([]types.WarehouseDTO, len(warehouses))
@@ -127,12 +120,8 @@ func (s *warehouseService) UpdateWarehouse(id uint, dto types.UpdateWarehouseDTO
 
 func (s *warehouseService) DeleteWarehouse(id uint) error {
 	if err := s.repo.DeleteWarehouse(id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.logger.Error("warehouse not found", zap.Uint("warehouseID", id))
-			return types.ErrWarehouseNotFound
-		}
-		return types.ErrFailedDeleteWarehouse
+		s.logger.Error("warehouse not found", zap.Uint("warehouseID", id))
+		return err
 	}
-
 	return nil
 }

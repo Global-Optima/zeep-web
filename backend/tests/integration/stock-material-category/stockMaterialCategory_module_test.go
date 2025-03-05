@@ -108,14 +108,21 @@ func TestStockMaterialCategoryEndpoints(t *testing.T) {
 		env.RunTests(t, testCases)
 	})
 
-	/*t.Run("Delete a Stock Material Category", func(t *testing.T) {
+	t.Run("Delete a Stock Material Category", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description:  "Admin should delete a stock material category",
+				Description:  "Admin should not delete used stock material category",
 				Method:       http.MethodDelete,
 				URL:          "/api/test/stock-material-categories/1",
 				AuthRole:     data.RoleAdmin, // Only Admin can delete
-				ExpectedCode: http.StatusNoContent,
+				ExpectedCode: http.StatusConflict,
+			},
+			{
+				Description:  "Admin should delete unsed stock material category",
+				Method:       http.MethodDelete,
+				URL:          "/api/test/stock-material-categories/2",
+				AuthRole:     data.RoleAdmin, // Only Admin can delete
+				ExpectedCode: http.StatusOK,
 			},
 			{
 				Description:  "Barista should NOT be able to delete a stock material category",
@@ -126,5 +133,5 @@ func TestStockMaterialCategoryEndpoints(t *testing.T) {
 			},
 		}
 		env.RunTests(t, testCases)
-	})*/
+	})
 }

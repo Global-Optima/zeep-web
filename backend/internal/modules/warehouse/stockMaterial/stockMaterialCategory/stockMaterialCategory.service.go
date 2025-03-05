@@ -84,7 +84,7 @@ func (s *stockMaterialCategoryService) Update(id uint, dto types.UpdateStockMate
 func (s *stockMaterialCategoryService) Delete(id uint) error {
 	if err := s.repo.Delete(id); err != nil {
 		s.logger.Error("failed to delete stock material category", zap.Error(err))
-		return types.ErrFailedDeleteStockMaterialCategory
+		return err
 	}
 	return nil
 }

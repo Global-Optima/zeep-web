@@ -171,12 +171,12 @@ func TestWarehouseService_DeleteWarehouse_WithPreloadedData(t *testing.T) {
 		{
 			name:        "Delete non-existing ID 0",
 			id:          0,
-			expectedErr: fmt.Errorf("warehouse with ID %d not found", 0),
+			expectedErr: fmt.Errorf("warehouse not found"),
 		},
 		{
 			name:        "Delete non-existing ID 999",
 			id:          999,
-			expectedErr: fmt.Errorf("warehouse with ID %d not found", 999),
+			expectedErr: fmt.Errorf("warehouse not found"),
 		},
 	}
 

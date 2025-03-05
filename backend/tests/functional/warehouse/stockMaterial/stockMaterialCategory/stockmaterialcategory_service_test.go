@@ -139,7 +139,7 @@ func TestStockMaterialCategoryService_GetAll_WithPreloadedData(t *testing.T) {
 		{
 			name:          "Get all categories without filter",
 			filter:        types.StockMaterialCategoryFilter{},
-			expectedCount: 1,
+			expectedCount: 2,
 		},
 		{
 			name: "Filter by search term - matching",
