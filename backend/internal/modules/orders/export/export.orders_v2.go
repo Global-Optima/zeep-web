@@ -67,7 +67,7 @@ func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO, headers []str
 			var additivesDetails []string
 			for _, additive := range suborder.Additives {
 				total += additive.Price
-				additivesDetails = append(additivesDetails, fmt.Sprintf("ID: %d %s(%d) - %.2f KZT", additive.Additive.ID, additive.Additive.Name, additive.Additive.Size, additive.Price))
+				additivesDetails = append(additivesDetails, fmt.Sprintf("ID: %d %s(%.2f) - %.2f KZT", additive.Additive.ID, additive.Additive.Name, additive.Additive.Size, additive.Price))
 			}
 			row.AddCell().Value = fmt.Sprintf("%.2f KZT", total)
 			row.AddCell().Value = strings.Join(additivesDetails, "\n")
