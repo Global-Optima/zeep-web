@@ -61,10 +61,9 @@ func checkIngredientCategoryReferences(db *gorm.DB, ingredientCategoryID uint) e
 
 	err := db.
 		Preload("Ingredients", func(db *gorm.DB) *gorm.DB {
-			return db.Limit(1)
+			return db.Select("id").Limit(1)
 		}).
-		Where(&data.IngredientCategory{BaseEntity: data.BaseEntity{ID: ingredientCategoryID}}).
-		First(&ingredientCategory).Error
+		First(&ingredientCategory, ingredientCategoryID).Error
 	if err != nil {
 		return err
 	}

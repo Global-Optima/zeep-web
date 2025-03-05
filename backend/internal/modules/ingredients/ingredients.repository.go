@@ -163,19 +163,18 @@ func checkIngredientReferences(db *gorm.DB, ingredientID uint) error {
 
 	err := db.
 		Preload("StockMaterials", func(db *gorm.DB) *gorm.DB {
-			return db.Limit(1)
+			return db.Select("id").Limit(1)
 		}).
 		Preload("ProductSizeIngredients", func(db *gorm.DB) *gorm.DB {
-			return db.Limit(1)
+			return db.Select("id").Limit(1)
 		}).
 		Preload("StoreStocks", func(db *gorm.DB) *gorm.DB {
-			return db.Limit(1)
+			return db.Select("id").Limit(1)
 		}).
 		Preload("AdditiveIngredients", func(db *gorm.DB) *gorm.DB {
-			return db.Limit(1)
+			return db.Select("id").Limit(1)
 		}).
-		Where(&data.Ingredient{BaseEntity: data.BaseEntity{ID: ingredientID}}).
-		First(&ingredient).Error
+		First(&ingredient, ingredientID).Error
 	if err != nil {
 		return err
 	}

@@ -92,10 +92,9 @@ func checkStockMaterialCategoryReferences(db *gorm.DB, categoryID uint) error {
 
 	err := db.
 		Preload("StockMaterials", func(db *gorm.DB) *gorm.DB {
-			return db.Limit(1)
+			return db.Select("id").Limit(1)
 		}).
-		Where(&data.StockMaterialCategory{BaseEntity: data.BaseEntity{ID: categoryID}}).
-		First(&category).Error
+		First(&category, categoryID).Error
 	if err != nil {
 		return err
 	}

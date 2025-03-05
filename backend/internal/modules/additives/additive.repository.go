@@ -287,10 +287,9 @@ func checkAdditiveCategoryReferences(db *gorm.DB, additiveCategoryID uint) error
 
 	err := db.
 		Preload("Additives", func(db *gorm.DB) *gorm.DB {
-			return db.Limit(1)
+			return db.Select("id").Limit(1)
 		}).
-		Where(&data.AdditiveCategory{BaseEntity: data.BaseEntity{ID: additiveCategoryID}}).
-		First(&additiveCategory).Error
+		First(&additiveCategory, additiveCategoryID).Error
 	if err != nil {
 		return err
 	}

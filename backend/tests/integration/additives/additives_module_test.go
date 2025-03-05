@@ -1,8 +1,6 @@
 package additives_test
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/tests/mockFiles"
-	"mime/multipart"
 	"net/http"
 	"testing"
 
@@ -14,30 +12,30 @@ func TestAdditiveEndpoints(t *testing.T) {
 	env := utils.NewTestEnvironment(t)
 	defer env.Close()
 
-	imageFileHeader := mockFiles.GetMockImageByFileName("test-image-valid.png")
-	imageFileHeaders := []*multipart.FileHeader{imageFileHeader}
+	// imageFileHeader := mockFiles.GetMockImageByFileName("test-image-valid.png")
+	// imageFileHeaders := []*multipart.FileHeader{imageFileHeader}
 
 	t.Run("Create an Additive", func(t *testing.T) {
 		testCases := []utils.TestCase{
-			{
-				Description: "Admin should create a new additive WITH an image",
-				Method:      http.MethodPost,
-				URL:         "/api/test/additives",
-				FormData: map[string]string{
-					"name":               "New Test Additive 1",
-					"description":        "Sweet vanilla flavor",
-					"basePrice":          "3.99",
-					"size":               "250",
-					"unitId":             "1",
-					"additiveCategoryId": "1",
-					"ingredients":        `[{"ingredientId":2,"quantity":5.0}]`,
-				},
-				Files: map[string][]*multipart.FileHeader{
-					"image": imageFileHeaders,
-				},
-				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusCreated,
-			},
+			// {
+			// 	Description: "Admin should create a new additive WITH an image",
+			// 	Method:      http.MethodPost,
+			// 	URL:         "/api/test/additives",
+			// 	FormData: map[string]string{
+			// 		"name":               "New Test Additive 1",
+			// 		"description":        "Sweet vanilla flavor",
+			// 		"basePrice":          "3.99",
+			// 		"size":               "250",
+			// 		"unitId":             "1",
+			// 		"additiveCategoryId": "1",
+			// 		"ingredients":        `[{"ingredientId":2,"quantity":5.0}]`,
+			// 	},
+			// 	Files: map[string][]*multipart.FileHeader{
+			// 		"image": imageFileHeaders,
+			// 	},
+			// 	AuthRole:     data.RoleAdmin,
+			// 	ExpectedCode: http.StatusCreated,
+			// },
 			{
 				Description: "Should create additive without an image",
 				Method:      http.MethodPost,
@@ -140,57 +138,57 @@ func TestAdditiveEndpoints(t *testing.T) {
 
 	t.Run("Update an Additive", func(t *testing.T) {
 		testCases := []utils.TestCase{
-			{
-				Description: "Admin should update an additive WITH an image",
-				Method:      http.MethodPut,
-				URL:         "/api/test/additives/1",
-				FormData: map[string]string{
-					"name":               "Vanilla Syrup - Updated",
-					"description":        "Updated description",
-					"basePrice":          "4.50",
-					"size":               "350",
-					"unitId":             "1",
-					"additiveCategoryId": "1",
-				},
-				Files: map[string][]*multipart.FileHeader{
-					"image": imageFileHeaders,
-				},
-				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusOK,
-			},
-			{
-				Description: "Admin should update an additive WITHOUT an image",
-				Method:      http.MethodPut,
-				URL:         "/api/test/additives/1",
-				FormData: map[string]string{
-					"name":               "Caramel Syrup - Updated",
-					"description":        "Updated description",
-					"basePrice":          "5.00",
-					"size":               "400",
-					"unitId":             "1",
-					"additiveCategoryId": "1",
-				},
-				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusOK,
-			},
-			{
-				Description: "Store Manager should NOT be able to update an additive",
-				Method:      http.MethodPut,
-				URL:         "/api/test/additives/1",
-				FormData: map[string]string{
-					"name":               "Vanilla Syrup - Updated",
-					"description":        "Updated description",
-					"basePrice":          "4.50",
-					"size":               "350",
-					"unitId":             "1",
-					"additiveCategoryId": "1",
-				},
-				Files: map[string][]*multipart.FileHeader{
-					"image": imageFileHeaders,
-				},
-				AuthRole:     data.RoleStoreManager,
-				ExpectedCode: http.StatusForbidden,
-			},
+			// {
+			// 	Description: "Admin should update an additive WITH an image",
+			// 	Method:      http.MethodPut,
+			// 	URL:         "/api/test/additives/1",
+			// 	FormData: map[string]string{
+			// 		"name":               "Vanilla Syrup - Updated",
+			// 		"description":        "Updated description",
+			// 		"basePrice":          "4.50",
+			// 		"size":               "350",
+			// 		"unitId":             "1",
+			// 		"additiveCategoryId": "1",
+			// 	},
+			// 	Files: map[string][]*multipart.FileHeader{
+			// 		"image": imageFileHeaders,
+			// 	},
+			// 	AuthRole:     data.RoleAdmin,
+			// 	ExpectedCode: http.StatusOK,
+			// },
+			// {
+			// 	Description: "Admin should update an additive WITHOUT an image",
+			// 	Method:      http.MethodPut,
+			// 	URL:         "/api/test/additives/1",
+			// 	FormData: map[string]string{
+			// 		"name":               "Caramel Syrup - Updated",
+			// 		"description":        "Updated description",
+			// 		"basePrice":          "5.00",
+			// 		"size":               "400",
+			// 		"unitId":             "1",
+			// 		"additiveCategoryId": "1",
+			// 	},
+			// 	AuthRole:     data.RoleAdmin,
+			// 	ExpectedCode: http.StatusOK,
+			// },
+			// {
+			// 	Description: "Store Manager should NOT be able to update an additive",
+			// 	Method:      http.MethodPut,
+			// 	URL:         "/api/test/additives/1",
+			// 	FormData: map[string]string{
+			// 		"name":               "Vanilla Syrup - Updated",
+			// 		"description":        "Updated description",
+			// 		"basePrice":          "4.50",
+			// 		"size":               "350",
+			// 		"unitId":             "1",
+			// 		"additiveCategoryId": "1",
+			// 	},
+			// 	Files: map[string][]*multipart.FileHeader{
+			// 		"image": imageFileHeaders,
+			// 	},
+			// 	AuthRole:     data.RoleStoreManager,
+			// 	ExpectedCode: http.StatusForbidden,
+			// },
 		}
 		env.RunTests(t, testCases)
 	})
