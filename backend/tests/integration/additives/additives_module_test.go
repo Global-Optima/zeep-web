@@ -48,6 +48,7 @@ func TestAdditiveEndpoints(t *testing.T) {
 					"unitId":             "1",
 					"additiveCategoryId": "1",
 					"ingredients":        `[{"ingredientId":1,"quantity":4.0}]`,
+					"machineId":          "TEST0000111122223333000001",
 				},
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusCreated,

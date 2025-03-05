@@ -151,13 +151,13 @@ function selectRegion(region: RegionDTO) {
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Название склада</FormLabel>
+									<FormLabel>Адрес склада</FormLabel>
 									<FormControl>
 										<Input
 											id="address"
 											v-bind="componentField"
 											:readonly="readonly"
-											placeholder="Введите название склада"
+											placeholder="Введите адрес склада"
 										/>
 									</FormControl>
 									<FormMessage />
