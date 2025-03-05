@@ -84,18 +84,19 @@ func checkUnitReferences(db *gorm.DB, unitID uint) error {
 
 	err := db.
 		Preload("StockMaterials", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id").Limit(1)
+			return db.Limit(1)
 		}).
 		Preload("Additives", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id").Limit(1)
+			return db.Limit(1)
 		}).
 		Preload("ProductSizes", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id").Limit(1)
+			return db.Limit(1)
 		}).
 		Preload("Ingredients", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id").Limit(1)
+			return db.Limit(1)
 		}).
-		First(&unit, unitID).Error
+		Where(&data.Unit{BaseEntity: data.BaseEntity{ID: unitID}}).
+		First(&unit).Error
 	if err != nil {
 		return err
 	}
