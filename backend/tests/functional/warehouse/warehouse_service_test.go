@@ -2,6 +2,7 @@ package functional
 
 import (
 	"fmt"
+	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
@@ -111,30 +112,30 @@ func TestWarehouseService_UpdateWarehouse_WithPreloadedData(t *testing.T) {
 		update      types.UpdateWarehouseDTO
 		expectError bool
 	}{
-		// {
-		// 	name: "Update existing Warehouse",
-		// 	id:   1,
-		// 	update: types.UpdateWarehouseDTO{
-		// 		Name:     tests.StringPtr("Primary Warehouse"),
-		// 		RegionID: tests.UintPtr(1),
-		// 		FacilityAddress: &types.FacilityAddressDTO{
-		// 			Address: "New Address",
-		// 		},
-		// 	},
-		// 	expectError: false,
-		// },
-		// {
-		// 	name: "Update non-existing Warehouse",
-		// 	id:   0,
-		// 	update: types.UpdateWarehouseDTO{
-		// 		Name:     tests.StringPtr("Primary Warehouse"),
-		// 		RegionID: tests.UintPtr(1),
-		// 		FacilityAddress: &types.FacilityAddressDTO{
-		// 			Address: "New Address",
-		// 		},
-		// 	},
-		// 	expectError: true,
-		// },
+		{
+			name: "Update existing Warehouse",
+			id:   1,
+			update: types.UpdateWarehouseDTO{
+				Name:     tests.StringPtr("Primary Warehouse"),
+				RegionID: tests.UintPtr(1),
+				FacilityAddress: &facilityAddressesTypes.CreateOrUpdateFacilityAddressDTO{
+					Address: "New Address",
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "Update non-existing Warehouse",
+			id:   0,
+			update: types.UpdateWarehouseDTO{
+				Name:     tests.StringPtr("Primary Warehouse"),
+				RegionID: tests.UintPtr(1),
+				FacilityAddress: &facilityAddressesTypes.CreateOrUpdateFacilityAddressDTO{
+					Address: "New Address",
+				},
+			},
+			expectError: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -171,12 +172,12 @@ func TestWarehouseService_DeleteWarehouse_WithPreloadedData(t *testing.T) {
 		{
 			name:        "Delete non-existing ID 0",
 			id:          0,
-			expectedErr: fmt.Errorf("warehouse with ID %d not found", 0),
+			expectedErr: fmt.Errorf("warehouse not found"),
 		},
 		{
 			name:        "Delete non-existing ID 999",
 			id:          999,
-			expectedErr: fmt.Errorf("warehouse with ID %d not found", 999),
+			expectedErr: fmt.Errorf("warehouse not found"),
 		},
 	}
 
