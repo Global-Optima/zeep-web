@@ -43,7 +43,7 @@ func UpdateStoreFields(dto *UpdateStoreDTO) (*StoreUpdateModels, error) {
 	if dto.StoreHours != "" {
 		store.StoreHours = dto.StoreHours
 	}
-	if dto.FacilityAddress != nil {
+	if dto.FacilityAddress != nil && dto.FacilityAddress.Address != "" {
 		facilityAddress = facilityAddressesTypes.MapToFacilityAddressModel(dto.FacilityAddress)
 	}
 

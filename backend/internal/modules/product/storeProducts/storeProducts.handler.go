@@ -1,11 +1,13 @@
 package storeProducts
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/pkg/errors"
-	"net/http"
-	"strconv"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
@@ -251,6 +253,7 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 	var dtos []types.CreateStoreProductDTO
 	if err := c.ShouldBindJSON(&dtos); err != nil {
+		logrus.Info(err)
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
