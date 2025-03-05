@@ -18,7 +18,7 @@ func TestProductEndpoints(t *testing.T) {
 	// imageFileHeaders := []*multipart.FileHeader{imageFileHeader}
 	// videoFileHeaders := []*multipart.FileHeader{videoFileHeader}
 
-	//products tests
+	// products tests
 	t.Run("Create a Product", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			// {
