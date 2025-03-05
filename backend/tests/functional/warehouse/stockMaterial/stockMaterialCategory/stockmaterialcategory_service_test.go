@@ -233,7 +233,7 @@ func TestStockMaterialCategoryService_Update_WithPreloadedData(t *testing.T) {
 	}
 }
 
-/*func TestStockMaterialCategoryService_Delete_WithPreloadedData(t *testing.T) {
+func TestStockMaterialCategoryService_Delete_WithPreloadedData(t *testing.T) {
 	module := tests.GetStockMaterialCategoryModule()
 
 	_ = ResetTestData(t)
@@ -244,8 +244,13 @@ func TestStockMaterialCategoryService_Update_WithPreloadedData(t *testing.T) {
 		expectError bool
 	}{
 		{
-			name:        "Delete existing category",
+			name:        "Should not delete category in use",
 			id:          1,
+			expectError: true,
+		},
+		{
+			name:        "Delete unused category",
+			id:          2,
 			expectError: false,
 		},
 		{
@@ -269,4 +274,4 @@ func TestStockMaterialCategoryService_Update_WithPreloadedData(t *testing.T) {
 			}
 		})
 	}
-}*/
+}
