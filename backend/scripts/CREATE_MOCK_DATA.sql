@@ -9,24 +9,53 @@ INSERT INTO
         is_banned
     )
 VALUES
-    ('Иван','Иванов','hashed_password_123','+79031234567',true,false),
-    ('Мария','Смирнова','hashed_password_456','+79876543210',false,false),
-    ('Алексей','Петров','hashed_password_789','+79998887766',true,false);
-    
-    
+    (
+        'Иван',
+        'Иванов',
+        'hashed_password_123',
+        '+79031234567',
+        true,
+        false
+    ),
+    (
+        'Мария',
+        'Смирнова',
+        'hashed_password_456',
+        '+79876543210',
+        false,
+        false
+    ),
+    (
+        'Алексей',
+        'Петров',
+        'hashed_password_789',
+        '+79998887766',
+        true,
+        false
+    );
+
 -- Insert into FacilityAddress
 INSERT INTO
     facility_addresses (address, longitude, latitude)
 VALUES
     ('Улица Абая, 50, Алматы', 76.9497, 43.2383),
-    ('Проспект Республики, 25, Астана',73.0948,49.8028),
-    ('Улица Байтурсынова, 15, Алматы',76.9422,43.2528),
+    (
+        'Проспект Республики, 25, Астана',
+        73.0948,
+        49.8028
+    ),
+    (
+        'Улица Байтурсынова, 15, Алматы',
+        76.9422,
+        43.2528
+    ),
     ('Улица Сарыарка, 12, Астана', 71.4100, 51.1690),
     ('Улица Панфилова, 98, Алматы', 76.9271, 43.2575),
-    ('Улица Ш. Уалиханова, 7, Астана',71.4451,51.1);
+    ('Улица Ш. Уалиханова, 7, Астана', 71.4451, 51.1);
 
 -- Insert into Units
-INSERT INTO units (name, conversion_factor)
+INSERT INTO
+    units (name, conversion_factor)
 VALUES
     ('Килограмм', 1.0),
     ('Грамм', 0.001),
@@ -46,28 +75,40 @@ INSERT INTO
 VALUES
     (
         (
-            SELECT id
-            FROM facility_addresses
-            WHERE address = 'Улица Абая, 50, Алматы'
+            SELECT
+                id
+            FROM
+                facility_addresses
+            WHERE
+                address = 'Улица Абая, 50, Алматы'
         ),
         'Алматинский склад',
         (
-            SELECT id
-            FROM regions
-            WHERE name = 'Алматы'
+            SELECT
+                id
+            FROM
+                regions
+            WHERE
+                name = 'Алматы'
         )
     ),
     (
         (
-            SELECT id
-            FROM facility_addresses
-            WHERE address = 'Проспект Республики, 25, Астана'
+            SELECT
+                id
+            FROM
+                facility_addresses
+            WHERE
+                address = 'Проспект Республики, 25, Астана'
         ),
         'Астанинский склад',
         (
-            SELECT id
-            FROM regions
-            WHERE name = 'Астана'
+            SELECT
+                id
+            FROM
+                regions
+            WHERE
+                name = 'Астана'
         )
     );
 
@@ -80,41 +121,106 @@ VALUES
     ('Чай', 'Различные виды чая'),
     ('Смузи', 'Фруктовые и овощные смузи'),
     ('Соки', 'Свежевыжатые соки и напитки'),
-    ('Коктейли','Алкогольные и безалкогольные коктейли'),
-    ('Газированные напитки','Прохладительные газированные напитки'),
-    ('Энергетические напитки','Напитки для повышения энергии'),
-    ('Молочные коктейли','Коктейли на основе молока и сливок'),
-    ('Минеральная вода','Природная и газированная минеральная вода'),
+    (
+        'Коктейли',
+        'Алкогольные и безалкогольные коктейли'
+    ),
+    (
+        'Газированные напитки',
+        'Прохладительные газированные напитки'
+    ),
+    (
+        'Энергетические напитки',
+        'Напитки для повышения энергии'
+    ),
+    (
+        'Молочные коктейли',
+        'Коктейли на основе молока и сливок'
+    ),
+    (
+        'Минеральная вода',
+        'Природная и газированная минеральная вода'
+    ),
     ('Фраппе', 'Кофейные напитки со льдом'),
     ('Травяные чаи', 'Настои и чаи на травах'),
-    ('Круассаны','Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе');
+    (
+        'Круассаны',
+        'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе'
+    );
 
 -- Insert into AdditiveCategory
-INSERT INTO additive_categories (name, description, is_multiple_select)
+INSERT INTO
+    additive_categories (name, description, is_multiple_select)
 VALUES
-    ('Ароматизаторы','Дополнительные вкусы для усиления аромата',true),
+    (
+        'Ароматизаторы',
+        'Дополнительные вкусы для усиления аромата',
+        true
+    ),
     ('Подсластители', 'Добавление сладости', false),
-    ('Топпинги','Украшения для десертов и напитков',true),
+    (
+        'Топпинги',
+        'Украшения для десертов и напитков',
+        true
+    ),
     ('Сиропы', 'Сиропы для напитков и десертов', false),
     ('Специи', 'Ароматные специи для напитков', true),
-    ('Молочные добавки','Добавление молока и сливок',false),
+    (
+        'Молочные добавки',
+        'Добавление молока и сливок',
+        false
+    ),
     ('Фрукты', 'Свежие и сушеные фрукты', true),
-    ('Орехи','Измельченные орехи для украшения',false),
+    (
+        'Орехи',
+        'Измельченные орехи для украшения',
+        false
+    ),
     ('Шоколад', 'Шоколадная стружка и какао', true),
-    ('Мед','Естественный подсластитель на основе меда',false),
+    (
+        'Мед',
+        'Естественный подсластитель на основе меда',
+        false
+    ),
     ('Сахарные добавки', 'Различные виды сахара', true),
-    ('Кубики льда','Лед для охлаждения напитков',false);
+    (
+        'Кубики льда',
+        'Лед для охлаждения напитков',
+        false
+    );
 
 -- Insert into IngredientCategories
-INSERT INTO ingredient_categories (name, description)
+INSERT INTO
+    ingredient_categories (name, description)
 VALUES
-    ('Молочные продукты', 'Категория для молока, сливок, и других молочных ингредиентов'),
-    ('Фрукты', 'Категория для фруктов, таких как яблоки, бананы, апельсины'),
-    ('Подсластители', 'Категория для сахара, мёда, сиропов'),
-    ('Специи', 'Категория для специй, таких как корица, ваниль, мята, имбирь'),
-    ('Орехи и семена', 'Категория для орехов, фисташек, и других семян'),
-    ('Шоколад и какао', 'Категория для шоколада, какао-порошка, и других шоколадных продуктов'),
-    ('Охлаждающие добавки', 'Категория для льда, мороженого, и других охлаждающих ингредиентов');
+    (
+        'Молочные продукты',
+        'Категория для молока, сливок, и других молочных ингредиентов'
+    ),
+    (
+        'Фрукты',
+        'Категория для фруктов, таких как яблоки, бананы, апельсины'
+    ),
+    (
+        'Подсластители',
+        'Категория для сахара, мёда, сиропов'
+    ),
+    (
+        'Специи',
+        'Категория для специй, таких как корица, ваниль, мята, имбирь'
+    ),
+    (
+        'Орехи и семена',
+        'Категория для орехов, фисташек, и других семян'
+    ),
+    (
+        'Шоколад и какао',
+        'Категория для шоколада, какао-порошка, и других шоколадных продуктов'
+    ),
+    (
+        'Охлаждающие добавки',
+        'Категория для льда, мороженого, и других охлаждающих ингредиентов'
+    );
 
 -- Insert into Products
 INSERT INTO
@@ -285,9 +391,27 @@ VALUES
 INSERT INTO
     recipe_steps (product_id, step, name, description, image_url)
 VALUES
-    (1,1,'Приготовление эспрессо','Сварить эспрессо','https://example.com/images/espresso.jpg'),
-    (1,2,'Вспенивание молока','Вспенить молоко до нужной текстуры','https://example.com/images/steamed-milk.jpg'),
-    (2,1,'Приготовление пены','Сделать густую пену для капучино','https://example.com/images/foam.jpg');
+    (
+        1,
+        1,
+        'Приготовление эспрессо',
+        'Сварить эспрессо',
+        'https://example.com/images/espresso.jpg'
+    ),
+    (
+        1,
+        2,
+        'Вспенивание молока',
+        'Вспенить молоко до нужной текстуры',
+        'https://example.com/images/steamed-milk.jpg'
+    ),
+    (
+        2,
+        1,
+        'Приготовление пены',
+        'Сделать густую пену для капучино',
+        'https://example.com/images/foam.jpg'
+    );
 
 -- Insert into ProductSize
 -- Insert into ProductSize
@@ -302,42 +426,294 @@ INSERT INTO
     )
 VALUES
     -- Все unit_id заменены на 4 (миллилитры)
-    ('S', 4, 1000.00, 250, 1, 'ZEEP0000000000000000000000000001'),
-    ('M', 4, 1250.00, 350, 1, 'ZEEP0000000000000000000000000002'),
-    ('L', 4, 1500.00, 450, 1, 'ZEEP0000000000000000000000000003'),
-    ('S', 4, 1100.00, 300, 2, 'ZEEP0000000000000000000000000004'),
-    ('S', 4, 750.00, 200, 3, 'ZEEP0000000000000000000000000005'),
-    ('M', 4, 900.00, 300, 3, 'ZEEP0000000000000000000000000006'),
-    ('L', 4, 1150.00, 400, 3, 'ZEEP0000000000000000000000000007'),
-    ('S', 4, 600.00, 250, 4, 'ZEEP0000000000000000000000000008'),
-    ('M', 4, 850.00, 350, 4, 'ZEEP0000000000000000000000000009'),
-    ('L', 4, 1100.00, 450, 4, 'ZEEP0000000000000000000000000010'),
-    ('S', 4, 900.00, 250, 5, 'ZEEP0000000000000000000000000011'),
-    ('M', 4, 1100.00, 350, 5, 'ZEEP0000000000000000000000000012'),
-    ('L', 4, 1300.00, 450, 5, 'ZEEP0000000000000000000000000013'),
-    ('S', 4, 1500.00, 300, 6, 'ZEEP0000000000000000000000000014'),
-    ('L', 4, 1750.00, 500, 6, 'ZEEP0000000000000000000000000015'),
-    ('S', 4, 500.00, 200, 7, 'ZEEP0000000000000000000000000016'),
-    ('M', 4, 750.00, 300, 7, 'ZEEP0000000000000000000000000017'),
-    ('L', 4, 900.00, 400, 7, 'ZEEP0000000000000000000000000018'),
-    ('S', 4, 600.00, 300, 8, 'ZEEP0000000000000000000000000019'),
-    ('L', 4, 750.00, 500, 8, 'ZEEP0000000000000000000000000020'),
-    ('M', 4, 800.00, 350, 9, 'ZEEP0000000000000000000000000021'),
-    ('L', 4, 1000.00, 550, 9, 'ZEEP0000000000000000000000000022'),
-    ('S', 4, 500.00, 200, 10, 'ZEEP0000000000000000000000000023'),
-    ('M', 4, 700.00, 350, 10, 'ZEEP0000000000000000000000000024'),
-    ('S', 4, 600.00, 500, 11, 'ZEEP0000000000000000000000000025'),
-    ('S', 4, 900.00, 500, 12, 'ZEEP0000000000000000000000000026'),
-    ('S', 4, 400.00, 500, 13, 'ZEEP0000000000000000000000000027'),
-    ('S', 4, 900.00, 300, 14, 'ZEEP0000000000000000000000000028'),
-    ('S', 4, 1200.00, 300, 15, 'ZEEP0000000000000000000000000029'),
-    ('S', 4, 800.00, 300, 16, 'ZEEP0000000000000000000000000030'),
-    ('S', 4, 800.00, 300, 17, 'ZEEP0000000000000000000000000031'),
-    ('S', 4, 1400.00, 300, 18, 'ZEEP0000000000000000000000000032'),
-    ('S', 4, 1100.00, 300, 19, 'ZEEP0000000000000000000000000033'),
-    ('S', 4, 1250.00, 500, 20, 'ZEEP0000000000000000000000000034'),
-    ('S', 4, 1250.00, 500, 21, 'ZEEP0000000000000000000000000035'),
-    ('S', 4, 1500.00, 500, 22, 'ZEEP0000000000000000000000000036');
+    (
+        'S',
+        4,
+        1000.00,
+        250,
+        1,
+        'ZEEP0000000000000000000000000001'
+    ),
+    (
+        'M',
+        4,
+        1250.00,
+        350,
+        1,
+        'ZEEP0000000000000000000000000002'
+    ),
+    (
+        'L',
+        4,
+        1500.00,
+        450,
+        1,
+        'ZEEP0000000000000000000000000003'
+    ),
+    (
+        'S',
+        4,
+        1100.00,
+        300,
+        2,
+        'ZEEP0000000000000000000000000004'
+    ),
+    (
+        'S',
+        4,
+        750.00,
+        200,
+        3,
+        'ZEEP0000000000000000000000000005'
+    ),
+    (
+        'M',
+        4,
+        900.00,
+        300,
+        3,
+        'ZEEP0000000000000000000000000006'
+    ),
+    (
+        'L',
+        4,
+        1150.00,
+        400,
+        3,
+        'ZEEP0000000000000000000000000007'
+    ),
+    (
+        'S',
+        4,
+        600.00,
+        250,
+        4,
+        'ZEEP0000000000000000000000000008'
+    ),
+    (
+        'M',
+        4,
+        850.00,
+        350,
+        4,
+        'ZEEP0000000000000000000000000009'
+    ),
+    (
+        'L',
+        4,
+        1100.00,
+        450,
+        4,
+        'ZEEP0000000000000000000000000010'
+    ),
+    (
+        'S',
+        4,
+        900.00,
+        250,
+        5,
+        'ZEEP0000000000000000000000000011'
+    ),
+    (
+        'M',
+        4,
+        1100.00,
+        350,
+        5,
+        'ZEEP0000000000000000000000000012'
+    ),
+    (
+        'L',
+        4,
+        1300.00,
+        450,
+        5,
+        'ZEEP0000000000000000000000000013'
+    ),
+    (
+        'S',
+        4,
+        1500.00,
+        300,
+        6,
+        'ZEEP0000000000000000000000000014'
+    ),
+    (
+        'L',
+        4,
+        1750.00,
+        500,
+        6,
+        'ZEEP0000000000000000000000000015'
+    ),
+    (
+        'S',
+        4,
+        500.00,
+        200,
+        7,
+        'ZEEP0000000000000000000000000016'
+    ),
+    (
+        'M',
+        4,
+        750.00,
+        300,
+        7,
+        'ZEEP0000000000000000000000000017'
+    ),
+    (
+        'L',
+        4,
+        900.00,
+        400,
+        7,
+        'ZEEP0000000000000000000000000018'
+    ),
+    (
+        'S',
+        4,
+        600.00,
+        300,
+        8,
+        'ZEEP0000000000000000000000000019'
+    ),
+    (
+        'L',
+        4,
+        750.00,
+        500,
+        8,
+        'ZEEP0000000000000000000000000020'
+    ),
+    (
+        'M',
+        4,
+        800.00,
+        350,
+        9,
+        'ZEEP0000000000000000000000000021'
+    ),
+    (
+        'L',
+        4,
+        1000.00,
+        550,
+        9,
+        'ZEEP0000000000000000000000000022'
+    ),
+    (
+        'S',
+        4,
+        500.00,
+        200,
+        10,
+        'ZEEP0000000000000000000000000023'
+    ),
+    (
+        'M',
+        4,
+        700.00,
+        350,
+        10,
+        'ZEEP0000000000000000000000000024'
+    ),
+    (
+        'S',
+        4,
+        600.00,
+        500,
+        11,
+        'ZEEP0000000000000000000000000025'
+    ),
+    (
+        'S',
+        4,
+        900.00,
+        500,
+        12,
+        'ZEEP0000000000000000000000000026'
+    ),
+    (
+        'S',
+        4,
+        400.00,
+        500,
+        13,
+        'ZEEP0000000000000000000000000027'
+    ),
+    (
+        'S',
+        4,
+        900.00,
+        300,
+        14,
+        'ZEEP0000000000000000000000000028'
+    ),
+    (
+        'S',
+        4,
+        1200.00,
+        300,
+        15,
+        'ZEEP0000000000000000000000000029'
+    ),
+    (
+        'S',
+        4,
+        800.00,
+        300,
+        16,
+        'ZEEP0000000000000000000000000030'
+    ),
+    (
+        'S',
+        4,
+        800.00,
+        300,
+        17,
+        'ZEEP0000000000000000000000000031'
+    ),
+    (
+        'S',
+        4,
+        1400.00,
+        300,
+        18,
+        'ZEEP0000000000000000000000000032'
+    ),
+    (
+        'S',
+        4,
+        1100.00,
+        300,
+        19,
+        'ZEEP0000000000000000000000000033'
+    ),
+    (
+        'S',
+        4,
+        1250.00,
+        500,
+        20,
+        'ZEEP0000000000000000000000000034'
+    ),
+    (
+        'S',
+        4,
+        1250.00,
+        500,
+        21,
+        'ZEEP0000000000000000000000000035'
+    ),
+    (
+        'S',
+        4,
+        1500.00,
+        500,
+        22,
+        'ZEEP0000000000000000000000000036'
+    );
 
 -- Insert into Additives
 INSERT INTO
@@ -496,9 +872,18 @@ VALUES
 INSERT INTO
     franchisees (name, description)
 VALUES
-    ('Кофейня "Астана"','Франчайзинговая сеть кофеен в городе Астана'),
-    ('Сеть кофеен "Юг"','Сеть кофеен на юге Казахстана'),
-    ('Кофейня "Шымкент"','Кофейня в центре города Шымкент');
+    (
+        'Кофейня "Астана"',
+        'Франчайзинговая сеть кофеен в городе Астана'
+    ),
+    (
+        'Сеть кофеен "Юг"',
+        'Сеть кофеен на юге Казахстана'
+    ),
+    (
+        'Кофейня "Шымкент"',
+        'Кофейня в центре города Шымкент'
+    );
 
 -- Insert into Store
 INSERT INTO
@@ -515,11 +900,56 @@ INSERT INTO
         updated_at
     )
 VALUES
-    ('Центральное Кафе',3,NULL,1,true,'+79001112233','central@example.com','8:00-20:00',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),   -- Assigned to 'Алматинский склад'
-    ('Кафе на Углу',4,1,2, true,'+79002223344','corner@example.com','9:00-22:00',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),          -- Assigned to 'Астанинский склад'
-    ('Маленькое Кафе',5,2,1, true,'+79003334455','smallstore@example.com','8:00-18:00',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),    -- Assigned to 'Алматинский склад'
-    ('Городское Кафе',6,NULL,2, true,'+79004445566','citycoffee@example.com','7:00-23:00',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP); -- Assigned to 'Астанинский склад'
+    (
+        'Центральное Кафе',
+        3,
+        NULL,
+        1,
+        true,
+        '+79001112233',
+        'central@example.com',
+        '8:00-20:00',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Assigned to 'Алматинский склад'
+    (
+        'Кафе на Углу',
+        4,
+        1,
+        2,
+        true,
+        '+79002223344',
+        'corner@example.com',
+        '9:00-22:00',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Assigned to 'Астанинский склад'
+    (
+        'Маленькое Кафе',
+        5,
+        2,
+        1,
+        true,
+        '+79003334455',
+        'smallstore@example.com',
+        '8:00-18:00',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Assigned to 'Алматинский склад'
+    (
+        'Городское Кафе',
+        6,
+        NULL,
+        2,
+        true,
+        '+79004445566',
+        'citycoffee@example.com',
+        '7:00-23:00',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
+-- Assigned to 'Астанинский склад'
 -- Insert into StoreAdditives store 1 additives are loaded later in the script
 INSERT INTO
     store_additives (store_id, additive_id)
@@ -561,8 +991,10 @@ SELECT
     true,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-FROM products p
-WHERE p.deleted_at IS NULL;
+FROM
+    products p
+WHERE
+    p.deleted_at IS NULL;
 
 -- Store 2
 INSERT INTO
@@ -575,8 +1007,9 @@ VALUES
     (2, 14, false), -- Mineral Water
     (2, 18, true), -- Raspberry Lemonade
     (2, 17, false), -- Mint Tea
-    (2, 16, true); -- Ginger Tea
+    (2, 16, true);
 
+-- Ginger Tea
 -- Store 3
 INSERT INTO
     store_products (store_id, product_id, is_available)
@@ -588,9 +1021,9 @@ VALUES
     (3, 15, true), -- Lemon Frappe
     (3, 7, true), -- Mango Smoothie
     (3, 20, true), -- Caramel Latte
-    (3, 13, true); -- Chocolate Milkshake
+    (3, 13, true);
 
-
+-- Chocolate Milkshake
 -- Store 4
 INSERT INTO
     store_products (store_id, product_id, is_available)
@@ -713,8 +1146,9 @@ VALUES
     ('Клубника', 33, 0.3, 8, 0.7, 10, 1, 2), -- Килограмм
     ('Имбирь', 80, 0.8, 18, 1.8, 180, 2, 4), -- Грамм (исправлено)
     ('Соль', 0, 0, 0, 0, 1095, 2, 4), -- Грамм (исправлено)
-    ('Фисташки', 562, 45, 28, 20, 365, 2, 5); -- Грамм (исправлено)
+    ('Фисташки', 562, 45, 28, 20, 365, 2, 5);
 
+-- Грамм (исправлено)
 -- Орехи и семена
 -- Insert into AdditiveIngredients
 INSERT INTO
@@ -849,8 +1283,8 @@ FROM
     LEFT JOIN product_size_ingredients psi ON ps.id = psi.product_size_id
 WHERE
     psi.id IS NULL;
--- Фисташки
 
+-- Фисташки
 -- Insert into Employee
 INSERT INTO
     employees (
@@ -995,8 +1429,20 @@ INSERT INTO
         updated_at
     )
 VALUES
-    (1,8,'FRANCHISEE_OWNER',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-    (1,9,'FRANCHISEE_MANAGER',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+    (
+        1,
+        8,
+        'FRANCHISEE_OWNER',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        1,
+        9,
+        'FRANCHISEE_MANAGER',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
 -- Store Employees Table
 INSERT INTO
@@ -1008,11 +1454,41 @@ INSERT INTO
         updated_at
     )
 VALUES
-    (2, 2, 'STORE_MANAGER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 3, 'STORE_MANAGER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 1, 'BARISTA', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (10, 2, 'BARISTA', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (12, 4, 'STORE_MANAGER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (
+        2,
+        2,
+        'STORE_MANAGER',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        3,
+        3,
+        'STORE_MANAGER',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        4,
+        1,
+        'BARISTA',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        10,
+        2,
+        'BARISTA',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        12,
+        4,
+        'STORE_MANAGER',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
 -- Warehouse Employees Table
 INSERT INTO
@@ -1024,8 +1500,20 @@ INSERT INTO
         updated_at
     )
 VALUES
-    (5,1,'WAREHOUSE_EMPLOYEE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
-    (6,2,'WAREHOUSE_MANAGER',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+    (
+        5,
+        1,
+        'WAREHOUSE_EMPLOYEE',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        6,
+        2,
+        'WAREHOUSE_MANAGER',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
 -- Region Managers Table
 INSERT INTO
@@ -1037,7 +1525,13 @@ INSERT INTO
         updated_at
     )
 VALUES
-    (7,1,'REGION_WAREHOUSE_MANAGER',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+    (
+        7,
+        1,
+        'REGION_WAREHOUSE_MANAGER',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
 -- Admin Employees Table
 INSERT INTO
@@ -1050,8 +1544,16 @@ VALUES
 INSERT INTO
     employee_work_tracks (start_work_at, end_work_at, employee_id)
 VALUES
-    ('2024-10-01 09:00:00+00','2024-10-01 17:00:00+00',1),
-    ('2024-10-02 09:00:00+00','2024-10-02 17:00:00+00', 1);
+    (
+        '2024-10-01 09:00:00+00',
+        '2024-10-01 17:00:00+00',
+        1
+    ),
+    (
+        '2024-10-02 09:00:00+00',
+        '2024-10-02 17:00:00+00',
+        1
+    );
 
 -- Insert into EmployeeWorkday
 INSERT INTO
@@ -1102,33 +1604,171 @@ INSERT INTO
     )
 VALUES
     -- Store 1 Stocks (Центральное Кафе)
-    (1, 1, 10000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Молоко (литр)
-    (1, 2, 10000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Сахар (кг)
-    (1, 3, 100000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Шоколад (грамм)
-    (1, 5, 100000, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Мед (грамм)
-    (1, 6, 100000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Ваниль (грамм)
-    
+    (
+        1,
+        1,
+        10000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Молоко (литр)
+    (
+        1,
+        2,
+        10000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Сахар (кг)
+    (
+        1,
+        3,
+        100000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Шоколад (грамм)
+    (
+        1,
+        5,
+        100000,
+        20,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Мед (грамм)
+    (
+        1,
+        6,
+        100000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Ваниль (грамм)
     -- Store 2 Stocks (Кафе на Углу)
-    (2, 1, 10000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Молоко (литр)
-    (2, 2, 10000, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Сахар (кг)
-    (2, 7, 100000, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Мята (грамм)
-    (2, 8, 10000, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Кокосовое молоко (литр)
-    (2, 10, 10000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Лимонный сок (литр)
-    
+    (
+        2,
+        1,
+        10000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Молоко (литр)
+    (
+        2,
+        2,
+        10000,
+        5,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Сахар (кг)
+    (
+        2,
+        7,
+        100000,
+        15,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Мята (грамм)
+    (
+        2,
+        8,
+        10000,
+        20,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Кокосовое молоко (литр)
+    (
+        2,
+        10,
+        10000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Лимонный сок (литр)
     -- Store 3 Stocks (Маленькое Кафе)
-    (3, 1, 10000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Молоко (литр)
-    (3, 3, 100000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Шоколад (грамм)
-    (3, 5, 100000, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Мед (грамм)
-    (3, 12, 100000, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Имбирь (грамм)
-    (3, 14, 100000, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Какао-порошок (грамм)
-    
+    (
+        3,
+        1,
+        10000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Молоко (литр)
+    (
+        3,
+        3,
+        100000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Шоколад (грамм)
+    (
+        3,
+        5,
+        100000,
+        20,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Мед (грамм)
+    (
+        3,
+        12,
+        100000,
+        5,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Имбирь (грамм)
+    (
+        3,
+        14,
+        100000,
+        15,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Какао-порошок (грамм)
     -- Store 4 Stocks (Городское Кафе)
-    (4, 1, 10000, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Молоко (литр)
-    (4, 2, 10000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Сахар (кг)
-    (4, 7, 100000, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Мята (грамм)
-    (4, 9, 100000, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Кубики льда (мл)
-    (4, 14, 100000, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Какао-порошок (грамм)
+    (
+        4,
+        1,
+        10000,
+        20,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Молоко (литр)
+    (
+        4,
+        2,
+        10000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Сахар (кг)
+    (
+        4,
+        7,
+        100000,
+        15,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Мята (грамм)
+    (
+        4,
+        9,
+        100000,
+        5,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Кубики льда (мл)
+    (
+        4,
+        14,
+        100000,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
+-- Какао-порошок (грамм)
 WITH
     store_list AS (
         SELECT
@@ -1187,11 +1827,23 @@ WHERE
 INSERT INTO
     stock_material_categories (name, description)
 VALUES
-    ('Молочные продукты', 'Молоко, сливки, йогурты и другие молочные продукты'),
-    ('Подсластители', 'Сахар, мед и другие подсластители'),
-    ('Кондитерские изделия','Шоколад, какао и другие кондитерские ингредиенты'),
+    (
+        'Молочные продукты',
+        'Молоко, сливки, йогурты и другие молочные продукты'
+    ),
+    (
+        'Подсластители',
+        'Сахар, мед и другие подсластители'
+    ),
+    (
+        'Кондитерские изделия',
+        'Шоколад, какао и другие кондитерские ингредиенты'
+    ),
     ('Специи', 'Различные специи и пряности'),
-    ('Ароматизаторы','Ванильный экстракт и другие ароматизаторы');
+    (
+        'Ароматизаторы',
+        'Ванильный экстракт и другие ароматизаторы'
+    );
 
 -- Insert stock materials with Russian names and category references
 INSERT INTO
@@ -1374,8 +2026,9 @@ VALUES
         '2024-10-01',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
-    ); -- Delivery 3
+    );
 
+-- Delivery 3
 -- Insert into supplier_warehouse_delivery_materials
 INSERT INTO
     supplier_warehouse_delivery_materials (
@@ -1390,8 +2043,9 @@ VALUES
     (1, 2, '222222222222', 30, '2025-06-05'), -- Sugar Delivery
     (2, 3, '333333333333', 40, '2025-11-20'), -- Chocolate Delivery
     (3, 4, '444444444444', 20, '2026-06-10'), -- Cinnamon Delivery
-    (3, 5, '555555555555', 15, '2027-12-15'); -- Vanilla Delivery
+    (3, 5, '555555555555', 15, '2027-12-15');
 
+-- Vanilla Delivery
 -- Insert mock data into supplier_materials
 INSERT INTO
     supplier_materials (
@@ -1411,8 +2065,9 @@ VALUES
     (3, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
     -- Unilever supplies Vanilla
     (4, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
-    (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate
+    (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
+-- Chocolate
 -- Insert mock data into supplier_prices
 INSERT INTO
     supplier_prices (supplier_material_id, base_price)
@@ -1453,10 +2108,34 @@ INSERT INTO
         updated_at
     )
 VALUES
-    (1, 1, 'CREATED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 2, 'PROCESSED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 2, 'IN_DELIVERY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 1, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (
+        1,
+        1,
+        'CREATED',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        2,
+        2,
+        'PROCESSED',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        3,
+        2,
+        'IN_DELIVERY',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        4,
+        1,
+        'COMPLETED',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
 INSERT INTO
     stock_request_ingredients (
@@ -1478,4 +2157,6 @@ VALUES
     (3, 2, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
     -- StockRequest 4 (Store 4 -> Warehouse 4)
     (4, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate
+    (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Chocolate
