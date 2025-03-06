@@ -115,7 +115,7 @@ func TestUnitEndpoints(t *testing.T) {
 		env.RunTests(t, testCases)
 	})
 
-	/*t.Run("Delete a Unit", func(t *testing.T) {
+	t.Run("Delete a Unit", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
 				Description:  "Should not delete a unit in use",
@@ -123,6 +123,13 @@ func TestUnitEndpoints(t *testing.T) {
 				URL:          "/api/test/units/1",
 				AuthRole:     data.RoleAdmin, // ✅ Only admin can delete
 				ExpectedCode: http.StatusConflict,
+			},
+			{
+				Description:  "Should delete unused unit",
+				Method:       http.MethodDelete,
+				URL:          "/api/test/units/3",
+				AuthRole:     data.RoleAdmin, // ✅ Only admin can delete
+				ExpectedCode: http.StatusOK,
 			},
 			{
 				Description:  "Barista should NOT be able to delete a unit",
@@ -133,5 +140,5 @@ func TestUnitEndpoints(t *testing.T) {
 			},
 		}
 		env.RunTests(t, testCases)
-	})*/
+	})
 }

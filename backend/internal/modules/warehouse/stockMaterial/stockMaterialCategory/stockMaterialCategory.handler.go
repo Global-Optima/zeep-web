@@ -137,7 +137,7 @@ func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	response, err := h.service.GetByID(uint(id))
+	response, err := h.service.GetByID(id)
 	if err != nil {
 		if errors.Is(err, types.ErrStockMaterialCategoryNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterialCategory)
@@ -146,7 +146,7 @@ func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Delete(uint(id)); err != nil {
+	if err := h.service.Delete(id); err != nil {
 		if errors.Is(err, types.ErrStockMaterialCategoryIsInUse) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409StockMaterialCategoryDeleteInUse)
 			return
@@ -157,7 +157,7 @@ func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
 
 	action := types.DeleteStockMaterialAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(id),
+			ID:   id,
 			Name: response.Name,
 		})
 

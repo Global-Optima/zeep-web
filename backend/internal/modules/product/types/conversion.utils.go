@@ -77,6 +77,7 @@ func MapToBaseProductSizeDTO(productSize data.ProductSize) BaseProductSizeDTO {
 		ProductID: productSize.ProductID,
 		Size:      productSize.Size,
 		BasePrice: productSize.BasePrice,
+		MachineId: productSize.MachineId,
 	}
 }
 
@@ -131,6 +132,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 		UnitID:    dto.UnitID,
 		BasePrice: dto.BasePrice,
 		Size:      dto.Size,
+		MachineId: dto.MachineId,
 	}
 
 	for _, additive := range dto.Additives {
@@ -171,6 +173,7 @@ func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
 			product.CategoryID = dto.CategoryID
 		}
 	}
+
 	return product
 }
 
@@ -188,6 +191,9 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 	if dto.Size != nil {
 		productSize.Size = *dto.Size
+	}
+	if dto.MachineId != nil {
+		productSize.MachineId = *dto.MachineId
 	}
 
 	var additives []data.ProductSizeAdditive

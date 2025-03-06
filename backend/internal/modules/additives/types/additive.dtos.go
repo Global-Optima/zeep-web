@@ -1,10 +1,11 @@
 package types
 
 import (
+	"mime/multipart"
+
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"mime/multipart"
 )
 
 type AdditiveCategoriesFilterQuery struct {
@@ -41,6 +42,7 @@ type BaseAdditiveDTO struct {
 	Size        float64                 `json:"size"`
 	Unit        unitTypes.UnitsDTO      `json:"unit"`
 	Category    BaseAdditiveCategoryDTO `json:"category"`
+	MachineId   string                  `json:"machineId"`
 }
 
 type AdditiveDTO struct {
@@ -66,6 +68,7 @@ type BaseAdditiveCategoryItemDTO struct {
 	Size        float64            `json:"size"`
 	Unit        unitTypes.UnitsDTO `json:"unit"`
 	CategoryID  uint               `json:"categoryId"`
+	MachineId   string             `json:"machineId"`
 }
 
 type AdditiveCategoryItemDTO struct {
@@ -100,6 +103,7 @@ type UpdateAdditiveDTO struct {
 	Size               *float64                `form:"size" binding:"omitempty,gt=0"`
 	UnitID             *uint                   `form:"unitId" binding:"omitempty,gt=0"`
 	AdditiveCategoryID *uint                   `form:"additiveCategoryId" binding:"omitempty,gt=0"`
+	MachineId          *string                 `form:"machineId" binding:"omitempty"`
 	Ingredients        []SelectedIngredientDTO `json:"-"`
 	Image              *multipart.FileHeader
 }
@@ -118,6 +122,7 @@ type CreateAdditiveDTO struct {
 	Size               float64                 `form:"size" binding:"required,gt=0"`
 	UnitID             uint                    `form:"unitId" binding:"required,gt=0"`
 	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"required,gt=0"`
+	MachineId          string                  `form:"machineId" binding:"required"`
 	Ingredients        []SelectedIngredientDTO `json:"-"`
 	Image              *multipart.FileHeader
 }

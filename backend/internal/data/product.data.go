@@ -52,6 +52,7 @@ type ProductSize struct {
 	ProductID              uint    `gorm:"index;not null"`
 	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
 	DiscountID             uint
+	MachineId              string                  `gorm:"size:40;not null;unique" sort:"machineId"`
 	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 }
@@ -126,6 +127,7 @@ type Additive struct {
 	AdditiveCategoryID   uint                  `gorm:"index"`
 	Category             AdditiveCategory      `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL" sort:"category"`
 	ImageURL             StorageImageKey       `gorm:"size:2048"`
+	MachineId            string                `gorm:"size:40;not null;unique" sort:"machineId"`
 	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`
 	Ingredients          []AdditiveIngredient  `gorm:"foreignKey:AdditiveID"`

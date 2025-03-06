@@ -43,7 +43,7 @@ const selectedStatus = ref<{ label: string; count: number; status?: OrderStatus 
  */
 const { filteredOrders, orderCountsByStatus, setFilter } = useOrderEventsService({
   status: selectedStatus.value.status,
-})
+}, {printOnCreate: true})
 
 /**
  * Convert orderCountsByStatus into an array structure for the

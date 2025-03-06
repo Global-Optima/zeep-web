@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
@@ -23,6 +24,7 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 		UnitID:             dto.UnitID,
 		Size:               dto.Size,
 		AdditiveCategoryID: dto.AdditiveCategoryID,
+		MachineId:          dto.MachineId,
 	}
 
 	for _, ingredient := range dto.Ingredients {
@@ -58,6 +60,9 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) (*AdditiveModels, er
 	}
 	if dto.AdditiveCategoryID != nil {
 		additive.AdditiveCategoryID = *dto.AdditiveCategoryID
+	}
+	if dto.MachineId != nil {
+		additive.MachineId = *dto.MachineId
 	}
 
 	var ingredients []data.ProductSizeIngredient
@@ -135,6 +140,7 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		Category:    *ConvertToCategoryDTO(&additive.Category),
+		MachineId:   additive.MachineId,
 	}
 }
 
@@ -186,5 +192,6 @@ func ConvertToBaseAdditiveCategoryItem(additive *data.Additive, categoryID uint)
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		CategoryID:  categoryID,
+		MachineId:   additive.MachineId,
 	}
 }

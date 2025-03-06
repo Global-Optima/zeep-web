@@ -152,14 +152,21 @@ func TestIngredientCategoryEndpoints(t *testing.T) {
 		env.RunTests(t, testCases)
 	})
 
-	/*t.Run("Delete an Ingredient Category", func(t *testing.T) {
+	t.Run("Delete an Ingredient Category", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description:  "Admin should delete an ingredient category",
+				Description:  "Admin should delete unused ingredient category",
+				Method:       http.MethodDelete,
+				URL:          "/api/test/ingredient-categories/3",
+				AuthRole:     data.RoleAdmin, // Only Admin allowed
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Admin should not delete used ingredient category",
 				Method:       http.MethodDelete,
 				URL:          "/api/test/ingredient-categories/1",
 				AuthRole:     data.RoleAdmin, // Only Admin allowed
-				ExpectedCode: http.StatusOK,
+				ExpectedCode: http.StatusConflict,
 			},
 			{
 				Description:  "Barista should NOT be able to delete an ingredient category",
@@ -170,5 +177,5 @@ func TestIngredientCategoryEndpoints(t *testing.T) {
 			},
 		}
 		env.RunTests(t, testCases)
-	})*/
+	})
 }

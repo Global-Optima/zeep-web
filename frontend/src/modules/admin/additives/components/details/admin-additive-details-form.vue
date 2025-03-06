@@ -64,6 +64,7 @@ const createAdditiveSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название добавки'),
     description: z.string().min(1, 'Введите описание'),
+    machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
     unitId: z.number().min(0, 'Введите единицу измерения'),
@@ -83,6 +84,7 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
     unitId: additive.unit.id,
     imageUrl: additive.imageUrl,
     additiveCategoryId: additive.category.id,
+    machineId: additive.machineId
   }
 })
 
@@ -273,6 +275,24 @@ function removeIngredient(index: number) {
 									</FormItem>
 								</FormField>
 							</div>
+
+							<FormField
+								name="machineId"
+								v-slot="{ componentField }"
+							>
+								<FormItem>
+									<FormLabel>Код топпинга из автомата</FormLabel>
+									<FormControl>
+										<Input
+											id="machineId"
+											type="text"
+											v-bind="componentField"
+											placeholder="Введите код"
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							</FormField>
 						</div>
 					</CardContent>
 				</Card>

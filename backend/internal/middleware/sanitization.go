@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -28,31 +27,54 @@ func SanitizeMiddleware() gin.HandlerFunc {
 }
 
 func processJSONRequest(c *gin.Context) {
-	var requestData map[string]interface{}
-	if err := c.ShouldBindJSON(&requestData); err != nil {
-		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+	var requestData interface{}
+
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	for key, value := range requestData {
-		if strVal, ok := value.(string); ok {
-			sanitized, valid := utils.SanitizeString(strVal)
-			if !valid {
-				localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
-				return
-			}
-			requestData[key] = sanitized
-		}
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
+	if err := json.Unmarshal(body, &requestData); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
 	}
+
+	requestData = sanitizeRecursive(requestData)
 
 	sanitizedBody, _ := json.Marshal(requestData)
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(sanitizedBody))
 }
 
+func sanitizeRecursive(data interface{}) interface{} {
+	switch v := data.(type) {
+	case map[string]interface{}:
+		for key, value := range v {
+			v[key] = sanitizeRecursive(value)
+		}
+		return v
+	case []interface{}:
+		for i, item := range v {
+			v[i] = sanitizeRecursive(item)
+		}
+		return v
+	case string:
+		sanitized, valid := utils.SanitizeString(v)
+		if !valid {
+			return ""
+		}
+		return sanitized
+	default:
+		return v
+	}
+}
+
 func processMultipartRequest(c *gin.Context) {
 	form, err := c.MultipartForm()
 	if err != nil {
-		localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
@@ -60,7 +82,7 @@ func processMultipartRequest(c *gin.Context) {
 		for i, val := range values {
 			sanitized, valid := utils.SanitizeString(val)
 			if !valid {
-				localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+				localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 				return
 			}
 			form.Value[key][i] = sanitized

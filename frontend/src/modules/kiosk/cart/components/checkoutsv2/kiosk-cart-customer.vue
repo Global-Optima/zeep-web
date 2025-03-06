@@ -155,7 +155,7 @@ const returnToMenu = () => {
 
 			<!-- Cart Items -->
 			<div class="gap-4 grid px-6 py-4 overflow-y-auto no-scrollbar">
-				<div class="flex flex-col gap-6 h-[100dvh]">
+				<div class="flex flex-col gap-6 h-[50dvh]">
 					<div
 						v-for="cartItem in cartItemsArray"
 						:key="cartItem.key"
@@ -181,7 +181,7 @@ const returnToMenu = () => {
 					<Input
 						:model-value="customerName"
 						@update:model-value="v => emits('update:customerName', v.toString())"
-						class="bg-slate-100 px-6 py-6 border-none rounded-xl w-full text-xl"
+						class="bg-slate-100 px-6 py-8 border-none rounded-xl w-full text-xl"
 						placeholder="Введите ваше имя"
 					/>
 

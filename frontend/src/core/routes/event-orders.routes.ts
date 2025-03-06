@@ -1,4 +1,3 @@
-import AppDefaultLayout from '@/core/layouts/default/app-default-layout.vue'
 import type { AppRouteRecord, ParentRoutePage } from './routes.types'
 
 export const EVENT_ORDERS_CHILDREN_ROUTES = {
@@ -24,6 +23,6 @@ export const EVENT_ORDERS_CHILDREN_ROUTES = {
 
 export const EVENT_ORDERS_ROUTES_CONFIG: ParentRoutePage = {
 	path: '/',
-	component: AppDefaultLayout,
+	component: () => import('@/core/layouts/default/app-default-layout.vue'),
 	children: EVENT_ORDERS_CHILDREN_ROUTES,
 }

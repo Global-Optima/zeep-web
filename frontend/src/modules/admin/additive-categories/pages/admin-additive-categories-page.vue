@@ -14,7 +14,7 @@
 				<!-- No Data Message -->
 				<p
 					v-if="!categoriesResponse || categoriesResponse.data.length === 0"
-					class="flex justify-center items-center h-52 text-muted-foreground text-center"
+					class="text-muted-foreground text-center"
 				>
 					Категории топпингов не найдены
 				</p>

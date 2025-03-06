@@ -90,6 +90,7 @@
   },
   "responses": {
     "500": "An unexpected error occurred. Please try again later.",
+    "409": "The request could not be completed due to a conflict with the current state of the resource.",
     "404": "The requested resource was not found.",
     "403": "Access denied. You do not have permission to view this resource.",
     "401": "You need to log in to access this resource.",

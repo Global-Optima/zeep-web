@@ -11,7 +11,8 @@ VALUES
 INSERT INTO units (name, conversion_factor)
 VALUES
   ('Piece', 1),
-  ('Kilogram', 1);
+  ('Kilogram', 1),
+  ('Unused', 1);
 
 -- 3. Insert into product_categories
 INSERT INTO product_categories (name, description)
@@ -23,25 +24,28 @@ VALUES
 INSERT INTO additive_categories (name, description, is_multiple_select)
 VALUES
   ('Milk Additives', 'Milk based additives', TRUE),
-  ('Syrups', 'Flavored syrups', TRUE);
+  ('Syrups', 'Flavored syrups', TRUE),
+  ('Unused Additives', 'Unused additives description', TRUE);
 
 -- 5. Insert into ingredient_categories
 INSERT INTO ingredient_categories (name, description)
 VALUES
   ('Dairy', 'Milk and related products'),
-  ('Sweeteners', 'Sugar and sweeteners');
+  ('Sweeteners', 'Sugar and sweeteners'),
+  ('Unused Category', 'Not used category');
 
 -- 6. Insert into stock_material_categories
 INSERT INTO stock_material_categories (name, description)
 VALUES
-  ('Raw Materials', 'Materials used in production');
+  ('Raw Materials', 'Materials used in production'),
+  ('Unused Materials', 'Not used materials');
 
 -- 7. Insert into products
-INSERT INTO products (name, description, image_url, video_url, category_id)
+INSERT INTO products (name, description, image_url, video_url, category_id, machine_id)
 VALUES
-  ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1),
-  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2),
-  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1);
+  ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1, 'TEST0000111122223333000001'),
+  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2, 'TEST0000111122223333000002'),
+  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1, 'TEST0000111122223333000003');
 
 -- 8. Insert into recipe_steps (for Espresso)
 INSERT INTO recipe_steps (product_id, step, name, description, image_url)
@@ -57,10 +61,10 @@ VALUES
   ('S', 2, 4.50, 245, 3);
 
 -- 10. Insert into additives
-INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_url)
+INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_url, machine_id)
 VALUES
-  ('Extra Milk', 'Additional milk', 0.50, 100, 1, 1, 'http://example.com/milk.png'),
-  ('Vanilla Syrup', 'Sweet vanilla flavor', 0.75, 50, 1, 2, 'http://example.com/vanilla.png');
+  ('Extra Milk', 'Additional milk', 0.50, 100, 1, 1, 'http://example.com/milk.png', 'TEST0000111122223333000009901'),
+  ('Vanilla Syrup', 'Sweet vanilla flavor', 0.75, 50, 1, 2, 'http://example.com/vanilla.png', 'TEST0000111122223333000009902');
 
 -- 11. Insert into franchisees
 INSERT INTO franchisees (name, description)
@@ -109,7 +113,8 @@ VALUES
 INSERT INTO ingredients (name, calories, fat, carbs, proteins, expiration_in_days, unit_id, category_id)
 VALUES
   ('Coffee Beans', 5, 0, 0, 0, 365, 1, 1),
-  ('Milk', 42, 1, 5, 3, 7, 1, 1);
+  ('Milk', 42, 1, 5, 3, 7, 1, 1),
+  ('Unused ingredient', 5, 0, 0, 0, 365, 1, 1);
 
 -- 20. Insert into product_size_ingredients
 INSERT INTO product_size_ingredients (ingredient_id, product_size_id, quantity)
@@ -259,7 +264,8 @@ VALUES
 INSERT INTO stock_materials (name, description, ingredient_id, safety_stock, unit_id, size, category_id, barcode, expiration_period_in_days, is_active)
 VALUES
     ('Coffee Beans Jacobs', 'Material for coffee', 1, 50, 1, 100, 1, 'CB001', 365, true),
-    ('Coffee Beans Nescafe', 'Material for coffee', 1, 50, 1, 300, 1, 'CB002', 365, true);
+    ('Coffee Beans Nescafe', 'Material for coffee', 1, 50, 1, 300, 1, 'CB002', 365, true),
+    ('Unused stock material', 'not used', 1, 50, 1, 300, 1, 'CB003', 365, true);
 
 -- 43. Insert into stock_request_ingredients
 -- INSERT INTO stock_request_ingredients (stock_request_id, stock_material_id, quantity, delivered_date, expiration_date)

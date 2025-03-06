@@ -9,11 +9,9 @@
 	<div v-else>
 		<Card>
 			<CardContent class="mt-4">
-				<PageLoader v-if="isPending" />
-
 				<p
-					v-else-if="!franchiseesResponse || franchiseesResponse.data.length === 0"
-					class="flex justify-center items-center h-52 text-muted-foreground text-center"
+					v-if="!franchiseesResponse || franchiseesResponse.data.length === 0"
+					class="text-muted-foreground text-center"
 				>
 					Франчайзи не найдены
 				</p>
@@ -37,7 +35,6 @@
 
 <script setup lang="ts">
 import AdminListLoader from '@/core/components/admin-list-loader/AdminListLoader.vue'
-import PageLoader from "@/core/components/page-loader/PageLoader.vue"
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
 import { usePaginationFilter } from "@/core/hooks/use-pagination-filter.hook"

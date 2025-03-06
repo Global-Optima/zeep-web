@@ -1,4 +1,3 @@
-import AppDefaultLayout from '@/core/layouts/default/app-default-layout.vue'
 import type { AppRouteRecord, ParentRoutePage } from './routes.types'
 
 export const ERRORS_CHILDREN_ROUTES = {
@@ -22,6 +21,6 @@ export const ERRORS_CHILDREN_ROUTES = {
 
 export const ERRORS_ROUTES_CONFIG: ParentRoutePage = {
 	path: '/errors',
-	component: AppDefaultLayout,
+	component: () => import('@/core/layouts/default/app-default-layout.vue'),
 	children: ERRORS_CHILDREN_ROUTES,
 }

@@ -1,27 +1,35 @@
 import { useToast } from '@/core/components/ui/toast'
-import { getSavedQRSettings, useQRPrinter } from '@/core/hooks/use-qr-print.hook'
+import {
+	generateSubOrderQR,
+	getSavedBaristaQRSettings,
+	useQRPrinter,
+} from '@/core/hooks/use-qr-print.hook'
 import type {
 	OrderDTO,
 	OrderStatus,
 	SuborderDTO,
 } from '@/modules/admin/store-orders/models/orders.models'
+
 import { useWebSocket } from '@vueuse/core'
-import { computed, reactive, ref, watchEffect } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 interface OrderFilterOptions {
 	status?: OrderStatus
 }
 
-// Global reactive state for all orders
+interface UseOrderEventsServiceOptions {
+	printOnCreate?: boolean
+}
+
 const state = reactive<{ allOrders: OrderDTO[] }>({
 	allOrders: [],
 })
 
+// --------------------------------------
+// HELPERS
+// --------------------------------------
 const wsUrl = import.meta.env.VITE_WS_URL || 'ws://example:8080/api/v1'
 
-/**
- * Convert a raw OrderDTO into a deeply reactive object.
- */
 function convertOrderToReactive(order: OrderDTO): OrderDTO {
 	return reactive({
 		...order,
@@ -29,114 +37,128 @@ function convertOrderToReactive(order: OrderDTO): OrderDTO {
 	}) as OrderDTO
 }
 
-/**
- * Merge updated fields into an existing reactive order without losing references.
- * This preserves reactivity on nested objects (like subOrders).
- */
 function mergeOrder(existingOrder: OrderDTO, updatedOrder: OrderDTO) {
-	// Merge top-level properties
+	// Merge top-level fields
 	Object.assign(existingOrder, updatedOrder)
 
-	// Replace subOrders with new reactive copies to ensure correct reactivity
+	// Replace subOrders with fresh reactive copies
 	existingOrder.subOrders = updatedOrder.subOrders.map((sub: SuborderDTO) => reactive(sub))
 }
 
-/**
- * Sort orders by creation time (ascending). Adjust if you prefer descending.
- */
 function sortOrders(orderList: OrderDTO[]): OrderDTO[] {
 	return orderList.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 }
 
-export function useOrderEventsService(initialFilter: OrderFilterOptions = {}) {
+/**
+ * The main hook to manage live orders via WebSocket.
+ *
+ * @param initialFilter - Initial filter for orders (e.g., { status: 'PENDING' })
+ * @param options - Additional config, including whether to print on create.
+ */
+export function useOrderEventsService(
+	initialFilter: OrderFilterOptions = {},
+	options: UseOrderEventsServiceOptions = { printOnCreate: false },
+) {
+	const { printOnCreate = true } = options
+
+	// ----------------------------------
+	// Setup: Toast + QR Printer
+	// ----------------------------------
 	const { toast } = useToast()
 	const { printQR } = useQRPrinter()
 
-	// WebSocket URL includes timezone, if desired
+	// ----------------------------------
+	// Reactive Filter
+	// ----------------------------------
+	const localFilter = ref<OrderFilterOptions>({ ...initialFilter })
+
+	// ----------------------------------
+	// WebSocket Setup
+	// ----------------------------------
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 	const url = `${wsUrl}/orders/ws?timezone=${timezone}`
 
-	// Local filter is a ref so we can update it reactively
-	const localFilter = ref({ ...initialFilter })
-
-	// Configure our WebSocket
 	const {
 		status: socketStatus,
-		data: messageEvent,
 		send,
 		open,
 		close,
 	} = useWebSocket(url, {
 		immediate: true,
-		autoReconnect: true,
-		onError: err => {
-			console.error('WebSocket Error:', err)
+		autoReconnect: {
+			retries: 10,
+			delay: 2000,
+		},
+		onConnected() {
+			console.log('[WS] Connected!')
+		},
+		onDisconnected() {
+			toast({
+				title: 'Вы отключились',
+				description: 'Соединение с заказами было прервано.',
+			})
+		},
+		onError(err) {
+			console.error('[WS] Error:', err)
 			toast({
 				title: 'Ошибка соединения',
 				description: 'Не удалось подключиться к серверу.',
 				variant: 'destructive',
 			})
 		},
-		onDisconnected: () => {
-			toast({
-				title: 'Вы отключились',
-				description: 'Соединение с заказами было прервано.',
-			})
+		/**
+		 * Handle incoming messages here (instead of watchEffect on `data`).
+		 * This avoids extra re-renders.
+		 */
+		onMessage(_, event) {
+			if (!event.data) return
+
+			try {
+				const msg = JSON.parse(event.data)
+				switch (msg.type) {
+					case 'initial_data':
+						handleInitialData(msg.payload)
+						break
+
+					case 'order_created':
+						handleOrderCreated(msg.payload)
+						break
+
+					case 'order_updated':
+						handleOrderUpdated(msg.payload)
+						break
+
+					case 'order_deleted':
+						handleOrderDeleted(msg.payload)
+						break
+
+					default:
+						console.warn('Неизвестный тип события:', msg.type)
+						toast({
+							title: 'Неизвестное событие',
+							description: `Получен неизвестный тип события: ${msg.type}`,
+							variant: 'destructive',
+						})
+				}
+			} catch (err) {
+				console.error('Не удалось разобрать сообщение WebSocket:', err)
+				toast({
+					title: 'Ошибка обработки данных',
+					description: 'Не удалось обработать данные от сервера.',
+					variant: 'destructive',
+				})
+			}
 		},
 	})
 
-	// Handle incoming WebSocket messages
-	watchEffect(() => {
-		if (!messageEvent.value) return
-		try {
-			const msg = JSON.parse(messageEvent.value)
-			switch (msg.type) {
-				case 'initial_data':
-					handleInitialData(msg.payload)
-					break
-				case 'order_created':
-					handleOrderCreated(msg.payload)
-					break
-				case 'order_updated':
-					handleOrderUpdated(msg.payload)
-					break
-				case 'order_deleted':
-					handleOrderDeleted(msg.payload)
-					break
-				default:
-					console.warn('Неизвестный тип события:', msg.type)
-					toast({
-						title: 'Неизвестное событие',
-						description: `Получен неизвестный тип события: ${msg.type}`,
-						variant: 'destructive',
-					})
-			}
-		} catch (err) {
-			console.error('Не удалось разобрать сообщение WebSocket:', err)
-			toast({
-				title: 'Ошибка обработки данных',
-				description: 'Не удалось обработать данные от сервера.',
-				variant: 'destructive',
-			})
-		}
-	})
-
 	// ----------------------------------
-	// Public Computed + Methods
+	// Computed
 	// ----------------------------------
-
-	/**
-	 * Filter orders by the chosen status. If no status is specified,
-	 * return all orders.
-	 */
 	const filteredOrders = computed(() => {
 		if (!localFilter.value.status) return state.allOrders
 		return state.allOrders.filter(o => o.status === localFilter.value.status)
 	})
 
-	/**
-	 * Tally counts of each status.
-	 */
 	const orderCountsByStatus = computed<Record<OrderStatus, number>>(() => {
 		const counts: Record<OrderStatus, number> = {
 			PENDING: 0,
@@ -152,47 +174,29 @@ export function useOrderEventsService(initialFilter: OrderFilterOptions = {}) {
 		return counts
 	})
 
-	/**
-	 * Update our local filter.
-	 */
+	// ----------------------------------
+	// Public Methods
+	// ----------------------------------
 	function setFilter(newFilter: OrderFilterOptions) {
 		localFilter.value = { ...localFilter.value, ...newFilter }
 	}
 
 	// ----------------------------------
-	// Message/Event Handlers
+	// Event Handlers
 	// ----------------------------------
-
-	/** Replace entire list with sorted reactive orders. */
 	function handleInitialData(initialOrders: OrderDTO[]) {
 		state.allOrders = sortOrders(initialOrders.map(convertOrderToReactive))
 	}
 
-	/**
-	 * On "order_created" event: upsert the order.
-	 * If it's truly new, print barcodes.
-	 */
 	async function handleOrderCreated(newOrder: OrderDTO) {
-		// Upsert the order (add to state or update)
 		const [reactiveOrder, isNew] = upsertOrder(newOrder)
-		if (!isNew) return // If order is not new, skip printing
+		if (!isNew || !printOnCreate) return
 
-		// Load saved QR settings from storage
-		const currentBaristaQRSettings = getSavedQRSettings()
+		const { width, height } = getSavedBaristaQRSettings()
 
 		try {
-			// Use for-loop to ensure sequential printing
-			for (const sub of reactiveOrder.subOrders) {
-				const name = `${sub.productSize.productName} ${sub.productSize.sizeName}`
-				await printQR(
-					name,
-					`suborder-${sub.id}`, // QR code value
-					currentBaristaQRSettings.width,
-					currentBaristaQRSettings.height,
-					{ showModal: false }, // Silent printing
-				)
-				console.log(`✅ Suborder with id ${sub.id} printed`)
-			}
+			const suborderQRs = reactiveOrder.subOrders.map(s => generateSubOrderQR(s))
+			printQR(suborderQRs, { labelHeightMm: height, labelWidthMm: width })
 		} catch (err) {
 			console.error('Ошибка при печати QR-кода:', err)
 			toast({
@@ -203,30 +207,17 @@ export function useOrderEventsService(initialFilter: OrderFilterOptions = {}) {
 		}
 	}
 
-	/**
-	 * On "order_updated" event: upsert the order (merge updates).
-	 */
-	function handleOrderUpdated(updated: OrderDTO) {
-		upsertOrder(updated)
+	function handleOrderUpdated(updatedOrder: OrderDTO) {
+		upsertOrder(updatedOrder)
 	}
 
-	/**
-	 * On "order_deleted" event: remove the order by ID.
-	 */
 	function handleOrderDeleted(orderId: number) {
 		state.allOrders = state.allOrders.filter(o => o.id !== orderId)
 	}
 
 	// ----------------------------------
-	// Internal Helpers
+	// Upsert Helper
 	// ----------------------------------
-
-	/**
-	 * Upsert an order:
-	 *  - If `order.id` exists, merge changes (preserve references).
-	 *  - Otherwise, insert a new reactive order at the front.
-	 * Returns [theReactiveOrder, isNew].
-	 */
 	function upsertOrder(orderData: OrderDTO): [OrderDTO, boolean] {
 		const idx = state.allOrders.findIndex(o => o.id === orderData.id)
 		if (idx !== -1) {
@@ -244,16 +235,15 @@ export function useOrderEventsService(initialFilter: OrderFilterOptions = {}) {
 	}
 
 	// ----------------------------------
-	// Return the Hook API
+	// Return API
 	// ----------------------------------
-
 	return {
-		// Reactive data
+		// State
 		status: socketStatus,
 		filteredOrders,
 		orderCountsByStatus,
 
-		// Actions
+		// Methods
 		setFilter,
 		send,
 		open,

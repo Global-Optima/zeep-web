@@ -9,13 +9,10 @@
 	<div v-else>
 		<Card>
 			<CardContent class="mt-4">
-				<!-- Loading Indicator -->
-				<PageLoader v-if="isPending" />
-
 				<!-- No Data Message -->
 				<p
-					v-else-if="!productCategoriesResponse || productCategoriesResponse.data.length === 0"
-					class="flex justify-center items-center h-52 text-muted-foreground text-center"
+					v-if="!productCategoriesResponse || productCategoriesResponse.data.length === 0"
+					class="text-muted-foreground text-center"
 				>
 					Категории ингредиентов не найдены
 				</p>
@@ -40,7 +37,6 @@
 
 <script setup lang="ts">
 import AdminListLoader from '@/core/components/admin-list-loader/AdminListLoader.vue'
-import PageLoader from "@/core/components/page-loader/PageLoader.vue"
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
 import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
 import { usePaginationFilter } from "@/core/hooks/use-pagination-filter.hook"

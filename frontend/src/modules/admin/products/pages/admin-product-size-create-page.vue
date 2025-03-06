@@ -62,6 +62,7 @@ function handleCreate(data: CreateProductSizeFormSchema) {
 		unitId: data.unitId,
 		basePrice: data.basePrice,
 		size: data.size,
+    machineId: data.machineId,
 		isDefault: false,
 		additives: data.additives.map(a => ({ additiveId: a.additiveId, isDefault: a.isDefault })),
 		ingredients: data.ingredients.map(a => ({ ingredientId: a.ingredientId, quantity: a.quantity })),

@@ -8,7 +8,7 @@ type FacilityAddressDTO struct {
 }
 
 type CreateOrUpdateFacilityAddressDTO struct {
-	Address   string   `json:"address"`
+	Address   string   `json:"address" binding:"required"`
 	Longitude *float64 `json:"longitude,omitempty"`
 	Latitude  *float64 `json:"latitude,omitempty"`
 }
