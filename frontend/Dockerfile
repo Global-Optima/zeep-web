@@ -34,14 +34,8 @@ FROM nginx:alpine AS final
 # Remove default nginx config if needed
 RUN rm -f /etc/nginx/conf.d/default.conf
 
-# Copy custom nginx configuration if available
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy the template
+COPY nginx.template.conf /etc/nginx/nginx.template.conf
 
-# Copy the production build from the builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Expose port 80
-EXPOSE 80
-
-# Run nginx in the foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Use envsubst to replace variables in the template
+CMD envsubst '$NGINX_SERVER_NAME' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && nginx -g "daemon off;"

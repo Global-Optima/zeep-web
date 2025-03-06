@@ -15,22 +15,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22.x
+          bun-version: latest
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install Dependencies (Bun)
+        run: bun install --frozen-lockfile
 
       - name: Lint Code
-        run: npm run lint
+        run: bun run lint
 
       - name: Build Frontend
-        run: npm run build
+        run: bun run build
 
       - name: Run Unit Tests
-        run: npm run test:unit
+        run: bun run test:unit
 
   backend:
     runs-on: ubuntu-latest
