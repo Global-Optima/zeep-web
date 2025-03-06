@@ -103,7 +103,7 @@ export class KaspiService {
 
 	constructor(config: KaspiConfig) {
 		this.api = axios.create({
-			baseURL: `${window.location.origin}/external/kaspi/?ip=${config.posIpAddress}&port=8080`,
+			baseURL: `${window.location.origin}/external/kaspi/${config.posIpAddress}/8080`,
 			timeout: config.timeout || 60000,
 		})
 
