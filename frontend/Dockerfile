@@ -31,19 +31,18 @@ RUN bun run build
 # ====================
 FROM nginx:alpine AS final
 
-# Remove default nginx config if needed
+# Remove default config and copy template
 RUN rm -f /etc/nginx/conf.d/default.conf
-
-# Copy the template
 COPY nginx.template.conf /etc/nginx/nginx.template.conf
 
-# Replace placeholder in the template
-RUN envsubst '$NGINX_SERVER_NAME' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf
-
+# Copy static files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80
-EXPOSE 80
+# Add custom entrypoint script
+COPY scripts/envsubst_nginx.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Start Nginx
+# Expose port and set entrypoint
+EXPOSE 80
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
