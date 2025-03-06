@@ -27,7 +27,7 @@ ENV VITE_WS_URL=$VITE_WS_URL
 RUN bun run build
 
 # ====================
-# Final Stage
+# Final Stage (Nginx)
 # ====================
 FROM nginx:alpine AS final
 
@@ -37,5 +37,13 @@ RUN rm -f /etc/nginx/conf.d/default.conf
 # Copy the template
 COPY nginx.template.conf /etc/nginx/nginx.template.conf
 
-# Use envsubst to replace variables in the template
-CMD envsubst '$NGINX_SERVER_NAME' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && nginx -g "daemon off;"
+# Replace placeholder in the template
+RUN envsubst '$NGINX_SERVER_NAME' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
