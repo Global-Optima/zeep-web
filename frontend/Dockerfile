@@ -39,7 +39,7 @@ COPY nginx.template.conf /etc/nginx/nginx.template.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Add custom entrypoint script
-COPY scripts/envsubst_nginx.sh /entrypoint.sh
+COPY scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Expose port and set entrypoint

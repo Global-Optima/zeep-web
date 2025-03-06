@@ -134,12 +134,28 @@ services:
     environment:
       NGINX_SERVER_NAME: ${NGINX_SERVER_NAME}
     depends_on:
-      backend:
-        condition: service_started
+      - backend
     ports:
-      - '80:80'
+      - '443:443'
+    volumes:
+      - ./certs:/etc/letsencrypt
+      - ./certs-data:/var/www/certbot
+      - ./frontend/nginx.template.conf:/etc/nginx/nginx.template.conf
+      - ./frontend/scripts/entrypoint.sh:/entrypoint.sh
     networks:
       - app_network
+
+  certbot:
+    build:
+      context: ./certbot
+    container_name: certbot
+    env_file:
+      - .env
+    volumes:
+      - ./certs:/etc/letsencrypt
+      - ./certs-data:/var/www/certbot
+    depends_on:
+      - frontend
 
   # Prometheus (Metrics Collection)
   prometheus:
