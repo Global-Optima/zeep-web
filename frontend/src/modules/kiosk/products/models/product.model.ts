@@ -7,7 +7,6 @@ export enum ProductSizeNames {
 	S = 'S',
 	M = 'M',
 	L = 'L',
-	XL = 'XL',
 }
 
 export interface BaseProductDTO {
@@ -34,6 +33,7 @@ export interface BaseProductSizeDTO {
 	productId: number
 	unit: UnitDTO
 	size: number
+	machineId: string
 }
 
 export interface ProductSizeDTO extends BaseProductSizeDTO {
@@ -74,6 +74,7 @@ export interface CreateProductSizeDTO {
 	unitId: number
 	basePrice: number
 	isDefault: boolean
+	machineId: string
 	additives?: SelectedAdditiveDTO[]
 	ingredients: SelectedIngredientDTO[]
 }
@@ -91,6 +92,7 @@ export interface UpdateProductSizeDTO {
 	size?: number | null
 	unitId?: number
 	isDefault?: boolean | null
+	machineId?: string
 	additives?: SelectedAdditiveDTO[]
 	ingredients?: SelectedIngredientDTO[]
 }

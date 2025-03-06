@@ -193,8 +193,7 @@ INSERT INTO
         description,
         image_url,
         video_url,
-        category_id,
-        machine_id
+        category_id
     )
 VALUES
     (
@@ -202,176 +201,154 @@ VALUES
         'Нежный кофе с молоком',
         'https://png.pngtree.com/png-vector/20240416/ourmid/pngtree-coffee-latte-seen-up-close-png-image_12286454.png',
         'https://example.com/videos/latte.mp4',
-        2,
-        'ZEEP0000000011112222000001'
+        2
     ),
     (
         'Капучино',
         'Кофе с густой пенкой',
         'https://www.pngplay.com/wp-content/uploads/7/Cappuccino-Coffee-PNG-Clipart-Background.png',
         'https://example.com/videos/cappuccino.mp4',
-        2,
-        'ZEEP0000000011112222000002'
+        2
     ),
     (
         'Эспрессо',
         'Крепкий кофе, подается в маленькой чашке',
         'https://static.vecteezy.com/system/resources/previews/023/438/448/non_2x/espresso-coffee-cutout-free-png.png',
         NULL,
-        2,
-        'ZEEP0000000011112222000003'
+        2
     ),
     (
         'Зеленый чай',
         'Свежий зеленый чай из лучших листьев',
         'https://static.vecteezy.com/system/resources/thumbnails/024/108/075/small_2x/fresh-herbal-tea-cup-with-green-leaves-isolated-on-transparent-background-png.png',
         NULL,
-        3,
-        'ZEEP0000000011112222000004'
+        3
     ),
     (
         'Черный чай',
         'Классический черный чай с насыщенным вкусом',
         'https://static.vecteezy.com/system/resources/thumbnails/037/280/520/small_2x/ai-generated-black-tea-held-in-a-glass-isolated-on-transparent-background-free-png.png',
         NULL,
-        3,
-        'ZEEP0000000011112222000005'
+        3
     ),
     (
         'Клубничный смузи',
         'Смузи с клубникой и бананом',
         'https://png.pngtree.com/png-vector/20240807/ourmid/pngtree-smooth-and-sweet-strawberry-smoothie-ready-to-serve-in-a-cool-png-image_13402854.png',
         NULL,
-        4,
-        'ZEEP0000000011112222000006'
+        4
     ),
     (
         'Манговый смузи',
         'Тропический смузи с манго',
         'https://static.vecteezy.com/system/resources/thumbnails/033/321/478/small_2x/mango-smoothie-in-a-glass-isolated-png.png',
         NULL,
-        4,
-        'ZEEP0000000011112222000007'
+        4
     ),
     (
         'Апельсиновый сок',
         'Свежевыжатый апельсиновый сок',
         'https://www.pngplay.com/wp-content/uploads/6/Orange-Flavor-Juice-PNG.png',
         NULL,
-        5,
-        'ZEEP0000000011112222000008'
+        5
     ),
     (
         'Яблочный сок',
         'Сок из спелых яблок',
         'https://static.vecteezy.com/system/resources/previews/027/145/688/non_2x/apple-juice-ice-surrounded-by-apples-and-leaves-ai-generated-png.png',
         NULL,
-        5,
-        'ZEEP0000000011112222000009'
+        5
     ),
     (
         'Мохито',
         'Освежающий коктейль с мятой и лаймом',
         'https://png.pngtree.com/png-clipart/20231119/original/pngtree-mojito-cocktail-herb-picture-image_13268789.png',
         NULL,
-        6,
-        'ZEEP0000000011112222000010'
+        6
     ),
     (
         'Кола',
         'Классический газированный напиток',
         'https://freepngimg.com/save/2438-coca-cola-bottle-png-image/906x906',
         NULL,
-        7,
-        'ZEEP0000000011112222000011'
+        7
     ),
     (
         'Энергетический напиток',
         'Энергетический напиток для бодрости',
         'https://pngimg.com/uploads/red_bull/red_bull_PNG29.png',
         NULL,
-        8,
-        'ZEEP0000000011112222000012'
+        8
     ),
     (
         'Шоколадный молочный коктейль',
         'Сладкий коктейль с шоколадным вкусом',
         'https://png.pngtree.com/png-vector/20240603/ourmid/pngtree-hyper-realistic-image-of-chocolate-milkshake-png-image_12614596.png',
         NULL,
-        9,
-        'ZEEP0000000011112222000013'
+        9
     ),
     (
         'Минеральная вода',
         'Природная минеральная вода без газа',
         'https://static.vecteezy.com/system/resources/previews/036/573/060/non_2x/cold-mineral-water-bottle-borjomi-free-png.png',
         NULL,
-        10,
-        'ZEEP0000000011112222000014'
+        10
     ),
     (
         'Лимонный фраппе',
         'Кофейный напиток с лимоном и льдом',
         'https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-mocha-coffee-frappe-in-glass-png-image_13321780.png',
         NULL,
-        11,
-        'ZEEP0000000011112222000015'
+        11
     ),
     (
         'Имбирный чай',
         'Травяной чай с имбирем для бодрости',
         'https://static.vecteezy.com/system/resources/thumbnails/039/336/072/small_2x/ai-generated-a-glass-of-ginger-tea-isolated-on-transparent-background-png.png',
         NULL,
-        12,
-        'ZEEP0000000011112222000016'
+        12
     ),
     (
         'Чай с мятой',
         'Травяной чай с ароматом свежей мяты',
         'https://www.freepnglogos.com/uploads/tea-png/tea-latte-mix-cafe-17.png',
         NULL,
-        12,
-        'ZEEP0000000011112222000017'
+        12
     ),
     (
         'Малиновый лимонад',
         'Освежающий лимонад с малиной',
         'https://static.vecteezy.com/system/resources/thumbnails/036/257/929/small_2x/ai-generated-a-glass-of-strawberry-juice-isolated-on-transparent-background-free-png.png',
         NULL,
-        7,
-        'ZEEP0000000011112222000018'
+        7
     ),
     (
         'Клубничный чай',
         'Чай с добавлением клубники',
         'https://static.vecteezy.com/system/resources/previews/048/894/947/non_2x/a-strawberry-iced-tea-in-a-plastic-cup-transparent-background-png.png',
         NULL,
-        3,
-        'ZEEP0000000011112222000019'
+        3
     ),
     (
         'Карамельный латте',
         'Кофе с молоком и карамельным вкусом',
         'https://static.vecteezy.com/system/resources/thumbnails/027/145/750/small_2x/iced-caramel-latte-topped-with-whipped-cream-and-caramel-sauce-perfect-for-drink-catalog-ai-generated-png.png',
         'https://example.com/videos/caramel-latte.mp4',
-        2,
-        'ZEEP0000000011112222000020'
+        2
     ),
     (
         'Круассан с шоколадом',
         'Нежный хрустящий круассан с шоколадной начинкой',
         'https://www.pngplay.com/wp-content/uploads/15/Pain-Au-Chocolat-Transparent-PNG.png',
         NULL,
-        13,
-        'ZEEP0000000011112222000021'
+        13
     ),
     (
         'Круассан с миндалем',
         'Ароматный круассан с миндальной начинкой и посыпкой',
         'https://www.pngplay.com/wp-content/uploads/15/Croissants-Transparent-Image.png',
         NULL,
-        13,
-        'ZEEP0000000011112222000022'
+        13
     );
 
 -- Insert into RecipeStep
@@ -407,45 +384,298 @@ INSERT INTO
         unit_id,
         base_price,
         size,
-        product_id
+        product_id,
+        machine_id
     )
 VALUES
-    ('S', 1, 1000.00, 250, 1),
-    ('M', 1, 1250.00, 350, 1),
-    ('L', 1, 1500.00, 450, 1),
-    ('S', 1, 1100.00, 300, 2),
-    ('S', 1, 750.00, 200, 3),
-    ('M', 1, 900.00, 300, 3),
-    ('L', 2, 1150.00, 400, 3),
-    ('S', 2, 600.00, 250, 4),
-    ('M', 2, 850.00, 350, 4),
-    ('L', 2, 1100.00, 450, 4),
-    ('S', 2, 900.00, 250, 5),
-    ('M', 2, 1100.00, 350, 5),
-    ('L', 2, 1300.00, 450, 5),
-    ('S', 2, 1500.00, 300, 6),
-    ('L', 2, 1750.00, 500, 6),
-    ('S', 2, 500.00, 200, 7),
-    ('M', 2, 750.00, 300, 7),
-    ('L', 3, 900.00, 400, 7),
-    ('S', 3, 600.00, 300, 8),
-    ('L', 3, 750.00, 500, 8),
-    ('M', 3, 800.00, 350, 9),
-    ('L', 3, 1000.00, 550, 9),
-    ('S', 3, 500.00, 200, 10),
-    ('M', 3, 700.00, 350, 10),
-    ('S', 3, 600.00, 500, 11),
-    ('S', 3, 900.00, 500, 12),
-    ('S', 3, 400.00, 500, 13),
-    ('S', 4, 900.00, 300, 14),
-    ('S', 4, 1200.00, 300, 15),
-    ('S', 4, 800.00, 300, 16),
-    ('S', 4, 800.00, 300, 17),
-    ('S', 4, 1400.00, 300, 18),
-    ('S', 4, 1100.00, 300, 19),
-    ('S', 4, 1250.00, 500, 20),
-    ('S', 4, 1250.00, 500, 21),
-    ('S', 1, 1500.00, 500, 22);
+    (
+        'S',
+        1,
+        1000.00,
+        250,
+        1,
+        'ZEEP0000000000000000000000000001'
+    ),
+    (
+        'M',
+        1,
+        1250.00,
+        350,
+        1,
+        'ZEEP0000000000000000000000000002'
+    ),
+    (
+        'L',
+        1,
+        1500.00,
+        450,
+        1,
+        'ZEEP0000000000000000000000000003'
+    ),
+    (
+        'S',
+        1,
+        1100.00,
+        300,
+        2,
+        'ZEEP0000000000000000000000000004'
+    ),
+    (
+        'S',
+        1,
+        750.00,
+        200,
+        3,
+        'ZEEP0000000000000000000000000005'
+    ),
+    (
+        'M',
+        1,
+        900.00,
+        300,
+        3,
+        'ZEEP0000000000000000000000000006'
+    ),
+    (
+        'L',
+        2,
+        1150.00,
+        400,
+        3,
+        'ZEEP0000000000000000000000000007'
+    ),
+    (
+        'S',
+        2,
+        600.00,
+        250,
+        4,
+        'ZEEP0000000000000000000000000008'
+    ),
+    (
+        'M',
+        2,
+        850.00,
+        350,
+        4,
+        'ZEEP0000000000000000000000000009'
+    ),
+    (
+        'L',
+        2,
+        1100.00,
+        450,
+        4,
+        'ZEEP0000000000000000000000000010'
+    ),
+    (
+        'S',
+        2,
+        900.00,
+        250,
+        5,
+        'ZEEP0000000000000000000000000011'
+    ),
+    (
+        'M',
+        2,
+        1100.00,
+        350,
+        5,
+        'ZEEP0000000000000000000000000012'
+    ),
+    (
+        'L',
+        2,
+        1300.00,
+        450,
+        5,
+        'ZEEP0000000000000000000000000013'
+    ),
+    (
+        'S',
+        2,
+        1500.00,
+        300,
+        6,
+        'ZEEP0000000000000000000000000014'
+    ),
+    (
+        'L',
+        2,
+        1750.00,
+        500,
+        6,
+        'ZEEP0000000000000000000000000015'
+    ),
+    (
+        'S',
+        2,
+        500.00,
+        200,
+        7,
+        'ZEEP0000000000000000000000000016'
+    ),
+    (
+        'M',
+        2,
+        750.00,
+        300,
+        7,
+        'ZEEP0000000000000000000000000017'
+    ),
+    (
+        'L',
+        3,
+        900.00,
+        400,
+        7,
+        'ZEEP0000000000000000000000000018'
+    ),
+    (
+        'S',
+        3,
+        600.00,
+        300,
+        8,
+        'ZEEP0000000000000000000000000019'
+    ),
+    (
+        'L',
+        3,
+        750.00,
+        500,
+        8,
+        'ZEEP0000000000000000000000000020'
+    ),
+    (
+        'M',
+        3,
+        800.00,
+        350,
+        9,
+        'ZEEP0000000000000000000000000021'
+    ),
+    (
+        'L',
+        3,
+        1000.00,
+        550,
+        9,
+        'ZEEP0000000000000000000000000022'
+    ),
+    (
+        'S',
+        3,
+        500.00,
+        200,
+        10,
+        'ZEEP0000000000000000000000000023'
+    ),
+    (
+        'M',
+        3,
+        700.00,
+        350,
+        10,
+        'ZEEP0000000000000000000000000024'
+    ),
+    (
+        'S',
+        3,
+        600.00,
+        500,
+        11,
+        'ZEEP0000000000000000000000000025'
+    ),
+    (
+        'S',
+        3,
+        900.00,
+        500,
+        12,
+        'ZEEP0000000000000000000000000026'
+    ),
+    (
+        'S',
+        3,
+        400.00,
+        500,
+        13,
+        'ZEEP0000000000000000000000000027'
+    ),
+    (
+        'S',
+        4,
+        900.00,
+        300,
+        14,
+        'ZEEP0000000000000000000000000028'
+    ),
+    (
+        'S',
+        4,
+        1200.00,
+        300,
+        15,
+        'ZEEP0000000000000000000000000029'
+    ),
+    (
+        'S',
+        4,
+        800.00,
+        300,
+        16,
+        'ZEEP0000000000000000000000000030'
+    ),
+    (
+        'S',
+        4,
+        800.00,
+        300,
+        17,
+        'ZEEP0000000000000000000000000031'
+    ),
+    (
+        'S',
+        4,
+        1400.00,
+        300,
+        18,
+        'ZEEP0000000000000000000000000032'
+    ),
+    (
+        'S',
+        4,
+        1100.00,
+        300,
+        19,
+        'ZEEP0000000000000000000000000033'
+    ),
+    (
+        'S',
+        4,
+        1250.00,
+        500,
+        20,
+        'ZEEP0000000000000000000000000034'
+    ),
+    (
+        'S',
+        4,
+        1250.00,
+        500,
+        21,
+        'ZEEP0000000000000000000000000035'
+    ),
+    (
+        'S',
+        1,
+        1500.00,
+        500,
+        22,
+        'ZEEP0000000000000000000000000036'
+    );
 
 -- Insert into Additives
 INSERT INTO
@@ -618,18 +848,19 @@ VALUES
     );
 
 -- Insert into Store
-INSERT INTO stores (
-    name,
-    facility_address_id,
-    franchisee_id,
-    warehouse_id,  -- Directly linking store to warehouse
-    is_active,
-    contact_phone,
-    contact_email,
-    store_hours,
-    created_at,
-    updated_at
-)
+INSERT INTO
+    stores (
+        name,
+        facility_address_id,
+        franchisee_id,
+        warehouse_id, -- Directly linking store to warehouse
+        is_active,
+        contact_phone,
+        contact_email,
+        store_hours,
+        created_at,
+        updated_at
+    )
 VALUES
     (
         'Центральное Кафе',
@@ -679,7 +910,6 @@ VALUES
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
-
 
 -- Insert into StoreAdditives store 1 additives are loaded later in the script
 INSERT INTO
@@ -768,7 +998,14 @@ VALUES
     (4, 17, true), -- Mint Tea
     (4, 12, true);
 
-INSERT INTO store_product_sizes (store_product_id, product_size_id, store_price, created_at, updated_at)
+INSERT INTO
+    store_product_sizes (
+        store_product_id,
+        product_size_id,
+        store_price,
+        created_at,
+        updated_at
+    )
 SELECT
     sp.id,
     ps.id,
@@ -816,7 +1053,14 @@ VALUES
     (9, 5, false),
     (10, 9, false);
 
-INSERT INTO store_additives (store_id, additive_id, store_price, created_at, updated_at)
+INSERT INTO
+    store_additives (
+        store_id,
+        additive_id,
+        store_price,
+        created_at,
+        updated_at
+    )
 SELECT DISTINCT
     1,
     psa.additive_id,
@@ -1345,52 +1589,177 @@ VALUES
     (50.00, 2, '2024-06-30 23:59:59+00'),
     (25.00, 3, '2024-04-30 23:59:59+00');
 
-INSERT INTO store_stocks (
-    store_id,
-    ingredient_id,
-    quantity,
-    low_stock_threshold,
-    created_at,
-    updated_at
-)
+INSERT INTO
+    store_stocks (
+        store_id,
+        ingredient_id,
+        quantity,
+        low_stock_threshold,
+        created_at,
+        updated_at
+    )
 VALUES
     -- Store 1 Stocks (Центральное Кафе)
-    (1, 1, 100, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (
+        1,
+        1,
+        100,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Milk
     (1, 2, 50, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (1, 3, 70, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
-    (1, 5, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Honey
-    (1, 6, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
+    (
+        1,
+        3,
+        70,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Chocolate
+    (
+        1,
+        5,
+        90,
+        20,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Honey
+    (
+        1,
+        6,
+        50,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Vanilla
     -- Store 2 Stocks (Кафе на Углу)
-    (2, 1, 80, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
+    (
+        2,
+        1,
+        80,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Milk
     (2, 2, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (2, 7, 60, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Mint
-    (2, 8, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Coconut Milk
-    (2, 10, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Lemon Juice
+    (
+        2,
+        7,
+        60,
+        15,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Mint
+    (
+        2,
+        8,
+        90,
+        20,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Coconut Milk
+    (
+        2,
+        10,
+        50,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Lemon Juice
     -- Store 3 Stocks (Маленькое Кафе)
-    (3, 1, 100, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (3, 3, 70, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
-    (3, 5, 90, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Honey
-    (3, 12, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Ginger
-    (3, 14, 60, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cocoa Powder
+    (
+        3,
+        1,
+        100,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Milk
+    (
+        3,
+        3,
+        70,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Chocolate
+    (
+        3,
+        5,
+        90,
+        20,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Honey
+    (
+        3,
+        12,
+        40,
+        5,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Ginger
+    (
+        3,
+        14,
+        60,
+        15,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Cocoa Powder
     -- Store 4 Stocks (Городское Кафе)
-    (4, 1, 120, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (4, 2, 60, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-    (4, 7, 50, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Mint
+    (
+        4,
+        1,
+        120,
+        20,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Milk
+    (
+        4,
+        2,
+        60,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Sugar
+    (
+        4,
+        7,
+        50,
+        15,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ), -- Mint
     (4, 9, 40, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Ice Cubes
-    (4, 14, 50, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Cocoa Powder
+    (
+        4,
+        14,
+        50,
+        10,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
 
-
-WITH store_list AS (
-    SELECT id AS store_id FROM stores
-)
-INSERT INTO store_stocks (
-    store_id,
-    ingredient_id,
-    quantity,
-    low_stock_threshold,
-    created_at,
-    updated_at
-)
+-- Cocoa Powder
+WITH
+    store_list AS (
+        SELECT
+            id AS store_id
+        FROM
+            stores
+    )
+INSERT INTO
+    store_stocks (
+        store_id,
+        ingredient_id,
+        quantity,
+        low_stock_threshold,
+        created_at,
+        updated_at
+    )
 SELECT
     sl.store_id,
     i.id AS ingredient_id,
@@ -1398,22 +1767,36 @@ SELECT
     10 AS low_stock_threshold,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-FROM (
-    SELECT sa.store_id, ai.ingredient_id
-    FROM store_additives sa
-    JOIN additive_ingredients ai ON ai.additive_id = sa.additive_id
-    UNION
-    SELECT sp.store_id, psi.ingredient_id
-    FROM store_products sp
-    JOIN store_product_sizes sps ON sps.store_product_id = sp.id
-    JOIN product_size_ingredients psi ON psi.product_size_id = sps.product_size_id
-) AS needed
-JOIN store_list sl ON sl.store_id = needed.store_id
-JOIN ingredients i ON i.id = needed.ingredient_id
-WHERE NOT EXISTS (
-    SELECT 1 FROM store_stocks s
-    WHERE s.store_id = sl.store_id AND s.ingredient_id = i.id AND s.deleted_at IS NULL
-);
+FROM
+    (
+        SELECT
+            sa.store_id,
+            ai.ingredient_id
+        FROM
+            store_additives sa
+            JOIN additive_ingredients ai ON ai.additive_id = sa.additive_id
+        UNION
+        SELECT
+            sp.store_id,
+            psi.ingredient_id
+        FROM
+            store_products sp
+            JOIN store_product_sizes sps ON sps.store_product_id = sp.id
+            JOIN product_size_ingredients psi ON psi.product_size_id = sps.product_size_id
+    ) AS needed
+    JOIN store_list sl ON sl.store_id = needed.store_id
+    JOIN ingredients i ON i.id = needed.ingredient_id
+WHERE
+    NOT EXISTS (
+        SELECT
+            1
+        FROM
+            store_stocks s
+        WHERE
+            s.store_id = sl.store_id
+            AND s.ingredient_id = i.id
+            AND s.deleted_at IS NULL
+    );
 
 -- Insert stock material categories
 INSERT INTO
@@ -1729,26 +2112,26 @@ VALUES
         CURRENT_TIMESTAMP
     );
 
-INSERT INTO stock_request_ingredients (
-    stock_request_id,
-    stock_material_id,
-    quantity,
-    created_at,
-    updated_at
-)
+INSERT INTO
+    stock_request_ingredients (
+        stock_request_id,
+        stock_material_id,
+        quantity,
+        created_at,
+        updated_at
+    )
 VALUES
     -- StockRequest 1 (Store 1 -> Warehouse 1)
     (1, 2, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
     (1, 1, 20.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-
     -- StockRequest 2 (Store 2 -> Warehouse 2)
     (2, 3, 5.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Chocolate
     (2, 4, 2.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Cinnamon
-
     -- StockRequest 3 (Store 3 -> Warehouse 3)
     (3, 5, 1.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Vanilla
     (3, 2, 15.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Sugar
-
     -- StockRequest 4 (Store 4 -> Warehouse 4)
     (4, 1, 10.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), -- Milk
-    (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); -- Chocolate
+    (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Chocolate

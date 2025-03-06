@@ -1,7 +1,7 @@
 <template>
 	<div :class="['flex flex-col flex-1 gap-8 px-12 p-6 h-full', classNames]">
 		<div class="text-left">
-			<h2 class="font-medium text-3xl text-slate-100 2xl:text-6xl">{{ title }}</h2>
+			<h2 class="font-medium text-slate-100 text-3xl xl:text-5xl">{{ title }}</h2>
 		</div>
 
 		<div class="flex-1 mt-2 overflow-auto">
@@ -19,14 +19,14 @@
 					<li
 						v-for="(item, index) in pagedOrders"
 						:key="item.id || index"
-						class="flex items-center gap-5 2xl:gap-10 text-3xl lg:text-4xl 2xl:text-5xl"
+						class="flex items-center gap-5 2xl:gap-8 text-3xl lg:text-4xl"
 					>
 						<span
-							:class="cn('flex justify-center items-center p-4 rounded-md w-24 2xl:w-32 font-bold', type === 'PREPARING' && 'bg-blue-100 text-blue-900', type === 'COMPLETED' && 'bg-emerald-100 text-emerald-900')"
+							:class="cn('flex justify-center items-center p-4 rounded-md size-12 flex-shrink-0 2xl:size-16 font-bold', type === 'PREPARING' && 'bg-blue-100 text-blue-900', type === 'COMPLETED' && 'bg-emerald-100 text-emerald-900')"
 						>
 							{{ item.displayNumber }}
 						</span>
-						<span class="font-medium text-slate-100">{{ item.customerName }}</span>
+						<span class="text-slate-100">{{ item.customerName }}</span>
 					</li>
 				</ul>
 			</transition>

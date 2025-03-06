@@ -81,6 +81,7 @@ export interface OrderProductSizeDTO {
 	productName: string
 	size: number
 	unit: UnitDTO
+	machineId: string
 }
 
 export interface OrderAdditiveDTO {
@@ -88,6 +89,7 @@ export interface OrderAdditiveDTO {
 	name: string
 	description: string
 	size: string
+  machineId: string
 }
 
 export interface SuborderAdditiveDTO {

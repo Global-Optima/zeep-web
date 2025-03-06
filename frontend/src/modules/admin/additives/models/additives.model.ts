@@ -34,6 +34,7 @@ export interface BaseAdditiveDTO {
 	size: number
 	unit: UnitDTO
 	category: BaseAdditiveCategoryDTO
+	machineId: string
 }
 
 // Additive DTOs
@@ -58,6 +59,7 @@ export interface BaseAdditiveCategoryItemDTO {
 	size: number
 	unit: UnitDTO
 	categoryId: number
+	machineId: number
 }
 
 export interface AdditiveCategoryItemDTO extends BaseAdditiveCategoryItemDTO {
@@ -89,6 +91,7 @@ export interface UpdateAdditiveDTO {
 	size?: number
 	unitId?: number
 	additiveCategoryId?: number
+	machineId?: string
 	ingredients?: SelectedIngredientDTO[]
 }
 
@@ -107,6 +110,7 @@ export interface CreateAdditiveDTO {
 	size: number
 	unitId: number
 	additiveCategoryId: number
+	machineId: string
 	ingredients: SelectedIngredientDTO[]
 	image?: File
 }

@@ -270,6 +270,11 @@ func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
 	var filter types.OrdersTimeZoneFilter
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
+		return
+	}
+
 	storeID, errH := contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())

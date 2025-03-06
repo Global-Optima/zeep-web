@@ -16,7 +16,6 @@ type BaseProductDTO struct {
 	ImageURL    string                             `json:"imageUrl"`
 	VideoURL    string                             `json:"videoUrl"`
 	Category    categoriesTypes.ProductCategoryDTO `json:"category"`
-	MachineId   string                             `json:"machineId"`
 }
 
 type ProductDTO struct {
@@ -24,13 +23,11 @@ type ProductDTO struct {
 	BaseProductDTO
 	ProductSizeCount int     `json:"productSizeCount"`
 	BasePrice        float64 `json:"basePrice"`
-	MachineId        string  `json:"machineId"`
 }
 
 type ProductDetailsDTO struct {
 	ProductDTO
-	Sizes     []ProductSizeDTO `json:"sizes"`
-	MachineId string           `json:"machineId"`
+	Sizes []ProductSizeDTO `json:"sizes"`
 }
 
 type BaseProductSizeDTO struct {
@@ -39,6 +36,7 @@ type BaseProductSizeDTO struct {
 	ProductID uint               `json:"productId"`
 	Unit      unitTypes.UnitsDTO `json:"unit"`
 	Size      float64            `json:"size"`
+	MachineId string             `json:"machineId"`
 }
 
 type ProductSizeDTO struct {
@@ -68,7 +66,6 @@ type CreateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"required"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
-	MachineId   string `form:"machineId" binding:"required,max=40"`
 }
 
 type SelectedAdditiveDTO struct {
@@ -87,6 +84,7 @@ type CreateProductSizeDTO struct {
 	Size        float64                 `json:"size" binding:"required,gt=0"`
 	UnitID      uint                    `json:"unitId" binding:"required,gt=0"`
 	BasePrice   float64                 `json:"basePrice" binding:"required,gt=0"`
+	MachineId   string                  `form:"machineId" binding:"required,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"required,dive"`
 }
@@ -97,7 +95,6 @@ type UpdateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
-	MachineId   *string `form:"machineId" binding:"omitempty,max=40"`
 }
 
 type UpdateProductSizeDTO struct {
@@ -105,6 +102,7 @@ type UpdateProductSizeDTO struct {
 	BasePrice   *float64                `json:"basePrice" binding:"omitempty,gt=0"`
 	Size        *float64                `json:"size" binding:"omitempty,gt=0"`
 	UnitID      *uint                   `json:"unitId" binding:"omitempty,gt=0"`
+	MachineId   *string                 `form:"machineId" binding:"omitempty,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }
