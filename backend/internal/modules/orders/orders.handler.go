@@ -406,3 +406,41 @@ func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 
 	utils.SendSuccessResponse(c, updatedSuborderDTO)
 }
+
+func (h *OrderHandler) FailOrderPayment(c *gin.Context) {
+	orderID, errH := utils.ParseParam(c, "orderId")
+	if errH != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
+		return
+	}
+
+	err := h.service.FailOrderPayment(orderID)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500OrderPayment)
+		return
+	}
+
+	localization.SendLocalizedResponseWithKey(c, types.Response200OrderPayment)
+}
+
+func (h *OrderHandler) SuccessOrderPayment(c *gin.Context) {
+	orderID, errH := utils.ParseParam(c, "orderId")
+	if errH != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
+		return
+	}
+
+	var dto types.TransactionDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	err := h.service.SuccessOrderPayment(orderID, &dto)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500OrderFail)
+		return
+	}
+
+	localization.SendLocalizedResponseWithKey(c, types.Response200OrderFail)
+}

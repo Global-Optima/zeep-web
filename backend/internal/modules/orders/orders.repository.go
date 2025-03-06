@@ -16,7 +16,7 @@ type OrderRepository interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error)
 	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]data.Order, error)
 	GetOrderById(orderID uint) (*data.Order, error)
-	CreateOrder(order *data.Order) error
+	CreateOrder(order *data.Order) (uint, error)
 	UpdateOrderStatus(orderID uint, status data.OrderStatus) error
 	DeleteOrder(orderID uint) error
 
@@ -33,6 +33,8 @@ type OrderRepository interface {
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
 
 	CalculateFrozenStock(storeID uint) (map[uint]float64, error)
+	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) error
+	HandlePaymentFailure(orderID uint) error
 }
 
 type orderRepository struct {
@@ -40,13 +42,16 @@ type orderRepository struct {
 }
 
 func NewOrderRepository(db *gorm.DB) OrderRepository {
-	return &orderRepository{db: db}
+	return &orderRepository{
+		db: db,
+	}
 }
 
-func (r *orderRepository) CreateOrder(order *data.Order) error {
+func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 	const workingHours = 16 // Working hours for a cafe
+	var orderID uint = 0
 
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
 		// Lock the store's orders for consistency
 		if err := tx.Exec(`
 			SELECT 1
@@ -101,6 +106,10 @@ func (r *orderRepository) CreateOrder(order *data.Order) error {
 
 		return nil
 	})
+
+	orderID = order.ID
+
+	return orderID, err
 }
 
 func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error) {
@@ -448,6 +457,7 @@ func (r *orderRepository) loadActiveOrders(storeID uint) ([]data.Order, error) {
 		Preload("Suborders.StoreProductSize.ProductSize.ProductSizeIngredients.Ingredient").
 		Where("store_id = ?", storeID).
 		Where("status IN ?", []data.OrderStatus{
+			data.OrderStatusWaitingForPayment,
 			data.OrderStatusPending,
 			data.OrderStatusPreparing,
 		}).
@@ -471,4 +481,52 @@ func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
 			(*frozenStock)[ingrUsage.IngredientID] += ingrUsage.Quantity
 		}
 	}
+}
+
+func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) error {
+	order, err := r.GetOrderById(orderID)
+	if err != nil {
+		return err
+	}
+
+	if order.Status != data.OrderStatusWaitingForPayment {
+		return types.ErrInappropriateOrderStatus
+	}
+
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&data.Order{}).
+			Where(&data.Order{BaseEntity: data.BaseEntity{ID: orderID}}).
+			Updates(&data.Order{Status: data.OrderStatusPending}).Error
+
+		if err != nil {
+			return err
+		}
+
+		if err := tx.Create(paymentTransaction).Error; err != nil {
+			return fmt.Errorf("failed to create transaction: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *orderRepository) HandlePaymentFailure(orderID uint) error {
+	order, err := r.GetOrderById(orderID)
+	if err != nil {
+		return err
+	}
+
+	if order.Status != data.OrderStatusWaitingForPayment {
+		return types.ErrInappropriateOrderStatus
+	}
+
+	if err := r.db.Unscoped().Delete(&order).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

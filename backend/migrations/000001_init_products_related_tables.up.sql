@@ -792,3 +792,21 @@ CREATE TABLE  supplier_prices (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
 );
+
+CREATE TABLE transactions (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    order_id INT NOT NULL REFERENCES orders(id),
+    bin VARCHAR(20) NOT NULL,
+    transaction_id VARCHAR(20) UNIQUE NOT NULL, -- Unique ID from payment gateway
+    process_id VARCHAR(20) UNIQUE NULLABLE,
+    payment_method VARCHAR(50) NOT NULL,        -- e.g., "card", "qr"
+    amount DECIMAL(10, 2) NOT NULL,             -- Transaction amount
+    currency CHAR(3) NOT NULL,
+    qr_number VARCHAR(16),-- Currency code (e.g., "KZT")
+    card_mask VARCHAR(16),
+    icc VARCHAR(255), -- Visa, MasterCarD
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);

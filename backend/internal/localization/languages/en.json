@@ -111,6 +111,10 @@
     "201-order": "Order was successfully created",
     "200-order-update": "Order successfully updated.",
     "200-order-delete": "Order successfully deleted.",
+    "500-order-payment-success": "An unexpected error occurred while processing the payment. Please try again later.",
+    "200-order-payment-success": "The payment was processed successfully.",
+    "500-order-payment-fail": "An unexpected error occurred while processing the order. Please try again later.",
+    "200-order-payment-fail": "The order was processed successfully, but failed during payment.",
 
     "500-product-get": "An unexpected error occurred while fetching product. Please try again later.",
     "500-product-create": "An unexpected error occurred while creating product. Please try again later.",

@@ -42,6 +42,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
+	github.com/hibiken/asynq v0.25.1 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
 	github.com/jcmturner/gofork v1.7.6 // indirect
@@ -56,7 +57,9 @@ require (
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
+	github.com/redis/go-redis/v9 v9.7.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
+	golang.org/x/time v0.8.0 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
 )
 
@@ -103,7 +106,7 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/cast v1.6.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tealeg/xlsx v1.0.5
