@@ -131,6 +131,8 @@ services:
         VITE_WS_URL: ${VITE_WS_URL}
     env_file:
       - .env
+    environment:
+      NGINX_SERVER_NAME: ${NGINX_SERVER_NAME}
     depends_on:
       backend:
         condition: service_started
