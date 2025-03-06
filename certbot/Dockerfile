@@ -1,10 +1,10 @@
 FROM certbot/certbot:latest
 
 # Copy the certbot entrypoint script
-COPY scripts/entrypoint.sh /entrypoint.sh
+COPY scripts/certbot-entrypoint.sh /certbot-entrypoint.sh
 
-# Make script executable
-RUN chmod +x /entrypoint.sh
+# Ensure script is executable
+RUN chmod +x /certbot-entrypoint.sh
 
 # Set entrypoint to the script
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/certbot-entrypoint.sh"]
