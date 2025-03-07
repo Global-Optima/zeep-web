@@ -194,7 +194,6 @@ INSERT INTO
         image_url,
         video_url,
         category_id,
-        machine_id
     )
 VALUES
     (
@@ -202,176 +201,154 @@ VALUES
         'Нежный кофе с молоком',
         'https://png.pngtree.com/png-vector/20240416/ourmid/pngtree-coffee-latte-seen-up-close-png-image_12286454.png',
         'https://example.com/videos/latte.mp4',
-        2,
-        'ZEEP0000000011112222000001'
+        2
     ),
     (
         'Капучино',
         'Кофе с густой пенкой',
         'https://www.pngplay.com/wp-content/uploads/7/Cappuccino-Coffee-PNG-Clipart-Background.png',
         'https://example.com/videos/cappuccino.mp4',
-        2,
-        'ZEEP0000000011112222000002'
+        2
     ),
     (
         'Эспрессо',
         'Крепкий кофе, подается в маленькой чашке',
         'https://static.vecteezy.com/system/resources/previews/023/438/448/non_2x/espresso-coffee-cutout-free-png.png',
         NULL,
-        2,
-        'ZEEP0000000011112222000003'
+        2
     ),
     (
         'Зеленый чай',
         'Свежий зеленый чай из лучших листьев',
         'https://static.vecteezy.com/system/resources/thumbnails/024/108/075/small_2x/fresh-herbal-tea-cup-with-green-leaves-isolated-on-transparent-background-png.png',
         NULL,
-        3,
-        'ZEEP0000000011112222000004'
+        3
     ),
     (
         'Черный чай',
         'Классический черный чай с насыщенным вкусом',
         'https://static.vecteezy.com/system/resources/thumbnails/037/280/520/small_2x/ai-generated-black-tea-held-in-a-glass-isolated-on-transparent-background-free-png.png',
         NULL,
-        3,
-        'ZEEP0000000011112222000005'
+        3
     ),
     (
         'Клубничный смузи',
         'Смузи с клубникой и бананом',
         'https://png.pngtree.com/png-vector/20240807/ourmid/pngtree-smooth-and-sweet-strawberry-smoothie-ready-to-serve-in-a-cool-png-image_13402854.png',
         NULL,
-        4,
-        'ZEEP0000000011112222000006'
+        4
     ),
     (
         'Манговый смузи',
         'Тропический смузи с манго',
         'https://static.vecteezy.com/system/resources/thumbnails/033/321/478/small_2x/mango-smoothie-in-a-glass-isolated-png.png',
         NULL,
-        4,
-        'ZEEP0000000011112222000007'
+        4
     ),
     (
         'Апельсиновый сок',
         'Свежевыжатый апельсиновый сок',
         'https://www.pngplay.com/wp-content/uploads/6/Orange-Flavor-Juice-PNG.png',
         NULL,
-        5,
-        'ZEEP0000000011112222000008'
+        5
     ),
     (
         'Яблочный сок',
         'Сок из спелых яблок',
         'https://static.vecteezy.com/system/resources/previews/027/145/688/non_2x/apple-juice-ice-surrounded-by-apples-and-leaves-ai-generated-png.png',
         NULL,
-        5,
-        'ZEEP0000000011112222000009'
+        5
     ),
     (
         'Мохито',
         'Освежающий коктейль с мятой и лаймом',
         'https://png.pngtree.com/png-clipart/20231119/original/pngtree-mojito-cocktail-herb-picture-image_13268789.png',
         NULL,
-        6,
-        'ZEEP0000000011112222000010'
+        6
     ),
     (
         'Кола',
         'Классический газированный напиток',
         'https://freepngimg.com/save/2438-coca-cola-bottle-png-image/906x906',
         NULL,
-        7,
-        'ZEEP0000000011112222000011'
+        7
     ),
     (
         'Энергетический напиток',
         'Энергетический напиток для бодрости',
         'https://pngimg.com/uploads/red_bull/red_bull_PNG29.png',
         NULL,
-        8,
-        'ZEEP0000000011112222000012'
+        8
     ),
     (
         'Шоколадный молочный коктейль',
         'Сладкий коктейль с шоколадным вкусом',
         'https://png.pngtree.com/png-vector/20240603/ourmid/pngtree-hyper-realistic-image-of-chocolate-milkshake-png-image_12614596.png',
         NULL,
-        9,
-        'ZEEP0000000011112222000013'
+        9
     ),
     (
         'Минеральная вода',
         'Природная минеральная вода без газа',
         'https://static.vecteezy.com/system/resources/previews/036/573/060/non_2x/cold-mineral-water-bottle-borjomi-free-png.png',
         NULL,
-        10,
-        'ZEEP0000000011112222000014'
+        10
     ),
     (
         'Лимонный фраппе',
         'Кофейный напиток с лимоном и льдом',
         'https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-mocha-coffee-frappe-in-glass-png-image_13321780.png',
         NULL,
-        11,
-        'ZEEP0000000011112222000015'
+        11
     ),
     (
         'Имбирный чай',
         'Травяной чай с имбирем для бодрости',
         'https://static.vecteezy.com/system/resources/thumbnails/039/336/072/small_2x/ai-generated-a-glass-of-ginger-tea-isolated-on-transparent-background-png.png',
         NULL,
-        12,
-        'ZEEP0000000011112222000016'
+        12
     ),
     (
         'Чай с мятой',
         'Травяной чай с ароматом свежей мяты',
         'https://www.freepnglogos.com/uploads/tea-png/tea-latte-mix-cafe-17.png',
         NULL,
-        12,
-        'ZEEP0000000011112222000017'
+        12
     ),
     (
         'Малиновый лимонад',
         'Освежающий лимонад с малиной',
         'https://static.vecteezy.com/system/resources/thumbnails/036/257/929/small_2x/ai-generated-a-glass-of-strawberry-juice-isolated-on-transparent-background-free-png.png',
         NULL,
-        7,
-        'ZEEP0000000011112222000018'
+        7
     ),
     (
         'Клубничный чай',
         'Чай с добавлением клубники',
         'https://static.vecteezy.com/system/resources/previews/048/894/947/non_2x/a-strawberry-iced-tea-in-a-plastic-cup-transparent-background-png.png',
         NULL,
-        3,
-        'ZEEP0000000011112222000019'
+        3
     ),
     (
         'Карамельный латте',
         'Кофе с молоком и карамельным вкусом',
         'https://static.vecteezy.com/system/resources/thumbnails/027/145/750/small_2x/iced-caramel-latte-topped-with-whipped-cream-and-caramel-sauce-perfect-for-drink-catalog-ai-generated-png.png',
         'https://example.com/videos/caramel-latte.mp4',
-        2,
-        'ZEEP0000000011112222000020'
+        2
     ),
     (
         'Круассан с шоколадом',
         'Нежный хрустящий круассан с шоколадной начинкой',
         'https://www.pngplay.com/wp-content/uploads/15/Pain-Au-Chocolat-Transparent-PNG.png',
         NULL,
-        13,
-        'ZEEP0000000011112222000021'
+        13
     ),
     (
         'Круассан с миндалем',
         'Ароматный круассан с миндальной начинкой и посыпкой',
         'https://www.pngplay.com/wp-content/uploads/15/Croissants-Transparent-Image.png',
         NULL,
-        13,
-        'ZEEP0000000011112222000022'
+        13
     );
 
 -- Insert into RecipeStep

@@ -799,7 +799,7 @@ CREATE TABLE transactions (
     order_id INT NOT NULL REFERENCES orders(id),
     bin VARCHAR(20) NOT NULL,
     transaction_id VARCHAR(20) UNIQUE NOT NULL, -- Unique ID from payment gateway
-    process_id VARCHAR(20) UNIQUE NULLABLE,
+    process_id VARCHAR(20) UNIQUE NULL,
     payment_method VARCHAR(50) NOT NULL,        -- e.g., "card", "qr"
     amount DECIMAL(10, 2) NOT NULL,             -- Transaction amount
     currency CHAR(3) NOT NULL,
