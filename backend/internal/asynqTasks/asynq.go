@@ -102,6 +102,6 @@ func (m *AsynqManager) EnqueueTask(taskType string, payload []byte, delay time.D
 		return err
 	}
 
-	m.logger.Errorf("✅ Task %s enqueued successfully with delay %v", taskType, delay)
+	m.logger.Infof("✅ Task %s enqueued successfully with delay %v", taskType, delay)
 	return nil
 }

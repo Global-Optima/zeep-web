@@ -180,6 +180,7 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Where("store_id = ?", *filter.StoreID).
+		Where("status NOT IN (?)", []data.OrderStatus{data.OrderStatusWaitingForPayment}).
 		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
 		Order("created_at ASC").
 		Find(&orders).Error
