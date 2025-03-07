@@ -193,7 +193,7 @@ INSERT INTO
         description,
         image_url,
         video_url,
-        category_id,
+        category_id
     )
 VALUES
     (
