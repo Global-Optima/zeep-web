@@ -2,14 +2,14 @@ package config
 
 import (
 	"fmt"
+	advancedConfig "github.com/num30/config"
+	"github.com/spf13/viper"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
-
-	"github.com/spf13/viper"
 )
 
 const (
@@ -61,6 +61,10 @@ func LoadConfig() *Config {
 		// Determine environment
 		config.IsDevelopment = config.Env == EnvDevelopment
 		config.IsTest = config.Env == EnvTest
+
+		if err := advancedConfig.NewConfReader("zeep-config").Read(&config); err != nil {
+			log.Fatalf("Error validating config: %v", err)
+		}
 
 		cfg = &config
 	})
