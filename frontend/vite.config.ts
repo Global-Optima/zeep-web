@@ -29,6 +29,7 @@ export default defineConfig({
 				background_color: '#F5F5F7',
 				theme_color: '#F5F5F7',
 				display: 'standalone',
+				lang: 'ru',
 				start_url: '/',
 				icons: [
 					{ src: '/android-icon-36x36.png', sizes: '36x36', type: 'image/png' },
