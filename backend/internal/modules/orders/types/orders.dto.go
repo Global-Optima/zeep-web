@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"time"
 
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
@@ -169,6 +168,18 @@ type OrdersTimeZoneFilter struct {
 	TimeZoneOffset   *uint   `form:"timezoneOffset" binding:"omitempty"`
 }
 
-var (
-	ErrInsufficientStock = errors.New("insufficient stock to fulfill the order")
-)
+type TransactionDTO struct {
+	Bin           string  `json:"bin" binding:"required,len=12"`
+	TransactionID string  `json:"transactionId" binding:"required,max=20"`
+	ProcessID     *string `json:"processId" binding:"omitempty,max=20"`
+	PaymentMethod string  `json:"paymentMethod" binding:"required"`
+	Amount        float64 `json:"amount" binding:"required,gt=0"`
+	Currency      string  `json:"currency" binding:"required,len=3"`
+	QRNumber      *string `json:"qrNumber" binding:"omitempty,min=7,max=16"`
+	CardMask      *string `json:"cardMask" binding:"omitempty,len=16"`
+	ICC           *string `json:"icc" binding:"omitempty"`
+}
+
+type WaitingOrderPayload struct {
+	OrderID uint `json:"orderId"`
+}

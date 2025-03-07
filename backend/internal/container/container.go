@@ -1,6 +1,7 @@
 package container
 
 import (
+	asynqManager "github.com/Global-Optima/zeep-web/backend/internal/asynqTasks"
 	"sync"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
@@ -17,6 +18,8 @@ import (
 type Container struct {
 	once                    sync.Once
 	DbHandler               *database.DBHandler
+	RedisClient             *database.RedisClient
+	AsynqManager            *asynqManager.AsynqManager
 	storageRepo             *storage.StorageRepository
 	router                  *routes.Router
 	logger                  *zap.SugaredLogger
@@ -44,9 +47,10 @@ type Container struct {
 	Analytics               *modules.AnalyticsModule
 }
 
-func NewContainer(dbHandler *database.DBHandler, storageRepo *storage.StorageRepository, router *routes.Router, logger *zap.SugaredLogger) *Container {
+func NewContainer(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo *storage.StorageRepository, router *routes.Router, logger *zap.SugaredLogger) *Container {
 	return &Container{
 		DbHandler:   dbHandler,
+		RedisClient: redisClient,
 		storageRepo: storageRepo,
 		router:      router,
 		logger:      logger,
@@ -56,6 +60,12 @@ func NewContainer(dbHandler *database.DBHandler, storageRepo *storage.StorageRep
 func (c *Container) mustInit() {
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
 	cronManager := scheduler.NewCronManager(c.logger)
+
+	var err error
+	c.AsynqManager, err = asynqManager.NewAsyncManager(c.RedisClient.Client, c.logger)
+	if err != nil {
+		c.logger.Fatalf("Failed to create asynq manager: %v", err)
+	}
 
 	c.Audits = modules.NewAuditsModule(baseModule)
 	c.Franchisees = modules.NewFranchiseesModule(baseModule, c.Audits.Service)
@@ -77,7 +87,7 @@ func (c *Container) mustInit() {
 	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo)
 	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Additives.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, *c.storageRepo, c.Notifications.Service)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)
-	c.Orders = modules.NewOrdersModule(baseModule, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Notifications.Service)
+	c.Orders = modules.NewOrdersModule(baseModule, c.AsynqManager, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Notifications.Service)
 	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.Franchisees.Service, c.Regions.Service, c.StockMaterials.Repo, c.Notifications.Service, c.Audits.Service)
 	c.Analytics = modules.NewAnalyticsModule(baseModule)
 

@@ -20,10 +20,11 @@ const (
 )
 
 var (
-	ErrMessageBindingJSON  = NewResponseKey(http.StatusBadRequest, "json")
-	ErrMessageBindingQuery = NewResponseKey(http.StatusBadRequest, "query")
-	ErrMessageGettingImage = NewResponseKey(http.StatusBadRequest, "image", "upload")
-	ErrMessageGettingVideo = NewResponseKey(http.StatusBadRequest, "video", "upload")
+	ErrMessageBindingJSON    = NewResponseKey(http.StatusBadRequest, "json")
+	ErrMessageBindingQuery   = NewResponseKey(http.StatusBadRequest, "query")
+	ErrMessageGettingImage   = NewResponseKey(http.StatusBadRequest, "image", "upload")
+	ErrMessageGettingVideo   = NewResponseKey(http.StatusBadRequest, "video", "upload")
+	ErrMessageDecryptingJSON = NewResponseKey(http.StatusBadRequest, "json-decryption")
 )
 
 var DefaultLocalizedErrorMessages = &LocalizedMessage{
