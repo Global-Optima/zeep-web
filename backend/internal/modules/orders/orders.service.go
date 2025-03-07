@@ -3,12 +3,11 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/taskqueue"
-	"time"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/taskqueue"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
@@ -206,9 +205,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return &order, err
 	}
 
-	waitingOrderDuration := 10 * time.Second
-
-	err = s.taskQueue.EnqueueTask(OrderPaymentFailure, payload, waitingOrderDuration)
+	err = s.taskQueue.EnqueueTask(OrderPaymentFailure, payload, config.GetConfig().Payment.WaitingTime)
 	if err != nil {
 		return &order, err
 	}
@@ -227,10 +224,6 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	}
 
 	return &order, nil
-}
-
-func (s *orderService) HandleOrderPaymentSuccess(orderID uint) {
-
 }
 
 func (s *orderService) StockAndPriceValidationResults(

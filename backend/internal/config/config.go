@@ -30,6 +30,7 @@ type Config struct {
 	Redis     RedisConfig     `mapstructure:",squash"`
 	Kafka     KafkaConfig     `mapstructure:",squash"`
 	Filtering FilteringConfig `mapstructure:",squash"`
+	Payment   PaymentConfig   `mapstructure:",squash"`
 }
 
 var (
