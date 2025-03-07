@@ -1,5 +1,33 @@
 services:
-  # PostgreSQL Database
+  ########################################################################
+  # 1) Traefik - Reverse Proxy for Automatic HTTPS via Let's Encrypt
+  ########################################################################
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    command:
+      - '--api.dashboard=true'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      # Let’s Encrypt ACME config
+      - '--certificatesresolvers.myresolver.acme.httpchallenge=true'
+      - '--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.myresolver.acme.email=${LETSENCRYPT_EMAIL}'
+      - '--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json'
+    ports:
+      - '80:80' # HTTP
+      - '443:443' # HTTPS
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/letsencrypt:/letsencrypt
+    networks:
+      - app_network
+
+  ########################################################################
+  # 2) PostgreSQL Database
+  ########################################################################
   db:
     container_name: db
     image: postgres:16
@@ -49,7 +77,9 @@ services:
     networks:
       - app_network
 
-  # Redis
+  ########################################################################
+  # 3) Redis
+  ########################################################################
   redis:
     container_name: redis
     image: redis:latest
@@ -76,7 +106,9 @@ services:
     networks:
       - app_network
 
-  # Backend (Golang Gin)
+  ########################################################################
+  # 4) Backend (Golang Gin)
+  ########################################################################
   backend:
     container_name: backend
     build:
@@ -121,7 +153,9 @@ services:
     networks:
       - app_network
 
-  # Frontend (Vite Vue 3)
+  ########################################################################
+  # 5) Frontend (Vite Vue 3) w/ Nginx
+  ########################################################################
   frontend:
     container_name: frontend
     build:
@@ -134,32 +168,32 @@ services:
     environment:
       NGINX_SERVER_NAME: ${NGINX_SERVER_NAME}
     depends_on:
-      - backend
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./certs:/etc/letsencrypt
-      - ./certs-data:/var/www/certbot
-      - ./frontend/nginx.template.conf:/etc/nginx/nginx.template.conf
-      - ./frontend/scripts/frontend-entrypoint.sh:/frontend-entrypoint.sh
+      backend:
+        condition: service_started
     networks:
       - app_network
+    labels:
+      # Enable Traefik for this service
+      - 'traefik.enable=true'
 
-  certbot:
-    build:
-      context: ./certbot
-    container_name: certbot
-    env_file:
-      - .env
-    volumes:
-      - ./certs:/etc/letsencrypt
-      - ./certs-data:/var/www/certbot
-      - ./certbot/scripts/certbot-entrypoint.sh:/certbot-entrypoint.sh
-    depends_on:
-      - frontend
+      # HTTPS router
+      - 'traefik.http.routers.frontend-https.rule=Host(`${NGINX_SERVER_NAME}`)'
+      - 'traefik.http.routers.frontend-https.entrypoints=websecure'
+      - 'traefik.http.routers.frontend-https.tls=true'
+      - 'traefik.http.routers.frontend-https.tls.certresolver=myresolver'
 
-  # Prometheus (Metrics Collection)
+      # HTTP router for redirect -> HTTPS
+      - 'traefik.http.routers.frontend-http.rule=Host(`${NGINX_SERVER_NAME}`)'
+      - 'traefik.http.routers.frontend-http.entrypoints=web'
+      - 'traefik.http.middlewares.default-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.frontend-http.middlewares=default-redirect'
+
+      # Internal port that Nginx listens on
+      - 'traefik.http.services.frontend.loadbalancer.server.port=80'
+
+  ########################################################################
+  # 6) Prometheus (Metrics Collection)
+  ########################################################################
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
@@ -182,7 +216,9 @@ services:
     networks:
       - app_network
 
-  # System Monitoring
+  ########################################################################
+  # 7) System Monitoring
+  ########################################################################
   node_exporter:
     container_name: node_exporter
     image: prom/node-exporter:latest
@@ -203,7 +239,9 @@ services:
     networks:
       - app_network
 
-  # Grafana (Visualization)
+  ########################################################################
+  # 8) Grafana (Visualization)
+  ########################################################################
   grafana:
     container_name: grafana
     image: grafana/grafana:latest
@@ -218,7 +256,9 @@ services:
     networks:
       - app_network
 
-  # Loki (Logging)
+  ########################################################################
+  # 9) Loki (Logging)
+  ########################################################################
   loki:
     container_name: loki
     image: grafana/loki:latest
@@ -234,7 +274,9 @@ services:
     networks:
       - app_network
 
-  # Promtail (Log Shipper for Loki)
+  ########################################################################
+  # 10) Promtail (Log Shipper for Loki)
+  ########################################################################
   promtail:
     container_name: promtail
     image: grafana/promtail:latest
@@ -246,7 +288,9 @@ services:
     networks:
       - app_network
 
-  # cAdvisor (Container Metrics)
+  ########################################################################
+  # 11) cAdvisor (Container Metrics)
+  ########################################################################
   cadvisor:
     container_name: cadvisor
     image: gcr.io/cadvisor/cadvisor:latest
@@ -260,13 +304,17 @@ services:
     networks:
       - app_network
 
-# Volumes
+######################################################################
+# Named Volumes
+######################################################################
 volumes:
   db_data:
   redis_data:
   grafana_data:
 
-# Networks
+######################################################################
+# Docker Network
+######################################################################
 networks:
   app_network:
     driver: bridge
