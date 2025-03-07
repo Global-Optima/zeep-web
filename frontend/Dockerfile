@@ -27,21 +27,22 @@ ENV VITE_WS_URL=$VITE_WS_URL
 RUN bun run build
 
 # ====================
-# Final Stage
+# Final Stage (Nginx)
 # ====================
 FROM nginx:alpine AS final
 
-# Remove default nginx config if needed
+# Remove default config and copy template
 RUN rm -f /etc/nginx/conf.d/default.conf
+COPY nginx.template.conf /etc/nginx/nginx.template.conf
 
-# Copy custom nginx configuration if available
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy the production build from the builder stage
+# Copy static frontend files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80
-EXPOSE 80
+# Copy entrypoint script
+COPY scripts/frontend-entrypoint.sh /frontend-entrypoint.sh
+RUN chmod +x /frontend-entrypoint.sh
 
-# Run nginx in the foreground
+EXPOSE 80 443
+
+ENTRYPOINT ["/frontend-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

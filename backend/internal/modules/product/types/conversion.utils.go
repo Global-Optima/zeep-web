@@ -26,7 +26,6 @@ func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 		ImageURL:    product.ImageURL.GetURL(),
 		VideoURL:    product.VideoURL.GetURL(),
 		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
-		MachineId:   product.MachineId,
 	}
 }
 
@@ -40,7 +39,6 @@ func MapToProductDetailsDTO(product *data.Product) *ProductDetailsDTO {
 	return &ProductDetailsDTO{
 		ProductDTO: MapToProductDTO(*product),
 		Sizes:      sizes,
-		MachineId:  product.MachineId,
 	}
 }
 
@@ -52,7 +50,6 @@ func MapToProductDTO(product data.Product) ProductDTO {
 		BaseProductDTO:   MapToBaseProductDTO(&product),
 		BasePrice:        basePrice,
 		ProductSizeCount: productSizeCount,
-		MachineId:        product.MachineId,
 	}
 }
 
@@ -80,6 +77,7 @@ func MapToBaseProductSizeDTO(productSize data.ProductSize) BaseProductSizeDTO {
 		ProductID: productSize.ProductID,
 		Size:      productSize.Size,
 		BasePrice: productSize.BasePrice,
+		MachineId: productSize.MachineId,
 	}
 }
 
@@ -122,7 +120,6 @@ func CreateToProductModel(dto *CreateProductDTO) *data.Product {
 		Name:        dto.Name,
 		Description: dto.Description,
 		CategoryID:  dto.CategoryID,
-		MachineId:   dto.MachineId,
 	}
 
 	return product
@@ -135,6 +132,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 		UnitID:    dto.UnitID,
 		BasePrice: dto.BasePrice,
 		Size:      dto.Size,
+		MachineId: dto.MachineId,
 	}
 
 	for _, additive := range dto.Additives {
@@ -175,9 +173,6 @@ func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
 			product.CategoryID = dto.CategoryID
 		}
 	}
-	if dto.MachineId != nil {
-		product.MachineId = *dto.MachineId
-	}
 
 	return product
 }
@@ -196,6 +191,9 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 	if dto.Size != nil {
 		productSize.Size = *dto.Size
+	}
+	if dto.MachineId != nil {
+		productSize.MachineId = *dto.MachineId
 	}
 
 	var additives []data.ProductSizeAdditive

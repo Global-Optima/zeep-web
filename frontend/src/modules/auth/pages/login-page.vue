@@ -60,7 +60,7 @@ const onLoginEmployee = (dto: EmployeeLoginDTO) => {
 	<div
 		class="flex flex-col justify-center items-center gap-6 bg-gradient-to-r from-slate-900 to-slate-700 p-4 min-h-screen"
 	>
-		<div class="border-gray-100 bg-white shadow-lg p-6 md:p-8 rounded-xl w-full max-w-md h-full">
+		<div class="bg-white shadow-lg p-6 md:p-8 border-gray-100 rounded-xl w-full max-w-md h-full">
 			<!-- Wrap the conditional blocks in a Transition for smooth animation -->
 			<transition
 				name="fade-slide"
@@ -80,7 +80,7 @@ const onLoginEmployee = (dto: EmployeeLoginDTO) => {
 							>
 								<button
 									@click="selectedRole = role.key"
-									class="flex justify-between items-center py-2 md:py-3 w-full text-lg md:text-xl hover:text-primary"
+									class="flex justify-between items-center py-2 md:py-3 w-full hover:text-primary text-lg md:text-xl"
 								>
 									{{ role.label }}
 									<ChevronRight class="w-5 h-5" />
@@ -124,7 +124,7 @@ const onLoginEmployee = (dto: EmployeeLoginDTO) => {
 /* Transition classes for a smooth fade and slide effect */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 .fade-slide-enter-from,
 .fade-slide-leave-to {

@@ -1,4 +1,3 @@
-import AppAdminLayout from '@/core/layouts/admin/app-admin-layout.vue'
 import { ADMIN_ADDITIVES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-additives.routes'
 import { ADMIN_FRANCHISEES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-franchisees.routes'
 import { ADMIN_INGREDIENTS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-ingredients.routes'
@@ -8,9 +7,9 @@ import { ADMIN_STOCK_MATERIALS_CHILDREN_ROUTES } from '@/core/routes/admin/admin
 import { ADMIN_SUPPLIERS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-suppliers.routes'
 import { ADMIN_UNITS_CHILDREN_ROUTES } from '@/core/routes/admin/admin-units.routes'
 import { ADMIN_WAREHOUSES_CHILDREN_ROUTES } from '@/core/routes/admin/admin-warehouses.routes'
-import type { AppRouteRecord, ParentRoutePage } from '../routes.types'
-import { ADMIN_EMPLOYEES_CHILDREN_ROUTES } from './admin-employees.routes'
-import { ADMIN_STORE_ORDERS_CHILDREN_ROUTES } from './admin-orders.routes'
+import { ADMIN_EMPLOYEES_CHILDREN_ROUTES } from './admin/admin-employees.routes'
+import { ADMIN_STORE_ORDERS_CHILDREN_ROUTES } from './admin/admin-orders.routes'
+import type { AppRouteRecord, ParentRoutePage } from './routes.types'
 
 export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_ADDITIVES_CHILDREN_ROUTES,
@@ -149,6 +148,6 @@ export const ADMIN_CHILDREN_ROUTES = {
 
 export const ADMIN_ROUTES_CONFIG = {
 	path: '/admin',
-	component: AppAdminLayout,
+	component: () => import('@/core/layouts/admin/app-admin-layout.vue'),
 	children: ADMIN_CHILDREN_ROUTES,
 } satisfies ParentRoutePage

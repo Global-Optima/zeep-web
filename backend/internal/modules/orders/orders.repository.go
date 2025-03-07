@@ -3,8 +3,9 @@ package orders
 import (
 	"errors"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
@@ -153,49 +154,60 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]data.Order, error) {
 	var orders []data.Order
 
-	var location *time.Location
-	var now time.Time
-
-	// Determine which location to use.
-	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
-		var err error
-		location, err = time.LoadLocation(*filter.TimeZoneLocation)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load timezone: %w", err)
-		}
-		now = time.Now().In(location)
-	} else if filter.TimeZoneOffset != nil {
-		offsetSeconds := int(*filter.TimeZoneOffset) * 60
-		location = time.FixedZone("offset", offsetSeconds)
-		now = time.Now().UTC().In(location)
-	} else {
-		location = time.UTC
-		now = time.Now().UTC()
-	}
-
-	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
-	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
-
-	startOfTodayUTC := startOfToday.UTC()
-	endOfTodayUTC := endOfToday.UTC()
-
+	// Validate StoreID first
 	if filter.StoreID == nil {
 		return nil, fmt.Errorf("storeID is required")
 	}
 
-	query := r.db.
+	// Get correct timezone location
+	location, err := getTimeZoneLocation(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the current date in the specified timezone
+	now := time.Now().In(location)
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
+
+	// Convert start and end of today **back to UTC** for database querying
+	startOfTodayUTC := startOfToday.UTC()
+	endOfTodayUTC := endOfToday.UTC()
+
+	// Query orders for the given store within the correct time range
+	err = r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Where("store_id = ?", *filter.StoreID).
-		Where("created_at >= ? AND created_at <= ?", startOfTodayUTC, endOfTodayUTC)
+		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
+		Order("created_at ASC").
+		Find(&orders).Error
 
-	err := query.Order("created_at asc").Find(&orders).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch barista orders: %w", err)
 	}
 
 	return orders, nil
+}
+
+func getTimeZoneLocation(filter types.OrdersTimeZoneFilter) (*time.Location, error) {
+	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
+		location, err := time.LoadLocation(*filter.TimeZoneLocation)
+		if err != nil {
+			return nil, fmt.Errorf("invalid timezone location: %w", err)
+		}
+
+		return location, nil
+	}
+
+	if filter.TimeZoneOffset != nil {
+		offsetSeconds := int(*filter.TimeZoneOffset) * 60
+		return time.FixedZone("Custom Offset", offsetSeconds), nil
+	}
+
+	// Default to UTC if no timezone is provided
+	return time.UTC, nil
 }
 
 func (r *orderRepository) GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error) {

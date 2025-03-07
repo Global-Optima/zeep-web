@@ -1,4 +1,4 @@
-import { ADMIN_CHILDREN_ROUTES, ADMIN_ROUTES_CONFIG } from '@/core/routes/admin/admin.routes'
+import { ADMIN_CHILDREN_ROUTES, ADMIN_ROUTES_CONFIG } from '@/core/routes/admin.routes'
 import {
 	EVENT_ORDERS_CHILDREN_ROUTES,
 	EVENT_ORDERS_ROUTES_CONFIG,

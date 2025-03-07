@@ -68,6 +68,7 @@ export interface UpdateProductSizeFormSchema {
   size: number
   additives: SelectedAdditiveTypesDTO[]
   ingredients: SelectedIngredientsTypesDTO[]
+  machineId: string
 }
 
 const { productSize, readonly = false } = defineProps<{
@@ -81,12 +82,13 @@ const emits = defineEmits<{
 }>()
 
 
-const createProductSizeSchema = toTypedSchema(
+const updateProductSizeSchema = toTypedSchema(
   z.object({
     name: z.nativeEnum(ProductSizeNames).describe('Выберите корректный вариант'),
     basePrice: z.number().min(0, 'Введите корректную цену'),
     size: z.number().min(0, 'Введите корректный размер'),
     unitId: z.number().min(1, 'Введите корректную единицу измерения'),
+    machineId: z.string().min(1, 'Введите код товара из автомата').max(40, "Максимум 40 символов"),
   })
 )
 
@@ -98,12 +100,13 @@ const validateAdditives = (additives: SelectedAdditiveTypesDTO[]) => {
 }
 
 const { handleSubmit, isSubmitting, setFieldValue } = useForm({
-  validationSchema: createProductSizeSchema,
+  validationSchema: updateProductSizeSchema,
   initialValues: {
     name: productSize.name as ProductSizeNames,
     unitId: productSize.unit.id,
     basePrice: productSize.basePrice,
     size: productSize.size,
+    machineId: productSize.machineId
   }
 })
 
@@ -329,6 +332,24 @@ function selectUnit(unit: UnitDTO) {
 										v-bind="componentField"
 										placeholder="Введите цену"
 										:readonly="readonly"
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+
+						<FormField
+							name="machineId"
+							v-slot="{ componentField }"
+						>
+							<FormItem>
+								<FormLabel>Код товара из автомата</FormLabel>
+								<FormControl>
+									<Input
+										id="machineId"
+										type="text"
+										v-bind="componentField"
+										placeholder="Введите код"
 									/>
 								</FormControl>
 								<FormMessage />

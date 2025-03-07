@@ -61,6 +61,7 @@ export interface CreateProductSizeFormSchema {
   unitId: number
   basePrice: number
   size: number
+  machineId: string
   additives: SelectedAdditiveTypesDTO[]
   ingredients: SelectedIngredientsTypesDTO[]
 }
@@ -74,6 +75,7 @@ const createProductSizeSchema = toTypedSchema(
   z.object({
     name: z.nativeEnum(ProductSizeNames).describe('Выберите корректный вариант'),
     basePrice: z.number().min(0, 'Введите корректную цену'),
+    machineId: z.string().min(1, 'Введите код товара из автомата').max(40, "Максимум 40 символов"),
     size: z.number().min(0, 'Введите корректный размер'),
     unitId: z.number().min(1, 'Введите корректный размер'),
   })
@@ -286,6 +288,24 @@ function selectUnit(unit: UnitDTO) {
 										type="number"
 										v-bind="componentField"
 										placeholder="Введите цену"
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+
+						<FormField
+							name="machineId"
+							v-slot="{ componentField }"
+						>
+							<FormItem>
+								<FormLabel>Код товара из автомата</FormLabel>
+								<FormControl>
+									<Input
+										id="machineId"
+										type="text"
+										v-bind="componentField"
+										placeholder="Введите код"
 									/>
 								</FormControl>
 								<FormMessage />

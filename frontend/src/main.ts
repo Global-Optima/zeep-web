@@ -12,9 +12,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 
 const app = createApp(App)
-const pinia = createPinia()
-
-pinia.use(piniaPluginPersistedstate)
+const pinia = createPinia().use(piniaPluginPersistedstate)
 
 app.use(pinia)
 app.use(router)

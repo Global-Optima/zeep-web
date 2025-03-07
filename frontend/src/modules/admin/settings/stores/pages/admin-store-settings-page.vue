@@ -29,9 +29,9 @@
 
 <script setup lang="ts">
 import { Card, CardContent } from '@/core/components/ui/card'
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, ref, shallowRef } from 'vue'
 
-const tabs = ref([
+const tabs = shallowRef([
   { id: 'kaspi', name: 'Каспи Интеграция', component: defineAsyncComponent(() => import('../components/admin-store-settings-kaspi.vue')) },
   { id: 'kaspiTEst', name: 'Каспи Тест', component: defineAsyncComponent(() => import('../components/admin-store-settings-kaspi-test.vue')) },
 ]);

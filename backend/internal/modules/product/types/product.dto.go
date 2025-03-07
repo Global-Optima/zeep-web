@@ -39,6 +39,7 @@ type BaseProductSizeDTO struct {
 	ProductID uint               `json:"productId"`
 	Unit      unitTypes.UnitsDTO `json:"unit"`
 	Size      float64            `json:"size"`
+	MachineId string             `json:"machineId"`
 }
 
 type ProductSizeDTO struct {
@@ -87,6 +88,7 @@ type CreateProductSizeDTO struct {
 	Size        float64                 `json:"size" binding:"required,gt=0"`
 	UnitID      uint                    `json:"unitId" binding:"required,gt=0"`
 	BasePrice   float64                 `json:"basePrice" binding:"required,gt=0"`
+	MachineId   string                  `form:"machineId" binding:"required,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"required,dive"`
 }
@@ -105,6 +107,7 @@ type UpdateProductSizeDTO struct {
 	BasePrice   *float64                `json:"basePrice" binding:"omitempty,gt=0"`
 	Size        *float64                `json:"size" binding:"omitempty,gt=0"`
 	UnitID      *uint                   `json:"unitId" binding:"omitempty,gt=0"`
+	MachineId   *string                 `form:"machineId" binding:"omitempty,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }

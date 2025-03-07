@@ -53,6 +53,7 @@ type ProductSize struct {
 	ProductID              uint    `gorm:"index;not null"`
 	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
 	DiscountID             uint
+	MachineId              string                  `gorm:"size:40;not null;unique" sort:"machineId"`
 	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 }

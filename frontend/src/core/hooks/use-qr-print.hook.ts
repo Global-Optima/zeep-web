@@ -1,9 +1,20 @@
 import { SAVED_BARISTA_QR_SETTINGS_KEY } from '@/core/constants/qr.constants'
+import type { SuborderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode-generator'
 import { usePrinter, type PrintOptions } from './use-print.hook'
 
-export const getSavedQRSettings = (): { width: number; height: number } => {
+export interface QRPrintOptions extends PrintOptions {
+	labelWidthMm?: number
+	labelHeightMm?: number
+	dpi?: number
+}
+
+export const generateSubOrderQR = (sb: SuborderDTO) => {
+	return `${sb.id}|${sb.productSize.machineId}|${sb.additives.map(a => a.additive.machineId).join(',')}`
+}
+
+export const getSavedBaristaQRSettings = (): { width: number; height: number } => {
 	const stored = localStorage.getItem(SAVED_BARISTA_QR_SETTINGS_KEY)
 
 	if (stored) {
@@ -35,13 +46,8 @@ export function useGenerateQR() {
 	 * @param labelHeightMm - Height of the label in millimeters.
 	 * @param dpi - Printer DPI (default: 300 for high-res prints).
 	 */
-	async function generateQR(
-		productName: string,
-		qrValue: string,
-		labelWidthMm: number = 100,
-		labelHeightMm: number = 100,
-		dpi: number = 203,
-	): Promise<Blob> {
+	async function generateQR(qrValue: string, options: QRPrintOptions = {}): Promise<Blob> {
+		const { dpi = 203, labelWidthMm = 100, labelHeightMm = 100 } = options
 		// -------------------------------
 		// 1) Define Label Size in mm
 		// -------------------------------
@@ -121,23 +127,17 @@ export function useQRPrinter() {
 	const { generateQR } = useGenerateQR()
 
 	/**
-	 * Generates and prints a QR code with dynamic label sizes.
-	 * @param productName - The name to display with the QR code.
 	 * @param qrValue - The encoded QR value.
 	 * @param labelWidthMm - Label width in mm.
 	 * @param labelHeightMm - Label height in mm.
 	 * @param options - Optional print configurations.
 	 */
-	const printQR = async (
-		productName: string,
-		qrValue: string,
-		labelWidthMm: number = 100,
-		labelHeightMm: number = 100,
-		options?: PrintOptions,
-	) => {
+	const printQR = async (qrValue: string | string[], options?: QRPrintOptions) => {
 		try {
-			const qrPdfBlob = await generateQR(productName, qrValue, labelWidthMm, labelHeightMm)
-			await print(qrPdfBlob, options)
+			const qrValues = Array.isArray(qrValue) ? qrValue : [qrValue]
+			const qrPdfBlobs = await Promise.all(qrValues.map(v => generateQR(v, options)))
+
+			await print(qrPdfBlobs, options)
 		} catch (error) {
 			console.error('Error generating or printing QR code:', error)
 			throw error
