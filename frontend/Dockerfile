@@ -35,14 +35,14 @@ FROM nginx:alpine AS final
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY nginx.template.conf /etc/nginx/nginx.template.conf
 
-# Copy static frontend files
+# Copy static files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy entrypoint script
-COPY scripts/frontend-entrypoint.sh /frontend-entrypoint.sh
-RUN chmod +x /frontend-entrypoint.sh
+# Add custom entrypoint script
+COPY scripts/envsubst_nginx.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-EXPOSE 80 443
-
-ENTRYPOINT ["/frontend-entrypoint.sh"]
+# Expose port and set entrypoint
+EXPOSE 80
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
