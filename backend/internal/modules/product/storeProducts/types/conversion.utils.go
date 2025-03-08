@@ -33,6 +33,7 @@ func MapToStoreProductSizeDTO(storeProductSize *data.StoreProductSize) *StorePro
 	return &StoreProductSizeDTO{
 		ID:                 storeProductSize.ID,
 		BaseProductSizeDTO: productTypes.MapToBaseProductSizeDTO(storeProductSize.ProductSize),
+		TotalNutrition:     *productTypes.CalculateTotalNutrition(&storeProductSize.ProductSize),
 		ProductSizeID:      storeProductSize.ProductSizeID,
 		StorePrice:         getStorePrice(storeProductSize),
 	}

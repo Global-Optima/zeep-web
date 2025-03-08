@@ -188,6 +188,8 @@ func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 
 func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	var dto types.CreateAdditiveDTO
+	var err error
+
 	if err := c.ShouldBind(&dto); err != nil {
 		logrus.Info(err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
@@ -195,15 +197,12 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	}
 
 	ingredientsJSON := c.PostForm("ingredients")
-	if ingredientsJSON == "" {
-		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-		return
-	}
-
-	err := json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients)
-	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-		return
+	if ingredientsJSON != "" {
+		err := json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients)
+		if err != nil {
+			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+			return
+		}
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)

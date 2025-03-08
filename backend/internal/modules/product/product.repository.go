@@ -75,6 +75,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		Preload("Unit").
 		Preload("Additives.Additive.Category").
 		Preload("Additives.Additive.Unit").
+		Preload("Additives.Additive.Ingredients").
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
 		Preload("ProductSizeIngredients.Ingredient.Unit").
 		First(&productSize, productSizeID).Error
@@ -161,7 +162,11 @@ func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (ui
 
 func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if updateModels != nil {
+		if updateModels == nil {
+			return fmt.Errorf("nothing to update")
+		}
+
+		if updateModels.ProductSize != nil {
 			if err := r.updateProductSize(tx, id, updateModels.ProductSize); err != nil {
 				return err
 			}
@@ -197,17 +202,19 @@ func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, add
 		return fmt.Errorf("failed to delete additives: %w", err)
 	}
 
-	newAdditives := make([]data.ProductSizeAdditive, len(additives))
-	for i, additive := range additives {
-		newAdditives[i] = data.ProductSizeAdditive{
-			ProductSizeID: productSizeID,
-			AdditiveID:    additive.AdditiveID,
-			IsDefault:     additive.IsDefault,
+	if len(additives) > 0 {
+		newAdditives := make([]data.ProductSizeAdditive, len(additives))
+		for i, additive := range additives {
+			newAdditives[i] = data.ProductSizeAdditive{
+				ProductSizeID: productSizeID,
+				AdditiveID:    additive.AdditiveID,
+				IsDefault:     additive.IsDefault,
+			}
 		}
-	}
 
-	if err := tx.Create(newAdditives).Error; err != nil {
-		return fmt.Errorf("failed to create additives: %w", err)
+		if err := tx.Create(newAdditives).Error; err != nil {
+			return fmt.Errorf("failed to create additives: %w", err)
+		}
 	}
 
 	return nil
@@ -218,17 +225,19 @@ func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, i
 		return fmt.Errorf("failed to delete ingredients: %w", err)
 	}
 
-	newIngredients := make([]data.ProductSizeIngredient, len(ingredients))
-	for i, ingredient := range ingredients {
-		newIngredients[i] = data.ProductSizeIngredient{
-			ProductSizeID: productSizeID,
-			IngredientID:  ingredient.IngredientID,
-			Quantity:      ingredient.Quantity,
+	if len(ingredients) > 0 {
+		newIngredients := make([]data.ProductSizeIngredient, len(ingredients))
+		for i, ingredient := range ingredients {
+			newIngredients[i] = data.ProductSizeIngredient{
+				ProductSizeID: productSizeID,
+				IngredientID:  ingredient.IngredientID,
+				Quantity:      ingredient.Quantity,
+			}
 		}
-	}
 
-	if err := tx.Create(newIngredients).Error; err != nil {
-		return fmt.Errorf("failed to create ingredients: %w", err)
+		if err := tx.Create(newIngredients).Error; err != nil {
+			return fmt.Errorf("failed to create ingredients: %w", err)
+		}
 	}
 
 	return nil

@@ -119,7 +119,7 @@ func (s *storeAdditiveService) GetStoreAdditives(storeID uint, filter *additiveT
 }
 
 func (s *storeAdditiveService) GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]additiveTypes.AdditiveDTO, error) {
-	additives, err := s.repo.GetAdditivesListToAdd(storeID, filter)
+	additives, err := s.repo.GetAvailableAdditivesToAdd(storeID, filter)
 	if err != nil {
 		wrappedError := utils.WrapError("failed to retrieve list additives to add for store", err)
 		s.logger.Error(wrappedError)

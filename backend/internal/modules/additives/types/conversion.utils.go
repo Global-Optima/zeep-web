@@ -13,7 +13,7 @@ import (
 
 type AdditiveModels struct {
 	Additive    *data.Additive
-	Ingredients []data.ProductSizeIngredient
+	Ingredients []data.AdditiveIngredient
 }
 
 func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
@@ -65,14 +65,20 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) (*AdditiveModels, er
 		additive.MachineId = *dto.MachineId
 	}
 
-	var ingredients []data.ProductSizeIngredient
+	var ingredients []data.AdditiveIngredient
 
-	for _, ingredient := range dto.Ingredients {
-		temp := data.ProductSizeIngredient{
-			IngredientID: ingredient.IngredientID,
-			Quantity:     ingredient.Quantity,
+	if dto.Ingredients != nil {
+		if len(dto.Ingredients) == 0 {
+			ingredients = []data.AdditiveIngredient{}
+		} else {
+			for _, ingredient := range dto.Ingredients {
+				temp := data.AdditiveIngredient{
+					IngredientID: ingredient.IngredientID,
+					Quantity:     ingredient.Quantity,
+				}
+				ingredients = append(ingredients, temp)
+			}
 		}
-		ingredients = append(ingredients, temp)
 	}
 
 	return &AdditiveModels{
