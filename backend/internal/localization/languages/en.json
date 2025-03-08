@@ -252,7 +252,7 @@
     "200-warehouseStock-receive": "Inventory received successfully.",
     "200-warehouseStock-addMaterial": "Stock added successfully.",
     "200-warehouseStock-deductStock": "Stock deducted successfully.",
-    "200-warehouseStock-update": "Stock updated successfully.", 
+    "200-warehouseStock-update": "Stock updated successfully.",
 
     "500-warehouse-get" : "An unexpected error occurred while fetching warehouse data. Please try again later.",
     "500-warehouse-create" : "An unexpected error occurred while creating warehouse. Please try again later.",
@@ -297,6 +297,7 @@
     "200-region-delete": "Region successfully deleted.",
 
     "500-adminEmployee-get": "An unexpected error occurred while fetching admin employee data. Please try again later.",
+    "409-adminEmployee": "Admin with this email or phone number already exists.",
     "404-adminEmployee": "Admin employee not found.",
     "403-adminEmployee": "Access to the admin employee is forbidden.",
     "400-adminEmployee": "Invalid admin employee data. Please check and try again.",
