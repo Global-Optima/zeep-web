@@ -207,6 +207,7 @@
     "500-storeEmployee-get": "An unexpected error occurred while fetching store employee data. Please try again later.",
     "500-storeEmployee-update": "An unexpected error occurred while updating store employee data. Please try again later.",
     "500-storeEmployee-delete": "An unexpected error occurred while deleting store employee data. Please try again later.",
+    "409-storeEmployee": "Store employee with this email or phone number already exists.",
     "404-storeEmployee": "Store employee not found.",
     "403-storeEmployee": "Access to the store employee is forbidden.",
     "400-storeEmployee": "Invalid store employee data. Please check and try again.",
