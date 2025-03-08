@@ -2,6 +2,7 @@ package employees
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees/types"
 
@@ -40,9 +41,7 @@ func (r *regionEmployeeRepository) GetRegionEmployees(regionID uint, filter *emp
 		Joins("JOIN employees ON employees.id = region_employees.employee_id")
 
 	if filter.IsActive != nil {
-		query = query.Where(&data.RegionEmployee{
-			Employee: data.Employee{IsActive: filter.IsActive},
-		})
+		query = query.Where("employees.is_active = ?", *filter.IsActive)
 	}
 
 	if filter.Role != nil {
@@ -100,7 +99,6 @@ func (r *regionEmployeeRepository) GetAllRegionEmployees(regionID uint) ([]data.
 		Preload("Employee").
 		Where("region_employees.region_id = ? AND employees.is_active = true", regionID).
 		Find(&regionEmployees).Error
-
 	if err != nil {
 		return nil, err
 	}

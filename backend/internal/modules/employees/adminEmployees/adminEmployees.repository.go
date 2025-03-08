@@ -2,6 +2,7 @@ package employees
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -29,9 +30,7 @@ func (r *adminEmployeeRepository) GetAdminEmployees(filter *types.EmployeesFilte
 		Joins("JOIN employees ON employees.id = admin_employees.employee_id")
 
 	if filter.IsActive != nil {
-		query = query.Where(&data.AdminEmployee{
-			Employee: data.Employee{IsActive: filter.IsActive},
-		})
+		query = query.Where("employees.is_active = ?", *filter.IsActive)
 	}
 
 	if filter.Role != nil {
@@ -80,7 +79,6 @@ func (r *adminEmployeeRepository) GetAllAdminEmployees() ([]data.AdminEmployee, 
 		Joins("INNER JOIN employees ON admin_employees.employee_id = employees.id").
 		Where("employees.is_active = true").
 		Find(&employees).Error
-
 	if err != nil {
 		return nil, err
 	}

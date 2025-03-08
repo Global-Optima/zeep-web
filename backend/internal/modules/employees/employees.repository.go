@@ -3,6 +3,7 @@ package employees
 import (
 	"errors"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -104,7 +105,7 @@ func (r *employeeRepository) GetEmployees(filter *types.EmployeesFilter) ([]data
 	}
 
 	if filter.IsActive != nil {
-		query.Where("is_active = ?", *filter.IsActive)
+		query = query.Where("employees.is_active = ?", *filter.IsActive)
 	}
 
 	if filter.Search != nil {
@@ -155,7 +156,6 @@ func (r *employeeRepository) UpdateEmployee(id uint, updateModels *types.UpdateE
 }
 
 func (r *employeeRepository) UpdateEmployeeWithAssociations(tx *gorm.DB, id uint, updateModels *types.UpdateEmployeeModels) error {
-
 	if updateModels.Employee != nil && !utils.IsEmpty(updateModels.Employee) {
 		err := tx.Model(&data.Employee{}).Where("id = ?", id).Updates(updateModels.Employee).Error
 		if err != nil {
@@ -224,7 +224,6 @@ func (r *employeeRepository) ReassignEmployeeType(employeeID uint, dto *types.Re
 				}
 			}
 			if newTypeMapping, ok := typeMappings[dto.EmployeeType]; ok {
-
 				if err := tx.Create(newTypeMapping.createModel).Error; err != nil {
 					return err
 				}
@@ -301,7 +300,6 @@ func (r *employeeRepository) GetEmployeeWorkdayByID(workdayID uint) (*data.Emplo
 	err := r.db.
 		Preload("Employee").
 		First(&workday, workdayID).Error
-
 	if err != nil {
 		return nil, err
 	}
