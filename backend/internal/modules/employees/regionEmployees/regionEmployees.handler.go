@@ -1,6 +1,9 @@
 package employees
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -10,8 +13,6 @@ import (
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/pkg/errors"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -104,7 +105,7 @@ func (h *RegionEmployeeHandler) CreateRegionEmployee(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrAlreadyExists):
-			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			localization.SendLocalizedResponseWithKey(c, types.Response409RegionEmployee)
 			return
 		case errors.Is(err, moduleErrors.ErrValidation):
 			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
