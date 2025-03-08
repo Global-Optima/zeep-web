@@ -11,6 +11,7 @@ var (
 	Response500WarehouseEmployeeUpdate = localization.NewResponseKey(500, data.WarehouseEmployeeComponent, data.UpdateOperation.ToString())
 	Response500WarehouseEmployeeDelete = localization.NewResponseKey(500, data.WarehouseEmployeeComponent, data.DeleteOperation.ToString())
 
+	Response409WarehouseEmployee = localization.NewResponseKey(409, data.WarehouseEmployeeComponent)
 	Response400WarehouseEmployee = localization.NewResponseKey(400, data.WarehouseEmployeeComponent)
 
 	Response200WarehouseEmployeeUpdate = localization.NewResponseKey(200, data.WarehouseEmployeeComponent, data.UpdateOperation.ToString())

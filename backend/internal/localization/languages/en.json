@@ -231,6 +231,7 @@
     "500-warehouseEmployee-get": "An unexpected error occurred while fetching warehouse employee data. Please try again later.",
     "500-warehouseEmployee-update": "An unexpected error occurred while updating warehouse employee data. Please try again later.",
     "500-warehouseEmployee-delete": "An unexpected error occurred while deleting warehouse employee data. Please try again later.",
+    "409-warehouseEmployee": "Warehouse employee with this email or phone number already exists.",
     "404-warehouseEmployee": "Warehouse employee not found.",
     "403-warehouseEmployee": "Access to the warehouse employee is forbidden.",
     "400-warehouseEmployee": "Invalid warehouse employee data. Please check and try again.",
