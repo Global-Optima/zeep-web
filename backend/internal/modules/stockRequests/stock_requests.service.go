@@ -63,7 +63,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to count today's stock requests: %w", err)
 	}
-	if count >= maxRequestsPerDay {
+	if count >= maxRequestsPerDay+1 {
 		return 0, "", types.ErrOneRequestPerDay
 	}
 
