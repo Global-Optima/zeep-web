@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock/types"
@@ -125,7 +126,7 @@ func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryF
 		Joins("JOIN suppliers ON suppliers.id = supplier_warehouse_deliveries.supplier_id")
 
 	if filter.WarehouseID != nil {
-		query = query.Where("warehouse_id = ?", *filter.WarehouseID)
+		query = query.Where("supplier_warehouse_deliveries.warehouse_id = ?", *filter.WarehouseID)
 	}
 	if filter.StartDate != nil {
 		query = query.Where("delivery_date >= ?", *filter.StartDate)
@@ -142,11 +143,14 @@ func (r *warehouseStockRepository) GetDeliveries(filter types.WarehouseDeliveryF
 	query = query.
 		Joins("JOIN supplier_warehouse_delivery_materials ON supplier_warehouse_delivery_materials.delivery_id = supplier_warehouse_deliveries.id").
 		Joins("JOIN stock_materials ON supplier_warehouse_delivery_materials.stock_material_id = stock_materials.id").
-		Where(`stock_materials.name ILIKE ? OR
+		Where(`
+			(
+				stock_materials.name ILIKE ? OR
 				stock_materials.description ILIKE ? OR
 				stock_materials.barcode ILIKE ? OR
 				suppliers.name ILIKE ?
-			`, search, search, search, search).
+			)
+		`, search, search, search, search).
 		Group("supplier_warehouse_deliveries.id")
 
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.SupplierWarehouseDelivery{})
@@ -464,15 +468,16 @@ func (r *warehouseStockRepository) getWarehouseStocksWithPagination(filter *type
 		query = query.Where("stock_materials.category_id = ?", *filter.CategoryID)
 	}
 
-	// Filter by search query
+	// Filter by search query with proper grouping of OR conditions
 	if filter.Search != nil && *filter.Search != "" {
 		search := "%" + *filter.Search + "%"
 		query = query.Where(`
-			stock_materials.name ILIKE ? OR
-			stock_materials.description ILIKE ? OR
-			stock_materials.barcode ILIKE ? OR
-			stock_materials.barcode ILIKE ?
-		`, search, search, search, search)
+			(
+				stock_materials.name ILIKE ? OR
+				stock_materials.description ILIKE ? OR
+				stock_materials.barcode ILIKE ?
+			)
+		`, search, search, search)
 	}
 
 	// Apply pagination and sorting
