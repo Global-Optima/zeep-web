@@ -14,7 +14,7 @@ const delegatedProps = computed(() => {
 
 <template>
 	<ToastDescription
-		:class="cn('text-sm opacity-90', props.class)"
+		:class="cn('lg:text-sm text-base', props.class)"
 		v-bind="delegatedProps"
 	>
 		<slot />

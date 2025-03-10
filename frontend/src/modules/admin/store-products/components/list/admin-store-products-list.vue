@@ -7,7 +7,7 @@
 				<TableHead class="hidden md:table-cell">Категория</TableHead>
 				<TableHead>Цена</TableHead>
 				<TableHead class="hidden md:table-cell">Доступно</TableHead>
-				<TableHead></TableHead>
+				<TableHead v-if="canDelete"></TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -38,7 +38,10 @@
 						{{ product.isAvailable ? 'Доступен' : 'Недоступен' }}
 					</div>
 				</TableCell>
-				<TableCell class="flex justify-end">
+				<TableCell
+					class="flex justify-end"
+					v-if="canDelete"
+				>
 					<Button
 						variant="ghost"
 						size="icon"
@@ -64,7 +67,9 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { formatPrice } from '@/core/utils/price.utils'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { StoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -75,6 +80,8 @@ const router = useRouter();
 const queryClient = useQueryClient();
 
 const { storeProducts } = defineProps<{ storeProducts: StoreProductDTO[] }>();
+
+const canDelete = useHasRole([EmployeeRole.STORE_MANAGER])
 
 const { mutate: deleteStoreProduct } = useMutation({
 	mutationFn: (id: number) => storeProductsService.deleteStoreProduct(id),
@@ -92,6 +99,7 @@ const onProductClick = (storeProductId: number) => {
 };
 
 const onDeleteProductClick = (e: Event, id: number) => {
+  if (!canDelete) return
 	e.stopPropagation();
 	deleteStoreProduct(id);
 };

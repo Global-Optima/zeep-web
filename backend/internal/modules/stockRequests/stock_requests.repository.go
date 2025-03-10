@@ -40,6 +40,7 @@ type StockRequestRepository interface {
 	UpdateStockRequestIngredientQuantity(ingredientID uint, quantity float64) error
 
 	CountStockRequestsInLast24Hours(storeID uint) (int64, error)
+	CountFinalizedStockRequestsInLast24Hours(storeID uint) (int64, error)
 }
 
 type stockRequestRepository struct {
@@ -373,6 +374,23 @@ func (r *stockRequestRepository) CountStockRequestsInLast24Hours(storeID uint) (
 	threshold := time.Now().Add(-24 * time.Hour)
 	err := r.db.Model(&data.StockRequest{}).
 		Where("store_id = ? AND created_at >= ?", storeID, threshold).
+		Count(&count).Error
+	return count, err
+}
+
+func (r *stockRequestRepository) CountFinalizedStockRequestsInLast24Hours(storeID uint) (int64, error) {
+	var count int64
+	threshold := time.Now().Add(-24 * time.Hour)
+	finalizedStatuses := []data.StockRequestStatus{
+		data.StockRequestProcessed,
+		data.StockRequestInDelivery,
+		data.StockRequestCompleted,
+		data.StockRequestRejectedByStore,
+		data.StockRequestRejectedByWarehouse,
+		data.StockRequestAcceptedWithChange,
+	}
+	err := r.db.Model(&data.StockRequest{}).
+		Where("store_id = ? AND created_at >= ? AND status IN (?)", storeID, threshold, finalizedStatuses).
 		Count(&count).Error
 	return count, err
 }

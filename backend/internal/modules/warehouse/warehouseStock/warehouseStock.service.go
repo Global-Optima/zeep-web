@@ -2,8 +2,9 @@ package warehouseStock
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -268,10 +269,10 @@ func (s *warehouseStockService) GetAvailableToAddStockMaterials(storeID uint, qu
 	stocks, err := s.repo.GetAvailableToAddStockMaterials(storeID, query)
 	if err != nil {
 		s.logger.Errorf("failed to fetch available stock materials: %v", err)
-		return nil, types.ErrFetchStockMaterials
+		return []stockMaterialTypes.StockMaterialsDTO{}, types.ErrFetchStockMaterials
 	}
 
-	var stockMaterialResponses []stockMaterialTypes.StockMaterialsDTO
+	stockMaterialResponses := make([]stockMaterialTypes.StockMaterialsDTO, 0)
 	for _, stockMaterial := range stocks {
 		stockMaterialResponses = append(stockMaterialResponses, *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&stockMaterial))
 	}

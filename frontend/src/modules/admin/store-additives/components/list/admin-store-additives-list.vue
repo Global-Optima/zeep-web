@@ -7,7 +7,7 @@
 				<TableHead>Категория</TableHead>
 				<TableHead>Размер</TableHead>
 				<TableHead>Цена</TableHead>
-				<TableHead></TableHead>
+				<TableHead v-if="canDelete"></TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -34,7 +34,7 @@
 				<TableCell>
 					{{ formatPrice(additive.storePrice) }}
 				</TableCell>
-				<TableCell>
+				<TableCell v-if="canDelete">
 					<Button
 						variant="ghost"
 						size="icon"
@@ -60,7 +60,9 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { formatPrice } from '@/core/utils/price.utils'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { StoreAdditiveDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -71,6 +73,8 @@ const router = useRouter()
 const queryClient = useQueryClient()
 
 const {additives} = defineProps<{additives: StoreAdditiveDTO[]}>()
+
+const canDelete = useHasRole([EmployeeRole.STORE_MANAGER])
 
 const {mutate: deleteStoreAdditive} = useMutation({
 		mutationFn: (id: number) => storeAdditivesService.deleteStoreAdditive(id),
@@ -88,6 +92,8 @@ const onProductClick = (additiveId: number) => {
 };
 
 const onDeleteProductClick = (e: Event, id: number) => {
+  if (!canDelete) return
+
   e.stopPropagation()
   deleteStoreAdditive(id)
 }

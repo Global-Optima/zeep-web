@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -20,7 +21,7 @@ type StoreAdditiveRepository interface {
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
 	GetSufficientStoreAdditiveByID(storeID, storeAdditiveID uint, frozenStock map[uint]float64) (*data.StoreAdditive, error)
-	GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
+	GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
 	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]data.StoreAdditive, error)
 	GetStoreAdditiveCategories(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
@@ -122,7 +123,7 @@ func (r *storeAdditiveRepository) CreateStoreAdditives(storeAdditives []data.Sto
 	return ids, nil
 }
 
-func (r *storeAdditiveRepository) GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error) {
+func (r *storeAdditiveRepository) GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error) {
 	var additives []data.Additive
 
 	query := r.db.
@@ -134,7 +135,7 @@ func (r *storeAdditiveRepository) GetAdditivesListToAdd(storeID uint, filter *ad
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ? OR additives.size ILIKE ?", searchTerm, searchTerm, searchTerm)
+		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ?", searchTerm, searchTerm)
 	}
 
 	if filter.MinPrice != nil {
@@ -172,37 +173,84 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 ) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
+	// First, get the relevant product_size_id to limit the join scope
+	var productSizeID uint
+	err := r.db.Model(&data.StoreProductSize{}).
+		Select("product_size_id").
+		Where("id = ? AND EXISTS (SELECT 1 FROM store_products WHERE store_products.id = store_product_sizes.store_product_id AND store_products.store_id = ?)",
+			storeProductSizeID, storeID).
+		Limit(1).
+		Pluck("product_size_id", &productSizeID).Error
+	if err != nil {
+		return nil, err
+	}
+	if productSizeID == 0 {
+		return nil, moduleErrors.ErrNotFound
+	}
+
+	// Build the main query for categories
 	query := r.db.Model(&data.AdditiveCategory{}).
 		Select("DISTINCT additive_categories.*").
-		Joins("JOIN additives ON additives.additive_category_id = additive_categories.id").
-		Joins("JOIN product_size_additives ON product_size_additives.additive_id = additives.id").
-		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_size_additives.product_size_id").
-		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
-		Joins("JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
-		Where("store_products.store_id = ?", storeID).
-		Where("store_product_sizes.id = ?", storeProductSizeID).
-		Preload("Additives", func(db *gorm.DB) *gorm.DB {
-			return db.Joins("JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
-				Preload("Unit").
-				Preload("StoreAdditives", "store_id = ?", storeID).
-				Preload("ProductSizeAdditives", "product_size_id IN (SELECT product_size_id FROM store_product_sizes WHERE id = ?)", storeProductSizeID)
-		})
+		Joins("INNER JOIN additives ON additives.additive_category_id = additive_categories.id").
+		Joins("INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
+		Joins("INNER JOIN product_size_additives ON product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?", productSizeID).
+		Where("additive_categories.deleted_at IS NULL").
+		Where("store_additives.deleted_at IS NULL")
 
+	// Apply filters
 	if filter.IsMultipleSelect != nil {
-		query = query.Where("is_multiple_select = ?", *filter.IsMultipleSelect)
+		query = query.Where("additive_categories.is_multiple_select = ?", *filter.IsMultipleSelect)
 	}
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?", searchTerm, searchTerm)
+		query = query.Where("(additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?)", searchTerm, searchTerm)
 	}
 
-	err := query.Find(&categories).Error
+	// Fetch categories first
+	err = query.Find(&categories).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, moduleErrors.ErrNotFound
 		}
 		return nil, err
+	}
+
+	if len(categories) == 0 {
+		return categories, nil
+	}
+
+	// Extract category IDs
+	var categoryIDs []uint
+	for _, cat := range categories {
+		categoryIDs = append(categoryIDs, cat.ID)
+	}
+
+	// Get additives for these categories with a separate query
+	var additives []data.Additive
+	err = r.db.Model(&data.Additive{}).
+		Joins("INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ? AND store_additives.deleted_at IS NULL", storeID).
+		Preload("Unit").
+		Preload("StoreAdditives", "store_id = ? AND deleted_at IS NULL", storeID).
+		Preload("ProductSizeAdditives", "product_size_id = ?", productSizeID).
+		Where("additives.additive_category_id IN ?", categoryIDs).
+		Where("additives.deleted_at IS NULL").
+		Find(&additives).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Organize additives by category
+	additivesByCategoryID := make(map[uint][]data.Additive)
+	for _, additive := range additives {
+		additivesByCategoryID[additive.AdditiveCategoryID] = append(additivesByCategoryID[additive.AdditiveCategoryID], additive)
+	}
+
+	// Assign additives to their categories
+	for i := range categories {
+		if additiveList, ok := additivesByCategoryID[categories[i].ID]; ok {
+			categories[i].Additives = additiveList
+		}
 	}
 
 	return categories, nil
@@ -213,6 +261,7 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint, fil
 
 	query := r.db.Model(&data.StoreAdditive{}).
 		Where(&data.StoreAdditive{BaseEntity: data.BaseEntity{ID: storeAdditiveID}}).
+		Preload("Additive").
 		Preload("Additive.Category").
 		Preload("Additive.Unit").
 		Preload("Additive.Ingredients.Ingredient.Unit").
