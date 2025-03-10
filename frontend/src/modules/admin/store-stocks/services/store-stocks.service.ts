@@ -8,6 +8,7 @@ import type {
 	StoreWarehouseStockDTO,
 	UpdateStoreWarehouseStockDTO,
 } from '../models/store-stock.model'
+import type { IngredientFilter, IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 
 class StoreStockService {
 	/**
@@ -26,6 +27,16 @@ class StoreStockService {
 			console.error('Failed to fetch store warehouse stock list: ', error)
 			throw error
 		}
+	}
+
+	async getAvailableIngredients(filter?: IngredientFilter) {
+		const response = await apiClient.get<PaginatedResponse<IngredientsDTO[]>>(
+			'/store-stocks/available-to-add',
+			{
+				params: buildRequestFilter(filter),
+			},
+		)
+		return response.data
 	}
 
 	/**
