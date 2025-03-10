@@ -10,8 +10,8 @@ var (
 	Response500FranchiseeEmployeeCreate = localization.NewResponseKey(500, data.FranchiseeEmployeeComponent, data.CreateOperation.ToString())
 	Response500FranchiseeEmployeeUpdate = localization.NewResponseKey(500, data.FranchiseeEmployeeComponent, data.UpdateOperation.ToString())
 	Response500FranchiseeEmployeeDelete = localization.NewResponseKey(500, data.FranchiseeEmployeeComponent, data.DeleteOperation.ToString())
-
-	Response400FranchiseeEmployee = localization.NewResponseKey(400, data.FranchiseeEmployeeComponent)
+	Response409FranchiseeEmployee       = localization.NewResponseKey(409, data.FranchiseeEmployeeComponent)
+	Response400FranchiseeEmployee       = localization.NewResponseKey(400, data.FranchiseeEmployeeComponent)
 
 	Response200FranchiseeEmployeeUpdate = localization.NewResponseKey(200, data.FranchiseeEmployeeComponent, data.UpdateOperation.ToString())
 	Response200FranchiseeEmployeeDelete = localization.NewResponseKey(200, data.FranchiseeEmployeeComponent, data.DeleteOperation.ToString())

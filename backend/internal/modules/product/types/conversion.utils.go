@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"sort"
 	"strings"
 
@@ -110,6 +111,7 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 
 	return ProductSizeDetailsDTO{
 		ProductSizeDTO: MapToProductSizeDTO(productSize),
+		TotalNutrition: *CalculateTotalNutrition(&productSize),
 		Additives:      additives,
 		Ingredients:    ingredients,
 	}
@@ -199,20 +201,32 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	var additives []data.ProductSizeAdditive
 	var ingredients []data.ProductSizeIngredient
 
-	for _, additive := range dto.Additives {
-		temp := data.ProductSizeAdditive{
-			AdditiveID: additive.AdditiveID,
-			IsDefault:  additive.IsDefault,
+	if dto.Additives != nil {
+		if len(dto.Additives) == 0 {
+			additives = []data.ProductSizeAdditive{}
+		} else {
+			for _, additive := range dto.Additives {
+				temp := data.ProductSizeAdditive{
+					AdditiveID: additive.AdditiveID,
+					IsDefault:  additive.IsDefault,
+				}
+				additives = append(additives, temp)
+			}
 		}
-		additives = append(additives, temp)
 	}
 
-	for _, ingredient := range dto.Ingredients {
-		temp := data.ProductSizeIngredient{
-			IngredientID: ingredient.IngredientID,
-			Quantity:     ingredient.Quantity,
+	if dto.Ingredients != nil {
+		if len(dto.Ingredients) == 0 {
+			ingredients = []data.ProductSizeIngredient{}
+		} else {
+			for _, ingredient := range dto.Ingredients {
+				temp := data.ProductSizeIngredient{
+					IngredientID: ingredient.IngredientID,
+					Quantity:     ingredient.Quantity,
+				}
+				ingredients = append(ingredients, temp)
+			}
 		}
-		ingredients = append(ingredients, temp)
 	}
 
 	return &ProductSizeModels{
@@ -259,4 +273,33 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageUR
 	}
 
 	return changes
+}
+
+func CalculateTotalNutrition(productSize *data.ProductSize) *TotalNutrition {
+	totalNutrition := &TotalNutrition{}
+
+	for _, psi := range productSize.ProductSizeIngredients {
+		totalNutrition.Calories += (psi.Ingredient.Calories * psi.Quantity) / 100
+		totalNutrition.Proteins += (psi.Ingredient.Proteins * psi.Quantity) / 100
+		totalNutrition.Fats += (psi.Ingredient.Fat * psi.Quantity) / 100
+		totalNutrition.Carbs += (psi.Ingredient.Carbs * psi.Quantity) / 100
+	}
+
+	for _, psa := range productSize.Additives {
+		if psa.IsDefault {
+			for _, ai := range psa.Additive.Ingredients {
+				totalNutrition.Calories += (ai.Ingredient.Calories * ai.Quantity) / 100
+				totalNutrition.Proteins += (ai.Ingredient.Proteins * ai.Quantity) / 100
+				totalNutrition.Fats += (ai.Ingredient.Fat * ai.Quantity) / 100
+				totalNutrition.Carbs += (ai.Ingredient.Carbs * ai.Quantity) / 100
+			}
+		}
+	}
+
+	totalNutrition.Calories = utils.RoundToOneDecimal(totalNutrition.Calories)
+	totalNutrition.Proteins = utils.RoundToOneDecimal(totalNutrition.Proteins)
+	totalNutrition.Fats = utils.RoundToOneDecimal(totalNutrition.Fats)
+	totalNutrition.Carbs = utils.RoundToOneDecimal(totalNutrition.Carbs)
+
+	return totalNutrition
 }

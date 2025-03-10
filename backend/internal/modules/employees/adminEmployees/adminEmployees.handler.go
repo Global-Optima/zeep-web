@@ -1,6 +1,9 @@
 package employees
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -11,8 +14,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
-	"strconv"
 )
 
 type AdminEmployeeHandler struct {
@@ -40,7 +41,7 @@ func (h *AdminEmployeeHandler) CreateAdminEmployee(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrAlreadyExists):
-			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			localization.SendLocalizedResponseWithKey(c, types.Response409AdminEmployee)
 			return
 		case errors.Is(err, moduleErrors.ErrValidation):
 			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)

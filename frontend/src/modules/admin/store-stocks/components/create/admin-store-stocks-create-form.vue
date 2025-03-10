@@ -130,7 +130,7 @@
 		</div>
 	</div>
 
-	<AdminIngredientsSelectDialog
+	<AdminAvailableIngredientsSelectDialog
 		:open="openDialog"
 		@close="openDialog = false"
 		@select="addSelectedIngredient"
@@ -156,9 +156,11 @@ import {
   TableRow
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
-import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
+
+const AdminAvailableIngredientsSelectDialog = defineAsyncComponent(() => import('@/modules/admin/store-stocks/components/admin-available-ingredients-select-dialog.vue'))
+
 interface CreateStoreStockItem {
 	name: string
 	ingredientId: number
@@ -268,7 +270,7 @@ function onCancel() {
 	toast({
 		title: 'Отмена',
 		description: 'Изменения отменены.',
-		variant: 'default'
+		variant: "destructive"
 	})
 	emit('onCancel')
 }

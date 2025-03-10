@@ -212,3 +212,19 @@ func ToOrderDeliveryAddressDTO(address *data.CustomerAddress) *OrderDeliveryAddr
 		Latitude:  address.Latitude,
 	}
 }
+
+func ToTransactionModel(dto *TransactionDTO, orderID uint, transactionType data.TransactionType) *data.Transaction {
+	return &data.Transaction{
+		Type:          transactionType,
+		OrderID:       orderID,
+		Bin:           dto.Bin,
+		TransactionID: dto.TransactionID,
+		ProcessID:     dto.ProcessID,
+		PaymentMethod: dto.PaymentMethod,
+		Amount:        dto.Amount,
+		Currency:      dto.Currency,
+		QRNumber:      dto.QRNumber,
+		CardMask:      dto.CardMask,
+		ICC:           dto.ICC,
+	}
+}

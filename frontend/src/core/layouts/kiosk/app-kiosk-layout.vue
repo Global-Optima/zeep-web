@@ -92,6 +92,7 @@ onBeforeUnmount(() => {
 			<div
 				v-if="showCart"
 				class="bottom-8 left-0 fixed flex justify-center w-full"
+				aria-label="Открыть корзину"
 			>
 				<KioskHomeCart />
 			</div>
