@@ -105,7 +105,7 @@ func (r *employeeRepository) GetEmployees(filter *types.EmployeesFilter) ([]data
 	}
 
 	if filter.IsActive != nil {
-		query.Where("is_active = ?", *filter.IsActive)
+		query = query.Where("employees.is_active = ?", *filter.IsActive)
 	}
 
 	if filter.Search != nil {
