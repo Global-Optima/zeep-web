@@ -128,6 +128,10 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 			localization.SendLocalizedResponseWithKey(c, types.Response400InsufficientStock)
 			return
 		}
+		if err == types.ErrMultipleSelect {
+			localization.SendLocalizedResponseWithKey(c, types.Response400MultipleSelect)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500OrderCreate)
 		return
 	}

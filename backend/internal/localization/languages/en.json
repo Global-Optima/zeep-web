@@ -108,6 +108,7 @@
     "400-order": "Failed to validate order.",
     "400-order-customerName": "Inappropriate customer name.",
     "400-order-insufficientStock": "Insufficient stock to fulfill the order.",
+    "400-order-multipleSelect": "Multiple selection of the additive of this category is not allowed.",
     "201-order": "Order was successfully created",
     "200-order-update": "Order successfully updated.",
     "200-order-delete": "Order successfully deleted.",
