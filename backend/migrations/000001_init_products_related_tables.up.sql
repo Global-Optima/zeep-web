@@ -446,8 +446,8 @@ CREATE TABLE  admin_employees (
     id SERIAL PRIMARY KEY,
     employee_id INT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
     role admin_role NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
     );
 
@@ -467,43 +467,12 @@ CREATE TABLE
 
 CREATE TYPE http_method AS ENUM ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
 CREATE TYPE operation_type AS ENUM ('GET', 'CREATE', 'UPDATE', 'DELETE');
-CREATE TYPE component_name AS ENUM (
-    'FRANCHISEE',
-    'REGION',
-    'PRODUCT',
-    'PRODUCT_CATEGORY',
-    'STORE_PRODUCT',
-    'EMPLOYEE',
-    'STORE_EMPLOYEE',
-    'WAREHOUSE_EMPLOYEE',
-    'FRANCHISEE_EMPLOYEE',
-    'REGION_EMPLOYEE',
-    'ADMIN_EMPLOYEE',
-    'ADDITIVE',
-    'ADDITIVE_CATEGORY',
-    'STORE_ADDITIVE',
-    'PRODUCT_SIZE',
-    'RECIPE_STEPS',
-    'STORE',
-    'WAREHOUSE',
-    'STORE_STOCK',
-    'INGREDIENT',
-    'INGREDIENT_CATEGORY',
-    'STOCK_REQUEST',
-    'STOCK_MATERIAL',
-    'STOCK_MATERIAL_CATEGORY',
-    'WAREHOUSE_STOCK',
-    'SUPPLIER',
-    'UNIT',
-    'ORDER'
-    );
-
 
 CREATE TABLE employee_audits (
     id SERIAL PRIMARY KEY,
     employee_id INT NOT NULL REFERENCES employees (id) ON DELETE CASCADE,
     operation_type operation_type NOT NULL,
-    component_name component_name NOT NULL,
+    component_name VARCHAR(255) NOT NULL,
     details JSONB,
     ip_address VARCHAR(45) NOT NULL,
     resource_url TEXT NOT NULL,
@@ -533,16 +502,15 @@ CREATE UNIQUE INDEX unique_employee_workday
     ON employee_workdays (employee_id, day)
     WHERE deleted_at IS NULL;
 
-
 -- Table: employee_notifications
 CREATE TABLE employee_notifications (
     id SERIAL PRIMARY KEY,
     event_type VARCHAR(255) NOT NULL,
     priority VARCHAR(50) NOT NULL,
     details JSONB DEFAULT '{}'::JSONB,
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    deleted_at TIMESTAMP NULL
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMPTZ NULL
 );
 
 -- Table: employee_notification_recipients
@@ -551,9 +519,9 @@ CREATE TABLE employee_notification_recipients (
     notification_id INT NOT NULL REFERENCES employee_notifications(id) ON DELETE CASCADE,
     employee_id INT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
     is_read BOOLEAN DEFAULT FALSE NOT NULL,
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    deleted_at TIMESTAMP NULL
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMPTZ NULL
 );
 
 -- Indexes for employee_notification_recipients
@@ -788,6 +756,24 @@ CREATE TABLE  supplier_prices (
     id SERIAL PRIMARY KEY,
     supplier_material_id INT NOT NULL REFERENCES supplier_materials(id) ON DELETE CASCADE,
     base_price DECIMAL(10, 2) NOT NULL CHECK (base_price > 0),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE transactions (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    order_id INT NOT NULL REFERENCES orders(id),
+    bin VARCHAR(20) NOT NULL,
+    transaction_id VARCHAR(50) UNIQUE NOT NULL,
+    process_id VARCHAR(50) UNIQUE NULL,
+    payment_method VARCHAR(50) NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    currency CHAR(3) NOT NULL,
+    qr_number VARCHAR(50),
+    card_mask VARCHAR(16),
+    icc VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
