@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"time"
 
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
@@ -168,7 +167,3 @@ type OrdersTimeZoneFilter struct {
 	TimeZoneLocation *string `form:"timezone" binding:"omitempty"`
 	TimeZoneOffset   *uint   `form:"timezoneOffset" binding:"omitempty"`
 }
-
-var (
-	ErrInsufficientStock = errors.New("insufficient stock to fulfill the order")
-)
