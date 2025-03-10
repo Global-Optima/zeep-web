@@ -7,12 +7,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/core/components/ui/dialog'
-import type { StoreProductDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { NotebookText } from 'lucide-vue-next'
-
-const {product} = defineProps<{
-product: StoreProductDetailsDTO
-}>()
 </script>
 
 <template>
