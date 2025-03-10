@@ -59,11 +59,11 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 		return 0, "", types.ErrExistingRequest
 	}
 
-	count, err := s.repo.CountStockRequestsInLast24Hours(storeID)
+	count, err := s.repo.CountFinalizedStockRequestsInLast24Hours(storeID)
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to count today's stock requests: %w", err)
 	}
-	if count >= maxRequestsPerDay {
+	if count > maxRequestsPerDay {
 		return 0, "", types.ErrOneRequestPerDay
 	}
 
