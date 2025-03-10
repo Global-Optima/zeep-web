@@ -241,7 +241,8 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 		Joins("INNER JOIN additives ON additives.additive_category_id = additive_categories.id").
 		Joins("INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
 		Joins("INNER JOIN product_size_additives ON product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?", productSizeID).
-		Where("additive_categories.deleted_at IS NULL")
+		Where("additive_categories.deleted_at IS NULL").
+		Where("store_additives.deleted_at IS NULL")
 
 	// Apply filters
 	if filter.IsMultipleSelect != nil {
@@ -275,9 +276,9 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 	// Get additives for these categories with a separate query
 	var additives []data.Additive
 	err = r.db.Model(&data.Additive{}).
-		Joins("INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
+		Joins("INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ? AND store_additives.deleted_at IS NULL", storeID).
 		Preload("Unit").
-		Preload("StoreAdditives", "store_id = ?", storeID).
+		Preload("StoreAdditives", "store_id = ? AND deleted_at IS NULL", storeID).
 		Preload("ProductSizeAdditives", "product_size_id = ?", productSizeID).
 		Where("additives.additive_category_id IN ?", categoryIDs).
 		Where("additives.deleted_at IS NULL").
