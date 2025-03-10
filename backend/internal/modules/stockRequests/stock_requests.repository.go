@@ -108,9 +108,9 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 			Joins("JOIN stock_request_ingredients sri ON sri.stock_request_id = stock_requests.id").
 			Joins("JOIN stock_materials sm ON sri.stock_material_id = sm.id").
 			Where(`
-				LOWER(sm.name) LIKE LOWER(?) OR 
-				LOWER(sm.description) LIKE LOWER(?) OR 
-				LOWER(sm.barcode) LIKE LOWER(?)
+				sm.name ILIKE ? OR 
+				sm.description ILIKE ? OR 
+				sm.barcode ILIKE ?
 			`, search, search, search).
 			Group("stock_requests.id").
 			Select("stock_requests.id")
