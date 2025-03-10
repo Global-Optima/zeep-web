@@ -15,6 +15,7 @@ type CreateIngredientDTO struct {
 	CategoryID       uint    `json:"categoryId" binding:"required,gt=0"`
 	UnitID           uint    `json:"unitId" binding:"required,gt=0"`
 	ExpirationInDays int     `json:"expirationInDays"`
+	IsAllergen       bool    `json:"isAllergen" binding:"default=false"`
 }
 
 type UpdateIngredientDTO struct {
@@ -26,6 +27,7 @@ type UpdateIngredientDTO struct {
 	UnitID           *uint    `json:"unitId" binding:"omitempty,gt=0"`
 	CategoryID       *uint    `json:"categoryId" binding:"omitempty,gt=0"`
 	ExpirationInDays *int     `json:"expirationInDays,omitempty"` // ISO-8601 formatted string
+	IsAllergen       *bool    `json:"isAllergen,omitempty"`
 }
 
 type IngredientDTO struct {
@@ -36,6 +38,7 @@ type IngredientDTO struct {
 	Carbs            float64                                             `json:"carbs"`
 	Proteins         float64                                             `json:"proteins"`
 	ExpirationInDays int                                                 `json:"expirationInDays"`
+	IsAllergen       bool                                                `json:"isAllergen"`
 	Unit             unitTypes.UnitsDTO                                  `json:"unit"`
 	Category         ingredientCategoriesType.IngredientCategoryResponse `json:"category"`
 }
@@ -46,4 +49,5 @@ type IngredientFilter struct {
 	Name          *string  `form:"name"`
 	MinCalories   *float64 `form:"minCalories"`
 	MaxCalories   *float64 `form:"maxCalories"`
+	IsAllergen    *bool    `form:"isAllergen"`
 }

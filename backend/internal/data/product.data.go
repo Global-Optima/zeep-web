@@ -87,6 +87,7 @@ type Ingredient struct {
 	UnitID                 uint                    `gorm:"not null"`                                   // Link to Unit
 	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 	CategoryID             uint                    `gorm:"not null"` // Link to IngredientCategory
+	IsAllergen             bool                    `gorm:"default:false" sort:"isAllergen"`
 	IngredientCategory     IngredientCategory      `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
 	StockMaterials         []StockMaterial         `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID"`

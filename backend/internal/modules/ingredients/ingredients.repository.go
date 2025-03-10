@@ -87,6 +87,9 @@ func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([
 	if filter.MaxCalories != nil {
 		query = query.Where("calories <= ?", *filter.MaxCalories)
 	}
+	if filter.IsAllergen != nil {
+		query = query.Where("is_allergen = ?", *filter.IsAllergen)
+	}
 
 	// Apply pagination
 	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Ingredient{})

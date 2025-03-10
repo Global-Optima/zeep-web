@@ -28,6 +28,7 @@ func ConvertToIngredientModel(dto *CreateIngredientDTO) (*data.Ingredient, error
 		Carbs:            dto.Carbs,
 		Proteins:         dto.Proteins,
 		ExpirationInDays: dto.ExpirationInDays,
+		IsAllergen:       dto.IsAllergen,
 	}
 
 	return ingredient, nil
@@ -81,6 +82,11 @@ func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient,
 		}
 		ingredient.ExpirationInDays = *dto.ExpirationInDays
 	}
+
+	if dto.IsAllergen != nil {
+		ingredient.IsAllergen = *dto.IsAllergen
+	}
+
 	return ingredient, nil
 }
 
@@ -94,6 +100,7 @@ func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientDTO 
 		Carbs:            ingredient.Carbs,
 		Proteins:         ingredient.Proteins,
 		ExpirationInDays: ingredient.ExpirationInDays,
+		IsAllergen:       ingredient.IsAllergen,
 		Unit: unitType.UnitsDTO{
 			ID:               ingredient.Unit.ID,
 			Name:             ingredient.Unit.Name,
