@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -213,6 +214,7 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint, fil
 
 	query := r.db.Model(&data.StoreAdditive{}).
 		Where(&data.StoreAdditive{BaseEntity: data.BaseEntity{ID: storeAdditiveID}}).
+		Preload("Additive").
 		Preload("Additive.Category").
 		Preload("Additive.Unit").
 		Preload("Additive.Ingredients.Ingredient.Unit").
