@@ -21,7 +21,7 @@ type StoreAdditiveRepository interface {
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
 	GetSufficientStoreAdditiveByID(storeID, storeAdditiveID uint, frozenStock map[uint]float64) (*data.StoreAdditive, error)
-	GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
+	GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
 	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]data.StoreAdditive, error)
 	GetStoreAdditiveCategories(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
@@ -123,7 +123,7 @@ func (r *storeAdditiveRepository) CreateStoreAdditives(storeAdditives []data.Sto
 	return ids, nil
 }
 
-func (r *storeAdditiveRepository) GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error) {
+func (r *storeAdditiveRepository) GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error) {
 	var additives []data.Additive
 
 	query := r.db.
@@ -135,7 +135,7 @@ func (r *storeAdditiveRepository) GetAdditivesListToAdd(storeID uint, filter *ad
 
 	if filter.Search != nil && *filter.Search != "" {
 		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ? OR additives.size ILIKE ?", searchTerm, searchTerm, searchTerm)
+		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ?", searchTerm, searchTerm)
 	}
 
 	if filter.MinPrice != nil {
@@ -184,6 +184,7 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 		Where("store_product_sizes.id = ?", storeProductSizeID).
 		Preload("Additives", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
+				Where("store_additives.deleted_at IS NULL").
 				Preload("Unit").
 				Preload("StoreAdditives", "store_id = ?", storeID).
 				Preload("ProductSizeAdditives", "product_size_id IN (SELECT product_size_id FROM store_product_sizes WHERE id = ?)", storeProductSizeID)
