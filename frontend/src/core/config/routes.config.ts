@@ -60,15 +60,13 @@ type ExtractRouteKeys<T extends readonly AppRouteRecord[]> = T[number] extends i
 
 export type RouteKey = ExtractRouteKeys<typeof CHILDREN_ROUTES_RECORDS>
 
-export const ROUTES: RouteRecordRaw[] = PARENT_ROUTES_RECORDS.map(record => {
-	const route: RouteRecordRaw = {
+export function getRoutes(): RouteRecordRaw[] {
+	return PARENT_ROUTES_RECORDS.map(record => ({
 		path: record.path,
 		component: record.component,
 		children: Object.values(record.children),
-	}
-
-	return route
-})
+	}))
+}
 
 const routeLookupMap: Record<RouteKey, AppRoutePage> = CHILDREN_ROUTES_RECORDS.reduce(
 	(acc, record) => {

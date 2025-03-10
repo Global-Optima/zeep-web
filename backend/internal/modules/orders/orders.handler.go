@@ -1,7 +1,9 @@
 package orders
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"log"
 	"net/http"
 	"strconv"
@@ -414,4 +416,54 @@ func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, updatedSuborderDTO)
+}
+
+func (h *OrderHandler) SuccessOrderPayment(c *gin.Context) {
+	orderID, errH := utils.ParseParam(c, "orderId")
+	if errH != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
+		return
+	}
+
+	var enryptedData utils.EncryptedData
+	if err := c.ShouldBindJSON(&enryptedData); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	decryptedJSON, err := utils.DecryptPayload(enryptedData, config.GetConfig().Payment.SecretKey)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Decryption failed"})
+		return
+	}
+
+	var dto types.TransactionDTO
+	if err := json.Unmarshal(decryptedJSON, &dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	err = h.service.SuccessOrderPayment(orderID, &dto)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500OrderPaymentSuccess)
+		return
+	}
+
+	localization.SendLocalizedResponseWithKey(c, types.Response200OrderPaymentSuccess)
+}
+
+func (h *OrderHandler) FailOrderPayment(c *gin.Context) {
+	orderID, errH := utils.ParseParam(c, "orderId")
+	if errH != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
+		return
+	}
+
+	err := h.service.FailOrderPayment(orderID)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500OrderPaymentFail)
+		return
+	}
+
+	localization.SendLocalizedResponseWithKey(c, types.Response200OrderPaymentFail)
 }

@@ -81,13 +81,6 @@ const createProductSizeSchema = toTypedSchema(
   })
 )
 
-const validateAdditives = (additives: SelectedAdditiveTypesDTO[]) => {
-  if (!additives.length) {
-    return 'Необходимо добавить хотя бы одну добавку.'
-  }
-  return null
-}
-
 const ingredients = ref<SelectedIngredientsTypesDTO[]>([])
 const openIngredientsDialog = ref(false)
 
@@ -140,7 +133,6 @@ function sortAdditives() {
 }
 
 const onSubmit = handleSubmit((formValues) => {
-  additivesError.value = validateAdditives(additives.value)
   if (additivesError.value) {
     return
   }

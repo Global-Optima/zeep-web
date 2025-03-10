@@ -3,7 +3,6 @@ package additives
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 
@@ -211,7 +210,6 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels == nil {
 			return fmt.Errorf("nothing to update")
-
 		}
 
 		if updateModels.Additive != nil {
@@ -222,7 +220,6 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 			}
 		}
 
-		logrus.Info(updateModels.Ingredients == nil)
 		if updateModels.Ingredients != nil {
 			if err := tx.Where("additive_id = ?", additiveID).Delete(&data.AdditiveIngredient{}).Error; err != nil {
 				return fmt.Errorf("failed to delete ingredients: %w", err)

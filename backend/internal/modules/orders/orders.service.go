@@ -1,12 +1,13 @@
 package orders
 
 import (
+	"encoding/json"
 	"fmt"
-
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/taskqueue"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
@@ -18,6 +19,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/pdf"
 	"go.uber.org/zap"
+)
+
+const (
+	OrderPaymentFailure = "order-payment-failure"
 )
 
 type OrderService interface {
@@ -38,6 +43,9 @@ type OrderService interface {
 
 	AcceptSubOrder(subOrderID uint) error
 	AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDTO, error)
+
+	SuccessOrderPayment(orderID uint, dto *types.TransactionDTO) error
+	FailOrderPayment(orderID uint) error
 }
 
 type orderValidationResults struct {
@@ -48,6 +56,7 @@ type orderValidationResults struct {
 }
 
 type orderService struct {
+	taskQueue           taskqueue.TaskQueue
 	orderRepo           OrderRepository
 	storeProductRepo    storeProducts.StoreProductRepository
 	storeAdditiveRepo   storeAdditives.StoreAdditiveRepository
@@ -57,6 +66,7 @@ type orderService struct {
 }
 
 func NewOrderService(
+	taskQueue taskqueue.TaskQueue,
 	orderRepo OrderRepository,
 	storeProductRepo storeProducts.StoreProductRepository,
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
@@ -65,6 +75,7 @@ func NewOrderService(
 	logger *zap.SugaredLogger,
 ) OrderService {
 	return &orderService{
+		taskQueue:           taskQueue,
 		orderRepo:           orderRepo,
 		storeProductRepo:    storeProductRepo,
 		storeAdditiveRepo:   storeAdditiveRepo,
@@ -178,13 +189,24 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		validations.ProductPrices,
 		validations.AdditivePrices,
 	)
-	order.Status = data.OrderStatusPending
+	order.Status = data.OrderStatusWaitingForPayment
 	order.Total = total
 
-	if err := s.orderRepo.CreateOrder(&order); err != nil {
+	id, err := s.orderRepo.CreateOrder(&order)
+	if err != nil {
 		wrappedErr := fmt.Errorf("error creating order: %w", err)
 		s.logger.Error(wrappedErr.Error())
 		return nil, wrappedErr
+	}
+
+	payload, err := json.Marshal(types.WaitingOrderPayload{OrderID: id})
+	if err != nil {
+		return &order, err
+	}
+
+	err = s.taskQueue.EnqueueTask(OrderPaymentFailure, payload, config.GetConfig().Payment.WaitingTime)
+	if err != nil {
+		return &order, err
 	}
 
 	notificationDetails := &details.NewOrderNotificationDetails{
@@ -810,4 +832,23 @@ func evaluateSuborderStatuses(suborders []data.Suborder) (hasPreparing bool, all
 		}
 	}
 	return
+}
+
+func (s *orderService) SuccessOrderPayment(orderID uint, dto *types.TransactionDTO) error {
+	paymentTransaction := types.ToTransactionModel(dto, orderID, data.TransactionTypePayment)
+	err := s.orderRepo.HandlePaymentSuccess(orderID, paymentTransaction)
+	if err != nil {
+		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
+		return err
+	}
+	return nil
+}
+
+func (s *orderService) FailOrderPayment(orderID uint) error {
+	err := s.orderRepo.HandlePaymentFailure(orderID)
+	if err != nil {
+		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
+		return err
+	}
+	return nil
 }

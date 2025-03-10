@@ -92,13 +92,6 @@ const updateProductSizeSchema = toTypedSchema(
   })
 )
 
-const validateAdditives = (additives: SelectedAdditiveTypesDTO[]) => {
-  if (!additives.length) {
-    return 'Необходимо добавить хотя бы одну добавку.'
-  }
-  return null
-}
-
 const { handleSubmit, isSubmitting, setFieldValue } = useForm({
   validationSchema: updateProductSizeSchema,
   initialValues: {
@@ -169,15 +162,17 @@ function removeIngredient(index: number) {
 
 const onSubmit = handleSubmit((formValues) => {
   if (readonly) return
-  additivesError.value = validateAdditives(additives.value)
+
   if (additivesError.value) {
     return
   }
+
   const finalDTO: UpdateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
     ingredients: ingredients.value
   }
+
   emits('onSubmit', finalDTO)
 })
 
