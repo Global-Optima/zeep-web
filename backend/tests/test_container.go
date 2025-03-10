@@ -29,6 +29,13 @@ func NewTestContainer() *container.Container {
 		var cfg *config.Config
 		var err error
 
+		redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
+		if err != nil {
+			log.Fatalf("Failed to initialize Redis: %v", err)
+		}
+
+		utils.InitCache(redisClient.Client, redisClient.Ctx)
+
 		cfg, err = config.LoadTestConfig()
 		if err != nil {
 			log.Println("failed to load test configuration from file, trying to load from env...")
@@ -67,7 +74,7 @@ func NewTestContainer() *container.Container {
 		if err != nil {
 			sugarLog.Fatalf("Failed to initialize mock storage repository: %v", err)
 		}
-		testContainer = container.NewContainer(dbHandler, &mockStorageRepo, apiRouter, sugarLog)
+		testContainer = container.NewContainer(dbHandler, redisClient, &mockStorageRepo, apiRouter, sugarLog)
 		testContainer.MustInitModules()
 
 		time.Sleep(100 * time.Millisecond)
