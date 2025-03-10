@@ -21,14 +21,11 @@ var censorValidator *TextCensorValidator
 func initCensorValidator(dicts *Dictionaries) *TextCensorValidator {
 	return &TextCensorValidator{
 		EnDetector: goaway.NewProfanityDetector().
-			WithCustomDictionary(dicts.English.Dictionary, dicts.English.FalsePositives, dicts.English.FalseNegatives).
-			WithCustomCharacterReplacements(ConvertReplacements(dicts.English.CharacterReplacements)),
+			WithCustomDictionary(dicts.English.Dictionary, dicts.English.FalsePositives, dicts.English.FalseNegatives),
 		RuDetector: goaway.NewProfanityDetector().
-			WithCustomDictionary(dicts.Russian.Dictionary, dicts.Russian.FalsePositives, dicts.Russian.FalseNegatives).
-			WithCustomCharacterReplacements(ConvertReplacements(dicts.Russian.CharacterReplacements)),
+			WithCustomDictionary(dicts.Russian.Dictionary, dicts.Russian.FalsePositives, dicts.Russian.FalseNegatives),
 		KkDetector: goaway.NewProfanityDetector().
-			WithCustomDictionary(dicts.Kazakh.Dictionary, dicts.Kazakh.FalsePositives, dicts.Kazakh.FalseNegatives).
-			WithCustomCharacterReplacements(ConvertReplacements(dicts.Kazakh.CharacterReplacements)),
+			WithCustomDictionary(dicts.Kazakh.Dictionary, dicts.Kazakh.FalsePositives, dicts.Kazakh.FalseNegatives),
 	}
 }
 

@@ -4,16 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
-	"unicode/utf8"
+	"strings"
 )
 
 type Regex struct {
 	*regexp.Regexp
 }
+
+type CharacterReplacementMap map[string][]string
 
 func (r *Regex) UnmarshalJSON(data []byte) error {
 	var pattern string
@@ -31,11 +34,34 @@ func (r *Regex) UnmarshalJSON(data []byte) error {
 }
 
 type LanguageDictionaries struct {
-	Dictionary            []string          `json:"dictionary"`
-	FalsePositives        []string          `json:"falsePositives"`
-	FalseNegatives        []string          `json:"falseNegatives"`
-	CharacterReplacements map[string]string `json:"characterReplacements"`
-	ProfanityRegex        Regex             `json:"profanityRegex"`
+	Dictionary            []string                `json:"dictionary"`
+	FalsePositives        []string                `json:"falsePositives"`
+	FalseNegatives        []string                `json:"falseNegatives"`
+	CharacterReplacements CharacterReplacementMap `json:"characterReplacements"`
+}
+
+func (d *LanguageDictionaries) generateTextVariants(text string) ([]string, error) {
+	var variants []string
+	variants = append(variants, text)
+
+	for key, values := range d.CharacterReplacements {
+		var newVariants []string
+		for _, variant := range variants {
+			if strings.Contains(variant, key) {
+				for _, replacement := range values {
+					newVariant := strings.ReplaceAll(variant, key, replacement)
+					newVariants = append(newVariants, newVariant)
+					logrus.Info(newVariant)
+				}
+			}
+		}
+		variants = append(variants, newVariants...)
+		if len(variants) > MAX_WORD_VARIANTS {
+			return nil, errors.New("too many variants to check")
+		}
+	}
+
+	return variants, nil
 }
 
 type Dictionaries struct {
@@ -90,18 +116,37 @@ func getDictionaryFilePath(filename string) (string, error) {
 	return "", errors.New("dictionary file not found")
 }
 
-func ConvertReplacements(rep map[string]string) map[rune]rune {
-	result := make(map[rune]rune, len(rep))
-	for k, v := range rep {
-		if len(k) > 0 && len(v) > 0 {
-			rKey, _ := utf8.DecodeRuneInString(k)
-			rValue, _ := utf8.DecodeRuneInString(v)
-			result[rKey] = rValue
-		}
-	}
-	return result
-}
-
 func GetDictionaries() *Dictionaries {
 	return dictionaries
+}
+
+func (c *CharacterReplacementMap) UnmarshalJSON(data []byte) error {
+	// Create a temporary map for decoding
+	temp := make(map[string]interface{})
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return fmt.Errorf("failed to parse character replacements: %w", err)
+	}
+
+	// Convert values to []string correctly
+	*c = make(map[string][]string)
+	for key, value := range temp {
+		switch v := value.(type) {
+		case string:
+			(*c)[key] = []string{v} // Wrap single string into a slice
+		case []interface{}:
+			var replacements []string
+			for _, item := range v {
+				if str, ok := item.(string); ok {
+					replacements = append(replacements, str)
+				} else {
+					return fmt.Errorf("invalid character replacement type for key '%s'", key)
+				}
+			}
+			(*c)[key] = replacements
+		default:
+			return fmt.Errorf("unexpected type for character replacement at key '%s'", key)
+		}
+	}
+
+	return nil
 }

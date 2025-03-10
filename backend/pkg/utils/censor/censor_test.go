@@ -48,7 +48,8 @@ func TestNormalizeTextFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
-			actualOutput := normalizeText(tt.input)
+			actualOutput, err := normalizeText(tt.input)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedOutput, actualOutput)
 		})
 	}
