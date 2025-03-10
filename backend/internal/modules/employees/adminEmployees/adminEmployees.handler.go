@@ -41,7 +41,7 @@ func (h *AdminEmployeeHandler) CreateAdminEmployee(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrAlreadyExists):
-			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			localization.SendLocalizedResponseWithKey(c, types.Response409AdminEmployee)
 			return
 		case errors.Is(err, moduleErrors.ErrValidation):
 			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)

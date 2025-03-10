@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 	"unicode"
@@ -71,4 +72,8 @@ func RegisterCustomValidators(validate *validator.Validate) {
 func InitValidators() {
 	validate := validator.New()
 	RegisterCustomValidators(validate)
+}
+
+func RoundToOneDecimal(value float64) float64 {
+	return math.Round(value*10) / 10
 }

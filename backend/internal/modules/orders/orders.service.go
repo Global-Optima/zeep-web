@@ -168,9 +168,8 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		frozenMap,
 	)
 	if err != nil {
-		wrappedErr := fmt.Errorf("validation failed: %w", err)
-		s.logger.Error(wrappedErr.Error())
-		return nil, wrappedErr
+		s.logger.Error("validation failed: %w", err)
+		return nil, err
 	}
 
 	createOrderDTO.StoreID = storeID
@@ -211,12 +210,14 @@ func (s *orderService) StockAndPriceValidationResults(
 ) (*orderValidationResults, error) {
 	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo, frozenMap)
 	if err != nil {
-		return nil, fmt.Errorf("product validation failed: %w", err)
+		s.logger.Error(fmt.Errorf("product validation failed: %w", err))
+		return nil, err
 	}
 
 	additivePrices, additiveNames, err := ValidateStoreAdditives(storeID, storeAdditiveIDs, s.storeAdditiveRepo, frozenMap)
 	if err != nil {
-		return nil, fmt.Errorf("additive validation failed: %w", err)
+		s.logger.Error(fmt.Errorf("additive validation failed: %w", err))
+		return nil, err
 	}
 
 	return &orderValidationResults{
@@ -236,6 +237,9 @@ func ValidateStoreAdditives(
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 
+	// This map will count how many additives are selected per category.
+	categoryCount := make(map[uint]int)
+
 	for _, addID := range storeAdditiveIDs {
 		storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
 		if err != nil {
@@ -248,6 +252,17 @@ func ValidateStoreAdditives(
 			return nil, nil, fmt.Errorf("store additive with ID %d has an empty name", addID)
 		}
 
+		// Increase the count for the additive's category.
+		categoryID := storeAdd.Additive.AdditiveCategoryID
+		categoryCount[categoryID]++
+
+		// If the additive category does NOT allow multiple selection,
+		// then more than one additive in this category is an error.
+		if !storeAdd.Additive.Category.IsMultipleSelect && categoryCount[categoryID] > 1 {
+			return nil, nil, types.ErrMultipleSelect
+		}
+
+		// Get the effective price (store-specific price overrides the base price if available).
 		price := storeAdd.Additive.BasePrice
 		if storeAdd.StorePrice != nil {
 			price = *storeAdd.StorePrice

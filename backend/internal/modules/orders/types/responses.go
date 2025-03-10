@@ -14,4 +14,5 @@ var (
 	Response201Order             = localization.NewResponseKey(http.StatusCreated, data.OrderComponent)
 	Response200OrderUpdate       = localization.NewResponseKey(http.StatusOK, data.OrderComponent, data.UpdateOperation.ToString())
 	Response400InsufficientStock = localization.NewResponseKey(http.StatusBadRequest, data.OrderComponent, "INSUFFICIENT_STOCK")
+	Response400MultipleSelect    = localization.NewResponseKey(http.StatusBadRequest, data.OrderComponent, "MULTIPLE_SELECT")
 )

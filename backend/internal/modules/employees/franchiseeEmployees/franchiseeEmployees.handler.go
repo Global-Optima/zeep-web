@@ -1,11 +1,12 @@
 package employees
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/pkg/errors"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -104,7 +105,7 @@ func (h *FranchiseeEmployeeHandler) CreateFranchiseeEmployee(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrAlreadyExists):
-			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
+			localization.SendLocalizedResponseWithKey(c, types.Response409FranchiseeEmployee)
 			return
 		case errors.Is(err, moduleErrors.ErrValidation):
 			localization.SendLocalizedResponseWithStatus(c, http.StatusBadRequest)
