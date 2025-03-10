@@ -167,53 +167,6 @@ func (r *storeAdditiveRepository) GetAdditivesListToAdd(storeID uint, filter *ad
 	return additives, nil
 }
 
-// func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
-// 	storeID, storeProductSizeID uint,
-// 	filter *types.StoreAdditiveCategoriesFilter,
-// ) ([]data.AdditiveCategory, error) {
-// 	startTime := time.Now()
-// 	var categories []data.AdditiveCategory
-
-// 	query := r.db.Model(&data.AdditiveCategory{}).
-// 		Select("DISTINCT additive_categories.*").
-// 		Joins("JOIN additives ON additives.additive_category_id = additive_categories.id").
-// 		Joins("JOIN product_size_additives ON product_size_additives.additive_id = additives.id").
-// 		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_size_additives.product_size_id").
-// 		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
-// 		Joins("JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
-// 		Where("store_products.store_id = ?", storeID).
-// 		Where("store_product_sizes.id = ?", storeProductSizeID).
-// 		Preload("Additives", func(db *gorm.DB) *gorm.DB {
-// 			return db.Joins("JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
-// 				Preload("Unit").
-// 				Preload("StoreAdditives", "store_id = ?", storeID).
-// 				Preload("ProductSizeAdditives", "product_size_id IN (SELECT product_size_id FROM store_product_sizes WHERE id = ?)", storeProductSizeID)
-// 		})
-
-// 	if filter.IsMultipleSelect != nil {
-// 		query = query.Where("is_multiple_select = ?", *filter.IsMultipleSelect)
-// 	}
-
-// 	if filter.Search != nil && *filter.Search != "" {
-// 		searchTerm := "%" + *filter.Search + "%"
-// 		query = query.Where("additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?", searchTerm, searchTerm)
-// 	}
-
-// 	err := query.Find(&categories).Error
-
-// 	endTime := time.Now()
-// 	fmt.Println("\n\n\n\n", endTime.Sub(startTime))
-
-// 	if err != nil {
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			return nil, moduleErrors.ErrNotFound
-// 		}
-// 		return nil, err
-// 	}
-
-// 	return categories, nil
-// }
-
 func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 	storeID, storeProductSizeID uint,
 	filter *types.StoreAdditiveCategoriesFilter,
