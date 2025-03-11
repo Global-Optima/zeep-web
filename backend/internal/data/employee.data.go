@@ -2,10 +2,11 @@ package data
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type EmployeeType string
@@ -350,4 +351,12 @@ type EmployeeWorkday struct {
 	EndAt      string   `gorm:"type:time;not null" sort:"endAt"`
 	EmployeeID uint     `gorm:"index;not null"`
 	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employees"`
+}
+
+type EmployeeTokens struct {
+	BaseEntity
+	HashedToken string    `gorm:"size:255;not null"`
+	ExpiresAt   time.Time `gorm:"type:timestamp;not null"`
+	EmployeeID  uint      `gorm:"index;not null"`
+	Employee    Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 }
