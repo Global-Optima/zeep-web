@@ -39,8 +39,8 @@ class EmployeeService {
 		return response.data
 	}
 
-	async getCurrentEmployee(): Promise<EmployeeDTO> {
-		const response = await apiClient.get<EmployeeDTO>(`/employees/current`)
+	async getCurrentEmployee(): Promise<EmployeeDetailsDTO> {
+		const response = await apiClient.get<EmployeeDetailsDTO>(`/employees/current`)
 		return response.data
 	}
 }

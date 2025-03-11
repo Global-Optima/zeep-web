@@ -9,21 +9,12 @@ import {
   DropdownMenuTrigger,
 } from '@/core/components/ui/dropdown-menu'
 import { useToast } from '@/core/components/ui/toast'
-import { getRouteName, type RouteKey } from '@/core/config/routes.config'
-import { EMPLOYEE_ROLES_FORMATTED, EmployeeType, type EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
+import { getRouteName } from '@/core/config/routes.config'
+import { EMPLOYEE_ROLES_FORMATTED, type EmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { authService } from '@/modules/auth/services/auth.service'
 import { useMutation } from '@tanstack/vue-query'
 import { User } from 'lucide-vue-next'
-import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-
-const EMPLOYEE_DETAILS_ROUTE_NAMES: Record<EmployeeType, RouteKey> = {
-  [EmployeeType.STORE]: "ADMIN_STORE_EMPLOYEE_DETAILS",
-  [EmployeeType.WAREHOUSE]: "ADMIN_WAREHOUSE_EMPLOYEE_DETAILS",
-  [EmployeeType.FRANCHISEE]: "ADMIN_FRANCHISEE_EMPLOYEE_DETAILS",
-  [EmployeeType.REGION]: "ADMIN_REGION_EMPLOYEE_DETAILS",
-  [EmployeeType.ADMIN]: "ADMIN_ADMIN_EMPLOYEE_DETAILS",
-};
 
 const {currentEmployee} = defineProps<{currentEmployee: EmployeeDTO}>()
 const router = useRouter()
@@ -45,17 +36,9 @@ const onLogoutClick = () => {
   logoutEmployee()
 }
 
-const employeeRoute = computed(() => {
-  const routeName = EMPLOYEE_DETAILS_ROUTE_NAMES[currentEmployee.type];
-  return routeName
-    ? { name: routeName, params: { id: currentEmployee.typeBasedId } }
-    : null;
-});
-
 const onEmployeeClick = () => {
-  if (employeeRoute.value) {
-    router.push(employeeRoute.value);
-  }
+  router.push({name: getRouteName("ADMIN_EMPLOYEE_PROFILE")});
+
 };
 </script>
 
