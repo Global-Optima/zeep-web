@@ -169,9 +169,6 @@ services:
       - .env
     environment:
       NGINX_SERVER_NAME: ${NGINX_SERVER_NAME}
-    depends_on:
-      backend:
-        condition: service_started
     networks:
       - app_network
     labels:
@@ -253,8 +250,6 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
     networks:
       - app_network
 
