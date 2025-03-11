@@ -41,15 +41,6 @@ func TestStockMaterialCategoryService_Create_WithPreloadedData(t *testing.T) {
 			},
 			expectError: false,
 		},
-		// { // commented, because request should not pass through
-		// 	//  handlers with empty name (json binding required)
-		// 	name: "Create with empty name",
-		// 	input: types.CreateStockMaterialCategoryDTO{
-		// 		Name:        "",
-		// 		Description: "Test Description",
-		// 	},
-		// 	expectError: true,
-		// },
 		{
 			name: "Create with duplicate name",
 			input: types.CreateStockMaterialCategoryDTO{
