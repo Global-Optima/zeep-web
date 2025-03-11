@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const maxRequestsPerDay int64 = 10
+const maxRequestsPerDay int64 = 2
 
 type StockRequestService interface {
 	CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, string, error)

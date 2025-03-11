@@ -191,16 +191,29 @@ func TestStockRequestService_SetProcessedStatus(t *testing.T) {
 	})
 
 	t.Run("Rate Limit Violation", func(t *testing.T) {
-		id := createTestStockRequest(t, service, 1)
+		// Create first request (valid)
+		id1 := createTestStockRequest(t, service, 1)
 
-		// Ensure request is created within the last 24 hours to trigger rate limit
-		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
-			Update("created_at", time.Now().Add(-1*time.Hour)).Error
+		// Ensure it's finalized so it's counted in the 24-hour limit
+		err := db.Model(&data.StockRequest{}).Where("id = ?", id1).
+			Update("created_at", time.Now().Add(-1*time.Hour)).
+			Update("status", data.StockRequestCompleted).Error
 		assert.NoError(t, err)
 
-		_, err = service.SetProcessedStatus(id)
+		// Create second request (valid)
+		id2 := createTestStockRequest(t, service, 1)
+		err = db.Model(&data.StockRequest{}).Where("id = ?", id2).
+			Update("created_at", time.Now().Add(-1*time.Hour)).
+			Update("status", data.StockRequestCompleted).Error
+		assert.NoError(t, err)
+
+		_, _, err = service.CreateStockRequest(1, types.CreateStockRequestDTO{
+			StockMaterials: []types.StockRequestStockMaterialDTO{
+				{StockMaterialID: 1, Quantity: 10},
+			},
+		})
 		assert.Error(t, err, "Processing should fail due to rate limit")
-		assert.True(t, strings.Contains(err.Error(), "one"),
+		assert.True(t, strings.Contains(err.Error(), "one request allowed per day"),
 			"Error should indicate rate limit violation")
 	})
 }
