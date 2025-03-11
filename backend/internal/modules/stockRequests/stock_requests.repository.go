@@ -84,6 +84,7 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 		Preload("Ingredients.StockMaterial.Ingredient.IngredientCategory").
 		Preload("Ingredients.StockMaterial.Unit")
 
+	// Apply basic filters
 	if filter.StoreID != nil {
 		query = query.Where("store_id = ?", *filter.StoreID)
 	}
@@ -100,21 +101,24 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 		query = query.Where("created_at <= ?", *filter.EndDate)
 	}
 
+	// Incorporate search logic via a subquery so we don't perform extra round trips.
 	if filter.Search != nil && *filter.Search != "" {
 		search := "%" + *filter.Search + "%"
-
-		query = query.
+		subQuery := r.db.Model(&data.StockRequest{}).
 			Joins("JOIN stock_request_ingredients sri ON sri.stock_request_id = stock_requests.id").
 			Joins("JOIN stock_materials sm ON sri.stock_material_id = sm.id").
 			Where(`
-				LOWER(sm.name) LIKE LOWER(?) OR 
-				LOWER(sm.description) LIKE LOWER(?) OR 
-				LOWER(sm.barcode) LIKE LOWER(?)
-			`, search, search, search)
+				sm.name ILIKE ? OR 
+				sm.description ILIKE ? OR 
+				sm.barcode ILIKE ?
+			`, search, search, search).
+			Group("stock_requests.id").
+			Select("stock_requests.id")
+		query = query.Where("stock_requests.id IN (?)", subQuery)
 	}
 
-	query = query.Order("created_at DESC")
-
+	// Order results and apply pagination.
+	query = query.Order("stock_requests.created_at DESC")
 	var err error
 	query, err = utils.ApplyPagination(query, filter.Pagination, &data.StockRequest{})
 	if err != nil {
