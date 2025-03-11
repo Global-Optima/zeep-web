@@ -838,7 +838,7 @@ func (s *orderService) SuccessOrderPayment(orderID uint, dto *types.TransactionD
 	paymentTransaction := types.ToTransactionModel(dto, orderID, data.TransactionTypePayment)
 	err := s.orderRepo.HandlePaymentSuccess(orderID, paymentTransaction)
 	if err != nil {
-		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
+		s.logger.Errorf("failed to handle the order %d success", err)
 		return err
 	}
 	return nil
@@ -850,5 +850,6 @@ func (s *orderService) FailOrderPayment(orderID uint) error {
 		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
 		return err
 	}
+
 	return nil
 }

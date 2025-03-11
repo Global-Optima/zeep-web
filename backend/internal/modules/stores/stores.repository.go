@@ -2,7 +2,6 @@ package stores
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -23,7 +22,7 @@ type StoreRepository interface {
 	CreateStore(store *data.Store) (uint, error)
 	GetStoreByID(storeID uint) (*data.Store, error)
 	GetStores(filter *types.StoreFilter) ([]data.Store, error)
-	UpdateStore(storeID uint, updateModels *types.StoreUpdateModels) error
+	UpdateStore(storeID uint, store *data.Store) error
 	DeleteStore(storeID uint, hardDelete bool) error
 	CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error)
 	GetFacilityAddressByAddress(address string) (*data.FacilityAddress, error)
@@ -152,35 +151,17 @@ func (r *storeRepository) GetStores(filter *types.StoreFilter) ([]data.Store, er
 	return stores, nil
 }
 
-func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpdateModels) error {
-	if updateModels == nil {
-		return fmt.Errorf("nothing to update")
-	}
-
-	existingStore, err := r.GetStoreByID(storeID)
-	if err != nil {
-		return err
-	}
-
-	err = r.db.Transaction(func(tx *gorm.DB) error {
-
-		if updateModels.Store != nil {
-			query := tx.Model(&data.Store{}).Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}})
-
-			if updateModels.Store.FranchiseeID == nil {
-				query.UpdateColumn("franchisee_id", gorm.Expr("franchisee_id - ?", nil))
-			}
-
-			if err := query.Updates(updateModels.Store).Error; err != nil {
-				return err
-			}
+func (r *storeRepository) UpdateStore(storeID uint, store *data.Store) error {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&data.Store{}).
+			Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}}).
+			Save(store).Error; err != nil {
+			return err
 		}
 
-		if updateModels.FacilityAddress != nil {
-			if err := tx.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingStore.FacilityAddress.ID}}).
-				Updates(updateModels.FacilityAddress).Error; err != nil {
-				return err
-			}
+		if err := tx.Where("id = ?", store.FacilityAddressID).
+			Updates(&store.FacilityAddress).Error; err != nil {
+			return err
 		}
 
 		return nil

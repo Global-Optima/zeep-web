@@ -17,10 +17,11 @@ const (
 var once sync.Once
 
 type AsynqManager struct {
-	client *asynq.Client
-	server *asynq.Server
-	mux    *asynq.ServeMux
-	logger *zap.SugaredLogger
+	client    *asynq.Client
+	server    *asynq.Server
+	inspector *asynq.Inspector
+	mux       *asynq.ServeMux
+	logger    *zap.SugaredLogger
 }
 
 type AsynqManagerTask struct {
@@ -59,10 +60,11 @@ func initAsynq(redisClient *redis.Client, logger *zap.SugaredLogger) (*AsynqMana
 		)
 
 		manger = &AsynqManager{
-			client: asynq.NewClient(redisConn),
-			server: server,
-			mux:    asynq.NewServeMux(),
-			logger: logger,
+			client:    asynq.NewClient(redisConn),
+			server:    server,
+			inspector: asynq.NewInspector(redisConn),
+			mux:       asynq.NewServeMux(),
+			logger:    logger,
 		}
 		initErr = nil
 	})

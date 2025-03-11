@@ -120,14 +120,21 @@ func (s *storeService) GetStores(filter *types.StoreFilter) ([]types.StoreDTO, e
 }
 
 func (s *storeService) UpdateStore(storeID uint, updateStoreDto *types.UpdateStoreDTO) error {
-	updateModels, err := types.UpdateStoreFields(updateStoreDto)
+	store, err := s.repo.GetStoreByID(storeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to get store: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	err = types.UpdateStoreFieldsV(updateStoreDto, store)
 	if err != nil {
 		wrappedErr := fmt.Errorf("validation failed trying to update store: %w", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
 
-	err = s.repo.UpdateStore(storeID, updateModels)
+	err = s.repo.UpdateStore(storeID, store)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to update store: %w", err)
 		s.logger.Error(wrappedErr)

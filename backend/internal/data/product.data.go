@@ -6,6 +6,8 @@ const (
 	S Size = "S"
 	M Size = "M"
 	L Size = "L"
+
+	DEFAULT_INGREDIENT_EXPIRATION_IN_DAYS = 1095 //3 years
 )
 
 func (s Size) ToString() string {

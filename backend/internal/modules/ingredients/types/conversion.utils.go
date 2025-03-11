@@ -19,6 +19,10 @@ func ConvertToIngredientModel(dto *CreateIngredientDTO) (*data.Ingredient, error
 		return nil, fmt.Errorf("%w: Ingredient name is required", ErrValidation)
 	}
 
+	if dto.ExpirationInDays == 0 {
+		dto.ExpirationInDays = data.DEFAULT_INGREDIENT_EXPIRATION_IN_DAYS
+	}
+
 	ingredient := &data.Ingredient{
 		Name:             dto.Name,
 		CategoryID:       dto.CategoryID,
@@ -35,12 +39,10 @@ func ConvertToIngredientModel(dto *CreateIngredientDTO) (*data.Ingredient, error
 }
 
 // Converts UpdateIngredientDTO to Ingredient model
-func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient, error) {
+func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO, ingredient *data.Ingredient) error {
 	if dto == nil {
-		return nil, fmt.Errorf("%w: DTO cannot be nil", ErrValidation)
+		return fmt.Errorf("%w: DTO cannot be nil", ErrValidation)
 	}
-
-	ingredient := &data.Ingredient{}
 
 	if strings.TrimSpace(dto.Name) != "" {
 		ingredient.Name = dto.Name
@@ -64,21 +66,21 @@ func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient,
 
 	if dto.UnitID != nil {
 		if *dto.UnitID == 0 {
-			return nil, fmt.Errorf("%w: UnitID must be greater than 0", ErrValidation)
+			return fmt.Errorf("%w: UnitID must be greater than 0", ErrValidation)
 		}
 		ingredient.UnitID = *dto.UnitID
 	}
 
 	if dto.CategoryID != nil {
 		if *dto.CategoryID == 0 {
-			return nil, fmt.Errorf("%w: CategoryID must be greater than 0", ErrValidation)
+			return fmt.Errorf("%w: CategoryID must be greater than 0", ErrValidation)
 		}
 		ingredient.CategoryID = *dto.CategoryID
 	}
 
 	if dto.ExpirationInDays != nil {
 		if *dto.ExpirationInDays == 0 {
-			return nil, fmt.Errorf("%w: Expiration days can not be 0", ErrValidation)
+			return fmt.Errorf("%w: Expiration days can not be 0", ErrValidation)
 		}
 		ingredient.ExpirationInDays = *dto.ExpirationInDays
 	}
@@ -87,7 +89,7 @@ func ConvertToUpdateIngredientModel(dto *UpdateIngredientDTO) (*data.Ingredient,
 		ingredient.IsAllergen = *dto.IsAllergen
 	}
 
-	return ingredient, nil
+	return nil
 }
 
 // Converts Ingredient model to IngredientResponseDTO

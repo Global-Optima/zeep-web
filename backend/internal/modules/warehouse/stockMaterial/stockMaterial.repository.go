@@ -142,7 +142,7 @@ func (r *stockMaterialRepository) CreateStockMaterials(stockMaterials []data.Sto
 }
 
 func (r *stockMaterialRepository) UpdateStockMaterial(id uint, stockMaterial *data.StockMaterial) error {
-	return r.db.Model(&data.StockMaterial{}).Where("id = ?", id).Updates(stockMaterial).Error
+	return r.db.Model(&data.StockMaterial{}).Where("id = ?", id).Save(stockMaterial).Error
 }
 
 func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error) {
