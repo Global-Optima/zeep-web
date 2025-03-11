@@ -16,7 +16,7 @@ type BaseProductDTO struct {
 	ImageURL    string                             `json:"imageUrl"`
 	VideoURL    string                             `json:"videoUrl"`
 	Category    categoriesTypes.ProductCategoryDTO `json:"category"`
-	MachineId   string                             `json:"machineId"`
+	// MachineId   string                             `json:"machineId"`
 }
 
 type ProductDTO struct {
@@ -24,13 +24,13 @@ type ProductDTO struct {
 	BaseProductDTO
 	ProductSizeCount int     `json:"productSizeCount"`
 	BasePrice        float64 `json:"basePrice"`
-	MachineId        string  `json:"machineId"`
+	// MachineId        string  `json:"machineId"`
 }
 
 type ProductDetailsDTO struct {
 	ProductDTO
-	Sizes     []ProductSizeDTO `json:"sizes"`
-	MachineId string           `json:"machineId"`
+	Sizes []ProductSizeDTO `json:"sizes"`
+	// MachineId string           `json:"machineId"`
 }
 
 type BaseProductSizeDTO struct {
@@ -70,7 +70,7 @@ type CreateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"required"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
-	MachineId   string `form:"machineId" binding:"required,max=40"`
+	// MachineId   string `form:"machineId" binding:"required,max=40"`
 }
 
 type SelectedAdditiveDTO struct {
@@ -100,7 +100,7 @@ type UpdateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
-	MachineId   *string `form:"machineId" binding:"omitempty,max=40"`
+	// MachineId   *string `form:"machineId" binding:"omitempty,max=40"`
 }
 
 type UpdateProductSizeDTO struct {

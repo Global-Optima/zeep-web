@@ -30,7 +30,7 @@ type Product struct {
 	Category     ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
 	RecipeSteps  []RecipeStep    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 	ProductSizes []ProductSize   `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	MachineId    string          `gorm:"size:40;not null;unique" sort:"machineId"`
+	// MachineId    string          `gorm:"size:40;not null;unique" sort:"machineId"`
 }
 
 type RecipeStep struct {
