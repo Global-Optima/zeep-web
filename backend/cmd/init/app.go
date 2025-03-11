@@ -122,7 +122,6 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	})
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
-
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
 
 	storageHandler := storage.NewStorageHandler(storageRepo)                // temp
@@ -130,6 +129,7 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	appContainer := container.NewContainer(dbHandler, redisClient, &storageRepo, apiRouter, logger.GetZapSugaredLogger())
 	appContainer.MustInitModules()
+	apiRouter.EmployeeRoutes.Use(middleware.EmployeeSessionComparison(appContainer.Auth.EmployeeTokenRepo))
 
 	router.GET("/metrics", func(c *gin.Context) {
 		promhttp.Handler().ServeHTTP(c.Writer, c.Request)

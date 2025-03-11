@@ -1,9 +1,12 @@
 package auth
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
@@ -157,7 +160,6 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
 	refreshToken, err := types.ExtractToken(c, types.REFRESH_TOKEN_HEADER, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
 	if err != nil {
-		// Token not found in cookie
 		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
 		return
 	}
@@ -170,7 +172,7 @@ func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
 
 	cfg := config.GetConfig()
 
-	utils.SetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, newAccessToken, cfg.JWT.CustomerAccessTokenTTL)
+	utils.SetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, newAccessToken, cfg.JWT.EmployeeAccessTokenTTL)
 
 	utils.SendSuccessResponse(c, gin.H{
 		"message": "refresh successful",
@@ -181,8 +183,21 @@ func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
 }
 
 func (h *AuthenticationHandler) EmployeeLogout(c *gin.Context) {
+	employeeID, err := contexts.GetEmployeeIDFromCtx(c)
+	if err != nil {
+		logrus.Info(err)
+		utils.SendErrorWithStatus(c, "failed to retrieve employee ID", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.service.HandleEmployeeLogout(employeeID); err != nil {
+		utils.SendErrorWithStatus(c, "failed to delete session token", http.StatusInternalServerError)
+		return
+	}
+
+	c.Set(contexts.EMPLOYEE_CONTEXT, nil)
+
 	utils.ClearCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
 	utils.ClearCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
-
 	utils.SendSuccessResponse(c, gin.H{"message": "logout successful"})
 }

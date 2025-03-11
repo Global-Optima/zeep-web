@@ -2,7 +2,11 @@ package auth
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
@@ -15,29 +19,34 @@ import (
 type AuthenticationService interface {
 	EmployeeLogin(email, password string) (*types.TokenPair, error)
 	EmployeeRefreshAccessToken(refreshToken string) (string, error)
+	HandleEmployeeLogout(employeeID uint) error
+
 	CustomerRegister(input *types.CustomerRegisterDTO) (uint, error)
 	CustomerLogin(email, password string) (*types.TokenPair, error)
 	CustomerRefreshTokens(refreshToken string) (*types.TokenPair, error)
 }
 
 type authenticationService struct {
-	repo          AuthenticationRepository
-	customersRepo customers.CustomerRepository
-	employeesRepo employees.EmployeeRepository
-	logger        *zap.SugaredLogger
+	repo              AuthenticationRepository
+	customersRepo     customers.CustomerRepository
+	employeesRepo     employees.EmployeeRepository
+	employeeTokenRepo employeeToken.EmployeeTokenRepository
+	logger            *zap.SugaredLogger
 }
 
 func NewAuthenticationService(
 	repo AuthenticationRepository,
 	customersRepo customers.CustomerRepository,
 	employeesRepo employees.EmployeeRepository,
+	employeeTokenRepo employeeToken.EmployeeTokenRepository,
 	logger *zap.SugaredLogger,
 ) AuthenticationService {
 	return &authenticationService{
-		repo:          repo,
-		customersRepo: customersRepo,
-		employeesRepo: employeesRepo,
-		logger:        logger,
+		repo:              repo,
+		customersRepo:     customersRepo,
+		employeesRepo:     employeesRepo,
+		employeeTokenRepo: employeeTokenRepo,
+		logger:            logger,
 	}
 }
 
@@ -71,6 +80,14 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*types.To
 	if err != nil {
 		return nil, utils.WrapError("failed to generate access token", err)
 	}
+
+	err = s.saveEmployeeToken(employee.ID, accessToken)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to save employee token", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
 	refreshToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenRefresh)
 	if err != nil {
 		return nil, utils.WrapError("failed to generate refresh token", err)
@@ -99,7 +116,7 @@ func (s *authenticationService) EmployeeRefreshAccessToken(refreshToken string) 
 
 	employee, err := s.employeesRepo.GetEmployeeByID(claims.EmployeeClaimsData.ID)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve Customer", err)
+		wrappedErr := utils.WrapError("failed to retrieve employee", err)
 		s.logger.Error(wrappedErr)
 		return "", wrappedErr
 	}
@@ -114,6 +131,13 @@ func (s *authenticationService) EmployeeRefreshAccessToken(refreshToken string) 
 	newAccessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to generate access token", err)
+		s.logger.Error(wrappedErr)
+		return "", wrappedErr
+	}
+
+	err = s.updateEmployeeToken(employee.ID, newAccessToken)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update employee token", err)
 		s.logger.Error(wrappedErr)
 		return "", wrappedErr
 	}
@@ -245,4 +269,43 @@ func (s *authenticationService) CustomerRefreshTokens(refreshToken string) (*typ
 	}
 
 	return tokenPair, nil
+}
+
+func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
+	hashedToken := utils.HashTokenSHA256(token)
+
+	cfg := config.GetConfig()
+	expirationTime := time.Now().Add(cfg.JWT.EmployeeAccessTokenTTL)
+
+	employeeToken := &data.EmployeeTokens{
+		EmployeeID:  employeeID,
+		HashedToken: hashedToken,
+		ExpiresAt:   expirationTime,
+	}
+
+	if err := s.employeeTokenRepo.CreateToken(employeeToken); err != nil {
+		return fmt.Errorf("failed to save token: %w", err)
+	}
+
+	return nil
+}
+
+func (s *authenticationService) updateEmployeeToken(employeeID uint, token string) error {
+	if err := s.employeeTokenRepo.DeleteTokenByEmployeeID(employeeID); err != nil {
+		return fmt.Errorf("failed to delete token: %w", err)
+	}
+
+	if err := s.saveEmployeeToken(employeeID, token); err != nil {
+		return fmt.Errorf("failed to update token: %w", err)
+	}
+
+	return nil
+}
+
+func (s *authenticationService) HandleEmployeeLogout(employeeID uint) error {
+	if err := s.employeeTokenRepo.DeleteTokenByEmployeeID(employeeID); err != nil {
+		return fmt.Errorf("failed to delete token: %w", err)
+	}
+
+	return nil
 }

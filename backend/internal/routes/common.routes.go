@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
 	adminEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/adminEmployees"
 	franchiseeEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/franchiseeEmployees"
@@ -27,8 +28,8 @@ func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandle
 		employeesRoutes := router.Group("/employees")
 		{
 			employeesRoutes.POST("/login", handler.EmployeeLogin)
-			employeesRoutes.POST("/refresh", handler.EmployeeRefresh)
-			employeesRoutes.POST("/logout", handler.EmployeeLogout)
+			employeesRoutes.POST("/refresh", middleware.EmployeeAuth(), handler.EmployeeRefresh)
+			employeesRoutes.POST("/logout", middleware.EmployeeAuth(), handler.EmployeeLogout)
 		}
 	}
 }

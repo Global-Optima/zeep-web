@@ -2,10 +2,11 @@ package types
 
 import (
 	"errors"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/golang-jwt/jwt/v5"
-	"time"
 )
 
 type UserType string

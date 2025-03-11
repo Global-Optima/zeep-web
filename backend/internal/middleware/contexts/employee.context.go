@@ -6,6 +6,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 const EMPLOYEE_CONTEXT = "EMPLOYEE_CONTEXT"
@@ -15,6 +16,7 @@ func GetEmployeeClaimsFromCtx(c *gin.Context) (*types.EmployeeClaims, error) {
 
 	ctx, ok := c.Get(EMPLOYEE_CONTEXT)
 	if !ok {
+		logrus.Info("no employee context found")
 		return nil, fmt.Errorf("no employee context found")
 	}
 
