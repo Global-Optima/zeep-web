@@ -16,12 +16,20 @@ func MapToFacilityAddressDTO(facilityAddress *data.FacilityAddress) *FacilityAdd
 	}
 }
 
-func MapToFacilityAddressModel(dto *CreateOrUpdateFacilityAddressDTO) *data.FacilityAddress {
-	return &data.FacilityAddress{
-		Address:   dto.Address,
-		Longitude: dto.Longitude,
-		Latitude:  dto.Latitude,
+func MapToFacilityAddressModel(dto *CreateOrUpdateFacilityAddressDTO, address *data.FacilityAddress) *data.FacilityAddress {
+	if address == nil {
+		return &data.FacilityAddress{
+			Address:   dto.Address,
+			Longitude: dto.Longitude,
+			Latitude:  dto.Latitude,
+		}
 	}
+
+	address.Address = dto.Address
+	address.Longitude = dto.Longitude
+	address.Latitude = dto.Latitude
+
+	return address
 }
 
 func safeFloat(f *float64) float64 {
