@@ -3,11 +3,12 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
@@ -146,7 +147,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	BroadcastOrderCreated(orderDTO.StoreID, createdOrderWithPreloads)
 
-	utils.SendSuccessResponse(c, createdOrder)
+	utils.SendSuccessResponse(c, types.ConvertOrderToDTO(createdOrder))
 }
 
 func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
@@ -433,7 +434,7 @@ func (h *OrderHandler) SuccessOrderPayment(c *gin.Context) {
 
 	decryptedJSON, err := utils.DecryptPayload(enryptedData, config.GetConfig().Payment.SecretKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Decryption failed"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Decryption failed: " + err.Error()})
 		return
 	}
 

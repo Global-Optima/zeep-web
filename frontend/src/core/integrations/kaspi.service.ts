@@ -1,3 +1,5 @@
+import type { TransactionDTO } from '@/modules/admin/store-orders/models/orders.models'
+import type { PaymentMethod } from '@/modules/kiosk/cart/models/kiosk-cart.models'
 import axios, { type AxiosInstance } from 'axios'
 
 export interface KaspiConfig {
@@ -100,6 +102,7 @@ export class KaspiService {
 	private api: AxiosInstance
 	private tokenData: KaspiTokenResponse | null = null
 	private cashierName: string | null = null
+	private deviceIp: string
 
 	// You can adjust these if your device is actually http, or a different port, etc.
 	private deviceProtocol = 'https' // was "https://${posIpAddress}:8080"
@@ -146,7 +149,28 @@ export class KaspiService {
 		)
 	}
 
-	private deviceIp: string
+	async awaitPayment(method: PaymentMethod): Promise<TransactionDTO> {
+		await new Promise(resolve => setTimeout(resolve, 5000)) // Simulate delay
+
+		// Randomize success/failure (50% chance each)
+		const isSuccess = Math.random() > 0.5
+
+		if (!isSuccess) {
+			throw new Error('Mock Payment Failure')
+		}
+
+		return {
+			bin: '123456',
+			transactionId: 'TX-' + Date.now(),
+			processId: 'PROC-' + (Math.random() * 1e5).toFixed(0),
+			paymentMethod: method,
+			amount: 1500,
+			currency: 'KZT',
+			qrNumber: 'QR-' + (Math.random() * 1e6).toFixed(0),
+			cardMask: '************4242',
+			icc: 'fakeICCData',
+		}
+	}
 
 	private saveToken(): void {
 		if (this.tokenData) {

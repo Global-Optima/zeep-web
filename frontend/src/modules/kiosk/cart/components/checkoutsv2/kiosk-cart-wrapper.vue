@@ -2,28 +2,30 @@
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
 import type { LocalizedError } from '@/core/models/errors.model'
-import type { CreateOrderDTO } from '@/modules/admin/store-orders/models/orders.models'
+import type { CreateOrderDTO, OrderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
+import { CheckoutStep, type PaymentMethod } from '@/modules/kiosk/cart/models/kiosk-cart.models'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import { useMutation } from '@tanstack/vue-query'
 import type { AxiosError } from 'axios'
-import { defineAsyncComponent, shallowReactive } from 'vue'
+import { defineAsyncComponent, onMounted, shallowReactive } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Step State
+
+// Step State (Persisted)
 const stepState = shallowReactive({
-  currentStep: 'customer' as 'customer' | 'payment' | 'confirmation',
-  customerName: '',
-  selectedPayment: '',
+  currentStep: (sessionStorage.getItem('currentStep') as CheckoutStep) || CheckoutStep.CUSTOMER,
+  customerName: sessionStorage.getItem('customerName') || '',
+  selectedPayment: sessionStorage.getItem('selectedPayment') ?? null ,
+  orderId: Number(sessionStorage.getItem('orderId')) || null,
   qrCodeUrl: '',
 });
 
-// Cart Store
 const cartStore = useCartStore();
-const {toast} = useToast()
-const router = useRouter()
+const { toast } = useToast();
+const router = useRouter();
 
-// Step Components
+// Lazy-loaded Step Components
 const CheckoutCustomer = defineAsyncComponent(() =>
   import('@/modules/kiosk/cart/components/checkoutsv2/kiosk-cart-customer.vue')
 );
@@ -34,41 +36,34 @@ const CheckoutConfirmation = defineAsyncComponent(() =>
   import('@/modules/kiosk/cart/components/checkoutsv2/kiosk-cart-success.vue')
 );
 
-// Mutations
-const createOrderMutation = useMutation({
+// Create Order Mutation
+const createOrderMutation = useMutation<OrderDTO, AxiosError<LocalizedError>, CreateOrderDTO>({
   mutationFn: (orderDTO: CreateOrderDTO) => ordersService.createOrder(orderDTO),
-  onSuccess: () => {
-    stepState.qrCodeUrl = "https://cabinet.kofd.kz/consumer";
-    stepState.currentStep = 'confirmation';
+  onSuccess: (order) => {
+    stepState.orderId = order.id;
+    sessionStorage.setItem('orderId', order.id.toString());
+    stepState.currentStep = CheckoutStep.PAYMENT;
+    sessionStorage.setItem('currentStep', CheckoutStep.PAYMENT);
   },
-  onError: (error: AxiosError<LocalizedError>) => {
+  onError: (error) => {
     toast({
-      title: "Ошибка",
-      description: error.response?.data.message.ru ?? "Ошибка при создании заказа",
+      title: 'Ошибка',
+      description: error.response?.data.message.ru ?? 'Ошибка при создании заказа',
     });
   },
 });
 
-const checkCustomerNameMutation = useMutation({
-  mutationFn: (name: string) => ordersService.checkCustomerName({ customerName: name }),
-  onError: (error: AxiosError<LocalizedError>) => {
-    toast({
-      title: "Ошибка",
-      description: error.response?.data.message.ru ?? "Ошибка при проверке имени клиента",
-    });
-  },
+// If there's an existing orderId in sessionStorage, jump to Payment on reload
+onMounted(() => {
+  if (stepState.orderId) {
+    stepState.currentStep = CheckoutStep.PAYMENT;
+  }
 });
 
-// Navigation Logic
+// Step Navigation
 const proceedToNextStep = async () => {
-  if (stepState.currentStep === 'customer') {
-    try {
-      await checkCustomerNameMutation.mutateAsync(stepState.customerName);
-      stepState.currentStep = 'payment';
-    } catch {
-      return;
-    }
-  } else if (stepState.currentStep === 'payment') {
+  if (stepState.currentStep === CheckoutStep.CUSTOMER) {
+    // Build CreateOrderDTO from cart
     const orderDTO: CreateOrderDTO = {
       customerName: stepState.customerName,
       subOrders: Object.values(cartStore.cartItems).map(item => ({
@@ -78,69 +73,70 @@ const proceedToNextStep = async () => {
       })),
     };
     await createOrderMutation.mutateAsync(orderDTO);
+
+    // If success, onSuccess sets stepState to 'payment'
   }
 };
 
-const goBack = () => {
-  if (stepState.currentStep === 'payment') {
-    stepState.currentStep = 'customer';
-  } else if (stepState.currentStep === 'confirmation') {
-    stepState.currentStep = 'payment';
-  }
-};
-
-const closeSuccess = () => {
-  stepState.currentStep = 'customer';
-  stepState.customerName = '';
-  stepState.selectedPayment = '';
-  stepState.qrCodeUrl = '';
+// Called when Payment is done or user closes
+const resetCheckoutFlow = () => {
+  stepState.currentStep = CheckoutStep.CUSTOMER;
+  sessionStorage.clear();
   cartStore.clearCart();
-  cartStore.toggleModal()
-
-  router.push({name: getRouteName("KIOSK_HOME")})
+  cartStore.toggleModal();
+  router.push({ name: getRouteName("KIOSK_HOME") });
 };
 
+const closeCheckoutModal = () => {
+  stepState.currentStep = CheckoutStep.CUSTOMER;
+  sessionStorage.clear();
+  cartStore.toggleModal();
+}
 
-const closePayment = () => {
-  stepState.currentStep = 'customer';
-  stepState.customerName = '';
-  stepState.selectedPayment = '';
-  stepState.qrCodeUrl = '';
-  cartStore.toggleModal()
+// If you want to proceed from Payment → Confirmation instead of closing
+const onPaymentSuccess = () => {
+  // Example: show a Confirmation step with a QR code
+  stepState.currentStep = CheckoutStep.CONFIRMATION;
+  sessionStorage.setItem('currentStep', CheckoutStep.CONFIRMATION);
+
+  // For demonstration, we set a sample QR code
+  stepState.qrCodeUrl = 'https://cabinet.kofd.kz/consumer';
 };
 
-const closeCustomer = () => {
-  stepState.currentStep = 'customer';
-  stepState.customerName = '';
-  stepState.selectedPayment = '';
-  stepState.qrCodeUrl = '';
-  cartStore.toggleModal()
-};
+const updateSelectedPayment = (val: PaymentMethod | null) => {
+  stepState.selectedPayment = val;
+  sessionStorage.setItem('selectedPayment', val || '');
+}
 </script>
 
 <template>
+	<!-- Step: Customer -->
 	<CheckoutCustomer
 		v-if="stepState.currentStep === 'customer'"
 		:open="true"
-		@toggle="closeCustomer"
-		@next="proceedToNextStep"
 		v-model:customer-name="stepState.customerName"
+		@toggle="closeCheckoutModal"
+		@next="proceedToNextStep"
 	/>
 
+	<!-- Step: Payment -->
 	<CheckoutPayment
-		v-if="stepState.currentStep === 'payment'"
+		v-else-if="stepState.currentStep === 'payment'"
 		:isOpen="true"
-		:selectedPayment="stepState.selectedPayment"
-		@close="closePayment"
-		@back="goBack"
-		@proceed="(data) => { stepState.selectedPayment = data.paymentMethod; proceedToNextStep(); }"
+		:selectedPayment="stepState.selectedPayment as PaymentMethod ?? null"
+		:orderId="stepState.orderId"
+		@back="stepState.currentStep = CheckoutStep.CUSTOMER"
+		@close="closeCheckoutModal"
+		@update:selectedPayment="updateSelectedPayment"
+		@proceed="onPaymentSuccess"
 	/>
 
+	<!-- Step: Confirmation -->
 	<CheckoutConfirmation
-		v-if="stepState.currentStep === 'confirmation'"
+		v-else-if="stepState.currentStep === 'confirmation'"
 		:isOpen="true"
 		:qrCodeUrl="stepState.qrCodeUrl"
-		@close="closeSuccess"
-		@proceed="closeSuccess"
+		@close="resetCheckoutFlow"
+		@proceed="resetCheckoutFlow"
 	/>
 </template>

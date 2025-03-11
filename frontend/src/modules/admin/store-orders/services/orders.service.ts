@@ -1,4 +1,5 @@
 import { apiClient } from '@/core/config/axios-instance.config'
+import { encryptPayload, type EncryptedData } from '@/core/services/aes.service'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import { saveAs } from 'file-saver'
@@ -10,9 +11,12 @@ import type {
 	OrdersFilterQuery,
 	OrderStatusesCountDTO,
 	SuborderDTO,
+	TransactionDTO,
 } from '../models/orders.models'
 
 class OrderService {
+	private readonly paymentSecret = import.meta.env.VITE_PAYMENT_SECRET as string
+
 	async getAllOrders(filter?: OrdersFilterQuery) {
 		try {
 			const response = await apiClient.get<PaginatedResponse<OrderDTO[]>>('/orders', {
@@ -27,9 +31,43 @@ class OrderService {
 
 	async createOrder(orderDTO: CreateOrderDTO) {
 		try {
-			return apiClient.post<{ orderId: number }>('/orders', orderDTO).then(res => res.data)
+			return apiClient.post<OrderDTO>('/orders', orderDTO).then(res => res.data)
 		} catch (error) {
 			console.error('Failed to create order:', error)
+			throw error
+		}
+	}
+
+	async failOrderPayment(orderId: number) {
+		try {
+			return apiClient
+				.post<{ orderId: number }>(`/orders/${orderId}/payment/fail`)
+				.then(res => res.data)
+		} catch (error) {
+			console.error('Failed to fail order payment:', error)
+			throw error
+		}
+	}
+
+	async successOrderPayment(orderId: number, dto: TransactionDTO): Promise<{ orderId: number }> {
+		try {
+			// Load secret key from environment variables
+			if (!this.paymentSecret) {
+				throw new Error('Payment is not defined in environment variables')
+			}
+
+			// Encrypt the TransactionDTO
+			const encryptedData: EncryptedData = encryptPayload(dto, this.paymentSecret)
+
+			// Send encrypted payload to the backend
+			const res = await apiClient.post<{ orderId: number }>(
+				`/orders/${orderId}/payment/success`,
+				encryptedData,
+			)
+
+			return res.data
+		} catch (error) {
+			console.error('Failed to complete order payment:', error)
 			throw error
 		}
 	}

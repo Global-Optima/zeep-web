@@ -10,18 +10,21 @@ import (
 	"io"
 )
 
+// Struct to store encrypted data
 type EncryptedData struct {
 	IV      string `json:"iv" binding:"required"`
 	Payload string `json:"payload" binding:"required"`
 }
 
+// Convert secret key to a 32-byte AES key (SHA-256)
 func ConvertSecretKeyToAESKey(secretKey string) []byte {
-	hash := sha256.Sum256([]byte(secretKey)) // Hashing ensures a fixed-length 32-byte key
+	hash := sha256.Sum256([]byte(secretKey))
 	return hash[:]
 }
 
+// Encrypt data using AES-GCM (256-bit)
 func EncryptPayload(plainData []byte, secretKey string) (*EncryptedData, error) {
-	aesKey := ConvertSecretKeyToAESKey(secretKey) // Convert secretKey to 32-byte AES key
+	aesKey := ConvertSecretKeyToAESKey(secretKey)
 
 	block, err := aes.NewCipher(aesKey)
 	if err != nil {
@@ -38,6 +41,7 @@ func EncryptPayload(plainData []byte, secretKey string) (*EncryptedData, error) 
 		return nil, err
 	}
 
+	// **Encrypt and get authentication tag inside ciphertext**
 	cipherData := aesGCM.Seal(nil, nonce, plainData, nil)
 
 	return &EncryptedData{
@@ -46,8 +50,9 @@ func EncryptPayload(plainData []byte, secretKey string) (*EncryptedData, error) 
 	}, nil
 }
 
+// Decrypt data using AES-GCM (256-bit)
 func DecryptPayload(data EncryptedData, secretKey string) ([]byte, error) {
-	aesKey := ConvertSecretKeyToAESKey(secretKey) // Convert secretKey to 32-byte AES key
+	aesKey := ConvertSecretKeyToAESKey(secretKey)
 
 	iv, err := base64.StdEncoding.DecodeString(data.IV)
 	if err != nil {
@@ -69,6 +74,7 @@ func DecryptPayload(data EncryptedData, secretKey string) ([]byte, error) {
 		return nil, err
 	}
 
+	// **Decrypt using AES-GCM with authentication tag**
 	plainData, err := aesGCM.Open(nil, iv, cipherData, nil)
 	if err != nil {
 		return nil, fmt.Errorf("decryption failed: %w", err)
