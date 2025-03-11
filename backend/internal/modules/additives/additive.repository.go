@@ -208,7 +208,11 @@ func (r *additiveRepository) CreateAdditive(additive *data.Additive) (uint, erro
 
 func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if updateModels != nil {
+		if updateModels == nil {
+			return fmt.Errorf("nothing to update")
+		}
+
+		if updateModels.Additive != nil {
 			if err := tx.Model(&data.Additive{}).
 				Where("id = ?", additiveID).
 				Updates(updateModels.Additive).Error; err != nil {
@@ -217,22 +221,22 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 		}
 
 		if updateModels.Ingredients != nil {
-			// Remove existing ingredients
 			if err := tx.Where("additive_id = ?", additiveID).Delete(&data.AdditiveIngredient{}).Error; err != nil {
 				return fmt.Errorf("failed to delete ingredients: %w", err)
 			}
 
-			// Add new ingredients
-			ingredients := make([]data.AdditiveIngredient, len(updateModels.Ingredients))
-			for i, ingredient := range updateModels.Ingredients {
-				ingredients[i] = data.AdditiveIngredient{
-					AdditiveID:   additiveID,
-					IngredientID: ingredient.IngredientID,
-					Quantity:     ingredient.Quantity,
+			if len(updateModels.Ingredients) > 0 {
+				ingredients := make([]data.AdditiveIngredient, len(updateModels.Ingredients))
+				for i, ingredient := range updateModels.Ingredients {
+					ingredients[i] = data.AdditiveIngredient{
+						AdditiveID:   additiveID,
+						IngredientID: ingredient.IngredientID,
+						Quantity:     ingredient.Quantity,
+					}
 				}
-			}
-			if err := tx.Create(ingredients).Error; err != nil {
-				return fmt.Errorf("failed to create ingredients: %w", err)
+				if err := tx.Create(ingredients).Error; err != nil {
+					return fmt.Errorf("failed to create ingredients: %w", err)
+				}
 			}
 		}
 

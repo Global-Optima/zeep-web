@@ -16,6 +16,7 @@ type BaseProductDTO struct {
 	ImageURL    string                             `json:"imageUrl"`
 	VideoURL    string                             `json:"videoUrl"`
 	Category    categoriesTypes.ProductCategoryDTO `json:"category"`
+	MachineId   string                             `json:"machineId"`
 }
 
 type ProductDTO struct {
@@ -23,11 +24,13 @@ type ProductDTO struct {
 	BaseProductDTO
 	ProductSizeCount int     `json:"productSizeCount"`
 	BasePrice        float64 `json:"basePrice"`
+	MachineId        string  `json:"machineId"`
 }
 
 type ProductDetailsDTO struct {
 	ProductDTO
-	Sizes []ProductSizeDTO `json:"sizes"`
+	Sizes     []ProductSizeDTO `json:"sizes"`
+	MachineId string           `json:"machineId"`
 }
 
 type BaseProductSizeDTO struct {
@@ -51,8 +54,9 @@ type ProductSizeIngredientDTO struct {
 
 type ProductSizeDetailsDTO struct {
 	ProductSizeDTO
-	Additives   []ProductSizeAdditiveDTO   `json:"additives"`
-	Ingredients []ProductSizeIngredientDTO `json:"ingredients"`
+	TotalNutrition TotalNutrition             `json:"totalNutrition"`
+	Additives      []ProductSizeAdditiveDTO   `json:"additives"`
+	Ingredients    []ProductSizeIngredientDTO `json:"ingredients"`
 }
 
 type ProductSizeAdditiveDTO struct {
@@ -66,6 +70,7 @@ type CreateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"required"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
+	MachineId   string `form:"machineId" binding:"required,max=40"`
 }
 
 type SelectedAdditiveDTO struct {
@@ -86,7 +91,7 @@ type CreateProductSizeDTO struct {
 	BasePrice   float64                 `json:"basePrice" binding:"required,gt=0"`
 	MachineId   string                  `form:"machineId" binding:"required,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
-	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"required,dive"`
+	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }
 
 type UpdateProductDTO struct {
@@ -95,6 +100,7 @@ type UpdateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
+	MachineId   *string `form:"machineId" binding:"omitempty,max=40"`
 }
 
 type UpdateProductSizeDTO struct {
@@ -111,4 +117,11 @@ type ProductsFilterDto struct {
 	utils.BaseFilter
 	CategoryID *uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Search     *string `form:"search"`
+}
+
+type TotalNutrition struct {
+	Calories float64 `json:"calories"`
+	Proteins float64 `json:"proteins"`
+	Fats     float64 `json:"fats"`
+	Carbs    float64 `json:"carbs"`
 }

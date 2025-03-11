@@ -51,8 +51,8 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
 	}
 
-	setupRedis(cfg, t)
-	router := setupRouter(dbHandler)
+	redis := setupRedis(cfg, t)
+	router := setupRouter(dbHandler, redis)
 
 	truncateAndLoadMockData(dbHandler.DB)
 	log.Println("Mock data loaded successfully")
@@ -193,7 +193,7 @@ func setupMockStorage() *storage.StorageRepository {
 	return &storageRepo
 }
 
-func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
+func setupRouter(dbHandler *database.DBHandler, redis *database.RedisClient) *gin.Engine {
 	router := gin.New()
 	utils.InitValidators()
 	//router.Use(middleware.SanitizeMiddleware())
@@ -204,7 +204,7 @@ func setupRouter(dbHandler *database.DBHandler) *gin.Engine {
 
 	storageRepo := setupMockStorage()
 
-	testContainer := container.NewContainer(dbHandler, storageRepo, apiRouter, logger.GetZapSugaredLogger())
+	testContainer := container.NewContainer(dbHandler, redis, storageRepo, apiRouter, logger.GetZapSugaredLogger())
 	testContainer.MustInitModules()
 
 	return router

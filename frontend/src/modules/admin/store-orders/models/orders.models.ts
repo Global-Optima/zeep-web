@@ -2,6 +2,7 @@ import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 export enum OrderStatus {
+  WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT',
 	PENDING = 'PENDING',
 	PREPARING = 'PREPARING',
 	COMPLETED = 'COMPLETED',
@@ -89,7 +90,7 @@ export interface OrderAdditiveDTO {
 	name: string
 	description: string
 	size: string
-  machineId: string
+	machineId: string
 }
 
 export interface SuborderAdditiveDTO {
@@ -152,4 +153,16 @@ export interface OrdersExportFilterQuery {
 	endDate?: string
 	storeId?: number
 	language?: 'kk' | 'ru' | 'en'
+}
+
+export interface TransactionDTO {
+	bin: string
+	transactionId: string
+	processId: string
+	paymentMethod: string
+	amount: number
+	currency: string
+	qrNumber: string
+	cardMask: string
+	icc: string
 }

@@ -53,6 +53,7 @@ func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data
 		Joins("JOIN products ON products.category_id = product_categories.id").
 		Joins("JOIN store_products ON store_products.product_id = products.id").
 		Joins("JOIN store_product_sizes ON store_product_sizes.store_product_id = store_products.id").
+		Where("store_products.deleted_at IS NULL").
 		Where("store_products.store_id = ? AND store_products.is_available = ?", storeID, true).
 		Group("product_categories.id").
 		Find(&categories).Error
@@ -316,6 +317,7 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 		Preload("ProductSize.Product").
 		Preload("ProductSize.Additives.Additive.Category").
 		Preload("ProductSize.Additives.Additive.Unit").
+		Preload("ProductSize.Additives.Additive.Ingredients").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
 		First(&storeProductSize).Error

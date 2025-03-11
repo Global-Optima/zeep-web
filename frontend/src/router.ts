@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios'
 import { createRouter, createWebHistory } from 'vue-router'
-import { getRouteName, ROUTES } from './core/config/routes.config'
+import { getRouteName, getRoutes } from './core/config/routes.config'
 import { DEFAULT_TITLE, TITLE_TEMPLATE } from './core/constants/seo.constants'
 import { employeesService } from './modules/admin/employees/services/employees.service'
 import { useEmployeeAuthStore } from './modules/auth/store/employee-auth.store'
@@ -10,7 +10,7 @@ export const router = createRouter({
 	scrollBehavior() {
 		return { top: 0, behavior: 'smooth' }
 	},
-	routes: ROUTES,
+	routes: getRoutes(),
 })
 
 router.beforeEach(async (to, from, next) => {

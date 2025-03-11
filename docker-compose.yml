@@ -139,6 +139,7 @@ services:
         DEFAULT_PAGE: ${DEFAULT_PAGE}
         DEFAULT_PAGE_SIZE: ${DEFAULT_PAGE_SIZE}
         MAX_PAGE_SIZE: ${MAX_PAGE_SIZE}
+        PAYMENT_SECRET: ${PAYMENT_SECRET}
     env_file:
       - .env
     ports:
@@ -163,6 +164,7 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
         VITE_WS_URL: ${VITE_WS_URL}
+        VITE_PAYMENT_SECRET: ${PAYMENT_SECRET}
     env_file:
       - .env
     environment:
