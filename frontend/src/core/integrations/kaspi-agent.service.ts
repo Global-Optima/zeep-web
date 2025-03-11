@@ -102,15 +102,33 @@ export class KaspiService {
 	private api: AxiosInstance
 	private tokenData: KaspiTokenResponse | null = null
 	private cashierName: string | null = null
+	private deviceIp: string
+
+	// You can adjust these if your device is actually http, or a different port, etc.
+	private deviceProtocol = 'https' // was "https://${posIpAddress}:8080"
+	private devicePort = '8080'
 
 	constructor(config: KaspiConfig) {
+		/**
+		 * Instead of calling the device IP directly, we call the local agent:
+		 *   http://localhost:42999/proxy
+		 *
+		 * The local agent will read the query params:
+		 *   ?ip=${config.posIpAddress}&port=8080&proto=https
+		 *
+		 * and forward to: https://192.168.x.x:8080/whatever
+		 */
 		this.api = axios.create({
-			baseURL: `https://${config.posIpAddress}:8080/v2`,
+			baseURL: 'http://localhost:42999/proxy',
 			timeout: config.timeout || 60000,
 		})
 
+		// Store the device IP in a property if needed
+		this.deviceIp = config.posIpAddress
+
 		this.loadToken()
 
+		// Interceptor to handle 403 => refresh token
 		this.api.interceptors.response.use(
 			response => response,
 			async error => {
@@ -118,7 +136,6 @@ export class KaspiService {
 
 				if (error.response?.status === 403 && !originalRequest._retry && this.tokenData) {
 					originalRequest._retry = true
-
 					try {
 						await this.refreshAccessToken()
 						return this.api(originalRequest)
@@ -168,10 +185,35 @@ export class KaspiService {
 		}
 	}
 
+	/**
+	 * Build the query string for local agent:
+	 *   ?ip=192.168.200.42&port=8080&proto=https
+	 */
+	private buildDeviceQuery(params?: Record<string, unknown>): string {
+		// Basic device info:
+		const baseParams = new URLSearchParams({
+			ip: this.deviceIp,
+			port: this.devicePort,
+			proto: this.deviceProtocol,
+		})
+
+		// Add additional query params (like 'name', 'processId', etc.)
+		if (params) {
+			for (const [key, val] of Object.entries(params)) {
+				if (val !== undefined && val !== null) {
+					baseParams.append(key, String(val))
+				}
+			}
+		}
+
+		return `?${baseParams.toString()}`
+	}
+
 	async registerTerminal(name: string): Promise<KaspiTokenResponse> {
 		try {
-			const response = await this.api.get<KaspiTokenResponse>('/register', { params: { name } })
-
+			// => GET /register?ip=xxx&port=8080&proto=https&name=someName
+			const url = `/register${this.buildDeviceQuery({ name })}`
+			const response = await this.api.get<KaspiTokenResponse>(url)
 			this.tokenData = response.data
 			this.cashierName = name
 			this.saveToken()
@@ -187,13 +229,12 @@ export class KaspiService {
 		}
 
 		try {
-			const response = await this.api.get<KaspiTokenResponse>('/revoke', {
-				params: {
-					name: this.cashierName,
-					refreshToken: this.tokenData.data.refreshToken,
-				},
-			})
-
+			// => GET /revoke?ip=xxx&port=8080&proto=https&name=cashier&refreshToken=xxx
+			const url = `/revoke${this.buildDeviceQuery({
+				name: this.cashierName,
+				refreshToken: this.tokenData.data.refreshToken,
+			})}`
+			const response = await this.api.get<KaspiTokenResponse>(url)
 			this.tokenData = response.data
 			this.saveToken()
 		} catch (error) {
@@ -207,8 +248,12 @@ export class KaspiService {
 		}
 
 		try {
-			const response = await this.api.get<PaymentResponse>('/payment', {
-				params: { amount: params.amount, owncheque: params.owncheque },
+			// => GET /payment?ip=xxx&port=8080&proto=https&amount=123&owncheque=true
+			const url = `/payment${this.buildDeviceQuery({
+				amount: params.amount,
+				owncheque: params.owncheque,
+			})}`
+			const response = await this.api.get<PaymentResponse>(url, {
 				headers: this.getAuthHeaders(),
 			})
 			return response.data
@@ -219,8 +264,9 @@ export class KaspiService {
 
 	async getTransactionStatus(processId: string): Promise<KaspiTransactionStatus> {
 		try {
-			const response = await this.api.get<KaspiTransactionStatus>('/status', {
-				params: { processId },
+			// => GET /status?ip=xxx&port=8080&proto=https&processId=xyz
+			const url = `/status${this.buildDeviceQuery({ processId })}`
+			const response = await this.api.get<KaspiTransactionStatus>(url, {
 				headers: this.getAuthHeaders(),
 			})
 			return response.data
@@ -235,13 +281,14 @@ export class KaspiService {
 		}
 
 		try {
-			const response = await this.api.get<RefundResponse>('/refund', {
-				params: {
-					amount: params.amount,
-					method: params.method,
-					transactionId: params.transactionId,
-					owncheque: params.owncheque,
-				},
+			// => GET /refund?ip=xxx&port=8080&proto=https&amount=123&method=card&transactionId=abc
+			const url = `/refund${this.buildDeviceQuery({
+				amount: params.amount,
+				method: params.method,
+				transactionId: params.transactionId,
+				owncheque: params.owncheque,
+			})}`
+			const response = await this.api.get<RefundResponse>(url, {
 				headers: this.getAuthHeaders(),
 			})
 			return response.data.data.processId
@@ -252,7 +299,9 @@ export class KaspiService {
 
 	async getDeviceInfo(): Promise<KaspiDeviceInfo> {
 		try {
-			const response = await this.api.get<KaspiDeviceInfo>('/deviceinfo', {
+			// => GET /deviceinfo?ip=xxx&port=8080&proto=https
+			const url = `/deviceinfo${this.buildDeviceQuery()}`
+			const response = await this.api.get<KaspiDeviceInfo>(url, {
 				headers: this.getAuthHeaders(),
 			})
 			return response.data
@@ -261,11 +310,11 @@ export class KaspiService {
 		}
 	}
 
-	// ✅ New Actualization Method
 	async actualizeTransaction(processId: string): Promise<KaspiTransactionStatus> {
 		try {
-			const response = await this.api.get<KaspiTransactionStatus>('/actualize', {
-				params: { processId },
+			// => GET /actualize?ip=xxx&port=8080&proto=https&processId=abc
+			const url = `/actualize${this.buildDeviceQuery({ processId })}`
+			const response = await this.api.get<KaspiTransactionStatus>(url, {
 				headers: this.getAuthHeaders(),
 			})
 			return response.data
@@ -296,7 +345,9 @@ export class KaspiService {
 		}
 
 		return new Error(
-			`${context ? `${context}: ` : ''}${errorMessage}${statusCode ? ` (Код ошибки: ${statusCode})` : ''}`,
+			`${context ? `${context}: ` : ''}${errorMessage}${
+				statusCode ? ` (Код ошибки: ${statusCode})` : ''
+			}`,
 		)
 	}
 }
