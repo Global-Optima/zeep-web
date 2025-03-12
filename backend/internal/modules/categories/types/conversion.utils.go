@@ -10,9 +10,12 @@ func MapCategoryToDTO(category data.ProductCategory) *ProductCategoryDTO {
 	}
 }
 
-func UpdateToCategory(dto *UpdateProductCategoryDTO) *data.ProductCategory {
-	return &data.ProductCategory{
-		Name:        dto.Name,
-		Description: dto.Description,
+func UpdateToCategory(dto *UpdateProductCategoryDTO, category *data.ProductCategory) {
+	if dto.Name != "" {
+		category.Name = dto.Name
+	}
+
+	if dto.Description != "" {
+		category.Description = dto.Description
 	}
 }

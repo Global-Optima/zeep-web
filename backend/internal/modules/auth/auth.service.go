@@ -53,7 +53,7 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*types.To
 		return nil, errors.New("this employee is not registered")
 	}
 
-	if employee.IsActive == nil || !*employee.IsActive {
+	if !employee.IsActive {
 		return nil, types.ErrInactiveEmployee
 	}
 
@@ -147,8 +147,8 @@ func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDT
 		LastName:   input.LastName,
 		Password:   hashedPassword,
 		Phone:      input.Phone,
-		IsVerified: nil,
-		IsBanned:   nil,
+		IsVerified: false,
+		IsBanned:   false,
 	}
 
 	id, err := s.repo.CreateCustomer(customer)
@@ -175,7 +175,7 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*types.To
 		return nil, errors.New("this Customer is not registered")
 	}
 
-	if customer.IsBanned != nil || !*customer.IsBanned {
+	if customer.IsBanned {
 		return nil, types.ErrBannedCustomer
 	}
 

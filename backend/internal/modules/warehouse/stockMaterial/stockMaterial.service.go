@@ -1,7 +1,6 @@
 package stockMaterial
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
@@ -79,7 +78,8 @@ func (s *stockMaterialService) UpdateStockMaterial(stockMaterialID uint, req *ty
 	}
 
 	if stockMaterial == nil {
-		return fmt.Errorf("stock material with ID %d not found", stockMaterialID)
+		return fmt.Errorf("%w: stock material with ID %d not found",
+			types.ErrStockMaterialNotFound, stockMaterialID)
 	}
 
 	updatedStockMaterial, err := types.ValidateAndApplyUpdate(stockMaterial, req)
@@ -162,7 +162,7 @@ func (s *stockMaterialService) RetrieveStockMaterialByBarcode(barcode string) (*
 		return nil, err
 	}
 	if stockMaterial == nil {
-		return nil, errors.New("StockMaterial not found with the provided barcode")
+		return nil, types.ErrStockMaterialBarcodeNotFound
 	}
 
 	return types.ConvertStockMaterialToStockMaterialResponse(stockMaterial), nil

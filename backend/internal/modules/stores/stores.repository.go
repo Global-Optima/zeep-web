@@ -157,27 +157,13 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 		return fmt.Errorf("nothing to update")
 	}
 
-	existingStore, err := r.GetStoreByID(storeID)
-	if err != nil {
-		return err
-	}
-
-	err = r.db.Transaction(func(tx *gorm.DB) error {
-		if updateModels.Store != nil {
-			query := tx.Model(&data.Store{}).Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}})
-
-			if updateModels.Store.FranchiseeID == nil {
-				query.UpdateColumn("franchisee_id", gorm.Expr("franchisee_id - ?", nil))
-			}
-
-			if err := query.Updates(updateModels.Store).Error; err != nil {
-				return err
-			}
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&updateModels.Store).Error; err != nil {
+			return err
 		}
 
 		if updateModels.FacilityAddress != nil {
-			if err := tx.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingStore.FacilityAddress.ID}}).
-				Updates(updateModels.FacilityAddress).Error; err != nil {
+			if err := tx.Save(&updateModels.FacilityAddress).Error; err != nil {
 				return err
 			}
 		}

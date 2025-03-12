@@ -3,7 +3,6 @@ package stores
 import (
 	"errors"
 	"fmt"
-
 	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
@@ -120,7 +119,14 @@ func (s *storeService) GetStores(filter *types.StoreFilter) ([]types.StoreDTO, e
 }
 
 func (s *storeService) UpdateStore(storeID uint, updateStoreDto *types.UpdateStoreDTO) error {
-	updateModels, err := types.UpdateStoreFields(updateStoreDto)
+	store, err := s.repo.GetStoreByID(storeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to get store: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	updateModels, err := types.UpdateStoreFields(updateStoreDto, store, &store.FacilityAddress)
 	if err != nil {
 		wrappedErr := fmt.Errorf("validation failed trying to update store: %w", err)
 		s.logger.Error(wrappedErr)

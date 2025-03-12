@@ -46,7 +46,7 @@ func (s *warehouseService) GetAllStoresByWarehouse(warehouseID uint, pagination 
 }
 
 func (s *warehouseService) CreateWarehouse(req types.CreateWarehouseDTO) (*types.WarehouseDTO, error) {
-	facilityAddress := facilityAddressesTypes.MapToFacilityAddressModel(&req.FacilityAddress)
+	facilityAddress := facilityAddressesTypes.MapToFacilityAddressModel(&req.FacilityAddress, nil)
 	warehouse := types.ToWarehouseModel(req, 0)
 
 	if err := s.repo.CreateWarehouse(&warehouse, facilityAddress); err != nil {

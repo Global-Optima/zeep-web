@@ -359,7 +359,23 @@
     "500-employee-getWorkday": "An unexpected error occurred while fetching employee workday data. Please try again later.",
     "500-employee-getWorkdays": "An unexpected error occurred while fetching employee workdays. Please try again later.",
     "400-employee": "Invalid employee data. Please check and try again.",
-    "401-employee": "You need to be logged in to access this resource."
+    "401-employee": "You need to be logged in to access this resource.",
+
+    "400-stockMaterial": "Invalid stock material data. Please check and try again.",
+    "500-stockMaterial-get": "An unexpected error occurred while fetching stock material. Please try again later.",
+    "500-stockMaterial-create": "An unexpected error occurred while creating stock material. Please try again later.",
+    "500-stockMaterial-update": "An unexpected error occurred while updating stock material. Please try again later.",
+    "500-stockMaterial-delete": "An unexpected error occurred while deleting stock material. Please try again later.",
+    "404-stockMaterial": "Stock material not found.",
+    "500-stockMaterial-deactivate": "An unexpected error occurred while deactivating stock material. Please try again later.",
+    "500-stockMaterial-barcode": "An unexpected error occurred while generating stock material barcode. Please try again later.",
+    "500-stockMaterial-barcode-get": "An unexpected error occurred while fetching stock material barcode. Please try again later.",
+    "400-stockMaterial-barcode-required": "Barcode is required.",
+    "404-stockMaterial-barcode": "Stock material not found with the provided barcode.",
+    "201-stockMaterial": "Stock material successfully created.",
+    "200-stockMaterial-update": "Stock material successfully updated.",
+    "200-stockMaterial-delete": "Stock material successfully deleted.",
+    "200-stockMaterial-deactivate": "Stock material successfully deactivated."
   },
   "notification": {
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",

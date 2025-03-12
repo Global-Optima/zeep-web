@@ -10,10 +10,6 @@ import (
 func MapToStoreDTO(store *data.Store) *StoreDTO {
 	facilityAddressDTO := facilityAddressesTypes.MapToFacilityAddressDTO(&store.FacilityAddress)
 
-	isActive := false
-	if store.IsActive != nil && *store.IsActive {
-		isActive = true
-	}
 	var franchisee *franchiseesTypes.FranchiseeDTO = nil
 	if store.Franchisee != nil {
 		franchisee = franchiseesTypes.ConvertFranchiseeToDTO(store.Franchisee)
@@ -25,7 +21,7 @@ func MapToStoreDTO(store *data.Store) *StoreDTO {
 		ID:              store.ID,
 		Name:            store.Name,
 		Franchisee:      franchisee,
-		IsActive:        isActive,
+		IsActive:        store.IsActive,
 		Warehouse:       *warehouse,
 		ContactPhone:    store.ContactPhone,
 		ContactEmail:    store.ContactEmail,

@@ -3,6 +3,7 @@ package stockMaterial
 import (
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"net/http"
 	"strconv"
 
@@ -29,13 +30,13 @@ func NewStockMaterialHandler(service StockMaterialService, auditService audit.Au
 func (h *StockMaterialHandler) GetAllStockMaterials(c *gin.Context) {
 	var filter types.StockMaterialFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.StockMaterial{}); err != nil {
-		utils.SendBadRequestError(c, "Invalid query parameters")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterial)
 		return
 	}
 
 	stockMaterialResponses, err := h.service.GetAllStockMaterials(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve stock materials")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialGet)
 		return
 	}
 
@@ -46,16 +47,16 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 	idParam := c.Param("id")
 	stockMaterialID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StockMaterial ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterial)
 		return
 	}
 
 	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
 	if err != nil {
-		if errors.Is(err, types.ErrStockMaterialNotFound) {
-			utils.SendNotFoundError(c, "StockMaterial not found")
+		if err.Error() == "StockMaterial not found" {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
 		} else {
-			utils.SendInternalServerError(c, "failed to retrieve stockMaterial")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialGet)
 		}
 		return
 	}
@@ -66,13 +67,13 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
 	var req types.CreateStockMaterialDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
 	stockMaterialResponse, err := h.service.CreateStockMaterial(&req)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to create stockMaterial")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCreate)
 		return
 	}
 
@@ -86,35 +87,35 @@ func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, stockMaterialResponse)
+	localization.SendLocalizedResponseWithKey(c, types.Response201StockMaterial)
 }
 
 func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 	idParam := c.Param("id")
 	stockMaterialID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StockMaterial ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterial)
 		return
 	}
 
 	var req types.UpdateStockMaterialDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_JSON)
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterial)
 		return
 	}
 
 	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to retrieve stockMaterial")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialGet)
 		return
 	}
 
 	err = h.service.UpdateStockMaterial(uint(stockMaterialID), &req)
 	if err != nil {
-		if errors.Is(err, types.ErrStockMaterialNotFound) {
-			utils.SendNotFoundError(c, "StockMaterial not found")
+		if err.Error() == "StockMaterial not found" {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
 		} else {
-			utils.SendInternalServerError(c, "failed to update stockMaterial")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialUpdate)
 		}
 		return
 	}
@@ -129,32 +130,32 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	utils.SendSuccessResponse(c, "Updated stock material successfully")
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialUpdate)
 }
 
 func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 	idParam := c.Param("id")
 	stockMaterialID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StockMaterial ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterial)
 		return
 	}
 
 	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
 	if err != nil {
 		if errors.Is(err, types.ErrStockMaterialNotFound) {
-			utils.SendNotFoundError(c, "stock material not found")
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
 		}
-		utils.SendInternalServerError(c, "failed to retrieve stockMaterial")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialGet)
 		return
 	}
 
 	err = h.service.DeleteStockMaterial(uint(stockMaterialID))
 	if err != nil {
 		if errors.Is(err, types.ErrStockMaterialNotFound) {
-			utils.SendNotFoundError(c, "StockMaterial not found")
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
 		} else {
-			utils.SendInternalServerError(c, "failed to delete stockMaterial")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialDelete)
 		}
 		return
 	}
@@ -169,40 +170,40 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 		_ = h.auditService.RecordEmployeeAction(c, &action)
 	}()
 
-	c.Status(http.StatusNoContent)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialDelete)
 }
 
 func (h *StockMaterialHandler) DeactivateStockMaterial(c *gin.Context) {
 	idParam := c.Param("id")
 	stockMaterialID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		utils.SendBadRequestError(c, "Invalid StockMaterial ID")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterial)
 		return
 	}
 
 	err = h.service.DeactivateStockMaterial(uint(stockMaterialID))
 	if err != nil {
-		if errors.Is(err, types.ErrStockMaterialNotFound) {
-			utils.SendNotFoundError(c, "StockMaterial not found")
+		if err.Error() == "StockMaterial not found" {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
 		} else {
-			utils.SendInternalServerError(c, "failed to deactivate stockMaterial")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialDeactivate)
 		}
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialDeactivate)
 }
 
 func (h *StockMaterialHandler) GetStockMaterialBarcode(c *gin.Context) {
 	stockMaterialID, errH := utils.ParseParam(c, "id")
 	if errH != nil {
-		utils.SendBadRequestError(c, errH.Error())
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterial)
 		return
 	}
 
 	barcodeImage, err := h.service.GenerateStockMaterialBarcodePDF(stockMaterialID)
 	if err != nil {
-		utils.SendInternalServerError(c, "failed to get barcode image")
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialBarcode)
 		return
 	}
 
@@ -228,16 +229,16 @@ func (h *StockMaterialHandler) GenerateBarcode(c *gin.Context) {
 func (h *StockMaterialHandler) RetrieveStockMaterialByBarcode(c *gin.Context) {
 	barcode := c.Param("barcode")
 	if barcode == "" {
-		utils.SendBadRequestError(c, "Barcode is required")
+		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterialBarcodeRequired)
 		return
 	}
 
 	response, err := h.service.RetrieveStockMaterialByBarcode(barcode)
 	if err != nil {
-		if errors.Is(err, types.ErrStockMaterialNotFound) {
-			utils.SendNotFoundError(c, "StockMaterial not found with the provided barcode")
+		if errors.Is(err, types.ErrStockMaterialBarcodeNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterialBarcode)
 		} else {
-			utils.SendInternalServerError(c, "failed to retrieve stockMaterial barcode")
+			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialBarcodeGet)
 		}
 		return
 	}

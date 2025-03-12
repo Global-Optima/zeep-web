@@ -11,7 +11,7 @@ var (
 	Response500OrderCreate         = localization.NewResponseKey(http.StatusInternalServerError, data.OrderComponent, data.CreateOperation.ToString())
 	Response500OrderPaymentSuccess = localization.NewResponseKey(http.StatusInternalServerError, data.OrderComponent, "payment", "success")
 	Response500OrderPaymentFail    = localization.NewResponseKey(http.StatusInternalServerError, data.OrderComponent, "payment", "fail")
-	Response400OrderCustomerName   = localization.NewResponseKey(http.StatusBadRequest, data.OrderComponent, "customerName")
+	Response400OrderCustomerName   = localization.NewResponseKey(http.StatusBadRequest, data.OrderComponent, "CUSTOMER_NAME")
 	Response400Order               = localization.NewResponseKey(http.StatusBadRequest, data.OrderComponent)
 	Response201Order               = localization.NewResponseKey(http.StatusCreated, data.OrderComponent)
 	Response200OrderPaymentSuccess = localization.NewResponseKey(http.StatusOK, data.OrderComponent, "payment", "success")

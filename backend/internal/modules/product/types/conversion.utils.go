@@ -101,13 +101,13 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 	additives := make([]ProductSizeAdditiveDTO, len(productSize.Additives))
 	ingredients := make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
 
-	for i, productSizeAdditive := range productSize.Additives {
-		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
-	}
-
 	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
 		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
 		ingredients[i].Quantity = productSizeIngredient.Quantity
+	}
+
+	for i, productSizeAdditive := range productSize.Additives {
+		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	return ProductSizeDetailsDTO{
@@ -278,12 +278,20 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageUR
 
 func CalculateTotalNutrition(productSize *data.ProductSize) *TotalNutrition {
 	totalNutrition := &TotalNutrition{}
+	ingredientSet := make(map[string]struct{})
+	allergenSet := make(map[string]struct{})
 
 	for _, psi := range productSize.ProductSizeIngredients {
 		totalNutrition.Calories += (psi.Ingredient.Calories * psi.Quantity) / 100
 		totalNutrition.Proteins += (psi.Ingredient.Proteins * psi.Quantity) / 100
 		totalNutrition.Fats += (psi.Ingredient.Fat * psi.Quantity) / 100
 		totalNutrition.Carbs += (psi.Ingredient.Carbs * psi.Quantity) / 100
+
+		ingredientSet[psi.Ingredient.Name] = struct{}{}
+
+		if psi.Ingredient.IsAllergen {
+			allergenSet[psi.Ingredient.Name] = struct{}{}
+		}
 	}
 
 	for _, psa := range productSize.Additives {
@@ -293,8 +301,24 @@ func CalculateTotalNutrition(productSize *data.ProductSize) *TotalNutrition {
 				totalNutrition.Proteins += (ai.Ingredient.Proteins * ai.Quantity) / 100
 				totalNutrition.Fats += (ai.Ingredient.Fat * ai.Quantity) / 100
 				totalNutrition.Carbs += (ai.Ingredient.Carbs * ai.Quantity) / 100
+
+				ingredientSet[ai.Ingredient.Name] = struct{}{}
+
+				if ai.Ingredient.IsAllergen {
+					allergenSet[ai.Ingredient.Name] = struct{}{}
+				}
 			}
 		}
+	}
+
+	totalNutrition.IngredientsList = make([]string, 0, len(ingredientSet))
+	for name := range ingredientSet {
+		totalNutrition.IngredientsList = append(totalNutrition.IngredientsList, name)
+	}
+
+	totalNutrition.AllergenIngredients = make([]string, 0, len(allergenSet))
+	for name := range allergenSet {
+		totalNutrition.AllergenIngredients = append(totalNutrition.AllergenIngredients, name)
 	}
 
 	totalNutrition.Calories = utils.RoundToOneDecimal(totalNutrition.Calories)
