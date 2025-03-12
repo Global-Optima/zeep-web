@@ -418,13 +418,13 @@ func (h *OrderHandler) SuccessOrderPayment(c *gin.Context) {
 		return
 	}
 
-	var enryptedData utils.EncryptedData
-	if err := c.ShouldBindJSON(&enryptedData); err != nil {
+	var encryptedData utils.EncryptedData
+	if err := c.ShouldBindJSON(&encryptedData); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	decryptedJSON, err := utils.DecryptPayload(enryptedData, config.GetConfig().Payment.SecretKey)
+	decryptedJSON, err := utils.DecryptPayload(encryptedData, config.GetConfig().Payment.SecretKey)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Decryption failed: " + err.Error()})
 		return
