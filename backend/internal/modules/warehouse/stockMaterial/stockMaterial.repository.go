@@ -171,42 +171,43 @@ func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint
 		return nil, err
 	}
 
-	// Create a map to store only non-nil fields for the update
-	updateData := make(map[string]interface{})
+	// Create a partial StockMaterial struct with only the fields to update
+	updateModel := data.StockMaterial{}
 
+	// Only set fields that are provided in the DTO
 	if fields.Name != nil {
-		updateData["name"] = *fields.Name
+		updateModel.Name = *fields.Name
 	}
 	if fields.Description != nil {
-		updateData["description"] = *fields.Description
+		updateModel.Description = *fields.Description
 	}
 	if fields.SafetyStock != nil {
-		updateData["safety_stock"] = *fields.SafetyStock
+		updateModel.SafetyStock = *fields.SafetyStock
 	}
 	if fields.UnitID != nil {
-		updateData["unit_id"] = *fields.UnitID
+		updateModel.UnitID = *fields.UnitID
 	}
 	if fields.CategoryID != nil {
-		updateData["category_id"] = *fields.CategoryID
+		updateModel.CategoryID = *fields.CategoryID
 	}
 	if fields.IngredientID != nil {
-		updateData["ingredient_id"] = *fields.IngredientID
+		updateModel.IngredientID = *fields.IngredientID
 	}
 	if fields.Barcode != nil {
-		updateData["barcode"] = *fields.Barcode
+		updateModel.Barcode = *fields.Barcode
 	}
 	if fields.ExpirationPeriodInDays != nil {
-		updateData["expiration_period_in_days"] = *fields.ExpirationPeriodInDays
+		updateModel.ExpirationPeriodInDays = *fields.ExpirationPeriodInDays
 	}
 	if fields.IsActive != nil {
-		updateData["is_active"] = *fields.IsActive
+		updateModel.IsActive = *fields.IsActive
 	}
 	if fields.Size != nil {
-		updateData["size"] = *fields.Size
+		updateModel.Size = *fields.Size
 	}
 
-	// Perform the update using the dynamic map
-	if err := r.db.Model(&stockMaterial).Updates(updateData).Error; err != nil {
+	// Perform the update using the partial struct
+	if err := r.db.Model(&stockMaterial).Updates(updateModel).Error; err != nil {
 		return nil, err
 	}
 
