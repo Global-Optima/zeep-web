@@ -173,7 +173,7 @@ services:
       - app_network
     depends_on:
       backend:
-        condition: service_healthy
+        condition: service_started
     labels:
       # Enable Traefik for this service
       - "traefik.enable=true"
