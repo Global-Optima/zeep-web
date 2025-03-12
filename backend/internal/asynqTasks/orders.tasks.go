@@ -31,9 +31,15 @@ func (h *OrderAsynqTasks) HandleOrderPaymentFailureTask(ctx context.Context, t *
 	err := h.orderRepo.HandlePaymentFailure(payload.OrderID)
 	if err != nil {
 		if errors.Is(err, ordersTypes.ErrOrderNotFound) {
-			h.logger.Infof("ℹ️ Order %d already deleted, skipping task execution", payload.OrderID)
+			h.logger.Warnf("ℹ️ Order %d already deleted, skipping deferred deletion", payload.OrderID)
 			return nil
 		}
+
+		if errors.Is(err, ordersTypes.ErrInappropriateOrderStatus) {
+			h.logger.Warnf("ℹ️ Order %d is already paid, skipping deferred deletion", payload.OrderID)
+			return nil
+		}
+
 		return err
 	}
 
