@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
@@ -128,25 +127,17 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
-		if err == types.ErrInsufficientStock {
+		if errors.Is(err, types.ErrInsufficientStock) {
 			localization.SendLocalizedResponseWithKey(c, types.Response400InsufficientStock)
 			return
 		}
-		if err == types.ErrMultipleSelect {
+		if errors.Is(err, types.ErrMultipleSelect) {
 			localization.SendLocalizedResponseWithKey(c, types.Response400MultipleSelect)
 			return
 		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500OrderCreate)
 		return
 	}
-
-	createdOrderWithPreloads, err := h.service.GetOrderById(createdOrder.ID)
-	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("failed to fetch created order with ID %d: %s", createdOrder.ID, err.Error()))
-		return
-	}
-
-	BroadcastOrderCreated(orderDTO.StoreID, createdOrderWithPreloads)
 
 	utils.SendSuccessResponse(c, types.ConvertOrderToDTO(createdOrder))
 }
@@ -450,6 +441,14 @@ func (h *OrderHandler) SuccessOrderPayment(c *gin.Context) {
 		localization.SendLocalizedResponseWithKey(c, types.Response500OrderPaymentSuccess)
 		return
 	}
+
+	order, err := h.service.GetOrderById(orderID)
+	if err != nil {
+		utils.SendInternalServerError(c, fmt.Sprintf("failed to fetch created order with ID %d: %s", orderID, err.Error()))
+		return
+	}
+
+	BroadcastOrderSucceeded(order.StoreID, order)
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200OrderPaymentSuccess)
 }
