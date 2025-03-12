@@ -43,49 +43,55 @@ func (r *stockMaterialRepository) GetAllStockMaterials(filter *types.StockMateri
 		Preload("StockMaterialCategory").
 		Preload("Ingredient").
 		Preload("Ingredient.IngredientCategory").
-		Preload("Ingredient.Unit").
-		Where("stock_materials.is_active = ?", true)
+		Preload("Ingredient.Unit")
 
-	if filter != nil {
-		if filter.Search != nil && *filter.Search != "" {
-			search := "%" + *filter.Search + "%"
-			query = query.Joins("JOIN stock_material_categories ON stock_material_categories.id = stock_materials.category_id").
-				Where("(stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_material_categories.name ILIKE ? OR stock_materials.barcode ILIKE ?)", search, search, search, search)
-		}
+	if filter == nil {
+		filter = &types.StockMaterialFilter{}
+	}
 
-		if filter.LowStock != nil && *filter.LowStock {
-			query = query.Where("quantity < safety_stock")
-		}
+	// Apply filters only if they exist
+	if filter.Search != nil && *filter.Search != "" {
+		search := "%" + *filter.Search + "%"
+		query = query.Joins("JOIN stock_material_categories ON stock_material_categories.id = stock_materials.category_id").
+			Where("(stock_materials.name ILIKE ? OR stock_materials.description ILIKE ? OR stock_material_categories.name ILIKE ? OR stock_materials.barcode ILIKE ?)", search, search, search, search)
+	}
 
-		if filter.IsActive != nil {
-			query = query.Where("stock_materials.is_active = ?", *filter.IsActive)
-		}
+	if filter.LowStock != nil && *filter.LowStock {
+		query = query.Where("quantity < safety_stock")
+	}
 
-		if filter.IngredientID != nil {
-			query = query.Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
-		}
-
-		if filter.CategoryID != nil {
-			query = query.Where("stock_materials.category_id = ?", *filter.CategoryID)
-		}
-
-		if filter.SupplierID != nil {
-			query = query.Joins("JOIN supplier_materials ON supplier_materials.stock_material_id = stock_materials.id").
-				Where("supplier_materials.supplier_id = ?", *filter.SupplierID)
-		}
-
-		if filter.ExpirationInDays != nil {
-			query = query.Where("stock_materials.expiration_period_in_days <= ?", *filter.ExpirationInDays)
-		}
+	if filter.IsActive != nil {
+		query = query.Where("stock_materials.is_active = ?", *filter.IsActive)
 	} else {
-		return nil, fmt.Errorf("filter is nil")
+		query = query.Where("stock_materials.is_active = ?", true) // Default to active materials
+	}
+
+	if filter.IngredientID != nil {
+		query = query.Where("stock_materials.ingredient_id = ?", *filter.IngredientID)
+	}
+
+	if filter.CategoryID != nil {
+		query = query.Where("stock_materials.category_id = ?", *filter.CategoryID)
+	}
+
+	if filter.SupplierID != nil {
+		query = query.Joins("JOIN supplier_materials ON supplier_materials.stock_material_id = stock_materials.id").
+			Where("supplier_materials.supplier_id = ?", *filter.SupplierID)
+	}
+
+	if filter.ExpirationInDays != nil {
+		query = query.Where("stock_materials.expiration_period_in_days <= ?", *filter.ExpirationInDays)
 	}
 
 	query = query.Order("stock_materials.created_at DESC")
-	var err error
-	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
-	if err != nil {
-		return nil, err
+
+	// Apply pagination only if provided
+	if filter.Pagination != nil {
+		var err error
+		query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StockMaterial{})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if err := query.Find(&stockMaterials).Error; err != nil {
@@ -130,11 +136,20 @@ func (r *stockMaterialRepository) CreateStockMaterial(stockMaterial *data.StockM
 	var existingBarcode data.StockMaterial
 	err := r.db.Model(&data.StockMaterial{}).Where("barcode = ?", stockMaterial.Barcode).First(&existingBarcode).Error
 
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return r.db.Create(stockMaterial).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
 	}
 
-	return err
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err := r.db.Create(stockMaterial).Error; err != nil {
+			return err
+		}
+
+		return r.db.Preload("Ingredient").Preload("Unit").Preload("StockMaterialCategory").
+			First(stockMaterial, stockMaterial.ID).Error
+	}
+
+	return fmt.Errorf("barcode %s already exists", stockMaterial.Barcode)
 }
 
 func (r *stockMaterialRepository) CreateStockMaterials(stockMaterials []data.StockMaterial) error {
@@ -148,18 +163,61 @@ func (r *stockMaterialRepository) UpdateStockMaterial(id uint, stockMaterial *da
 func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint, fields types.UpdateStockMaterialDTO) (*data.StockMaterial, error) {
 	var stockMaterial data.StockMaterial
 
-	if err := r.db.Preload("Unit").First(&stockMaterial, stockMaterialID).Error; err != nil {
+	// Check if the stock material exists
+	if err := r.db.Select("id").Where("id = ?", stockMaterialID).First(&stockMaterial).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("StockMaterial not found")
+			return nil, types.ErrStockMaterialNotFound
 		}
 		return nil, err
 	}
 
-	if err := r.db.Model(&stockMaterial).Updates(fields).Error; err != nil {
+	// Create a partial StockMaterial struct with only the fields to update
+	updateModel := data.StockMaterial{}
+
+	// Only set fields that are provided in the DTO
+	if fields.Name != nil {
+		updateModel.Name = *fields.Name
+	}
+	if fields.Description != nil {
+		updateModel.Description = *fields.Description
+	}
+	if fields.SafetyStock != nil {
+		updateModel.SafetyStock = *fields.SafetyStock
+	}
+	if fields.UnitID != nil {
+		updateModel.UnitID = *fields.UnitID
+	}
+	if fields.CategoryID != nil {
+		updateModel.CategoryID = *fields.CategoryID
+	}
+	if fields.IngredientID != nil {
+		updateModel.IngredientID = *fields.IngredientID
+	}
+	if fields.Barcode != nil {
+		updateModel.Barcode = *fields.Barcode
+	}
+	if fields.ExpirationPeriodInDays != nil {
+		updateModel.ExpirationPeriodInDays = *fields.ExpirationPeriodInDays
+	}
+	if fields.IsActive != nil {
+		updateModel.IsActive = *fields.IsActive
+	}
+	if fields.Size != nil {
+		updateModel.Size = *fields.Size
+	}
+
+	// Perform the update using the partial struct
+	if err := r.db.Model(&stockMaterial).Updates(updateModel).Error; err != nil {
 		return nil, err
 	}
 
-	if err := r.db.Preload("Unit").First(&stockMaterial, stockMaterialID).Error; err != nil {
+	// Reload the updated stock material with necessary preloads
+	if err := r.db.Preload("Unit").
+		Preload("StockMaterialCategory").
+		Preload("Ingredient").
+		Preload("Ingredient.IngredientCategory").
+		Preload("Ingredient.Unit").
+		First(&stockMaterial, stockMaterialID).Error; err != nil {
 		return nil, err
 	}
 
@@ -167,11 +225,36 @@ func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint
 }
 
 func (r *stockMaterialRepository) DeleteStockMaterial(stockMaterialID uint) error {
-	return r.db.Delete(&data.StockMaterial{}, stockMaterialID).Error
+	result := r.db.Delete(&data.StockMaterial{}, stockMaterialID)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("stock material with ID %d not found", stockMaterialID)
+	}
+	return nil
 }
 
 func (r *stockMaterialRepository) DeactivateStockMaterial(stockMaterialID uint) error {
-	return r.db.Model(&data.StockMaterial{}).Where("id = ?", stockMaterialID).Update("is_active", false).Error
+	var stockMaterial data.StockMaterial
+	err := r.db.Select("is_active").Where("id = ?", stockMaterialID).First(&stockMaterial).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("stock material with id %d not found", stockMaterialID)
+		}
+		return err
+	}
+
+	if !stockMaterial.IsActive {
+		return nil // Already inactive, no need to update
+	}
+
+	result := r.db.Model(&data.StockMaterial{}).Where("id = ?", stockMaterialID).Update("is_active", false)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
 
 func (r *stockMaterialRepository) PopulateStockMaterial(stockMaterialID uint, stockMaterial *data.StockMaterial) error {

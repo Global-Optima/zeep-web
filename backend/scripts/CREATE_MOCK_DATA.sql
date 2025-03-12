@@ -414,7 +414,6 @@ VALUES
     );
 
 -- Insert into ProductSize
--- Insert into ProductSize
 INSERT INTO
     product_sizes (
         name,

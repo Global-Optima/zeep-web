@@ -56,6 +56,10 @@ func (s *stockMaterialService) GetStockMaterialByID(stockMaterialID uint) (*type
 }
 
 func (s *stockMaterialService) CreateStockMaterial(req *types.CreateStockMaterialDTO) (*types.StockMaterialsDTO, error) {
+	if req.SafetyStock <= 0 {
+		return nil, fmt.Errorf("safety stock must be greater than zero")
+	}
+
 	stockMaterial := types.ConvertCreateStockMaterialRequestToStockMaterial(req)
 
 	err := s.repo.CreateStockMaterial(stockMaterial)
