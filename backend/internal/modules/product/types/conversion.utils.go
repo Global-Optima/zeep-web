@@ -99,32 +99,14 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
 	additives := make([]ProductSizeAdditiveDTO, len(productSize.Additives))
 	ingredients := make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
-	compoundIngredientsSet := make(map[string]struct{})
 
-	// Map ProductSize Ingredients
 	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
 		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
 		ingredients[i].Quantity = productSizeIngredient.Quantity
-
-		// Add to compoundIngredientsSet
-		compoundIngredientsSet[productSizeIngredient.Ingredient.Name] = struct{}{}
 	}
 
-	// Map Additives (Only Default ones)
 	for i, productSizeAdditive := range productSize.Additives {
 		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
-
-		if productSizeAdditive.IsDefault {
-			for _, additiveIngredient := range productSizeAdditive.Additive.Ingredients {
-				compoundIngredientsSet[additiveIngredient.Ingredient.Name] = struct{}{}
-			}
-		}
-	}
-
-	// Convert unique ingredient names to a slice
-	compoundIngredients := make([]string, 0, len(compoundIngredientsSet))
-	for name := range compoundIngredientsSet {
-		compoundIngredients = append(compoundIngredients, name)
 	}
 
 	return ProductSizeDetailsDTO{
