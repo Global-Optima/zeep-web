@@ -105,7 +105,7 @@ export class KaspiService {
 
 	constructor(config: KaspiConfig) {
 		this.api = axios.create({
-			baseURL: `https://${config.posIpAddress}:8080/v2`,
+			baseURL: `https://smartpos.kaspipos.kz:8080/v2`,
 			timeout: config.timeout || 60000,
 		})
 
