@@ -127,8 +127,12 @@ jobs:
       - name: Install gofumpt
         run: go install mvdan.cc/gofumpt@latest
 
-      - name: Run gofumpt
-        run: gofumpt -l -w .
+      - name: Run gofumpt check
+        run: |
+          if ! gofumpt -l .; then
+            echo "Code is not formatted according to gofumpt."
+            exit 1
+          fi
 
       - name: Run golangci-lint
         run: golangci-lint run -v --concurrency=2 --timeout=5m
