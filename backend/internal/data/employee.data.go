@@ -2,10 +2,11 @@ package data
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type EmployeeType string
@@ -82,9 +83,11 @@ var RoleManagePermissions = map[EmployeeRole][]EmployeeRole{
 	RoleWarehouseManager:       {RoleWarehouseEmployee},
 	RoleFranchiseManager:       {RoleStoreManager, RoleBarista},
 	RoleRegionWarehouseManager: {RoleWarehouseManager, RoleWarehouseEmployee},
-	RoleAdmin: {RoleOwner, RoleFranchiseOwner, RoleFranchiseManager,
+	RoleAdmin: {
+		RoleOwner, RoleFranchiseOwner, RoleFranchiseManager,
 		RoleRegionWarehouseManager, RoleStoreManager, RoleWarehouseManager,
-		RoleBarista, RoleWarehouseEmployee},
+		RoleBarista, RoleWarehouseEmployee,
+	},
 }
 
 func CanManageRole(currentRole, targetRole EmployeeRole) bool {

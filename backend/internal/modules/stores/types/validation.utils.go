@@ -65,7 +65,6 @@ func CreateStoreFields(dto *CreateStoreDTO) (*data.Store, error) {
 
 	if !utils.IsValidPhone(dto.ContactPhone, utils.DEFAULT_PHONE_NUMBER_REGION) {
 		return nil, moduleErrors.ErrValidation.WithDetails("phoneNumber")
-
 	}
 	store.ContactPhone = dto.ContactPhone
 

@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 

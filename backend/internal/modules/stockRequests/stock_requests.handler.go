@@ -89,7 +89,7 @@ func (h *StockRequestHandler) CreateStockRequest(c *gin.Context) {
 
 func (h *StockRequestHandler) GetStockRequests(c *gin.Context) {
 	var filter types.GetStockRequestsFilter
-	var requests = make([]types.StockRequestResponse, 0)
+	requests := make([]types.StockRequestResponse, 0)
 
 	storeID, storeErr := h.franchiseeService.CheckFranchiseeStore(c)
 	warehouseID, warehouseErr := h.regionService.CheckRegionWarehouse(c)

@@ -2,13 +2,14 @@ package types
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 func ValidateCustomer(input CustomerRegisterDTO) error {
@@ -126,7 +127,6 @@ func ValidateEmployeeJWT(tokenString string, claims *EmployeeClaims, tokenType T
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.JWT.EmployeeSecretKey), nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to parse token: %w", err)
 	}

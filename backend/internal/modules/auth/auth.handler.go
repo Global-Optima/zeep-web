@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"net/http"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/pkg/errors"
-	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"

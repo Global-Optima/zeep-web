@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"

@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"

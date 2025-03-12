@@ -22,6 +22,7 @@ func (s *StockRequestStatusUpdatedDetails) ToDetails() ([]byte, error) {
 func (s *StockRequestStatusUpdatedDetails) GetBaseDetails() *BaseNotificationDetails {
 	return &s.BaseNotificationDetails
 }
+
 func TranslateStockRequestStatus(status data.StockRequestStatus, lang string) (string, error) {
 	key := "notification.stockRequestStatus." + localization.ToCamelCase(string(status))
 

@@ -1,13 +1,14 @@
 package contexts
 
 import (
+	"net/http"
+	"slices"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
-	"slices"
-	"strconv"
 )
 
 var (

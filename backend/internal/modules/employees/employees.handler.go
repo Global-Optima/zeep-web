@@ -1,14 +1,15 @@
 package employees
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"

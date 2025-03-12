@@ -75,7 +75,6 @@ func NewStoreEmployeesModule(
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
 ) *StoreEmployeesModule {
-
 	repo := storeEmployees.NewStoreEmployeeRepository(base.DB, employeeRepo)
 	service := storeEmployees.NewStoreEmployeeService(repo, employeeRepo, base.Logger)
 	handler := storeEmployees.NewStoreEmployeeHandler(service, employeeService, franchiseeService, auditService)
@@ -102,7 +101,6 @@ func NewWarehouseEmployeesModule(
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
 ) *WarehouseEmployeesModule {
-
 	repo := warehouseEmployees.NewWarehouseEmployeeRepository(base.DB, employeeRepo)
 	service := warehouseEmployees.NewWarehouseEmployeeService(repo, employeeRepo, base.Logger)
 	handler := warehouseEmployees.NewWarehouseEmployeeHandler(service, employeeService, regionService, auditService)
@@ -129,7 +127,6 @@ func NewFranchiseeEmployeesModule(
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
 ) *FranchiseeEmployeesModule {
-
 	repo := franchiseeEmployees.NewFranchiseeEmployeeRepository(base.DB, employeeRepo)
 	service := franchiseeEmployees.NewFranchiseeEmployeeService(repo, employeeRepo, base.Logger)
 	handler := franchiseeEmployees.NewFranchiseeEmployeeHandler(service, employeeService, franchiseeService, auditService)
@@ -156,7 +153,6 @@ func NewRegionEmployeesModule(
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
 ) *RegionEmployeesModule {
-
 	repo := regionEmployees.NewRegionEmployeeRepository(base.DB, employeeRepo)
 	service := regionEmployees.NewRegionEmployeeService(repo, employeeRepo, base.Logger)
 	handler := regionEmployees.NewRegionEmployeeHandler(service, employeeService, regionService, auditService)
@@ -182,7 +178,6 @@ func NewAdminEmployeesModule(
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
 ) *AdminEmployeesModule {
-
 	repo := adminEmployees.NewAdminEmployeeRepository(base.DB)
 	service := adminEmployees.NewAdminEmployeeService(repo, employeeRepo, base.Logger)
 	handler := adminEmployees.NewAdminEmployeeHandler(service, employeeService, auditService)

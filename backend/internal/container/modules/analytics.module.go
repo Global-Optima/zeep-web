@@ -15,7 +15,6 @@ type AnalyticsModule struct {
 func NewAnalyticsModule(
 	base *common.BaseModule,
 ) *AnalyticsModule {
-
 	repo := analytics.NewAnalyticsRepo(base.DB)
 	service := analytics.NewAnalyticsService(repo, base.Logger)
 	handler := analytics.NewAnalyticsHandler(service)

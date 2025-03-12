@@ -2,12 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 
 	"gorm.io/gorm"
 

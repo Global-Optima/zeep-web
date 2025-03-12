@@ -2,8 +2,9 @@ package taskqueue
 
 import (
 	"context"
-	"github.com/hibiken/asynq"
 	"time"
+
+	"github.com/hibiken/asynq"
 )
 
 type TaskQueue interface {

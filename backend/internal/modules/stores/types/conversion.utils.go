@@ -8,7 +8,6 @@ import (
 )
 
 func MapToStoreDTO(store *data.Store) *StoreDTO {
-
 	facilityAddressDTO := facilityAddressesTypes.MapToFacilityAddressDTO(&store.FacilityAddress)
 
 	var franchisee *franchiseesTypes.FranchiseeDTO = nil

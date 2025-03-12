@@ -2,13 +2,14 @@ package product
 
 import (
 	"errors"
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"go.uber.org/zap"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 

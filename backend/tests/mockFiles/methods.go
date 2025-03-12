@@ -1,11 +1,12 @@
 package mockFiles
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"mime/multipart"
 	"path/filepath"
 	"runtime"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 )
 
 const (

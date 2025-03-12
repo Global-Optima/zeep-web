@@ -3,12 +3,13 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
@@ -288,7 +289,6 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 	}
 
 	initialOrders, err := h.service.GetAllBaristaOrders(filter)
-
 	if err != nil {
 		log.Printf("Failed to fetch initial orders for store %d: %v", storeID, err)
 		utils.SendInternalServerError(c, "failed to fetch initial orders")

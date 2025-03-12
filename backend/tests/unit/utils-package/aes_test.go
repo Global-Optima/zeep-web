@@ -3,8 +3,9 @@ package utils
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"testing"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 type TestMessage struct {

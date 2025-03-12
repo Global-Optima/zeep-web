@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"

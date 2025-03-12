@@ -2,8 +2,9 @@ package functional
 
 import (
 	"fmt"
-	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 	"testing"
+
+	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 	"github.com/Global-Optima/zeep-web/backend/tests"

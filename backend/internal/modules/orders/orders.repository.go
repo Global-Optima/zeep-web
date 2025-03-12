@@ -292,7 +292,6 @@ func (r *orderRepository) GetRawOrderById(orderId uint) (*data.Order, error) {
 	var order data.Order
 	err := r.db.Where("id = ?", orderId).
 		First(&order).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrOrderNotFound

@@ -170,7 +170,6 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}

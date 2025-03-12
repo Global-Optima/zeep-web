@@ -25,7 +25,6 @@ func (h *AuditHandler) GetAudits(c *gin.Context) {
 	}
 
 	audits, err := h.service.GetAuditRecords(&filter)
-
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to retrieve Audits")
 		return
