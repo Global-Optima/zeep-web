@@ -44,7 +44,6 @@ func (r *ingredientRepository) UpdateIngredient(ingredientID uint, ingredient *d
 func (r *ingredientRepository) GetRawIngredientByID(ingredientID uint) (*data.Ingredient, error) {
 	var ingredient data.Ingredient
 	err := r.db.First(&ingredient, ingredientID).Error
-
 	if err != nil {
 		return nil, err
 	}
