@@ -1,10 +1,11 @@
 package functional
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -98,7 +99,6 @@ func TestStoreStockService_AddMultipleStock(t *testing.T) {
 	deleteTestStock(t, service, storeID, 1)
 
 	t.Run("Add Multiple - New and Update", func(t *testing.T) {
-
 		dto1 := types.AddStoreStockDTO{
 			IngredientID:      1,
 			Quantity:          100,
@@ -129,7 +129,6 @@ func TestStoreStockService_GetStockListAndByIDs(t *testing.T) {
 	clearMockStock(t, service)
 
 	t.Run("GetStockList with Filtering", func(t *testing.T) {
-
 		dto1 := types.AddStoreStockDTO{IngredientID: 1, Quantity: 40, LowStockThreshold: 50}
 		dto2 := types.AddStoreStockDTO{IngredientID: 2, Quantity: 20, LowStockThreshold: 30}
 		_ = createTestStock(t, service, storeID, dto1)
@@ -150,7 +149,6 @@ func TestStoreStockService_GetStockListAndByIDs(t *testing.T) {
 	})
 
 	t.Run("GetStockListByIDs", func(t *testing.T) {
-
 		id1 := createTestStock(t, service, 1, types.AddStoreStockDTO{IngredientID: 1, Quantity: 100, LowStockThreshold: 50})
 		id2 := createTestStock(t, service, 1, types.AddStoreStockDTO{IngredientID: 2, Quantity: 200, LowStockThreshold: 100})
 		ids := []uint{id1, id2}
@@ -232,7 +230,6 @@ func TestStoreStockService_GetAvailableIngredientsToAdd(t *testing.T) {
 	clearMockStock(t, service)
 
 	t.Run("Exclude Existing Ingredients", func(t *testing.T) {
-
 		_ = createTestStock(t, service, storeID, types.AddStoreStockDTO{IngredientID: 1, Quantity: 100, LowStockThreshold: 50})
 
 		filter := &ingredientTypes.IngredientFilter{

@@ -3,11 +3,12 @@ package media
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"mime/multipart"
+
 	"github.com/abema/go-mp4"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"io"
-	"mime/multipart"
 )
 
 const (

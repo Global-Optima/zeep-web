@@ -2,14 +2,15 @@ package config
 
 import (
 	"fmt"
-	advancedConfig "github.com/num30/config"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
+
+	advancedConfig "github.com/num30/config"
+	"github.com/spf13/viper"
 )
 
 const (

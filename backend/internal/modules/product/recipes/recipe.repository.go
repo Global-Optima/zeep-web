@@ -32,7 +32,6 @@ func (r *recipeRepository) CreateOrReplaceRecipeStepsByProductID(productID uint,
 		err := tx.Model(&data.RecipeStep{}).
 			Where("product_id = ?", productID).
 			Delete(&recipeSteps).Error
-
 		if err != nil {
 			return err
 		}
@@ -43,7 +42,6 @@ func (r *recipeRepository) CreateOrReplaceRecipeStepsByProductID(productID uint,
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +58,6 @@ func (r *recipeRepository) GetRecipeStepByID(id uint) (*data.RecipeStep, error) 
 	err := r.db.Model(&data.RecipeStep{}).
 		Where("id = ?", id).
 		First(&recipeStep).Error
-
 	if err != nil {
 		return nil, err
 	}

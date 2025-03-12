@@ -4,6 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/url"
+	"sync"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -12,11 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"golang.org/x/sync/errgroup"
-	"io"
-	"mime/multipart"
-	"net/url"
-	"sync"
-	"time"
 )
 
 var (
@@ -38,7 +39,6 @@ func NewMockStorageRepository() (storage.StorageRepository, error) {
 		ConvertedImagesPrefix: storage.IMAGES_CONVERTED_STORAGE_REPO_KEY,
 		ConvertedVideosPrefix: storage.VIDEOS_CONVERTED_STORAGE_REPO_KEY,
 	})
-
 	if err != nil {
 		return nil, err
 	}

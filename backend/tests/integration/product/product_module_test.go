@@ -1,10 +1,11 @@
 package product_test
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/tests/mockFiles"
 	"mime/multipart"
 	"net/http"
 	"testing"
+
+	"github.com/Global-Optima/zeep-web/backend/tests/mockFiles"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 

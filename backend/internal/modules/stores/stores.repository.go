@@ -163,7 +163,6 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 	}
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
-
 		if updateModels.Store != nil {
 			query := tx.Model(&data.Store{}).Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}})
 
@@ -185,7 +184,6 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}

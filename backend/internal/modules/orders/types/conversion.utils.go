@@ -104,7 +104,7 @@ func ConvertSuborderAdditiveToDTO(suborderAdditive *data.SuborderAdditive) Subor
 			Name:        suborderAdditive.StoreAdditive.Additive.Name,
 			Description: suborderAdditive.StoreAdditive.Additive.Description,
 			Size:        suborderAdditive.StoreAdditive.Additive.Size,
-			MachineId: suborderAdditive.StoreAdditive.Additive.MachineId,
+			MachineId:   suborderAdditive.StoreAdditive.Additive.MachineId,
 		},
 		Price:     suborderAdditive.Price,
 		CreatedAt: suborderAdditive.CreatedAt,

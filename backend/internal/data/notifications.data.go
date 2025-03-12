@@ -2,8 +2,10 @@ package data
 
 import "gorm.io/datatypes"
 
-type NotificationPriority string
-type NotificationEventType string
+type (
+	NotificationPriority  string
+	NotificationEventType string
+)
 
 const (
 	HIGH   NotificationPriority = "HIGH"

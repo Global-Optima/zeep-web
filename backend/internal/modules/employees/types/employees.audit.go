@@ -5,7 +5,5 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 )
 
-var (
-	UpdateEmployeeAuditFactory = shared.NewAuditActionExtendedFactory(
-		data.UpdateOperation, data.EmployeeComponent, &ReassignEmployeeTypeDTO{})
-)
+var UpdateEmployeeAuditFactory = shared.NewAuditActionExtendedFactory(
+	data.UpdateOperation, data.EmployeeComponent, &ReassignEmployeeTypeDTO{})

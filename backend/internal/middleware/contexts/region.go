@@ -1,11 +1,12 @@
 package contexts
 
 import (
+	"slices"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/gin-gonic/gin"
-	"slices"
-	"strconv"
 )
 
 // GetRegionId returns the retrieved id and HandlerError

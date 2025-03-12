@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"github.com/jung-kurt/gofpdf"
 	"image"
 	"image/color"
 	"image/draw"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/jung-kurt/gofpdf"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/boombuler/barcode"
@@ -161,7 +162,7 @@ func GenerateBarcodeImage(barcodeData string) (*bytes.Buffer, error) {
 	drawer.DrawString(barcodeData)
 
 	// 7. Encode image as PNG in memory
-	var imgBuf = &bytes.Buffer{}
+	imgBuf := &bytes.Buffer{}
 	if err := png.Encode(imgBuf, finalImg); err != nil {
 		return imgBuf, fmt.Errorf("failed to encode final PNG: %w", err)
 	}

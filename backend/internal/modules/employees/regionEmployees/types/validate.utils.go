@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
@@ -12,7 +13,7 @@ type UpdateRegionEmployeeModels struct {
 }
 
 func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.EmployeeRole) (*UpdateRegionEmployeeModels, error) {
-	var regionEmployee = &data.RegionEmployee{}
+	regionEmployee := &data.RegionEmployee{}
 	if input.RegionID != nil {
 		regionEmployee.RegionID = *input.RegionID
 	}

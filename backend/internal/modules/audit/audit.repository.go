@@ -112,7 +112,6 @@ func (r *auditRepository) GetAuditRecordByID(ID uint) (*data.EmployeeAudit, erro
 		Preload("Employee").
 		Where("id = ?", ID).
 		First(&audit).Error
-
 	if err != nil {
 		return nil, err
 	}

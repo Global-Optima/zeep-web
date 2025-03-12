@@ -2,14 +2,17 @@ package shared
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 )
 
-var auditActions = make(map[AuditActionCore]func() data.AuditDetails)
-var defaultFactory = func() data.AuditDetails {
-	return &data.BaseDetails{}
-}
+var (
+	auditActions   = make(map[AuditActionCore]func() data.AuditDetails)
+	defaultFactory = func() data.AuditDetails {
+		return &data.BaseDetails{}
+	}
+)
 
 func GetAuditActionDetailsFactory(core AuditActionCore) func() data.AuditDetails {
 	zapLogger := logger.GetZapSugaredLogger()
@@ -27,7 +30,6 @@ func NewAuditActionBaseFactory(
 	operationType data.OperationType,
 	componentName data.ComponentName,
 ) func(details *data.BaseDetails) AuditActionBase {
-
 	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,
@@ -54,7 +56,6 @@ func NewAuditActionExtendedFactory[T any](
 	componentName data.ComponentName,
 	dto T,
 ) func(baseDetails *data.BaseDetails, dto T) AuditActionExtended {
-
 	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,
@@ -86,7 +87,6 @@ func NewAuditStoreActionExtendedFactory[T any](
 	componentName data.ComponentName,
 	dto T,
 ) func(baseDetails *data.BaseDetails, dto T, storeID uint) AuditStoreActionExtended {
-
 	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,
@@ -125,7 +125,6 @@ func NewAuditWarehouseActionExtendedFactory[T any](
 	componentName data.ComponentName,
 	dto T,
 ) func(baseDetails *data.BaseDetails, dto T, warehouseID uint) AuditWarehouseActionExtended {
-
 	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,
@@ -164,7 +163,6 @@ func NewAuditFranchiseeActionExtendedFactory[T any](
 	componentName data.ComponentName,
 	dto T,
 ) func(baseDetails *data.BaseDetails, dto T, storeID uint) AuditFranchiseeActionExtended {
-
 	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,
@@ -203,7 +201,6 @@ func NewAuditRegionActionExtendedFactory[T any](
 	componentName data.ComponentName,
 	dto T,
 ) func(baseDetails *data.BaseDetails, dto T, storeID uint) AuditRegionActionExtended {
-
 	core := AuditActionCore{
 		OperationType: operationType,
 		ComponentName: componentName,

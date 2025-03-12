@@ -1,8 +1,9 @@
 package limiters
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func LimitRequestBody(maxBytes int64) gin.HandlerFunc {

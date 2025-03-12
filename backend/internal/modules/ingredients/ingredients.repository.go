@@ -45,7 +45,6 @@ func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingre
 	err := r.db.Preload("Unit").
 		Preload("IngredientCategory").
 		First(&ingredient, ingredientID).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +59,6 @@ func (r *ingredientRepository) GetIngredientsByIDs(ingredientIDs []uint) ([]data
 		Preload("IngredientCategory").
 		Where("id IN (?)", ingredientIDs).
 		Find(&ingredients).Error
-
 	if err != nil {
 		return nil, err
 	}

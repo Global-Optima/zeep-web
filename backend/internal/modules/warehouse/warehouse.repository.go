@@ -2,6 +2,7 @@ package warehouse
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
@@ -70,7 +71,6 @@ func (r *warehouseRepository) GetWarehouseByID(id uint) (*data.Warehouse, error)
 		Preload("FacilityAddress").
 		Preload("Region").
 		First(&warehouse, id).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrWarehouseNotFound
@@ -165,7 +165,6 @@ func (r *warehouseRepository) UpdateWarehouse(id uint, updateModels *types.Wareh
 	}
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
-
 		if updateModels.Warehouse != nil {
 			query := tx.Model(&data.Warehouse{}).Where(&data.Warehouse{BaseEntity: data.BaseEntity{ID: id}})
 
@@ -183,7 +182,6 @@ func (r *warehouseRepository) UpdateWarehouse(id uint, updateModels *types.Wareh
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}

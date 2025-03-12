@@ -8,10 +8,9 @@ import (
 )
 
 func MapToStoreDTO(store *data.Store) *StoreDTO {
-
 	facilityAddressDTO := facilityAddressesTypes.MapToFacilityAddressDTO(&store.FacilityAddress)
 
-	var isActive = false
+	isActive := false
 	if store.IsActive != nil && *store.IsActive {
 		isActive = true
 	}

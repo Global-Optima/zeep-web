@@ -19,7 +19,6 @@ func NewAuthModule(
 	customersRepo customers.CustomerRepository,
 	employeesRepo employees.EmployeeRepository,
 ) *AuthModule {
-
 	repo := auth.NewAuthenticationRepository(base.DB)
 	service := auth.NewAuthenticationService(repo, customersRepo, employeesRepo, base.Logger)
 	handler := auth.NewAuthenticationHandler(service)

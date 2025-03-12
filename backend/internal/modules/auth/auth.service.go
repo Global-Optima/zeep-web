@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"

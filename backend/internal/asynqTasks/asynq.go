@@ -2,11 +2,12 @@ package asynqTasks
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"sync"
-	"time"
 )
 
 const (
@@ -23,8 +24,7 @@ type AsynqManager struct {
 	logger *zap.SugaredLogger
 }
 
-type AsynqManagerTask struct {
-}
+type AsynqManagerTask struct{}
 
 type MyRedisConnOpt struct {
 	Rdb *redis.Client

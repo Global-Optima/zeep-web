@@ -2,6 +2,9 @@ package recipes
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
@@ -9,8 +12,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 type RecipeHandler struct {

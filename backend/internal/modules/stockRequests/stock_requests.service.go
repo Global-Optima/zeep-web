@@ -563,7 +563,6 @@ func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.S
 		return nil, fmt.Errorf("failed to replace ingredients for stock request ID %d: %w", requestID, err)
 	}
 	return request, nil
-
 }
 
 func (s *stockRequestService) DeleteStockRequest(requestID uint) (*data.StockRequest, error) {

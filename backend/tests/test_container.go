@@ -64,7 +64,7 @@ func NewTestContainer() *container.Container {
 
 		r := gin.New()
 		utils.InitValidators()
-		//r.Use(middleware.SanitizeMiddleware())
+		// r.Use(middleware.SanitizeMiddleware())
 		r.Use(logger.ZapLoggerMiddleware())
 		r.Use(gin.Recovery())
 

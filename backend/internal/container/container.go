@@ -1,8 +1,9 @@
 package container
 
 import (
-	asynqManager "github.com/Global-Optima/zeep-web/backend/internal/asynqTasks"
 	"sync"
+
+	asynqManager "github.com/Global-Optima/zeep-web/backend/internal/asynqTasks"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 

@@ -296,7 +296,6 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 	}
 
 	initialOrders, err := h.service.GetAllBaristaOrders(filter)
-
 	if err != nil {
 		log.Printf("Failed to fetch initial orders for store %d: %v", storeID, err)
 		utils.SendInternalServerError(c, "failed to fetch initial orders")

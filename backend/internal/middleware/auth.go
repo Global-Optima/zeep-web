@@ -1,12 +1,13 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	authTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func EmployeeAuth() gin.HandlerFunc {

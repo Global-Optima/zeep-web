@@ -15,7 +15,6 @@ type AuditsModule struct {
 func NewAuditsModule(
 	base *common.BaseModule,
 ) *AuditsModule {
-
 	repo := audit.NewAuditRepository(base.DB)
 	service := audit.NewAuditService(repo, base.Logger)
 	handler := audit.NewAuditHandler(service)

@@ -2,6 +2,7 @@ package franchisees
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
