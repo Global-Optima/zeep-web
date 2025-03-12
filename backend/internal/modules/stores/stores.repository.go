@@ -163,9 +163,9 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 		}
 
 		if updateModels.FacilityAddress != nil {
-		}
-		if err := tx.Save(&updateModels.FacilityAddress).Error; err != nil {
-			return err
+			if err := tx.Save(&updateModels.FacilityAddress).Error; err != nil {
+				return err
+			}
 		}
 
 		return nil
