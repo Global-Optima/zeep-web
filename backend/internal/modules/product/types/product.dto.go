@@ -67,7 +67,6 @@ type CreateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"required"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
-	MachineId   string `form:"machineId" binding:"required,max=40"`
 }
 
 type SelectedAdditiveDTO struct {
@@ -97,7 +96,6 @@ type UpdateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
-	MachineId   *string `form:"machineId" binding:"omitempty,max=40"`
 }
 
 type UpdateProductSizeDTO struct {
