@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
     branches:
-      - '*'
+      - '**'
 
 jobs:
   frontend:
@@ -84,13 +84,13 @@ jobs:
           mkdir -p tests
           cat <<EOF > tests/test.env
           ENV=test
-          
+
           DB_HOST=localhost
           DB_PORT=5432
           DB_USER=testuser
           DB_PASSWORD=testpassword
           DB_NAME=testdb
-          
+
           REDIS_HOST=localhost
           REDIS_PORT=6379
           REDIS_DB=0
