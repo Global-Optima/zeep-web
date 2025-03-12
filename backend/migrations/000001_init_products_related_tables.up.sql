@@ -8,8 +8,8 @@ CREATE TABLE
 	 facility_addresses (
 		id SERIAL PRIMARY KEY,
 		address VARCHAR(255) UNIQUE NOT NULL,
-		longitude DECIMAL(9, 6) UNIQUE,
-		latitude DECIMAL(9, 6) UNIQUE,
+		longitude DECIMAL(9, 6),
+		latitude DECIMAL(9, 6),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -286,7 +286,8 @@ CREATE TABLE
         expiration_in_days INT CHECK (expiration_in_days >= 0),
         unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
         category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE RESTRICT,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        is_allergen BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);

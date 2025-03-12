@@ -317,7 +317,7 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 		Preload("ProductSize.Product").
 		Preload("ProductSize.Additives.Additive.Category").
 		Preload("ProductSize.Additives.Additive.Unit").
-		Preload("ProductSize.Additives.Additive.Ingredients").
+		Preload("ProductSize.Additives.Additive.Ingredients.Ingredient").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
 		First(&storeProductSize).Error

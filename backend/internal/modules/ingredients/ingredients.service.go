@@ -43,7 +43,13 @@ func (s *ingredientService) CreateIngredient(dto *types.CreateIngredientDTO) (ui
 }
 
 func (s *ingredientService) UpdateIngredient(ingredientID uint, dto *types.UpdateIngredientDTO) error {
-	ingredient, err := types.ConvertToUpdateIngredientModel(dto)
+	ingredient, err := s.repo.GetRawIngredientByID(ingredientID)
+	if err != nil {
+		s.logger.Error("Failed to update ingredient:", err)
+		return err
+	}
+
+	err = types.ConvertToUpdateIngredientModel(dto, ingredient)
 	if err != nil {
 		return err
 	}

@@ -115,8 +115,10 @@ type ProductsFilterDto struct {
 }
 
 type TotalNutrition struct {
-	Calories float64 `json:"calories"`
-	Proteins float64 `json:"proteins"`
-	Fats     float64 `json:"fats"`
-	Carbs    float64 `json:"carbs"`
+	IngredientsList     []string `json:"ingredientsList"`
+	AllergenIngredients []string `json:"allergenIngredients"`
+	Calories            float64  `json:"calories"`
+	Proteins            float64  `json:"proteins"`
+	Fats                float64  `json:"fats"`
+	Carbs               float64  `json:"carbs"`
 }

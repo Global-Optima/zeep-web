@@ -110,11 +110,11 @@ VALUES
     (1, 2, false);
 
 -- 19. Insert into ingredients
-INSERT INTO ingredients (name, calories, fat, carbs, proteins, expiration_in_days, unit_id, category_id)
+INSERT INTO ingredients (name, calories, fat, carbs, proteins, expiration_in_days, unit_id, category_id, is_allergen)
 VALUES
-  ('Coffee Beans', 5, 0, 0, 0, 365, 1, 1),
-  ('Milk', 42, 1, 5, 3, 7, 1, 1),
-  ('Unused ingredient', 5, 0, 0, 0, 365, 1, 1);
+  ('Coffee Beans', 5, 0, 0, 0, 365, 1, 1, true),
+  ('Milk', 42, 1, 5, 3, 7, 1, 1, false),
+  ('Unused ingredient', 5, 0, 0, 0, 365, 1, 1, false);
 
 -- 20. Insert into product_size_ingredients
 INSERT INTO product_size_ingredients (ingredient_id, product_size_id, quantity)

@@ -69,7 +69,7 @@ func (r *categoryRepository) CreateCategory(category *data.ProductCategory) (uin
 func (r *categoryRepository) UpdateCategory(id uint, category *data.ProductCategory) error {
 	return r.db.Model(&data.ProductCategory{}).
 		Where("id = ?", id).
-		Updates(category).Error
+		Save(category).Error
 }
 
 func (r *categoryRepository) DeleteCategory(id uint) error {

@@ -279,7 +279,25 @@ func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 		Where("id = ?", orderId).
 		First(&order).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrOrderNotFound
+		}
 		return nil, fmt.Errorf("failed to fetch order with ID %d: %w", orderId, err)
+	}
+
+	return &order, nil
+}
+
+func (r *orderRepository) GetRawOrderById(orderId uint) (*data.Order, error) {
+	var order data.Order
+	err := r.db.Where("id = ?", orderId).
+		First(&order).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrOrderNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch raw order with ID %d: %w", orderId, err)
 	}
 
 	return &order, nil
@@ -489,7 +507,7 @@ func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
 }
 
 func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) error {
-	order, err := r.GetOrderById(orderID)
+	order, err := r.GetRawOrderById(orderID)
 	if err != nil {
 		return err
 	}
@@ -519,7 +537,7 @@ func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction 
 }
 
 func (r *orderRepository) HandlePaymentFailure(orderID uint) error {
-	order, err := r.GetOrderById(orderID)
+	order, err := r.GetRawOrderById(orderID)
 	if err != nil {
 		return err
 	}
