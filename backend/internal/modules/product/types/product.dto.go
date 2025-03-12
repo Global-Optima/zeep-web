@@ -16,7 +16,6 @@ type BaseProductDTO struct {
 	ImageURL    string                             `json:"imageUrl"`
 	VideoURL    string                             `json:"videoUrl"`
 	Category    categoriesTypes.ProductCategoryDTO `json:"category"`
-	MachineId   string                             `json:"machineId"`
 }
 
 type ProductDTO struct {
@@ -24,13 +23,11 @@ type ProductDTO struct {
 	BaseProductDTO
 	ProductSizeCount int     `json:"productSizeCount"`
 	BasePrice        float64 `json:"basePrice"`
-	MachineId        string  `json:"machineId"`
 }
 
 type ProductDetailsDTO struct {
 	ProductDTO
-	Sizes     []ProductSizeDTO `json:"sizes"`
-	MachineId string           `json:"machineId"`
+	Sizes []ProductSizeDTO `json:"sizes"`
 }
 
 type BaseProductSizeDTO struct {

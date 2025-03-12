@@ -1,10 +1,11 @@
 package additives_test
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/tests/mockFiles"
 	"mime/multipart"
 	"net/http"
 	"testing"
+
+	"github.com/Global-Optima/zeep-web/backend/tests/mockFiles"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/tests/integration/utils"
@@ -31,6 +32,7 @@ func TestAdditiveEndpoints(t *testing.T) {
 					"unitId":             "1",
 					"additiveCategoryId": "1",
 					"ingredients":        `[{"ingredientId":2,"quantity":5.0}]`,
+					"machineId":          "TEST000011112222999900001",
 				},
 				Files: map[string][]*multipart.FileHeader{
 					"image": imageFileHeaders,
@@ -55,25 +57,25 @@ func TestAdditiveEndpoints(t *testing.T) {
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusCreated,
 			},
-			// {
-			// 	Description: "Barista should NOT be able to create an additive",
-			// 	Method:      http.MethodPost,
-			// 	URL:         "/api/test/additives",
-			// 	FormData: map[string]string{
-			// 		"name":               "New Test Additive 3",
-			// 		"description":        "Sweet vanilla flavor",
-			// 		"basePrice":          "3.99",
-			// 		"size":               "250",
-			// 		"unitId":             "1",
-			// 		"additiveCategoryId": "1",
-			// 		"ingredients":        `[{"ingredientId":2,"quantity":5.0}]`,
-			// 	},
-			// 	Files: map[string][]*multipart.FileHeader{
-			// 		"image": imageFileHeaders, // Attach image
-			// 	},
-			// 	AuthRole:     data.RoleBarista,
-			// 	ExpectedCode: http.StatusForbidden,
-			// },
+			{
+				Description: "Barista should NOT be able to create an additive",
+				Method:      http.MethodPost,
+				URL:         "/api/test/additives",
+				FormData: map[string]string{
+					"name":               "New Test Additive 3",
+					"description":        "Sweet vanilla flavor",
+					"basePrice":          "3.99",
+					"size":               "250",
+					"unitId":             "1",
+					"additiveCategoryId": "1",
+					"ingredients":        `[{"ingredientId":2,"quantity":5.0}]`,
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders, // Attach image
+				},
+				AuthRole:     data.RoleBarista,
+				ExpectedCode: http.StatusForbidden,
+			},
 		}
 		env.RunTests(t, testCases)
 	})
