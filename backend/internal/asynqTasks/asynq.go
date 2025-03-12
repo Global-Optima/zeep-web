@@ -17,6 +17,10 @@ const (
 
 var once sync.Once
 
+type contextKey string
+
+const asynqTaskKey contextKey = "service"
+
 type AsynqManager struct {
 	client *asynq.Client
 	server *asynq.Server
@@ -46,7 +50,7 @@ func initAsynq(redisClient *redis.Client, logger *zap.SugaredLogger) (*AsynqMana
 			asynq.Config{
 				Concurrency: ASYNQ_CONCURRENCY,
 				BaseContext: func() context.Context {
-					return context.WithValue(context.Background(), "service", "asynq-task-queue")
+					return context.WithValue(context.Background(), asynqTaskKey, "asynq-task-queue")
 				},
 				RetryDelayFunc: func(n int, e error, t *asynq.Task) time.Duration {
 					return ASYNQ_RETRY_DELAY

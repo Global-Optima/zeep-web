@@ -50,7 +50,6 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 
 func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 	const workingHours = 16 // Working hours for a cafe
-	var orderID uint = 0
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		// Lock the store's orders for consistency
@@ -108,9 +107,7 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 		return nil
 	})
 
-	orderID = order.ID
-
-	return orderID, err
+	return order.ID, err
 }
 
 func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error) {

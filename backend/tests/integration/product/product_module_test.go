@@ -32,6 +32,7 @@ func TestProductEndpoints(t *testing.T) {
 					"name":        "Latte",
 					"description": "A smooth coffee with milk",
 					"categoryId":  "2",
+					// "machineId":   "TEST0000111122223333000009",
 				},
 				Files: map[string][]*multipart.FileHeader{
 					"image": imageFileHeaders,
@@ -47,6 +48,7 @@ func TestProductEndpoints(t *testing.T) {
 					"name":        "New Americano",
 					"description": "A smooth coffee with milk",
 					"categoryId":  "2",
+					// "machineId":   "TEST0000111122223333000001",
 				},
 				Files: map[string][]*multipart.FileHeader{
 					"image": imageFileHeaders,

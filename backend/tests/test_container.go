@@ -26,17 +26,9 @@ var (
 
 func NewTestContainer() *container.Container {
 	once.Do(func() {
-		var cfg *config.Config
 		var err error
-
-		redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
-		if err != nil {
-			log.Fatalf("Failed to initialize Redis: %v", err)
-		}
-
-		utils.InitCache(redisClient.Client, redisClient.Ctx)
-
-		cfg, err = config.LoadTestConfig()
+		// Initialize cfg first
+		cfg, err := config.LoadTestConfig()
 		if err != nil {
 			log.Println("failed to load test configuration from file, trying to load from env...")
 			cfg, err = LoadConfigFromEnv()
@@ -44,6 +36,14 @@ func NewTestContainer() *container.Container {
 				log.Fatalf("Failed to load test configuration: %v", err)
 			}
 		}
+
+		// Now use cfg after it's initialized
+		redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
+		if err != nil {
+			log.Fatalf("Failed to initialize Redis: %v", err)
+		}
+
+		utils.InitCache(redisClient.Client, redisClient.Ctx)
 
 		if err := logger.InitLogger("debug", "logs/test_application.log", cfg.IsDevelopment); err != nil {
 			log.Fatalf("Failed to initialize test loggers: %v", err)

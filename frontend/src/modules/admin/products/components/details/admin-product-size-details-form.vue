@@ -50,6 +50,8 @@ interface SelectedAdditiveTypesDTO {
   isDefault: boolean
   name: string
   categoryName: string
+  size: number
+  unitName: string
   imageUrl: string
 }
 
@@ -108,6 +110,8 @@ const additives = ref<SelectedAdditiveTypesDTO[]>(productSize.additives.map(a =>
   isDefault: a.isDefault,
   name: a.name,
   categoryName: a.category.name,
+  size: a.size,
+  unitName: a.unit.name,
   imageUrl: a.imageUrl
 })))
 
@@ -132,6 +136,8 @@ function addAdditive(additive: AdditiveDTO) {
       isDefault: false,
       name: additive.name,
       categoryName: additive.category.name,
+      size: additive.size,
+      unitName: additive.unit.name,
       imageUrl: additive.imageUrl,
     })
   }
@@ -383,6 +389,7 @@ function selectUnit(unit: UnitDTO) {
 								<TableHead></TableHead>
 								<TableHead>Название</TableHead>
 								<TableHead>Категория</TableHead>
+								<TableHead>Размер</TableHead>
 								<TableHead>По умолчанию</TableHead>
 								<TableHead v-if="!readonly"></TableHead>
 							</TableRow>
@@ -401,6 +408,7 @@ function selectUnit(unit: UnitDTO) {
 								</TableCell>
 								<TableCell>{{ additive.name }}</TableCell>
 								<TableCell>{{ additive.categoryName }}</TableCell>
+								<TableCell>{{ additive.size }} {{ additive.unitName }}</TableCell>
 								<TableCell>
 									<Checkbox
 										type="checkbox"

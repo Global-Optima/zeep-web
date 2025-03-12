@@ -123,6 +123,11 @@ func CalculateEAN13CheckDigit(code string) int {
 }
 
 func GenerateBarcodeImage(barcodeData string) (*bytes.Buffer, error) {
+	// Ensure the font is initialized
+	if err := InitBarcodeFont(); err != nil {
+		return nil, err
+	}
+
 	bcode, err := code128.Encode(barcodeData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode barcode data %q: %w", barcodeData, err)
