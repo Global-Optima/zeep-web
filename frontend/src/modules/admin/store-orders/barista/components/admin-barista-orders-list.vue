@@ -163,6 +163,7 @@ function orderClasses(order: OrderDTO) {
  */
 const sortedOrders = computed(() => {
   const orderStatusPriority: Record<OrderStatus, number> = {
+    [OrderStatus.WAITING_FOR_PAYMENT]: 1,
     [OrderStatus.PENDING]: 1,
     [OrderStatus.PREPARING]: 1,
     [OrderStatus.IN_DELIVERY]: 1,

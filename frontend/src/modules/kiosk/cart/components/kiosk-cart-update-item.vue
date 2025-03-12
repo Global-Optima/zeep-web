@@ -44,7 +44,7 @@ const fetchAdditives = async () => {
       ...category,
       additives: category.additives.map(additive => ({
         ...additive,
-        isSelected: isAdditiveSelected(category.id, additive.additiveId),
+        isSelected: isAdditiveSelected(category, additive.additiveId),
       })),
     }));
   } catch {
@@ -95,16 +95,21 @@ const totalPrice = computed(() => {
 });
 
 // Check if additive is selected
-const isAdditiveSelected = (categoryId: number, additiveId: number) =>
-  selectedAdditives.value[categoryId]?.some(a => a.additiveId === additiveId) || false;
+const isAdditiveSelected = (category: StoreAdditiveCategoryDTO, additiveId: number) =>
+  selectedAdditives.value[category.id]?.some(a => a.additiveId === additiveId) || false;
 
 // Handle additive selection
-const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
-  const current = selectedAdditives.value[categoryId] || [];
-  const isSelected = current.some(a => a.additiveId === additive.additiveId);
-  selectedAdditives.value[categoryId] = isSelected
-    ? current.filter(a => a.additiveId !== additive.additiveId)
-    : [...current, additive];
+const onAdditiveToggle = (category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) => {
+  const current = selectedAdditives.value[category.id] || [];
+  const isSelected = current.some((a) => a.additiveId === additive.additiveId);
+
+  if (category.isMultipleSelect) {
+    selectedAdditives.value[category.id] = isSelected
+      ? current.filter(a => a.additiveId !== additive.additiveId)
+      : [...current, additive];
+  } else {
+    selectedAdditives.value[category.id] = isSelected ? [] : [additive];
+  }
 };
 
 

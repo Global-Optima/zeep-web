@@ -79,6 +79,7 @@ const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'dd MMMM yyyy', { locale: ru })
 }
 const ORDER_STATUS_COLOR: Record<OrderStatus, string> = {
+  [OrderStatus.WAITING_FOR_PAYMENT]: 'bg-pink-100 text-pink-800',
   [OrderStatus.PENDING]: 'bg-purple-100 text-purple-800',
   [OrderStatus.PREPARING]: 'bg-yellow-100 text-yellow-800',
   [OrderStatus.COMPLETED]: 'bg-green-200 text-green-900',
@@ -88,6 +89,7 @@ const ORDER_STATUS_COLOR: Record<OrderStatus, string> = {
 }
 
 const ORDER_STATUS_FORMATTED: Record<OrderStatus, string> = {
+  [OrderStatus.WAITING_FOR_PAYMENT]: 'Ожидание оплаты',
   [OrderStatus.PENDING]: 'В ожидании',
   [OrderStatus.PREPARING]: 'Готовится',
   [OrderStatus.COMPLETED]: 'Завершен',

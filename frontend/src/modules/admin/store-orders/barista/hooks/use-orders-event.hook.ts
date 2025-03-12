@@ -161,6 +161,7 @@ export function useOrderEventsService(
 
 	const orderCountsByStatus = computed<Record<OrderStatus, number>>(() => {
 		const counts: Record<OrderStatus, number> = {
+			WAITING_FOR_PAYMENT: 0,
 			PENDING: 0,
 			PREPARING: 0,
 			COMPLETED: 0,

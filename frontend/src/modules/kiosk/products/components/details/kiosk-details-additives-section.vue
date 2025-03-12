@@ -13,8 +13,8 @@
 						:key="additive.additiveId"
 						:additive="additive"
 						:is-default="additive.isDefault"
-						:is-selected="isAdditiveSelected(category.id, additive.additiveId)"
-						@click:additive="() => onAdditiveToggle(category.id, additive)"
+						:is-selected="isAdditiveSelected(category, additive.additiveId)"
+						@click:additive="() => onAdditiveToggle(category, additive)"
 					/>
 				</div>
 			</div>
@@ -29,16 +29,16 @@ import KioskDetailsAdditivesCard from '@/modules/kiosk/products/components/detai
 
 defineProps<{
   categories: StoreAdditiveCategoryDTO[]
-  isAdditiveSelected: (categoryId: number, additiveId: number) => boolean
+  isAdditiveSelected: (category: StoreAdditiveCategoryDTO, additiveId: number) => boolean
   containerClass?: string
 }>()
 
 const emits = defineEmits<{
-  (e: 'toggleAdditive', categoryId: number, additive: StoreAdditiveCategoryItemDTO): void
+  (e: 'toggleAdditive', category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO): void
 }>()
 
-const onAdditiveToggle = (categoryId: number, additive: StoreAdditiveCategoryItemDTO) => {
-  emits('toggleAdditive', categoryId, additive)
+const onAdditiveToggle = (category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) => {
+  emits('toggleAdditive', category, additive)
 }
 </script>
 

@@ -139,6 +139,7 @@ services:
         DEFAULT_PAGE: ${DEFAULT_PAGE}
         DEFAULT_PAGE_SIZE: ${DEFAULT_PAGE_SIZE}
         MAX_PAGE_SIZE: ${MAX_PAGE_SIZE}
+        PAYMENT_SECRET: ${PAYMENT_SECRET}
     env_file:
       - .env
     ports:
@@ -163,13 +164,11 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
         VITE_WS_URL: ${VITE_WS_URL}
+        VITE_PAYMENT_SECRET: ${PAYMENT_SECRET}
     env_file:
       - .env
     environment:
       NGINX_SERVER_NAME: ${NGINX_SERVER_NAME}
-    depends_on:
-      backend:
-        condition: service_started
     networks:
       - app_network
     labels:
@@ -251,8 +250,6 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
     networks:
       - app_network
 
