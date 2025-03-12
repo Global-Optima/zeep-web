@@ -96,7 +96,6 @@
     "401": "You need to log in to access this resource.",
     "400": "Bad request. Please check your input and try again.",
     "400-json": "Invalid data input",
-    "400-json-decryption": "Failed to decrypt the provided JSON. Please try again.",
     "400-query": "Invalid query parameters",
     "200": "The request was successfully processed.",
     "201": "The resource was successfully created.",

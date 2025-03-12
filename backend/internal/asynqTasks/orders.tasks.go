@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	ordersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
 	"github.com/hibiken/asynq"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -29,6 +30,10 @@ func (h *OrderAsynqTasks) HandleOrderPaymentFailureTask(ctx context.Context, t *
 
 	err := h.orderRepo.HandlePaymentFailure(payload.OrderID)
 	if err != nil {
+		if errors.Is(err, ordersTypes.ErrOrderNotFound) {
+			h.logger.Infof("ℹ️ Order %d already deleted, skipping task execution", payload.OrderID)
+			return nil
+		}
 		return err
 	}
 
