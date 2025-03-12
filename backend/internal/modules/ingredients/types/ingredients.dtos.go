@@ -15,7 +15,7 @@ type CreateIngredientDTO struct {
 	CategoryID       uint    `json:"categoryId" binding:"required,gt=0"`
 	UnitID           uint    `json:"unitId" binding:"required,gt=0"`
 	ExpirationInDays int     `json:"expirationInDays"`
-	IsAllergen       bool    `json:"isAllergen" binding:"required"`
+	IsAllergen       bool    `json:"isAllergen"`
 }
 
 type UpdateIngredientDTO struct {
