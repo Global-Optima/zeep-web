@@ -39,7 +39,7 @@
 									</p>
 								</div>
 
-								<p class="ml-2 text-gray-500 text-sm">
+								<p class="text-gray-500 text-sm">
 									{{ stockMaterial.category.name }}
 								</p>
 							</div>

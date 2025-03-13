@@ -10,7 +10,7 @@ import {
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { useToast } from '@/core/components/ui/toast'
-import { KaspiService, type KaspiConfig } from '@/core/integrations/kaspi.service'
+import { getKaspiConfig, KaspiService, saveKaspiConfig } from '@/core/integrations/kaspi.service'
 
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
@@ -19,11 +19,10 @@ import * as z from 'zod'
 
 const formSchema = toTypedSchema(
   z.object({
-    posIpAddress: z.string().regex(
-      /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/,
+    host: z.string().min(1,
       'Неверный формат IP-адреса'
     ),
-    integrationName: z.string().min(2, 'Имя интеграции должно содержать минимум 2 символа'),
+    name: z.string().min(2, 'Имя интеграции должно содержать минимум 2 символа'),
   })
 );
 
@@ -31,38 +30,30 @@ const { toast } = useToast();
 
 const { handleSubmit, isSubmitting, setValues } = useForm({
   validationSchema: formSchema,
-  initialValues: {
-    posIpAddress: '',
-    integrationName: '',
-  },
 });
 
 onMounted(() => {
-  const savedConfig = localStorage.getItem('ZEEP_KASPI_CONFIG');
-  if (savedConfig) {
-    try {
-      const parsedConfig: KaspiConfig = JSON.parse(savedConfig);
-      setValues(parsedConfig);
-    } catch (error) {
-      console.warn('Ошибка загрузки конфигурации:', error);
-    }
+  const config = getKaspiConfig()
+  if (config) {
+    setValues(config);
   }
 });
 
 const onSubmit = handleSubmit(async (values) => {
-  localStorage.setItem('ZEEP_KASPI_CONFIG', JSON.stringify(values));
+  saveKaspiConfig(values)
   const kaspi = new KaspiService(values);
 
   try {
-    await kaspi.registerTerminal(values.integrationName);
+    await kaspi.registerTerminal();
 
     toast({
-      title: '✅ Интеграция успешно завершена',
-      description: `Терминал ${values.integrationName} зарегистрирован.`,
+      title: 'Интеграция успешно завершена',
+      description: `Терминал ${values.name} зарегистрирован.`,
+      variant: "success"
     });
   } catch (error) {
     toast({
-      title: '❌ Ошибка интеграции',
+      title: 'Ошибка интеграции',
       description: error instanceof Error ? error.message : 'Неизвестная ошибка',
       variant: 'destructive',
     });
@@ -78,18 +69,20 @@ const onSubmit = handleSubmit(async (values) => {
 		<!-- IP-адрес POS-терминала -->
 		<FormField
 			v-slot="{ componentField }"
-			name="posIpAddress"
+			name="host"
 		>
 			<FormItem>
-				<FormLabel>IP-адрес POS-терминала</FormLabel>
+				<FormLabel>Адрес POS-терминала</FormLabel>
 				<FormControl>
 					<Input
 						type="text"
-						placeholder="192.168.x.x"
+						placeholder="smartpos.kaspipos.kz"
 						v-bind="componentField"
 					/>
 				</FormControl>
-				<FormDescription> Укажите IP-адрес POS-терминала для подключения. </FormDescription>
+				<FormDescription>
+					Укажите адрес POS-терминала внутри сети для подключения.
+				</FormDescription>
 				<FormMessage />
 			</FormItem>
 		</FormField>
@@ -97,7 +90,7 @@ const onSubmit = handleSubmit(async (values) => {
 		<!-- Имя интеграции -->
 		<FormField
 			v-slot="{ componentField }"
-			name="integrationName"
+			name="name"
 		>
 			<FormItem>
 				<FormLabel>Имя интеграции</FormLabel>

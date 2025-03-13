@@ -31,19 +31,18 @@
         ]"
 					data-testid="additive-price"
 				>
-					{{ isDefault ? formatPrice(0) : formatPrice(additive.storePrice) }}
+					{{ isDefault ? "Входит в состав" : formatPrice(additive.storePrice) }}
 				</p>
 				<button
 					class="relative rounded-full focus:outline-none sm:size-8"
 					:class="[
-          isSelected ? 'bg-primary' : 'bg-gray-200',
-          isDefault ? 'cursor-not-allowed opacity-50' : '',
+          isSelected || isDefault ? 'bg-primary' : 'bg-gray-200',
         ]"
 					:disabled="isDefault"
 					data-testid="additive-button"
 				>
 					<span
-						v-if="isSelected"
+						v-if="isSelected || isDefault"
 						class="absolute inset-0 bg-white m-auto rounded-full w-3 sm:w-4 h-3 sm:h-4"
 						data-testid="additive-selected-indicator"
 					></span>

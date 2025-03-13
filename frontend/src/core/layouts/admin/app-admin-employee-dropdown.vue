@@ -24,7 +24,7 @@ const { toast } = useToast()
 const {mutate: logoutEmployee} = useMutation({
 		mutationFn: () => authService.logoutEmployee(),
 		onSuccess: () => {
-			toast({title: "Вы вышли из системы"})
+      localStorage.clear();
 			router.push({name: getRouteName("LOGIN")})
 		},
 		onError: () => {

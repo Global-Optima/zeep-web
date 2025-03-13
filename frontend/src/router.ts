@@ -17,7 +17,10 @@ router.beforeEach(async (to, from, next) => {
 	const { setCurrentEmployee } = useEmployeeAuthStore()
 
 	// Prevent navigating outside /kiosk
-	const isLeavingKiosk = from.path.startsWith('/kiosk') && !to.path.startsWith('/kiosk')
+	const isLeavingKiosk =
+		from.path.startsWith('/kiosk') &&
+		!to.path.startsWith('/kiosk') &&
+		!from.path.startsWith('/kiosk/checklist')
 	if (isLeavingKiosk) {
 		return next(false) // Block navigation outside kiosk
 	}
