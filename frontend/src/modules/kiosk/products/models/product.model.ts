@@ -27,6 +27,16 @@ export interface ProductDetailsDTO extends ProductDTO {
 	sizes: ProductSizeDTO[]
 }
 
+export interface TotalNutrition {
+	ingredients: string[]
+  allergenIngredients: string[]
+  calories: number
+  proteins: number
+  fats: number
+  carbs: number
+}
+
+
 export interface BaseProductSizeDTO {
 	name: string
 	basePrice: number

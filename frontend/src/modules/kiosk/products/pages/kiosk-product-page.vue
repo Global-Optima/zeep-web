@@ -28,7 +28,9 @@
 						/>
 					</Button>
 
-					<KioskProductRecipeDialog :product="productDetails" />
+					<template v-if="selectedSize">
+						<KioskProductRecipeDialog :nutrition="selectedSize.totalNutrition" />
+					</template>
 				</header>
 				<div class="flex flex-col justify-center items-center">
 					<LazyImage
