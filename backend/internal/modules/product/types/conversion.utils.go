@@ -311,9 +311,9 @@ func CalculateTotalNutrition(productSize *data.ProductSize) *TotalNutrition {
 		}
 	}
 
-	totalNutrition.IngredientsList = make([]string, 0, len(ingredientSet))
+	totalNutrition.Ingredients = make([]string, 0, len(ingredientSet))
 	for name := range ingredientSet {
-		totalNutrition.IngredientsList = append(totalNutrition.IngredientsList, name)
+		totalNutrition.Ingredients = append(totalNutrition.Ingredients, name)
 	}
 
 	totalNutrition.AllergenIngredients = make([]string, 0, len(allergenSet))

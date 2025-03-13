@@ -115,7 +115,7 @@ type ProductsFilterDto struct {
 }
 
 type TotalNutrition struct {
-	IngredientsList     []string `json:"ingredientsList"`
+	Ingredients         []string `json:"ingredients"`
 	AllergenIngredients []string `json:"allergenIngredients"`
 	Calories            float64  `json:"calories"`
 	Proteins            float64  `json:"proteins"`
