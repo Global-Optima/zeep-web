@@ -28,13 +28,18 @@
 						<li
 							v-for="stockMaterial in stockMaterials.data"
 							:key="stockMaterial.id"
-							class="flex justify-between items-center hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
+							class="hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
 							@click="selectMaterial(stockMaterial)"
 						>
-							<span class="flex-1">{{ stockMaterial.name }}</span>
-							<span class="text-gray-500 text-sm">
-								{{ stockMaterial.category.name }}
-							</span>
+							<div class="flex justify-between w-full">
+								<span class="flex-1">{{ stockMaterial.name }}</span>
+								<span class="text-gray-500 text-sm ml-2">
+									{{ stockMaterial.category.name }}
+								</span>
+							</div>
+							<div class="text-gray-500 text-sm">
+								{{ stockMaterial.size }} {{ stockMaterial.unit.name }}
+							</div>
 						</li>
 					</ul>
 				</div>
