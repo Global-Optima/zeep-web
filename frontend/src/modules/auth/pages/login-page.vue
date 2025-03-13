@@ -43,6 +43,7 @@ const { toast } = useToast()
 const {mutate: loginEmployee} = useMutation({
 		mutationFn: (dto: EmployeeLoginDTO) => authService.loginEmployee(dto),
 		onSuccess: () => {
+      localStorage.clear();
 			router.push({name: getRouteName("ADMIN_DASHBOARD")})
 		},
 		onError: () => {
