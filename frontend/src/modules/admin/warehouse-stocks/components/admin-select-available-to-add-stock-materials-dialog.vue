@@ -31,14 +31,17 @@
 							class="hover:bg-gray-100 px-2 py-3 border-b rounded-lg cursor-pointer"
 							@click="selectMaterial(stockMaterial)"
 						>
-							<div class="flex justify-between w-full">
-								<span class="flex-1">{{ stockMaterial.name }}</span>
-								<span class="text-gray-500 text-sm ml-2">
+							<div class="flex justify-between gap-2 w-full">
+								<div class="flex-1">
+									<p>{{ stockMaterial.name }}</p>
+									<p class="text-gray-500 text-sm">
+										{{ stockMaterial.size }} {{ stockMaterial.unit.name }}
+									</p>
+								</div>
+
+								<p class="ml-2 text-gray-500 text-sm">
 									{{ stockMaterial.category.name }}
-								</span>
-							</div>
-							<div class="text-gray-500 text-sm">
-								{{ stockMaterial.size }} {{ stockMaterial.unit.name }}
+								</p>
 							</div>
 						</li>
 					</ul>
