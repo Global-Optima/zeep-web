@@ -7,13 +7,13 @@ import { getKaspiConfig, KaspiService } from '@/core/integrations/kaspi.service'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 
 // Types
-import type { OrderDTO } from '@/modules/admin/store-orders/models/orders.models'
+import type { OrderDTO, TransactionDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { PaymentMethod } from '@/modules/kiosk/cart/models/kiosk-cart.models'
 
 const PAYMENT_TIMEOUT = 120_000 // 2 minutes
 const STORAGE_KEY = 'ZEEP_CART_PAYMENT_COUNTDOWN'
 
-export function useCartPayment(order: OrderDTO | null, onSuccess: () => void, onBack: () => void) {
+export function useCartPayment(order: OrderDTO | null, onProceed: () => void, onBack: () => void) {
 	const isTest: boolean =
 		import.meta.env.VITE_TEST_PAYMENT === undefined
 			? false
@@ -42,28 +42,47 @@ export function useCartPayment(order: OrderDTO | null, onSuccess: () => void, on
 	const awaitPaymentMutation = useMutation({
 		mutationFn: async ({ order }: { order: OrderDTO }) => {
 			const kaspiConfig = getKaspiConfig()
-
-			if (!kaspiConfig) throw new Error('Failed to get kaspi config')
+			if (!kaspiConfig) throw new Error('Kaspi config not found')
 
 			const kaspiService = new KaspiService(kaspiConfig)
-
-			if (isTest) return kaspiService.awaitPaymentTest()
-
-			return kaspiService.awaitPayment(order.total)
+			return isTest ? kaspiService.awaitPaymentTest() : kaspiService.awaitPayment(order.total)
 		},
-		onSuccess: async (transaction, variables) => {
-			// Mark order paid
-			await ordersService.successOrderPayment(variables.order.id, transaction)
-			// Reset local state
-			resetPaymentFlow(false)
-			// Fire the parent's success callback
-			onSuccess()
+		onSuccess: transaction => {
+			if (!order) throw new Error('Order not found')
+			successOrderPaymentMutation.mutate({ order, transactionDTO: transaction })
 		},
 		onError: err => {
-			console.error(err)
-			errorMessage.value = 'Ошибка при обработке платежа. Попробуйте снова.'
-			toast({ title: 'Ошибка', description: errorMessage.value, variant: 'destructive' })
+			console.error('Payment wait failed:', err)
+			toast({
+				title: 'Ошибка оплаты',
+				description: 'Не удалось дождаться оплаты. Попробуйте снова.',
+				variant: 'destructive',
+			})
 			resetPaymentFlow(true)
+		},
+	})
+
+	const successOrderPaymentMutation = useMutation({
+		mutationFn: async ({
+			order,
+			transactionDTO,
+		}: {
+			order: OrderDTO
+			transactionDTO: TransactionDTO
+		}) => {
+			await ordersService.successOrderPayment(order.id, transactionDTO)
+		},
+		onSuccess: () => {
+			onProceed()
+		},
+		onError: err => {
+			console.error('Payment confirmation failed:', err)
+			toast({
+				title: 'Ошибка подтверждения',
+				description: 'Не удалось подтвердить платеж. Обратитесь к персоналу',
+				variant: 'destructive',
+			})
+			resetPaymentFlow(false)
 		},
 	})
 
@@ -109,10 +128,8 @@ export function useCartPayment(order: OrderDTO | null, onSuccess: () => void, on
 	}
 
 	function initializeTimer(forceRestart = false) {
-		// Clear any existing timer
 		clearTimer()
 
-		// If forcing a restart, store new start time
 		if (forceRestart) {
 			sessionStorage.setItem(STORAGE_KEY, Date.now().toString())
 		}
@@ -120,22 +137,20 @@ export function useCartPayment(order: OrderDTO | null, onSuccess: () => void, on
 		const storedTime = sessionStorage.getItem(STORAGE_KEY)
 		if (!storedTime) return
 
-		hasTimerStarted.value = true
-		isTimeoutReached.value = false
-
 		const elapsed = Date.now() - Number(storedTime)
 		const remaining = PAYMENT_TIMEOUT - elapsed
-		countdown.value = Math.ceil(remaining / 1000)
 
-		if (countdown.value <= 0) {
+		if (remaining <= 0) {
 			isTimeoutReached.value = true
 			failPayment()
 			return
 		}
 
-		// Launch a single setInterval
+		countdown.value = Math.ceil(remaining / 1000)
+		hasTimerStarted.value = true
+
 		timerId = window.setInterval(() => {
-			countdown.value--
+			countdown.value -= 1
 			if (countdown.value <= 0) {
 				clearTimer()
 				isTimeoutReached.value = true

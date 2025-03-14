@@ -175,7 +175,7 @@ const handleUpdate = () => {
 									stroke-width="1.6"
 								/>
 							</Button>
-							<KioskProductRecipeDialog :product="productDetails" />
+							<KioskProductRecipeDialog :nutrition="selectedSize.totalNutrition" />
 						</header>
 
 						<div class="flex flex-col justify-center items-center">

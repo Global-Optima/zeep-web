@@ -1,3 +1,4 @@
+import AppKioskLayout from '../layouts/kiosk/app-kiosk-layout.vue'
 import type { AppRouteRecord, ParentRoutePage } from './routes.types'
 
 export const KIOSK_CHILDREN_ROUTES = {
@@ -33,6 +34,6 @@ export const KIOSK_CHILDREN_ROUTES = {
 
 export const KIOSK_ROUTES_CONFIG: ParentRoutePage = {
 	path: '/kiosk',
-	component: () => import('@/core/layouts/kiosk/app-kiosk-layout.vue'),
+	component: AppKioskLayout,
 	children: KIOSK_CHILDREN_ROUTES,
 }

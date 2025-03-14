@@ -1,5 +1,5 @@
 <template>
-	<nav class="items-start gap-2 grid px-2 font-medium text-lg sm:text-sm overflow-y-auto">
+	<nav class="items-start gap-2 grid px-2 overflow-y-auto font-medium sm:text-sm text-lg">
 		<div
 			v-for="item in accessibleNavItems"
 			:key="isCollapsibleNavItem(item) ? item.label : item.routeKey"

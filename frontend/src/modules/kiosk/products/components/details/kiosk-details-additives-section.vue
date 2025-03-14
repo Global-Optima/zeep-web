@@ -7,7 +7,7 @@
 		>
 			<div v-if="category.additives.length > 0">
 				<p class="font-medium text-3xl">{{ category.name }}</p>
-				<div class="gap-4 grid grid-cols-2 mt-5">
+				<div class="gap-4 grid grid-cols-1 md:grid-cols-2 mt-5">
 					<KioskDetailsAdditivesCard
 						v-for="additive in category.additives"
 						:key="additive.additiveId"

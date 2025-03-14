@@ -46,7 +46,18 @@ export interface KaspiTransactionStatus {
 	data: {
 		processId: string
 		status: 'wait' | 'success' | 'fail' | 'unknown'
-		subStatus?: string
+		subStatus:
+			| 'Initialize'
+			| 'WaitUser'
+			| 'WaitForQrConfirmation'
+			| 'ProcessingCard'
+			| 'WaitForPinCode'
+			| 'ProcessRefund'
+			| 'QrTransactionSuccess'
+			| 'QrTransactionFailure'
+			| 'CardTransactionSuccess'
+			| 'CardTransactionFailure'
+			| 'ProcessCancelled'
 		transactionId: string
 		message?: string
 		addInfo?: {
@@ -55,7 +66,7 @@ export interface KaspiTransactionStatus {
 			LoanTerm?: number
 			LoanOfferName?: string
 		}
-		chequeInfo?: QRPaymentInfo | CardPaymentInfo
+		chequeInfo: QRPaymentInfo | CardPaymentInfo
 	}
 }
 
@@ -98,7 +109,7 @@ export interface KaspiDeviceInfo {
 }
 
 export const KASPI_CONFIG_STORAGE_KEY = 'ZEEP_KASPI_CONFIG'
-export const KASPI_TOKENS_STORAGE_KEY = 'ZEEP_KASPI_CONFIG'
+export const KASPI_TOKENS_STORAGE_KEY = 'ZEEP_KASPI_TOKENS'
 
 export const getKaspiConfig = () => {
 	const savedConfig = localStorage.getItem(KASPI_CONFIG_STORAGE_KEY)
@@ -186,48 +197,47 @@ export class KaspiService {
 	}
 
 	private async pollPaymentStatus(processId: string): Promise<TransactionDTO> {
-		return new Promise<TransactionDTO>(async (resolve, reject) => {
-			const poll = async () => {
+		return new Promise(async (resolve, reject) => {
+			const checkStatus = async () => {
 				try {
-					const statusResponse = await this.getTransactionStatus(processId)
-					const { status, message, transactionId, chequeInfo } = statusResponse.data
+					const response = await this.getTransactionStatus(processId)
 
-					if (status === 'success') {
-						if (!chequeInfo) {
-							reject(new Error('Invalid payment response: Missing cheque information'))
+					if (response.data.status === 'success') {
+						if (!response.data.chequeInfo) {
+							reject(new Error('Invalid payment data'))
 							return
 						}
-
-						resolve({
-							bin: chequeInfo.bin,
-							transactionId: transactionId,
-							processId,
-							paymentMethod: chequeInfo.method,
-							amount: Number(chequeInfo.amount),
-							currency: 'KZT',
-							qrNumber: chequeInfo.method === 'qr' ? chequeInfo.orderNumber : undefined,
-							cardMask: chequeInfo.method === 'card' ? chequeInfo.cardMask : undefined,
-							icc: chequeInfo.method === 'card' ? chequeInfo.icc : undefined,
-						})
-					}
-
-					if (status === 'fail') {
-						reject(new Error(`Payment failed: ${message}`))
+						resolve(this.mapTransactionResponse(response))
 						return
 					}
 
-					setTimeout(poll, 1000)
+					if (['fail', 'unknown'].includes(response.data.status)) {
+						reject(new Error(response.data.message))
+						return
+					}
+
+					setTimeout(checkStatus, 1000)
 				} catch (error) {
-					reject(
-						new Error(
-							`Status check failed: ${error instanceof Error ? error.message : 'Unexpected error'}`,
-						),
-					)
+					reject(error)
 				}
 			}
 
-			poll()
+			checkStatus()
 		})
+	}
+
+	private mapTransactionResponse({ data }: KaspiTransactionStatus): TransactionDTO {
+		return {
+			bin: data.chequeInfo.bin,
+			transactionId: data.transactionId,
+			processId: data.processId,
+			paymentMethod: data.chequeInfo.method,
+			amount: Number(data.chequeInfo.amount),
+			currency: 'KZT',
+			qrNumber: data.chequeInfo.method === 'qr' ? data.chequeInfo.orderNumber : undefined,
+			cardMask: data.chequeInfo.method === 'card' ? data.chequeInfo.cardMask : undefined,
+			icc: data.chequeInfo.method === 'card' ? data.chequeInfo.icc : undefined,
+		}
 	}
 
 	private saveToken(): void {
