@@ -197,7 +197,7 @@ func setupMockStorage() *storage.StorageRepository {
 func setupRouter(dbHandler *database.DBHandler, redis *database.RedisClient) *gin.Engine {
 	router := gin.New()
 	utils.InitValidators()
-	//router.Use(middleware.SanitizeMiddleware())
+	// router.Use(middleware.SanitizeMiddleware())
 	router.Use(logger.ZapLoggerMiddleware())
 
 	apiRouter := routes.NewRouter(router, "/api", "/test")
@@ -243,6 +243,7 @@ func truncateTables(db *gorm.DB) error {
 	}
 	return nil
 }
+
 func loadMockData(db *gorm.DB) {
 	_, b, _, _ := runtime.Caller(0)
 	baseDir := filepath.Join(filepath.Dir(b), "../../..")

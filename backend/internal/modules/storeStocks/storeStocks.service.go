@@ -2,8 +2,9 @@ package storeStocks
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 
@@ -65,7 +66,6 @@ func (s *storeStockService) AddMultipleStock(storeId uint, dto *types.AddMultipl
 		}
 		return nil
 	})
-
 	if err != nil {
 		wrappedErr := utils.WrapError("error adding multiple stock elements", err)
 		s.logger.Error(wrappedErr)

@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -169,7 +170,6 @@ func (s *storeProductService) GetStoreProductSizeByID(storeID, storeProductSizeI
 }
 
 func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.CreateStoreProductDTO) (uint, error) {
-
 	if len(dto.ProductSizes) > 0 {
 		inputSizeIDs := make([]uint, len(dto.ProductSizes))
 		for i, productSize := range dto.ProductSizes {

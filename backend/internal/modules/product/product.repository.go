@@ -75,7 +75,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		Preload("Unit").
 		Preload("Additives.Additive.Category").
 		Preload("Additives.Additive.Unit").
-		Preload("Additives.Additive.Ingredients").
+		Preload("Additives.Additive.Ingredients.Ingredient").
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
 		Preload("ProductSizeIngredients.Ingredient.Unit").
 		First(&productSize, productSizeID).Error

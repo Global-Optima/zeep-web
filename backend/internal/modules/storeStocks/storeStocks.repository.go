@@ -3,9 +3,10 @@ package storeStocks
 import (
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-	"time"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 
@@ -284,7 +285,6 @@ func (r *storeStockRepository) GetStockById(stockId uint, filter *contexts.Store
 }
 
 func (r *storeStockRepository) UpdateStock(storeId, stockId uint, dto *types.UpdateStoreStockDTO) error {
-
 	if storeId == 0 {
 		return fmt.Errorf("storeId cannot be 0")
 	}
@@ -378,7 +378,6 @@ func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, storePr
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -419,7 +418,6 @@ func (r *storeStockRepository) DeductStockByAdditiveTechCart(storeID, storeAddit
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -468,7 +466,6 @@ func (r *storeStockRepository) deductProductSizeIngredientStock(tx *gorm.DB, sto
 		Preload("Ingredient.Unit").
 		Where("store_id = ? AND ingredient_id = ?", storeID, ingredient.IngredientID).
 		First(&existingStock).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("stock not found for ingredient ID %d", ingredient.IngredientID)
@@ -505,7 +502,6 @@ func (r *storeStockRepository) deductAdditiveIngredientStock(tx *gorm.DB, storeI
 		Preload("Ingredient.Unit").
 		Where("store_id = ? AND ingredient_id = ?", storeID, ingredient.IngredientID).
 		First(&existingStock).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("stock not found for ingredient ID %d", ingredient.IngredientID)
@@ -545,7 +541,6 @@ func (r *storeStockRepository) FindEarliestExpirationForIngredient(ingredientID,
 		Select("MIN(stock_request_ingredients.expiration_date) AS earliest_expiration_date").
 		Where("stock_requests.store_id = ? AND stock_materials.ingredient_id = ?", storeID, ingredientID).
 		Scan(&earliestExpirationDate).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

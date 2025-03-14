@@ -3,6 +3,7 @@ package categories
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
+	"go.uber.org/zap"
 )
 
 type CategoryService interface {
@@ -14,12 +15,14 @@ type CategoryService interface {
 }
 
 type categoryService struct {
-	repo CategoryRepository
+	repo   CategoryRepository
+	logger *zap.SugaredLogger
 }
 
-func NewCategoryService(repo CategoryRepository) CategoryService {
+func NewCategoryService(repo CategoryRepository, logger *zap.SugaredLogger) CategoryService {
 	return &categoryService{
-		repo: repo,
+		repo:   repo,
+		logger: logger,
 	}
 }
 
@@ -61,10 +64,17 @@ func (s *categoryService) CreateCategory(dto *types.CreateProductCategoryDTO) (u
 }
 
 func (s *categoryService) UpdateCategory(id uint, dto *types.UpdateProductCategoryDTO) error {
-	category := types.UpdateToCategory(dto)
-
-	err := s.repo.UpdateCategory(id, category)
+	category, err := s.repo.GetCategoryByID(id)
 	if err != nil {
+		s.logger.Error("Error updating category during finding", zap.Error(err))
+		return err
+	}
+
+	types.UpdateToCategory(dto, category)
+
+	err = s.repo.UpdateCategory(id, category)
+	if err != nil {
+		s.logger.Error("Error updating category", zap.Error(err))
 		return err
 	}
 

@@ -3,6 +3,7 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -101,7 +102,6 @@ func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderD
 
 func (s *orderService) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetAllBaristaOrders(filter)
-
 	if err != nil {
 		wrappedErr := fmt.Errorf("error getting barista orders: %w", err)
 		s.logger.Error(wrappedErr.Error())
@@ -429,7 +429,6 @@ func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
 		}
 
 		err = s.orderRepo.UpdateOrderStatus(orderID, newStatus)
-
 		if err != nil {
 			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
 			s.logger.Error(wrappedErr.Error())
@@ -509,7 +508,6 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 		}
 
 		err = s.orderRepo.UpdateOrderStatus(order.ID, newStatus)
-
 		if err != nil {
 			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
 			s.logger.Error(wrappedErr.Error())
@@ -838,7 +836,7 @@ func (s *orderService) SuccessOrderPayment(orderID uint, dto *types.TransactionD
 	paymentTransaction := types.ToTransactionModel(dto, orderID, data.TransactionTypePayment)
 	err := s.orderRepo.HandlePaymentSuccess(orderID, paymentTransaction)
 	if err != nil {
-		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
+		s.logger.Errorf("failed to handle the order %d success", err)
 		return err
 	}
 	return nil
@@ -850,5 +848,6 @@ func (s *orderService) FailOrderPayment(orderID uint) error {
 		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
 		return err
 	}
+
 	return nil
 }

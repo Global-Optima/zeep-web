@@ -2,9 +2,10 @@ package types
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"strings"
 )
 
 type UpdateEmployeeModels struct {
@@ -39,7 +40,7 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 		return nil, fmt.Errorf("%w: invalid role specified: %s", ErrValidation, input.Role)
 	}
 
-	var workdays = make([]data.EmployeeWorkday, len(input.Workdays))
+	workdays := make([]data.EmployeeWorkday, len(input.Workdays))
 
 	for i, workday := range input.Workdays {
 		validatedWorkday, err := ValidateWorkday(&workday)
@@ -55,7 +56,7 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 		Email:          input.Email,
 		Phone:          utils.FormatPhoneInput(input.Phone),
 		HashedPassword: hashedPassword,
-		IsActive:       &input.IsActive,
+		IsActive:       input.IsActive,
 		Workdays:       workdays,
 	}
 
@@ -71,7 +72,7 @@ func PrepareUpdateFields(input *UpdateEmployeeDTO) (*UpdateEmployeeModels, error
 		employee.LastName = *input.LastName
 	}
 	if input.IsActive != nil {
-		employee.IsActive = input.IsActive
+		employee.IsActive = *input.IsActive
 	}
 
 	workdays := make([]data.EmployeeWorkday, len(input.Workdays))

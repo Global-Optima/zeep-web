@@ -15,10 +15,10 @@ import (
 type EventType string
 
 const (
-	EventTypeInitialData  EventType = "initial_data"
-	EventTypeOrderCreated EventType = "order_created"
-	EventTypeOrderUpdated EventType = "order_updated"
-	EventTypeOrderDeleted EventType = "order_deleted"
+	EventTypeInitialData    EventType = "initial_data"
+	EventTypeOrderSucceeded EventType = "order_succeeded"
+	EventTypeOrderUpdated   EventType = "order_updated"
+	EventTypeOrderDeleted   EventType = "order_deleted"
 )
 
 type WebSocketMessage struct {
@@ -119,9 +119,9 @@ func (h *Hub) BroadcastMessage(storeID uint, eventType EventType, payload interf
 	return nil
 }
 
-// BroadcastOrderCreated broadcasts an order creation event.
-func BroadcastOrderCreated(storeID uint, order types.OrderDTO) {
-	_ = GetHubInstance().BroadcastMessage(storeID, EventTypeOrderCreated, order)
+// BroadcastOrderSucceeded broadcasts an order creation event.
+func BroadcastOrderSucceeded(storeID uint, order types.OrderDTO) {
+	_ = GetHubInstance().BroadcastMessage(storeID, EventTypeOrderSucceeded, order)
 }
 
 // BroadcastOrderUpdated broadcasts an order update event.

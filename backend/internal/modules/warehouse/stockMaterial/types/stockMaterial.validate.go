@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
@@ -57,8 +56,6 @@ func ValidateAndApplyUpdate(stockMaterial *data.StockMaterial, req *UpdateStockM
 	if req.IsActive != nil {
 		stockMaterial.IsActive = *req.IsActive
 	}
-
-	stockMaterial.UpdatedAt = time.Now()
 
 	return stockMaterial, nil
 }

@@ -4,6 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"mime"
+	"mime/multipart"
+	"net/http"
+	"net/url"
+	"path/filepath"
+	"strings"
+	"sync"
+
 	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
@@ -13,14 +22,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"golang.org/x/sync/errgroup"
-	"io"
-	"mime"
-	"mime/multipart"
-	"net/http"
-	"net/url"
-	"path/filepath"
-	"strings"
-	"sync"
 )
 
 const (
@@ -60,7 +61,6 @@ func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (St
 		ConvertedImagesPrefix: IMAGES_CONVERTED_STORAGE_REPO_KEY,
 		ConvertedVideosPrefix: VIDEOS_CONVERTED_STORAGE_REPO_KEY,
 	})
-
 	if err != nil {
 		return nil, err
 	}

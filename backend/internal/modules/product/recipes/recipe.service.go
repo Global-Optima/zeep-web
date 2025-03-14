@@ -2,6 +2,7 @@ package recipes
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -27,7 +28,6 @@ func NewRecipeService(repo RecipeRepository, logger *zap.SugaredLogger) RecipeSe
 }
 
 func (s *recipeService) CreateOrReplaceRecipeSteps(productID uint, dtos []types.CreateOrReplaceRecipeStepDTO) ([]uint, error) {
-
 	recipeSteps := types.CreateToRecipeStepModel(productID, dtos)
 
 	ids, err := s.repo.CreateOrReplaceRecipeStepsByProductID(productID, recipeSteps)

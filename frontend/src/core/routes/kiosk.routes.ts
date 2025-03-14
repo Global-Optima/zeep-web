@@ -22,6 +22,13 @@ export const KIOSK_CHILDREN_ROUTES = {
 		},
 		component: () => import('@/modules/kiosk/landing/pages/kiosk-landing-page.vue'),
 	},
+	KIOSK_CHECKLIST: {
+		path: 'checklist',
+		meta: {
+			title: 'Проверка',
+		},
+		component: () => import('@/modules/kiosk/checklist/pages/kiosk-checklist-page.vue'),
+	},
 } satisfies AppRouteRecord
 
 export const KIOSK_ROUTES_CONFIG: ParentRoutePage = {

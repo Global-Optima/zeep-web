@@ -2,7 +2,7 @@ import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 export enum OrderStatus {
-  WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT',
+	WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT',
 	PENDING = 'PENDING',
 	PREPARING = 'PREPARING',
 	COMPLETED = 'COMPLETED',
@@ -162,7 +162,7 @@ export interface TransactionDTO {
 	paymentMethod: string
 	amount: number
 	currency: string
-	qrNumber: string
-	cardMask: string
-	icc: string
+	qrNumber?: string
+	cardMask?: string
+	icc?: string
 }

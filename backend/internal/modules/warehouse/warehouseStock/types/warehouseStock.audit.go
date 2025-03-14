@@ -11,7 +11,5 @@ type WarehouseStockPayloads struct {
 	ReceiveWarehouseDelivery  *ReceiveWarehouseDelivery   `json:"receiveWarehouseDelivery,omitempty"`
 }
 
-var (
-	UpdateWarehouseStockAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
-		data.UpdateOperation, data.WarehouseStockComponent, &WarehouseStockPayloads{})
-)
+var UpdateWarehouseStockAuditFactory = shared.NewAuditWarehouseActionExtendedFactory(
+	data.UpdateOperation, data.WarehouseStockComponent, &WarehouseStockPayloads{})

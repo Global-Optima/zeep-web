@@ -5,6 +5,4 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	ErrProductAlreadyExists = moduleErrors.NewModuleError(errors.New("product already exists"))
-)
+var ErrProductAlreadyExists = moduleErrors.NewModuleError(errors.New("product already exists"))

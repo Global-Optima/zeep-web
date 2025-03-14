@@ -2,9 +2,10 @@ package audit
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"reflect"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func ExcludeEmptyJSONFields(input interface{}) (map[string]interface{}, error) {

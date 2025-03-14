@@ -45,6 +45,8 @@ interface SelectedAdditiveTypesDTO {
   isDefault: boolean
   name: string
   categoryName: string
+  size: number
+  unitName: string
   imageUrl: string
 }
 
@@ -111,6 +113,8 @@ function addAdditive(additive: AdditiveDTO) {
       isDefault: false,
       name: additive.name,
       categoryName: additive.category.name,
+      size: additive.size,
+      unitName: additive.unit.name,
       imageUrl: additive.imageUrl,
     })
   }
@@ -126,10 +130,6 @@ function removeIngredient(index: number) {
 
 function toggleDefault(index: number) {
   additives.value[index].isDefault = !additives.value[index].isDefault
-}
-
-function sortAdditives() {
-  return [...additives.value].sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
 }
 
 const onSubmit = handleSubmit((formValues) => {
@@ -330,13 +330,14 @@ function selectUnit(unit: UnitDTO) {
 								<TableHead></TableHead>
 								<TableHead>Название</TableHead>
 								<TableHead>Категория</TableHead>
+								<TableHead>Размер</TableHead>
 								<TableHead>По умолчанию</TableHead>
 								<TableHead></TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
 							<TableRow
-								v-for="(additive, index) in sortAdditives()"
+								v-for="(additive, index) in additives"
 								:key="additive.additiveId"
 							>
 								<TableCell>
@@ -348,6 +349,7 @@ function selectUnit(unit: UnitDTO) {
 								</TableCell>
 								<TableCell>{{ additive.name }}</TableCell>
 								<TableCell>{{ additive.categoryName }}</TableCell>
+								<TableCell>{{ additive.size}} {{additive.unitName}}</TableCell>
 								<TableCell class="text-center">
 									<Input
 										type="checkbox"

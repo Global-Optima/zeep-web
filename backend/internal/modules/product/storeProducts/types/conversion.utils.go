@@ -55,7 +55,7 @@ func MapToStoreProductDetailsDTO(sp *data.StoreProduct) StoreProductDetailsDTO {
 func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 	var spsPrices []float64
 	var spsMinPrice float64 = 0
-	var spsCount = len(sp.StoreProductSizes)
+	spsCount := len(sp.StoreProductSizes)
 
 	if sp.StoreProductSizes != nil && spsCount > 0 {
 		for _, storeProductSize := range sp.StoreProductSizes {
@@ -71,8 +71,8 @@ func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 }
 
 func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSizeDetailsDTO {
-	var additives = make([]productTypes.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
-	var ingredients = make([]productTypes.ProductSizeIngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
+	additives := make([]productTypes.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
+	ingredients := make([]productTypes.ProductSizeIngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
 
 	for i, productSizeAdditive := range sps.ProductSize.Additives {
 		additives[i] = productTypes.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)

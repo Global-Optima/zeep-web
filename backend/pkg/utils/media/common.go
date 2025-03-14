@@ -3,7 +3,6 @@ package media
 import (
 	"bytes"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"mime"
@@ -13,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type FileData struct {

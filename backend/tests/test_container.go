@@ -27,10 +27,9 @@ var (
 
 func NewTestContainer() *container.Container {
 	once.Do(func() {
-		var cfg *config.Config
 		var err error
-
-		cfg, err = config.LoadTestConfig()
+		// Initialize cfg first
+		cfg, err := config.LoadTestConfig()
 		if err != nil {
 			log.Println("failed to load test configuration from file, trying to load from env...")
 			cfg, err = LoadConfigFromEnv()
@@ -65,7 +64,7 @@ func NewTestContainer() *container.Container {
 
 		r := gin.New()
 		utils.InitValidators()
-		//r.Use(middleware.SanitizeMiddleware())
+		// r.Use(middleware.SanitizeMiddleware())
 		r.Use(logger.ZapLoggerMiddleware())
 		r.Use(gin.Recovery())
 

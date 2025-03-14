@@ -108,8 +108,8 @@ func (r *stockRequestRepository) GetStockRequests(filter types.GetStockRequestsF
 			Joins("JOIN stock_request_ingredients sri ON sri.stock_request_id = stock_requests.id").
 			Joins("JOIN stock_materials sm ON sri.stock_material_id = sm.id").
 			Where(`
-				sm.name ILIKE ? OR 
-				sm.description ILIKE ? OR 
+				sm.name ILIKE ? OR
+				sm.description ILIKE ? OR
 				sm.barcode ILIKE ?
 			`, search, search, search).
 			Group("stock_requests.id").
@@ -145,7 +145,6 @@ func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.Stoc
 		Preload("Ingredients.StockMaterial.Unit").
 		First(&stockRequest, requestID).
 		Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +171,6 @@ func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouse
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -317,7 +315,6 @@ func (r *stockRequestRepository) GetOpenCartByStoreID(storeID uint) (*data.Stock
 		Preload("Ingredients.StockMaterial.Unit").
 		Where("store_id = ? AND status = ?", storeID, data.StockRequestCreated).
 		First(&request).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +338,6 @@ func (r *stockRequestRepository) AddDetails(stockRequestID uint, newDetails []ty
 	err = r.db.Model(&data.StockRequest{}).
 		Where("id = ?", stockRequestID).
 		Update("details", datatypes.JSON(updatedDetailsJSON)).Error
-
 	if err != nil {
 		return fmt.Errorf("failed to update details for stock request ID %d: %w", stockRequestID, err)
 	}

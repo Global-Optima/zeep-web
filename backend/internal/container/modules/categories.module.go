@@ -15,7 +15,7 @@ type CategoriesModule struct {
 
 func NewCategoriesModule(base *common.BaseModule, auditService audit.AuditService) *CategoriesModule {
 	repo := categories.NewCategoryRepository(base.DB)
-	service := categories.NewCategoryService(repo)
+	service := categories.NewCategoryService(repo, base.Logger)
 	handler := categories.NewCategoryHandler(service, auditService)
 
 	base.Router.RegisterProductCategoriesRoutes(handler)

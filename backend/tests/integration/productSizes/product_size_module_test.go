@@ -27,6 +27,7 @@ func TestProductEndpoints(t *testing.T) {
 					"basePrice":   4.99,
 					"ingredients": []map[string]interface{}{{"ingredientId": 2, "quantity": 5.0}},
 					"additives":   []map[string]interface{}{{"additiveId": 1, "isDefault": false}},
+					"machineId":   "TEST0000111122223333000010",
 				},
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusCreated,

@@ -83,9 +83,11 @@ var RoleManagePermissions = map[EmployeeRole][]EmployeeRole{
 	RoleWarehouseManager:       {RoleWarehouseEmployee},
 	RoleFranchiseManager:       {RoleStoreManager, RoleBarista},
 	RoleRegionWarehouseManager: {RoleWarehouseManager, RoleWarehouseEmployee},
-	RoleAdmin: {RoleOwner, RoleFranchiseOwner, RoleFranchiseManager,
+	RoleAdmin: {
+		RoleOwner, RoleFranchiseOwner, RoleFranchiseManager,
 		RoleRegionWarehouseManager, RoleStoreManager, RoleWarehouseManager,
-		RoleBarista, RoleWarehouseEmployee},
+		RoleBarista, RoleWarehouseEmployee,
+	},
 }
 
 func CanManageRole(currentRole, targetRole EmployeeRole) bool {
@@ -267,7 +269,7 @@ type Employee struct {
 	Phone              string              `gorm:"size:16;not null"`
 	Email              string              `gorm:"size:255;not null" sort:"email"`
 	HashedPassword     string              `gorm:"size:255;not null"`
-	IsActive           *bool               `gorm:"not null" sort:"isActive"`
+	IsActive           bool                `gorm:"not null" sort:"isActive"`
 	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
 	RegionEmployee     *RegionEmployee     `gorm:"foreignKey:EmployeeID"`

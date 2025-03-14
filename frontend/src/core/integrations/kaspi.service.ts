@@ -1,10 +1,9 @@
 import type { TransactionDTO } from '@/modules/admin/store-orders/models/orders.models'
-import type { PaymentMethod } from '@/modules/kiosk/cart/models/kiosk-cart.models'
 import axios, { type AxiosInstance } from 'axios'
 
 export interface KaspiConfig {
-	posIpAddress: string
-	integrationName: string
+	host: string
+	name: string
 	timeout?: number
 }
 
@@ -48,7 +47,7 @@ export interface KaspiTransactionStatus {
 		processId: string
 		status: 'wait' | 'success' | 'fail' | 'unknown'
 		subStatus?: string
-		transactionId?: string
+		transactionId: string
 		message?: string
 		addInfo?: {
 			IsOffer?: boolean
@@ -98,14 +97,34 @@ export interface KaspiDeviceInfo {
 	}
 }
 
+export const KASPI_CONFIG_STORAGE_KEY = 'ZEEP_KASPI_CONFIG'
+export const KASPI_TOKENS_STORAGE_KEY = 'ZEEP_KASPI_CONFIG'
+
+export const getKaspiConfig = () => {
+	const savedConfig = localStorage.getItem(KASPI_CONFIG_STORAGE_KEY)
+	if (savedConfig) {
+		try {
+			const parsedConfig: KaspiConfig = JSON.parse(savedConfig)
+			return parsedConfig
+		} catch (error) {
+			console.warn('Ошибка загрузки конфигурации:', error)
+		}
+	}
+}
+
+export const saveKaspiConfig = (config: KaspiConfig) => {
+	localStorage.setItem(KASPI_CONFIG_STORAGE_KEY, JSON.stringify(config))
+}
+
 export class KaspiService {
 	private api: AxiosInstance
 	private tokenData: KaspiTokenResponse | null = null
-	private cashierName: string | null = null
+	private config: KaspiConfig
 
 	constructor(config: KaspiConfig) {
+		this.config = config
 		this.api = axios.create({
-			baseURL: `https://${config.posIpAddress}:8080/v2`,
+			baseURL: `https://${config.host}:8080/v2`,
 			timeout: config.timeout || 60000,
 		})
 
@@ -132,7 +151,7 @@ export class KaspiService {
 		)
 	}
 
-	async awaitPayment(method: PaymentMethod): Promise<TransactionDTO> {
+	async awaitPaymentTest(): Promise<TransactionDTO> {
 		await new Promise(resolve => setTimeout(resolve, 5000)) // Simulate delay
 
 		// Randomize success/failure (50% chance each)
@@ -146,7 +165,7 @@ export class KaspiService {
 			bin: '123456',
 			transactionId: 'TX-' + Date.now(),
 			processId: 'PROC-' + (Math.random() * 1e5).toFixed(0),
-			paymentMethod: method,
+			paymentMethod: 'card',
 			amount: 1500,
 			currency: 'KZT',
 			qrNumber: 'QR-' + (Math.random() * 1e6).toFixed(0),
@@ -155,25 +174,82 @@ export class KaspiService {
 		}
 	}
 
+	public async awaitPayment(amount: number): Promise<TransactionDTO> {
+		try {
+			const initiateResponse = await this.initiatePayment({ amount })
+			return this.pollPaymentStatus(initiateResponse.data.processId)
+		} catch (error) {
+			throw new Error(
+				`Payment initiation failed: ${error instanceof Error ? error.message : 'Unexpected error'}`,
+			)
+		}
+	}
+
+	private async pollPaymentStatus(processId: string): Promise<TransactionDTO> {
+		return new Promise<TransactionDTO>(async (resolve, reject) => {
+			const poll = async () => {
+				try {
+					const statusResponse = await this.getTransactionStatus(processId)
+					const { status, message, transactionId, chequeInfo } = statusResponse.data
+
+					if (status === 'success') {
+						if (!chequeInfo) {
+							reject(new Error('Invalid payment response: Missing cheque information'))
+							return
+						}
+
+						resolve({
+							bin: chequeInfo.bin,
+							transactionId: transactionId,
+							processId,
+							paymentMethod: chequeInfo.method,
+							amount: Number(chequeInfo.amount),
+							currency: 'KZT',
+							qrNumber: chequeInfo.method === 'qr' ? chequeInfo.orderNumber : undefined,
+							cardMask: chequeInfo.method === 'card' ? chequeInfo.cardMask : undefined,
+							icc: chequeInfo.method === 'card' ? chequeInfo.icc : undefined,
+						})
+					}
+
+					if (status === 'fail') {
+						reject(new Error(`Payment failed: ${message}`))
+						return
+					}
+
+					setTimeout(poll, 1000)
+				} catch (error) {
+					reject(
+						new Error(
+							`Status check failed: ${error instanceof Error ? error.message : 'Unexpected error'}`,
+						),
+					)
+				}
+			}
+
+			poll()
+		})
+	}
+
 	private saveToken(): void {
 		if (this.tokenData) {
-			localStorage.setItem('kaspi_token', JSON.stringify(this.tokenData))
+			localStorage.setItem(KASPI_TOKENS_STORAGE_KEY, JSON.stringify(this.tokenData))
 		}
 	}
 
 	private loadToken(): void {
-		const savedToken = localStorage.getItem('kaspi_token')
+		const savedToken = localStorage.getItem(KASPI_TOKENS_STORAGE_KEY)
 		if (savedToken) {
 			this.tokenData = JSON.parse(savedToken)
 		}
 	}
 
-	async registerTerminal(name: string): Promise<KaspiTokenResponse> {
+	async registerTerminal(): Promise<KaspiTokenResponse> {
 		try {
-			const response = await this.api.get<KaspiTokenResponse>('/register', { params: { name } })
+			const response = await this.api.get<KaspiTokenResponse>('/register', {
+				params: { name: this.config.name },
+			})
 
 			this.tokenData = response.data
-			this.cashierName = name
 			this.saveToken()
 			return response.data
 		} catch (error) {
@@ -182,14 +258,14 @@ export class KaspiService {
 	}
 
 	async refreshAccessToken(): Promise<void> {
-		if (!this.tokenData || !this.cashierName) {
+		if (!this.tokenData || !this.config.name) {
 			throw new Error('Нет действительного токена или имени кассира')
 		}
 
 		try {
 			const response = await this.api.get<KaspiTokenResponse>('/revoke', {
 				params: {
-					name: this.cashierName,
+					name: this.config.name,
 					refreshToken: this.tokenData.data.refreshToken,
 				},
 			})

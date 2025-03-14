@@ -3,6 +3,7 @@ import type {
 	BaseProductDTO,
 	BaseProductSizeDTO,
 	ProductSizeAdditiveDTO,
+	ProductTotalNutrition,
 } from '@/modules/kiosk/products/models/product.model'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
 
@@ -16,14 +17,18 @@ export interface StoreProductDTO extends BaseProductDTO {
 	isAvailable: boolean
 }
 
+export interface StoreProductSizeDTO extends BaseProductSizeDTO {
+	id: number
+	totalNutrition: ProductTotalNutrition
+	productSizeId: number
+	storePrice: number
+}
+
 export interface StoreProductDetailsDTO extends StoreProductDTO {
 	sizes: StoreProductSizeDetailsDTO[]
 }
 
-export interface StoreProductSizeDetailsDTO extends BaseProductSizeDTO {
-	id: number
-	productSizeId: number
-	storePrice: number
+export interface StoreProductSizeDetailsDTO extends StoreProductSizeDTO {
 	additives: ProductSizeAdditiveDTO[]
 	ingredients: ProductSizeIngredientDTO[]
 }

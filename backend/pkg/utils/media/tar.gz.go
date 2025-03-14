@@ -29,7 +29,7 @@ func TarGzSingleFile(filenameInsideTar string, fileData []byte) ([]byte, error) 
 
 	header := &tar.Header{
 		Name:       filenameInsideTar,
-		Mode:       0644,
+		Mode:       0o644,
 		Size:       int64(len(fileData)),
 		ModTime:    time.Now(),
 		PAXRecords: map[string]string{"MIME-Type": mimeType},

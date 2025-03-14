@@ -50,7 +50,6 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 
 func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 	const workingHours = 16 // Working hours for a cafe
-	var orderID uint = 0
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		// Lock the store's orders for consistency
@@ -108,9 +107,7 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 		return nil
 	})
 
-	orderID = order.ID
-
-	return orderID, err
+	return order.ID, err
 }
 
 func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error) {
@@ -184,7 +181,6 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
 		Order("created_at ASC").
 		Find(&orders).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch barista orders: %w", err)
 	}
@@ -282,9 +278,25 @@ func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 		Preload("Store").
 		Where("id = ?", orderId).
 		First(&order).Error
-
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrOrderNotFound
+		}
 		return nil, fmt.Errorf("failed to fetch order with ID %d: %w", orderId, err)
+	}
+
+	return &order, nil
+}
+
+func (r *orderRepository) GetRawOrderById(orderId uint) (*data.Order, error) {
+	var order data.Order
+	err := r.db.Where("id = ?", orderId).
+		First(&order).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrOrderNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch raw order with ID %d: %w", orderId, err)
 	}
 
 	return &order, nil
@@ -351,7 +363,6 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 		Joins("JOIN suborders ON suborders.order_id = orders.id").
 		Where("suborders.id = ?", subOrderID).
 		First(&order).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch order for suborder %d: %w", subOrderID, err)
 	}
@@ -388,7 +399,6 @@ func (r *orderRepository) GetOrderDetails(orderID uint, filter *contexts.StoreCo
 	}
 
 	err := query.First(&order).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -435,7 +445,6 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 		Preload("SuborderAdditives.StoreAdditive.Additive").
 		Where("id = ?", suborderID).
 		First(&suborder).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -497,7 +506,7 @@ func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
 }
 
 func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) error {
-	order, err := r.GetOrderById(orderID)
+	order, err := r.GetRawOrderById(orderID)
 	if err != nil {
 		return err
 	}
@@ -510,7 +519,6 @@ func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction 
 		err := tx.Model(&data.Order{}).
 			Where(&data.Order{BaseEntity: data.BaseEntity{ID: orderID}}).
 			Updates(&data.Order{Status: data.OrderStatusPending}).Error
-
 		if err != nil {
 			return err
 		}
@@ -528,7 +536,7 @@ func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction 
 }
 
 func (r *orderRepository) HandlePaymentFailure(orderID uint) error {
-	order, err := r.GetOrderById(orderID)
+	order, err := r.GetRawOrderById(orderID)
 	if err != nil {
 		return err
 	}

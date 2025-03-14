@@ -44,7 +44,6 @@ func NewWarehousesModule(
 	err := cronManager.RegisterJob(scheduler.DailyJob, func() {
 		warehouseStockCronTasks.CheckWarehouseStockNotifications()
 	})
-
 	if err != nil {
 		base.Logger.Errorf("Failed to register warehouse stock cron job: %v", err)
 	}

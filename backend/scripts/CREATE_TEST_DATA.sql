@@ -41,11 +41,11 @@ VALUES
   ('Unused Materials', 'Not used materials');
 
 -- 7. Insert into products
-INSERT INTO products (name, description, image_url, video_url, category_id, machine_id)
+INSERT INTO products (name, description, image_url, video_url, category_id)
 VALUES
-  ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1, 'TEST0000111122223333000001'),
-  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2, 'TEST0000111122223333000002'),
-  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1, 'TEST0000111122223333000003');
+  ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1),
+  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2),
+  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1);
 
 -- 8. Insert into recipe_steps (for Espresso)
 INSERT INTO recipe_steps (product_id, step, name, description, image_url)
@@ -54,11 +54,11 @@ VALUES
   (1, 2, 'Tamp', 'Tamp the coffee', 'http://example.com/tamp.png');
 
 -- 9. Insert into product_sizes
-INSERT INTO product_sizes (name, unit_id, base_price, size, product_id)
+INSERT INTO product_sizes (name, unit_id, base_price, size, product_id, machine_id)
 VALUES
-  ('S', 1, 2.50, 250, 1),
-  ('M', 1, 3.50, 350, 1),
-  ('S', 2, 4.50, 245, 3);
+  ('S', 1, 2.50, 250, 1, 'TEST0000111122223333000001'),
+  ('M', 1, 3.50, 350, 1, 'TEST0000111122223333000002'),
+  ('S', 2, 4.50, 245, 3, 'TEST0000111122223333000003');
 
 -- 10. Insert into additives
 INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_url, machine_id)
@@ -110,11 +110,11 @@ VALUES
     (1, 2, false);
 
 -- 19. Insert into ingredients
-INSERT INTO ingredients (name, calories, fat, carbs, proteins, expiration_in_days, unit_id, category_id)
+INSERT INTO ingredients (name, calories, fat, carbs, proteins, expiration_in_days, unit_id, category_id, is_allergen)
 VALUES
-  ('Coffee Beans', 5, 0, 0, 0, 365, 1, 1),
-  ('Milk', 42, 1, 5, 3, 7, 1, 1),
-  ('Unused ingredient', 5, 0, 0, 0, 365, 1, 1);
+  ('Coffee Beans', 5, 0, 0, 0, 365, 1, 1, true),
+  ('Milk', 42, 1, 5, 3, 7, 1, 1, false),
+  ('Unused ingredient', 5, 0, 0, 0, 365, 1, 1, false);
 
 -- 20. Insert into product_size_ingredients
 INSERT INTO product_size_ingredients (ingredient_id, product_size_id, quantity)

@@ -1,12 +1,13 @@
 package franchisees
 
 import (
+	"slices"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 	"github.com/gin-gonic/gin"
-	"slices"
 )
 
 type FranchiseeService interface {

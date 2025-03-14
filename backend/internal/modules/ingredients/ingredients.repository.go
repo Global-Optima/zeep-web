@@ -12,6 +12,7 @@ type IngredientRepository interface {
 	UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
+	GetRawIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error)
 	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
 	GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error)
@@ -37,7 +38,17 @@ func (r *ingredientRepository) CreateIngredient(ingredient *data.Ingredient) (ui
 func (r *ingredientRepository) UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error {
 	return r.db.Model(&data.Ingredient{}).
 		Where("id = ?", ingredientID).
-		Updates(ingredient).Error
+		Save(ingredient).Error
+}
+
+func (r *ingredientRepository) GetRawIngredientByID(ingredientID uint) (*data.Ingredient, error) {
+	var ingredient data.Ingredient
+	err := r.db.First(&ingredient, ingredientID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &ingredient, nil
 }
 
 func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingredient, error) {
@@ -45,7 +56,6 @@ func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingre
 	err := r.db.Preload("Unit").
 		Preload("IngredientCategory").
 		First(&ingredient, ingredientID).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +70,6 @@ func (r *ingredientRepository) GetIngredientsByIDs(ingredientIDs []uint) ([]data
 		Preload("IngredientCategory").
 		Where("id IN (?)", ingredientIDs).
 		Find(&ingredients).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +95,9 @@ func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([
 	}
 	if filter.MaxCalories != nil {
 		query = query.Where("calories <= ?", *filter.MaxCalories)
+	}
+	if filter.IsAllergen != nil {
+		query = query.Where("is_allergen = ?", *filter.IsAllergen)
 	}
 
 	// Apply pagination

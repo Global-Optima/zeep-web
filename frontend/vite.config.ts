@@ -40,50 +40,6 @@ export default defineConfig({
 					{ src: '/android-icon-192x192.png', sizes: '192x192', type: 'image/png' },
 				],
 			},
-			workbox: {
-				runtimeCaching: [
-					// Navigation caching for instant page transitions
-					{
-						urlPattern: ({ request }) => request.mode === 'navigate',
-						handler: 'NetworkFirst',
-						options: {
-							cacheName: 'pages',
-							expiration: {
-								maxEntries: 50,
-								maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
-							},
-						},
-					},
-					// Static resources caching
-					{
-						urlPattern: ({ request }) =>
-							request.destination === 'style' ||
-							request.destination === 'script' ||
-							request.destination === 'worker',
-						handler: 'StaleWhileRevalidate',
-						options: {
-							cacheName: 'static-resources',
-							expiration: {
-								maxEntries: 50,
-								maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-							},
-						},
-					},
-					// Image caching
-					{
-						urlPattern: ({ request }) => request.destination === 'image',
-						handler: 'CacheFirst',
-						options: {
-							cacheName: 'images',
-							expiration: {
-								maxEntries: 100,
-								maxAgeSeconds: 60 * 24 * 60 * 60, // 60 days
-							},
-						},
-					},
-				],
-				cleanupOutdatedCaches: true,
-			},
 			devOptions: {
 				enabled: true,
 				type: 'module',

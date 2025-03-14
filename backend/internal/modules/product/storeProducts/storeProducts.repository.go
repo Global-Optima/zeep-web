@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -57,7 +58,6 @@ func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data
 		Where("store_products.store_id = ? AND store_products.is_available = ?", storeID, true).
 		Group("product_categories.id").
 		Find(&categories).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +256,6 @@ func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID 
 		err := tx.Model(&data.StoreProduct{}).
 			Where("store_id = ? AND id = ?", storeID, storeProductID).
 			Update("is_available", &updateModels.StoreProduct.IsAvailable).Error
-
 		if err != nil {
 			return err
 		}
@@ -317,11 +316,10 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 		Preload("ProductSize.Product").
 		Preload("ProductSize.Additives.Additive.Category").
 		Preload("ProductSize.Additives.Additive.Unit").
-		Preload("ProductSize.Additives.Additive.Ingredients").
+		Preload("ProductSize.Additives.Additive.Ingredients.Ingredient").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
 		First(&storeProductSize).Error
-
 	if err != nil {
 		return &storeProductSize, err
 	}
@@ -347,7 +345,6 @@ func (r *storeProductRepository) GetSufficientStoreProductSizeById(
 		Preload("ProductSize.Additives.Additive.Category").
 		Preload("ProductSize.Additives.Additive.Unit").
 		First(&storeProductSize).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to load StoreProductSize (ID=%d): %w", storeProductSizeID, err)
 	}

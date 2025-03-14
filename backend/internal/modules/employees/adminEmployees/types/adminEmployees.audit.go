@@ -6,7 +6,5 @@ import (
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
 
-var (
-	CreateAdminEmployeeAuditFactory = shared.NewAuditActionExtendedFactory(
-		data.CreateOperation, data.AdminEmployeeComponent, &employeesTypes.CreateEmployeeDTO{})
-)
+var CreateAdminEmployeeAuditFactory = shared.NewAuditActionExtendedFactory(
+	data.CreateOperation, data.AdminEmployeeComponent, &employeesTypes.CreateEmployeeDTO{})

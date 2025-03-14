@@ -329,6 +329,7 @@ func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMateria
 		router.POST("/barcodes/generate", middleware.EmployeeRoleMiddleware(), handler.GenerateBarcode)
 	}
 }
+
 func (r *Router) RegisterStockMaterialCategoryRoutes(handler *stockMaterialCategory.StockMaterialCategoryHandler) {
 	router := r.EmployeeRoutes.Group("/stock-material-categories")
 	{
@@ -384,7 +385,7 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 }
 
 func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestHandler) {
-	var stockRequestReadPermissions = append(data.StoreAndWarehousePermissions, data.FranchiseeAndRegionPermissions...)
+	stockRequestReadPermissions := append(data.StoreAndWarehousePermissions, data.FranchiseeAndRegionPermissions...)
 
 	router := r.EmployeeRoutes.Group("/stock-requests")
 	{

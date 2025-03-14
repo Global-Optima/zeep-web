@@ -25,7 +25,6 @@ func (m ModuleError) Error() string {
 }
 
 func (m ModuleError) WithDetails(reason string, details ...string) ModuleErrorInterface {
-
 	return &ModuleError{
 		err:     m.err,
 		reason:  reason,
