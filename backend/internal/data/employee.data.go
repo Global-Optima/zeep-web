@@ -359,6 +359,6 @@ type EmployeeToken struct {
 	BaseEntity
 	Token      string    `gorm:"size:255;not null"`
 	ExpiresAt  time.Time `gorm:"type:timestamp;not null"`
-	EmployeeID uint      `gorm:"index;not null"`
+	EmployeeID uint      `gorm:"unique;index;not null"`
 	Employee   Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 }

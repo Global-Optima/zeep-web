@@ -124,9 +124,17 @@ func (s *storeEmployeeService) GetAllStoreEmployees(storeID uint) ([]employeesTy
 }
 
 func (s *storeEmployeeService) UpdateStoreEmployee(id uint, filter *contexts.StoreContextFilter, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.StoreEmployeeUpdateFields(id, input, role, s.employeeTokenManager)
+	updateFields, err := types.StoreEmployeeUpdateFields(input, role)
 	if err != nil {
 		return err
 	}
+
+	if input.Role != nil {
+		err := s.employeeTokenManager.DeleteTokenByStoreEmployeeID(id)
+		if err != nil {
+			return err
+		}
+	}
+
 	return s.repo.UpdateStoreEmployee(id, filter, updateFields)
 }

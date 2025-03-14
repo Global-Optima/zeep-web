@@ -125,9 +125,17 @@ func (s *warehouseEmployeeService) GetAllWarehouseEmployees(warehouseID uint) ([
 }
 
 func (s *warehouseEmployeeService) UpdateWarehouseEmployee(id uint, filter *contexts.WarehouseContextFilter, input *types.UpdateWarehouseEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.WarehouseEmployeeUpdateFields(id, input, role, s.employeeTokenManager)
+	updateFields, err := types.WarehouseEmployeeUpdateFields(input, role)
 	if err != nil {
 		return err
 	}
+
+	if input.Role != nil {
+		err := s.employeeTokenManager.DeleteTokenByWarehouseEmployeeID(id)
+		if err != nil {
+			return err
+		}
+	}
+
 	return s.repo.UpdateWarehouseEmployee(id, filter, updateFields)
 }

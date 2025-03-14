@@ -121,9 +121,17 @@ func (s *franchiseeEmployeeService) GetAllFranchiseeEmployees(franchiseeID uint)
 }
 
 func (s *franchiseeEmployeeService) UpdateFranchiseeEmployee(id uint, franchiseeID *uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.FranchiseeEmployeeUpdateFields(id, input, role, s.employeeTokenManager)
+	updateFields, err := types.FranchiseeEmployeeUpdateFields(input, role)
 	if err != nil {
 		return err
 	}
+
+	if input.Role != nil {
+		err := s.employeeTokenManager.DeleteTokenByFranchiseeEmployeeID(id)
+		if err != nil {
+			return err
+		}
+	}
+
 	return s.repo.UpdateFranchiseeEmployee(id, franchiseeID, updateFields)
 }

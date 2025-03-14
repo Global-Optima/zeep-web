@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
 
@@ -13,7 +12,7 @@ type UpdateStoreEmployeeModels struct {
 	StoreEmployee *data.StoreEmployee
 }
 
-func StoreEmployeeUpdateFields(storeEmployeeID uint, input *UpdateStoreEmployeeDTO, role data.EmployeeRole, employeeTokenManager employeeToken.EmployeeTokenManager) (*UpdateStoreEmployeeModels, error) {
+func StoreEmployeeUpdateFields(input *UpdateStoreEmployeeDTO, role data.EmployeeRole) (*UpdateStoreEmployeeModels, error) {
 	storeEmployee := &data.StoreEmployee{}
 	if input.StoreID != nil {
 		storeEmployee.StoreID = *input.StoreID
@@ -27,11 +26,6 @@ func StoreEmployeeUpdateFields(storeEmployeeID uint, input *UpdateStoreEmployeeD
 			return nil, fmt.Errorf("%s %w %s", role, employeesTypes.ErrNotAllowedToManageTheRole, *input.Role)
 		}
 		storeEmployee.Role = *input.Role
-
-		err := employeeTokenManager.DeleteTokenByStoreEmployeeID(storeEmployeeID)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	employeeUpdateModels, err := employeesTypes.PrepareUpdateFields(&input.UpdateEmployeeDTO)

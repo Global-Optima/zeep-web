@@ -121,9 +121,17 @@ func (s *regionEmployeeService) GetAllRegionEmployees(regionID uint) ([]employee
 }
 
 func (s *regionEmployeeService) UpdateRegionEmployee(id uint, regionID *uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.RegionEmployeeUpdateFields(id, input, role, s.employeeTokenManager)
+	updateFields, err := types.RegionEmployeeUpdateFields(input, role)
 	if err != nil {
 		return err
 	}
+
+	if input.Role != nil {
+		err := s.employeeTokenManager.DeleteTokenByRegionEmployeeID(id)
+		if err != nil {
+			return err
+		}
+	}
+
 	return s.repo.UpdateRegionEmployee(id, regionID, updateFields)
 }

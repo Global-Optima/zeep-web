@@ -32,13 +32,7 @@ func ValidateCustomer(input CustomerRegisterDTO) error {
 	return nil
 }
 
-// ExtractToken tries to get token from HTTP header or browser cookie. Header is prioritized.
 func ExtractToken(c *gin.Context, headerKey, cookieKey string) (string, error) {
-	authHeader := c.GetHeader(headerKey)
-	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-		return strings.TrimPrefix(authHeader, "Bearer "), nil
-	}
-
 	cookie, err := c.Cookie(cookieKey)
 	if err != nil {
 		return "", err
@@ -52,7 +46,7 @@ func ValidateEmployeeToken(tokenString string, session *EmployeeClaims) error {
 
 	token, err := jwt.ParseWithClaims(tokenString, session, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.JWT.EmployeeSecretKey), nil
-	})
+	}, jwt.WithoutClaimsValidation())
 	if err != nil {
 		return fmt.Errorf("failed to parse token: %w", err)
 	}
@@ -66,8 +60,8 @@ func ValidateCustomerToken(tokenString string, session *CustomerClaims) error {
 	cfg := config.GetConfig()
 
 	token, err := jwt.ParseWithClaims(tokenString, session, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cfg.JWT.EmployeeSecretKey), nil
-	})
+		return []byte(cfg.JWT.CustomerSecretKey), nil
+	}, jwt.WithoutClaimsValidation())
 	if err != nil {
 		return fmt.Errorf("failed to parse token: %w", err)
 	}
