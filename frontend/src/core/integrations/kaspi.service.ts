@@ -98,7 +98,7 @@ export interface KaspiDeviceInfo {
 }
 
 export const KASPI_CONFIG_STORAGE_KEY = 'ZEEP_KASPI_CONFIG'
-export const KASPI_TOKENS_STORAGE_KEY = 'ZEEP_KASPI_CONFIG'
+export const KASPI_TOKENS_STORAGE_KEY = 'ZEEP_KASPI_TOKENS'
 
 export const getKaspiConfig = () => {
 	const savedConfig = localStorage.getItem(KASPI_CONFIG_STORAGE_KEY)
