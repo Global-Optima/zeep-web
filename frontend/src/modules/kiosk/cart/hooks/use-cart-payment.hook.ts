@@ -74,7 +74,6 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 		},
 		onSuccess: () => {
 			onProceed()
-			resetPaymentFlow(false)
 		},
 		onError: err => {
 			console.error('Payment confirmation failed:', err)
