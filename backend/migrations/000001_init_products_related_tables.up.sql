@@ -201,6 +201,7 @@ CREATE TABLE
 		contact_phone valid_phone,
 		contact_email VARCHAR(255),
 		store_hours VARCHAR(255),
+        last_inventory_sync_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ

@@ -47,7 +47,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
+		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
 		storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
 		storeAdditiveIDs, err = storeAdditiveRepoTx.CreateStoreAdditives(storeAdditives)
@@ -55,7 +55,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		if err := m.addStocks(&storeWarehouseRepo, storeID, stockDTOs); err != nil {
+		if err := m.addStocks(&storeStockRepo, storeID, stockDTOs); err != nil {
 			return err
 		}
 
