@@ -1,5 +1,6 @@
 <script setup lang="ts">
 
+import PageLoader from '@/core/components/page-loader/PageLoader.vue'
 import { Button } from '@/core/components/ui/button'
 import { getRouteName } from '@/core/config/routes.config'
 import AppAdminHeader from '@/core/layouts/admin/app-admin-header.vue'
@@ -109,7 +110,21 @@ const layoutLabel = computed(() => {
 			<AppAdminHeader />
 
 			<main class="flex-1 bg-slate-50 p-4 lg:p-6">
-				<RouterView />
+				<RouterView v-slot="{ Component, route }">
+					<template v-if="Component">
+						<Transition
+							name="fade"
+							mode="out-in"
+						>
+							<Suspense>
+								<div :key="route.matched[0]?.path">
+									<component :is="Component" />
+								</div>
+								<template #fallback> <PageLoader /> </template>
+							</Suspense>
+						</Transition>
+					</template>
+				</RouterView>
 			</main>
 		</div>
 	</div>

@@ -2,7 +2,7 @@
 	<div
 		@click="handleClick"
 		:class="[
-      'text-center bg-white rounded-[32px] p-5 flex items-start border-2 gap-8',
+      'text-center bg-white rounded-[32px] p-5 flex items-start border-2 gap-4 md:gap-8',
       isSelected ? 'bg-primary border-primary' : 'border-transparent',
       isDefault  ? 'cursor-not-allowed opacity-60 !border-primary' : 'cursor-pointer',
 
@@ -12,7 +12,7 @@
 		<LazyImage
 			:src="additive.imageUrl"
 			alt="Изображение добавки"
-			class="rounded-md w-24 h-24 object-contain"
+			class="rounded-md size-20 md:size-24 object-contain"
 		/>
 
 		<div class="flex flex-col justify-between items-start w-full h-full">
@@ -26,7 +26,7 @@
 			<div class="flex justify-between items-center w-full">
 				<p
 					:class="[
-          'text-primary text-2xl',
+          'text-primary text-2xl text-left',
           isSelected ? 'text-black' : '',
         ]"
 					data-testid="additive-price"
@@ -34,7 +34,7 @@
 					{{ isDefault ? "Входит в состав" : formatPrice(additive.storePrice) }}
 				</p>
 				<button
-					class="relative rounded-full focus:outline-none sm:size-8"
+					class="relative flex-shrink-0 rounded-full focus:outline-none size-8"
 					:class="[
           isSelected || isDefault ? 'bg-primary' : 'bg-gray-200',
         ]"
@@ -43,7 +43,7 @@
 				>
 					<span
 						v-if="isSelected || isDefault"
-						class="absolute inset-0 bg-white m-auto rounded-full w-3 sm:w-4 h-3 sm:h-4"
+						class="absolute inset-0 bg-white m-auto rounded-full size-3"
 						data-testid="additive-selected-indicator"
 					></span>
 				</button>
