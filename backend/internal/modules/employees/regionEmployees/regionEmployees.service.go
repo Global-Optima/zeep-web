@@ -126,6 +126,13 @@ func (s *regionEmployeeService) UpdateRegionEmployee(id uint, regionID *uint, in
 		return err
 	}
 
+	err = s.repo.UpdateRegionEmployee(id, regionID, updateFields)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update region manager employee", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
 	if input.Role != nil {
 		err := s.employeeTokenManager.DeleteTokenByRegionEmployeeID(id)
 		if err != nil {
@@ -133,5 +140,5 @@ func (s *regionEmployeeService) UpdateRegionEmployee(id uint, regionID *uint, in
 		}
 	}
 
-	return s.repo.UpdateRegionEmployee(id, regionID, updateFields)
+	return nil
 }

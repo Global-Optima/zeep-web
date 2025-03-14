@@ -126,6 +126,13 @@ func (s *franchiseeEmployeeService) UpdateFranchiseeEmployee(id uint, franchisee
 		return err
 	}
 
+	err = s.repo.UpdateFranchiseeEmployee(id, franchiseeID, updateFields)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update franchisee employee", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
 	if input.Role != nil {
 		err := s.employeeTokenManager.DeleteTokenByFranchiseeEmployeeID(id)
 		if err != nil {
@@ -133,5 +140,5 @@ func (s *franchiseeEmployeeService) UpdateFranchiseeEmployee(id uint, franchisee
 		}
 	}
 
-	return s.repo.UpdateFranchiseeEmployee(id, franchiseeID, updateFields)
+	return nil
 }

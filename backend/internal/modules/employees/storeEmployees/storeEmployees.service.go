@@ -129,6 +129,13 @@ func (s *storeEmployeeService) UpdateStoreEmployee(id uint, filter *contexts.Sto
 		return err
 	}
 
+	err = s.repo.UpdateStoreEmployee(id, filter, updateFields)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update store employee", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
 	if input.Role != nil {
 		err := s.employeeTokenManager.DeleteTokenByStoreEmployeeID(id)
 		if err != nil {
@@ -136,5 +143,5 @@ func (s *storeEmployeeService) UpdateStoreEmployee(id uint, filter *contexts.Sto
 		}
 	}
 
-	return s.repo.UpdateStoreEmployee(id, filter, updateFields)
+	return nil
 }
