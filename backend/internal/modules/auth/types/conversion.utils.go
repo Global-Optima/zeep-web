@@ -56,13 +56,8 @@ func MapEmployeeToEmployeeSessionData(employee *data.Employee) (*EmployeeSession
 }
 
 func MapCustomerToClaimsData(customer *data.Customer) *CustomerSession {
-	isVerified := false
-	if customer.IsVerified == nil {
-		isVerified = *customer.IsVerified
-	}
-
 	return &CustomerSession{
 		CustomerID: customer.ID,
-		IsVerified: isVerified,
+		IsVerified: customer.IsVerified,
 	}
 }
