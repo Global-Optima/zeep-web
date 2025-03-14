@@ -7,13 +7,13 @@ import { getKaspiConfig, KaspiService } from '@/core/integrations/kaspi.service'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 
 // Types
-import type { OrderDTO } from '@/modules/admin/store-orders/models/orders.models'
+import type { OrderDTO, TransactionDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { PaymentMethod } from '@/modules/kiosk/cart/models/kiosk-cart.models'
 
 const PAYMENT_TIMEOUT = 120_000 // 2 minutes
 const STORAGE_KEY = 'ZEEP_CART_PAYMENT_COUNTDOWN'
 
-export function useCartPayment(order: OrderDTO | null, onSuccess: () => void, onBack: () => void) {
+export function useCartPayment(order: OrderDTO | null, onProceed: () => void, onBack: () => void) {
 	const isTest: boolean =
 		import.meta.env.VITE_TEST_PAYMENT === undefined
 			? false
@@ -39,6 +39,25 @@ export function useCartPayment(order: OrderDTO | null, onSuccess: () => void, on
 	/* -------------------------------------
 	 * Mutations
 	 * ------------------------------------- */
+	const successOrderPaymentMutation = useMutation({
+		mutationFn: async ({
+			order,
+			transactionDTO,
+		}: {
+			order: OrderDTO
+			transactionDTO: TransactionDTO
+		}) => ordersService.successOrderPayment(order.id, transactionDTO),
+		onSuccess: () => {
+			onProceed()
+			resetPaymentFlow(false)
+		},
+		onError: err => {
+			console.error(err)
+			errorMessage.value = 'Ошибка при отправки платежа. Просим обратиться к персоналу'
+			toast({ title: 'Ошибка', description: errorMessage.value, variant: 'destructive' })
+		},
+	})
+
 	const awaitPaymentMutation = useMutation({
 		mutationFn: async ({ order }: { order: OrderDTO }) => {
 			const kaspiConfig = getKaspiConfig()
@@ -51,13 +70,8 @@ export function useCartPayment(order: OrderDTO | null, onSuccess: () => void, on
 
 			return kaspiService.awaitPayment(order.total)
 		},
-		onSuccess: async (transaction, variables) => {
-			// Mark order paid
-			await ordersService.successOrderPayment(variables.order.id, transaction)
-			// Reset local state
-			resetPaymentFlow(false)
-			// Fire the parent's success callback
-			onSuccess()
+		onSuccess: (transaction, variables) => {
+			successOrderPaymentMutation.mutate({ order: variables.order, transactionDTO: transaction })
 		},
 		onError: err => {
 			console.error(err)
