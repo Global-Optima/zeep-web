@@ -17,132 +17,65 @@ import (
 )
 
 type AuthenticationService interface {
-	EmployeeLogin(email, password string) (*types.TokenPair, error)
-	EmployeeRefreshAccessToken(refreshToken string) (string, error)
+	EmployeeLogin(email, password string) (*types.Token, error)
 	HandleEmployeeLogout(employeeID uint) error
 
 	CustomerRegister(input *types.CustomerRegisterDTO) (uint, error)
-	CustomerLogin(email, password string) (*types.TokenPair, error)
-	CustomerRefreshTokens(refreshToken string) (*types.TokenPair, error)
+	CustomerLogin(email, password string) (*types.Token, error)
 }
 
 type authenticationService struct {
-	repo              AuthenticationRepository
-	customersRepo     customers.CustomerRepository
-	employeesRepo     employees.EmployeeRepository
-	employeeTokenRepo employeeToken.EmployeeTokenRepository
-	logger            *zap.SugaredLogger
+	repo                 AuthenticationRepository
+	customersRepo        customers.CustomerRepository
+	employeesRepo        employees.EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
 func NewAuthenticationService(
 	repo AuthenticationRepository,
 	customersRepo customers.CustomerRepository,
 	employeesRepo employees.EmployeeRepository,
-	employeeTokenRepo employeeToken.EmployeeTokenRepository,
+	employeeTokenManager employeeToken.EmployeeTokenManager,
 	logger *zap.SugaredLogger,
 ) AuthenticationService {
 	return &authenticationService{
-		repo:              repo,
-		customersRepo:     customersRepo,
-		employeesRepo:     employeesRepo,
-		employeeTokenRepo: employeeTokenRepo,
-		logger:            logger,
+		repo:                 repo,
+		customersRepo:        customersRepo,
+		employeesRepo:        employeesRepo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
-func (s *authenticationService) EmployeeLogin(email, password string) (*types.TokenPair, error) {
+func (s *authenticationService) EmployeeLogin(email, password string) (*types.Token, error) {
 	employee, err := s.employeesRepo.GetEmployeeByEmailOrPhone(email, "")
 	if err != nil {
-		s.logger.Error(types.ErrInvalidCredentials)
+		s.logger.Error(err)
 		return nil, types.ErrInvalidCredentials
 	}
-
 	if employee == nil {
 		return nil, errors.New("this employee is not registered")
 	}
-
 	if employee.IsActive == nil || !*employee.IsActive {
 		return nil, types.ErrInactiveEmployee
 	}
-
 	if err := utils.ComparePassword(employee.HashedPassword, password); err != nil {
 		return nil, types.ErrInvalidCredentials
 	}
 
-	employeeData, err := types.MapEmployeeToClaimsData(employee)
+	sessionToken, err := types.GenerateEmployeeJWT(employee.ID)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to map employee claims", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return nil, utils.WrapError("failed to generate session token", err)
 	}
 
-	accessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
-	if err != nil {
-		return nil, utils.WrapError("failed to generate access token", err)
-	}
-
-	err = s.saveEmployeeToken(employee.ID, accessToken)
-	if err != nil {
+	if err := s.updateEmployeeToken(employee.ID, sessionToken); err != nil {
 		wrappedErr := utils.WrapError("failed to save employee token", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	refreshToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenRefresh)
-	if err != nil {
-		return nil, utils.WrapError("failed to generate refresh token", err)
-	}
-
-	tokenPair := types.TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return &tokenPair, nil
-}
-
-func (s *authenticationService) EmployeeRefreshAccessToken(refreshToken string) (string, error) {
-	claims := &types.EmployeeClaims{}
-	err := types.ValidateEmployeeJWT(refreshToken, claims, types.TokenRefresh)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to validate refresh token", err)
-		return "", wrappedErr
-	}
-
-	if claims.EmployeeClaimsData.ID == 0 {
-		wrappedErr := utils.WrapError("invalid refresh token payload", errors.New("id cannot be 0"))
-		return "", wrappedErr
-	}
-
-	employee, err := s.employeesRepo.GetEmployeeByID(claims.EmployeeClaimsData.ID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve employee", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	employeeData, err := types.MapEmployeeToClaimsData(employee)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to map employee claims", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	newAccessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to generate access token", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	err = s.updateEmployeeToken(employee.ID, newAccessToken)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to update employee token", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	return newAccessToken, nil
+	return &types.Token{SessionToken: sessionToken}, nil
 }
 
 func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDTO) (uint, error) {
@@ -186,7 +119,7 @@ func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDT
 	return id, nil
 }
 
-func (s *authenticationService) CustomerLogin(phone, password string) (*types.TokenPair, error) {
+func (s *authenticationService) CustomerLogin(phone, password string) (*types.Token, error) {
 	customer, err := s.repo.GetCustomerByPhone(phone)
 	if err != nil {
 		wrappedErr := utils.WrapError("error retrieving customer", err)
@@ -206,84 +139,29 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*types.To
 		return nil, types.ErrInvalidCredentials
 	}
 
-	employeeData := types.MapCustomerToClaimsData(customer)
-
-	accessToken, err := types.GenerateCustomerJWT(employeeData, types.TokenAccess)
+	sessionToken, err := types.GenerateCustomerJWT(customer.ID)
 	if err != nil {
 		return nil, utils.WrapError("failed to generate access token", err)
 	}
-	refreshToken, err := types.GenerateCustomerJWT(employeeData, types.TokenRefresh)
-	if err != nil {
-		return nil, utils.WrapError("failed to generate refresh token", err)
+
+	token := types.Token{
+		SessionToken: sessionToken,
 	}
 
-	tokenPair := types.TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return &tokenPair, nil
-}
-
-func (s *authenticationService) CustomerRefreshTokens(refreshToken string) (*types.TokenPair, error) {
-	claims := &types.CustomerClaims{}
-	err := types.ValidateCustomerJWT(refreshToken, claims, types.TokenRefresh)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to validate refresh token", err)
-		return nil, wrappedErr
-	}
-
-	if claims.CustomerClaimsData.ID == 0 {
-		wrappedErr := utils.WrapError("invalid refresh token payload", errors.New("id cannot be 0"))
-		return nil, wrappedErr
-	}
-
-	customer, err := s.customersRepo.GetCustomerByID(claims.CustomerClaimsData.ID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve Customer", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	accessClaims := types.MapCustomerToClaimsData(customer)
-
-	accessToken, err := types.GenerateCustomerJWT(accessClaims, types.TokenAccess)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to generate access token", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	customerData := types.MapCustomerToClaimsData(customer)
-
-	refreshToken, err = types.GenerateCustomerJWT(customerData, types.TokenRefresh)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to generate access token", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	tokenPair := &types.TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return tokenPair, nil
+	return &token, nil
 }
 
 func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
-	hashedToken := utils.HashTokenSHA256(token)
-
 	cfg := config.GetConfig()
-	expirationTime := time.Now().Add(cfg.JWT.EmployeeAccessTokenTTL)
+	expirationTime := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
 
-	employeeToken := &data.EmployeeTokens{
-		EmployeeID:  employeeID,
-		HashedToken: hashedToken,
-		ExpiresAt:   expirationTime,
+	employeeToken := &data.EmployeeToken{
+		EmployeeID: employeeID,
+		Token:      token,
+		ExpiresAt:  expirationTime,
 	}
 
-	if err := s.employeeTokenRepo.CreateToken(employeeToken); err != nil {
+	if err := s.employeeTokenManager.CreateToken(employeeToken); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
 
@@ -291,7 +169,7 @@ func (s *authenticationService) saveEmployeeToken(employeeID uint, token string)
 }
 
 func (s *authenticationService) updateEmployeeToken(employeeID uint, token string) error {
-	if err := s.employeeTokenRepo.DeleteTokenByEmployeeID(employeeID); err != nil {
+	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
 		return fmt.Errorf("failed to delete token: %w", err)
 	}
 
@@ -303,7 +181,7 @@ func (s *authenticationService) updateEmployeeToken(employeeID uint, token strin
 }
 
 func (s *authenticationService) HandleEmployeeLogout(employeeID uint) error {
-	if err := s.employeeTokenRepo.DeleteTokenByEmployeeID(employeeID); err != nil {
+	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
 		return fmt.Errorf("failed to delete token: %w", err)
 	}
 

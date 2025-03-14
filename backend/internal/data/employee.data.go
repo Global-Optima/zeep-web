@@ -353,10 +353,10 @@ type EmployeeWorkday struct {
 	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employees"`
 }
 
-type EmployeeTokens struct {
+type EmployeeToken struct {
 	BaseEntity
-	HashedToken string    `gorm:"size:255;not null"`
-	ExpiresAt   time.Time `gorm:"type:timestamp;not null"`
-	EmployeeID  uint      `gorm:"index;not null"`
-	Employee    Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
+	Token      string    `gorm:"size:255;not null"`
+	ExpiresAt  time.Time `gorm:"type:timestamp;not null"`
+	EmployeeID uint      `gorm:"index;not null"`
+	Employee   Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 }

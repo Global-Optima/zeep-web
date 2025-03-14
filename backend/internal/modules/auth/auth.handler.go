@@ -47,7 +47,7 @@ func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.service.CustomerLogin(input.Phone, input.Password)
+	token, err := h.service.CustomerLogin(input.Phone, input.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrValidation):
@@ -60,56 +60,25 @@ func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
 	}
 
 	claims := &types.CustomerClaims{}
-	if err := types.ValidateCustomerJWT(tokenPair.AccessToken, claims, types.TokenAccess); err != nil {
+	if err := types.ValidateCustomerToken(token.SessionToken, claims); err != nil {
 		utils.SendInternalServerError(c, "failed to validate token")
 		return
 	}
 
 	cfg := config.GetConfig()
 
-	utils.SetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.CustomerAccessTokenTTL)
-	utils.SetCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.CustomerRefreshTokenTTL)
+	utils.SetCookie(c, types.CUSTOMER_SESSION_COOKIE_KEY, token.SessionToken, cfg.JWT.CustomerTokenTTL)
 
 	utils.SendSuccessResponse(c, gin.H{
 		"message": "login successful",
 		"data": gin.H{
-			"accessToken":  tokenPair.AccessToken,
-			"refreshToken": tokenPair.RefreshToken,
-		},
-	})
-}
-
-func (h *AuthenticationHandler) CustomerRefresh(c *gin.Context) {
-	token, err := types.ExtractToken(c, types.REFRESH_TOKEN_HEADER, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
-	if err != nil {
-		// Token not found in cookie
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	tokenPair, err := h.service.CustomerRefreshTokens(token)
-	if err != nil {
-		utils.SendErrorWithStatus(c, "invalid token: "+err.Error(), http.StatusUnauthorized)
-		return
-	}
-
-	cfg := config.GetConfig()
-
-	utils.SetCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.CustomerAccessTokenTTL)
-	utils.SetCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.CustomerRefreshTokenTTL)
-
-	utils.SendSuccessResponse(c, gin.H{
-		"message": "refresh successful",
-		"data": gin.H{
-			"accessToken":  tokenPair.AccessToken,
-			"refreshToken": tokenPair.RefreshToken,
+			"sessionToken": token.SessionToken,
 		},
 	})
 }
 
 func (h *AuthenticationHandler) CustomerLogout(c *gin.Context) {
-	utils.ClearCookie(c, types.CUSTOMER_ACCESS_TOKEN_COOKIE_KEY)
-	utils.ClearCookie(c, types.CUSTOMER_REFRESH_TOKEN_COOKIE_KEY)
+	utils.ClearCookie(c, types.CUSTOMER_SESSION_COOKIE_KEY)
 
 	utils.SendSuccessResponse(c, gin.H{"message": "logout successful"})
 }
@@ -122,62 +91,33 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.service.EmployeeLogin(input.Email, input.Password)
+	token, err := h.service.EmployeeLogin(input.Email, input.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrInvalidCredentials):
 			utils.SendErrorWithStatus(c, "invalid credentials", http.StatusBadRequest)
-			return
 		case errors.Is(err, types.ErrInactiveEmployee):
 			utils.SendErrorWithStatus(c, "inactive employee", http.StatusForbidden)
-			return
 		default:
 			utils.SendErrorWithStatus(c, "unexpected error", http.StatusInternalServerError)
-			return
 		}
+		return
 	}
 
-	claims := &types.EmployeeClaims{}
-	if err := types.ValidateEmployeeJWT(tokenPair.AccessToken, claims, types.TokenAccess); err != nil {
-		utils.SendInternalServerError(c, "failed to validate token ")
+	var claims types.EmployeeClaims
+	if err := types.ValidateEmployeeToken(token.SessionToken, &claims); err != nil {
+		utils.SendInternalServerError(c, "failed to validate token")
 		return
 	}
 
 	cfg := config.GetConfig()
 
-	utils.SetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, tokenPair.AccessToken, cfg.JWT.EmployeeAccessTokenTTL)
-	utils.SetCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY, tokenPair.RefreshToken, cfg.JWT.EmployeeRefreshTokenTTL)
+	utils.SetCookie(c, types.EMPLOYEE_SESSION_COOKIE_KEY, token.SessionToken, cfg.JWT.EmployeeTokenTTL)
 
 	utils.SendSuccessResponse(c, gin.H{
 		"message": "login successful",
 		"data": gin.H{
-			"accessToken":  tokenPair.AccessToken,
-			"refreshToken": tokenPair.RefreshToken,
-		},
-	})
-}
-
-func (h *AuthenticationHandler) EmployeeRefresh(c *gin.Context) {
-	refreshToken, err := types.ExtractToken(c, types.REFRESH_TOKEN_HEADER, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
-	if err != nil {
-		utils.SendErrorWithStatus(c, "no token found", http.StatusUnauthorized)
-		return
-	}
-
-	newAccessToken, err := h.service.EmployeeRefreshAccessToken(refreshToken)
-	if err != nil {
-		utils.SendErrorWithStatus(c, "invalid token", http.StatusUnauthorized)
-		return
-	}
-
-	cfg := config.GetConfig()
-
-	utils.SetCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY, newAccessToken, cfg.JWT.EmployeeAccessTokenTTL)
-
-	utils.SendSuccessResponse(c, gin.H{
-		"message": "refresh successful",
-		"data": gin.H{
-			"accessToken": newAccessToken,
+			"sessionToken": token.SessionToken,
 		},
 	})
 }
@@ -197,7 +137,6 @@ func (h *AuthenticationHandler) EmployeeLogout(c *gin.Context) {
 
 	c.Set(contexts.EMPLOYEE_CONTEXT, nil)
 
-	utils.ClearCookie(c, types.EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY)
-	utils.ClearCookie(c, types.EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY)
+	utils.ClearCookie(c, types.EMPLOYEE_SESSION_COOKIE_KEY)
 	utils.SendSuccessResponse(c, gin.H{"message": "logout successful"})
 }

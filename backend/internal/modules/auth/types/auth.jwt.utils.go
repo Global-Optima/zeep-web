@@ -1,74 +1,39 @@
 package types
 
 import (
-	"errors"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type UserType string
-type TokenType string
-
 const (
-	TOKEN_TYPE_KEY           = "tokenType"
-	TokenAccess    TokenType = "access"
-	TokenRefresh   TokenType = "refresh"
+	ACCESS_TOKEN_HEADER = "Authorization"
 
-	ACCESS_TOKEN_HEADER  = "Authorization"
-	REFRESH_TOKEN_HEADER = "Refresh-Token"
-
-	EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY  = "EMPLOYEE_ACCESS_TOKEN"
-	EMPLOYEE_REFRESH_TOKEN_COOKIE_KEY = "EMPLOYEE_REFRESH_TOKEN"
-	CUSTOMER_ACCESS_TOKEN_COOKIE_KEY  = "CUSTOMER_ACCESS_TOKEN"
-	CUSTOMER_REFRESH_TOKEN_COOKIE_KEY = "CUSTOMER_REFRESH_TOKEN"
+	EMPLOYEE_SESSION_COOKIE_KEY = "ZEEP_EMPLOYEE_SESSION"
+	CUSTOMER_SESSION_COOKIE_KEY = "ZEEP_CUSTOMER_SESSION"
 )
-
-type EmployeeClaimsData struct {
-	ID           uint              `json:"id"`
-	Role         data.EmployeeRole `json:"role"`
-	WorkplaceID  uint              `json:"workplaceId"`
-	EmployeeType data.EmployeeType `json:"workplaceType"`
-}
 
 type EmployeeClaims struct {
 	jwt.RegisteredClaims
-	EmployeeClaimsData
-}
-
-type CustomerClaimsData struct {
-	ID         uint `json:"id"`
-	IsVerified bool `json:"isVerified"`
+	EmployeeID uint `json:"employeeId"`
 }
 
 type CustomerClaims struct {
 	jwt.RegisteredClaims
-	CustomerClaimsData
+	CustomerID uint `json:"customerId"`
 }
 
-type TokenPair struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
+type Token struct {
+	SessionToken string `json:"sessionToken"`
 }
 
-func GenerateCustomerJWT(input *CustomerClaimsData, tokenType TokenType) (string, error) {
-	var ttl time.Duration
-
+func GenerateEmployeeJWT(employeeID uint) (string, error) {
 	cfg := config.GetConfig()
+	ttl := cfg.JWT.EmployeeTokenTTL
 
-	switch tokenType {
-	case TokenAccess:
-		ttl = cfg.JWT.CustomerAccessTokenTTL
-	case TokenRefresh:
-		ttl = cfg.JWT.CustomerRefreshTokenTTL
-	default:
-		return "", errors.New("unsupported token type")
-	}
-
-	claims := CustomerClaims{
-		CustomerClaimsData: *input,
+	session := EmployeeClaims{
+		EmployeeID: employeeID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			Issuer:    "zeep-web",
@@ -76,34 +41,16 @@ func GenerateCustomerJWT(input *CustomerClaimsData, tokenType TokenType) (string
 		},
 	}
 
-	tokenWithClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	tokenWithClaims.Header[TOKEN_TYPE_KEY] = tokenType
-
-	tokenString, err := tokenWithClaims.SignedString([]byte(cfg.JWT.CustomerSecretKey))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, session)
+	return token.SignedString([]byte(cfg.JWT.EmployeeSecretKey))
 }
 
-func GenerateEmployeeJWT(input *EmployeeClaimsData, tokenType TokenType) (string, error) {
-	var ttl time.Duration
-
+func GenerateCustomerJWT(customerID uint) (string, error) {
 	cfg := config.GetConfig()
+	ttl := cfg.JWT.EmployeeTokenTTL
 
-	switch tokenType {
-	case TokenAccess:
-		ttl = cfg.JWT.EmployeeAccessTokenTTL
-	case TokenRefresh:
-		ttl = cfg.JWT.EmployeeRefreshTokenTTL
-	default:
-		return "", errors.New("unsupported token type")
-	}
-
-	claims := EmployeeClaims{
-		EmployeeClaimsData: *input,
+	session := CustomerClaims{
+		CustomerID: customerID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			Issuer:    "zeep-web",
@@ -111,13 +58,6 @@ func GenerateEmployeeJWT(input *EmployeeClaimsData, tokenType TokenType) (string
 		},
 	}
 
-	tokenWithClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenWithClaims.Header[TOKEN_TYPE_KEY] = tokenType
-
-	tokenString, err := tokenWithClaims.SignedString([]byte(cfg.JWT.EmployeeSecretKey))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, session)
+	return token.SignedString([]byte(cfg.JWT.EmployeeSecretKey))
 }

@@ -1,14 +1,15 @@
 package employees
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
-	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -108,7 +109,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.service.GetEmployeeByID(claims.EmployeeClaimsData.ID)
+	employee, err := h.service.GetEmployeeByID(claims.EmployeeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response401Employee)
 		return
@@ -199,7 +200,7 @@ func (h *EmployeeHandler) GetMyWorkdays(c *gin.Context) {
 		return
 	}
 
-	workdays, err := h.service.GetEmployeeWorkdays(claims.EmployeeClaimsData.ID)
+	workdays, err := h.service.GetEmployeeWorkdays(claims.EmployeeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeGetWorkdays)
 		return
