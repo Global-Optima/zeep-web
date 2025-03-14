@@ -26,7 +26,7 @@ func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandle
 		employeesRoutes := router.Group("/employees")
 		{
 			employeesRoutes.POST("/login", handler.EmployeeLogin)
-			employeesRoutes.POST("/logout", handler.EmployeeLogout) // TODO: logout context middleware to pass employee id
+			employeesRoutes.POST("/logout", handler.EmployeeLogout)
 		}
 	}
 }

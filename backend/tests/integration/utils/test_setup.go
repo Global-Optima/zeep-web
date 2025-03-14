@@ -203,7 +203,7 @@ func setupRouter(dbHandler *database.DBHandler, redis *database.RedisClient) *gi
 	apiRouter := routes.NewRouter(router, "/api", "/test")
 
 	employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
-	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager)) // TODO: Fix middleware for employee auth
+	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
 	storageRepo := setupMockStorage()
 

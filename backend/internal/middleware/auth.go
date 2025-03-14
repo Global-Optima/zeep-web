@@ -78,8 +78,6 @@ func CustomerAuth() gin.HandlerFunc {
 			return
 		}
 
-		//TODO: add db call to populate customer data
-
 		contexts.SetCustomerCtx(c, claims)
 		c.Next()
 	}

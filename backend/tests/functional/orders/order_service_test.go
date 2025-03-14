@@ -185,17 +185,6 @@ func TestOrderService_GetAllBaristaOrders_WithPreloadedData(t *testing.T) {
 			// it should fall on the previous day (yesterday).
 			expectedCount: 0,
 		},
-		//TODO incorrect logic, because created order is in status WAITING_FOR_PAYMENT that is not shown for barista
-		/*{
-			name: "Valid orders using TimeZoneOffset +0 (UTC)",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID:        uintPtr(1),
-				TimeZoneOffset: uintPtr(0), // UTC
-			},
-			// In UTC the order remains 00:01.
-			// Depending on the time of day, this should be seen as today’s order.
-			expectedCount: 2,
-		},*/
 		{
 			name: "No orders for non-existent store",
 			filter: types.OrdersTimeZoneFilter{
@@ -274,23 +263,6 @@ func TestOrderService_GetStatusesCount_WithPreloadedData(t *testing.T) {
 				ALL:         2,
 			},
 		},
-		//TODO incorrect logic, because created order is in status WAITING_FOR_PAYMENT that is not shown for barista
-		/*{
-			name: "Valid statuses using TimeZoneOffset +0 (UTC) for store 1",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID:        uintPtr(1),
-				TimeZoneOffset: uintPtr(0),
-			},
-			expectedCounts: types.OrderStatusesCountDTO{
-				PENDING:     1,
-				COMPLETED:   1,
-				PREPARING:   0,
-				IN_DELIVERY: 0,
-				DELIVERED:   0,
-				CANCELLED:   0,
-				ALL:         2,
-			},
-		},*/
 		{
 			name: "No orders returned using alternative timezone for store 1",
 			filter: types.OrdersTimeZoneFilter{
