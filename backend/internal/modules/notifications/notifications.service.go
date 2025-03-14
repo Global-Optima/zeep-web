@@ -19,6 +19,9 @@ type NotificationService interface {
 	NotifyOutOfStock(details details.NotificationDetails) error
 	NotifyNewStockRequest(details details.NotificationDetails) error
 	NotifyPriceChange(details details.NotificationDetails) error
+	NotifyNewProductAdded(details details.NotificationDetails) error
+	NotifyNewProductSizeAdded(details details.NotificationDetails) error
+	NotifyNewAdditiveAdded(details details.NotificationDetails) error
 
 	GetNotificationByID(notificationID, employeeID uint) (*types.NotificationDTO, error)
 	GetNotificationsByEmployee(employeeID uint, filter types.GetNotificationsFilter) ([]types.NotificationDTO, error)

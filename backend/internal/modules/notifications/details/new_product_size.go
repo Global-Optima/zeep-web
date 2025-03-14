@@ -10,8 +10,8 @@ import (
 
 type NewProductSizeDetails struct {
 	BaseNotificationDetails
-	ProductName string `json:"productName"`
-	Size        string `json:"size"`
+	ProductName string  `json:"productName"`
+	Size        float64 `json:"size"`
 }
 
 func (n *NewProductSizeDetails) ToDetails() ([]byte, error) {
@@ -22,9 +22,9 @@ func (n *NewProductSizeDetails) GetBaseDetails() *BaseNotificationDetails {
 	return &n.BaseNotificationDetails
 }
 
-func BuildNewProductSizeDetails(facilityID uint, facilityName, productName, size string) (*NewProductSizeDetails, error) {
-	if facilityID == 0 || facilityName == "" || productName == "" || size == "" {
-		return nil, fmt.Errorf("invalid input: all fields are required")
+func BuildNewProductSizeDetails(facilityID uint, facilityName, productName string, size float64) (*NewProductSizeDetails, error) {
+	if facilityID == 0 || facilityName == "" || productName == "" || size == 0 {
+		return nil, fmt.Errorf("invalid input: all fields are required and size != 0")
 	}
 	return &NewProductSizeDetails{
 		BaseNotificationDetails: BaseNotificationDetails{
