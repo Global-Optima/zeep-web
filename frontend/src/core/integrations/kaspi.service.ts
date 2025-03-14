@@ -46,7 +46,18 @@ export interface KaspiTransactionStatus {
 	data: {
 		processId: string
 		status: 'wait' | 'success' | 'fail' | 'unknown'
-		subStatus?: string
+		subStatus:
+			| 'Initialize'
+			| 'WaitUser'
+			| 'WaitForQrConfirmation'
+			| 'ProcessingCard'
+			| 'WaitForPinCode'
+			| 'ProcessRefund'
+			| 'QrTransactionSuccess'
+			| 'QrTransactionFailure'
+			| 'CardTransactionSuccess'
+			| 'CardTransactionFailure'
+			| 'ProcessCancelled'
 		transactionId: string
 		message?: string
 		addInfo?: {
@@ -190,7 +201,7 @@ export class KaspiService {
 			const poll = async () => {
 				try {
 					const statusResponse = await this.getTransactionStatus(processId)
-					const { status, message, transactionId, chequeInfo } = statusResponse.data
+					const { status, message, transactionId, chequeInfo, subStatus } = statusResponse.data
 
 					if (status === 'success') {
 						if (!chequeInfo) {
@@ -211,7 +222,13 @@ export class KaspiService {
 						})
 					}
 
-					if (status === 'fail') {
+					if (
+						status === 'fail' ||
+						status === 'unknown' ||
+						subStatus === 'QrTransactionFailure' ||
+						subStatus === 'CardTransactionFailure' ||
+						subStatus === 'ProcessCancelled'
+					) {
 						reject(new Error(`Payment failed: ${message}`))
 						return
 					}
