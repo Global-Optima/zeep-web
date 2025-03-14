@@ -206,7 +206,9 @@ export class KaspiService {
 					console.log('STATUSSSS', status)
 
 					if (status === 'success') {
+						console.log('SUCCESFULLY START')
 						if (!chequeInfo) {
+							console.log('SUCCESFULLY NO CHECK INFO')
 							reject(new Error('Invalid payment response: Missing cheque information'))
 							return
 						}
@@ -222,6 +224,10 @@ export class KaspiService {
 							cardMask: chequeInfo.method === 'card' ? chequeInfo.cardMask : undefined,
 							icc: chequeInfo.method === 'card' ? chequeInfo.icc : undefined,
 						})
+
+						console.log('SUCCESFULLY AFTER CHECK INFO')
+
+						return
 					}
 
 					if (
