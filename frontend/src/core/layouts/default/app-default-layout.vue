@@ -1,9 +1,27 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import PageLoader from '@/core/components/page-loader/PageLoader.vue'
+</script>
 
 <template>
 	<div class="relative bg-background w-full h-screen overflow-x-hidden">
 		<main class="w-full h-full">
-			<RouterView />
+			<RouterView v-slot="{ Component, route }">
+				<template v-if="Component">
+					<Transition
+						name="fade"
+						mode="out-in"
+					>
+						<Suspense>
+							<div :key="route.matched[0]?.path">
+								<component :is="Component" />
+							</div>
+							<template #fallback>
+								<PageLoader />
+							</template>
+						</Suspense>
+					</Transition>
+				</template>
+			</RouterView>
 		</main>
 	</div>
 </template>

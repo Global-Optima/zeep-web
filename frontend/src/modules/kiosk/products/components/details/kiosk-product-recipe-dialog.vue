@@ -7,7 +7,14 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/core/components/ui/dialog'
+import type { ProductTotalNutrition } from '@/modules/kiosk/products/models/product.model'
 import { NotebookText } from 'lucide-vue-next'
+import { computed } from 'vue'
+
+const {nutrition} = defineProps<{nutrition: ProductTotalNutrition}>()
+
+const ingredientsRecipe = computed(() => nutrition.ingredients.join(", "))
+const allergensList = computed(() => nutrition.allergenIngredients.join(", "))
 </script>
 
 <template>
@@ -35,22 +42,22 @@ import { NotebookText } from 'lucide-vue-next'
 				<div class="gap-8 grid grid-cols-4 shadow-md p-4 rounded-xl text-lg">
 					<div>
 						<p class="text-gray-500">Энергии</p>
-						<p class="mt-1 text-xl">502 ккал</p>
+						<p class="mt-1 text-xl">{{nutrition.calories}} ккал</p>
 					</div>
 
 					<div>
 						<p class="text-gray-500">Белки</p>
-						<p class="text-xl">2.4 гр</p>
+						<p class="text-xl">{{nutrition.proteins}} гр</p>
 					</div>
 
 					<div>
 						<p class="text-gray-500">Жиры</p>
-						<p class="text-xl">5.2 гр</p>
+						<p class="text-xl">{{nutrition.fats}} гр</p>
 					</div>
 
 					<div>
 						<p class="text-gray-500">Углеводы</p>
-						<p class="text-xl">10.6 гр</p>
+						<p class="text-xl">{{nutrition.carbs}} гр</p>
 					</div>
 				</div>
 
@@ -58,9 +65,7 @@ import { NotebookText } from 'lucide-vue-next'
 					<p class="font-semibold text-xl">Состав</p>
 
 					<p class="mt-1 text-gray-500 text-lg">
-						хлеб на ржаной закваске, специальный соус (майонез, соус шрирача, зерновая горчица,
-						трюфельное масло, халапеньо), сыр чеддер, сыр моцарелла, говяжий пастрами, квашеная
-						капуста, маринованный огурец
+						{{ingredientsRecipe}}
 					</p>
 				</div>
 
@@ -68,7 +73,7 @@ import { NotebookText } from 'lucide-vue-next'
 					<p class="font-semibold text-xl">Аллергены</p>
 
 					<p class="mt-1 text-gray-500 text-lg">
-						молоко (лактоза), яйца, глютен, горчицакапуста, маринованный огурец
+						{{allergensList}}
 					</p>
 				</div>
 			</div>

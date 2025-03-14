@@ -6,6 +6,7 @@ import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
+import { KIOSK_CUSTOMER_ADJECTIVES, KIOSK_CUSTOMER_NOUNS } from '@/modules/kiosk/cart/components/checkouts/customer-names-dictionary'
 import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
 import KioskCartUpdateItem from '@/modules/kiosk/cart/components/kiosk-cart-update-item.vue'
 import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
@@ -60,20 +61,10 @@ const handleUpdate = (updatedSize: StoreProductSizeDetailsDTO, updatedAdditives:
 
 // Unique Name Generator
 const generateUniqueName = () => {
-  const adjectives = [
-    "Веселый", "Бодрый", "Очаровательный", "Крутой", "Сияющий",
-    "Легендарный", "Мудрый", "Загадочный", "Счастливый", "Смелый"
-  ];
-  const nouns = [
-    "Путешественник", "Герой", "Исследователь", "Кофеман", "Маэстро",
-    "Мечтатель", "Сказочник", "Повар", "Джентльмен", "Король"
-  ];
+  const randomAdjective = KIOSK_CUSTOMER_ADJECTIVES[Math.floor(Math.random() * KIOSK_CUSTOMER_ADJECTIVES.length)];
+  const randomNoun = KIOSK_CUSTOMER_NOUNS[Math.floor(Math.random() * KIOSK_CUSTOMER_NOUNS.length)];
 
-  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-  const number = Math.floor(Math.random() * 10000);
-
-  emits('update:customerName', `${randomAdjective} ${randomNoun} ${number}`);
+  emits('update:customerName', `${randomAdjective} ${randomNoun}`);
 };
 
 // Validation State
@@ -124,7 +115,7 @@ const returnToMenu = () => {
 
 				<!-- Return button -->
 				<Button
-					class="!mt-8 px-6 h-14 text-2xl"
+					class="!mt-8 px-6 h-14 text-xl"
 					@click="returnToMenu"
 				>
 					Вернуться к меню
@@ -143,6 +134,7 @@ const returnToMenu = () => {
 					<DialogTitle class="text-4xl">Детали заказа</DialogTitle>
 					<Button
 						variant="ghost"
+						size="icon"
 						@click="clearCart"
 					>
 						<Trash

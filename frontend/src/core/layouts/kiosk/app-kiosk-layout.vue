@@ -1,75 +1,73 @@
 <script setup lang="ts">
-import { getRouteName, type RouteKey } from '@/core/config/routes.config'
-import { useCartStore } from "@/modules/kiosk/cart/stores/cart.store"
-import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
 import { useNetwork } from '@vueuse/core'
-import { WifiOff } from 'lucide-vue-next'
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
+// Kiosk & Services
+import { getRouteName, type RouteKey } from '@/core/config/routes.config'
+import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
+
+// UI Components
+import { useInactivityTimer } from '@/core/hooks/use-inactivity-timer.hooks'
+import { getKaspiConfig } from '@/core/integrations/kaspi.service'
+import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
+import { WifiOff } from 'lucide-vue-next'
+import { defineAsyncComponent } from 'vue'
+
+// Lazy load the cart dialog
 const KioskCartDialog = defineAsyncComponent(() =>
-  import('@/modules/kiosk/cart/components/checkoutsv2/kiosk-cart-wrapper.vue')
-);
+  import('@/modules/kiosk/cart/components/checkouts/kiosk-cart-wrapper.vue')
+)
 
-const router = useRouter()
+// Store & Router
 const cartStore = useCartStore()
+const router = useRouter()
 
-let inactivityTimeout: ReturnType<typeof setTimeout> | null = null
-const inactivityDuration = 300 * 1000 // 5 minutes
-
+// Network
 const { isOnline } = useNetwork()
 
-const resetAppStates = () => {
+// Inactivity constants
+const INACTIVITY_MS = 5 * 60 * 1000 // 5 minutes
+
+// On inactivity, reset store states and go to landing
+function handleInactivity() {
   cartStore.clearCart()
   cartStore.closeModal()
-}
 
-const handleInactivity = () => {
-  resetAppStates()
-
+  // Only navigate if online (use your logic if offline)
   if (isOnline.value) {
     router.push({ name: getRouteName('KIOSK_LANDING') })
   }
 }
 
-const resetInactivityTimer = () => {
-  if (inactivityTimeout) {
-    clearTimeout(inactivityTimeout)
-  }
-  inactivityTimeout = setTimeout(handleInactivity, inactivityDuration)
-}
+// We set up the composable
+useInactivityTimer(INACTIVITY_MS, handleInactivity, true)
 
-const activityEvents = ['mousemove', 'keydown', 'click', 'touchstart']
+// Some routes should NOT show the cart
+const omitShowCartPages: RouteKey[] = ['KIOSK_LANDING', 'KIOSK_CHECKLIST']
 
-const omitShowCartPages: RouteKey[] = ["KIOSK_LANDING"]
-
-const showCart = computed(() => !cartStore.isEmpty && !omitShowCartPages.includes(router.currentRoute.value.name as RouteKey))
-
-onMounted(() => {
-  resetInactivityTimer()
-  activityEvents.forEach(event => {
-    window.addEventListener(event, resetInactivityTimer)
-  })
+const showCart = computed(() => {
+  if (cartStore.isEmpty) return false
+  const currentRouteName = router.currentRoute.value.name as RouteKey
+  return !omitShowCartPages.includes(currentRouteName)
 })
 
-onBeforeUnmount(() => {
-  if (inactivityTimeout) {
-    clearTimeout(inactivityTimeout)
+// Check kiosk config on mount
+onMounted(() => {
+  if (!Boolean(getKaspiConfig())) {
+    router.replace({ name: getRouteName('KIOSK_CHECKLIST') })
   }
-  activityEvents.forEach(event => {
-    window.removeEventListener(event, resetInactivityTimer)
-  })
 })
 </script>
 
 <template>
 	<div class="relative bg-[#F3F4F9] w-full min-h-screen no-scrollbar">
+		<!-- If offline, show overlay -->
 		<div
 			v-if="!isOnline"
 			class="absolute inset-0 flex flex-col justify-center items-center bg-white p-6 text-center"
 		>
 			<WifiOff class="size-20 text-red-600" />
-			<!-- Lucide icon -->
 			<h1 class="mt-6 font-bold text-gray-900 text-3xl">Сеть недоступна</h1>
 			<p class="mt-4 max-w-md text-gray-600 text-lg">
 				К сожалению, терминал временно не может принимать заказы. Пожалуйста, обратитесь к
@@ -77,6 +75,7 @@ onBeforeUnmount(() => {
 			</p>
 		</div>
 
+		<!-- If online, show kiosk UI -->
 		<template v-else>
 			<main class="relative w-full h-full no-scrollbar">
 				<router-view v-slot="{ Component }">
@@ -89,6 +88,7 @@ onBeforeUnmount(() => {
 				</router-view>
 			</main>
 
+			<!-- Show the cart button if conditions pass -->
 			<div
 				v-if="showCart"
 				class="bottom-8 left-0 fixed flex justify-center w-full"
@@ -97,15 +97,14 @@ onBeforeUnmount(() => {
 				<KioskHomeCart />
 			</div>
 
-			<template v-if="cartStore.isModalOpen">
-				<KioskCartDialog />
-			</template>
+			<!-- Cart dialog -->
+			<KioskCartDialog v-if="cartStore.isModalOpen" />
 		</template>
 	</div>
 </template>
 
 <style lang="scss">
-/* ✅ Smooth transition effect */
+/* Smooth transition effect */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition: opacity 0.15s ease-in-out;
