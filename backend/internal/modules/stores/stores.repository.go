@@ -26,7 +26,7 @@ type StoreRepository interface {
 	GetRawStoreByID(storeID uint) (*data.Store, error)
 	GetStores(filter *types.StoreFilter) ([]data.Store, error)
 	UpdateStore(storeID uint, updateModels *types.StoreUpdateModels) error
-	UpdateStoreSyncTime(storeID uint) error
+	UpdateStoreSyncTime(storeID uint) (time.Time, error)
 	DeleteStore(storeID uint, hardDelete bool) error
 	CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error)
 	GetFacilityAddressByAddress(address string) (*data.FacilityAddress, error)
@@ -226,9 +226,15 @@ func (r *storeRepository) GetFacilityAddressByAddress(address string) (*data.Fac
 	return &facilityAddress, nil
 }
 
-func (r *storeRepository) UpdateStoreSyncTime(storeID uint) error {
-	updatedStore := &data.Store{LastInventorySyncAt: time.Now()}
+func (r *storeRepository) UpdateStoreSyncTime(storeID uint) (time.Time, error) {
+	currentTime := time.Now().UTC()
+	updatedStore := &data.Store{LastInventorySyncAt: currentTime}
 
-	return r.db.Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}}).
+	err := r.db.Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}}).
 		Updates(updatedStore).Error
+	if err != nil {
+		return currentTime, err
+	}
+
+	return currentTime, err
 }

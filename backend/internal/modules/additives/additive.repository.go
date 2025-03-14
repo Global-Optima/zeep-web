@@ -228,27 +228,6 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 	})
 }
 
-func (r *additiveRepository) getIngredientIDsByAdditive(additiveID uint) ([]uint, error) {
-	var additiveIngredients []data.AdditiveIngredient
-	err := r.db.Where("additive_id = ?", additiveID).
-		Find(&additiveIngredients).Error
-
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrAdditiveIngredientsNotFound
-		}
-		return nil, err
-	}
-
-	ids := make([]uint, 0, len(additiveIngredients))
-
-	for _, ai := range additiveIngredients {
-		ids = append(ids, ai.IngredientID)
-	}
-
-	return ids, nil
-}
-
 func (r *additiveRepository) updateAdditive(tx *gorm.DB, id uint, additive *data.Additive) error {
 	return tx.Model(&data.Additive{}).
 		Where(&data.Additive{BaseEntity: data.BaseEntity{ID: id}}).

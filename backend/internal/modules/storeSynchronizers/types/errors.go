@@ -6,7 +6,5 @@ import (
 )
 
 var (
-	ErrNotSynchronizedAdditivesNotFound              = moduleErrors.NewModuleError(errors.New("No not synchronized additives"))
-	ErrNotSynchronizedProductSizeIngredientsNotFound = moduleErrors.NewModuleError(errors.New("No product size ingredients to synchronize"))
-	ErrNotSynchronizedProductSizeAdditivesNotFound   = moduleErrors.NewModuleError(errors.New("No product size additives to synchronize"))
+	ErrStoreAlreadySynchronized = moduleErrors.NewModuleError(errors.New("store is already synchronized"))
 )

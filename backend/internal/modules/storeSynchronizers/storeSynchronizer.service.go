@@ -1,12 +1,13 @@
 package storeSynchronizers
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers/types"
 	"go.uber.org/zap"
 )
 
 type StoreSynchronizeService interface {
 	SynchronizeStoreInventory(storeID uint) error
-	IsSynchronizedStore(storeID uint) (bool, error)
+	GetSynchronizationStatus(storeID uint) (*types.SynchronizationStatus, error)
 }
 
 type storeSynchronizeService struct {
@@ -36,11 +37,11 @@ func (s *storeSynchronizeService) SynchronizeStoreInventory(storeID uint) error 
 	return nil
 }
 
-func (s *storeSynchronizeService) IsSynchronizedStore(storeID uint) (bool, error) {
-	isSync, err := s.transactionManager.IsSynchronizedStore(storeID)
+func (s *storeSynchronizeService) GetSynchronizationStatus(storeID uint) (*types.SynchronizationStatus, error) {
+	syncStatus, err := s.transactionManager.GetSynchronizationStatus(storeID)
 	if err != nil {
 		s.logger.Error("Error checking if store is synchronized", zap.Error(err))
-		return false, err
+		return nil, err
 	}
-	return isSync, nil
+	return syncStatus, nil
 }

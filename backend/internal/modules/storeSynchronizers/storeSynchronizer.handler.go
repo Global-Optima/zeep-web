@@ -42,11 +42,11 @@ func (h *StoreSynchronizerHandler) IsSynchronizedStore(c *gin.Context) {
 		return
 	}
 
-	isSync, err := h.service.IsSynchronizedStore(storeID)
+	syncStatus, err := h.service.GetSynchronizationStatus(storeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreSynchronizationCheck)
 		return
 	}
 
-	utils.SendResponseWithStatus(c, isSync, http.StatusOK)
+	utils.SendResponseWithStatus(c, syncStatus, http.StatusOK)
 }

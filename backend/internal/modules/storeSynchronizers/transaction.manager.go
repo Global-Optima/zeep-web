@@ -7,9 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
-	storesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/stores/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"time"
@@ -17,7 +15,7 @@ import (
 
 type TransactionManager interface {
 	SynchronizeStoreInventory(storeID uint) error
-	IsSynchronizedStore(storeID uint) (bool, error)
+	GetSynchronizationStatus(storeID uint) (*types.SynchronizationStatus, error)
 }
 
 type transactionManager struct {
@@ -38,37 +36,49 @@ func NewTransactionManager(db *gorm.DB, repo StoreSynchronizeRepository, storeRe
 	}
 }
 
-func (m *transactionManager) IsSynchronizedStore(storeID uint) (bool, error) {
-	unsyncData, err := m.fetchUnsynchronizedData(storeID)
+func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.SynchronizationStatus, error) {
+	store, err := m.storeRepo.GetRawStoreByID(storeID)
 	if err != nil {
-		return false, err
+		return nil, fmt.Errorf("failed to fetch store sync time: %w", err)
+	}
+
+	unsyncData, err := m.fetchUnsynchronizedData(storeID, store.LastInventorySyncAt)
+	if err != nil {
+		return nil, err
 	}
 
 	if unsyncData == nil {
-		return false, fmt.Errorf("could not fetch unsyncData: nil pointer dereference")
+		return nil, fmt.Errorf("could not fetch unsyncData: nil pointer dereference")
 	}
 
-	logrus.Info("1: ", unsyncData)
 	if len(unsyncData.AdditiveIDs) == 0 && len(unsyncData.IngredientIDs) == 0 {
-		return true, nil
+		return &types.SynchronizationStatus{
+			LastSyncDate: store.LastInventorySyncAt.UTC().String(),
+			IsSync:       true,
+		}, nil
 	}
 
 	err = m.filterMissingData(storeID, unsyncData)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	logrus.Info("2: ", unsyncData)
 
 	if len(unsyncData.AdditiveIDs) > 0 || len(unsyncData.IngredientIDs) > 0 {
-		return false, nil
+		return &types.SynchronizationStatus{
+			LastSyncDate: store.LastInventorySyncAt.UTC().String(),
+			IsSync:       false,
+		}, nil
 	}
 
-	err = m.storeRepo.UpdateStoreSyncTime(storeID)
+	synchronizedAt, err := m.storeRepo.UpdateStoreSyncTime(storeID)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	return true, nil
+	return &types.SynchronizationStatus{
+		LastSyncDate: synchronizedAt.UTC().String(),
+		IsSync:       true,
+	}, nil
 }
 
 func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
@@ -78,7 +88,7 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 	}
 
 	// Fetch unsynchronized and missing data concurrently
-	unsyncData, err := m.fetchUnsynchronizedData(storeID)
+	unsyncData, err := m.fetchUnsynchronizedData(storeID, store.LastInventorySyncAt)
 	if err != nil {
 		return err
 	}
@@ -129,41 +139,40 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 			return err
 		}
 
-		store.LastInventorySyncAt = time.Now()
 		m.storeRepo.CloneWithTransaction(tx)
-		return m.storeRepo.UpdateStore(storeID, &storesTypes.StoreUpdateModels{Store: store})
+		_, err = m.storeRepo.UpdateStoreSyncTime(storeID)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
 }
 
-func (m *transactionManager) fetchUnsynchronizedData(storeID uint) (*types.UnsyncData, error) {
+func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt time.Time) (*types.UnsyncData, error) {
 	var (
 		additiveIDs                []uint
 		ingredientIDsFromProducts  []uint
 		ingredientIDsFromAdditives []uint
 	)
 
-	store, err := m.storeRepo.GetRawStoreByID(storeID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch store sync time: %w", err)
-	}
-
 	g := new(errgroup.Group)
 
 	g.Go(func() error {
 		var err error
-		additiveIDs, err = m.repo.GetNotSynchronizedProductSizesAdditivesIDs(storeID, store.LastInventorySyncAt)
+		additiveIDs, err = m.repo.GetNotSynchronizedProductSizesAdditivesIDs(storeID, lastSyncAt)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		ingredientIDsFromProducts, err = m.repo.GetNotSynchronizedProductSizeWithAdditivesIngredients(storeID, store.LastInventorySyncAt)
+		ingredientIDsFromProducts, err = m.repo.GetNotSynchronizedProductSizeWithAdditivesIngredients(storeID, lastSyncAt)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		ingredientIDsFromAdditives, err = m.repo.GetNotSynchronizedAdditiveIngredientsIDs(storeID, store.LastInventorySyncAt)
+		ingredientIDsFromAdditives, err = m.repo.GetNotSynchronizedAdditiveIngredientsIDs(storeID, lastSyncAt)
 		return err
 	})
 
