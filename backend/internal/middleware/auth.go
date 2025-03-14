@@ -34,7 +34,7 @@ func EmployeeAuth(employeeTokenManager employeeToken.EmployeeTokenManager) gin.H
 
 		if savedToken == nil {
 			zapLogger.Warn("token not found")
-			utils.SendErrorWithStatus(c, "token not found", http.StatusUnauthorized)
+			utils.SendErrorWithStatus(c, "token not found, re-login", http.StatusUnauthorized)
 			c.Abort()
 			return
 		}

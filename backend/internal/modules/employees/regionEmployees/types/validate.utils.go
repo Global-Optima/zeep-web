@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 )
 
@@ -12,7 +13,7 @@ type UpdateRegionEmployeeModels struct {
 	RegionEmployee *data.RegionEmployee
 }
 
-func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.EmployeeRole) (*UpdateRegionEmployeeModels, error) {
+func RegionEmployeeUpdateFields(regionEmployeeID uint, input *UpdateRegionEmployeeDTO, role data.EmployeeRole, employeeTokenManager employeeToken.EmployeeTokenManager) (*UpdateRegionEmployeeModels, error) {
 	regionEmployee := &data.RegionEmployee{}
 	if input.RegionID != nil {
 		regionEmployee.RegionID = *input.RegionID
@@ -26,6 +27,11 @@ func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.Employ
 			return nil, fmt.Errorf("%s %w %s", role, employeesTypes.ErrNotAllowedToManageTheRole, *input.Role)
 		}
 		regionEmployee.Role = *input.Role
+
+		err := employeeTokenManager.DeleteTokenByRegionEmployeeID(regionEmployeeID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	updateEmployeeModels, err := employeesTypes.PrepareUpdateFields(&input.UpdateEmployeeDTO)

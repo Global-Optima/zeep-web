@@ -26,7 +26,7 @@ func NewAuthModule(
 	service := auth.NewAuthenticationService(repo, customersRepo, employeesRepo, employeeTokenManager, base.Logger)
 	handler := auth.NewAuthenticationHandler(service)
 
-	base.Router.RegisterAuthenticationRoutes(handler, employeeTokenManager)
+	base.Router.RegisterAuthenticationRoutes(handler)
 
 	return &AuthModule{
 		BaseModule: base,

@@ -77,7 +77,7 @@ func (c *Container) mustInit() {
 	c.Notifications = modules.NewNotificationModule(baseModule)
 	c.Categories = modules.NewCategoriesModule(baseModule, c.Audits.Service)
 	c.Customers = modules.NewCustomersModule(baseModule)
-	c.Employees = modules.NewEmployeesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Regions.Service)
+	c.Employees = modules.NewEmployeesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Regions.Service, *c.employeeTokenManager)
 	c.Ingredients = modules.NewIngredientsModule(baseModule, c.Audits.Service)
 	c.Stores = modules.NewStoresModule(baseModule, c.Franchisees.Service, c.Audits.Service)
 	c.StoreStocks = modules.NewStoreStockModule(baseModule, c.Ingredients.Service, c.Franchisees.Service, c.Audits.Service, c.Notifications.Service, c.Stores.Service, cronManager)

@@ -21,7 +21,6 @@ type CustomerSession struct {
 }
 
 func MapEmployeeToEmployeeSessionData(employee *data.Employee) (*EmployeeSession, error) {
-	// Declare them without initial assignment; Go defaults to zero values anyway.
 	var workplaceID uint
 	var role data.EmployeeRole
 

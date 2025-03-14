@@ -18,7 +18,6 @@ import (
 
 type AuthenticationService interface {
 	EmployeeLogin(email, password string) (*types.Token, error)
-	HandleEmployeeLogout(employeeID uint) error
 
 	CustomerRegister(input *types.CustomerRegisterDTO) (uint, error)
 	CustomerLogin(email, password string) (*types.Token, error)
@@ -65,15 +64,28 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*types.To
 		return nil, types.ErrInvalidCredentials
 	}
 
+	existingToken, err := s.employeeTokenManager.GetTokenByEmployeeID(employee.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("failed to check existing token: %w", err)
+	}
+
+	cfg := config.GetConfig()
+	newExpiration := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
+
+	if existingToken != nil && existingToken.ExpiresAt.After(time.Now()) {
+		if err := s.employeeTokenManager.UpdateTokenExpiration(employee.ID, newExpiration); err != nil {
+			return nil, fmt.Errorf("failed to update token expiration: %w", err)
+		}
+		return &types.Token{SessionToken: existingToken.Token}, nil
+	}
+
 	sessionToken, err := types.GenerateEmployeeJWT(employee.ID)
 	if err != nil {
 		return nil, utils.WrapError("failed to generate session token", err)
 	}
 
-	if err := s.updateEmployeeToken(employee.ID, sessionToken); err != nil {
-		wrappedErr := utils.WrapError("failed to save employee token", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+	if err := s.saveEmployeeToken(employee.ID, sessionToken); err != nil {
+		return nil, fmt.Errorf("failed to save employee token: %w", err)
 	}
 
 	return &types.Token{SessionToken: sessionToken}, nil
@@ -164,26 +176,6 @@ func (s *authenticationService) saveEmployeeToken(employeeID uint, token string)
 
 	if err := s.employeeTokenManager.CreateToken(employeeToken); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
-	}
-
-	return nil
-}
-
-func (s *authenticationService) updateEmployeeToken(employeeID uint, token string) error {
-	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
-		return fmt.Errorf("failed to delete token: %w", err)
-	}
-
-	if err := s.saveEmployeeToken(employeeID, token); err != nil {
-		return fmt.Errorf("failed to update token: %w", err)
-	}
-
-	return nil
-}
-
-func (s *authenticationService) HandleEmployeeLogout(employeeID uint) error {
-	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
-		return fmt.Errorf("failed to delete token: %w", err)
 	}
 
 	return nil

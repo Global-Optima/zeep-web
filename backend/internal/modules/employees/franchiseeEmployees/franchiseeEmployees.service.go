@@ -6,6 +6,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/franchiseeEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -23,16 +24,18 @@ type FranchiseeEmployeeService interface {
 }
 
 type franchiseeEmployeeService struct {
-	repo         FranchiseeEmployeeRepository
-	employeeRepo employees.EmployeeRepository
-	logger       *zap.SugaredLogger
+	repo                 FranchiseeEmployeeRepository
+	employeeRepo         employees.EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
-func NewFranchiseeEmployeeService(repo FranchiseeEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) FranchiseeEmployeeService {
+func NewFranchiseeEmployeeService(repo FranchiseeEmployeeRepository, employeeRepo employees.EmployeeRepository, employeeTokenManager employeeToken.EmployeeTokenManager, logger *zap.SugaredLogger) FranchiseeEmployeeService {
 	return &franchiseeEmployeeService{
-		repo:         repo,
-		employeeRepo: employeeRepo,
-		logger:       logger,
+		repo:                 repo,
+		employeeRepo:         employeeRepo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
@@ -118,7 +121,7 @@ func (s *franchiseeEmployeeService) GetAllFranchiseeEmployees(franchiseeID uint)
 }
 
 func (s *franchiseeEmployeeService) UpdateFranchiseeEmployee(id uint, franchiseeID *uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.FranchiseeEmployeeUpdateFields(input, role)
+	updateFields, err := types.FranchiseeEmployeeUpdateFields(id, input, role, s.employeeTokenManager)
 	if err != nil {
 		return err
 	}

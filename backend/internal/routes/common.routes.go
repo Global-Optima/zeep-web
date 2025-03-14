@@ -1,9 +1,7 @@
 package routes
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	adminEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/adminEmployees"
 	franchiseeEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/franchiseeEmployees"
 	regionEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees"
@@ -15,8 +13,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse"
 )
 
-func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandler, employeeTokenManager employeeToken.EmployeeTokenManager,
-) {
+func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandler) {
 	router := r.CommonRoutes.Group("/auth")
 	{
 		customersRoutes := router.Group("/customers")
@@ -29,7 +26,7 @@ func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandle
 		employeesRoutes := router.Group("/employees")
 		{
 			employeesRoutes.POST("/login", handler.EmployeeLogin)
-			employeesRoutes.POST("/logout", middleware.EmployeeAuth(employeeTokenManager), handler.EmployeeLogout) // TODO: logout context middleware to pass employee id
+			employeesRoutes.POST("/logout", handler.EmployeeLogout) // TODO: logout context middleware to pass employee id
 		}
 	}
 }

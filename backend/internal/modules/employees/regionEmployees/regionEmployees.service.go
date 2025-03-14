@@ -6,6 +6,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -23,16 +24,18 @@ type RegionEmployeeService interface {
 }
 
 type regionEmployeeService struct {
-	repo         RegionEmployeeRepository
-	employeeRepo employees.EmployeeRepository
-	logger       *zap.SugaredLogger
+	repo                 RegionEmployeeRepository
+	employeeRepo         employees.EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
-func NewRegionEmployeeService(repo RegionEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) RegionEmployeeService {
+func NewRegionEmployeeService(repo RegionEmployeeRepository, employeeRepo employees.EmployeeRepository, employeeTokenManager employeeToken.EmployeeTokenManager, logger *zap.SugaredLogger) RegionEmployeeService {
 	return &regionEmployeeService{
-		repo:         repo,
-		employeeRepo: employeeRepo,
-		logger:       logger,
+		repo:                 repo,
+		employeeRepo:         employeeRepo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
@@ -118,7 +121,7 @@ func (s *regionEmployeeService) GetAllRegionEmployees(regionID uint) ([]employee
 }
 
 func (s *regionEmployeeService) UpdateRegionEmployee(id uint, regionID *uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.RegionEmployeeUpdateFields(input, role)
+	updateFields, err := types.RegionEmployeeUpdateFields(id, input, role, s.employeeTokenManager)
 	if err != nil {
 		return err
 	}

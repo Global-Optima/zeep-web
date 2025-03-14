@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -24,16 +25,18 @@ type StoreEmployeeService interface {
 }
 
 type storeEmployeeService struct {
-	repo         StoreEmployeeRepository
-	employeeRepo employees.EmployeeRepository
-	logger       *zap.SugaredLogger
+	repo                 StoreEmployeeRepository
+	employeeRepo         employees.EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
-func NewStoreEmployeeService(repo StoreEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) StoreEmployeeService {
+func NewStoreEmployeeService(repo StoreEmployeeRepository, employeeRepo employees.EmployeeRepository, employeeTokenManager employeeToken.EmployeeTokenManager, logger *zap.SugaredLogger) StoreEmployeeService {
 	return &storeEmployeeService{
-		repo:         repo,
-		employeeRepo: employeeRepo,
-		logger:       logger,
+		repo:                 repo,
+		employeeRepo:         employeeRepo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
@@ -121,7 +124,7 @@ func (s *storeEmployeeService) GetAllStoreEmployees(storeID uint) ([]employeesTy
 }
 
 func (s *storeEmployeeService) UpdateStoreEmployee(id uint, filter *contexts.StoreContextFilter, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.StoreEmployeeUpdateFields(input, role)
+	updateFields, err := types.StoreEmployeeUpdateFields(id, input, role, s.employeeTokenManager)
 	if err != nil {
 		return err
 	}
