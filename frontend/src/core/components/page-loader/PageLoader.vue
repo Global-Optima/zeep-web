@@ -1,11 +1,13 @@
 <template>
-	<div class="flex justify-center items-center h-52 w-full">
-		<Loader class="animate-spin size-8 text-gray-400" />
+	<div class="z-10 fixed inset-0 flex justify-center items-center bg-white">
+		<Loader class="size-12 text-green-500 animate-spin" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import { Loader } from "lucide-vue-next";
+import { Loader } from "lucide-vue-next"
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Add custom styles here if needed */
+</style>

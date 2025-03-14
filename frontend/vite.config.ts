@@ -31,6 +31,7 @@ export default defineConfig({
 				display: 'standalone',
 				lang: 'ru',
 				start_url: '/',
+				orientation: 'any',
 				icons: [
 					{ src: '/android-icon-36x36.png', sizes: '36x36', type: 'image/png' },
 					{ src: '/android-icon-48x48.png', sizes: '48x48', type: 'image/png' },
@@ -39,10 +40,10 @@ export default defineConfig({
 					{ src: '/android-icon-144x144.png', sizes: '144x144', type: 'image/png' },
 					{ src: '/android-icon-192x192.png', sizes: '192x192', type: 'image/png' },
 				],
+				display_override: ['fullscreen', 'minimal-ui', 'standalone'],
 			},
 			devOptions: {
-				enabled: true,
-				type: 'module',
+				enabled: false,
 			},
 		}),
 		viteCompression({
