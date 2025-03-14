@@ -66,12 +66,14 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 
 			const kaspiService = new KaspiService(kaspiConfig)
 
-			if (isTest) return kaspiService.awaitPaymentTest()
+			if (isTest) return await kaspiService.awaitPaymentTest()
 
-			return kaspiService.awaitPayment(order.total)
+			return await kaspiService.awaitPayment(order.total)
 		},
-		onSuccess: (transaction, variables) => {
-			successOrderPaymentMutation.mutate({ order: variables.order, transactionDTO: transaction })
+		onSettled: (transaction, error, variables) => {
+			if (transaction && !error) {
+				successOrderPaymentMutation.mutate({ order: variables.order, transactionDTO: transaction })
+			}
 		},
 		onError: err => {
 			console.error(err)
