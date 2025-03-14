@@ -32,7 +32,7 @@ func ValidateCustomer(input CustomerRegisterDTO) error {
 	return nil
 }
 
-func ExtractToken(c *gin.Context, headerKey, cookieKey string) (string, error) {
+func ExtractToken(c *gin.Context, cookieKey string) (string, error) {
 	cookie, err := c.Cookie(cookieKey)
 	if err != nil {
 		return "", err
@@ -84,7 +84,7 @@ func ExtractCustomerSessionTokenAndValidate(c *gin.Context) (*CustomerClaims, st
 }
 
 func extractAndValidateEmployeeToken(c *gin.Context) (*EmployeeClaims, string, error) {
-	tokenString, err := ExtractToken(c, ACCESS_TOKEN_HEADER, EMPLOYEE_SESSION_COOKIE_KEY)
+	tokenString, err := ExtractToken(c, EMPLOYEE_SESSION_COOKIE_KEY)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "failed to extract token")
 	}
@@ -98,7 +98,7 @@ func extractAndValidateEmployeeToken(c *gin.Context) (*EmployeeClaims, string, e
 }
 
 func extractAndValidateCustomerToken(c *gin.Context) (*CustomerClaims, string, error) {
-	tokenString, err := ExtractToken(c, ACCESS_TOKEN_HEADER, CUSTOMER_SESSION_COOKIE_KEY)
+	tokenString, err := ExtractToken(c, CUSTOMER_SESSION_COOKIE_KEY)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "failed to extract token")
 	}

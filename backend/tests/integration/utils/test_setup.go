@@ -55,8 +55,8 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	redis := setupRedis(cfg, t)
 	router := setupRouter(dbHandler, redis)
 
-	truncateAndLoadMockData(dbHandler.DB)
-	log.Println("Mock data loaded successfully")
+	// truncateAndLoadMockData(dbHandler.DB)
+	// log.Println("Mock data loaded successfully")
 
 	return &TestEnvironment{
 		Router: router,
@@ -213,7 +213,7 @@ func setupRouter(dbHandler *database.DBHandler, redis *database.RedisClient) *gi
 	return router
 }
 
-func truncateAndLoadMockData(db *gorm.DB) {
+func TruncateAndLoadMockData(db *gorm.DB) {
 	if err := truncateTables(db); err != nil {
 		log.Fatalf("Failed to truncate tables: %v", err)
 	}
