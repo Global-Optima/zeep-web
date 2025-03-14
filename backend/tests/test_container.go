@@ -12,6 +12,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -28,7 +29,7 @@ var (
 func NewTestContainer() *container.Container {
 	once.Do(func() {
 		var err error
-		// Initialize cfg first
+
 		cfg, err := config.LoadTestConfig()
 		if err != nil {
 			log.Println("failed to load test configuration from file, trying to load from env...")
@@ -70,6 +71,7 @@ func NewTestContainer() *container.Container {
 
 		apiRouter := routes.NewRouter(r, "/api", "/test")
 		employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
+		apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
 		mockStorageRepo, err := mockStorage.NewMockStorageRepository()
 		if err != nil {
