@@ -34,7 +34,7 @@ type OrderRepository interface {
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
 
 	CalculateFrozenStock(storeID uint) (map[uint]float64, error)
-	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) error
+	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error)
 	HandlePaymentFailure(orderID uint) error
 }
 
@@ -505,20 +505,21 @@ func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
 	}
 }
 
-func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) error {
+func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error) {
 	order, err := r.GetRawOrderById(orderID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if order.Status != data.OrderStatusWaitingForPayment {
-		return types.ErrInappropriateOrderStatus
+		return nil, types.ErrInappropriateOrderStatus
 	}
+	order.Status = data.OrderStatusPending
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&data.Order{}).
 			Where(&data.Order{BaseEntity: data.BaseEntity{ID: orderID}}).
-			Updates(&data.Order{Status: data.OrderStatusPending}).Error
+			Save(order).Error
 		if err != nil {
 			return err
 		}
@@ -529,10 +530,10 @@ func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction 
 		return nil
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return order, nil
 }
 
 func (r *orderRepository) HandlePaymentFailure(orderID uint) error {

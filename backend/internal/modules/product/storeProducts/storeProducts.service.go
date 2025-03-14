@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -14,12 +15,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
-
-const DEFAULT_LOW_STOCK_THRESHOLD = 50
 
 type StoreProductService interface {
 	GetStoreProductCategories(storeID uint) ([]categoriesTypes.ProductCategoryDTO, error)
@@ -324,18 +323,18 @@ func (s *storeProductService) DeleteStoreProduct(storeID, storeProductID uint) e
 	return nil
 }
 
-func (s *storeProductService) formAddStockDTOsFromProductSizes(productSizeIDs []uint) ([]storeWarehousesTypes.AddStoreStockDTO, error) {
+func (s *storeProductService) formAddStockDTOsFromProductSizes(productSizeIDs []uint) ([]storeStocksTypes.AddStoreStockDTO, error) {
 	ingredientsList, err := s.ingredientsRepo.GetIngredientsForProductSizes(productSizeIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)
 	}
 
-	addStockDTOs := make([]storeWarehousesTypes.AddStoreStockDTO, len(ingredientsList))
+	addStockDTOs := make([]storeStocksTypes.AddStoreStockDTO, len(ingredientsList))
 	for i, ingredient := range ingredientsList {
-		addStockDTOs[i] = storeWarehousesTypes.AddStoreStockDTO{
+		addStockDTOs[i] = storeStocksTypes.AddStoreStockDTO{
 			IngredientID:      ingredient.ID,
 			Quantity:          0,
-			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
+			LowStockThreshold: storeStocks.DEFAULT_LOW_STOCK_THRESHOLD,
 		}
 	}
 	return addStockDTOs, nil

@@ -96,7 +96,7 @@ func (r *storeAdditiveRepository) FilterMissingStoreAdditiveIDs(storeID uint, ad
 	if err := r.db.
 		Model(&data.StoreAdditive{}).
 		Where("store_id = ? AND additive_id IN (?)", storeID, additivesIDs).
-		Pluck("ingredient_id", &existingAdditivesIDs).Error; err != nil {
+		Pluck("additive_id", &existingAdditivesIDs).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch existing ingredient IDs: %w", err)
 	}
 

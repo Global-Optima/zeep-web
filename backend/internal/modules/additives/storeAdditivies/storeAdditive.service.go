@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
@@ -13,10 +14,6 @@ import (
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
-)
-
-const (
-	DEFAULT_LOW_STOCK_THRESHOLD = 30
 )
 
 type StoreAdditiveService interface {
@@ -197,7 +194,7 @@ func (s *storeAdditiveService) formAddStockDTOsFromAdditives(additiveIDs []uint)
 		addStockDTOs[i] = storeStocksTypes.AddStoreStockDTO{
 			IngredientID:      ingredient.ID,
 			Quantity:          0,
-			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
+			LowStockThreshold: storeStocks.DEFAULT_LOW_STOCK_THRESHOLD,
 		}
 	}
 	return addStockDTOs, nil

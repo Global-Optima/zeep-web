@@ -37,7 +37,7 @@ func (s *storeSynchronizeService) SynchronizeStoreInventory(storeID uint) error 
 }
 
 func (s *storeSynchronizeService) IsSynchronizedStore(storeID uint) (bool, error) {
-	isSync, err := s.repo.IsSynchronizedStore(storeID)
+	isSync, err := s.transactionManager.IsSynchronizedStore(storeID)
 	if err != nil {
 		s.logger.Error("Error checking if store is synchronized", zap.Error(err))
 		return false, err
