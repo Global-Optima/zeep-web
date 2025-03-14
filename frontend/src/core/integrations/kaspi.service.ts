@@ -203,6 +203,8 @@ export class KaspiService {
 					const statusResponse = await this.getTransactionStatus(processId)
 					const { status, message, transactionId, chequeInfo, subStatus } = statusResponse.data
 
+					console.log('STATUSSSS', status)
+
 					if (status === 'success') {
 						if (!chequeInfo) {
 							reject(new Error('Invalid payment response: Missing cheque information'))
@@ -229,7 +231,7 @@ export class KaspiService {
 						subStatus === 'CardTransactionFailure' ||
 						subStatus === 'ProcessCancelled'
 					) {
-						reject(new Error(`Payment failed: ${message}`))
+						reject(new Error(`Payment failed: ${message ?? 'Unexpected error'}`))
 						return
 					}
 
