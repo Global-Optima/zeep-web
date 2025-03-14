@@ -404,7 +404,10 @@
     "warehouseStockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
     "warehouseOutOfStock": "*{{.ItemName}}* қоймада аз қалды.",
     "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
-    "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді."
+    "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді.",
+    "newProduct": "*{{.ProductName}}* атты жаңа өнім қосылды.",
+    "newProductSize": "*{{.ProductName}}* үшін *{{.Size}}* атты жаңа өлшем қосылды.",
+    "newAdditive": "*{{.AdditiveName}}* атты жаңа қоспа енгізілді."
   },
   "stockRequestComments": {
     "quantityMismatch" : "*{{.OriginalMaterialName}}*, *{{.ActualQuantity}}* жеткізілді, тапсырыста *{{.Quantity}}*.",

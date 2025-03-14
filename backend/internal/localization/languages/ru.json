@@ -403,7 +403,10 @@
 		"warehouseStockExpiration": "*{{.ItemName}}* срок годности истекает *{{.ExpirationDate}}*.",
 		"warehouseOutOfStock": "*{{.ItemName}}* заканчивается на складе.",
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",
-		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*."
+		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*.",
+        "newProduct": "Добавлен новый продукт *{{.ProductName}}*.",
+        "newProductSize": "Добавлен новый размер *{{.Size}}* для *{{.ProductName}}*.",
+        "newAdditive": "Введен новый добавка *{{.AdditiveName}}*."
 	},
 	"stockRequestComments": {
 		"quantityMismatch" : "*{{.OriginalMaterialName}}* получено *{{.ActualQuantity}}*, ожидалось *{{.Quantity}}*.",
