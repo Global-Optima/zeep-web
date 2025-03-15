@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	asynqManager "github.com/Global-Optima/zeep-web/backend/internal/asynqTasks"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 
@@ -22,6 +23,7 @@ type Container struct {
 	RedisClient             *database.RedisClient
 	AsynqManager            *asynqManager.AsynqManager
 	storageRepo             *storage.StorageRepository
+	employeeTokenManager    *employeeToken.EmployeeTokenManager
 	router                  *routes.Router
 	logger                  *zap.SugaredLogger
 	Additives               *modules.AdditivesModule
@@ -49,13 +51,14 @@ type Container struct {
 	Analytics               *modules.AnalyticsModule
 }
 
-func NewContainer(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo *storage.StorageRepository, router *routes.Router, logger *zap.SugaredLogger) *Container {
+func NewContainer(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo *storage.StorageRepository, employeeTokenManager *employeeToken.EmployeeTokenManager, router *routes.Router, logger *zap.SugaredLogger) *Container {
 	return &Container{
-		DbHandler:   dbHandler,
-		RedisClient: redisClient,
-		storageRepo: storageRepo,
-		router:      router,
-		logger:      logger,
+		DbHandler:            dbHandler,
+		RedisClient:          redisClient,
+		storageRepo:          storageRepo,
+		employeeTokenManager: employeeTokenManager,
+		router:               router,
+		logger:               logger,
 	}
 }
 
@@ -75,7 +78,7 @@ func (c *Container) mustInit() {
 	c.Notifications = modules.NewNotificationModule(baseModule)
 	c.Categories = modules.NewCategoriesModule(baseModule, c.Audits.Service)
 	c.Customers = modules.NewCustomersModule(baseModule)
-	c.Employees = modules.NewEmployeesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Regions.Service)
+	c.Employees = modules.NewEmployeesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Regions.Service, *c.employeeTokenManager)
 	c.Ingredients = modules.NewIngredientsModule(baseModule, c.Audits.Service)
 	c.Suppliers = modules.NewSuppliersModule(baseModule, c.Audits.Service)
 	c.StockMaterials = modules.NewStockMaterialsModule(baseModule, c.Audits.Service)
@@ -88,7 +91,7 @@ func (c *Container) mustInit() {
 
 	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo)
 	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Additives.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, *c.storageRepo, c.Notifications.Service)
-	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo)
+	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo, *c.employeeTokenManager)
 	c.Orders = modules.NewOrdersModule(baseModule, c.AsynqManager, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Notifications.Service)
 	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.Franchisees.Service, c.Regions.Service, c.StockMaterials.Repo, c.Notifications.Service, c.Audits.Service)
 	c.StoreSynchronizer = modules.NewStoreSynchronizerSynchronizerModule(baseModule, c.Stores.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo)

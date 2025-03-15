@@ -372,54 +372,48 @@ func (s *orderService) CheckAndAccumulateSuborders(
 }
 
 func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
-	err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
-	if err != nil {
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted); err != nil {
 		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
 		s.logger.Error(wrappedErr.Error())
 		return wrappedErr
 	}
 
-	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(orderID, subOrderID)
+	order, err := s.orderRepo.GetOrderById(orderID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to check suborder: %w", err)
-		s.logger.Error(wrappedErr.Error())
-		return wrappedErr
+		return fmt.Errorf("failed to get order by id: %w", err)
 	}
 
+	var completedSuborder *data.Suborder
+	for i := range order.Suborders {
+		if order.Suborders[i].ID == subOrderID {
+			completedSuborder = &order.Suborders[i]
+			break
+		}
+	}
+	if completedSuborder == nil {
+		return fmt.Errorf("suborder %d not found in order", subOrderID)
+	}
+
+	stockMap := make(map[uint]*data.StoreStock)
+	if err := s.deductSuborderIngredientsFromStock(order.StoreID, completedSuborder, stockMap); err != nil {
+		return fmt.Errorf("failed to deduct ingredients for suborder: %w", err)
+	}
+
+	s.notifyLowStockIngredients(order, stockMap)
+
+	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(orderID, subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to check suborder completion: %w", err)
+	}
 	if allCompleted {
-		order, err := s.orderRepo.GetOrderById(orderID)
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to get order by id: %w", err)
-			s.logger.Error(wrappedErr.Error())
-			return wrappedErr
-		}
-
-		stockMap := make(map[uint]*data.StoreStock)
-
-		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return fmt.Errorf("failed to deduct ingredients for products: %w", err)
-		}
-
-		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return fmt.Errorf("failed to deduct ingredients for additives: %w", err)
-		}
-
-		s.notifyLowStockIngredients(order, stockMap)
-
 		var newStatus data.OrderStatus
 		if order.DeliveryAddressID != nil {
 			newStatus = data.OrderStatusInDelivery
 		} else {
 			newStatus = data.OrderStatusCompleted
 		}
-
-		err = s.orderRepo.UpdateOrderStatus(orderID, newStatus)
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
-			s.logger.Error(wrappedErr.Error())
-			return wrappedErr
+		if err := s.orderRepo.UpdateOrderStatus(orderID, newStatus); err != nil {
+			return fmt.Errorf("failed to update order status: %w", err)
 		}
 	}
 
@@ -451,12 +445,28 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 		return nil, wrappedErr
 	}
 
-	err = s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
-	if err != nil {
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted); err != nil {
 		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
 		s.logger.Error(wrappedErr.Error())
 		return nil, wrappedErr
 	}
+
+	var completedSuborder *data.Suborder
+	for i := range order.Suborders {
+		if order.Suborders[i].ID == subOrderID {
+			completedSuborder = &order.Suborders[i]
+			break
+		}
+	}
+	if completedSuborder == nil {
+		return nil, fmt.Errorf("suborder %d not found in order", subOrderID)
+	}
+
+	stockMap := make(map[uint]*data.StoreStock)
+	if err := s.deductSuborderIngredientsFromStock(order.StoreID, completedSuborder, stockMap); err != nil {
+		return nil, fmt.Errorf("failed to deduct ingredients for additives: %w", err)
+	}
+	s.notifyLowStockIngredients(order, stockMap)
 
 	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(order.ID, subOrderID)
 	if err != nil {
@@ -464,38 +474,14 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 		s.logger.Error(wrappedErr.Error())
 		return nil, wrappedErr
 	}
-
 	if allCompleted {
-		order, err := s.orderRepo.GetOrderById(order.ID)
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to get order by id: %w", err)
-			s.logger.Error(wrappedErr.Error())
-			return nil, wrappedErr
-		}
-
-		stockMap := make(map[uint]*data.StoreStock)
-
-		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for products: %w", err)
-		}
-
-		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for additives: %w", err)
-		}
-
-		s.notifyLowStockIngredients(order, stockMap)
-
 		var newStatus data.OrderStatus
 		if order.DeliveryAddressID != nil {
 			newStatus = data.OrderStatusInDelivery
 		} else {
 			newStatus = data.OrderStatusCompleted
 		}
-
-		err = s.orderRepo.UpdateOrderStatus(order.ID, newStatus)
-		if err != nil {
+		if err := s.orderRepo.UpdateOrderStatus(order.ID, newStatus); err != nil {
 			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
 			s.logger.Error(wrappedErr.Error())
 			return nil, wrappedErr
@@ -507,7 +493,6 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 		return nil, err
 	}
 	response := types.ConvertSuborderToDTO(subOrder)
-
 	return &response, nil
 }
 
@@ -544,6 +529,36 @@ func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, sto
 				} else {
 					stockMap[stock.IngredientID] = &stock
 				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *orderService) deductSuborderIngredientsFromStock(storeID uint, suborder *data.Suborder, stockMap map[uint]*data.StoreStock) error {
+	updatedStocks, err := s.storeStockRepo.DeductStockByProductSizeTechCart(storeID, suborder.StoreProductSizeID)
+	if err != nil {
+		return fmt.Errorf("failed to deduct product size ingredients: %w", err)
+	}
+	for _, stock := range updatedStocks {
+		if existingStock, exists := stockMap[stock.IngredientID]; exists {
+			existingStock.Quantity = stock.Quantity
+		} else {
+			stockMap[stock.IngredientID] = &stock
+		}
+	}
+
+	for _, subAdditive := range suborder.SuborderAdditives {
+		updatedStocks, err := s.storeStockRepo.DeductStockByAdditiveTechCart(storeID, subAdditive.StoreAdditiveID)
+		if err != nil {
+			return fmt.Errorf("failed to deduct additive ingredients: %w", err)
+		}
+		for _, stock := range updatedStocks {
+			if existingStock, exists := stockMap[stock.IngredientID]; exists {
+				existingStock.Quantity = stock.Quantity
+			} else {
+				stockMap[stock.IngredientID] = &stock
 			}
 		}
 	}
@@ -745,6 +760,22 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 		return nil, fmt.Errorf("failed to update suborder status: %w", err)
 	}
 
+	if nextStatus == data.SubOrderStatusCompleted {
+		suborder, err = s.orderRepo.GetSuborderByID(subOrderID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve updated suborder: %w", err)
+		}
+		order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
+		}
+		stockMap := make(map[uint]*data.StoreStock)
+		if err := s.deductSuborderIngredientsFromStock(order.StoreID, suborder, stockMap); err != nil {
+			return nil, fmt.Errorf("failed to deduct ingredients for suborder: %w", err)
+		}
+		s.notifyLowStockIngredients(order, stockMap)
+	}
+
 	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
@@ -756,11 +787,10 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 	}
 
 	hasPreparing, allCompleted := evaluateSuborderStatuses(suborders)
-
 	if hasPreparing {
 		if order.Status != data.OrderStatusPreparing {
 			if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
-				return nil, fmt.Errorf("failed to update order status to pending: %w", err)
+				return nil, fmt.Errorf("failed to update order status to preparing: %w", err)
 			}
 		}
 	} else if allCompleted {
@@ -773,21 +803,6 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 		if err := s.orderRepo.UpdateOrderStatus(order.ID, newOrderStatus); err != nil {
 			return nil, fmt.Errorf("failed to update order status to completed: %w", err)
 		}
-
-		stockMap := make(map[uint]*data.StoreStock)
-
-		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for products: %w", err)
-		}
-
-		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for additives: %w", err)
-		}
-
-		s.notifyLowStockIngredients(order, stockMap)
-
 	} else {
 		if order.Status != data.OrderStatusPreparing {
 			if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {

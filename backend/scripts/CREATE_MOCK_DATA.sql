@@ -146,7 +146,12 @@ VALUES
     (
         'Круассаны',
         'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе'
+    ),
+    (
+        'Тестовые продукты',
+        'Продукты для тестирования функционала QR-кодов'
     );
+
 
 -- Insert into AdditiveCategory
 INSERT INTO
@@ -1190,6 +1195,228 @@ FROM
     LEFT JOIN additive_ingredients ai ON a.id = ai.additive_id
 WHERE
     ai.id IS NULL;
+
+
+-- =============================================
+-- 1) INSERT THE 21 NEW TEST PRODUCTS
+--    (All in category_id=14 = "Тестовые продукты")
+-- =============================================
+INSERT INTO products (
+    name,
+    description,
+    image_url,
+    video_url,
+    category_id
+)
+VALUES
+    ('Zeep Grape',
+     'Тестовый продукт: виноградный вкус',
+     'https://example.com/img/zeep_grape.png',
+     NULL,
+     14
+    ),
+    ('Zeep Light Grape',
+     'Тестовый продукт: легкий виноградный вкус',
+     'https://example.com/img/zeep_light_grape.png',
+     NULL,
+     14
+    ),
+    ('Zeep Shine Muskat',
+     'Тестовый продукт: мускатный аромат',
+     'https://example.com/img/zeep_shine_muskat.png',
+     NULL,
+     14
+    ),
+    ('Zeep Mango',
+     'Тестовый продукт: манговый вкус',
+     'https://example.com/img/zeep_mango.png',
+     NULL,
+     14
+    ),
+    ('Pulpy Grape Tea',
+     'Тестовый продукт: чай с виноградной мякотью',
+     'https://example.com/img/pulpy_grape_tea.png',
+     NULL,
+     14
+    ),
+    ('Pulpy Coco-Mango Tea',
+     'Тестовый продукт: чай с кокосом и манго',
+     'https://example.com/img/pulpy_coco_mango.png',
+     NULL,
+     14
+    ),
+    ('Pulpy Mango Saga Tea',
+     'Тестовый продукт: манговый чай с мякотью',
+     'https://example.com/img/pulpy_mango_saga.png',
+     NULL,
+     14
+    ),
+    ('Pulpy Super Mango Tea',
+     'Тестовый продукт: интенсивный манговый вкус',
+     'https://example.com/img/pulpy_super_mango.png',
+     NULL,
+     14
+    ),
+    ('Pulpy Shine Muscat Tea',
+     'Тестовый продукт: Shine Muscat чай с мякотью',
+     'https://example.com/img/pulpy_shine_muscat.png',
+     NULL,
+     14
+    ),
+    ('Passion Green Tea',
+     'Тестовый продукт: зеленый чай с маракуйей',
+     'https://example.com/img/passion_green_tea.png',
+     NULL,
+     14
+    ),
+    ('Mango Passion Tea',
+     'Тестовый продукт: чай с манго и маракуйей',
+     'https://example.com/img/mango_passion_tea.png',
+     NULL,
+     14
+    ),
+    ('Ruby Grapefruit Tea',
+     'Тестовый продукт: чай с красным грейпфрутом',
+     'https://example.com/img/ruby_grapefruit_tea.png',
+     NULL,
+     14
+    ),
+    ('Duck Citrus Lemon Tea',
+     'Тестовый продукт: чай с лимоном и цитрусами',
+     'https://example.com/img/duck_citrus_lemon.png',
+     NULL,
+     14
+    ),
+    ('Lemon Tea',
+     'Тестовый продукт: классический чай с лимоном',
+     'https://example.com/img/lemon_tea.png',
+     NULL,
+     14
+    ),
+    ('Cheesy Matcha',
+     'Тестовый продукт: матча с сырной шапкой',
+     'https://example.com/img/cheesy_matcha.png',
+     NULL,
+     14
+    ),
+    ('Matcha Milk Pudding',
+     'Тестовый продукт: матча с молочным пудингом',
+     'https://example.com/img/matcha_milk_pudding.png',
+     NULL,
+     14
+    ),
+    ('Milk Ceylon Tea',
+     'Тестовый продукт: Цейлонский чай с молоком',
+     'https://example.com/img/milk_ceylon.png',
+     NULL,
+     14
+    ),
+    ('Milk Tapioca Tea',
+     'Тестовый продукт: молочный чай с тапиокой',
+     'https://example.com/img/milk_tapioca.png',
+     NULL,
+     14
+    ),
+    ('Tapioca&Milk Pudding',
+     'Тестовый продукт: чай с тапиокой и пудингом',
+     'https://example.com/img/tapioca_milk_pudding.png',
+     NULL,
+     14
+    ),
+    ('Black Sugar Milk',
+     'Тестовый продукт: молоко с чёрным сахаром',
+     'https://example.com/img/black_sugar_milk.png',
+     NULL,
+     14
+    ),
+    ('OREO CREME BRULEE',
+     'Тестовый продукт: крем-брюле со вкусом Oreo',
+     'https://example.com/img/oreo_creme_brulee.png',
+     NULL,
+     14
+    );
+
+
+-- =============================================
+-- 2) INSERT PRODUCT_SIZES FOR THOSE 21 NEW ITEMS
+--    All "S", unit_id = 4 (ml), pick your base_price
+--    NOTE: product_id values below assume these 21
+--          new products are assigned IDs 23..43.
+--          Adjust if needed based on your DB.
+-- =============================================
+
+INSERT INTO product_sizes (
+    name,
+    unit_id,
+    base_price,
+    size,
+    product_id,
+    machine_id
+)
+VALUES
+    -- Zeep Grape (product_id = 23?)
+    ('S', 4, 1300.00, 300, 23, 'ZG0001'),
+
+    -- Zeep Light Grape (product_id = 24?)
+    ('S', 4, 1400.00, 300, 24, 'ZLG002'),
+
+    -- Zeep Shine Muskat (25?)
+    ('S', 4, 1500.00, 300, 25, 'ZSM003'),
+
+    -- Zeep Mango (26?)
+    ('S', 4, 1400.00, 300, 26, 'ZM0004'),
+
+    -- Pulpy Grape Tea (27?)
+    ('S', 4, 1300.00, 300, 27, 'PGT005'),
+
+    -- Pulpy Coco-Mango Tea (28?)
+    ('S', 4, 1350.00, 300, 28, 'PCMT06'),
+
+    -- Pulpy Mango Saga Tea (29?)
+    ('S', 4, 1400.00, 300, 29, 'PMST07'),
+
+    -- Pulpy Super Mango Tea (30?)
+    ('S', 4, 1450.00, 300, 30, 'PSMT08'),
+
+    -- Pulpy Shine Muscat Tea (31?)
+    ('S', 4, 1450.00, 300, 31, 'PSMT09'),
+
+    -- Passion Green Tea (32?)
+    ('S', 4, 1300.00, 300, 32, 'PGT010'),
+
+    -- Mango Passion Tea (33?)
+    ('S', 4, 1400.00, 300, 33, 'MPT011'),
+
+    -- Ruby Grapefruit Tea (34?)
+    ('S', 4, 1500.00, 300, 34, 'RGT012'),
+
+    -- Duck Citrus Lemon Tea (35?)
+    ('S', 4, 1300.00, 300, 35, 'DCLT13'),
+
+    -- Lemon Tea (36?)
+    ('S', 4, 1200.00, 300, 36, 'LT0014'),
+
+    -- Cheesy Matcha (37?)
+    ('S', 4, 1800.00, 300, 37, 'CM0015'),
+
+    -- Matcha Milk Pudding (38?)
+    ('S', 4, 1800.00, 300, 38, 'MMP016'),
+
+    -- Milk Ceylon Tea (39?)
+    ('S', 4, 1300.00, 300, 39, 'MCT017'),
+
+    -- Milk Tapioca Tea (40?)
+    ('S', 4, 1600.00, 300, 40, 'MTT018'),
+
+    -- Tapioca&Milk Pudding (41?)
+    ('S', 4, 1700.00, 300, 41, 'TMP019'),
+
+    -- Black Sugar Milk (42?)
+    ('S', 4, 1800.00, 300, 42, 'BSM020'),
+
+    -- OREO CREME BRULEE (43?)
+    ('S', 4, 2000.00, 300, 43, 'OCM021');
+
 
 -- Орехи и семена
 -- Insert into ProductIngredients

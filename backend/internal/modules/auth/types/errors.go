@@ -9,4 +9,5 @@ var (
 	ErrInactiveEmployee   = moduleErrors.NewModuleError(errors.New("inactive employee"))
 	ErrBannedCustomer     = moduleErrors.NewModuleError(errors.New("banned customer"))
 	ErrInvalidCredentials = moduleErrors.NewModuleError(errors.New("invalid credentials"))
+	ErrFailedToHashToken  = moduleErrors.NewModuleError(errors.New("failed to hash token"))
 )

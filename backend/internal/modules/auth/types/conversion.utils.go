@@ -8,8 +8,19 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 )
 
-func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, error) {
-	// Declare them without initial assignment; Go defaults to zero values anyway.
+type EmployeeSession struct {
+	EmployeeID   uint
+	WorkplaceID  uint
+	Role         data.EmployeeRole
+	EmployeeType data.EmployeeType
+}
+
+type CustomerSession struct {
+	CustomerID uint
+	IsVerified bool
+}
+
+func MapEmployeeToEmployeeSessionData(employee *data.Employee) (*EmployeeSession, error) {
 	var workplaceID uint
 	var role data.EmployeeRole
 
@@ -33,8 +44,8 @@ func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, erro
 		return nil, fmt.Errorf("%w: %s", employeesTypes.ErrUnsupportedEmployeeType, employee.GetType())
 	}
 
-	employeeData := EmployeeClaimsData{
-		ID:           employee.ID,
+	employeeData := EmployeeSession{
+		EmployeeID:   employee.ID,
 		Role:         role,
 		WorkplaceID:  workplaceID,
 		EmployeeType: employee.GetType(),
@@ -43,9 +54,9 @@ func MapEmployeeToClaimsData(employee *data.Employee) (*EmployeeClaimsData, erro
 	return &employeeData, nil
 }
 
-func MapCustomerToClaimsData(customer *data.Customer) *CustomerClaimsData {
-	return &CustomerClaimsData{
-		ID:         customer.ID,
+func MapCustomerToClaimsData(customer *data.Customer) *CustomerSession {
+	return &CustomerSession{
+		CustomerID: customer.ID,
 		IsVerified: customer.IsVerified,
 	}
 }

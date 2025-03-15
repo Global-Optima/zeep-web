@@ -32,69 +32,7 @@ func ValidateCustomer(input CustomerRegisterDTO) error {
 	return nil
 }
 
-func extractAndValidateEmployeeToken(c *gin.Context, tokenType TokenType) (*EmployeeClaims, error) {
-	var cookieKey, headerKey string
-
-	switch tokenType {
-	case TokenAccess:
-		cookieKey = EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY
-		headerKey = ACCESS_TOKEN_HEADER
-	case TokenRefresh:
-		cookieKey = EMPLOYEE_ACCESS_TOKEN_COOKIE_KEY
-		headerKey = REFRESH_TOKEN_HEADER
-	default:
-		return nil, fmt.Errorf("invalid token type: %v", tokenType)
-	}
-
-	tokenString, err := ExtractToken(c, headerKey, cookieKey)
-	if err != nil {
-		return nil, err
-	}
-
-	claims := &EmployeeClaims{}
-
-	if err := ValidateEmployeeJWT(tokenString, claims, tokenType); err != nil {
-		return nil, err
-	}
-
-	return claims, nil
-}
-
-func extractAndValidateCustomerToken(c *gin.Context, tokenType TokenType) (*CustomerClaims, error) {
-	var cookieKey, headerKey string
-
-	switch tokenType {
-	case TokenAccess:
-		cookieKey = CUSTOMER_ACCESS_TOKEN_COOKIE_KEY
-		headerKey = ACCESS_TOKEN_HEADER
-	case TokenRefresh:
-		cookieKey = CUSTOMER_ACCESS_TOKEN_COOKIE_KEY
-		headerKey = REFRESH_TOKEN_HEADER
-	default:
-		return nil, fmt.Errorf("invalid token type: %v", tokenType)
-	}
-
-	tokenString, err := ExtractToken(c, headerKey, cookieKey)
-	if err != nil {
-		return nil, err
-	}
-
-	claims := &CustomerClaims{}
-
-	if err := ValidateCustomerJWT(tokenString, claims, tokenType); err != nil {
-		return nil, err
-	}
-
-	return claims, nil
-}
-
-// ExtractToken tries to get token from HTTP header or browser cookie. Header is prioritized.
-func ExtractToken(c *gin.Context, headerKey, cookieKey string) (string, error) {
-	authHeader := c.GetHeader(headerKey)
-	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-		return strings.TrimPrefix(authHeader, "Bearer "), nil
-	}
-
+func ExtractToken(c *gin.Context, cookieKey string) (string, error) {
 	cookie, err := c.Cookie(cookieKey)
 	if err != nil {
 		return "", err
@@ -103,65 +41,72 @@ func ExtractToken(c *gin.Context, headerKey, cookieKey string) (string, error) {
 	return cookie, nil
 }
 
-func ValidateCustomerJWT(tokenString string, claims *CustomerClaims, tokenType TokenType) error {
+func ValidateEmployeeToken(tokenString string, session *EmployeeClaims) error {
 	cfg := config.GetConfig()
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cfg.JWT.CustomerSecretKey), nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to parse token: %w", err)
-	}
-
-	err = validateJWT(token, tokenType)
-	if err != nil {
-		return fmt.Errorf("token validation failed: %w", err)
-	}
-
-	return nil
-}
-
-func ValidateEmployeeJWT(tokenString string, claims *EmployeeClaims, tokenType TokenType) error {
-	cfg := config.GetConfig()
-
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, session, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.JWT.EmployeeSecretKey), nil
-	})
+	}, jwt.WithoutClaimsValidation())
 	if err != nil {
 		return fmt.Errorf("failed to parse token: %w", err)
 	}
-
-	err = validateJWT(token, tokenType)
-	if err != nil {
-		return fmt.Errorf("token validation failed: %w", err)
-	}
-
-	return nil
-}
-
-func validateJWT(token *jwt.Token, expectedType TokenType) error {
 	if !token.Valid {
 		return errors.New("token is invalid")
 	}
-
-	tokenType, ok := token.Header[TOKEN_TYPE_KEY].(string)
-	if !ok || TokenType(tokenType) != expectedType {
-		return fmt.Errorf("invalid token type: expected %s, got %s", expectedType, tokenType)
-	}
-
 	return nil
 }
 
-func ExtractEmployeeAccessTokenAndValidate(c *gin.Context) (*EmployeeClaims, error) {
+func ValidateCustomerToken(tokenString string, session *CustomerClaims) error {
+	cfg := config.GetConfig()
+
+	token, err := jwt.ParseWithClaims(tokenString, session, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.JWT.CustomerSecretKey), nil
+	}, jwt.WithoutClaimsValidation())
+	if err != nil {
+		return fmt.Errorf("failed to parse token: %w", err)
+	}
+	if !token.Valid {
+		return errors.New("token is invalid")
+	}
+	return nil
+}
+
+func ExtractEmployeeSessionTokenAndValidate(c *gin.Context) (*EmployeeClaims, string, error) {
 	return extractAndValidateEmployeeToken(
 		c,
-		TokenAccess,
 	)
 }
 
-func ExtractCustomerAccessTokenAndValidate(c *gin.Context) (*CustomerClaims, error) {
+func ExtractCustomerSessionTokenAndValidate(c *gin.Context) (*CustomerClaims, string, error) {
 	return extractAndValidateCustomerToken(
 		c,
-		TokenAccess,
 	)
+}
+
+func extractAndValidateEmployeeToken(c *gin.Context) (*EmployeeClaims, string, error) {
+	tokenString, err := ExtractToken(c, EMPLOYEE_SESSION_COOKIE_KEY)
+	if err != nil {
+		return nil, "", errors.Wrap(err, "failed to extract token")
+	}
+
+	claims := &EmployeeClaims{}
+	if err := ValidateEmployeeToken(tokenString, claims); err != nil {
+		return nil, "", errors.Wrap(err, "failed to validate token")
+	}
+
+	return claims, tokenString, nil
+}
+
+func extractAndValidateCustomerToken(c *gin.Context) (*CustomerClaims, string, error) {
+	tokenString, err := ExtractToken(c, CUSTOMER_SESSION_COOKIE_KEY)
+	if err != nil {
+		return nil, "", errors.Wrap(err, "failed to extract token")
+	}
+
+	claims := &CustomerClaims{}
+	if err := ValidateCustomerToken(tokenString, claims); err != nil {
+		return nil, "", errors.Wrap(err, "failed to validate token")
+	}
+
+	return claims, tokenString, nil
 }

@@ -20,3 +20,5 @@ go.work.sum
 config.yml
 
 logs
+
+__pycache__

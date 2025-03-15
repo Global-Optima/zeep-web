@@ -376,6 +376,19 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+-- EmployeeTokens Table
+CREATE TABLE 
+	employee_tokens (
+		id SERIAL PRIMARY KEY,
+		token VARCHAR(255) NOT NULL UNIQUE,
+		expires_at TIMESTAMPTZ NOT NULL,
+		employee_id INT NOT NULL UNIQUE REFERENCES employees (id) ON DELETE CASCADE,
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
+
+
 CREATE UNIQUE INDEX unique_employee_phone ON employees (phone) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX unique_employee_email ON employees (email) WHERE deleted_at IS NULL;
 

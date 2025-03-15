@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
@@ -54,8 +55,8 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	redis := setupRedis(cfg, t)
 	router := setupRouter(dbHandler, redis)
 
-	truncateAndLoadMockData(dbHandler.DB)
-	log.Println("Mock data loaded successfully")
+	// truncateAndLoadMockData(dbHandler.DB)
+	// log.Println("Mock data loaded successfully")
 
 	return &TestEnvironment{
 		Router: router,
@@ -200,17 +201,19 @@ func setupRouter(dbHandler *database.DBHandler, redis *database.RedisClient) *gi
 	router.Use(logger.ZapLoggerMiddleware())
 
 	apiRouter := routes.NewRouter(router, "/api", "/test")
-	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
+
+	employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
+	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
 	storageRepo := setupMockStorage()
 
-	testContainer := container.NewContainer(dbHandler, redis, storageRepo, apiRouter, logger.GetZapSugaredLogger())
+	testContainer := container.NewContainer(dbHandler, redis, storageRepo, &employeeTokenManager, apiRouter, logger.GetZapSugaredLogger())
 	testContainer.MustInitModules()
 
 	return router
 }
 
-func truncateAndLoadMockData(db *gorm.DB) {
+func TruncateAndLoadMockData(db *gorm.DB) {
 	if err := truncateTables(db); err != nil {
 		log.Fatalf("Failed to truncate tables: %v", err)
 	}
