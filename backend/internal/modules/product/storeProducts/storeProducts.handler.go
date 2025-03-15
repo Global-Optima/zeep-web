@@ -6,14 +6,12 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -253,7 +251,6 @@ func (h *StoreProductHandler) CreateStoreProduct(c *gin.Context) {
 func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 	var dtos []types.CreateStoreProductDTO
 	if err := c.ShouldBindJSON(&dtos); err != nil {
-		logrus.Info(err)
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}

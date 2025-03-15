@@ -2,7 +2,6 @@ package storeProducts
 
 import (
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"

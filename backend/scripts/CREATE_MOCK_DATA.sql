@@ -900,6 +900,7 @@ INSERT INTO
         contact_phone,
         contact_email,
         store_hours,
+        last_inventory_sync_at,
         created_at,
         updated_at
     )
@@ -914,6 +915,7 @@ VALUES
         'central@example.com',
         '8:00-20:00',
         CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ), -- Assigned to 'Алматинский склад'
     (
@@ -925,6 +927,7 @@ VALUES
         '+79002223344',
         'corner@example.com',
         '9:00-22:00',
+        CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ), -- Assigned to 'Астанинский склад'
@@ -938,6 +941,7 @@ VALUES
         'smallstore@example.com',
         '8:00-18:00',
         CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     ), -- Assigned to 'Алматинский склад'
     (
@@ -949,6 +953,7 @@ VALUES
         '+79004445566',
         'citycoffee@example.com',
         '7:00-23:00',
+        CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );

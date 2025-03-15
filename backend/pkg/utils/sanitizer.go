@@ -77,3 +77,21 @@ func InitValidators() {
 func RoundToOneDecimal(value float64) float64 {
 	return math.Round(value*10) / 10
 }
+
+func MergeDistinct[T comparable](arr1, arr2 []T) []T {
+	uniqueMap := make(map[T]struct{})
+
+	for _, v := range arr1 {
+		uniqueMap[v] = struct{}{}
+	}
+	for _, v := range arr2 {
+		uniqueMap[v] = struct{}{}
+	}
+
+	mergedSlice := make([]T, 0, len(uniqueMap))
+	for key := range uniqueMap {
+		mergedSlice = append(mergedSlice, key)
+	}
+
+	return mergedSlice
+}

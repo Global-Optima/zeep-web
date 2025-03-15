@@ -5,6 +5,8 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 )
 
+const DEFAULT_LOW_STOCK_THRESHOLD = 50
+
 func MapToStockDTO(stock data.StoreStock) StoreStockDTO {
 	return StoreStockDTO{
 		ID:                stock.ID,
@@ -22,5 +24,14 @@ func AddToStock(dto AddStoreStockDTO, storeID uint) *data.StoreStock {
 		Quantity:          dto.Quantity,
 		LowStockThreshold: dto.LowStockThreshold,
 		IngredientID:      dto.IngredientID,
+	}
+}
+
+func DefaultStockFromIngredient(storeID, ingredientID uint) *data.StoreStock {
+	return &data.StoreStock{
+		StoreID:           storeID,
+		IngredientID:      ingredientID,
+		Quantity:          0,
+		LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
 	}
 }

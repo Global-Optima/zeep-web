@@ -209,19 +209,6 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return &order, err
 	}
 
-	notificationDetails := &details.NewOrderNotificationDetails{
-		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           order.StoreID,
-			FacilityName: order.Store.Name,
-		},
-		CustomerName: createOrderDTO.CustomerName,
-		OrderID:      order.ID,
-	}
-
-	if err := s.notificationService.NotifyNewOrder(notificationDetails); err != nil {
-		s.logger.Errorf("failed to notify new order: %w", err)
-	}
-
 	return &order, nil
 }
 
@@ -849,11 +836,25 @@ func evaluateSuborderStatuses(suborders []data.Suborder) (hasPreparing bool, all
 
 func (s *orderService) SuccessOrderPayment(orderID uint, dto *types.TransactionDTO) error {
 	paymentTransaction := types.ToTransactionModel(dto, orderID, data.TransactionTypePayment)
-	err := s.orderRepo.HandlePaymentSuccess(orderID, paymentTransaction)
+	order, err := s.orderRepo.HandlePaymentSuccess(orderID, paymentTransaction)
 	if err != nil {
 		s.logger.Errorf("failed to handle the order %d success", err)
 		return err
 	}
+
+	notificationDetails := &details.NewOrderNotificationDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID:           order.StoreID,
+			FacilityName: order.Store.Name,
+		},
+		CustomerName: order.CustomerName,
+		OrderID:      order.ID,
+	}
+
+	if err := s.notificationService.NotifyNewOrder(notificationDetails); err != nil {
+		s.logger.Errorf("failed to notify new order: %w", err)
+	}
+
 	return nil
 }
 

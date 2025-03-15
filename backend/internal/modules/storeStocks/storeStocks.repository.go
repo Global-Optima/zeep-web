@@ -20,6 +20,7 @@ import (
 type StoreStockRepository interface {
 	GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]data.Ingredient, error)
 	AddStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error)
+	AddMultipleStocks(stocks []data.StoreStock) ([]uint, error)
 	AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error)
 	GetStockList(storeID uint, query *types.GetStockFilterQuery) ([]data.StoreStock, error)
 	GetStockListByIDs(storeID uint, IDs []uint) ([]data.StoreStock, error)
@@ -34,6 +35,7 @@ type StoreStockRepository interface {
 
 	FindEarliestExpirationForIngredient(ingredientID, storeID uint) (*time.Time, error)
 	GetStockByStoreAndIngredient(storeID, ingredientID uint, stock *data.StoreStock) error
+	FilterMissingIngredientsIDs(storeID uint, ingredientsIDs []uint) ([]uint, error)
 }
 
 type storeStockRepository struct {
@@ -135,6 +137,20 @@ func (r *storeStockRepository) AddStock(storeID uint, dto *types.AddStoreStockDT
 	}
 
 	return storeStock.ID, nil
+}
+
+func (r *storeStockRepository) AddMultipleStocks(stocks []data.StoreStock) ([]uint, error) {
+	stockIDs := make([]uint, len(stocks))
+
+	err := r.db.Create(&stocks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i, stock := range stocks {
+		stockIDs[i] = stock.ID
+	}
+	return stockIDs, nil
 }
 
 func (r *storeStockRepository) AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error) {
@@ -567,4 +583,32 @@ func (r *storeStockRepository) GetStockByStoreAndIngredient(
 		return fmt.Errorf("failed to fetch store stock: %w", err)
 	}
 	return nil
+}
+
+func (r *storeStockRepository) FilterMissingIngredientsIDs(storeID uint, ingredientsIDs []uint) ([]uint, error) {
+	if len(ingredientsIDs) == 0 {
+		return []uint{}, nil
+	}
+
+	var existingIngredientIDs []uint
+	if err := r.db.
+		Model(&data.StoreStock{}).
+		Where("store_id = ? AND ingredient_id IN (?)", storeID, ingredientsIDs).
+		Pluck("ingredient_id", &existingIngredientIDs).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch existing ingredient IDs: %w", err)
+	}
+
+	existingMap := make(map[uint]struct{}, len(existingIngredientIDs))
+	for _, id := range existingIngredientIDs {
+		existingMap[id] = struct{}{}
+	}
+
+	var missingIngredientIDs []uint
+	for _, id := range ingredientsIDs {
+		if _, found := existingMap[id]; !found {
+			missingIngredientIDs = append(missingIngredientIDs, id)
+		}
+	}
+
+	return missingIngredientIDs, nil
 }

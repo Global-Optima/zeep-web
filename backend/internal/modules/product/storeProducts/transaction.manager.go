@@ -1,9 +1,6 @@
 package storeProducts
 
 import (
-	"errors"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 
@@ -14,9 +11,9 @@ import (
 )
 
 type TransactionManager interface {
-	CreateStoreProductWithStocks(storeID uint, storeProduct *data.StoreProduct, storeAdditives []data.StoreAdditive, stockDTOs []storeStocksTypes.AddStoreStockDTO) (storeProductID uint, storeAdditiveIDs []uint, err error)
-	CreateMultipleStoreProductsWithStocks(storeID uint, storeProduct []data.StoreProduct, storeAdditives []data.StoreAdditive, stockDTOs []storeStocksTypes.AddStoreStockDTO) (storeProductIDs []uint, storeAdditiveIDs []uint, err error)
-	UpdateStoreProductWithStocks(storeID, storeProductID uint, updateModels *types.StoreProductModels, dtos []storeStocksTypes.AddStoreStockDTO) error
+	CreateStoreProductWithStocks(storeID uint, storeProduct *data.StoreProduct, storeAdditives []data.StoreAdditive, ingredientIDs []uint) (storeProductID uint, storeAdditiveIDs []uint, err error)
+	CreateMultipleStoreProductsWithStocks(storeID uint, storeProduct []data.StoreProduct, storeAdditives []data.StoreAdditive, ingredientIDs []uint) (storeProductIDs []uint, storeAdditiveIDs []uint, err error)
+	UpdateStoreProductWithStocks(storeID, storeProductID uint, updateModels *types.StoreProductModels, ingredientIDs []uint) error
 }
 
 type transactionManager struct {
@@ -35,7 +32,7 @@ func NewTransactionManager(db *gorm.DB, storeProductRepo StoreProductRepository,
 	}
 }
 
-func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storeProduct *data.StoreProduct, storeAdditives []data.StoreAdditive, stockDTOs []storeStocksTypes.AddStoreStockDTO) (uint, []uint, error) {
+func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storeProduct *data.StoreProduct, storeAdditives []data.StoreAdditive, ingredientIDs []uint) (uint, []uint, error) {
 	var id uint
 	var storeAdditiveIDs []uint
 	err := m.db.Transaction(func(tx *gorm.DB) error {
@@ -47,7 +44,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
+		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
 		storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
 		storeAdditiveIDs, err = storeAdditiveRepoTx.CreateStoreAdditives(storeAdditives)
@@ -55,7 +52,18 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		if err := m.addStocks(&storeWarehouseRepo, storeID, stockDTOs); err != nil {
+		missingIngredientIDs, err := storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
+		for i, ingredientID := range missingIngredientIDs {
+			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		}
+
+		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
+		if err != nil {
 			return err
 		}
 
@@ -67,7 +75,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 	return id, storeAdditiveIDs, nil
 }
 
-func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint, storeProducts []data.StoreProduct, storeAdditives []data.StoreAdditive, storeStockDTOs []storeStocksTypes.AddStoreStockDTO) ([]uint, []uint, error) {
+func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint, storeProducts []data.StoreProduct, storeAdditives []data.StoreAdditive, ingredientIDs []uint) ([]uint, []uint, error) {
 	var storeProductIDs, storeAdditiveIDs []uint
 	err := m.db.Transaction(func(tx *gorm.DB) error {
 		sp := m.storeProductRepo.CloneWithTransaction(tx)
@@ -92,8 +100,19 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 			return err
 		}
 
-		storeWarehouseRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
-		if err := m.addStocks(&storeWarehouseRepoTx, storeID, storeStockDTOs); err != nil {
+		storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
+		missingIngredientIDs, err := storeStockRepoTx.FilterMissingIngredientsIDs(storeID, ingredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
+		for i, ingredientID := range missingIngredientIDs {
+			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		}
+
+		_, err = m.addStocks(&storeStockRepoTx, newStoreStocks)
+		if err != nil {
 			return err
 		}
 
@@ -105,15 +124,26 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 	return storeProductIDs, storeAdditiveIDs, nil
 }
 
-func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductID uint, updateModels *types.StoreProductModels, dtos []storeStocksTypes.AddStoreStockDTO) error {
+func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductID uint, updateModels *types.StoreProductModels, ingredientIDs []uint) error {
 	err := m.db.Transaction(func(tx *gorm.DB) error {
 		sp := m.storeProductRepo.CloneWithTransaction(tx)
 		if err := sp.UpdateStoreProductByID(storeID, storeProductID, updateModels); err != nil {
 			return err
 		}
-		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
+		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
-		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+		missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
+		for i, ingredientID := range missingIngredientIDs {
+			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		}
+
+		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
+		if err != nil {
 			return err
 		}
 
@@ -125,16 +155,11 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 	return nil
 }
 
-func (m *transactionManager) addStocks(storeStockRepo storeStocks.StoreStockRepository, storeID uint, dtos []storeStocksTypes.AddStoreStockDTO) error {
-	for _, dto := range dtos {
-		_, err := storeStockRepo.AddStock(storeID, &dto)
-		if err != nil {
-			switch {
-			case errors.Is(err, moduleErrors.ErrAlreadyExists):
-				continue
-			}
-			return err
-		}
+func (m *transactionManager) addStocks(storeStockRepo storeStocks.StoreStockRepository, stocks []data.StoreStock) ([]uint, error) {
+	ids, err := storeStockRepo.AddMultipleStocks(stocks)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	return ids, nil
 }
