@@ -5,6 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -121,13 +122,8 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 		if len(unsyncData.IngredientIDs) > 0 {
 			g.Go(func() error {
 				newStoreStocks := make([]data.StoreStock, len(unsyncData.IngredientIDs))
-				for i, id := range unsyncData.IngredientIDs {
-					newStoreStocks[i] = data.StoreStock{
-						StoreID:           storeID,
-						IngredientID:      id,
-						Quantity:          0,
-						LowStockThreshold: storeStocks.DEFAULT_LOW_STOCK_THRESHOLD,
-					}
+				for i, ingredientID := range unsyncData.IngredientIDs {
+					newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
 				}
 				m.storeStockRepo.CloneWithTransaction(tx)
 				_, err := m.storeStockRepo.AddMultipleStocks(newStoreStocks)

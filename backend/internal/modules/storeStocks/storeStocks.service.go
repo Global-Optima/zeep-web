@@ -16,8 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const DEFAULT_LOW_STOCK_THRESHOLD = 50
-
 type StoreStockService interface {
 	GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]ingredientTypes.IngredientDTO, error)
 	AddStock(storeId uint, dto *types.AddStoreStockDTO) (uint, error)

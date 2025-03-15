@@ -3,6 +3,7 @@ package storeStocks
 import (
 	"database/sql"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -609,6 +610,7 @@ func (r *storeStockRepository) FilterMissingIngredientsIDs(storeID uint, ingredi
 			missingIngredientIDs = append(missingIngredientIDs, id)
 		}
 	}
+	logrus.Info(missingIngredientIDs)
 
 	return missingIngredientIDs, nil
 }
