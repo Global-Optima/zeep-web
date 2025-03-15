@@ -88,7 +88,6 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 		return err
 	}
 
-	// Fetch unsynchronized and missing data concurrently
 	unsyncData, err := m.fetchUnsynchronizedData(storeID, store.LastInventorySyncAt)
 	if err != nil {
 		return err
@@ -102,7 +101,6 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 	return m.db.Transaction(func(tx *gorm.DB) error {
 		g := new(errgroup.Group)
 
-		// Add missing additives
 		if len(unsyncData.AdditiveIDs) > 0 {
 			g.Go(func() error {
 				storeAdditiveList := make([]data.StoreAdditive, len(unsyncData.AdditiveIDs))
@@ -112,21 +110,20 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 						AdditiveID: id,
 					}
 				}
-				m.storeAdditiveRepo.CloneWithTransaction(tx)
-				_, err := m.storeAdditiveRepo.CreateStoreAdditives(storeAdditiveList)
+				storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
+				_, err := storeAdditiveRepoTx.CreateStoreAdditives(storeAdditiveList)
 				return err
 			})
 		}
 
-		// Add missing store stocks
 		if len(unsyncData.IngredientIDs) > 0 {
 			g.Go(func() error {
 				newStoreStocks := make([]data.StoreStock, len(unsyncData.IngredientIDs))
 				for i, ingredientID := range unsyncData.IngredientIDs {
 					newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
 				}
-				m.storeStockRepo.CloneWithTransaction(tx)
-				_, err := m.storeStockRepo.AddMultipleStocks(newStoreStocks)
+				storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
+				_, err := storeStockRepoTx.AddMultipleStocks(newStoreStocks)
 				return err
 			})
 		}
@@ -135,8 +132,8 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 			return err
 		}
 
-		m.storeRepo.CloneWithTransaction(tx)
-		_, err = m.storeRepo.UpdateStoreSyncTime(storeID)
+		storeRepoTx := m.storeRepo.CloneWithTransaction(tx)
+		_, err = storeRepoTx.UpdateStoreSyncTime(storeID)
 		if err != nil {
 			return err
 		}
