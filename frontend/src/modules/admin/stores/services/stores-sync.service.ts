@@ -4,7 +4,7 @@ import type { StoreSynchronizationStatus } from '../models/stores-sync.models'
 class StoreSyncService {
 	async isStoreSynchronized() {
 		try {
-			const response = await apiClient.get<StoreSynchronizationStatus>('/stores')
+			const response = await apiClient.get<StoreSynchronizationStatus>('/sync/store')
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch store sync status:', error)
@@ -14,7 +14,7 @@ class StoreSyncService {
 
 	async syncStoreStocksAndAdditives() {
 		try {
-			const response = await apiClient.post<void>('/stores')
+			const response = await apiClient.post<void>('/sync/store')
 			return response.data
 		} catch (error) {
 			console.error('Failed to post sync store:', error)
