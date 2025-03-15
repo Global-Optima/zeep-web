@@ -116,21 +116,43 @@
 								</div>
 							</div>
 							<!-- Store Hours -->
-							<FormField
-								name="storeHours"
-								v-slot="{ componentField }"
-							>
-								<FormItem>
-									<FormLabel>Часы работы</FormLabel>
-									<FormControl>
-										<Input
-											v-bind="componentField"
-											placeholder="Введите часы работы (например, 9:00-18:00)"
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							</FormField>
+
+							<div>
+								<Label>Часы работы</Label>
+								<div class="flex items-start gap-3 mt-2">
+									<FormField
+										name="storeHoursStart"
+										v-slot="{ componentField }"
+									>
+										<FormItem>
+											<FormControl>
+												<Input
+													type="time"
+													v-bind="componentField"
+												/>
+											</FormControl>
+											<FormMessage class="w-fit" />
+										</FormItem>
+									</FormField>
+
+									<span class="mt-1">—</span>
+
+									<FormField
+										name="storeHoursEnd"
+										v-slot="{ componentField }"
+									>
+										<FormItem>
+											<FormControl>
+												<Input
+													type="time"
+													v-bind="componentField"
+												/>
+											</FormControl>
+											<FormMessage class="w-fit" />
+										</FormItem>
+									</FormField>
+								</div>
+							</div>
 						</form>
 					</CardContent>
 				</Card>
@@ -139,7 +161,7 @@
 			<div class="items-start gap-4 grid auto-rows-max">
 				<Card>
 					<CardHeader>
-						<CardTitle>Франчайзи (опционально)</CardTitle>
+						<CardTitle>Франчайзи (необязательно)</CardTitle>
 						<CardDescription>Выберите франчайзи</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -227,6 +249,7 @@ import {
   FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { Label } from '@/core/components/ui/label'
 import { phoneValidationSchema } from '@/core/validators/phone.validator'
 import AdminSelectFranchiseeDialog from '@/modules/admin/franchisees/components/admin-select-franchisee-dialog.vue'
 import type { FranchiseeDTO } from '@/modules/admin/franchisees/models/franchisee.model'
@@ -245,6 +268,11 @@ const emit = defineEmits<{
 	(e: 'onCancel'): void
 }>()
 
+const parseTimeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
 // Define Zod schema
 const schema = toTypedSchema(
 	z.object({
@@ -255,10 +283,30 @@ const schema = toTypedSchema(
 		}),
 		contactPhone: phoneValidationSchema,
 		contactEmail: z.string().email('Введите действительный адрес электронной почты'),
-		storeHours: z.string().min(5, 'Часы работы должны быть указаны'),
+    storeHoursStart: z.string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Введите время в формате HH:mm')
+      .nonempty('Обязательное поле'),
+    storeHoursEnd: z.string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Введите время в формате HH:mm')
+      .nonempty('Обязательное поле'),
     warehouseId: z.number().min(1, 'Введите склад'),
     franchiseeId: z.number().optional()
-	}),
+	}).superRefine(({ storeHoursStart, storeHoursEnd }, ctx) => {
+    if (storeHoursStart && storeHoursEnd) {
+      const startMinutes = parseTimeToMinutes(storeHoursStart)
+      const endMinutes = parseTimeToMinutes(storeHoursEnd)
+
+      console.log(startMinutes >= endMinutes)
+
+      if (startMinutes >= endMinutes) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Время окончания должно быть позже начала',
+          path: ['storeHoursEnd']
+        })
+      }
+    }
+  }),
 )
 
 // Initialize form
@@ -268,6 +316,8 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
 
 // Submit form
 const submitForm = handleSubmit((formValues) => {
+  const formattedStoreHours = `${formValues.storeHoursStart} - ${formValues.storeHoursEnd}`
+
   const dto: CreateStoreDTO = {
     name: formValues.name,
     warehouseId: formValues.warehouseId,
@@ -277,7 +327,7 @@ const submitForm = handleSubmit((formValues) => {
     isActive: true,
     contactPhone: formValues.contactPhone,
     contactEmail: formValues.contactEmail,
-    storeHours: formValues.storeHours,
+    storeHours: formattedStoreHours,
     franchiseeId:  formValues.franchiseeId
   }
 
