@@ -2,8 +2,6 @@ package storeProducts
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
-
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -15,8 +13,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -220,18 +220,21 @@ func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.Create
 func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error) {
 	var inputSizeIDs []uint
 	storeProducts := make([]data.StoreProduct, len(dtos))
+	logrus.Info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
 	for i, dto := range dtos {
 		storeProducts[i] = *types.CreateToStoreProduct(&dto)
 		storeProducts[i].StoreID = storeID
 
 		if len(dto.ProductSizes) > 0 {
-			inputSizeIDs = make([]uint, len(dto.ProductSizes))
+			sizeIDs := make([]uint, len(dto.ProductSizes))
 			for j, productSize := range dto.ProductSizes {
-				inputSizeIDs[j] = productSize.ProductSizeID
+				sizeIDs[j] = productSize.ProductSizeID
 			}
 
-			if err := s.validateProductSizesByProductID(inputSizeIDs, dto.ProductID); err != nil {
+			inputSizeIDs = utils.MergeDistinct(inputSizeIDs, sizeIDs)
+
+			if err := s.validateProductSizesByProductID(sizeIDs, dto.ProductID); err != nil {
 				return nil, utils.WrapError("failed to create store products", err)
 			}
 		}
@@ -266,6 +269,7 @@ func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []t
 		}, storeID)
 	}
 
+	logrus.Info(addStockDTOs)
 	storeProductIDs, _, err := s.transactionManager.CreateMultipleStoreProductsWithStocks(storeID, storeProducts, storeAdditiveList, addStockDTOs)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to create %d store product: %w", len(dtos), err)
@@ -324,13 +328,13 @@ func (s *storeProductService) DeleteStoreProduct(storeID, storeProductID uint) e
 }
 
 func (s *storeProductService) formAddStockDTOsFromProductSizes(productSizeIDs []uint) ([]storeStocksTypes.AddStoreStockDTO, error) {
-	ingredientsList, err := s.ingredientsRepo.GetIngredientsForProductSizes(productSizeIDs)
+	ingredientIDs, err := s.ingredientsRepo.GetIngredientsForProductSizes(productSizeIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)
 	}
 
-	addStockDTOs := make([]storeStocksTypes.AddStoreStockDTO, len(ingredientsList))
-	for i, ingredient := range ingredientsList {
+	addStockDTOs := make([]storeStocksTypes.AddStoreStockDTO, len(ingredientIDs))
+	for i, ingredient := range ingredientIDs {
 		addStockDTOs[i] = storeStocksTypes.AddStoreStockDTO{
 			IngredientID:      ingredient.ID,
 			Quantity:          0,

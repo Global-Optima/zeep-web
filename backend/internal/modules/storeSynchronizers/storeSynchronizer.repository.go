@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"time"
 )
@@ -31,15 +32,15 @@ func (r *storeSynchronizeRepository) CloneWithTransaction(tx *gorm.DB) StoreSync
 func (r *storeSynchronizeRepository) GetNotSynchronizedAdditiveIngredientsIDs(storeID uint, lastSync time.Time) ([]uint, error) {
 	var notSynchronizedProductSizesAdditivesIDs []uint
 	err := r.db.Model(&data.AdditiveIngredient{}).
-		Distinct("additive_ingredients.additive_id").
+		Distinct("additive_ingredients.ingredient_id").
 		Joins("JOIN additives ON additive_ingredients.additive_id = additives.id").
 		Joins("JOIN product_size_additives ON product_size_additives.additive_id = additives.id").
 		Joins("JOIN product_sizes ON product_sizes.id = product_size_additives.product_size_id").
 		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_sizes.id").
 		Joins("JOIN store_products ON store_product_sizes.store_product_id = store_products.id").
-		Where("store_products.id = ?", storeID).
-		Where("additive_ingredients.created_at > ?", lastSync).
-		Pluck("additive_ingredients.additive_id", &notSynchronizedProductSizesAdditivesIDs).Error
+		Where("store_products.store_id = ?", storeID).
+		Where("additive_ingredients.created_at > ? OR product_size_additives.created_at > ?", lastSync, lastSync).
+		Pluck("additive_ingredients.ingredient_id", &notSynchronizedProductSizesAdditivesIDs).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -48,6 +49,7 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedAdditiveIngredientsIDs(st
 		return nil, fmt.Errorf("failed to fetch product sizes: %w", err)
 	}
 
+	logrus.Info(notSynchronizedProductSizesAdditivesIDs)
 	return notSynchronizedProductSizesAdditivesIDs, nil
 }
 

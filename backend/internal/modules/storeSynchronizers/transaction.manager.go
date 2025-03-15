@@ -42,7 +42,7 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 		return nil, fmt.Errorf("failed to fetch store sync time: %w", err)
 	}
 
-	unsyncData, err := m.fetchUnsynchronizedData(storeID, store.LastInventorySyncAt)
+	unsyncData, err := m.fetchUnsynchronizedData(storeID, store.LastInventorySyncAt.UTC())
 	if err != nil {
 		return nil, err
 	}
