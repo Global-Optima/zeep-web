@@ -1,4 +1,11 @@
 <template>
+	<div
+		v-if="isStoreSync"
+		class="mb-4"
+	>
+		<AdminStoresSyncCard />
+	</div>
+
 	<AdminStoreProductsToolbar
 		:filter="filter"
 		@update:filter="updateFilter"
@@ -41,8 +48,10 @@ import CardFooter from '@/core/components/ui/card/CardFooter.vue'
 import { usePaginationFilter } from '@/core/hooks/use-pagination-filter.hook'
 import AdminStoreProductsList from '@/modules/admin/store-products/components/list/admin-store-products-list.vue'
 import AdminStoreProductsToolbar from '@/modules/admin/store-products/components/list/admin-store-products-toolbar.vue'
+import AdminStoresSyncCard from '@/modules/admin/store-products/components/stores-sync/admin-stores-sync-card.vue'
 import type { StoreProductsFilterDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
+import { storeSyncService } from '@/modules/admin/stores/services/stores-sync.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 
@@ -51,6 +60,11 @@ const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter
 const { data: storeProductsResponse, isPending } = useQuery({
   queryKey: computed(() => ['admin-store-products', filter.value]),
   queryFn: () => storeProductsService.getStoreProducts(filter.value),
+})
+
+const { data: isStoreSync } = useQuery({
+  queryKey: ['admin-store-is-sync'],
+  queryFn: () => storeSyncService.isStoreSynchronized(),
 })
 </script>
 
