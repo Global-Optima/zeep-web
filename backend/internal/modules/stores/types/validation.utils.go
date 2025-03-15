@@ -5,7 +5,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	facilityAddressesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/facilityAddresses/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 )
 
 type StoreUpdateModels struct {
@@ -48,7 +47,6 @@ func UpdateStoreFields(dto *UpdateStoreDTO, store *data.Store, facilityAddress *
 		facilityAddress = facilityAddressesTypes.MapToFacilityAddressModel(dto.FacilityAddress, facilityAddress)
 	}
 
-	logrus.Info(*store)
 	return &StoreUpdateModels{
 		Store:           store,
 		FacilityAddress: facilityAddress,

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"time"
 )
@@ -49,7 +48,6 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedAdditiveIngredientsIDs(st
 		return nil, fmt.Errorf("failed to fetch product sizes: %w", err)
 	}
 
-	logrus.Info(notSynchronizedProductSizesAdditivesIDs)
 	return notSynchronizedProductSizesAdditivesIDs, nil
 }
 

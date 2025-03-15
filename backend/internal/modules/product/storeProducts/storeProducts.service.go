@@ -16,7 +16,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -220,7 +219,6 @@ func (s *storeProductService) CreateStoreProduct(storeID uint, dto *types.Create
 func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error) {
 	var inputSizeIDs []uint
 	storeProducts := make([]data.StoreProduct, len(dtos))
-	logrus.Info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
 	for i, dto := range dtos {
 		storeProducts[i] = *types.CreateToStoreProduct(&dto)
@@ -269,7 +267,6 @@ func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []t
 		}, storeID)
 	}
 
-	logrus.Info(addStockDTOs)
 	storeProductIDs, _, err := s.transactionManager.CreateMultipleStoreProductsWithStocks(storeID, storeProducts, storeAdditiveList, addStockDTOs)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to create %d store product: %w", len(dtos), err)
