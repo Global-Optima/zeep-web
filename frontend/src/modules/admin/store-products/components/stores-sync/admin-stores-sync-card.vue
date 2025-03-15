@@ -11,15 +11,15 @@
 		</div>
 		<Button
 			class="flex items-center gap-2 bg-blue-500 disabled:opacity-50 px-4 py-2 rounded-lg font-medium text-white"
-			:disabled="isLoading"
+			:disabled="isPending"
 			@click="syncData"
 		>
 			<Loader
-				v-if="isLoading"
+				v-if="isPending"
 				class="size-5 text-white animate-spin"
 			/>
-			<span v-if="!isLoading">Синхронизировать</span>
-			<span v-else>Синхронизация...</span>
+			<span v-if="!isPending">Синхронизировать</span>
+			<span v-else>Синхронизация</span>
 		</Button>
 	</div>
 </template>
@@ -30,15 +30,12 @@ import { useToast } from '@/core/components/ui/toast'
 import { storeSyncService } from '@/modules/admin/stores/services/stores-sync.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Loader } from 'lucide-vue-next'
-import { ref } from 'vue'
 
 const queryClient = useQueryClient()
 const { toast } = useToast()
-const isLoading = ref(false)
 
-const { mutate: syncData } = useMutation({
+const { mutate: syncData, isPending } = useMutation({
   mutationFn: () => {
-    isLoading.value = true
     return storeSyncService.syncStoreStocksAndAdditives()
   },
   onSuccess: () => {
@@ -55,9 +52,6 @@ const { mutate: syncData } = useMutation({
       description: 'Не удалось обновить данные. Попробуйте еще раз.',
       variant: 'destructive',
     })
-  },
-  onSettled: () => {
-    isLoading.value = false
   },
 })
 </script>
