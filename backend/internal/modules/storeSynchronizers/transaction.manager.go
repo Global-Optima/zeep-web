@@ -99,36 +99,26 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 	}
 
 	return m.db.Transaction(func(tx *gorm.DB) error {
-		g := new(errgroup.Group)
-
 		if len(unsyncData.AdditiveIDs) > 0 {
-			g.Go(func() error {
-				storeAdditiveList := make([]data.StoreAdditive, len(unsyncData.AdditiveIDs))
-				for i, id := range unsyncData.AdditiveIDs {
-					storeAdditiveList[i] = data.StoreAdditive{
-						StoreID:    storeID,
-						AdditiveID: id,
-					}
+			storeAdditiveList := make([]data.StoreAdditive, len(unsyncData.AdditiveIDs))
+			for i, id := range unsyncData.AdditiveIDs {
+				storeAdditiveList[i] = data.StoreAdditive{
+					StoreID:    storeID,
+					AdditiveID: id,
 				}
-				storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
-				_, err := storeAdditiveRepoTx.CreateStoreAdditives(storeAdditiveList)
-				return err
-			})
+			}
+			storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
+			_, err := storeAdditiveRepoTx.CreateStoreAdditives(storeAdditiveList)
+			return err
 		}
 
 		if len(unsyncData.IngredientIDs) > 0 {
-			g.Go(func() error {
-				newStoreStocks := make([]data.StoreStock, len(unsyncData.IngredientIDs))
-				for i, ingredientID := range unsyncData.IngredientIDs {
-					newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
-				}
-				storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
-				_, err := storeStockRepoTx.AddMultipleStocks(newStoreStocks)
-				return err
-			})
-		}
-
-		if err := g.Wait(); err != nil {
+			newStoreStocks := make([]data.StoreStock, len(unsyncData.IngredientIDs))
+			for i, ingredientID := range unsyncData.IngredientIDs {
+				newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+			}
+			storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
+			_, err := storeStockRepoTx.AddMultipleStocks(newStoreStocks)
 			return err
 		}
 
