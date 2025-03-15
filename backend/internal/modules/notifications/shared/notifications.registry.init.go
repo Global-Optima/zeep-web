@@ -38,6 +38,48 @@ func InitNotificationRegistry() {
 	)
 
 	RegisterNotification(
+		data.NEW_PRODUCT,
+		func() details.NotificationDetails {
+			return &details.NewProductDetails{}
+		},
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
+			productDetails, ok := baseDetails.(*details.NewProductDetails)
+			if !ok {
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for NEW_PRODUCT")
+			}
+			return details.BuildNewProductMessage(productDetails)
+		},
+	)
+
+	RegisterNotification(
+		data.NEW_PRODUCT_SIZE,
+		func() details.NotificationDetails {
+			return &details.NewProductSizeDetails{}
+		},
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
+			sizeDetails, ok := baseDetails.(*details.NewProductSizeDetails)
+			if !ok {
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for NEW_PRODUCT_SIZE")
+			}
+			return details.BuildNewProductSizeMessage(sizeDetails)
+		},
+	)
+
+	RegisterNotification(
+		data.NEW_ADDITIVE,
+		func() details.NotificationDetails {
+			return &details.NewAdditiveDetails{}
+		},
+		func(baseDetails details.NotificationDetails) (localization.LocalizedMessage, error) {
+			additiveDetails, ok := baseDetails.(*details.NewAdditiveDetails)
+			if !ok {
+				return localization.LocalizedMessage{}, fmt.Errorf("invalid details type for NEW_ADDITIVE")
+			}
+			return details.BuildNewAdditiveMessage(additiveDetails)
+		},
+	)
+
+	RegisterNotification(
 		data.NEW_STOCK_REQUEST,
 		func() details.NotificationDetails {
 			return &details.NewStockRequestDetails{}

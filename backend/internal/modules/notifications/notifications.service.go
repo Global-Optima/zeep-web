@@ -19,6 +19,9 @@ type NotificationService interface {
 	NotifyOutOfStock(details details.NotificationDetails) error
 	NotifyNewStockRequest(details details.NotificationDetails) error
 	NotifyPriceChange(details details.NotificationDetails) error
+	NotifyNewProductAdded(details details.NotificationDetails) error
+	NotifyNewProductSizeAdded(details details.NotificationDetails) error
+	NotifyNewAdditiveAdded(details details.NotificationDetails) error
 
 	GetNotificationByID(notificationID, employeeID uint) (*types.NotificationDTO, error)
 	GetNotificationsByEmployee(employeeID uint, filter types.GetNotificationsFilter) ([]types.NotificationDTO, error)
@@ -195,7 +198,47 @@ func (s *notificationService) NotifyNewStockRequest(details details.Notification
 	return nil
 }
 
+func (s *notificationService) NotifyNewProductAdded(details details.NotificationDetails) error {
+	notificationDetails, err := details.ToDetails()
+	if err != nil {
+		return err
+	}
+
+	s.createNotificationAsync(data.NEW_PRODUCT, data.MEDIUM, notificationDetails, details.GetBaseDetails())
+	return nil
+}
+
+func (s *notificationService) NotifyNewProductSizeAdded(details details.NotificationDetails) error {
+	notificationDetails, err := details.ToDetails()
+	if err != nil {
+		return err
+	}
+
+	s.createNotificationAsync(data.NEW_PRODUCT_SIZE, data.MEDIUM, notificationDetails, details.GetBaseDetails())
+	return nil
+}
+
+func (s *notificationService) NotifyNewAdditiveAdded(details details.NotificationDetails) error {
+	notificationDetails, err := details.ToDetails()
+	if err != nil {
+		return err
+	}
+
+	s.createNotificationAsync(data.NEW_ADDITIVE, data.MEDIUM, notificationDetails, details.GetBaseDetails())
+	return nil
+}
+
 func (s *notificationService) NotifyPriceChange(details details.NotificationDetails) error {
+	notificationDetails, err := details.ToDetails()
+	if err != nil {
+		return err
+	}
+
+	s.createNotificationAsync(data.PRICE_CHANGE, data.MEDIUM, notificationDetails, details.GetBaseDetails())
+	return nil
+}
+
+func (s *notificationService) NotifyNewProductSize(details details.NotificationDetails) error {
 	notificationDetails, err := details.ToDetails()
 	if err != nil {
 		return err

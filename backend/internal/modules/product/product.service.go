@@ -119,6 +119,17 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 		return 0, wrappedErr
 	}
 
+	notificationDetails := &details.NewProductDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID: productID,
+		},
+		ProductName: product.Name,
+	}
+	err = s.notificationService.NotifyNewProductAdded(notificationDetails)
+	if err != nil {
+		return 0, fmt.Errorf("failed to notify new product added: %w", err)
+	}
+
 	return productID, nil
 }
 
@@ -130,6 +141,18 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 		wrappedErr := fmt.Errorf("failed to create product size: %w", err)
 		s.logger.Error(wrappedErr)
 		return 0, wrappedErr
+	}
+
+	notificationDetails := &details.NewProductSizeDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID: productSizeID,
+		},
+		ProductName: productSize.Product.Name,
+		Size:        productSize.Size,
+	}
+	err = s.notificationService.NotifyNewProductSizeAdded(notificationDetails)
+	if err != nil {
+		return 0, fmt.Errorf("failed to notify new product size added: %w", err)
 	}
 
 	return productSizeID, nil
