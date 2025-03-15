@@ -1,13 +1,23 @@
 <template>
 	<div class="relative bg-[#F3F4F9] pb-32 text-black no-scrollbar">
 		<!-- Loading State -->
-		<KioskDetailsLoading v-if="isFetching" />
+		<PageLoader v-if="isFetching" />
 		<!-- Error State -->
 		<div
 			v-else-if="isError"
-			class="p-4 text-red-500"
+			class="flex flex-col justify-center items-center p-6 w-full h-screen text-center"
 		>
-			{{ error?.message || 'Ошибка загрузки данных' }}
+			<h1 class="mt-8 font-bold text-red-600 text-4xl">Ошибка</h1>
+			<p class="mt-6 max-w-md text-gray-600 text-2xl">
+				К сожалению, данный товар временно недоступен, попробуйте позже
+			</p>
+
+			<button
+				@click="onBackClick"
+				class="flex justify-center items-center bg-slate-200 mt-8 px-8 py-5 rounded-3xl h-14 text-slate- text-2xl"
+			>
+				Вернуться назад
+			</button>
 		</div>
 		<!-- Product Content -->
 		<div
@@ -81,6 +91,7 @@
 
 <script setup lang="ts">
 import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
+import PageLoader from '@/core/components/page-loader/PageLoader.vue'
 import { Button } from '@/core/components/ui/button'
 import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
@@ -93,7 +104,6 @@ import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
-import KioskDetailsLoading from '@/modules/kiosk/products/components/details/kiosk-details-loading.vue'
 import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
 import KioskProductRecipeDialog from '@/modules/kiosk/products/components/details/kiosk-product-recipe-dialog.vue'
 import { useQuery } from '@tanstack/vue-query'

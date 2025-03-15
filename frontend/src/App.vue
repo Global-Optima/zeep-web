@@ -7,7 +7,7 @@ import { Toaster } from '@/core/components/ui/toast'
 	<RouterView v-slot="{ Component, route }">
 		<template v-if="Component">
 			<Transition
-				name="fade"
+				name="fade-slide"
 				mode="out-in"
 			>
 				<Suspense>

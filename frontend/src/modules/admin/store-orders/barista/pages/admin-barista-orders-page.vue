@@ -2,6 +2,7 @@
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
 import { useBarcodeScanner } from '@/core/hooks/use-barcode-listener.hook'
+import { parseSubOrderQR } from '@/core/hooks/use-qr-print.hook'
 
 import AdminBaristaOrderStatusSelector from '@/modules/admin/store-orders/barista/components/admin-barista-order-status-selector.vue'
 import AdminBaristaOrdersList from '@/modules/admin/store-orders/barista/components/admin-barista-orders-list.vue'
@@ -16,6 +17,7 @@ import {
   type SuborderDTO
 } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
+import { useMutation } from '@tanstack/vue-query'
 
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -178,16 +180,11 @@ async function toggleSuborderStatus(suborder: SuborderDTO) {
  *  2. On scan, we toggle the suborder via the same `ordersService`.
  *  3. Optionally do local feedback or rely on websockets.
  */
-useBarcodeScanner({
-  prefix: 'suborder-',
-  onScan: async (suborderIdStr: string) => {
-    try {
-      const suborderId = Number(suborderIdStr)
-      console.log(suborderIdStr)
-      const updatedSuborder = await ordersService.toggleNextStatus(suborderId)
-
-      // Find the local order in filteredOrders
+const {mutate: toggleNextStatus} = useMutation({
+		mutationFn: (suborderId: number) => ordersService.toggleNextStatus(suborderId),
+		onSuccess: (updatedSuborder:  SuborderDTO) => {
       const localOrder = filteredOrders.value.find(o => o.id === updatedSuborder.orderId)
+
       if (localOrder) {
         // Optionally update the local suborder for immediate feedback
         const localSub = localOrder.subOrders.find(so => so.id === updatedSuborder.id)
@@ -208,10 +205,29 @@ useBarcodeScanner({
       toast({
         description: `Статус подзаказа ${updatedSuborder.productSize.productName} ${updatedSuborder.productSize.sizeName} был изменен`,
       })
-    } catch (error) {
-      console.error('Barcode Scan Error:', error)
-      toast({ description: 'Не удалось изменить статус подзаказа', variant: 'destructive' })
+
+		},
+		onError: () => {
+      toast({ description: 'Не удалось изменить статус подзаказа', variant: 'destructive' })		},
+})
+
+useBarcodeScanner({
+  onScan: async (subOrderQR: string) => {
+    const {subOrderId} = parseSubOrderQR(subOrderQR)
+
+    if (!subOrderId) {
+      toast({ description: 'QR не содержит информации об подзаказе', variant: 'destructive' })
+      return
     }
+
+    const suborderIdNumber = Number(subOrderId)
+    if (isNaN(suborderIdNumber)) {
+      toast({ description: 'Неверный формат номера подзаказа', variant: 'destructive' })
+      return
+    }
+
+    toggleNextStatus(suborderIdNumber)
+
   },
   onError: (err: Error) => {
     console.error('Barcode Scan Error:', err)

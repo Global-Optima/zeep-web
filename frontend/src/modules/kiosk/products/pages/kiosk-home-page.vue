@@ -12,7 +12,21 @@
 		/>
 
 		<!-- Products Grid -->
-		<section class="flex-1 pr-4 pb-4 pl-3 overflow-y-auto no-scrollbar">
+		<div
+			v-if="isProductsPending"
+			class="gap-3 grid grid-cols-2 sm:grid-cols-3 px-4"
+		>
+			<Skeleton
+				v-for="(_, index) in skeletonsArray"
+				:key="index"
+				class="bg-slate-200 bg-opacity-80 rounded-[38px] w-full h-96"
+			/>
+		</div>
+
+		<section
+			v-else
+			class="flex-1 px-4 pb-4 overflow-y-auto no-scrollbar"
+		>
 			<div
 				v-if="!products || products?.data.length === 0"
 				class="flex justify-center items-center h-20 text-gray-500"
@@ -37,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import { Skeleton } from '@/core/components/ui/skeleton'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/toolbar/kiosk-home-toolbar-mobile.vue'
@@ -50,6 +65,8 @@ const selectedCategoryId = ref<number | null>(null)
 const searchTerm = ref('')
 const previousCategoryId = ref<number | null>(null)
 
+const skeletonsArray: number[] = new Array(9).fill(5)
+
 // Query Keys
 const productsQueryKey = computed(() => [
   'products',
@@ -58,7 +75,7 @@ const productsQueryKey = computed(() => [
 
 
 // Fetch Categories
-const { data: categories, isLoading: categoriesLoading } = useQuery({
+const { data: categories, isPending: categoriesLoading } = useQuery({
   queryKey: ['store-product-categories'],
   queryFn: () => storeProductsService.getStoreProductCategories(),
 })
@@ -76,7 +93,7 @@ watch(
 
 
 // Fetch Products
-const { data: products } = useQuery({
+const { data: products, isPending: isProductsPending } = useQuery({
   queryKey: productsQueryKey,
   queryFn: () =>
     storeProductsService.getStoreProducts({
