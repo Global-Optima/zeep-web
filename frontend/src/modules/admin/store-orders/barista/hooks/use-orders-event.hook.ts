@@ -120,7 +120,7 @@ export function useOrderEventsService(
 						handleInitialData(msg.payload)
 						break
 
-					case 'order_created':
+					case 'order_succeeded':
 						handleOrderCreated(msg.payload)
 						break
 

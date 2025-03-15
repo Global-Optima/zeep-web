@@ -81,10 +81,10 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 				</Button>
 
 				<span
-					v-if="notificationIds.length > 0"
+					v-if="notificationsResponse && notificationsResponse.pagination.totalCount > 0"
 					class="top-1.5 right-1.5 absolute flex justify-center items-center bg-emerald-500 rounded-full size-4 text-white text-xs -translate-y-1/2 translate-x-1/2"
 				>
-					{{ notificationIds.length }}
+					{{ notificationsResponse.pagination.totalCount }}
 				</span>
 			</div>
 		</PopoverTrigger>

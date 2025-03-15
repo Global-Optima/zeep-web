@@ -71,7 +71,7 @@ const onCancel = () => {
 			</h1>
 
 			<div
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
 				<Button
@@ -132,7 +132,7 @@ const onCancel = () => {
 									id="description"
 									v-bind="componentField"
 									:readonly="readonly"
-									placeholder="Введите описание франчайзи (необязательно)"
+									placeholder="Введите описание франчайзи"
 									class="min-h-32"
 								/>
 							</FormControl>
@@ -145,7 +145,7 @@ const onCancel = () => {
 
 		<!-- Footer -->
 		<div
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 			v-if="!readonly"
 		>
 			<Button
