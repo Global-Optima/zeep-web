@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/warehouseEmployees/types"
@@ -24,16 +25,18 @@ type WarehouseEmployeeService interface {
 }
 
 type warehouseEmployeeService struct {
-	repo         WarehouseEmployeeRepository
-	employeeRepo employees.EmployeeRepository
-	logger       *zap.SugaredLogger
+	repo                 WarehouseEmployeeRepository
+	employeeRepo         employees.EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
-func NewWarehouseEmployeeService(repo WarehouseEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) WarehouseEmployeeService {
+func NewWarehouseEmployeeService(repo WarehouseEmployeeRepository, employeeRepo employees.EmployeeRepository, employeeTokenManager employeeToken.EmployeeTokenManager, logger *zap.SugaredLogger) WarehouseEmployeeService {
 	return &warehouseEmployeeService{
-		repo:         repo,
-		employeeRepo: employeeRepo,
-		logger:       logger,
+		repo:                 repo,
+		employeeRepo:         employeeRepo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
@@ -126,5 +129,20 @@ func (s *warehouseEmployeeService) UpdateWarehouseEmployee(id uint, filter *cont
 	if err != nil {
 		return err
 	}
-	return s.repo.UpdateWarehouseEmployee(id, filter, updateFields)
+
+	err = s.repo.UpdateWarehouseEmployee(id, filter, updateFields)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update warehouse employee", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	if input.Role != nil {
+		err := s.employeeTokenManager.DeleteTokenByWarehouseEmployeeID(id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -109,7 +109,7 @@ func (h *EmployeeHandler) GetCurrentEmployee(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.service.GetEmployeeByID(claims.EmployeeClaimsData.ID)
+	employee, err := h.service.GetEmployeeByID(claims.EmployeeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response401Employee)
 		return
@@ -200,7 +200,7 @@ func (h *EmployeeHandler) GetMyWorkdays(c *gin.Context) {
 		return
 	}
 
-	workdays, err := h.service.GetEmployeeWorkdays(claims.EmployeeClaimsData.ID)
+	workdays, err := h.service.GetEmployeeWorkdays(claims.EmployeeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500EmployeeGetWorkdays)
 		return

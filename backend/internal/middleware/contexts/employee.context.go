@@ -6,44 +6,46 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 const EMPLOYEE_CONTEXT = "EMPLOYEE_CONTEXT"
 
-func GetEmployeeClaimsFromCtx(c *gin.Context) (*types.EmployeeClaims, error) {
-	var claims *types.EmployeeClaims
+func GetEmployeeClaimsFromCtx(c *gin.Context) (*types.EmployeeSession, error) {
+	var employeeSessionData *types.EmployeeSession
 
 	ctx, ok := c.Get(EMPLOYEE_CONTEXT)
 	if !ok {
+		logrus.Info("no employee context found")
 		return nil, fmt.Errorf("no employee context found")
 	}
 
-	claims, ok = ctx.(*types.EmployeeClaims)
+	employeeSessionData, ok = ctx.(*types.EmployeeSession)
 	if !ok {
-		wrappedErr := fmt.Errorf("error getting employee context: type assertion failed, from <%v> to <%v>", reflect.TypeOf(ctx), reflect.TypeOf(claims))
+		wrappedErr := fmt.Errorf("error getting employee context: type assertion failed, from <%v> to <%v>", reflect.TypeOf(ctx), reflect.TypeOf(employeeSessionData))
 		return nil, wrappedErr
 	}
 
-	return claims, nil
+	return employeeSessionData, nil
 }
 
-func SetEmployeeCtx(c *gin.Context, claims *types.EmployeeClaims) {
-	c.Set(EMPLOYEE_CONTEXT, claims)
+func SetEmployeeCtx(c *gin.Context, employeeSessionData *types.EmployeeSession) {
+	c.Set(EMPLOYEE_CONTEXT, employeeSessionData)
 }
 
 func GetEmployeeIDFromCtx(c *gin.Context) (uint, error) {
-	var claims *types.EmployeeClaims
+	var employeeSessionData *types.EmployeeSession
 
 	ctx, ok := c.Get(EMPLOYEE_CONTEXT)
 	if !ok {
 		return 0, fmt.Errorf("no employee context found")
 	}
 
-	claims, ok = ctx.(*types.EmployeeClaims)
+	employeeSessionData, ok = ctx.(*types.EmployeeSession)
 	if !ok {
-		wrappedErr := fmt.Errorf("error getting employee context: type assertion failed, from <%v> to <%v>", reflect.TypeOf(ctx), reflect.TypeOf(claims))
+		wrappedErr := fmt.Errorf("error getting employee context: type assertion failed, from <%v> to <%v>", reflect.TypeOf(ctx), reflect.TypeOf(employeeSessionData))
 		return 0, wrappedErr
 	}
 
-	return claims.EmployeeClaimsData.ID, nil
+	return employeeSessionData.EmployeeID, nil
 }

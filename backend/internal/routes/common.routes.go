@@ -20,14 +20,12 @@ func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandle
 		{
 			customersRoutes.POST("/register", handler.CustomerRegister)
 			customersRoutes.POST("/login", handler.CustomerLogin)
-			customersRoutes.POST("/refresh", handler.CustomerRefresh)
 			customersRoutes.POST("/logout", handler.CustomerLogout)
 		}
 
 		employeesRoutes := router.Group("/employees")
 		{
 			employeesRoutes.POST("/login", handler.EmployeeLogin)
-			employeesRoutes.POST("/refresh", handler.EmployeeRefresh)
 			employeesRoutes.POST("/logout", handler.EmployeeLogout)
 		}
 	}

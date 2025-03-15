@@ -117,7 +117,7 @@ func MapToEmployeeAudit(c *gin.Context, action shared.AuditAction) (*data.Employ
 	}
 
 	return &data.EmployeeAudit{
-		EmployeeID:    claims.EmployeeClaimsData.ID,
+		EmployeeID:    claims.EmployeeID,
 		OperationType: core.OperationType,
 		ComponentName: core.ComponentName,
 		Details:       detailsJSONB,

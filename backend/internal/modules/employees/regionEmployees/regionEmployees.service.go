@@ -6,6 +6,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/regionEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -23,16 +24,18 @@ type RegionEmployeeService interface {
 }
 
 type regionEmployeeService struct {
-	repo         RegionEmployeeRepository
-	employeeRepo employees.EmployeeRepository
-	logger       *zap.SugaredLogger
+	repo                 RegionEmployeeRepository
+	employeeRepo         employees.EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
-func NewRegionEmployeeService(repo RegionEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) RegionEmployeeService {
+func NewRegionEmployeeService(repo RegionEmployeeRepository, employeeRepo employees.EmployeeRepository, employeeTokenManager employeeToken.EmployeeTokenManager, logger *zap.SugaredLogger) RegionEmployeeService {
 	return &regionEmployeeService{
-		repo:         repo,
-		employeeRepo: employeeRepo,
-		logger:       logger,
+		repo:                 repo,
+		employeeRepo:         employeeRepo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
@@ -122,5 +125,20 @@ func (s *regionEmployeeService) UpdateRegionEmployee(id uint, regionID *uint, in
 	if err != nil {
 		return err
 	}
-	return s.repo.UpdateRegionEmployee(id, regionID, updateFields)
+
+	err = s.repo.UpdateRegionEmployee(id, regionID, updateFields)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update region manager employee", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	if input.Role != nil {
+		err := s.employeeTokenManager.DeleteTokenByRegionEmployeeID(id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
