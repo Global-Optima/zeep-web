@@ -183,7 +183,7 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 		cfg.Redis.Password,
 		cfg.Redis.DB,
 		cfg.Redis.Username,
-		cfg.Redis.Enable_TLS,
+		*cfg.Redis.Enable_TLS,
 	)
 
 	if err != nil {

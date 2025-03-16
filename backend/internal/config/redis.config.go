@@ -5,6 +5,6 @@ type RedisConfig struct {
 	Port       int    `mapstructure:"REDIS_PORT" validate:"required"`
 	Password   string `mapstructure:"REDIS_PASSWORD" validate:"required"`
 	Username   string `mapstructure:"REDIS_USERNAME" validate:"required"`
-	Enable_TLS bool   `mapstructure:"REDIS_ENABLE_TLS" validate:"required"`
+	Enable_TLS *bool  `mapstructure:"REDIS_ENABLE_TLS" validate:"required"`
 	DB         int    `mapstructure:"REDIS_DB" validate:"gte=0"`
 }
