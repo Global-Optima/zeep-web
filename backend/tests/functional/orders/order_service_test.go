@@ -28,18 +28,18 @@ func resetTestData(t *testing.T) *gorm.DB {
 	return db
 }
 
-func stringPtr(s string) *string {
-	return &s
-}
+// func stringPtr(s string) *string {
+// 	return &s
+// }
 
 func uintPtr(u uint) *uint {
 	return &u
 }
 
-func orderStatusPtr(s string) *data.OrderStatus {
-	status := data.OrderStatus(s)
-	return &status
-}
+// func orderStatusPtr(s string) *data.OrderStatus {
+// 	status := data.OrderStatus(s)
+// 	return &status
+// }
 
 // func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
 // 	_ = resetTestData(t)
