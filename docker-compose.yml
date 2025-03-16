@@ -94,6 +94,7 @@ services:
     env_file:
       - .env
     environment:
+      REDIS_USERNAME: ${REDIS_USERNAME}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DB: ${REDIS_DB}
     volumes:
@@ -130,6 +131,7 @@ services:
         S3_SECRET_KEY: ${S3_SECRET_KEY}
         S3_ENDPOINT: ${S3_ENDPOINT}
         S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+        REDIS_USERNAME: ${REDIS_USERNAME}
         REDIS_HOST: ${REDIS_HOST}
         REDIS_PORT: ${REDIS_PORT}
         REDIS_PASSWORD: ${REDIS_PASSWORD}
