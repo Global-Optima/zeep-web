@@ -295,20 +295,6 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 		return
 	}
 
-	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
-		now := time.Now().UTC()
-		cutoffTime := now.Add(time.Duration(-int(*filter.TimeGapMinutes)) * time.Minute)
-
-		filteredOrders := make([]types.OrderDTO, 0)
-		for _, order := range initialOrders {
-			// Keep orders that were created after the cutoff time
-			if order.CreatedAt.After(cutoffTime) {
-				filteredOrders = append(filteredOrders, order)
-			}
-		}
-		initialOrders = filteredOrders
-	}
-
 	HandleClient(storeID, conn, initialOrders)
 }
 

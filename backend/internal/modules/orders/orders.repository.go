@@ -171,6 +171,19 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 	startOfTodayUTC := startOfToday.UTC()
 	endOfTodayUTC := endOfToday.UTC()
 
+	// Apply time gap filter if specified
+	var cutoffTimeUTC time.Time
+	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
+		// Calculate cutoff time based on TimeGapMinutes
+		cutoffTime := now.Add(time.Duration(-int(*filter.TimeGapMinutes)) * time.Minute)
+		cutoffTimeUTC = cutoffTime.UTC()
+
+		// Use the later of startOfTodayUTC or cutoffTimeUTC
+		if cutoffTimeUTC.After(startOfTodayUTC) {
+			startOfTodayUTC = cutoffTimeUTC
+		}
+	}
+
 	// Query orders for the given store within the correct time range
 	err = r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
