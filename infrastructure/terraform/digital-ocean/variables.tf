@@ -85,3 +85,13 @@ variable "ssh_allowed_cidr" {
   default     = "1.2.3.4/32"
   description = "CIDR block allowed to SSH into the Droplets."
 }
+
+variable "domain_name" {
+  type        = string
+  description = "The domain for the load balancer"
+}
+
+variable "certificate_name" {
+  type        = string
+  description = "The name of the DigitalOcean certificate"
+}

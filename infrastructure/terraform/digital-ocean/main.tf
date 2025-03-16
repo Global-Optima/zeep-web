@@ -15,8 +15,8 @@ terraform {
 
 # Configure the DigitalOcean Provider
 provider "digitalocean" {
-  token = var.do_token
-  spaces_access_id = var.spaces_access_id
+  token             = var.do_token
+  spaces_access_id  = var.spaces_access_id
   spaces_secret_key = var.spaces_access_token
 }
 
@@ -25,9 +25,9 @@ provider "digitalocean" {
 ###############################################################################
 
 resource "digitalocean_vpc" "main" {
-  name      = var.vpc_name
-  region    = var.region
-  ip_range  = "10.10.0.0/16"
+  name        = var.vpc_name
+  region      = var.region
+  ip_range    = "10.10.0.0/16"
   description = "VPC for production environment"
 }
 
@@ -60,6 +60,7 @@ resource "digitalocean_droplet" "app_server" {
 
 resource "digitalocean_firewall" "app_firewall" {
   name        = "app-firewall"
+
   droplet_ids = [
     for droplet in digitalocean_droplet.app_server : droplet.id
   ]
@@ -87,6 +88,7 @@ resource "digitalocean_firewall" "app_firewall" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
+  # Allow all TCP within the VPC's IP range
   inbound_rule {
     protocol         = "tcp"
     port_range       = "1-65535"
@@ -100,6 +102,7 @@ resource "digitalocean_firewall" "app_firewall" {
   }
 
   lifecycle {
+    # So the firewall isn't destroyed if droplet_ids changes
     ignore_changes = [
       droplet_ids
     ]
@@ -107,17 +110,37 @@ resource "digitalocean_firewall" "app_firewall" {
 }
 
 ###############################################################################
-# Load Balancer
+# Load Balancer + Domain + DNS + Certificate
 ###############################################################################
 
+resource "digitalocean_domain" "zeep_domain" {
+  name = var.domain_name
+}
+
+resource "digitalocean_record" "www" {
+  domain = digitalocean_domain.zeep_domain.name
+  type   = "A"
+  name   = "www"
+  value  = digitalocean_loadbalancer.lb.ip
+  ttl    = 300
+}
+
+# 3) Request a Let's Encrypt certificate from DO
+resource "digitalocean_certificate" "zeep_certificate" {
+  name    = var.certificate_name
+  type    = "lets_encrypt"
+  domains = [ "www.${var.domain_name}" ]
+}
+
+# 4) Create a load balancer with HTTP + HTTPS forwarding
 resource "digitalocean_loadbalancer" "lb" {
   name     = "app-lb"
   region   = var.region
   vpc_uuid = digitalocean_vpc.main.id
 
   forwarding_rule {
-    entry_port     = 80
-    entry_protocol = "http"
+    entry_port      = 80
+    entry_protocol  = "http"
     target_port     = 80
     target_protocol = "http"
   }
@@ -128,6 +151,7 @@ resource "digitalocean_loadbalancer" "lb" {
     target_port      = 80
     target_protocol  = "http"
     tls_passthrough  = false
+    certificate_name = digitalocean_certificate.zeep_certificate.name
   }
 
   healthcheck {
@@ -152,29 +176,29 @@ resource "digitalocean_loadbalancer" "lb" {
 ###############################################################################
 
 resource "digitalocean_database_cluster" "postgres" {
-  name                = "app-postgres-cluster"
-  engine              = "pg"
-  version             = "17"
-  size                = var.db_node_size
-  region              = var.region
-  node_count          = 2
+  name                 = "app-postgres-cluster"
+  engine               = "pg"
+  version              = "17"
+  size                 = var.db_node_size
+  region               = var.region
+  node_count           = 2
   private_network_uuid = digitalocean_vpc.main.id
-  tags               = concat(var.tags, ["postgres-db"])
+  tags                 = concat(var.tags, ["postgres-db"])
 }
 
 resource "digitalocean_database_cluster" "redis" {
-  name                = "app-redis-cache"
-  engine              = "redis"
-  version             = "7"
-  size                = var.redis_node_size
-  region              = var.region
-  node_count          = 1
+  name                 = "app-redis-cache"
+  engine               = "redis"
+  version              = "7"
+  size                 = var.redis_node_size
+  region               = var.region
+  node_count           = 1
   private_network_uuid = digitalocean_vpc.main.id
-  tags               = concat(var.tags, ["redis-cache"])
+  tags                 = concat(var.tags, ["redis-cache"])
 }
 
 ###############################################################################
-# Spaces (S3-Compatible)
+# Spaces (S3-Compatible) + CDN
 ###############################################################################
 
 resource "digitalocean_spaces_bucket" "bucket" {
