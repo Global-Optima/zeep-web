@@ -410,7 +410,7 @@
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",
 		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*.",
         "newProduct": "Добавлен новый продукт *{{.ProductName}}*.",
-        "newProductSize": "Добавлен новый размер *{{.Size}}*, *{{.ProductSizeName}}* для *{{.ProductName}}*.",
+        "newProductSize": "Добавлен новый размер *{{.ProductSizeName}}*, *{{.Size}}* для *{{.ProductName}}*.",
         "newAdditive": "Добавлена новая добавка *{{.AdditiveName}}*."
 	},
 	"stockRequestComments": {
