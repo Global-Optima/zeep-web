@@ -56,6 +56,7 @@ func ConvertOrderToDTO(order *data.Order) OrderDTO {
 		DeliveryAddressID: order.DeliveryAddressID,
 		Status:            order.Status,
 		CreatedAt:         order.CreatedAt,
+		CompletedAt:       order.CompletedAt,
 		Total:             order.Total,
 		SubordersQuantity: len(order.Suborders),
 		Suborders:         []SuborderDTO{},
@@ -81,11 +82,12 @@ func ConvertSuborderToDTO(suborder *data.Suborder) SuborderDTO {
 			Unit:        unitTypes.ToUnitResponse(suborder.StoreProductSize.ProductSize.Unit),
 			MachineId:   suborder.StoreProductSize.ProductSize.MachineId,
 		},
-		Price:     suborder.Price,
-		Status:    suborder.Status,
-		CreatedAt: suborder.CreatedAt,
-		UpdatedAt: suborder.UpdatedAt,
-		Additives: []SuborderStoreAdditiveDTO{},
+		Price:       suborder.Price,
+		Status:      suborder.Status,
+		CreatedAt:   suborder.CreatedAt,
+		UpdatedAt:   suborder.UpdatedAt,
+		CompletedAt: suborder.CompletedAt,
+		Additives:   []SuborderStoreAdditiveDTO{},
 	}
 
 	for _, additive := range suborder.SuborderAdditives {
@@ -171,6 +173,7 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 		Total:           order.Total,
 		Suborders:       suborders,
 		DeliveryAddress: deliveryAddress, // Optional
+		CompletedAt:     order.CompletedAt,
 	}
 }
 
