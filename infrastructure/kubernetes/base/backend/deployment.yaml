@@ -21,119 +21,143 @@ spec:
             - containerPort: 8080
               name: http
           env:
-            # Application Environment Variables
             - name: ENV
-              value: 'production'
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: ENV
             - name: SERVER_PORT
-              value: '8080'
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SERVER_PORT
             - name: CLIENT_URL
-              value: 'https://zeep.kz'
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: CLIENT_URL
             - name: DEFAULT_PAGE
-              value: '1'
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DEFAULT_PAGE
             - name: DEFAULT_PAGE_SIZE
-              value: '10'
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DEFAULT_PAGE_SIZE
             - name: MAX_PAGE_SIZE
-              value: '100'
-
-            # Database Configuration (Secrets)
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAX_PAGE_SIZE
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: db_host
+                  name: app-secrets
+                  key: DB_HOST
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: db_port
+                  name: app-secrets
+                  key: DB_PORT
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: db_user
+                  name: app-secrets
+                  key: DB_USER
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: db_password
+                  name: app-secrets
+                  key: DB_PASSWORD
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: db_name
-
-            # JWT Secrets
+                  name: app-secrets
+                  key: DB_NAME
             - name: JWT_CUSTOMER_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: jwt_customer_secret_key
+                  name: app-secrets
+                  key: JWT_CUSTOMER_SECRET_KEY
             - name: JWT_EMPLOYEE_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: jwt_employee_secret_key
+                  name: app-secrets
+                  key: JWT_EMPLOYEE_SECRET_KEY
             - name: JWT_CUSTOMER_ACCESS_TOKEN_TTL
-              value: '15m'
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_CUSTOMER_ACCESS_TOKEN_TTL
             - name: JWT_CUSTOMER_REFRESH_TOKEN_TTL
-              value: '7d'
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_CUSTOMER_REFRESH_TOKEN_TTL
             - name: JWT_EMPLOYEE_ACCESS_TOKEN_TTL
-              value: '30m'
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_EMPLOYEE_ACCESS_TOKEN_TTL
             - name: JWT_EMPLOYEE_REFRESH_TOKEN_TTL
-              value: '30d'
-
-            # Redis Configuration (Secrets)
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_EMPLOYEE_REFRESH_TOKEN_TTL
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: redis_host
+                  name: app-secrets
+                  key: REDIS_HOST
             - name: REDIS_PORT
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: redis_port
+                  name: app-secrets
+                  key: REDIS_PORT
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: redis_password
+                  name: app-secrets
+                  key: REDIS_PASSWORD
             - name: REDIS_DB
-              value: '0'
-
-            # S3 Configuration (Secrets)
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: REDIS_DB
             - name: S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: s3_access_key
+                  name: app-secrets
+                  key: S3_ACCESS_KEY
             - name: S3_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: s3_secret_key
+                  name: app-secrets
+                  key: S3_SECRET_KEY
             - name: S3_ENDPOINT
-              value: 'https://nyc3.digitaloceanspaces.com' # Replace with actual endpoint
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: S3_ENDPOINT
             - name: S3_BUCKET_NAME
-              value: 'your-bucket-name' # Replace with actual bucket name
-
-            # Payment Secret
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: S3_BUCKET_NAME
             - name: PAYMENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
-                  key: payment_secret
-
-          # Resource Requests and Limits
+                  name: app-secrets
+                  key: PAYMENT_SECRET
           resources:
             requests:
-              memory: '512Mi'
-              cpu: '500m'
+              memory: 512Mi
+              cpu: 500m
             limits:
-              memory: '1Gi'
-              cpu: '1'
-
-          # Liveness and Readiness Probes
+              memory: 1Gi
+              cpu: 1
           livenessProbe:
             httpGet:
               path: /health
@@ -146,18 +170,12 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
-
-          # Volume Mounts for Logs
           volumeMounts:
             - name: logs-volume
               mountPath: /app/logs
-
-      # Volumes for Persistent Logging
       volumes:
         - name: logs-volume
           emptyDir: {}
-
-      # Security Context for Hardening
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000

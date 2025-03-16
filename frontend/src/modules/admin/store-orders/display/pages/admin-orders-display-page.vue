@@ -38,7 +38,7 @@ const ORDERS_PER_PAGE = 6
 const AUTO_PAGE_INTERVAL = 6000 // 6 seconds
 
 // WebSocket Hook Integration
-const { filteredOrders } = useOrderEventsService()
+const { filteredOrders } = useOrderEventsService({timeGapMinutes: 3})
 
 // State for "In Progress" and "Ready" orders
 const inProgressOrders = computed(() =>
