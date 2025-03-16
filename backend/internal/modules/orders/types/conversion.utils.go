@@ -173,6 +173,7 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 		Total:           order.Total,
 		Suborders:       suborders,
 		DeliveryAddress: deliveryAddress, // Optional
+		CompletedAt:     order.CompletedAt,
 	}
 }
 
