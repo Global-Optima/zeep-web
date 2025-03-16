@@ -15,6 +15,7 @@ import { computed, reactive, ref } from 'vue'
 
 interface OrderFilterOptions {
 	status?: OrderStatus
+	timeGapMinutes?: number
 }
 
 interface UseOrderEventsServiceOptions {
@@ -76,7 +77,7 @@ export function useOrderEventsService(
 	// WebSocket Setup
 	// ----------------------------------
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-	const url = `${wsUrl}/orders/ws?timezone=${timezone}`
+	const url = `${wsUrl}/orders/ws?timezone=${timezone}&timeGapMinutes=${localFilter.value.timeGapMinutes ?? 60}`
 
 	const {
 		status: socketStatus,
