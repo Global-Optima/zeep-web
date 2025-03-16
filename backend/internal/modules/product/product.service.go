@@ -1,6 +1,7 @@
 package product
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
@@ -138,6 +139,10 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 
 	productSizeID, err := s.repo.CreateProductSize(productSize)
 	if err != nil {
+		if errors.Is(err, types.ErrProductSizeUniqueName) {
+			return 0, types.ErrProductSizeUniqueName
+		}
+
 		wrappedErr := fmt.Errorf("failed to create product size: %w", err)
 		s.logger.Error(wrappedErr)
 		return 0, wrappedErr

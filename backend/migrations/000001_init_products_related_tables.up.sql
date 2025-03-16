@@ -134,6 +134,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_product_size_name
+    ON product_sizes (product_id, name)
+    WHERE deleted_at IS NULL;
+
 -- Additive Table
 CREATE TABLE
 	 additives (
