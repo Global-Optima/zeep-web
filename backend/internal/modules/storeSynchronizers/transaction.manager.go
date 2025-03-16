@@ -9,7 +9,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"time"
@@ -52,8 +51,6 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 	if unsyncData == nil {
 		return nil, fmt.Errorf("could not fetch unsyncData: nil pointer dereference")
 	}
-	logrus.Info("1 additiveIDs: ", unsyncData.AdditiveIDs)
-	logrus.Info("1 ingredientIDs: ", unsyncData.IngredientIDs)
 
 	if len(unsyncData.AdditiveIDs) == 0 && len(unsyncData.IngredientIDs) == 0 {
 		return &types.SynchronizationStatus{
@@ -66,8 +63,6 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 	if err != nil {
 		return nil, err
 	}
-	logrus.Info("2 additiveIDs: ", unsyncData.AdditiveIDs)
-	logrus.Info("2 ingredientIDs: ", unsyncData.IngredientIDs)
 
 	if len(unsyncData.AdditiveIDs) > 0 || len(unsyncData.IngredientIDs) > 0 {
 		return &types.SynchronizationStatus{
@@ -93,75 +88,13 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 		return err
 	}
 
-	additiveIDs, err := m.repo.GetNotSynchronizedProductSizesAdditivesIDs(
-		storeID, store.LastInventorySyncAt,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to fetch unsynced additiveIDs: %w", err)
-	}
-
-	missingAdditives, err := m.storeAdditiveRepo.FilterMissingStoreAdditiveIDs(storeID, additiveIDs)
-	if err != nil {
-		return fmt.Errorf("failed to filter missing store_additives: %w", err)
-	}
-
 	return m.db.Transaction(func(tx *gorm.DB) error {
-		if len(missingAdditives) > 0 {
-			storeAdditiveList := make([]data.StoreAdditive, len(missingAdditives))
-			for i, addID := range missingAdditives {
-				storeAdditiveList[i] = data.StoreAdditive{
-					StoreID:    storeID,
-					AdditiveID: addID,
-				}
-			}
-			storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
-			if _, err := storeAdditiveRepoTx.CreateStoreAdditives(storeAdditiveList); err != nil {
-				return err
-			}
-
-			if err != nil {
-				return fmt.Errorf("failed to add store_additives: %w", err)
-			}
+		if err := m.synchronizeAdditives(tx, storeID, store.LastInventorySyncAt); err != nil {
+			return err
 		}
 
-		var productSizeIngredientIDs, additiveIngredientIDs []uint
-
-		productSizeIngredientIDs, err = m.repo.GetNotSynchronizedProductSizeWithAdditivesIngredients(
-			storeID, store.LastInventorySyncAt,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to fetch product-size ingredients: %w", err)
-		}
-
-		additiveIngredientIDs, err = m.repo.GetNotSynchronizedAdditiveIngredientsIDs(
-			storeID, store.LastInventorySyncAt,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to fetch additive-based ingredients: %w", err)
-		}
-
-		mergedIngredientIDs := utils.MergeDistinct(productSizeIngredientIDs, additiveIngredientIDs)
-
-		missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, mergedIngredientIDs)
-		if err != nil {
-			return fmt.Errorf("failed to filter missing store_stocks: %w", err)
-		}
-
-		if len(missingIngredientIDs) > 0 {
-			err = m.db.Transaction(func(tx *gorm.DB) error {
-				newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
-				for i, ingID := range missingIngredientIDs {
-					newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingID)
-				}
-				storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
-				if _, err := storeStockRepoTx.AddMultipleStocks(newStoreStocks); err != nil {
-					return err
-				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("failed to add store_stocks: %w", err)
-			}
+		if err := m.synchronizeIngredients(tx, storeID, store.LastInventorySyncAt); err != nil {
+			return err
 		}
 
 		storeRepoTx := m.storeRepo.CloneWithTransaction(tx)
@@ -229,5 +162,88 @@ func (m *transactionManager) filterMissingData(storeID uint, data *types.UnsyncD
 		return err
 	}
 
+	return nil
+}
+
+func (m *transactionManager) synchronizeAdditives(tx *gorm.DB, storeID uint, lastSyncAt time.Time) error {
+	additiveIDs, err := m.repo.GetNotSynchronizedProductSizesAdditivesIDs(
+		storeID, lastSyncAt,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to fetch unsynced additiveIDs: %w", err)
+	}
+
+	missingAdditives, err := m.storeAdditiveRepo.FilterMissingStoreAdditiveIDs(storeID, additiveIDs)
+	if err != nil {
+		return fmt.Errorf("failed to filter missing store_additives: %w", err)
+	}
+
+	if len(missingAdditives) > 0 {
+		storeAdditiveList := make([]data.StoreAdditive, len(missingAdditives))
+		for i, addID := range missingAdditives {
+			storeAdditiveList[i] = data.StoreAdditive{
+				StoreID:    storeID,
+				AdditiveID: addID,
+			}
+		}
+		storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
+		_, err := storeAdditiveRepoTx.CreateStoreAdditives(storeAdditiveList)
+		if err != nil {
+			return fmt.Errorf("failed to add store_additives: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, lastSyncAt time.Time) error {
+	var productSizeIngredientIDs, additiveIngredientIDs []uint
+
+	g := new(errgroup.Group)
+
+	g.Go(func() error {
+		var err error
+		productSizeIngredientIDs, err = m.repo.GetNotSynchronizedProductSizeWithAdditivesIngredients(
+			storeID, lastSyncAt,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to fetch product-size ingredients: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		var err error
+		additiveIngredientIDs, err = m.repo.GetNotSynchronizedAdditiveIngredientsIDs(
+			storeID, lastSyncAt,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to fetch additive-based ingredients: %w", err)
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("failed to synchronize ingredients: %w", err)
+	}
+
+	mergedIngredientIDs := utils.MergeDistinct(productSizeIngredientIDs, additiveIngredientIDs)
+
+	missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, mergedIngredientIDs)
+	if err != nil {
+		return fmt.Errorf("failed to filter missing store_stocks: %w", err)
+	}
+
+	if len(missingIngredientIDs) > 0 {
+		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
+		for i, ingID := range missingIngredientIDs {
+			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingID)
+		}
+		storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
+		_, err := storeStockRepoTx.AddMultipleStocks(newStoreStocks)
+		if err != nil {
+			return fmt.Errorf("failed to add store_stocks: %w", err)
+		}
+	}
 	return nil
 }
