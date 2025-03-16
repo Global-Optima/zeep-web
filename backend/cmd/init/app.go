@@ -85,8 +85,6 @@ func InitializeRedis(cfg *config.Config) *database.RedisClient {
 func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo storage.StorageRepository) *gin.Engine {
 	cfg := config.GetConfig()
 
-	gin.SetMode(gin.ReleaseMode)
-
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
 	router.Use(limiters.LimitRequestBody(30 * 1024 * 1024))
