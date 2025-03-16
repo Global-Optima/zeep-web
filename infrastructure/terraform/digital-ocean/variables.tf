@@ -27,7 +27,7 @@ variable "region" {
 }
 
 variable "ssh_key_ids" {
-  type        = list(number)
+  type        = list(string)
   default     = []
   description = "List of DigitalOcean SSH key IDs for Droplet access."
 }
@@ -88,10 +88,16 @@ variable "ssh_allowed_cidr" {
 
 variable "domain_name" {
   type        = string
-  description = "The domain for the load balancer"
+  description = "The domain for the load balancer (e.g. example.com)."
 }
 
 variable "certificate_name" {
   type        = string
   description = "The name of the DigitalOcean certificate"
+}
+
+variable "use_domain" {
+  type        = bool
+  default     = false
+  description = "Set to true to use a custom domain, false to test using only the LB IP."
 }
