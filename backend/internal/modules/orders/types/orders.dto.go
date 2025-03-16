@@ -55,10 +55,16 @@ type OrderDTO struct {
 	DeliveryAddressID *uint            `json:"deliveryAddressId,omitempty"`
 	Status            data.OrderStatus `json:"status"`
 	CreatedAt         time.Time        `json:"createdAt"`
+	CompletedAt       *time.Time       `json:"completedAt,omitempty"`
 	Total             float64          `json:"total"`
 	DisplayNumber     int              `json:"displayNumber"`
 	SubordersQuantity int              `json:"subOrdersQuantity"`
 	Suborders         []SuborderDTO    `json:"subOrders"`
+}
+
+type UpdateOrderDTO struct {
+	Status      data.OrderStatus `json:"status"`
+	CompletedAt *time.Time       `json:"completedAt,omitempty"`
 }
 
 type SuborderDTO struct {
@@ -70,6 +76,12 @@ type SuborderDTO struct {
 	Additives   []SuborderStoreAdditiveDTO `json:"additives"`
 	CreatedAt   time.Time                  `json:"createdAt"`
 	UpdatedAt   time.Time                  `json:"updatedAt"`
+	CompletedAt *time.Time                 `json:"completedAt,omitempty"`
+}
+
+type UpdateSubOrderDTO struct {
+	Status      data.SubOrderStatus `json:"status"`
+	CompletedAt *time.Time          `json:"completedAt,omitempty"`
 }
 
 type OrderStoreProductSizeDTO struct {
@@ -105,6 +117,7 @@ type OrderDetailsDTO struct {
 	Total           float64                  `json:"total"`
 	Suborders       []SuborderDetailsDTO     `json:"suborders"`
 	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"` // Optional
+	CompletedAt     *time.Time               `json:"completedAt,omitempty"`
 }
 
 type SuborderDetailsDTO struct {
@@ -113,6 +126,7 @@ type SuborderDetailsDTO struct {
 	Status           string                     `json:"status"`
 	StoreProductSize OrderProductSizeDetailsDTO `json:"storeProductSize"`
 	StoreAdditives   []OrderAdditiveDetailsDTO  `json:"storeAdditives"`
+	CompletedAt      *time.Time                 `json:"completedAt,omitempty"`
 }
 
 type OrderProductSizeDetailsDTO struct {
@@ -166,6 +180,7 @@ type OrdersTimeZoneFilter struct {
 	StoreID          *uint   `form:"storeId" binding:"omitempty"`
 	TimeZoneLocation *string `form:"timezone" binding:"omitempty"`
 	TimeZoneOffset   *uint   `form:"timezoneOffset" binding:"omitempty"`
+	TimeGapMinutes   *uint   `form:"timeGapMinutes" binding:"omitempty"`
 }
 
 type TransactionDTO struct {

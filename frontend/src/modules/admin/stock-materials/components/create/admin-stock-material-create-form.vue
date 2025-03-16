@@ -57,7 +57,10 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
 })
 
 const onSubmit = handleSubmit((formValues) => {
-  const dto: CreateStockMaterialDTO = formValues
+  const dto: CreateStockMaterialDTO = {
+    ...formValues,
+    isActive: true
+  }
   emits('onSubmit', dto)
 })
 
@@ -106,7 +109,7 @@ const onGenerateBarcodeClick = async () => {
 				Создать Материал
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -313,7 +316,7 @@ const onGenerateBarcodeClick = async () => {
 		</div>
 
 		<!-- Footer for mobile -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"

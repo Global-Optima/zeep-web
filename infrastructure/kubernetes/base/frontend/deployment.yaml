@@ -16,18 +16,46 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: your-registry/frontend:latest
+          image: diarcode/zeep-frontend:latest
           ports:
             - containerPort: 80
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 100m
+            limits:
+              memory: 256Mi
+              cpu: 500m
           env:
             - name: NGINX_SERVER_NAME
-              value: "example.com"
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: nginx_server_name
             - name: VITE_API_URL
-              value: "https://api.example.com"
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: API_URL
             - name: VITE_WS_URL
-              value: "wss://api.example.com"
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: WS_URL
             - name: VITE_PAYMENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: frontend-secrets
-                  key: payment_secret
+                  name: app-secrets
+                  key: PAYMENT_SECRET
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10

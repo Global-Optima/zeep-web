@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const DefaultLowStockThreshold = 100
+
 type StockRequestRepository interface {
 	CreateStockRequest(stockRequest *data.StockRequest) error
 	AddIngredientsToStockRequest(ingredients []data.StockRequestIngredient) error
@@ -28,7 +30,7 @@ type StockRequestRepository interface {
 	AddDetails(stockRequestID uint, details []types.StockRequestDetails) error
 
 	DeductWarehouseStock(stockMaterialID, warehouseID uint, quantityInPackages float64) (*data.WarehouseStock, error)
-	AddToStoreStock(storeID, stockMaterialID uint, quantityInPackages float64) error
+	UpsertToStoreStock(storeID, stockMaterialID uint, quantityInPackages float64) error
 	ReturnWarehouseStock(stockMaterialID, warehouseID uint, quantity float64) (*data.WarehouseStock, error)
 	GetWarehouseStockQuantity(warehouseID, stockMaterialID uint) (float64, error)
 	GetStoreWarehouse(storeID uint) (*data.Store, error)
@@ -178,23 +180,34 @@ func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouse
 	return &updatedStock, nil
 }
 
-func (r *stockRequestRepository) AddToStoreStock(storeID, stockMaterialID uint, quantityInPackages float64) error {
-	var stockMaterial data.StockMaterial
-	if err := r.db.Preload("Ingredient.Unit").
-		Where("id = ?", stockMaterialID).First(&stockMaterial).Error; err != nil {
+func (r *stockRequestRepository) UpsertToStoreStock(storeID, stockMaterialID uint, quantityInPackages float64) error {
+	var sm data.StockMaterial
+	if err := r.db.Preload("Ingredient.Unit").First(&sm, stockMaterialID).Error; err != nil {
 		return fmt.Errorf("failed to fetch stock material details for ID %d: %w", stockMaterialID, err)
 	}
 
-	var quantityInUnits float64
-	if stockMaterial.Ingredient.UnitID != stockMaterial.UnitID {
-		quantityInUnits = stockMaterial.Ingredient.Unit.ConversionFactor * stockMaterial.Size * quantityInPackages
-	} else {
-		quantityInUnits = stockMaterial.Size * quantityInPackages
+	q := sm.Size * quantityInPackages
+	if sm.Ingredient.UnitID != sm.UnitID {
+		q = sm.Ingredient.Unit.ConversionFactor * q
 	}
 
-	return r.db.Model(&data.StoreStock{}).
-		Where("store_id = ? AND ingredient_id = ?", storeID, stockMaterial.IngredientID).
-		Update("quantity", gorm.Expr("quantity + ?", quantityInUnits)).Error
+	var storeStock data.StoreStock
+	err := r.db.Where("store_id = ? AND ingredient_id = ?", storeID, sm.IngredientID).First(&storeStock).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			newStock := data.StoreStock{
+				StoreID:           storeID,
+				IngredientID:      sm.IngredientID,
+				Quantity:          q,
+				LowStockThreshold: DefaultLowStockThreshold,
+			}
+			return r.db.Create(&newStock).Error
+		}
+		return err
+	}
+
+	storeStock.Quantity += q
+	return r.db.Save(&storeStock).Error
 }
 
 func (r *stockRequestRepository) GetLastStockRequestDate(storeID uint) (*time.Time, error) {

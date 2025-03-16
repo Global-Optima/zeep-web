@@ -56,12 +56,14 @@ func InitializeConfig() *config.Config {
 }
 
 func InitializeDatabase(cfg *config.Config) *database.DBHandler {
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Database.Host,
 		cfg.Database.Port,
 		cfg.Database.User,
 		cfg.Database.Password,
 		cfg.Database.Name,
+		cfg.Database.SSL_Mode,
 	)
 
 	dbHandler, err := database.InitDB(dsn)
@@ -72,7 +74,7 @@ func InitializeDatabase(cfg *config.Config) *database.DBHandler {
 }
 
 func InitializeRedis(cfg *config.Config) *database.RedisClient {
-	redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
+	redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB, cfg.Redis.Username)
 	if err != nil {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
