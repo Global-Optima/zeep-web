@@ -41,7 +41,7 @@ const updateIngredientSchema = toTypedSchema(
     expirationInDays: z.number().min(0, 'Введите корректные дни хранения'),
     unitId: z.coerce.number().min(1, 'Выберите корректный размер'),
     categoryId: z.coerce.number().min(1, 'Выберите корректную категорию'),
-    isAllergen: z.boolean({message: 'Выберите если этот ингредиент аллергеном'})
+    isAllergen: z.boolean({message: 'Выберите если этот ингредиент аллергеном'}).default(false)
   })
 )
 

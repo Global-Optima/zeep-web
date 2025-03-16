@@ -1,5 +1,7 @@
 package data
 
+import "time"
+
 type OrderStatus string
 
 const (
@@ -42,6 +44,7 @@ type Order struct {
 	Suborders         []Suborder      `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
 	DisplayNumber     int             `gorm:"not null;index"`
 	Transactions      []Transaction   `gorm:"foreignKey:OrderID;constraint:OnDelete:SET NULL"`
+	CompletedAt       *time.Time      `gorm:"index;null"`
 }
 
 // Suborder Model
@@ -53,6 +56,7 @@ type Suborder struct {
 	Price              float64            `gorm:"type:decimal(10,2);not null;check:price >= 0"`
 	Status             SubOrderStatus     `gorm:"size:50;not null"`
 	SuborderAdditives  []SuborderAdditive `gorm:"foreignKey:SuborderID;constraint:OnDelete:CASCADE"`
+	CompletedAt        *time.Time         `gorm:"index;null"`
 }
 
 // SuborderAdditive Model

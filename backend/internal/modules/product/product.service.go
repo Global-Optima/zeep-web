@@ -1,6 +1,7 @@
 package product
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
@@ -119,6 +120,17 @@ func (s *productService) CreateProduct(dto *types.CreateProductDTO) (uint, error
 		return 0, wrappedErr
 	}
 
+	notificationDetails := &details.NewProductDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID: productID,
+		},
+		ProductName: product.Name,
+	}
+	err = s.notificationService.NotifyNewProductAdded(notificationDetails)
+	if err != nil {
+		return 0, fmt.Errorf("failed to notify new product added: %w", err)
+	}
+
 	return productID, nil
 }
 
@@ -127,9 +139,25 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 
 	productSizeID, err := s.repo.CreateProductSize(productSize)
 	if err != nil {
+		if errors.Is(err, types.ErrProductSizeUniqueName) {
+			return 0, types.ErrProductSizeUniqueName
+		}
+
 		wrappedErr := fmt.Errorf("failed to create product size: %w", err)
 		s.logger.Error(wrappedErr)
 		return 0, wrappedErr
+	}
+
+	notificationDetails := &details.NewProductSizeDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID: productSizeID,
+		},
+		ProductName: productSize.Product.Name,
+		Size:        productSize.Size,
+	}
+	err = s.notificationService.NotifyNewProductSizeAdded(notificationDetails)
+	if err != nil {
+		return 0, fmt.Errorf("failed to notify new product size added: %w", err)
 	}
 
 	return productSizeID, nil

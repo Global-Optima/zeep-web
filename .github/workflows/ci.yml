@@ -129,10 +129,13 @@ jobs:
 
       - name: Run gofumpt check
         run: |
-          if ! gofumpt -l .; then
-            echo "Code is not formatted according to gofumpt."
+          CHANGED_FILES=$(gofumpt -l .)
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "Code is not formatted according to gofumpt:"
+            echo "$CHANGED_FILES"
             exit 1
           fi
+
 
       - name: Run golangci-lint
         run: golangci-lint run -v --concurrency=2 --timeout=5m
