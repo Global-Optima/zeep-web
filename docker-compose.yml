@@ -163,6 +163,7 @@ services:
         VITE_API_URL: ${VITE_API_URL}
         VITE_WS_URL: ${VITE_WS_URL}
         VITE_PAYMENT_SECRET: ${PAYMENT_SECRET}
+        VITE_TEST_PAYMENT: ${VITE_TEST_PAYMENT}
     env_file:
       - .env
     environment:
@@ -198,7 +199,7 @@ services:
     container_name: prometheus
     image: prom/prometheus:latest
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - '9090:9090'
     depends_on:
@@ -212,7 +213,7 @@ services:
     ports:
       - '9115:9115'
     volumes:
-      - ./monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml
+      - ./infrastructure/monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml
     networks:
       - app_network
 
@@ -261,7 +262,7 @@ services:
     container_name: loki
     image: grafana/loki:latest
     volumes:
-      - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml
+      - ./infrastructure/monitoring/loki-config.yaml:/etc/loki/local-config.yaml
       - ./loki-data/wal:/tmp/loki/wal
       - ./loki-data/index:/tmp/loki/index
       - ./loki-data/cache:/tmp/loki/cache
@@ -279,7 +280,7 @@ services:
     container_name: promtail
     image: grafana/promtail:latest
     volumes:
-      - ./monitoring/promtail-config.yaml:/etc/promtail/config.yml
+      - ./infrastructure/monitoring/promtail-config.yaml:/etc/promtail/config.yml
       - ./backend/logs:/app/logs
     depends_on:
       - loki
