@@ -1,12 +1,13 @@
 package storeSynchronizers
 
 import (
+	"net/http"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type StoreSynchronizerHandler struct {

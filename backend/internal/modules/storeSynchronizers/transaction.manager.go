@@ -2,6 +2,8 @@ package storeSynchronizers
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -11,7 +13,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
-	"time"
 )
 
 type TransactionManager interface {

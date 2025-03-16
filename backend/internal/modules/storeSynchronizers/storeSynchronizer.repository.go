@@ -2,10 +2,11 @@ package storeSynchronizers
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"time"
 )
 
 type StoreSynchronizeRepository interface {
@@ -40,7 +41,6 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedAdditiveIngredientsIDs(st
 		Where("store_products.store_id = ?", storeID).
 		Where("additive_ingredients.created_at > ? OR product_size_additives.created_at > ?", lastSync, lastSync).
 		Pluck("additive_ingredients.ingredient_id", &notSynchronizedProductSizesAdditivesIDs).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return []uint{}, nil
@@ -62,7 +62,6 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizeWithAdditivesI
 		Where("store_products.store_id = ?", storeID).
 		Where("product_size_ingredients.created_at > ?", lastSync).
 		Pluck("product_size_ingredients.ingredient_id", &notSynchronizedIngredients).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return []uint{}, nil
@@ -83,7 +82,6 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesAdditivesIDs(
 		Where("store_products.store_id = ?", storeID).
 		Where("product_size_additives.created_at > ?", lastSync).
 		Pluck("product_size_additives.additive_id", &notSynchronizedProductSizesAdditivesIDs).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return []uint{}, nil

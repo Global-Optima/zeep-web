@@ -42,7 +42,6 @@ func (r *employeeTokenManager) GetTokenByEmployeeID(employeeID uint) (*data.Empl
 		Preload("Employee.FranchiseeEmployee").
 		Preload("Employee.AdminEmployee").
 		Where("employee_id = ?", employeeID).First(&token).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

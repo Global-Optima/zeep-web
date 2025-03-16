@@ -5,6 +5,4 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	ErrStoreAlreadySynchronized = moduleErrors.NewModuleError(errors.New("store is already synchronized"))
-)
+var ErrStoreAlreadySynchronized = moduleErrors.NewModuleError(errors.New("store is already synchronized"))
