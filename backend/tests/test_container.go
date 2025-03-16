@@ -39,7 +39,7 @@ func NewTestContainer() *container.Container {
 			}
 		}
 
-		redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
+		redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB, cfg.Redis.Username)
 		if err != nil {
 			log.Fatalf("Failed to initialize Redis: %v", err)
 		}

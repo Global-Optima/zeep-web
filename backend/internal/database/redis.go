@@ -14,7 +14,7 @@ type RedisClient struct {
 
 var redisInstance *RedisClient
 
-func InitRedis(host string, port int, password string, db int) (*RedisClient, error) {
+func InitRedis(host string, port int, password string, db int, username string) (*RedisClient, error) {
 	if redisInstance != nil {
 		return redisInstance, nil
 	}
@@ -22,6 +22,7 @@ func InitRedis(host string, port int, password string, db int) (*RedisClient, er
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", host, port),
 		Password: password,
+		Username: username,
 		DB:       db,
 	})
 
