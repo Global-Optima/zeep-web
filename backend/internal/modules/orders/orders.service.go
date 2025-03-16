@@ -518,46 +518,6 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 	return &response, nil
 }
 
-// func (s *orderService) deductProductSizeIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreStock) error {
-// 	for _, suborder := range order.Suborders {
-// 		updatedStocks, err := s.storeStockRepo.DeductStockByProductSizeTechCart(order.StoreID, suborder.StoreProductSizeID)
-// 		if err != nil {
-// 			return fmt.Errorf("failed to deduct from store stock: %w", err)
-// 		}
-
-// 		for _, stock := range updatedStocks {
-// 			if existingStock, exists := stockMap[stock.IngredientID]; exists {
-// 				existingStock.Quantity = stock.Quantity // Update latest quantity
-// 			} else {
-// 				stockMap[stock.IngredientID] = &stock
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-// func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreStock) error {
-// 	for _, suborder := range order.Suborders {
-// 		for _, storeAdditive := range suborder.SuborderAdditives {
-// 			updatedStocks, err := s.storeStockRepo.DeductStockByAdditiveTechCart(order.StoreID, storeAdditive.StoreAdditiveID)
-// 			if err != nil {
-// 				return fmt.Errorf("failed to deduct from store stock: %w", err)
-// 			}
-
-// 			for _, stock := range updatedStocks {
-// 				if existingStock, exists := stockMap[stock.IngredientID]; exists {
-// 					existingStock.Quantity = stock.Quantity // Update latest quantity
-// 				} else {
-// 					stockMap[stock.IngredientID] = &stock
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
-
 func (s *orderService) deductSuborderIngredientsFromStock(storeID uint, suborder *data.Suborder, stockMap map[uint]*data.StoreStock) error {
 	updatedStocks, err := s.storeStockRepo.DeductStockByProductSizeTechCart(storeID, suborder.StoreProductSizeID)
 	if err != nil {

@@ -180,6 +180,7 @@ type OrdersTimeZoneFilter struct {
 	StoreID          *uint   `form:"storeId" binding:"omitempty"`
 	TimeZoneLocation *string `form:"timezone" binding:"omitempty"`
 	TimeZoneOffset   *uint   `form:"timezoneOffset" binding:"omitempty"`
+	TimeGapMinutes   *uint   `form:"timeGapMinutes" binding:"omitempty"`
 }
 
 type TransactionDTO struct {
