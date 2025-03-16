@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 )
 
@@ -26,9 +27,10 @@ func NewAdditivesModule(
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	storageRepo storage.StorageRepository,
+	notificationService notifications.NotificationService,
 ) *AdditivesModule {
 	repo := additives.NewAdditiveRepository(base.DB)
-	service := additives.NewAdditiveService(repo, storageRepo, base.Logger)
+	service := additives.NewAdditiveService(repo, storageRepo, notificationService, base.Logger)
 	handler := additives.NewAdditiveHandler(service, auditService)
 
 	storeAdditivesModule := NewStoreAdditivesModule(base, service, franchiseeService, auditService, ingredientRepo, storeStockRepo, storageRepo)

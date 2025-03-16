@@ -28,6 +28,18 @@ func NewNotificationRoleMappingManager() *NotificationRoleMappingManager {
 					EmployeeRoles: []data.EmployeeRole{data.RoleStoreManager, data.RoleBarista},
 				},
 				{
+					EventType:     data.NEW_PRODUCT,
+					EmployeeRoles: []data.EmployeeRole{data.RoleAdmin, data.RoleFranchiseManager},
+				},
+				{
+					EventType:     data.NEW_PRODUCT_SIZE,
+					EmployeeRoles: []data.EmployeeRole{data.RoleAdmin, data.RoleFranchiseManager},
+				},
+				{
+					EventType:     data.NEW_ADDITIVE,
+					EmployeeRoles: []data.EmployeeRole{data.RoleAdmin, data.RoleFranchiseManager},
+				},
+				{
 					EventType:     data.STORE_WAREHOUSE_RUN_OUT,
 					EmployeeRoles: []data.EmployeeRole{data.RoleStoreManager, data.RoleBarista},
 				},

@@ -23,6 +23,7 @@ type Config struct {
 	Env           string `mapstructure:"ENV"`
 	IsDevelopment bool
 	IsTest        bool
+	GinMode       string
 
 	Database  DatabaseConfig  `mapstructure:",squash"`
 	Server    ServerConfig    `mapstructure:",squash"`
@@ -62,6 +63,12 @@ func LoadConfig() *Config {
 		// Determine environment
 		config.IsDevelopment = config.Env == EnvDevelopment
 		config.IsTest = config.Env == EnvTest
+
+		if config.Env == "production" {
+			config.GinMode = "release"
+		} else {
+			config.GinMode = "debug"
+		}
 
 		if err := advancedConfig.NewConfReader("zeep-config").Read(&config); err != nil {
 			log.Fatalf("Error validating config: %v", err)
