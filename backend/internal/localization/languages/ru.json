@@ -406,7 +406,7 @@
 		"priceChange": "Цена на *{{.ProductName}}* изменилась с *{{.OldPrice}}* на *{{.NewPrice}}*.",
         "newProduct": "Добавлен новый продукт *{{.ProductName}}*.",
         "newProductSize": "Добавлен новый размер *{{.Size}}* для *{{.ProductName}}*.",
-        "newAdditive": "Введен новый добавка *{{.AdditiveName}}*."
+        "newAdditive": "Добавлена новая добавка *{{.AdditiveName}}*."
 	},
 	"stockRequestComments": {
 		"quantityMismatch" : "*{{.OriginalMaterialName}}* получено *{{.ActualQuantity}}*, ожидалось *{{.Quantity}}*.",

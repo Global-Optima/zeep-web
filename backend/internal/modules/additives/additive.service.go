@@ -2,7 +2,6 @@ package additives
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -198,7 +197,6 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 		additive.ImageURL = data.StorageImageKey(imageUrl)
 	}
 
-	log.Println("3")
 	id, err := s.repo.CreateAdditive(additive)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to add additive", err)
@@ -221,12 +219,10 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 		},
 		AdditiveName: additive.Name,
 	}
-	log.Println("4")
 	err = s.notificationService.NotifyNewAdditiveAdded(notificationDetails)
 	if err != nil {
 		return 0, fmt.Errorf("failed to notify new additive added: %w", err)
 	}
-	log.Println("5")
 
 	return id, nil
 }

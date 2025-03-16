@@ -2,7 +2,6 @@ package additives
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -212,9 +211,7 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 		return
 	}
 
-	log.Println("1")
 	id, err := h.service.CreateAdditive(&dto)
-	log.Println("2")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveCreate)
 		return
