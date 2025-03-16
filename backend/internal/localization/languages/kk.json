@@ -410,7 +410,7 @@
     "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
     "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді.",
     "newProduct": "*{{.ProductName}}* атты жаңа өнім қосылды.",
-    "newProductSize": "*{{.ProductName}}* үшін *{{.Size}}* атты жаңа өлшем қосылды.",
+    "newProductSize": "*{{.ProductName}}* үшін *{{.Size}}*, *{{.ProductSizeName}}* атты жаңа өлшем қосылды.",
     "newAdditive": "*{{.AdditiveName}}* атты жаңа қоспа енгізілді."
   },
   "stockRequestComments": {

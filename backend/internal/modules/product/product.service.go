@@ -143,12 +143,20 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 		return 0, wrappedErr
 	}
 
+	product, err := s.repo.GetProductByID(productSize.ProductID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to get product by productSizeID: %w", err)
+		s.logger.Error(wrappedErr)
+		return 0, wrappedErr
+	}
+
 	notificationDetails := &details.NewProductSizeDetails{
 		BaseNotificationDetails: details.BaseNotificationDetails{
 			ID: productSizeID,
 		},
-		ProductName: productSize.Product.Name,
-		Size:        productSize.Size,
+		ProductName:     product.Name,
+		ProductSizeName: productSize.Name,
+		Size:            productSize.Size,
 	}
 	err = s.notificationService.NotifyNewProductSizeAdded(notificationDetails)
 	if err != nil {

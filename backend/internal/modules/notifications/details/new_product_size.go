@@ -10,8 +10,9 @@ import (
 
 type NewProductSizeDetails struct {
 	BaseNotificationDetails
-	ProductName string  `json:"productName"`
-	Size        float64 `json:"size"`
+	ProductName     string  `json:"productName"`
+	ProductSizeName string  `json:"productSizeName"`
+	Size            float64 `json:"size"`
 }
 
 func (n *NewProductSizeDetails) ToDetails() ([]byte, error) {
@@ -22,8 +23,8 @@ func (n *NewProductSizeDetails) GetBaseDetails() *BaseNotificationDetails {
 	return &n.BaseNotificationDetails
 }
 
-func BuildNewProductSizeDetails(facilityID uint, facilityName, productName string, size float64) (*NewProductSizeDetails, error) {
-	if facilityID == 0 || facilityName == "" || productName == "" || size == 0 {
+func BuildNewProductSizeDetails(facilityID uint, facilityName, productName, productSizeName string, size float64) (*NewProductSizeDetails, error) {
+	if facilityID == 0 || facilityName == "" || productName == "" || productSizeName == "" || size == 0 {
 		return nil, fmt.Errorf("invalid input: all fields are required and size != 0")
 	}
 	return &NewProductSizeDetails{
@@ -31,8 +32,9 @@ func BuildNewProductSizeDetails(facilityID uint, facilityName, productName strin
 			ID:           facilityID,
 			FacilityName: facilityName,
 		},
-		ProductName: productName,
-		Size:        size,
+		ProductName:     productName,
+		ProductSizeName: productSizeName,
+		Size:            size,
 	}, nil
 }
 
@@ -42,9 +44,10 @@ func BuildNewProductSizeMessage(details *NewProductSizeDetails) (localization.Lo
 	}
 	key := localization.FormTranslationKey("notification", data.NEW_PRODUCT_SIZE.ToString())
 	messages, err := localization.Translate(key, map[string]interface{}{
-		"FacilityName": details.FacilityName,
-		"ProductName":  details.ProductName,
-		"Size":         details.Size,
+		"FacilityName":    details.FacilityName,
+		"ProductName":     details.ProductName,
+		"ProductSizeName": details.ProductSizeName,
+		"Size":            details.Size,
 	})
 	if err != nil {
 		return localization.LocalizedMessage{}, fmt.Errorf("failed to build NewProductSize message: %w", err)
