@@ -144,21 +144,15 @@ func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt ti
 }
 
 func (m *transactionManager) filterMissingData(storeID uint, data *types.UnsyncData) error {
-	g := new(errgroup.Group)
+	var err error
 
-	g.Go(func() error {
-		var err error
-		data.AdditiveIDs, err = m.storeAdditiveRepo.FilterMissingStoreAdditiveIDs(storeID, data.AdditiveIDs)
+	data.AdditiveIDs, err = m.storeAdditiveRepo.FilterMissingStoreAdditiveIDs(storeID, data.AdditiveIDs)
+	if err != nil {
 		return err
-	})
+	}
 
-	g.Go(func() error {
-		var err error
-		data.IngredientIDs, err = m.storeStockRepo.FilterMissingIngredientsIDs(storeID, data.IngredientIDs)
-		return err
-	})
-
-	if err := g.Wait(); err != nil {
+	data.IngredientIDs, err = m.storeStockRepo.FilterMissingIngredientsIDs(storeID, data.IngredientIDs)
+	if err != nil {
 		return err
 	}
 
@@ -199,32 +193,19 @@ func (m *transactionManager) synchronizeAdditives(tx *gorm.DB, storeID uint, las
 func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, lastSyncAt time.Time) error {
 	var productSizeIngredientIDs, additiveIngredientIDs []uint
 
-	g := new(errgroup.Group)
+	var err error
+	productSizeIngredientIDs, err = m.repo.GetNotSynchronizedProductSizeWithAdditivesIngredients(
+		storeID, lastSyncAt,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to fetch product-size ingredients: %w", err)
+	}
 
-	g.Go(func() error {
-		var err error
-		productSizeIngredientIDs, err = m.repo.GetNotSynchronizedProductSizeWithAdditivesIngredients(
-			storeID, lastSyncAt,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to fetch product-size ingredients: %w", err)
-		}
-		return nil
-	})
-
-	g.Go(func() error {
-		var err error
-		additiveIngredientIDs, err = m.repo.GetNotSynchronizedAdditiveIngredientsIDs(
-			storeID, lastSyncAt,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to fetch additive-based ingredients: %w", err)
-		}
-		return nil
-	})
-
-	if err := g.Wait(); err != nil {
-		return fmt.Errorf("failed to synchronize ingredients: %w", err)
+	additiveIngredientIDs, err = m.repo.GetNotSynchronizedAdditiveIngredientsIDs(
+		storeID, lastSyncAt,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to fetch additive-based ingredients: %w", err)
 	}
 
 	mergedIngredientIDs := utils.MergeDistinct(productSizeIngredientIDs, additiveIngredientIDs)
