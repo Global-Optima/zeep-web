@@ -46,14 +46,14 @@ type RecipeStep struct {
 
 type ProductSize struct {
 	BaseEntity
-	Name                   string  `gorm:"size:100;not null" sort:"name"`
-	UnitID                 uint    `gorm:"index,not null"`
-	Unit                   Unit    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE" sort:"unit"`
-	BasePrice              float64 `gorm:"not null" sort:"price"`
-	Size                   float64 `gorm:"not null"`
-	ProductID              uint    `gorm:"index;not null"`
-	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
-	DiscountID             uint
+	Name                   string                  `gorm:"size:100;not null" sort:"name"`
+	UnitID                 uint                    `gorm:"index,not null"`
+	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE" sort:"unit"`
+	BasePrice              float64                 `gorm:"not null" sort:"price"`
+	Size                   float64                 `gorm:"not null"`
+	ProductID              uint                    `gorm:"index;not null"`
+	Product                Product                 `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
+	DiscountID             uint                    `gorm:"index"`
 	MachineId              string                  `gorm:"size:40;not null;unique" sort:"machineId"`
 	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`

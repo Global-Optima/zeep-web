@@ -3,13 +3,12 @@ package storeAdditives
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
-	storeWarehousesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
-	"github.com/pkg/errors"
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"gorm.io/gorm"
 )
 
 type TransactionManager interface {
-	CreateStoreAdditivesWithStocks(storeID uint, storeAdditive []data.StoreAdditive, dtos []storeWarehousesTypes.AddStoreStockDTO) ([]uint, error)
+	CreateStoreAdditivesWithStocks(storeID uint, storeAdditive []data.StoreAdditive, ingredientIDs []uint) ([]uint, error)
 }
 
 type transactionManager struct {
@@ -26,7 +25,7 @@ func NewTransactionManager(db *gorm.DB, storeAdditiveRepo StoreAdditiveRepositor
 	}
 }
 
-func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeAdditives []data.StoreAdditive, dtos []storeWarehousesTypes.AddStoreStockDTO) ([]uint, error) {
+func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeAdditives []data.StoreAdditive, ingredientIDs []uint) ([]uint, error) {
 	var ids []uint
 	err := m.db.Transaction(func(tx *gorm.DB) error {
 		sa := m.storeAdditiveRepo.CloneWithTransaction(tx)
@@ -43,7 +42,22 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 
 		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
-		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+		missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
+		for i, ingredientID := range missingIngredientIDs {
+			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		}
+
+		if len(newStoreStocks) == 0 {
+			return nil
+		}
+
+		_, err = m.addStocks(&storeWarehouseRepo, newStoreStocks)
+		if err != nil {
 			return err
 		}
 
@@ -55,16 +69,31 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 	return ids, nil
 }
 
-func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditiveID uint, updateStoreAdditive *data.StoreAdditive, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
+func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditiveID uint, updateStoreAdditive *data.StoreAdditive, ingredientIDs []uint) error {
 	err := m.db.Transaction(func(tx *gorm.DB) error {
 		sp := m.storeAdditiveRepo.CloneWithTransaction(tx)
 		if err := sp.UpdateStoreAdditive(storeID, storeAdditiveID, updateStoreAdditive); err != nil {
 			return err
 		}
 
-		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
+		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
-		if err := m.addStocks(&storeWarehouseRepo, storeID, dtos); err != nil {
+		missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
+		for i, ingredientID := range missingIngredientIDs {
+			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		}
+
+		if len(newStoreStocks) == 0 {
+			return nil
+		}
+
+		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
+		if err != nil {
 			return err
 		}
 
@@ -76,16 +105,11 @@ func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditi
 	return nil
 }
 
-func (m *transactionManager) addStocks(storeWarehouseRepo storeStocks.StoreStockRepository, storeID uint, dtos []storeWarehousesTypes.AddStoreStockDTO) error {
-	for _, dto := range dtos {
-		_, err := storeWarehouseRepo.AddOrUpdateStock(storeID, &dto)
-		if err != nil {
-			switch {
-			case errors.Is(err, storeWarehousesTypes.ErrStockAlreadyExists):
-				continue
-			}
-			return err
-		}
+func (m *transactionManager) addStocks(storeStockRepo storeStocks.StoreStockRepository, stocks []data.StoreStock) ([]uint, error) {
+	ids, err := storeStockRepo.AddMultipleStocks(stocks)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	return ids, nil
 }

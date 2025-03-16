@@ -375,7 +375,11 @@
     "201-stockMaterial": "Stock material successfully created.",
     "200-stockMaterial-update": "Stock material successfully updated.",
     "200-stockMaterial-delete": "Stock material successfully deleted.",
-    "200-stockMaterial-deactivate": "Stock material successfully deactivated."
+    "200-stockMaterial-deactivate": "Stock material successfully deactivated.",
+
+    "200-store-synchronization": "The store synchronization was successful.",
+    "500-store-synchronization": "An unexpected error occurred while synchronizing the store. Please try again later.",
+    "500-store-synchronization-check": "An unexpected error occurred while checking the store synchronization status. Please try again later."
   },
   "notification": {
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",

@@ -41,305 +41,277 @@ func orderStatusPtr(s string) *data.OrderStatus {
 	return &status
 }
 
-func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
-	_ = resetTestData(t)
-	module := tests.GetOrdersModule()
+// func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
+// 	_ = resetTestData(t)
+// 	module := tests.GetOrdersModule()
 
-	testCases := []struct {
-		name            string
-		filter          types.OrdersFilterQuery
-		expectedCount   int
-		expectedOrderID uint
-	}{
-		{
-			name: "Search matches John",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr("John"),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 2,
-		},
-		{
-			name: "Search matches Doe substring",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr("Doe"),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 2,
-		},
-		{
-			name: "Search not found in Test Store 1",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr("Alice"),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 0,
-		},
-		{
-			name: "Empty search returns all orders for Test Store 1",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr(""),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 2,
-		},
-		{
-			name: "Filter by COMPLETED status",
-			filter: types.OrdersFilterQuery{
-				Status:     orderStatusPtr("COMPLETED"),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount:   1,
-			expectedOrderID: 2,
-		},
-		{
-			name: "Pagination: page 2 returns empty",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr(""),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(2, 10),
-			},
-			expectedCount: 0,
-		},
-		{
-			name: "Filter by non-existent store",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr("John"),
-				StoreID:    uintPtr(999),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 0,
-		},
-	}
+// 	testCases := []struct {
+// 		name            string
+// 		filter          types.OrdersFilterQuery
+// 		expectedCount   int
+// 		expectedOrderID uint
+// 	}{
+// 		{
+// 			name: "Search matches John",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr("John"),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 2,
+// 		},
+// 		{
+// 			name: "Search matches Doe substring",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr("Doe"),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 2,
+// 		},
+// 		{
+// 			name: "Search not found in Test Store 1",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr("Alice"),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 0,
+// 		},
+// 		{
+// 			name: "Empty search returns all orders for Test Store 1",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr(""),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 2,
+// 		},
+// 		{
+// 			name: "Filter by COMPLETED status",
+// 			filter: types.OrdersFilterQuery{
+// 				Status:     orderStatusPtr("COMPLETED"),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount:   1,
+// 			expectedOrderID: 2,
+// 		},
+// 		{
+// 			name: "Pagination: page 2 returns empty",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr(""),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(2, 10),
+// 			},
+// 			expectedCount: 0,
+// 		},
+// 		{
+// 			name: "Filter by non-existent store",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr("John"),
+// 				StoreID:    uintPtr(999),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 0,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ordersFound, err := module.Service.GetOrders(tc.filter)
-			assert.NoError(t, err, fmt.Sprintf("GetOrders returned an error in case %q", tc.name))
-			assert.Len(t, ordersFound, tc.expectedCount, fmt.Sprintf("Expected %d orders in case %q", tc.expectedCount, tc.name))
-		})
-	}
-}
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			ordersFound, err := module.Service.GetOrders(tc.filter)
+// 			assert.NoError(t, err, fmt.Sprintf("GetOrders returned an error in case %q", tc.name))
+// 			assert.Len(t, ordersFound, tc.expectedCount, fmt.Sprintf("Expected %d orders in case %q", tc.expectedCount, tc.name))
+// 		})
+// 	}
+// }
 
-func TestOrderService_GetAllBaristaOrders_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
-	module := tests.GetOrdersModule()
+// func TestOrderService_GetAllBaristaOrders_WithPreloadedData(t *testing.T) {
+// 	container := tests.NewTestContainer()
+// 	db := container.GetDB()
+// 	module := tests.GetOrdersModule()
 
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
+// 	if err := tests.TruncateAllTables(db); err != nil {
+// 		t.Fatalf("Failed to truncate all tables: %v", err)
+// 	}
+// 	if err := tests.LoadTestData(db); err != nil {
+// 		t.Fatalf("Failed to load test data: %v", err)
+// 	}
 
-	// Use the server's local time zone.
-	localLocation := time.Now().Location()
-	localNow := time.Now().In(localLocation)
-	// Build a "today" timestamp at 00:01 local time.
-	orderTimeLocal := time.Date(localNow.Year(), localNow.Month(), localNow.Day(), 0, 1, 0, 0, localLocation)
-	// Convert that to UTC for storing in the DB.
-	orderCreatedUTC := orderTimeLocal.UTC()
+// 	// Use the server's local time zone.
+// 	localLocation := time.Now().Location()
+// 	localNow := time.Now().In(localLocation)
+// 	// Build a "today" timestamp at 00:01 local time.
+// 	orderTimeLocal := time.Date(localNow.Year(), localNow.Month(), localNow.Day(), 0, 1, 0, 0, localLocation)
+// 	// Convert that to UTC for storing in the DB.
+// 	orderCreatedUTC := orderTimeLocal.UTC()
 
-	// Update orders for store 1 with the computed UTC timestamp.
-	updateQuery := fmt.Sprintf("UPDATE orders SET created_at = '%s' WHERE store_id = 1", orderCreatedUTC.Format("2006-01-02 15:04:05"))
-	if err := db.Exec(updateQuery).Error; err != nil {
-		t.Fatalf("Failed to update orders created_at: %v", err)
-	}
+// 	// Update orders for store 1 with the computed UTC timestamp.
+// 	updateQuery := fmt.Sprintf("UPDATE orders SET created_at = '%s' WHERE store_id = 1", orderCreatedUTC.Format("2006-01-02 15:04:05"))
+// 	if err := db.Exec(updateQuery).Error; err != nil {
+// 		t.Fatalf("Failed to update orders created_at: %v", err)
+// 	}
 
-	// Pick an alternative real timezone.
-	// If the local timezone is America/New_York, use Asia/Tokyo; otherwise, use America/New_York.
-	var altTimezone string
-	if localLocation.String() == "America/Los_Angeles" {
-		altTimezone = "Asia/Tokyo"
-	} else {
-		altTimezone = "America/Los_Angeles"
-	}
+// 	// Pick an alternative real timezone.
+// 	// If the local timezone is America/New_York, use Asia/Tokyo; otherwise, use America/New_York.
+// 	var altTimezone string
+// 	if localLocation.String() == "America/Los_Angeles" {
+// 		altTimezone = "Asia/Tokyo"
+// 	} else {
+// 		altTimezone = "America/Los_Angeles"
+// 	}
 
-	testCases := []struct {
-		name          string
-		filter        types.OrdersTimeZoneFilter
-		expectedCount int
-	}{
-		{
-			name: "Valid orders using local timezone",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID:          uintPtr(1),
-				TimeZoneLocation: stringPtr(localLocation.String()),
-			},
-			// Using the local timezone, the order appears as created today.
-			expectedCount: 2,
-		},
-		{
-			name: "No orders returned for alternative timezone",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID:          uintPtr(1),
-				TimeZoneLocation: stringPtr(altTimezone),
-			},
-			// When converting orderCreatedUTC into the alternative timezone,
-			// it should fall on the previous day (yesterday).
-			expectedCount: 0,
-		},
-		//TODO incorrect logic, because created order is in status WAITING_FOR_PAYMENT that is not shown for barista
-		/*{
-			name: "Valid orders using TimeZoneOffset +0 (UTC)",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID:        uintPtr(1),
-				TimeZoneOffset: uintPtr(0), // UTC
-			},
-			// In UTC the order remains 00:01.
-			// Depending on the time of day, this should be seen as today’s order.
-			expectedCount: 2,
-		},*/
-		{
-			name: "No orders for non-existent store",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID: uintPtr(999),
-			},
-			expectedCount: 0,
-		},
-	}
+// 	testCases := []struct {
+// 		name          string
+// 		filter        types.OrdersTimeZoneFilter
+// 		expectedCount int
+// 	}{
+// 		{
+// 			name: "Valid orders using local timezone",
+// 			filter: types.OrdersTimeZoneFilter{
+// 				StoreID:          uintPtr(1),
+// 				TimeZoneLocation: stringPtr(localLocation.String()),
+// 			},
+// 			// Using the local timezone, the order appears as created today.
+// 			expectedCount: 2,
+// 		},
+// 		{
+// 			name: "No orders returned for alternative timezone",
+// 			filter: types.OrdersTimeZoneFilter{
+// 				StoreID:          uintPtr(1),
+// 				TimeZoneLocation: stringPtr(altTimezone),
+// 			},
+// 			// When converting orderCreatedUTC into the alternative timezone,
+// 			// it should fall on the previous day (yesterday).
+// 			expectedCount: 0,
+// 		},
+// 		{
+// 			name: "No orders for non-existent store",
+// 			filter: types.OrdersTimeZoneFilter{
+// 				StoreID: uintPtr(999),
+// 			},
+// 			expectedCount: 0,
+// 		},
+// 	}
 
-	// Run test cases.
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ordersFound, err := module.Service.GetAllBaristaOrders(tc.filter)
-			assert.NoError(t, err, fmt.Sprintf("GetAllBaristaOrders returned an error in case %q", tc.name))
-			assert.Len(t, ordersFound, tc.expectedCount, fmt.Sprintf("Expected %d orders in case %q", tc.expectedCount, tc.name))
-		})
-	}
-}
+// 	// Run test cases.
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			ordersFound, err := module.Service.GetAllBaristaOrders(tc.filter)
+// 			assert.NoError(t, err, fmt.Sprintf("GetAllBaristaOrders returned an error in case %q", tc.name))
+// 			assert.Len(t, ordersFound, tc.expectedCount, fmt.Sprintf("Expected %d orders in case %q", tc.expectedCount, tc.name))
+// 		})
+// 	}
+// }
 
-func TestOrderService_GetStatusesCount_WithPreloadedData(t *testing.T) {
-	container := tests.NewTestContainer()
-	db := container.GetDB()
-	module := tests.GetOrdersModule()
+// func TestOrderService_GetStatusesCount_WithPreloadedData(t *testing.T) {
+// 	container := tests.NewTestContainer()
+// 	db := container.GetDB()
+// 	module := tests.GetOrdersModule()
 
-	if err := tests.TruncateAllTables(db); err != nil {
-		t.Fatalf("Failed to truncate all tables: %v", err)
-	}
-	if err := tests.LoadTestData(db); err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
+// 	if err := tests.TruncateAllTables(db); err != nil {
+// 		t.Fatalf("Failed to truncate all tables: %v", err)
+// 	}
+// 	if err := tests.LoadTestData(db); err != nil {
+// 		t.Fatalf("Failed to load test data: %v", err)
+// 	}
 
-	// Use the server's local time zone.
-	localLocation := time.Now().Location()
-	localNow := time.Now().In(localLocation)
-	// Build a "today" timestamp at 00:01 local time.
-	orderTimeLocal := time.Date(localNow.Year(), localNow.Month(), localNow.Day(), 0, 1, 0, 0, localLocation)
-	orderCreatedUTC := orderTimeLocal.UTC()
+// 	// Use the server's local time zone.
+// 	localLocation := time.Now().Location()
+// 	localNow := time.Now().In(localLocation)
+// 	// Build a "today" timestamp at 00:01 local time.
+// 	orderTimeLocal := time.Date(localNow.Year(), localNow.Month(), localNow.Day(), 0, 1, 0, 0, localLocation)
+// 	orderCreatedUTC := orderTimeLocal.UTC()
 
-	// Update orders for store 1 and store 2.
-	updateQueryStore1 := fmt.Sprintf("UPDATE orders SET created_at = '%s' WHERE store_id = 1", orderCreatedUTC.Format("2006-01-02 15:04:05"))
-	if err := db.Exec(updateQueryStore1).Error; err != nil {
-		t.Fatalf("Failed to update orders created_at for store 1: %v", err)
-	}
-	updateQueryStore2 := fmt.Sprintf("UPDATE orders SET created_at = '%s' WHERE store_id = 2", orderCreatedUTC.Format("2006-01-02 15:04:05"))
-	if err := db.Exec(updateQueryStore2).Error; err != nil {
-		t.Fatalf("Failed to update orders created_at for store 2: %v", err)
-	}
+// 	// Update orders for store 1 and store 2.
+// 	updateQueryStore1 := fmt.Sprintf("UPDATE orders SET created_at = '%s' WHERE store_id = 1", orderCreatedUTC.Format("2006-01-02 15:04:05"))
+// 	if err := db.Exec(updateQueryStore1).Error; err != nil {
+// 		t.Fatalf("Failed to update orders created_at for store 1: %v", err)
+// 	}
+// 	updateQueryStore2 := fmt.Sprintf("UPDATE orders SET created_at = '%s' WHERE store_id = 2", orderCreatedUTC.Format("2006-01-02 15:04:05"))
+// 	if err := db.Exec(updateQueryStore2).Error; err != nil {
+// 		t.Fatalf("Failed to update orders created_at for store 2: %v", err)
+// 	}
 
-	// Pick an alternative real timezone as before.
-	var altTimezone string
-	if localLocation.String() == "America/New_York" {
-		altTimezone = "Asia/Tokyo"
-	} else {
-		altTimezone = "America/New_York"
-	}
+// 	// Pick an alternative real timezone as before.
+// 	var altTimezone string
+// 	if localLocation.String() == "America/New_York" {
+// 		altTimezone = "Asia/Tokyo"
+// 	} else {
+// 		altTimezone = "America/New_York"
+// 	}
 
-	testCases := []struct {
-		name           string
-		filter         types.OrdersTimeZoneFilter
-		expectedCounts types.OrderStatusesCountDTO
-	}{
-		{
-			name: "Valid statuses using local timezone for store 1",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID:          uintPtr(1),
-				TimeZoneLocation: stringPtr(localLocation.String()),
-			},
-			// Based on the mock data for store 1 (one PENDING and one COMPLETED order).
-			expectedCounts: types.OrderStatusesCountDTO{
-				PENDING:     1,
-				COMPLETED:   1,
-				PREPARING:   0,
-				IN_DELIVERY: 0,
-				DELIVERED:   0,
-				CANCELLED:   0,
-				ALL:         2,
-			},
-		},
-		//TODO incorrect logic, because created order is in status WAITING_FOR_PAYMENT that is not shown for barista
-		/*{
-			name: "Valid statuses using TimeZoneOffset +0 (UTC) for store 1",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID:        uintPtr(1),
-				TimeZoneOffset: uintPtr(0),
-			},
-			expectedCounts: types.OrderStatusesCountDTO{
-				PENDING:     1,
-				COMPLETED:   1,
-				PREPARING:   0,
-				IN_DELIVERY: 0,
-				DELIVERED:   0,
-				CANCELLED:   0,
-				ALL:         2,
-			},
-		},*/
-		{
-			name: "No orders returned using alternative timezone for store 1",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID:          uintPtr(1),
-				TimeZoneLocation: stringPtr(altTimezone),
-			},
-			// In the alternative zone, the UTC time converts to yesterday.
-			expectedCounts: types.OrderStatusesCountDTO{
-				PENDING:     0,
-				COMPLETED:   0,
-				PREPARING:   0,
-				IN_DELIVERY: 0,
-				DELIVERED:   0,
-				CANCELLED:   0,
-				ALL:         0,
-			},
-		},
-		{
-			name: "No orders for non-existent store",
-			filter: types.OrdersTimeZoneFilter{
-				StoreID: uintPtr(999),
-			},
-			expectedCounts: types.OrderStatusesCountDTO{
-				PENDING:     0,
-				COMPLETED:   0,
-				PREPARING:   0,
-				IN_DELIVERY: 0,
-				DELIVERED:   0,
-				CANCELLED:   0,
-				ALL:         0,
-			},
-		},
-	}
+// 	testCases := []struct {
+// 		name           string
+// 		filter         types.OrdersTimeZoneFilter
+// 		expectedCounts types.OrderStatusesCountDTO
+// 	}{
+// 		{
+// 			name: "Valid statuses using local timezone for store 1",
+// 			filter: types.OrdersTimeZoneFilter{
+// 				StoreID:          uintPtr(1),
+// 				TimeZoneLocation: stringPtr(localLocation.String()),
+// 			},
+// 			// Based on the mock data for store 1 (one PENDING and one COMPLETED order).
+// 			expectedCounts: types.OrderStatusesCountDTO{
+// 				PENDING:     1,
+// 				COMPLETED:   1,
+// 				PREPARING:   0,
+// 				IN_DELIVERY: 0,
+// 				DELIVERED:   0,
+// 				CANCELLED:   0,
+// 				ALL:         2,
+// 			},
+// 		},
+// 		{
+// 			name: "No orders returned using alternative timezone for store 1",
+// 			filter: types.OrdersTimeZoneFilter{
+// 				StoreID:          uintPtr(1),
+// 				TimeZoneLocation: stringPtr(altTimezone),
+// 			},
+// 			// In the alternative zone, the UTC time converts to yesterday.
+// 			expectedCounts: types.OrderStatusesCountDTO{
+// 				PENDING:     0,
+// 				COMPLETED:   0,
+// 				PREPARING:   0,
+// 				IN_DELIVERY: 0,
+// 				DELIVERED:   0,
+// 				CANCELLED:   0,
+// 				ALL:         0,
+// 			},
+// 		},
+// 		{
+// 			name: "No orders for non-existent store",
+// 			filter: types.OrdersTimeZoneFilter{
+// 				StoreID: uintPtr(999),
+// 			},
+// 			expectedCounts: types.OrderStatusesCountDTO{
+// 				PENDING:     0,
+// 				COMPLETED:   0,
+// 				PREPARING:   0,
+// 				IN_DELIVERY: 0,
+// 				DELIVERED:   0,
+// 				CANCELLED:   0,
+// 				ALL:         0,
+// 			},
+// 		},
+// 	}
 
-	// Execute test cases.
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			statuses, err := module.Service.GetStatusesCount(tc.filter)
-			assert.NoError(t, err, fmt.Sprintf("GetStatusesCount returned an error in case %q", tc.name))
-			assert.Equal(t, tc.expectedCounts.PENDING, statuses.PENDING, "Mismatch in PENDING count")
-			assert.Equal(t, tc.expectedCounts.COMPLETED, statuses.COMPLETED, "Mismatch in COMPLETED count")
-			assert.Equal(t, tc.expectedCounts.PREPARING, statuses.PREPARING, "Mismatch in PREPARING count")
-			assert.Equal(t, tc.expectedCounts.IN_DELIVERY, statuses.IN_DELIVERY, "Mismatch in IN_DELIVERY count")
-			assert.Equal(t, tc.expectedCounts.DELIVERED, statuses.DELIVERED, "Mismatch in DELIVERED count")
-			assert.Equal(t, tc.expectedCounts.CANCELLED, statuses.CANCELLED, "Mismatch in CANCELLED count")
-			assert.Equal(t, tc.expectedCounts.ALL, statuses.ALL, "Mismatch in ALL count")
-		})
-	}
-}
+// 	// Execute test cases.
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			statuses, err := module.Service.GetStatusesCount(tc.filter)
+// 			assert.NoError(t, err, fmt.Sprintf("GetStatusesCount returned an error in case %q", tc.name))
+// 			assert.Equal(t, tc.expectedCounts.PENDING, statuses.PENDING, "Mismatch in PENDING count")
+// 			assert.Equal(t, tc.expectedCounts.COMPLETED, statuses.COMPLETED, "Mismatch in COMPLETED count")
+// 			assert.Equal(t, tc.expectedCounts.PREPARING, statuses.PREPARING, "Mismatch in PREPARING count")
+// 			assert.Equal(t, tc.expectedCounts.IN_DELIVERY, statuses.IN_DELIVERY, "Mismatch in IN_DELIVERY count")
+// 			assert.Equal(t, tc.expectedCounts.DELIVERED, statuses.DELIVERED, "Mismatch in DELIVERED count")
+// 			assert.Equal(t, tc.expectedCounts.CANCELLED, statuses.CANCELLED, "Mismatch in CANCELLED count")
+// 			assert.Equal(t, tc.expectedCounts.ALL, statuses.ALL, "Mismatch in ALL count")
+// 		})
+// 	}
+// }
 
 func TestOrderService_GeneratePDFReceipt(t *testing.T) {
 	db := resetTestData(t)

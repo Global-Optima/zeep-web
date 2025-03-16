@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/storeEmployees/types"
 	employeesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
@@ -24,16 +25,18 @@ type StoreEmployeeService interface {
 }
 
 type storeEmployeeService struct {
-	repo         StoreEmployeeRepository
-	employeeRepo employees.EmployeeRepository
-	logger       *zap.SugaredLogger
+	repo                 StoreEmployeeRepository
+	employeeRepo         employees.EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
-func NewStoreEmployeeService(repo StoreEmployeeRepository, employeeRepo employees.EmployeeRepository, logger *zap.SugaredLogger) StoreEmployeeService {
+func NewStoreEmployeeService(repo StoreEmployeeRepository, employeeRepo employees.EmployeeRepository, employeeTokenManager employeeToken.EmployeeTokenManager, logger *zap.SugaredLogger) StoreEmployeeService {
 	return &storeEmployeeService{
-		repo:         repo,
-		employeeRepo: employeeRepo,
-		logger:       logger,
+		repo:                 repo,
+		employeeRepo:         employeeRepo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
@@ -125,5 +128,20 @@ func (s *storeEmployeeService) UpdateStoreEmployee(id uint, filter *contexts.Sto
 	if err != nil {
 		return err
 	}
-	return s.repo.UpdateStoreEmployee(id, filter, updateFields)
+
+	err = s.repo.UpdateStoreEmployee(id, filter, updateFields)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to update store employee", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	if input.Role != nil {
+		err := s.employeeTokenManager.DeleteTokenByStoreEmployeeID(id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

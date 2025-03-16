@@ -25,6 +25,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/units"
@@ -406,6 +407,14 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 			statusGroup.PATCH("/reject-store", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.RejectStoreStatus)             // Store
 			statusGroup.PATCH("/completed", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SetCompletedStatus)               // Store
 		}
+	}
+}
+
+func (r *Router) RegisterStoreSynchronizerSynchronizerRoutes(handler *storeSynchronizers.StoreSynchronizerHandler) {
+	router := r.EmployeeRoutes.Group("/sync")
+	{
+		router.GET("/store", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.IsSynchronizedStore)
+		router.POST("/store", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.SynchronizeStore)
 	}
 }
 

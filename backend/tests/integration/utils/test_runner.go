@@ -30,6 +30,10 @@ type TestCase struct {
 func (env *TestEnvironment) RunTests(t *testing.T, testCases []TestCase) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
+			TruncateAndLoadMockData(env.DB)
+			log.Printf("Loaded mock data")
+			log.Printf("🚀 Running test: %s", tc.Description)
+
 			var req *http.Request
 			var err error
 
@@ -79,7 +83,10 @@ func (env *TestEnvironment) RunTests(t *testing.T, testCases []TestCase) {
 			if tc.AuthRole != "" {
 				token := env.GetAuthToken(tc.AuthRole)
 				if token != "" {
-					req.Header.Set("Authorization", token)
+					req.AddCookie(&http.Cookie{
+						Name:  "ZEEP_EMPLOYEE_SESSION",
+						Value: token,
+					})
 				}
 			}
 
@@ -97,6 +104,10 @@ func (env *TestEnvironment) RunTests(t *testing.T, testCases []TestCase) {
 					t.Fatalf("❌ Failed to marshal expected body: %v", err)
 				}
 				assert.JSONEq(t, string(expectedJSON), w.Body.String())
+			}
+
+			if tc.AuthRole != "" {
+				env.Logout(tc.AuthRole)
 			}
 		})
 	}
@@ -143,15 +154,40 @@ func (env *TestEnvironment) GetAuthToken(role data.EmployeeRole) string {
 	}
 
 	var response struct {
-		Data struct {
-			AccessToken string `json:"accessToken"`
-		} `json:"data"`
 		Message string `json:"message"`
+		Data    struct {
+			SessionToken string `json:"sessionToken"`
+		} `json:"data"`
 	}
 	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
 		log.Fatalf("❌ Failed to parse login response: %v", err)
 	}
 
-	env.Tokens[role.ToString()] = "Bearer " + response.Data.AccessToken
+	env.Tokens[role.ToString()] = response.Data.SessionToken
 	return env.Tokens[role.ToString()]
+}
+
+func (env *TestEnvironment) Logout(role data.EmployeeRole) {
+	token, exists := env.Tokens[role.ToString()]
+	if !exists {
+		log.Printf("⚠️ No token found for role %s. Skipping logout.", role)
+		return
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/test/auth/employees/logout", nil)
+	req.AddCookie(&http.Cookie{
+		Name:  "ZEEP_EMPLOYEE_SESSION",
+		Value: token,
+	})
+
+	w := httptest.NewRecorder()
+	env.Router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		log.Printf("❌ Failed to logout as %s: Status %d", role, w.Code)
+	} else {
+		log.Printf("✅ Successfully logged out as %s", role)
+	}
+
+	delete(env.Tokens, role.ToString())
 }

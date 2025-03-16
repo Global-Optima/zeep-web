@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -27,14 +28,16 @@ type EmployeeService interface {
 }
 
 type employeeService struct {
-	repo   EmployeeRepository
-	logger *zap.SugaredLogger
+	repo                 EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
-func NewEmployeeService(repo EmployeeRepository, logger *zap.SugaredLogger) EmployeeService {
+func NewEmployeeService(repo EmployeeRepository, employeeTokenManager employeeToken.EmployeeTokenManager, logger *zap.SugaredLogger) EmployeeService {
 	return &employeeService{
-		repo:   repo,
-		logger: logger,
+		repo:                 repo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
@@ -128,6 +131,13 @@ func (s *employeeService) ReassignEmployeeType(employeeID uint, dto *types.Reass
 	err := s.repo.ReassignEmployeeType(employeeID, dto)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to reassign employee with ID = %d: %w", employeeID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	err = s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to delete token for employee with ID = %d: %w", employeeID, err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}

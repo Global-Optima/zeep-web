@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/limiters"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
@@ -125,12 +126,13 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
-	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
+	employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
+	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
 	storageHandler := storage.NewStorageHandler(storageRepo)                // temp
 	storage.RegisterStorageRoutes(apiRouter.EmployeeRoutes, storageHandler) // temp
 
-	appContainer := container.NewContainer(dbHandler, redisClient, &storageRepo, apiRouter, logger.GetZapSugaredLogger())
+	appContainer := container.NewContainer(dbHandler, redisClient, &storageRepo, &employeeTokenManager, apiRouter, logger.GetZapSugaredLogger())
 	appContainer.MustInitModules()
 
 	router.GET("/metrics", func(c *gin.Context) {

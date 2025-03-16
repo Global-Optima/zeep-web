@@ -8,6 +8,7 @@ import { getRouteName, type RouteKey } from '@/core/config/routes.config'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 
 // UI Components
+import PageLoader from '@/core/components/page-loader/PageLoader.vue'
 import { useInactivityTimer } from '@/core/hooks/use-inactivity-timer.hooks'
 import { getKaspiConfig } from '@/core/integrations/kaspi.service'
 import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
@@ -77,15 +78,24 @@ onMounted(() => {
 
 		<!-- If online, show kiosk UI -->
 		<template v-else>
-			<main class="relative w-full h-full no-scrollbar">
-				<router-view v-slot="{ Component }">
-					<transition
-						name="fade-slide"
-						mode="out-in"
-					>
-						<component :is="Component" />
-					</transition>
-				</router-view>
+			<main class="relative pb-40 w-full h-full no-scrollbar">
+				<RouterView v-slot="{ Component, route }">
+					<template v-if="Component">
+						<Transition
+							name="fade-slide"
+							mode="out-in"
+						>
+							<Suspense>
+								<div :key="route.matched[0]?.path">
+									<component :is="Component" />
+								</div>
+								<template #fallback>
+									<PageLoader />
+								</template>
+							</Suspense>
+						</Transition>
+					</template>
+				</RouterView>
 			</main>
 
 			<!-- Show the cart button if conditions pass -->

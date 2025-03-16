@@ -19,7 +19,7 @@ var once sync.Once
 
 type contextKey string
 
-const asynqTaskKey contextKey = "service"
+const asynqTaskKey contextKey = "asynq-manager"
 
 type AsynqManager struct {
 	client *asynq.Client

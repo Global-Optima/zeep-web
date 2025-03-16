@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: your-registry/frontend:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: NGINX_SERVER_NAME
+              value: "example.com"
+            - name: VITE_API_URL
+              value: "https://api.example.com"
+            - name: VITE_WS_URL
+              value: "wss://api.example.com"
+            - name: VITE_PAYMENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: payment_secret

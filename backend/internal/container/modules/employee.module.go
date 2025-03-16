@@ -3,6 +3,7 @@ package modules
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
 	adminEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/adminEmployees"
 	franchiseeEmployees "github.com/Global-Optima/zeep-web/backend/internal/modules/employees/franchiseeEmployees"
@@ -25,15 +26,16 @@ func NewEmployeesModule(
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
 	regionService regions.RegionService,
+	employeeTokenManager employeeToken.EmployeeTokenManager,
 ) *EmployeesModule {
 	repo := employees.NewEmployeeRepository(base.DB)
-	service := employees.NewEmployeeService(repo, base.Logger)
+	service := employees.NewEmployeeService(repo, employeeTokenManager, base.Logger)
 	handler := employees.NewEmployeeHandler(service, auditService, franchiseeService, regionService)
 
-	storeEmployeesModule := NewStoreEmployeesModule(base, service, franchiseeService, auditService, repo)
-	warehouseEmployeeModule := NewWarehouseEmployeesModule(base, service, regionService, auditService, repo)
-	franchiseeEmployeesModule := NewFranchiseeEmployeesModule(base, service, franchiseeService, auditService, repo)
-	regionEmployeesModule := NewRegionEmployeesModule(base, service, regionService, auditService, repo)
+	storeEmployeesModule := NewStoreEmployeesModule(base, service, franchiseeService, auditService, repo, employeeTokenManager)
+	warehouseEmployeeModule := NewWarehouseEmployeesModule(base, service, regionService, auditService, repo, employeeTokenManager)
+	franchiseeEmployeesModule := NewFranchiseeEmployeesModule(base, service, franchiseeService, auditService, repo, employeeTokenManager)
+	regionEmployeesModule := NewRegionEmployeesModule(base, service, regionService, auditService, repo, employeeTokenManager)
 	adminEmployeesModule := NewAdminEmployeesModule(base, service, auditService, repo)
 
 	base.Router.RegisterEmployeeAccountRoutes(
@@ -74,9 +76,10 @@ func NewStoreEmployeesModule(
 	franchiseeService franchisees.FranchiseeService,
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
+	employeeTokenManager employeeToken.EmployeeTokenManager,
 ) *StoreEmployeesModule {
 	repo := storeEmployees.NewStoreEmployeeRepository(base.DB, employeeRepo)
-	service := storeEmployees.NewStoreEmployeeService(repo, employeeRepo, base.Logger)
+	service := storeEmployees.NewStoreEmployeeService(repo, employeeRepo, employeeTokenManager, base.Logger)
 	handler := storeEmployees.NewStoreEmployeeHandler(service, employeeService, franchiseeService, auditService)
 
 	return &StoreEmployeesModule{
@@ -100,9 +103,10 @@ func NewWarehouseEmployeesModule(
 	regionService regions.RegionService,
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
+	employeeTokenManager employeeToken.EmployeeTokenManager,
 ) *WarehouseEmployeesModule {
 	repo := warehouseEmployees.NewWarehouseEmployeeRepository(base.DB, employeeRepo)
-	service := warehouseEmployees.NewWarehouseEmployeeService(repo, employeeRepo, base.Logger)
+	service := warehouseEmployees.NewWarehouseEmployeeService(repo, employeeRepo, employeeTokenManager, base.Logger)
 	handler := warehouseEmployees.NewWarehouseEmployeeHandler(service, employeeService, regionService, auditService)
 
 	return &WarehouseEmployeesModule{
@@ -126,9 +130,10 @@ func NewFranchiseeEmployeesModule(
 	franchiseeService franchisees.FranchiseeService,
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
+	employeeTokenManager employeeToken.EmployeeTokenManager,
 ) *FranchiseeEmployeesModule {
 	repo := franchiseeEmployees.NewFranchiseeEmployeeRepository(base.DB, employeeRepo)
-	service := franchiseeEmployees.NewFranchiseeEmployeeService(repo, employeeRepo, base.Logger)
+	service := franchiseeEmployees.NewFranchiseeEmployeeService(repo, employeeRepo, employeeTokenManager, base.Logger)
 	handler := franchiseeEmployees.NewFranchiseeEmployeeHandler(service, employeeService, franchiseeService, auditService)
 
 	return &FranchiseeEmployeesModule{
@@ -152,9 +157,10 @@ func NewRegionEmployeesModule(
 	regionService regions.RegionService,
 	auditService audit.AuditService,
 	employeeRepo employees.EmployeeRepository,
+	employeeTokenManager employeeToken.EmployeeTokenManager,
 ) *RegionEmployeesModule {
 	repo := regionEmployees.NewRegionEmployeeRepository(base.DB, employeeRepo)
-	service := regionEmployees.NewRegionEmployeeService(repo, employeeRepo, base.Logger)
+	service := regionEmployees.NewRegionEmployeeService(repo, employeeRepo, employeeTokenManager, base.Logger)
 	handler := regionEmployees.NewRegionEmployeeHandler(service, employeeService, regionService, auditService)
 
 	return &RegionEmployeesModule{

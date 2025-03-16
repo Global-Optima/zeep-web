@@ -39,6 +39,29 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	/* -------------------------------------
 	 * Mutations
 	 * ------------------------------------- */
+	const awaitPaymentMutation = useMutation({
+		mutationFn: async ({ order }: { order: OrderDTO }) => {
+			const kaspiConfig = getKaspiConfig()
+			if (!kaspiConfig) throw new Error('Kaspi config not found')
+
+			const kaspiService = new KaspiService(kaspiConfig)
+			return isTest ? kaspiService.awaitPaymentTest() : kaspiService.awaitPayment(order.total)
+		},
+		onSuccess: transaction => {
+			if (!order) throw new Error('Order not found')
+			successOrderPaymentMutation.mutate({ order, transactionDTO: transaction })
+		},
+		onError: err => {
+			console.error('Payment wait failed:', err)
+			toast({
+				title: 'Ошибка оплаты',
+				description: 'Не удалось дождаться оплаты. Попробуйте снова.',
+				variant: 'destructive',
+			})
+			resetPaymentFlow(true)
+		},
+	})
+
 	const successOrderPaymentMutation = useMutation({
 		mutationFn: async ({
 			order,
@@ -46,40 +69,20 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 		}: {
 			order: OrderDTO
 			transactionDTO: TransactionDTO
-		}) => ordersService.successOrderPayment(order.id, transactionDTO),
+		}) => {
+			await ordersService.successOrderPayment(order.id, transactionDTO)
+		},
 		onSuccess: () => {
 			onProceed()
+		},
+		onError: err => {
+			console.error('Payment confirmation failed:', err)
+			toast({
+				title: 'Ошибка подтверждения',
+				description: 'Не удалось подтвердить платеж. Обратитесь к персоналу',
+				variant: 'destructive',
+			})
 			resetPaymentFlow(false)
-		},
-		onError: err => {
-			console.error(err)
-			errorMessage.value = 'Ошибка при отправки платежа. Просим обратиться к персоналу'
-			toast({ title: 'Ошибка', description: errorMessage.value, variant: 'destructive' })
-		},
-	})
-
-	const awaitPaymentMutation = useMutation({
-		mutationFn: async ({ order }: { order: OrderDTO }) => {
-			const kaspiConfig = getKaspiConfig()
-
-			if (!kaspiConfig) throw new Error('Failed to get kaspi config')
-
-			const kaspiService = new KaspiService(kaspiConfig)
-
-			if (isTest) return await kaspiService.awaitPaymentTest()
-
-			return await kaspiService.awaitPayment(order.total)
-		},
-		onSettled: (transaction, error, variables) => {
-			if (transaction && !error) {
-				successOrderPaymentMutation.mutate({ order: variables.order, transactionDTO: transaction })
-			}
-		},
-		onError: err => {
-			console.error(err)
-			errorMessage.value = 'Ошибка при обработке платежа. Попробуйте снова.'
-			toast({ title: 'Ошибка', description: errorMessage.value, variant: 'destructive' })
-			resetPaymentFlow(true)
 		},
 	})
 
@@ -125,10 +128,8 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	}
 
 	function initializeTimer(forceRestart = false) {
-		// Clear any existing timer
 		clearTimer()
 
-		// If forcing a restart, store new start time
 		if (forceRestart) {
 			sessionStorage.setItem(STORAGE_KEY, Date.now().toString())
 		}
@@ -136,22 +137,20 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 		const storedTime = sessionStorage.getItem(STORAGE_KEY)
 		if (!storedTime) return
 
-		hasTimerStarted.value = true
-		isTimeoutReached.value = false
-
 		const elapsed = Date.now() - Number(storedTime)
 		const remaining = PAYMENT_TIMEOUT - elapsed
-		countdown.value = Math.ceil(remaining / 1000)
 
-		if (countdown.value <= 0) {
+		if (remaining <= 0) {
 			isTimeoutReached.value = true
 			failPayment()
 			return
 		}
 
-		// Launch a single setInterval
+		countdown.value = Math.ceil(remaining / 1000)
+		hasTimerStarted.value = true
+
 		timerId = window.setInterval(() => {
-			countdown.value--
+			countdown.value -= 1
 			if (countdown.value <= 0) {
 				clearTimer()
 				isTimeoutReached.value = true
