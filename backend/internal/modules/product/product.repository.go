@@ -193,7 +193,6 @@ func (r *productRepository) GetProductSizeIngredients(productSizeID uint) ([]uin
 
 	err := r.db.Where("product_size_id = ?", productSizeID).
 		Find(&productSizeIngredients).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrProductSizeIngredientsNotFound
@@ -215,7 +214,6 @@ func (r *productRepository) GetProductSizeAdditives(productSizeID uint) ([]uint,
 
 	err := r.db.Where("product_size_id = ?", productSizeID).
 		Find(&productSizeAdditives).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrProductSizeDefaultAdditivesNotFound
