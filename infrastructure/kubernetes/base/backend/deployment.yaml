@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: your-registry/backend:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            # Application Environment Variables
+            - name: ENV
+              value: 'production'
+            - name: SERVER_PORT
+              value: '8080'
+            - name: CLIENT_URL
+              value: 'https://zeep.kz'
+            - name: DEFAULT_PAGE
+              value: '1'
+            - name: DEFAULT_PAGE_SIZE
+              value: '10'
+            - name: MAX_PAGE_SIZE
+              value: '100'
+
+            # Database Configuration (Secrets)
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: db_host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: db_port
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: db_user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: db_password
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: db_name
+
+            # JWT Secrets
+            - name: JWT_CUSTOMER_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: jwt_customer_secret_key
+            - name: JWT_EMPLOYEE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: jwt_employee_secret_key
+            - name: JWT_CUSTOMER_ACCESS_TOKEN_TTL
+              value: '15m'
+            - name: JWT_CUSTOMER_REFRESH_TOKEN_TTL
+              value: '7d'
+            - name: JWT_EMPLOYEE_ACCESS_TOKEN_TTL
+              value: '30m'
+            - name: JWT_EMPLOYEE_REFRESH_TOKEN_TTL
+              value: '30d'
+
+            # Redis Configuration (Secrets)
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: redis_host
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: redis_port
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: redis_password
+            - name: REDIS_DB
+              value: '0'
+
+            # S3 Configuration (Secrets)
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: s3_access_key
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: s3_secret_key
+            - name: S3_ENDPOINT
+              value: 'https://nyc3.digitaloceanspaces.com' # Replace with actual endpoint
+            - name: S3_BUCKET_NAME
+              value: 'your-bucket-name' # Replace with actual bucket name
+
+            # Payment Secret
+            - name: PAYMENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: payment_secret
+
+          # Resource Requests and Limits
+          resources:
+            requests:
+              memory: '512Mi'
+              cpu: '500m'
+            limits:
+              memory: '1Gi'
+              cpu: '1'
+
+          # Liveness and Readiness Probes
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          # Volume Mounts for Logs
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /app/logs
+
+      # Volumes for Persistent Logging
+      volumes:
+        - name: logs-volume
+          emptyDir: {}
+
+      # Security Context for Hardening
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
