@@ -74,7 +74,15 @@ func InitializeDatabase(cfg *config.Config) *database.DBHandler {
 }
 
 func InitializeRedis(cfg *config.Config) *database.RedisClient {
-	redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB, cfg.Redis.Username)
+	redisClient, err := database.InitRedis(
+		cfg.Redis.Host,
+		cfg.Redis.Port,
+		cfg.Redis.Password,
+		cfg.Redis.DB,
+		cfg.Redis.Username,
+		cfg.Redis.Enable_TLS,
+	)
+
 	if err != nil {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
