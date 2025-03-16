@@ -55,6 +55,7 @@ type OrderDTO struct {
 	DeliveryAddressID *uint            `json:"deliveryAddressId,omitempty"`
 	Status            data.OrderStatus `json:"status"`
 	CreatedAt         time.Time        `json:"createdAt"`
+	CompletedAt       *time.Time       `json:"completedAt,omitempty"`
 	Total             float64          `json:"total"`
 	DisplayNumber     int              `json:"displayNumber"`
 	SubordersQuantity int              `json:"subOrdersQuantity"`
@@ -70,6 +71,7 @@ type SuborderDTO struct {
 	Additives   []SuborderStoreAdditiveDTO `json:"additives"`
 	CreatedAt   time.Time                  `json:"createdAt"`
 	UpdatedAt   time.Time                  `json:"updatedAt"`
+	CompletedAt *time.Time                 `json:"completedAt,omitempty"`
 }
 
 type OrderStoreProductSizeDTO struct {
