@@ -411,7 +411,7 @@
       "newStockRequest": "A new stock request was submitted by *{{.RequesterName}}*.",
       "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*.",
       "newProduct": "A new product *{{.ProductName}}* has been added.",
-      "newProductSize": "A new size *{{.Size}}* has been added for *{{.ProductName}}*.",
+      "newProductSize": "A new size *{{.ProductSizeName}}*, *{{.Size}}* has been added for *{{.ProductName}}*.",
       "newAdditive": "A new additive *{{.AdditiveName}}* has been introduced."
   },
   "stockRequestComments": {
