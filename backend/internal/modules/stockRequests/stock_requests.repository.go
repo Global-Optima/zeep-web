@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const DefaultLowStockThreshold = 100 //days
+const DefaultLowStockThreshold = 100
 
 type StockRequestRepository interface {
 	CreateStockRequest(stockRequest *data.StockRequest) error

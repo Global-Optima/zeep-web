@@ -142,6 +142,7 @@
     "500-productSize-delete": "An unexpected error occurred while deleting product size. Please try again later.",
     "404-productSize": "Product size not found.",
     "400-productSize": "Invalid product size data provided. Please check and try again.",
+    "400-productSize-duplicate": "Product size already exists.",
     "201-productSize": "Product size successfully created.",
     "200-productSize-update": "Product size successfully updated.",
     "200-productSize-delete": "Product size successfully deleted.",
