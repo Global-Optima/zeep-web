@@ -56,11 +56,6 @@ func InitializeConfig() *config.Config {
 }
 
 func InitializeDatabase(cfg *config.Config) *database.DBHandler {
-	sslMode := "require"
-
-	if cfg.IsDevelopment || cfg.IsTest {
-		sslMode = "disable"
-	}
 
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Database.Host,
@@ -68,7 +63,7 @@ func InitializeDatabase(cfg *config.Config) *database.DBHandler {
 		cfg.Database.User,
 		cfg.Database.Password,
 		cfg.Database.Name,
-		sslMode,
+		cfg.Database.SSL_Mode,
 	)
 
 	dbHandler, err := database.InitDB(dsn)
