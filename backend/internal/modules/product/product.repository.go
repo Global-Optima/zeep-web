@@ -3,6 +3,7 @@ package product
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 
@@ -154,6 +155,9 @@ func (r *productRepository) CreateProduct(product *data.Product) (uint, error) {
 
 func (r *productRepository) CreateProductSize(productSize *data.ProductSize) (uint, error) {
 	if err := r.db.Create(productSize).Error; err != nil {
+		if strings.Contains(err.Error(), "23505") {
+			return 0, types.ErrProductSizeUniqueName
+		}
 		return 0, err
 	}
 
