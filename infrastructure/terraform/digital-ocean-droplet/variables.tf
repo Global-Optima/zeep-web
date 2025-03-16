@@ -34,7 +34,7 @@ variable "ssh_key_ids" {
 
 variable "droplet_size" {
   type        = string
-  default     = "s-2vcpu-2gb"
+  default     = "s-2vcpu-4gb"
   description = "Droplet size slug for the application servers."
 }
 
