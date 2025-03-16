@@ -42,10 +42,7 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedAdditiveIngredientsIDs(st
 		Pluck("additive_ingredients.ingredient_id", &notSynchronizedProductSizesAdditivesIDs).Error
 
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return []uint{}, nil
-		}
-		return nil, fmt.Errorf("failed to fetch product sizes: %w", err)
+		return nil, err
 	}
 
 	return notSynchronizedProductSizesAdditivesIDs, nil
@@ -64,9 +61,6 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizeWithAdditivesI
 		Pluck("product_size_ingredients.ingredient_id", &notSynchronizedIngredients).Error
 
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return []uint{}, nil
-		}
 		return nil, err
 	}
 

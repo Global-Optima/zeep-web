@@ -62,6 +62,10 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
 		}
 
+		if len(newStoreStocks) == 0 {
+			return nil
+		}
+
 		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
 		if err != nil {
 			return err
@@ -111,6 +115,10 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
 		}
 
+		if len(newStoreStocks) == 0 {
+			return nil
+		}
+
 		_, err = m.addStocks(&storeStockRepoTx, newStoreStocks)
 		if err != nil {
 			return err
@@ -140,6 +148,10 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
 		for i, ingredientID := range missingIngredientIDs {
 			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		}
+
+		if len(newStoreStocks) == 0 {
+			return nil
 		}
 
 		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
