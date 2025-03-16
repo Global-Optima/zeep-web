@@ -51,7 +51,8 @@ VALUES
     ),
     ('Улица Сарыарка, 12, Астана', 71.4100, 51.1690),
     ('Улица Панфилова, 98, Алматы', 76.9271, 43.2575),
-    ('Улица Ш. Уалиханова, 7, Астана', 71.4451, 51.1);
+    ('Улица Ш. Уалиханова, 7, Астана', 71.4451, 51.1),
+    ('Улица Улы Дала, 10, Астана', 75.52, 45.20);
 
 -- Insert into Units
 INSERT INTO
@@ -956,6 +957,19 @@ VALUES
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
+    ),
+    (
+        'New Cafe',
+        7,
+        NULL,
+        2,
+        true,
+        '+79004445577',
+        'newcafe@example.com',
+        '7:00-23:00',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
     );
 
 -- Assigned to 'Астанинский склад'
@@ -1649,6 +1663,16 @@ VALUES
         '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
+    ),
+    (
+        'New',
+        'Manager',
+        '+77771236507',
+        'newmanager@example.com',
+        true,
+        '$2a$10$TpQjaWD1c2cj8Omkb6l36.tVrR8dl0EtuNwcrD09THT9dL7bo5aQy',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
     );
 
 -- Franchisee Employees Table
@@ -1717,6 +1741,13 @@ VALUES
     (
         12,
         4,
+        'STORE_MANAGER',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        13,
+        5,
         'STORE_MANAGER',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
