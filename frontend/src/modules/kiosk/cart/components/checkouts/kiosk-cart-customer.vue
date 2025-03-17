@@ -179,7 +179,7 @@ const returnToMenu = () => {
 
 					<p
 						v-if="errorMessage"
-						class="mt-2 px-6 text-red-500 text-sm"
+						class="mt-2 px-6 text-red-500 text-lg"
 					>
 						{{ errorMessage }}
 					</p>

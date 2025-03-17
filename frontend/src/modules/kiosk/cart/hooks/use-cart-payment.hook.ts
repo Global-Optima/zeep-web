@@ -1,6 +1,6 @@
 import { useToast } from '@/core/components/ui/toast'
 import { useMutation } from '@tanstack/vue-query'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
 // Services
 import { getKaspiConfig, KaspiService } from '@/core/integrations/kaspi.service'
@@ -14,12 +14,7 @@ const PAYMENT_TIMEOUT = 120_000 // 2 minutes
 const STORAGE_KEY = 'ZEEP_CART_PAYMENT_COUNTDOWN'
 
 export function useCartPayment(order: OrderDTO | null, onProceed: () => void, onBack: () => void) {
-	const isTest: boolean =
-		import.meta.env.VITE_TEST_PAYMENT === undefined
-			? false
-			: import.meta.env.VITE_TEST_PAYMENT === 'true'
-				? true
-				: false
+	const isTest: boolean = import.meta.env.VITE_TEST_PAYMENT === 'true'
 
 	const { toast } = useToast()
 
@@ -40,7 +35,7 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	 * Mutations
 	 * ------------------------------------- */
 	const awaitPaymentMutation = useMutation({
-		mutationFn: async ({ order }: { order: OrderDTO }) => {
+		mutationFn: ({ order }: { order: OrderDTO }) => {
 			const kaspiConfig = getKaspiConfig()
 			if (!kaspiConfig) throw new Error('Kaspi config not found')
 
@@ -48,6 +43,7 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 			return isTest ? kaspiService.awaitPaymentTest() : kaspiService.awaitPayment(order.total)
 		},
 		onSuccess: transaction => {
+			console.log('TRANSACTION', transaction)
 			if (!order) throw new Error('Order not found')
 			successOrderPaymentMutation.mutate({ order, transactionDTO: transaction })
 		},
@@ -63,17 +59,19 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	})
 
 	const successOrderPaymentMutation = useMutation({
-		mutationFn: async ({
+		mutationFn: ({
 			order,
 			transactionDTO,
 		}: {
 			order: OrderDTO
 			transactionDTO: TransactionDTO
 		}) => {
-			await ordersService.successOrderPayment(order.id, transactionDTO)
+			return ordersService.successOrderPayment(order.id, transactionDTO)
 		},
-		onSuccess: () => {
-			onProceed()
+		onSuccess: async () => {
+			await nextTick(() => {
+				onProceed()
+			})
 		},
 		onError: err => {
 			console.error('Payment confirmation failed:', err)

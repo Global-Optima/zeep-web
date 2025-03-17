@@ -163,14 +163,7 @@ export class KaspiService {
 	}
 
 	async awaitPaymentTest(): Promise<TransactionDTO> {
-		await new Promise(resolve => setTimeout(resolve, 5000)) // Simulate delay
-
-		// Randomize success/failure (50% chance each)
-		const isSuccess = Math.random() > 0.5
-
-		if (!isSuccess) {
-			throw new Error('Mock Payment Failure')
-		}
+		await new Promise(resolve => setTimeout(resolve, 3000))
 
 		return {
 			bin: '123456',
@@ -204,21 +197,18 @@ export class KaspiService {
 
 					if (response.data.status === 'success') {
 						if (!response.data.chequeInfo) {
-							reject(new Error('Invalid payment data'))
-							return
+							return reject(new Error('Invalid payment data'))
 						}
-						resolve(this.mapTransactionResponse(response))
-						return
+						return resolve(this.mapTransactionResponse(response))
 					}
 
 					if (['fail', 'unknown'].includes(response.data.status)) {
-						reject(new Error(response.data.message))
-						return
+						return reject(new Error(response.data.message))
 					}
 
 					setTimeout(checkStatus, 1000)
 				} catch (error) {
-					reject(error)
+					return reject(error)
 				}
 			}
 
