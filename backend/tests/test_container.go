@@ -47,7 +47,6 @@ func NewTestContainer() *container.Container {
 			cfg.Redis.Username,
 			*cfg.Redis.Enable_TLS,
 		)
-
 		if err != nil {
 			log.Fatalf("Failed to initialize Redis: %v", err)
 		}

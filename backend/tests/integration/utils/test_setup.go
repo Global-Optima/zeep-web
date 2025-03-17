@@ -185,7 +185,6 @@ func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
 		cfg.Redis.Username,
 		*cfg.Redis.Enable_TLS,
 	)
-
 	if err != nil {
 		t.Fatalf("Failed to initialize Redis: %v", err)
 	}
