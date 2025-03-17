@@ -30,6 +30,7 @@
 import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import type { UnitsFilterDTO } from '@/modules/admin/units/models/units.model'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
@@ -38,7 +39,9 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const props = defineProps<{ filter: UnitsFilterDTO }>()
-const emit = defineEmits(['update:filter'])
+const emit = defineEmits<{
+  (event: 'update:filter', value: UnitsFilterDTO): void
+}>()
 
 const localFilter = ref({ ...props.filter })
 
@@ -46,8 +49,13 @@ const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.search = newValue
-	emit('update:filter', { search: newValue.trim() })
+  localFilter.value.search = newValue
+  emit('update:filter', {
+    ...localFilter.value,
+    search: newValue.trim(),
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page (e.g., 1)
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 })
 
 const addProductCategory = () => {

@@ -59,6 +59,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { GetWarehouseStockFilter } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import AdminSelectWarehouseDropdown from '@/modules/admin/warehouses/components/admin-select-warehouse-dropdown.vue'
@@ -68,40 +69,54 @@ import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Props and Emit
 const props = defineProps<{ filter: GetWarehouseStockFilter }>()
-const emit = defineEmits<{(e: 'update:filter', value: GetWarehouseStockFilter): void }>()
+const emit = defineEmits<{ (e: 'update:filter', value: GetWarehouseStockFilter): void }>()
 
-// Local Filter
+// Local Filter Copy
 const localFilter = ref({ ...props.filter })
 
 const showForRegion = useHasRole([EmployeeRole.REGION_WAREHOUSE_MANAGER])
 const canCreate = useHasRole([EmployeeRole.WAREHOUSE_EMPLOYEE, EmployeeRole.WAREHOUSE_MANAGER])
 
-// Search Input
+// Search Input with Debouncing
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
+
 const selectedWarehouse = ref<WarehouseDTO | undefined>(undefined)
 
+// Update filter when a warehouse is selected, with pagination reset
 const onSelectWarehouse = (warehouse: WarehouseDTO) => {
   selectedWarehouse.value = warehouse
-  emit('update:filter', { ...props.filter, warehouseId: warehouse.id})
+  emit('update:filter', {
+    ...props.filter,
+    warehouseId: warehouse.id,
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page (e.g., 1)
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 }
 
-// Watch Search Input and Update Filter
+// Watch debounced search input and update filter with pagination reset
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.search = newValue.trim()
-	emit('update:filter', { ...localFilter.value })
+  localFilter.value.search = newValue.trim()
+  emit('update:filter', {
+    ...localFilter.value,
+    page: DEFAULT_PAGINATION_META.page,
+    pageSize: DEFAULT_PAGINATION_META.pageSize
+  })
 })
 
-// Filter Selection
+// Filter Selection: update filter and reset pagination
 const applyFilter = (filterType: string) => {
-	if (filterType === 'all') {
-		localFilter.value.lowStockOnly = undefined // Show all
-	} else if (filterType === 'lowStock') {
-		localFilter.value.lowStockOnly = true // Only low stock
-	}
-	emit('update:filter', { ...localFilter.value })
+  if (filterType === 'all') {
+    localFilter.value.lowStockOnly = undefined // Show all
+  } else if (filterType === 'lowStock') {
+    localFilter.value.lowStockOnly = true // Only low stock
+  }
+  emit('update:filter', {
+    ...localFilter.value,
+    page: DEFAULT_PAGINATION_META.page,
+    pageSize: DEFAULT_PAGINATION_META.pageSize
+  })
 }
 
 // Add Store Navigation
