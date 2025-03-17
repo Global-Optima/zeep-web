@@ -1,5 +1,5 @@
 ###############################################################################
-# main.tf
+# Terraform Provider Configuration
 ###############################################################################
 
 terraform {
@@ -13,7 +13,6 @@ terraform {
   }
 }
 
-# Configure the DigitalOcean Provider
 provider "digitalocean" {
   token             = var.do_token
   spaces_access_id  = var.spaces_access_id
@@ -21,7 +20,7 @@ provider "digitalocean" {
 }
 
 ###############################################################################
-# VPC
+# VPC Configuration
 ###############################################################################
 
 resource "digitalocean_vpc" "main" {
@@ -32,7 +31,7 @@ resource "digitalocean_vpc" "main" {
 }
 
 ###############################################################################
-# Droplets (Application Servers) using count
+# Droplet Configuration (Application Servers)
 ###############################################################################
 
 resource "digitalocean_droplet" "app_server" {
@@ -46,11 +45,42 @@ resource "digitalocean_droplet" "app_server" {
   backups    = false
   monitoring = true
   tags       = concat(var.tags, ["app-server"])
+
+  # Install Docker automatically
+  user_data = <<-EOF
+    #!/bin/bash
+    set -eux
+
+    # Remove existing Docker packages
+    for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
+      sudo apt-get remove -y $$pkg || true
+    done
+
+    # Install dependencies
+    sudo apt-get update
+    sudo apt-get install -y ca-certificates curl
+
+    # Add Docker GPG key and repository
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    echo "deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $$(. /etc/os-release && echo "$${UBUNTU_CODENAME:-$$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Install Docker
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    # Start Docker and add user to docker group
+    sudo systemctl enable --now docker
+    sudo usermod -aG docker $$(whoami)
+  EOF
 }
 
 ###############################################################################
-# Firewall
+# Firewall Configuration
 ###############################################################################
+
 resource "digitalocean_firewall" "app_firewall" {
   name        = "app-firewall"
   droplet_ids = [ for droplet in digitalocean_droplet.app_server : droplet.id ]
@@ -64,7 +94,7 @@ resource "digitalocean_firewall" "app_firewall" {
   inbound_rule {
     protocol         = "tcp"
     port_range       = "80"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_addresses = ["10.10.0.0/16", "0.0.0.0/0", "::/0"]
   }
 
   inbound_rule {
@@ -78,15 +108,14 @@ resource "digitalocean_firewall" "app_firewall" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "1-65535"
-    source_addresses = [digitalocean_vpc.main.ip_range]
-  }
-
   outbound_rule {
     protocol              = "tcp"
     port_range            = "all"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  outbound_rule {
+    protocol              = "icmp"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }
 
@@ -96,16 +125,23 @@ resource "digitalocean_firewall" "app_firewall" {
 }
 
 ###############################################################################
-# Domain, DNS Record & Certificate (Conditional)
+# Domain, DNS, and SSL Configuration
 ###############################################################################
+
 resource "digitalocean_domain" "zeep_domain" {
-  count = var.use_domain ? 1 : 0
-  name  = var.domain_name
+  name = "zeep.kz"
+}
+
+resource "digitalocean_record" "root" {
+  domain = digitalocean_domain.zeep_domain.name
+  type   = "A"
+  name   = "@"
+  value  = digitalocean_loadbalancer.lb.ip
+  ttl    = 300
 }
 
 resource "digitalocean_record" "www" {
-  count  = var.use_domain ? 1 : 0
-  domain = digitalocean_domain.zeep_domain[0].name
+  domain = digitalocean_domain.zeep_domain.name
   type   = "A"
   name   = "www"
   value  = digitalocean_loadbalancer.lb.ip
@@ -113,21 +149,21 @@ resource "digitalocean_record" "www" {
 }
 
 resource "digitalocean_certificate" "zeep_certificate" {
-  count   = var.use_domain ? 1 : 0
-  name    = var.certificate_name
+  name    = "zeep-ssl-cert"
   type    = "lets_encrypt"
-  domains = [ "www.${var.domain_name}" ]
+  domains = ["zeep.kz", "www.zeep.kz"]
 }
 
 ###############################################################################
-# Load Balancer
+# Load Balancer Configuration
 ###############################################################################
+
 resource "digitalocean_loadbalancer" "lb" {
   name     = "app-lb"
   region   = var.region
   vpc_uuid = digitalocean_vpc.main.id
 
-  # HTTP forwarding rule
+  # Redirect HTTP to HTTPS
   forwarding_rule {
     entry_port      = 80
     entry_protocol  = "http"
@@ -135,26 +171,19 @@ resource "digitalocean_loadbalancer" "lb" {
     target_protocol = "http"
   }
 
-  # HTTPS forwarding rule is created conditionally:
-  # - When using a domain (var.use_domain = true): LB terminates SSL using the certificate,
-  #   forwarding HTTPS to port 80 on the Droplets.
-  # - Otherwise (test mode), LB uses TLS passthrough on port 443.
-  dynamic "forwarding_rule" {
-    for_each = [1]  // Always one rule for HTTPS
-    content {
-      entry_port      = 443
-      entry_protocol  = "https"
-      target_port     = var.use_domain ? 80 : 443
-      target_protocol = var.use_domain ? "http" : "https"
-      tls_passthrough = var.use_domain ? false : true
-      certificate_name = var.use_domain ? digitalocean_certificate.zeep_certificate[0].name : null
-    }
+  # Secure HTTPS forwarding
+  forwarding_rule {
+    entry_port      = 443
+    entry_protocol  = "https"
+    target_port     = 80
+    target_protocol = "http"
+    certificate_name = digitalocean_certificate.zeep_certificate.name
   }
 
   healthcheck {
     protocol                 = "http"
     port                     = 80
-    path                     = "/healthz"
+    path                     = "/"
     check_interval_seconds   = 10
     response_timeout_seconds = 5
     unhealthy_threshold      = 3
@@ -163,12 +192,16 @@ resource "digitalocean_loadbalancer" "lb" {
 
   droplet_tag = "app-server"
 
-  depends_on = [ digitalocean_droplet.app_server ]
+  depends_on = [
+    digitalocean_droplet.app_server,
+    digitalocean_certificate.zeep_certificate
+  ]
 }
 
 ###############################################################################
-# Managed Databases
+# Managed Database Configuration
 ###############################################################################
+
 resource "digitalocean_database_cluster" "postgres" {
   name                 = "app-postgres-cluster"
   engine               = "pg"
@@ -194,6 +227,7 @@ resource "digitalocean_database_cluster" "redis" {
 ###############################################################################
 # Spaces (S3-Compatible) + CDN
 ###############################################################################
+
 resource "digitalocean_spaces_bucket" "bucket" {
   name   = var.bucket_name
   region = var.region
