@@ -18,7 +18,7 @@ type ProductRepository interface {
 	CreateProduct(product *data.Product) (uint, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
 	GetProductByID(productID uint) (*data.Product, error)
-	UpdateProduct(id uint, product *data.Product) error
+	SaveProduct(product *data.Product) error
 	DeleteProduct(productID uint) (*data.Product, error)
 
 	CreateProductSize(createModels *data.ProductSize) (uint, error)
@@ -363,15 +363,13 @@ func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, i
 	return nil
 }
 
-func (r *productRepository) UpdateProduct(productID uint, product *data.Product) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&data.Product{}).Where("id = ?", productID).Updates(product).Error
-		if err != nil {
-			return err
-		}
+func (r *productRepository) SaveProduct(product *data.Product) error {
+	err := r.db.Save(product).Error
+	if err != nil {
+		return err
+	}
 
-		return nil
-	})
+	return nil
 }
 
 func (r *productRepository) DeleteProduct(productID uint) (*data.Product, error) {

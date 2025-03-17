@@ -49,7 +49,7 @@ const createProductSchema = toTypedSchema(
 );
 
 // Setup form with vee-validate
-const { handleSubmit, setFieldValue } = useForm<CreateProductDTO>({
+const { handleSubmit, setFieldValue } = useForm({
   validationSchema: createProductSchema,
 });
 
@@ -238,7 +238,7 @@ function triggerVideoInput() {
 											/>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-green-600 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
 												@click="previewImage = null; setFieldValue('image', undefined)"
 											>
 												<X class="size-4" />
@@ -298,7 +298,7 @@ function triggerVideoInput() {
 											></video>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-green-600 p-1 rounded-full text-white"
+                        class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
 												@click="previewVideo = null; setFieldValue('video', undefined)"
 											>
 												<X class="size-4" />

@@ -24,14 +24,14 @@ func IsValidSize(size Size) bool {
 
 type Product struct {
 	BaseEntity
-	Name         string          `gorm:"size:100;not null" sort:"name"`
-	Description  string          `gorm:"type:text"`
-	ImageURL     StorageImageKey `gorm:"size:2048"`
-	VideoURL     StorageVideoKey `gorm:"size:2048"`
-	CategoryID   uint            `gorm:"index;not null"`
-	Category     ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
-	RecipeSteps  []RecipeStep    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	ProductSizes []ProductSize   `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	Name         string           `gorm:"size:100;not null" sort:"name"`
+	Description  string           `gorm:"type:text"`
+	ImageKey     *StorageImageKey `gorm:"size:2048"`
+	VideoKey     *StorageVideoKey `gorm:"size:2048"`
+	CategoryID   uint             `gorm:"index;not null"`
+	Category     ProductCategory  `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
+	RecipeSteps  []RecipeStep     `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	ProductSizes []ProductSize    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 }
 
 type RecipeStep struct {
@@ -41,7 +41,7 @@ type RecipeStep struct {
 	Step        int     `gorm:"not null" sort:"step"`
 	Name        string  `gorm:"size:100" sort:"name"`
 	Description string  `gorm:"type:text"`
-	ImageURL    string  `gorm:"size:2048"`
+	ImageKey    string  `gorm:"size:2048"`
 }
 
 type ProductSize struct {
@@ -129,7 +129,7 @@ type Additive struct {
 	Unit                 Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL" sort:"unit"`
 	AdditiveCategoryID   uint                  `gorm:"index"`
 	Category             AdditiveCategory      `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL" sort:"category"`
-	ImageURL             StorageImageKey       `gorm:"size:2048"`
+	ImageKey             *StorageImageKey      `gorm:"size:2048"`
 	MachineId            string                `gorm:"size:40;not null;unique" sort:"machineId"`
 	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`

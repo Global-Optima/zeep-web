@@ -92,8 +92,11 @@ export interface CreateProductSizeDTO {
 export interface UpdateProductDTO {
 	name?: string
 	description?: string
-	imageUrl?: string
 	categoryId?: number
+  image?: File
+  video?: File
+  deleteImage: boolean
+  deleteVideo: boolean
 }
 
 export interface UpdateProductSizeDTO {

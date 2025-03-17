@@ -7,9 +7,9 @@ import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
 import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { toTypedSchema } from '@vee-validate/zod'
-import { ChevronLeft } from 'lucide-vue-next'
+import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import { defineAsyncComponent, ref } from 'vue'
+import {computed, defineAsyncComponent, ref, useTemplateRef} from 'vue'
 import * as z from 'zod'
 
 // Lazy-load the dialog component
@@ -28,37 +28,36 @@ const emits = defineEmits<{
   onCancel: [];
 }>();
 
-const createProductSchema = toTypedSchema(
+const updateProductSchema = toTypedSchema(
   z.object({
-    name: z.string()
-      .min(2, 'Название должно содержать не менее 2 символов')
-      .max(100, 'Название не может превышать 100 символов'),
-    description: z.string()
-      .max(500, 'Описание не может превышать 500 символов'),
-    categoryId: z.coerce.number()
-      .min(1, 'Выберите категорию из списка'),
-    imageUrl: z.string().min(1, 'Вставьте картинку добавки'),
+    name: z.string().min(2, 'Название должно содержать не менее 2 символов').max(100, 'Название не может превышать 100 символов'),
+    description: z.string().max(500, 'Описание не может превышать 500 символов'),
+    categoryId: z.coerce.number().min(1, 'Выберите категорию из списка'),
+    image: z.instanceof(File).optional().refine((file) => {
+      if (!file) return true;
+      return ['image/jpeg', 'image/png'].includes(file.type);
+    }, 'Поддерживаются только форматы JPEG и PNG').refine((file) => {
+      if (!file) return true;
+      return file.size <= 5 * 1024 * 1024;
+    }, 'Максимальный размер файла: 5MB'),
+    video: z.instanceof(File).optional().refine((file) => {
+      if (!file) return true;
+      return ['video/mp4'].includes(file.type);
+    }, 'Поддерживается только формат MP4').refine((file) => {
+      if (!file) return true;
+      return file.size <= 20 * 1024 * 1024;
+    }, 'Максимальный размер файла: 20MB'),
   })
 );
 
-const { handleSubmit, isFieldDirty, setFieldValue, resetForm } = useForm<UpdateProductDTO>({
-  validationSchema: createProductSchema,
+const { handleSubmit, setFieldValue } = useForm({
+  validationSchema: updateProductSchema,
   initialValues: {
     name: productDetails.name,
     description: productDetails.description,
     categoryId: productDetails.category.id,
-    imageUrl: productDetails.imageUrl,
   },
 });
-
-const onSubmit = handleSubmit((values) => {
-  emits('onSubmit', values);
-});
-
-function onCancel() {
-  resetForm();
-  emits('onCancel');
-}
 
 const openCategoryDialog = ref(false);
 const selectedCategory = ref<ProductCategoryDTO | null>(productDetails.category);
@@ -70,6 +69,65 @@ function selectCategory(category: ProductCategoryDTO) {
     setFieldValue('categoryId', category.id);
   }
 }
+
+const previewImage = ref<string | null>(productDetails.imageUrl || null);
+const previewVideo = ref<string | null>(productDetails.videoUrl || null);
+const deleteImage = ref<boolean>(false)
+const deleteVideo = ref<boolean>(false)
+
+const handleImageUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files?.length) {
+    const file = target.files[0];
+    previewImage.value = URL.createObjectURL(file);
+    setFieldValue('image', file);
+    deleteImage.value = true
+  }
+};
+
+const handleVideoUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files?.length) {
+    const file = target.files[0];
+    previewVideo.value = URL.createObjectURL(file);
+    setFieldValue('video', file);
+    deleteVideo.value = true
+  }
+};
+
+const onSubmit = handleSubmit((values) => {
+  const dto: UpdateProductDTO = {
+    name: values.name,
+    description: values.description,
+    categoryId: values.categoryId,
+    image: values.image,
+    video: values.video,
+    deleteImage: deleteImage.value,
+    deleteVideo: deleteVideo.value,
+  };
+
+  emits('onSubmit', dto);
+});
+
+const onDeleteImage = () => {
+  previewImage.value = null
+  setFieldValue('image', undefined)
+  deleteImage.value = true
+}
+
+const onDeleteVideo = () => {
+  previewVideo.value = null
+  setFieldValue('video', undefined)
+  deleteVideo.value = true
+}
+
+const onCancel = () => emits('onCancel');
+
+const imageInputRef = ref<HTMLInputElement | null>(null);
+const videoInputRef = ref<HTMLInputElement | null>(null);
+const triggerImageInput = () => imageInputRef.value?.click();
+const triggerVideoInput = () => videoInputRef.value?.click();
+
 </script>
 
 <template>
@@ -126,7 +184,6 @@ function selectCategory(category: ProductCategoryDTO) {
 							<FormField
 								v-slot="{ componentField }"
 								name="name"
-								:validate-on-blur="!isFieldDirty"
 							>
 								<FormItem>
 									<FormLabel>Название продукта</FormLabel>
@@ -146,7 +203,6 @@ function selectCategory(category: ProductCategoryDTO) {
 							<FormField
 								v-slot="{ componentField }"
 								name="description"
-								:validate-on-blur="!isFieldDirty"
 							>
 								<FormItem>
 									<FormLabel>Описание</FormLabel>
@@ -195,69 +251,127 @@ function selectCategory(category: ProductCategoryDTO) {
 			</div>
 
 			<!-- Right Side: Media -->
-			<div class="items-start gap-4 grid auto-rows-max">
-				<!-- Image Preview Card -->
-				<Card>
-					<CardHeader>
-						<CardTitle>Изображение</CardTitle>
-						<CardDescription> Предварительный просмотр изображения продукта. </CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div class="space-y-2">
-							<div
-								v-if="productDetails.imageUrl"
-								class="relative border rounded-lg w-full h-48 overflow-hidden"
-							>
-								<LazyImage
-									:src="productDetails.imageUrl"
-									alt="Product Image"
-									class="rounded-lg w-full h-full object-contain"
-								/>
-							</div>
-							<div
-								v-else
-								class="p-4 border-2 border-gray-300 border-dashed rounded-lg text-center"
-							>
-								<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
-									<span class="mb-2">📷</span>
-									Изображение отсутствует
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
+      <div class="items-start gap-4 grid auto-rows-max">
+        <!-- Image Card -->
+        <Card>
+          <CardHeader>
+            <CardTitle>Изображение</CardTitle>
+            <CardDescription>
+              Загрузите изображение для продукта.<br />
+              Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField name="image">
+              <FormItem>
+                <FormControl>
+                  <div class="space-y-2">
+                    <!-- Preview -->
+                    <div
+                      v-if="previewImage"
+                      class="relative w-full h-48"
+                    >
+                      <LazyImage
+                        :src="previewImage"
+                        alt="Preview"
+                        class="border rounded-lg w-full h-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+                        @click="onDeleteImage"
+                      >
+                        <X class="size-4" />
+                      </button>
+                    </div>
 
-				<!-- Video Preview Card -->
-				<Card>
-					<CardHeader>
-						<CardTitle>Видео</CardTitle>
-						<CardDescription> Предварительный просмотр видео продукта. </CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div class="space-y-2">
-							<div
-								v-if="productDetails.videoUrl"
-								class="relative rounded-lg w-full h-48 overflow-hidden"
-							>
-								<video
-									:src="productDetails.videoUrl"
-									controls
-									class="w-full h-full object-cover"
-								></video>
-							</div>
-							<div
-								v-else
-								class="p-4 border-2 border-gray-300 border-dashed rounded-lg text-center"
-							>
-								<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
-									<span class="mb-2">🎥</span>
-									Видео отсутствует
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-			</div>
+                    <!-- Input -->
+                    <div
+                      v-if="!previewImage"
+                      class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
+                      @click="triggerImageInput"
+                    >
+                      <input
+                        ref="imageInputRef"
+                        type="file"
+                        accept="image/jpeg, image/png"
+                        style="display: none;"
+                        @change="handleImageUpload"
+                      />
+                      <p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+                        <span class="mb-2"><Camera /></span>
+                        Нажмите для загрузки изображения<br />
+                        или перетащите файл
+                      </p>
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+          </CardContent>
+        </Card>
+
+        <!-- Video Card -->
+        <Card>
+          <CardHeader>
+            <CardTitle>Видео</CardTitle>
+            <CardDescription>
+              Загрузите видео для продукта.<br />
+              Поддерживаемый формат: MP4 (макс. 20MB)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField name="video">
+              <FormItem>
+                <FormControl>
+                  <div class="space-y-2">
+                    <!-- Preview -->
+                    <div
+                      v-if="previewVideo"
+                      class="relative rounded-lg w-full h-48 overflow-hidden"
+                    >
+                      <video
+                        :src="previewVideo"
+                        controls
+                        class="w-full h-full object-cover"
+                      ></video>
+                      <button
+                        type="button"
+                        class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+                        @click="onDeleteVideo"
+                      >
+                        <X class="size-4" />
+                      </button>
+                    </div>
+
+                    <!-- Input -->
+                    <div
+                      v-if="!previewVideo"
+                      class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
+                      @click="triggerVideoInput"
+                    >
+                      <input
+                        ref="videoInputRef"
+                        type="file"
+                        accept="video/mp4"
+                        style="display: none;"
+                        @change="handleVideoUpload"
+                      />
+                      <p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+                        <span class="mb-2"><Video /></span>
+                        Нажмите для загрузки видео<br />
+                        или перетащите файл
+                      </p>
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+          </CardContent>
+        </Card>
+      </div>
 		</div>
 
 		<!-- Mobile Action Buttons -->

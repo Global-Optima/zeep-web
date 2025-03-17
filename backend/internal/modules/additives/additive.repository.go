@@ -211,7 +211,7 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 		}
 
 		if updateModels.Additive != nil {
-			err := r.updateAdditive(tx, additiveID, updateModels.Additive)
+			err := r.saveAdditive(tx, updateModels.Additive)
 			if err != nil {
 				return err
 			}
@@ -228,10 +228,8 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 	})
 }
 
-func (r *additiveRepository) updateAdditive(tx *gorm.DB, id uint, additive *data.Additive) error {
-	return tx.Model(&data.Additive{}).
-		Where(&data.Additive{BaseEntity: data.BaseEntity{ID: id}}).
-		Updates(additive).Error
+func (r *additiveRepository) saveAdditive(tx *gorm.DB, additive *data.Additive) error {
+	return tx.Save(additive).Error
 }
 
 func (r *additiveRepository) updateAdditiveIngredients(tx *gorm.DB, additiveID uint, additiveIngredients []data.AdditiveIngredient) error {
