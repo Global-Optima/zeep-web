@@ -134,6 +134,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_product_size_name
+    ON product_sizes (product_id, name)
+    WHERE deleted_at IS NULL;
+
 -- Additive Table
 CREATE TABLE
 	 additives (
@@ -377,7 +381,7 @@ CREATE TABLE
 	);
 
 -- EmployeeTokens Table
-CREATE TABLE 
+CREATE TABLE
 	employee_tokens (
 		id SERIAL PRIMARY KEY,
 		token VARCHAR(255) NOT NULL UNIQUE,
@@ -614,6 +618,7 @@ CREATE TABLE
 		total DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		completed_at TIMESTAMPTZ,
 		deleted_at TIMESTAMPTZ
 	);
 
@@ -630,6 +635,7 @@ CREATE TABLE
 		status VARCHAR(50) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		completed_at TIMESTAMPTZ,
 		deleted_at TIMESTAMPTZ
 	);
 

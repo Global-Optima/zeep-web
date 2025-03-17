@@ -18,13 +18,13 @@ type OrderRepository interface {
 	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]data.Order, error)
 	GetOrderById(orderID uint) (*data.Order, error)
 	CreateOrder(order *data.Order) (uint, error)
-	UpdateOrderStatus(orderID uint, status data.OrderStatus) error
+	UpdateOrderStatus(suborderID uint, updateData types.UpdateOrderDTO) error
 	DeleteOrder(orderID uint) error
 
 	GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error)
 
 	GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error)
-	UpdateSubOrderStatus(subOrderID uint, status data.SubOrderStatus) error
+	UpdateSubOrderStatus(suborderID uint, updateData types.UpdateSubOrderDTO) error
 	AddSubOrderAdditive(subOrderID uint, additive *data.SuborderAdditive) error
 	CheckAllSubordersCompleted(orderID, subOrderID uint) (bool, error)
 	GetOrderBySubOrderID(subOrderID uint) (*data.Order, error)
@@ -171,6 +171,19 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 	startOfTodayUTC := startOfToday.UTC()
 	endOfTodayUTC := endOfToday.UTC()
 
+	// Apply time gap filter if specified
+	var cutoffTimeUTC time.Time
+	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
+		// Calculate cutoff time based on TimeGapMinutes
+		cutoffTime := now.Add(time.Duration(-int(*filter.TimeGapMinutes)) * time.Minute)
+		cutoffTimeUTC = cutoffTime.UTC()
+
+		// Use the later of startOfTodayUTC or cutoffTimeUTC
+		if cutoffTimeUTC.After(startOfTodayUTC) {
+			startOfTodayUTC = cutoffTimeUTC
+		}
+	}
+
 	// Query orders for the given store within the correct time range
 	err = r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
@@ -302,10 +315,10 @@ func (r *orderRepository) GetRawOrderById(orderId uint) (*data.Order, error) {
 	return &order, nil
 }
 
-func (r *orderRepository) UpdateOrderStatus(orderID uint, status data.OrderStatus) error {
+func (r *orderRepository) UpdateOrderStatus(orderID uint, updateData types.UpdateOrderDTO) error {
 	return r.db.Model(&data.Order{}).
 		Where("id = ?", orderID).
-		Update("status", status).Error
+		Updates(updateData).Error
 }
 
 func (r *orderRepository) DeleteOrder(orderID uint) error {
@@ -321,10 +334,10 @@ func (r *orderRepository) GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, 
 	return suborders, nil
 }
 
-func (r *orderRepository) UpdateSubOrderStatus(suborderID uint, status data.SubOrderStatus) error {
+func (r *orderRepository) UpdateSubOrderStatus(suborderID uint, updateData types.UpdateSubOrderDTO) error {
 	return r.db.Model(&data.Suborder{}).
 		Where("id = ?", suborderID).
-		Update("status", status).Error
+		Updates(updateData).Error
 }
 
 func (r *orderRepository) AddSubOrderAdditive(suborderID uint, additive *data.SuborderAdditive) error {

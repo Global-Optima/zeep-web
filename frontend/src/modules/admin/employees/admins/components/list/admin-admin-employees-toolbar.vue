@@ -47,29 +47,36 @@ import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import type { EmployeesFilter } from '@/modules/admin/employees/models/employees.models'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Props and Emit
 const props = defineProps<{ filter: EmployeesFilter }>()
-const emit = defineEmits(['update:filter'])
+const emit = defineEmits<{
+  (event: 'update:filter', value: EmployeesFilter): void
+}>()
 
 const router = useRouter()
 
-// Local Filter
+// Local Filter: Create a local copy of the filter to avoid direct mutation
 const localFilter = ref({ ...props.filter })
 
-// Search Input
+// Search Input: Initialize the search term with any existing value
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 // Watch Search Input and Update Filter
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.search = newValue.trim()
-	emit('update:filter', { ...localFilter.value })
+  localFilter.value.search = newValue.trim()
+  emit('update:filter', {
+    ...localFilter.value,
+    search: newValue.trim(),
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page (e.g., 1)
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 })
 
 // Filter Selection

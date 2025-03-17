@@ -19,7 +19,10 @@
 			>
 				<AppAdminSidebar />
 
-				<div class="mt-auto">
+				<div
+					class="mt-auto"
+					v-if="showBottomButtons"
+				>
 					<Button
 						variant="outline"
 						@click="onDisplayClick"
@@ -69,12 +72,17 @@ import AppAdminEmployeeDropdown from '@/core/layouts/admin/app-admin-employee-dr
 import AppAdminNotificationsPopover from '@/core/layouts/admin/app-admin-notifications-popover.vue'
 import AppAdminSearch from '@/core/layouts/admin/app-admin-search.vue'
 import AppAdminSidebar from '@/core/layouts/admin/app-admin-sidebar.vue'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { useEmployeeAuthStore } from '@/modules/auth/store/employee-auth.store'
 import { Kanban, Menu, Store, TvMinimal } from 'lucide-vue-next'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+
 const {currentEmployee} = useEmployeeAuthStore()
 
 const router = useRouter()
+
+const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.BARISTA, EmployeeRole.STORE_MANAGER].includes(currentEmployee.role) : false )
 
 const onKioskClick = () => {
 	router.replace({name: getRouteName('KIOSK_HOME')})

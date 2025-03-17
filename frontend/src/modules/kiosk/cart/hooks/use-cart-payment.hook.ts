@@ -1,6 +1,6 @@
 import { useToast } from '@/core/components/ui/toast'
 import { useMutation } from '@tanstack/vue-query'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
 // Services
 import { getKaspiConfig, KaspiService } from '@/core/integrations/kaspi.service'
@@ -14,12 +14,7 @@ const PAYMENT_TIMEOUT = 120_000 // 2 minutes
 const STORAGE_KEY = 'ZEEP_CART_PAYMENT_COUNTDOWN'
 
 export function useCartPayment(order: OrderDTO | null, onProceed: () => void, onBack: () => void) {
-	const isTest: boolean =
-		import.meta.env.VITE_TEST_PAYMENT === undefined
-			? false
-			: import.meta.env.VITE_TEST_PAYMENT === 'true'
-				? true
-				: false
+	const isTest: boolean = import.meta.env.VITE_TEST_PAYMENT === 'true'
 
 	const { toast } = useToast()
 
@@ -39,41 +34,28 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	/* -------------------------------------
 	 * Mutations
 	 * ------------------------------------- */
-	const awaitPaymentMutation = useMutation({
-		mutationFn: async ({ order }: { order: OrderDTO }) => {
-			const kaspiConfig = getKaspiConfig()
-			if (!kaspiConfig) throw new Error('Kaspi config not found')
-
-			const kaspiService = new KaspiService(kaspiConfig)
-			return isTest ? kaspiService.awaitPaymentTest() : kaspiService.awaitPayment(order.total)
-		},
-		onSuccess: transaction => {
-			if (!order) throw new Error('Order not found')
-			successOrderPaymentMutation.mutate({ order, transactionDTO: transaction })
-		},
-		onError: err => {
-			console.error('Payment wait failed:', err)
-			toast({
-				title: 'Ошибка оплаты',
-				description: 'Не удалось дождаться оплаты. Попробуйте снова.',
-				variant: 'destructive',
-			})
-			resetPaymentFlow(true)
-		},
-	})
-
 	const successOrderPaymentMutation = useMutation({
-		mutationFn: async ({
+		mutationFn: ({
 			order,
 			transactionDTO,
 		}: {
 			order: OrderDTO
 			transactionDTO: TransactionDTO
 		}) => {
-			await ordersService.successOrderPayment(order.id, transactionDTO)
+			return ordersService.successOrderPayment(order.id, transactionDTO)
 		},
-		onSuccess: () => {
-			onProceed()
+		onSuccess: async () => {
+			console.log('Calling onProceed...')
+
+			try {
+				onProceed()
+				console.log('onProceed executed successfully')
+			} catch (error) {
+				console.error('onProceed error:', error)
+			}
+			await nextTick()
+
+			resetPaymentFlow(false)
 		},
 		onError: err => {
 			console.error('Payment confirmation failed:', err)
@@ -86,13 +68,46 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 		},
 	})
 
+	const awaitPayment = async (order: OrderDTO) => {
+		try {
+			if (!order) throw new Error('Order not found')
+
+			const kaspiConfig = getKaspiConfig()
+			if (!kaspiConfig) throw new Error('Kaspi config not found')
+
+			const kaspiService = new KaspiService(kaspiConfig)
+			const transaction = isTest
+				? await kaspiService.awaitPaymentTest()
+				: await kaspiService.awaitPayment(order.total)
+
+			console.log('Transaction Data:', transaction)
+
+			if (!transaction || !transaction.transactionId) {
+				console.error('Transaction data missing:', transaction)
+				throw new Error('Transaction data missing: ' + transaction)
+			}
+
+			await successOrderPaymentMutation.mutateAsync({
+				order,
+				transactionDTO: transaction,
+			})
+		} catch (err) {
+			console.error('Payment wait failed:', err)
+			toast({
+				title: 'Ошибка оплаты',
+				description: 'Не удалось дождаться оплаты. Попробуйте снова.',
+				variant: 'destructive',
+			})
+			resetPaymentFlow(true)
+		}
+	}
+
 	const failPaymentMutation = useMutation({
 		mutationFn: async (orderId: number) => {
 			return ordersService.failOrderPayment(orderId)
 		},
 		onSuccess: () => {
 			errorMessage.value = 'Платеж не завершен вовремя. Пожалуйста, попробуйте снова.'
-			isPaying.value = false
 			resetPaymentFlow(false)
 		},
 		onError: () => {
@@ -103,13 +118,13 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	/* -------------------------------------
 	 * Methods
 	 * ------------------------------------- */
-	function selectMethod(method: PaymentMethod) {
+	async function selectMethod(method: PaymentMethod) {
 		selectedMethod.value = method
 		errorMessage.value = ''
 		startPaymentProcess()
 	}
 
-	function startPaymentProcess() {
+	async function startPaymentProcess() {
 		if (!order || !selectedMethod.value) {
 			errorMessage.value = 'Номер заказа или способ оплаты отсутствуют.'
 			return
@@ -118,7 +133,7 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 		isPaying.value = true
 		errorMessage.value = ''
 
-		awaitPaymentMutation.mutate({ order })
+		await awaitPayment(order)
 	}
 
 	async function failPayment() {

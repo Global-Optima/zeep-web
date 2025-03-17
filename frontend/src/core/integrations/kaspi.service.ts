@@ -163,14 +163,7 @@ export class KaspiService {
 	}
 
 	async awaitPaymentTest(): Promise<TransactionDTO> {
-		await new Promise(resolve => setTimeout(resolve, 5000)) // Simulate delay
-
-		// Randomize success/failure (50% chance each)
-		const isSuccess = Math.random() > 0.5
-
-		if (!isSuccess) {
-			throw new Error('Mock Payment Failure')
-		}
+		await new Promise(resolve => setTimeout(resolve, 3000))
 
 		return {
 			bin: '123456',
@@ -190,6 +183,7 @@ export class KaspiService {
 			const initiateResponse = await this.initiatePayment({ amount })
 			return this.pollPaymentStatus(initiateResponse.data.processId)
 		} catch (error) {
+			console.log('awaitPayment', error)
 			throw new Error(
 				`Payment initiation failed: ${error instanceof Error ? error.message : 'Unexpected error'}`,
 			)
@@ -201,24 +195,24 @@ export class KaspiService {
 			const checkStatus = async () => {
 				try {
 					const response = await this.getTransactionStatus(processId)
+					console.log('Polling response:', response.data) 
 
 					if (response.data.status === 'success') {
 						if (!response.data.chequeInfo) {
-							reject(new Error('Invalid payment data'))
-							return
+							return reject(new Error('Invalid payment data: chequeInfo missing'))
 						}
-						resolve(this.mapTransactionResponse(response))
-						return
+
+						return resolve(this.mapTransactionResponse(response))
 					}
 
 					if (['fail', 'unknown'].includes(response.data.status)) {
-						reject(new Error(response.data.message))
-						return
+						return reject(new Error(`Payment failed: ${response.data.message}`))
 					}
 
 					setTimeout(checkStatus, 1000)
 				} catch (error) {
-					reject(error)
+					console.error('Polling error:', error)
+					return reject(error)
 				}
 			}
 
@@ -232,7 +226,7 @@ export class KaspiService {
 			transactionId: data.transactionId,
 			processId: data.processId,
 			paymentMethod: data.chequeInfo.method,
-			amount: Number(data.chequeInfo.amount),
+			amount: Number(data.chequeInfo.amount.split(' ')[0]),
 			currency: 'KZT',
 			qrNumber: data.chequeInfo.method === 'qr' ? data.chequeInfo.orderNumber : undefined,
 			cardMask: data.chequeInfo.method === 'card' ? data.chequeInfo.cardMask : undefined,

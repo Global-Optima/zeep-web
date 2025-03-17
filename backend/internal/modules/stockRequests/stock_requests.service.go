@@ -425,7 +425,7 @@ func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, 
 			return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 
-		if err := s.repo.AddToStoreStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
+		if err := s.repo.UpsertToStoreStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
 			return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 	}
@@ -471,7 +471,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 		}
 
 		if item.Quantity > 0 {
-			if err := s.repo.AddToStoreStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
+			if err := s.repo.UpsertToStoreStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
 				return fmt.Errorf("failed to add stock to store warehouse for stock material ID %d: %w", item.StockMaterialID, err)
 			}
 		}

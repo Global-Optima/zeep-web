@@ -141,6 +141,7 @@
     "500-productSize-delete": "Өнім өлшемін жою кезінде күтпеген қате орын алды. Кейінірек тағы бір рет көріп көріңіз.",
     "404-productSize": "Өнім өлшемі табылмады.",
     "400-productSize": "Өнім өлшемі деректері қате берілді. Пожалуйста, тексеріп, қайтадан көріңіз.",
+    "400-productSize-duplicate": "Өнім өлшемі бар.",
     "201-productSize": "Өнім өлшемі сәтті жасалды.",
     "200-productSize-update": "Өнім өлшемі сәтті жаңартылды.",
     "200-productSize-delete": "Өнім өлшемі сәтті жойылды.",
@@ -408,7 +409,10 @@
     "warehouseStockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
     "warehouseOutOfStock": "*{{.ItemName}}* қоймада аз қалды.",
     "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
-    "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді."
+    "priceChange": "*{{.ProductName}}* бағасы *{{.OldPrice}}*-ден *{{.NewPrice}}*-ге өзгерді.",
+    "newProduct": "*{{.ProductName}}* атты жаңа өнім қосылды.",
+    "newProductSize": "*{{.ProductName}}* үшін *{{.ProductSizeName}}*, *{{.Size}}* атты жаңа өлшем қосылды.",
+    "newAdditive": "*{{.AdditiveName}}* атты жаңа қоспа енгізілді."
   },
   "stockRequestComments": {
     "quantityMismatch" : "*{{.OriginalMaterialName}}*, *{{.ActualQuantity}}* жеткізілді, тапсырыста *{{.Quantity}}*.",

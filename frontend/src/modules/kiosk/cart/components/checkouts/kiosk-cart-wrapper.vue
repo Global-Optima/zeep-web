@@ -158,7 +158,7 @@ const updateSelectedPayment = (val: PaymentMethod | null) => {
 		v-else-if="stepState.currentStep === 'payment'"
 		:isOpen="true"
 		:selectedPayment="stepState.selectedPayment as PaymentMethod ?? null"
-		:order="stepState.order"
+		:order="stepState?.order"
 		@back="stepState.currentStep = CheckoutStep.CUSTOMER"
 		@close="closeCheckoutModal"
 		@update:selectedPayment="updateSelectedPayment"

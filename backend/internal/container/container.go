@@ -89,7 +89,7 @@ func (c *Container) mustInit() {
 	c.Stores = modules.NewStoresModule(baseModule, c.Franchisees.Service, c.Audits.Service)
 	c.StoreStocks = modules.NewStoreStockModule(baseModule, c.Ingredients.Service, c.Franchisees.Service, c.Audits.Service, c.Notifications.Service, c.Stores.Service, cronManager)
 
-	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo)
+	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo, c.Notifications.Service)
 	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Additives.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, *c.storageRepo, c.Notifications.Service)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo, *c.employeeTokenManager)
 	c.Orders = modules.NewOrdersModule(baseModule, c.AsynqManager, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Notifications.Service)

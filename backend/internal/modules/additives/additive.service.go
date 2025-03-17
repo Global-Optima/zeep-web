@@ -7,6 +7,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -29,16 +31,18 @@ type AdditiveService interface {
 }
 
 type additiveService struct {
-	repo        AdditiveRepository
-	storageRepo storage.StorageRepository
-	logger      *zap.SugaredLogger
+	repo                AdditiveRepository
+	storageRepo         storage.StorageRepository
+	notificationService notifications.NotificationService
+	logger              *zap.SugaredLogger
 }
 
-func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepository, logger *zap.SugaredLogger) AdditiveService {
+func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) AdditiveService {
 	return &additiveService{
-		repo:        repo,
-		storageRepo: storageRepo,
-		logger:      logger,
+		repo:                repo,
+		storageRepo:         storageRepo,
+		notificationService: notificationService,
+		logger:              logger,
 	}
 }
 
@@ -144,7 +148,7 @@ func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]typ
 		return nil, wrappedError
 	}
 
-	var additiveDTOs []types.AdditiveDTO
+	additiveDTOs := []types.AdditiveDTO{}
 	for _, additive := range additives {
 		additiveDTOs = append(additiveDTOs, *types.ConvertToAdditiveDTO(&additive))
 	}
@@ -210,6 +214,17 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 		}
 
 		return 0, wrappedErr
+	}
+
+	notificationDetails := &details.NewAdditiveDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID: additive.ID,
+		},
+		AdditiveName: additive.Name,
+	}
+	err = s.notificationService.NotifyNewAdditiveAdded(notificationDetails)
+	if err != nil {
+		return 0, fmt.Errorf("failed to notify new additive added: %w", err)
 	}
 
 	return id, nil

@@ -142,6 +142,7 @@
     "500-productSize-delete": "An unexpected error occurred while deleting product size. Please try again later.",
     "404-productSize": "Product size not found.",
     "400-productSize": "Invalid product size data provided. Please check and try again.",
+    "400-productSize-duplicate": "Product size already exists.",
     "201-productSize": "Product size successfully created.",
     "200-productSize-update": "Product size successfully updated.",
     "200-productSize-delete": "Product size successfully deleted.",
@@ -408,7 +409,10 @@
       "warehouseStockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",
       "warehouseOutOfStock": "*{{.ItemName}}* is running out of stock.",
       "newStockRequest": "A new stock request was submitted by *{{.RequesterName}}*.",
-      "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*."
+      "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*.",
+      "newProduct": "A new product *{{.ProductName}}* has been added.",
+      "newProductSize": "A new size *{{.ProductSizeName}}*, *{{.Size}}* has been added for *{{.ProductName}}*.",
+      "newAdditive": "A new additive *{{.AdditiveName}}* has been introduced."
   },
   "stockRequestComments": {
     "quantityMismatch" : "*{{.OriginalMaterialName}}* received *{{.ActualQuantity}}*, expected *{{.Quantity}}*",
