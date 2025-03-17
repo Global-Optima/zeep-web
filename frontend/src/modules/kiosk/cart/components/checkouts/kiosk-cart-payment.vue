@@ -41,11 +41,11 @@ const {
 )
 
 // ----- Handlers -----
-function onSelectMethod(method: PaymentMethod) {
+async function onSelectMethod(method: PaymentMethod) {
   // Update parent's v-model
   emit('update:selectedPayment', method)
   // Trigger payment logic
-  selectMethod(method)
+  await selectMethod(method)
 }
 
 function handleClose() {

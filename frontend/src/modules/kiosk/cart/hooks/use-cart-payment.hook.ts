@@ -34,20 +34,23 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	/* -------------------------------------
 	 * Mutations
 	 * ------------------------------------- */
-	const awaitPaymentMutation = useMutation({
-		mutationFn: ({ order }: { order: OrderDTO }) => {
+	const awaitPayment = async (order: OrderDTO) => {
+		try {
+			if (!order) throw new Error('Order not found')
+
 			const kaspiConfig = getKaspiConfig()
 			if (!kaspiConfig) throw new Error('Kaspi config not found')
 
 			const kaspiService = new KaspiService(kaspiConfig)
-			return isTest ? kaspiService.awaitPaymentTest() : kaspiService.awaitPayment(order.total)
-		},
-		onSuccess: transaction => {
-			console.log('TRANSACTION', transaction)
-			if (!order) throw new Error('Order not found')
-			successOrderPaymentMutation.mutate({ order, transactionDTO: transaction })
-		},
-		onError: err => {
+			const transaction = isTest
+				? await kaspiService.awaitPaymentTest()
+				: await kaspiService.awaitPayment(order.total)
+
+			await successOrderPaymentMutation.mutateAsync({
+				order,
+				transactionDTO: transaction,
+			})
+		} catch (err) {
 			console.error('Payment wait failed:', err)
 			toast({
 				title: 'Ошибка оплаты',
@@ -55,8 +58,8 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 				variant: 'destructive',
 			})
 			resetPaymentFlow(true)
-		},
-	})
+		}
+	}
 
 	const successOrderPaymentMutation = useMutation({
 		mutationFn: ({
@@ -69,9 +72,9 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 			return ordersService.successOrderPayment(order.id, transactionDTO)
 		},
 		onSuccess: async () => {
-			await nextTick(() => {
-				onProceed()
-			})
+			await nextTick()
+			onProceed()
+			resetPaymentFlow(false)
 		},
 		onError: err => {
 			console.error('Payment confirmation failed:', err)
@@ -101,13 +104,13 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	/* -------------------------------------
 	 * Methods
 	 * ------------------------------------- */
-	function selectMethod(method: PaymentMethod) {
+	async function selectMethod(method: PaymentMethod) {
 		selectedMethod.value = method
 		errorMessage.value = ''
 		startPaymentProcess()
 	}
 
-	function startPaymentProcess() {
+	async function startPaymentProcess() {
 		if (!order || !selectedMethod.value) {
 			errorMessage.value = 'Номер заказа или способ оплаты отсутствуют.'
 			return
@@ -116,7 +119,7 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 		isPaying.value = true
 		errorMessage.value = ''
 
-		awaitPaymentMutation.mutate({ order })
+		await awaitPayment(order)
 	}
 
 	async function failPayment() {
