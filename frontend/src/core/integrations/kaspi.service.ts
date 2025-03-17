@@ -222,7 +222,7 @@ export class KaspiService {
 			transactionId: data.transactionId,
 			processId: data.processId,
 			paymentMethod: data.chequeInfo.method,
-			amount: Number(data.chequeInfo.amount),
+			amount: Number(data.chequeInfo.amount.split(' ')[0]),
 			currency: 'KZT',
 			qrNumber: data.chequeInfo.method === 'qr' ? data.chequeInfo.orderNumber : undefined,
 			cardMask: data.chequeInfo.method === 'card' ? data.chequeInfo.cardMask : undefined,
