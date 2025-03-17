@@ -36,6 +36,7 @@ import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { StockMaterialCategoryFilterDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import { useDebounce } from '@vueuse/core'
@@ -47,7 +48,9 @@ const router = useRouter()
 const canCreate = useHasRole([EmployeeRole.ADMIN])
 
 const props = defineProps<{ filter: StockMaterialCategoryFilterDTO }>()
-const emit = defineEmits(['update:filter'])
+const emit = defineEmits<{
+  (event: 'update:filter', value: StockMaterialCategoryFilterDTO): void
+}>()
 
 const localFilter = ref({ ...props.filter })
 
@@ -55,10 +58,14 @@ const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.search = newValue
-	emit('update:filter', { search: newValue.trim() })
+  localFilter.value.search = newValue
+  emit('update:filter', {
+    ...localFilter.value,
+    search: newValue.trim(),
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page (e.g., 1)
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 })
-
 const addProductCategory = () => {
 	router.push({ name: getRouteName("ADMIN_STOCK_MATERIAL_CATEGORY_CREATE") })
 }

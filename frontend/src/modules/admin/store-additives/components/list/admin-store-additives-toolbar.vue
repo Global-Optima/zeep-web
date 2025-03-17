@@ -40,6 +40,7 @@ import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import type { AdditiveFilterQuery } from '@/modules/admin/additives/models/additives.model'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminSelectStoreDropdown from '@/modules/admin/stores/components/admin-select-store-dropdown.vue'
@@ -48,34 +49,39 @@ import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Props and Emit
 const props = defineProps<{ filter: AdditiveFilterQuery }>()
-const emit = defineEmits<{(e: 'update:filter', value: AdditiveFilterQuery): void }>()
+const emit = defineEmits<{ (e: 'update:filter', value: AdditiveFilterQuery): void }>()
 
 // Local Filter
 const localFilter = ref({ ...props.filter })
 
-// Search Input
+// Search Input with debouncing
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 const showForFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
-
 const selectedStore = ref<StoreDTO | undefined>(undefined)
+const canCreate = useHasRole([EmployeeRole.STORE_MANAGER])
 
 const onSelectStore = (store: StoreDTO) => {
   selectedStore.value = store
-  emit('update:filter', { ...props.filter, storeId: store.id})
+  emit('update:filter', {
+    ...props.filter,
+    storeId: store.id,
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page (e.g., 1)
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 }
-
-const canCreate = useHasRole([EmployeeRole.STORE_MANAGER])
 
 // Watch Search Input and Update Filter
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.search = newValue.trim()
-	emit('update:filter', { ...localFilter.value })
+  localFilter.value.search = newValue.trim()
+  emit('update:filter', {
+    ...localFilter.value,
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page (e.g., 1)
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 })
-
 // Add Store Navigation
 const router = useRouter()
 const addStore = () => {

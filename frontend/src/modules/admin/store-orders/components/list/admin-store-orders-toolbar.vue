@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { Input } from '@/core/components/ui/input'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminOrdersExport from '@/modules/admin/store-orders/components/admin-orders-export.vue'
 import type { OrdersFilterQuery } from '@/modules/admin/store-orders/models/orders.models'
@@ -40,31 +41,46 @@ import type { StoreDTO } from '@/modules/admin/stores/models/stores.models'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
-// Props and Emit
 const props = defineProps<{ filter: OrdersFilterQuery }>()
-const emit = defineEmits<{(e: 'update:filter', value: OrdersFilterQuery): void }>()
+const emit = defineEmits<{ (e: 'update:filter', value: OrdersFilterQuery): void }>()
 
-const canExport = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
+const canExport = useHasRole([
+  EmployeeRole.STORE_MANAGER,
+  EmployeeRole.FRANCHISEE_MANAGER,
+  EmployeeRole.FRANCHISEE_OWNER
+])
 
-const showForFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
+const showForFranchisee = useHasRole([
+  EmployeeRole.FRANCHISEE_MANAGER,
+  EmployeeRole.FRANCHISEE_OWNER
+])
 
 const selectedStore = ref<StoreDTO | undefined>(undefined)
 
 const onSelectStore = (store: StoreDTO) => {
   selectedStore.value = store
-  emit('update:filter', { ...props.filter, storeId: store.id})
+  emit('update:filter', {
+    ...props.filter,
+    storeId: store.id,
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page (e.g., 1)
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 }
 
-// Local Filter
+// Local Filter Copy
 const localFilter = ref({ ...props.filter })
 
-// Search Input
+// Search Input with Debouncing
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
-// Watch Search Input and Update Filter
+// Watch debounced search input and update filter with pagination reset
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.search = newValue.trim()
-	emit('update:filter', { ...localFilter.value })
+  localFilter.value.search = newValue.trim()
+  emit('update:filter', {
+    ...localFilter.value,
+    page: DEFAULT_PAGINATION_META.page,
+    pageSize: DEFAULT_PAGINATION_META.pageSize
+  })
 })
 </script>

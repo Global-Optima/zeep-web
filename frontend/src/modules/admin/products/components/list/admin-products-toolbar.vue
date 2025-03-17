@@ -34,20 +34,25 @@ import type { ProductsFilterDTO } from '@/modules/kiosk/products/models/product.
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 
 const props = defineProps<{ filter: ProductsFilterDTO }>()
-const emit = defineEmits(['update:filter'])
-
+const emit = defineEmits<{
+  (event: 'update:filter', value: ProductsFilterDTO): void
+}>()
 const localFilter = ref({ ...props.filter })
 
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.search = newValue
-	emit('update:filter', { search: newValue.trim() })
+  localFilter.value.search = newValue
+  emit('update:filter', {
+    search: newValue.trim(),
+    page: DEFAULT_PAGINATION_META.page, 
+    pageSize: DEFAULT_PAGINATION_META.pageSize
+  })
 })
-
 const router = useRouter()
 
 const onCreateClick = () => {
