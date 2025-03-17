@@ -181,24 +181,29 @@ func (r *stockRequestRepository) DeductWarehouseStock(stockMaterialID, warehouse
 }
 
 func (r *stockRequestRepository) UpsertToStoreStock(storeID, stockMaterialID uint, quantityInPackages float64) error {
-	var sm data.StockMaterial
-	if err := r.db.Preload("Ingredient.Unit").First(&sm, stockMaterialID).Error; err != nil {
+	var stockMaterial data.StockMaterial
+	if err := r.db.
+		Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		First(&stockMaterial, stockMaterialID).Error; err != nil {
 		return fmt.Errorf("failed to fetch stock material details for ID %d: %w", stockMaterialID, err)
 	}
 
-	q := sm.Size * quantityInPackages
-	if sm.Ingredient.UnitID != sm.UnitID {
-		q = sm.Ingredient.Unit.ConversionFactor * q
+	var quantityInUnits float64
+	if stockMaterial.Ingredient.UnitID != stockMaterial.UnitID {
+		quantityInUnits = stockMaterial.Ingredient.Unit.ConversionFactor * stockMaterial.Size * quantityInPackages
+	} else {
+		quantityInUnits = stockMaterial.Size * quantityInPackages
 	}
 
 	var storeStock data.StoreStock
-	err := r.db.Where("store_id = ? AND ingredient_id = ?", storeID, sm.IngredientID).First(&storeStock).Error
+	err := r.db.Where("store_id = ? AND ingredient_id = ?", storeID, stockMaterial.IngredientID).First(&storeStock).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			newStock := data.StoreStock{
 				StoreID:           storeID,
-				IngredientID:      sm.IngredientID,
-				Quantity:          q,
+				IngredientID:      stockMaterial.IngredientID,
+				Quantity:          quantityInUnits,
 				LowStockThreshold: DefaultLowStockThreshold,
 			}
 			return r.db.Create(&newStock).Error
@@ -206,7 +211,7 @@ func (r *stockRequestRepository) UpsertToStoreStock(storeID, stockMaterialID uin
 		return err
 	}
 
-	storeStock.Quantity += q
+	storeStock.Quantity += quantityInUnits
 	return r.db.Save(&storeStock).Error
 }
 

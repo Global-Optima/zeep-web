@@ -148,7 +148,7 @@ func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]typ
 		return nil, wrappedError
 	}
 
-	var additiveDTOs []types.AdditiveDTO
+	additiveDTOs := []types.AdditiveDTO{}
 	for _, additive := range additives {
 		additiveDTOs = append(additiveDTOs, *types.ConvertToAdditiveDTO(&additive))
 	}
