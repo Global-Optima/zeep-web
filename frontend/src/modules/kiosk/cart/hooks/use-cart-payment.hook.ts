@@ -34,33 +34,6 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 	/* -------------------------------------
 	 * Mutations
 	 * ------------------------------------- */
-	const awaitPayment = async (order: OrderDTO) => {
-		try {
-			if (!order) throw new Error('Order not found')
-
-			const kaspiConfig = getKaspiConfig()
-			if (!kaspiConfig) throw new Error('Kaspi config not found')
-
-			const kaspiService = new KaspiService(kaspiConfig)
-			const transaction = isTest
-				? await kaspiService.awaitPaymentTest()
-				: await kaspiService.awaitPayment(order.total)
-
-			await successOrderPaymentMutation.mutateAsync({
-				order,
-				transactionDTO: transaction,
-			})
-		} catch (err) {
-			console.error('Payment wait failed:', err)
-			toast({
-				title: 'Ошибка оплаты',
-				description: 'Не удалось дождаться оплаты. Попробуйте снова.',
-				variant: 'destructive',
-			})
-			resetPaymentFlow(true)
-		}
-	}
-
 	const successOrderPaymentMutation = useMutation({
 		mutationFn: ({
 			order,
@@ -72,8 +45,16 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 			return ordersService.successOrderPayment(order.id, transactionDTO)
 		},
 		onSuccess: async () => {
+			console.log('Calling onProceed...')
+
+			try {
+				onProceed()
+				console.log('onProceed executed successfully')
+			} catch (error) {
+				console.error('onProceed error:', error)
+			}
 			await nextTick()
-			onProceed()
+
 			resetPaymentFlow(false)
 		},
 		onError: err => {
@@ -87,13 +68,47 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 		},
 	})
 
+	const awaitPayment = async (order: OrderDTO) => {
+		try {
+			if (!order) throw new Error('Order not found')
+
+			const kaspiConfig = getKaspiConfig()
+			if (!kaspiConfig) throw new Error('Kaspi config not found')
+
+			const kaspiService = new KaspiService(kaspiConfig)
+			const transaction = isTest
+				? await kaspiService.awaitPaymentTest()
+				: await kaspiService.awaitPayment(order.total)
+
+			console.log('Transaction Data:', transaction)
+
+			if (!transaction || !transaction.transactionId) {
+				console.error('Transaction data missing:', transaction)
+				throw new Error('Transaction data missing: ' + transaction)
+			}
+
+			await successOrderPaymentMutation.mutateAsync({
+				order,
+				transactionDTO: transaction,
+			})
+			console.log('Here 4')
+		} catch (err) {
+			console.error('Payment wait failed:', err)
+			toast({
+				title: 'Ошибка оплаты',
+				description: 'Не удалось дождаться оплаты. Попробуйте снова.',
+				variant: 'destructive',
+			})
+			resetPaymentFlow(true)
+		}
+	}
+
 	const failPaymentMutation = useMutation({
 		mutationFn: async (orderId: number) => {
 			return ordersService.failOrderPayment(orderId)
 		},
 		onSuccess: () => {
 			errorMessage.value = 'Платеж не завершен вовремя. Пожалуйста, попробуйте снова.'
-			isPaying.value = false
 			resetPaymentFlow(false)
 		},
 		onError: () => {

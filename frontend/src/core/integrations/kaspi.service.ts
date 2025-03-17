@@ -183,6 +183,7 @@ export class KaspiService {
 			const initiateResponse = await this.initiatePayment({ amount })
 			return this.pollPaymentStatus(initiateResponse.data.processId)
 		} catch (error) {
+			console.log('awaitPayment', error)
 			throw new Error(
 				`Payment initiation failed: ${error instanceof Error ? error.message : 'Unexpected error'}`,
 			)
@@ -194,20 +195,23 @@ export class KaspiService {
 			const checkStatus = async () => {
 				try {
 					const response = await this.getTransactionStatus(processId)
+					console.log('Polling response:', response.data) 
 
 					if (response.data.status === 'success') {
 						if (!response.data.chequeInfo) {
-							return reject(new Error('Invalid payment data'))
+							return reject(new Error('Invalid payment data: chequeInfo missing'))
 						}
+
 						return resolve(this.mapTransactionResponse(response))
 					}
 
 					if (['fail', 'unknown'].includes(response.data.status)) {
-						return reject(new Error(response.data.message))
+						return reject(new Error(`Payment failed: ${response.data.message}`))
 					}
 
 					setTimeout(checkStatus, 1000)
 				} catch (error) {
+					console.error('Polling error:', error)
 					return reject(error)
 				}
 			}
