@@ -30,7 +30,7 @@ export interface UpdateIngredientDTO {
 	categoryId?: number
 	unitId?: number
 	expirationInDays?: number
-  isAllergen?: boolean
+	isAllergen?: boolean
 }
 
 /**
@@ -44,7 +44,7 @@ export interface IngredientsDTO {
 	carbs: number
 	proteins: number
 	expirationInDays: number
-  isAllergen: boolean
+	isAllergen: boolean
 	unit: UnitDTO
 	category: IngredientCategoryDTO
 }
@@ -57,7 +57,7 @@ export interface IngredientFilter extends PaginationParams {
 	name?: string
 	minCalories?: number
 	maxCalories?: number
-  isAllergen?: boolean
+	isAllergen?: boolean
 }
 
 export interface CreateIngredientCategoryDTO {

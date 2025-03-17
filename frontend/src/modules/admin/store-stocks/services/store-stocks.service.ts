@@ -8,7 +8,10 @@ import type {
 	StoreWarehouseStockDTO,
 	UpdateStoreWarehouseStockDTO,
 } from '../models/store-stock.model'
-import type { IngredientFilter, IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type {
+	IngredientFilter,
+	IngredientsDTO,
+} from '@/modules/admin/ingredients/models/ingredients.model'
 
 class StoreStockService {
 	/**

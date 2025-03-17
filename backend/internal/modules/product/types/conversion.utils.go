@@ -27,18 +27,11 @@ func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 		return BaseProductDTO{}
 	}
 
-	imageUrl, videoUrl := "", ""
-	if product.ImageKey != nil {
-		imageUrl = product.ImageKey.GetURL()
-	}
-	if product.VideoKey != nil {
-		videoUrl = product.VideoKey.GetURL()
-	}
 	return BaseProductDTO{
 		Name:        product.Name,
 		Description: product.Description,
-		ImageURL:    imageUrl,
-		VideoURL:    videoUrl,
+		ImageURL:    product.ImageKey.GetURL(),
+		VideoURL:    product.VideoKey.GetURL(),
 		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
@@ -272,18 +265,13 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKe
 		})
 	}
 
-	keyStr := ""
-	if imageKey != nil {
-		keyStr = imageKey.GetURL()
-	}
-
 	if imageKey != before.ImageKey {
 		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
 			Params: map[string]interface{}{
-				"OldImageURL": before.ImageKey,
-				"NewImageURL": keyStr,
+				"OldImageURL": before.ImageKey.GetURL(),
+				"NewImageURL": imageKey.GetURL(),
 			},
 		})
 	}

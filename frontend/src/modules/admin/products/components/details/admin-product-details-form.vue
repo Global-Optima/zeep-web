@@ -9,7 +9,7 @@ import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/
 import { toTypedSchema } from '@vee-validate/zod'
 import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import {computed, defineAsyncComponent, ref, useTemplateRef} from 'vue'
+import { defineAsyncComponent, ref, useTemplateRef} from 'vue'
 import * as z from 'zod'
 
 // Lazy-load the dialog component
@@ -123,11 +123,10 @@ const onDeleteVideo = () => {
 
 const onCancel = () => emits('onCancel');
 
-const imageInputRef = ref<HTMLInputElement | null>(null);
-const videoInputRef = ref<HTMLInputElement | null>(null);
+const imageInputRef = useTemplateRef("imageInputRef");
+const videoInputRef = useTemplateRef("videoInputRef");
 const triggerImageInput = () => imageInputRef.value?.click();
 const triggerVideoInput = () => videoInputRef.value?.click();
-
 </script>
 
 <template>
@@ -251,127 +250,127 @@ const triggerVideoInput = () => videoInputRef.value?.click();
 			</div>
 
 			<!-- Right Side: Media -->
-      <div class="items-start gap-4 grid auto-rows-max">
-        <!-- Image Card -->
-        <Card>
-          <CardHeader>
-            <CardTitle>Изображение</CardTitle>
-            <CardDescription>
-              Загрузите изображение для продукта.<br />
-              Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FormField name="image">
-              <FormItem>
-                <FormControl>
-                  <div class="space-y-2">
-                    <!-- Preview -->
-                    <div
-                      v-if="previewImage"
-                      class="relative w-full h-48"
-                    >
-                      <LazyImage
-                        :src="previewImage"
-                        alt="Preview"
-                        class="border rounded-lg w-full h-full object-contain"
-                      />
-                      <button
-                        type="button"
-                        class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
-                        @click="onDeleteImage"
-                      >
-                        <X class="size-4" />
-                      </button>
-                    </div>
+			<div class="items-start gap-4 grid auto-rows-max">
+				<!-- Image Card -->
+				<Card>
+					<CardHeader>
+						<CardTitle>Изображение</CardTitle>
+						<CardDescription>
+							Загрузите изображение для продукта.<br />
+							Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<FormField name="image">
+							<FormItem>
+								<FormControl>
+									<div class="space-y-2">
+										<!-- Preview -->
+										<div
+											v-if="previewImage"
+											class="relative w-full h-48"
+										>
+											<LazyImage
+												:src="previewImage"
+												alt="Preview"
+												class="border rounded-lg w-full h-full object-contain"
+											/>
+											<button
+												type="button"
+												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												@click="onDeleteImage"
+											>
+												<X class="size-4" />
+											</button>
+										</div>
 
-                    <!-- Input -->
-                    <div
-                      v-if="!previewImage"
-                      class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
-                      @click="triggerImageInput"
-                    >
-                      <input
-                        ref="imageInputRef"
-                        type="file"
-                        accept="image/jpeg, image/png"
-                        style="display: none;"
-                        @change="handleImageUpload"
-                      />
-                      <p class="flex flex-col justify-center items-center text-gray-500 text-sm">
-                        <span class="mb-2"><Camera /></span>
-                        Нажмите для загрузки изображения<br />
-                        или перетащите файл
-                      </p>
-                    </div>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            </FormField>
-          </CardContent>
-        </Card>
+										<!-- Input -->
+										<div
+											v-if="!previewImage"
+											class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
+											@click="triggerImageInput"
+										>
+											<input
+												ref="imageInputRef"
+												type="file"
+												accept="image/jpeg, image/png"
+												style="display: none;"
+												@change="handleImageUpload"
+											/>
+											<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+												<span class="mb-2"><Camera /></span>
+												Нажмите для загрузки изображения<br />
+												или перетащите файл
+											</p>
+										</div>
+									</div>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+					</CardContent>
+				</Card>
 
-        <!-- Video Card -->
-        <Card>
-          <CardHeader>
-            <CardTitle>Видео</CardTitle>
-            <CardDescription>
-              Загрузите видео для продукта.<br />
-              Поддерживаемый формат: MP4 (макс. 20MB)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FormField name="video">
-              <FormItem>
-                <FormControl>
-                  <div class="space-y-2">
-                    <!-- Preview -->
-                    <div
-                      v-if="previewVideo"
-                      class="relative rounded-lg w-full h-48 overflow-hidden"
-                    >
-                      <video
-                        :src="previewVideo"
-                        controls
-                        class="w-full h-full object-cover"
-                      ></video>
-                      <button
-                        type="button"
-                        class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
-                        @click="onDeleteVideo"
-                      >
-                        <X class="size-4" />
-                      </button>
-                    </div>
+				<!-- Video Card -->
+				<Card>
+					<CardHeader>
+						<CardTitle>Видео</CardTitle>
+						<CardDescription>
+							Загрузите видео для продукта.<br />
+							Поддерживаемый формат: MP4 (макс. 20MB)
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<FormField name="video">
+							<FormItem>
+								<FormControl>
+									<div class="space-y-2">
+										<!-- Preview -->
+										<div
+											v-if="previewVideo"
+											class="relative rounded-lg w-full h-48 overflow-hidden"
+										>
+											<video
+												:src="previewVideo"
+												controls
+												class="w-full h-full object-cover"
+											></video>
+											<button
+												type="button"
+												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												@click="onDeleteVideo"
+											>
+												<X class="size-4" />
+											</button>
+										</div>
 
-                    <!-- Input -->
-                    <div
-                      v-if="!previewVideo"
-                      class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
-                      @click="triggerVideoInput"
-                    >
-                      <input
-                        ref="videoInputRef"
-                        type="file"
-                        accept="video/mp4"
-                        style="display: none;"
-                        @change="handleVideoUpload"
-                      />
-                      <p class="flex flex-col justify-center items-center text-gray-500 text-sm">
-                        <span class="mb-2"><Video /></span>
-                        Нажмите для загрузки видео<br />
-                        или перетащите файл
-                      </p>
-                    </div>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            </FormField>
-          </CardContent>
-        </Card>
-      </div>
+										<!-- Input -->
+										<div
+											v-if="!previewVideo"
+											class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
+											@click="triggerVideoInput"
+										>
+											<input
+												ref="videoInputRef"
+												type="file"
+												accept="video/mp4"
+												style="display: none;"
+												@change="handleVideoUpload"
+											/>
+											<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+												<span class="mb-2"><Video /></span>
+												Нажмите для загрузки видео<br />
+												или перетащите файл
+											</p>
+										</div>
+									</div>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 
 		<!-- Mobile Action Buttons -->

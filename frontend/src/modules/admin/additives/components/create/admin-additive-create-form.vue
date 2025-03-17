@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref, useTemplateRef } from 'vue'
+import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -13,13 +13,17 @@ import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
-import AdminSelectAdditiveCategory from '@/modules/admin/additive-categories/components/admin-select-additive-category.vue'
 import type { AdditiveCategoryDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
-import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, Trash, X } from 'lucide-vue-next'
+
+const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
+  import('@/modules/admin/additive-categories/components/admin-select-additive-category.vue'))
+const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
+const AdminSelectUnit = defineAsyncComponent(() =>
+  import('@/modules/admin/units/components/admin-select-unit.vue'))
 
 interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   name: string
@@ -376,7 +380,7 @@ function removeIngredient(index: number) {
 											/>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-green-600 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
 												@click="previewImage = null; setFieldValue('image', undefined)"
 											>
 												<X class="size-4" />

@@ -260,7 +260,6 @@ func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAddit
 				}
 			}()
 		}
-
 		return nil, err
 	}
 

@@ -5,13 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
-import AdminSelectProductCategory from '@/modules/admin/product-categories/components/admin-select-product-category.vue'
 import type { CreateProductDTO, ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Camera, ChevronLeft, Video, X } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import { ref, useTemplateRef } from 'vue'
+import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
 import * as z from 'zod'
+
+const AdminSelectProductCategory = defineAsyncComponent(() =>
+  import('@/modules/admin/product-categories/components/admin-select-product-category.vue'))
 
 const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
 
@@ -298,7 +300,7 @@ function triggerVideoInput() {
 											></video>
 											<button
 												type="button"
-                        class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
 												@click="previewVideo = null; setFieldValue('video', undefined)"
 											>
 												<X class="size-4" />

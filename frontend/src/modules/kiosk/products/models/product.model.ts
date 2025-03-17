@@ -29,13 +29,12 @@ export interface ProductDetailsDTO extends ProductDTO {
 
 export interface ProductTotalNutrition {
 	ingredients: string[]
-  allergenIngredients: string[]
-  calories: number
-  proteins: number
-  fats: number
-  carbs: number
+	allergenIngredients: string[]
+	calories: number
+	proteins: number
+	fats: number
+	carbs: number
 }
-
 
 export interface BaseProductSizeDTO {
 	name: string
@@ -93,10 +92,10 @@ export interface UpdateProductDTO {
 	name?: string
 	description?: string
 	categoryId?: number
-  image?: File
-  video?: File
-  deleteImage: boolean
-  deleteVideo: boolean
+	image?: File
+	video?: File
+	deleteImage: boolean
+	deleteVideo: boolean
 }
 
 export interface UpdateProductSizeDTO {
