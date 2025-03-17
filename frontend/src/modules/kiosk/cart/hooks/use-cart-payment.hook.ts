@@ -91,7 +91,6 @@ export function useCartPayment(order: OrderDTO | null, onProceed: () => void, on
 				order,
 				transactionDTO: transaction,
 			})
-			console.log('Here 4')
 		} catch (err) {
 			console.error('Payment wait failed:', err)
 			toast({
