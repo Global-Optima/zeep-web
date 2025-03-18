@@ -38,21 +38,41 @@ const ORDERS_PER_PAGE = 6
 const AUTO_PAGE_INTERVAL = 6000 // 6 seconds
 
 // WebSocket Hook Integration
-const { filteredOrders } = useOrderEventsService({timeGapMinutes: 3})
+const { filteredOrders } = useOrderEventsService({ timeGapMinutes: 15 })
 
-// State for "In Progress" and "Ready" orders
+// Create a reactive currentTime value that updates every second,
+// so that our computed filtering will refresh as time passes.
+const currentTime = ref(Date.now())
+const timeInterval = setInterval(() => {
+	currentTime.value = Date.now()
+}, 1000)
+
+// Clean up the interval when the component is unmounted.
+onBeforeUnmount(() => {
+	clearInterval(timeInterval)
+})
+
+// Orders that are "In Progress" are filtered by status.
 const inProgressOrders = computed(() =>
 	filteredOrders.value.filter(order => order.status === OrderStatus.PREPARING)
 )
+
+// For "Ready" orders, we only show orders that are completed
+// and whose completedAt is within the last 15 minutes.
 const readyOrders = computed(() =>
-	filteredOrders.value.filter(order => order.status === OrderStatus.COMPLETED)
+	filteredOrders.value.filter(order => {
+		if (order.status !== OrderStatus.COMPLETED) return false
+		if (!order.completedAt) return true // if no completedAt date, include by default
+		const completedAtTime = new Date(order.completedAt).getTime()
+		return (currentTime.value - completedAtTime) < 15 * 60 * 1000
+	})
 )
 
 // Pagination State
 const inProgressPageIndex = ref(0)
 const readyPageIndex = ref(0)
 
-// Pagination Logic
+// Calculate total pages for each order section
 const totalInProgressPages = computed(() =>
 	Math.ceil(inProgressOrders.value.length / ORDERS_PER_PAGE)
 )
@@ -60,7 +80,7 @@ const totalReadyPages = computed(() =>
 	Math.ceil(readyOrders.value.length / ORDERS_PER_PAGE)
 )
 
-// Methods to update pages
+// Methods to update the current page indices
 const setInProgressPage = (page: number) => {
 	inProgressPageIndex.value = page
 }
@@ -68,11 +88,11 @@ const setReadyPage = (page: number) => {
 	readyPageIndex.value = page
 }
 
-// Automatically change pages every 6 seconds
-let interval: ReturnType<typeof setInterval>
+// Automatically rotate pages every 6 seconds
+let autoRotateInterval: ReturnType<typeof setInterval>
 
 const rotatePages = () => {
-	interval = setInterval(() => {
+	autoRotateInterval = setInterval(() => {
 		inProgressPageIndex.value =
 			(inProgressPageIndex.value + 1) % totalInProgressPages.value
 		readyPageIndex.value =
@@ -85,6 +105,6 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-	clearInterval(interval)
+	clearInterval(autoRotateInterval)
 })
 </script>

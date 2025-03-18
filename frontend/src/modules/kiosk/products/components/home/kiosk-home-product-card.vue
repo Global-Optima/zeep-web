@@ -8,7 +8,7 @@
 			<LazyImage
 				:src="product.imageUrl"
 				alt="Изображение товара"
-				class="rounded-lg w-full h-44 sm:h-60 object-contain"
+				class="rounded-xl w-full h-44 sm:h-60 object-contain"
 			/>
 
 			<h3
