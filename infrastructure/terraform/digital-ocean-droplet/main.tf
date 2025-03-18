@@ -149,9 +149,9 @@ resource "digitalocean_record" "www" {
 }
 
 resource "digitalocean_certificate" "zeep_certificate" {
-  name    = "zeep-ssl-cert"
+  name    = var.certificate_name
   type    = "lets_encrypt"
-  domains = ["zeep.kz", "www.zeep.kz"]
+  domains = var.domains
 }
 
 ###############################################################################

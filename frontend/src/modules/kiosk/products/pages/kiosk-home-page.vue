@@ -104,7 +104,7 @@ const {
       isAvailable: true,
       pageSize: 100
     }),
-  enabled: computed(() => Boolean(selectedCategoryId.value))
+  enabled: computed(() => Boolean(selectedCategoryId.value) || Boolean(searchTerm.value))
 })
 
 

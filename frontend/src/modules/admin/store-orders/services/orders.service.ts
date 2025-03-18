@@ -11,6 +11,7 @@ import type {
 	OrdersExportFilterQuery,
 	OrdersFilterQuery,
 	OrderStatusesCountDTO,
+	OrdersTimeZoneFilter,
 	SuborderDTO,
 	TransactionDTO,
 } from '../models/orders.models'
@@ -26,6 +27,18 @@ class OrderService {
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch orders:', error)
+			throw error
+		}
+	}
+
+	async getBaristaOrders(filter?: OrdersTimeZoneFilter) {
+		try {
+			const response = await apiClient.get<OrderDTO[]>('/orders', {
+				params: buildRequestFilter(filter),
+			})
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch barista orders:', error)
 			throw error
 		}
 	}

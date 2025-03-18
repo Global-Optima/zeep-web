@@ -117,7 +117,7 @@ type OrderDetailsDTO struct {
 	Status          data.OrderStatus         `json:"status"`
 	Total           float64                  `json:"total"`
 	Suborders       []SuborderDetailsDTO     `json:"suborders"`
-	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"` // Optional
+	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"`
 	CompletedAt     *time.Time               `json:"completedAt,omitempty"`
 }
 

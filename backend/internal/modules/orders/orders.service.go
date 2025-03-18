@@ -150,28 +150,25 @@ func ExpandSuborders(suborders []types.CreateSubOrderDTO) []types.CreateSubOrder
 
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
 	censorValidator := censor.GetCensorValidator()
+
 	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
 		s.logger.Error(err)
-		return nil, err
+		return nil, types.ErrInvalidCustomerNameCensor
 	}
 
 	if len(createOrderDTO.Suborders) == 0 {
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
-	// Calculate how much is already frozen by existing PENDING/PREPARING orders
 	frozenMap, err := s.orderRepo.CalculateFrozenStock(storeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
 	}
 
-	// Attempt to create + freeze new suborders usage
-	// If we can't fulfill them all, it returns an error early
 	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenMap); err != nil {
 		return nil, err
 	}
 
-	// If we get here, we have effectively 'reserved' usage in frozenMap
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
 	validations, err := s.StockAndPriceValidationResults(
 		storeID,
@@ -841,7 +838,7 @@ func (s *orderService) SuccessOrderPayment(orderID uint, dto *types.TransactionD
 	paymentTransaction := types.ToTransactionModel(dto, orderID, data.TransactionTypePayment)
 	order, err := s.orderRepo.HandlePaymentSuccess(orderID, paymentTransaction)
 	if err != nil {
-		s.logger.Errorf("failed to handle the order %d success", err)
+		s.logger.Errorf("failed to handle the order %d success: %v", orderID, err)
 		return err
 	}
 
