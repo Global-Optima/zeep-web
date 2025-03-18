@@ -40,6 +40,7 @@ import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
 import {toast} from "@/core/components/ui/toast";
+import Checkbox from "../../../../../core/components/ui/checkbox/Checkbox.vue";
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
@@ -357,11 +358,11 @@ function selectUnit(unit: UnitDTO) {
 								<TableCell>{{ additive.categoryName }}</TableCell>
 								<TableCell>{{ additive.size}} {{additive.unitName}}</TableCell>
 								<TableCell class="text-center">
-									<Input
+                  <Checkbox
 										type="checkbox"
-										class="shadow-none h-5"
+                    class="size-6 text-left"
 										:checked="additive.isDefault"
-										@change="toggleDefault(index)"
+                    @update:checked="v => additive.isDefault = v"
 									/>
 								</TableCell>
 								<TableCell class="text-center">

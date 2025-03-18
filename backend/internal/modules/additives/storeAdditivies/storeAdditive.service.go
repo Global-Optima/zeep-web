@@ -84,15 +84,9 @@ func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, 
 		return nil, wrappedErr
 	}
 
-	if len(categories) == 0 {
-		wrappedErr := utils.WrapError("failed to retrieve store additives", types.ErrStoreAdditiveCategoriesNotFound)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	var categoryDTOs []types.StoreAdditiveCategoryDTO
-	for _, category := range categories {
-		categoryDTOs = append(categoryDTOs, *types.ConvertToStoreAdditiveCategoryDTO(&category))
+	categoryDTOs := make([]types.StoreAdditiveCategoryDTO, len(categories))
+	for i, category := range categories {
+		categoryDTOs[i] = *types.ConvertToStoreAdditiveCategoryDTO(&category)
 	}
 
 	return categoryDTOs, nil
