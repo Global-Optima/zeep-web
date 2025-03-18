@@ -1,6 +1,6 @@
 <template>
 	<div
-		v-if="!isStoreSyncPending && !isStoreSyncResponse?.isSync"
+		v-if=" !isStoreSyncPending && isStoreSyncResponse && !isStoreSyncResponse.isSync"
 		class="mb-4"
 	>
 		<AdminStoresSyncCard />
@@ -63,9 +63,10 @@ const { data: storeProductsResponse, isLoading } = useQuery({
   enabled: computed(() => Boolean(filter.value.storeId))
 })
 
-const { data: isStoreSyncResponse, isPending: isStoreSyncPending } = useQuery({
+const { data: isStoreSyncResponse, isLoading: isStoreSyncPending } = useQuery({
   queryKey: ['admin-store-is-sync'],
   queryFn: () => storeSyncService.isStoreSynchronized(),
+  enabled: computed(() => Boolean(filter.value.storeId))
 })
 </script>
 
