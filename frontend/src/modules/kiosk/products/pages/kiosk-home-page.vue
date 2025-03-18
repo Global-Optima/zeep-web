@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, useTemplateRef } from 'vue'
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query'
 import { useDebounceFn } from '@vueuse/core'
 import { useInfiniteScroll } from '@vueuse/core'
@@ -74,7 +74,7 @@ const skeletonsArray: number[] = new Array(9).fill(5)
    Query Keys
 -----------------------------*/
 const productsQueryKey = computed(() => [
-  'products',
+  'kiosk-products',
   { categoryId: selectedCategoryId.value, searchTerm: searchTerm.value },
 ])
 
@@ -131,16 +131,7 @@ const flattenedProducts = computed(() => {
 /* --------------------------
    Infinite Scroll Setup
 -----------------------------*/
-
-// Flag to check if initial products have been loaded
-const initialLoaded = ref(false)
-watch(isProductsPending, (pending) => {
-  if (!pending) {
-    initialLoaded.value = true
-  }
-})
-
-const scrollContainer = ref<HTMLElement | null>(null)
+const scrollContainer = useTemplateRef<HTMLElement | null>('scrollContainer')
 useInfiniteScroll(
   scrollContainer,
   () => {
