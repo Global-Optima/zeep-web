@@ -3,7 +3,6 @@ package orders
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -168,52 +167,41 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
 
-	// Convert start and end of today **back to UTC** for database querying
+	// Convert start and end of today to UTC for database querying
 	startOfTodayUTC := startOfToday.UTC()
 	endOfTodayUTC := endOfToday.UTC()
 
-	// Base query for all orders
-	baseQuery := r.db.
+	// Base query to fetch orders for the given store within today's time range
+	query := r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Where("store_id = ?", *filter.StoreID).
 		Where("status NOT IN (?)", []data.OrderStatus{data.OrderStatusWaitingForPayment}).
-		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC)
+		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
+		Order("created_at ASC")
 
-	// If TimeGapMinutes is specified, we need to handle completed and non-completed orders differently
+	// If TimeGapMinutes is specified, apply different filtering logic for completed vs in-progress orders
 	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
-		// Calculate cutoff time based on TimeGapMinutes
+		// Calculate cutoff time for completed orders
 		cutoffTime := now.Add(time.Duration(-int(*filter.TimeGapMinutes)) * time.Minute)
 		cutoffTimeUTC := cutoffTime.UTC()
 
-		// Query for non-completed orders (these should be included regardless of time)
-		var nonCompletedOrders []data.Order
-		nonCompletedQuery := baseQuery.Where("status NOT IN (?)", []data.OrderStatus{data.OrderStatusCompleted, data.OrderStatusCancelled})
-		if err := nonCompletedQuery.Find(&nonCompletedOrders).Error; err != nil {
-			return nil, fmt.Errorf("failed to fetch non-completed orders: %w", err)
-		}
+		// We want to show:
+		// 1. In-progress orders (status is not COMPLETED, DELIVERED, or CANCELLED)
+		// 2. Completed orders that were completed after the cutoff time
+		query = query.Where(
+			"(status NOT IN (?, ?, ?) OR (status IN (?, ?, ?) AND completed_at >= ?))",
+			data.OrderStatusCompleted, data.OrderStatusDelivered, data.OrderStatusCancelled,
+			data.OrderStatusCompleted, data.OrderStatusDelivered, data.OrderStatusCancelled,
+			cutoffTimeUTC,
+		)
+	}
 
-		// Query for completed orders that fall within the time gap
-		var completedOrders []data.Order
-		completedQuery := baseQuery.Where("status = ?", data.OrderStatusCompleted).
-			Where("(completed_at IS NULL OR completed_at > ?)", cutoffTimeUTC)
-		if err := completedQuery.Find(&completedOrders).Error; err != nil {
-			return nil, fmt.Errorf("failed to fetch completed orders: %w", err)
-		}
-
-		// Combine the results
-		orders = append(nonCompletedOrders, completedOrders...)
-
-		// Sort the combined results by created_at
-		sort.Slice(orders, func(i, j int) bool {
-			return orders[i].CreatedAt.Before(orders[j].CreatedAt)
-		})
-	} else {
-		// If no TimeGapMinutes specified, fetch all orders as before
-		if err := baseQuery.Order("created_at ASC").Find(&orders).Error; err != nil {
-			return nil, fmt.Errorf("failed to fetch barista orders: %w", err)
-		}
+	// Execute the query
+	err = query.Find(&orders).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch barista orders: %w", err)
 	}
 
 	return orders, nil
