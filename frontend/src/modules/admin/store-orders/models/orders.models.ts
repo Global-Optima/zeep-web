@@ -63,6 +63,7 @@ export interface OrderDTO {
 	subOrdersQuantity: number
 	displayNumber: number
 	subOrders: SuborderDTO[]
+	completedAt?: Date
 }
 
 export interface SuborderDTO {
@@ -109,6 +110,8 @@ export interface OrderDetailsDTO {
 	total: number
 	suborders: SuborderDetailsDTO[]
 	deliveryAddress?: OrderDeliveryAddressDTO
+	completedAt?: Date
+	displayNumber: number
 }
 
 export interface SuborderDetailsDTO {
@@ -117,6 +120,7 @@ export interface SuborderDetailsDTO {
 	status: string
 	storeProductSize: OrderProductSizeDetailsDTO
 	storeAdditives: OrderAdditiveDetailsDTO[]
+	completedAt?: Date
 }
 
 export interface OrderProductSizeDetailsDTO {

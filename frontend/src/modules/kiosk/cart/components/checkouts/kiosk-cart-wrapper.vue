@@ -1,176 +1,177 @@
 <script setup lang="ts">
-import { useToast } from '@/core/components/ui/toast'
+import { Button } from '@/core/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
+import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
-import type { LocalizedError } from '@/core/models/errors.model'
-import type { CreateOrderDTO, OrderDTO } from '@/modules/admin/store-orders/models/orders.models'
+import { formatPrice } from '@/core/utils/price.utils'
+import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
+import type { CreateOrderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
-import { CheckoutStep, PaymentMethod } from '@/modules/kiosk/cart/models/kiosk-cart.models'
-import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
+import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
+import { KIOSK_CUSTOMER_ADJECTIVES, KIOSK_CUSTOMER_NOUNS } from '@/modules/kiosk/cart/components/checkouts/customer-names-dictionary'
+import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
+import KioskCartUpdateItem from '@/modules/kiosk/cart/components/kiosk-cart-update-item.vue'
+import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
 import { useMutation } from '@tanstack/vue-query'
-import type { AxiosError } from 'axios'
-import { defineAsyncComponent, onMounted, reactive } from 'vue'
+import { ShoppingBasket, Trash } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Lazy-loaded Step Components
-const CheckoutCustomer = defineAsyncComponent(() =>
-  import('@/modules/kiosk/cart/components/checkouts/kiosk-cart-customer.vue')
-);
-const CheckoutPayment = defineAsyncComponent(() =>
-  import('@/modules/kiosk/cart/components/checkouts/kiosk-cart-payment.vue')
-);
-const CheckoutConfirmation = defineAsyncComponent(() =>
-  import('@/modules/kiosk/cart/components/checkouts/kiosk-cart-success.vue')
-);
+// Cart Store
+const cartStore = useCartStore()
+const router = useRouter()
 
-const stepState = reactive<{
-  currentStep: CheckoutStep
-  customerName: string
-  selectedPayment: PaymentMethod | null
-  order: OrderDTO | null
-  qrCodeUrl: string
-}>({
-  currentStep: parseStep(sessionStorage.getItem('currentStep'), CheckoutStep.CUSTOMER),
-  customerName: sessionStorage.getItem('customerName') ?? '',
-  selectedPayment: parsePaymentMethod(sessionStorage.getItem('selectedPayment')),
-  order: parseJSON<OrderDTO | null>(sessionStorage.getItem('order'), null),
-  qrCodeUrl: '',
+// State
+const customerName = ref('')
+const selectedCartItem = ref<CartItem | null>(null)
+const showValidationError = ref(false)
+const createOrderMutation = useMutation({
+  mutationFn: (orderDTO: CreateOrderDTO) => ordersService.createOrder(orderDTO)
 })
 
-const cartStore = useCartStore();
-const { toast } = useToast();
-const router = useRouter();
+// Computed
+const cartItemsArray = computed(() => Object.values(cartStore.cartItems))
+const totalPrice = computed(() => cartStore.totalPrice)
+const showCartItems = computed(() => cartStore.totalItems > 0)
+const errorMessage = computed(() => {
+  if (!showValidationError.value) return ''
+  if (!customerName.value.trim()) return 'Пожалуйста, введите ваше имя.'
+  if (customerName.value.length < 3) return 'Имя должно содержать минимум 3 символа.'
+  return ''
+})
 
-function parseJSON<T>(jsonString: string | null, fallback: T): T {
-  if (!jsonString) return fallback
-  try {
-    return JSON.parse(jsonString) as T
-  } catch {
-    return fallback
-  }
+// Handlers
+const generateUniqueName = () => {
+  const adj = KIOSK_CUSTOMER_ADJECTIVES[Math.floor(Math.random() * KIOSK_CUSTOMER_ADJECTIVES.length)]
+  const noun = KIOSK_CUSTOMER_NOUNS[Math.floor(Math.random() * KIOSK_CUSTOMER_NOUNS.length)]
+  customerName.value = `${adj} ${noun}`
 }
 
-function parseStep(value: string | null, fallback: CheckoutStep): CheckoutStep {
-  // If there's no stored value, return the fallback
-  if (!value) return fallback
+const handleProceed = async () => {
+  showValidationError.value = true
+  if (errorMessage.value) return
 
-  // If the stored step is a valid enum key, cast it
-  // (Adjust if your enum is numeric, or do more robust checking)
-  if (Object.values(CheckoutStep).includes(value as CheckoutStep)) {
-    return value as CheckoutStep
+  const orderDTO: CreateOrderDTO = {
+    customerName: customerName.value,
+    subOrders: cartItemsArray.value.map(item => ({
+      storeProductSizeId: item.size.id,
+      quantity: item.quantity,
+      storeAdditivesIds: item.additives.map(a => a.id)
+    }))
   }
-  return fallback
+
+  const order = await createOrderMutation.mutateAsync(orderDTO)
+  cartStore.toggleModal()
+  router.push({ name: getRouteName("KIOSK_CART_PAYMENT"), params: { orderId: order.id } })
 }
 
-function parsePaymentMethod(value: string | null): PaymentMethod | null {
-  if (!value) return null
-  if (Object.values(PaymentMethod).includes(value as PaymentMethod)) {
-    return value as PaymentMethod
+const openUpdateDialog = (item: CartItem) => (selectedCartItem.value = item)
+const closeUpdateDialog = () => (selectedCartItem.value = null)
+const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditiveCategoryItemDTO[]) => {
+  if (selectedCartItem.value) {
+    cartStore.updateCartItem(selectedCartItem.value.key, { size, additives })
+    closeUpdateDialog()
   }
-  return null
-}
-
-
-// Create Order Mutation
-const createOrderMutation = useMutation<OrderDTO, AxiosError<LocalizedError>, CreateOrderDTO>({
-  mutationFn: (orderDTO: CreateOrderDTO) => ordersService.createOrder(orderDTO),
-  onSuccess: (order) => {
-    stepState.order = order;
-    sessionStorage.setItem('order', JSON.stringify(order));
-    stepState.currentStep = CheckoutStep.PAYMENT;
-    sessionStorage.setItem('currentStep', CheckoutStep.PAYMENT);
-  },
-  onError: (error) => {
-    toast({
-      title: 'Ошибка',
-      description: error.response?.data.message.ru ?? 'Ошибка при создании заказа',
-    });
-  },
-});
-
-// If there's an existing orderId in sessionStorage, jump to Payment on reload
-onMounted(() => {
-  if (stepState.order) {
-    stepState.currentStep = CheckoutStep.PAYMENT;
-  }
-});
-
-// Step Navigation
-const proceedToNextStep = async () => {
-  if (stepState.currentStep === CheckoutStep.CUSTOMER) {
-    // Build CreateOrderDTO from cart
-    const orderDTO: CreateOrderDTO = {
-      customerName: stepState.customerName,
-      subOrders: Object.values(cartStore.cartItems).map(item => ({
-        storeProductSizeId: item.size.id,
-        quantity: item.quantity,
-        storeAdditivesIds: item.additives.map(add => add.id),
-      })),
-    };
-    await createOrderMutation.mutateAsync(orderDTO);
-
-    // If success, onSuccess sets stepState to 'payment'
-  }
-};
-
-// Called when Payment is done or user closes
-const resetCheckoutFlow = () => {
-  stepState.currentStep = CheckoutStep.CUSTOMER;
-  sessionStorage.clear();
-  cartStore.clearCart();
-  cartStore.toggleModal();
-  router.push({ name: getRouteName("KIOSK_HOME") });
-};
-
-const closeCheckoutModal = () => {
-  stepState.currentStep = CheckoutStep.CUSTOMER;
-  sessionStorage.clear();
-  cartStore.toggleModal();
-}
-
-// If you want to proceed from Payment → Confirmation instead of closing
-const onPaymentSuccess = () => {
-  // Example: show a Confirmation step with a QR code
-  stepState.currentStep = CheckoutStep.CONFIRMATION;
-  sessionStorage.setItem('currentStep', CheckoutStep.CONFIRMATION);
-
-  // For demonstration, we set a sample QR code
-  stepState.qrCodeUrl = 'https://cabinet.kofd.kz/consumer';
-};
-
-const updateSelectedPayment = (val: PaymentMethod | null) => {
-  stepState.selectedPayment = val;
-  sessionStorage.setItem('selectedPayment', val || '');
 }
 </script>
 
 <template>
-	<!-- Step: Customer -->
-	<CheckoutCustomer
-		v-if="stepState.currentStep === 'customer'"
-		:open="true"
-		v-model:customer-name="stepState.customerName"
-		@toggle="closeCheckoutModal"
-		@next="proceedToNextStep"
-	/>
+	<Dialog
+		:open="showCartItems"
+		@update:open="cartStore.toggleModal"
+	>
+		<DialogContent
+			v-if="!showCartItems"
+			:include-close-button="false"
+			class="p-6 sm:rounded-[36px]"
+		>
+			<div class="flex flex-col items-center space-y-6 h-full">
+				<ShoppingBasket class="size-16 text-gray-400" />
+				<h2 class="font-semibold text-slate-800 text-3xl">Ваша корзина пуста</h2>
+				<p class="text-slate-500 text-xl">
+					Добавьте товары из меню, чтобы начать оформление заказа
+				</p>
+				<Button
+					class="!mt-8 px-6 h-14 text-xl"
+					@click="router.push({ name: getRouteName('KIOSK_HOME') })"
+				>
+					Вернуться к меню
+				</Button>
+			</div>
+		</DialogContent>
 
-	<!-- Step: Payment -->
-	<CheckoutPayment
-		v-else-if="stepState.currentStep === 'payment'"
-		:isOpen="true"
-		:selectedPayment="stepState.selectedPayment as PaymentMethod ?? null"
-		:order="stepState?.order"
-		@back="stepState.currentStep = CheckoutStep.CUSTOMER"
-		@close="closeCheckoutModal"
-		@update:selectedPayment="updateSelectedPayment"
-		@proceed="onPaymentSuccess"
-	/>
+		<DialogContent
+			v-else
+			:include-close-button="false"
+			class="p-4 sm:rounded-[36px] max-w-2xl"
+		>
+			<DialogHeader class="p-6 pb-0">
+				<div class="flex justify-between items-start gap-4">
+					<DialogTitle class="text-4xl">Детали заказа</DialogTitle>
+					<Button
+						variant="ghost"
+						size="icon"
+						@click="cartStore.clearCart"
+					>
+						<Trash class="size-9 text-red-500" />
+					</Button>
+				</div>
+			</DialogHeader>
 
-	<!-- Step: Confirmation -->
-	<CheckoutConfirmation
-		v-else-if="stepState.currentStep === 'confirmation'"
-		:isOpen="true"
-		:qrCodeUrl="stepState.qrCodeUrl"
-		@close="resetCheckoutFlow"
-		@proceed="resetCheckoutFlow"
-	/>
+			<div class="px-6 py-4 overflow-y-auto no-scrollbar">
+				<div class="flex flex-col gap-6 h-[50dvh]">
+					<div
+						v-for="item in cartItemsArray"
+						:key="item.key"
+						@click="openUpdateDialog(item)"
+					>
+						<KioskCartItem :item="item" />
+					</div>
+					<KioskCartUpdateItem
+						v-if="selectedCartItem"
+						:is-open="!!selectedCartItem"
+						:cart-item="selectedCartItem"
+						@close="closeUpdateDialog"
+						@update="handleUpdate"
+					/>
+				</div>
+			</div>
+
+			<DialogFooter class="block px-6 pb-6 w-full">
+				<div>
+					<Input
+						v-model="customerName"
+						class="bg-slate-100 px-6 py-8 rounded-xl w-full text-xl"
+						placeholder="Введите ваше имя"
+					/>
+					<p
+						v-if="errorMessage"
+						class="mt-2 px-5 text-red-500 text-lg"
+					>
+						{{ errorMessage }}
+					</p>
+					<div class="flex justify-center mt-4">
+						<Button
+							variant="ghost"
+							class="text-blue-500 text-xl"
+							@click="generateUniqueName"
+						>
+							Сгенерировать имя
+						</Button>
+					</div>
+				</div>
+
+				<div class="flex justify-between items-center gap-4 mt-6">
+					<p class="font-semibold text-primary text-4xl">{{ formatPrice(totalPrice) }}</p>
+					<Button
+						size="lg"
+						class="py-6 text-xl"
+						@click="handleProceed"
+					>
+						Оплатить
+					</Button>
+				</div>
+			</DialogFooter>
+		</DialogContent>
+	</Dialog>
 </template>

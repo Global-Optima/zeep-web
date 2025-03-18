@@ -134,7 +134,7 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 		suborders[i] = SuborderDetailsDTO{
 			ID:     sub.ID,
 			Price:  sub.Price,
-			Status: string(sub.Status),
+			Status: sub.Status,
 			StoreProductSize: OrderProductSizeDetailsDTO{
 				ID:         sub.StoreProductSize.ID,
 				Name:       sub.StoreProductSize.ProductSize.Name,
@@ -169,11 +169,12 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 	return &OrderDetailsDTO{
 		ID:              order.ID,
 		CustomerName:    customerName, // Optional
-		Status:          string(order.Status),
+		Status:          order.Status,
 		Total:           order.Total,
 		Suborders:       suborders,
 		DeliveryAddress: deliveryAddress, // Optional
 		CompletedAt:     order.CompletedAt,
+		DisplayNumber:   order.DisplayNumber,
 	}
 }
 

@@ -195,7 +195,7 @@ export class KaspiService {
 			const checkStatus = async () => {
 				try {
 					const response = await this.getTransactionStatus(processId)
-					console.log('Polling response:', response.data) 
+					console.log('Polling response:', response.data)
 
 					if (response.data.status === 'success') {
 						if (!response.data.chequeInfo) {
