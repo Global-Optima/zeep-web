@@ -19,7 +19,7 @@ type ProductRepository interface {
 	CreateProduct(product *data.Product) (uint, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
 	GetProductByID(productID uint) (*data.Product, error)
-	UpdateProduct(id uint, product *data.Product) error
+	SaveProduct(product *data.Product) error
 	DeleteProduct(productID uint) (*data.Product, error)
 
 	CreateProductSize(createModels *data.ProductSize) (uint, error)
@@ -351,7 +351,7 @@ func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, i
 	}
 
 	if len(toDeleteIDs) > 0 {
-		if err := tx.Where("product_size_id = ? AND ingredient_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
+		if err := tx.Unscoped().Where("product_size_id = ? AND ingredient_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
 			return fmt.Errorf("failed to delete old ingredients: %w", err)
 		}
 	}
@@ -365,15 +365,13 @@ func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, i
 	return nil
 }
 
-func (r *productRepository) UpdateProduct(productID uint, product *data.Product) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&data.Product{}).Where("id = ?", productID).Updates(product).Error
-		if err != nil {
-			return err
-		}
+func (r *productRepository) SaveProduct(product *data.Product) error {
+	err := r.db.Save(product).Error
+	if err != nil {
+		return err
+	}
 
-		return nil
-	})
+	return nil
 }
 
 func (r *productRepository) DeleteProduct(productID uint) (*data.Product, error) {

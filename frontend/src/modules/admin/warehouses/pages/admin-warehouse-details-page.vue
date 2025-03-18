@@ -102,7 +102,7 @@ function handleUpdate(data: UpdateWarehouseDTO) {
 		})
 		return router.back()
 	}
-  
+
   console.log("DTOOO", data)
 
 	updateMutation.mutate({ id: Number(warehouseId), dto: data })

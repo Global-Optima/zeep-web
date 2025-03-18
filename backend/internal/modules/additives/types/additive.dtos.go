@@ -106,6 +106,7 @@ type UpdateAdditiveDTO struct {
 	MachineId          *string                 `form:"machineId" binding:"omitempty"`
 	Ingredients        []SelectedIngredientDTO `json:"-"`
 	Image              *multipart.FileHeader
+	DeleteImage        bool `form:"deleteImage"`
 }
 
 type AdditiveCategoryResponseDTO struct {

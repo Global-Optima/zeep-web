@@ -12,10 +12,12 @@ import { adminEmployeeService } from '@/modules/admin/employees/admins/services/
 import type { CreateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
+import {type AxiosLocalizedError, useAxiosLocaleToast} from "@/core/hooks/use-axios-locale-toast.hooks";
 
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+const { toastLocalizedError } = useAxiosLocaleToast()
 
 const createMutation = useMutation({
 	mutationFn: ({ dto }: { dto: CreateEmployeeDTO }) =>
@@ -34,13 +36,9 @@ const createMutation = useMutation({
 			description: 'Новый сотрудник успешно зарегистрирован в системе.',
 		})
 	},
-	onError: () => {
-		toast({
-			title: 'Ошибка при создании',
-			description: 'Не удалось создать нового сотрудника. Попробуйте еще раз.',
-			variant: 'destructive',
-		})
-	},
+  onError: (error: AxiosLocalizedError) => {
+    toastLocalizedError(error, "Произошла ошибка при обновлении материалов запроса на склад.")
+  }
 })
 
 function handleCreate(dto: CreateEmployeeDTO) {

@@ -233,8 +233,8 @@ INSERT INTO
     products (
         name,
         description,
-        image_url,
-        video_url,
+        image_key,
+        video_key,
         category_id
     )
 VALUES
@@ -395,7 +395,7 @@ VALUES
 
 -- Insert into RecipeStep
 INSERT INTO
-    recipe_steps (product_id, step, name, description, image_url)
+    recipe_steps (product_id, step, name, description, image_key)
 VALUES
     (
         1,
@@ -729,7 +729,7 @@ INSERT INTO
         size,
         unit_id,
         additive_category_id,
-        image_url,
+        image_key,
         machine_id
     )
 VALUES
@@ -1218,8 +1218,8 @@ WHERE
 INSERT INTO products (
     name,
     description,
-    image_url,
-    video_url,
+    image_key,
+    video_key,
     category_id
 )
 VALUES
