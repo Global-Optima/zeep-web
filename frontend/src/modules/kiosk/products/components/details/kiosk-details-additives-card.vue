@@ -4,7 +4,7 @@
 		:class="[
       'text-center bg-white rounded-[32px] p-5 flex items-start border-2 gap-4 md:gap-8',
       isSelected ? 'bg-primary border-primary' : 'border-transparent',
-      isDefault  ? 'cursor-not-allowed opacity-60 !border-primary' : 'cursor-pointer',
+      isDefault  ? 'cursor-not-allowed opacity-70 !border-primary' : 'cursor-pointer',
 
     ]"
 		data-testid="additive-card"
@@ -31,7 +31,14 @@
         ]"
 					data-testid="additive-price"
 				>
-					{{ isDefault ? "Входит в состав" : formatPrice(additive.storePrice) }}
+					<span
+						v-if="isDefault"
+						class="text-xl"
+					>
+						Входит в состав
+					</span>
+
+					<span v-else>{{formatPrice(additive.storePrice)}}</span>
 				</p>
 				<button
 					class="relative flex-shrink-0 rounded-full focus:outline-none size-8"

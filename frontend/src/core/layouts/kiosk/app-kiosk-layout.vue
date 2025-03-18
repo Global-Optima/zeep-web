@@ -45,7 +45,7 @@ function handleInactivity() {
 useInactivityTimer(INACTIVITY_MS, handleInactivity, true)
 
 // Some routes should NOT show the cart
-const omitShowCartPages: RouteKey[] = ['KIOSK_LANDING', 'KIOSK_CHECKLIST']
+const omitShowCartPages: RouteKey[] = ['KIOSK_LANDING', 'KIOSK_CHECKLIST', "KIOSK_CART_PAYMENT", "KIOSK_CART_PAYMENT_SUCCESS"]
 
 const showCart = computed(() => {
   if (cartStore.isEmpty) return false

@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	Response500StoreStockIsInUse  = localization.NewResponseKey(500, data.StoreStockComponent, "in-use")
 	Response500StoreStock         = localization.NewResponseKey(500, data.StoreStockComponent)
 	Response400StoreStock         = localization.NewResponseKey(400, data.StoreStockComponent)
 	Response200StoreStockUpdate   = localization.NewResponseKey(200, data.StoreStockComponent, data.UpdateOperation.ToString())

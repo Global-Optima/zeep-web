@@ -64,7 +64,6 @@ function selectAdditive(additive: AdditiveDTO) {
   // Check if the additive is already added
   const exists = additivesList.value.some((a) => a.id === additive.id)
   if (exists) {
-    // Optional: Notify the user (e.g., toast) about the duplicate entry
     openAdditiveDialog.value = false
     return
   }
@@ -94,7 +93,7 @@ function removeAdditive(index: number) {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="font-semibold text-xl tracking-tight shrink-0">Добавить добавки в кафе</h1>
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -168,7 +167,7 @@ function removeAdditive(index: number) {
 							<TableRow>
 								<TableCell
 									colspan="4"
-									class="text-center text-gray-500"
+									class="text-gray-500 text-center"
 								>
 									Нет добавленных добавок
 								</TableCell>
@@ -180,7 +179,7 @@ function removeAdditive(index: number) {
 		</Card>
 
 		<!-- Footer (mobile only) -->
-		<div class="flex justify-center items-center gap-2 md:hidden mt-4">
+		<div class="md:hidden flex justify-center items-center gap-2 mt-4">
 			<Button
 				variant="outline"
 				type="button"

@@ -9,18 +9,18 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
-import type { LocalizedError } from '@/core/models/errors.model'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import AdminStockRequestsUpdateForm from '@/modules/admin/stock-requests/components/update/admin-stock-requests-update-form.vue'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import { stockRequestsService } from '@/modules/admin/stock-requests/services/stock-requests.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import type { AxiosError } from 'axios'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+const { toastLocalizedError } = useAxiosLocaleToast()
 
 const route = useRoute()
 const stockRequestId = route.params.id as string
@@ -49,12 +49,8 @@ const updateMutation = useMutation({
 		})
 		router.back()
 	},
-  onError: (error: AxiosError<LocalizedError>) => {
-    toast({
-      title: "Ошибка",
-      description: error.response?.data.message.ru ?? "Произошла ошибка при обновлении материалов запроса на склад." ,
-      variant: 'destructive',
-    })
+  onError: (error: AxiosLocalizedError) => {
+    toastLocalizedError(error, "Произошла ошибка при обновлении материалов запроса на склад.")
   }
 })
 

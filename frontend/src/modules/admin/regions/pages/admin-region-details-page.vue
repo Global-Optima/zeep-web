@@ -102,7 +102,7 @@ const updateMutation = useMutation({
 	},
 })
 
-function handleUpdate(data: UpdateAdditiveDTO) {
+function handleUpdate(data: UpdateRegionDTO) {
 	if (isNaN(Number(additiveId))) {
 		toast({
 			title: 'Ошибка',

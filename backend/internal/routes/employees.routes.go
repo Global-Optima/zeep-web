@@ -268,6 +268,7 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.EmployeeRoutes.Group("/orders")
 	{
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateOrder)
+		router.GET("/:orderId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrderDetails)                             // all franchise, stores
 		router.POST("/check-name", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CheckCustomerName)
 		router.POST("/:orderId/payment/fail", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.FailOrderPayment)
 		router.POST("/:orderId/payment/success", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SuccessOrderPayment)
@@ -278,7 +279,6 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.GET("/:orderId/suborders", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetSubOrders)                          // Store manager and barista
 		router.GET("/statuses/count", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStatusesCount)                          // Store manager and barista
 		router.GET("/:orderId/receipt", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GeneratePDFReceipt)                      // Store manager and barista
-		router.GET("/:orderId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrderDetails)                             // all franchise, stores
 
 		router.GET("/export", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.ExportOrders) // franchise and store management
 		router.PUT("/suborders/:subOrderId/status-change", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.ChangeSubOrderStatus)

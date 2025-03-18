@@ -8,7 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 )
 
-type StoreSynchronizerSynchronizerModule struct {
+type StoreSynchronizerModule struct {
 	*common.BaseModule
 	Repo    storeSynchronizers.StoreSynchronizeRepository
 	Service storeSynchronizers.StoreSynchronizeService
@@ -20,7 +20,7 @@ func NewStoreSynchronizerSynchronizerModule(
 	storeRepo stores.StoreRepository,
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
-) *StoreSynchronizerSynchronizerModule {
+) *StoreSynchronizerModule {
 	repo := storeSynchronizers.NewStoreSynchronizeRepository(base.DB)
 	service := storeSynchronizers.NewStoreSynchronizeService(
 		repo,
@@ -31,7 +31,7 @@ func NewStoreSynchronizerSynchronizerModule(
 
 	base.Router.RegisterStoreSynchronizerSynchronizerRoutes(handler)
 
-	return &StoreSynchronizerSynchronizerModule{
+	return &StoreSynchronizerModule{
 		BaseModule: base,
 		Repo:       repo,
 		Service:    service,

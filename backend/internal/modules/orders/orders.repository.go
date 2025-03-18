@@ -167,33 +167,29 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
 
-	// Convert start and end of today **back to UTC** for database querying
+	// Convert start and end of today to UTC for database querying
 	startOfTodayUTC := startOfToday.UTC()
 	endOfTodayUTC := endOfToday.UTC()
 
-	// Apply time gap filter if specified
-	var cutoffTimeUTC time.Time
-	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
-		// Calculate cutoff time based on TimeGapMinutes
-		cutoffTime := now.Add(time.Duration(-int(*filter.TimeGapMinutes)) * time.Minute)
-		cutoffTimeUTC = cutoffTime.UTC()
-
-		// Use the later of startOfTodayUTC or cutoffTimeUTC
-		if cutoffTimeUTC.After(startOfTodayUTC) {
-			startOfTodayUTC = cutoffTimeUTC
-		}
-	}
-
-	// Query orders for the given store within the correct time range
-	err = r.db.
+	// Base query to fetch orders for the given store within today's time range
+	query := r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Where("store_id = ?", *filter.StoreID).
 		Where("status NOT IN (?)", []data.OrderStatus{data.OrderStatusWaitingForPayment}).
 		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
-		Order("created_at ASC").
-		Find(&orders).Error
+		Order("created_at ASC")
+
+	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
+		cutoffTime := now.Add(-time.Duration(*filter.TimeGapMinutes) * time.Minute)
+		cutoffTimeUTC := cutoffTime.UTC()
+
+		query = query.Where("(status != ? OR completed_at >= ?)", data.OrderStatusCompleted, cutoffTimeUTC)
+	}
+
+	// Execute the query
+	err = query.Find(&orders).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch barista orders: %w", err)
 	}
@@ -201,23 +197,26 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 	return orders, nil
 }
 
+// Helper function to get the timezone location
 func getTimeZoneLocation(filter types.OrdersTimeZoneFilter) (*time.Location, error) {
+	// Default to UTC
+	location := time.UTC
+
+	// If timezone location is specified, use that
 	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
-		location, err := time.LoadLocation(*filter.TimeZoneLocation)
+		var err error
+		location, err = time.LoadLocation(*filter.TimeZoneLocation)
 		if err != nil {
 			return nil, fmt.Errorf("invalid timezone location: %w", err)
 		}
-
-		return location, nil
+	} else if filter.TimeZoneOffset != nil {
+		// If timezone offset is specified, create a fixed timezone
+		hours := int(*filter.TimeZoneOffset) / 60
+		minutes := int(*filter.TimeZoneOffset) % 60
+		location = time.FixedZone(fmt.Sprintf("UTC%+d:%02d", hours, minutes), int(*filter.TimeZoneOffset)*60)
 	}
 
-	if filter.TimeZoneOffset != nil {
-		offsetSeconds := int(*filter.TimeZoneOffset) * 60
-		return time.FixedZone("Custom Offset", offsetSeconds), nil
-	}
-
-	// Default to UTC if no timezone is provided
-	return time.UTC, nil
+	return location, nil
 }
 
 func (r *orderRepository) GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error) {

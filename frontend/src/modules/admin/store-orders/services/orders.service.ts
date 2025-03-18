@@ -6,6 +6,7 @@ import { saveAs } from 'file-saver'
 import type {
 	CheckCustomerName,
 	CreateOrderDTO,
+	OrderDetailsDTO,
 	OrderDTO,
 	OrdersExportFilterQuery,
 	OrdersFilterQuery,
@@ -25,6 +26,16 @@ class OrderService {
 			return response.data
 		} catch (error) {
 			console.error('Failed to fetch orders:', error)
+			throw error
+		}
+	}
+
+	async getOrderById(id: number) {
+		try {
+			const response = await apiClient.get<OrderDetailsDTO>(`/orders/${id}`)
+			return response.data
+		} catch (error) {
+			console.error('Failed to fetch order:', error)
 			throw error
 		}
 	}
