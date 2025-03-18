@@ -8,6 +8,7 @@ import * as z from 'zod'
 import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
+import Checkbox from "@/core/components/ui/checkbox/Checkbox.vue"
 import {
   FormControl,
   FormField,
@@ -31,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { toast } from "@/core/components/ui/toast"
 import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
@@ -39,8 +41,6 @@ import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
-import {toast} from "@/core/components/ui/toast";
-import Checkbox from "../../../../../core/components/ui/checkbox/Checkbox.vue";
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
@@ -128,10 +128,6 @@ function removeAdditive(index: number) {
 
 function removeIngredient(index: number) {
   ingredients.value.splice(index, 1)
-}
-
-function toggleDefault(index: number) {
-  additives.value[index].isDefault = !additives.value[index].isDefault
 }
 
 const onSubmit = handleSubmit((formValues) => {
@@ -357,12 +353,12 @@ function selectUnit(unit: UnitDTO) {
 								<TableCell>{{ additive.name }}</TableCell>
 								<TableCell>{{ additive.categoryName }}</TableCell>
 								<TableCell>{{ additive.size}} {{additive.unitName}}</TableCell>
-								<TableCell class="text-center">
-                  <Checkbox
+								<TableCell class="text-left">
+									<Checkbox
 										type="checkbox"
-                    class="size-6 text-left"
+										class="size-6 text-left"
 										:checked="additive.isDefault"
-                    @update:checked="v => additive.isDefault = v"
+										@update:checked="v => additive.isDefault = v"
 									/>
 								</TableCell>
 								<TableCell class="text-center">

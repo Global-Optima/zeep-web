@@ -30,7 +30,7 @@
 			ref="scrollContainer"
 		>
 			<div
-				v-if="flattenedProducts.length === 0"
+				v-if="!products || products.data.length === 0"
 				class="flex justify-center items-center h-20 text-gray-500"
 			>
 				<p class="text-lg">Ничего не найдено</p>
@@ -41,17 +41,10 @@
 				class="gap-3 grid grid-cols-2 sm:grid-cols-3"
 			>
 				<KioskHomeProductCard
-					v-for="product in flattenedProducts"
+					v-for="product in products.data"
 					:key="product.id"
 					:product="product"
 				/>
-
-				<div
-					v-if="isFetchingNextPage"
-					class="flex justify-center col-span-full"
-				>
-					<Loader class="w-8 h-8 text-primary animate-spin" />
-				</div>
 			</div>
 		</section>
 	</div>
@@ -59,14 +52,12 @@
 
 <script setup lang="ts">
 import { Skeleton } from '@/core/components/ui/skeleton'
-import { DEFAULT_PAGINATION_META, hasMorePages } from '@/core/utils/pagination.utils'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/toolbar/kiosk-home-toolbar-mobile.vue'
-import { useInfiniteQuery, useQuery } from '@tanstack/vue-query'
-import { useDebounceFn, useInfiniteScroll } from '@vueuse/core'
-import { Loader } from 'lucide-vue-next'
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
+import { useDebounceFn } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
 
 /* --------------------------
    Reactive References
@@ -75,14 +66,6 @@ const selectedCategoryId = ref<number | null>(null)
 const searchTerm = ref('')
 const previousCategoryId = ref<number | null>(null)
 const skeletonsArray: number[] = new Array(9).fill(5)
-
-/* --------------------------
-   Query Keys
---------------------------*/
-const productsQueryKey = computed(() => [
-  'kiosk-products',
-  { categoryId: selectedCategoryId.value, searchTerm: searchTerm.value },
-])
 
 /* --------------------------
    Fetch Categories
@@ -108,49 +91,22 @@ watch(
 --------------------------*/
 const {
   data: products,
-  fetchNextPage,
-  hasNextPage,
-  isFetchingNextPage,
   isPending: isProductsPending
-} = useInfiniteQuery({
-  queryKey: productsQueryKey,
-  initialPageParam: DEFAULT_PAGINATION_META.page,
-  queryFn: ({ pageParam = DEFAULT_PAGINATION_META.page }) =>
+} = useQuery({
+  queryKey: computed(() => [
+    'kiosk-products',
+    { categoryId: selectedCategoryId.value, searchTerm: searchTerm.value },
+  ]),
+  queryFn: () =>
     storeProductsService.getStoreProducts({
       categoryId: selectedCategoryId.value!,
       search: searchTerm.value,
       isAvailable: true,
-      page: pageParam,
+      pageSize: 100
     }),
-  getNextPageParam: (lastPage) =>
-    hasMorePages(lastPage.pagination) ? lastPage.pagination.page + 1 : undefined,
-  enabled: computed(() => Boolean(selectedCategoryId.value) || searchTerm.value.trim() !== '')
+  enabled: computed(() => Boolean(selectedCategoryId.value))
 })
 
-/* --------------------------
-   Flatten Infinite Query Pages
---------------------------*/
-const flattenedProducts = computed(() => {
-  return products.value && products.value.pages
-    ? products.value.pages.flatMap(page => page.data)
-    : []
-})
-
-/* --------------------------
-   Infinite Scroll Setup
---------------------------*/
-// Use a standard ref for the scroll container.
-const scrollContainer = useTemplateRef<HTMLElement>("scrollContainer")
-
-useInfiniteScroll(
-  scrollContainer,
-  () => {
-    if (hasNextPage.value) {
-      fetchNextPage()
-    }
-  },
-  { distance: 10 }
-)
 
 /* --------------------------
    Toolbar Interactions
