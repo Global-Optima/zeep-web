@@ -11,6 +11,7 @@ import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import PageLoader from '@/core/components/page-loader/PageLoader.vue'
 import { useInactivityTimer } from '@/core/hooks/use-inactivity-timer.hooks'
 import { getKaspiConfig } from '@/core/integrations/kaspi.service'
+import { cn } from '@/core/utils/tailwind.utils'
 import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
 import { WifiOff } from 'lucide-vue-next'
 import { defineAsyncComponent } from 'vue'
@@ -63,7 +64,7 @@ onMounted(() => {
 
 <template>
 	<div
-		class="relative bg-slate-50 bg-gradient-to-br from-green-50/40 to-blue-50/40 w-full min-h-screen no-scrollbar"
+		class="relative bg-slate-100 w-full min-h-screen no-scrollbar"
 	>
 		<!-- If offline, show overlay -->
 		<div
@@ -80,7 +81,7 @@ onMounted(() => {
 
 		<!-- If online, show kiosk UI -->
 		<template v-else>
-			<main class="relative pb-40 w-full h-full no-scrollbar">
+			<main :class="cn('relative w-full h-full no-scrollbar', showCart && 'pb-40')">
 				<RouterView v-slot="{ Component, route }">
 					<template v-if="Component">
 						<Transition

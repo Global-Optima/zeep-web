@@ -4,7 +4,7 @@
 		<!-- Toolbar for mobile view -->
 		<KioskHomeToolbarMobile
 			v-if="!categoriesLoading"
-			:categories="categories ?? []"
+			:categories="categories"
 			:selected-category-id="selectedCategoryId"
 			:search-term="searchTerm"
 			@update:category="onUpdateCategory"
@@ -45,10 +45,15 @@
 					:key="product.id"
 					:product="product"
 				/>
+
+				<div
+					v-if="isFetchingNextPage"
+					class="flex justify-center col-span-full"
+				>
+					<Loader class="w-8 h-8 text-primary animate-spin" />
+				</div>
 			</div>
 		</section>
-
-		<!-- Cart Button for mobile (if any) -->
 	</div>
 </template>
 
@@ -60,6 +65,7 @@ import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk
 import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/toolbar/kiosk-home-toolbar-mobile.vue'
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query'
 import { useDebounceFn, useInfiniteScroll } from '@vueuse/core'
+import { Loader } from 'lucide-vue-next'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
 /* --------------------------
@@ -84,6 +90,7 @@ const productsQueryKey = computed(() => [
 const { data: categories, isPending: categoriesLoading } = useQuery({
   queryKey: ['store-product-categories'],
   queryFn: () => storeProductsService.getStoreProductCategories(),
+  initialData: []
 })
 
 watch(
@@ -132,25 +139,24 @@ const flattenedProducts = computed(() => {
 /* --------------------------
    Infinite Scroll Setup
 --------------------------*/
-// Use useTemplateRef to get a reference to the scroll container element.
-// Note: We now attach the ref to the <section> (the actual scrollable container).
-const scrollContainer = useTemplateRef<HTMLElement>('scrollContainer')
+// Use a standard ref for the scroll container.
+const scrollContainer = useTemplateRef<HTMLElement>("scrollContainer")
 
 useInfiniteScroll(
   scrollContainer,
   () => {
-    if (hasNextPage.value && !isFetchingNextPage.value) {
+    if (hasNextPage.value) {
       fetchNextPage()
     }
   },
-  { distance: 500 }
+  { distance: 10 }
 )
 
 /* --------------------------
    Toolbar Interactions
 --------------------------*/
 function onUpdateCategory(categoryId: number) {
-  if (searchTerm.value.trim() !== '') return
+  searchTerm.value = ""
   selectedCategoryId.value = categoryId
 }
 
@@ -173,6 +179,4 @@ function onUpdateSearchTerm(newSearchTerm: string) {
 }
 </script>
 
-<style scoped lang="scss">
-/* Add any necessary scoped styles here */
-</style>
+<style scoped lang="scss"></style>
