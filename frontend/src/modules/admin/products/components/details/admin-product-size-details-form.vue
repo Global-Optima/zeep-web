@@ -198,7 +198,7 @@ function selectUnit(unit: UnitDTO) {
 </script>
 
 <template>
-	<div class="mx-auto w-full max-w-2xl">
+	<div class="mx-auto w-full max-w-4xl">
 		<!-- Header -->
 		<div class="flex justify-between items-center gap-4 w-full">
 			<div class="flex items-center gap-4">

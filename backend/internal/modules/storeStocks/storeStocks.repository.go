@@ -24,6 +24,7 @@ type StoreStockRepository interface {
 	AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error)
 	GetStockList(storeID uint, query *types.GetStockFilterQuery) ([]data.StoreStock, error)
 	GetStockListByIDs(storeID uint, IDs []uint) ([]data.StoreStock, error)
+	GetRawStockByID(storeID, stockID uint) (*data.StoreStock, error)
 	GetStockById(stockID uint, filter *contexts.StoreContextFilter) (*data.StoreStock, error)
 	GetAllStockList(storeID uint) ([]data.StoreStock, error)
 	UpdateStock(storeID, stockID uint, dto *types.UpdateStoreStockDTO) error
@@ -36,6 +37,7 @@ type StoreStockRepository interface {
 	FindEarliestExpirationForIngredient(ingredientID, storeID uint) (*time.Time, error)
 	GetStockByStoreAndIngredient(storeID, ingredientID uint, stock *data.StoreStock) error
 	FilterMissingIngredientsIDs(storeID uint, ingredientsIDs []uint) ([]uint, error)
+	CheckStoreStockUsage(stockID uint) (bool, error)
 }
 
 type storeStockRepository struct {
@@ -262,8 +264,26 @@ func (r *storeStockRepository) GetStockListByIDs(storeID uint, stockIds []uint) 
 	return storeWarehouseStockList, nil
 }
 
+func (r *storeStockRepository) GetRawStockByID(storeID, stockID uint) (*data.StoreStock, error) {
+	var StoreStock data.StoreStock
+
+	err := r.db.Model(&data.StoreStock{}).
+		Where("store_id = ? AND id = ?", storeID, stockID).
+		First(&StoreStock).
+		Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStockNotFound
+		}
+		return nil, fmt.Errorf("failed to get store stock: %w", err)
+	}
+
+	return &StoreStock, nil
+}
+
 func (r *storeStockRepository) GetStockById(stockId uint, filter *contexts.StoreContextFilter) (*data.StoreStock, error) {
-	var StoreWarehouseStock data.StoreStock
+	var StoreStock data.StoreStock
 
 	if stockId == 0 {
 		return nil, fmt.Errorf("store stock id cannot be 0")
@@ -292,12 +312,12 @@ func (r *storeStockRepository) GetStockById(stockId uint, filter *contexts.Store
 		}
 	}
 
-	err := query.First(&StoreWarehouseStock).Error
+	err := query.First(&StoreStock).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return &StoreWarehouseStock, nil
+	return &StoreStock, nil
 }
 
 func (r *storeStockRepository) UpdateStock(storeId, stockId uint, dto *types.UpdateStoreStockDTO) error {
@@ -346,11 +366,12 @@ func (r *storeStockRepository) UpdateStock(storeId, stockId uint, dto *types.Upd
 
 func (r *storeStockRepository) DeleteStockById(storeId, stockId uint) error {
 	res := r.db.
+		Unscoped().
 		Where("id = ? AND store_id = ?", stockId, storeId).
 		Delete(&data.StoreStock{})
 
 	if res.Error != nil {
-		return fmt.Errorf("failed to delete store warehouse stock: %w", res.Error)
+		return fmt.Errorf("failed to delete store stock: %w", res.Error)
 	}
 
 	if res.RowsAffected == 0 {
@@ -358,6 +379,32 @@ func (r *storeStockRepository) DeleteStockById(storeId, stockId uint) error {
 	}
 
 	return nil
+}
+
+func (r *storeStockRepository) CheckStoreStockUsage(stockID uint) (bool, error) {
+	var isInUse bool
+
+	err := r.db.
+		Table("store_stocks AS ss").
+		Select("1").
+		Joins("JOIN ingredients AS i ON ss.ingredient_id = i.id").
+		Joins("LEFT JOIN product_size_ingredients AS psi ON psi.ingredient_id = i.id").
+		Joins("LEFT JOIN store_product_sizes AS sps ON psi.product_size_id = sps.product_size_id").
+		Joins("LEFT JOIN store_products AS sp ON sps.store_product_id = sp.id").
+		Joins("LEFT JOIN additive_ingredients AS ai ON ai.ingredient_id = i.id").
+		Joins("LEFT JOIN store_additives AS sa ON ai.additive_id = sa.additive_id").
+		Where("ss.id = ?", stockID).
+		Where("ss.deleted_at IS NULL").
+		Where("i.deleted_at IS NULL").
+		Where("(psi.id IS NOT NULL OR ai.id IS NOT NULL)"). // Ensures ingredient is used
+		Limit(1).
+		Scan(&isInUse).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, err
+	}
+
+	return isInUse, nil
 }
 
 func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, storeProductSizeID uint) ([]data.StoreStock, error) {

@@ -13,7 +13,7 @@ func CreateToRecipeStepModel(productID uint, dto []CreateOrReplaceRecipeStepDTO)
 		recipeStep.Step = step.Step
 		recipeStep.Name = step.Name
 		recipeStep.Description = step.Description
-		recipeStep.ImageURL = step.ImageURL
+		recipeStep.ImageKey = step.ImageURL
 		recipeSteps[i] = *recipeStep
 	}
 	return recipeSteps
@@ -32,7 +32,7 @@ func UpdateToRecipeStepModel(dto *CreateOrReplaceRecipeStepDTO) *data.RecipeStep
 		recipeStep.Description = dto.Description
 	}
 	if dto.ImageURL != "" {
-		recipeStep.ImageURL = dto.ImageURL
+		recipeStep.ImageKey = dto.ImageURL
 	}
 	return recipeStep
 }
@@ -44,6 +44,6 @@ func MapRecipeStepToDTO(recipeStep *data.RecipeStep) RecipeStepDTO {
 		ProductID:   recipeStep.ProductID,
 		Step:        recipeStep.Step,
 		Description: recipeStep.Description,
-		ImageURL:    recipeStep.ImageURL,
+		ImageURL:    recipeStep.ImageKey,
 	}
 }

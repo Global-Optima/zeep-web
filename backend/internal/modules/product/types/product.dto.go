@@ -96,6 +96,8 @@ type UpdateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
+	DeleteImage bool `form:"deleteImage"`
+	DeleteVideo bool `form:"deleteVideo"`
 }
 
 type UpdateProductSizeDTO struct {

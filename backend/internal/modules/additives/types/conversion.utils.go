@@ -37,8 +37,7 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 	return additive
 }
 
-func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO) (*AdditiveModels, error) {
-	additive := &data.Additive{}
+func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO, additive *data.Additive) (*AdditiveModels, error) {
 	if dto == nil {
 		return nil, errors.New("dto cannot be nil")
 	}
@@ -142,7 +141,7 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 		Name:        additive.Name,
 		Description: additive.Description,
 		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageURL.GetURL(),
+		ImageURL:    additive.ImageKey.GetURL(),
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		Category:    *ConvertToCategoryDTO(&additive.Category),
@@ -194,7 +193,7 @@ func ConvertToBaseAdditiveCategoryItem(additive *data.Additive, categoryID uint)
 		Name:        additive.Name,
 		Description: additive.Description,
 		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageURL.GetURL(),
+		ImageURL:    additive.ImageKey.GetURL(),
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
 		CategoryID:  categoryID,

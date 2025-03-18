@@ -122,7 +122,7 @@ const onBackClick = () => router.push({ name: getRouteName('KIOSK_HOME') });
 const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null);
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({});
 
-const { data: productDetails, isPending: isFetching, isError, error } = useQuery({
+const { data: productDetails, isPending: isFetching, isError } = useQuery({
   queryKey: computed(() => ['kiosk-product-details', productId]),
   queryFn: () => storeProductsService.getStoreProduct(productId.value),
   enabled: computed(() => productId.value > 0),

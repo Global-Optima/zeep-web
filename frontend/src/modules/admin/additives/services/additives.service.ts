@@ -1,7 +1,6 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import { buildFormData } from '@/core/utils/request-form-data-builder.utils'
-import type { UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import type {
 	AdditiveCategoriesFilterQuery,
 	AdditiveCategoryDTO,
@@ -13,7 +12,7 @@ import type {
 	UpdateAdditiveCategoryDTO,
 	UpdateAdditiveDTO,
 } from '../models/additives.model'
-import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 
 class AdditiveService {
 	async getAdditives(filter?: AdditiveFilterQuery) {
@@ -40,7 +39,7 @@ class AdditiveService {
 	}
 
 	async updateAdditive(id: number, dto: UpdateAdditiveDTO) {
-		const formData = buildFormData<UpdateProductDTO>(dto)
+		const formData = buildFormData<UpdateAdditiveDTO>(dto)
 
 		const response = await apiClient.put<void>(`/additives/${id}`, formData, {
 			headers: {

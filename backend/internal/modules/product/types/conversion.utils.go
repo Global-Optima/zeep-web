@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -22,11 +23,15 @@ type ProductSizeModels struct {
 }
 
 func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
+	if product == nil {
+		return BaseProductDTO{}
+	}
+
 	return BaseProductDTO{
 		Name:        product.Name,
 		Description: product.Description,
-		ImageURL:    product.ImageURL.GetURL(),
-		VideoURL:    product.VideoURL.GetURL(),
+		ImageURL:    product.ImageKey.GetURL(),
+		VideoURL:    product.VideoKey.GetURL(),
 		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
@@ -154,11 +159,9 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	return productSize
 }
 
-func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
-	product := &data.Product{}
-
+func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 	if dto == nil {
-		return nil
+		return fmt.Errorf("cannot update nil product")
 	}
 
 	if strings.TrimSpace(dto.Name) != "" {
@@ -177,7 +180,7 @@ func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
 		}
 	}
 
-	return product
+	return nil
 }
 
 func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
@@ -237,7 +240,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageURL data.StorageKey) []details.CentralCatalogChange {
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKey *data.StorageImageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
 	if dto.Name != "" && dto.Name != before.Name {
@@ -262,13 +265,13 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageUR
 		})
 	}
 
-	if imageURL.ToString() != "" && imageURL != before.ImageURL {
+	if imageKey != before.ImageKey {
 		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
 			Params: map[string]interface{}{
-				"OldImageURL": before.ImageURL,
-				"NewImageURL": imageURL.ToString(),
+				"OldImageURL": before.ImageKey.GetURL(),
+				"NewImageURL": imageKey.GetURL(),
 			},
 		})
 	}

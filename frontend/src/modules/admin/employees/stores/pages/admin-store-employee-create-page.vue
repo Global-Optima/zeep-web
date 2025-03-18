@@ -12,10 +12,12 @@ import AdminStoreEmployeesCreateForm from '@/modules/admin/employees/stores/comp
 import { storeEmployeeService } from '@/modules/admin/employees/stores/services/store-employees.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
+import {type AxiosLocalizedError, useAxiosLocaleToast} from "@/core/hooks/use-axios-locale-toast.hooks";
 
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+const { toastLocalizedError } = useAxiosLocaleToast()
 
 const route = useRoute()
 const storeId = route.params.storeId as string
@@ -37,13 +39,9 @@ const createMutation = useMutation({
 			description: 'Новый сотрудник успешно зарегистрирован в системе.',
 		})
 	},
-	onError: () => {
-		toast({
-			title: 'Ошибка при создании',
-			description: 'Не удалось создать нового сотрудника. Попробуйте еще раз.',
-			variant: 'destructive',
-		})
-	},
+  onError: (error: AxiosLocalizedError) => {
+    toastLocalizedError(error, "Не удалось создать нового сотрудника. Попробуйте еще раз.")
+  }
 })
 
 function handleCreate(dto: CreateEmployeeDTO) {

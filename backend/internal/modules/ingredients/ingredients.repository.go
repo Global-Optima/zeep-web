@@ -162,7 +162,7 @@ func (r *ingredientRepository) DeleteIngredient(ingredientID uint) error {
 			return err
 		}
 
-		if err := tx.Delete(&data.Ingredient{}, ingredientID).Error; err != nil {
+		if err := tx.Unscoped().Delete(&data.Ingredient{}, ingredientID).Error; err != nil {
 			return err
 		}
 
