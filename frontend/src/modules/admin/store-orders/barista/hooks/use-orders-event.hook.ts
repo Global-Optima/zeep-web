@@ -107,10 +107,6 @@ export function useOrderEventsService(
 				variant: 'destructive',
 			})
 		},
-		/**
-		 * Handle incoming messages here (instead of watchEffect on `data`).
-		 * This avoids extra re-renders.
-		 */
 		onMessage(_, event) {
 			if (!event.data) return
 
