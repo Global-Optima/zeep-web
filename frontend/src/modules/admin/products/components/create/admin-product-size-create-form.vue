@@ -139,7 +139,7 @@ const onSubmit = handleSubmit((formValues) => {
   }
 
   if (ingredients.value.some(i => i.quantity <= 0)) {
-    return toast({ description: "Технологическая карта не может иметь количество 0" })
+    return toast({ description: "Укажите количество в технологической карте" })
   }
 
   const finalDTO: CreateProductSizeFormSchema = {
