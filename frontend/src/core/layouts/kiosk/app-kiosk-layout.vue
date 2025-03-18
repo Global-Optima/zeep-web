@@ -101,10 +101,10 @@ onMounted(() => {
 			<!-- Show the cart button if conditions pass -->
 			<div
 				v-if="showCart"
-				class="bottom-8 left-0 fixed flex justify-center w-full"
+				class="fixed bottom-8 flex justify-center w-full pointer-events-none"
 				aria-label="Открыть корзину"
 			>
-				<KioskHomeCart />
+				<KioskHomeCart/>
 			</div>
 
 			<!-- Cart dialog -->
