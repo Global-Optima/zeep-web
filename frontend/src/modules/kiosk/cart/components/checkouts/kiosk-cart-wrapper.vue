@@ -3,6 +3,7 @@ import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import type { CreateOrderDTO } from '@/modules/admin/store-orders/models/orders.models'
@@ -21,12 +22,17 @@ import { useRouter } from 'vue-router'
 const cartStore = useCartStore()
 const router = useRouter()
 
+const {toastLocalizedError} = useAxiosLocaleToast()
+
 // State
 const customerName = ref('')
 const selectedCartItem = ref<CartItem | null>(null)
 const showValidationError = ref(false)
 const createOrderMutation = useMutation({
-  mutationFn: (orderDTO: CreateOrderDTO) => ordersService.createOrder(orderDTO)
+  mutationFn: (orderDTO: CreateOrderDTO) => ordersService.createOrder(orderDTO),
+  onError: (err: AxiosLocalizedError) => {
+    toastLocalizedError(err, "Ошибка при создании заказа")
+  }
 })
 
 // Computed

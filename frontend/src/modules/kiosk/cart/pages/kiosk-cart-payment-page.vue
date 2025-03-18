@@ -4,12 +4,25 @@ import { Button } from '@/core/components/ui/button'
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
 import { getKaspiConfig, KaspiService } from '@/core/integrations/kaspi.service'
-import { OrderStatus, type OrderDetailsDTO, type TransactionDTO } from '@/modules/admin/store-orders/models/orders.models'
+import {
+  OrderStatus,
+  type OrderDetailsDTO,
+  type TransactionDTO
+} from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
-import { PaymentMethod, type PaymentOption } from '@/modules/kiosk/cart/models/kiosk-cart.models'
+import {
+  PaymentMethod,
+  type PaymentOption
+} from '@/modules/kiosk/cart/models/kiosk-cart.models'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { QrCode } from 'lucide-vue-next'
-import { computed, onBeforeUnmount, reactive, watch } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  watch
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -23,11 +36,12 @@ const paymentOptions: PaymentOption[] = [
   { id: PaymentMethod.KASPI, label: 'Kaspi QR', icon: QrCode },
 ]
 
-const PAYMENT_TIMEOUT = 120_000 // 2 minutes (in ms)
+// Constants
+const PAYMENT_TIMEOUT = 120_000 // 2 minutes
 const STORAGE_KEY = 'ZEEP_CART_PAYMENT_COUNTDOWN'
-const isTest: boolean = import.meta.env.VITE_TEST_PAYMENT === 'true'
+const isTest = import.meta.env.VITE_TEST_PAYMENT === 'true'
 
-// Group related payment state into one reactive object
+// Group payment state
 const paymentState = reactive({
   selectedMethod: null as PaymentMethod | null,
   isPaying: false,
@@ -37,48 +51,67 @@ const paymentState = reactive({
   isTimeoutReached: false,
 })
 
-// Timer ID (non-reactive)
+// Non-reactive timer ref
 let timerId: number | null = null
 
 // Query: Fetch order details
-const { data: order, isPending: isOrderPending, isError: isOrderError, isSuccess: isOrderSuccess } = useQuery({
+const {
+  data: order,
+  isPending: isOrderPending,
+  isError: isOrderError,
+  isSuccess: isOrderSuccess
+} = useQuery({
   queryKey: computed(() => ['payment-order', orderId]),
   queryFn: () => ordersService.getOrderById(Number(orderId)),
   enabled: computed(() => !isNaN(Number(orderId))),
   retry: 1,
 })
 
-const allowOrderStatuses:OrderStatus[] = [OrderStatus.WAITING_FOR_PAYMENT]
+// Allowed statuses for continuing payment
+const allowOrderStatuses: OrderStatus[] = [OrderStatus.WAITING_FOR_PAYMENT]
 
-// Watch for query resolution to manage order state
-watch([isOrderSuccess, isOrderError, order], ([success, error, orderData]) => {
-  if (success) {
-    if (!orderData) {
-      toast({ title: 'Ошибка', description: 'Заказ не найден', variant: 'destructive' })
-      router.push({ name: getRouteName('KIOSK_HOME') })
-    } else if (orderData && !allowOrderStatuses.includes(orderData.status)) {
+// Watch for order query results (but no longer start the timer here)
+watch(
+  [isOrderSuccess, isOrderError, order],
+  ([success, error, orderData]) => {
+    if (success) {
+      if (!orderData) {
+        toast({
+          title: 'Ошибка',
+          description: 'Заказ не найден',
+          variant: 'destructive'
+        })
+        router.push({ name: getRouteName('KIOSK_HOME') })
+      } else if (!allowOrderStatuses.includes(orderData.status)) {
+        toast({
+          title: 'Заказ уже оплачен',
+          description: 'Платеж уже подтвержден, возвращаем в меню',
+          variant: 'destructive'
+        })
+        router.push({ name: getRouteName('KIOSK_HOME') })
+      }
+    }
+
+    if (error) {
       toast({
-        title: 'Заказ уже оплачен',
-        description: 'Платеж уже подтвержден, возвращаем в меню',
+        title: 'Ошибка загрузки',
+        description: 'Не удалось загрузить данные заказа',
         variant: 'destructive'
       })
       router.push({ name: getRouteName('KIOSK_HOME') })
-    } else {
-      initializeTimer(false)
     }
   }
-  if (error) {
-    toast({ title: 'Ошибка загрузки', description: 'Не удалось загрузить данные заказа', variant: 'destructive' })
-    router.push({ name: getRouteName('KIOSK_HOME') })
-  }
-})
+)
 
 // Mutation: Confirm successful order payment
 const successOrderPaymentMutation = useMutation({
   mutationFn: ({ order, transactionDTO }: { order: OrderDetailsDTO, transactionDTO: TransactionDTO }) =>
     ordersService.successOrderPayment(order.id, transactionDTO),
   onSuccess: (_, variables) => {
-    router.push({ name: getRouteName('KIOSK_CART_PAYMENT_SUCCESS'), params: { orderId: variables.order.id } })
+    router.push({
+      name: getRouteName('KIOSK_CART_PAYMENT_SUCCESS'),
+      params: { orderId: variables.order.id }
+    })
   },
   onError: () => {
     toast({
@@ -99,7 +132,14 @@ const failPaymentMutation = useMutation({
   }
 })
 
-// Payment processing: Await payment via Kaspi service
+// Timer always starts on mount — ignoring any existing order checks
+onMounted(() => {
+  // Force a fresh timer start each time the page opens
+  sessionStorage.setItem(STORAGE_KEY, Date.now().toString())
+  initializeTimer(false)
+})
+
+// Payment routine for Kaspi
 const awaitPayment = async () => {
   if (!order.value) return
 
@@ -112,13 +152,16 @@ const awaitPayment = async () => {
       ? await kaspiService.awaitPaymentTest()
       : await kaspiService.awaitPayment(order.value.total)
 
-    if (!transaction?.transactionId) throw new Error('Invalid transaction data')
+    if (!transaction?.transactionId) {
+      throw new Error('Invalid transaction data')
+    }
 
-    await successOrderPaymentMutation.mutateAsync({
+    successOrderPaymentMutation.mutate({
       order: order.value,
       transactionDTO: transaction
     })
-  } catch {
+  } catch (error) {
+    console.error('PAYMENT ERROR: ', error)
     toast({
       title: 'Ошибка оплаты',
       description: 'Не удалось дождаться оплаты. Попробуйте снова.',
@@ -135,6 +178,7 @@ const initializeTimer = (forceRestart = false) => {
   if (forceRestart) {
     sessionStorage.setItem(STORAGE_KEY, Date.now().toString())
   }
+
   const storedTime = sessionStorage.getItem(STORAGE_KEY)
   if (!storedTime) return
 
@@ -168,7 +212,8 @@ const clearTimer = () => {
 }
 
 // Navigation & Payment Flow Handlers
-const handleBack = () => {
+const handleBack = async () => {
+  await failPayment()
   resetPaymentFlow(false)
   router.push({ name: getRouteName('KIOSK_HOME') })
 }
@@ -188,6 +233,7 @@ const startPaymentProcess = async () => {
     paymentState.errorMessage = 'Номер заказа или способ оплаты отсутствуют'
     return
   }
+  // Re-initialize timer from scratch
   initializeTimer(true)
   paymentState.isPaying = true
   paymentState.errorMessage = ''
@@ -209,17 +255,21 @@ const resetPaymentFlow = (goBack: boolean) => {
   paymentState.selectedMethod = null
   paymentState.errorMessage = ''
   paymentState.isTimeoutReached = false
-  if (goBack) router.push({ name: getRouteName('KIOSK_HOME') })
+  if (goBack) {
+    router.push({ name: getRouteName('KIOSK_HOME') })
+  }
 }
 
-// Computed properties for UI
+// Computed for UI
 const displayCountdown = computed(() => {
   const mm = Math.floor(paymentState.countdown / 60)
   const ss = paymentState.countdown % 60
   return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`
 })
 
-const isCountdownVisible = computed(() => paymentState.hasTimerStarted && paymentState.isPaying)
+const isCountdownVisible = computed(() =>
+  paymentState.hasTimerStarted && paymentState.isPaying
+)
 
 onBeforeUnmount(() => {
   clearTimer()
@@ -229,7 +279,6 @@ onBeforeUnmount(() => {
 <template>
 	<div class="flex justify-center items-center bg-slate-100 h-screen">
 		<PageLoader v-if="isOrderPending" />
-
 		<div
 			v-else
 			class="p-6 rounded-3xl w-full max-w-3xl"

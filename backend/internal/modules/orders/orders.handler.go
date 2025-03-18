@@ -136,6 +136,10 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 			localization.SendLocalizedResponseWithKey(c, types.Response400MultipleSelect)
 			return
 		}
+		if errors.Is(err, types.ErrInvalidCustomerNameCensor) {
+			localization.SendLocalizedResponseWithKey(c, types.Response400OrderCustomerName)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500OrderCreate)
 		return
 	}
