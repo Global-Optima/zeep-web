@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/pkg/errors"
 
@@ -50,7 +51,7 @@ func (h *AuthenticationHandler) CustomerLogin(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrValidation):
-			utils.SendErrorWithStatus(c, "invalid credentials", http.StatusBadRequest)
+			localization.SendLocalizedResponseWithKey(c, types.Response400IncorrectCredentials)
 			return
 		default:
 			utils.SendErrorWithStatus(c, "unexpected error", http.StatusInternalServerError)
@@ -94,7 +95,7 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrInvalidCredentials):
-			utils.SendErrorWithStatus(c, "invalid credentials", http.StatusBadRequest)
+			localization.SendLocalizedResponseWithKey(c, types.Response400IncorrectCredentials)
 		case errors.Is(err, types.ErrInactiveEmployee):
 			utils.SendErrorWithStatus(c, "inactive employee", http.StatusForbidden)
 		default:

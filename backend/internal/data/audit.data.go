@@ -51,6 +51,8 @@ const (
 	SupplierComponent              ComponentName = "SUPPLIER"
 	UnitComponent                  ComponentName = "UNIT"
 	OrderComponent                 ComponentName = "ORDER"
+
+	AuthenticationComponent ComponentName = "AUTH"
 )
 
 func (o OperationType) ToString() string {
