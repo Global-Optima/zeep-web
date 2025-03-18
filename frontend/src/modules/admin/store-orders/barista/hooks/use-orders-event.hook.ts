@@ -56,7 +56,7 @@ function sortOrders(orderList: OrderDTO[]): OrderDTO[] {
  * @param initialFilter - Initial filter for orders (e.g., { status: 'PENDING' })
  * @param options - Additional config, including whether to print on create.
  */
-export function useOrderEventsService(
+export function useOrderEvents(
 	initialFilter: OrderFilterOptions = {},
 	options: UseOrderEventsServiceOptions = { printOnCreate: false },
 ) {

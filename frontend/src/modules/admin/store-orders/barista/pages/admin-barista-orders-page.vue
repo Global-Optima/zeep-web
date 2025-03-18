@@ -8,7 +8,7 @@ import AdminBaristaOrderStatusSelector from '@/modules/admin/store-orders/barist
 import AdminBaristaOrdersList from '@/modules/admin/store-orders/barista/components/admin-barista-orders-list.vue'
 import AdminBaristaSubOrderDetails from '@/modules/admin/store-orders/barista/components/admin-barista-sub-order-details.vue'
 import AdminBaristaSubordersList from '@/modules/admin/store-orders/barista/components/admin-barista-suborders-list.vue'
-import { useOrderEventsService } from '@/modules/admin/store-orders/barista/hooks/use-orders-event.hook'
+import { useOrderEvents } from '@/modules/admin/store-orders/barista/hooks/use-orders-event.hook'
 
 import {
   OrderStatus,
@@ -43,7 +43,7 @@ const selectedStatus = ref<{ label: string; count: number; status?: OrderStatus 
  * Real-Time Orders:
  * Pull from our updated `useOrderEventsService`, which returns deeply reactive data.
  */
-const { filteredOrders, orderCountsByStatus, setFilter } = useOrderEventsService({
+const { filteredOrders, orderCountsByStatus, setFilter } = useOrderEvents({
   status: selectedStatus.value.status,
 }, {printOnCreate: true})
 

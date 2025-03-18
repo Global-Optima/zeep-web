@@ -170,3 +170,10 @@ export interface TransactionDTO {
 	cardMask?: string
 	icc?: string
 }
+
+export interface OrdersTimeZoneFilter {
+	storeId?: number
+	timezone?: string
+	timezoneOffset?: number
+	timeGapMinutes?: number
+}

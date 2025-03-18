@@ -82,22 +82,18 @@ variable "app_server_count" {
 
 variable "ssh_allowed_cidr" {
   type        = string
-  default     = "1.2.3.4/32"
+  default     = "0.0.0.0/0"
   description = "CIDR block allowed to SSH into the Droplets."
 }
 
-variable "domain_name" {
-  type        = string
-  description = "The domain for the load balancer (e.g. example.com)."
+variable "domains" {
+  type        = list(string)
+  default     = ["www.zeep.kz", "zeep.kz"]
+  sensitive   = true
+  description = "The domains for the load balancer (e.g. example.com)."
 }
 
 variable "certificate_name" {
   type        = string
   description = "The name of the DigitalOcean certificate"
-}
-
-variable "use_domain" {
-  type        = bool
-  default     = false
-  description = "Set to true to use a custom domain, false to test using only the LB IP."
 }
