@@ -200,6 +200,13 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 			return
 		}
+
+		for _, ingredient := range dto.Ingredients {
+			if ingredient.IngredientID == 0 || ingredient.Quantity <= 0 {
+				localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+				return
+			}
+		}
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)

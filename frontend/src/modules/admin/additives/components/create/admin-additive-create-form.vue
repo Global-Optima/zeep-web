@@ -355,64 +355,64 @@ function removeIngredient(index: number) {
 			<!-- Media and Category Blocks -->
 			<div class="items-start gap-4 grid auto-rows-max">
 				<!-- Media Block -->
-				<Card>
-					<CardHeader>
-						<CardTitle>Изображение</CardTitle>
-						<CardDescription>
-							Загрузите изображение для продукта.<br />
-							Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<FormField name="image">
-							<FormItem>
-								<FormControl>
-									<div class="space-y-2">
-										<!-- Preview -->
-										<div
-											v-if="previewImage"
-											class="relative w-full h-48"
-										>
-											<LazyImage
-												:src="previewImage"
-												alt="Preview"
-												class="border rounded-lg w-full h-full object-contain"
-											/>
-											<button
-												type="button"
-												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
-												@click="previewImage = null; setFieldValue('image', undefined)"
-											>
-												<X class="size-4" />
-											</button>
-										</div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Изображение</CardTitle>
+            <CardDescription>
+              Загрузите изображение для продукта.<br />
+              Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField name="image">
+              <FormItem>
+                <FormControl>
+                  <div class="space-y-2">
+                    <!-- Preview -->
+                    <div
+                      v-if="previewImage"
+                      class="relative w-full h-48"
+                    >
+                      <LazyImage
+                        :src="previewImage"
+                        alt="Preview"
+                        class="border rounded-lg w-full h-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+                        @click="previewImage = null; setFieldValue('image', undefined)"
+                      >
+                        <X class="size-4" />
+                      </button>
+                    </div>
 
-										<!-- Input -->
-										<div
-											v-if="!previewImage"
-											class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
-											@click="triggerImageInput"
-										>
-											<input
-												ref="imageInputRef"
-												type="file"
-												accept="image/jpeg, image/png"
-												style="display: none;"
-												@change="handleImageUpload"
-											/>
-											<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
-												<span class="mb-2"><Camera /></span>
-												Нажмите для загрузки изображения<br />
-												или перетащите файл
-											</p>
-										</div>
-									</div>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-					</CardContent>
-				</Card>
+                    <!-- Input -->
+                    <div
+                      v-if="!previewImage"
+                      class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
+                      @click="triggerImageInput"
+                    >
+                      <input
+                        ref="imageInputRef"
+                        type="file"
+                        accept="image/jpeg, image/png"
+                        style="display: none;"
+                        @change="handleImageUpload"
+                      />
+                      <p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+                        <span class="mb-2"><Camera /></span>
+                        Нажмите для загрузки изображения<br />
+                        или перетащите файл
+                      </p>
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+          </CardContent>
+        </Card>
 
 				<!-- Category Block -->
 				<Card>

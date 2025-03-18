@@ -1,6 +1,7 @@
 package storeStocks
 
 import (
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -272,6 +273,10 @@ func (h *StoreStockHandler) DeleteStoreStockById(c *gin.Context) {
 
 	err = h.service.DeleteStockById(storeID, uint(stockId))
 	if err != nil {
+		if errors.Is(err, types.ErrStockIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response500StoreStockIsInUse)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreStock)
 		return
 	}

@@ -91,7 +91,7 @@ type Ingredient struct {
 	IsAllergen             bool                    `gorm:"default:false" sort:"isAllergen"`
 	IngredientCategory     IngredientCategory      `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
 	StockMaterials         []StockMaterial         `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
-	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID"`
+	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	StoreStocks            []StoreStock            `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	AdditiveIngredients    []AdditiveIngredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 }

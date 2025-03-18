@@ -153,7 +153,30 @@ func (s *storeStockService) UpdateStockById(storeId, stockId uint, input *types.
 }
 
 func (s *storeStockService) DeleteStockById(storeId, stockId uint) error {
-	err := s.repo.DeleteStockById(storeId, stockId)
+	storeStock, err := s.repo.GetRawStockByID(storeId, stockId)
+	if err != nil {
+		wrappedErr := utils.WrapError("error getting store stock", err)
+		s.logger.Error(wrappedErr)
+		return err
+	}
+	if storeStock.Quantity > 0 {
+		s.logger.Error("error deleting store stock, quantity must be 0")
+		return types.ErrStockIsInUse
+	}
+
+	isInUse, err := s.repo.CheckStoreStockUsage(stockId)
+	if err != nil {
+		wrappedErr := utils.WrapError("error checking store stock usage", err)
+		s.logger.Error(wrappedErr)
+		return err
+	}
+	if isInUse {
+
+		s.logger.Error("error deleting store stock, used in store")
+		return types.ErrStockIsInUse
+	}
+
+	err = s.repo.DeleteStockById(storeId, stockId)
 	if err != nil {
 		wrappedErr := utils.WrapError("error deleting stock", err)
 		s.logger.Error(wrappedErr)

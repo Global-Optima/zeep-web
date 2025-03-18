@@ -281,7 +281,7 @@ func (r *additiveRepository) updateAdditiveIngredients(tx *gorm.DB, additiveID u
 	}
 
 	if len(toDeleteIDs) > 0 {
-		if err := tx.Where("additive_id = ? AND ingredient_id IN (?)", additiveID, toDeleteIDs).Delete(&data.AdditiveIngredient{}).Error; err != nil {
+		if err := tx.Unscoped().Where("additive_id = ? AND ingredient_id IN (?)", additiveID, toDeleteIDs).Delete(&data.AdditiveIngredient{}).Error; err != nil {
 			return fmt.Errorf("failed to delete old ingredients: %w", err)
 		}
 	}
@@ -297,6 +297,7 @@ func (r *additiveRepository) updateAdditiveIngredients(tx *gorm.DB, additiveID u
 
 func (r *additiveRepository) DeleteAdditive(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
+
 	if err := r.db.First(&additive, additiveID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrAdditiveNotFound
@@ -304,11 +305,45 @@ func (r *additiveRepository) DeleteAdditive(additiveID uint) (*data.Additive, er
 		return nil, err
 	}
 
-	if err := r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error; err != nil {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkAdditiveReferences(tx, additiveID); err != nil {
+			return err
+		}
+
+		if err := r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
 	return &additive, nil
+}
+
+func checkAdditiveReferences(db *gorm.DB, additiveID uint) error {
+	var additive data.Additive
+
+	err := db.
+		Preload("ProductSizeAdditives", func(db *gorm.DB) *gorm.DB {
+			return db.Limit(1)
+		}).
+		Preload("StoreAdditives", func(db *gorm.DB) *gorm.DB {
+			return db.Limit(1)
+		}).
+		Where(&data.Additive{BaseEntity: data.BaseEntity{ID: additiveID}}).
+		First(&additive).Error
+	if err != nil {
+		return err
+	}
+
+	if len(additive.ProductSizeAdditives) > 0 || len(additive.StoreAdditives) > 0 {
+		return types.ErrAdditiveCategoryIsInUse
+	}
+
+	return nil
 }
 
 func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error) {

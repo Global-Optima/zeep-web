@@ -351,7 +351,7 @@ func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, i
 	}
 
 	if len(toDeleteIDs) > 0 {
-		if err := tx.Where("product_size_id = ? AND ingredient_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
+		if err := tx.Unscoped().Where("product_size_id = ? AND ingredient_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeIngredient{}).Error; err != nil {
 			return fmt.Errorf("failed to delete old ingredients: %w", err)
 		}
 	}
