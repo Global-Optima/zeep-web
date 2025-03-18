@@ -32,6 +32,7 @@ func processJSONRequest(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		c.Abort()
 		return
 	}
 
@@ -39,6 +40,7 @@ func processJSONRequest(c *gin.Context) {
 
 	if err := json.Unmarshal(body, &requestData); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		c.Abort()
 		return
 	}
 
@@ -75,6 +77,7 @@ func processMultipartRequest(c *gin.Context) {
 	form, err := c.MultipartForm()
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		c.Abort()
 		return
 	}
 
@@ -83,6 +86,7 @@ func processMultipartRequest(c *gin.Context) {
 			sanitized, valid := utils.SanitizeString(val)
 			if !valid {
 				localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+				c.Abort()
 				return
 			}
 			form.Value[key][i] = sanitized
