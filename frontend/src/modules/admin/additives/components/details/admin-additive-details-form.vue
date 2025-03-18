@@ -62,8 +62,10 @@ const openIngredientsDialog = ref(false)
 // Validation Schema
 const updateAdditiveSchema = toTypedSchema(
   z.object({
-    name: z.string().min(1, 'Введите название добавки'),
-    description: z.string().min(1, 'Введите описание'),
+    name: z.string().min(1, 'Введите название добавки')
+      .max(100, 'Название не может превышать 100 символов'),
+    description: z.string().min(1, 'Введите описание')
+      .max(500, 'Описание не может превышать 500 символов'),
     machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
@@ -111,11 +113,9 @@ const onSubmit = handleSubmit((formValues) => {
   if (readonly) return
 
   if (!selectedCategory.value?.id || !selectedUnit.value?.id) return
-  if (selectedIngredients.value.length === 0) {
-    return toast({ description: "Технологическая карта должна иметь минимум 1 ингредиент" })
-  }
+
   if (selectedIngredients.value.some(i => i.quantity <= 0)) {
-    return toast({ description: "Технологическая карта не может иметь количество 0" })
+    return toast({ description: "Укажите количество в технологической карте" })
   }
 
   const dto: UpdateAdditiveDTO = {
