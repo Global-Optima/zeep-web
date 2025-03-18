@@ -88,12 +88,13 @@ variable "ssh_allowed_cidr" {
 
 variable "domains" {
   type        = list(string)
-  default     = ["www.zeep.kz", "zeep.kz"]
+  default     = ["zeep.kz", "www.zeep.kz"]
   sensitive   = true
   description = "The domains for the load balancer (e.g. example.com)."
 }
 
 variable "certificate_name" {
   type        = string
+  default = "zeep-cert"
   description = "The name of the DigitalOcean certificate"
 }

@@ -104,6 +104,8 @@
     "400-image-upload": "Invalid image data provided. Please check and try again.",
     "400-video-upload": "Invalid video data provided. Please check and try again.",
 
+    "400-auth": "The email or password you entered is incorrect. Please try again.",
+
     "500-order": "An unexpected error occurred with the order. Please try again later.",
     "500-order-create": "An unexpected error occurred while creating the order. Please try again later.",
     "400-order": "Failed to validate order.",
