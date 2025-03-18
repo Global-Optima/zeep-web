@@ -105,7 +105,7 @@ onMounted(() => {
 				style="pointer-events: none;"
 				aria-label="Открыть корзину"
 			>
-				<KioskHomeCart style="pointer-events: auto;" />
+				<KioskHomeCart/>
 			</div>
 
 			<!-- Cart dialog -->
