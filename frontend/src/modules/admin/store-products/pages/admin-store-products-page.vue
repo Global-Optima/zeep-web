@@ -11,7 +11,7 @@
 		@update:filter="updateFilter"
 	/>
 
-	<AdminListLoader v-if="isPending" />
+	<AdminListLoader v-if="isLoading" />
 
 	<div v-else>
 		<Card>
@@ -57,9 +57,10 @@ import { computed } from 'vue'
 
 const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<StoreProductsFilterDTO>({})
 
-const { data: storeProductsResponse, isPending } = useQuery({
+const { data: storeProductsResponse, isLoading } = useQuery({
   queryKey: computed(() => ['admin-store-products', filter.value]),
   queryFn: () => storeProductsService.getStoreProducts(filter.value),
+  enabled: computed(() => Boolean(filter.value.storeId))
 })
 
 const { data: isStoreSyncResponse, isPending: isStoreSyncPending } = useQuery({
