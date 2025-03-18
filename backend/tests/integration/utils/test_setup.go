@@ -55,8 +55,8 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	redis := setupRedis(cfg, t)
 	router := setupRouter(dbHandler, redis)
 
-	// truncateAndLoadMockData(dbHandler.DB)
-	// log.Println("Mock data loaded successfully")
+	TruncateAndLoadMockData(dbHandler.DB)
+	log.Println("Mock data loaded successfully")
 
 	return &TestEnvironment{
 		Router: router,

@@ -113,9 +113,7 @@ const {
       categoryId: selectedCategoryId.value!,
       search: searchTerm.value,
       isAvailable: true,
-      storeId: 0,
       page: pageParam,
-      pageSize: DEFAULT_PAGINATION_META.pageSize,
     }),
   getNextPageParam: (lastPage) =>
     hasMorePages(lastPage.pagination) ? lastPage.pagination.page + 1 : undefined,
@@ -150,7 +148,7 @@ useInfiniteScroll(
       fetchNextPage()
     }
   },
-  { distance: 500, direction: 'bottom' },
+  { distance: 500},
 )
 
 /* --------------------------
