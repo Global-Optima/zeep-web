@@ -181,21 +181,11 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
 		Order("created_at ASC")
 
-	// If TimeGapMinutes is specified, apply different filtering logic for completed vs in-progress orders
 	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
-		// Calculate cutoff time for completed orders
-		cutoffTime := now.Add(time.Duration(-int(*filter.TimeGapMinutes)) * time.Minute)
+		cutoffTime := now.Add(-time.Duration(*filter.TimeGapMinutes) * time.Minute)
 		cutoffTimeUTC := cutoffTime.UTC()
 
-		// We want to show:
-		// 1. In-progress orders (status is not COMPLETED, DELIVERED, or CANCELLED)
-		// 2. Completed orders that were completed after the cutoff time
-		query = query.Where(
-			"(status NOT IN (?, ?, ?) OR (status IN (?, ?, ?) AND completed_at >= ?))",
-			data.OrderStatusCompleted, data.OrderStatusDelivered, data.OrderStatusCancelled,
-			data.OrderStatusCompleted, data.OrderStatusDelivered, data.OrderStatusCancelled,
-			cutoffTimeUTC,
-		)
+		query = query.Where("(status != ? OR completed_at >= ?)", data.OrderStatusCompleted, cutoffTimeUTC)
 	}
 
 	// Execute the query
