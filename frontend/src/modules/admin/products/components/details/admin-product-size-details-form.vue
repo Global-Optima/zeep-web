@@ -37,6 +37,7 @@ import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredie
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
+import {toast} from "@/core/components/ui/toast";
 
 const AdminSelectAdditiveDialog = defineAsyncComponent(() =>
   import('@/modules/admin/additives/components/admin-select-additive-dialog.vue'))
@@ -171,6 +172,10 @@ const onSubmit = handleSubmit((formValues) => {
 
   if (additivesError.value) {
     return
+  }
+
+  if (ingredients.value.some(i => i.quantity <= 0)) {
+    return toast({ description: "Укажите количество в технологической карте" })
   }
 
   const finalDTO: UpdateProductSizeFormSchema = {
@@ -412,7 +417,7 @@ function selectUnit(unit: UnitDTO) {
 								<TableCell>
 									<Checkbox
 										type="checkbox"
-										class="size-6 text-center"
+										class="size-6 text-left"
 										:checked="additive.isDefault"
 										:disabled="readonly"
 										@update:checked="v => additive.isDefault = v"

@@ -59,8 +59,12 @@ const createAdditiveSchema = toTypedSchema(
     machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
-    unitId: z.number().min(0, 'Введите единицу измерения'),
-    additiveCategoryId: z.coerce.number().min(1, 'Выберите категорию добавки'),
+    unitId: z.coerce.number()
+      .min(1, 'Выберите единицу измерения из списка')
+      .default(0),
+    additiveCategoryId: z.coerce.number()
+      .min(1, 'Выберите категорию из списка')
+      .default(0),
     image: z.instanceof(File).optional().refine((file) => {
       if (!file) return true; // Optional field
       return ['image/jpeg', 'image/png'].includes(file.type);
@@ -68,7 +72,6 @@ const createAdditiveSchema = toTypedSchema(
       if (!file) return true;
       return file.size <= 5 * 1024 * 1024; // Max 5MB
     }, 'Максимальный размер файла: 5MB'),
-
   })
 )
 
@@ -98,8 +101,9 @@ function triggerImageInput() {
 const onSubmit = handleSubmit((formValues) => {
   if (!selectedCategory.value?.id) return
   if (!selectedUnit.value?.id) return
-  if (selectedIngredients.value.length === 0) {
-    return toast({description: "Технологическая карта должна иметь минимум 1 ингредиент"})
+
+  if (selectedIngredients.value.some(i => i.quantity <= 0)) {
+    return toast({ description: "Укажите количество в технологической карте" })
   }
 
   const dto: CreateAdditiveDTO = {
@@ -415,23 +419,26 @@ function removeIngredient(index: number) {
         </Card>
 
 				<!-- Category Block -->
-				<Card>
-					<CardHeader>
-						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию топпинга.</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div>
-							<Button
-								variant="link"
-								class="mt-0 p-0 h-fit text-primary underline"
-								@click="openCategoryDialog = true"
-							>
-								{{ selectedCategory?.name || 'Категория не выбрана' }}
-							</Button>
-						</div>
-					</CardContent>
-				</Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Категория</CardTitle>
+            <CardDescription>Выберите категорию товара</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField name="additiveCategoryId">
+              <FormItem>
+                <Button
+                  variant="link"
+                  class="mt-0 p-0 h-fit text-primary underline"
+                  @click="openCategoryDialog = true"
+                >
+                  {{ selectedCategory?.name || 'Категория не выбрана' }}
+                </Button>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+          </CardContent>
+        </Card>
 
 				<Card>
 					<CardHeader>
@@ -439,7 +446,8 @@ function removeIngredient(index: number) {
 						<CardDescription>Выберите единицу измерения</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div>
+            <FormField name="unitId">
+              <FormItem>
 							<Button
 								variant="link"
 								class="mt-0 p-0 h-fit text-primary underline"
@@ -447,7 +455,9 @@ function removeIngredient(index: number) {
 							>
 								{{ selectedUnit?.name || 'Единица измерения не выбрана' }}
 							</Button>
-						</div>
+                <FormMessage />
+              </FormItem>
+            </FormField>
 					</CardContent>
 				</Card>
 			</div>

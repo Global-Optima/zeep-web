@@ -30,9 +30,11 @@ const createProductSchema = toTypedSchema(
       .min(2, 'Название должно содержать не менее 2 символов')
       .max(100, 'Название не может превышать 100 символов'),
     description: z.string()
+      .min(1, 'Введите описание')
       .max(500, 'Описание не может превышать 500 символов'),
     categoryId: z.coerce.number()
-      .min(1, 'Выберите категорию из списка'),
+      .min(1, 'Выберите категорию из списка')
+      .default(0),
     image: z.instanceof(File).optional().refine((file) => {
       if (!file) return true; // Optional field
       return ['image/jpeg', 'image/png'].includes(file.type);
@@ -195,21 +197,27 @@ function triggerVideoInput() {
 					</CardContent>
 				</Card>
 
-				<Card>
-					<CardHeader>
-						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию товара</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<Button
-							variant="link"
-							class="mt-0 p-0 h-fit text-primary underline"
-							@click="openCategoryDialog = true"
-						>
-							{{ selectedCategory?.name || 'Категория не выбрана' }}
-						</Button>
-					</CardContent>
-				</Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Категория</CardTitle>
+            <CardDescription>Категория товара</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField name="categoryId">
+              <FormItem>
+                <Button
+                  variant="link"
+                  class="mt-0 p-0 h-fit text-primary underline"
+                  type="button"
+                  @click="openCategoryDialog = true"
+                >
+                  {{ selectedCategory?.name || 'Категория не выбрана' }}
+                </Button>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+          </CardContent>
+        </Card>
 			</div>
 
 			<!-- Right Side: Media -->

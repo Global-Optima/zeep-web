@@ -39,6 +39,7 @@ import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
+import {toast} from "@/core/components/ui/toast";
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
@@ -136,6 +137,11 @@ const onSubmit = handleSubmit((formValues) => {
   if (additivesError.value) {
     return
   }
+
+  if (ingredients.value.some(i => i.quantity <= 0)) {
+    return toast({ description: "Укажите количество в технологической карте" })
+  }
+
   const finalDTO: CreateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,

@@ -30,8 +30,12 @@ const emits = defineEmits<{
 
 const updateProductSchema = toTypedSchema(
   z.object({
-    name: z.string().min(2, 'Название должно содержать не менее 2 символов').max(100, 'Название не может превышать 100 символов'),
-    description: z.string().max(500, 'Описание не может превышать 500 символов'),
+    name: z.string()
+      .min(2, 'Название должно содержать не менее 2 символов')
+      .max(100, 'Название не может превышать 100 символов'),
+    description: z.string()
+      .min(1, 'Введите описание')
+      .max(500, 'Описание не может превышать 500 символов'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию из списка'),
     image: z.instanceof(File).optional().refine((file) => {
       if (!file) return true;
