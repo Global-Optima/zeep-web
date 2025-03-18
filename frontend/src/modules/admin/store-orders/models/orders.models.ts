@@ -106,7 +106,7 @@ export interface SuborderAdditiveDTO {
 export interface OrderDetailsDTO {
 	id: number
 	customerName?: string
-	status: string
+	status: OrderStatus
 	total: number
 	suborders: SuborderDetailsDTO[]
 	deliveryAddress?: OrderDeliveryAddressDTO

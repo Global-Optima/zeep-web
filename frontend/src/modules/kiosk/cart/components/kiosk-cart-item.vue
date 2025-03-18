@@ -12,7 +12,7 @@
 			<p class="flex-1 text-3xl">{{ item.product.name }}, {{ item.size.name }}</p>
 			<p class="mt-2 text-xl">{{ itemDescription }}</p>
 
-			<p class="mt-4 font-semibold text-4xl">
+			<p class="mt-4 font-semibold text-primary text-4xl">
 				{{ formatPrice(itemTotalPrice) }}
 			</p>
 

@@ -4,7 +4,7 @@ import { Button } from '@/core/components/ui/button'
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
 import { getKaspiConfig, KaspiService } from '@/core/integrations/kaspi.service'
-import type { OrderDetailsDTO, TransactionDTO } from '@/modules/admin/store-orders/models/orders.models'
+import { OrderStatus, type OrderDetailsDTO, type TransactionDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 import { PaymentMethod, type PaymentOption } from '@/modules/kiosk/cart/models/kiosk-cart.models'
 import { useMutation, useQuery } from '@tanstack/vue-query'
@@ -48,11 +48,20 @@ const { data: order, isPending: isOrderPending, isError: isOrderError, isSuccess
   retry: 1,
 })
 
+const allowOrderStatuses:OrderStatus[] = [OrderStatus.WAITING_FOR_PAYMENT]
+
 // Watch for query resolution to manage order state
 watch([isOrderSuccess, isOrderError, order], ([success, error, orderData]) => {
   if (success) {
     if (!orderData) {
       toast({ title: 'Ошибка', description: 'Заказ не найден', variant: 'destructive' })
+      router.push({ name: getRouteName('KIOSK_HOME') })
+    } else if (orderData && !allowOrderStatuses.includes(orderData.status)) {
+      toast({
+        title: 'Заказ уже оплачен',
+        description: 'Платеж уже подтвержден, возвращаем в меню',
+        variant: 'destructive'
+      })
       router.push({ name: getRouteName('KIOSK_HOME') })
     } else {
       initializeTimer(false)
