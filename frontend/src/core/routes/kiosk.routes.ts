@@ -19,9 +19,23 @@ export const KIOSK_CHILDREN_ROUTES = {
 	KIOSK_LANDING: {
 		path: 'landing',
 		meta: {
-			title: 'Популряное',
+			title: 'Популярное',
 		},
 		component: () => import('@/modules/kiosk/landing/pages/kiosk-landing-page.vue'),
+	},
+	KIOSK_CART_PAYMENT: {
+		path: 'cart/payment/:orderId',
+		meta: {
+			title: 'Оплата',
+		},
+		component: () => import('@/modules/kiosk/cart/pages/kiosk-cart-payment-page.vue'),
+	},
+	KIOSK_CART_PAYMENT_SUCCESS: {
+		path: 'cart/payment/:orderId/success',
+		meta: {
+			title: 'Успешная оплата',
+		},
+		component: () => import('@/modules/kiosk/cart/pages/kiosk-cart-payment-success-page.vue'),
 	},
 	KIOSK_CHECKLIST: {
 		path: 'checklist',

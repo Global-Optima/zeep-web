@@ -45,7 +45,7 @@ function handleInactivity() {
 useInactivityTimer(INACTIVITY_MS, handleInactivity, true)
 
 // Some routes should NOT show the cart
-const omitShowCartPages: RouteKey[] = ['KIOSK_LANDING', 'KIOSK_CHECKLIST']
+const omitShowCartPages: RouteKey[] = ['KIOSK_LANDING', 'KIOSK_CHECKLIST', "KIOSK_CART_PAYMENT", "KIOSK_CART_PAYMENT_SUCCESS"]
 
 const showCart = computed(() => {
   if (cartStore.isEmpty) return false
@@ -101,10 +101,10 @@ onMounted(() => {
 			<!-- Show the cart button if conditions pass -->
 			<div
 				v-if="showCart"
-				class="bottom-8 left-0 fixed flex justify-center w-full"
+				class="fixed bottom-8 flex justify-center w-full pointer-events-none"
 				aria-label="Открыть корзину"
 			>
-				<KioskHomeCart />
+				<KioskHomeCart/>
 			</div>
 
 			<!-- Cart dialog -->

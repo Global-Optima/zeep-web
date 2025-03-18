@@ -180,7 +180,7 @@ const handleUpdate = () => {
 
 						<div class="flex flex-col justify-center items-center">
 							<LazyImage
-								:src="productDetails.imageUrl || 'https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png'"
+								:src="productDetails.imageUrl"
 								alt="Изображение товара"
 								class="w-38 h-64 object-contain"
 							/>

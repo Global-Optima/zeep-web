@@ -44,9 +44,9 @@
 				</header>
 				<div class="flex flex-col justify-center items-center">
 					<LazyImage
-						src="https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png"
+						:src="productDetails.imageUrl"
 						alt="Изображение товара"
-						class="w-38 h-64 object-contain"
+						class="rounded-3xl w-38 h-64 object-contain"
 					/>
 					<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>
 					<p class="mt-2 text-slate-600 text-xl">{{ productDetails.description }}</p>

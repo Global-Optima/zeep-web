@@ -112,8 +112,9 @@ type SuborderStoreAdditiveDTO struct {
 
 type OrderDetailsDTO struct {
 	ID              uint                     `json:"id"`
-	CustomerName    *string                  `json:"customerName,omitempty"` // Optional
-	Status          string                   `json:"status"`
+	DisplayNumber   int                      `json:"displayNumber"`
+	CustomerName    *string                  `json:"customerName,omitempty"`
+	Status          data.OrderStatus         `json:"status"`
 	Total           float64                  `json:"total"`
 	Suborders       []SuborderDetailsDTO     `json:"suborders"`
 	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"` // Optional
@@ -123,7 +124,7 @@ type OrderDetailsDTO struct {
 type SuborderDetailsDTO struct {
 	ID               uint                       `json:"id"`
 	Price            float64                    `json:"price"`
-	Status           string                     `json:"status"`
+	Status           data.SubOrderStatus        `json:"status"`
 	StoreProductSize OrderProductSizeDetailsDTO `json:"storeProductSize"`
 	StoreAdditives   []OrderAdditiveDetailsDTO  `json:"storeAdditives"`
 	CompletedAt      *time.Time                 `json:"completedAt,omitempty"`
