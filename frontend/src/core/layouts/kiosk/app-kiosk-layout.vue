@@ -62,7 +62,9 @@ onMounted(() => {
 </script>
 
 <template>
-	<div class="relative bg-[#F3F4F9] w-full min-h-screen no-scrollbar">
+	<div
+		class="relative bg-slate-50 bg-gradient-to-br from-green-50/40 to-blue-50/40 w-full min-h-screen no-scrollbar"
+	>
 		<!-- If offline, show overlay -->
 		<div
 			v-if="!isOnline"
@@ -101,10 +103,10 @@ onMounted(() => {
 			<!-- Show the cart button if conditions pass -->
 			<div
 				v-if="showCart"
-				class="fixed bottom-8 flex justify-center w-full pointer-events-none"
+				class="bottom-8 fixed flex justify-center w-full pointer-events-none"
 				aria-label="Открыть корзину"
 			>
-				<KioskHomeCart/>
+				<KioskHomeCart />
 			</div>
 
 			<!-- Cart dialog -->

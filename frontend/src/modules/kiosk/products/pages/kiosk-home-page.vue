@@ -11,7 +11,7 @@
 			@update:search-term="onUpdateSearchTerm"
 		/>
 
-		<!-- Products Grid -->
+		<!-- Products Grid Loading Skeleton -->
 		<div
 			v-if="isProductsPending"
 			class="gap-3 grid grid-cols-2 sm:grid-cols-3 px-4"
@@ -23,6 +23,7 @@
 			/>
 		</div>
 
+		<!-- Scrollable Products List -->
 		<section
 			v-else
 			class="flex-1 px-4 pb-4 overflow-y-auto no-scrollbar"
@@ -47,24 +48,23 @@
 			</div>
 		</section>
 
-		<!-- Cart Button for mobile -->
+		<!-- Cart Button for mobile (if any) -->
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, useTemplateRef } from 'vue'
-import { useInfiniteQuery, useQuery } from '@tanstack/vue-query'
-import { useDebounceFn } from '@vueuse/core'
-import { useInfiniteScroll } from '@vueuse/core'
 import { Skeleton } from '@/core/components/ui/skeleton'
 import { DEFAULT_PAGINATION_META, hasMorePages } from '@/core/utils/pagination.utils'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/toolbar/kiosk-home-toolbar-mobile.vue'
+import { useInfiniteQuery, useQuery } from '@tanstack/vue-query'
+import { useDebounceFn, useInfiniteScroll } from '@vueuse/core'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 /* --------------------------
    Reactive References
------------------------------*/
+--------------------------*/
 const selectedCategoryId = ref<number | null>(null)
 const searchTerm = ref('')
 const previousCategoryId = ref<number | null>(null)
@@ -72,7 +72,7 @@ const skeletonsArray: number[] = new Array(9).fill(5)
 
 /* --------------------------
    Query Keys
------------------------------*/
+--------------------------*/
 const productsQueryKey = computed(() => [
   'kiosk-products',
   { categoryId: selectedCategoryId.value, searchTerm: searchTerm.value },
@@ -80,7 +80,7 @@ const productsQueryKey = computed(() => [
 
 /* --------------------------
    Fetch Categories
------------------------------*/
+--------------------------*/
 const { data: categories, isPending: categoriesLoading } = useQuery({
   queryKey: ['store-product-categories'],
   queryFn: () => storeProductsService.getStoreProductCategories(),
@@ -98,7 +98,7 @@ watch(
 
 /* --------------------------
    Infinite Products Query
------------------------------*/
+--------------------------*/
 const {
   data: products,
   fetchNextPage,
@@ -122,16 +122,20 @@ const {
 
 /* --------------------------
    Flatten Infinite Query Pages
------------------------------*/
+--------------------------*/
 const flattenedProducts = computed(() => {
   return products.value && products.value.pages
     ? products.value.pages.flatMap(page => page.data)
     : []
 })
+
 /* --------------------------
    Infinite Scroll Setup
------------------------------*/
-const scrollContainer = useTemplateRef<HTMLElement | null>('scrollContainer')
+--------------------------*/
+// Use useTemplateRef to get a reference to the scroll container element.
+// Note: We now attach the ref to the <section> (the actual scrollable container).
+const scrollContainer = useTemplateRef<HTMLElement>('scrollContainer')
+
 useInfiniteScroll(
   scrollContainer,
   () => {
@@ -139,12 +143,12 @@ useInfiniteScroll(
       fetchNextPage()
     }
   },
-  { distance: 500},
+  { distance: 500 }
 )
 
 /* --------------------------
    Toolbar Interactions
------------------------------*/
+--------------------------*/
 function onUpdateCategory(categoryId: number) {
   if (searchTerm.value.trim() !== '') return
   selectedCategoryId.value = categoryId
