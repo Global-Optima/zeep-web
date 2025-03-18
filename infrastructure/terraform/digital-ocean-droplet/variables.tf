@@ -98,3 +98,45 @@ variable "certificate_name" {
   default = "zeep-cert"
   description = "The name of the DigitalOcean certificate"
 }
+
+variable "ssh_private_key_path" {
+  type        = string
+  description = "Path to the SSH private key file for accessing Droplets"
+  sensitive   = true
+}
+
+variable "github_token" {
+  type        = string
+  description = "GitHub Personal Access Token for private repository access"
+  sensitive   = true
+}
+
+variable "github_repo" {
+  type        = string
+  description = "GitHub repository in format username/repository"
+  default     = "your-org/zeep-app"
+}
+
+variable "github_branch" {
+  type        = string
+  description = "GitHub branch to deploy"
+  default     = "main"
+}
+
+variable "jwt_customer_secret" {
+  type        = string
+  description = "Secret key for customer JWT tokens"
+  sensitive   = true
+}
+
+variable "jwt_employee_secret" {
+  type        = string
+  description = "Secret key for employee JWT tokens"
+  sensitive   = true
+}
+
+variable "payment_secret" {
+  type        = string
+  description = "Secret key for payment processing"
+  sensitive   = true
+}
