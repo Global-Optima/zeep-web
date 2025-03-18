@@ -4,7 +4,7 @@
 		@update:filter="updateFilter"
 	/>
 
-	<AdminListLoader v-if="isPending" />
+	<AdminListLoader v-if="isLoading" />
 
 	<div v-else>
 		<Card>
@@ -48,9 +48,10 @@ import { computed } from 'vue'
 
 const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<AdditiveFilterQuery>({})
 
-const { data: storeAdditivesResponse, isPending } = useQuery({
+const { data: storeAdditivesResponse, isLoading } = useQuery({
   queryKey: computed(() => ['admin-store-additives', filter.value]),
   queryFn: () => storeAdditivesService.getStoreAdditives(filter.value),
+  enabled: computed(() => Boolean(filter.value.storeId))
 })
 </script>
 
