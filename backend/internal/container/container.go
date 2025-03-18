@@ -41,7 +41,7 @@ type Container struct {
 	Regions                 *modules.RegionsModule
 	Stores                  *modules.StoresModule
 	StoreStocks             *modules.StoreStockModule
-	StoreSynchronizer       *modules.StoreSynchronizerSynchronizerModule
+	StoreSynchronizer       *modules.StoreSynchronizerModule
 	Suppliers               *modules.SuppliersModule
 	StockRequests           *modules.StockRequestsModule
 	Warehouses              *modules.WarehousesModule
