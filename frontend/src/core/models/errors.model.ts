@@ -1,9 +1,7 @@
+import type { LocalizedMessage } from './localized.model'
+
 export interface LocalizedError {
-	message: {
-		en: string
-		ru: string
-		kk: string
-	}
+	message: LocalizedMessage
 	status: number
 	timestamp: Date
 	path: string
