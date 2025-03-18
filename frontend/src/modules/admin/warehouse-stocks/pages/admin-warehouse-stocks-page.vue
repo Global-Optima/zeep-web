@@ -4,7 +4,7 @@
 		@update:filter="updateFilter"
 	/>
 
-	<AdminListLoader v-if="isPending" />
+	<AdminListLoader v-if="isLoading" />
 
 	<div v-else>
 		<Card>
@@ -48,9 +48,10 @@ import { computed } from 'vue'
 
 const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<GetWarehouseStockFilter>({})
 
-const { data: warehouseStocksResponse, isPending } = useQuery({
+const { data: warehouseStocksResponse, isLoading } = useQuery({
   queryKey: computed(() => ['warehouse-stocks', filter.value]),
   queryFn: () => warehouseStocksService.getWarehouseStocks(filter.value),
+  enabled: computed(() => Boolean(filter.value.warehouseId))
 })
 </script>
 
