@@ -1,7 +1,5 @@
 <template>
-	<div
-		class="flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-purple-50 p-4 min-h-screen"
-	>
+	<div class="flex justify-center items-center bg-slate-100 h-screen">
 		<PageLoader v-if="isOrderPending" />
 
 		<div
