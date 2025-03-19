@@ -26,13 +26,9 @@ provider "digitalocean" {
 resource "digitalocean_vpc" "main" {
   name        = var.vpc_name
   region      = var.region
-  ip_range    = "10.10.0.0/16"
+  ip_range    = "10.114.0.0/20"
   description = "VPC for production environment"
 }
-
-###############################################################################
-# Droplet Configuration (Application Servers)
-###############################################################################
 
 ###############################################################################
 # Droplet Configuration with Provisioning
@@ -57,18 +53,20 @@ resource "digitalocean_droplet" "app_server" {
 
 resource "digitalocean_firewall" "app_firewall" {
   name        = "app-firewall"
-  droplet_ids = [ for droplet in digitalocean_droplet.app_server : droplet.id ]
+  droplet_ids = [for droplet in digitalocean_droplet.app_server : droplet.id]
 
   inbound_rule {
     protocol         = "tcp"
     port_range       = "22"
-    source_addresses = [var.ssh_allowed_cidr]
+    source_addresses = [var.ssh_allowed_cidr] # default 0.0.0.0/0 (open SSH)
   }
 
+  # If you want internal traffic from the same VPC range, you could do: "10.114.0.0/20"
+  # The example below is wide open to 0.0.0.0/0 for HTTP
   inbound_rule {
     protocol         = "tcp"
     port_range       = "80"
-    source_addresses = ["10.10.0.0/16", "0.0.0.0/0", "::/0"]
+    source_addresses = ["0.0.0.0/0", "::/0"]
   }
 
   inbound_rule {
@@ -83,6 +81,12 @@ resource "digitalocean_firewall" "app_firewall" {
   }
 
   outbound_rule {
+    protocol              = "udp"
+    port_range            = "1-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  outbound_rule {
     protocol              = "tcp"
     port_range            = "all"
     destination_addresses = ["0.0.0.0/0", "::/0"]
@@ -94,7 +98,7 @@ resource "digitalocean_firewall" "app_firewall" {
   }
 
   lifecycle {
-    ignore_changes = [ droplet_ids ]
+    ignore_changes = [droplet_ids]
   }
 }
 
@@ -127,6 +131,7 @@ resource "digitalocean_certificate" "zeep_certificate" {
   type    = "lets_encrypt"
   domains = var.domains
 }
+
 
 ###############################################################################
 # Load Balancer Configuration

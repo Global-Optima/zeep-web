@@ -40,7 +40,7 @@ variable "droplet_size" {
 
 variable "droplet_image" {
   type        = string
-  default     = "ubuntu-24-10-x64"
+  default     = "ubuntu-22-04-x64"
   description = "Droplet image for the application servers."
 }
 
@@ -58,7 +58,7 @@ variable "redis_node_size" {
 
 variable "vpc_name" {
   type        = string
-  default     = "zeep-vps"
+  default     = "zeep-vpc"
   description = "Name of the VPC."
 }
 
@@ -83,18 +83,17 @@ variable "app_server_count" {
 variable "ssh_allowed_cidr" {
   type        = string
   default     = "0.0.0.0/0"
-  description = "CIDR block allowed to SSH into the Droplets."
+  description = "CIDR block allowed to SSH into the Droplets. Be cautious!"
 }
 
 variable "domains" {
   type        = list(string)
   default     = ["zeep.kz", "www.zeep.kz"]
-  sensitive   = true
-  description = "The domains for the load balancer (e.g. example.com)."
+  description = "The domains for the load balancer certificate (e.g. example.com)."
 }
 
 variable "certificate_name" {
   type        = string
-  default = "zeep-cert"
-  description = "The name of the DigitalOcean certificate"
+  default     = "zeep-cert"
+  description = "The name of the DigitalOcean certificate."
 }
