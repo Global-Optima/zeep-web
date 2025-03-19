@@ -49,6 +49,97 @@ resource "digitalocean_droplet" "app_server" {
   backups    = false
   monitoring = true
   tags       = concat(var.tags, ["app-server"])
+
+  # Wait for the droplet to be fully provisioned before attempting to connect
+  provisioner "remote-exec" {
+    inline = ["echo 'Droplet is ready'"]
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      host    = self.ipv4_address
+      private_key = file(var.ssh_private_key_path)
+    }
+  }
+
+  # Upload the setup script
+  provisioner "file" {
+    source      = "${path.module}/setup.sh"
+    destination = "/root/setup.sh"
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      host    = self.ipv4_address
+      private_key = file(var.ssh_private_key_path)
+    }
+  }
+  # Upload the environment config file
+  provisioner "file" {
+    content = templatefile("${path.module}/config.env.tpl", {
+      # PostgreSQL configuration
+      POSTGRES_HOST     = digitalocean_database_cluster.postgres.host
+      POSTGRES_PORT     = digitalocean_database_cluster.postgres.port
+      POSTGRES_USER     = digitalocean_database_cluster.postgres.user
+      POSTGRES_PASSWORD = digitalocean_database_cluster.postgres.password
+      POSTGRES_DB       = digitalocean_database_cluster.postgres.database
+      
+      # Redis configuration
+      REDIS_USERNAME    = digitalocean_database_cluster.redis.user
+      REDIS_HOST        = digitalocean_database_cluster.redis.host
+      REDIS_PORT        = digitalocean_database_cluster.redis.port
+      REDIS_PASSWORD    = digitalocean_database_cluster.redis.password
+      
+      # Domain configuration
+      DOMAIN            = var.domains[0]
+      
+      # S3 configuration
+      S3_ACCESS_KEY     = var.spaces_access_id
+      S3_SECRET_KEY     = var.spaces_access_token
+      S3_ENDPOINT       = digitalocean_spaces_bucket.bucket.endpoint
+      S3_BUCKET_NAME    = digitalocean_spaces_bucket.bucket.name
+      
+      # JWT and other application secrets
+      JWT_CUSTOMER_SECRET_KEY = var.jwt_customer_secret
+      JWT_EMPLOYEE_SECRET_KEY = var.jwt_employee_secret
+      PAYMENT_SECRET          = var.payment_secret
+      
+      # GitHub configuration
+      GITHUB_TOKEN      = var.github_token
+      GITHUB_REPO       = var.github_repo
+      GITHUB_BRANCH     = var.github_branch
+    })
+    destination = "/root/config.env"
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      host    = self.ipv4_address
+      private_key = file(var.ssh_private_key_path)
+    }
+  }
+
+  # Execute the setup script
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /root/setup.sh",
+      "/root/setup.sh"
+    ]
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      host    = self.ipv4_address
+      private_key = file(var.ssh_private_key_path)
+      timeout = "10m"
+    }
+  }
+
+  depends_on = [
+    digitalocean_database_cluster.postgres,
+    digitalocean_database_cluster.redis,
+    digitalocean_spaces_bucket.bucket
+  ]
 }
 
 ###############################################################################
