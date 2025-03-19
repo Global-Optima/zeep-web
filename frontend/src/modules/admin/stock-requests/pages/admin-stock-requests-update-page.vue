@@ -45,6 +45,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['stock-request', Number(stockRequestId)] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Материалы запроса на склад успешно обновлены.',
 		})
 		router.back()

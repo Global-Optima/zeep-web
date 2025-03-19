@@ -169,7 +169,7 @@ type OrdersExportFilterQuery struct {
 type OrderExportDTO struct {
 	ID              uint                     `json:"id"`
 	CustomerName    string                   `json:"customerName"`
-	Status          string                   `json:"status"`
+	Status          data.OrderStatus         `json:"status"`
 	Total           float64                  `json:"total"`
 	CreatedAt       time.Time                `json:"createdAt"`
 	StoreName       string                   `json:"storeName"`
@@ -178,10 +178,12 @@ type OrderExportDTO struct {
 }
 
 type OrdersTimeZoneFilter struct {
-	StoreID          *uint   `form:"storeId" binding:"omitempty"`
-	TimeZoneLocation *string `form:"timezone" binding:"omitempty"`
-	TimeZoneOffset   *uint   `form:"timezoneOffset" binding:"omitempty"`
-	TimeGapMinutes   *uint   `form:"timeGapMinutes" binding:"omitempty"`
+	StoreID                *uint              `form:"storeId" binding:"omitempty"`
+	TimeZoneLocation       *string            `form:"timezone" binding:"omitempty"`
+	TimeZoneOffset         *uint              `form:"timezoneOffset" binding:"omitempty"`
+	TimeGapMinutes         *uint              `form:"timeGapMinutes" binding:"omitempty"`
+	IncludeYesterdayOrders *bool              `form:"includeYesterdayOrders" binding:"omitempty"`
+	Statuses               []data.OrderStatus `form:"statuses" binding:"omitempty"`
 }
 
 type TransactionDTO struct {

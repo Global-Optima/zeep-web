@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import AdminOrdersDisplayList from '@/modules/admin/store-orders/display/components/admin-orders-display-list.vue'
-import { OrderStatus } from '@/modules/admin/store-orders/models/orders.models'
+import { OrderStatus, type OrdersTimeZoneFilter } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 
 // ------------------------------------------------------------------
@@ -12,18 +12,21 @@ import { ordersService } from '@/modules/admin/store-orders/services/orders.serv
 const ORDERS_PER_PAGE = 6
 const AUTO_PAGE_INTERVAL = 6000 // 6 seconds
 
-// ------------------------------------------------------------------
-// TanStack Query - Fetch barista orders
-// ------------------------------------------------------------------
-/**
- * If you want TypeScript to know these are Order[]:
- * useQuery<Order[]>({ ... })
- */
+
+ const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+ const filter: OrdersTimeZoneFilter = {
+  timeGapMinutes: 15,
+  timezone: timezone,
+  includeYesterdayOrders: false,
+  statuses: [OrderStatus.PREPARING, OrderStatus.COMPLETED]
+ }
+
 const {
   data: orders,
 } = useQuery({
-  queryKey: ['barista-orders', {timeGapMinutes: 15}],
-  queryFn: () => ordersService.getBaristaOrders({ timeGapMinutes: 15 }),
+  queryKey: ['barista-orders', filter],
+  queryFn: () => ordersService.getBaristaOrders(filter),
   placeholderData: [],
   initialData: [],
   refetchInterval: 5000,

@@ -28,9 +28,10 @@ const createMutation = useMutation({
 		})
 	},
 	onSuccess: () => {
-		queryClient.invalidateQueries({ queryKey: ['store-stocks'] })
+		queryClient.invalidateQueries({ queryKey: ['admin-store-stocks'] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Запасы кафе успешно добавлены.',
 		})
 

@@ -43,6 +43,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['warehouse-employee', employeeId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные сотрудника успешно обновлены.',
 		})
 	},

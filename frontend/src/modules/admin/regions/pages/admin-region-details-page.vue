@@ -48,13 +48,12 @@
 
 <script lang="ts" setup>
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
-import type { UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import AdminRegionDetailsForm from '@/modules/admin/regions/components/details/admin-region-details-form.vue'
 import AdminRegionEmployees from '@/modules/admin/regions/components/details/admin-region-employees.vue'
 import AdminRegionWarehouses from '@/modules/admin/regions/components/details/admin-region-warehouses.vue'
@@ -90,6 +89,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-region-details', additiveId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные региона успешно обновлены.',
 		})
 	},

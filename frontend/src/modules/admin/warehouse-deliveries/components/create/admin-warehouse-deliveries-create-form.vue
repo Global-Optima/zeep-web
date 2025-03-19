@@ -210,11 +210,6 @@ function selectSupplier(supplier: SupplierDTO) {
 	openSupplierDialog.value = false
   materials.value = []
   stockMaterialFilter.value = {supplierId: supplier.id}
-	toast({
-		title: 'Успех',
-		description: `Поставщик "${supplier.name}" выбран.`,
-		variant: 'default',
-	})
 }
 
 // Add Stock Material
@@ -222,11 +217,6 @@ function addStockMaterial(stockMaterial: StockMaterialsDTO) {
 	const exists = materials.value.some((item) => item.stockMaterialId === stockMaterial.id)
 
 	if (exists) {
-		toast({
-			title: 'Ошибка',
-			description: `Материал "${stockMaterial.name}" уже добавлен.`,
-			variant: 'destructive',
-		})
 		return
 	}
 
@@ -238,22 +228,13 @@ function addStockMaterial(stockMaterial: StockMaterialsDTO) {
     size: stockMaterial.size,
     unit: stockMaterial.unit
 	})
-	toast({
-		title: 'Успех',
-		description: `Материал "${stockMaterial.name}" добавлен.`,
-		variant: 'default',
-	})
+
 	openStockMaterialDialog.value = false
 }
 
 // Remove Material
 function removeMaterial(index: number) {
-	const removed = materials.value.splice(index, 1)
-	toast({
-		title: 'Удалено',
-		description: `Материал "${removed[0].name}" удален.`,
-		variant: 'default',
-	})
+	materials.value.splice(index, 1)
 }
 
 // Submit
@@ -292,11 +273,6 @@ function onSubmit() {
 
 // Cancel
 function onCancel() {
-	toast({
-		title: 'Отмена',
-		description: 'Изменения отменены.',
-		variant: 'default',
-	})
 	emit('on-close')
 }
 </script>

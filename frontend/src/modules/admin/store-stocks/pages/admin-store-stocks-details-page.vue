@@ -29,7 +29,7 @@ const storeStockId = route.params.id as string
 const canUpdate = useHasRole([EmployeeRole.STORE_MANAGER])
 
 const { data: storeStockData } = useQuery({
-	queryKey: computed(() => ['store-stock', storeStockId]),
+	queryKey: computed(() => ['admin-store-stock', storeStockId]),
 	queryFn: () => storeStocksService.getStoreWarehouseStockById(Number(storeStockId)),
 	enabled: !isNaN(Number(storeStockId)),
 })
@@ -44,10 +44,11 @@ const updateMutation = useMutation({
 		})
 	},
 	onSuccess: () => {
-		queryClient.invalidateQueries({ queryKey: ['store-stocks'] })
-		queryClient.invalidateQueries({ queryKey: ['store-stock', storeStockId] })
+		queryClient.invalidateQueries({ queryKey: ['admin-store-stocks'] })
+		queryClient.invalidateQueries({ queryKey: ['admin-store-stock', storeStockId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные запасов кафе успешно обновлены.',
 		})
 	},

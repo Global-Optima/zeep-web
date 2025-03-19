@@ -31,6 +31,7 @@ const {mutate, isPending} = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-products'] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Продукт успешно создан.',
 		})
 		router.push({ name: getRouteName('ADMIN_PRODUCTS') })

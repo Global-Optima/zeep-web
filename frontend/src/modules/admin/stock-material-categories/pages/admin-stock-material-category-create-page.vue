@@ -29,6 +29,7 @@ const createMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-stock-material-categories'] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Категория материалов успешно создана.',
 		})
 		router.back()

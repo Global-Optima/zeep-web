@@ -16,13 +16,13 @@
 						class="mt-1 text-primary underline cursor-pointer"
 						@click="openMaterialDialog"
 					>
-						{{ selectedStockMaterial ? selectedStockMaterial.name : 'Выбрать материал' }}
+						{{ selectedStockMaterialLabel }}
 					</p>
 				</div>
 
 				<!-- Quantity Input -->
 				<div class="mb-4">
-					<Label for="quantity">Количество</Label>
+					<Label for="quantity">Количество упаковок</Label>
 					<Input
 						id="quantity"
 						type="number"
@@ -81,7 +81,7 @@ import { Label } from '@/core/components/ui/label'
 import type { StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import AdminSelectAvailableToAddStockMaterialsDialog from '@/modules/admin/warehouse-stocks/components/admin-select-available-to-add-stock-materials-dialog.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const { open, initialFilter } = defineProps<{ open: boolean, initialFilter?: StockMaterialsFilter}>()
 
@@ -93,6 +93,14 @@ const emit = defineEmits<{
 const selectedStockMaterial = ref<StockMaterialsDTO | null>(null)
 const quantity = ref<number>(1)
 const materialDialogOpen = ref(false)
+
+const selectedStockMaterialLabel = computed(() => {
+  const material = selectedStockMaterial.value
+
+  return material ?
+  `${material.name}, ${material.size} ${material.unit.name.toLowerCase()}`
+  : 'Выбрать материал'
+})
 
 function openMaterialDialog() {
   materialDialogOpen.value = true

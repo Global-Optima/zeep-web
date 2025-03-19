@@ -45,6 +45,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-unit-details', unitId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Размер успешно обновлён.',
 		})
 	},

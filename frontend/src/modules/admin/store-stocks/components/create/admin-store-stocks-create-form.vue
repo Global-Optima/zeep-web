@@ -186,11 +186,6 @@ function addSelectedIngredient(ingredient: { id: number; name: string; unit: { n
 	)
 
 	if (exists) {
-		toast({
-			title: 'Ошибка',
-			description: `Ингредиент "${ingredient.name}" уже добавлен.`,
-			variant: 'destructive'
-		})
 		return
 	}
 
@@ -203,23 +198,12 @@ function addSelectedIngredient(ingredient: { id: number; name: string; unit: { n
 		category: ingredient.category
 	})
 
-	toast({
-		title: 'Успех',
-		description: `Ингредиент "${ingredient.name}" добавлен.`,
-		variant: 'default'
-	})
-
 	openDialog.value = false
 }
 
 // Remove ingredient from the table
 function removeIngredient(index: number) {
-	const removed = selectedIngredients.value.splice(index, 1)
-	toast({
-		title: 'Удалено',
-		description: `Ингредиент "${removed[0].name}" удален.`,
-		variant: 'default'
-	})
+	selectedIngredients.value.splice(index, 1)
 }
 
 // Validation checks
@@ -256,22 +240,11 @@ function onSubmit() {
 		}))
 	}
 
-	toast({
-		title: 'Успех',
-		description: 'Ингредиенты успешно добавлены.',
-		variant: 'default'
-	})
-
 	emit('onSubmit', payload)
 }
 
 // Cancel form
 function onCancel() {
-	toast({
-		title: 'Отмена',
-		description: 'Изменения отменены.',
-		variant: "destructive"
-	})
 	emit('onCancel')
 }
 </script>

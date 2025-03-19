@@ -164,7 +164,7 @@ export class KaspiService {
 
 	async awaitPaymentTest(): Promise<TransactionDTO> {
 		await new Promise(resolve => setTimeout(resolve, 3000))
-    
+
 		return {
 			bin: '123456',
 			transactionId: 'TX-' + Date.now(),

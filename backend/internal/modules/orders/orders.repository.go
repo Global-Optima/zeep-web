@@ -156,7 +156,7 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 		return nil, fmt.Errorf("storeID is required")
 	}
 
-	// Get correct timezone location
+	// Get the correct timezone location
 	location, err := getTimeZoneLocation(filter)
 	if err != nil {
 		return nil, err
@@ -165,13 +165,19 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 	// Get the current date in the specified timezone
 	now := time.Now().In(location)
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+
+	if filter.IncludeYesterdayOrders != nil && *filter.IncludeYesterdayOrders {
+		yesterday := now.AddDate(0, 0, -1)
+		startOfToday = time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, location)
+	}
+
 	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
 
 	// Convert start and end of today to UTC for database querying
 	startOfTodayUTC := startOfToday.UTC()
 	endOfTodayUTC := endOfToday.UTC()
 
-	// Base query to fetch orders for the given store within today's time range
+	// Base query with preloads and business logic
 	query := r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
@@ -181,10 +187,15 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
 		Order("created_at ASC")
 
+	// Optionally filter by an array of statuses if provided
+	if len(filter.Statuses) > 0 {
+		query = query.Where("status IN (?)", filter.Statuses)
+	}
+
+	// Apply additional time gap filtering if needed
 	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
 		cutoffTime := now.Add(-time.Duration(*filter.TimeGapMinutes) * time.Minute)
 		cutoffTimeUTC := cutoffTime.UTC()
-
 		query = query.Where("(status != ? OR completed_at >= ?)", data.OrderStatusCompleted, cutoffTimeUTC)
 	}
 

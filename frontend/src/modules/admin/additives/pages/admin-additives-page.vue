@@ -12,7 +12,7 @@
 				<!-- No Data Message -->
 				<p
 					v-if="!additivesResponse || additivesResponse.data.length === 0"
-					class="text-muted-foreground text-center"
+					class="text-muted-foreground"
 				>
 					Топпинги не найдены
 				</p>

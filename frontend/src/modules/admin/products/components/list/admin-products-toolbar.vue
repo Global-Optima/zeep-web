@@ -49,7 +49,7 @@ watch(debouncedSearchTerm, (newValue) => {
   localFilter.value.search = newValue
   emit('update:filter', {
     search: newValue.trim(),
-    page: DEFAULT_PAGINATION_META.page, 
+    page: DEFAULT_PAGINATION_META.page,
     pageSize: DEFAULT_PAGINATION_META.pageSize
   })
 })

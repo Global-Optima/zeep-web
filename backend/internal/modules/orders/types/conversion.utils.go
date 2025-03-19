@@ -188,7 +188,7 @@ func ToOrderExportDTO(order *data.Order, storeName string) OrderExportDTO {
 	return OrderExportDTO{
 		ID:              order.ID,
 		CustomerName:    order.CustomerName,
-		Status:          string(order.Status),
+		Status:          order.Status,
 		Total:           order.Total,
 		CreatedAt:       order.CreatedAt,
 		StoreName:       storeName,

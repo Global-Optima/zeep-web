@@ -49,6 +49,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-stock-material-details', stockMaterialId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные товара успешно обновлены.',
 		})
 	},

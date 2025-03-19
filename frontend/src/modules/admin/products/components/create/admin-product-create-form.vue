@@ -197,27 +197,27 @@ function triggerVideoInput() {
 					</CardContent>
 				</Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Категория</CardTitle>
-            <CardDescription>Категория товара</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FormField name="categoryId">
-              <FormItem>
-                <Button
-                  variant="link"
-                  class="mt-0 p-0 h-fit text-primary underline"
-                  type="button"
-                  @click="openCategoryDialog = true"
-                >
-                  {{ selectedCategory?.name || 'Категория не выбрана' }}
-                </Button>
-                <FormMessage />
-              </FormItem>
-            </FormField>
-          </CardContent>
-        </Card>
+				<Card>
+					<CardHeader>
+						<CardTitle>Категория</CardTitle>
+						<CardDescription>Категория товара</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<FormField name="categoryId">
+							<FormItem>
+								<Button
+									variant="link"
+									class="mt-0 p-0 h-fit text-primary underline"
+									type="button"
+									@click="openCategoryDialog = true"
+								>
+									{{ selectedCategory?.name || 'Категория не выбрана' }}
+								</Button>
+								<FormMessage />
+							</FormItem>
+						</FormField>
+					</CardContent>
+				</Card>
 			</div>
 
 			<!-- Right Side: Media -->

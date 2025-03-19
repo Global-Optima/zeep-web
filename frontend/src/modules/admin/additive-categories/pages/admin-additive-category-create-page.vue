@@ -29,6 +29,7 @@ const createMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-additive-categories'] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Категория добавок успешно создана.',
 		})
 		router.back()
