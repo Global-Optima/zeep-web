@@ -1,5 +1,5 @@
 <template>
-	<div class="relative bg-[#F3F4F9] pb-32 text-black no-scrollbar">
+	<div class="relative bg-[#F3F4F9] pt-safe pb-32 text-black no-scrollbar">
 		<!-- Loading State -->
 		<PageLoader v-if="isFetching" />
 		<!-- Error State -->

@@ -33,7 +33,7 @@ class OrderService {
 
 	async getBaristaOrders(filter?: OrdersTimeZoneFilter) {
 		try {
-			const response = await apiClient.get<OrderDTO[]>('/orders', {
+			const response = await apiClient.get<OrderDTO[]>('/orders/kiosk', {
 				params: buildRequestFilter(filter),
 			})
 			return response.data

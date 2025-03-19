@@ -73,6 +73,7 @@ const skeletonsArray: number[] = new Array(9).fill(5)
 const { data: categories, isPending: categoriesLoading } = useQuery({
   queryKey: ['store-product-categories'],
   queryFn: () => storeProductsService.getStoreProductCategories(),
+  refetchInterval: 20_000,
   initialData: []
 })
 
@@ -104,6 +105,7 @@ const {
       isAvailable: true,
       pageSize: 100
     }),
+    refetchInterval: 20_000,
   enabled: computed(() => Boolean(selectedCategoryId.value) || Boolean(searchTerm.value))
 })
 
