@@ -31,10 +31,6 @@ resource "digitalocean_vpc" "main" {
 }
 
 ###############################################################################
-# Droplet Configuration (Application Servers)
-###############################################################################
-
-###############################################################################
 # Droplet Configuration with Provisioning
 ###############################################################################
 
@@ -64,9 +60,9 @@ resource "digitalocean_droplet" "app_server" {
 
   # Upload the setup script
   provisioner "file" {
-    source      = "${path.module}/setup.sh"
     destination = "/root/setup.sh"
-
+    content     = replace(file("${path.module}/setup.sh"), "\r\n", "\n")
+    
     connection {
       type    = "ssh"
       user    = "root"
@@ -122,10 +118,16 @@ resource "digitalocean_droplet" "app_server" {
   # Execute the setup script
   provisioner "remote-exec" {
     inline = [
+      "echo 'Waiting for apt to be available...'",
+      "until [ ! -f /var/lib/apt/lists/lock ] && [ ! -f /var/lib/dpkg/lock-frontend ]; do sleep 2; done",
+      "sudo apt-get update",
+      "sudo apt-get install -y dos2unix",
+      "sudo dos2unix /root/setup.sh || echo 'Failed to convert setup.sh'",
+      "sudo dos2unix /root/config.env || echo 'Failed to convert config.env'",
       "chmod +x /root/setup.sh",
       "/root/setup.sh"
     ]
-
+    
     connection {
       type    = "ssh"
       user    = "root"
