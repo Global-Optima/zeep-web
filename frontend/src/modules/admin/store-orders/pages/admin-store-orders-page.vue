@@ -36,22 +36,28 @@
 <script setup lang="ts">
 import AdminListLoader from '@/core/components/admin-list-loader/AdminListLoader.vue'
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
-import { Card, CardContent } from '@/core/components/ui/card'
+import {Card, CardContent} from '@/core/components/ui/card'
 import CardFooter from '@/core/components/ui/card/CardFooter.vue'
-import { usePaginationFilter } from '@/core/hooks/use-pagination-filter.hook'
+import {usePaginationFilter} from '@/core/hooks/use-pagination-filter.hook'
 import AdminStoreOrdersList from '@/modules/admin/store-orders/components/list/admin-store-orders-list.vue'
 import AdminStoreOrdersToolbar from '@/modules/admin/store-orders/components/list/admin-store-orders-toolbar.vue'
-import type { OrdersFilterQuery } from '@/modules/admin/store-orders/models/orders.models'
-import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
-import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
+import type {OrdersFilterQuery} from '@/modules/admin/store-orders/models/orders.models'
+import {ordersService} from '@/modules/admin/store-orders/services/orders.service'
+import {useQuery} from '@tanstack/vue-query'
+import {computed} from 'vue'
+import {useHasRole} from "@/core/hooks/use-has-roles.hook";
+import {EmployeeRole} from "@/modules/admin/employees/models/employees.models";
 
 const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<OrdersFilterQuery>({})
+const isFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
+const isStore = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
 
 const { data: storeOrders, isLoading } = useQuery({
   queryKey: computed(() => ['store-orders', filter.value]),
   queryFn: () => ordersService.getAllOrders(filter.value),
-  enabled: computed(() => Boolean(filter.value.storeId))
+  enabled: computed(() =>
+    isStore.value || (isFranchisee.value && Boolean(filter.value.storeId))
+  )
 })
 </script>
 

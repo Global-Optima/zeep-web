@@ -45,13 +45,19 @@ import type { GetStoreWarehouseStockFilterQuery } from '@/modules/admin/store-st
 import { storeStocksService } from '@/modules/admin/store-stocks/services/store-stocks.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
+import {useHasRole} from "@/core/hooks/use-has-roles.hook";
+import {EmployeeRole} from "@/modules/admin/employees/models/employees.models";
 
 const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<GetStoreWarehouseStockFilterQuery>({})
+const isFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
+const isStore = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
 
 const { data: storeStocksResponse, isLoading } = useQuery({
   queryKey: computed(() => ['store-stocks', filter.value]),
   queryFn: () => storeStocksService.getStoreWarehouseStockList(filter.value),
-  enabled: computed(() => Boolean(filter.value.storeId))
+  enabled: computed(() =>
+    isStore.value || (isFranchisee.value && Boolean(filter.value.storeId))
+  )
 })
 </script>
 
