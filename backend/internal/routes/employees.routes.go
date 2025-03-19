@@ -268,7 +268,7 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 	router := r.EmployeeRoutes.Group("/orders")
 	{
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateOrder)
-		router.GET("/:orderId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrderDetails)                             // all franchise, stores
+		router.GET("/:orderId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrderDetails) // all franchise, stores
 		router.POST("/check-name", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CheckCustomerName)
 		router.POST("/:orderId/payment/fail", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.FailOrderPayment)
 		router.POST("/:orderId/payment/success", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SuccessOrderPayment)

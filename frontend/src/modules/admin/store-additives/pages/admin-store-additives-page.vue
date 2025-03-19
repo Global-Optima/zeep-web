@@ -45,13 +45,19 @@ import AdminStoreAdditivesToolbar from '@/modules/admin/store-additives/componen
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
+import {useHasRole} from "@/core/hooks/use-has-roles.hook";
+import {EmployeeRole} from "@/modules/admin/employees/models/employees.models";
 
 const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<AdditiveFilterQuery>({})
+const isFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
+const isStore = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
 
 const { data: storeAdditivesResponse, isLoading } = useQuery({
   queryKey: computed(() => ['admin-store-additives', filter.value]),
   queryFn: () => storeAdditivesService.getStoreAdditives(filter.value),
-  enabled: computed(() => Boolean(filter.value.storeId))
+  enabled: computed(() =>
+    isStore.value || (isFranchisee.value && Boolean(filter.value.storeId))
+  )
 })
 </script>
 
