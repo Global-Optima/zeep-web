@@ -48,7 +48,7 @@ func addOrdersSheet(sheet *xlsx.Sheet, data []types.OrderExportDTO, file *xlsx.F
 		addCell(row, order.StoreName)
 		addCell(row, order.CustomerName)
 		addCell(row, fmt.Sprintf("%.2f", order.Total))
-		addCell(row, order.Status)
+		addCell(row, string(order.Status))
 		addCell(row, order.CreatedAt.Format("2006-01-02 15:04:05"))
 
 		productSheetName := fmt.Sprintf("Order_%d_Products", order.ID)

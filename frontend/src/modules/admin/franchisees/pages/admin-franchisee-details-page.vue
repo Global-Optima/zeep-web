@@ -48,10 +48,10 @@
 
 <script lang="ts" setup>
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminFranchiseeDetailsForm from '@/modules/admin/franchisees/components/details/admin-franchisee-details-form.vue'
@@ -89,6 +89,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-franchisee-details', franchiseeId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные франчайзи успешно обновлены.',
 		})
 	},

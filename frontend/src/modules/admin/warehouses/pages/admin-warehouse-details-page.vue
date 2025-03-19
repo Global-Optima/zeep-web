@@ -38,10 +38,10 @@
 
 <script lang="ts" setup>
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
@@ -81,6 +81,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-warehouse-details', warehouseId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные склада успешно обновлены.',
 		})
 	},

@@ -29,6 +29,7 @@ const createMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-store-additives'] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Добавки кафе успешно добавлены.',
 		})
 		router.back()

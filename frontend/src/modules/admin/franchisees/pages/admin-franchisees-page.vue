@@ -11,7 +11,7 @@
 			<CardContent class="mt-4">
 				<p
 					v-if="!franchiseesResponse || franchiseesResponse.data.length === 0"
-					class="text-muted-foreground text-center"
+					class="text-muted-foreground"
 				>
 					Франчайзи не найдены
 				</p>

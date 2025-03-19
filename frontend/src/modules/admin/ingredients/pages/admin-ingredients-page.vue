@@ -12,7 +12,7 @@
 				<!-- No Data Message -->
 				<p
 					v-if="!ingredientsResponse || ingredientsResponse.data.length === 0"
-					class="text-muted-foreground text-center"
+					class="text-muted-foreground"
 				>
 					Ингредиенты не найдены
 				</p>

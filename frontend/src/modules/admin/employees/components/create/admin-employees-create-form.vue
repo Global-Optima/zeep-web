@@ -202,24 +202,24 @@
 import PasswordInput from '@/core/components/password-input/PasswordInput.vue'
 import { Button } from '@/core/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
 } from '@/core/components/ui/card'
 import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import { Switch } from '@/core/components/ui/switch'
-import { passwordValidationSchema } from '@/core/validators/password.validator'
+import { signupPasswordValidationSchema } from '@/core/validators/password.validator'
 import { phoneValidationSchema } from '@/core/validators/phone.validator'
 import { EmployeeRole, type CreateEmployeeDTO } from '@/modules/admin/employees/models/employees.models'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -246,7 +246,7 @@ const schema = toTypedSchema(
 		role: z.nativeEnum(EmployeeRole),
 		email: z.string().email('Введите действительный адрес электронной почты'),
     phone: phoneValidationSchema,
-    password: passwordValidationSchema,
+    password: signupPasswordValidationSchema,
     isActive: z.boolean(),
   })
 );

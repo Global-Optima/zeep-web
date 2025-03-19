@@ -13,7 +13,7 @@
 					v-if="!unitsResponse || unitsResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Категории топпингов не найдены
+					Единицы измерения не найдены
 				</p>
 				<AdminUnitsList
 					v-else

@@ -7,7 +7,7 @@ const { toasts } = useToast()
 </script>
 
 <template>
-	<ToastProvider :duration="3000">
+	<ToastProvider :duration="5000">
 		<Toast
 			v-for="toast in toasts"
 			:key="toast.id"

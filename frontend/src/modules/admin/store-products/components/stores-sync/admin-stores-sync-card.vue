@@ -40,6 +40,10 @@ const { mutate: syncData, isPending } = useMutation({
   },
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['admin-store-is-sync'] })
+    queryClient.invalidateQueries({ queryKey: ['admin-store-additives'] })
+    queryClient.invalidateQueries({ queryKey: ['admin-store-products'] })
+    queryClient.invalidateQueries({ queryKey: ['admin-store-stocks'] })
+
     toast({
       title: 'Синхронизация успешно завершена',
       description: 'Все изменения в продуктах, добавках и технологических картах обновлены.',

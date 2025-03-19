@@ -58,6 +58,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-store-product-details', storeProductId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные товара кафе успешно обновлены.',
 		})
 	},
