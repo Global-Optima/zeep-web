@@ -42,7 +42,8 @@ type warehouseStockService struct {
 func NewWarehouseStockService(repo WarehouseStockRepository,
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
 	notificationService notifications.NotificationService,
-	logger *zap.SugaredLogger) WarehouseStockService {
+	logger *zap.SugaredLogger,
+) WarehouseStockService {
 	return &warehouseStockService{
 		repo:                repo,
 		stockMaterialRepo:   stockMaterialRepo,

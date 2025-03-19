@@ -24,7 +24,6 @@ func (r *authenticationRepository) CreateCustomer(customer *data.Customer) (uint
 
 	err := r.db.Model(&data.Customer{}).
 		Create(customer).Scan(createdCustomer).Error
-
 	if err != nil {
 		return 0, err
 	}

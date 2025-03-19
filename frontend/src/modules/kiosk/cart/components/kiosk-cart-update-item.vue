@@ -1,161 +1,30 @@
-<script setup lang="ts">
-import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
-import { Button } from '@/core/components/ui/button'
-import { Dialog, DialogContent } from '@/core/components/ui/dialog'
-import { formatPrice } from '@/core/utils/price.utils'
-import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
-import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
-import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
-import type { CartItem } from '@/modules/kiosk/cart/stores/cart.store'
-import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
-import KioskDetailsLoading from '@/modules/kiosk/products/components/details/kiosk-details-loading.vue'
-import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
-import KioskProductRecipeDialog from '@/modules/kiosk/products/components/details/kiosk-product-recipe-dialog.vue'
-import { ChevronLeft, Pencil } from 'lucide-vue-next'
-import { computed, onMounted, ref, watch } from 'vue'
-
-// Props & Emits
-const props = defineProps<{
-  isOpen: boolean;
-  cartItem: CartItem;
-}>();
-
-const emits = defineEmits<{
-  (e: 'close'): void;
-  (e: 'update', updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]): void;
-}>();
-
-// Individual state variables
-const productDetails = ref(props.cartItem.product);
-const selectedSize = ref<StoreProductSizeDetailsDTO>(props.cartItem.size);
-const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({});
-const additivesCategories = ref<StoreAdditiveCategoryDTO[]>([]);
-const isLoading = ref(false);
-const errorMessage = ref<string | null>(null);
-
-// Fetch additives for the selected size
-const fetchAdditives = async () => {
-  try {
-    isLoading.value = true;
-    const fetchedCategories = await storeAdditivesService.getStoreAdditiveCategories(selectedSize.value.id);
-
-    // Merge fetched additives with pre-selected ones
-    additivesCategories.value = fetchedCategories.map(category => ({
-      ...category,
-      additives: category.additives.map(additive => ({
-        ...additive,
-        isSelected: isAdditiveSelected(category, additive.additiveId),
-      })),
-    }));
-  } catch {
-    errorMessage.value = 'Ошибка при загрузке добавок';
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-// Initialize state & fetch additives
-const resetAndFetchAdditives = async () => {
-  selectedSize.value = props.cartItem.size;
-  selectedAdditives.value = props.cartItem.additives.reduce<Record<number, StoreAdditiveCategoryItemDTO[]>>((acc, additive) => {
-    acc[additive.categoryId] = acc[additive.categoryId] || [];
-    acc[additive.categoryId].push(additive);
-    return acc;
-  }, {});
-  await fetchAdditives();
-};
-
-// Preserve additives across size changes
-const preserveSelectedAdditives = () => {
-  const previousAdditives = { ...selectedAdditives.value };
-  Object.keys(previousAdditives).forEach(categoryId => {
-    const category = additivesCategories.value.find(cat => cat.id === Number(categoryId));
-    if (category) {
-      selectedAdditives.value[category.id] = previousAdditives[category.id] || [];
-    }
-  });
-};
-
-// Handle size selection
-const onSizeSelect = async (size: StoreProductSizeDetailsDTO) => {
-  if (selectedSize.value.id === size.id) return;
-  selectedSize.value = size;
-  selectedAdditives.value = {};
-  await fetchAdditives();
-  preserveSelectedAdditives();
-};
-
-// Computed total price
-const totalPrice = computed(() => {
-  const storePrice = selectedSize.value.storePrice;
-  const additivePrice = Object.values(selectedAdditives.value)
-    .flat()
-    .reduce((sum, add) => sum + add.storePrice, 0);
-  return storePrice + additivePrice;
-});
-
-// Check if additive is selected
-const isAdditiveSelected = (category: StoreAdditiveCategoryDTO, additiveId: number) =>
-  selectedAdditives.value[category.id]?.some(a => a.additiveId === additiveId) || false;
-
-// Handle additive selection
-const onAdditiveToggle = (category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) => {
-  const current = selectedAdditives.value[category.id] || [];
-  const isSelected = current.some((a) => a.additiveId === additive.additiveId);
-
-  if (category.isMultipleSelect) {
-    selectedAdditives.value[category.id] = isSelected
-      ? current.filter(a => a.additiveId !== additive.additiveId)
-      : [...current, additive];
-  } else {
-    selectedAdditives.value[category.id] = isSelected ? [] : [additive];
-  }
-};
-
-
-const sortedSizes = computed(() =>
-  productDetails.value?.sizes ? [...productDetails.value.sizes].sort((a, b) => a.size - b.size) : []
-);
-
-// Watch for dialog open state and reinitialize
-watch(
-  () => props.isOpen,
-  async open => {
-    if (open) await resetAndFetchAdditives();
-  }
-);
-
-// On mounted, check and fetch data if dialog is already open
-onMounted(async () => {
-  if (props.isOpen) await resetAndFetchAdditives();
-});
-
-// Handle update action
-const handleUpdate = () => {
-  const updatedAdditives = Object.values(selectedAdditives.value).flat();
-  emits('update', selectedSize.value, updatedAdditives);
-  emits('close');
-};
-</script>
-
 <template>
 	<Dialog
 		:open="isOpen"
-		@update:open="emits('close')"
+		@update:open="() => emits('close')"
 	>
 		<DialogContent
 			:include-close-button="false"
-			class="p-0 border-none !rounded-[52px] max-w-[80vw] h-[90vh] overflow-clip"
+			class="p-0 border-none !rounded-[52px] max-w-[80vw] h-[95vh] overflow-clip"
 		>
-			<div class="relative bg-[#F3F4F9] overflow-y-auto text-black no-scrollbar">
+			<div class="relative bg-[#F3F4F9] pb-32 overflow-y-scroll text-black no-scrollbar">
 				<!-- Loading State -->
-				<KioskDetailsLoading v-if="isLoading" />
+				<PageLoader v-if="isFetching" />
 				<!-- Error State -->
 				<div
-					v-else-if="errorMessage"
-					class="p-4 text-red-500"
+					v-else-if="isError || errorMessage"
+					class="flex flex-col justify-center items-center p-6 w-full h-screen text-center"
 				>
-					{{ errorMessage }}
+					<h1 class="mt-8 font-bold text-red-600 text-4xl">Ошибка</h1>
+					<p class="mt-6 max-w-md text-gray-600 text-2xl">
+						{{ errorMessage || 'К сожалению, данный товар временно недоступен, попробуйте позже' }}
+					</p>
+					<button
+						@click="emits('close')"
+						class="flex justify-center items-center bg-slate-200 mt-8 px-8 py-5 rounded-3xl h-14 text-slate- text-2xl"
+					>
+						Вернуться назад
+					</button>
 				</div>
 				<!-- Product Content -->
 				<div
@@ -175,19 +44,20 @@ const handleUpdate = () => {
 									stroke-width="1.6"
 								/>
 							</Button>
-							<KioskProductRecipeDialog :product="productDetails" />
+							<template v-if="selectedSize">
+								<KioskProductRecipeDialog :nutrition="selectedSize.totalNutrition" />
+							</template>
 						</header>
-
 						<div class="flex flex-col justify-center items-center">
 							<LazyImage
-								:src="productDetails.imageUrl || 'https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png'"
+								:src="productDetails.imageUrl"
 								alt="Изображение товара"
-								class="w-38 h-64 object-contain"
+								class="rounded-3xl w-38 h-64 object-contain"
 							/>
 							<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>
 							<p class="mt-2 text-slate-600 text-xl">{{ productDetails.description }}</p>
 						</div>
-
+						<!-- Sticky Section -->
 						<div class="top-0 z-10 sticky bg-white mt-8 pb-6">
 							<div class="flex justify-between items-center gap-4">
 								<!-- Size Selection -->
@@ -200,7 +70,7 @@ const handleUpdate = () => {
 										@click:size="onSizeSelect"
 									/>
 								</div>
-								<!-- Add to Cart Button -->
+								<!-- Update Button with Price -->
 								<div class="flex items-center gap-6">
 									<p class="font-medium text-4xl">{{ formatPrice(totalPrice) }}</p>
 									<button
@@ -213,11 +83,10 @@ const handleUpdate = () => {
 							</div>
 						</div>
 					</div>
-
 					<!-- Additives Selection -->
 					<div class="mt-10">
 						<KioskDetailsAdditivesSection
-							:categories="additivesCategories"
+							:categories="additiveCategories ?? []"
 							:isAdditiveSelected="isAdditiveSelected"
 							@toggle-additive="onAdditiveToggle"
 						/>
@@ -227,3 +96,134 @@ const handleUpdate = () => {
 		</DialogContent>
 	</Dialog>
 </template>
+
+<script setup lang="ts">
+import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
+import PageLoader from '@/core/components/page-loader/PageLoader.vue'
+import { Button } from '@/core/components/ui/button'
+import { Dialog, DialogContent } from '@/core/components/ui/dialog'
+import { formatPrice } from '@/core/utils/price.utils'
+import type {
+  StoreAdditiveCategoryDTO,
+  StoreAdditiveCategoryItemDTO
+} from '@/modules/admin/store-additives/models/store-additves.model'
+import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
+import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
+import { type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
+import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
+import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
+import KioskProductRecipeDialog from '@/modules/kiosk/products/components/details/kiosk-product-recipe-dialog.vue'
+import { useQuery } from '@tanstack/vue-query'
+import { ChevronLeft, Pencil } from 'lucide-vue-next'
+import { computed, ref, watchEffect } from 'vue'
+
+// ----- Props & Emits -----
+const props = defineProps<{
+  isOpen: boolean;
+  cartItem: CartItem;
+}>()
+const emits = defineEmits<{
+  (e: 'close'): void;
+  (e: 'update', updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]): void;
+}>()
+
+
+// ----- Local State -----
+// Use the product data from the passed cartItem.
+const productDetails = ref(props.cartItem.product)
+// Initialize selected size and additives from the passed cartItem.
+const selectedSize = ref<StoreProductSizeDetailsDTO>(props.cartItem.size)
+const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>(
+  props.cartItem.additives.reduce((acc, additive) => {
+    acc[additive.categoryId] = acc[additive.categoryId] || []
+    acc[additive.categoryId].push(additive)
+    return acc
+  }, {} as Record<number, StoreAdditiveCategoryItemDTO[]>)
+)
+
+// This will hold the additive categories fetched for the selected size.
+const additiveCategories = ref<StoreAdditiveCategoryDTO[]>([])
+const errorMessage = ref<string | null>(null)
+
+// ----- Fetch Additive Categories -----
+// Use Vue Query to fetch additive categories for the current size.
+const { data: fetchedAdditives, isPending: isFetching, isError } = useQuery({
+  queryKey: computed(() => ['kiosk-additive-categories', selectedSize.value?.id]),
+  queryFn: () => {
+    if (selectedSize.value) {
+      return storeAdditivesService.getStoreAdditiveCategories(selectedSize.value.id)
+    }
+  },
+  initialData: [],
+  enabled: computed(() => !!selectedSize.value)
+})
+
+// When new additive data is fetched, merge the current selections.
+watchEffect(() => {
+  if (fetchedAdditives.value) {
+    additiveCategories.value = fetchedAdditives.value.map(category => ({
+      ...category,
+      additives: category.additives.map(additive => ({
+        ...additive,
+        isSelected: isAdditiveSelected(category, additive.additiveId)
+      }))
+    }))
+  }
+})
+
+// ----- Computed Values -----
+const sortedSizes = computed(() => {
+  return productDetails.value?.sizes ? [...productDetails.value.sizes].sort((a, b) => a.size - b.size) : []
+})
+
+watchEffect(() => {
+  // Ensure a size is selected; if not, select the first one.
+  if (!selectedSize.value && sortedSizes.value.length > 0) {
+    selectedSize.value = sortedSizes.value[0]
+  }
+})
+
+const totalPrice = computed(() => {
+  if (!selectedSize.value) return 0
+  const basePrice = selectedSize.value.storePrice
+  const additivesPrice = Object.values(selectedAdditives.value)
+    .flat()
+    .reduce((sum, additive) => sum + additive.storePrice, 0)
+  return basePrice + additivesPrice
+})
+
+// ----- Helper Functions -----
+function isAdditiveSelected(category: StoreAdditiveCategoryDTO, additiveId: number): boolean {
+  return selectedAdditives.value[category.id]?.some(a => a.additiveId === additiveId) || false
+}
+
+const onSizeSelect = (size: StoreProductSizeDetailsDTO) => {
+  if (selectedSize.value?.id === size.id) return
+  selectedSize.value = size
+  selectedAdditives.value = {}
+}
+
+const onAdditiveToggle = (category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) => {
+  const current = selectedAdditives.value[category.id] || []
+  const alreadySelected = current.some(a => a.additiveId === additive.additiveId)
+  if (category.isMultipleSelect) {
+    selectedAdditives.value[category.id] = alreadySelected
+      ? current.filter(a => a.additiveId !== additive.additiveId)
+      : [...current, additive]
+  } else {
+    selectedAdditives.value[category.id] = alreadySelected ? [] : [additive]
+  }
+}
+
+// ----- Action Handler -----
+// When the user clicks the update button, emit the updated size and additives.
+const handleUpdate = () => {
+  const updatedAdditives = Object.values(selectedAdditives.value).flat()
+  emits('update', selectedSize.value, updatedAdditives)
+  emits('close')
+}
+</script>
+
+<style scoped>
+/* You can add additional styles if needed */
+</style>

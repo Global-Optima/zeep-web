@@ -66,7 +66,7 @@ func UpdateWarehouseToModels(dto *UpdateWarehouseDTO) *WarehouseUpdateModels {
 	}
 
 	if dto.FacilityAddress != nil {
-		facilityAddress = facilityAddressesTypes.MapToFacilityAddressModel(dto.FacilityAddress)
+		facilityAddress = facilityAddressesTypes.MapToFacilityAddressModel(dto.FacilityAddress, nil)
 	}
 
 	return &WarehouseUpdateModels{

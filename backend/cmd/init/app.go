@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/limiters"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
@@ -55,12 +56,13 @@ func InitializeConfig() *config.Config {
 }
 
 func InitializeDatabase(cfg *config.Config) *database.DBHandler {
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Database.Host,
 		cfg.Database.Port,
 		cfg.Database.User,
 		cfg.Database.Password,
 		cfg.Database.Name,
+		cfg.Database.SSL_Mode,
 	)
 
 	dbHandler, err := database.InitDB(dsn)
@@ -71,7 +73,14 @@ func InitializeDatabase(cfg *config.Config) *database.DBHandler {
 }
 
 func InitializeRedis(cfg *config.Config) *database.RedisClient {
-	redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
+	redisClient, err := database.InitRedis(
+		cfg.Redis.Host,
+		cfg.Redis.Port,
+		cfg.Redis.Password,
+		cfg.Redis.DB,
+		cfg.Redis.Username,
+		*cfg.Redis.Enable_TLS,
+	)
 	if err != nil {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
@@ -83,6 +92,8 @@ func InitializeRedis(cfg *config.Config) *database.RedisClient {
 
 func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.RedisClient, storageRepo storage.StorageRepository) *gin.Engine {
 	cfg := config.GetConfig()
+
+	gin.SetMode(cfg.GinMode)
 
 	router := gin.New()
 	router.Use(logger.ZapLoggerMiddleware())
@@ -123,12 +134,13 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
 
-	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
+	employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
+	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
 	storageHandler := storage.NewStorageHandler(storageRepo)                // temp
 	storage.RegisterStorageRoutes(apiRouter.EmployeeRoutes, storageHandler) // temp
 
-	appContainer := container.NewContainer(dbHandler, redisClient, &storageRepo, apiRouter, logger.GetZapSugaredLogger())
+	appContainer := container.NewContainer(dbHandler, redisClient, &storageRepo, &employeeTokenManager, apiRouter, logger.GetZapSugaredLogger())
 	appContainer.MustInitModules()
 
 	router.GET("/metrics", func(c *gin.Context) {

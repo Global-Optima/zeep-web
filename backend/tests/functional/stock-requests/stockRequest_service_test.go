@@ -3,6 +3,7 @@ package functional
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
@@ -117,91 +118,105 @@ func TestStockRequestService_GetStockRequestByID(t *testing.T) {
 	})
 }
 
-// func TestStockRequestService_RejectStockRequestByStore(t *testing.T) {
-// 	service := setupTest(t)
-// 	db := getTestDB()
+func TestStockRequestService_RejectStockRequestByStore(t *testing.T) {
+	service := setupTest(t)
+	db := getTestDB()
 
-// 	t.Run("Valid Transition", func(t *testing.T) {
+	t.Run("Valid Transition", func(t *testing.T) {
+		id := createTestStockRequest(t, service, 1)
 
-// 		id := createTestStockRequest(t, service, 1)
+		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
+			Update("status", data.StockRequestInDelivery).Error
+		assert.NoError(t, err)
+		dto := types.RejectStockRequestStatusDTO{
+			Comment: stringPtr("Store rejects the request"),
+		}
+		req, err := service.RejectStockRequestByStore(id, dto)
+		assert.NoError(t, err)
+		assert.Equal(t, data.StockRequestRejectedByStore, req.Status, "Status should change to REJECTED_BY_STORE")
+	})
 
-// 		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
-// 			Update("status", data.StockRequestInDelivery).Error
-// 		assert.NoError(t, err)
-// 		dto := types.RejectStockRequestStatusDTO{
-// 			Comment: stringPtr("Store rejects the request"),
-// 		}
-// 		req, err := service.RejectStockRequestByStore(id, dto)
-// 		assert.NoError(t, err)
-// 		assert.Equal(t, data.StockRequestRejectedByStore, req.Status, "Status should change to REJECTED_BY_STORE")
-// 	})
+	t.Run("Invalid Transition", func(t *testing.T) {
+		id := createTestStockRequest(t, service, 1)
+		dto := types.RejectStockRequestStatusDTO{
+			Comment: stringPtr("Store rejects the request"),
+		}
+		_, err := service.RejectStockRequestByStore(id, dto)
+		assert.Error(t, err, "Store rejection from CREATED status should error")
+		assert.True(t, strings.Contains(err.Error(), "invalid status transition"),
+			"Error should mention invalid status transition")
+	})
+}
 
-// 	t.Run("Invalid Transition", func(t *testing.T) {
+func TestStockRequestService_RejectStockRequestByWarehouse(t *testing.T) {
+	service := setupTest(t)
+	db := getTestDB()
 
-// 		id := createTestStockRequest(t, service, 1)
-// 		dto := types.RejectStockRequestStatusDTO{
-// 			Comment: stringPtr("Store rejects the request"),
-// 		}
-// 		_, err := service.RejectStockRequestByStore(id, dto)
-// 		assert.Error(t, err, "Store rejection from CREATED status should error")
-// 		assert.True(t, strings.Contains(err.Error(), "invalid status transition"),
-// 			"Error should mention invalid status transition")
-// 	})
-// }
+	t.Run("Valid Transition", func(t *testing.T) {
+		id := createTestStockRequest(t, service, 1)
+		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
+			Update("status", data.StockRequestProcessed).Error
+		assert.NoError(t, err)
+		dto := types.RejectStockRequestStatusDTO{
+			Comment: stringPtr("Warehouse rejects the request"),
+		}
+		req, err := service.RejectStockRequestByWarehouse(id, dto)
+		assert.NoError(t, err)
+		assert.Equal(t, data.StockRequestRejectedByWarehouse, req.Status, "Status should change to REJECTED_BY_WAREHOUSE")
+	})
 
-// func TestStockRequestService_RejectStockRequestByWarehouse(t *testing.T) {
-// 	service := setupTest(t)
-// 	db := getTestDB()
+	t.Run("Invalid Transition", func(t *testing.T) {
+		id := createTestStockRequest(t, service, 1)
+		dto := types.RejectStockRequestStatusDTO{
+			Comment: stringPtr("Warehouse rejects the request"),
+		}
+		_, err := service.RejectStockRequestByWarehouse(id, dto)
+		assert.Error(t, err, "Warehouse rejection from CREATED status should error")
+	})
+}
 
-// 	t.Run("Valid Transition", func(t *testing.T) {
+func TestStockRequestService_SetProcessedStatus(t *testing.T) {
+	service := setupTest(t)
+	db := getTestDB()
 
-// 		id := createTestStockRequest(t, service, 1)
-// 		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
-// 			Update("status", data.StockRequestProcessed).Error
-// 		assert.NoError(t, err)
-// 		dto := types.RejectStockRequestStatusDTO{
-// 			Comment: stringPtr("Warehouse rejects the request"),
-// 		}
-// 		req, err := service.RejectStockRequestByWarehouse(id, dto)
-// 		assert.NoError(t, err)
-// 		assert.Equal(t, data.StockRequestRejectedByWarehouse, req.Status, "Status should change to REJECTED_BY_WAREHOUSE")
-// 	})
+	t.Run("Successful Processing", func(t *testing.T) {
+		id := createTestStockRequest(t, service, 1)
 
-// 	t.Run("Invalid Transition", func(t *testing.T) {
+		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
+			Update("created_at", time.Now().Add(-25*time.Hour)).Error
+		assert.NoError(t, err)
+		req, err := service.SetProcessedStatus(id)
+		assert.NoError(t, err)
+		assert.Equal(t, data.StockRequestProcessed, req.Status, "Status should change to PROCESSED")
+	})
 
-// 		id := createTestStockRequest(t, service, 1)
-// 		dto := types.RejectStockRequestStatusDTO{
-// 			Comment: stringPtr("Warehouse rejects the request"),
-// 		}
-// 		_, err := service.RejectStockRequestByWarehouse(id, dto)
-// 		assert.Error(t, err, "Warehouse rejection from CREATED status should error")
-// 	})
-// }
+	// t.Run("Rate Limit Violation", func(t *testing.T) {
+	// 	// Create first request (valid)
+	// 	id1 := createTestStockRequest(t, service, 1)
 
-// func TestStockRequestService_SetProcessedStatus(t *testing.T) {
-// 	service := setupTest(t)
-// 	db := getTestDB()
+	// 	// Ensure it's finalized so it's counted in the 24-hour limit
+	// 	err := db.Model(&data.StockRequest{}).Where("id = ?", id1).
+	// 		Update("created_at", time.Now().Add(-1*time.Hour)).
+	// 		Update("status", data.StockRequestCompleted).Error
+	// 	assert.NoError(t, err)
 
-// 	t.Run("Successful Processing", func(t *testing.T) {
-// 		id := createTestStockRequest(t, service, 1)
+	// 	// Create second request (valid)
+	// 	id2 := createTestStockRequest(t, service, 1)
+	// 	err = db.Model(&data.StockRequest{}).Where("id = ?", id2).
+	// 		Update("created_at", time.Now().Add(-1*time.Hour)).
+	// 		Update("status", data.StockRequestCompleted).Error
+	// 	assert.NoError(t, err)
 
-// 		err := db.Model(&data.StockRequest{}).Where("id = ?", id).
-// 			Update("created_at", time.Now().Add(-25*time.Hour)).Error
-// 		assert.NoError(t, err)
-// 		req, err := service.SetProcessedStatus(id)
-// 		assert.NoError(t, err)
-// 		assert.Equal(t, data.StockRequestProcessed, req.Status, "Status should change to PROCESSED")
-// 	})
-
-// 	t.Run("Rate Limit Violation", func(t *testing.T) {
-
-// 		id := createTestStockRequest(t, service, 1)
-// 		_, err := service.SetProcessedStatus(id)
-// 		assert.Error(t, err, "Processing should fail due to rate limit")
-// 		assert.True(t, strings.Contains(err.Error(), "one"),
-// 			"Error should indicate rate limit violation")
-// 	})
-// }
+	// 	_, _, err = service.CreateStockRequest(1, types.CreateStockRequestDTO{
+	// 		StockMaterials: []types.StockRequestStockMaterialDTO{
+	// 			{StockMaterialID: 1, Quantity: 10},
+	// 		},
+	// 	})
+	// 	assert.Error(t, err, "Processing should fail due to rate limit")
+	// 	assert.True(t, strings.Contains(err.Error(), "one request allowed per day"),
+	// 		"Error should indicate rate limit violation")
+	// })
+}
 
 func TestStockRequestService_SetInDeliveryStatus(t *testing.T) {
 	service := setupTest(t)

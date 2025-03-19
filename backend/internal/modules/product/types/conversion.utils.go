@@ -1,9 +1,11 @@
 package types
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
@@ -21,11 +23,15 @@ type ProductSizeModels struct {
 }
 
 func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
+	if product == nil {
+		return BaseProductDTO{}
+	}
+
 	return BaseProductDTO{
 		Name:        product.Name,
 		Description: product.Description,
-		ImageURL:    product.ImageURL.GetURL(),
-		VideoURL:    product.VideoURL.GetURL(),
+		ImageURL:    product.ImageKey.GetURL(),
+		VideoURL:    product.VideoKey.GetURL(),
 		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
@@ -100,13 +106,13 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 	additives := make([]ProductSizeAdditiveDTO, len(productSize.Additives))
 	ingredients := make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
 
-	for i, productSizeAdditive := range productSize.Additives {
-		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
-	}
-
 	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
 		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
 		ingredients[i].Quantity = productSizeIngredient.Quantity
+	}
+
+	for i, productSizeAdditive := range productSize.Additives {
+		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	return ProductSizeDetailsDTO{
@@ -153,11 +159,9 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 	return productSize
 }
 
-func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
-	product := &data.Product{}
-
+func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 	if dto == nil {
-		return nil
+		return fmt.Errorf("cannot update nil product")
 	}
 
 	if strings.TrimSpace(dto.Name) != "" {
@@ -176,7 +180,7 @@ func UpdateProductToModel(dto *UpdateProductDTO) *data.Product {
 		}
 	}
 
-	return product
+	return nil
 }
 
 func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
@@ -236,7 +240,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageURL data.StorageKey) []details.CentralCatalogChange {
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKey *data.StorageImageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
 	if dto.Name != "" && dto.Name != before.Name {
@@ -261,13 +265,13 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageUR
 		})
 	}
 
-	if imageURL.ToString() != "" && imageURL != before.ImageURL {
+	if imageKey != before.ImageKey {
 		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
 			Params: map[string]interface{}{
-				"OldImageURL": before.ImageURL,
-				"NewImageURL": imageURL.ToString(),
+				"OldImageURL": before.ImageKey.GetURL(),
+				"NewImageURL": imageKey.GetURL(),
 			},
 		})
 	}
@@ -277,12 +281,20 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageUR
 
 func CalculateTotalNutrition(productSize *data.ProductSize) *TotalNutrition {
 	totalNutrition := &TotalNutrition{}
+	ingredientSet := make(map[string]struct{})
+	allergenSet := make(map[string]struct{})
 
 	for _, psi := range productSize.ProductSizeIngredients {
 		totalNutrition.Calories += (psi.Ingredient.Calories * psi.Quantity) / 100
 		totalNutrition.Proteins += (psi.Ingredient.Proteins * psi.Quantity) / 100
 		totalNutrition.Fats += (psi.Ingredient.Fat * psi.Quantity) / 100
 		totalNutrition.Carbs += (psi.Ingredient.Carbs * psi.Quantity) / 100
+
+		ingredientSet[psi.Ingredient.Name] = struct{}{}
+
+		if psi.Ingredient.IsAllergen {
+			allergenSet[psi.Ingredient.Name] = struct{}{}
+		}
 	}
 
 	for _, psa := range productSize.Additives {
@@ -292,8 +304,24 @@ func CalculateTotalNutrition(productSize *data.ProductSize) *TotalNutrition {
 				totalNutrition.Proteins += (ai.Ingredient.Proteins * ai.Quantity) / 100
 				totalNutrition.Fats += (ai.Ingredient.Fat * ai.Quantity) / 100
 				totalNutrition.Carbs += (ai.Ingredient.Carbs * ai.Quantity) / 100
+
+				ingredientSet[ai.Ingredient.Name] = struct{}{}
+
+				if ai.Ingredient.IsAllergen {
+					allergenSet[ai.Ingredient.Name] = struct{}{}
+				}
 			}
 		}
+	}
+
+	totalNutrition.Ingredients = make([]string, 0, len(ingredientSet))
+	for name := range ingredientSet {
+		totalNutrition.Ingredients = append(totalNutrition.Ingredients, name)
+	}
+
+	totalNutrition.AllergenIngredients = make([]string, 0, len(allergenSet))
+	for name := range allergenSet {
+		totalNutrition.AllergenIngredients = append(totalNutrition.AllergenIngredients, name)
 	}
 
 	totalNutrition.Calories = utils.RoundToOneDecimal(totalNutrition.Calories)

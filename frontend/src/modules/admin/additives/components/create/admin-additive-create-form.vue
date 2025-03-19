@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref, useTemplateRef } from 'vue'
+import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -13,13 +13,17 @@ import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
-import AdminSelectAdditiveCategory from '@/modules/admin/additive-categories/components/admin-select-additive-category.vue'
 import type { AdditiveCategoryDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
-import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, Trash, X } from 'lucide-vue-next'
+
+const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
+  import('@/modules/admin/additive-categories/components/admin-select-additive-category.vue'))
+const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
+const AdminSelectUnit = defineAsyncComponent(() =>
+  import('@/modules/admin/units/components/admin-select-unit.vue'))
 
 interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   name: string
@@ -55,8 +59,12 @@ const createAdditiveSchema = toTypedSchema(
     machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
-    unitId: z.number().min(0, 'Введите единицу измерения'),
-    additiveCategoryId: z.coerce.number().min(1, 'Выберите категорию добавки'),
+    unitId: z.coerce.number()
+      .min(1, 'Выберите единицу измерения из списка')
+      .default(0),
+    additiveCategoryId: z.coerce.number()
+      .min(1, 'Выберите категорию из списка')
+      .default(0),
     image: z.instanceof(File).optional().refine((file) => {
       if (!file) return true; // Optional field
       return ['image/jpeg', 'image/png'].includes(file.type);
@@ -64,7 +72,6 @@ const createAdditiveSchema = toTypedSchema(
       if (!file) return true;
       return file.size <= 5 * 1024 * 1024; // Max 5MB
     }, 'Максимальный размер файла: 5MB'),
-
   })
 )
 
@@ -94,8 +101,9 @@ function triggerImageInput() {
 const onSubmit = handleSubmit((formValues) => {
   if (!selectedCategory.value?.id) return
   if (!selectedUnit.value?.id) return
-  if (selectedIngredients.value.length === 0) {
-    return toast({description: "Технологическая карта должна иметь минимум 1 ингредиент"})
+
+  if (selectedIngredients.value.some(i => i.quantity <= 0)) {
+    return toast({ description: "Укажите количество в технологической карте" })
   }
 
   const dto: CreateAdditiveDTO = {
@@ -351,83 +359,86 @@ function removeIngredient(index: number) {
 			<!-- Media and Category Blocks -->
 			<div class="items-start gap-4 grid auto-rows-max">
 				<!-- Media Block -->
-				<Card>
-					<CardHeader>
-						<CardTitle>Изображение</CardTitle>
-						<CardDescription>
-							Загрузите изображение для продукта.<br />
-							Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<FormField name="image">
-							<FormItem>
-								<FormControl>
-									<div class="space-y-2">
-										<!-- Preview -->
-										<div
-											v-if="previewImage"
-											class="relative w-full h-48"
-										>
-											<LazyImage
-												:src="previewImage"
-												alt="Preview"
-												class="border rounded-lg w-full h-full object-contain"
-											/>
-											<button
-												type="button"
-												class="top-2 right-2 absolute bg-green-600 p-1 rounded-full text-white"
-												@click="previewImage = null; setFieldValue('image', undefined)"
-											>
-												<X class="size-4" />
-											</button>
-										</div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Изображение</CardTitle>
+            <CardDescription>
+              Загрузите изображение для продукта.<br />
+              Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField name="image">
+              <FormItem>
+                <FormControl>
+                  <div class="space-y-2">
+                    <!-- Preview -->
+                    <div
+                      v-if="previewImage"
+                      class="relative w-full h-48"
+                    >
+                      <LazyImage
+                        :src="previewImage"
+                        alt="Preview"
+                        class="border rounded-lg w-full h-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+                        @click="previewImage = null; setFieldValue('image', undefined)"
+                      >
+                        <X class="size-4" />
+                      </button>
+                    </div>
 
-										<!-- Input -->
-										<div
-											v-if="!previewImage"
-											class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
-											@click="triggerImageInput"
-										>
-											<input
-												ref="imageInputRef"
-												type="file"
-												accept="image/jpeg, image/png"
-												style="display: none;"
-												@change="handleImageUpload"
-											/>
-											<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
-												<span class="mb-2"><Camera /></span>
-												Нажмите для загрузки изображения<br />
-												или перетащите файл
-											</p>
-										</div>
-									</div>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						</FormField>
-					</CardContent>
-				</Card>
+                    <!-- Input -->
+                    <div
+                      v-if="!previewImage"
+                      class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
+                      @click="triggerImageInput"
+                    >
+                      <input
+                        ref="imageInputRef"
+                        type="file"
+                        accept="image/jpeg, image/png"
+                        style="display: none;"
+                        @change="handleImageUpload"
+                      />
+                      <p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+                        <span class="mb-2"><Camera /></span>
+                        Нажмите для загрузки изображения<br />
+                        или перетащите файл
+                      </p>
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+          </CardContent>
+        </Card>
 
 				<!-- Category Block -->
-				<Card>
-					<CardHeader>
-						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию топпинга.</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div>
-							<Button
-								variant="link"
-								class="mt-0 p-0 h-fit text-primary underline"
-								@click="openCategoryDialog = true"
-							>
-								{{ selectedCategory?.name || 'Категория не выбрана' }}
-							</Button>
-						</div>
-					</CardContent>
-				</Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Категория</CardTitle>
+            <CardDescription>Выберите категорию товара</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField name="additiveCategoryId">
+              <FormItem>
+                <Button
+                  variant="link"
+                  class="mt-0 p-0 h-fit text-primary underline"
+                  @click="openCategoryDialog = true"
+                >
+                  {{ selectedCategory?.name || 'Категория не выбрана' }}
+                </Button>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+          </CardContent>
+        </Card>
 
 				<Card>
 					<CardHeader>
@@ -435,7 +446,8 @@ function removeIngredient(index: number) {
 						<CardDescription>Выберите единицу измерения</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div>
+            <FormField name="unitId">
+              <FormItem>
 							<Button
 								variant="link"
 								class="mt-0 p-0 h-fit text-primary underline"
@@ -443,7 +455,9 @@ function removeIngredient(index: number) {
 							>
 								{{ selectedUnit?.name || 'Единица измерения не выбрана' }}
 							</Button>
-						</div>
+                <FormMessage />
+              </FormItem>
+            </FormField>
 					</CardContent>
 				</Card>
 			</div>

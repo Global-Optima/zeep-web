@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
@@ -9,13 +10,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
-	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
-)
-
-const (
-	DEFAULT_LOW_STOCK_THRESHOLD = 30
 )
 
 type StoreAdditiveService interface {
@@ -63,14 +59,14 @@ func (s *storeAdditiveService) CreateStoreAdditives(storeID uint, dtos []types.C
 		inputAdditiveIDs[i] = storeAdditives[i].AdditiveID
 	}
 
-	addStockDTO, err := s.formAddStockDTOsFromAdditives(inputAdditiveIDs)
+	ingredientIDs, err := s.formAddStockDTOsFromAdditives(inputAdditiveIDs)
 	if err != nil {
 		wrappedErr := fmt.Errorf("error forming additional stock DTOs: %w", err)
 		s.logger.Error(wrappedErr)
 		return nil, err
 	}
 
-	ids, err := s.transactionManager.CreateStoreAdditivesWithStocks(storeID, storeAdditives, addStockDTO)
+	ids, err := s.transactionManager.CreateStoreAdditivesWithStocks(storeID, storeAdditives, ingredientIDs)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to create store additives: %w", err)
 		s.logger.Error(wrappedErr)
@@ -88,15 +84,9 @@ func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, 
 		return nil, wrappedErr
 	}
 
-	if len(categories) == 0 {
-		wrappedErr := utils.WrapError("failed to retrieve store additives", types.ErrStoreAdditiveCategoriesNotFound)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	var categoryDTOs []types.StoreAdditiveCategoryDTO
-	for _, category := range categories {
-		categoryDTOs = append(categoryDTOs, *types.ConvertToStoreAdditiveCategoryDTO(&category))
+	categoryDTOs := make([]types.StoreAdditiveCategoryDTO, len(categories))
+	for i, category := range categories {
+		categoryDTOs[i] = *types.ConvertToStoreAdditiveCategoryDTO(&category)
 	}
 
 	return categoryDTOs, nil
@@ -185,19 +175,15 @@ func (s *storeAdditiveService) DeleteStoreAdditive(storeID, storeAdditiveID uint
 	return nil
 }
 
-func (s *storeAdditiveService) formAddStockDTOsFromAdditives(additiveIDs []uint) ([]storeStocksTypes.AddStoreStockDTO, error) {
+func (s *storeAdditiveService) formAddStockDTOsFromAdditives(additiveIDs []uint) ([]uint, error) {
 	ingredientsList, err := s.ingredientsRepo.GetIngredientsForAdditives(additiveIDs)
 	if err != nil {
 		return nil, utils.WrapError("could not get ingredients", err)
 	}
 
-	addStockDTOs := make([]storeStocksTypes.AddStoreStockDTO, len(ingredientsList))
+	ingredientIDs := make([]uint, len(ingredientsList))
 	for i, ingredient := range ingredientsList {
-		addStockDTOs[i] = storeStocksTypes.AddStoreStockDTO{
-			IngredientID:      ingredient.ID,
-			Quantity:          0,
-			LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
-		}
+		ingredientIDs[i] = ingredient.ID
 	}
-	return addStockDTOs, nil
+	return ingredientIDs, nil
 }

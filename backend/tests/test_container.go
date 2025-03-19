@@ -12,6 +12,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/modules"
 	"github.com/Global-Optima/zeep-web/backend/internal/database"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/routes"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
@@ -26,17 +28,9 @@ var (
 
 func NewTestContainer() *container.Container {
 	once.Do(func() {
-		var cfg *config.Config
 		var err error
 
-		redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
-		if err != nil {
-			log.Fatalf("Failed to initialize Redis: %v", err)
-		}
-
-		utils.InitCache(redisClient.Client, redisClient.Ctx)
-
-		cfg, err = config.LoadTestConfig()
+		cfg, err := config.LoadTestConfig()
 		if err != nil {
 			log.Println("failed to load test configuration from file, trying to load from env...")
 			cfg, err = LoadConfigFromEnv()
@@ -44,6 +38,20 @@ func NewTestContainer() *container.Container {
 				log.Fatalf("Failed to load test configuration: %v", err)
 			}
 		}
+
+		redisClient, err := database.InitRedis(
+			cfg.Redis.Host,
+			cfg.Redis.Port,
+			cfg.Redis.Password,
+			cfg.Redis.DB,
+			cfg.Redis.Username,
+			*cfg.Redis.Enable_TLS,
+		)
+		if err != nil {
+			log.Fatalf("Failed to initialize Redis: %v", err)
+		}
+
+		utils.InitCache(redisClient.Client, redisClient.Ctx)
 
 		if err := logger.InitLogger("debug", "logs/test_application.log", cfg.IsDevelopment); err != nil {
 			log.Fatalf("Failed to initialize test loggers: %v", err)
@@ -64,17 +72,19 @@ func NewTestContainer() *container.Container {
 
 		r := gin.New()
 		utils.InitValidators()
-		//r.Use(middleware.SanitizeMiddleware())
+		// r.Use(middleware.SanitizeMiddleware())
 		r.Use(logger.ZapLoggerMiddleware())
 		r.Use(gin.Recovery())
 
 		apiRouter := routes.NewRouter(r, "/api", "/test")
+		employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
+		apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
 		mockStorageRepo, err := mockStorage.NewMockStorageRepository()
 		if err != nil {
 			sugarLog.Fatalf("Failed to initialize mock storage repository: %v", err)
 		}
-		testContainer = container.NewContainer(dbHandler, redisClient, &mockStorageRepo, apiRouter, sugarLog)
+		testContainer = container.NewContainer(dbHandler, redisClient, &mockStorageRepo, &employeeTokenManager, apiRouter, sugarLog)
 		testContainer.MustInitModules()
 
 		time.Sleep(100 * time.Millisecond)

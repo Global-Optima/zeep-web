@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"net/http"
+	"slices"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc {
@@ -16,7 +18,7 @@ func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc 
 		claims, err := contexts.GetEmployeeClaimsFromCtx(c)
 		if err != nil {
 			zapLogger.Warnf("missing or invalid token: %v", err)
-			utils.SendErrorWithStatus(c, "missing or invalid token", http.StatusUnauthorized)
+			localization.SendLocalizedResponseWithStatus(c, http.StatusUnauthorized)
 			c.Abort()
 			return
 		}
@@ -26,14 +28,12 @@ func EmployeeRoleMiddleware(requiredRoles ...data.EmployeeRole) gin.HandlerFunc 
 			return
 		}
 
-		for _, role := range requiredRoles {
-			if claims.Role == role {
-				c.Next()
-				return
-			}
+		if slices.Contains(requiredRoles, claims.Role) {
+			c.Next()
+			return
 		}
 
-		utils.SendErrorWithStatus(c, "access denied", http.StatusForbidden)
+		localization.SendLocalizedResponseWithStatus(c, http.StatusForbidden)
 		c.Abort()
 	}
 }

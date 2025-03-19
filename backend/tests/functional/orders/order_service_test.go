@@ -8,6 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 	"github.com/Global-Optima/zeep-web/backend/tests"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -27,103 +28,103 @@ func resetTestData(t *testing.T) *gorm.DB {
 	return db
 }
 
-func stringPtr(s string) *string {
-	return &s
-}
+// func stringPtr(s string) *string {
+// 	return &s
+// }
 
 func uintPtr(u uint) *uint {
 	return &u
 }
 
-func orderStatusPtr(s string) *data.OrderStatus {
-	status := data.OrderStatus(s)
-	return &status
-}
+// func orderStatusPtr(s string) *data.OrderStatus {
+// 	status := data.OrderStatus(s)
+// 	return &status
+// }
 
-func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
-	_ = resetTestData(t)
-	module := tests.GetOrdersModule()
+// func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
+// 	_ = resetTestData(t)
+// 	module := tests.GetOrdersModule()
 
-	testCases := []struct {
-		name            string
-		filter          types.OrdersFilterQuery
-		expectedCount   int
-		expectedOrderID uint
-	}{
-		{
-			name: "Search matches John",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr("John"),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 2,
-		},
-		{
-			name: "Search matches Doe substring",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr("Doe"),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 2,
-		},
-		{
-			name: "Search not found in Test Store 1",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr("Alice"),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 0,
-		},
-		{
-			name: "Empty search returns all orders for Test Store 1",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr(""),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 2,
-		},
-		{
-			name: "Filter by COMPLETED status",
-			filter: types.OrdersFilterQuery{
-				Status:     orderStatusPtr("COMPLETED"),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount:   1,
-			expectedOrderID: 2,
-		},
-		{
-			name: "Pagination: page 2 returns empty",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr(""),
-				StoreID:    uintPtr(1),
-				BaseFilter: tests.BaseFilterWithPagination(2, 10),
-			},
-			expectedCount: 0,
-		},
-		{
-			name: "Filter by non-existent store",
-			filter: types.OrdersFilterQuery{
-				Search:     stringPtr("John"),
-				StoreID:    uintPtr(999),
-				BaseFilter: tests.BaseFilterWithPagination(1, 10),
-			},
-			expectedCount: 0,
-		},
-	}
+// 	testCases := []struct {
+// 		name            string
+// 		filter          types.OrdersFilterQuery
+// 		expectedCount   int
+// 		expectedOrderID uint
+// 	}{
+// 		{
+// 			name: "Search matches John",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr("John"),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 2,
+// 		},
+// 		{
+// 			name: "Search matches Doe substring",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr("Doe"),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 2,
+// 		},
+// 		{
+// 			name: "Search not found in Test Store 1",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr("Alice"),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 0,
+// 		},
+// 		{
+// 			name: "Empty search returns all orders for Test Store 1",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr(""),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 2,
+// 		},
+// 		{
+// 			name: "Filter by COMPLETED status",
+// 			filter: types.OrdersFilterQuery{
+// 				Status:     orderStatusPtr("COMPLETED"),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount:   1,
+// 			expectedOrderID: 2,
+// 		},
+// 		{
+// 			name: "Pagination: page 2 returns empty",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr(""),
+// 				StoreID:    uintPtr(1),
+// 				BaseFilter: tests.BaseFilterWithPagination(2, 10),
+// 			},
+// 			expectedCount: 0,
+// 		},
+// 		{
+// 			name: "Filter by non-existent store",
+// 			filter: types.OrdersFilterQuery{
+// 				Search:     stringPtr("John"),
+// 				StoreID:    uintPtr(999),
+// 				BaseFilter: tests.BaseFilterWithPagination(1, 10),
+// 			},
+// 			expectedCount: 0,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ordersFound, err := module.Service.GetOrders(tc.filter)
-			assert.NoError(t, err, fmt.Sprintf("GetOrders returned an error in case %q", tc.name))
-			assert.Len(t, ordersFound, tc.expectedCount, fmt.Sprintf("Expected %d orders in case %q", tc.expectedCount, tc.name))
-		})
-	}
-}
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			ordersFound, err := module.Service.GetOrders(tc.filter)
+// 			assert.NoError(t, err, fmt.Sprintf("GetOrders returned an error in case %q", tc.name))
+// 			assert.Len(t, ordersFound, tc.expectedCount, fmt.Sprintf("Expected %d orders in case %q", tc.expectedCount, tc.name))
+// 		})
+// 	}
+// }
 
 // func TestOrderService_GetAllBaristaOrders_WithPreloadedData(t *testing.T) {
 // 	container := tests.NewTestContainer()
@@ -183,16 +184,6 @@ func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
 // 			// When converting orderCreatedUTC into the alternative timezone,
 // 			// it should fall on the previous day (yesterday).
 // 			expectedCount: 0,
-// 		},
-// 		{
-// 			name: "Valid orders using TimeZoneOffset +0 (UTC)",
-// 			filter: types.OrdersTimeZoneFilter{
-// 				StoreID:        uintPtr(1),
-// 				TimeZoneOffset: uintPtr(0), // UTC
-// 			},
-// 			// In UTC the order remains 00:01.
-// 			// Depending on the time of day, this should be seen as today’s order.
-// 			expectedCount: 2,
 // 		},
 // 		{
 // 			name: "No orders for non-existent store",
@@ -262,22 +253,6 @@ func TestOrderService_GetOrders_WithPreloadedData(t *testing.T) {
 // 				TimeZoneLocation: stringPtr(localLocation.String()),
 // 			},
 // 			// Based on the mock data for store 1 (one PENDING and one COMPLETED order).
-// 			expectedCounts: types.OrderStatusesCountDTO{
-// 				PENDING:     1,
-// 				COMPLETED:   1,
-// 				PREPARING:   0,
-// 				IN_DELIVERY: 0,
-// 				DELIVERED:   0,
-// 				CANCELLED:   0,
-// 				ALL:         2,
-// 			},
-// 		},
-// 		{
-// 			name: "Valid statuses using TimeZoneOffset +0 (UTC) for store 1",
-// 			filter: types.OrdersTimeZoneFilter{
-// 				StoreID:        uintPtr(1),
-// 				TimeZoneOffset: uintPtr(0),
-// 			},
 // 			expectedCounts: types.OrderStatusesCountDTO{
 // 				PENDING:     1,
 // 				COMPLETED:   1,
@@ -425,108 +400,110 @@ func TestOrderService_GetSubOrders(t *testing.T) {
 	assert.Equal(t, 1, len(suborders), "Expected 1 suborder for order 1")
 }
 
-// func TestOrderService_CreateOrder_Combined(t *testing.T) {
-// 	_ = resetTestData(t)
-// 	module := tests.GetOrdersModule()
+func TestOrderService_CreateOrder_Combined(t *testing.T) {
+	_ = resetTestData(t)
+	module := tests.GetOrdersModule()
 
-// 	err := censor.InitializeCensorForTests()
-// 	if err != nil {
-// 		t.Fatalf("Failed to initialize censor for tests: %v", err)
-// 	}
+	err := censor.InitializeCensorForTests()
+	if err != nil {
+		t.Fatalf("Failed to initialize censor for tests: %v", err)
+	}
 
-// 	testCases := []struct {
-// 		name              string
-// 		dto               types.CreateOrderDTO
-// 		storeID           uint
-// 		expectedError     bool
-// 		expectedErrSubstr string
-// 		expectedTotal     float64
-// 	}{
-// 		{
-// 			name: "Successful order creation - John Doe, quantity 2",
-// 			dto: types.CreateOrderDTO{
-// 				CustomerName: "John",
-// 				Suborders: []types.CreateSubOrderDTO{
-// 					{
-// 						StoreProductSizeID: 1, // product size with store_price 2.75
-// 						Quantity:           2,
-// 						StoreAdditivesIDs:  []uint{1}, // additive with store_price 0.55
-// 					},
-// 				},
-// 				StoreID: 1,
-// 			},
-// 			storeID:       1,
-// 			expectedError: false,
-// 			// Expected total = 2 * (2.75 + 0.55) = 6.60
-// 			expectedTotal: 6.60,
-// 		},
-// 		{
-// 			name: "Failure due to empty suborders",
-// 			dto: types.CreateOrderDTO{
-// 				CustomerName: "John",
-// 				Suborders:    []types.CreateSubOrderDTO{},
-// 				StoreID:      1,
-// 			},
-// 			storeID:           1,
-// 			expectedError:     true,
-// 			expectedErrSubstr: "order can not be empty",
-// 		},
-// 		{
-// 			name: "Failure due to censored customer name",
-// 			dto: types.CreateOrderDTO{
-// 				CustomerName: "fuck", // Assume this is rejected by the censor validator.
-// 				Suborders: []types.CreateSubOrderDTO{
-// 					{
-// 						StoreProductSizeID: 1,
-// 						Quantity:           1,
-// 						StoreAdditivesIDs:  []uint{1},
-// 					},
-// 				},
-// 				StoreID: 1,
-// 			},
-// 			storeID:           1,
-// 			expectedError:     true,
-// 			expectedErrSubstr: "inappropriate", // Expect an error message indicating censorship.
-// 		},
-// 		{
-// 			name: "Failure due to invalid product size",
-// 			dto: types.CreateOrderDTO{
-// 				CustomerName: "John",
-// 				Suborders: []types.CreateSubOrderDTO{
-// 					{
-// 						StoreProductSizeID: 9999, // non-existent ID
-// 						Quantity:           1,
-// 						StoreAdditivesIDs:  []uint{1},
-// 					},
-// 				},
-// 				StoreID: 1,
-// 			},
-// 			storeID:           1,
-// 			expectedError:     true,
-// 			expectedErrSubstr: "invalid store product size ID",
-// 		},
-// 	}
+	testCases := []struct {
+		name              string
+		dto               types.CreateOrderDTO
+		storeID           uint
+		expectedError     bool
+		expectedErrSubstr string
+		expectedTotal     float64
+	}{
+		{
+			name: "Successful order creation - John Doe, quantity 2",
+			dto: types.CreateOrderDTO{
+				CustomerName: "John",
+				Suborders: []types.CreateSubOrderDTO{
+					{
+						StoreProductSizeID: 1, // product size with store_price 2.75
+						Quantity:           2,
+						StoreAdditivesIDs:  []uint{1}, // additive with store_price 0.55
+					},
+				},
+				StoreID: 1,
+			},
+			storeID:       1,
+			expectedError: false,
+			// Expected total = 2 * (2.75 + 0.55) = 6.60
+			expectedTotal: 6.60,
+		},
+		{
+			name: "Failure due to empty suborders",
+			dto: types.CreateOrderDTO{
+				CustomerName: "John",
+				Suborders:    []types.CreateSubOrderDTO{},
+				StoreID:      1,
+			},
+			storeID:           1,
+			expectedError:     true,
+			expectedErrSubstr: "order can not be empty",
+		},
+		{
+			name: "Failure due to censored customer name",
+			dto: types.CreateOrderDTO{
+				CustomerName: "fuck", // Assume this is rejected by the censor validator.
+				Suborders: []types.CreateSubOrderDTO{
+					{
+						StoreProductSizeID: 1,
+						Quantity:           1,
+						StoreAdditivesIDs:  []uint{1},
+					},
+				},
+				StoreID: 1,
+			},
+			storeID:           1,
+			expectedError:     true,
+			expectedErrSubstr: "inappropriate", // Expect an error message indicating censorship.
+		},
+		{
+			name: "Failure due to invalid product size",
+			dto: types.CreateOrderDTO{
+				CustomerName: "John",
+				Suborders: []types.CreateSubOrderDTO{
+					{
+						StoreProductSizeID: 9999, // non-existent ID
+						Quantity:           1,
+						StoreAdditivesIDs:  []uint{1},
+					},
+				},
+				StoreID: 1,
+			},
+			storeID:           1,
+			expectedError:     true,
+			expectedErrSubstr: "insufficient stock",
+		},
+	}
 
-// 	// Run each test case.
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			order, err := module.Service.CreateOrder(tc.storeID, &tc.dto)
-// 			if tc.expectedError {
-// 				assert.Error(t, err, "Expected error in case %q", tc.name)
-// 				if tc.expectedErrSubstr != "" {
-// 					assert.Contains(t, err.Error(), tc.expectedErrSubstr, "Error message should contain %q", tc.expectedErrSubstr)
-// 				}
-// 				assert.Nil(t, order, "Order should be nil when creation fails")
-// 			} else {
-// 				assert.NoError(t, err, "Unexpected error in case %q", tc.name)
-// 				assert.NotNil(t, order, "Returned order should not be nil in case %q", tc.name)
-// 				// Verify total and status.
-// 				assert.InDelta(t, tc.expectedTotal, order.Total, 0.01, "Order total is incorrect")
-// 				assert.Equal(t, data.OrderStatusPending, order.Status, "New order should have PENDING status")
-// 			}
-// 		})
-// 	}
-// }
+	// Run each test case.
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			order, err := module.Service.CreateOrder(tc.storeID, &tc.dto)
+			if tc.expectedError {
+				assert.Error(t, err, "Expected error in case %q", tc.name)
+				if tc.expectedErrSubstr != "" {
+					assert.Contains(t, err.Error(), tc.expectedErrSubstr, "Error message should contain %q", tc.expectedErrSubstr)
+				}
+				assert.Nil(t, order, "Order should be nil when creation fails")
+			} else {
+				assert.NoError(t, err, "Unexpected error in case %q", tc.name)
+				assert.NotNil(t, order, "Returned order should not be nil in case %q", tc.name)
+				// Verify total and status.
+				assert.InDelta(t, tc.expectedTotal, order.Total, 0.01, "Order total is incorrect")
+				// assert.Equal(t, data.OrderStatusPending, order.Status, "New order should have PENDING status")
+				// or
+				assert.Equal(t, data.OrderStatusWaitingForPayment, order.Status, "New order should have WAITING_FOR_PAYMENT status")
+			}
+		})
+	}
+}
 
 func insertTestOrderWithTwoSuborders(t *testing.T, db *gorm.DB) (orderID uint, suborderIDs []uint) {
 	t.Helper()

@@ -2,7 +2,11 @@ package auth
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/customers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/employees"
@@ -13,46 +17,46 @@ import (
 )
 
 type AuthenticationService interface {
-	EmployeeLogin(email, password string) (*types.TokenPair, error)
-	EmployeeRefreshAccessToken(refreshToken string) (string, error)
+	EmployeeLogin(email, password string) (*types.Token, error)
+
 	CustomerRegister(input *types.CustomerRegisterDTO) (uint, error)
-	CustomerLogin(email, password string) (*types.TokenPair, error)
-	CustomerRefreshTokens(refreshToken string) (*types.TokenPair, error)
+	CustomerLogin(email, password string) (*types.Token, error)
 }
 
 type authenticationService struct {
-	repo          AuthenticationRepository
-	customersRepo customers.CustomerRepository
-	employeesRepo employees.EmployeeRepository
-	logger        *zap.SugaredLogger
+	repo                 AuthenticationRepository
+	customersRepo        customers.CustomerRepository
+	employeesRepo        employees.EmployeeRepository
+	employeeTokenManager employeeToken.EmployeeTokenManager
+	logger               *zap.SugaredLogger
 }
 
 func NewAuthenticationService(
 	repo AuthenticationRepository,
 	customersRepo customers.CustomerRepository,
 	employeesRepo employees.EmployeeRepository,
+	employeeTokenManager employeeToken.EmployeeTokenManager,
 	logger *zap.SugaredLogger,
 ) AuthenticationService {
 	return &authenticationService{
-		repo:          repo,
-		customersRepo: customersRepo,
-		employeesRepo: employeesRepo,
-		logger:        logger,
+		repo:                 repo,
+		customersRepo:        customersRepo,
+		employeesRepo:        employeesRepo,
+		employeeTokenManager: employeeTokenManager,
+		logger:               logger,
 	}
 }
 
-func (s *authenticationService) EmployeeLogin(email, password string) (*types.TokenPair, error) {
+func (s *authenticationService) EmployeeLogin(email, password string) (*types.Token, error) {
 	employee, err := s.employeesRepo.GetEmployeeByEmailOrPhone(email, "")
 	if err != nil {
-		s.logger.Error(types.ErrInvalidCredentials)
+		s.logger.Error(err)
 		return nil, types.ErrInvalidCredentials
 	}
-
 	if employee == nil {
 		return nil, errors.New("this employee is not registered")
 	}
-
-	if employee.IsActive == nil || !*employee.IsActive {
+	if !employee.IsActive {
 		return nil, types.ErrInactiveEmployee
 	}
 
@@ -60,65 +64,31 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*types.To
 		return nil, types.ErrInvalidCredentials
 	}
 
-	employeeData, err := types.MapEmployeeToClaimsData(employee)
+	existingToken, err := s.employeeTokenManager.GetTokenByEmployeeID(employee.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("failed to check existing token: %w", err)
+	}
+
+	cfg := config.GetConfig()
+	newExpiration := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
+
+	if existingToken != nil && existingToken.ExpiresAt.After(time.Now()) {
+		if err := s.employeeTokenManager.UpdateTokenExpiration(employee.ID, newExpiration); err != nil {
+			return nil, fmt.Errorf("failed to update token expiration: %w", err)
+		}
+		return &types.Token{SessionToken: existingToken.Token}, nil
+	}
+
+	sessionToken, err := types.GenerateEmployeeJWT(employee.ID)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to map employee claims", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+		return nil, utils.WrapError("failed to generate session token", err)
 	}
 
-	accessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
-	if err != nil {
-		return nil, utils.WrapError("failed to generate access token", err)
-	}
-	refreshToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenRefresh)
-	if err != nil {
-		return nil, utils.WrapError("failed to generate refresh token", err)
+	if err := s.saveEmployeeToken(employee.ID, sessionToken); err != nil {
+		return nil, fmt.Errorf("failed to save employee token: %w", err)
 	}
 
-	tokenPair := types.TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return &tokenPair, nil
-}
-
-func (s *authenticationService) EmployeeRefreshAccessToken(refreshToken string) (string, error) {
-	claims := &types.EmployeeClaims{}
-	err := types.ValidateEmployeeJWT(refreshToken, claims, types.TokenRefresh)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to validate refresh token", err)
-		return "", wrappedErr
-	}
-
-	if claims.EmployeeClaimsData.ID == 0 {
-		wrappedErr := utils.WrapError("invalid refresh token payload", errors.New("id cannot be 0"))
-		return "", wrappedErr
-	}
-
-	employee, err := s.employeesRepo.GetEmployeeByID(claims.EmployeeClaimsData.ID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve Customer", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	employeeData, err := types.MapEmployeeToClaimsData(employee)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to map employee claims", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	newAccessToken, err := types.GenerateEmployeeJWT(employeeData, types.TokenAccess)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to generate access token", err)
-		s.logger.Error(wrappedErr)
-		return "", wrappedErr
-	}
-
-	return newAccessToken, nil
+	return &types.Token{SessionToken: sessionToken}, nil
 }
 
 func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDTO) (uint, error) {
@@ -146,8 +116,8 @@ func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDT
 		LastName:   input.LastName,
 		Password:   hashedPassword,
 		Phone:      input.Phone,
-		IsVerified: nil,
-		IsBanned:   nil,
+		IsVerified: false,
+		IsBanned:   false,
 	}
 
 	id, err := s.repo.CreateCustomer(customer)
@@ -162,7 +132,7 @@ func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDT
 	return id, nil
 }
 
-func (s *authenticationService) CustomerLogin(phone, password string) (*types.TokenPair, error) {
+func (s *authenticationService) CustomerLogin(phone, password string) (*types.Token, error) {
 	customer, err := s.repo.GetCustomerByPhone(phone)
 	if err != nil {
 		wrappedErr := utils.WrapError("error retrieving customer", err)
@@ -174,7 +144,7 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*types.To
 		return nil, errors.New("this Customer is not registered")
 	}
 
-	if customer.IsBanned != nil || !*customer.IsBanned {
+	if customer.IsBanned {
 		return nil, types.ErrBannedCustomer
 	}
 
@@ -182,67 +152,31 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*types.To
 		return nil, types.ErrInvalidCredentials
 	}
 
-	employeeData := types.MapCustomerToClaimsData(customer)
-
-	accessToken, err := types.GenerateCustomerJWT(employeeData, types.TokenAccess)
+	sessionToken, err := types.GenerateCustomerJWT(customer.ID)
 	if err != nil {
 		return nil, utils.WrapError("failed to generate access token", err)
 	}
-	refreshToken, err := types.GenerateCustomerJWT(employeeData, types.TokenRefresh)
-	if err != nil {
-		return nil, utils.WrapError("failed to generate refresh token", err)
+
+	token := types.Token{
+		SessionToken: sessionToken,
 	}
 
-	tokenPair := types.TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return &tokenPair, nil
+	return &token, nil
 }
 
-func (s *authenticationService) CustomerRefreshTokens(refreshToken string) (*types.TokenPair, error) {
-	claims := &types.CustomerClaims{}
-	err := types.ValidateCustomerJWT(refreshToken, claims, types.TokenRefresh)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to validate refresh token", err)
-		return nil, wrappedErr
+func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
+	cfg := config.GetConfig()
+	expirationTime := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
+
+	employeeToken := &data.EmployeeToken{
+		EmployeeID: employeeID,
+		Token:      token,
+		ExpiresAt:  expirationTime,
 	}
 
-	if claims.CustomerClaimsData.ID == 0 {
-		wrappedErr := utils.WrapError("invalid refresh token payload", errors.New("id cannot be 0"))
-		return nil, wrappedErr
+	if err := s.employeeTokenManager.CreateToken(employeeToken); err != nil {
+		return fmt.Errorf("failed to save token: %w", err)
 	}
 
-	customer, err := s.customersRepo.GetCustomerByID(claims.CustomerClaimsData.ID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to retrieve Customer", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	accessClaims := types.MapCustomerToClaimsData(customer)
-
-	accessToken, err := types.GenerateCustomerJWT(accessClaims, types.TokenAccess)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to generate access token", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	customerData := types.MapCustomerToClaimsData(customer)
-
-	refreshToken, err = types.GenerateCustomerJWT(customerData, types.TokenRefresh)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to generate access token", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	tokenPair := &types.TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return tokenPair, nil
+	return nil
 }

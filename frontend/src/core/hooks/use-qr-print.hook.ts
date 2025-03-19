@@ -11,7 +11,23 @@ export interface QRPrintOptions extends PrintOptions {
 }
 
 export const generateSubOrderQR = (sb: SuborderDTO) => {
-	return `${sb.id}|${sb.productSize.machineId}|${sb.additives.map(a => a.additive.machineId).join(',')}`
+	const parts = [
+		sb.id ?? null,
+		sb.productSize?.machineId ?? null,
+		sb.additives?.length ? sb.additives.map(a => a.additive.machineId).join(',') : null,
+	]
+
+	return parts.filter(Boolean).join('|')
+}
+
+export const parseSubOrderQR = (qrString: string) => {
+	const [subOrderId, productSizeMachineId, additivesString] = qrString.split('|')
+
+	return {
+		subOrderId: subOrderId || null,
+		productSizeMachineId: productSizeMachineId || null,
+		additiveMachineIds: additivesString ? additivesString.split(',') : [],
+	}
 }
 
 export const getSavedBaristaQRSettings = (): { width: number; height: number } => {

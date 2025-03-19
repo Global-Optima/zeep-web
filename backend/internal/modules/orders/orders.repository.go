@@ -18,13 +18,13 @@ type OrderRepository interface {
 	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]data.Order, error)
 	GetOrderById(orderID uint) (*data.Order, error)
 	CreateOrder(order *data.Order) (uint, error)
-	UpdateOrderStatus(orderID uint, status data.OrderStatus) error
+	UpdateOrderStatus(suborderID uint, updateData types.UpdateOrderDTO) error
 	DeleteOrder(orderID uint) error
 
 	GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error)
 
 	GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error)
-	UpdateSubOrderStatus(subOrderID uint, status data.SubOrderStatus) error
+	UpdateSubOrderStatus(suborderID uint, updateData types.UpdateSubOrderDTO) error
 	AddSubOrderAdditive(subOrderID uint, additive *data.SuborderAdditive) error
 	CheckAllSubordersCompleted(orderID, subOrderID uint) (bool, error)
 	GetOrderBySubOrderID(subOrderID uint) (*data.Order, error)
@@ -34,7 +34,7 @@ type OrderRepository interface {
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
 
 	CalculateFrozenStock(storeID uint) (map[uint]float64, error)
-	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) error
+	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error)
 	HandlePaymentFailure(orderID uint) error
 }
 
@@ -50,7 +50,6 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 
 func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 	const workingHours = 16 // Working hours for a cafe
-	var orderID uint = 0
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		// Lock the store's orders for consistency
@@ -108,9 +107,7 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 		return nil
 	})
 
-	orderID = order.ID
-
-	return orderID, err
+	return order.ID, err
 }
 
 func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error) {
@@ -170,21 +167,29 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
 
-	// Convert start and end of today **back to UTC** for database querying
+	// Convert start and end of today to UTC for database querying
 	startOfTodayUTC := startOfToday.UTC()
 	endOfTodayUTC := endOfToday.UTC()
 
-	// Query orders for the given store within the correct time range
-	err = r.db.
+	// Base query to fetch orders for the given store within today's time range
+	query := r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Where("store_id = ?", *filter.StoreID).
 		Where("status NOT IN (?)", []data.OrderStatus{data.OrderStatusWaitingForPayment}).
 		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
-		Order("created_at ASC").
-		Find(&orders).Error
+		Order("created_at ASC")
 
+	if filter.TimeGapMinutes != nil && *filter.TimeGapMinutes > 0 {
+		cutoffTime := now.Add(-time.Duration(*filter.TimeGapMinutes) * time.Minute)
+		cutoffTimeUTC := cutoffTime.UTC()
+
+		query = query.Where("(status != ? OR completed_at >= ?)", data.OrderStatusCompleted, cutoffTimeUTC)
+	}
+
+	// Execute the query
+	err = query.Find(&orders).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch barista orders: %w", err)
 	}
@@ -192,23 +197,26 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 	return orders, nil
 }
 
+// Helper function to get the timezone location
 func getTimeZoneLocation(filter types.OrdersTimeZoneFilter) (*time.Location, error) {
+	// Default to UTC
+	location := time.UTC
+
+	// If timezone location is specified, use that
 	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
-		location, err := time.LoadLocation(*filter.TimeZoneLocation)
+		var err error
+		location, err = time.LoadLocation(*filter.TimeZoneLocation)
 		if err != nil {
 			return nil, fmt.Errorf("invalid timezone location: %w", err)
 		}
-
-		return location, nil
+	} else if filter.TimeZoneOffset != nil {
+		// If timezone offset is specified, create a fixed timezone
+		hours := int(*filter.TimeZoneOffset) / 60
+		minutes := int(*filter.TimeZoneOffset) % 60
+		location = time.FixedZone(fmt.Sprintf("UTC%+d:%02d", hours, minutes), int(*filter.TimeZoneOffset)*60)
 	}
 
-	if filter.TimeZoneOffset != nil {
-		offsetSeconds := int(*filter.TimeZoneOffset) * 60
-		return time.FixedZone("Custom Offset", offsetSeconds), nil
-	}
-
-	// Default to UTC if no timezone is provided
-	return time.UTC, nil
+	return location, nil
 }
 
 func (r *orderRepository) GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error) {
@@ -282,18 +290,34 @@ func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 		Preload("Store").
 		Where("id = ?", orderId).
 		First(&order).Error
-
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrOrderNotFound
+		}
 		return nil, fmt.Errorf("failed to fetch order with ID %d: %w", orderId, err)
 	}
 
 	return &order, nil
 }
 
-func (r *orderRepository) UpdateOrderStatus(orderID uint, status data.OrderStatus) error {
+func (r *orderRepository) GetRawOrderById(orderId uint) (*data.Order, error) {
+	var order data.Order
+	err := r.db.Where("id = ?", orderId).
+		First(&order).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrOrderNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch raw order with ID %d: %w", orderId, err)
+	}
+
+	return &order, nil
+}
+
+func (r *orderRepository) UpdateOrderStatus(orderID uint, updateData types.UpdateOrderDTO) error {
 	return r.db.Model(&data.Order{}).
 		Where("id = ?", orderID).
-		Update("status", status).Error
+		Updates(updateData).Error
 }
 
 func (r *orderRepository) DeleteOrder(orderID uint) error {
@@ -309,10 +333,10 @@ func (r *orderRepository) GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, 
 	return suborders, nil
 }
 
-func (r *orderRepository) UpdateSubOrderStatus(suborderID uint, status data.SubOrderStatus) error {
+func (r *orderRepository) UpdateSubOrderStatus(suborderID uint, updateData types.UpdateSubOrderDTO) error {
 	return r.db.Model(&data.Suborder{}).
 		Where("id = ?", suborderID).
-		Update("status", status).Error
+		Updates(updateData).Error
 }
 
 func (r *orderRepository) AddSubOrderAdditive(suborderID uint, additive *data.SuborderAdditive) error {
@@ -351,7 +375,6 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 		Joins("JOIN suborders ON suborders.order_id = orders.id").
 		Where("suborders.id = ?", subOrderID).
 		First(&order).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch order for suborder %d: %w", subOrderID, err)
 	}
@@ -388,7 +411,6 @@ func (r *orderRepository) GetOrderDetails(orderID uint, filter *contexts.StoreCo
 	}
 
 	err := query.First(&order).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -435,7 +457,6 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 		Preload("SuborderAdditives.StoreAdditive.Additive").
 		Where("id = ?", suborderID).
 		First(&suborder).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -496,21 +517,21 @@ func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
 	}
 }
 
-func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) error {
-	order, err := r.GetOrderById(orderID)
+func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error) {
+	order, err := r.GetRawOrderById(orderID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if order.Status != data.OrderStatusWaitingForPayment {
-		return types.ErrInappropriateOrderStatus
+		return nil, types.ErrInappropriateOrderStatus
 	}
+	order.Status = data.OrderStatusPending
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&data.Order{}).
 			Where(&data.Order{BaseEntity: data.BaseEntity{ID: orderID}}).
-			Updates(&data.Order{Status: data.OrderStatusPending}).Error
-
+			Save(order).Error
 		if err != nil {
 			return err
 		}
@@ -521,14 +542,14 @@ func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction 
 		return nil
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return order, nil
 }
 
 func (r *orderRepository) HandlePaymentFailure(orderID uint) error {
-	order, err := r.GetOrderById(orderID)
+	order, err := r.GetRawOrderById(orderID)
 	if err != nil {
 		return err
 	}

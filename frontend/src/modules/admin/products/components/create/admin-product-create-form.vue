@@ -5,13 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
-import AdminSelectProductCategory from '@/modules/admin/product-categories/components/admin-select-product-category.vue'
 import type { CreateProductDTO, ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Camera, ChevronLeft, Video, X } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import { ref, useTemplateRef } from 'vue'
+import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
 import * as z from 'zod'
+
+const AdminSelectProductCategory = defineAsyncComponent(() =>
+  import('@/modules/admin/product-categories/components/admin-select-product-category.vue'))
 
 const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
 
@@ -28,9 +30,11 @@ const createProductSchema = toTypedSchema(
       .min(2, 'Название должно содержать не менее 2 символов')
       .max(100, 'Название не может превышать 100 символов'),
     description: z.string()
+      .min(1, 'Введите описание')
       .max(500, 'Описание не может превышать 500 символов'),
     categoryId: z.coerce.number()
-      .min(1, 'Выберите категорию из списка'),
+      .min(1, 'Выберите категорию из списка')
+      .default(0),
     image: z.instanceof(File).optional().refine((file) => {
       if (!file) return true; // Optional field
       return ['image/jpeg', 'image/png'].includes(file.type);
@@ -49,7 +53,7 @@ const createProductSchema = toTypedSchema(
 );
 
 // Setup form with vee-validate
-const { handleSubmit, setFieldValue } = useForm<CreateProductDTO>({
+const { handleSubmit, setFieldValue } = useForm({
   validationSchema: createProductSchema,
 });
 
@@ -193,21 +197,27 @@ function triggerVideoInput() {
 					</CardContent>
 				</Card>
 
-				<Card>
-					<CardHeader>
-						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию товара</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<Button
-							variant="link"
-							class="mt-0 p-0 h-fit text-primary underline"
-							@click="openCategoryDialog = true"
-						>
-							{{ selectedCategory?.name || 'Категория не выбрана' }}
-						</Button>
-					</CardContent>
-				</Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Категория</CardTitle>
+            <CardDescription>Категория товара</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField name="categoryId">
+              <FormItem>
+                <Button
+                  variant="link"
+                  class="mt-0 p-0 h-fit text-primary underline"
+                  type="button"
+                  @click="openCategoryDialog = true"
+                >
+                  {{ selectedCategory?.name || 'Категория не выбрана' }}
+                </Button>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+          </CardContent>
+        </Card>
 			</div>
 
 			<!-- Right Side: Media -->
@@ -238,7 +248,7 @@ function triggerVideoInput() {
 											/>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-green-600 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
 												@click="previewImage = null; setFieldValue('image', undefined)"
 											>
 												<X class="size-4" />
@@ -298,7 +308,7 @@ function triggerVideoInput() {
 											></video>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-green-600 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
 												@click="previewVideo = null; setFieldValue('video', undefined)"
 											>
 												<X class="size-4" />

@@ -1,12 +1,13 @@
 package localization
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/gin-gonic/gin"
 )
 
 type LocalizedErrorInterface interface {

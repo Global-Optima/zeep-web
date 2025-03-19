@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
@@ -34,7 +35,7 @@ func MapToBaseEmployeeDTO(employee *data.Employee) *BaseEmployeeDTO {
 		Email:     employee.Email,
 		Type:      employeeType,
 		Role:      role,
-		IsActive:  *employee.IsActive,
+		IsActive:  employee.IsActive,
 	}
 }
 

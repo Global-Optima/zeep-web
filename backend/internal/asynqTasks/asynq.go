@@ -2,11 +2,12 @@ package asynqTasks
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"sync"
-	"time"
 )
 
 const (
@@ -16,6 +17,10 @@ const (
 
 var once sync.Once
 
+type contextKey string
+
+const asynqTaskKey contextKey = "asynq-manager"
+
 type AsynqManager struct {
 	client *asynq.Client
 	server *asynq.Server
@@ -23,8 +28,7 @@ type AsynqManager struct {
 	logger *zap.SugaredLogger
 }
 
-type AsynqManagerTask struct {
-}
+type AsynqManagerTask struct{}
 
 type MyRedisConnOpt struct {
 	Rdb *redis.Client
@@ -46,7 +50,7 @@ func initAsynq(redisClient *redis.Client, logger *zap.SugaredLogger) (*AsynqMana
 			asynq.Config{
 				Concurrency: ASYNQ_CONCURRENCY,
 				BaseContext: func() context.Context {
-					return context.WithValue(context.Background(), "service", "asynq-task-queue")
+					return context.WithValue(context.Background(), asynqTaskKey, "asynq-task-queue")
 				},
 				RetryDelayFunc: func(n int, e error, t *asynq.Task) time.Duration {
 					return ASYNQ_RETRY_DELAY

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { defineAsyncComponent, ref } from 'vue'
+import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -16,7 +16,7 @@ import { useToast } from '@/core/components/ui/toast'
 import type { AdditiveCategoryDTO, AdditiveDetailsDTO, BaseAdditiveCategoryDTO, SelectedIngredientDTO, UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import { ChevronLeft, Trash } from 'lucide-vue-next'
+import {Camera, ChevronLeft, Trash, X} from 'lucide-vue-next'
 
 // Async Components
 const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
@@ -60,55 +60,80 @@ const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(additive.ingredie
 const openIngredientsDialog = ref(false)
 
 // Validation Schema
-const createAdditiveSchema = toTypedSchema(
+const updateAdditiveSchema = toTypedSchema(
   z.object({
-    name: z.string().min(1, 'Введите название добавки'),
-    description: z.string().min(1, 'Введите описание'),
+    name: z.string().min(1, 'Введите название добавки')
+      .max(100, 'Название не может превышать 100 символов'),
+    description: z.string().min(1, 'Введите описание')
+      .max(500, 'Описание не может превышать 500 символов'),
     machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
     unitId: z.number().min(0, 'Введите единицу измерения'),
-    imageUrl: z.string().min(1, 'Вставьте картинку добавки'),
     additiveCategoryId: z.coerce.number().min(1, 'Выберите категорию добавки'),
+    image: z.instanceof(File).optional().refine((file) => {
+      if (!file) return true;
+      return ['image/jpeg', 'image/png'].includes(file.type);
+    }, 'Поддерживаются только форматы JPEG и PNG').refine((file) => {
+      if (!file) return true;
+      return file.size <= 5 * 1024 * 1024;
+    }, 'Максимальный размер файла: 5MB'),
   })
 )
 
 // Form Setup
 const { handleSubmit, resetForm, setFieldValue } = useForm({
-  validationSchema: createAdditiveSchema,
+  validationSchema: updateAdditiveSchema,
   initialValues: {
     name: additive.name,
     description: additive.description,
     basePrice: additive.basePrice,
     size: additive.size,
     unitId: additive.unit.id,
-    imageUrl: additive.imageUrl,
     additiveCategoryId: additive.category.id,
-    machineId: additive.machineId
+    machineId: additive.machineId,
   }
 })
+
+const previewImage = ref<string | null>(additive.imageUrl || null);
+const deleteImage = ref<boolean>(false)
+
+const handleImageUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files?.length) {
+    const file = target.files[0];
+    previewImage.value = URL.createObjectURL(file);
+    setFieldValue('image', file);
+    deleteImage.value = true
+  }
+};
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
   if (readonly) return
 
   if (!selectedCategory.value?.id || !selectedUnit.value?.id) return
-  if (selectedIngredients.value.length === 0) {
-    return toast({ description: "Технологическая карта должна иметь минимум 1 ингредиент" })
-  }
+
   if (selectedIngredients.value.some(i => i.quantity <= 0)) {
-    return toast({ description: "Технологическая карта не может иметь количество 0" })
+    return toast({ description: "Укажите количество в технологической карте" })
   }
 
   const dto: UpdateAdditiveDTO = {
     ...formValues,
     additiveCategoryId: selectedCategory.value.id,
     unitId: selectedUnit.value.id,
-    ingredients: selectedIngredients.value.map(i => ({ ingredientId: i.ingredientId, quantity: i.quantity }))
+    ingredients: selectedIngredients.value.map(i => ({ ingredientId: i.ingredientId, quantity: i.quantity })),
+    deleteImage: deleteImage.value,
   }
 
   emits('onSubmit', dto)
 })
+
+const onDeleteImage = () => {
+  previewImage.value = null
+  setFieldValue('image', undefined)
+  deleteImage.value = true
+}
 
 const onCancel = () => {
   resetForm()
@@ -141,6 +166,9 @@ function addIngredient(ingredient: IngredientsDTO) {
 function removeIngredient(index: number) {
   selectedIngredients.value.splice(index, 1)
 }
+
+const imageInputRef = useTemplateRef("imageInputRef");
+const triggerImageInput = () => imageInputRef.value?.click();
 </script>
 
 <template>
@@ -372,30 +400,59 @@ function removeIngredient(index: number) {
 				<Card>
 					<CardHeader>
 						<CardTitle>Изображение</CardTitle>
-						<CardDescription> Предварительный просмотр изображения продукта. </CardDescription>
+						<CardDescription>
+							Загрузите изображение для продукта.<br />
+							Поддерживаемые форматы: JPEG, PNG (макс. 5MB)
+						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div class="space-y-2">
-							<div
-								v-if="additive.imageUrl"
-								class="relative border rounded-lg w-full h-48 overflow-hidden"
-							>
-								<LazyImage
-									:src="additive.imageUrl"
-									alt="Product Image"
-									class="rounded-lg w-full h-full object-contain"
-								/>
-							</div>
-							<div
-								v-else
-								class="p-4 border-2 border-gray-300 border-dashed rounded-lg text-center"
-							>
-								<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
-									<span class="mb-2">📷</span>
-									Изображение отсутствует
-								</p>
-							</div>
-						</div>
+						<FormField name="image">
+							<FormItem>
+								<FormControl>
+									<div class="space-y-2">
+										<!-- Preview -->
+										<div
+											v-if="previewImage"
+											class="relative w-full h-48"
+										>
+											<LazyImage
+												:src="previewImage"
+												alt="Preview"
+												class="border rounded-lg w-full h-full object-contain"
+											/>
+											<button
+												type="button"
+												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												@click="onDeleteImage"
+											>
+												<X class="size-4" />
+											</button>
+										</div>
+
+										<!-- Input -->
+										<div
+											v-if="!previewImage"
+											class="p-4 border-2 border-gray-300 hover:border-primary border-dashed rounded-lg text-center transition-colors cursor-pointer"
+											@click="triggerImageInput"
+										>
+											<input
+												ref="imageInputRef"
+												type="file"
+												accept="image/jpeg, image/png"
+												style="display: none;"
+												@change="handleImageUpload"
+											/>
+											<p class="flex flex-col justify-center items-center text-gray-500 text-sm">
+												<span class="mb-2"><Camera /></span>
+												Нажмите для загрузки изображения<br />
+												или перетащите файл
+											</p>
+										</div>
+									</div>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						</FormField>
 					</CardContent>
 				</Card>
 

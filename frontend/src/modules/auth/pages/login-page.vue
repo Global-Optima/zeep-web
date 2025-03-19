@@ -15,6 +15,8 @@ import { authService } from '@/modules/auth/services/auth.service'
 import { useMutation } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
 
+import { type AxiosLocalizedError, useAxiosLocaleToast } from "@/core/hooks/use-axios-locale-toast.hooks";
+
 // Role selection state
 const selectedRole = ref<string | null>(null)
 
@@ -36,18 +38,18 @@ const roles = [
   { key: 'Admin', label: 'Администратор' }
 ]
 
-
 const router = useRouter()
 const { toast } = useToast()
+const { toastLocalizedError } = useAxiosLocaleToast()
 
-const {mutate: loginEmployee} = useMutation({
-		mutationFn: (dto: EmployeeLoginDTO) => authService.loginEmployee(dto),
-		onSuccess: () => {
-			router.push({name: getRouteName("ADMIN_DASHBOARD")})
-		},
-		onError: () => {
-			toast({title: "Произошла ошибка при входе"})
-		},
+const { mutate: loginEmployee } = useMutation({
+  mutationFn: (dto: EmployeeLoginDTO) => authService.loginEmployee(dto),
+  onSuccess: () => {
+    router.push({ name: getRouteName("ADMIN_DASHBOARD") })
+  },
+  onError: (error: AxiosLocalizedError) => {
+    toastLocalizedError(error, "Произошла ошибка при входе")
+  },
 })
 
 const onLoginEmployee = (dto: EmployeeLoginDTO) => {

@@ -12,9 +12,9 @@ type StoreUpdateModels struct {
 	FacilityAddress *data.FacilityAddress
 }
 
-func UpdateStoreFields(dto *UpdateStoreDTO) (*StoreUpdateModels, error) {
-	store := &data.Store{}
-	var facilityAddress *data.FacilityAddress
+func UpdateStoreFields(dto *UpdateStoreDTO, store *data.Store, facilityAddress *data.FacilityAddress) (*StoreUpdateModels, error) {
+	store.Warehouse = data.Warehouse{}
+	store.Franchisee = nil
 
 	if dto.Name != "" {
 		store.Name = dto.Name
@@ -26,7 +26,7 @@ func UpdateStoreFields(dto *UpdateStoreDTO) (*StoreUpdateModels, error) {
 		store.WarehouseID = *dto.WarehouseID
 	}
 	if dto.IsActive != nil {
-		store.IsActive = dto.IsActive
+		store.IsActive = *dto.IsActive
 	}
 	if dto.ContactPhone != "" {
 		if !utils.IsValidPhone(dto.ContactPhone, utils.DEFAULT_PHONE_NUMBER_REGION) {
@@ -44,7 +44,7 @@ func UpdateStoreFields(dto *UpdateStoreDTO) (*StoreUpdateModels, error) {
 		store.StoreHours = dto.StoreHours
 	}
 	if dto.FacilityAddress != nil && dto.FacilityAddress.Address != "" {
-		facilityAddress = facilityAddressesTypes.MapToFacilityAddressModel(dto.FacilityAddress)
+		facilityAddress = facilityAddressesTypes.MapToFacilityAddressModel(dto.FacilityAddress, facilityAddress)
 	}
 
 	return &StoreUpdateModels{
@@ -59,11 +59,10 @@ func CreateStoreFields(dto *CreateStoreDTO) (*data.Store, error) {
 	store.Name = dto.Name
 	store.FranchiseeID = dto.FranchiseeID
 	store.WarehouseID = dto.WarehouseID
-	store.FacilityAddress = *facilityAddressesTypes.MapToFacilityAddressModel(&dto.FacilityAddress)
+	store.FacilityAddress = *facilityAddressesTypes.MapToFacilityAddressModel(&dto.FacilityAddress, nil)
 
 	if !utils.IsValidPhone(dto.ContactPhone, utils.DEFAULT_PHONE_NUMBER_REGION) {
 		return nil, moduleErrors.ErrValidation.WithDetails("phoneNumber")
-
 	}
 	store.ContactPhone = dto.ContactPhone
 

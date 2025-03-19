@@ -8,8 +8,8 @@ CREATE TABLE
 	 facility_addresses (
 		id SERIAL PRIMARY KEY,
 		address VARCHAR(255) UNIQUE NOT NULL,
-		longitude DECIMAL(9, 6) UNIQUE,
-		latitude DECIMAL(9, 6) UNIQUE,
+		longitude DECIMAL(9, 6),
+		latitude DECIMAL(9, 6),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -89,8 +89,8 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(100) NOT NULL,
 		description TEXT,
-		image_url VARCHAR(2048),
-		video_url VARCHAR(2048),
+		image_key VARCHAR(2048),
+		video_key VARCHAR(2048),
 		category_id INT NOT NULL REFERENCES product_categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -107,7 +107,7 @@ CREATE TABLE
 		step INT NOT NULL,
 		name VARCHAR(100),
 		description TEXT,
-		image_url VARCHAR(2048),
+		image_key VARCHAR(2048),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -134,6 +134,10 @@ CREATE TABLE
 		deleted_at TIMESTAMPTZ
 	);
 
+CREATE UNIQUE INDEX unique_product_size_name
+    ON product_sizes (product_id, name)
+    WHERE deleted_at IS NULL;
+
 -- Additive Table
 CREATE TABLE
 	 additives (
@@ -144,7 +148,7 @@ CREATE TABLE
         size DECIMAL(10, 2) NOT NULL CHECK (additives.size > 0),
         unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
 		additive_category_id INT NOT NULL REFERENCES additive_categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
-		image_url VARCHAR(2048),
+		image_key VARCHAR(2048),
         machine_id VARCHAR(255) NOT NULL UNIQUE,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -201,6 +205,7 @@ CREATE TABLE
 		contact_phone valid_phone,
 		contact_email VARCHAR(255),
 		store_hours VARCHAR(255),
+        last_inventory_sync_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
@@ -286,7 +291,8 @@ CREATE TABLE
         expiration_in_days INT CHECK (expiration_in_days >= 0),
         unit_id INT NOT NULL REFERENCES units(id) ON DELETE RESTRICT,
         category_id INT NOT NULL REFERENCES ingredient_categories(id) ON DELETE RESTRICT,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        is_allergen BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
@@ -373,6 +379,19 @@ CREATE TABLE
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
 	);
+
+-- EmployeeTokens Table
+CREATE TABLE
+	employee_tokens (
+		id SERIAL PRIMARY KEY,
+		token VARCHAR(255) NOT NULL UNIQUE,
+		expires_at TIMESTAMPTZ NOT NULL,
+		employee_id INT NOT NULL UNIQUE REFERENCES employees (id) ON DELETE CASCADE,
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMPTZ
+	);
+
 
 CREATE UNIQUE INDEX unique_employee_phone ON employees (phone) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX unique_employee_email ON employees (email) WHERE deleted_at IS NULL;
@@ -599,6 +618,7 @@ CREATE TABLE
 		total DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		completed_at TIMESTAMPTZ,
 		deleted_at TIMESTAMPTZ
 	);
 
@@ -615,6 +635,7 @@ CREATE TABLE
 		status VARCHAR(50) NOT NULL,
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		completed_at TIMESTAMPTZ,
 		deleted_at TIMESTAMPTZ
 	);
 

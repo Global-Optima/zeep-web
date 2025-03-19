@@ -6,9 +6,9 @@
 	>
 		<div>
 			<LazyImage
-				src="https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png"
+				:src="product.imageUrl"
 				alt="Изображение товара"
-				class="rounded-lg w-full h-44 sm:h-60 object-contain"
+				class="rounded-xl w-full h-44 sm:h-60 object-contain"
 			/>
 
 			<h3

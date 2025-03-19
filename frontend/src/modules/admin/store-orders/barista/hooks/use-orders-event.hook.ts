@@ -15,6 +15,7 @@ import { computed, reactive, ref } from 'vue'
 
 interface OrderFilterOptions {
 	status?: OrderStatus
+	timeGapMinutes?: number
 }
 
 interface UseOrderEventsServiceOptions {
@@ -55,7 +56,7 @@ function sortOrders(orderList: OrderDTO[]): OrderDTO[] {
  * @param initialFilter - Initial filter for orders (e.g., { status: 'PENDING' })
  * @param options - Additional config, including whether to print on create.
  */
-export function useOrderEventsService(
+export function useOrderEvents(
 	initialFilter: OrderFilterOptions = {},
 	options: UseOrderEventsServiceOptions = { printOnCreate: false },
 ) {
@@ -76,7 +77,7 @@ export function useOrderEventsService(
 	// WebSocket Setup
 	// ----------------------------------
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-	const url = `${wsUrl}/orders/ws?timezone=${timezone}`
+	const url = `${wsUrl}/orders/ws?timezone=${timezone}&timeGapMinutes=${localFilter.value.timeGapMinutes ?? 60}`
 
 	const {
 		status: socketStatus,
@@ -106,10 +107,6 @@ export function useOrderEventsService(
 				variant: 'destructive',
 			})
 		},
-		/**
-		 * Handle incoming messages here (instead of watchEffect on `data`).
-		 * This avoids extra re-renders.
-		 */
 		onMessage(_, event) {
 			if (!event.data) return
 
@@ -120,7 +117,7 @@ export function useOrderEventsService(
 						handleInitialData(msg.payload)
 						break
 
-					case 'order_created':
+					case 'order_succeeded':
 						handleOrderCreated(msg.payload)
 						break
 

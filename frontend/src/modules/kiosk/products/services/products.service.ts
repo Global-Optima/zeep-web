@@ -15,7 +15,7 @@ import type {
 	UpdateProductDTO,
 	UpdateProductSizeDTO,
 } from '../models/product.model'
-import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 
 class ProductsService {
 	async getProducts(filter?: ProductsFilterDTO) {

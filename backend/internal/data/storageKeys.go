@@ -25,12 +25,15 @@ type StorageKey interface {
 
 type StorageImageKey string
 
-func (s StorageImageKey) ToString() string {
-	return string(s)
+func (s *StorageImageKey) ToString() string {
+	if s == nil {
+		return ""
+	}
+	return string(*s)
 }
 
-func (s StorageImageKey) GetURL() string {
-	if s == "" {
+func (s *StorageImageKey) GetURL() string {
+	if s == nil || *s == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s/%s",
@@ -40,26 +43,15 @@ func (s StorageImageKey) GetURL() string {
 	)
 }
 
-func (s StorageImageKey) GetOriginalImageURL() string {
-	if s == "" {
-		return ""
-	}
-	return fmt.Sprintf("%s/%s/%s",
-		storageKeyInfo.Endpoint,
-		storageKeyInfo.BucketName,
-		url.PathEscape(s.GetOriginalImageObjectKey()),
-	)
-}
-
-func (s StorageImageKey) GetConvertedImageObjectKey() string {
-	if s == "" {
+func (s *StorageImageKey) GetConvertedImageObjectKey() string {
+	if s == nil || *s == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s", storageKeyInfo.ConvertedImagesPrefix, url.PathEscape(s.ToString()))
 }
 
-func (s StorageImageKey) GetOriginalImageObjectKey() string {
-	if s == "" {
+func (s *StorageImageKey) GetOriginalImageObjectKey() string {
+	if s == nil || *s == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s", storageKeyInfo.OriginalImagesPrefix, url.PathEscape(s.ToString()))
@@ -67,12 +59,15 @@ func (s StorageImageKey) GetOriginalImageObjectKey() string {
 
 type StorageVideoKey string
 
-func (s StorageVideoKey) ToString() string {
-	return string(s)
+func (s *StorageVideoKey) ToString() string {
+	if s == nil {
+		return ""
+	}
+	return string(*s)
 }
 
-func (s StorageVideoKey) GetURL() string {
-	if s == "" {
+func (s *StorageVideoKey) GetURL() string {
+	if s == nil || *s == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s/%s",
@@ -82,8 +77,8 @@ func (s StorageVideoKey) GetURL() string {
 	)
 }
 
-func (s StorageVideoKey) GetConvertedVideoObjectKey() string {
-	if s == "" {
+func (s *StorageVideoKey) GetConvertedVideoObjectKey() string {
+	if s == nil || *s == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s", storageKeyInfo.ConvertedVideosPrefix, url.PathEscape(s.ToString()))

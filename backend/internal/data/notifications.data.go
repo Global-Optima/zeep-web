@@ -2,8 +2,10 @@ package data
 
 import "gorm.io/datatypes"
 
-type NotificationPriority string
-type NotificationEventType string
+type (
+	NotificationPriority  string
+	NotificationEventType string
+)
 
 const (
 	HIGH   NotificationPriority = "HIGH"
@@ -14,6 +16,9 @@ const (
 const (
 	STOCK_REQUEST_STATUS_UPDATED NotificationEventType = "STOCK_REQUEST_STATUS_UPDATED"
 	NEW_ORDER                    NotificationEventType = "NEW_ORDER"
+	NEW_PRODUCT_SIZE             NotificationEventType = "NEW_PRODUCT_SIZE"
+	NEW_PRODUCT                  NotificationEventType = "NEW_PRODUCT"
+	NEW_ADDITIVE                 NotificationEventType = "NEW_ADDITIVE"
 	STORE_WAREHOUSE_RUN_OUT      NotificationEventType = "STORE_WAREHOUSE_RUN_OUT"
 	CENTRAL_CATALOG_UPDATE       NotificationEventType = "CENTRAL_CATALOG_UPDATE"
 	STORE_STOCK_EXPIRATION       NotificationEventType = "STORE_STOCK_EXPIRATION"

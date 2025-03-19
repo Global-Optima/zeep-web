@@ -6,8 +6,9 @@ import * as z from 'zod'
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { Switch } from '@/core/components/ui/switch'
 import AdminSelectIngredientCategory from '@/modules/admin/ingredient-categories/components/admin-select-ingredient-category.vue'
 import type { CreateIngredientDTO, IngredientCategoryDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
@@ -31,7 +32,8 @@ const updateIngredientSchema = toTypedSchema(
     proteins: z.number().min(0, 'Введите корректное значение белков'),
     expirationInDays: z.number().min(0, 'Введите корректные дни хранения'),
     unitId: z.coerce.number().min(1, 'Выберите корректный размер'),
-    categoryId: z.coerce.number().min(1, 'Выберите корректную категорию')
+    categoryId: z.coerce.number().min(1, 'Выберите корректную категорию'),
+    isAllergen: z.boolean({message: 'Выберите если этот ингредиент аллергеном'}).default(false)
   })
 )
 
@@ -50,7 +52,8 @@ const onSubmit = handleSubmit((formValues) => {
     proteins: formValues.proteins,
     categoryId: formValues.categoryId,
     unitId: formValues.unitId,
-    expirationInDays: formValues.expirationInDays
+    expirationInDays: formValues.expirationInDays,
+    isAllergen: formValues.isAllergen
   }
 
   emits('onSubmit', dto)
@@ -96,7 +99,7 @@ function selectUnit(unit: UnitDTO) {
 				Создать ингредиент
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -234,6 +237,29 @@ function selectUnit(unit: UnitDTO) {
 									<FormMessage />
 								</FormItem>
 							</FormField>
+
+							<FormField
+								v-slot="{ value, handleChange }"
+								name="isAllergen"
+							>
+								<FormItem
+									class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
+								>
+									<div class="flex flex-col space-y-0.5">
+										<FormLabel class="font-medium text-base"> Аллерген </FormLabel>
+										<FormDescription class="text-sm">
+											Данный ингредиент является аллергеном
+										</FormDescription>
+									</div>
+
+									<FormControl>
+										<Switch
+											:checked="value"
+											@update:checked="handleChange"
+										/>
+									</FormControl>
+								</FormItem>
+							</FormField>
 						</div>
 					</CardContent>
 				</Card>
@@ -300,7 +326,7 @@ function selectUnit(unit: UnitDTO) {
 		/>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"

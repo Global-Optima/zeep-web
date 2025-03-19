@@ -87,12 +87,13 @@ export interface UpdateAdditiveDTO {
 	name?: string
 	description?: string
 	basePrice?: number
-	imageUrl?: string
 	size?: number
 	unitId?: number
 	additiveCategoryId?: number
 	machineId?: string
 	ingredients?: SelectedIngredientDTO[]
+	image?: File
+	deleteImage: boolean
 }
 
 export interface AdditiveCategoryResponseDTO {

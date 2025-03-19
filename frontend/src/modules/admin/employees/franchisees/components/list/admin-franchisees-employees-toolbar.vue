@@ -45,26 +45,30 @@
 import { Button } from '@/core/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import { Input } from '@/core/components/ui/input'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import type { EmployeesFilter } from '@/modules/admin/employees/models/employees.models'
 import { useDebounce } from '@vueuse/core'
 import { ChevronDown } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
-// Props and Emit
 const props = defineProps<{ filter: EmployeesFilter }>()
-const emit = defineEmits(['update:filter'])
+const emit = defineEmits<{
+  (event: 'update:filter', value: EmployeesFilter): void
+}>()
 
-// Local Filter
 const localFilter = ref({ ...props.filter })
 
-// Search Input
 const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
-// Watch Search Input and Update Filter
 watch(debouncedSearchTerm, (newValue) => {
-	localFilter.value.search = newValue.trim()
-	emit('update:filter', { ...localFilter.value })
+  localFilter.value.search = newValue.trim()
+  emit('update:filter', {
+    ...localFilter.value,
+    search: newValue.trim(),
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page (e.g., 1)
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 })
 
 // Filter Selection

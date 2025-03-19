@@ -1,9 +1,10 @@
 package types
 
 import (
+	"net/http"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 var (

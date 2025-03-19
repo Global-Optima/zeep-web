@@ -10,6 +10,7 @@ WORKDIR /app
 ARG VITE_API_URL
 ARG VITE_WS_URL
 ARG VITE_PAYMENT_SECRET
+ARG VITE_TEST_PAYMENT
 
 # Copy only package files first for better caching
 COPY package*.json ./
@@ -24,6 +25,7 @@ COPY . .
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_WS_URL=$VITE_WS_URL
 ENV VITE_PAYMENT_SECRET=$VITE_PAYMENT_SECRET
+ENV VITE_TEST_PAYMENT=$VITE_TEST_PAYMENT
 
 # Build the production files
 RUN bun run build

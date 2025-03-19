@@ -3,6 +3,8 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -101,7 +103,6 @@ func (s *orderService) GetOrders(filter types.OrdersFilterQuery) ([]types.OrderD
 
 func (s *orderService) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]types.OrderDTO, error) {
 	orders, err := s.orderRepo.GetAllBaristaOrders(filter)
-
 	if err != nil {
 		wrappedErr := fmt.Errorf("error getting barista orders: %w", err)
 		s.logger.Error(wrappedErr.Error())
@@ -149,28 +150,25 @@ func ExpandSuborders(suborders []types.CreateSubOrderDTO) []types.CreateSubOrder
 
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
 	censorValidator := censor.GetCensorValidator()
+
 	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
 		s.logger.Error(err)
-		return nil, err
+		return nil, types.ErrInvalidCustomerNameCensor
 	}
 
 	if len(createOrderDTO.Suborders) == 0 {
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
-	// Calculate how much is already frozen by existing PENDING/PREPARING orders
 	frozenMap, err := s.orderRepo.CalculateFrozenStock(storeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
 	}
 
-	// Attempt to create + freeze new suborders usage
-	// If we can't fulfill them all, it returns an error early
 	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenMap); err != nil {
 		return nil, err
 	}
 
-	// If we get here, we have effectively 'reserved' usage in frozenMap
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
 	validations, err := s.StockAndPriceValidationResults(
 		storeID,
@@ -207,19 +205,6 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	err = s.taskQueue.EnqueueTask(OrderPaymentFailure, payload, config.GetConfig().Payment.WaitingTime)
 	if err != nil {
 		return &order, err
-	}
-
-	notificationDetails := &details.NewOrderNotificationDetails{
-		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           order.StoreID,
-			FacilityName: order.Store.Name,
-		},
-		CustomerName: createOrderDTO.CustomerName,
-		OrderID:      order.ID,
-	}
-
-	if err := s.notificationService.NotifyNewOrder(notificationDetails); err != nil {
-		s.logger.Errorf("failed to notify new order: %w", err)
 	}
 
 	return &order, nil
@@ -385,42 +370,46 @@ func (s *orderService) CheckAndAccumulateSuborders(
 }
 
 func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
-	err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
-	if err != nil {
+	completedAt := time.Now()
+	updateSubOrder := types.UpdateSubOrderDTO{
+		Status:      data.SubOrderStatusCompleted,
+		CompletedAt: &completedAt,
+	}
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, updateSubOrder); err != nil {
 		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
 		s.logger.Error(wrappedErr.Error())
 		return wrappedErr
 	}
 
-	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(orderID, subOrderID)
+	order, err := s.orderRepo.GetOrderById(orderID)
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed to check suborder: %w", err)
-		s.logger.Error(wrappedErr.Error())
-		return wrappedErr
+		return fmt.Errorf("failed to get order by id: %w", err)
 	}
 
+	var completedSuborder *data.Suborder
+	for i := range order.Suborders {
+		if order.Suborders[i].ID == subOrderID {
+			completedSuborder = &order.Suborders[i]
+			break
+		}
+	}
+	if completedSuborder == nil {
+		return fmt.Errorf("suborder %d not found in order", subOrderID)
+	}
+
+	stockMap := make(map[uint]*data.StoreStock)
+	if err := s.deductSuborderIngredientsFromStock(order.StoreID, completedSuborder, stockMap); err != nil {
+		return fmt.Errorf("failed to deduct ingredients for suborder: %w", err)
+	}
+
+	s.notifyLowStockIngredients(order, stockMap)
+
+	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(orderID, subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to check suborder completion: %w", err)
+	}
 	if allCompleted {
-		order, err := s.orderRepo.GetOrderById(orderID)
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to get order by id: %w", err)
-			s.logger.Error(wrappedErr.Error())
-			return wrappedErr
-		}
-
-		stockMap := make(map[uint]*data.StoreStock)
-
-		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return fmt.Errorf("failed to deduct ingredients for products: %w", err)
-		}
-
-		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return fmt.Errorf("failed to deduct ingredients for additives: %w", err)
-		}
-
-		s.notifyLowStockIngredients(order, stockMap)
-
+		completedAt = time.Now()
 		var newStatus data.OrderStatus
 		if order.DeliveryAddressID != nil {
 			newStatus = data.OrderStatusInDelivery
@@ -428,12 +417,12 @@ func (s *orderService) CompleteSubOrder(orderID, subOrderID uint) error {
 			newStatus = data.OrderStatusCompleted
 		}
 
-		err = s.orderRepo.UpdateOrderStatus(orderID, newStatus)
-
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
-			s.logger.Error(wrappedErr.Error())
-			return wrappedErr
+		updateOrder := types.UpdateOrderDTO{
+			Status:      newStatus,
+			CompletedAt: &completedAt,
+		}
+		if err := s.orderRepo.UpdateOrderStatus(orderID, updateOrder); err != nil {
+			return fmt.Errorf("failed to update order status: %w", err)
 		}
 	}
 
@@ -465,12 +454,33 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 		return nil, wrappedErr
 	}
 
-	err = s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusCompleted)
-	if err != nil {
+	completedAt := time.Now()
+	updateSubOrder := types.UpdateSubOrderDTO{
+		Status:      data.SubOrderStatusCompleted,
+		CompletedAt: &completedAt,
+	}
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, updateSubOrder); err != nil {
 		wrappedErr := fmt.Errorf("failed to complete suborder: %w", err)
 		s.logger.Error(wrappedErr.Error())
 		return nil, wrappedErr
 	}
+
+	var completedSuborder *data.Suborder
+	for i := range order.Suborders {
+		if order.Suborders[i].ID == subOrderID {
+			completedSuborder = &order.Suborders[i]
+			break
+		}
+	}
+	if completedSuborder == nil {
+		return nil, fmt.Errorf("suborder %d not found in order", subOrderID)
+	}
+
+	stockMap := make(map[uint]*data.StoreStock)
+	if err := s.deductSuborderIngredientsFromStock(order.StoreID, completedSuborder, stockMap); err != nil {
+		return nil, fmt.Errorf("failed to deduct ingredients for additives: %w", err)
+	}
+	s.notifyLowStockIngredients(order, stockMap)
 
 	allCompleted, err := s.orderRepo.CheckAllSubordersCompleted(order.ID, subOrderID)
 	if err != nil {
@@ -478,39 +488,19 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 		s.logger.Error(wrappedErr.Error())
 		return nil, wrappedErr
 	}
-
 	if allCompleted {
-		order, err := s.orderRepo.GetOrderById(order.ID)
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to get order by id: %w", err)
-			s.logger.Error(wrappedErr.Error())
-			return nil, wrappedErr
-		}
-
-		stockMap := make(map[uint]*data.StoreStock)
-
-		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for products: %w", err)
-		}
-
-		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for additives: %w", err)
-		}
-
-		s.notifyLowStockIngredients(order, stockMap)
-
+		completedAt = time.Now()
 		var newStatus data.OrderStatus
 		if order.DeliveryAddressID != nil {
 			newStatus = data.OrderStatusInDelivery
 		} else {
 			newStatus = data.OrderStatusCompleted
 		}
-
-		err = s.orderRepo.UpdateOrderStatus(order.ID, newStatus)
-
-		if err != nil {
+		updateOrder := types.UpdateOrderDTO{
+			Status:      newStatus,
+			CompletedAt: &completedAt,
+		}
+		if err := s.orderRepo.UpdateOrderStatus(order.ID, updateOrder); err != nil {
 			wrappedErr := fmt.Errorf("failed to update order status: %w", err)
 			s.logger.Error(wrappedErr.Error())
 			return nil, wrappedErr
@@ -522,43 +512,32 @@ func (s *orderService) CompleteSubOrderByBarcode(subOrderID uint) (*types.Subord
 		return nil, err
 	}
 	response := types.ConvertSuborderToDTO(subOrder)
-
 	return &response, nil
 }
 
-func (s *orderService) deductProductSizeIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreStock) error {
-	for _, suborder := range order.Suborders {
-		updatedStocks, err := s.storeStockRepo.DeductStockByProductSizeTechCart(order.StoreID, suborder.StoreProductSizeID)
-		if err != nil {
-			return fmt.Errorf("failed to deduct from store stock: %w", err)
-		}
-
-		for _, stock := range updatedStocks {
-			if existingStock, exists := stockMap[stock.IngredientID]; exists {
-				existingStock.Quantity = stock.Quantity // Update latest quantity
-			} else {
-				stockMap[stock.IngredientID] = &stock
-			}
+func (s *orderService) deductSuborderIngredientsFromStock(storeID uint, suborder *data.Suborder, stockMap map[uint]*data.StoreStock) error {
+	updatedStocks, err := s.storeStockRepo.DeductStockByProductSizeTechCart(storeID, suborder.StoreProductSizeID)
+	if err != nil {
+		return fmt.Errorf("failed to deduct product size ingredients: %w", err)
+	}
+	for _, stock := range updatedStocks {
+		if existingStock, exists := stockMap[stock.IngredientID]; exists {
+			existingStock.Quantity = stock.Quantity
+		} else {
+			stockMap[stock.IngredientID] = &stock
 		}
 	}
 
-	return nil
-}
-
-func (s *orderService) deductAdditiveIngredientsFromStock(order *data.Order, stockMap map[uint]*data.StoreStock) error {
-	for _, suborder := range order.Suborders {
-		for _, storeAdditive := range suborder.SuborderAdditives {
-			updatedStocks, err := s.storeStockRepo.DeductStockByAdditiveTechCart(order.StoreID, storeAdditive.StoreAdditiveID)
-			if err != nil {
-				return fmt.Errorf("failed to deduct from store stock: %w", err)
-			}
-
-			for _, stock := range updatedStocks {
-				if existingStock, exists := stockMap[stock.IngredientID]; exists {
-					existingStock.Quantity = stock.Quantity // Update latest quantity
-				} else {
-					stockMap[stock.IngredientID] = &stock
-				}
+	for _, subAdditive := range suborder.SuborderAdditives {
+		updatedStocks, err := s.storeStockRepo.DeductStockByAdditiveTechCart(storeID, subAdditive.StoreAdditiveID)
+		if err != nil {
+			return fmt.Errorf("failed to deduct additive ingredients: %w", err)
+		}
+		for _, stock := range updatedStocks {
+			if existingStock, exists := stockMap[stock.IngredientID]; exists {
+				existingStock.Quantity = stock.Quantity
+			} else {
+				stockMap[stock.IngredientID] = &stock
 			}
 		}
 	}
@@ -704,7 +683,10 @@ func (s *orderService) AcceptSubOrder(subOrderID uint) error {
 		return fmt.Errorf("suborder %d is not pending", subOrderID)
 	}
 
-	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, data.SubOrderStatusPreparing); err != nil {
+	updateSubOrder := types.UpdateSubOrderDTO{
+		Status: data.SubOrderStatusPreparing,
+	}
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, updateSubOrder); err != nil {
 		return fmt.Errorf("failed to update suborder status: %w", err)
 	}
 
@@ -726,10 +708,13 @@ func (s *orderService) AcceptSubOrder(subOrderID uint) error {
 		}
 	}
 
+	updateOrder := types.UpdateOrderDTO{
+		Status: data.OrderStatusPreparing,
+	}
 	// If all suborders have been accepted (i.e. transitioned to PREPARING or later)
 	// and the order is still in the PENDING state, update the order's status.
 	if allAccepted && order.Status == data.OrderStatusPending {
-		if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
+		if err := s.orderRepo.UpdateOrderStatus(order.ID, updateOrder); err != nil {
 			return fmt.Errorf("failed to update order status: %w", err)
 		}
 	}
@@ -755,9 +740,29 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 	if !ok {
 		return nil, fmt.Errorf("no allowed transition from status %s", currentStatus)
 	}
-
-	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, nextStatus); err != nil {
+	completedAt := time.Now()
+	updateSubOrder := types.UpdateSubOrderDTO{
+		Status:      nextStatus,
+		CompletedAt: &completedAt,
+	}
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, updateSubOrder); err != nil {
 		return nil, fmt.Errorf("failed to update suborder status: %w", err)
+	}
+
+	if nextStatus == data.SubOrderStatusCompleted {
+		suborder, err = s.orderRepo.GetSuborderByID(subOrderID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve updated suborder: %w", err)
+		}
+		order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
+		}
+		stockMap := make(map[uint]*data.StoreStock)
+		if err := s.deductSuborderIngredientsFromStock(order.StoreID, suborder, stockMap); err != nil {
+			return nil, fmt.Errorf("failed to deduct ingredients for suborder: %w", err)
+		}
+		s.notifyLowStockIngredients(order, stockMap)
 	}
 
 	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
@@ -771,11 +776,13 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 	}
 
 	hasPreparing, allCompleted := evaluateSuborderStatuses(suborders)
-
 	if hasPreparing {
 		if order.Status != data.OrderStatusPreparing {
-			if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
-				return nil, fmt.Errorf("failed to update order status to pending: %w", err)
+			updateOrder := types.UpdateOrderDTO{
+				Status: data.OrderStatusPreparing,
+			}
+			if err := s.orderRepo.UpdateOrderStatus(order.ID, updateOrder); err != nil {
+				return nil, fmt.Errorf("failed to update order status to preparing: %w", err)
 			}
 		}
 	} else if allCompleted {
@@ -785,27 +792,20 @@ func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDT
 		} else {
 			newOrderStatus = data.OrderStatusCompleted
 		}
-		if err := s.orderRepo.UpdateOrderStatus(order.ID, newOrderStatus); err != nil {
+		completedAt := time.Now()
+		updateOrder := types.UpdateOrderDTO{
+			Status:      newOrderStatus,
+			CompletedAt: &completedAt,
+		}
+		if err := s.orderRepo.UpdateOrderStatus(order.ID, updateOrder); err != nil {
 			return nil, fmt.Errorf("failed to update order status to completed: %w", err)
 		}
-
-		stockMap := make(map[uint]*data.StoreStock)
-
-		err = s.deductProductSizeIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for products: %w", err)
-		}
-
-		err = s.deductAdditiveIngredientsFromStock(order, stockMap)
-		if err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for additives: %w", err)
-		}
-
-		s.notifyLowStockIngredients(order, stockMap)
-
 	} else {
 		if order.Status != data.OrderStatusPreparing {
-			if err := s.orderRepo.UpdateOrderStatus(order.ID, data.OrderStatusPreparing); err != nil {
+			updateOrder := types.UpdateOrderDTO{
+				Status: data.OrderStatusPreparing,
+			}
+			if err := s.orderRepo.UpdateOrderStatus(order.ID, updateOrder); err != nil {
 				return nil, fmt.Errorf("failed to update order status to preparing: %w", err)
 			}
 		}
@@ -836,11 +836,25 @@ func evaluateSuborderStatuses(suborders []data.Suborder) (hasPreparing bool, all
 
 func (s *orderService) SuccessOrderPayment(orderID uint, dto *types.TransactionDTO) error {
 	paymentTransaction := types.ToTransactionModel(dto, orderID, data.TransactionTypePayment)
-	err := s.orderRepo.HandlePaymentSuccess(orderID, paymentTransaction)
+	order, err := s.orderRepo.HandlePaymentSuccess(orderID, paymentTransaction)
 	if err != nil {
-		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
+		s.logger.Errorf("failed to handle the order %d success: %v", orderID, err)
 		return err
 	}
+
+	notificationDetails := &details.NewOrderNotificationDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID:           order.StoreID,
+			FacilityName: order.Store.Name,
+		},
+		CustomerName: order.CustomerName,
+		OrderID:      order.ID,
+	}
+
+	if err := s.notificationService.NotifyNewOrder(notificationDetails); err != nil {
+		s.logger.Errorf("failed to notify new order: %w", err)
+	}
+
 	return nil
 }
 
@@ -850,5 +864,6 @@ func (s *orderService) FailOrderPayment(orderID uint) error {
 		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
 		return err
 	}
+
 	return nil
 }

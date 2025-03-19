@@ -52,6 +52,7 @@ import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { STOCK_REQUEST_STATUS_OPTIONS, StockRequestStatus, type GetStockRequestsFilter } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import AdminSelectStoreDropdown from '@/modules/admin/stores/components/admin-select-store-dropdown.vue'
@@ -64,7 +65,8 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{ filter?: GetStockRequestsFilter }>()
-const emit = defineEmits<{(e: 'update:filter', value: GetStockRequestsFilter): void }>()
+const emit = defineEmits<{ (e: 'update:filter', value: GetStockRequestsFilter): void }>()
+
 const router = useRouter()
 
 const canCreateStockRequest = useHasRole([EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA])
@@ -79,29 +81,49 @@ const searchTerm = ref(localFilter.value.search || '')
 const debouncedSearchTerm = useDebounce(computed(() => searchTerm.value), 500)
 
 const showForFranchisee = useHasRole([EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER])
-
 const selectedStore = ref<StoreDTO | undefined>(undefined)
 
 const onSelectStore = (store: StoreDTO) => {
   selectedStore.value = store
-  emit('update:filter', { ...props.filter, storeId: store.id})
+  emit('update:filter', {
+    ...props.filter,
+    storeId: store.id,
+    page: DEFAULT_PAGINATION_META.page,       // Reset to default page
+    pageSize: DEFAULT_PAGINATION_META.pageSize  // Reset to default page size
+  })
 }
 
 const { currentEmployee } = useEmployeeAuthStore()
 
 const onSelectWarehouse = (warehouse: WarehouseDTO) => {
   selectedWarehouse.value = warehouse
-  emit('update:filter', { ...props.filter, warehouseId: warehouse.id})
+  emit('update:filter', {
+    ...props.filter,
+    warehouseId: warehouse.id,
+    page: DEFAULT_PAGINATION_META.page,
+    pageSize: DEFAULT_PAGINATION_META.pageSize
+  })
 }
 
 const filteredStatusOptions = computed(() => {
   if (!currentEmployee || !currentEmployee.role) return []
 
-  const warehouseRoles: EmployeeRole[] = [EmployeeRole.WAREHOUSE_EMPLOYEE, EmployeeRole.WAREHOUSE_MANAGER, EmployeeRole.REGION_WAREHOUSE_MANAGER]
-  const storeRoles: EmployeeRole[] = [EmployeeRole.STORE_MANAGER, EmployeeRole.BARISTA, EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER]
+  const warehouseRoles: EmployeeRole[] = [
+    EmployeeRole.WAREHOUSE_EMPLOYEE,
+    EmployeeRole.WAREHOUSE_MANAGER,
+    EmployeeRole.REGION_WAREHOUSE_MANAGER
+  ]
+  const storeRoles: EmployeeRole[] = [
+    EmployeeRole.STORE_MANAGER,
+    EmployeeRole.BARISTA,
+    EmployeeRole.FRANCHISEE_MANAGER,
+    EmployeeRole.FRANCHISEE_OWNER
+  ]
 
   if (warehouseRoles.includes(currentEmployee.role)) {
-    return STOCK_REQUEST_STATUS_OPTIONS.filter(status => status.value !== StockRequestStatus.CREATED)
+    return STOCK_REQUEST_STATUS_OPTIONS.filter(
+      status => status.value !== StockRequestStatus.CREATED
+    )
   }
 
   if (storeRoles.includes(currentEmployee.role)) {
@@ -119,13 +141,20 @@ const filteredSelectedStatuses = computed(() => {
 
 watch(debouncedSearchTerm, (newValue) => {
   localFilter.value.search = newValue
-  emit('update:filter', { ...props.filter, search: newValue.trim() })
+  emit('update:filter', {
+    ...props.filter,
+    search: newValue.trim(),
+    page: DEFAULT_PAGINATION_META.page,
+    pageSize: DEFAULT_PAGINATION_META.pageSize
+  })
 })
 
 watch(filteredSelectedStatuses, (newStatuses) => {
   emit('update:filter', {
     ...props.filter,
-    statuses: newStatuses.length ? newStatuses : undefined
+    statuses: newStatuses.length ? newStatuses : undefined,
+    page: DEFAULT_PAGINATION_META.page,
+    pageSize: DEFAULT_PAGINATION_META.pageSize
   })
 })
 

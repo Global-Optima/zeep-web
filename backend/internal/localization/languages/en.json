@@ -104,6 +104,8 @@
     "400-image-upload": "Invalid image data provided. Please check and try again.",
     "400-video-upload": "Invalid video data provided. Please check and try again.",
 
+    "400-auth": "The email or password you entered is incorrect. Please try again.",
+
     "500-order": "An unexpected error occurred with the order. Please try again later.",
     "500-order-create": "An unexpected error occurred while creating the order. Please try again later.",
     "400-order": "Failed to validate order.",
@@ -129,7 +131,7 @@
     "200-product-delete": "Product successfully deleted.",
 
     "500-productCategory": "An unexpected error occurred with the product category. Please try again later.",
-    "409-productCategory-delete-in-use": "Product category cannot be deleted because it is in use.",
+    "409-productCategory-delete-inUse": "Product category cannot be deleted because it is in use.",
     "400-productCategory": "Invalid product category data provided. Please check and try again.",
     "404-productCategory": "Product category not found.",
     "201-productCategory": "Product category successfully created.",
@@ -142,6 +144,7 @@
     "500-productSize-delete": "An unexpected error occurred while deleting product size. Please try again later.",
     "404-productSize": "Product size not found.",
     "400-productSize": "Invalid product size data provided. Please check and try again.",
+    "400-productSize-duplicate": "Product size already exists.",
     "201-productSize": "Product size successfully created.",
     "200-productSize-update": "Product size successfully updated.",
     "200-productSize-delete": "Product size successfully deleted.",
@@ -160,7 +163,7 @@
     "500-additiveCategory-create": "An unexpected error occurred while creating additive category. Please try again later.",
     "500-additiveCategory-update": "An unexpected error occurred while updating additive category data. Please try again later.",
     "500-additiveCategory-delete": "An unexpected error occurred while deleting additive category data. Please try again later.",
-    "409-additiveCategory-delete-in-use": "The additive category cannot be deleted because it is in use. Please remove all dependencies before trying again.",
+    "409-additiveCategory-delete-inUse": "The additive category cannot be deleted because it is in use. Please remove all dependencies before trying again.",
     "404-additiveCategory": "Additive category not found.",
     "400-additiveCategory": "Invalid additive category data provided. Please check and try again.",
     "201-additiveCategory": "Additive category successfully created.",
@@ -202,12 +205,13 @@
     "200-storeAdditive-update": "Store additive successfully updated.",
     "200-storeAdditive-delete": "Store additive successfully deleted.",
 
-    "500-storeStocks": "An unexpected error occurred with the store stocks. Please try again later.",
-    "400-storeStocks": "Invalid store stocks data provided. Please check and try again.",
-    "201-storeStocks": "Store stock successfully created.",
-    "201-storeStocks-multiple": "Store stocks successfully created.",
-    "200-storeStocks-update": "Store stocks successfully updated.",
-    "200-storeStocks-delete": "Store stocks successfully deleted.",
+    "500-storeStock-inUse": "The store stock is currently in use. Please try again later.",
+    "500-storeStock": "An unexpected error occurred with the store stocks. Please try again later.",
+    "400-storeStock": "Invalid store stocks data provided. Please check and try again.",
+    "201-storeStock": "Store stock successfully created.",
+    "201-storeStock-multiple": "Store stocks successfully created.",
+    "200-storeStock-update": "Store stocks successfully updated.",
+    "200-storeStock-delete": "Store stocks successfully deleted.",
 
 
     "500-storeEmployee-get": "An unexpected error occurred while fetching store employee data. Please try again later.",
@@ -327,7 +331,7 @@
     "500-ingredient-update": "Failed to update ingredient.",
     "500-ingredient-delete": "Failed to delete ingredient.",
     "404-ingredient": "Ingredient not found.",
-    "409-ingredient-in-use": "The ingredient cannot be deleted because it is in use. Please remove all dependencies before trying again.",
+    "409-ingredient-inUse": "The ingredient cannot be deleted because it is in use. Please remove all dependencies before trying again.",
     "201-ingredient": "Ingredient successfully created.",
     "200-ingredient-update": "Ingredient successfully updated.",
     "200-ingredient-delete": "Ingredient successfully deleted.",
@@ -337,12 +341,12 @@
     "500-ingredientCategory-create": "An unexpected error occurred while creating the ingredient category. Please try again later.",
     "500-ingredientCategory-update": "An unexpected error occurred while updating the ingredient category. Please try again later.",
     "500-ingredientCategory-delete": "An unexpected error occurred while deleting the ingredient category. Please try again later.",
-    "409-ingredientCategory-delete-in-use": "Ingredient category cannot be deleted because it is in use.",
+    "409-ingredientCategory-delete-inUse": "Ingredient category cannot be deleted because it is in use.",
     "200-ingredientCategory-update": "Ingredient category successfully updated.",
     "200-ingredientCategory-delete": "Ingredient category successfully deleted.",
     "201-ingredientCategory": "Ingredient category successfully created.",
 
-    "409-stockMaterialCategory-delete-in-use": "Stock material category cannot be deleted because it is in use.",
+    "409-stockMaterialCategory-delete-inUse": "Stock material category cannot be deleted because it is in use.",
     "400-stockMaterialCategory": "Invalid request body.",
     "500-stockMaterialCategory-create": "Failed to create stock material category.",
     "500-stockMaterialCategory-get": "Failed to fetch stock material category.",
@@ -359,7 +363,27 @@
     "500-employee-getWorkday": "An unexpected error occurred while fetching employee workday data. Please try again later.",
     "500-employee-getWorkdays": "An unexpected error occurred while fetching employee workdays. Please try again later.",
     "400-employee": "Invalid employee data. Please check and try again.",
-    "401-employee": "You need to be logged in to access this resource."
+    "401-employee": "You need to be logged in to access this resource.",
+
+    "400-stockMaterial": "Invalid stock material data. Please check and try again.",
+    "500-stockMaterial-get": "An unexpected error occurred while fetching stock material. Please try again later.",
+    "500-stockMaterial-create": "An unexpected error occurred while creating stock material. Please try again later.",
+    "500-stockMaterial-update": "An unexpected error occurred while updating stock material. Please try again later.",
+    "500-stockMaterial-delete": "An unexpected error occurred while deleting stock material. Please try again later.",
+    "404-stockMaterial": "Stock material not found.",
+    "500-stockMaterial-deactivate": "An unexpected error occurred while deactivating stock material. Please try again later.",
+    "500-stockMaterial-barcode": "An unexpected error occurred while generating stock material barcode. Please try again later.",
+    "500-stockMaterial-barcode-get": "An unexpected error occurred while fetching stock material barcode. Please try again later.",
+    "400-stockMaterial-barcode-required": "Barcode is required.",
+    "404-stockMaterial-barcode": "Stock material not found with the provided barcode.",
+    "201-stockMaterial": "Stock material successfully created.",
+    "200-stockMaterial-update": "Stock material successfully updated.",
+    "200-stockMaterial-delete": "Stock material successfully deleted.",
+    "200-stockMaterial-deactivate": "Stock material successfully deactivated.",
+
+    "200-store-synchronization": "The store synchronization was successful.",
+    "500-store-synchronization": "An unexpected error occurred while synchronizing the store. Please try again later.",
+    "500-store-synchronization-check": "An unexpected error occurred while checking the store synchronization status. Please try again later."
   },
   "notification": {
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
@@ -388,7 +412,10 @@
       "warehouseStockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",
       "warehouseOutOfStock": "*{{.ItemName}}* is running out of stock.",
       "newStockRequest": "A new stock request was submitted by *{{.RequesterName}}*.",
-      "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*."
+      "priceChange": "The price of *{{.ProductName}}* has changed from *{{.OldPrice}}* to *{{.NewPrice}}*.",
+      "newProduct": "A new product *{{.ProductName}}* has been added.",
+      "newProductSize": "A new size *{{.ProductSizeName}}*, *{{.Size}}* has been added for *{{.ProductName}}*.",
+      "newAdditive": "A new additive *{{.AdditiveName}}* has been introduced."
   },
   "stockRequestComments": {
     "quantityMismatch" : "*{{.OriginalMaterialName}}* received *{{.ActualQuantity}}*, expected *{{.Quantity}}*",

@@ -148,7 +148,6 @@ func (r *supplierRepository) upsertSupplierPrice(tx *gorm.DB, supplierMaterialID
 	var existingPrice data.SupplierPrice
 	err := tx.Where("supplier_material_id = ?", supplierMaterialID).
 		First(&existingPrice).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			price.SupplierMaterialID = supplierMaterialID

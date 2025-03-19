@@ -16,7 +16,6 @@ type BaseProductDTO struct {
 	ImageURL    string                             `json:"imageUrl"`
 	VideoURL    string                             `json:"videoUrl"`
 	Category    categoriesTypes.ProductCategoryDTO `json:"category"`
-	MachineId   string                             `json:"machineId"`
 }
 
 type ProductDTO struct {
@@ -24,13 +23,11 @@ type ProductDTO struct {
 	BaseProductDTO
 	ProductSizeCount int     `json:"productSizeCount"`
 	BasePrice        float64 `json:"basePrice"`
-	MachineId        string  `json:"machineId"`
 }
 
 type ProductDetailsDTO struct {
 	ProductDTO
-	Sizes     []ProductSizeDTO `json:"sizes"`
-	MachineId string           `json:"machineId"`
+	Sizes []ProductSizeDTO `json:"sizes"`
 }
 
 type BaseProductSizeDTO struct {
@@ -66,11 +63,10 @@ type ProductSizeAdditiveDTO struct {
 
 type CreateProductDTO struct {
 	Name        string `form:"name" binding:"required,min=2,max=100"`
-	Description string `form:"description" binding:"max=500"`
+	Description string `form:"description" binding:"required,max=500"`
 	CategoryID  uint   `form:"categoryId" binding:"required"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
-	MachineId   string `form:"machineId" binding:"required,max=40"`
 }
 
 type SelectedAdditiveDTO struct {
@@ -100,7 +96,8 @@ type UpdateProductDTO struct {
 	CategoryID  uint   `form:"categoryId" binding:"omitempty,gt=0"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
-	MachineId   *string `form:"machineId" binding:"omitempty,max=40"`
+	DeleteImage bool `form:"deleteImage"`
+	DeleteVideo bool `form:"deleteVideo"`
 }
 
 type UpdateProductSizeDTO struct {
@@ -120,8 +117,10 @@ type ProductsFilterDto struct {
 }
 
 type TotalNutrition struct {
-	Calories float64 `json:"calories"`
-	Proteins float64 `json:"proteins"`
-	Fats     float64 `json:"fats"`
-	Carbs    float64 `json:"carbs"`
+	Ingredients         []string `json:"ingredients"`
+	AllergenIngredients []string `json:"allergenIngredients"`
+	Calories            float64  `json:"calories"`
+	Proteins            float64  `json:"proteins"`
+	Fats                float64  `json:"fats"`
+	Carbs               float64  `json:"carbs"`
 }

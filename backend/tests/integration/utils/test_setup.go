@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
 	mockStorage "github.com/Global-Optima/zeep-web/backend/tests/integration/utils/s3-mock-repository"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
@@ -54,7 +55,7 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	redis := setupRedis(cfg, t)
 	router := setupRouter(dbHandler, redis)
 
-	truncateAndLoadMockData(dbHandler.DB)
+	TruncateAndLoadMockData(dbHandler.DB)
 	log.Println("Mock data loaded successfully")
 
 	return &TestEnvironment{
@@ -176,7 +177,14 @@ func setupDatabase(cfg *config.Config, t *testing.T) *database.DBHandler {
 }
 
 func setupRedis(cfg *config.Config, t *testing.T) *database.RedisClient {
-	redisClient, err := database.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
+	redisClient, err := database.InitRedis(
+		cfg.Redis.Host,
+		cfg.Redis.Port,
+		cfg.Redis.Password,
+		cfg.Redis.DB,
+		cfg.Redis.Username,
+		*cfg.Redis.Enable_TLS,
+	)
 	if err != nil {
 		t.Fatalf("Failed to initialize Redis: %v", err)
 	}
@@ -196,21 +204,23 @@ func setupMockStorage() *storage.StorageRepository {
 func setupRouter(dbHandler *database.DBHandler, redis *database.RedisClient) *gin.Engine {
 	router := gin.New()
 	utils.InitValidators()
-	//router.Use(middleware.SanitizeMiddleware())
+	// router.Use(middleware.SanitizeMiddleware())
 	router.Use(logger.ZapLoggerMiddleware())
 
 	apiRouter := routes.NewRouter(router, "/api", "/test")
-	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth())
+
+	employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
+	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
 	storageRepo := setupMockStorage()
 
-	testContainer := container.NewContainer(dbHandler, redis, storageRepo, apiRouter, logger.GetZapSugaredLogger())
+	testContainer := container.NewContainer(dbHandler, redis, storageRepo, &employeeTokenManager, apiRouter, logger.GetZapSugaredLogger())
 	testContainer.MustInitModules()
 
 	return router
 }
 
-func truncateAndLoadMockData(db *gorm.DB) {
+func TruncateAndLoadMockData(db *gorm.DB) {
 	if err := truncateTables(db); err != nil {
 		log.Fatalf("Failed to truncate tables: %v", err)
 	}
@@ -240,6 +250,7 @@ func truncateTables(db *gorm.DB) error {
 	}
 	return nil
 }
+
 func loadMockData(db *gorm.DB) {
 	_, b, _, _ := runtime.Caller(0)
 	baseDir := filepath.Join(filepath.Dir(b), "../../..")

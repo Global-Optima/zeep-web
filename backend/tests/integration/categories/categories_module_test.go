@@ -19,6 +19,7 @@ func (suite *CategoriesIntegrationTestSuite) SetupSuite() {
 func (suite *CategoriesIntegrationTestSuite) TearDownSuite() {
 	suite.Env.Close()
 }
+
 func (suite *CategoriesIntegrationTestSuite) TestGetAllCategories() {
 	testCases := []utils.TestCase{
 		// {

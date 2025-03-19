@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const maxRequestsPerDay int64 = 1
+const maxRequestsPerDay int64 = 10
 
 type StockRequestService interface {
 	CreateStockRequest(storeID uint, req types.CreateStockRequestDTO) (uint, string, error)
@@ -63,7 +63,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to count today's stock requests: %w", err)
 	}
-	if count > maxRequestsPerDay {
+	if count >= maxRequestsPerDay {
 		return 0, "", types.ErrOneRequestPerDay
 	}
 
@@ -224,7 +224,7 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) (*data.StockReq
 		if err != nil {
 			return nil, fmt.Errorf("failed to count today's stock requests: %w", err)
 		}
-		if count > maxRequestsPerDay {
+		if count >= maxRequestsPerDay {
 			return nil, types.ErrOneRequestPerDay
 		}
 	}
@@ -425,7 +425,7 @@ func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, 
 			return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 
-		if err := s.repo.AddToStoreStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
+		if err := s.repo.UpsertToStoreStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
 			return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 	}
@@ -471,7 +471,7 @@ func (s *stockRequestService) handleAcceptedWithChange(request *data.StockReques
 		}
 
 		if item.Quantity > 0 {
-			if err := s.repo.AddToStoreStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
+			if err := s.repo.UpsertToStoreStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
 				return fmt.Errorf("failed to add stock to store warehouse for stock material ID %d: %w", item.StockMaterialID, err)
 			}
 		}
@@ -563,7 +563,6 @@ func (s *stockRequestService) UpdateStockRequest(requestID uint, items []types.S
 		return nil, fmt.Errorf("failed to replace ingredients for stock request ID %d: %w", requestID, err)
 	}
 	return request, nil
-
 }
 
 func (s *stockRequestService) DeleteStockRequest(requestID uint) (*data.StockRequest, error) {

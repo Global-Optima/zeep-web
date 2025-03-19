@@ -2,9 +2,10 @@ package contexts
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/types"
 	"github.com/gin-gonic/gin"
-	"reflect"
 )
 
 const CUSTOMER_CONTEXT = "CUSTOMER_CONTEXT"

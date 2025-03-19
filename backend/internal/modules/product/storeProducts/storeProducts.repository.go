@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -18,6 +19,7 @@ type StoreProductRepository interface {
 	GetStoreProductById(storeProductID uint, filter *contexts.StoreContextFilter) (*data.StoreProduct, error)
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error)
 	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
+
 	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
 	GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]data.StoreProduct, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
@@ -30,6 +32,8 @@ type StoreProductRepository interface {
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
 	CloneWithTransaction(tx *gorm.DB) StoreProductRepository
+
+	FilterProductsWithSufficientStock(storeID uint, products []data.StoreProduct) ([]data.StoreProduct, error)
 }
 
 type storeProductRepository struct {
@@ -57,7 +61,6 @@ func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data
 		Where("store_products.store_id = ? AND store_products.is_available = ?", storeID, true).
 		Group("product_categories.id").
 		Find(&categories).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +169,51 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 	return storeProducts, nil
 }
 
+func (r *storeProductRepository) FilterProductsWithSufficientStock(storeID uint, products []data.StoreProduct) ([]data.StoreProduct, error) {
+	var availableProducts []data.StoreProduct
+	for _, sp := range products {
+		ok, err := r.hasSufficientStockForProduct(storeID, &sp)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			availableProducts = append(availableProducts, sp)
+		}
+	}
+	return availableProducts, nil
+}
+
+func (r *storeProductRepository) hasSufficientStockForProduct(storeID uint, sp *data.StoreProduct) (bool, error) {
+	// Loop through each product size (which is associated via StoreProductSizes -> ProductSize)
+	for _, sps := range sp.StoreProductSizes {
+		productSize := sps.ProductSize
+		allIngredientsAvailable := true
+		// For each ingredient in this product size, check the store stock.
+		for _, psi := range productSize.ProductSizeIngredients {
+			var storeStock data.StoreStock
+			// Find the stock for this ingredient in the store.
+			err := r.db.
+				Where("store_id = ? AND ingredient_id = ?", storeID, psi.IngredientID).
+				First(&storeStock).Error
+			if err != nil {
+				// if not found or any error then treat as insufficient stock
+				allIngredientsAvailable = false
+				break
+			}
+			// If store stock is less than what is required, mark as insufficient.
+			if storeStock.Quantity < psi.Quantity {
+				allIngredientsAvailable = false
+				break
+			}
+		}
+		// If one product size has all ingredients available, then the product is available.
+		if allIngredientsAvailable {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (r *storeProductRepository) GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]data.StoreProduct, error) {
 	var storeProducts []data.StoreProduct
 
@@ -256,7 +304,6 @@ func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID 
 		err := tx.Model(&data.StoreProduct{}).
 			Where("store_id = ? AND id = ?", storeID, storeProductID).
 			Update("is_available", &updateModels.StoreProduct.IsAvailable).Error
-
 		if err != nil {
 			return err
 		}
@@ -317,11 +364,10 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 		Preload("ProductSize.Product").
 		Preload("ProductSize.Additives.Additive.Category").
 		Preload("ProductSize.Additives.Additive.Unit").
-		Preload("ProductSize.Additives.Additive.Ingredients").
+		Preload("ProductSize.Additives.Additive.Ingredients.Ingredient").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
 		First(&storeProductSize).Error
-
 	if err != nil {
 		return &storeProductSize, err
 	}
@@ -347,7 +393,6 @@ func (r *storeProductRepository) GetSufficientStoreProductSizeById(
 		Preload("ProductSize.Additives.Additive.Category").
 		Preload("ProductSize.Additives.Additive.Unit").
 		First(&storeProductSize).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to load StoreProductSize (ID=%d): %w", storeProductSizeID, err)
 	}

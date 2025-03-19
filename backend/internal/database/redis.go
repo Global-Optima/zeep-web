@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
@@ -14,15 +15,22 @@ type RedisClient struct {
 
 var redisInstance *RedisClient
 
-func InitRedis(host string, port int, password string, db int) (*RedisClient, error) {
+func InitRedis(host string, port int, password string, db int, username string, enableTLS bool) (*RedisClient, error) {
 	if redisInstance != nil {
 		return redisInstance, nil
 	}
 
+	var tlsConfig *tls.Config
+	if enableTLS {
+		tlsConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", host, port),
-		Password: password,
-		DB:       db,
+		Addr:      fmt.Sprintf("%s:%d", host, port),
+		Password:  password,
+		Username:  username,
+		DB:        db,
+		TLSConfig: tlsConfig,
 	})
 
 	ctx := context.Background()

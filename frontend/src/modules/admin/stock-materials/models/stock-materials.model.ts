@@ -13,6 +13,7 @@ export interface CreateStockMaterialDTO {
 	barcode: string
 	expirationPeriodInDays: number
 	size: number
+	isActive: boolean
 }
 
 export interface UpdateStockMaterialDTO {

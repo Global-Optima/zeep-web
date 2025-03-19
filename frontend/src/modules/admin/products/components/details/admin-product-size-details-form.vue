@@ -37,6 +37,7 @@ import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredie
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
+import {toast} from "@/core/components/ui/toast";
 
 const AdminSelectAdditiveDialog = defineAsyncComponent(() =>
   import('@/modules/admin/additives/components/admin-select-additive-dialog.vue'))
@@ -50,6 +51,8 @@ interface SelectedAdditiveTypesDTO {
   isDefault: boolean
   name: string
   categoryName: string
+  size: number
+  unitName: string
   imageUrl: string
 }
 
@@ -108,6 +111,8 @@ const additives = ref<SelectedAdditiveTypesDTO[]>(productSize.additives.map(a =>
   isDefault: a.isDefault,
   name: a.name,
   categoryName: a.category.name,
+  size: a.size,
+  unitName: a.unit.name,
   imageUrl: a.imageUrl
 })))
 
@@ -132,6 +137,8 @@ function addAdditive(additive: AdditiveDTO) {
       isDefault: false,
       name: additive.name,
       categoryName: additive.category.name,
+      size: additive.size,
+      unitName: additive.unit.name,
       imageUrl: additive.imageUrl,
     })
   }
@@ -167,6 +174,10 @@ const onSubmit = handleSubmit((formValues) => {
     return
   }
 
+  if (ingredients.value.some(i => i.quantity <= 0)) {
+    return toast({ description: "Укажите количество в технологической карте" })
+  }
+
   const finalDTO: UpdateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
@@ -192,7 +203,7 @@ function selectUnit(unit: UnitDTO) {
 </script>
 
 <template>
-	<div class="mx-auto w-full max-w-2xl">
+	<div class="mx-auto w-full max-w-4xl">
 		<!-- Header -->
 		<div class="flex justify-between items-center gap-4 w-full">
 			<div class="flex items-center gap-4">
@@ -383,6 +394,7 @@ function selectUnit(unit: UnitDTO) {
 								<TableHead></TableHead>
 								<TableHead>Название</TableHead>
 								<TableHead>Категория</TableHead>
+								<TableHead>Размер</TableHead>
 								<TableHead>По умолчанию</TableHead>
 								<TableHead v-if="!readonly"></TableHead>
 							</TableRow>
@@ -401,10 +413,11 @@ function selectUnit(unit: UnitDTO) {
 								</TableCell>
 								<TableCell>{{ additive.name }}</TableCell>
 								<TableCell>{{ additive.categoryName }}</TableCell>
+								<TableCell>{{ additive.size }} {{ additive.unitName }}</TableCell>
 								<TableCell>
 									<Checkbox
 										type="checkbox"
-										class="size-6 text-center"
+										class="size-6 text-left"
 										:checked="additive.isDefault"
 										:disabled="readonly"
 										@update:checked="v => additive.isDefault = v"

@@ -6,6 +6,8 @@ const (
 	S Size = "S"
 	M Size = "M"
 	L Size = "L"
+
+	DEFAULT_INGREDIENT_EXPIRATION_IN_DAYS = 1095 // 3 years
 )
 
 func (s Size) ToString() string {
@@ -22,15 +24,14 @@ func IsValidSize(size Size) bool {
 
 type Product struct {
 	BaseEntity
-	Name         string          `gorm:"size:100;not null" sort:"name"`
-	Description  string          `gorm:"type:text"`
-	ImageURL     StorageImageKey `gorm:"size:2048"`
-	VideoURL     StorageVideoKey `gorm:"size:2048"`
-	CategoryID   uint            `gorm:"index;not null"`
-	Category     ProductCategory `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
-	RecipeSteps  []RecipeStep    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	ProductSizes []ProductSize   `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	MachineId    string          `gorm:"size:40;not null;unique" sort:"machineId"`
+	Name         string           `gorm:"size:100;not null" sort:"name"`
+	Description  string           `gorm:"type:text"`
+	ImageKey     *StorageImageKey `gorm:"size:2048"`
+	VideoKey     *StorageVideoKey `gorm:"size:2048"`
+	CategoryID   uint             `gorm:"index;not null"`
+	Category     ProductCategory  `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
+	RecipeSteps  []RecipeStep     `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	ProductSizes []ProductSize    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 }
 
 type RecipeStep struct {
@@ -40,19 +41,19 @@ type RecipeStep struct {
 	Step        int     `gorm:"not null" sort:"step"`
 	Name        string  `gorm:"size:100" sort:"name"`
 	Description string  `gorm:"type:text"`
-	ImageURL    string  `gorm:"size:2048"`
+	ImageKey    string  `gorm:"size:2048"`
 }
 
 type ProductSize struct {
 	BaseEntity
-	Name                   string  `gorm:"size:100;not null" sort:"name"`
-	UnitID                 uint    `gorm:"index,not null"`
-	Unit                   Unit    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE" sort:"unit"`
-	BasePrice              float64 `gorm:"not null" sort:"price"`
-	Size                   float64 `gorm:"not null"`
-	ProductID              uint    `gorm:"index;not null"`
-	Product                Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
-	DiscountID             uint
+	Name                   string                  `gorm:"size:100;not null" sort:"name"`
+	UnitID                 uint                    `gorm:"index,not null"`
+	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE" sort:"unit"`
+	BasePrice              float64                 `gorm:"not null" sort:"price"`
+	Size                   float64                 `gorm:"not null"`
+	ProductID              uint                    `gorm:"index;not null"`
+	Product                Product                 `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
+	DiscountID             uint                    `gorm:"index"`
 	MachineId              string                  `gorm:"size:40;not null;unique" sort:"machineId"`
 	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
@@ -87,9 +88,10 @@ type Ingredient struct {
 	UnitID                 uint                    `gorm:"not null"`                                   // Link to Unit
 	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
 	CategoryID             uint                    `gorm:"not null"` // Link to IngredientCategory
+	IsAllergen             bool                    `gorm:"default:false" sort:"isAllergen"`
 	IngredientCategory     IngredientCategory      `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
 	StockMaterials         []StockMaterial         `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"` // New association
-	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID"`
+	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	StoreStocks            []StoreStock            `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	AdditiveIngredients    []AdditiveIngredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 }
@@ -127,7 +129,7 @@ type Additive struct {
 	Unit                 Unit                  `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL" sort:"unit"`
 	AdditiveCategoryID   uint                  `gorm:"index"`
 	Category             AdditiveCategory      `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL" sort:"category"`
-	ImageURL             StorageImageKey       `gorm:"size:2048"`
+	ImageKey             *StorageImageKey      `gorm:"size:2048"`
 	MachineId            string                `gorm:"size:40;not null;unique" sort:"machineId"`
 	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`

@@ -17,6 +17,7 @@ import (
 
 type StoreAdditiveRepository interface {
 	GetMissingStoreAdditiveIDsForProductSizes(storeID uint, productSizeIDs []uint) ([]uint, error)
+	FilterMissingStoreAdditiveIDs(storeID uint, additivesIDs []uint) ([]uint, error)
 	CreateStoreAdditive(storeID uint, dto *types.CreateStoreAdditiveDTO) (uint, error)
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
@@ -85,6 +86,34 @@ func (r *storeAdditiveRepository) GetMissingStoreAdditiveIDsForProductSizes(
 	}
 
 	return missingAdditiveIDs, nil
+}
+
+func (r *storeAdditiveRepository) FilterMissingStoreAdditiveIDs(storeID uint, additivesIDs []uint) ([]uint, error) {
+	if len(additivesIDs) == 0 {
+		return []uint{}, nil
+	}
+
+	var existingAdditivesIDs []uint
+	if err := r.db.
+		Model(&data.StoreAdditive{}).
+		Where("store_id = ? AND additive_id IN (?)", storeID, additivesIDs).
+		Pluck("additive_id", &existingAdditivesIDs).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch existing ingredient IDs: %w", err)
+	}
+
+	existingMap := make(map[uint]struct{}, len(existingAdditivesIDs))
+	for _, id := range existingAdditivesIDs {
+		existingMap[id] = struct{}{}
+	}
+
+	var missingIngredientIDs []uint
+	for _, id := range additivesIDs {
+		if _, found := existingMap[id]; !found {
+			missingIngredientIDs = append(missingIngredientIDs, id)
+		}
+	}
+
+	return missingIngredientIDs, nil
 }
 
 func (r *storeAdditiveRepository) CreateStoreAdditive(storeID uint, dto *types.CreateStoreAdditiveDTO) (uint, error) {
@@ -428,7 +457,6 @@ func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID u
 		Joins("JOIN store_additives sa ON psa.additive_id = sa.additive_id").
 		Joins("JOIN store_product_sizes sps ON psa.product_size_id = sps.product_size_id").
 		Joins("JOIN store_products sp ON sps.store_product_id = sp.id").
-		Where("psa.is_default = TRUE").
 		Where("sa.id = ? AND sa.store_id = ?", storeAdditiveID, storeID).
 		Where("sp.store_id = ?", storeID).
 		Where("psa.deleted_at IS NULL").

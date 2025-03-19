@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
     branches:
-      - '*'
+      - '**'
 
 jobs:
   frontend:
@@ -84,13 +84,13 @@ jobs:
           mkdir -p tests
           cat <<EOF > tests/test.env
           ENV=test
-          
+
           DB_HOST=localhost
           DB_PORT=5432
           DB_USER=testuser
           DB_PASSWORD=testpassword
           DB_NAME=testdb
-          
+
           REDIS_HOST=localhost
           REDIS_PORT=6379
           REDIS_DB=0
@@ -123,6 +123,19 @@ jobs:
 
       - name: Install dependencies
         run: go mod tidy
+
+      - name: Install gofumpt
+        run: go install mvdan.cc/gofumpt@latest
+
+      - name: Run gofumpt check
+        run: |
+          CHANGED_FILES=$(gofumpt -l .)
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "Code is not formatted according to gofumpt:"
+            echo "$CHANGED_FILES"
+            exit 1
+          fi
+
 
       - name: Run golangci-lint
         run: golangci-lint run -v --concurrency=2 --timeout=5m

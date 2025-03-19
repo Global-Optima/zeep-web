@@ -7,15 +7,13 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 type AdditiveHandler struct {
@@ -191,7 +189,6 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	var err error
 
 	if err := c.ShouldBind(&dto); err != nil {
-		logrus.Info(err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -202,6 +199,13 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 		if err != nil {
 			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 			return
+		}
+
+		for _, ingredient := range dto.Ingredients {
+			if ingredient.IngredientID == 0 || ingredient.Quantity <= 0 {
+				localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+				return
+			}
 		}
 	}
 

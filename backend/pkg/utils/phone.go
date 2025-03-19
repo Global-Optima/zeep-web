@@ -10,7 +10,7 @@ const (
 )
 
 func IsValidPhone(rawNumber, region string) bool {
-	//if region is unknown set to ""
+	// if region is unknown set to ""
 	phoneNumber, err := phonenumbers.Parse(rawNumber, region)
 	if err != nil {
 		return false

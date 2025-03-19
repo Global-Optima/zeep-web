@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: diarcode/zeep-backend:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: ENV
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: ENV
+            - name: SERVER_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SERVER_PORT
+            - name: CLIENT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: CLIENT_URL
+            - name: DEFAULT_PAGE
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DEFAULT_PAGE
+            - name: DEFAULT_PAGE_SIZE
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DEFAULT_PAGE_SIZE
+            - name: MAX_PAGE_SIZE
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAX_PAGE_SIZE
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PORT
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_NAME
+            - name: JWT_CUSTOMER_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_CUSTOMER_SECRET_KEY
+            - name: JWT_EMPLOYEE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_EMPLOYEE_SECRET_KEY
+            - name: JWT_CUSTOMER_ACCESS_TOKEN_TTL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_CUSTOMER_ACCESS_TOKEN_TTL
+            - name: JWT_CUSTOMER_REFRESH_TOKEN_TTL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_CUSTOMER_REFRESH_TOKEN_TTL
+            - name: JWT_EMPLOYEE_ACCESS_TOKEN_TTL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_EMPLOYEE_ACCESS_TOKEN_TTL
+            - name: JWT_EMPLOYEE_REFRESH_TOKEN_TTL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_EMPLOYEE_REFRESH_TOKEN_TTL
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: REDIS_PASSWORD
+            - name: REDIS_DB
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: REDIS_DB
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: S3_SECRET_KEY
+            - name: S3_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: S3_ENDPOINT
+            - name: S3_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: S3_BUCKET_NAME
+            - name: PAYMENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: PAYMENT_SECRET
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 500m
+            limits:
+              memory: 1Gi
+              cpu: 1
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /app/logs
+      volumes:
+        - name: logs-volume
+          emptyDir: {}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000

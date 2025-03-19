@@ -2,7 +2,7 @@ import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 export enum OrderStatus {
-  WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT',
+	WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT',
 	PENDING = 'PENDING',
 	PREPARING = 'PREPARING',
 	COMPLETED = 'COMPLETED',
@@ -63,6 +63,7 @@ export interface OrderDTO {
 	subOrdersQuantity: number
 	displayNumber: number
 	subOrders: SuborderDTO[]
+	completedAt?: Date
 }
 
 export interface SuborderDTO {
@@ -105,10 +106,12 @@ export interface SuborderAdditiveDTO {
 export interface OrderDetailsDTO {
 	id: number
 	customerName?: string
-	status: string
+	status: OrderStatus
 	total: number
 	suborders: SuborderDetailsDTO[]
 	deliveryAddress?: OrderDeliveryAddressDTO
+	completedAt?: Date
+	displayNumber: number
 }
 
 export interface SuborderDetailsDTO {
@@ -117,6 +120,7 @@ export interface SuborderDetailsDTO {
 	status: string
 	storeProductSize: OrderProductSizeDetailsDTO
 	storeAdditives: OrderAdditiveDetailsDTO[]
+	completedAt?: Date
 }
 
 export interface OrderProductSizeDetailsDTO {
@@ -162,7 +166,14 @@ export interface TransactionDTO {
 	paymentMethod: string
 	amount: number
 	currency: string
-	qrNumber: string
-	cardMask: string
-	icc: string
+	qrNumber?: string
+	cardMask?: string
+	icc?: string
+}
+
+export interface OrdersTimeZoneFilter {
+	storeId?: number
+	timezone?: string
+	timezoneOffset?: number
+	timeGapMinutes?: number
 }

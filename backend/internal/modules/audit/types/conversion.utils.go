@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
@@ -116,7 +117,7 @@ func MapToEmployeeAudit(c *gin.Context, action shared.AuditAction) (*data.Employ
 	}
 
 	return &data.EmployeeAudit{
-		EmployeeID:    claims.EmployeeClaimsData.ID,
+		EmployeeID:    claims.EmployeeID,
 		OperationType: core.OperationType,
 		ComponentName: core.ComponentName,
 		Details:       detailsJSONB,

@@ -1,13 +1,23 @@
 <template>
-	<div class="relative bg-[#F3F4F9] pb-32 text-black no-scrollbar">
+	<div class="relative bg-[#F3F4F9] pt-safe pb-32 text-black no-scrollbar">
 		<!-- Loading State -->
-		<KioskDetailsLoading v-if="isFetching" />
+		<PageLoader v-if="isFetching" />
 		<!-- Error State -->
 		<div
 			v-else-if="isError"
-			class="p-4 text-red-500"
+			class="flex flex-col justify-center items-center p-6 w-full h-screen text-center"
 		>
-			{{ error?.message || 'Ошибка загрузки данных' }}
+			<h1 class="mt-8 font-bold text-red-600 text-4xl">Ошибка</h1>
+			<p class="mt-6 max-w-md text-gray-600 text-2xl">
+				К сожалению, данный товар временно недоступен, попробуйте позже
+			</p>
+
+			<button
+				@click="onBackClick"
+				class="flex justify-center items-center bg-slate-200 mt-8 px-8 py-5 rounded-3xl h-14 text-slate- text-2xl"
+			>
+				Вернуться назад
+			</button>
 		</div>
 		<!-- Product Content -->
 		<div
@@ -28,13 +38,15 @@
 						/>
 					</Button>
 
-					<KioskProductRecipeDialog :product="productDetails" />
+					<template v-if="selectedSize">
+						<KioskProductRecipeDialog :nutrition="selectedSize.totalNutrition" />
+					</template>
 				</header>
 				<div class="flex flex-col justify-center items-center">
 					<LazyImage
-						src="https://www.nicepng.com/png/full/106-1060376_starbucks-iced-coffee-png-vector-library-pumpkin-spice.png"
+						:src="productDetails.imageUrl"
 						alt="Изображение товара"
-						class="w-38 h-64 object-contain"
+						class="rounded-3xl w-38 h-64 object-contain"
 					/>
 					<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>
 					<p class="mt-2 text-slate-600 text-xl">{{ productDetails.description }}</p>
@@ -79,6 +91,7 @@
 
 <script setup lang="ts">
 import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
+import PageLoader from '@/core/components/page-loader/PageLoader.vue'
 import { Button } from '@/core/components/ui/button'
 import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
@@ -91,7 +104,6 @@ import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
 import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
-import KioskDetailsLoading from '@/modules/kiosk/products/components/details/kiosk-details-loading.vue'
 import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
 import KioskProductRecipeDialog from '@/modules/kiosk/products/components/details/kiosk-product-recipe-dialog.vue'
 import { useQuery } from '@tanstack/vue-query'
@@ -110,7 +122,7 @@ const onBackClick = () => router.push({ name: getRouteName('KIOSK_HOME') });
 const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null);
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({});
 
-const { data: productDetails, isPending: isFetching, isError, error } = useQuery({
+const { data: productDetails, isPending: isFetching, isError } = useQuery({
   queryKey: computed(() => ['kiosk-product-details', productId]),
   queryFn: () => storeProductsService.getStoreProduct(productId.value),
   enabled: computed(() => productId.value > 0),

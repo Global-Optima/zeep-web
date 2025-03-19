@@ -1,8 +1,107 @@
+<script setup lang="ts">
+import { useQuery } from '@tanstack/vue-query'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+
+import AdminOrdersDisplayList from '@/modules/admin/store-orders/display/components/admin-orders-display-list.vue'
+import { OrderStatus } from '@/modules/admin/store-orders/models/orders.models'
+import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
+
+// ------------------------------------------------------------------
+// Constants & Config
+// ------------------------------------------------------------------
+const ORDERS_PER_PAGE = 6
+const AUTO_PAGE_INTERVAL = 6000 // 6 seconds
+
+// ------------------------------------------------------------------
+// TanStack Query - Fetch barista orders
+// ------------------------------------------------------------------
+/**
+ * If you want TypeScript to know these are Order[]:
+ * useQuery<Order[]>({ ... })
+ */
+const {
+  data: orders,
+} = useQuery({
+  queryKey: ['barista-orders', {timeGapMinutes: 15}],
+  queryFn: () => ordersService.getBaristaOrders({ timeGapMinutes: 15 }),
+  placeholderData: [],
+  initialData: [],
+  refetchInterval: 5000,
+  refetchOnWindowFocus: true,
+  staleTime: 0,
+  retry: 3,
+})
+
+// ------------------------------------------------------------------
+// Order Filtering
+// (Removed the 15-minute hide logic. We just split into "PREPARING" vs "COMPLETED".)
+// ------------------------------------------------------------------
+const inProgressOrders = computed(() => {
+  return orders.value.filter(order => order.status === OrderStatus.PREPARING)
+})
+
+const readyOrders = computed(() => {
+  return orders.value.filter(order => order.status === OrderStatus.COMPLETED)
+})
+
+// ------------------------------------------------------------------
+// Pagination State
+// ------------------------------------------------------------------
+const inProgressPageIndex = ref(0)
+const readyPageIndex = ref(0)
+
+const totalInProgressPages = computed(() => {
+  return Math.ceil(inProgressOrders.value.length / ORDERS_PER_PAGE)
+})
+
+const totalReadyPages = computed(() => {
+  return Math.ceil(readyOrders.value.length / ORDERS_PER_PAGE)
+})
+
+function setInProgressPage(page: number) {
+  inProgressPageIndex.value = page
+}
+
+function setReadyPage(page: number) {
+  readyPageIndex.value = page
+}
+
+// ------------------------------------------------------------------
+// Auto-Rotate Pages
+// ------------------------------------------------------------------
+let autoRotateInterval: ReturnType<typeof setInterval> | null = null
+
+function rotatePages() {
+  autoRotateInterval = setInterval(() => {
+    // Guard so we don’t modulo by zero
+    if (totalInProgressPages.value > 0) {
+      inProgressPageIndex.value =
+        (inProgressPageIndex.value + 1) % totalInProgressPages.value
+    }
+    if (totalReadyPages.value > 0) {
+      readyPageIndex.value =
+        (readyPageIndex.value + 1) % totalReadyPages.value
+    }
+  }, AUTO_PAGE_INTERVAL)
+}
+
+onMounted(() => {
+  rotatePages()
+})
+
+onBeforeUnmount(() => {
+  if (autoRotateInterval) {
+    clearInterval(autoRotateInterval)
+  }
+})
+</script>
+
 <template>
 	<div class="flex flex-col items-center h-screen overflow-hidden">
-		<!-- Main Layout -->
+		<!-- If you want a loading or error state, you can add it here -->
+
 		<div class="flex items-start w-full h-full">
-			<!-- In Progress Orders Section -->
+			<!-- In Progress Orders -->
 			<AdminOrdersDisplayList
 				title="В работе"
 				:orders="inProgressOrders"
@@ -13,7 +112,7 @@
 				@pageChange="setInProgressPage"
 			/>
 
-			<!-- Ready Orders Section -->
+			<!-- Ready Orders -->
 			<AdminOrdersDisplayList
 				title="Готовы"
 				:orders="readyOrders"
@@ -26,65 +125,3 @@
 		</div>
 	</div>
 </template>
-
-<script setup lang="ts">
-import { useOrderEventsService } from '@/modules/admin/store-orders/barista/hooks/use-orders-event.hook'
-import AdminOrdersDisplayList from '@/modules/admin/store-orders/display/components/admin-orders-display-list.vue'
-import { OrderStatus } from '@/modules/admin/store-orders/models/orders.models'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-
-// Constants
-const ORDERS_PER_PAGE = 6
-const AUTO_PAGE_INTERVAL = 6000 // 6 seconds
-
-// WebSocket Hook Integration
-const { filteredOrders } = useOrderEventsService()
-
-// State for "In Progress" and "Ready" orders
-const inProgressOrders = computed(() =>
-	filteredOrders.value.filter(order => order.status === OrderStatus.PREPARING)
-)
-const readyOrders = computed(() =>
-	filteredOrders.value.filter(order => order.status === OrderStatus.COMPLETED)
-)
-
-// Pagination State
-const inProgressPageIndex = ref(0)
-const readyPageIndex = ref(0)
-
-// Pagination Logic
-const totalInProgressPages = computed(() =>
-	Math.ceil(inProgressOrders.value.length / ORDERS_PER_PAGE)
-)
-const totalReadyPages = computed(() =>
-	Math.ceil(readyOrders.value.length / ORDERS_PER_PAGE)
-)
-
-// Methods to update pages
-const setInProgressPage = (page: number) => {
-	inProgressPageIndex.value = page
-}
-const setReadyPage = (page: number) => {
-	readyPageIndex.value = page
-}
-
-// Automatically change pages every 6 seconds
-let interval: ReturnType<typeof setInterval>
-
-const rotatePages = () => {
-	interval = setInterval(() => {
-		inProgressPageIndex.value =
-			(inProgressPageIndex.value + 1) % totalInProgressPages.value
-		readyPageIndex.value =
-			(readyPageIndex.value + 1) % totalReadyPages.value
-	}, AUTO_PAGE_INTERVAL)
-}
-
-onMounted(() => {
-	rotatePages()
-})
-
-onBeforeUnmount(() => {
-	clearInterval(interval)
-})
-</script>

@@ -8,6 +8,7 @@ import * as z from 'zod'
 import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
+import Checkbox from "@/core/components/ui/checkbox/Checkbox.vue"
 import {
   FormControl,
   FormField,
@@ -31,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { toast } from "@/core/components/ui/toast"
 import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
@@ -45,6 +47,8 @@ interface SelectedAdditiveTypesDTO {
   isDefault: boolean
   name: string
   categoryName: string
+  size: number
+  unitName: string
   imageUrl: string
 }
 
@@ -111,6 +115,8 @@ function addAdditive(additive: AdditiveDTO) {
       isDefault: false,
       name: additive.name,
       categoryName: additive.category.name,
+      size: additive.size,
+      unitName: additive.unit.name,
       imageUrl: additive.imageUrl,
     })
   }
@@ -124,18 +130,15 @@ function removeIngredient(index: number) {
   ingredients.value.splice(index, 1)
 }
 
-function toggleDefault(index: number) {
-  additives.value[index].isDefault = !additives.value[index].isDefault
-}
-
-function sortAdditives() {
-  return [...additives.value].sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
-}
-
 const onSubmit = handleSubmit((formValues) => {
   if (additivesError.value) {
     return
   }
+
+  if (ingredients.value.some(i => i.quantity <= 0)) {
+    return toast({ description: "Укажите количество в технологической карте" })
+  }
+
   const finalDTO: CreateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
@@ -330,13 +333,14 @@ function selectUnit(unit: UnitDTO) {
 								<TableHead></TableHead>
 								<TableHead>Название</TableHead>
 								<TableHead>Категория</TableHead>
+								<TableHead>Размер</TableHead>
 								<TableHead>По умолчанию</TableHead>
 								<TableHead></TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
 							<TableRow
-								v-for="(additive, index) in sortAdditives()"
+								v-for="(additive, index) in additives"
 								:key="additive.additiveId"
 							>
 								<TableCell>
@@ -348,12 +352,13 @@ function selectUnit(unit: UnitDTO) {
 								</TableCell>
 								<TableCell>{{ additive.name }}</TableCell>
 								<TableCell>{{ additive.categoryName }}</TableCell>
-								<TableCell class="text-center">
-									<Input
+								<TableCell>{{ additive.size}} {{additive.unitName}}</TableCell>
+								<TableCell class="text-left">
+									<Checkbox
 										type="checkbox"
-										class="shadow-none h-5"
+										class="size-6 text-left"
 										:checked="additive.isDefault"
-										@change="toggleDefault(index)"
+										@update:checked="v => additive.isDefault = v"
 									/>
 								</TableCell>
 								<TableCell class="text-center">

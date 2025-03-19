@@ -3,19 +3,20 @@ package media
 import (
 	"bytes"
 	"fmt"
-	"github.com/HugoSmits86/nativewebp"
-	"github.com/disintegration/imaging"
-	"github.com/gin-gonic/gin"
 	"image"
 	"io"
 	"mime/multipart"
 	"path/filepath"
+
+	"github.com/HugoSmits86/nativewebp"
+	"github.com/disintegration/imaging"
+	"github.com/gin-gonic/gin"
 )
 
 const (
 	IMAGE_FORM_DATA_KEY = "image"
 	WEBP_FORMAT_KEY     = ".webp"
-	MAX_IMAGE_SIZE      = 5 * 1024 * 1024 //5MB
+	MAX_IMAGE_SIZE      = 5 * 1024 * 1024 // 5MB
 )
 
 func ConvertToWebp(img *image.Image) ([]byte, error) {

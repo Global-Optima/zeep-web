@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
@@ -22,11 +23,14 @@ type StoreRepository interface {
 	GetAllStoresForNotifications() ([]data.Store, error)
 	CreateStore(store *data.Store) (uint, error)
 	GetStoreByID(storeID uint) (*data.Store, error)
+	GetRawStoreByID(storeID uint) (*data.Store, error)
 	GetStores(filter *types.StoreFilter) ([]data.Store, error)
 	UpdateStore(storeID uint, updateModels *types.StoreUpdateModels) error
+	UpdateStoreSyncTime(storeID uint) (time.Time, error)
 	DeleteStore(storeID uint, hardDelete bool) error
 	CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error)
 	GetFacilityAddressByAddress(address string) (*data.FacilityAddress, error)
+	CloneWithTransaction(tx *gorm.DB) storeRepository
 }
 
 type storeRepository struct {
@@ -35,6 +39,12 @@ type storeRepository struct {
 
 func NewStoreRepository(db *gorm.DB) StoreRepository {
 	return &storeRepository{db: db}
+}
+
+func (r *storeRepository) CloneWithTransaction(tx *gorm.DB) storeRepository {
+	return storeRepository{
+		db: tx,
+	}
 }
 
 func (r *storeRepository) GetAllStores(filter *types.StoreFilter) ([]data.Store, error) {
@@ -98,6 +108,15 @@ func (r *storeRepository) CreateStore(store *data.Store) (uint, error) {
 	return store.ID, nil
 }
 
+func (r *storeRepository) GetRawStoreByID(storeID uint) (*data.Store, error) {
+	var store data.Store
+	if err := r.db.Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}}).
+		First(&store).Error; err != nil {
+		return nil, err
+	}
+	return &store, nil
+}
+
 func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
 	var store data.Store
 	if err := r.db.Preload("FacilityAddress").
@@ -157,35 +176,19 @@ func (r *storeRepository) UpdateStore(storeID uint, updateModels *types.StoreUpd
 		return fmt.Errorf("nothing to update")
 	}
 
-	existingStore, err := r.GetStoreByID(storeID)
-	if err != nil {
-		return err
-	}
-
-	err = r.db.Transaction(func(tx *gorm.DB) error {
-
-		if updateModels.Store != nil {
-			query := tx.Model(&data.Store{}).Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}})
-
-			if updateModels.Store.FranchiseeID == nil {
-				query.UpdateColumn("franchisee_id", gorm.Expr("franchisee_id - ?", nil))
-			}
-
-			if err := query.Updates(updateModels.Store).Error; err != nil {
-				return err
-			}
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&updateModels.Store).Error; err != nil {
+			return err
 		}
 
 		if updateModels.FacilityAddress != nil {
-			if err := tx.Where(&data.FacilityAddress{BaseEntity: data.BaseEntity{ID: existingStore.FacilityAddress.ID}}).
-				Updates(updateModels.FacilityAddress).Error; err != nil {
+			if err := tx.Save(&updateModels.FacilityAddress).Error; err != nil {
 				return err
 			}
 		}
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
@@ -221,4 +224,17 @@ func (r *storeRepository) GetFacilityAddressByAddress(address string) (*data.Fac
 		return nil, err
 	}
 	return &facilityAddress, nil
+}
+
+func (r *storeRepository) UpdateStoreSyncTime(storeID uint) (time.Time, error) {
+	currentTime := time.Now().UTC()
+	updatedStore := &data.Store{LastInventorySyncAt: currentTime}
+
+	err := r.db.Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}}).
+		Updates(updatedStore).Error
+	if err != nil {
+		return currentTime, err
+	}
+
+	return currentTime, err
 }

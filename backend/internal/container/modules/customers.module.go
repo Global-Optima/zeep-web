@@ -17,7 +17,7 @@ func NewCustomersModule(base *common.BaseModule) *CustomersModule {
 	service := customers.NewCustomerService(repo, base.Logger)
 	handler := customers.NewCustomerHandler(service)
 
-	//base.Router.RegisterCustomerRoutes(handler)
+	// base.Router.RegisterCustomerRoutes(handler)
 
 	return &CustomersModule{
 		BaseModule: base,

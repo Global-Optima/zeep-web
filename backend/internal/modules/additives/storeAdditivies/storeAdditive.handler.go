@@ -1,8 +1,9 @@
 package storeAdditives
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"strconv"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
@@ -64,10 +65,6 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 
 	additivesList, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(storeProductSizeID), &filter)
 	if err != nil {
-		if errors.Is(err, types.ErrStoreAdditiveCategoriesNotFound) {
-			utils.SendSuccessResponse(c, []types.StoreAdditiveCategoryDTO{})
-			return
-		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}

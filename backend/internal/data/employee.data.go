@@ -2,10 +2,11 @@ package data
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type EmployeeType string
@@ -82,9 +83,11 @@ var RoleManagePermissions = map[EmployeeRole][]EmployeeRole{
 	RoleWarehouseManager:       {RoleWarehouseEmployee},
 	RoleFranchiseManager:       {RoleStoreManager, RoleBarista},
 	RoleRegionWarehouseManager: {RoleWarehouseManager, RoleWarehouseEmployee},
-	RoleAdmin: {RoleOwner, RoleFranchiseOwner, RoleFranchiseManager,
+	RoleAdmin: {
+		RoleOwner, RoleFranchiseOwner, RoleFranchiseManager,
 		RoleRegionWarehouseManager, RoleStoreManager, RoleWarehouseManager,
-		RoleBarista, RoleWarehouseEmployee},
+		RoleBarista, RoleWarehouseEmployee,
+	},
 }
 
 func CanManageRole(currentRole, targetRole EmployeeRole) bool {
@@ -266,7 +269,7 @@ type Employee struct {
 	Phone              string              `gorm:"size:16;not null"`
 	Email              string              `gorm:"size:255;not null" sort:"email"`
 	HashedPassword     string              `gorm:"size:255;not null"`
-	IsActive           *bool               `gorm:"not null" sort:"isActive"`
+	IsActive           bool                `gorm:"not null" sort:"isActive"`
 	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
 	RegionEmployee     *RegionEmployee     `gorm:"foreignKey:EmployeeID"`
@@ -350,4 +353,12 @@ type EmployeeWorkday struct {
 	EndAt      string   `gorm:"type:time;not null" sort:"endAt"`
 	EmployeeID uint     `gorm:"index;not null"`
 	Employee   Employee `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE" sort:"employees"`
+}
+
+type EmployeeToken struct {
+	BaseEntity
+	Token      string    `gorm:"size:255;not null"`
+	ExpiresAt  time.Time `gorm:"type:timestamp;not null"`
+	EmployeeID uint      `gorm:"unique;index;not null"`
+	Employee   Employee  `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE"`
 }

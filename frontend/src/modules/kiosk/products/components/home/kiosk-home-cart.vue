@@ -1,7 +1,7 @@
 <template>
 	<button
 		@click="onCartClick"
-		class="flex items-center gap-4 bg-primary shadow-xl backdrop-blur-md px-6 sm:px-8 py-6 rounded-full text-primary-foreground transition-all duration-300 ease-out"
+		class="flex items-center gap-4 bg-primary shadow-xl backdrop-blur-md px-6 sm:px-8 py-6 rounded-full text-primary-foreground transition-all duration-300 ease-out pointer-events-auto"
 		:class="{ 'scale-110 shadow-2xl': isAnimating }"
 	>
 		<div>

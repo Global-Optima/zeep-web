@@ -103,7 +103,6 @@ func GenerateUnexpectedCommentFromDetails(details StockRequestDetails) *localiza
 		"MaterialName":   details.MaterialName,
 		"ActualQuantity": details.ActualQuantity,
 	})
-
 	if err != nil {
 		return nil
 	}
@@ -118,7 +117,6 @@ func GenerateMismatchCommentFromDetails(details StockRequestDetails) *localizati
 		"Quantity":             details.Quantity,
 		"ActualQuantity":       details.ActualQuantity,
 	})
-
 	if err != nil {
 		return nil
 	}

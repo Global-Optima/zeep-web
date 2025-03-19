@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"gorm.io/gorm"
@@ -213,30 +212,16 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 		}
 
 		if updateModels.Additive != nil {
-			if err := tx.Model(&data.Additive{}).
-				Where("id = ?", additiveID).
-				Updates(updateModels.Additive).Error; err != nil {
-				return fmt.Errorf("failed to update additive: %w", err)
+			err := r.saveAdditive(tx, updateModels.Additive)
+			if err != nil {
+				return err
 			}
 		}
 
 		if updateModels.Ingredients != nil {
-			if err := tx.Where("additive_id = ?", additiveID).Delete(&data.AdditiveIngredient{}).Error; err != nil {
-				return fmt.Errorf("failed to delete ingredients: %w", err)
-			}
-
-			if len(updateModels.Ingredients) > 0 {
-				ingredients := make([]data.AdditiveIngredient, len(updateModels.Ingredients))
-				for i, ingredient := range updateModels.Ingredients {
-					ingredients[i] = data.AdditiveIngredient{
-						AdditiveID:   additiveID,
-						IngredientID: ingredient.IngredientID,
-						Quantity:     ingredient.Quantity,
-					}
-				}
-				if err := tx.Create(ingredients).Error; err != nil {
-					return fmt.Errorf("failed to create ingredients: %w", err)
-				}
+			err := r.updateAdditiveIngredients(tx, additiveID, updateModels.Ingredients)
+			if err != nil {
+				return err
 			}
 		}
 
@@ -244,8 +229,75 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 	})
 }
 
+func (r *additiveRepository) saveAdditive(tx *gorm.DB, additive *data.Additive) error {
+	return tx.Save(additive).Error
+}
+
+func (r *additiveRepository) updateAdditiveIngredients(tx *gorm.DB, additiveID uint, additiveIngredients []data.AdditiveIngredient) error {
+	var existingIngredients []data.AdditiveIngredient
+	if err := tx.Where("additive_id = ?", additiveID).Find(&existingIngredients).Error; err != nil {
+		return fmt.Errorf("failed to fetch existing ingredients: %w", err)
+	}
+
+	existingMap := make(map[uint]data.AdditiveIngredient)
+	for _, ing := range existingIngredients {
+		existingMap[ing.IngredientID] = ing
+	}
+
+	// Track changes
+	var toInsert []data.AdditiveIngredient
+	var toUpdate []data.AdditiveIngredient
+	existingIDs := make(map[uint]struct{})
+
+	for _, ingredient := range additiveIngredients {
+		existing, exists := existingMap[ingredient.IngredientID]
+
+		if exists {
+			if existing.Quantity != ingredient.Quantity {
+				existing.Quantity = ingredient.Quantity
+				toUpdate = append(toUpdate, existing)
+			}
+			existingIDs[ingredient.IngredientID] = struct{}{}
+		} else {
+			toInsert = append(toInsert, data.AdditiveIngredient{
+				AdditiveID:   additiveID,
+				IngredientID: ingredient.IngredientID,
+				Quantity:     ingredient.Quantity,
+			})
+		}
+	}
+
+	var toDeleteIDs []uint
+	for id := range existingMap {
+		if _, found := existingIDs[id]; !found {
+			toDeleteIDs = append(toDeleteIDs, id)
+		}
+	}
+
+	if len(toUpdate) > 0 {
+		if err := tx.Save(&toUpdate).Error; err != nil {
+			return fmt.Errorf("failed to update ingredients: %w", err)
+		}
+	}
+
+	if len(toDeleteIDs) > 0 {
+		if err := tx.Unscoped().Where("additive_id = ? AND ingredient_id IN (?)", additiveID, toDeleteIDs).Delete(&data.AdditiveIngredient{}).Error; err != nil {
+			return fmt.Errorf("failed to delete old ingredients: %w", err)
+		}
+	}
+
+	if len(toInsert) > 0 {
+		if err := tx.Create(&toInsert).Error; err != nil {
+			return fmt.Errorf("failed to insert new ingredients: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func (r *additiveRepository) DeleteAdditive(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
+
 	if err := r.db.First(&additive, additiveID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrAdditiveNotFound
@@ -253,11 +305,45 @@ func (r *additiveRepository) DeleteAdditive(additiveID uint) (*data.Additive, er
 		return nil, err
 	}
 
-	if err := r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error; err != nil {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkAdditiveReferences(tx, additiveID); err != nil {
+			return err
+		}
+
+		if err := r.db.Where("id = ?", additiveID).Delete(&data.Additive{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
 	return &additive, nil
+}
+
+func checkAdditiveReferences(db *gorm.DB, additiveID uint) error {
+	var additive data.Additive
+
+	err := db.
+		Preload("ProductSizeAdditives", func(db *gorm.DB) *gorm.DB {
+			return db.Limit(1)
+		}).
+		Preload("StoreAdditives", func(db *gorm.DB) *gorm.DB {
+			return db.Limit(1)
+		}).
+		Where(&data.Additive{BaseEntity: data.BaseEntity{ID: additiveID}}).
+		First(&additive).Error
+	if err != nil {
+		return err
+	}
+
+	if len(additive.ProductSizeAdditives) > 0 || len(additive.StoreAdditives) > 0 {
+		return types.ErrAdditiveCategoryIsInUse
+	}
+
+	return nil
 }
 
 func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error) {
@@ -311,7 +397,7 @@ func (r *additiveRepository) GetAdditiveCategoryByID(categoryID uint) (*data.Add
 	err := r.db.Preload("Additives").First(&category, categoryID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, moduleErrors.ErrNotFound
+			return nil, types.ErrAdditiveCategoryNotFound
 		}
 		return nil, err
 	}

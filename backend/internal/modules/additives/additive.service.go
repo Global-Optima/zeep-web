@@ -7,6 +7,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -29,16 +31,18 @@ type AdditiveService interface {
 }
 
 type additiveService struct {
-	repo        AdditiveRepository
-	storageRepo storage.StorageRepository
-	logger      *zap.SugaredLogger
+	repo                AdditiveRepository
+	storageRepo         storage.StorageRepository
+	notificationService notifications.NotificationService
+	logger              *zap.SugaredLogger
 }
 
-func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepository, logger *zap.SugaredLogger) AdditiveService {
+func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) AdditiveService {
 	return &additiveService{
-		repo:        repo,
-		storageRepo: storageRepo,
-		logger:      logger,
+		repo:                repo,
+		storageRepo:         storageRepo,
+		notificationService: notificationService,
+		logger:              logger,
 	}
 }
 
@@ -144,7 +148,7 @@ func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]typ
 		return nil, wrappedError
 	}
 
-	var additiveDTOs []types.AdditiveDTO
+	additiveDTOs := []types.AdditiveDTO{}
 	for _, additive := range additives {
 		additiveDTOs = append(additiveDTOs, *types.ConvertToAdditiveDTO(&additive))
 	}
@@ -190,84 +194,98 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 			s.logger.Error(wrappedErr)
 			return 0, wrappedErr
 		}
-		additive.ImageURL = data.StorageImageKey(imageUrl)
+		imageKey := data.StorageImageKey(imageUrl)
+		additive.ImageKey = &imageKey
 	}
 
 	id, err := s.repo.CreateAdditive(additive)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to add additive", err)
 		s.logger.Error(wrappedErr)
-		go func() {
-			if additive.ImageURL.ToString() != "" {
-				err := s.storageRepo.DeleteImageFiles(additive.ImageURL)
+
+		if additive.ImageKey != nil && additive.ImageKey.ToString() != "" {
+			go func() {
+				err := s.storageRepo.DeleteImageFiles(*additive.ImageKey)
 				if err != nil {
 					wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
 					s.logger.Error(wrappedErr)
 				}
-			}
-		}()
+			}()
+		}
+
 		return 0, wrappedErr
+	}
+
+	notificationDetails := &details.NewAdditiveDetails{
+		BaseNotificationDetails: details.BaseNotificationDetails{
+			ID: additive.ID,
+		},
+		AdditiveName: additive.Name,
+	}
+	err = s.notificationService.NotifyNewAdditiveAdded(notificationDetails)
+	if err != nil {
+		return 0, fmt.Errorf("failed to notify new additive added: %w", err)
 	}
 
 	return id, nil
 }
 
 func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) (*types.AdditiveDTO, error) {
-	var (
-		oldAdditive *data.Additive
-		err         error
-	)
+	additive, err := s.repo.GetAdditiveByID(additiveID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to check additive: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+	oldImageKey := additive.ImageKey
 
-	updateModels, err := types.ConvertToUpdatedAdditiveModels(dto)
+	updateModels, err := types.ConvertToUpdatedAdditiveModels(dto, additive)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to convert updated additive models: %w", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	oldAdditive, err = s.repo.GetAdditiveByID(additiveID)
-	if err != nil {
-		wrappedErr := fmt.Errorf("failed to check additive: %w", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
+	if dto.DeleteImage && dto.Image == nil {
+		updateModels.Additive.ImageKey = nil
 	}
 
 	if dto.Image != nil {
-		imageUrl, _, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, nil)
+		imageKey, _, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, nil)
 		if err != nil {
 			wrappedErr := fmt.Errorf("failed to upload image: %w", err)
 			s.logger.Error(wrappedErr)
 			return nil, wrappedErr
 		}
-		updateModels.Additive.ImageURL = data.StorageImageKey(imageUrl)
+		newImageKey := data.StorageImageKey(imageKey)
+		updateModels.Additive.ImageKey = &newImageKey
 	}
 
-	if err := s.repo.UpdateAdditiveWithAssociations(additiveID, updateModels); err != nil {
+	err = s.repo.UpdateAdditiveWithAssociations(additiveID, updateModels)
+	if err != nil {
 		wrappedErr := utils.WrapError("failed to update additive with associations", err)
 		s.logger.Error(wrappedErr)
-		go func() {
-			if updateModels.Additive.ImageURL.ToString() != "" {
-				err := s.storageRepo.DeleteImageFiles(updateModels.Additive.ImageURL)
+
+		if updateModels.Additive.ImageKey != nil && updateModels.Additive.ImageKey != oldImageKey {
+			go func() {
+				err := s.storageRepo.DeleteImageFiles(*updateModels.Additive.ImageKey)
 				if err != nil {
 					wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
 					s.logger.Error(wrappedErr)
 				}
-			}
-		}()
+			}()
+		}
 		return nil, err
 	}
 
-	if dto.Image != nil {
-		go func() {
-			err := s.storageRepo.MarkImagesAsDeleted(oldAdditive.ImageURL)
-			if err != nil {
-				wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
-				s.logger.Error(wrappedErr)
-			}
-		}()
+	if oldImageKey != nil && oldImageKey != updateModels.Additive.ImageKey {
+		if err := s.storageRepo.MarkImagesAsDeleted(*oldImageKey); err != nil {
+			wrappedErr := fmt.Errorf("failed to delete image files: %w", err)
+			s.logger.Error(wrappedErr)
+		}
 	}
 
-	oldAdditiveDto := types.ConvertToAdditiveDTO(oldAdditive)
+	oldAdditiveDto := types.ConvertToAdditiveDTO(additive)
 
 	return oldAdditiveDto, nil
 }
@@ -281,10 +299,12 @@ func (s *additiveService) DeleteAdditive(additiveID uint) error {
 	}
 
 	go func() {
-		err := s.storageRepo.MarkImagesAsDeleted(additive.ImageURL)
-		if err != nil {
-			wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
-			s.logger.Error(wrappedErr)
+		if additive.ImageKey != nil {
+			err := s.storageRepo.MarkImagesAsDeleted(*additive.ImageKey)
+			if err != nil {
+				wrappedErr := fmt.Errorf("failed to mark images as deleted: %w", err)
+				s.logger.Error(wrappedErr)
+			}
 		}
 	}()
 
