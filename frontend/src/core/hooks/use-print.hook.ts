@@ -1,6 +1,11 @@
+import isMobile from 'is-mobile'
 import printJS from 'print-js'
 
 export interface PrintOptions {
+	/** If true, printing is allowed only on desktop devices.
+	 *  On mobile/tablet, the print job will be skipped.
+	 */
+	desktopOnly?: boolean
 	/** Invoked before printing each PDF. */
 	beforePrint?: () => void
 	/** Invoked after printing each PDF. */
@@ -8,7 +13,7 @@ export interface PrintOptions {
 }
 
 interface PrintJob {
-	blobs: Blob[] // 1 or more PDF Blobs
+	blobs: Blob[] // one or more PDF Blobs
 	options?: PrintOptions
 	resolve: () => void // For resolving the .print(...) Promise
 	reject: (err: unknown) => void
@@ -34,6 +39,12 @@ export function usePrinter() {
 	 * when the entire job (all blobs) has finished printing.
 	 */
 	const print = async (content: Blob | Blob[], options?: PrintOptions): Promise<void> => {
+		// If desktopOnly flag is set and the device is mobile, skip printing.
+		if (options?.desktopOnly && isMobile({ tablet: true })) {
+			console.warn('[usePrinter] Printing skipped: Desktop-only mode active on a mobile device.')
+			return Promise.resolve()
+		}
+
 		// Normalize to an array of Blobs
 		const blobs = Array.isArray(content) ? content : [content]
 

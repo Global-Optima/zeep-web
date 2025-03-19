@@ -29,6 +29,7 @@ const createMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-regions'] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Регион успешно создан.',
 		})
 		router.back()

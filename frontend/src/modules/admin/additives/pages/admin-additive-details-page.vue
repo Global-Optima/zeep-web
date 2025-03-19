@@ -50,6 +50,7 @@ const {mutate, isPending} = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-additive-details', additiveId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные топпинга успешно обновлены.',
 		})
 	},

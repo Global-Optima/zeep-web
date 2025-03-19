@@ -110,11 +110,6 @@ function submitForm() {
 
 // Cancel Form
 function cancelForm() {
-  toast({
-    title: 'Отмена',
-    description: 'Действие отменено.',
-    variant: 'default',
-  })
   emit('cancel')
 }
 </script>

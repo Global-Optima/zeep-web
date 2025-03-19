@@ -251,11 +251,6 @@ function onSubmit() {
 
 // Cancel
 function onCancel() {
-	toast({
-		title: 'Отмена',
-		description: 'Изменения отменены.',
-		variant: 'default',
-	})
 	emit('onCancel')
 }
 </script>

@@ -176,4 +176,6 @@ export interface OrdersTimeZoneFilter {
 	timezone?: string
 	timezoneOffset?: number
 	timeGapMinutes?: number
+	includeYesterdayOrders?: boolean
+	statuses?: OrderStatus[]
 }

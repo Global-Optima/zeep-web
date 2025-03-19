@@ -152,6 +152,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/core/components/ui/select'
+import { loginPasswordValidationSchema } from '@/core/validators/password.validator'
 import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import { warehouseService } from '@/modules/admin/warehouses/services/warehouse.service'
 import { authService } from '@/modules/auth/services/auth.service'
@@ -169,7 +170,7 @@ const formSchema = toTypedSchema(
   z.object({
     selectedWarehouseId: z.coerce.number().min(1, {message: "Пожалуйста, выберите склад"}),
     selectedEmployeeEmail: z.string().min(1, {message: "Пожалуйста, выберите сотрудника"}),
-    password: z.string().min(2, "Пароль должен содержать не менее 2 символов"),
+    password: loginPasswordValidationSchema,
   })
 )
 

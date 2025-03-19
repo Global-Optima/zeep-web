@@ -45,6 +45,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-ingredient-categories-details', categoryId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные категории ингредиентов успешно обновлены.',
 		})
 	},

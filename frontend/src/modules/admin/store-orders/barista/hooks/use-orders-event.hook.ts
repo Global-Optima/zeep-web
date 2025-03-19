@@ -77,7 +77,7 @@ export function useOrderEvents(
 	// WebSocket Setup
 	// ----------------------------------
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-	const url = `${wsUrl}/orders/ws?timezone=${timezone}&timeGapMinutes=${localFilter.value.timeGapMinutes ?? 60}`
+	const url = `${wsUrl}/orders/ws?timezone=${timezone}&timeGapMinutes=${localFilter.value.timeGapMinutes ?? 60}&includeYesterdayOrders=true`
 
 	const {
 		status: socketStatus,
@@ -194,7 +194,7 @@ export function useOrderEvents(
 
 		try {
 			const suborderQRs = reactiveOrder.subOrders.map(s => generateSubOrderQR(s))
-			printQR(suborderQRs, { labelHeightMm: height, labelWidthMm: width })
+			printQR(suborderQRs, { labelHeightMm: height, labelWidthMm: width, desktopOnly: true })
 		} catch (err) {
 			console.error('Ошибка при печати QR-кода:', err)
 			toast({

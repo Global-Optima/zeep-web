@@ -55,6 +55,7 @@
 					<div class="flex justify-end mt-4">
 						<Button
 							variant="outline"
+							type="button"
 							class="mr-2"
 							@click="cancelForm"
 						>
@@ -205,11 +206,6 @@ function submitForm() {
 }
 
 function cancelForm() {
-	toast({
-		title: 'Отмена',
-		description: 'Изменения отменены.',
-		variant: 'default',
-	})
 	emit('cancel')
 }
 </script>

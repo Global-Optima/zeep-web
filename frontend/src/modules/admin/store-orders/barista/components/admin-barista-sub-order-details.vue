@@ -12,6 +12,7 @@
 				<Button
 					size="icon"
 					variant="ghost"
+					type="button"
 					class="top-6 right-6 absolute"
 					:disabled="disabledCompleteButton"
 					@click="printQrCode"
@@ -104,7 +105,7 @@ import { computed } from 'vue'
  * - suborder: a single SuborderDTO or null (if none is selected).
  *   This suborder is assumed to be "deeply reactive" from the parent.
  */
-const props = defineProps<{
+const {suborder} = defineProps<{
   suborder: SuborderDTO | null;
 }>()
 
@@ -127,8 +128,8 @@ function toggleSuborderStatus(s: SuborderDTO) {
  * Dynamically compute the button label.
  */
 const completeButtonText = computed(() => {
-  if (!props.suborder) return 'Обновить статус'
-  switch (props.suborder.status) {
+  if (!suborder) return 'Обновить статус'
+  switch (suborder.status) {
     case SubOrderStatus.PENDING:
       return 'Начать приготовление'
     case SubOrderStatus.PREPARING:
@@ -144,7 +145,7 @@ const completeButtonText = computed(() => {
  * Disable the complete button if the suborder is already completed.
  */
 const disabledCompleteButton = computed(() =>
-  props.suborder?.status === SubOrderStatus.COMPLETED
+  suborder?.status === SubOrderStatus.COMPLETED
 )
 
 /**
@@ -153,13 +154,15 @@ const disabledCompleteButton = computed(() =>
 const { printQR } = useQRPrinter()
 
 async function printQrCode() {
-  if (props.suborder) {
+  if (suborder) {
     const {width, height} = getSavedBaristaQRSettings()
 
-    const qr = generateSubOrderQR(props.suborder)
+    const qr = generateSubOrderQR(suborder)
+
     await printQR(qr, {
       labelWidthMm: width,
-      labelHeightMm: height
+      labelHeightMm: height,
+      desktopOnly: true
     })
   }
 }

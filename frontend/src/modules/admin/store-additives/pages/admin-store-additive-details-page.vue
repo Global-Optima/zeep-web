@@ -50,6 +50,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-store-additive-details', storeAdditiveId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные добавки кафе успешно обновлены.',
 		})
 	},

@@ -39,10 +39,10 @@
 
 <script setup lang="ts">
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminProductDetailsForm from '@/modules/admin/products/components/details/admin-product-details-form.vue'
@@ -79,6 +79,7 @@ const {mutate, isPending} = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-product-details', productId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные товара успешно обновлены.',
 		})
 	},

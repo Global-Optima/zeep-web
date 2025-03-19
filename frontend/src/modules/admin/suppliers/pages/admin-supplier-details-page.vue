@@ -87,6 +87,7 @@ const { mutate: updateSupplier } = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-supplier-materials', Number(supplierId)] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Данные поставщика успешно обновлены.',
 		})
 	},
@@ -113,6 +114,7 @@ const { mutate: updateSupplierMaterials } = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-supplier-details', supplierId] })
 		toast({
 			title: 'Успех!',
+variant: 'success',
 			description: 'Материалы поставщика успешно обновлены.',
 		})
 	},
@@ -156,7 +158,6 @@ function onUpdateSupplierMaterials(data: UpdateSupplierMaterialDTO[]) {
 }
 
 function onCancel() {
-  toast({ title: 'Отмена', description: 'Действие отменено.', variant: 'default' })
 	router.back()
 }
 </script>

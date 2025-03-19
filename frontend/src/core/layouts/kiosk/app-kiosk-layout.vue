@@ -63,9 +63,7 @@ onMounted(() => {
 </script>
 
 <template>
-	<div
-		class="relative bg-slate-100 w-full min-h-screen no-scrollbar"
-	>
+	<div class="relative bg-slate-100 w-full min-h-screen no-scrollbar">
 		<!-- If offline, show overlay -->
 		<div
 			v-if="!isOnline"

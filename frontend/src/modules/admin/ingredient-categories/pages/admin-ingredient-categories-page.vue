@@ -12,7 +12,7 @@
 				<!-- No Data Message -->
 				<p
 					v-if="!productCategoriesResponse || productCategoriesResponse.data.length === 0"
-					class="text-muted-foreground text-center"
+					class="text-muted-foreground"
 				>
 					Категории ингредиентов не найдены
 				</p>

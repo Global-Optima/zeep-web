@@ -3,7 +3,6 @@ import { Separator } from '@/core/components/ui/separator'
 import { ArrowLeft, ChevronRight } from 'lucide-vue-next'
 import { ref } from 'vue'
 
-import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
 import type { EmployeeLoginDTO } from '@/modules/admin/employees/models/employees.models'
 import AdminLoginForm from '@/modules/auth/components/login/admin-login-form.vue'
@@ -15,7 +14,7 @@ import { authService } from '@/modules/auth/services/auth.service'
 import { useMutation } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
 
-import { type AxiosLocalizedError, useAxiosLocaleToast } from "@/core/hooks/use-axios-locale-toast.hooks";
+import { type AxiosLocalizedError, useAxiosLocaleToast } from "@/core/hooks/use-axios-locale-toast.hooks"
 
 // Role selection state
 const selectedRole = ref<string | null>(null)
@@ -39,7 +38,6 @@ const roles = [
 ]
 
 const router = useRouter()
-const { toast } = useToast()
 const { toastLocalizedError } = useAxiosLocaleToast()
 
 const { mutate: loginEmployee } = useMutation({
