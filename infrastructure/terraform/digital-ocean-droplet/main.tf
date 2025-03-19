@@ -142,6 +142,8 @@ resource "digitalocean_loadbalancer" "lb" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.main.id
 
+  redirect_http_to_https = true
+
   # Redirect HTTP to HTTPS
   forwarding_rule {
     entry_port      = 80
