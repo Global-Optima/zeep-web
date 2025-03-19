@@ -1,0 +1,69 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies (Bun)
+        run: bun install --frozen-lockfile
+
+      - name: Lint Code
+        run: bun run lint
+
+      - name: Build Frontend
+        run: bun run build
+
+      - name: Run Unit Tests
+        run: bun run test:unit
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.23'
+
+      - name: Install Dependencies
+        run: go mod tidy
+
+      - name: Build Backend
+        run: go build -o server cmd/main.go
+
+  deploy:
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: staging
+      cancel-in-progress: true
+    steps:
+      - name: SSH into VPS and Deploy
+        uses: D3rHase/ssh-command-action@v0.2.2
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          user: ${{ secrets.STAGING_SSH_USERNAME }}
+          private_key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          command: |
+            ~/deploy.sh
