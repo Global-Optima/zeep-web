@@ -9,19 +9,18 @@ import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/
 import { toTypedSchema } from '@vee-validate/zod'
 import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import { defineAsyncComponent, ref, useTemplateRef} from 'vue'
+import { defineAsyncComponent, ref, useTemplateRef, defineExpose } from 'vue'
 import * as z from 'zod'
-import { watch } from 'vue'
 
 // Lazy-load the dialog component
 const AdminSelectProductCategory = defineAsyncComponent(() =>
   import('@/modules/admin/product-categories/components/admin-select-product-category.vue')
 );
 
-const { productDetails, readonly, isSubmitting } = defineProps<{
+const {productDetails, readonly, isSubmitting} = defineProps<{
   productDetails: ProductDetailsDTO;
   readonly?: boolean;
-  isSubmitting: boolean;
+  isSubmitting: boolean
 }>();
 
 const emits = defineEmits<{
@@ -55,8 +54,7 @@ const updateProductSchema = toTypedSchema(
   })
 );
 
-// Initialize Form
-const { handleSubmit, setFieldValue, resetForm } = useForm({
+const { handleSubmit, setFieldValue, resetField } = useForm({
   validationSchema: updateProductSchema,
   initialValues: {
     name: productDetails.name,
@@ -68,33 +66,6 @@ const { handleSubmit, setFieldValue, resetForm } = useForm({
 const openCategoryDialog = ref(false);
 const selectedCategory = ref<ProductCategoryDTO | null>(productDetails.category);
 
-const previewImage = ref<string | null>(productDetails.imageUrl || null);
-const previewVideo = ref<string | null>(productDetails.videoUrl || null);
-const deleteImage = ref<boolean>(false);
-const deleteVideo = ref<boolean>(false);
-
-watch(() => productDetails, (newDetails) => {
-  if (newDetails) {
-    // Reset form values when product details change
-    resetForm({
-      values: {
-        name: newDetails.name,
-        description: newDetails.description,
-        categoryId: newDetails.category.id,
-      },
-    });
-
-    // Ensure the category is updated
-    selectedCategory.value = newDetails.category;
-
-    // Only update images if they were not manually changed by the user
-    if (!deleteImage.value) previewImage.value = newDetails.imageUrl || null;
-    if (!deleteVideo.value) previewVideo.value = newDetails.videoUrl || null;
-    deleteImage.value = false
-    deleteVideo.value = false
-  }
-}, { deep: true, immediate: true });
-
 function selectCategory(category: ProductCategoryDTO) {
   if (!readonly) {
     selectedCategory.value = category;
@@ -103,13 +74,18 @@ function selectCategory(category: ProductCategoryDTO) {
   }
 }
 
+const previewImage = ref<string | null>(productDetails.imageUrl || null);
+const previewVideo = ref<string | null>(productDetails.videoUrl || null);
+const deleteImage = ref<boolean>(false)
+const deleteVideo = ref<boolean>(false)
+
 const handleImageUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files?.length) {
     const file = target.files[0];
     previewImage.value = URL.createObjectURL(file);
     setFieldValue('image', file);
-    deleteImage.value = true;
+    deleteImage.value = true
   }
 };
 
@@ -119,7 +95,7 @@ const handleVideoUpload = (event: Event) => {
     const file = target.files[0];
     previewVideo.value = URL.createObjectURL(file);
     setFieldValue('video', file);
-    deleteVideo.value = true;
+    deleteVideo.value = true
   }
 };
 
@@ -137,22 +113,31 @@ const onSubmit = handleSubmit((values) => {
   emits('onSubmit', dto);
 });
 
-const onDeleteImage = () => {
-  previewImage.value = null;
-  setFieldValue('image', undefined);
-  deleteImage.value = true;
+const resetFormValues = () => {
+  resetField('image')
+  resetField('video')
+  deleteImage.value = false
+  deleteVideo.value = false;
 };
 
+defineExpose({ resetFormValues });
+
+const onDeleteImage = () => {
+  previewImage.value = null
+  setFieldValue('image', undefined)
+  deleteImage.value = true
+}
+
 const onDeleteVideo = () => {
-  previewVideo.value = null;
-  setFieldValue('video', undefined);
-  deleteVideo.value = true;
-};
+  previewVideo.value = null
+  setFieldValue('video', undefined)
+  deleteVideo.value = true
+}
 
 const onCancel = () => emits('onCancel');
 
-const imageInputRef = useTemplateRef('imageInputRef');
-const videoInputRef = useTemplateRef('videoInputRef');
+const imageInputRef = useTemplateRef("imageInputRef");
+const videoInputRef = useTemplateRef("videoInputRef");
 const triggerImageInput = () => imageInputRef.value?.click();
 const triggerVideoInput = () => videoInputRef.value?.click();
 </script>

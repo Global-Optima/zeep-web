@@ -3,6 +3,7 @@
 
 	<AdminAdditiveDetailsForm
 		v-else
+    ref="formRef"
 		:additive="additiveDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
@@ -20,6 +21,7 @@ import { additivesService } from '@/modules/admin/additives/services/additives.s
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
+import {useTemplateRef} from "vue";
 
 const router = useRouter()
 const queryClient = useQueryClient()
@@ -36,6 +38,8 @@ const { data: additiveDetails } = useQuery({
 	enabled: !isNaN(Number(additiveId)),
 })
 
+const formRef = useTemplateRef<InstanceType<typeof AdminAdditiveDetailsForm>>('formRef')
+
 const {mutate, isPending} = useMutation({
 	mutationFn: ({ id, dto }: { id: number; dto: UpdateAdditiveDTO }) =>
 		additivesService.updateAdditive(id, dto),
@@ -48,9 +52,12 @@ const {mutate, isPending} = useMutation({
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-additives'] })
 		queryClient.invalidateQueries({ queryKey: ['admin-additive-details', additiveId] })
+
+    formRef.value?.resetFormValues();
+
 		toast({
 			title: 'Успех!',
-variant: 'success',
+      variant: 'success',
 			description: 'Данные топпинга успешно обновлены.',
 		})
 	},

@@ -20,6 +20,7 @@
 			</TabsList>
 			<TabsContent value="details">
 				<AdminProductDetailsForm
+          ref="formRef"
 					:product-details="productDetails"
 					@on-submit="onUpdate"
 					@on-cancel="onCancel"
@@ -51,6 +52,7 @@ import type { UpdateProductDTO } from '@/modules/kiosk/products/models/product.m
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
+import {ref, useTemplateRef} from "vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -65,6 +67,8 @@ const { data: productDetails } = useQuery({
 	enabled: !isNaN(Number(productId)),
 })
 
+const formRef = useTemplateRef<InstanceType<typeof AdminProductDetailsForm>>('formRef')
+
 const {mutate, isPending} = useMutation({
 	mutationFn: ({ id, dto }: { id: number; dto: UpdateProductDTO }) =>
 		productsService.updateProduct(id, dto),
@@ -77,7 +81,10 @@ const {mutate, isPending} = useMutation({
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-products'] })
 		queryClient.invalidateQueries({ queryKey: ['admin-product-details', productId] })
-		toast({
+
+    formRef.value?.resetFormValues();
+
+    toast({
 			title: 'Успех!',
 variant: 'success',
 			description: 'Данные товара успешно обновлены.',
