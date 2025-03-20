@@ -1,6 +1,7 @@
 <template>
 	<div>
-		<p v-if="!productDetails">Товар не найден</p>
+    <PageLoader v-if="isLoading"/>
+		<p v-else-if="!productDetails">Товар не найден</p>
 
 		<Tabs
 			v-else
@@ -52,7 +53,8 @@ import type { UpdateProductDTO } from '@/modules/kiosk/products/models/product.m
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
-import {ref, useTemplateRef} from "vue";
+import {useTemplateRef} from "vue";
+import PageLoader from "@/core/components/page-loader/PageLoader.vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -61,7 +63,7 @@ const { toast } = useToast()
 
 const productId = route.params.id as string
 
-const { data: productDetails } = useQuery({
+const { data: productDetails, isLoading } = useQuery({
 	queryKey: ['admin-product-details', productId],
 	queryFn: () => productsService.getProductDetails(Number(productId)),
 	enabled: !isNaN(Number(productId)),
