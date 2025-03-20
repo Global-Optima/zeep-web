@@ -71,6 +71,12 @@ const handleProceed = async () => {
   router.push({ name: getRouteName("KIOSK_CART_PAYMENT"), params: { orderId: order.id } })
 }
 
+const onBackClick = () => {
+  router.push({name: getRouteName("KIOSK_HOME")})
+  cartStore.toggleModal()
+}
+
+
 const openUpdateDialog = (item: CartItem) => (selectedCartItem.value = item)
 const closeUpdateDialog = () => (selectedCartItem.value = null)
 const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditiveCategoryItemDTO[]) => {
@@ -83,7 +89,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 
 <template>
 	<Dialog
-		:open="showCartItems"
+		:open="cartStore.isModalOpen"
 		@update:open="cartStore.toggleModal"
 	>
 		<DialogContent
@@ -94,12 +100,12 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 			<div class="flex flex-col items-center space-y-6 h-full">
 				<ShoppingBasket class="size-16 text-gray-400" />
 				<h2 class="font-semibold text-slate-800 text-3xl">Ваша корзина пуста</h2>
-				<p class="text-slate-500 text-xl">
+				<p class="text-slate-500 text-xl text-center">
 					Добавьте товары из меню, чтобы начать оформление заказа
 				</p>
 				<Button
 					class="!mt-8 px-6 h-14 text-xl"
-					@click="router.push({ name: getRouteName('KIOSK_HOME') })"
+					@click="onBackClick"
 				>
 					Вернуться к меню
 				</Button>
