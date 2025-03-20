@@ -1,8 +1,10 @@
 <template>
-	<p v-if="!additiveDetails">Топпинг не найден</p>
+  <PageLoader v-if="isLoading"/>
+	<p v-else-if="!additiveDetails">Топпинг не найден</p>
 
 	<AdminAdditiveDetailsForm
 		v-else
+    ref="formRef"
 		:additive="additiveDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
@@ -20,6 +22,8 @@ import { additivesService } from '@/modules/admin/additives/services/additives.s
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
+import {useTemplateRef} from "vue";
+import PageLoader from "@/core/components/page-loader/PageLoader.vue";
 
 const router = useRouter()
 const queryClient = useQueryClient()
@@ -30,11 +34,13 @@ const canUpdateAdditives = useHasRole([EmployeeRole.ADMIN])
 
 const additiveId = route.params.id as string
 
-const { data: additiveDetails } = useQuery({
+const { data: additiveDetails, isLoading } = useQuery({
 	queryKey: ['admin-additive-details', additiveId],
 	queryFn: () => additivesService.getAdditiveById(Number(additiveId)),
 	enabled: !isNaN(Number(additiveId)),
 })
+
+const formRef = useTemplateRef<InstanceType<typeof AdminAdditiveDetailsForm>>('formRef')
 
 const {mutate, isPending} = useMutation({
 	mutationFn: ({ id, dto }: { id: number; dto: UpdateAdditiveDTO }) =>
@@ -48,9 +54,12 @@ const {mutate, isPending} = useMutation({
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-additives'] })
 		queryClient.invalidateQueries({ queryKey: ['admin-additive-details', additiveId] })
+
+    formRef.value?.resetFormValues();
+
 		toast({
 			title: 'Успех!',
-variant: 'success',
+      variant: 'success',
 			description: 'Данные топпинга успешно обновлены.',
 		})
 	},
