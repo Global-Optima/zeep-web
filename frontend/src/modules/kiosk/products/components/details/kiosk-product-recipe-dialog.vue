@@ -13,6 +13,9 @@ import { computed } from 'vue'
 
 const {nutrition} = defineProps<{nutrition: ProductTotalNutrition}>()
 
+const showIngredients = computed(() => nutrition.ingredients.length > 0)
+const showAllergens = computed(() => nutrition.allergenIngredients.length > 0)
+
 const ingredientsRecipe = computed(() => nutrition.ingredients.join(", "))
 const allergensList = computed(() => nutrition.allergenIngredients.join(", "))
 </script>
@@ -61,7 +64,7 @@ const allergensList = computed(() => nutrition.allergenIngredients.join(", "))
 					</div>
 				</div>
 
-				<div>
+				<div v-if="showIngredients">
 					<p class="font-semibold text-xl">Состав</p>
 
 					<p class="mt-1 text-gray-500 text-lg">
@@ -69,7 +72,7 @@ const allergensList = computed(() => nutrition.allergenIngredients.join(", "))
 					</p>
 				</div>
 
-				<div>
+				<div v-if="showAllergens">
 					<p class="font-semibold text-xl">Аллергены</p>
 
 					<p class="mt-1 text-gray-500 text-lg">
