@@ -95,6 +95,7 @@ jobs:
           REDIS_PORT=6379
           REDIS_DB=0
           REDIS_PASSWORD=
+          REDIS_ENABLE_TLS=false
 
           DEFAULT_PAGE=1
           DEFAULT_PAGE_SIZE=10
