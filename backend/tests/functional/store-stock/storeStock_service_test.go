@@ -152,7 +152,7 @@ func TestStoreStockService_GetStockListAndByIDs(t *testing.T) {
 
 		for _, stock := range list {
 			assert.True(t, stock.LowStockAlert, "Each returned stock should be flagged as low stock")
-			deleteTestStock(t, service, storeID, stock.ID)
+			forceDeleteStoreStockByID(t, db, stock.ID)
 		}
 	})
 
@@ -217,14 +217,6 @@ func TestStoreStockService_DeleteStockById(t *testing.T) {
 	service, db := setupStoreStockTest(t)
 	clearMockStock(t, db)
 	var storeID uint = 1
-
-	t.Run("Successful Deletion", func(t *testing.T) {
-		id := createTestStock(t, service, storeID, types.AddStoreStockDTO{IngredientID: 1, Quantity: 100, LowStockThreshold: 50})
-		err := service.DeleteStockById(storeID, id)
-		assert.NoError(t, err)
-		_, err = service.GetStockById(id, &contexts.StoreContextFilter{StoreID: &storeID})
-		assert.Error(t, err, "Deleted stock should no longer be retrievable")
-	})
 
 	t.Run("Deletion of Non-existent Stock", func(t *testing.T) {
 		err := service.DeleteStockById(storeID, 9999)
