@@ -251,6 +251,72 @@ func truncateTables(db *gorm.DB) error {
 	return nil
 }
 
+func ResetTestDatabase(db *gorm.DB) error {
+	// Manual safe truncate order to avoid deadlocks
+	tables := []string{
+		"suborder_additives",
+		"suborders",
+		"orders",
+		"store_product_sizes",
+		"store_products",
+		"store_additives",
+		"product_size_additives",
+		"product_size_ingredients",
+		"additive_ingredients",
+		"ingredients",
+		"additives",
+		"recipe_steps",
+		"products",
+		"product_categories",
+		"units",
+		"store_stocks",
+		"employee_tokens",
+		"employee_work_tracks",
+		"employee_workdays",
+		"employee_notifications",
+		"employee_notification_recipients",
+		"store_employees",
+		"warehouse_employees",
+		"region_employees",
+		"admin_employees",
+		"franchisee_employees",
+		"employees",
+		"customers",
+		"customer_addresses",
+		"verification_codes",
+		"referrals",
+		"bonuses",
+		"stock_request_ingredients",
+		"stock_requests",
+		"warehouse_stocks",
+		"supplier_warehouse_delivery_materials",
+		"supplier_warehouse_deliveries",
+		"supplier_materials",
+		"supplier_prices",
+		"suppliers",
+		"stock_materials",
+		"stock_material_categories",
+		"warehouses",
+		"stores",
+		"franchisees",
+		"regions",
+		"facility_addresses",
+	}
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Exec("SET session_replication_role = 'replica'").Error; err != nil {
+			return err
+		}
+		if err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", strings.Join(tables, ", "))).Error; err != nil {
+			return fmt.Errorf("failed to truncate tables: %w", err)
+		}
+		if err := tx.Exec("SET session_replication_role = 'origin'").Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func loadMockData(db *gorm.DB) {
 	_, b, _, _ := runtime.Caller(0)
 	baseDir := filepath.Join(filepath.Dir(b), "../../..")
