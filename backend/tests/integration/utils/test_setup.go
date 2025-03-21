@@ -55,8 +55,8 @@ func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	redis := setupRedis(cfg, t)
 	router := setupRouter(dbHandler, redis)
 
-	TruncateAndLoadMockData(dbHandler.DB)
-	log.Println("Mock data loaded successfully")
+	// TruncateAndLoadMockData(dbHandler.DB)
+	// log.Println("Mock data loaded successfully")
 
 	return &TestEnvironment{
 		Router: router,
@@ -221,7 +221,7 @@ func setupRouter(dbHandler *database.DBHandler, redis *database.RedisClient) *gi
 }
 
 func TruncateAndLoadMockData(db *gorm.DB) {
-	if err := truncateTables(db); err != nil {
+	if err := ResetTestDatabase(db); err != nil {
 		log.Fatalf("Failed to truncate tables: %v", err)
 	}
 	loadMockData(db)
@@ -256,6 +256,7 @@ func ResetTestDatabase(db *gorm.DB) error {
 	tables := []string{
 		"suborder_additives",
 		"suborders",
+		"transactions",
 		"orders",
 		"store_product_sizes",
 		"store_products",
@@ -268,34 +269,38 @@ func ResetTestDatabase(db *gorm.DB) error {
 		"recipe_steps",
 		"products",
 		"product_categories",
+		"product_sizes",
 		"units",
 		"store_stocks",
+		"employee_notification_recipients",
+		"employee_notifications",
 		"employee_tokens",
 		"employee_work_tracks",
 		"employee_workdays",
-		"employee_notifications",
-		"employee_notification_recipients",
+		"employee_audits",
 		"store_employees",
 		"warehouse_employees",
 		"region_employees",
 		"admin_employees",
 		"franchisee_employees",
 		"employees",
-		"customers",
-		"customer_addresses",
-		"verification_codes",
 		"referrals",
 		"bonuses",
+		"verification_codes",
+		"customer_addresses",
+		"customers",
 		"stock_request_ingredients",
 		"stock_requests",
 		"warehouse_stocks",
 		"supplier_warehouse_delivery_materials",
 		"supplier_warehouse_deliveries",
-		"supplier_materials",
 		"supplier_prices",
+		"supplier_materials",
 		"suppliers",
 		"stock_materials",
 		"stock_material_categories",
+		"ingredient_categories",
+		"additive_categories",
 		"warehouses",
 		"stores",
 		"franchisees",
