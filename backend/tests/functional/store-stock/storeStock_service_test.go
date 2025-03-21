@@ -42,11 +42,6 @@ func createTestStock(t *testing.T, service storeStocks.StoreStockService, storeI
 	return id
 }
 
-func deleteTestStock(t *testing.T, service storeStocks.StoreStockService, storeID, stockID uint) {
-	err := service.DeleteStockById(storeID, stockID)
-	assert.NoError(t, err, "DeleteStockById should succeed")
-}
-
 func forceDeleteStoreStockByID(t *testing.T, db *gorm.DB, id uint) {
 	if err := db.Exec("DELETE FROM store_stocks WHERE id = ?", id).Error; err != nil {
 		t.Fatalf("❌ failed to force delete store stock ID %d: %v", id, err)
