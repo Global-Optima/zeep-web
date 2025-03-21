@@ -274,7 +274,7 @@ func ResetTestDatabase(db *gorm.DB) error {
 		"store_stocks",
 		"employee_notification_recipients",
 		"employee_notifications",
-		"employee_tokens",
+		// "employee_tokens",
 		"employee_work_tracks",
 		"employee_workdays",
 		"employee_audits",
