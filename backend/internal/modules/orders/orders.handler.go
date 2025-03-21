@@ -80,15 +80,14 @@ func (h *OrderHandler) GetAllBaristaOrders(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetSubOrders(c *gin.Context) {
-	orderIDStr := c.Param("orderId")
+	orderID, err := utils.ParseParam(c, "orderId")
 
-	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
 	if err != nil || orderID == 0 {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
-	subOrders, err := h.service.GetSubOrders(uint(orderID))
+	subOrders, err := h.service.GetSubOrders(orderID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to fetch suborders")
 		return
@@ -179,14 +178,13 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
-	suborderIDParam := c.Param("subOrderId")
-	suborderID, err := strconv.ParseUint(suborderIDParam, 10, 64)
+	suborderID, err := utils.ParseParam(c, "subOrderId")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
-	barcodeImage, err := h.service.GenerateSuborderBarcodePDF(uint(suborderID))
+	barcodeImage, err := h.service.GenerateSuborderBarcodePDF(suborderID)
 	if err != nil {
 		utils.SendInternalServerError(c, err.Error())
 		return
@@ -213,7 +211,7 @@ func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {
 		return
 	}
 
-	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	order, err := h.service.GetOrderBySubOrder(subOrderID)
 	if err != nil {
 		errorMessage := fmt.Sprintf("failed to get order: %v", err)
 		utils.SendInternalServerError(c, errorMessage)
@@ -303,7 +301,7 @@ func (h *OrderHandler) ServeWS(c *gin.Context) {
 }
 
 func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
-	orderID, err := strconv.ParseUint(c.Param("orderId"), 10, 64)
+	orderID, err := utils.ParseParam(c, "orderId")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
@@ -315,7 +313,7 @@ func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 		return
 	}
 
-	orderDetails, err := h.service.GetOrderDetails(uint(orderID), filter)
+	orderDetails, err := h.service.GetOrderDetails(orderID, filter)
 	if err != nil {
 		utils.SendInternalServerError(c, "Failed to fetch order details")
 		return
