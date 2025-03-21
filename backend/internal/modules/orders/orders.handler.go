@@ -380,7 +380,7 @@ func (h *OrderHandler) AcceptSubOrder(c *gin.Context) {
 	}
 
 	// Optionally fetch the updated order to broadcast the new status.
-	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	order, err := h.service.GetOrderBySubOrder(subOrderID)
 	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("failed to fetch updated order: %v", err))
 		return
@@ -403,7 +403,7 @@ func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 		return
 	}
 
-	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
+	order, err := h.service.GetOrderBySubOrder(subOrderID)
 	if err == nil {
 		BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 	}
