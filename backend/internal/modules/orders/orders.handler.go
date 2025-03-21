@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -159,7 +158,7 @@ func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
 		return
 	}
 
-	err := h.service.CompleteSubOrder(orderID, uint(subOrderID))
+	err := h.service.CompleteSubOrder(orderID, subOrderID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to complete suborder")
 		return
@@ -224,14 +223,13 @@ func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {
 }
 
 func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
-	orderIDStr := c.Param("orderId")
-	orderID, err := strconv.ParseUint(orderIDStr, 10, 64)
+	orderID, err := utils.ParseParam(c, "orderId")
 	if err != nil || orderID == 0 {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
 		return
 	}
 
-	pdfData, err := h.service.GeneratePDFReceipt(uint(orderID))
+	pdfData, err := h.service.GeneratePDFReceipt(orderID)
 	if err != nil {
 		utils.SendInternalServerError(c, "failed to generate PDF receipt")
 		return
@@ -376,7 +374,7 @@ func (h *OrderHandler) AcceptSubOrder(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AcceptSubOrder(uint(subOrderID)); err != nil {
+	if err := h.service.AcceptSubOrder(subOrderID); err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("failed to accept suborder: %v", err))
 		return
 	}
@@ -399,7 +397,7 @@ func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 		return
 	}
 
-	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(uint(subOrderID))
+	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(subOrderID)
 	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("failed to update suborder status: %v", err))
 		return
