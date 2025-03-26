@@ -1,0 +1,26 @@
+@echo off
+echo Updating golangci-lint...
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+echo Updating gopls...
+go install golang.org/x/tools/gopls@latest
+
+echo Updating gotests...
+go install github.com/cweill/gotests/gotests@latest
+
+echo Updating gomodifytags...
+go install github.com/fatih/gomodifytags@latest
+
+echo Updating impl...
+go install github.com/josharian/impl@latest
+
+echo Updating goplay...
+go install github.com/haya14busa/goplay/cmd/goplay@latest
+
+echo Updating dlv...
+go install github.com/go-delve/delve/cmd/dlv@latest
+
+echo Updating staticcheck...
+go install honnef.co/go/tools/cmd/staticcheck@latest
+
+echo All tools updated.
