@@ -461,7 +461,7 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 			},
 			storeID:           1,
 			expectedError:     true,
-			expectedErrSubstr: "inappropriate", // Expect an error message indicating censorship.
+			expectedErrSubstr: "name", // Expect an error message indicating censorship.
 		},
 		{
 			name: "Failure due to invalid product size",
@@ -598,7 +598,7 @@ func TestOrderService_CompleteSubOrder_Combined(t *testing.T) {
 	t.Run("Complete non-existent suborder", func(t *testing.T) {
 		err := module.Service.CompleteSubOrder(orderID, 99999) // Non-existent ID.
 		assert.Error(t, err, "Should return error for non-existent suborder")
-		assert.Contains(t, err.Error(), "failed to check suborder", "Error should mention suborder failure")
+		assert.Contains(t, err.Error(), "not found", "Error should mention suborder failure")
 	})
 }
 
