@@ -23,4 +23,7 @@ go install github.com/go-delve/delve/cmd/dlv@latest
 echo Updating staticcheck...
 go install honnef.co/go/tools/cmd/staticcheck@latest
 
+echo Updating gofumpt...
+go install mvdan.cc/gofumpt@latest
+
 echo All tools updated.
