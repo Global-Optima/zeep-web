@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"net/http"
 	"slices"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"

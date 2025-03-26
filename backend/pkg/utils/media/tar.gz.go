@@ -16,10 +16,16 @@ func TarGzSingleFile(filenameInsideTar string, fileData []byte) ([]byte, error) 
 	buf := new(bytes.Buffer)
 
 	gzipWriter := gzip.NewWriter(buf)
-	defer gzipWriter.Close()
+
+	defer func() {
+		_ = gzipWriter.Close()
+	}()
 
 	tarWriter := tar.NewWriter(gzipWriter)
-	defer tarWriter.Close()
+
+	defer func() {
+		_ = tarWriter.Close()
+	}()
 
 	ext := filepath.Ext(filenameInsideTar)
 	mimeType := mime.TypeByExtension(ext)

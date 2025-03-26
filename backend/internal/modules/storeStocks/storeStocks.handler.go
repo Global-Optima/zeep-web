@@ -1,8 +1,9 @@
 package storeStocks
 
 import (
-	"github.com/pkg/errors"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"

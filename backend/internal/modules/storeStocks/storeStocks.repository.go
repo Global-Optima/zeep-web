@@ -271,7 +271,6 @@ func (r *storeStockRepository) GetRawStockByID(storeID, stockID uint) (*data.Sto
 		Where("store_id = ? AND id = ?", storeID, stockID).
 		First(&StoreStock).
 		Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrStockNotFound

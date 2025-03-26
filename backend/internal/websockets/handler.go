@@ -29,7 +29,7 @@ func WebSocketHandler(hub *WebSocketHub, channel string) gin.HandlerFunc {
 
 		defer func() {
 			hub.unregister <- sub
-			conn.Close()
+			_ = conn.Close()
 		}()
 
 		for {

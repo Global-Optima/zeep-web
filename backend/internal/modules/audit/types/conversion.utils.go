@@ -48,7 +48,7 @@ func ConvertToEmployeeAuditDTO(audit *data.EmployeeAudit) (*EmployeeAuditDTO, er
 
 	return &EmployeeAuditDTO{
 		ID:                audit.ID,
-		Timestamp:         audit.BaseEntity.CreatedAt,
+		Timestamp:         audit.CreatedAt,
 		OperationType:     audit.OperationType,
 		ComponentName:     audit.ComponentName,
 		LocalizedMessages: *messages,
@@ -78,12 +78,12 @@ func MapLocalizedMessages(audit *data.EmployeeAudit, details data.AuditDetails) 
 	case *data.ExtendedDetailsStore:
 		messages, err = localization.Translate(key, map[string]interface{}{
 			NAME_KEY:       details.GetBaseDetails().Name,
-			STORE_NAME_KEY: details.StoreInfo.StoreName,
+			STORE_NAME_KEY: details.StoreName,
 		})
 	case *data.ExtendedDetailsWarehouse:
 		messages, err = localization.Translate(key, map[string]interface{}{
 			NAME_KEY:           details.GetBaseDetails().Name,
-			WAREHOUSE_NAME_KEY: details.WarehouseInfo.WarehouseName,
+			WAREHOUSE_NAME_KEY: details.WarehouseName,
 		})
 	default:
 		return nil, fmt.Errorf("unsupported type: %T", details)
