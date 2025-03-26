@@ -20,14 +20,15 @@ const (
 	MAX_IMAGE_SIZE      = 5 * 1024 * 1024 // 5MB
 )
 
-func ConvertToWebp(img *image.Image) ([]byte, error) {
+func ConvertToWebp(img image.Image) ([]byte, error) {
 	var webpBuffer bytes.Buffer
 
-	opts := &encoder.Options{
-		Lossless: true,
+	opts, err := encoder.NewLosslessEncoderOptions(encoder.PresetDefault, 6)
+	if err != nil {
+		return nil, err
 	}
 
-	err := webp.Encode(&webpBuffer, *img, opts)
+	err = webp.Encode(&webpBuffer, img, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode WebP: %v", err)
 	}
@@ -77,7 +78,7 @@ func ConvertImageToRawAndWebp(fileHeader *multipart.FileHeader) (*FilesPair, err
 		return nil, err
 	}
 
-	webpBytes, err := ConvertToWebp(&img)
+	webpBytes, err := ConvertToWebp(img)
 	if err != nil {
 		return nil, err
 	}
