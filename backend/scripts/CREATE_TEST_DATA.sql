@@ -41,14 +41,22 @@ VALUES
   ('Unused Materials', 'Not used materials');
 
 -- 7. Insert into products
-INSERT INTO products (name, description, image_url, video_url, category_id)
+INSERT INTO products (
+  name,
+  description,
+  image_key,
+  video_key,
+  category_id,
+  created_at,
+  updated_at
+)
 VALUES
-  ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1),
-  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2),
-  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1);
+  ('Espresso', 'Strong coffee shot', 'http://example.com/espresso.png', NULL, 1, NOW(), NOW()),
+  ('Green Tea', 'Light and healthy', 'http://example.com/greentea.png', NULL, 2, NOW(), NOW()),
+  ('Americano', 'Light coffee shot', 'http://example.com/americano.png', NULL, 1, NOW(), NOW());
 
 -- 8. Insert into recipe_steps (for Espresso)
-INSERT INTO recipe_steps (product_id, step, name, description, image_url)
+INSERT INTO recipe_steps (product_id, step, name, description, image_key)
 VALUES
   (1, 1, 'Grind Beans', 'Grind fresh coffee beans', 'http://example.com/grind.png'),
   (1, 2, 'Tamp', 'Tamp the coffee', 'http://example.com/tamp.png');
@@ -61,7 +69,7 @@ VALUES
   ('S', 2, 4.50, 245, 3, 'TEST0000111122223333000003');
 
 -- 10. Insert into additives
-INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_url, machine_id)
+INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_key, machine_id)
 VALUES
   ('Extra Milk', 'Additional milk', 0.50, 100, 1, 1, 'http://example.com/milk.png', 'TEST0000111122223333000009901'),
   ('Vanilla Syrup', 'Sweet vanilla flavor', 0.75, 50, 1, 2, 'http://example.com/vanilla.png', 'TEST0000111122223333000009902');
