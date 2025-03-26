@@ -43,12 +43,5 @@ func TarGzSingleFile(filenameInsideTar string, fileData []byte) ([]byte, error) 
 		return nil, fmt.Errorf("failed to write file data: %w", err)
 	}
 
-	if err := tarWriter.Close(); err != nil {
-		return nil, fmt.Errorf("failed to close tar writer: %w", err)
-	}
-	if err := gzipWriter.Close(); err != nil {
-		return nil, fmt.Errorf("failed to close gzip writer: %w", err)
-	}
-
 	return buf.Bytes(), nil
 }

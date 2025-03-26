@@ -4,10 +4,24 @@
 FROM golang:1.23-alpine AS builder
 
 # Set environment variables for Go
-ENV CGO_ENABLED=0 
+ENV CGO_ENABLED=1 \
+    GOOS=linux \
+    GOARCH=amd64
 
 # Set working directory
 WORKDIR /app
+
+# Install GCC and required C libraries
+RUN apk add --no-cache \
+    gcc \
+    g++ \
+    libc-dev \
+    libwebp-dev \
+    pkgconfig \
+    ca-certificates \
+    tzdata \
+    bash \
+    git
 
 # Build arguments for passing env variables at build time
 ARG ENV
@@ -56,7 +70,7 @@ RUN go build -ldflags="-s -w" -o server cmd/main.go
 FROM alpine:latest AS runtime
 
 # Install necessary tools (e.g., ca-certificates for SSL)
-RUN apk add --no-cache bash ca-certificates tzdata
+RUN apk add --no-cache bash ca-certificates tzdata libwebp libwebp-tools
 
 # Set working directory
 WORKDIR /app

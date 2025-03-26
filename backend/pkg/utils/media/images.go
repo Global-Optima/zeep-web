@@ -3,14 +3,15 @@ package media
 import (
 	"bytes"
 	"fmt"
+	"github.com/kolesa-team/go-webp/encoder"
 	"image"
 	"io"
 	"mime/multipart"
 	"path/filepath"
 
-	"github.com/HugoSmits86/nativewebp"
 	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
+	"github.com/kolesa-team/go-webp/webp"
 )
 
 const (
@@ -22,7 +23,11 @@ const (
 func ConvertToWebp(img *image.Image) ([]byte, error) {
 	var webpBuffer bytes.Buffer
 
-	err := nativewebp.Encode(&webpBuffer, *img, nil)
+	opts := &encoder.Options{
+		Lossless: true,
+	}
+
+	err := webp.Encode(&webpBuffer, *img, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode WebP: %v", err)
 	}
