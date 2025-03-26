@@ -28,11 +28,13 @@ func (h *StorageHandler) UploadFileHandler(c *gin.Context) {
 
 	fileData, err := file.Open()
 	if err != nil {
-
 		c.JSON(http.StatusInternalServerError, gin.H{"error": types.ErrFileOpenFailed.Error()})
 		return
 	}
-	defer fileData.Close()
+
+	defer func() {
+		_ = fileData.Close()
+	}()
 
 	fileBytes, err := io.ReadAll(fileData)
 	if err != nil {
@@ -168,7 +170,10 @@ func (h *StorageHandler) DownloadAndSaveFileHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file locally"})
 		return
 	}
-	defer out.Close()
+	
+	defer func() {
+		_ = out.Close()
+	}()
 
 	if _, err := out.Write(fileData); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write file locally"})
