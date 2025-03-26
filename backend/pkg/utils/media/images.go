@@ -48,7 +48,7 @@ func ConvertImageToRawAndWebp(fileHeader *multipart.FileHeader) (*FilesPair, err
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %v", err)
 	}
-	
+
 	defer func() {
 		_ = file.Close()
 	}()

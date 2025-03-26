@@ -170,7 +170,7 @@ func (h *StorageHandler) DownloadAndSaveFileHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file locally"})
 		return
 	}
-	
+
 	defer func() {
 		_ = out.Close()
 	}()

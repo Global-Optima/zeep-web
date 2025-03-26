@@ -16,11 +16,11 @@ func TarGzSingleFile(filenameInsideTar string, fileData []byte) ([]byte, error) 
 	buf := new(bytes.Buffer)
 
 	gzipWriter := gzip.NewWriter(buf)
-	
+
 	defer func() {
 		_ = gzipWriter.Close()
 	}()
-	
+
 	tarWriter := tar.NewWriter(gzipWriter)
 
 	defer func() {

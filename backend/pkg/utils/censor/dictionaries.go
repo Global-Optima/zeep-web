@@ -56,7 +56,7 @@ func LoadDictionaries(filename string) (*Dictionaries, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open dictionary file: %w", err)
 	}
-	
+
 	defer func() {
 		_ = file.Close()
 	}()
