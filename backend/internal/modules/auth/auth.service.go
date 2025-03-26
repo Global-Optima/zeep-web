@@ -84,8 +84,14 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*types.To
 		return nil, utils.WrapError("failed to generate session token", err)
 	}
 
-	if err := s.saveEmployeeToken(employee.ID, sessionToken); err != nil {
-		return nil, fmt.Errorf("failed to save employee token: %w", err)
+	if existingToken != nil {
+		if err := s.updateEmployeeToken(employee.ID, sessionToken); err != nil {
+			return nil, fmt.Errorf("failed to update employee token with new token: %w", err)
+		}
+	} else {
+		if err := s.saveEmployeeToken(employee.ID, sessionToken); err != nil {
+			return nil, fmt.Errorf("failed to save employee token: %w", err)
+		}
 	}
 
 	return &types.Token{SessionToken: sessionToken}, nil
@@ -167,6 +173,28 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*types.To
 func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
 	cfg := config.GetConfig()
 	expirationTime := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
+
+	employeeToken := &data.EmployeeToken{
+		EmployeeID: employeeID,
+		Token:      token,
+		ExpiresAt:  expirationTime,
+	}
+
+	if err := s.employeeTokenManager.CreateToken(employeeToken); err != nil {
+		return fmt.Errorf("failed to save token: %w", err)
+	}
+
+	return nil
+}
+
+func (s *authenticationService) updateEmployeeToken(employeeID uint, token string) error {
+	cfg := config.GetConfig()
+	expirationTime := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
+
+	err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID)
+	if err != nil {
+		return fmt.Errorf("failed to delete token: %w", err)
+	}
 
 	employeeToken := &data.EmployeeToken{
 		EmployeeID: employeeID,
