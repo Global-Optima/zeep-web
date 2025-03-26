@@ -9,7 +9,7 @@ import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additiv
 import type { CreateOrderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
-import { KIOSK_CUSTOMER_ADJECTIVES_V2, KIOSK_CUSTOMER_NOUNS_V2 } from '@/modules/kiosk/cart/components/checkouts/customer-names-dictionary'
+import { KIOSK_CUSTOMER_NICKNAMES } from '@/modules/kiosk/cart/components/checkouts/customer-names-dictionary'
 import KioskCartItem from '@/modules/kiosk/cart/components/kiosk-cart-item.vue'
 import KioskCartUpdateItem from '@/modules/kiosk/cart/components/kiosk-cart-update-item.vue'
 import { useCartStore, type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
@@ -48,9 +48,7 @@ const errorMessage = computed(() => {
 
 // Handlers
 const generateUniqueName = () => {
-  const adj = KIOSK_CUSTOMER_ADJECTIVES_V2[Math.floor(Math.random() * KIOSK_CUSTOMER_ADJECTIVES_V2.length)]
-  const noun = KIOSK_CUSTOMER_NOUNS_V2[Math.floor(Math.random() * KIOSK_CUSTOMER_NOUNS_V2.length)]
-  customerName.value = `${adj} ${noun}`
+  customerName.value = KIOSK_CUSTOMER_NICKNAMES[Math.floor(Math.random() * KIOSK_CUSTOMER_NICKNAMES.length)]
 }
 
 const handleProceed = async () => {
