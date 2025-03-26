@@ -1,8 +1,6 @@
 module github.com/Global-Optima/zeep-web/backend
 
-go 1.22.2
-
-toolchain go1.23.2
+go 1.24.1
 
 require (
 	github.com/HugoSmits86/nativewebp v0.9.3
