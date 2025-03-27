@@ -110,8 +110,6 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	}))
 
 	utils.InitValidators()
-	router.Use(middleware.SanitizeMiddleware())
-
 	router.Use(middleware.RedisMiddleware(redisClient.Client))
 
 	router.Use(func(c *gin.Context) {
@@ -133,7 +131,6 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	})
 
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
-
 	employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
