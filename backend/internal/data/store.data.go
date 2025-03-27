@@ -1,6 +1,10 @@
 package data
 
-import "time"
+import (
+	"fmt"
+	"gorm.io/gorm"
+	"time"
+)
 
 type Franchisee struct {
 	BaseEntity
@@ -39,13 +43,27 @@ type StoreStock struct {
 	Quantity          float64    `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"quantity"`
 }
 
+func (storeStock *StoreStock) AfterUpdate(tx *gorm.DB) error {
+
+	if storeStock == nil || storeStock.ID == 0 || storeStock.StoreID == 0 || storeStock.IngredientID == 0 {
+		return fmt.Errorf("not enough info to fire AfterUpdate hook, preload the entity to proceed or use save instead of updates")
+	}
+
+	return UpdateOutOfStockInventory(tx, storeStock.StoreID, storeStock.IngredientID)
+}
+
+func (storeStock *StoreStock) AfterCreate(tx *gorm.DB) error {
+	return UpdateOutOfStockInventory(tx, storeStock.StoreID, storeStock.IngredientID)
+}
+
 type StoreAdditive struct {
 	BaseEntity
-	AdditiveID uint     `gorm:"index;not null"`
-	StoreID    uint     `gorm:"index;not null"`
-	StorePrice *float64 `gorm:"type:decimal(10,2);check:price >= 0"`
-	Store      Store    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
-	Additive   Additive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
+	AdditiveID   uint     `gorm:"index;not null"`
+	StoreID      uint     `gorm:"index;not null"`
+	StorePrice   *float64 `gorm:"type:decimal(10,2);check:price >= 0"`
+	IsOutOfStock bool     `gorm:"not null;default:false" sort:"isOutOfStock"`
+	Store        Store    `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	Additive     Additive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 }
 
 type StoreProductSize struct {
@@ -61,7 +79,8 @@ type StoreProduct struct {
 	BaseEntity
 	ProductID         uint               `gorm:"index;not null"`
 	StoreID           uint               `gorm:"index;not null"`
-	IsAvailable       bool               `gorm:"default:true"`
+	IsAvailable       bool               `gorm:"default:true" sort:"isAvailable"`
+	IsOutOfStock      bool               `gorm:"not null;default:false" sort:"isOutOfStock"`
 	Store             Store              `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
 	Product           Product            `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"products"`
 	StoreProductSizes []StoreProductSize `gorm:"foreignKey:StoreProductID;constraint:OnDelete:CASCADE"`

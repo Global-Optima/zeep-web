@@ -12,6 +12,7 @@ func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditive
 		BaseAdditiveDTO: *additiveTypes.ConvertToBaseAdditiveDTO(&storeAdditive.Additive),
 		AdditiveID:      storeAdditive.AdditiveID,
 		StorePrice:      getStorePrice(storeAdditive),
+		IsOutOfStock:    storeAdditive.IsOutOfStock,
 	}
 }
 

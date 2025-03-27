@@ -7,6 +7,7 @@
 				<TableHead>Категория</TableHead>
 				<TableHead>Размер</TableHead>
 				<TableHead>Цена</TableHead>
+        <TableHead>В наличии</TableHead>
 				<TableHead v-if="canDelete"></TableHead>
 			</TableRow>
 		</TableHeader>
@@ -34,6 +35,11 @@
 				<TableCell>
 					{{ formatPrice(additive.storePrice) }}
 				</TableCell>
+        <TableCell>
+          <div :class="[!additive.isOutOfStock ? 'text-green-600' : 'text-red-500']">
+            {{ !additive.isOutOfStock ? 'Да' : 'Нет' }}
+          </div>
+        </TableCell>
 				<TableCell v-if="canDelete">
 					<Button
 						variant="ghost"

@@ -2,24 +2,21 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
-func ParseStockParamsWithPagination(c *gin.Context) (*GetStockFilterQuery, error) {
-	var params GetStockFilterQuery
-	var err error
-
-	if err = c.ShouldBindQuery(&params); err != nil {
-		return nil, err
+func UpdateToStoreStockModel(dto *UpdateStoreStockDTO, storeStock *data.StoreStock) error {
+	if dto == nil {
+		return errors.New("nil UpdateStoreStockDTO")
 	}
 
-	params.Pagination = utils.ParsePagination(c)
-
-	params.Sort, err = utils.ParseSortParamsForModel(c, &data.StoreStock{})
-	if err != nil {
-		return nil, err
+	if dto.LowStockThreshold != nil {
+		storeStock.LowStockThreshold = *dto.LowStockThreshold
 	}
 
-	return &params, nil
+	if dto.Quantity != nil {
+		storeStock.Quantity = *dto.Quantity
+	}
+
+	return nil
 }

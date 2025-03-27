@@ -22,7 +22,7 @@ type GetStockFilterQuery struct {
 
 type UpdateStoreStockDTO struct {
 	Quantity          *float64 `json:"quantity" binding:"omitempty,gte=0"`
-	LowStockThreshold *float64 `json:"lowStockThreshold"`
+	LowStockThreshold *float64 `json:"lowStockThreshold" binding:"omitempty,gte=0"`
 }
 
 type AddMultipleStoreStockDTO struct {

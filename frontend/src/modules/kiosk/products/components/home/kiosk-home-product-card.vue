@@ -1,33 +1,47 @@
 <template>
-	<div
-		class="flex flex-col justify-between bg-white p-6 rounded-[32px] h-full cursor-pointer"
-		@click="selectProduct"
-		data-testid="product-card"
-	>
-		<div>
-			<LazyImage
-				:src="product.imageUrl"
-				alt="Изображение товара"
-				class="rounded-xl w-full h-44 sm:h-60 object-contain"
-			/>
+  <div
+    class="relative flex flex-col justify-between bg-white p-6 rounded-[32px] h-full transition-all duration-300"
+    :class="{
+      'cursor-pointer': !product.isOutOfStock,
+      'cursor-not-allowed opacity-70 !border-primary' : product.isOutOfStock
+    }"
+    @click="selectProduct"
+    data-testid="product-card"
+  >
+    <!-- Метка "Нет в наличии" -->
+    <div
+      v-if="product.isOutOfStock"
+      class="absolute bottom-6 right-7 bg-gray-500 text-white text-xl font-semibold px-3 py-1 rounded-full z-10"
+      style="filter: none"
+    >
+      Нет в наличии
+    </div>
 
-			<h3
-				class="mt-6 text-base sm:text-xl line-clamp-2"
-				data-testid="product-title"
-			>
-				{{ product.name }}
-			</h3>
-		</div>
+    <div>
+      <LazyImage
+        :src="product.imageUrl"
+        alt="Изображение товара"
+        class="rounded-xl w-full h-44 sm:h-60 object-contain"
+      />
 
-		<div class="mt-4">
-			<p
-				class="font-medium text-primary text-xl sm:text-2xl"
-				data-testid="product-price"
-			>
-				{{ formatPrice(product.storePrice) }}
-			</p>
-		</div>
-	</div>
+      <h3
+        class="mt-6 text-base sm:text-xl line-clamp-2"
+        data-testid="product-title"
+      >
+        {{ product.name }}
+      </h3>
+    </div>
+
+    <div class="mt-4">
+      <p
+        class="font-medium text-xl sm:text-2xl"
+        :class="product.isOutOfStock ? 'text-gray-400' : 'text-primary'"
+        data-testid="product-price"
+      >
+        {{ formatPrice(product.storePrice) }}
+      </p>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">

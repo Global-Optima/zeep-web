@@ -21,13 +21,13 @@ type StoreStockRepository interface {
 	GetAvailableIngredientsToAdd(storeID uint, filter *ingredientTypes.IngredientFilter) ([]data.Ingredient, error)
 	AddStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error)
 	AddMultipleStocks(stocks []data.StoreStock) ([]uint, error)
-	AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error)
+	AddOrSaveStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error)
 	GetStockList(storeID uint, query *types.GetStockFilterQuery) ([]data.StoreStock, error)
 	GetStockListByIDs(storeID uint, IDs []uint) ([]data.StoreStock, error)
 	GetRawStockByID(storeID, stockID uint) (*data.StoreStock, error)
 	GetStockById(stockID uint, filter *contexts.StoreContextFilter) (*data.StoreStock, error)
 	GetAllStockList(storeID uint) ([]data.StoreStock, error)
-	UpdateStock(storeID, stockID uint, dto *types.UpdateStoreStockDTO) error
+	SaveStock(storeID, stockID uint, storeStock *data.StoreStock) error
 	DeleteStockById(storeID, stockID uint) error
 	WithTransaction(txFunc func(txRepo storeStockRepository) error) error
 	CloneWithTransaction(tx *gorm.DB) storeStockRepository
@@ -155,7 +155,7 @@ func (r *storeStockRepository) AddMultipleStocks(stocks []data.StoreStock) ([]ui
 	return stockIDs, nil
 }
 
-func (r *storeStockRepository) AddOrUpdateStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error) {
+func (r *storeStockRepository) AddOrSaveStock(storeID uint, dto *types.AddStoreStockDTO) (uint, error) {
 	var existingStock data.StoreStock
 	err := r.db.
 		Where("store_id = ? AND ingredient_id = ?", storeID, dto.IngredientID).
@@ -319,45 +319,17 @@ func (r *storeStockRepository) GetStockById(stockId uint, filter *contexts.Store
 	return &StoreStock, nil
 }
 
-func (r *storeStockRepository) UpdateStock(storeId, stockId uint, dto *types.UpdateStoreStockDTO) error {
-	if storeId == 0 {
-		return fmt.Errorf("storeId cannot be 0")
-	}
-
-	if stockId == 0 {
-		return fmt.Errorf("stockId cannot be 0")
-	}
-
-	updateFields := map[string]interface{}{}
-
-	if dto.Quantity != nil {
-		updateFields["quantity"] = *dto.Quantity
-	}
-	if dto.LowStockThreshold != nil {
-		updateFields["low_stock_threshold"] = *dto.LowStockThreshold
-	}
-
-	var existingStock data.StoreStock
-
-	res := r.db.Model(&data.StoreStock{}).
-		Where("store_id = ?", storeId).
-		Where("id = ?", stockId).
-		First(&existingStock)
-
-	if res.Error != nil {
-		return utils.WrapError("failed to update store stock", res.Error)
-	}
-
+func (r *storeStockRepository) SaveStock(storeID, stockID uint, storeStock *data.StoreStock) error {
 	updRes := r.db.Model(&data.StoreStock{}).
-		Where(&data.StoreStock{BaseEntity: data.BaseEntity{ID: stockId}}).
-		Updates(updateFields)
+		Where(&data.StoreStock{BaseEntity: data.BaseEntity{ID: stockID}}).
+		Save(storeStock)
 
 	if updRes.Error != nil {
 		return utils.WrapError("failed to update store stock", updRes.Error)
 	}
 
 	if updRes.RowsAffected == 0 {
-		return fmt.Errorf("update attempt had no changes for stockId=%d with storeId=%d", stockId, storeId)
+		return fmt.Errorf("update attempt had no changes for stockId=%d with storeId=%d", stockID, storeID)
 	}
 
 	return nil
@@ -546,15 +518,12 @@ func (r *storeStockRepository) deductProductSizeIngredientStock(tx *gorm.DB, sto
 		return nil, fmt.Errorf("insufficient stock for ingredient ID %d", ingredient.IngredientID)
 	}
 
-	newQuantity := existingStock.Quantity - deductedQuantity
-	err = tx.Model(&data.StoreStock{}).
-		Where("id = ?", existingStock.ID).
-		Update("quantity", newQuantity).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to update store warehouse stock for ingredient ID %d: %w", ingredient.IngredientID, err)
+	existingStock.Quantity -= deductedQuantity
+
+	if err := tx.Save(&existingStock).Error; err != nil {
+		return nil, fmt.Errorf("failed to save store warehouse stock for ingredient ID %d: %w", ingredient.IngredientID, err)
 	}
 
-	existingStock.Quantity = newQuantity
 	return &existingStock, nil
 }
 
@@ -582,15 +551,12 @@ func (r *storeStockRepository) deductAdditiveIngredientStock(tx *gorm.DB, storeI
 		return nil, fmt.Errorf("insufficient stock for ingredient ID %d", ingredient.IngredientID)
 	}
 
-	newQuantity := existingStock.Quantity - deductedQuantity
-	err = tx.Model(&data.StoreStock{}).
-		Where("id = ?", existingStock.ID).
-		Update("quantity", newQuantity).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to update store warehouse stock for ingredient ID %d: %w", ingredient.IngredientID, err)
+	existingStock.Quantity -= deductedQuantity
+
+	if err := tx.Save(&existingStock).Error; err != nil {
+		return nil, fmt.Errorf("failed to save store warehouse stock for ingredient ID %d: %w", ingredient.IngredientID, err)
 	}
 
-	existingStock.Quantity = newQuantity
 	return &existingStock, nil
 }
 

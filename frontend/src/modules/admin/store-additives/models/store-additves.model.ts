@@ -15,6 +15,7 @@ export interface UpdateStoreAdditiveDTO {
 export interface StoreAdditiveDTO extends AdditiveDTO {
 	additiveId: number
 	storePrice: number
+  isOutOfStock: boolean
 }
 
 export interface StoreAdditiveCategoriesFilter {

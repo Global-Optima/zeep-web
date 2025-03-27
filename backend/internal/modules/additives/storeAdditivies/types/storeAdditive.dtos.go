@@ -16,8 +16,9 @@ type UpdateStoreAdditiveDTO struct {
 type StoreAdditiveDTO struct {
 	ID uint `json:"id"`
 	additiveTypes.BaseAdditiveDTO
-	AdditiveID uint    `json:"additiveId"`
-	StorePrice float64 `json:"storePrice"`
+	AdditiveID   uint    `json:"additiveId"`
+	StorePrice   float64 `json:"storePrice"`
+	IsOutOfStock bool    `json:"isOutOfStock"`
 }
 
 type StoreAdditiveDetailsDTO struct {

@@ -141,6 +141,9 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 			query = query.Where("is_available = ?", *filter.IsAvailable).
 				Where("EXISTS (SELECT 1 FROM store_product_sizes sps WHERE sps.store_product_id = store_products.id)")
 		}
+		if filter.IsOutOfStock != nil {
+			query = query.Where("is_out_of_stock = ?", *filter.IsOutOfStock)
+		}
 		if filter.CategoryID != nil {
 			query = query.Where("products.category_id = ?", *filter.CategoryID)
 		}
