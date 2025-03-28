@@ -9,12 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import Switch from '@/core/components/ui/switch/Switch.vue'
-import type { AdditiveCategoryDTO, UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDetailsDTO, UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Props
 const props = defineProps<{
-  category: AdditiveCategoryDTO
+  category: AdditiveCategoryDetailsDTO
   readonly?: boolean
 }>()
 

@@ -211,6 +211,13 @@ func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, l
 
 	mergedIngredientIDs := utils.MergeDistinct(productSizeIngredientIDs, additiveIngredientIDs)
 
+	for _, ingredientID := range mergedIngredientIDs {
+		err := data.UpdateOutOfStockInventory(tx, storeID, ingredientID)
+		if err != nil {
+			return fmt.Errorf("failed to update ingredient: %w", err)
+		}
+	}
+
 	missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, mergedIngredientIDs)
 	if err != nil {
 		return fmt.Errorf("failed to filter missing store_stocks: %w", err)

@@ -16,11 +16,11 @@ import (
 
 type AdditiveService interface {
 	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]uint, error)
-	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error)
+	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDetailsDTO, error)
 	CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) (uint, error)
 	UpdateAdditiveCategory(id uint, dto *types.UpdateAdditiveCategoryDTO) error
 	DeleteAdditiveCategory(categoryID uint) error
-	GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryResponseDTO, error)
+	GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryDetailsDTO, error)
 
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
 	GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error)
@@ -46,7 +46,7 @@ func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepo
 	}
 }
 
-func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDTO, error) {
+func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDetailsDTO, error) {
 	categories, err := s.repo.GetAdditiveCategories(filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve additives", err)
@@ -55,12 +55,12 @@ func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategories
 	}
 
 	if len(categories) == 0 {
-		return []types.AdditiveCategoryDTO{}, nil
+		return []types.AdditiveCategoryDetailsDTO{}, nil
 	}
 
-	var categoryDTOs []types.AdditiveCategoryDTO
+	var categoryDTOs []types.AdditiveCategoryDetailsDTO
 	for _, category := range categories {
-		categoryDTOs = append(categoryDTOs, *types.ConvertToAdditiveCategoryDTO(&category))
+		categoryDTOs = append(categoryDTOs, *types.ConvertToAdditiveCategoryDetailsDTO(&category))
 	}
 
 	return categoryDTOs, nil
@@ -98,7 +98,7 @@ func (s *additiveService) CreateAdditiveCategory(dto *types.CreateAdditiveCatego
 func (s *additiveService) UpdateAdditiveCategory(id uint, dto *types.UpdateAdditiveCategoryDTO) error {
 	existingCategory, err := s.repo.GetAdditiveCategoryByID(id)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to fetch existing additive categor", err)
+		wrappedErr := utils.WrapError("failed to fetch existing additive category", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
@@ -125,7 +125,7 @@ func (s *additiveService) DeleteAdditiveCategory(categoryID uint) error {
 	return nil
 }
 
-func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryResponseDTO, error) {
+func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryDetailsDTO, error) {
 	category, err := s.repo.GetAdditiveCategoryByID(categoryID)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to fetch additive category", err)
@@ -137,7 +137,7 @@ func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.Addit
 		return nil, fmt.Errorf("additive category with ID %d not found", categoryID)
 	}
 
-	return types.ConvertToAdditiveCategoryResponseDTO(category), nil
+	return types.ConvertToAdditiveCategoryDetailsDTO(category), nil
 }
 
 func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error) {
@@ -231,7 +231,7 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 }
 
 func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) (*types.AdditiveDTO, error) {
-	additive, err := s.repo.GetAdditiveByID(additiveID)
+	additive, err := s.repo.GetRawAdditiveByID(additiveID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to check additive: %w", err)
 		s.logger.Error(wrappedErr)
@@ -261,7 +261,7 @@ func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAddit
 		updateModels.Additive.ImageKey = &newImageKey
 	}
 
-	err = s.repo.UpdateAdditiveWithAssociations(additiveID, updateModels)
+	err = s.repo.SaveAdditiveWithAssociations(additiveID, updateModels)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to update additive with associations", err)
 		s.logger.Error(wrappedErr)

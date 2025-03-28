@@ -56,6 +56,7 @@ export interface ProductSizeDetailsDTO extends ProductSizeDTO {
 
 export interface ProductSizeAdditiveDTO extends AdditiveDTO {
 	isDefault: boolean
+  isHidden: boolean
 }
 
 export interface CreateProductDTO {
@@ -69,6 +70,7 @@ export interface CreateProductDTO {
 export interface SelectedAdditiveDTO {
 	additiveId: number
 	isDefault: boolean
+  isHidden: boolean
 }
 
 export interface SelectedIngredientDTO {
@@ -82,7 +84,6 @@ export interface CreateProductSizeDTO {
 	size: number
 	unitId: number
 	basePrice: number
-	isDefault: boolean
 	machineId: string
 	additives?: SelectedAdditiveDTO[]
 	ingredients: SelectedIngredientDTO[]
@@ -99,11 +100,11 @@ export interface UpdateProductDTO {
 }
 
 export interface UpdateProductSizeDTO {
-	name?: string | null
-	basePrice?: number | null
-	size?: number | null
+	name?: string
+	basePrice?: number
+	size?: number
 	unitId?: number
-	isDefault?: boolean | null
+	isDefault?: boolean
 	machineId?: string
 	additives?: SelectedAdditiveDTO[]
 	ingredients?: SelectedIngredientDTO[]

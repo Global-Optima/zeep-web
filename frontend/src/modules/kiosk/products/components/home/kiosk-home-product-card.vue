@@ -3,19 +3,11 @@
     class="relative flex flex-col justify-between bg-white p-6 rounded-[32px] h-full transition-all duration-300"
     :class="{
       'cursor-pointer': !product.isOutOfStock,
-      'cursor-not-allowed opacity-70 !border-primary' : product.isOutOfStock
+      'cursor-not-allowed opacity-60 !border-primary' : product.isOutOfStock
     }"
     @click="selectProduct"
     data-testid="product-card"
   >
-    <!-- Метка "Нет в наличии" -->
-    <div
-      v-if="product.isOutOfStock"
-      class="absolute bottom-6 right-7 bg-gray-500 text-white text-xl font-semibold px-3 py-1 rounded-full z-10"
-      style="filter: none"
-    >
-      Нет в наличии
-    </div>
 
     <div>
       <LazyImage
@@ -32,13 +24,21 @@
       </h3>
     </div>
 
-    <div class="mt-4">
+    <div class="mt-4 flex items-start justify-between gap-4 flex-wrap">
       <p
         class="font-medium text-xl sm:text-2xl"
         :class="product.isOutOfStock ? 'text-gray-400' : 'text-primary'"
         data-testid="product-price"
       >
         {{ formatPrice(product.storePrice) }}
+      </p>
+
+      <p
+        v-if="product.isOutOfStock"
+        class="bg-slate-200 text-slate-800 text-sm font-medium
+         px-4 py-2 rounded-xl"
+      >
+        Нет в наличии
       </p>
     </div>
   </div>
@@ -62,6 +62,9 @@ const router = useRouter()
 
  const selectProduct = () => {
   // currentProductStore.openModal(product.id)
+   if (product.isOutOfStock) {
+     return
+   }
   router.push({name: getRouteName("KIOSK_PRODUCT"), params: {id: product.id}})
 };
 </script>

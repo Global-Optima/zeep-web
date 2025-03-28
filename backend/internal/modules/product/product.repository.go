@@ -3,9 +3,8 @@ package product
 import (
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"strings"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
@@ -18,6 +17,7 @@ type ProductRepository interface {
 	CheckProductExists(productName string) (bool, error)
 	CreateProduct(product *data.Product) (uint, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
+	GetRawProductByID(productID uint) (*data.Product, error)
 	GetProductByID(productID uint) (*data.Product, error)
 	SaveProduct(product *data.Product) error
 	DeleteProduct(productID uint) (*data.Product, error)
@@ -82,7 +82,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		First(&productSize, productSizeID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, moduleErrors.ErrNotFound
+			return nil, types.ErrProductSizeNotFound
 		}
 		return nil, fmt.Errorf("failed to fetch ProductSize ID %d: %w", productSizeID, err)
 	}
@@ -126,6 +126,23 @@ func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data
 	return products, nil
 }
 
+func (r *productRepository) GetRawProductByID(productID uint) (*data.Product, error) {
+	var product data.Product
+
+	err := r.db.
+		Where("id = ?", productID).
+		First(&product).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrProductNotFound
+		}
+		return nil, err
+	}
+
+	return &product, nil
+}
+
 func (r *productRepository) GetProductByID(productID uint) (*data.Product, error) {
 	var product data.Product
 
@@ -137,7 +154,7 @@ func (r *productRepository) GetProductByID(productID uint) (*data.Product, error
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, moduleErrors.ErrNotFound
+			return nil, types.ErrProductNotFound
 		}
 		return nil, err
 	}
@@ -262,16 +279,19 @@ func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, add
 		existing, exists := existingMap[additive.AdditiveID]
 
 		if exists {
-			if existing.IsDefault != additive.IsDefault {
+			if existing.IsDefault != additive.IsDefault || existing.IsHidden != additive.IsHidden {
 				existing.IsDefault = additive.IsDefault
+				existing.IsHidden = additive.IsHidden
 				toUpdate = append(toUpdate, existing)
 			}
+
 			existingIDs[additive.AdditiveID] = struct{}{}
 		} else {
 			toInsert = append(toInsert, data.ProductSizeAdditive{
 				ProductSizeID: productSizeID,
 				AdditiveID:    additive.AdditiveID,
 				IsDefault:     additive.IsDefault,
+				IsHidden:      additive.IsHidden,
 			})
 		}
 	}
@@ -366,6 +386,7 @@ func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, i
 }
 
 func (r *productRepository) SaveProduct(product *data.Product) error {
+	logrus.Info(*product)
 	err := r.db.Save(product).Error
 	if err != nil {
 		return err

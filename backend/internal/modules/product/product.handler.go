@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
@@ -60,7 +59,7 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 	productDetails, err := h.service.GetProductByID(uint(productID))
 	if err != nil {
 		switch {
-		case errors.Is(err, moduleErrors.ErrNotFound):
+		case errors.Is(err, types.ErrProductNotFound):
 			localization.SendLocalizedResponseWithKey(c, types.Response404Product)
 			return
 		default:
@@ -157,7 +156,7 @@ func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
 	productSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
 	if err != nil {
 		switch {
-		case errors.Is(err, moduleErrors.ErrNotFound):
+		case errors.Is(err, types.ErrProductSizeNotFound):
 			localization.SendLocalizedResponseWithKey(c, types.Response404ProductSize)
 			return
 		default:

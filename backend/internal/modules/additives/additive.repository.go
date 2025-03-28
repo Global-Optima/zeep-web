@@ -14,11 +14,12 @@ import (
 type AdditiveRepository interface {
 	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]data.ProductSizeAdditive, error)
 	CheckAdditiveExists(additiveName string) (bool, error)
+	GetRawAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) (uint, error)
-	UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
+	SaveAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
 	DeleteAdditive(additiveID uint) (*data.Additive, error)
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
@@ -163,6 +164,21 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 	return additives, nil
 }
 
+func (r *additiveRepository) GetRawAdditiveByID(additiveID uint) (*data.Additive, error) {
+	var additive data.Additive
+	err := r.db.Model(&data.Additive{}).
+		Where("id = ?", additiveID).
+		First(&additive).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrAdditiveNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch raw additive with ID %d: %w", additiveID, err)
+	}
+
+	return &additive, nil
+}
+
 func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
 	err := r.db.Model(&data.Additive{}).
@@ -174,7 +190,7 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 		First(&additive).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, moduleErrors.ErrNotFound
+			return nil, types.ErrAdditiveNotFound
 		}
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
@@ -205,7 +221,7 @@ func (r *additiveRepository) CreateAdditive(additive *data.Additive) (uint, erro
 	return additive.ID, nil
 }
 
-func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error {
+func (r *additiveRepository) SaveAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels == nil {
 			return fmt.Errorf("nothing to update")
@@ -219,7 +235,7 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 		}
 
 		if updateModels.Ingredients != nil {
-			err := r.updateAdditiveIngredients(tx, additiveID, updateModels.Ingredients)
+			err := r.saveAdditiveIngredients(tx, additiveID, updateModels.Ingredients)
 			if err != nil {
 				return err
 			}
@@ -233,7 +249,7 @@ func (r *additiveRepository) saveAdditive(tx *gorm.DB, additive *data.Additive) 
 	return tx.Save(additive).Error
 }
 
-func (r *additiveRepository) updateAdditiveIngredients(tx *gorm.DB, additiveID uint, additiveIngredients []data.AdditiveIngredient) error {
+func (r *additiveRepository) saveAdditiveIngredients(tx *gorm.DB, additiveID uint, additiveIngredients []data.AdditiveIngredient) error {
 	var existingIngredients []data.AdditiveIngredient
 	if err := tx.Where("additive_id = ?", additiveID).Find(&existingIngredients).Error; err != nil {
 		return fmt.Errorf("failed to fetch existing ingredients: %w", err)

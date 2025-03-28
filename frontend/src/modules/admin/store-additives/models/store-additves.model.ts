@@ -1,6 +1,6 @@
 import type {
-	AdditiveDTO,
-	BaseAdditiveCategoryItemDTO,
+  AdditiveDTO,
+  BaseAdditiveDTO,
 } from '../../additives/models/additives.model'
 
 export interface CreateStoreAdditiveDTO {
@@ -23,11 +23,13 @@ export interface StoreAdditiveCategoriesFilter {
 	isMultipleSelect?: boolean
 }
 
-export interface StoreAdditiveCategoryItemDTO extends BaseAdditiveCategoryItemDTO {
+export interface StoreAdditiveCategoryItemDTO extends BaseAdditiveDTO {
 	id: number
 	additiveId: number
 	storePrice: number
+  isOutOfStock: boolean
 	isDefault: boolean
+  isHidden: boolean
 }
 
 export interface StoreAdditiveCategoryDTO {

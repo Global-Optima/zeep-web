@@ -28,15 +28,18 @@ type StoreAdditiveDetailsDTO struct {
 
 type StoreAdditiveCategoriesFilter struct {
 	Search           *string `form:"search"`
+	IsOutOfStock     *bool   `form:"isOutOfStock"`
 	IsMultipleSelect *bool   `form:"isMultipleSelect"`
 }
 
 type StoreAdditiveCategoryItemDTO struct {
 	ID uint `json:"id"`
-	additiveTypes.BaseAdditiveCategoryItemDTO
-	AdditiveID uint    `json:"additiveId"`
-	StorePrice float64 `json:"storePrice"`
-	IsDefault  bool    `json:"isDefault"`
+	additiveTypes.BaseAdditiveDTO
+	AdditiveID   uint    `json:"additiveId"`
+	StorePrice   float64 `json:"storePrice"`
+	IsOutOfStock bool    `json:"isOutOfStock"`
+	IsDefault    bool    `json:"isDefault"`
+	IsHidden     bool    `json:"isHidden"`
 }
 
 type StoreAdditiveCategoryDTO struct {

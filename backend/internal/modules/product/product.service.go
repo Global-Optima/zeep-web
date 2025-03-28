@@ -3,7 +3,6 @@ package product
 import (
 	"errors"
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -177,7 +176,7 @@ func (s *productService) CreateProductSize(dto *types.CreateProductSizeDTO) (uin
 }
 
 func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductDTO) (*types.ProductDTO, error) {
-	product, err := s.repo.GetProductByID(productID)
+	product, err := s.repo.GetRawProductByID(productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to fetch product: %w", err)
 		s.logger.Error(wrappedErr)

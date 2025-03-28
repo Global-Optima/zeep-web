@@ -2,10 +2,8 @@ package types
 
 import (
 	"fmt"
-	"sort"
-	"strings"
-
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+	"sort"
 
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
@@ -99,6 +97,7 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 	return ProductSizeAdditiveDTO{
 		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive),
 		IsDefault:   productSizeAdditive.IsDefault,
+		IsHidden:    productSizeAdditive.IsHidden,
 	}
 }
 
@@ -143,19 +142,9 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 		MachineId: dto.MachineId,
 	}
 
-	for _, additive := range dto.Additives {
-		productSize.Additives = append(productSize.Additives, data.ProductSizeAdditive{
-			AdditiveID: additive.AdditiveID,
-			IsDefault:  additive.IsDefault,
-		})
-	}
+	productSize.Additives = mapAdditives(dto.Additives)
+	productSize.ProductSizeIngredients = mapIngredients(dto.Ingredients)
 
-	for _, ingredient := range dto.Ingredients {
-		productSize.ProductSizeIngredients = append(productSize.ProductSizeIngredients, data.ProductSizeIngredient{
-			IngredientID: ingredient.IngredientID,
-			Quantity:     ingredient.Quantity,
-		})
-	}
 	return productSize
 }
 
@@ -164,20 +153,14 @@ func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 		return fmt.Errorf("cannot update nil product")
 	}
 
-	if strings.TrimSpace(dto.Name) != "" {
-		if dto.Name != product.Name {
-			product.Name = dto.Name
-		}
+	if dto.Name != "" {
+		product.Name = dto.Name
 	}
-	if strings.TrimSpace(dto.Description) != "" {
-		if dto.Description != product.Description {
-			product.Description = dto.Description
-		}
-	}
+
+	product.Description = dto.Description
+
 	if dto.CategoryID != 0 {
-		if dto.CategoryID != product.CategoryID {
-			product.CategoryID = dto.CategoryID
-		}
+		product.CategoryID = dto.CategoryID
 	}
 
 	return nil
@@ -202,42 +185,57 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 		productSize.MachineId = *dto.MachineId
 	}
 
-	var additives []data.ProductSizeAdditive
-	var ingredients []data.ProductSizeIngredient
-
-	if dto.Additives != nil {
-		if len(dto.Additives) == 0 {
-			additives = []data.ProductSizeAdditive{}
-		} else {
-			for _, additive := range dto.Additives {
-				temp := data.ProductSizeAdditive{
-					AdditiveID: additive.AdditiveID,
-					IsDefault:  additive.IsDefault,
-				}
-				additives = append(additives, temp)
-			}
-		}
-	}
-
-	if dto.Ingredients != nil {
-		if len(dto.Ingredients) == 0 {
-			ingredients = []data.ProductSizeIngredient{}
-		} else {
-			for _, ingredient := range dto.Ingredients {
-				temp := data.ProductSizeIngredient{
-					IngredientID: ingredient.IngredientID,
-					Quantity:     ingredient.Quantity,
-				}
-				ingredients = append(ingredients, temp)
-			}
-		}
-	}
+	additives := mapAdditives(dto.Additives)
+	ingredients := mapIngredients(dto.Ingredients)
 
 	return &ProductSizeModels{
 		ProductSize: productSize,
 		Additives:   additives,
 		Ingredients: ingredients,
 	}
+}
+
+func mapAdditives(additivesDTO []SelectedAdditiveDTO) []data.ProductSizeAdditive {
+	if additivesDTO == nil {
+		return nil
+	}
+
+	additives := make([]data.ProductSizeAdditive, 0, len(additivesDTO))
+
+	for _, dto := range additivesDTO {
+		additive := data.ProductSizeAdditive{
+			AdditiveID: dto.AdditiveID,
+			IsDefault:  dto.IsDefault,
+		}
+
+		if dto.IsDefault {
+			additive.IsHidden = dto.IsHidden
+		} else {
+			additive.IsHidden = false
+		}
+
+		additives = append(additives, additive)
+	}
+
+	return additives
+}
+
+func mapIngredients(ingredientsDTO []SelectedIngredientDTO) []data.ProductSizeIngredient {
+	if ingredientsDTO == nil {
+		return nil
+	}
+
+	ingredients := make([]data.ProductSizeIngredient, 0, len(ingredientsDTO))
+
+	for _, dto := range ingredientsDTO {
+		ingredient := data.ProductSizeIngredient{
+			IngredientID: dto.IngredientID,
+			Quantity:     dto.Quantity,
+		}
+		ingredients = append(ingredients, ingredient)
+	}
+
+	return ingredients
 }
 
 func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKey *data.StorageImageKey) []details.CentralCatalogChange {

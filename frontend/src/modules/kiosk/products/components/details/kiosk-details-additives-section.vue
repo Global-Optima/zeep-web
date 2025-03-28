@@ -12,7 +12,6 @@
 						v-for="additive in category.additives"
 						:key="additive.additiveId"
 						:additive="additive"
-						:is-default="additive.isDefault"
 						:is-selected="isAdditiveSelected(category, additive.additiveId)"
 						@click:additive="() => onAdditiveToggle(category, additive)"
 					/>
