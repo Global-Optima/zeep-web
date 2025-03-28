@@ -169,11 +169,9 @@ func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 			product.Name = dto.Name
 		}
 	}
-	if strings.TrimSpace(dto.Description) != "" {
-		if dto.Description != product.Description {
-			product.Description = dto.Description
-		}
-	}
+
+	product.Description = dto.Description
+
 	if dto.CategoryID != 0 {
 		if dto.CategoryID != product.CategoryID {
 			product.CategoryID = dto.CategoryID

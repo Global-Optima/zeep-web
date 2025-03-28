@@ -64,8 +64,8 @@ const updateAdditiveSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название добавки')
       .max(100, 'Название не может превышать 100 символов'),
-    description: z.string().min(1, 'Введите описание')
-      .max(500, 'Описание не может превышать 500 символов'),
+    description: z.string()
+      .max(500, 'Описание не может превышать 500 символов').optional(),
     machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),

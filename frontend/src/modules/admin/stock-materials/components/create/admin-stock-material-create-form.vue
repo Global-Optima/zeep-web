@@ -39,7 +39,7 @@ const openIngredientDialog = ref(false)
 const createStockMaterialSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название материала'),
-    description: z.string().optional(),
+    description: z.string().optional().default(''),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас упаковок должен быть больше 0'),
     size: z.coerce.number().min(1, 'Введите размер упаковки'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),

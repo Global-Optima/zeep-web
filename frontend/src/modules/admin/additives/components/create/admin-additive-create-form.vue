@@ -55,7 +55,7 @@ const openIngredientsDialog = ref(false)
 const createAdditiveSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название добавки'),
-    description: z.string().min(1, 'Введите описание'),
+    description: z.string().optional().default(''),
     machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),

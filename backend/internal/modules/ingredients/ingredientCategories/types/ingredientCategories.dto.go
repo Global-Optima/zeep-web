@@ -4,12 +4,12 @@ import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type CreateIngredientCategoryDTO struct {
 	Name        string `json:"name" binding:"required"`
-	Description string `json:"description,omitempty"`
+	Description string `json:"description" sanitize:"soft"`
 }
 
 type UpdateIngredientCategoryDTO struct {
 	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
+	Description *string `json:"description" sanitize:"soft"`
 }
 
 type IngredientCategoryResponse struct {
