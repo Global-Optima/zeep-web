@@ -39,7 +39,9 @@ func (r *ingredientCategoryRepository) GetByID(id uint) (*data.IngredientCategor
 }
 
 func (r *ingredientCategoryRepository) Update(id uint, updates data.IngredientCategory) error {
-	return r.db.Model(&data.IngredientCategory{}).Where("id = ?", id).Updates(updates).Error
+	return r.db.Model(&data.IngredientCategory{}).Where("id = ?", id).
+		Select("name", "description").
+		Updates(updates).Error
 }
 
 func (r *ingredientCategoryRepository) Delete(id uint) error {

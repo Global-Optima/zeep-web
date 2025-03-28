@@ -86,19 +86,19 @@ type AdditiveCategoryDTO struct {
 
 type CreateAdditiveCategoryDTO struct {
 	Name             string `json:"name" binding:"required"`
-	Description      string `json:"description" binding:"omitempty"`
+	Description      string `json:"description" sanitize:"soft"`
 	IsMultipleSelect bool   `json:"isMultipleSelect"`
 }
 
 type UpdateAdditiveCategoryDTO struct {
 	Name             *string `json:"name" binding:"omitempty"`
-	Description      *string `json:"description" binding:"omitempty"`
+	Description      *string `json:"description" sanitize:"soft"`
 	IsMultipleSelect *bool   `json:"isMultipleSelect"`
 }
 
 type UpdateAdditiveDTO struct {
 	Name               string                  `form:"name" binding:"omitempty"`
-	Description        string                  `form:"description" binding:"omitempty"`
+	Description        string                  `form:"description" sanitize:"soft"`
 	BasePrice          *float64                `form:"basePrice" binding:"omitempty,gte=0"`
 	Size               *float64                `form:"size" binding:"omitempty,gt=0"`
 	UnitID             *uint                   `form:"unitId" binding:"omitempty,gt=0"`
