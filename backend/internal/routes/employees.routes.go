@@ -36,6 +36,16 @@ import (
 
 	stockMaterialCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
+	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
+
+	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	productCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
+	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+
+	ingredientCategoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+
+	franchiseeTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 )
 
 func (r *Router) RegisterAuditRoutes(handler *audit.AuditHandler) {
@@ -54,12 +64,14 @@ func (r *Router) RegisterFranchiseeRoutes(handler *franchisees.FranchiseeHandler
 		router.POST(
 			"",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&franchiseeTypes.CreateFranchiseeDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.CreateFranchisee,
 		)
 		router.PUT(
 			"/:id",
 			middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...),
+			middleware.WithDTO(&franchiseeTypes.UpdateFranchiseeDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.UpdateFranchisee,
 		)
@@ -109,12 +121,14 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.POST(
 			"",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&productTypes.CreateProductDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.CreateProduct,
 		)
 		router.PUT(
 			"/:id",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&productTypes.UpdateProductDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.UpdateProduct,
 		)
@@ -123,12 +137,14 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.POST(
 			"/sizes",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&productTypes.CreateProductSizeDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.CreateProductSize,
 		)
 		router.PUT(
 			"/sizes/:id",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&productTypes.UpdateProductSizeDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.UpdateProductSize,
 		)
@@ -170,12 +186,14 @@ func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler
 		router.POST(
 			"",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&ingredientTypes.CreateIngredientDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.CreateIngredient,
 		)
 		router.PUT(
 			"/:id",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&ingredientTypes.UpdateIngredientDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.UpdateIngredient,
 		)
@@ -191,12 +209,14 @@ func (r *Router) RegisterIngredientCategoriesRoutes(handler *ingredientCategorie
 		router.POST(
 			"",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&ingredientCategoriesTypes.CreateIngredientCategoryDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.Create,
 		)
 		router.PUT(
 			"/:id",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&ingredientCategoriesTypes.UpdateIngredientCategoryDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.Update,
 		)
@@ -233,12 +253,14 @@ func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHan
 		router.POST(
 			"",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&productCategoryTypes.CreateProductCategoryDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.CreateCategory,
 		)
 		router.PUT(
 			"/:id",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&productCategoryTypes.UpdateProductCategoryDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.UpdateCategory,
 		)
@@ -254,12 +276,14 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 		router.POST(
 			"",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&additiveTypes.CreateAdditiveDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.CreateAdditive,
 		)
 		router.PUT(
 			"/:id",
 			middleware.EmployeeRoleMiddleware(),
+			middleware.WithDTO(&additiveTypes.UpdateAdditiveDTO{}),
 			middleware.SanitizeMiddleware(),
 			handler.UpdateAdditive,
 		)
@@ -272,12 +296,14 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 			additiveCategories.POST(
 				"",
 				middleware.EmployeeRoleMiddleware(),
+				middleware.WithDTO(&additiveTypes.CreateAdditiveCategoryDTO{}),
 				middleware.SanitizeMiddleware(),
 				handler.CreateAdditiveCategory,
 			)
 			additiveCategories.PUT(
 				"/:id",
 				middleware.EmployeeRoleMiddleware(),
+				middleware.WithDTO(&additiveTypes.UpdateAdditiveCategoryDTO{}),
 				middleware.SanitizeMiddleware(),
 				handler.UpdateAdditiveCategory,
 			)
@@ -396,8 +422,18 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 	{
 		router.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetSuppliers)        // Region, warehouse
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetSupplierByID) // Region, warehouse
-		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateSupplier)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateSupplier)
+		router.POST(
+			"",
+			middleware.EmployeeRoleMiddleware(),
+			middleware.SanitizeMiddleware(),
+			handler.CreateSupplier,
+		)
+		router.PUT(
+			"/:id",
+			middleware.EmployeeRoleMiddleware(),
+			middleware.SanitizeMiddleware(),
+			handler.UpdateSupplier,
+		)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteSupplier)
 
 		router.GET("/:id/materials", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetMaterialsBySupplier) // Region, warehouse
@@ -498,12 +534,14 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 			warehouseRoutes.POST(
 				"",
 				middleware.EmployeeRoleMiddleware(data.RegionPermissions...),
+				middleware.WithDTO(&warehouseTypes.CreateWarehouseDTO{}),
 				middleware.SanitizeMiddleware(),
 				handler.CreateWarehouse,
 			) // region
 			warehouseRoutes.PUT(
 				"/:warehouseId",
 				middleware.EmployeeRoleMiddleware(data.RegionPermissions...),
+				middleware.WithDTO(&warehouseTypes.UpdateWarehouseDTO{}),
 				middleware.SanitizeMiddleware(),
 				handler.UpdateWarehouse,
 			) // region
