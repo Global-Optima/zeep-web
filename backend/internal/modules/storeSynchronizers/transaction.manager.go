@@ -53,6 +53,13 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 		return nil, fmt.Errorf("could not fetch unsyncData: nil pointer dereference")
 	}
 
+	for _, ingredientID := range unsyncData.IngredientIDs {
+		err := data.UpdateOutOfStockInventory(m.db, storeID, ingredientID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if len(unsyncData.AdditiveIDs) == 0 && len(unsyncData.IngredientIDs) == 0 {
 		return &types.SynchronizationStatus{
 			LastSyncDate: store.LastInventorySyncAt.UTC().String(),

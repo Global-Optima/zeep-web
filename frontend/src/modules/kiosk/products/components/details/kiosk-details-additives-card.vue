@@ -28,8 +28,16 @@
           :class="additive.isOutOfStock ? 'text-gray-400' : (isSelected ? 'text-black' : 'text-primary')"
           data-testid="additive-price"
         >
-          {{ formatPrice(additive.storePrice) }}
+          <span
+            v-if="additive.isDefault"
+            class="text-xl"
+          >
+						Входит в состав
+					</span>
+
+          <span v-else>{{formatPrice(additive.storePrice)}}</span>
         </p>
+
 
         <template v-if="additive.isOutOfStock">
           <p
@@ -42,11 +50,11 @@
         <template v-else>
           <button
             class="relative flex-shrink-0 rounded-full focus:outline-none size-8"
-            :class="[isSelected ? 'bg-primary' : 'bg-gray-200']"
+            :class="[isSelected || additive.isDefault ? 'bg-primary' : 'bg-gray-200']"
             data-testid="additive-button"
           >
             <span
-              v-if="isSelected"
+              v-if="isSelected || additive.isDefault"
               class="absolute inset-0 bg-white m-auto rounded-full size-3"
               data-testid="additive-selected-indicator"
             ></span>

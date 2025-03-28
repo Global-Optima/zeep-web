@@ -114,7 +114,7 @@ function addAdditive(additive: AdditiveDTO) {
     additives.value.push({
       additiveId: additive.id,
       isDefault: false,
-      isHidden: undefined,
+      isHidden: false,
       name: additive.name,
       categoryName: additive.category.name,
       size: additive.size,
@@ -165,7 +165,7 @@ function selectUnit(unit: UnitDTO) {
 function onAdditiveDefaultClick(index: number, value: boolean) {
   additives.value[index].isDefault = value
   if (!value) {
-    additives.value[index].isHidden = undefined
+    additives.value[index].isHidden = false
   }
 }
 
