@@ -46,7 +46,10 @@ func FileToMultipart(filePath, fieldName string) (*multipart.FileHeader, *bytes.
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// Get file stats
 	fileStat, err := file.Stat()
@@ -100,7 +103,10 @@ func CreateMultipartFileHeader(filePath string) *multipart.FileHeader {
 		log.Fatal(err)
 		return nil
 	}
-	defer file.Close()
+
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// create a buffer to hold the file in memory
 	var buff bytes.Buffer
@@ -122,7 +128,7 @@ func CreateMultipartFileHeader(filePath string) *multipart.FileHeader {
 
 	// close the form writer after the copying process is finished
 	// I don't use defer in here to avoid unexpected EOF error
-	formWriter.Close()
+	_ = formWriter.Close()
 
 	// transform the bytes buffer into a form reader
 	buffReader := bytes.NewReader(buff.Bytes())

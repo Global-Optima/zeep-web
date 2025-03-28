@@ -55,7 +55,10 @@ func (env *TestEnvironment) RunTests(t *testing.T, testCases []TestCase) {
 						if err != nil {
 							t.Fatalf("failed to open test file: %v", err)
 						}
-						defer file.Close()
+
+						defer func() {
+							_ = file.Close()
+						}()
 
 						part, err := writer.CreateFormFile(fieldName, fileHeader.Filename)
 						if err != nil {

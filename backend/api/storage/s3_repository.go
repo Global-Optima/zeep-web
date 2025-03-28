@@ -220,7 +220,10 @@ func (r *storageRepository) DownloadFile(key string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	var buf bytes.Buffer
 	if _, err := io.Copy(&buf, resp.Body); err != nil {
