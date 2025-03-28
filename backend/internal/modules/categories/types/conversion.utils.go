@@ -15,7 +15,5 @@ func UpdateToCategory(dto *UpdateProductCategoryDTO, category *data.ProductCateg
 		category.Name = dto.Name
 	}
 
-	if dto.Description != "" {
-		category.Description = dto.Description
-	}
+	category.Description = dto.Description
 }

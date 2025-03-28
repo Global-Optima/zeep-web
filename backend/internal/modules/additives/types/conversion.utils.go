@@ -45,9 +45,8 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO, additive *data.Addit
 	if strings.TrimSpace(dto.Name) != "" {
 		additive.Name = dto.Name
 	}
-	if strings.TrimSpace(dto.Description) != "" {
-		additive.Description = dto.Description
-	}
+	additive.Description = dto.Description
+
 	if dto.BasePrice != nil {
 		additive.BasePrice = *dto.BasePrice
 	}

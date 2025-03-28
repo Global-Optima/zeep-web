@@ -30,7 +30,7 @@ const emits = defineEmits<{
 const updateFranchiseeSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название франчайзи'),
-    description: z.string().min(1, 'Введите описание франчайзи'),
+    description: z.string().optional(),
   })
 )
 

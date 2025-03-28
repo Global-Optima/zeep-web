@@ -22,7 +22,7 @@ const emits = defineEmits<{
 const createAdditiveCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
-    description: z.string().min(1, 'Введите описание категории'),
+    description: z.string().optional().default(''),
     isMultipleSelect: z.boolean(),
   })
 )

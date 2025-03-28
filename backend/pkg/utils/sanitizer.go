@@ -40,6 +40,23 @@ func SanitizeString(input string) (string, bool) {
 	return normalized, true
 }
 
+func SoftSanitizeString(input string) (string, bool) {
+	if !utf8.ValidString(input) {
+		return "", false
+	}
+
+	normalizedUTF8 := norm.NFC.String(input)
+
+	trimmed := strings.TrimSpace(normalizedUTF8)
+
+	spaceRegex := regexp.MustCompile(`\s+`)
+	normalized := spaceRegex.ReplaceAllString(trimmed, " ")
+
+	normalized = removeInvisibleCharacters(normalized)
+
+	return normalized, true
+}
+
 // removeInvisibleCharacters removes non-printable, zero-width, and control characters
 func removeInvisibleCharacters(input string) string {
 	var builder strings.Builder
