@@ -2,6 +2,7 @@ package storeSynchronizers
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -44,6 +45,11 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 		return nil, fmt.Errorf("failed to fetch store sync time: %w", err)
 	}
 
+	syncStatus := &types.SynchronizationStatus{
+		LastSyncDate: store.LastInventorySyncAt.UTC().String(),
+		IsSync:       true,
+	}
+
 	unsyncData, err := m.fetchUnsynchronizedData(storeID, store.LastInventorySyncAt.UTC())
 	if err != nil {
 		return nil, err
@@ -52,42 +58,12 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 	if unsyncData == nil {
 		return nil, fmt.Errorf("could not fetch unsyncData: nil pointer dereference")
 	}
-
-	for _, ingredientID := range unsyncData.IngredientIDs {
-		err := data.UpdateOutOfStockInventory(m.db, storeID, ingredientID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if len(unsyncData.AdditiveIDs) == 0 && len(unsyncData.IngredientIDs) == 0 {
-		return &types.SynchronizationStatus{
-			LastSyncDate: store.LastInventorySyncAt.UTC().String(),
-			IsSync:       true,
-		}, nil
-	}
-
-	err = m.filterMissingData(storeID, unsyncData)
-	if err != nil {
-		return nil, err
-	}
-
+	logrus.Info(unsyncData)
 	if len(unsyncData.AdditiveIDs) > 0 || len(unsyncData.IngredientIDs) > 0 {
-		return &types.SynchronizationStatus{
-			LastSyncDate: store.LastInventorySyncAt.UTC().String(),
-			IsSync:       false,
-		}, nil
+		syncStatus.IsSync = false
 	}
 
-	synchronizedAt, err := m.storeRepo.UpdateStoreSyncTime(storeID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.SynchronizationStatus{
-		LastSyncDate: synchronizedAt.UTC().String(),
-		IsSync:       true,
-	}, nil
+	return syncStatus, nil
 }
 
 func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
@@ -97,11 +73,22 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 	}
 
 	return m.db.Transaction(func(tx *gorm.DB) error {
+		productSizeIDs, err := m.repo.GetNotSynchronizedProductSizesIDs(storeID, store.LastInventorySyncAt)
+		if err != nil {
+			return err
+		}
+
 		if err := m.synchronizeAdditives(tx, storeID, store.LastInventorySyncAt); err != nil {
 			return err
 		}
 
-		if err := m.synchronizeIngredients(tx, storeID, store.LastInventorySyncAt); err != nil {
+		synchronizedIngredientIDS, err := m.synchronizeIngredients(tx, storeID, store.LastInventorySyncAt)
+		if err != nil {
+			return err
+		}
+
+		err = data.RecalculateOutOfStock(tx, storeID, synchronizedIngredientIDS, productSizeIDs)
+		if err != nil {
 			return err
 		}
 
@@ -116,6 +103,7 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 
 func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt time.Time) (*types.UnsyncData, error) {
 	var (
+		productSizeIDs             []uint
 		additiveIDs                []uint
 		ingredientIDsFromProducts  []uint
 		ingredientIDsFromAdditives []uint
@@ -131,7 +119,13 @@ func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt ti
 
 	g.Go(func() error {
 		var err error
-		ingredientIDsFromProducts, err = m.repo.GetNotSynchronizedProductSizeWithAdditivesIngredients(storeID, lastSyncAt)
+		ingredientIDsFromProducts, err = m.repo.GetNotSynchronizedProductSizeIngredientsIDs(storeID, lastSyncAt)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		productSizeIDs, err = m.repo.GetNotSynchronizedProductSizesIDs(storeID, lastSyncAt)
 		return err
 	})
 
@@ -146,8 +140,9 @@ func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt ti
 	}
 
 	return &types.UnsyncData{
-		AdditiveIDs:   additiveIDs,
-		IngredientIDs: utils.MergeDistinct(ingredientIDsFromAdditives, ingredientIDsFromProducts),
+		ProductSizeIDs: productSizeIDs,
+		AdditiveIDs:    additiveIDs,
+		IngredientIDs:  utils.MergeDistinct(ingredientIDsFromAdditives, ingredientIDsFromProducts),
 	}, nil
 }
 
@@ -198,36 +193,29 @@ func (m *transactionManager) synchronizeAdditives(tx *gorm.DB, storeID uint, las
 	return nil
 }
 
-func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, lastSyncAt time.Time) error {
+func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, lastSyncAt time.Time) ([]uint, error) {
 	var productSizeIngredientIDs, additiveIngredientIDs []uint
 
 	var err error
-	productSizeIngredientIDs, err = m.repo.GetNotSynchronizedProductSizeWithAdditivesIngredients(
+	productSizeIngredientIDs, err = m.repo.GetNotSynchronizedProductSizeIngredientsIDs(
 		storeID, lastSyncAt,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to fetch product-size ingredients: %w", err)
+		return nil, fmt.Errorf("failed to fetch product-size ingredients: %w", err)
 	}
 
 	additiveIngredientIDs, err = m.repo.GetNotSynchronizedAdditiveIngredientsIDs(
 		storeID, lastSyncAt,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to fetch additive-based ingredients: %w", err)
+		return nil, fmt.Errorf("failed to fetch additive-based ingredients: %w", err)
 	}
 
 	mergedIngredientIDs := utils.MergeDistinct(productSizeIngredientIDs, additiveIngredientIDs)
 
-	for _, ingredientID := range mergedIngredientIDs {
-		err := data.UpdateOutOfStockInventory(tx, storeID, ingredientID)
-		if err != nil {
-			return fmt.Errorf("failed to update ingredient: %w", err)
-		}
-	}
-
 	missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, mergedIngredientIDs)
 	if err != nil {
-		return fmt.Errorf("failed to filter missing store_stocks: %w", err)
+		return nil, fmt.Errorf("failed to filter missing store_stocks: %w", err)
 	}
 
 	if len(missingIngredientIDs) > 0 {
@@ -238,8 +226,8 @@ func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, l
 		storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
 		_, err := storeStockRepoTx.AddMultipleStocks(newStoreStocks)
 		if err != nil {
-			return fmt.Errorf("failed to add store_stocks: %w", err)
+			return nil, fmt.Errorf("failed to add store_stocks: %w", err)
 		}
 	}
-	return nil
+	return mergedIngredientIDs, nil
 }

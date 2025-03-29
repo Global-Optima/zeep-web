@@ -54,7 +54,7 @@ func (s *ingredientService) UpdateIngredient(ingredientID uint, dto *types.Updat
 		return err
 	}
 
-	if err := s.repo.UpdateIngredient(ingredientID, ingredient); err != nil {
+	if err := s.repo.SaveIngredient(ingredientID, ingredient); err != nil {
 		s.logger.Error("Failed to update ingredient:", err)
 		return err
 	}

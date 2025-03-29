@@ -1,5 +1,7 @@
 package data
 
+import "time"
+
 type Size string
 
 const (
@@ -55,6 +57,7 @@ type ProductSize struct {
 	Product                Product                 `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
 	DiscountID             uint                    `gorm:"index"`
 	MachineId              string                  `gorm:"size:40;not null;unique" sort:"machineId"`
+	AdditivesUpdatedAt     time.Time               `gorm:"index" sort:"additivesUpdatedAt"`
 	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 }

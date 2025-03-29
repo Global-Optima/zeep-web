@@ -9,7 +9,7 @@ import (
 
 type IngredientRepository interface {
 	CreateIngredient(ingredient *data.Ingredient) (uint, error)
-	UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error
+	SaveIngredient(ingredientID uint, ingredient *data.Ingredient) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetRawIngredientByID(ingredientID uint) (*data.Ingredient, error)
@@ -35,7 +35,7 @@ func (r *ingredientRepository) CreateIngredient(ingredient *data.Ingredient) (ui
 	return ingredient.ID, err
 }
 
-func (r *ingredientRepository) UpdateIngredient(ingredientID uint, ingredient *data.Ingredient) error {
+func (r *ingredientRepository) SaveIngredient(ingredientID uint, ingredient *data.Ingredient) error {
 	return r.db.Model(&data.Ingredient{}).
 		Where("id = ?", ingredientID).
 		Save(ingredient).Error

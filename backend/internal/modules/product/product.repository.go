@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"strings"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
@@ -187,14 +188,17 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 			return fmt.Errorf("nothing to update")
 		}
 
-		if updateModels.ProductSize != nil {
-			if err := r.updateProductSize(tx, id, updateModels.ProductSize); err != nil {
-				return err
-			}
-		}
+		additivesUpdated := false
 
 		if updateModels.Additives != nil {
 			if err := r.updateAdditives(tx, id, updateModels.Additives); err != nil {
+				return err
+			}
+			additivesUpdated = true
+		}
+
+		if updateModels.ProductSize != nil {
+			if err := r.updateProductSize(tx, id, updateModels.ProductSize, additivesUpdated); err != nil {
 				return err
 			}
 		}
@@ -251,7 +255,11 @@ func (r *productRepository) GetProductSizeAdditives(productSizeID uint) ([]uint,
 	return ids, nil
 }
 
-func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize) error {
+func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize, additivesUpdated bool) error {
+	if additivesUpdated {
+		productSize.AdditivesUpdatedAt = time.Now().UTC()
+	}
+
 	if err := tx.Model(&data.ProductSize{}).
 		Where("id = ?", id).
 		Updates(productSize).Error; err != nil {
@@ -310,7 +318,7 @@ func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, add
 	}
 
 	if len(toDeleteIDs) > 0 {
-		if err := tx.Where("product_size_id = ? AND additive_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
+		if err := tx.Unscoped().Where("product_size_id = ? AND additive_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
 			return fmt.Errorf("failed to delete old additives: %w", err)
 		}
 	}

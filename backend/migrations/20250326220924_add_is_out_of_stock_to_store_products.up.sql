@@ -10,5 +10,8 @@ ALTER TABLE additives
 ALTER TABLE additives
     ADD CONSTRAINT additives_base_price_check CHECK (base_price >= 0);
 
+ALTER TABLE product_sizes
+    ADD COLUMN additives_updated_at TIMESTAMPTZ;
+
 ALTER TABLE product_size_additives
     ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT FALSE;
