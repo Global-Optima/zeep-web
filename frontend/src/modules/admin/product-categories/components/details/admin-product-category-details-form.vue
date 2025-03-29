@@ -2,12 +2,14 @@
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
+import { ref } from 'vue';
 
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import type { ProductCategoryDTO, UpdateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
@@ -34,6 +36,12 @@ const { handleSubmit, resetForm } = useForm<UpdateProductCategoryDTO>({
   validationSchema: createCategorySchema,
   initialValues: productCategory
 })
+
+const machineCategoryOptions = ref([
+  { label: "Чай", value: "TEA" },
+  { label: "Кофе", value: "COFFEE" },
+  { label: "Мороженое", value: "ICE_CREAM" }
+]);
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
@@ -126,6 +134,33 @@ const onCancel = () => {
 									placeholder="Введите описание категории"
 									:readonly="readonly"
 								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					</FormField>
+
+					<!-- Machine Category -->
+					<FormField
+						name="machineCategory"
+						v-slot="{ componentField }"
+					>
+						<FormItem>
+							<FormLabel>Категория Машины</FormLabel>
+							<FormControl>
+								<Select v-bind="componentField">
+									<SelectTrigger id="machine_category">
+										<SelectValue placeholder="Выберите категорию машины" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem
+											v-for="option in machineCategoryOptions"
+											:key="option.value"
+											:value="option.value"
+										>
+											{{ option.label }}
+										</SelectItem>
+									</SelectContent>
+								</Select>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
