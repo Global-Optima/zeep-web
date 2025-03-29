@@ -118,6 +118,7 @@ export interface ProductCategoryDTO {
 	id: number
 	name: string
 	description: string
+  machineCategory: string
 }
 
 export interface ProductCategoriesFilterDTO extends PaginationParams {
@@ -127,9 +128,11 @@ export interface ProductCategoriesFilterDTO extends PaginationParams {
 export interface CreateProductCategoryDTO {
 	name: string
 	description: string
+  machineCategory?: string
 }
 
 export interface UpdateProductCategoryDTO {
 	name?: string
 	description?: string
+  machineCategory?: string
 }
