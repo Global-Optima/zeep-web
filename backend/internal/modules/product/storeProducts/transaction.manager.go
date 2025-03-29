@@ -71,6 +71,10 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
+		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -124,6 +128,10 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 			return err
 		}
 
+		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -156,6 +164,10 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 
 		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
 		if err != nil {
+			return err
+		}
+
+		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {
 			return err
 		}
 

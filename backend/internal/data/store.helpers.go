@@ -10,44 +10,58 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 		return nil
 	}
 
-	storeProductIDsFromPS, err := getStoreProductIDsByProductSizes(tx, storeID, productSizeIDs)
-	if err != nil {
-		return err
+	var storeProductIDsFromPS,
+		storeProductIDsFromIngredients,
+		storeAdditiveIDs []uint
+	var err error
+
+	if len(productSizeIDs) > 0 {
+		storeProductIDsFromPS, err = getStoreProductIDsByProductSizes(tx, storeID, productSizeIDs)
+		if err != nil {
+			return err
+		}
 	}
 
-	storeProductIDsFromIngredients, err := getStoreProductIDsByIngredients(tx, storeID, ingredientIDs)
-	if err != nil {
-		return err
+	if len(ingredientIDs) > 0 {
+		storeProductIDsFromIngredients, err = getStoreProductIDsByIngredients(tx, storeID, ingredientIDs)
+		if err != nil {
+			return err
+		}
 	}
 
-	mergedStoreProductIDs := unionUintSlices(storeProductIDsFromPS, storeProductIDsFromIngredients)
+	if len(storeProductIDsFromPS) > 0 || len(storeProductIDsFromIngredients) > 0 {
+		mergedStoreProductIDs := unionUintSlices(storeProductIDsFromPS, storeProductIDsFromIngredients)
 
-	if err := recalculateStoreProducts(tx, mergedStoreProductIDs); err != nil {
-		return err
+		if err := recalculateStoreProducts(tx, mergedStoreProductIDs); err != nil {
+			return err
+		}
 	}
 
-	storeAdditiveIDs, err := getStoreAdditiveIDsByIngredients(tx, storeID, ingredientIDs)
-	if err != nil {
-		return err
+	if len(ingredientIDs) > 0 {
+		storeAdditiveIDs, err = getStoreAdditiveIDsByIngredients(tx, storeID, ingredientIDs)
+		if err != nil {
+			return err
+		}
+		if err := recalculateStoreAdditives(tx, storeAdditiveIDs); err != nil {
+			return err
+		}
 	}
-	if err := recalculateStoreAdditives(tx, storeAdditiveIDs); err != nil {
-		return err
-	}
+
 	logrus.Info("=============================================")
 
 	return nil
 }
 
-func recalculateStoreProducts(tx *gorm.DB, productIDs []uint) error {
-	if len(productIDs) == 0 {
+func recalculateStoreProducts(tx *gorm.DB, storeProductIDs []uint) error {
+	if len(storeProductIDs) == 0 {
 		return nil
 	}
 
-	outOfStockIDs, err := getOutOfStockStoreProductIDs(tx, productIDs)
+	outOfStockIDs, err := getOutOfStockStoreProductIDs(tx, storeProductIDs)
 	if err != nil {
 		return err
 	}
-	inStockIDs := diffUintSlice(productIDs, outOfStockIDs)
+	inStockIDs := diffUintSlice(storeProductIDs, outOfStockIDs)
 	logrus.Infof("outOfStockProducts: %v", outOfStockIDs)
 	logrus.Infof("inStockProducts: %v", inStockIDs)
 
@@ -104,26 +118,26 @@ func updateStoreAdditiveStockFlags(tx *gorm.DB, ids []uint, isOutOfStock bool) e
 
 func getStoreProductIDsByIngredients(tx *gorm.DB, storeID uint, ingredientIDs []uint) ([]uint, error) {
 	var byIngredients []uint
-	err := tx.Table("store_product_sizes AS sps").
-		Select("DISTINCT sps.store_product_id").
-		Joins("JOIN store_products sp ON sp.id = sps.store_product_id").
-		Joins("JOIN product_size_ingredients psi ON psi.product_size_id = sps.product_size_id").
-		Where("sp.store_id = ?", storeID).
-		Where("psi.ingredient_id IN ?", ingredientIDs).
-		Pluck("sps.store_product_id", &byIngredients).Error
+	err := tx.Model(&StoreProductSize{}).
+		Select("DISTINCT store_product_sizes.store_product_id").
+		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
+		Joins("JOIN product_size_ingredients ON product_size_ingredients.product_size_id = store_product_sizes.product_size_id").
+		Where("store_products.store_id = ?", storeID).
+		Where("product_size_ingredients.ingredient_id IN ?", ingredientIDs).
+		Pluck("store_product_sizes.store_product_id", &byIngredients).Error
 	if err != nil {
 		return nil, err
 	}
 
 	var byAdditives []uint
-	err = tx.Table("store_product_sizes AS sps").
-		Select("DISTINCT sps.store_product_id").
-		Joins("JOIN store_products sp ON sp.id = sps.store_product_id").
-		Joins("JOIN product_size_additives psa ON psa.product_size_id = sps.product_size_id AND psa.is_default = true").
-		Joins("JOIN additive_ingredients ai ON ai.additive_id = psa.additive_id").
-		Where("sp.store_id = ?", storeID).
-		Where("ai.ingredient_id IN ?", ingredientIDs).
-		Pluck("sps.store_product_id", &byAdditives).Error
+	err = tx.Model(&StoreProductSize{}).
+		Select("DISTINCT store_product_sizes.store_product_id").
+		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
+		Joins("JOIN product_size_additives ON product_size_additives.product_size_id = store_product_sizes.product_size_id AND product_size_additives.is_default = true").
+		Joins("JOIN additive_ingredients ON additive_ingredients.additive_id = product_size_additives.additive_id").
+		Where("store_products.store_id = ?", storeID).
+		Where("additive_ingredients.ingredient_id IN ?", ingredientIDs).
+		Pluck("store_product_sizes.store_product_id", &byAdditives).Error
 	if err != nil {
 		return nil, err
 	}
@@ -133,12 +147,12 @@ func getStoreProductIDsByIngredients(tx *gorm.DB, storeID uint, ingredientIDs []
 
 func getStoreAdditiveIDsByIngredients(tx *gorm.DB, storeID uint, ingredientIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Table("store_additives AS sa").
-		Select("DISTINCT sa.id").
-		Joins("JOIN additive_ingredients ai ON ai.additive_id = sa.additive_id").
-		Where("sa.store_id = ?", storeID).
-		Where("ai.ingredient_id IN ?", ingredientIDs).
-		Pluck("sa.id", &ids).Error
+	err := tx.Model(&StoreAdditive{}).
+		Select("DISTINCT store_additives.id").
+		Joins("JOIN additive_ingredients ON additive_ingredients.additive_id = store_additives.additive_id").
+		Where("store_additives.store_id = ?", storeID).
+		Where("additive_ingredients.ingredient_id IN ?", ingredientIDs).
+		Pluck("store_additives.id", &ids).Error
 	return ids, err
 }
 
@@ -146,27 +160,27 @@ func getOutOfStockStoreProductIDs(tx *gorm.DB, storeProductIDs []uint) ([]uint, 
 	var outByIngredients []uint
 	var outByAdditives []uint
 
-	err := tx.Table("store_product_sizes AS sps").
-		Select("DISTINCT sps.store_product_id").
-		Joins("JOIN store_products sp ON sp.id = sps.store_product_id").
-		Joins("JOIN product_size_ingredients psi ON psi.product_size_id = sps.product_size_id").
-		Joins("JOIN store_stocks ss ON ss.ingredient_id = psi.ingredient_id AND ss.store_id = sp.store_id").
-		Where("sp.id IN ?", storeProductIDs).
-		Where("ss.quantity < psi.quantity").
-		Pluck("sps.store_product_id", &outByIngredients).Error
+	err := tx.Model(&StoreProductSize{}).
+		Select("DISTINCT store_product_sizes.store_product_id").
+		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
+		Joins("JOIN product_size_ingredients ON product_size_ingredients.product_size_id = store_product_sizes.product_size_id").
+		Joins("JOIN store_stocks ON store_stocks.ingredient_id = product_size_ingredients.ingredient_id AND store_stocks.store_id = store_products.store_id").
+		Where("store_products.id IN ?", storeProductIDs).
+		Where("store_stocks.quantity < product_size_ingredients.quantity").
+		Pluck("store_product_sizes.store_product_id", &outByIngredients).Error
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.Model("store_product_sizes AS sps").
-		Select("DISTINCT sps.store_product_id").
-		Joins("JOIN store_products sp ON sp.id = sps.store_product_id").
-		Joins("JOIN product_size_additives psa ON psa.product_size_id = sps.product_size_id AND psa.is_default = TRUE").
-		Joins("JOIN additive_ingredients ai ON ai.additive_id = psa.additive_id").
-		Joins("JOIN store_stocks ss ON ss.ingredient_id = ai.ingredient_id").
-		Where("sp.id IN ?", storeProductIDs).
-		Where("ss.quantity < ai.quantity").
-		Pluck("sps.store_product_id", &outByAdditives).Error
+	err = tx.Model(&StoreProductSize{}).
+		Select("DISTINCT store_product_sizes.store_product_id").
+		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
+		Joins("JOIN product_size_additives ON product_size_additives.product_size_id = store_product_sizes.product_size_id AND product_size_additives.is_default = TRUE").
+		Joins("JOIN additive_ingredients ON additive_ingredients.additive_id = product_size_additives.additive_id").
+		Joins("JOIN store_stocks ON store_stocks.ingredient_id = additive_ingredients.ingredient_id").
+		Where("store_products.id IN ?", storeProductIDs).
+		Where("store_stocks.quantity < additive_ingredients.quantity").
+		Pluck("store_product_sizes.store_product_id", &outByAdditives).Error
 	if err != nil {
 		return nil, err
 	}
@@ -177,19 +191,19 @@ func getOutOfStockStoreProductIDs(tx *gorm.DB, storeProductIDs []uint) ([]uint, 
 
 func getOutOfStockStoreAdditiveIDs(tx *gorm.DB, storeAdditiveIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Table("store_additives AS sa").
-		Select("DISTINCT sa.id").
-		Joins("JOIN additive_ingredients ai ON ai.additive_id = sa.additive_id").
-		Joins("JOIN store_stocks ss ON ss.ingredient_id = ai.ingredient_id AND ss.store_id = sa.store_id").
-		Where("sa.id IN ?", storeAdditiveIDs).
-		Where("ss.quantity < ai.quantity").
-		Pluck("sa.id", &ids).Error
+	err := tx.Model(&StoreAdditive{}).
+		Select("DISTINCT store_additives.id").
+		Joins("JOIN additive_ingredients ON additive_ingredients.additive_id = store_additives.additive_id").
+		Joins("JOIN store_stocks ON store_stocks.ingredient_id = additive_ingredients.ingredient_id AND store_stocks.store_id = store_additives.store_id").
+		Where("store_additives.id IN ?", storeAdditiveIDs).
+		Where("store_stocks.quantity < additive_ingredients.quantity").
+		Pluck("store_additives.id", &ids).Error
 	return ids, err
 }
 
 func getStoreProductIDsByProductSizes(tx *gorm.DB, storeID uint, productSizeIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Table("store_products").
+	err := tx.Model(&StoreProduct{}).
 		Distinct("store_products.id").
 		Joins("JOIN store_product_sizes ON store_products.id = store_product_sizes.store_product_id").
 		Where("store_products.store_id = ?", storeID).

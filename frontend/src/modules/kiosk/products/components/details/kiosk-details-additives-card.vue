@@ -25,7 +25,7 @@
       <div class="flex justify-between items-center w-full gap-2 flex-wrap">
         <p
           class="text-left text-xl md:text-2xl"
-          :class="additive.isOutOfStock ? 'text-gray-400' : (isSelected ? 'text-black' : 'text-primary')"
+          :class="additive.isOutOfStock ? 'text-gray-400' : 'text-primary'"
           data-testid="additive-price"
         >
           <span
