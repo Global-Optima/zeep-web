@@ -82,7 +82,7 @@ func (r *notificationRepository) GetNotificationsByEmployee(employeeID uint, fil
 		query = query.Where("n.details::text ILIKE ?", searchTerm)
 	}
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.BaseFilter.Pagination, filter.BaseFilter.Sort, &data.EmployeeNotificationRecipient{})
+	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.EmployeeNotificationRecipient{})
 	if err != nil {
 		return nil, err
 	}

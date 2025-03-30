@@ -76,7 +76,7 @@ func (hub *WebSocketHub) Run() {
 				for conn := range connections {
 					err := conn.WriteJSON(message)
 					if err != nil {
-						conn.Close()
+						_ = conn.Close()
 						delete(connections, conn)
 					}
 				}
