@@ -65,8 +65,10 @@ func (r *stockMaterialCategoryRepository) GetAll(filter types.StockMaterialCateg
 func (r *stockMaterialCategoryRepository) Update(id uint, updates data.StockMaterialCategory) error {
 	result := r.db.Model(&data.StockMaterialCategory{}).
 		Where("id = ?", id).
-		Select("name", "description").
-		Updates(&updates)
+		Updates(&data.StockMaterialCategory{
+			Name:        updates.Name,
+			Description: updates.Description,
+		})
 	if result.Error != nil {
 		return result.Error
 	}
