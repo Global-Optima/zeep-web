@@ -1,6 +1,7 @@
 package data
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -30,9 +31,9 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 	}
 
 	if len(storeProductIDsFromPS) > 0 || len(storeProductIDsFromIngredients) > 0 {
-		mergedStoreProductIDs := unionUintSlices(storeProductIDsFromPS, storeProductIDsFromIngredients)
+		mergedStoreProductIDs := utils.MergeDistinct(storeProductIDsFromPS, storeProductIDsFromIngredients)
 
-		if err := recalculateStoreProducts(tx, mergedStoreProductIDs); err != nil {
+		if err := RecalculateStoreProducts(tx, mergedStoreProductIDs); err != nil {
 			return err
 		}
 	}
@@ -42,7 +43,7 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 		if err != nil {
 			return err
 		}
-		if err := recalculateStoreAdditives(tx, storeAdditiveIDs); err != nil {
+		if err := RecalculateStoreAdditives(tx, storeAdditiveIDs); err != nil {
 			return err
 		}
 	}
@@ -52,7 +53,7 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 	return nil
 }
 
-func recalculateStoreProducts(tx *gorm.DB, storeProductIDs []uint) error {
+func RecalculateStoreProducts(tx *gorm.DB, storeProductIDs []uint) error {
 	if len(storeProductIDs) == 0 {
 		return nil
 	}
@@ -61,7 +62,7 @@ func recalculateStoreProducts(tx *gorm.DB, storeProductIDs []uint) error {
 	if err != nil {
 		return err
 	}
-	inStockIDs := diffUintSlice(storeProductIDs, outOfStockIDs)
+	inStockIDs := utils.DiffSlice(storeProductIDs, outOfStockIDs)
 	logrus.Infof("outOfStockProducts: %v", outOfStockIDs)
 	logrus.Infof("inStockProducts: %v", inStockIDs)
 
@@ -75,16 +76,16 @@ func recalculateStoreProducts(tx *gorm.DB, storeProductIDs []uint) error {
 	return nil
 }
 
-func recalculateStoreAdditives(tx *gorm.DB, additiveIDs []uint) error {
-	if len(additiveIDs) == 0 {
+func RecalculateStoreAdditives(tx *gorm.DB, storeAdditiveIDs []uint) error {
+	if len(storeAdditiveIDs) == 0 {
 		return nil
 	}
 
-	outOfStockIDs, err := getOutOfStockStoreAdditiveIDs(tx, additiveIDs)
+	outOfStockIDs, err := getOutOfStockStoreAdditiveIDs(tx, storeAdditiveIDs)
 	if err != nil {
 		return err
 	}
-	inStockIDs := diffUintSlice(additiveIDs, outOfStockIDs)
+	inStockIDs := utils.DiffSlice(storeAdditiveIDs, outOfStockIDs)
 	logrus.Infof("outOfStockAdditives: %v", outOfStockIDs)
 	logrus.Infof("inStockAdditives: %v", inStockIDs)
 
@@ -142,7 +143,7 @@ func getStoreProductIDsByIngredients(tx *gorm.DB, storeID uint, ingredientIDs []
 		return nil, err
 	}
 
-	return unionUintSlices(byIngredients, byAdditives), nil
+	return utils.MergeDistinct(byIngredients, byAdditives), nil
 }
 
 func getStoreAdditiveIDsByIngredients(tx *gorm.DB, storeID uint, ingredientIDs []uint) ([]uint, error) {
@@ -186,7 +187,7 @@ func getOutOfStockStoreProductIDs(tx *gorm.DB, storeProductIDs []uint) ([]uint, 
 	}
 
 	logrus.Infof("OutByIngredients: %v, OutByAdditives: %v", outByIngredients, outByAdditives)
-	return unionUintSlices(outByIngredients, outByAdditives), nil
+	return utils.MergeDistinct(outByIngredients, outByAdditives), nil
 }
 
 func getOutOfStockStoreAdditiveIDs(tx *gorm.DB, storeAdditiveIDs []uint) ([]uint, error) {
@@ -211,34 +212,4 @@ func getStoreProductIDsByProductSizes(tx *gorm.DB, storeID uint, productSizeIDs 
 		Pluck("store_product_id", &ids).Error
 
 	return ids, err
-}
-
-func diffUintSlice(all, subset []uint) []uint {
-	m := make(map[uint]struct{}, len(subset))
-	for _, id := range subset {
-		m[id] = struct{}{}
-	}
-
-	var diff []uint
-	for _, id := range all {
-		if _, exists := m[id]; !exists {
-			diff = append(diff, id)
-		}
-	}
-	return diff
-}
-
-func unionUintSlices(a, b []uint) []uint {
-	seen := make(map[uint]struct{})
-	for _, v := range a {
-		seen[v] = struct{}{}
-	}
-	for _, v := range b {
-		seen[v] = struct{}{}
-	}
-	result := make([]uint, 0, len(seen))
-	for id := range seen {
-		result = append(result, id)
-	}
-	return result
 }

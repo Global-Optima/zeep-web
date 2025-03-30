@@ -52,12 +52,19 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
 		}
 
-		if len(newStoreStocks) == 0 {
-			return nil
+		if len(newStoreStocks) > 0 {
+			_, err = m.addStocks(&storeWarehouseRepo, newStoreStocks)
+			if err != nil {
+				return err
+			}
 		}
 
-		_, err = m.addStocks(&storeWarehouseRepo, newStoreStocks)
-		if err != nil {
+		storeAdditiveIDs := make([]uint, len(storeAdditives))
+		for i, storeAdditive := range storeAdditives {
+			storeAdditiveIDs[i] = storeAdditive.ID
+		}
+
+		if err := data.RecalculateStoreAdditives(tx, storeAdditiveIDs); err != nil {
 			return err
 		}
 
@@ -67,42 +74,6 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 		return nil, err
 	}
 	return ids, nil
-}
-
-func (m *transactionManager) UpdateStoreAdditivesWithStocks(storeID, storeAdditiveID uint, updateStoreAdditive *data.StoreAdditive, ingredientIDs []uint) error {
-	err := m.db.Transaction(func(tx *gorm.DB) error {
-		sp := m.storeAdditiveRepo.CloneWithTransaction(tx)
-		if err := sp.UpdateStoreAdditive(storeID, storeAdditiveID, updateStoreAdditive); err != nil {
-			return err
-		}
-
-		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
-
-		missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
-		if err != nil {
-			return err
-		}
-
-		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
-		for i, ingredientID := range missingIngredientIDs {
-			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
-		}
-
-		if len(newStoreStocks) == 0 {
-			return nil
-		}
-
-		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (m *transactionManager) addStocks(storeStockRepo storeStocks.StoreStockRepository, stocks []data.StoreStock) ([]uint, error) {

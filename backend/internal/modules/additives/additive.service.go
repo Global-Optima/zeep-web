@@ -5,7 +5,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
@@ -70,7 +69,7 @@ func (s *additiveService) GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([
 	var additiveIDs []uint
 
 	productSizeAdditives, err := s.repo.GetAdditivesByProductSizeIDs(productSizeIDs)
-	if err != nil && !errors.Is(err, moduleErrors.ErrNotFound) {
+	if err != nil && !errors.Is(err, types.ErrAdditiveNotFound) {
 		wrappedErr := utils.WrapError("failed to retrieve product size additives", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
@@ -317,10 +316,6 @@ func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDetai
 		wrappedErr := utils.WrapError("failed to fetch additive by ID", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
-	}
-
-	if additive == nil {
-		return nil, fmt.Errorf("additive with ID %d not found", additiveID)
 	}
 
 	return types.ConvertToAdditiveDetailsDTO(additive), nil

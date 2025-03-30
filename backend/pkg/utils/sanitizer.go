@@ -95,3 +95,18 @@ func MergeDistinct[T comparable](arr1, arr2 []T) []T {
 
 	return mergedSlice
 }
+
+func DiffSlice[T comparable](all, subset []T) []T {
+	m := make(map[T]struct{}, len(subset))
+	for _, v := range subset {
+		m[v] = struct{}{}
+	}
+
+	var diff []T
+	for _, v := range all {
+		if _, exists := m[v]; !exists {
+			diff = append(diff, v)
+		}
+	}
+	return diff
+}

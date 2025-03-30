@@ -1,11 +1,10 @@
 package storeProducts
 
 import (
-	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"gorm.io/gorm"
 )
@@ -62,13 +61,11 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
 		}
 
-		if len(newStoreStocks) == 0 {
-			return nil
-		}
-
-		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
-		if err != nil {
-			return err
+		if len(newStoreStocks) > 0 {
+			_, err = m.addStocks(&storeStockRepo, newStoreStocks)
+			if err != nil {
+				return err
+			}
 		}
 
 		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {
@@ -119,13 +116,11 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
 		}
 
-		if len(newStoreStocks) == 0 {
-			return nil
-		}
-
-		_, err = m.addStocks(&storeStockRepoTx, newStoreStocks)
-		if err != nil {
-			return err
+		if len(newStoreStocks) > 0 {
+			_, err = m.addStocks(&storeStockRepoTx, newStoreStocks)
+			if err != nil {
+				return err
+			}
 		}
 
 		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {
@@ -158,13 +153,11 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
 		}
 
-		if len(newStoreStocks) == 0 {
-			return nil
-		}
-
-		_, err = m.addStocks(&storeStockRepo, newStoreStocks)
-		if err != nil {
-			return err
+		if len(newStoreStocks) > 0 {
+			_, err = m.addStocks(&storeStockRepo, newStoreStocks)
+			if err != nil {
+				return err
+			}
 		}
 
 		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {

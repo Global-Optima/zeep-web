@@ -5,7 +5,7 @@
     :class="[
     'relative text-center bg-white rounded-[24px] p-4 flex items-start border-2 gap-4 md:gap-6 transition-all duration-300',
     additive.isOutOfStock
-      ? 'cursor-not-allowed opacity-60'
+      ? '!cursor-not-allowed opacity-60'
       : (isSelected ? 'bg-primary border-primary cursor-pointer' : 'border-transparent cursor-pointer'),
       additive.isDefault ? 'cursor-not-allowed opacity-50 !border-primary' : 'cursor-pointer',
   ]"

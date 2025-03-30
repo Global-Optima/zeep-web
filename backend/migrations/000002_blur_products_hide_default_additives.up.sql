@@ -10,6 +10,9 @@ ALTER TABLE additives
 ALTER TABLE additives
     ADD CONSTRAINT additives_base_price_check CHECK (base_price >= 0);
 
+ALTER TABLE store_additives
+    ADD CONSTRAINT store_additives_price_check CHECK (base_price >= 0);
+
 ALTER TABLE product_sizes
     ADD COLUMN additives_updated_at TIMESTAMPTZ;
 
