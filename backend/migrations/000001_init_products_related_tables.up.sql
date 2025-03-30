@@ -221,7 +221,7 @@ CREATE TABLE
 		id SERIAL PRIMARY KEY,
 		additive_id INT NOT NULL REFERENCES additives (id) ON DELETE CASCADE,
 		store_id INT NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
-    store_price DECIMAL(10, 2) CHECK (store_price >= 0),
+    	store_price DECIMAL(10, 2) CHECK (store_price > 0),
 		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMPTZ
