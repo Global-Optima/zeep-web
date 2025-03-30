@@ -2,8 +2,9 @@ package data
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Franchisee struct {
@@ -44,7 +45,6 @@ type StoreStock struct {
 }
 
 func (storeStock *StoreStock) AfterUpdate(tx *gorm.DB) error {
-
 	if storeStock == nil || storeStock.ID == 0 || storeStock.StoreID == 0 || storeStock.IngredientID == 0 {
 		return fmt.Errorf("not enough info to fire AfterUpdate hook, preload the entity to proceed or use save instead of updates")
 	}

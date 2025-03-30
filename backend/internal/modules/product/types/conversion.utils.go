@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"sort"
+
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
