@@ -147,22 +147,6 @@ func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt ti
 	}, nil
 }
 
-func (m *transactionManager) filterMissingData(storeID uint, data *types.UnsyncData) error {
-	var err error
-
-	data.AdditiveIDs, err = m.storeAdditiveRepo.FilterMissingStoreAdditiveIDs(storeID, data.AdditiveIDs)
-	if err != nil {
-		return err
-	}
-
-	data.IngredientIDs, err = m.storeStockRepo.FilterMissingIngredientsIDs(storeID, data.IngredientIDs)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *transactionManager) synchronizeAdditives(tx *gorm.DB, storeID uint, lastSyncAt time.Time) error {
 	additiveIDs, err := m.repo.GetNotSynchronizedProductSizesAdditivesIDs(
 		storeID, lastSyncAt,
