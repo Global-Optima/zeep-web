@@ -15,10 +15,10 @@ type ProductCategoriesFilterDTO struct {
 
 type CreateProductCategoryDTO struct {
 	Name        string `json:"name" binding:"required,min=2"`
-	Description string `json:"description" sanitize:"soft"`
+	Description string `json:"description" binding:"omitempty"`
 }
 
 type UpdateProductCategoryDTO struct {
-	Name        string `json:"name,omitempty" binding:"omitempty,min=2"`
-	Description string `json:"description" sanitize:"soft"`
+	Name        string `json:"name,omitempty" binding:"min=2,omitempty"`
+	Description string `json:"description" binding:"omitempty"`
 }

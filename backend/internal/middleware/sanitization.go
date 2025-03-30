@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"reflect"
+	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -14,7 +15,6 @@ import (
 
 const DTO_KEY = "dto"
 
-// WithDTO sets the DTO in the context for later sanitization.
 func WithDTO(dto interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set(DTO_KEY, dto)
@@ -22,14 +22,12 @@ func WithDTO(dto interface{}) gin.HandlerFunc {
 	}
 }
 
-// SanitizeMiddleware handles sanitization for JSON and multipart/form-data requests.
 func SanitizeMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		contentType := c.ContentType()
-		switch contentType {
-		case "application/json":
+		if strings.HasPrefix(contentType, "application/json") {
 			processJSONRequest(c)
-		case "multipart/form-data":
+		} else if strings.HasPrefix(contentType, "multipart/form-data") {
 			processMultipartRequest(c)
 		}
 		c.Next()
@@ -43,7 +41,7 @@ func processJSONRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	// Restore the original body for further use.
+
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	if dto, exists := c.Get(DTO_KEY); exists {
@@ -52,14 +50,11 @@ func processJSONRequest(c *gin.Context) {
 			c.Abort()
 			return
 		}
-
-		// Recursively sanitize the DTO.
 		if err := sanitizeStruct(dto); err != nil {
 			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 			c.Abort()
 			return
 		}
-
 		sanitizedBody, _ := json.Marshal(dto)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(sanitizedBody))
 	} else {
@@ -76,36 +71,35 @@ func processJSONRequest(c *gin.Context) {
 }
 
 func processMultipartRequest(c *gin.Context) {
-	// Parse multipart form (adjust size as needed)
+	if !strings.HasPrefix(c.ContentType(), "multipart/form-data") {
+		return
+	}
+
 	if err := c.Request.ParseMultipartForm(30 << 20); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		c.Abort()
 		return
 	}
 
-	// If a DTO is present, bind form values into it and sanitize.
 	if dto, exists := c.Get(DTO_KEY); exists {
-		// Bind multipart form values into the DTO.
 		if err := c.ShouldBind(dto); err != nil {
 			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 			c.Abort()
 			return
 		}
-		// Recursively sanitize the DTO.
 		if err := sanitizeStruct(dto); err != nil {
 			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 			c.Abort()
 			return
 		}
-		// DTO-bound data is now sanitized—exit processing.
+		updateMultipartFormFromDTO(c, dto)
 		return
 	}
 
-	// Fallback: manually iterate over form values.
+	// Fallback: without DTO we can only apply soft sanitation.
 	form := c.Request.MultipartForm
 	for key, values := range form.Value {
 		for i, val := range values {
-			// Use soft sanitation for all fields; empty values will be preserved.
 			sanitized, valid := utils.SoftSanitizeString(val)
 			if !valid {
 				localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
@@ -118,8 +112,44 @@ func processMultipartRequest(c *gin.Context) {
 	c.Request.MultipartForm = form
 }
 
-// sanitizeStruct recursively processes a DTO struct (or nested structs) based on tags.
-// Expects dto to be a pointer to a struct.
+// updateMultipartFormFromDTO updates c.Request.MultipartForm.Value based on the sanitized DTO.
+// It uses reflection to iterate over the DTO's fields, uses the "form" tag to look up
+// the corresponding key in the multipart form, and writes the sanitized value.
+func updateMultipartFormFromDTO(c *gin.Context, dto interface{}) {
+	form := c.Request.MultipartForm
+	v := reflect.ValueOf(dto).Elem()
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldType := t.Field(i)
+		if !field.CanInterface() {
+			continue
+		}
+		formTag := fieldType.Tag.Get("form")
+		if formTag == "" {
+			continue
+		}
+
+		var val string
+		switch field.Kind() {
+		case reflect.String:
+			val = field.String()
+		case reflect.Ptr:
+			if field.Type().Elem().Kind() == reflect.String && !field.IsNil() {
+				val = field.Elem().String()
+			} else {
+				continue
+			}
+		default:
+			continue
+		}
+		form.Value[formTag] = []string{val}
+	}
+	c.Request.MultipartForm = form
+}
+
+// sanitizeStruct recursively processes a DTO struct (or nested structs).
+// It expects dto to be a pointer to a struct.
 func sanitizeStruct(dto interface{}) error {
 	v := reflect.ValueOf(dto)
 	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
@@ -129,12 +159,12 @@ func sanitizeStruct(dto interface{}) error {
 	return nil
 }
 
-// sanitizeRecursiveValue walks any value recursively and sanitizes string fields.
-// It respects the "sanitize" tag if provided ("skip" to leave unchanged).
-// Otherwise, it applies full sanitization.
-// If the string is empty, it is returned as-is (allowing empty values via "omitempty").
+// sanitizeRecursiveValue walks through any value recursively and sanitizes string fields.
+// It checks the "binding" tag:
+// if the tag contains "min=", strict sanitation is applied;
+// if the tag contains "omitempty" (and not "min="), soft sanitation is applied;
+// otherwise, strict sanitation is used.
 func sanitizeRecursiveValue(v reflect.Value) {
-	// If pointer, process its element (if non-nil).
 	if v.Kind() == reflect.Ptr {
 		if v.IsNil() {
 			return
@@ -149,26 +179,20 @@ func sanitizeRecursiveValue(v reflect.Value) {
 		for i := 0; i < v.NumField(); i++ {
 			field := v.Field(i)
 			fieldType := t.Field(i)
-			tag := fieldType.Tag.Get("sanitize")
-			if tag == "skip" {
+			if !field.CanSet() {
 				continue
 			}
-
-			// If the field is a string.
-			if field.Kind() == reflect.String && field.CanSet() {
+			bindingTag := fieldType.Tag.Get("binding")
+			if field.Kind() == reflect.String {
 				original := field.String()
-				field.SetString(sanitizeStringByTag(original, tag))
+				field.SetString(sanitizeStringByBinding(original, bindingTag))
 				continue
 			}
-
-			// If the field is a pointer to a string.
 			if field.Kind() == reflect.Ptr && field.Type().Elem().Kind() == reflect.String && !field.IsNil() {
 				original := field.Elem().String()
-				field.Elem().SetString(sanitizeStringByTag(original, tag))
+				field.Elem().SetString(sanitizeStringByBinding(original, bindingTag))
 				continue
 			}
-
-			// Recursively process nested structs, pointers, slices, etc.
 			sanitizeRecursiveValue(field)
 		}
 	case reflect.Slice, reflect.Array:
@@ -178,14 +202,28 @@ func sanitizeRecursiveValue(v reflect.Value) {
 	}
 }
 
-// sanitizeStringByTag applies the sanitization method.
-// If the original string is empty, it returns it as-is.
-func sanitizeStringByTag(original, tag string) string {
+// sanitizeStringByBinding applies the appropriate sanitation based on the binding tag.
+// If the binding tag contains "min=", strict sanitation is applied (empty strings are disallowed after trim).
+// If it contains "omitempty" (and no "min="), soft sanitation is applied (empty strings remain as-is).
+// Otherwise, strict sanitation is applied.
+func sanitizeStringByBinding(original, bindingTag string) string {
 	if original == "" {
 		return original
 	}
-	// If you need to support additional tag logic (e.g. "soft"),
-	// you can add conditions here.
+	if strings.Contains(bindingTag, "min=") {
+		sanitized, valid := utils.SanitizeString(original)
+		if !valid {
+			return ""
+		}
+		return sanitized
+	}
+	if strings.Contains(bindingTag, "omitempty") {
+		if original == "" {
+			return original
+		}
+		soft, _ := utils.SoftSanitizeString(original)
+		return soft
+	}
 	sanitized, valid := utils.SanitizeString(original)
 	if !valid {
 		return ""
@@ -193,7 +231,7 @@ func sanitizeStringByTag(original, tag string) string {
 	return sanitized
 }
 
-// sanitizeRecursive is the fallback for non-DTO JSON data, applying default sanitation on strings.
+// sanitizeRecursive is the fallback for non-DTO JSON data, applying strict sanitation on strings.
 func sanitizeRecursive(data interface{}) interface{} {
 	switch v := data.(type) {
 	case map[string]interface{}:
@@ -207,7 +245,6 @@ func sanitizeRecursive(data interface{}) interface{} {
 		}
 		return v
 	case string:
-		// If the string is empty, return it as-is.
 		if v == "" {
 			return v
 		}

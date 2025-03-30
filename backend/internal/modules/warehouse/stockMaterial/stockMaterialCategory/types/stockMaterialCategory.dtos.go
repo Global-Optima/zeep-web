@@ -4,12 +4,12 @@ import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type CreateStockMaterialCategoryDTO struct {
 	Name        string `json:"name" binding:"required"`
-	Description string `json:"description" sanitize:"soft"`
+	Description string `json:"description" binding:"omitempty"`
 }
 
 type UpdateStockMaterialCategoryDTO struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description" sanitize:"soft"`
+	Name        *string `json:"name" binding:"min=1,omitempty"`
+	Description *string `json:"description" binding:"omitempty"`
 }
 
 type StockMaterialCategoryResponse struct {

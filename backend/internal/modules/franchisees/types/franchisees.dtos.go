@@ -4,12 +4,12 @@ import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type CreateFranchiseeDTO struct {
 	Name        string `json:"name" binding:"required"`
-	Description string `json:"description" sanitize:"soft"`
+	Description string `json:"description" binding:"omitempty"`
 }
 
 type UpdateFranchiseeDTO struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description" sanitize:"soft"`
+	Name        *string `json:"name" binding:"min=1,omitempty"`
+	Description *string `json:"description" binding:"omitempty"`
 }
 
 type FranchiseeDTO struct {
