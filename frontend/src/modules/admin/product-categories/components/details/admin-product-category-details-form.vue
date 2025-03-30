@@ -28,13 +28,19 @@ const createCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
     description: z.string().min(1, 'Введите описание категории'),
+    machineCategory: z.enum(['TEA', 'COFFEE', 'ICE_CREAM'], {
+      message: 'Выберите категорию машины',
+    }),
   })
 )
 
 // Form Setup
 const { handleSubmit, resetForm } = useForm<UpdateProductCategoryDTO>({
   validationSchema: createCategorySchema,
-  initialValues: productCategory
+  initialValues: {
+    ...productCategory,
+    machineCategory: productCategory.machineCategory || '',
+  }
 })
 
 const machineCategoryOptions = ref([
