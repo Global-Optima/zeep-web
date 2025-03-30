@@ -136,7 +136,7 @@ jobs:
           fi
 
       - name: Run golangci-lint
-        run: golangci-lint run -v --concurrency=2 --timeout=5m
+        run: golangci-lint run -v --concurrency=4 --timeout=5m
 
       - name: Run tests
         run: go test -p 1 ./...
