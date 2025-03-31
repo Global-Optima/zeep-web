@@ -24,7 +24,7 @@ type CreateProductCategoryDTO struct {
 }
 
 type UpdateProductCategoryDTO struct {
-	Name            *string              `json:"name,omitempty" binding:"min=2,omitempty"`
+	Name            *string              `json:"name,omitempty" binding:"min=0,omitempty"`
 	Description     *string              `json:"description" binding:"omitempty"`
 	MachineCategory data.MachineCategory `json:"machineCategory,omitempty" binding:"omitempty,oneof=TEA COFFEE ICE_CREAM"`
 }
