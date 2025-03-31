@@ -239,11 +239,10 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-var (
-	emptyStringRu = "пустое значение"
-	// emptyStringEn = "empty value"
-	// emptyStringKk = "бос мән"
-)
+var emptyStringRu = "пустое значение"
+
+// emptyStringEn = "empty value"
+// emptyStringKk = "бос мән"
 
 func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKey *data.StorageImageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
