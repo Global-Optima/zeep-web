@@ -57,7 +57,15 @@ func (r *employeeTokenManager) DeleteToken(token *data.EmployeeToken) error {
 }
 
 func (r *employeeTokenManager) DeleteTokenByEmployeeID(employeeID uint) error {
-	return r.db.Unscoped().Where("employee_id = ?", employeeID).Delete(&data.EmployeeToken{}).Error
+	err := r.db.Unscoped().
+		Where("employee_id = ?", employeeID).
+		Delete(&data.EmployeeToken{}).
+		Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	return nil
 }
 
 func (r *employeeTokenManager) DeleteTokenByStoreEmployeeID(storeEmployeeID uint) error {
