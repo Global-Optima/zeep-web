@@ -1,0 +1,14 @@
+ALTER TABLE store_products
+    ADD COLUMN is_out_of_stock BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE store_additives
+    ADD COLUMN is_out_of_stock BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE product_sizes
+    ADD COLUMN additives_updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE product_size_additives
+    ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE additives
+    ADD COLUMN ingredients_updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;

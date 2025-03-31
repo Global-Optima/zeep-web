@@ -26,7 +26,7 @@ func NewFranchiseeHandler(service FranchiseeService, auditService audit.AuditSer
 
 func (h *FranchiseeHandler) CreateFranchisee(c *gin.Context) {
 	var input types.CreateFranchiseeDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := utils.ParseRequestBody(c, &input); err != nil {
 		utils.SendBadRequestError(c, "invalid input")
 		return
 	}
@@ -58,7 +58,7 @@ func (h *FranchiseeHandler) UpdateFranchisee(c *gin.Context) {
 	}
 
 	var input types.UpdateFranchiseeDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := utils.ParseRequestBody(c, &input); err != nil {
 		utils.SendBadRequestError(c, "invalid input")
 		return
 	}

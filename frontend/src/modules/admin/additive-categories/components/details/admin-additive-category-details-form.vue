@@ -9,12 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import Switch from '@/core/components/ui/switch/Switch.vue'
-import type { AdditiveCategoryDTO, UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDetailsDTO, UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Props
 const props = defineProps<{
-  category: AdditiveCategoryDTO
+  category: AdditiveCategoryDetailsDTO
   readonly?: boolean
 }>()
 
@@ -28,7 +28,7 @@ const emits = defineEmits<{
 const createAdditiveCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
-    description: z.string().min(1, 'Введите описание категории'),
+    description: z.string().optional(),
     isMultipleSelect: z.boolean().optional().describe('Можно ли выбирать несколько топпингов в этой категории'),
   })
 )

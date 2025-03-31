@@ -12,12 +12,12 @@ func MapCategoryToDTO(category data.ProductCategory) *ProductCategoryDTO {
 }
 
 func UpdateToCategory(dto *UpdateProductCategoryDTO, category *data.ProductCategory) {
-	if dto.Name != "" {
-		category.Name = dto.Name
+	if dto.Name != nil {
+		category.Name = *dto.Name
 	}
 
-	if dto.Description != "" {
-		category.Description = dto.Description
+	if dto.Description != nil {
+		category.Description = *dto.Description
 	}
 
 	if dto.MachineCategory != "" {

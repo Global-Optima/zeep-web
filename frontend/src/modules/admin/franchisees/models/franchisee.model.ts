@@ -8,7 +8,7 @@ export interface FranchiseeDTO {
 
 export interface CreateFranchiseeDTO {
 	name: string
-	description: string
+	description?: string
 }
 
 export interface UpdateFranchiseeDTO {

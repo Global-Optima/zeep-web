@@ -13,7 +13,7 @@ import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
-import type { AdditiveCategoryDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDetailsDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, Trash, X } from 'lucide-vue-next'
@@ -41,7 +41,7 @@ const emits = defineEmits<{
 const {toast} = useToast()
 
 // Reactive State for Category Selection
-const selectedCategory = ref<AdditiveCategoryDTO | null>(null)
+const selectedCategory = ref<AdditiveCategoryDetailsDTO | null>(null)
 const openCategoryDialog = ref(false)
 
 const selectedUnit = ref<UnitDTO | null>(null)
@@ -55,7 +55,7 @@ const openIngredientsDialog = ref(false)
 const createAdditiveSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название добавки'),
-    description: z.string().min(1, 'Введите описание'),
+    description: z.string().optional(),
     machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
@@ -121,7 +121,7 @@ const onCancel = () => {
   emits('onCancel')
 }
 
-function selectCategory(category: AdditiveCategoryDTO) {
+function selectCategory(category: AdditiveCategoryDetailsDTO) {
   selectedCategory.value = category
   openCategoryDialog.value = false
   setFieldValue('additiveCategoryId', category.id)

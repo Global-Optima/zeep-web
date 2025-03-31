@@ -17,7 +17,7 @@
 			>
 				<TableCell class="p-4 font-medium"> {{ category.name }} </TableCell>
 				<TableCell> {{ category.description }} </TableCell>
-				<TableCell> {{ category.additives.length }} </TableCell>
+				<TableCell> {{ category.additivesCount }} </TableCell>
 				<TableCell class="flex justify-end">
 					<Button
 						variant="ghost"
@@ -43,13 +43,13 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
-import type { AdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDetailsDTO } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
-const {categories} = defineProps<{categories: AdditiveCategoryDTO[]}>()
+const {categories} = defineProps<{categories: AdditiveCategoryDetailsDTO[]}>()
 
 const router = useRouter();
 const queryClient = useQueryClient()

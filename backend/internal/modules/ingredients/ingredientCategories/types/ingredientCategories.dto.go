@@ -3,13 +3,13 @@ package types
 import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 type CreateIngredientCategoryDTO struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description,omitempty"`
+	Name        string  `json:"name" binding:"required"`
+	Description *string `json:"description" binding:"omitempty"`
 }
 
 type UpdateIngredientCategoryDTO struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
+	Name        *string `json:"name" binding:"omitempty,min=1"`
+	Description *string `json:"description" binding:"omitempty"`
 }
 
 type IngredientCategoryResponse struct {

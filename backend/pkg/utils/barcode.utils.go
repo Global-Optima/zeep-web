@@ -13,7 +13,6 @@ import (
 
 	"github.com/jung-kurt/gofpdf"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/code128"
 	"github.com/golang/freetype/truetype"
@@ -46,24 +45,6 @@ func InitBarcodeFont() error {
 		fontFace = truetype.NewFace(f, &truetype.Options{Size: 12})
 	})
 	return fontError
-}
-
-func GenerateUPCBarcode(sku data.StockMaterial, supplierID uint) (string, error) {
-	manufacturerCode := fmt.Sprintf("%05d", supplierID%100000)
-
-	productCode := fmt.Sprintf("%05d", sku.ID%100000)
-
-	baseCode := fmt.Sprintf("0%s%s", manufacturerCode, productCode)
-
-	checkDigit := CalculateUPCCheckDigit(baseCode)
-
-	fullBarcode := baseCode + strconv.Itoa(checkDigit)
-
-	if len(fullBarcode) != 12 {
-		return "", fmt.Errorf("invalid barcode length: %s", fullBarcode)
-	}
-
-	return fullBarcode, nil
 }
 
 func CalculateUPCCheckDigit(code string) int {
