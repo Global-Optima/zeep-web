@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +13,7 @@ type StoreSynchronizeRepository interface {
 	GetNotSynchronizedProductSizesIDs(storeID uint, lastSync time.Time) ([]uint, error)
 	GetNotSynchronizedProductSizeIngredientsIDs(storeID uint, lastSync time.Time) ([]uint, error)
 	GetNotSynchronizedProductSizesAdditivesIDs(storeID uint, lastSync time.Time) ([]uint, error)
+	GetNotSynchronizedAdditivesIDs(storeID uint, lastSync time.Time) ([]uint, error)
 }
 
 type storeSynchronizeRepository struct {
@@ -22,12 +22,6 @@ type storeSynchronizeRepository struct {
 
 func NewStoreSynchronizeRepository(db *gorm.DB) StoreSynchronizeRepository {
 	return &storeSynchronizeRepository{db: db}
-}
-
-func (r *storeSynchronizeRepository) CloneWithTransaction(tx *gorm.DB) StoreSynchronizeRepository {
-	return &storeSynchronizeRepository{
-		db: tx,
-	}
 }
 
 func (r *storeSynchronizeRepository) GetNotSynchronizedAdditiveIngredientsIDs(storeID uint, lastSync time.Time) ([]uint, error) {
@@ -96,11 +90,23 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesAdditivesIDs(
 			lastSync, lastSync).
 		Pluck("product_size_additives.additive_id", &notSynchronizedProductSizesAdditivesIDs).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return []uint{}, nil
-		}
 		return nil, fmt.Errorf("failed to fetch product sizes: %w", err)
 	}
 
 	return notSynchronizedProductSizesAdditivesIDs, nil
+}
+
+func (r *storeSynchronizeRepository) GetNotSynchronizedAdditivesIDs(storeID uint, lastSync time.Time) ([]uint, error) {
+	var notSynchronizedAdditives []uint
+	err := r.db.Model(&data.Additive{}).
+		Distinct("additives.id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
+		Where("store_additives.store_id = ?", storeID).
+		Where("additives.ingredients_updated_at > ?", lastSync).
+		Pluck("additive.id", &notSynchronizedAdditives).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return notSynchronizedAdditives, nil
 }

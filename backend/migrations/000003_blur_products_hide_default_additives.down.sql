@@ -9,3 +9,6 @@ ALTER TABLE product_size_additives
 
 ALTER TABLE product_sizes
     DROP COLUMN additives_updated_at;
+
+ALTER TABLE additives
+    DROP COLUMN ingredients_updated_at;

@@ -3,6 +3,7 @@ package additives
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -228,6 +229,9 @@ func (r *additiveRepository) SaveAdditiveWithAssociations(additiveID uint, updat
 		}
 
 		if updateModels.Additive != nil {
+			if updateModels.Ingredients != nil {
+				updateModels.Additive.IngredientsUpdatedAt = time.Now().UTC()
+			}
 			err := r.saveAdditive(tx, updateModels.Additive)
 			if err != nil {
 				return err
@@ -239,6 +243,15 @@ func (r *additiveRepository) SaveAdditiveWithAssociations(additiveID uint, updat
 			if err != nil {
 				return err
 			}
+		}
+
+		productSizeIDs, err := r.getProductSizeIDsByAdditive(additiveID)
+		if err != nil {
+			return err
+		}
+
+		if err := r.updateProductSizeAdditivesUpdatedAt(productSizeIDs); err != nil {
+			return err
 		}
 
 		return nil
@@ -306,6 +319,36 @@ func (r *additiveRepository) saveAdditiveIngredients(tx *gorm.DB, additiveID uin
 		if err := tx.Create(&toInsert).Error; err != nil {
 			return fmt.Errorf("failed to insert new ingredients: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func (r *additiveRepository) getProductSizeIDsByAdditive(additiveID uint) ([]uint, error) {
+	var productSizeIDs []uint
+
+	err := r.db.Model(&data.ProductSizeAdditive{}).
+		Where("additive_id = ?", additiveID).
+		Pluck("product_size_id", &productSizeIDs).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get productSizeIDs by additiveID %d: %w", additiveID, err)
+	}
+
+	return productSizeIDs, nil
+}
+
+func (r *additiveRepository) updateProductSizeAdditivesUpdatedAt(productSizeIDs []uint) error {
+	if len(productSizeIDs) == 0 {
+		return nil
+	}
+
+	err := r.db.Model(&data.ProductSize{}).
+		Where("id IN ?", productSizeIDs).
+		Update("additives_updated_at", time.Now().UTC()).Error
+
+	if err != nil {
+		return fmt.Errorf("failed to update additives_updated_at for productSizeIDs: %w", err)
 	}
 
 	return nil

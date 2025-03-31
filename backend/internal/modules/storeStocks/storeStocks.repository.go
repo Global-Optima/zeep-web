@@ -320,6 +320,11 @@ func (r *storeStockRepository) GetStockById(stockId uint, filter *contexts.Store
 }
 
 func (r *storeStockRepository) SaveStock(storeID, stockID uint, storeStock *data.StoreStock) error {
+	existingStock, err := r.GetRawStockByID(storeID, stockID)
+	if err != nil {
+		return err
+	}
+
 	updRes := r.db.Model(&data.StoreStock{}).
 		Where(&data.StoreStock{BaseEntity: data.BaseEntity{ID: stockID}}).
 		Save(storeStock)
@@ -330,6 +335,12 @@ func (r *storeStockRepository) SaveStock(storeID, stockID uint, storeStock *data
 
 	if updRes.RowsAffected == 0 {
 		return fmt.Errorf("update attempt had no changes for stockId=%d with storeId=%d", stockID, storeID)
+	}
+
+	if storeStock.Quantity <= storeStock.LowStockThreshold || (existingStock.Quantity <= existingStock.LowStockThreshold && storeStock.Quantity > storeStock.LowStockThreshold) {
+		if err := data.RecalculateOutOfStock(r.db, storeID, []uint{storeStock.IngredientID}, nil, nil); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -401,6 +412,7 @@ func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, storePr
 	}
 
 	var updatedStocks []data.StoreStock
+	var ingredientsToRecalculate []uint
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		for _, ingredient := range productSizeIngredients {
@@ -409,6 +421,15 @@ func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, storePr
 				return err
 			}
 			updatedStocks = append(updatedStocks, *updatedStock)
+			if updatedStock.Quantity <= updatedStock.LowStockThreshold {
+				ingredientsToRecalculate = append(ingredientsToRecalculate, updatedStock.IngredientID)
+			}
+		}
+
+		if len(ingredientsToRecalculate) > 0 {
+			if err := data.RecalculateOutOfStock(tx, storeID, ingredientsToRecalculate, nil, nil); err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -441,6 +462,7 @@ func (r *storeStockRepository) DeductStockByAdditiveTechCart(storeID, storeAddit
 	}
 
 	var updatedStocks []data.StoreStock
+	var ingredientsToRecalculate []uint
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		for _, ingredient := range additiveIngredients {
@@ -449,7 +471,17 @@ func (r *storeStockRepository) DeductStockByAdditiveTechCart(storeID, storeAddit
 				return err
 			}
 			updatedStocks = append(updatedStocks, *updatedStock)
+			if updatedStock.Quantity <= updatedStock.LowStockThreshold {
+				ingredientsToRecalculate = append(ingredientsToRecalculate, updatedStock.IngredientID)
+			}
 		}
+
+		if len(ingredientsToRecalculate) > 0 {
+			if err := data.RecalculateOutOfStock(tx, storeID, ingredientsToRecalculate, nil, nil); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -541,6 +573,7 @@ func (r *storeStockRepository) deductAdditiveIngredientStock(tx *gorm.DB, storeI
 	}
 
 	var deductedQuantity float64
+
 	if existingStock.Ingredient.UnitID == ingredient.Ingredient.UnitID {
 		deductedQuantity = ingredient.Quantity
 	} else {

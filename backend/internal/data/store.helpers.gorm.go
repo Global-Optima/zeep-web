@@ -14,19 +14,22 @@ type usageRow struct {
 	RequiredQty  float64
 }
 
-func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, productSizeIDs []uint) error {
+// RecalculateOutOfStock allows nil values for ingredientIDs and productSizeIDs if no need to check by any of them
+func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, productSizeIDs, additiveIDs []uint) error {
 	start := time.Now()
 	logrus.Info("=================Start Recalculation===================")
-	logrus.Infof("initial values: storeID=%v ingredientIDs=%v productSizeIDs=%v", storeID, ingredientIDs, productSizeIDs)
+	logrus.Infof("initial values: storeID=%v ingredientIDs=%v productSizeIDs=%v additiveID=%v", storeID, ingredientIDs, productSizeIDs, additiveIDs)
 
-	if storeID == 0 || (len(ingredientIDs) == 0 && len(productSizeIDs) == 0) {
+	if storeID == 0 || (len(ingredientIDs) == 0 && len(productSizeIDs) == 0 && len(additiveIDs) == 0) {
 		return nil
 	}
 
 	var productSizesIngredientIDs,
 		storeProductIDsFromPS,
 		storeProductIDsFromIngredients,
-		storeAdditiveIDs []uint
+		storeAdditiveIDsFromAdditives,
+		storeAdditiveIDsFromIngredients []uint
+	var frozenStockMap map[uint]float64
 	var err error
 
 	if len(productSizeIDs) > 0 {
@@ -48,8 +51,15 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 		logrus.Infof("ingredients diff: %v", utils.DiffSlice(ingredientIDs, productSizesIngredientIDs))
 	}
 
+	if len(additiveIDs) > 0 {
+		storeAdditiveIDsFromAdditives, err = getStoreAdditiveIDsByAdditives(tx, storeID, additiveIDs)
+		if err != nil {
+			return err
+		}
+	}
+
 	if len(ingredientIDs) > 0 {
-		frozenStockMap, err := CalculateFrozenStock(tx, storeID, ingredientIDs)
+		frozenStockMap, err = CalculateFrozenStock(tx, storeID, ingredientIDs)
 		if err != nil {
 			return err
 		}
@@ -60,23 +70,31 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 			return err
 		}
 
-		if len(storeProductIDsFromPS) > 0 || len(storeProductIDsFromIngredients) > 0 {
-			mergedStoreProductIDs := utils.UnionSlices(storeProductIDsFromPS, storeProductIDsFromIngredients)
-
-			if err := RecalculateStoreProducts(tx, mergedStoreProductIDs, frozenStockMap, storeID); err != nil {
-				return err
-			}
-		}
-
-		storeAdditiveIDs, err = getStoreAdditiveIDsByIngredients(tx, storeID, ingredientIDs)
+		storeAdditiveIDsFromIngredients, err = getStoreAdditiveIDsByIngredients(tx, storeID, ingredientIDs)
 		if err != nil {
 			return err
 		}
+	}
 
-		if len(storeAdditiveIDs) > 0 {
-			if err := RecalculateStoreAdditives(tx, storeAdditiveIDs, storeID, frozenStockMap); err != nil {
-				return err
-			}
+	if len(storeProductIDsFromPS) > 0 || len(storeProductIDsFromIngredients) > 0 {
+		if err := RecalculateStoreProducts(
+			tx,
+			utils.UnionSlices(storeProductIDsFromPS, storeProductIDsFromIngredients),
+			frozenStockMap,
+			storeID,
+		); err != nil {
+			return err
+		}
+	}
+
+	if len(storeAdditiveIDsFromAdditives) > 0 || len(storeAdditiveIDsFromIngredients) > 0 {
+		if err := RecalculateStoreAdditives(
+			tx,
+			utils.UnionSlices(storeAdditiveIDsFromAdditives, storeAdditiveIDsFromIngredients),
+			storeID,
+			frozenStockMap,
+		); err != nil {
+			return err
 		}
 	}
 
@@ -128,8 +146,9 @@ func RecalculateStoreAdditives(
 		return err
 	}
 	inStockIDs := utils.DiffSlice(storeAdditiveIDs, outOfStockIDs)
+	logrus.Infof("OutAdditives: %v", outOfStockIDs)
+	logrus.Infof("InAdditives: %v", inStockIDs)
 
-	// Далее стандартно
 	if err := updateStoreAdditiveStockFlags(tx, outOfStockIDs, true); err != nil {
 		return err
 	}
@@ -203,6 +222,20 @@ func getStoreProductIDsByDefaultAdditiveUsage(tx *gorm.DB, storeID uint, ingredi
 		Pluck("store_product_sizes.store_product_id", &productIDs).Error
 
 	return productIDs, err
+}
+
+func getStoreAdditiveIDsByAdditives(tx *gorm.DB, storeID uint, additiveIDs []uint) ([]uint, error) {
+	var ids []uint
+	err := tx.Model(&StoreAdditive{}).
+		Select("DISTINCT store_additives.id").
+		Joins("JOIN additives ON additives.id = store_additives.additive_id").
+		Where("store_additives.store_id = ?", storeID).
+		Where("additives.id IN ?", additiveIDs).
+		Pluck("store_additives.id", &ids).Error
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
 }
 
 func getStoreAdditiveIDsByIngredients(tx *gorm.DB, storeID uint, ingredientIDs []uint) ([]uint, error) {
@@ -286,7 +319,6 @@ func getOutByIngredients(
 	outSet := make(map[uint]struct{})
 	for _, row := range usageRows {
 		available := stockMap[row.IngredientID]
-		logrus.Infof("%v < %v", available, row.RequiredQty)
 		if available < row.RequiredQty {
 			outSet[row.EntityID] = struct{}{}
 		}
@@ -294,7 +326,6 @@ func getOutByIngredients(
 
 	var outIDs []uint
 	for spID := range outSet {
-		logrus.Infof("out ID %v", spID)
 		outIDs = append(outIDs, spID)
 	}
 	logrus.Infof("TOTAL OUT IDS: %v", outIDs)
@@ -492,6 +523,7 @@ func getDefaultAdditiveIngredientsByProductSizeIDs(tx *gorm.DB, productSizeIDs [
 	return additiveIngredientIDs, nil
 }
 
+// CalculateFrozenStock allows nil value for ingredientIDs if no need to filter ingredients
 func CalculateFrozenStock(tx *gorm.DB, storeID uint, ingredientIDs []uint) (map[uint]float64, error) {
 	frozenStock := make(map[uint]float64)
 
@@ -541,7 +573,7 @@ func isSuborderActive(sub Suborder) bool {
 
 func accumulateProductUsage(frozenStock *map[uint]float64, sub Suborder, ingredientIDs []uint) {
 	for _, usage := range sub.StoreProductSize.ProductSize.ProductSizeIngredients {
-		if ingredientIDs == nil || contains(ingredientIDs, usage.IngredientID) {
+		if len(ingredientIDs) == 0 || contains(ingredientIDs, usage.IngredientID) {
 			(*frozenStock)[usage.IngredientID] += usage.Quantity
 		}
 	}
@@ -550,7 +582,7 @@ func accumulateProductUsage(frozenStock *map[uint]float64, sub Suborder, ingredi
 func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub Suborder, ingredientIDs []uint) {
 	for _, subAdd := range sub.SuborderAdditives {
 		for _, ingrUsage := range subAdd.StoreAdditive.Additive.Ingredients {
-			if ingredientIDs == nil || contains(ingredientIDs, ingrUsage.IngredientID) {
+			if len(ingredientIDs) == 0 || contains(ingredientIDs, ingrUsage.IngredientID) {
 				(*frozenStock)[ingrUsage.IngredientID] += ingrUsage.Quantity
 			}
 		}

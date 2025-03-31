@@ -1,10 +1,7 @@
 package data
 
 import (
-	"fmt"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type Franchisee struct {
@@ -42,14 +39,6 @@ type StoreStock struct {
 	Ingredient        Ingredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE" sort:"ingredients"`
 	LowStockThreshold float64    `gorm:"type:decimal(10,2);not null;check:low_stock_threshold > 0" sort:"lowStockThreshold"`
 	Quantity          float64    `gorm:"type:decimal(10,2);not null;check:quantity >= 0" sort:"quantity"`
-}
-
-func (storeStock *StoreStock) AfterUpdate(tx *gorm.DB) error {
-	if storeStock == nil || storeStock.ID == 0 || storeStock.StoreID == 0 || storeStock.IngredientID == 0 {
-		return fmt.Errorf("not enough info to fire AfterUpdate hook, preload the entity to proceed or use save instead of updates")
-	}
-
-	return RecalculateOutOfStock(tx, storeStock.StoreID, []uint{storeStock.IngredientID}, nil)
 }
 
 type StoreAdditive struct {

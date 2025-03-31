@@ -80,7 +80,7 @@ func (s *ingredientService) GetIngredientByID(ingredientID uint) (*types.Ingredi
 }
 
 func (s *ingredientService) GetIngredientsByIDs(ingredientIDs []uint) ([]types.IngredientDTO, error) {
-	ingredients, err := s.repo.GetIngredientsByIDs(ingredientIDs)
+	ingredients, err := s.repo.GetIngredientsWithDetailsByIDs(ingredientIDs)
 	if err != nil {
 		s.logger.Error("Failed to fetch ingredient by ID:", err)
 		return nil, err

@@ -1,11 +1,12 @@
 package types
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 )
 
-const DEFAULT_LOW_STOCK_THRESHOLD = 50
+const DEFAULT_LOW_STOCK_THRESHOLD = 2 //for conversion factor equal to kg or l
 
 func MapToStockDTO(stock data.StoreStock) StoreStockDTO {
 	return StoreStockDTO{
@@ -27,11 +28,15 @@ func AddToStock(dto AddStoreStockDTO, storeID uint) *data.StoreStock {
 	}
 }
 
-func DefaultStockFromIngredient(storeID, ingredientID uint) *data.StoreStock {
+func DefaultStockFromIngredient(storeID uint, ingredient *data.Ingredient) (*data.StoreStock, error) {
+	if ingredient == nil || ingredient.ID == 0 || ingredient.Unit.ConversionFactor == 0 {
+		return nil, fmt.Errorf("not enough ingredient info to create default stock: no ingredient or unit preload fetched")
+	}
+
 	return &data.StoreStock{
 		StoreID:           storeID,
-		IngredientID:      ingredientID,
+		IngredientID:      ingredient.ID,
 		Quantity:          0,
-		LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
-	}
+		LowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD / ingredient.Unit.ConversionFactor,
+	}, nil
 }

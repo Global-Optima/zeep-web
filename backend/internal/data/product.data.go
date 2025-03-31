@@ -135,6 +135,7 @@ type Additive struct {
 	Category             AdditiveCategory      `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL" sort:"category"`
 	ImageKey             *StorageImageKey      `gorm:"size:2048"`
 	MachineId            string                `gorm:"size:40;not null;unique" sort:"machineId"`
+	IngredientsUpdatedAt time.Time             `gorm:"index" sort:"ingredientsUpdatedAt"`
 	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`
 	Ingredients          []AdditiveIngredient  `gorm:"foreignKey:AdditiveID"`

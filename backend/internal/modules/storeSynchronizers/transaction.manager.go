@@ -2,6 +2,7 @@ package storeSynchronizers
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -28,15 +29,24 @@ type transactionManager struct {
 	storeRepo         stores.StoreRepository
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository
 	storeStockRepo    storeStocks.StoreStockRepository
+	ingredientRepo    ingredients.IngredientRepository
 }
 
-func NewTransactionManager(db *gorm.DB, repo StoreSynchronizeRepository, storeRepo stores.StoreRepository, storeAdditiveRepo storeAdditives.StoreAdditiveRepository, storeStockRepo storeStocks.StoreStockRepository) TransactionManager {
+func NewTransactionManager(
+	db *gorm.DB,
+	repo StoreSynchronizeRepository,
+	storeRepo stores.StoreRepository,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
+	ingredientRepo ingredients.IngredientRepository,
+) TransactionManager {
 	return &transactionManager{
 		db:                db,
 		repo:              repo,
 		storeRepo:         storeRepo,
 		storeAdditiveRepo: storeAdditiveRepo,
 		storeStockRepo:    storeStockRepo,
+		ingredientRepo:    ingredientRepo,
 	}
 }
 
@@ -79,7 +89,8 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 			return err
 		}
 
-		if err := m.synchronizeAdditives(tx, storeID, store.LastInventorySyncAt); err != nil {
+		additiveIDs, err := m.synchronizeAdditives(tx, storeID, store.LastInventorySyncAt)
+		if err != nil {
 			return err
 		}
 
@@ -88,7 +99,7 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 			return err
 		}
 
-		err = data.RecalculateOutOfStock(tx, storeID, synchronizedIngredientIDS, productSizeIDs)
+		err = data.RecalculateOutOfStock(tx, storeID, synchronizedIngredientIDS, productSizeIDs, additiveIDs)
 		if err != nil {
 			return err
 		}
@@ -103,18 +114,17 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 }
 
 func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt time.Time) (*types.UnsyncData, error) {
-	var (
-		productSizeIDs             []uint
-		additiveIDs                []uint
-		ingredientIDsFromProducts  []uint
+	var productSizeIDs,
+		productSizeAdditiveIDs,
+		additiveIDs,
+		ingredientIDsFromProducts,
 		ingredientIDsFromAdditives []uint
-	)
 
 	g := new(errgroup.Group)
 
 	g.Go(func() error {
 		var err error
-		additiveIDs, err = m.repo.GetNotSynchronizedProductSizesAdditivesIDs(storeID, lastSyncAt)
+		productSizeAdditiveIDs, err = m.repo.GetNotSynchronizedProductSizesAdditivesIDs(storeID, lastSyncAt)
 		return err
 	})
 
@@ -136,28 +146,40 @@ func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt ti
 		return err
 	})
 
+	g.Go(func() error {
+		var err error
+		additiveIDs, err = m.repo.GetNotSynchronizedAdditivesIDs(storeID, lastSyncAt)
+		return err
+	})
+
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 
 	return &types.UnsyncData{
 		ProductSizeIDs: productSizeIDs,
-		AdditiveIDs:    additiveIDs,
+		AdditiveIDs:    utils.UnionSlices(productSizeAdditiveIDs, additiveIDs),
 		IngredientIDs:  utils.UnionSlices(ingredientIDsFromAdditives, ingredientIDsFromProducts),
 	}, nil
 }
 
-func (m *transactionManager) synchronizeAdditives(tx *gorm.DB, storeID uint, lastSyncAt time.Time) error {
-	additiveIDs, err := m.repo.GetNotSynchronizedProductSizesAdditivesIDs(
+func (m *transactionManager) synchronizeAdditives(tx *gorm.DB, storeID uint, lastSyncAt time.Time) ([]uint, error) {
+	productSizeAdditiveIDs, err := m.repo.GetNotSynchronizedProductSizesAdditivesIDs(
 		storeID, lastSyncAt,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to fetch unsynced additiveIDs: %w", err)
+		return nil, fmt.Errorf("failed to fetch unsynced productSizeAdditiveIDs: %w", err)
 	}
 
-	missingAdditives, err := m.storeAdditiveRepo.FilterMissingStoreAdditiveIDs(storeID, additiveIDs)
+	additiveIDs, err := m.repo.GetNotSynchronizedAdditivesIDs(storeID, lastSyncAt)
 	if err != nil {
-		return fmt.Errorf("failed to filter missing store_additives: %w", err)
+		return nil, fmt.Errorf("failed to fetch unsycned additiveIDs")
+	}
+
+	mergedAdditiveIDs := utils.UnionSlices(productSizeAdditiveIDs, additiveIDs)
+	missingAdditives, err := m.storeAdditiveRepo.FilterMissingStoreAdditiveIDs(storeID, mergedAdditiveIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to filter missing store_additives: %w", err)
 	}
 
 	if len(missingAdditives) > 0 {
@@ -171,11 +193,11 @@ func (m *transactionManager) synchronizeAdditives(tx *gorm.DB, storeID uint, las
 		storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
 		_, err := storeAdditiveRepoTx.CreateStoreAdditives(storeAdditiveList)
 		if err != nil {
-			return fmt.Errorf("failed to add store_additives: %w", err)
+			return nil, fmt.Errorf("failed to add store_additives: %w", err)
 		}
 	}
 
-	return nil
+	return mergedAdditiveIDs, nil
 }
 
 func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, lastSyncAt time.Time) ([]uint, error) {
@@ -204,12 +226,22 @@ func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, l
 	}
 
 	if len(missingIngredientIDs) > 0 {
-		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
-		for i, ingID := range missingIngredientIDs {
-			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingID)
+		missingIngredients, err := m.ingredientRepo.GetIngredientsWithDetailsByIDs(missingIngredientIDs)
+		if err != nil {
+			return nil, err
 		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredients))
+		for i, ingredient := range missingIngredients {
+			newStock, err := storeStocksTypes.DefaultStockFromIngredient(storeID, &ingredient)
+			if err != nil {
+				return nil, err
+			}
+			newStoreStocks[i] = *newStock
+		}
+
 		storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
-		_, err := storeStockRepoTx.AddMultipleStocks(newStoreStocks)
+		_, err = storeStockRepoTx.AddMultipleStocks(newStoreStocks)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add store_stocks: %w", err)
 		}

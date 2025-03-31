@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"gorm.io/gorm"
@@ -15,13 +16,20 @@ type transactionManager struct {
 	db                *gorm.DB
 	storeAdditiveRepo StoreAdditiveRepository
 	storeStockRepo    storeStocks.StoreStockRepository
+	ingredientRepo    ingredients.IngredientRepository
 }
 
-func NewTransactionManager(db *gorm.DB, storeAdditiveRepo StoreAdditiveRepository, storeStockRepo storeStocks.StoreStockRepository) TransactionManager {
+func NewTransactionManager(
+	db *gorm.DB,
+	storeAdditiveRepo StoreAdditiveRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
+	ingredientRepo ingredients.IngredientRepository,
+) TransactionManager {
 	return &transactionManager{
 		db:                db,
 		storeAdditiveRepo: storeAdditiveRepo,
 		storeStockRepo:    storeStockRepo,
+		ingredientRepo:    ingredientRepo,
 	}
 }
 
@@ -47,9 +55,18 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			return err
 		}
 
-		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
-		for i, ingredientID := range missingIngredientIDs {
-			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		missingIngredients, err := m.ingredientRepo.GetIngredientsWithDetailsByIDs(missingIngredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredients))
+		for i, ingredient := range missingIngredients {
+			newStock, err := storeStocksTypes.DefaultStockFromIngredient(storeID, &ingredient)
+			if err != nil {
+				return err
+			}
+			newStoreStocks[i] = *newStock
 		}
 
 		if len(newStoreStocks) > 0 {

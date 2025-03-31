@@ -13,7 +13,7 @@ type IngredientRepository interface {
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetRawIngredientByID(ingredientID uint) (*data.Ingredient, error)
-	GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error)
+	GetIngredientsWithDetailsByIDs(ingredientIDs []uint) ([]data.Ingredient, error)
 	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
 	GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error)
 	GetIngredientsForAdditives(additiveIDs []uint) ([]data.Ingredient, error)
@@ -63,7 +63,7 @@ func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingre
 	return &ingredient, nil
 }
 
-func (r *ingredientRepository) GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error) {
+func (r *ingredientRepository) GetIngredientsWithDetailsByIDs(ingredientIDs []uint) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
 	err := r.db.Model(&data.Ingredient{}).
 		Preload("Unit").

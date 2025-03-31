@@ -3,6 +3,7 @@ package storeProducts
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
@@ -20,14 +21,22 @@ type transactionManager struct {
 	storeProductRepo  StoreProductRepository
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository
 	storeStockRepo    storeStocks.StoreStockRepository
+	ingredientRepo    ingredients.IngredientRepository
 }
 
-func NewTransactionManager(db *gorm.DB, storeProductRepo StoreProductRepository, storeAdditiveRepo storeAdditives.StoreAdditiveRepository, storeStockRepo storeStocks.StoreStockRepository) TransactionManager {
+func NewTransactionManager(
+	db *gorm.DB,
+	storeProductRepo StoreProductRepository,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
+	ingredientRepo ingredients.IngredientRepository,
+) TransactionManager {
 	return &transactionManager{
 		db:                db,
 		storeProductRepo:  storeProductRepo,
 		storeAdditiveRepo: storeAdditiveRepo,
 		storeStockRepo:    storeStockRepo,
+		ingredientRepo:    ingredientRepo,
 	}
 }
 
@@ -56,9 +65,18 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
-		for i, ingredientID := range missingIngredientIDs {
-			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		missingIngredients, err := m.ingredientRepo.GetIngredientsWithDetailsByIDs(missingIngredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredients))
+		for i, ingredient := range missingIngredients {
+			newStock, err := storeStocksTypes.DefaultStockFromIngredient(storeID, &ingredient)
+			if err != nil {
+				return err
+			}
+			newStoreStocks[i] = *newStock
 		}
 
 		if len(newStoreStocks) > 0 {
@@ -68,7 +86,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			}
 		}
 
-		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {
+		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil, nil); err != nil {
 			return err
 		}
 
@@ -111,9 +129,18 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 			return err
 		}
 
-		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
-		for i, ingredientID := range missingIngredientIDs {
-			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		missingIngredients, err := m.ingredientRepo.GetIngredientsWithDetailsByIDs(missingIngredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredients))
+		for i, ingredient := range missingIngredients {
+			newStock, err := storeStocksTypes.DefaultStockFromIngredient(storeID, &ingredient)
+			if err != nil {
+				return err
+			}
+			newStoreStocks[i] = *newStock
 		}
 
 		if len(newStoreStocks) > 0 {
@@ -123,7 +150,7 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 			}
 		}
 
-		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {
+		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil, nil); err != nil {
 			return err
 		}
 
@@ -148,9 +175,18 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 			return err
 		}
 
-		newStoreStocks := make([]data.StoreStock, len(missingIngredientIDs))
-		for i, ingredientID := range missingIngredientIDs {
-			newStoreStocks[i] = *storeStocksTypes.DefaultStockFromIngredient(storeID, ingredientID)
+		missingIngredients, err := m.ingredientRepo.GetIngredientsWithDetailsByIDs(missingIngredientIDs)
+		if err != nil {
+			return err
+		}
+
+		newStoreStocks := make([]data.StoreStock, len(missingIngredients))
+		for i, ingredient := range missingIngredients {
+			newStock, err := storeStocksTypes.DefaultStockFromIngredient(storeID, &ingredient)
+			if err != nil {
+				return err
+			}
+			newStoreStocks[i] = *newStock
 		}
 
 		if len(newStoreStocks) > 0 {
@@ -160,7 +196,7 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 			}
 		}
 
-		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil); err != nil {
+		if err := data.RecalculateOutOfStock(tx, storeID, ingredientIDs, nil, nil); err != nil {
 			return err
 		}
 
