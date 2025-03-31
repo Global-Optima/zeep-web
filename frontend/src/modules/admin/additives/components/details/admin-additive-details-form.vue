@@ -82,7 +82,7 @@ const updateAdditiveSchema = toTypedSchema(
 )
 
 // Form Setup
-const { handleSubmit, resetForm, setFieldValue } = useForm({
+const { handleSubmit, resetField, setFieldValue } = useForm({
   validationSchema: updateAdditiveSchema,
   initialValues: {
     name: additive.name,
@@ -129,6 +129,13 @@ const onSubmit = handleSubmit((formValues) => {
   emits('onSubmit', dto)
 })
 
+const resetFormValues = () => {
+  resetField('image')
+  deleteImage.value = false
+}
+
+defineExpose({ resetFormValues })
+
 const onDeleteImage = () => {
   previewImage.value = null
   setFieldValue('image', undefined)
@@ -136,7 +143,6 @@ const onDeleteImage = () => {
 }
 
 const onCancel = () => {
-  resetForm()
   emits('onCancel')
 }
 
