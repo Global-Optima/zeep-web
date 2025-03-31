@@ -156,16 +156,15 @@ func (s *authenticationService) checkEmployeeCredentials(email, password string)
 func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, error) {
 	existingToken, err := s.employeeTokenManager.GetTokenByEmployeeID(employeeID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return "", fmt.Errorf("failed to check existing token: %w", err)
+		return "", fmt.Errorf("failed to retrieve existing token: %w", err)
 	}
 
-	// Если токен существует и просрочен - удаляем его
-	if existingToken != nil && existingToken.ExpiresAt.Before(time.Now()) {
-		if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
-			return "", fmt.Errorf("failed to delete expired token: %w", err)
-		}
-		// Удаляем токен из памяти
-		existingToken = nil
+	if existingToken != nil && existingToken.ExpiresAt.After(time.Now()) {
+		return existingToken.Token, nil
+	}
+
+	if delErr := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); delErr != nil {
+		return "", fmt.Errorf("failed to delete expired token: %w", delErr)
 	}
 
 	sessionToken, err := types.GenerateEmployeeJWT(employeeID)
@@ -173,15 +172,11 @@ func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, er
 		return "", utils.WrapError("failed to generate session token", err)
 	}
 
-	if existingToken == nil {
-		if err := s.saveEmployeeToken(employeeID, sessionToken); err != nil {
-			return "", fmt.Errorf("failed to save new token: %w", err)
-		}
-
-		return sessionToken, nil
+	if err := s.saveEmployeeToken(employeeID, sessionToken); err != nil {
+		return "", fmt.Errorf("failed to save new token: %w", err)
 	}
 
-	return existingToken.Token, nil
+	return sessionToken, nil
 }
 
 func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
