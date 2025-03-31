@@ -9,7 +9,7 @@ This template provides a foundation for developing the backend of **ZeepApp**, a
 ## Customize Configuration
 
 Configurations are specified in the `config.yaml` file, which includes database settings, server ports, and third-party integrations as required.
-
+ 
 ## Project Setup
 
 1. **Install Dependencies**

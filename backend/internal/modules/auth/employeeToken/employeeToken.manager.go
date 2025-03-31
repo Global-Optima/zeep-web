@@ -2,7 +2,6 @@ package employeeToken
 
 import (
 	"errors"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"gorm.io/gorm"
@@ -17,7 +16,6 @@ type EmployeeTokenManager interface {
 	DeleteTokenByWarehouseEmployeeID(warehouseEmployeeID uint) error
 	DeleteTokenByRegionEmployeeID(regionEmployeeID uint) error
 	DeleteTokenByFranchiseeEmployeeID(franchiseeEmployeeID uint) error
-	UpdateTokenExpiration(employeeID uint, newExpiration time.Time) error
 }
 
 type employeeTokenManager struct {
@@ -102,12 +100,4 @@ func (r *employeeTokenManager) DeleteTokenByFranchiseeEmployeeID(franchiseeEmplo
 		return err
 	}
 	return r.DeleteTokenByEmployeeID(franchiseeEmp.EmployeeID)
-}
-
-func (r *employeeTokenManager) UpdateTokenExpiration(employeeID uint, newExpiration time.Time) error {
-	return r.db.
-		Model(&data.EmployeeToken{}).
-		Where("employee_id = ?", employeeID).
-		Update("expires_at", newExpiration).
-		Error
 }

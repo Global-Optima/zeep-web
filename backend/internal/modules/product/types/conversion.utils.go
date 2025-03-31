@@ -126,7 +126,7 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 func CreateToProductModel(dto *CreateProductDTO) *data.Product {
 	product := &data.Product{
 		Name:        dto.Name,
-		Description: dto.Description,
+		Description: *dto.Description,
 		CategoryID:  dto.CategoryID,
 	}
 
@@ -154,11 +154,15 @@ func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 		return fmt.Errorf("cannot update nil product")
 	}
 
-	if dto.Name != "" {
-		product.Name = dto.Name
+	if dto.Name != nil {
+		if dto.Name != &product.Name {
+			product.Name = *dto.Name
+		}
 	}
 
-	product.Description = dto.Description
+	if dto.Description != nil {
+		product.Description = *dto.Description
+	}
 
 	if dto.CategoryID != 0 {
 		product.CategoryID = dto.CategoryID
@@ -239,29 +243,55 @@ func mapIngredientsToProductSizeIngredients(ingredientsDTO []SelectedIngredientD
 	return ingredients
 }
 
+var emptyStringRu = "пустое значение"
+
+// emptyStringEn = "empty value"
+// emptyStringKk = "бос мән"
+
 func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKey *data.StorageImageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
-	if dto.Name != "" && dto.Name != before.Name {
+	if dto.Name != nil && dto.Name != &before.Name {
 		key := "notification.centralCatalogUpdateDetails.nameChange"
-		changes = append(changes, details.CentralCatalogChange{
-			Key: key,
-			Params: map[string]interface{}{
-				"OldName": before.Name,
-				"NewName": dto.Name,
-			},
-		})
+
+		if *dto.Name == "" {
+			changes = append(changes, details.CentralCatalogChange{
+				Key: key,
+				Params: map[string]interface{}{
+					"OldName": before.Name,
+					"NewName": emptyStringRu,
+				},
+			})
+		} else {
+			changes = append(changes, details.CentralCatalogChange{
+				Key: key,
+				Params: map[string]interface{}{
+					"OldName": before.Name,
+					"NewName": dto.Name,
+				},
+			})
+		}
 	}
 
-	if dto.Description != "" && dto.Description != before.Description {
+	if dto.Description != nil && dto.Description != &before.Description {
 		key := "notification.centralCatalogUpdateDetails.descriptionChange"
-		changes = append(changes, details.CentralCatalogChange{
-			Key: key,
-			Params: map[string]interface{}{
-				"OldDescription": before.Description,
-				"NewDescription": dto.Description,
-			},
-		})
+		if *dto.Description == "" {
+			changes = append(changes, details.CentralCatalogChange{
+				Key: key,
+				Params: map[string]interface{}{
+					"OldDescription": before.Description,
+					"NewDescription": emptyStringRu,
+				},
+			})
+		} else {
+			changes = append(changes, details.CentralCatalogChange{
+				Key: key,
+				Params: map[string]interface{}{
+					"OldDescription": before.Description,
+					"NewDescription": dto.Description,
+				},
+			})
+		}
 	}
 
 	if imageKey != before.ImageKey {

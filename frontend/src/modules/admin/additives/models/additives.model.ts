@@ -86,7 +86,7 @@ export interface UpdateAdditiveDTO {
 
 export interface CreateAdditiveDTO {
 	name: string
-	description: string
+	description?: string
 	basePrice: number
 	imageUrl?: string
 	size: number

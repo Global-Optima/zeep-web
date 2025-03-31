@@ -70,20 +70,20 @@ type AdditiveCategoryDetailsDTO struct {
 }
 
 type CreateAdditiveCategoryDTO struct {
-	Name             string `json:"name" binding:"required"`
-	Description      string `json:"description" binding:"omitempty"`
-	IsMultipleSelect bool   `json:"isMultipleSelect"`
+	Name             string  `json:"name" binding:"required"`
+	Description      *string `json:"description" binding:"omitempty"`
+	IsMultipleSelect bool    `json:"isMultipleSelect"`
 }
 
 type UpdateAdditiveCategoryDTO struct {
-	Name             *string `json:"name" binding:"omitempty"`
+	Name             *string `json:"name" binding:"min=0,omitempty"`
 	Description      *string `json:"description" binding:"omitempty"`
 	IsMultipleSelect *bool   `json:"isMultipleSelect"`
 }
 
 type UpdateAdditiveDTO struct {
-	Name               string                  `form:"name" binding:"omitempty"`
-	Description        string                  `form:"description" binding:"omitempty"`
+	Name               *string                 `form:"name" binding:"min=0,omitempty"`
+	Description        *string                 `form:"description" binding:"omitempty"`
 	BasePrice          *float64                `form:"basePrice" binding:"omitempty,gte=0"`
 	Size               *float64                `form:"size" binding:"omitempty,gt=0"`
 	UnitID             *uint                   `form:"unitId" binding:"omitempty,gt=0"`
@@ -101,8 +101,8 @@ type AdditiveCategoryDTO struct {
 
 type CreateAdditiveDTO struct {
 	Name               string                  `form:"name" binding:"required"`
-	Description        string                  `form:"description" binding:"required"`
-	BasePrice          float64                 `form:"basePrice" binding:"gte=0"`
+	Description        *string                 `form:"description" binding:"omitempty"`
+	BasePrice          float64                 `form:"basePrice" binding:"required,gte=0"`
 	Size               float64                 `form:"size" binding:"required,gt=0"`
 	UnitID             uint                    `form:"unitId" binding:"required,gt=0"`
 	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"required,gt=0"`

@@ -21,7 +21,7 @@ const emits = defineEmits<{
 const createCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
-    description: z.string().min(1, 'Введите описание категории'),
+    description:  z.string().optional(),
   })
 )
 
