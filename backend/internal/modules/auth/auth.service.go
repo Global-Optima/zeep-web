@@ -48,50 +48,14 @@ func NewAuthenticationService(
 }
 
 func (s *authenticationService) EmployeeLogin(email, password string) (*types.Token, error) {
-	employee, err := s.employeesRepo.GetEmployeeByEmailOrPhone(email, "")
+	employee, err := s.checkEmployeeCredentials(email, password)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, types.ErrInvalidCredentials
-	}
-	if employee == nil {
-		return nil, errors.New("this employee is not registered")
-	}
-	if !employee.IsActive {
-		return nil, types.ErrInactiveEmployee
+		return nil, err
 	}
 
-	if err := utils.ComparePassword(employee.HashedPassword, password); err != nil {
-		return nil, types.ErrInvalidCredentials
-	}
-
-	existingToken, err := s.employeeTokenManager.GetTokenByEmployeeID(employee.ID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("failed to check existing token: %w", err)
-	}
-
-	cfg := config.GetConfig()
-	newExpiration := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
-
-	if existingToken != nil && existingToken.ExpiresAt.After(time.Now()) {
-		if err := s.employeeTokenManager.UpdateTokenExpiration(employee.ID, newExpiration); err != nil {
-			return nil, fmt.Errorf("failed to update token expiration: %w", err)
-		}
-		return &types.Token{SessionToken: existingToken.Token}, nil
-	}
-
-	sessionToken, err := types.GenerateEmployeeJWT(employee.ID)
+	sessionToken, err := s.handleEmployeeToken(employee.ID)
 	if err != nil {
-		return nil, utils.WrapError("failed to generate session token", err)
-	}
-
-	if existingToken != nil {
-		if err := s.updateEmployeeToken(employee.ID, sessionToken); err != nil {
-			return nil, fmt.Errorf("failed to update employee token with new token: %w", err)
-		}
-	} else {
-		if err := s.saveEmployeeToken(employee.ID, sessionToken); err != nil {
-			return nil, fmt.Errorf("failed to save employee token: %w", err)
-		}
+		return nil, err
 	}
 
 	return &types.Token{SessionToken: sessionToken}, nil
@@ -170,41 +134,71 @@ func (s *authenticationService) CustomerLogin(phone, password string) (*types.To
 	return &token, nil
 }
 
-func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
-	cfg := config.GetConfig()
-	expirationTime := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
-
-	employeeToken := &data.EmployeeToken{
-		EmployeeID: employeeID,
-		Token:      token,
-		ExpiresAt:  expirationTime,
+func (s *authenticationService) checkEmployeeCredentials(email, password string) (*data.Employee, error) {
+	employee, err := s.employeesRepo.GetEmployeeByEmailOrPhone(email, "")
+	if err != nil {
+		s.logger.Error(err)
+		return nil, types.ErrInvalidCredentials
+	}
+	if employee == nil {
+		return nil, errors.New("this employee is not registered")
+	}
+	if !employee.IsActive {
+		return nil, types.ErrInactiveEmployee
 	}
 
-	if err := s.employeeTokenManager.CreateToken(employeeToken); err != nil {
-		return fmt.Errorf("failed to save token: %w", err)
+	if err := utils.ComparePassword(employee.HashedPassword, password); err != nil {
+		return nil, types.ErrInvalidCredentials
 	}
-
-	return nil
+	return employee, nil
 }
 
-func (s *authenticationService) updateEmployeeToken(employeeID uint, token string) error {
-	cfg := config.GetConfig()
-	expirationTime := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
-
-	err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID)
-	if err != nil {
-		return fmt.Errorf("failed to delete token: %w", err)
+func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, error) {
+	existingToken, err := s.employeeTokenManager.GetTokenByEmployeeID(employeeID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", fmt.Errorf("failed to retrieve existing token: %w", err)
 	}
+
+	if existingToken != nil && existingToken.ExpiresAt.After(time.Now()) {
+		return existingToken.Token, nil
+	}
+
+	if existingToken == nil {
+		return s.createEmployeeToken(employeeID)
+	}
+
+	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
+		return "", fmt.Errorf("failed to delete old/expired token: %w", err)
+	}
+
+	return s.createEmployeeToken(employeeID)
+}
+
+func (s *authenticationService) createEmployeeToken(employeeID uint) (string, error) {
+	sessionToken, err := types.GenerateEmployeeJWT(employeeID)
+	if err != nil {
+		return "", utils.WrapError("failed to generate session token", err)
+	}
+
+	if err := s.saveEmployeeToken(employeeID, sessionToken); err != nil {
+		return "", fmt.Errorf("failed to save new token: %w", err)
+	}
+
+	return sessionToken, nil
+}
+
+func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
+	cfg := config.GetConfig()
+	now := time.Now()
+	expirationTime := now.Add(cfg.JWT.EmployeeTokenTTL)
 
 	employeeToken := &data.EmployeeToken{
 		EmployeeID: employeeID,
 		Token:      token,
 		ExpiresAt:  expirationTime,
 	}
-
 	if err := s.employeeTokenManager.CreateToken(employeeToken); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
-
 	return nil
 }
