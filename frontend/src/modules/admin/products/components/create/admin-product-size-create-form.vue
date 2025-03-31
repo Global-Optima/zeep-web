@@ -344,7 +344,7 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
                 <TableHead>Название</TableHead>
                 <TableHead>Категория</TableHead>
                 <TableHead>Размер</TableHead>
-                <TableHead class="text-center">По умолчанию</TableHead>
+                <TableHead class="text-center">В составе</TableHead>
                 <TableHead class="text-center">Не показывать</TableHead>
                 <TableHead></TableHead>
               </TableRow>

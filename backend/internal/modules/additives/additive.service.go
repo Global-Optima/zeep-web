@@ -230,7 +230,7 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 }
 
 func (s *additiveService) UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) (*types.AdditiveDTO, error) {
-	additive, err := s.repo.GetRawAdditiveByID(additiveID)
+	additive, err := s.repo.GetAdditiveByID(additiveID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to check additive: %w", err)
 		s.logger.Error(wrappedErr)
@@ -311,7 +311,7 @@ func (s *additiveService) DeleteAdditive(additiveID uint) error {
 }
 
 func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error) {
-	additive, err := s.repo.GetAdditiveByID(additiveID)
+	additive, err := s.repo.GetAdditiveWithDetailsByID(additiveID)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to fetch additive by ID", err)
 		s.logger.Error(wrappedErr)

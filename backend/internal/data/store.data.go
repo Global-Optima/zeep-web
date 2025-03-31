@@ -49,7 +49,16 @@ func (storeStock *StoreStock) AfterUpdate(tx *gorm.DB) error {
 		return fmt.Errorf("not enough info to fire AfterUpdate hook, preload the entity to proceed or use save instead of updates")
 	}
 
-	return RecalculateOutOfStock(tx, storeStock.StoreID, []uint{storeStock.IngredientID}, nil)
+	frozenMap, err := CalculateFrozenStock(tx, storeStock.StoreID, []uint{storeStock.IngredientID})
+	if err != nil {
+		return err
+	}
+
+	if storeStock.Quantity < storeStock.LowStockThreshold {
+		return RecalculateOutOfStock(tx, storeStock.StoreID, []uint{storeStock.IngredientID}, nil, frozenMap)
+	}
+
+	return nil
 }
 
 type StoreAdditive struct {

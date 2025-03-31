@@ -406,7 +406,7 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 								<TableHead>Название</TableHead>
 								<TableHead>Категория</TableHead>
 								<TableHead>Размер</TableHead>
-								<TableHead class="text-center !pr-2">По умолчанию</TableHead>
+								<TableHead class="text-center !pr-2">В составе</TableHead>
                 <TableHead class="text-center !pr-2">Не показывать</TableHead>
 								<TableHead v-if="!readonly"></TableHead>
 							</TableRow>

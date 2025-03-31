@@ -143,8 +143,8 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 		MachineId: dto.MachineId,
 	}
 
-	productSize.Additives = mapAdditives(dto.Additives)
-	productSize.ProductSizeIngredients = mapIngredients(dto.Ingredients)
+	productSize.Additives = mapAdditivesToProductSizeAdditives(dto.Additives)
+	productSize.ProductSizeIngredients = mapIngredientsToProductSizeIngredients(dto.Ingredients)
 
 	return productSize
 }
@@ -186,8 +186,8 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 		productSize.MachineId = *dto.MachineId
 	}
 
-	additives := mapAdditives(dto.Additives)
-	ingredients := mapIngredients(dto.Ingredients)
+	additives := mapAdditivesToProductSizeAdditives(dto.Additives)
+	ingredients := mapIngredientsToProductSizeIngredients(dto.Ingredients)
 
 	return &ProductSizeModels{
 		ProductSize: productSize,
@@ -196,7 +196,7 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
-func mapAdditives(additivesDTO []SelectedAdditiveDTO) []data.ProductSizeAdditive {
+func mapAdditivesToProductSizeAdditives(additivesDTO []SelectedAdditiveDTO) []data.ProductSizeAdditive {
 	if additivesDTO == nil {
 		return nil
 	}
@@ -221,7 +221,7 @@ func mapAdditives(additivesDTO []SelectedAdditiveDTO) []data.ProductSizeAdditive
 	return additives
 }
 
-func mapIngredients(ingredientsDTO []SelectedIngredientDTO) []data.ProductSizeIngredient {
+func mapIngredientsToProductSizeIngredients(ingredientsDTO []SelectedIngredientDTO) []data.ProductSizeIngredient {
 	if ingredientsDTO == nil {
 		return nil
 	}

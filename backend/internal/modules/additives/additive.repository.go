@@ -14,8 +14,8 @@ import (
 type AdditiveRepository interface {
 	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]data.ProductSizeAdditive, error)
 	CheckAdditiveExists(additiveName string) (bool, error)
-	GetRawAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
+	GetAdditiveWithDetailsByID(additiveID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) (uint, error)
@@ -164,7 +164,7 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 	return additives, nil
 }
 
-func (r *additiveRepository) GetRawAdditiveByID(additiveID uint) (*data.Additive, error) {
+func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
 	err := r.db.Model(&data.Additive{}).
 		Where("id = ?", additiveID).
@@ -179,7 +179,7 @@ func (r *additiveRepository) GetRawAdditiveByID(additiveID uint) (*data.Additive
 	return &additive, nil
 }
 
-func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
+func (r *additiveRepository) GetAdditiveWithDetailsByID(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
 	err := r.db.Model(&data.Additive{}).
 		Preload("Category").

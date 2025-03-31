@@ -103,7 +103,6 @@ const {
       categoryId: selectedCategoryId.value!,
       search: searchTerm.value,
       isAvailable: true,
-      //isOutOfStock: false,
       pageSize: 100
     }),
     refetchInterval: 20_000,
