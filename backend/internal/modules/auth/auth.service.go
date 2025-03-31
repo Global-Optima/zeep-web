@@ -154,7 +154,6 @@ func (s *authenticationService) checkEmployeeCredentials(email, password string)
 }
 
 func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, error) {
-
 	existingToken, err := s.employeeTokenManager.GetTokenByEmployeeID(employeeID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", fmt.Errorf("failed to retrieve existing token: %w", err)
@@ -164,12 +163,19 @@ func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, er
 		return existingToken.Token, nil
 	}
 
-	if existingToken != nil {
-		if delErr := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); delErr != nil {
-			return "", fmt.Errorf("failed to delete old/expired token: %w", delErr)
-		}
+	if existingToken == nil {
+		return s.createEmployeeToken(employeeID)
 	}
 
+	err = s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID)
+	if err != nil {
+		return "", fmt.Errorf("failed to delete old/expired token: %w", err)
+	}
+
+	return s.createEmployeeToken(employeeID)
+}
+
+func (s *authenticationService) createEmployeeToken(employeeID uint) (string, error) {
 	sessionToken, err := types.GenerateEmployeeJWT(employeeID)
 	if err != nil {
 		return "", utils.WrapError("failed to generate session token", err)
