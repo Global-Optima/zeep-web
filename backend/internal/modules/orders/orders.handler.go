@@ -389,6 +389,7 @@ func (h *OrderHandler) AcceptSubOrder(c *gin.Context) {
 	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
 }
+
 func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 	subOrderID, err := utils.ParseParam(c, "subOrderId")
 	if err != nil {
