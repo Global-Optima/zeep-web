@@ -167,8 +167,7 @@ func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, er
 		return s.createEmployeeToken(employeeID)
 	}
 
-	err = s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID)
-	if err != nil {
+	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
 		return "", fmt.Errorf("failed to delete old/expired token: %w", err)
 	}
 
