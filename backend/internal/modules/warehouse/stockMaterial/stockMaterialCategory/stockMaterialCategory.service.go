@@ -29,7 +29,7 @@ func NewStockMaterialCategoryService(repo StockMaterialCategoryRepository, logge
 func (s *stockMaterialCategoryService) Create(dto types.CreateStockMaterialCategoryDTO) (uint, error) {
 	category := &data.StockMaterialCategory{
 		Name:        dto.Name,
-		Description: dto.Description,
+		Description: *dto.Description,
 	}
 
 	if err := s.repo.Create(category); err != nil {

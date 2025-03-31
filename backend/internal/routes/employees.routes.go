@@ -34,7 +34,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
 
-	stockMaterialCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
 	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
 	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
 
@@ -489,14 +488,10 @@ func (r *Router) RegisterStockMaterialCategoryRoutes(handler *stockMaterialCateg
 		router.GET("/:id", handler.GetByID)
 		router.POST("",
 			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&stockMaterialCategoryTypes.CreateStockMaterialCategoryDTO{}),
-			middleware.SanitizeMiddleware(),
 			handler.Create,
 		)
 		router.PUT("/:id",
 			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&stockMaterialCategoryTypes.UpdateStockMaterialCategoryDTO{}),
-			middleware.SanitizeMiddleware(),
 			handler.Update,
 		)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.Delete)

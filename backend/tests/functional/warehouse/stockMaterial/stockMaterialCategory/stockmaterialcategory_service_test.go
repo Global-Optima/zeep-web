@@ -37,7 +37,7 @@ func TestStockMaterialCategoryService_Create_WithPreloadedData(t *testing.T) {
 			name: "Create valid category",
 			input: types.CreateStockMaterialCategoryDTO{
 				Name:        "Test Category",
-				Description: "Test Description",
+				Description: tests.StringPtr("Test Description"),
 			},
 			expectError: false,
 		},
@@ -45,7 +45,7 @@ func TestStockMaterialCategoryService_Create_WithPreloadedData(t *testing.T) {
 			name: "Create with duplicate name",
 			input: types.CreateStockMaterialCategoryDTO{
 				Name:        "Raw Materials", // Already exists in preloaded data
-				Description: "Test Description",
+				Description: tests.StringPtr("Test Description"),
 			},
 			expectError: true,
 		},
