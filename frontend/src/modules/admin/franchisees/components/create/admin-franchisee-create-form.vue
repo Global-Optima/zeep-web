@@ -24,7 +24,7 @@ const emits = defineEmits<{
 const createFranchiseeSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название франчайзи'),
-    description: z.string().optional().default(''),
+    description: z.string().optional(),
   })
 )
 

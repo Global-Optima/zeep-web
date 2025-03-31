@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -50,6 +51,7 @@ func ParseRequestBodyJSON(c *gin.Context, dto interface{}) error {
 
 	if isPointerToStruct(dto) {
 		if err := json.Unmarshal(body, dto); err != nil {
+			logrus.Errorf("error unmarshalling JSON: %v", err)
 			return ErrUnmarshalJSON
 		}
 
@@ -162,13 +164,18 @@ func sanitizeRecursiveValue(v reflect.Value) error {
 
 			case reflect.Ptr:
 				// If it's a *string
-				if field.Type().Elem().Kind() == reflect.String && !field.IsNil() {
-					original := field.Elem().String()
-					sanitized, err := sanitizeStringByBinding(original, bindingTag)
-					if err != nil {
-						return err
+				if field.Type().Elem().Kind() == reflect.String {
+					if field.IsNil() {
+						empty := ""
+						field.Set(reflect.ValueOf(&empty))
+					} else {
+						original := field.Elem().String()
+						sanitized, err := sanitizeStringByBinding(original, bindingTag)
+						if err != nil {
+							return err
+						}
+						field.Elem().SetString(sanitized)
 					}
-					field.Elem().SetString(sanitized)
 				} else if !field.IsNil() {
 					// pointer to something else - recurse
 					if err := sanitizeRecursiveValue(field.Elem()); err != nil {

@@ -63,7 +63,7 @@ type ProductSizeAdditiveDTO struct {
 
 type CreateProductDTO struct {
 	Name        string  `form:"name" binding:"required,min=2,max=100"`
-	Description *string `form:"description" binding:"max=500,omitempty"`
+	Description *string `form:"description" binding:"omitempty,max=500"`
 	CategoryID  uint    `form:"categoryId" binding:"required"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader

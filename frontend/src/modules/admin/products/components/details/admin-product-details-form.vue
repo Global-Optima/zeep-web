@@ -35,8 +35,7 @@ const updateProductSchema = toTypedSchema(
       .max(100, 'Название не может превышать 100 символов'),
     description: z.string()
       .max(500, 'Описание не может превышать 500 символов')
-	  .optional()
-	  .default(''),
+	  .optional(),
     categoryId: z.coerce.number().min(1, 'Выберите категорию из списка'),
     image: z.instanceof(File).optional().refine((file) => {
       if (!file) return true;

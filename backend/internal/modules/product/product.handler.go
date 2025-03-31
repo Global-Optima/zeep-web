@@ -3,7 +3,6 @@ package product
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -49,9 +48,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetProductDetails(c *gin.Context) {
-	productIDParam := c.Param("id")
-
-	productID, err := strconv.ParseUint(productIDParam, 10, 64)
+	productID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
@@ -121,9 +118,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
-	productIDParam := c.Param("id")
-
-	productID, err := strconv.ParseUint(productIDParam, 10, 64)
+	productID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400ProductSize)
 		return
@@ -139,9 +134,7 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
-	productSizeIDParam := c.Param("id")
-
-	productSizeID, err := strconv.ParseUint(productSizeIDParam, 10, 64)
+	productSizeID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400ProductSize)
 		return
@@ -195,7 +188,7 @@ func (h *ProductHandler) CreateProductSize(c *gin.Context) {
 }
 
 func (h *ProductHandler) UpdateProduct(c *gin.Context) {
-	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	productID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
@@ -241,7 +234,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 }
 
 func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
-	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	productSizeID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400ProductSize)
 		return
@@ -281,7 +274,7 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 }
 
 func (h *ProductHandler) DeleteProduct(c *gin.Context) {
-	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	productID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
 		return
@@ -308,7 +301,7 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 }
 
 func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
-	productSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	productSizeID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400ProductSize)
 		return

@@ -60,7 +60,7 @@ export interface ProductSizeAdditiveDTO extends AdditiveDTO {
 
 export interface CreateProductDTO {
 	name: string
-	description: string
+	description?: string
 	categoryId: number
 	image?: File
 	video?: File
@@ -126,7 +126,7 @@ export interface ProductCategoriesFilterDTO extends PaginationParams {
 
 export interface CreateProductCategoryDTO {
 	name: string
-	description: string
+	description?: string
 }
 
 export interface UpdateProductCategoryDTO {
