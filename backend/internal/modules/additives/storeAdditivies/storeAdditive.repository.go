@@ -260,6 +260,7 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 	err = r.db.Model(&data.Additive{}).
 		Joins("INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ? AND store_additives.deleted_at IS NULL", storeID).
 		Preload("Unit").
+		Preload("Category").
 		Preload("StoreAdditives", "store_id = ? AND deleted_at IS NULL", storeID).
 		Preload("ProductSizeAdditives", "product_size_id = ?", productSizeID).
 		Where("additives.additive_category_id IN ?", categoryIDs).

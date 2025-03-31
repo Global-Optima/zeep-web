@@ -14,6 +14,7 @@ type StoreProductDTO struct {
 	ProductSizeCount      int     `json:"productSizeCount"`
 	StoreProductSizeCount int     `json:"storeProductSizeCount"`
 	IsAvailable           bool    `json:"isAvailable"`
+	IsOutOfStock          bool    `json:"isOutOfStock"`
 }
 
 type StoreProductSizeDTO struct {
@@ -58,11 +59,12 @@ type UpdateStoreProductSizeDTO struct {
 
 type StoreProductsFilterDTO struct {
 	utils.BaseFilter
-	CategoryID  *uint    `form:"categoryId" binding:"omitempty,gt=0"`
-	IsAvailable *bool    `form:"isAvailable" binding:"omitempty"`
-	Search      *string  `form:"search" binding:"omitempty,max=50"`
-	MaxPrice    *float64 `form:"maxPrice" binding:"omitempty,gt=0"`
-	MinPrice    *float64 `form:"minPrice" binding:"omitempty,gt=0"`
+	CategoryID   *uint    `form:"categoryId" binding:"omitempty,gt=0"`
+	IsAvailable  *bool    `form:"isAvailable" binding:"omitempty"`
+	IsOutOfStock *bool    `form:"isOutOfStock" binding:"omitempty"`
+	Search       *string  `form:"search" binding:"omitempty,max=50"`
+	MaxPrice     *float64 `form:"maxPrice" binding:"omitempty,gt=0"`
+	MinPrice     *float64 `form:"minPrice" binding:"omitempty,gt=0"`
 }
 
 type ExcludedStoreProductsFilterDTO struct {

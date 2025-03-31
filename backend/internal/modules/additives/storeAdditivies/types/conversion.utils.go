@@ -12,6 +12,7 @@ func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditive
 		BaseAdditiveDTO: *additiveTypes.ConvertToBaseAdditiveDTO(&storeAdditive.Additive),
 		AdditiveID:      storeAdditive.AdditiveID,
 		StorePrice:      getStorePrice(storeAdditive),
+		IsOutOfStock:    storeAdditive.IsOutOfStock,
 	}
 }
 
@@ -52,11 +53,13 @@ func ConvertToStoreAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []S
 		if len(additive.StoreAdditives) > 0 && len(additive.ProductSizeAdditives) > 0 {
 			additive.StoreAdditives[0].Additive = additive
 			storeAdditives = append(storeAdditives, StoreAdditiveCategoryItemDTO{
-				ID:                          additive.StoreAdditives[0].ID,
-				BaseAdditiveCategoryItemDTO: *additiveTypes.ConvertToBaseAdditiveCategoryItem(&additive, category.ID),
-				AdditiveID:                  additive.StoreAdditives[0].AdditiveID,
-				StorePrice:                  getStorePrice(&additive.StoreAdditives[0]),
-				IsDefault:                   additive.ProductSizeAdditives[0].IsDefault,
+				ID:              additive.StoreAdditives[0].ID,
+				BaseAdditiveDTO: *additiveTypes.ConvertToBaseAdditiveDTO(&additive),
+				AdditiveID:      additive.StoreAdditives[0].AdditiveID,
+				StorePrice:      getStorePrice(&additive.StoreAdditives[0]),
+				IsOutOfStock:    additive.StoreAdditives[0].IsOutOfStock,
+				IsDefault:       additive.ProductSizeAdditives[0].IsDefault,
+				IsHidden:        additive.ProductSizeAdditives[0].IsHidden,
 			})
 		}
 	}

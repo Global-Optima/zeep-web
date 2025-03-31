@@ -41,7 +41,7 @@ func TestFranchiseeEndpoints(t *testing.T) {
 				Method:      http.MethodPost,
 				URL:         "/api/test/franchisees",
 				Body: map[string]interface{}{
-					"name":        "",
+					"name":        " ", // Empty name
 					"description": "Branch with empty name",
 				},
 				AuthRole:     data.RoleAdmin,

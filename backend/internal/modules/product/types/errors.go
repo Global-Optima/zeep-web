@@ -6,7 +6,9 @@ import (
 )
 
 var (
-	ErrProductAlreadyExists                = moduleErrors.NewModuleError(errors.New("product already exists"))
+	ErrProductAlreadyExists = moduleErrors.NewModuleError(errors.New("product already exists"))
+	ErrProductNotFound      = moduleErrors.NewModuleError(errors.New("product not found"))
+
 	ErrProductSizeIngredientsNotFound      = moduleErrors.NewModuleError(errors.New("product size ingredients not found"))
 	ErrProductSizeDefaultAdditivesNotFound = moduleErrors.NewModuleError(errors.New("product size default additives not found"))
 	ErrProductSizeNotFound                 = moduleErrors.NewModuleError(errors.New("product size not found"))

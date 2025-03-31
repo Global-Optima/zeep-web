@@ -26,7 +26,12 @@ func NewStockRequestsModule(
 	auditService audit.AuditService,
 ) *StockRequestsModule {
 	repo := stockRequests.NewStockRequestRepository(base.DB)
-	service := stockRequests.NewStockRequestService(repo, stockMaterialRepo, notificationService)
+	service := stockRequests.NewStockRequestService(
+		repo,
+		stockMaterialRepo,
+		stockRequests.NewTransactionManager(base.DB, repo, stockMaterialRepo),
+		notificationService,
+	)
 	handler := stockRequests.NewStockRequestHandler(service, franchiseeService, regionService, auditService)
 
 	base.Router.RegisterStockRequestRoutes(handler)

@@ -43,6 +43,7 @@ type StockRequestRepository interface {
 
 	CountStockRequestsInLast24Hours(storeID uint) (int64, error)
 	CountFinalizedStockRequestsInLast24Hours(storeID uint) (int64, error)
+	CloneWithTransaction(tx *gorm.DB) StockRequestRepository
 }
 
 type stockRequestRepository struct {
@@ -51,6 +52,10 @@ type stockRequestRepository struct {
 
 func NewStockRequestRepository(db *gorm.DB) StockRequestRepository {
 	return &stockRequestRepository{db: db}
+}
+
+func (r *stockRequestRepository) CloneWithTransaction(tx *gorm.DB) StockRequestRepository {
+	return &stockRequestRepository{db: tx}
 }
 
 func (r *stockRequestRepository) CreateStockRequest(stockRequest *data.StockRequest) error {
@@ -184,6 +189,7 @@ func (r *stockRequestRepository) UpsertToStoreStock(storeID, stockMaterialID uin
 	var stockMaterial data.StockMaterial
 	if err := r.db.
 		Preload("Ingredient").
+		Preload("Unit").
 		Preload("Ingredient.Unit").
 		First(&stockMaterial, stockMaterialID).Error; err != nil {
 		return fmt.Errorf("failed to fetch stock material details for ID %d: %w", stockMaterialID, err)
@@ -191,7 +197,7 @@ func (r *stockRequestRepository) UpsertToStoreStock(storeID, stockMaterialID uin
 
 	var quantityInUnits float64
 	if stockMaterial.Ingredient.UnitID != stockMaterial.UnitID {
-		quantityInUnits = stockMaterial.Ingredient.Unit.ConversionFactor * stockMaterial.Size * quantityInPackages
+		quantityInUnits = stockMaterial.Unit.ConversionFactor / stockMaterial.Ingredient.Unit.ConversionFactor * stockMaterial.Size * quantityInPackages
 	} else {
 		quantityInUnits = stockMaterial.Size * quantityInPackages
 	}
@@ -230,7 +236,7 @@ func (r *stockRequestRepository) GetLastStockRequestDate(storeID uint) (*time.Ti
 
 	err = r.db.Select("created_at").Where("store_id = ?", storeID).
 		Order("created_at DESC").First(&lastRequest).Error
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
 	return &lastRequest.CreatedAt, err

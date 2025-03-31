@@ -26,6 +26,7 @@ func MapToStoreProductDTO(sp *data.StoreProduct) *StoreProductDTO {
 		StoreProductSizeCount: storeProductSizeCount,
 		StorePrice:            storePrice,
 		IsAvailable:           sp.IsAvailable,
+		IsOutOfStock:          sp.IsOutOfStock,
 	}
 }
 
