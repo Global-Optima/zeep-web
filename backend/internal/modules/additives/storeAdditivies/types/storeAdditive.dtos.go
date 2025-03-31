@@ -5,7 +5,7 @@ import (
 )
 
 type CreateStoreAdditiveDTO struct {
-	AdditiveID uint     `json:"additiveId" binding:"required,gt=0"`
+	AdditiveID uint     `json:"additiveId" binding:"required,gte=0"`
 	StorePrice *float64 `json:"storePrice" binding:"omitempty"`
 }
 
