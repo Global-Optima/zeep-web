@@ -108,7 +108,6 @@ func (r *storageRepository) UploadFile(filename string, reader io.Reader) (strin
 		ACL:         aws.String("public-read"),
 		ContentType: &contentType,
 	})
-
 	if err != nil {
 		return "", err
 	}
