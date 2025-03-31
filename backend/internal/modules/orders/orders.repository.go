@@ -104,10 +104,66 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 			return fmt.Errorf("failed to create order: %w", err)
 		}
 
+		orderIngredients, err := r.getOrderIngredients(tx, order.ID)
+		if err != nil {
+			return fmt.Errorf("failed to get order ingredients: %w", err)
+		}
+
+		if err := data.RecalculateOutOfStock(tx, order.StoreID, orderIngredients, nil, nil); err != nil {
+			return fmt.Errorf("failed to recalculate out of stock: %w", err)
+		}
+
 		return nil
 	})
 
 	return order.ID, err
+}
+
+func (r *orderRepository) getOrderIngredients(tx *gorm.DB, orderID uint) ([]uint, error) {
+	ingredientIDsFromProductSizes, err := r.getOrderProductSizeIngredients(tx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	ingredientIDsFromAdditives, err := r.getOrderAdditiveIngredients(tx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.UnionSlices(ingredientIDsFromProductSizes, ingredientIDsFromAdditives), nil
+}
+
+func (r *orderRepository) getOrderProductSizeIngredients(tx *gorm.DB, orderID uint) ([]uint, error) {
+	var ingredientIDsFromProductSizes []uint
+
+	err := tx.Model(&data.ProductSizeIngredient{}).
+		Distinct("product_size_ingredients.ingredient_id").
+		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_size_ingredients.product_size_id").
+		Joins("JOIN suborders ON suborders.store_product_size_id = store_product_sizes.id").
+		Where("suborders.order_id = ?", orderID).
+		Pluck("product_size_ingredients.ingredient_id", &ingredientIDsFromProductSizes).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ingredients from product sizes: %w", err)
+	}
+
+	return ingredientIDsFromProductSizes, nil
+}
+
+func (r *orderRepository) getOrderAdditiveIngredients(tx *gorm.DB, orderID uint) ([]uint, error) {
+	var ingredientIDsFromAdditives []uint
+
+	err := tx.Model(&data.AdditiveIngredient{}).
+		Distinct("additive_ingredients.ingredient_id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additive_ingredients.additive_id").
+		Joins("JOIN suborder_additives ON suborder_additives.store_additive_id = store_additives.id").
+		Joins("JOIN suborders ON suborders.id = suborder_additives.suborder_id").
+		Where("suborders.order_id = ?", orderID).
+		Pluck("additive_ingredients.ingredient_id", &ingredientIDsFromAdditives).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ingredients from additives: %w", err)
+	}
+
+	return ingredientIDsFromAdditives, nil
 }
 
 func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error) {
@@ -567,6 +623,15 @@ func (r *orderRepository) HandlePaymentFailure(orderID uint) error {
 
 	if order.Status != data.OrderStatusWaitingForPayment {
 		return types.ErrInappropriateOrderStatus
+	}
+
+	orderIngredients, err := r.getOrderIngredients(r.db, orderID)
+	if err != nil {
+		return err
+	}
+
+	if err := data.RecalculateOutOfStock(r.db, order.StoreID, orderIngredients, nil, nil); err != nil {
+		return err
 	}
 
 	if err := r.db.Unscoped().Delete(&order).Error; err != nil {

@@ -1,5 +1,7 @@
 package data
 
+import "time"
+
 type Size string
 
 const (
@@ -55,6 +57,7 @@ type ProductSize struct {
 	Product                Product                 `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" sort:"product"`
 	DiscountID             uint                    `gorm:"index"`
 	MachineId              string                  `gorm:"size:40;not null;unique" sort:"machineId"`
+	AdditivesUpdatedAt     time.Time               `gorm:"index" sort:"additivesUpdatedAt"`
 	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 }
@@ -108,6 +111,7 @@ type ProductSizeAdditive struct {
 	ProductSizeID uint        `gorm:"index;not null"`
 	AdditiveID    uint        `gorm:"index;not null"`
 	IsDefault     bool        `gorm:"not null" sort:"isDefault"`
+	IsHidden      bool        `gorm:"default:false"`
 	ProductSize   ProductSize `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	Additive      Additive    `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 }
@@ -131,6 +135,7 @@ type Additive struct {
 	Category             AdditiveCategory      `gorm:"foreignKey:AdditiveCategoryID;constraint:OnDelete:SET NULL" sort:"category"`
 	ImageKey             *StorageImageKey      `gorm:"size:2048"`
 	MachineId            string                `gorm:"size:40;not null;unique" sort:"machineId"`
+	IngredientsUpdatedAt time.Time             `gorm:"index" sort:"ingredientsUpdatedAt"`
 	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`
 	Ingredients          []AdditiveIngredient  `gorm:"foreignKey:AdditiveID"`

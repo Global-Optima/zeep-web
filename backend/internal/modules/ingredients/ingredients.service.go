@@ -54,7 +54,7 @@ func (s *ingredientService) UpdateIngredient(ingredientID uint, dto *types.Updat
 		return err
 	}
 
-	if err := s.repo.UpdateIngredient(ingredientID, ingredient); err != nil {
+	if err := s.repo.SaveIngredient(ingredientID, ingredient); err != nil {
 		s.logger.Error("Failed to update ingredient:", err)
 		return err
 	}
@@ -80,7 +80,7 @@ func (s *ingredientService) GetIngredientByID(ingredientID uint) (*types.Ingredi
 }
 
 func (s *ingredientService) GetIngredientsByIDs(ingredientIDs []uint) ([]types.IngredientDTO, error) {
-	ingredients, err := s.repo.GetIngredientsByIDs(ingredientIDs)
+	ingredients, err := s.repo.GetIngredientsWithDetailsByIDs(ingredientIDs)
 	if err != nil {
 		s.logger.Error("Failed to fetch ingredient by ID:", err)
 		return nil, err

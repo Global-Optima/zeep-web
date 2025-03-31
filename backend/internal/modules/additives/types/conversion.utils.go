@@ -105,12 +105,10 @@ func ConvertToUpdatedAdditiveCategoryModel(dto *UpdateAdditiveCategoryDTO, exist
 	return existing
 }
 
-func ConvertToAdditiveCategoryResponseDTO(model *data.AdditiveCategory) *AdditiveCategoryResponseDTO {
-	return &AdditiveCategoryResponseDTO{
-		ID:               model.ID,
-		Name:             model.Name,
-		Description:      model.Description,
-		IsMultipleSelect: model.IsMultipleSelect,
+func ConvertToAdditiveCategoryDTO(model *data.AdditiveCategory) *AdditiveCategoryDTO {
+	return &AdditiveCategoryDTO{
+		ID:                      model.ID,
+		BaseAdditiveCategoryDTO: *ConvertToBaseAdditiveCategoryDTO(model),
 	}
 }
 
@@ -142,59 +140,27 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 		ImageURL:    additive.ImageKey.GetURL(),
 		Size:        additive.Size,
 		Unit:        unitTypes.ToUnitResponse(additive.Unit),
-		Category:    *ConvertToCategoryDTO(&additive.Category),
+		Category:    *ConvertToAdditiveCategoryDTO(&additive.Category),
 		MachineId:   additive.MachineId,
 	}
 }
 
-func ConvertToCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategoryDTO {
+func ConvertToBaseAdditiveCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategoryDTO {
 	return &BaseAdditiveCategoryDTO{
-		ID:               category.ID,
 		Name:             category.Name,
 		Description:      category.Description,
 		IsMultipleSelect: category.IsMultipleSelect,
 	}
 }
 
-func ConvertToAdditiveCategoryDTO(category *data.AdditiveCategory) *AdditiveCategoryDTO {
-	additives := ConvertToAdditiveCategoryItemDTOs(category)
-
-	return &AdditiveCategoryDTO{
-		ID:               category.ID,
-		Name:             category.Name,
-		Description:      category.Description,
-		IsMultipleSelect: category.IsMultipleSelect,
-		Additives:        additives, // Always initialized as a slice
-	}
-}
-
-func ConvertToAdditiveCategoryItemDTOs(category *data.AdditiveCategory) []AdditiveCategoryItemDTO {
-	additives := make([]AdditiveCategoryItemDTO, 0)
-
-	// Populate additives if present
-	for _, additive := range category.Additives {
-		additives = append(additives, *ConvertToAdditiveCategoryItem(&additive, category.ID))
+func ConvertToAdditiveCategoryDetailsDTO(category *data.AdditiveCategory) *AdditiveCategoryDetailsDTO {
+	additivesCount := 0
+	if category.Additives != nil {
+		additivesCount = len(category.Additives)
 	}
 
-	return additives
-}
-
-func ConvertToAdditiveCategoryItem(additive *data.Additive, categoryID uint) *AdditiveCategoryItemDTO {
-	return &AdditiveCategoryItemDTO{
-		ID:                          additive.ID,
-		BaseAdditiveCategoryItemDTO: *ConvertToBaseAdditiveCategoryItem(additive, categoryID),
-	}
-}
-
-func ConvertToBaseAdditiveCategoryItem(additive *data.Additive, categoryID uint) *BaseAdditiveCategoryItemDTO {
-	return &BaseAdditiveCategoryItemDTO{
-		Name:        additive.Name,
-		Description: additive.Description,
-		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageKey.GetURL(),
-		Size:        additive.Size,
-		Unit:        unitTypes.ToUnitResponse(additive.Unit),
-		CategoryID:  categoryID,
-		MachineId:   additive.MachineId,
+	return &AdditiveCategoryDetailsDTO{
+		AdditiveCategoryDTO: *ConvertToAdditiveCategoryDTO(category),
+		AdditivesCount:      additivesCount,
 	}
 }

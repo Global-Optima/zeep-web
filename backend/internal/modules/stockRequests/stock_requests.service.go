@@ -3,7 +3,6 @@ package stockRequests
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -39,13 +38,20 @@ type StockRequestService interface {
 type stockRequestService struct {
 	repo                StockRequestRepository
 	stockMaterialRepo   stockMaterial.StockMaterialRepository
+	transactionManager  TransactionManager
 	notificationService notifications.NotificationService
 }
 
-func NewStockRequestService(repo StockRequestRepository, stockMaterialRepo stockMaterial.StockMaterialRepository, notificationService notifications.NotificationService) StockRequestService {
+func NewStockRequestService(
+	repo StockRequestRepository,
+	stockMaterialRepo stockMaterial.StockMaterialRepository,
+	transactionManager TransactionManager,
+	notificationService notifications.NotificationService,
+) StockRequestService {
 	return &stockRequestService{
 		repo:                repo,
 		stockMaterialRepo:   stockMaterialRepo,
+		transactionManager:  transactionManager,
 		notificationService: notificationService,
 	}
 }
@@ -305,18 +311,9 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) (*data.StockReq
 		return nil, fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestCompleted)
 	}
 
-	store, err := s.repo.GetStoreWarehouse(request.StoreID)
+	err = s.transactionManager.HandleCompleteStockRequest(request)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch store warehouse: %w", err)
-	}
-
-	if err := s.handleCompletedStatus(request, store.ID); err != nil {
 		return nil, err
-	}
-
-	request.Status = data.StockRequestCompleted
-	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
-		return nil, fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
 	requestDetails := &details.StockRequestStatusUpdatedDetails{
@@ -409,24 +406,6 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 			if err != nil {
 				return fmt.Errorf("failed to send out of stock notification: %w", err)
 			}
-		}
-	}
-	return nil
-}
-
-func (s *stockRequestService) handleCompletedStatus(request *data.StockRequest, storeWarehouseID uint) error {
-	for _, ingredient := range request.Ingredients {
-		dates := types.UpdateIngredientDates{
-			DeliveredDate:  time.Now(),
-			ExpirationDate: time.Now().AddDate(0, 0, ingredient.StockMaterial.ExpirationPeriodInDays),
-		}
-
-		if err := s.repo.UpdateStockRequestIngredientDates(ingredient.ID, &dates); err != nil {
-			return fmt.Errorf("failed to update ingredient dates for stock material ID %d: %w", ingredient.StockMaterialID, err)
-		}
-
-		if err := s.repo.UpsertToStoreStock(storeWarehouseID, ingredient.StockMaterialID, ingredient.Quantity); err != nil {
-			return fmt.Errorf("failed to update store warehouse stock for stock material ID %d: %w", ingredient.StockMaterialID, err)
 		}
 	}
 	return nil

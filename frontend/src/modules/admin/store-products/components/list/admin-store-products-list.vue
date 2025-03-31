@@ -6,7 +6,7 @@
 				<TableHead>Название</TableHead>
 				<TableHead class="hidden md:table-cell">Категория</TableHead>
 				<TableHead>Цена</TableHead>
-				<TableHead class="hidden md:table-cell">Доступно</TableHead>
+				<TableHead class="hidden md:table-cell">Статус</TableHead>
 				<TableHead v-if="canDelete"></TableHead>
 			</TableRow>
 		</TableHeader>
@@ -33,11 +33,14 @@
 				<TableCell>
 					{{ formatPrice(product.storePrice) }}
 				</TableCell>
-				<TableCell class="hidden md:table-cell">
-					<div :class="[product.isAvailable ? 'text-green-600' : 'text-red-500']">
-						{{ product.isAvailable ? 'Доступен' : 'Недоступен' }}
-					</div>
-				</TableCell>
+        <TableCell class="hidden md:table-cell">
+          <p
+            class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
+            :class="getStatusClass(product)"
+          >
+            {{ getStatusLabel(product) }}
+          </p>
+        </TableCell>
 				<TableCell
 					class="flex justify-end"
 					v-if="canDelete"
@@ -75,6 +78,39 @@ import { storeProductsService } from '@/modules/admin/store-products/services/st
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import type {StoreWarehouseStockDTO} from "@/modules/admin/store-stocks/models/store-stock.model";
+
+type StoreProductStatus = 'available' | 'out_of_stock' | 'unavailable'
+
+const STORE_PRODUCT_STATUS_COLOR: Record<StoreProductStatus, string> = {
+  available: 'bg-green-100 text-green-800',
+  unavailable: 'bg-yellow-100 text-yellow-800',
+  out_of_stock: 'bg-red-100 text-red-800',
+}
+
+const STORE_PRODUCT_STATUS_FORMATTED: Record<StoreProductStatus, string> = {
+  available: 'Доступен',
+  unavailable: 'Недоступен',
+  out_of_stock: 'Нет в наличии',
+}
+
+function computeStatus(storeProduct: StoreProductDTO): StoreProductStatus {
+  if (!storeProduct.isAvailable) {
+    return 'unavailable'
+  }
+  if (storeProduct.isOutOfStock) {
+    return 'out_of_stock'
+  }
+  return 'available'
+}
+
+function getStatusClass(storeProduct: StoreProductDTO): string {
+  return STORE_PRODUCT_STATUS_COLOR[computeStatus(storeProduct)]
+}
+
+function getStatusLabel(storeProduct: StoreProductDTO): string {
+  return STORE_PRODUCT_STATUS_FORMATTED[computeStatus(storeProduct)]
+}
 
 const router = useRouter();
 const queryClient = useQueryClient();

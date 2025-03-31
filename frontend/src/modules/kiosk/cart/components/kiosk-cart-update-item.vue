@@ -135,8 +135,8 @@ const productDetails = ref(props.cartItem.product)
 const selectedSize = ref<StoreProductSizeDetailsDTO>(props.cartItem.size)
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>(
   props.cartItem.additives.reduce((acc, additive) => {
-    acc[additive.categoryId] = acc[additive.categoryId] || []
-    acc[additive.categoryId].push(additive)
+    acc[additive.category.id] = acc[additive.category.id] || []
+    acc[additive.category.id].push(additive)
     return acc
   }, {} as Record<number, StoreAdditiveCategoryItemDTO[]>)
 )

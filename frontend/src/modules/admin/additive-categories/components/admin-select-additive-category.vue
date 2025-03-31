@@ -59,7 +59,7 @@
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/core/components/ui/dialog'
 import { Input } from '@/core/components/ui/input'
-import type { AdditiveCategoriesFilterQuery, AdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoriesFilterQuery, AdditiveCategoryDetailsDTO } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounce } from '@vueuse/core'
@@ -69,7 +69,7 @@ const {open} = defineProps<{
 }>()
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', additiveCategory: AdditiveCategoryDTO): void;
+  (e: 'select', additiveCategory: AdditiveCategoryDetailsDTO): void;
 }>()
 const searchTerm = ref('')
 const debouncedSearchTerm = useDebounce(
@@ -99,7 +99,7 @@ function loadMore() {
   }
 }
 
-function selectAdditiveCategory(additive: AdditiveCategoryDTO) {
+function selectAdditiveCategory(additive: AdditiveCategoryDetailsDTO) {
   emit('select', additive)
   onClose()
 }

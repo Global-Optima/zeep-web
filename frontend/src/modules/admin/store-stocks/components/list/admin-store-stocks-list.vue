@@ -137,7 +137,6 @@ const INGREDIENT_STATUS_FORMATTED: Record<IngredientStatus, string> = {
   out_of_stock: 'Нет в наличии',
 }
 
-
 function computeStatus(stock: StoreWarehouseStockDTO): IngredientStatus {
   if (stock.quantity === 0) {
     return 'out_of_stock'

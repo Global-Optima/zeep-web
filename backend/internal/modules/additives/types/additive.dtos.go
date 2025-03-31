@@ -26,7 +26,6 @@ type AdditiveFilterQuery struct {
 }
 
 type BaseAdditiveCategoryDTO struct {
-	ID               uint   `json:"id"`
 	Name             string `json:"name"`
 	Description      string `json:"description"`
 	IsMultipleSelect bool   `json:"isMultipleSelect"`
@@ -35,14 +34,14 @@ type BaseAdditiveCategoryDTO struct {
 // BaseAdditiveDTO should not be returned directly as a response,
 // instead wrap it into another struct with more info like ID and etc
 type BaseAdditiveDTO struct {
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
-	BasePrice   float64                 `json:"basePrice"`
-	ImageURL    string                  `json:"imageUrl"`
-	Size        float64                 `json:"size"`
-	Unit        unitTypes.UnitsDTO      `json:"unit"`
-	Category    BaseAdditiveCategoryDTO `json:"category"`
-	MachineId   string                  `json:"machineId"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	BasePrice   float64             `json:"basePrice"`
+	ImageURL    string              `json:"imageUrl"`
+	Size        float64             `json:"size"`
+	Unit        unitTypes.UnitsDTO  `json:"unit"`
+	Category    AdditiveCategoryDTO `json:"category"`
+	MachineId   string              `json:"machineId"`
 }
 
 type AdditiveDTO struct {
@@ -60,28 +59,14 @@ type AdditiveIngredientDTO struct {
 	Ingredient ingredientTypes.IngredientDTO `json:"ingredient"`
 }
 
-type BaseAdditiveCategoryItemDTO struct {
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	BasePrice   float64            `json:"basePrice"`
-	ImageURL    string             `json:"imageUrl"`
-	Size        float64            `json:"size"`
-	Unit        unitTypes.UnitsDTO `json:"unit"`
-	CategoryID  uint               `json:"categoryId"`
-	MachineId   string             `json:"machineId"`
-}
-
 type AdditiveCategoryItemDTO struct {
 	ID uint `json:"id"`
-	BaseAdditiveCategoryItemDTO
+	BaseAdditiveDTO
 }
 
-type AdditiveCategoryDTO struct {
-	ID               uint                      `json:"id"`
-	Name             string                    `json:"name"`
-	Description      string                    `json:"description"`
-	Additives        []AdditiveCategoryItemDTO `json:"additives"`
-	IsMultipleSelect bool                      `json:"isMultipleSelect"`
+type AdditiveCategoryDetailsDTO struct {
+	AdditiveCategoryDTO
+	AdditivesCount int `json:"additivesCount"`
 }
 
 type CreateAdditiveCategoryDTO struct {
@@ -109,11 +94,9 @@ type UpdateAdditiveDTO struct {
 	DeleteImage        bool `form:"deleteImage"`
 }
 
-type AdditiveCategoryResponseDTO struct {
-	ID               uint   `json:"id"`
-	Name             string `json:"name"`
-	Description      string `json:"description"`
-	IsMultipleSelect bool   `json:"isMultipleSelect"`
+type AdditiveCategoryDTO struct {
+	ID uint `json:"id"`
+	BaseAdditiveCategoryDTO
 }
 
 type CreateAdditiveDTO struct {

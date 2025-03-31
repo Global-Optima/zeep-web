@@ -3,7 +3,7 @@ import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import { buildFormData } from '@/core/utils/request-form-data-builder.utils'
 import type {
 	AdditiveCategoriesFilterQuery,
-	AdditiveCategoryDTO,
+	AdditiveCategoryDetailsDTO,
 	AdditiveDetailsDTO,
 	AdditiveDTO,
 	AdditiveFilterQuery,
@@ -54,7 +54,7 @@ class AdditiveService {
 	}
 
 	async getAdditiveCategories(filter?: AdditiveCategoriesFilterQuery) {
-		const response = await apiClient.get<PaginatedResponse<AdditiveCategoryDTO[]>>(
+		const response = await apiClient.get<PaginatedResponse<AdditiveCategoryDetailsDTO[]>>(
 			'/additives/categories',
 			{
 				params: buildRequestFilter(filter),
@@ -65,7 +65,7 @@ class AdditiveService {
 
 	// Fetch a single additive category by ID
 	async getAdditiveCategoryById(id: number) {
-		const response = await apiClient.get<AdditiveCategoryDTO>(`/additives/categories/${id}`)
+		const response = await apiClient.get<AdditiveCategoryDetailsDTO>(`/additives/categories/${id}`)
 		return response.data
 	}
 

@@ -12,7 +12,11 @@
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminProductSizeUpdateForm, { type UpdateProductSizeFormSchema } from '@/modules/admin/products/components/details/admin-product-size-details-form.vue'
-import type { UpdateProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
+import type {
+  SelectedAdditiveDTO,
+  SelectedIngredientDTO,
+  UpdateProductSizeDTO
+} from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
@@ -69,15 +73,26 @@ function handleUpdate(data: UpdateProductSizeFormSchema) {
 		return router.back()
 	}
 
+  const additives: SelectedAdditiveDTO[] = data.additives.map(a => ({
+    additiveId: a.additiveId,
+    isDefault: a.isDefault,
+    isHidden: a.isHidden,
+  }))
+
+  const ingredients: SelectedIngredientDTO[] = data.ingredients.map(a => ({
+    ingredientId: a.ingredientId,
+    quantity: a.quantity
+  }))
+
 	const dto: UpdateProductSizeDTO = {
-		name: data.name,
-		basePrice: data.basePrice,
-		size: data.size,
-		unitId: data.unitId,
+    name: data.name,
+    basePrice: data.basePrice,
+    size: data.size,
+    unitId: data.unitId,
     machineId: data.machineId,
-		additives: data.additives.map(a => ({ additiveId: a.additiveId, isDefault: a.isDefault ?? false })),
-		ingredients: data.ingredients.map(a => ({ ingredientId: a.ingredientId, quantity: a.quantity })),
-	}
+    additives,
+    ingredients,
+  }
 
 	updateMutation.mutate({ sizeId: Number(productSizeId), dto })
 }

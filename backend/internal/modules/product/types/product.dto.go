@@ -59,6 +59,7 @@ type ProductSizeDetailsDTO struct {
 type ProductSizeAdditiveDTO struct {
 	additiveTypes.AdditiveDTO
 	IsDefault bool `json:"isDefault"`
+	IsHidden  bool `json:"isHidden"`
 }
 
 type CreateProductDTO struct {
@@ -72,6 +73,7 @@ type CreateProductDTO struct {
 type SelectedAdditiveDTO struct {
 	AdditiveID uint `json:"additiveId" binding:"required"`
 	IsDefault  bool `json:"isDefault"`
+	IsHidden   bool `json:"isHidden"`
 }
 
 type SelectedIngredientDTO struct {
@@ -85,7 +87,7 @@ type CreateProductSizeDTO struct {
 	Size        float64                 `json:"size" binding:"required,gt=0"`
 	UnitID      uint                    `json:"unitId" binding:"required,gt=0"`
 	BasePrice   float64                 `json:"basePrice" binding:"required,gt=0"`
-	MachineId   string                  `form:"machineId" binding:"required,max=40"`
+	MachineId   string                  `json:"machineId" binding:"required,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }
@@ -105,7 +107,7 @@ type UpdateProductSizeDTO struct {
 	BasePrice   *float64                `json:"basePrice" binding:"omitempty,gt=0"`
 	Size        *float64                `json:"size" binding:"omitempty,gt=0"`
 	UnitID      *uint                   `json:"unitId" binding:"omitempty,gt=0"`
-	MachineId   *string                 `form:"machineId" binding:"omitempty,max=40"`
+	MachineId   *string                 `json:"machineId" binding:"omitempty,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }

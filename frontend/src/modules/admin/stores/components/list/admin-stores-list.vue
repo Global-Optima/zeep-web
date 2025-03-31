@@ -5,7 +5,7 @@
 				<TableHead class="p-4">Название</TableHead>
 				<TableHead class="p-4">Адрес</TableHead>
 				<TableHead class="p-4">Телефон</TableHead>
-				<TableHead class="p-4">Статус</TableHead>
+				<TableHead class="p-4">Тип</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>
@@ -28,14 +28,14 @@
 				<!-- Status -->
 				<TableCell class="p-4">
 					<span
-						v-if="store.franchisee"
-						:class="[
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs bg-green-100 text-green-80',
+            :class="[
+              'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs',
+              store.franchisee ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
               ]"
-					>
-						Франшиза
-					</span>
-				</TableCell>
+          >
+            {{ store.franchisee ? 'Франшиза' : 'Официальное' }}
+          </span>
+        </TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>

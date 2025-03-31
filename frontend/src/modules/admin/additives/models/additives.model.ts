@@ -20,10 +20,13 @@ export interface AdditiveFilterQuery extends PaginationParams {
 
 // Base DTOs
 export interface BaseAdditiveCategoryDTO {
+  name: string
+  description: string
+  isMultipleSelect: boolean
+}
+
+export interface AdditiveCategoryDTO extends BaseAdditiveCategoryDTO{
 	id: number
-	name: string
-	description: string
-	isMultipleSelect: boolean
 }
 
 export interface BaseAdditiveDTO {
@@ -33,7 +36,7 @@ export interface BaseAdditiveDTO {
 	imageUrl: string
 	size: number
 	unit: UnitDTO
-	category: BaseAdditiveCategoryDTO
+	category: AdditiveCategoryDTO
 	machineId: string
 }
 
@@ -51,23 +54,8 @@ export interface SelectedDetailedIngredientDTO {
 	quantity: number
 }
 
-export interface BaseAdditiveCategoryItemDTO {
-	name: string
-	description: string
-	basePrice: number
-	imageUrl: string
-	size: number
-	unit: UnitDTO
-	categoryId: number
-	machineId: number
-}
-
-export interface AdditiveCategoryItemDTO extends BaseAdditiveCategoryItemDTO {
-	id: number
-}
-
-export interface AdditiveCategoryDTO extends BaseAdditiveCategoryDTO {
-	additives: AdditiveCategoryItemDTO[]
+export interface AdditiveCategoryDetailsDTO extends AdditiveCategoryDTO {
+	additivesCount: number
 }
 
 // Create and Update DTOs
@@ -94,13 +82,6 @@ export interface UpdateAdditiveDTO {
 	ingredients?: SelectedIngredientDTO[]
 	image?: File
 	deleteImage: boolean
-}
-
-export interface AdditiveCategoryResponseDTO {
-	id: number
-	name: string
-	description: string
-	isMultipleSelect: boolean
 }
 
 export interface CreateAdditiveDTO {

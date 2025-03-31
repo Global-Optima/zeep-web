@@ -45,6 +45,7 @@ import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
 interface SelectedAdditiveTypesDTO {
   additiveId: number
   isDefault: boolean
+  isHidden: boolean
   name: string
   categoryName: string
   size: number
@@ -113,6 +114,7 @@ function addAdditive(additive: AdditiveDTO) {
     additives.value.push({
       additiveId: additive.id,
       isDefault: false,
+      isHidden: false,
       name: additive.name,
       categoryName: additive.category.name,
       size: additive.size,
@@ -159,6 +161,14 @@ function selectUnit(unit: UnitDTO) {
   openUnitDialog.value = false
   setFieldValue('unitId', unit.id)
 }
+
+function onAdditiveDefaultClick(index: number, value: boolean) {
+  additives.value[index].isDefault = value
+  if (!value) {
+    additives.value[index].isHidden = false
+  }
+}
+
 </script>
 
 <template>
@@ -327,53 +337,69 @@ function selectUnit(unit: UnitDTO) {
 					</div>
 				</CardHeader>
 				<CardContent>
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead></TableHead>
-								<TableHead>Название</TableHead>
-								<TableHead>Категория</TableHead>
-								<TableHead>Размер</TableHead>
-								<TableHead>По умолчанию</TableHead>
-								<TableHead></TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							<TableRow
-								v-for="(additive, index) in additives"
-								:key="additive.additiveId"
-							>
-								<TableCell>
-									<LazyImage
-										:src="additive.imageUrl"
-										alt="Изображение добавки"
-										class="rounded-md size-16 object-contain"
-									/>
-								</TableCell>
-								<TableCell>{{ additive.name }}</TableCell>
-								<TableCell>{{ additive.categoryName }}</TableCell>
-								<TableCell>{{ additive.size}} {{additive.unitName}}</TableCell>
-								<TableCell class="text-left">
-									<Checkbox
-										type="checkbox"
-										class="size-6 text-left"
-										:checked="additive.isDefault"
-										@update:checked="v => additive.isDefault = v"
-									/>
-								</TableCell>
-								<TableCell class="text-center">
-									<Button
-										variant="ghost"
-										size="icon"
-										@click="removeAdditive(index)"
-									>
-										<Trash class="w-6 h-6 text-red-500" />
-									</Button>
-								</TableCell>
-							</TableRow>
-						</TableBody>
-					</Table>
-					<div
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead></TableHead>
+                <TableHead>Название</TableHead>
+                <TableHead>Категория</TableHead>
+                <TableHead>Размер</TableHead>
+                <TableHead class="text-center">В составе</TableHead>
+                <TableHead class="text-center">Не показывать</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              <TableRow
+                v-for="(additive, index) in additives"
+                :key="additive.additiveId"
+              >
+                <TableCell>
+                  <LazyImage
+                    :src="additive.imageUrl"
+                    alt="Изображение добавки"
+                    class="rounded-md size-16 object-contain"
+                  />
+                </TableCell>
+
+                <TableCell>{{ additive.name }}</TableCell>
+                <TableCell>{{ additive.categoryName }}</TableCell>
+                <TableCell>{{ additive.size }} {{ additive.unitName }}</TableCell>
+
+                <!-- По умолчанию -->
+                <TableCell class="text-center !pr-2">
+                  <Checkbox
+                    type="checkbox"
+                    class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
+                    :checked="additive.isDefault"
+                    @update:checked="value => onAdditiveDefaultClick(index, value)"
+                  />
+                </TableCell>
+
+                <TableCell class="text-center !pr-2">
+                    <Checkbox
+                      type="checkbox"
+                      :disabled="!additive.isDefault"
+                      class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
+                      :checked="additive.isHidden ?? false"
+                      @update:checked="v => additive.isHidden = v"
+                    />
+                </TableCell>
+
+                <TableCell class="text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    @click="removeAdditive(index)"
+                  >
+                    <Trash class="w-6 h-6 text-red-500" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+          <div
 						v-if="additivesError"
 						class="mt-2 text-red-500 text-sm"
 					>
