@@ -276,8 +276,7 @@ func (r *storageRepository) ConvertAndUploadMedia(
 
 	if vidFileHeader != nil {
 		group.Go(func() error {
-			var err error
-			videoReader, videoName, err = r.validateVideo(vidFileHeader)
+			videoReader, videoName, err = r.prepareVideoForUpload(vidFileHeader)
 			return err
 		})
 	}
@@ -300,6 +299,7 @@ func (r *storageRepository) ConvertAndUploadMedia(
 		}
 	}
 
+	// Wait for the upload processes to complete
 	if err := group.Wait(); err != nil {
 		return "", "", fmt.Errorf("upload failed: %w", err)
 	}
@@ -315,11 +315,11 @@ func (r *storageRepository) convertImage(imgFileHeader *multipart.FileHeader) (*
 	return convertedFiles, nil
 }
 
-func (r *storageRepository) validateVideo(vidFileHeader *multipart.FileHeader) (io.Reader, string, error) {
+func (r *storageRepository) prepareVideoForUpload(vidFileHeader *multipart.FileHeader) (io.Reader, string, error) {
 	videoName := media.GenerateUniqueName() + media.MP4_FORMAT_KEY
-	videoReader, err := media.ValidateMP4(vidFileHeader)
+	videoReader, err := vidFileHeader.Open()
 	if err != nil {
-		return nil, "", fmt.Errorf("video validation failed: %w", err)
+		return nil, "", fmt.Errorf("failed to open video file: %w", err)
 	}
 	return videoReader, videoName, nil
 }

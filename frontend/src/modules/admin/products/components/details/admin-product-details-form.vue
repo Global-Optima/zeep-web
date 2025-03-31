@@ -9,7 +9,7 @@ import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/
 import { toTypedSchema } from '@vee-validate/zod'
 import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import { defineAsyncComponent, ref, useTemplateRef} from 'vue'
+import { defineAsyncComponent, ref, useTemplateRef, defineExpose } from 'vue'
 import * as z from 'zod'
 
 // Lazy-load the dialog component
@@ -54,7 +54,7 @@ const updateProductSchema = toTypedSchema(
   })
 );
 
-const { handleSubmit, setFieldValue } = useForm({
+const { handleSubmit, setFieldValue, resetField } = useForm({
   validationSchema: updateProductSchema,
   initialValues: {
     name: productDetails.name,
@@ -112,6 +112,15 @@ const onSubmit = handleSubmit((values) => {
 
   emits('onSubmit', dto);
 });
+
+const resetFormValues = () => {
+  resetField('image')
+  resetField('video')
+  deleteImage.value = false
+  deleteVideo.value = false;
+};
+
+defineExpose({ resetFormValues });
 
 const onDeleteImage = () => {
   previewImage.value = null
