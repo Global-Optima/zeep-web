@@ -143,7 +143,7 @@ func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt ti
 	return &types.UnsyncData{
 		ProductSizeIDs: productSizeIDs,
 		AdditiveIDs:    additiveIDs,
-		IngredientIDs:  utils.MergeDistinct(ingredientIDsFromAdditives, ingredientIDsFromProducts),
+		IngredientIDs:  utils.UnionSlices(ingredientIDsFromAdditives, ingredientIDsFromProducts),
 	}, nil
 }
 
@@ -196,7 +196,7 @@ func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, l
 		return nil, fmt.Errorf("failed to fetch additive-based ingredients: %w", err)
 	}
 
-	mergedIngredientIDs := utils.MergeDistinct(productSizeIngredientIDs, additiveIngredientIDs)
+	mergedIngredientIDs := utils.UnionSlices(productSizeIngredientIDs, additiveIngredientIDs)
 
 	missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, mergedIngredientIDs)
 	if err != nil {

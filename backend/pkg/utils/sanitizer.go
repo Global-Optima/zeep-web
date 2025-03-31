@@ -78,7 +78,7 @@ func RoundToOneDecimal(value float64) float64 {
 	return math.Round(value*10) / 10
 }
 
-func MergeDistinct[T comparable](arr1, arr2 []T) []T {
+func UnionSlices[T comparable](arr1, arr2 []T) []T {
 	uniqueMap := make(map[T]struct{})
 
 	for _, v := range arr1 {
