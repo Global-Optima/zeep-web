@@ -196,19 +196,11 @@ func (s *authenticationService) saveEmployeeToken(employeeID uint, token string)
 }
 
 func (s *authenticationService) updateEmployeeToken(employeeID uint, token string) error {
-	cfg := config.GetConfig()
-	expirationTime := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
-
 	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
 		return fmt.Errorf("failed to delete old token: %w", err)
 	}
 
-	newEmployeeToken := &data.EmployeeToken{
-		EmployeeID: employeeID,
-		Token:      token,
-		ExpiresAt:  expirationTime,
-	}
-	if err := s.employeeTokenManager.CreateToken(newEmployeeToken); err != nil {
+	if err := s.saveEmployeeToken(employeeID, token); err != nil {
 		return fmt.Errorf("failed to create new token: %w", err)
 	}
 	return nil
