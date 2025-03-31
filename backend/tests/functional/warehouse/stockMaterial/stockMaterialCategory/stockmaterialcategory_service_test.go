@@ -65,7 +65,7 @@ func TestStockMaterialCategoryService_Create_WithPreloadedData(t *testing.T) {
 				category, err := module.Service.GetByID(id)
 				assert.NoError(t, err)
 				assert.Equal(t, tc.input.Name, category.Name)
-				assert.Equal(t, tc.input.Description, category.Description)
+				assert.Equal(t, *tc.input.Description, category.Description)
 				assert.NotEmpty(t, category.CreatedAt)
 				assert.NotEmpty(t, category.UpdatedAt)
 			}

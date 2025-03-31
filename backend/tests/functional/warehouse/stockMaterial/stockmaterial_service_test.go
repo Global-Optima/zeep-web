@@ -202,7 +202,7 @@ func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
 				assert.Equal(t, tc.input.Name, result.Name)
-				assert.Equal(t, tc.input.Description, result.Description)
+				assert.Equal(t, *tc.input.Description, result.Description)
 				assert.Equal(t, tc.input.SafetyStock, result.SafetyStock)
 				assert.Equal(t, tc.input.UnitID, result.Unit.ID)
 				assert.Equal(t, tc.input.CategoryID, result.Category.ID)
