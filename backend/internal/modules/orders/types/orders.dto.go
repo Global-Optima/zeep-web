@@ -186,6 +186,10 @@ type OrdersTimeZoneFilter struct {
 	Statuses               []data.OrderStatus `form:"statuses" binding:"omitempty"`
 }
 
+type ToggleNextSuborderStatusOptions struct {
+	IncludeIfCompletedGapMinutes *int `form:"includeIfCompletedGapMinutes"`
+}
+
 type TransactionDTO struct {
 	Bin           string  `json:"bin" binding:"required,len=12"`
 	TransactionID string  `json:"transactionId" binding:"required,max=20"`
