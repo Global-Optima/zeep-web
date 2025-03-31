@@ -61,7 +61,7 @@ func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
 
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 	var dto types.CreateProductCategoryDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
 		return
 	}
@@ -94,7 +94,7 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	}
 
 	var dto types.UpdateProductCategoryDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}

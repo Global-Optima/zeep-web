@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -19,7 +17,7 @@ type AdditiveModels struct {
 func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 	additive := &data.Additive{
 		Name:               dto.Name,
-		Description:        dto.Description,
+		Description:        *dto.Description,
 		BasePrice:          dto.BasePrice,
 		UnitID:             dto.UnitID,
 		Size:               dto.Size,
@@ -42,11 +40,11 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO, additive *data.Addit
 		return nil, errors.New("dto cannot be nil")
 	}
 
-	if strings.TrimSpace(dto.Name) != "" {
-		additive.Name = dto.Name
+	if dto.Name != nil {
+		additive.Name = *dto.Name
 	}
-	if strings.TrimSpace(dto.Description) != "" {
-		additive.Description = dto.Description
+	if dto.Description != nil {
+		additive.Description = *dto.Description
 	}
 	if dto.BasePrice != nil {
 		additive.BasePrice = *dto.BasePrice
@@ -89,7 +87,7 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO, additive *data.Addit
 func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.AdditiveCategory {
 	return &data.AdditiveCategory{
 		Name:             dto.Name,
-		Description:      dto.Description,
+		Description:      *dto.Description,
 		IsMultipleSelect: dto.IsMultipleSelect,
 	}
 }

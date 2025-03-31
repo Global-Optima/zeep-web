@@ -67,7 +67,7 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 
 func (h *StockMaterialHandler) CreateStockMaterial(c *gin.Context) {
 	var req types.CreateStockMaterialDTO
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := utils.ParseRequestBody(c, &req); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -100,7 +100,7 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 	}
 
 	var req types.UpdateStockMaterialDTO
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := utils.ParseRequestBody(c, &req); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterial)
 		return
 	}

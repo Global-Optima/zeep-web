@@ -18,7 +18,7 @@ func ToGenerateBarcodeResponse(barcode string) GenerateBarcodeResponse {
 func ConvertCreateStockMaterialRequestToStockMaterial(req *CreateStockMaterialDTO) *data.StockMaterial {
 	return &data.StockMaterial{
 		Name:                   req.Name,
-		Description:            req.Description,
+		Description:            *req.Description,
 		SafetyStock:            req.SafetyStock,
 		UnitID:                 req.UnitID,
 		Size:                   req.Size,
