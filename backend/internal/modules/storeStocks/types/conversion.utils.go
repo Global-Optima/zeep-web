@@ -2,11 +2,12 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 )
 
-const DEFAULT_LOW_STOCK_THRESHOLD = 2 //for conversion factor equal to kg or l
+const DEFAULT_LOW_STOCK_THRESHOLD = 2 // for conversion factor equal to kg or l
 
 func MapToStockDTO(stock data.StoreStock) StoreStockDTO {
 	return StoreStockDTO{

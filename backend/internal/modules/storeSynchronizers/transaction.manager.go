@@ -2,8 +2,9 @@ package storeSynchronizers
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 
 	"github.com/sirupsen/logrus"
 

@@ -2,10 +2,11 @@ package data
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"time"
 )
 
 type usageRow struct {

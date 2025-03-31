@@ -330,7 +330,6 @@ func (r *additiveRepository) getProductSizeIDsByAdditive(additiveID uint) ([]uin
 	err := r.db.Model(&data.ProductSizeAdditive{}).
 		Where("additive_id = ?", additiveID).
 		Pluck("product_size_id", &productSizeIDs).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get productSizeIDs by additiveID %d: %w", additiveID, err)
 	}
@@ -346,7 +345,6 @@ func (r *additiveRepository) updateProductSizeAdditivesUpdatedAt(productSizeIDs 
 	err := r.db.Model(&data.ProductSize{}).
 		Where("id IN ?", productSizeIDs).
 		Update("additives_updated_at", time.Now().UTC()).Error
-
 	if err != nil {
 		return fmt.Errorf("failed to update additives_updated_at for productSizeIDs: %w", err)
 	}
