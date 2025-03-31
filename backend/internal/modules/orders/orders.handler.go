@@ -389,7 +389,6 @@ func (h *OrderHandler) AcceptSubOrder(c *gin.Context) {
 	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
 	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
 }
-
 func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 	subOrderID, err := utils.ParseParam(c, "subOrderId")
 	if err != nil {
@@ -397,7 +396,13 @@ func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 		return
 	}
 
-	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(subOrderID)
+	var options types.ToggleNextSuborderStatusOptions
+	if err := c.ShouldBindQuery(&options); err != nil {
+		utils.SendBadRequestError(c, fmt.Sprintf("Invalid query params: %v", err))
+		return
+	}
+
+	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(subOrderID, &options)
 	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("failed to update suborder status: %v", err))
 		return

@@ -651,12 +651,12 @@ func TestOrderService_AdvanceSubOrderStatus(t *testing.T) {
 	assert.Len(t, suborderIDs, 2, "Expected two suborders inserted")
 
 	// Advance the second suborder from PENDING to PREPARING.
-	dto, err := module.Service.AdvanceSubOrderStatus(suborderIDs[1])
+	dto, err := module.Service.AdvanceSubOrderStatus(suborderIDs[1], nil)
 	assert.NoError(t, err, "Advancing suborder status should succeed")
 	assert.Equal(t, data.SubOrderStatusPreparing, dto.Status, "Suborder should transition to PREPARING")
 
 	// Advance the same suborder from PREPARING to COMPLETED.
-	dto, err = module.Service.AdvanceSubOrderStatus(suborderIDs[1])
+	dto, err = module.Service.AdvanceSubOrderStatus(suborderIDs[1], nil)
 	assert.NoError(t, err, "Advancing suborder status again should succeed")
 	assert.Equal(t, data.SubOrderStatusCompleted, dto.Status, "Suborder should transition to COMPLETED")
 

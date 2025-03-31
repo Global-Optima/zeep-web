@@ -75,9 +75,9 @@
 									<p class="font-medium text-4xl">{{ formatPrice(totalPrice) }}</p>
 									<button
 										@click="handleUpdate"
-										class="flex items-center gap-3 bg-primary p-5 rounded-full text-primary-foreground"
+										class="flex items-center gap-3 bg-primary p-6 rounded-full text-primary-foreground"
 									>
-										<Pencil class="size-8 sm:size-12" />
+										<Pencil class="size-6 sm:size-10" />
 									</button>
 								</div>
 							</div>

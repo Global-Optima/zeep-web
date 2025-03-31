@@ -1,5 +1,5 @@
 <template>
-	<div class="relative bg-[#F3F4F9] pt-safe pb-32 text-black no-scrollbar">
+	<div class="relative bg-[#F3F4F9] pt-safe text-black no-scrollbar">
 		<!-- Loading State -->
 		<PageLoader v-if="isFetching" />
 		<!-- Error State -->
@@ -24,7 +24,8 @@
 			v-else-if="productDetails"
 			class="pb-44"
 		>
-			<div class="bg-white shadow-gray-200 shadow-xl px-8 pb-6 rounded-b-[48px] w-full">
+			<!-- Non-sticky content -->
+			<div class="bg-white shadow-gray-200 shadow-xl px-8 pb-6 w-full">
 				<header class="flex justify-between items-center gap-6 pt-6">
 					<Button
 						size="icon"
@@ -42,7 +43,7 @@
 						<KioskProductRecipeDialog :nutrition="selectedSize.totalNutrition" />
 					</template>
 				</header>
-				<div class="flex flex-col justify-center items-center">
+				<div class="flex flex-col justify-center items-center mt-4">
 					<LazyImage
 						:src="productDetails.imageUrl"
 						alt="Изображение товара"
@@ -51,32 +52,34 @@
 					<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>
 					<p class="mt-2 text-slate-600 text-xl">{{ productDetails.description }}</p>
 				</div>
-				<!-- Sticky Section -->
-				<div class="top-0 z-10 sticky bg-white mt-8 pb-6">
-					<div class="flex justify-between items-center gap-4">
-						<!-- Size Selection -->
-						<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-							<KioskDetailsSizes
-								v-for="size in sortedSizes"
-								:key="size.id"
-								:size="size"
-								:is-selected="selectedSize?.id === size.id"
-								@click:size="onSizeSelect"
-							/>
-						</div>
-						<!-- Add to Cart Button -->
-						<div class="flex items-center gap-6">
-							<p class="font-medium text-4xl">{{ formatPrice(totalPrice) }}</p>
-							<button
-								@click="handleAddToCart"
-								class="flex items-center gap-3 bg-primary p-5 rounded-full text-primary-foreground"
-							>
-								<Plus class="size-8 sm:size-12" />
-							</button>
-						</div>
+			</div>
+
+			<!-- Sticky Section - moved outside the rounded container -->
+			<div class="top-0 z-10 sticky bg-white shadow-lg px-8 py-4 rounded-b-[48px]">
+				<div class="flex justify-between items-center gap-4">
+					<!-- Size Selection -->
+					<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+						<KioskDetailsSizes
+							v-for="size in sortedSizes"
+							:key="size.id"
+							:size="size"
+							:is-selected="selectedSize?.id === size.id"
+							@click:size="onSizeSelect"
+						/>
+					</div>
+					<!-- Add to Cart Button -->
+					<div class="flex items-center gap-6">
+						<p class="font-medium text-3xl truncate">{{ formatPrice(totalPrice) }}</p>
+						<button
+							@click="handleAddToCart"
+							class="flex items-center gap-3 bg-primary p-5 rounded-full text-primary-foreground"
+						>
+							<Plus class="size-8 sm:size-12" />
+						</button>
 					</div>
 				</div>
 			</div>
+
 			<!-- Additives Selection -->
 			<div class="mt-10">
 				<KioskDetailsAdditivesSection
