@@ -163,8 +163,8 @@ func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, er
 		return existingToken.Token, nil
 	}
 
-	if delErr := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); delErr != nil {
-		return "", fmt.Errorf("failed to delete expired token: %w", delErr)
+	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); existingToken != nil && err != nil {
+		return "", fmt.Errorf("failed to delete expired token: %w", err)
 	}
 
 	sessionToken, err := types.GenerateEmployeeJWT(employeeID)
@@ -181,7 +181,8 @@ func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, er
 
 func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
 	cfg := config.GetConfig()
-	expirationTime := time.Now().Add(cfg.JWT.EmployeeTokenTTL)
+	now := time.Now()
+	expirationTime := now.Add(cfg.JWT.EmployeeTokenTTL)
 
 	employeeToken := &data.EmployeeToken{
 		EmployeeID: employeeID,
