@@ -28,7 +28,7 @@ func NewStockMaterialCategoryHandler(service StockMaterialCategoryService, audit
 
 func (h *StockMaterialCategoryHandler) Create(c *gin.Context) {
 	var dto types.CreateStockMaterialCategoryDTO
-	if err := utils.ParseAndSanitize(c, &dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterialCategory)
 		return
 	}
@@ -101,7 +101,7 @@ func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
 	}
 
 	var dto types.UpdateStockMaterialCategoryDTO
-	if err := utils.ParseAndSanitize(c, &dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StockMaterialCategory)
 		return
 	}

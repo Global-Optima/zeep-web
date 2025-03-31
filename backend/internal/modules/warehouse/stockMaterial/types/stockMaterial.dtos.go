@@ -13,7 +13,7 @@ type GenerateBarcodeResponse struct {
 
 type CreateStockMaterialDTO struct {
 	Name                   string  `json:"name" binding:"required"`
-	Description            string  `json:"description" binding:"omitempty"`
+	Description            *string `json:"description" binding:"omitempty"`
 	SafetyStock            float64 `json:"safetyStock" binding:"required,gt=0"`
 	UnitID                 uint    `json:"unitId" binding:"required"`
 	CategoryID             uint    `json:"categoryId" binding:"required"`

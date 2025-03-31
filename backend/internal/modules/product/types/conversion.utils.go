@@ -126,7 +126,7 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 func CreateToProductModel(dto *CreateProductDTO) *data.Product {
 	product := &data.Product{
 		Name:        dto.Name,
-		Description: dto.Description,
+		Description: *dto.Description,
 		CategoryID:  dto.CategoryID,
 	}
 
@@ -170,7 +170,9 @@ func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 		}
 	}
 
-	product.Description = dto.Description
+	if dto.Description != nil {
+		product.Description = *dto.Description
+	}
 
 	if dto.CategoryID != 0 {
 		if dto.CategoryID != product.CategoryID {
@@ -252,7 +254,7 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKe
 		})
 	}
 
-	if dto.Description != "" && dto.Description != before.Description {
+	if *dto.Description != "" && dto.Description != &before.Description {
 		key := "notification.centralCatalogUpdateDetails.descriptionChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,

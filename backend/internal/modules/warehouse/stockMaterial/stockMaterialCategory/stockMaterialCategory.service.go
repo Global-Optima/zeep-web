@@ -65,7 +65,10 @@ func (s *stockMaterialCategoryService) GetAll(filter types.StockMaterialCategory
 }
 
 func (s *stockMaterialCategoryService) Update(id uint, dto types.UpdateStockMaterialCategoryDTO) error {
-	category := data.StockMaterialCategory{}
+	category, err := s.repo.GetByID(id)
+	if err != nil {
+		return types.ErrFailedRetrieveStockMaterialCategory
+	}
 
 	if dto.Name != nil {
 		category.Name = *dto.Name

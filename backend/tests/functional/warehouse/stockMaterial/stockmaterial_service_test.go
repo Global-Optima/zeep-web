@@ -131,7 +131,7 @@ func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T
 			name: "Create valid stock material",
 			input: &types.CreateStockMaterialDTO{
 				Name:                   "New Test Material",
-				Description:            "Test material description",
+				Description:            tests.StringPtr("Test material description"),
 				SafetyStock:            50.5,
 				UnitID:                 1,
 				CategoryID:             1,
@@ -146,7 +146,7 @@ func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T
 			name: "Create with invalid safety stock (0)",
 			input: &types.CreateStockMaterialDTO{
 				Name:         "Test Material",
-				Description:  "Test description",
+				Description:  tests.StringPtr("Test description"),
 				SafetyStock:  0, // Should be > 0
 				UnitID:       1,
 				CategoryID:   1,
@@ -158,7 +158,7 @@ func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T
 			name: "Create with non-existing unit ID",
 			input: &types.CreateStockMaterialDTO{
 				Name:         "Test Material",
-				Description:  "Test description",
+				Description:  tests.StringPtr("Test description"),
 				SafetyStock:  50.5,
 				UnitID:       999,
 				CategoryID:   1,
@@ -170,7 +170,7 @@ func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T
 			name: "Create with non-existing category ID",
 			input: &types.CreateStockMaterialDTO{
 				Name:         "Test Material",
-				Description:  "Test description",
+				Description:  tests.StringPtr("Test description"),
 				SafetyStock:  50.5,
 				UnitID:       1,
 				CategoryID:   999,
@@ -182,7 +182,7 @@ func TestStockMaterialService_CreateStockMaterial_WithPreloadedData(t *testing.T
 			name: "Create with non-existing ingredient ID",
 			input: &types.CreateStockMaterialDTO{
 				Name:         "Test Material",
-				Description:  "Test description",
+				Description:  tests.StringPtr("Test description"),
 				SafetyStock:  50.5,
 				UnitID:       1,
 				CategoryID:   1,

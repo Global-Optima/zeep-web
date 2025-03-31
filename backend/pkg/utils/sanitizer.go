@@ -15,97 +15,78 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/text/unicode/norm"
 )
 
 var (
-	ErrReadBody            = errors.New("failed to read request body")
-	ErrUnmarshalJSON       = errors.New("failed to unmarshal JSON")
-	ErrParseMultipartForm  = errors.New("failed to parse multipart/form-data")
-	ErrBindMultipartStruct = errors.New("failed to bind multipart form to struct")
-	ErrSanitizeStruct      = errors.New("failed to sanitize struct data")
-	ErrSoftSanitize        = errors.New("failed to soft-sanitize form field")
+	ErrReadBody             = errors.New("failed to read request body")
+	ErrUnmarshalJSON        = errors.New("failed to unmarshal JSON")
+	ErrParseMultipartForm   = errors.New("failed to parse multipart/form-data")
+	ErrBindMultipartStruct  = errors.New("failed to bind multipart form to struct")
+	ErrSanitizeStruct       = errors.New("failed to sanitize struct data")
+	ErrSoftSanitize         = errors.New("failed to soft-sanitize form field")
+	ErrStrictSanitizeFailed = errors.New("strict sanitization failed (invalid or empty)")
 )
 
-// ParseAndSanitize is the entry point that replicates the middleware logic
-// in a handler-friendly function. It checks content-type, then either parses JSON
-// or multipart data. If 'dto' is a pointer to a struct, it sanitizes that struct;
-// otherwise, it falls back to a generic approach.
-func ParseAndSanitize(c *gin.Context, dto interface{}) error {
+func ParseRequestBody(c *gin.Context, dto interface{}) error {
 	contentType := c.ContentType()
 	switch {
 	case strings.HasPrefix(contentType, "application/json"):
-		return parseAndSanitizeJSON(c, dto)
+		return ParseRequestBodyJSON(c, dto)
 	case strings.HasPrefix(contentType, "multipart/form-data"):
-		return parseAndSanitizeMultipart(c, dto)
+		return ParseRequestBodyMultipart(c, dto)
 	default:
-		// fallback or treat as JSON
-		return parseAndSanitizeJSON(c, dto)
+		// fallback treat as JSON
+		return ParseRequestBodyJSON(c, dto)
 	}
 }
 
-// -----------------------------------------------------------
-// JSON logic (mirrors processJSONRequest in your middleware)
-// -----------------------------------------------------------
-
-func parseAndSanitizeJSON(c *gin.Context, dto interface{}) error {
+func ParseRequestBodyJSON(c *gin.Context, dto interface{}) error {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		return ErrReadBody
 	}
-	// Restore the original body so future reads still work
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
-	// Check if 'dto' is a pointer to a struct. If so, unmarshal into it.
 	if isPointerToStruct(dto) {
-		logrus.Info("Parsing JSON into provided DTO")
-		// Unmarshal into the provided DTO
 		if err := json.Unmarshal(body, dto); err != nil {
 			return ErrUnmarshalJSON
 		}
+
 		// Sanitize
 		if err := sanitizeStruct(dto); err != nil {
-			return ErrSanitizeStruct
+			return fmt.Errorf("%w: %v", ErrSanitizeStruct, err)
 		}
-		// Rewrite sanitized JSON back into request body
+
 		sanitizedBody, _ := json.Marshal(dto)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(sanitizedBody))
 		return nil
 	}
 
-	// Fallback: parse into a generic interface{} and recursively sanitize
 	var requestData interface{}
 	if err := json.Unmarshal(body, &requestData); err != nil {
 		return ErrUnmarshalJSON
 	}
-	requestData = sanitizeRecursive(requestData)
-	sanitizedBody, _ := json.Marshal(requestData)
+	sanitized := sanitizeRecursive(requestData)
+	sanitizedBody, _ := json.Marshal(sanitized)
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(sanitizedBody))
 
 	return nil
 }
 
-// ----------------------------------------------------------------------
-// Multipart logic (mirrors processMultipartRequest in your middleware)
-// ----------------------------------------------------------------------
-
-func parseAndSanitizeMultipart(c *gin.Context, dto interface{}) error {
-	// Parse the multipart form
+func ParseRequestBodyMultipart(c *gin.Context, dto interface{}) error {
 	if err := c.Request.ParseMultipartForm(30 << 20); err != nil {
 		return ErrParseMultipartForm
 	}
 
-	// If 'dto' is a pointer to struct, bind & sanitize
 	if isPointerToStruct(dto) {
 		if err := c.ShouldBind(dto); err != nil {
-			// Could not bind to struct
 			return ErrBindMultipartStruct
 		}
 		if err := sanitizeStruct(dto); err != nil {
-			return ErrSanitizeStruct
+			return fmt.Errorf("%w: %v", ErrSanitizeStruct, err)
 		}
-		// (Optional) update c.Request.MultipartForm with sanitized values
+
 		updateMultipartFormFromDTO(c, dto)
 		return nil
 	}
@@ -135,33 +116,31 @@ func isPointerToStruct(obj interface{}) bool {
 	return elem.IsValid() && elem.Kind() == reflect.Struct
 }
 
-// -----------------------------------------------------------------------------
-// Reflection-based sanitization (same as your middleware code).
-// -----------------------------------------------------------------------------
-
 func sanitizeStruct(dto interface{}) error {
 	v := reflect.ValueOf(dto)
 	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
 		// fallback if not pointer-to-struct
-		logrus.Warn("sanitizeStruct called with non-pointer-to-struct")
 		data, ok := dto.(*interface{})
 		if ok && data != nil {
 			*data = sanitizeRecursive(*data)
 		}
 		return nil
 	}
-	sanitizeRecursiveValue(v)
+
+	if err := sanitizeRecursiveValue(v); err != nil {
+		return err
+	}
 	return nil
 }
 
-// sanitizeRecursiveValue walks the struct fields looking for string/*string fields
-func sanitizeRecursiveValue(v reflect.Value) {
-	logrus.Debugf("Sanitizing value of kind: %s", v.Kind())
+func sanitizeRecursiveValue(v reflect.Value) error {
 	switch v.Kind() {
 	case reflect.Ptr:
 		if !v.IsNil() {
-			sanitizeRecursiveValue(v.Elem())
+			return sanitizeRecursiveValue(v.Elem())
 		}
+		return nil
+
 	case reflect.Struct:
 		t := v.Type()
 		for i := 0; i < v.NumField(); i++ {
@@ -175,67 +154,79 @@ func sanitizeRecursiveValue(v reflect.Value) {
 			switch field.Kind() {
 			case reflect.String:
 				original := field.String()
-				logrus.Info("Sanitizing string field:", fieldType.Name, "with binding tag:", bindingTag)
-				field.SetString(sanitizeStringByBinding(original, bindingTag))
+				sanitized, err := sanitizeStringByBinding(original, bindingTag)
+				if err != nil {
+					return err // bubble up
+				}
+				field.SetString(sanitized)
 
 			case reflect.Ptr:
 				// If it's a *string
 				if field.Type().Elem().Kind() == reflect.String && !field.IsNil() {
 					original := field.Elem().String()
-					logrus.Info("Sanitizing *string field:", fieldType.Name, "with binding tag:", bindingTag)
-					field.Elem().SetString(sanitizeStringByBinding(original, bindingTag))
+					sanitized, err := sanitizeStringByBinding(original, bindingTag)
+					if err != nil {
+						return err
+					}
+					field.Elem().SetString(sanitized)
 				} else if !field.IsNil() {
 					// pointer to something else - recurse
-					logrus.Debugf("Recursing into pointer field: %s", fieldType.Name)
-					sanitizeRecursiveValue(field.Elem())
+					if err := sanitizeRecursiveValue(field.Elem()); err != nil {
+						return err
+					}
 				}
+
 			case reflect.Slice, reflect.Array, reflect.Struct:
-				sanitizeRecursiveValue(field)
+				if err := sanitizeRecursiveValue(field); err != nil {
+					return err
+				}
 			default:
 				// skip numeric, bool, etc.
 			}
 		}
-
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < v.Len(); i++ {
-			sanitizeRecursiveValue(v.Index(i))
+			if err := sanitizeRecursiveValue(v.Index(i)); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
-// sanitizeStringByBinding applies strict or soft sanitize based on the "binding" tag
-func sanitizeStringByBinding(original, bindingTag string) string {
+// sanitizeStringByBinding returns (sanitizedString, error).
+// If "strict" fails, we return ErrStrictSanitizeFailed.
+func sanitizeStringByBinding(original, bindingTag string) (string, error) {
 	if original == "" {
-		return original
+		return original, nil
 	}
+
+	// If the binding tag has "min=", treat as strict
 	if strings.Contains(bindingTag, "min=") {
-		logrus.Info("Applying strict sanitization for min binding")
 		sanitized, valid := SanitizeString(original)
 		if !valid {
-			logrus.Warnf("Sanitization failed for string: %s", original)
-			return ""
+			return "", ErrStrictSanitizeFailed
 		}
-		logrus.Debugf("Sanitized string: %s", sanitized)
-		return sanitized
+		return sanitized, nil
 	}
+
+	// If the binding tag has "omitempty" (but no "min="), do soft
 	if strings.Contains(bindingTag, "omitempty") {
-		logrus.Info("Applying soft sanitization for omitempty binding")
 		if original == "" {
-			return original
+			return original, nil
 		}
 		soft, _ := SoftSanitizeString(original)
-		logrus.Debugf("Soft sanitized string: %s", soft)
-		return soft
+		return soft, nil
 	}
+
 	// Default: strict
 	sanitized, valid := SanitizeString(original)
 	if !valid {
-		return ""
+		return "", ErrStrictSanitizeFailed
 	}
-	return sanitized
+	return sanitized, nil
 }
 
-// sanitizeRecursive is the fallback for raw data that isn't part of your struct
 func sanitizeRecursive(data interface{}) interface{} {
 	switch v := data.(type) {
 	case map[string]interface{}:
@@ -262,7 +253,6 @@ func sanitizeRecursive(data interface{}) interface{} {
 	}
 }
 
-// updateMultipartFormFromDTO rewrites the sanitized string fields in c.Request.MultipartForm
 func updateMultipartFormFromDTO(c *gin.Context, dto interface{}) {
 	if c.Request.MultipartForm == nil {
 		return
@@ -300,10 +290,6 @@ func updateMultipartFormFromDTO(c *gin.Context, dto interface{}) {
 	c.Request.MultipartForm = form
 }
 
-// ----------------------------------------------------------------------------
-// The rest is your existing string-sanitizing and validator logic
-// ----------------------------------------------------------------------------
-
 func SanitizeString(input string) (string, bool) {
 	if !utf8.ValidString(input) {
 		return "", false
@@ -314,7 +300,6 @@ func SanitizeString(input string) (string, bool) {
 	normalized := spaceRegex.ReplaceAllString(trimmed, " ")
 	normalized = removeInvisibleCharacters(normalized)
 
-	// If there's nothing left, we consider it invalid
 	if len(normalized) == 0 {
 		return "", false
 	}
@@ -354,11 +339,7 @@ func ValidateSanitizedString(fl validator.FieldLevel) bool {
 }
 
 func RegisterCustomValidators(validate *validator.Validate) {
-	err := validate.RegisterValidation("customSanitize", ValidateSanitizedString)
-	if err != nil {
-		fmt.Printf("failed to register custom validator: %v", err)
-		return
-	}
+	_ = validate.RegisterValidation("customSanitize", ValidateSanitizedString)
 }
 
 func InitValidators() {
@@ -372,18 +353,15 @@ func RoundToOneDecimal(value float64) float64 {
 
 func MergeDistinct[T comparable](arr1, arr2 []T) []T {
 	uniqueMap := make(map[T]struct{})
-
 	for _, v := range arr1 {
 		uniqueMap[v] = struct{}{}
 	}
 	for _, v := range arr2 {
 		uniqueMap[v] = struct{}{}
 	}
-
 	mergedSlice := make([]T, 0, len(uniqueMap))
 	for key := range uniqueMap {
 		mergedSlice = append(mergedSlice, key)
 	}
-
 	return mergedSlice
 }

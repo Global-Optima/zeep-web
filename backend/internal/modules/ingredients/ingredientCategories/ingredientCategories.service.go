@@ -26,7 +26,7 @@ func NewIngredientCategoryService(repo IngredientCategoryRepository) IngredientC
 func (s *ingredientCategoryService) Create(dto types.CreateIngredientCategoryDTO) (uint, error) {
 	category := &data.IngredientCategory{
 		Name:        dto.Name,
-		Description: dto.Description,
+		Description: *dto.Description,
 	}
 	if err := s.repo.Create(category); err != nil {
 		return 0, fmt.Errorf("failed to create ingredient category: %w", err)
@@ -47,7 +47,10 @@ func (s *ingredientCategoryService) GetByID(id uint) (*types.IngredientCategoryR
 }
 
 func (s *ingredientCategoryService) Update(id uint, dto types.UpdateIngredientCategoryDTO) error {
-	updates := data.IngredientCategory{}
+	updates, err := s.repo.GetByID(id)
+	if err != nil {
+		return types.ErrFailedToFetchIngredientCategory
+	}
 	if dto.Name != nil {
 		updates.Name = *dto.Name
 	}

@@ -15,7 +15,7 @@ type StockMaterialCategoryRepository interface {
 	Create(category *data.StockMaterialCategory) error
 	GetByID(id uint) (*data.StockMaterialCategory, error)
 	GetAll(filter types.StockMaterialCategoryFilter) ([]data.StockMaterialCategory, error)
-	Update(id uint, updates data.StockMaterialCategory) error
+	Update(id uint, updates *data.StockMaterialCategory) error
 	Delete(id uint) error
 }
 
@@ -62,13 +62,8 @@ func (r *stockMaterialCategoryRepository) GetAll(filter types.StockMaterialCateg
 	return categories, err
 }
 
-func (r *stockMaterialCategoryRepository) Update(id uint, updates data.StockMaterialCategory) error {
-	result := r.db.Model(&data.StockMaterialCategory{}).
-		Where("id = ?", id).
-		Updates(&data.StockMaterialCategory{
-			Name:        updates.Name,
-			Description: updates.Description,
-		})
+func (r *stockMaterialCategoryRepository) Update(id uint, updates *data.StockMaterialCategory) error {
+	result := r.db.Model(&data.StockMaterialCategory{}).Where("id = ?", id).Save(updates)
 	if result.Error != nil {
 		return result.Error
 	}

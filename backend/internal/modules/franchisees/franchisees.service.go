@@ -40,13 +40,18 @@ func (s *franchiseeService) CreateFranchisee(dto *types.CreateFranchiseeDTO) (ui
 }
 
 func (s *franchiseeService) UpdateFranchisee(id uint, dto *types.UpdateFranchiseeDTO) error {
-	updateData := &data.Franchisee{}
+	updateData, err := s.repo.GetFranchiseeByID(id)
+	if err != nil {
+		return types.ErrFailedToFetchFranchiseeStore
+	}
+
 	if dto.Name != nil {
 		updateData.Name = *dto.Name
 	}
 	if dto.Description != nil {
 		updateData.Description = *dto.Description
 	}
+
 	return s.repo.UpdateFranchisee(id, updateData)
 }
 

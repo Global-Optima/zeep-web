@@ -80,16 +80,9 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	var dto types.CreateProductDTO
 
-	err := c.Request.ParseMultipartForm(30 << 20)
+	err := utils.ParseRequestBody(c, &dto)
 	if err != nil {
 		h.logger.Errorf("error parsing multipart form: %v", err)
-		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-		return
-	}
-
-	err = c.ShouldBind(&dto)
-	if err != nil {
-		h.logger.Errorf("error binding form-data: %v", err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -208,8 +201,8 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	var dto *types.UpdateProductDTO
-	if err := c.ShouldBind(&dto); err != nil {
+	var dto types.UpdateProductDTO
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -226,7 +219,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.UpdateProduct(uint(productID), dto)
+	existingProduct, err := h.service.UpdateProduct(uint(productID), &dto)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductUpdate)
 		return
@@ -237,7 +230,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 			ID:   uint(productID),
 			Name: existingProduct.Name,
 		},
-		dto,
+		&dto,
 	)
 
 	go func() {

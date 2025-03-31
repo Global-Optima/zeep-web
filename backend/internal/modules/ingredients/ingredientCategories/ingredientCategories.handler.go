@@ -27,7 +27,7 @@ func NewIngredientCategoryHandler(service IngredientCategoryService, auditServic
 
 func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 	var dto types.CreateIngredientCategoryDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -76,7 +76,7 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 	}
 
 	var dto types.UpdateIngredientCategoryDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
 	}

@@ -33,18 +33,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/warehouseStock"
-
-	stockMaterialTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/types"
-	warehouseTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/types"
-
-	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
-	productCategoryTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
-	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
-
-	ingredientCategoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-
-	franchiseeTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees/types"
 )
 
 func (r *Router) RegisterAuditRoutes(handler *audit.AuditHandler) {
@@ -60,20 +48,8 @@ func (r *Router) RegisterFranchiseeRoutes(handler *franchisees.FranchiseeHandler
 		router.GET("", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetFranchisees)
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetFranchiseeByID)
 		router.GET("/my", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), handler.GetMyFranchisee)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&franchiseeTypes.CreateFranchiseeDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.CreateFranchisee,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...),
-			middleware.WithDTO(&franchiseeTypes.UpdateFranchiseeDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateFranchisee,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateFranchisee)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), handler.UpdateFranchisee)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner, data.RoleFranchiseOwner), handler.DeleteFranchisee)
 	}
 }
@@ -83,18 +59,8 @@ func (r *Router) RegisterRegionRoutes(handler *regions.RegionHandler) {
 	{
 		router.GET("", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetRegions)        // owner
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetRegionByID) // owner
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.SanitizeMiddleware(),
-			handler.CreateRegion,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateRegion,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateRegion)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateRegion)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteRegion)
 	}
 }
@@ -117,36 +83,12 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.GET("/:id", handler.GetProductDetails)
 		router.GET(":id/sizes", handler.GetProductSizesByProductID)
 		router.GET("/sizes/:id", handler.GetProductSizeByID)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&productTypes.CreateProductDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.CreateProduct,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&productTypes.UpdateProductDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateProduct,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProduct)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProduct)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProduct)
 		router.DELETE("sizes/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProductSize)
-		router.POST(
-			"/sizes",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&productTypes.CreateProductSizeDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.CreateProductSize,
-		)
-		router.PUT(
-			"/sizes/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&productTypes.UpdateProductSizeDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateProductSize,
-		)
+		router.POST("/sizes", middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
+		router.PUT("/sizes/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
 	}
 }
 
@@ -182,20 +124,8 @@ func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler
 	{
 		router.GET("/:id", handler.GetIngredientByID)
 		router.GET("", handler.GetIngredients)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&ingredientTypes.CreateIngredientDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.CreateIngredient,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&ingredientTypes.UpdateIngredientDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateIngredient,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateIngredient)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateIngredient)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteIngredient)
 	}
 }
@@ -205,20 +135,8 @@ func (r *Router) RegisterIngredientCategoriesRoutes(handler *ingredientCategorie
 	{
 		router.GET("", handler.GetAll)
 		router.GET("/:id", handler.GetByID)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&ingredientCategoriesTypes.CreateIngredientCategoryDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.Create,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&ingredientCategoriesTypes.UpdateIngredientCategoryDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.Update,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.Create)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.Update)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.Delete)
 	}
 }
@@ -228,18 +146,8 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 	{
 		router.GET("/:id", handler.GetStoreByID)
 		router.GET("", handler.GetStoresByFranchisee)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...),
-			middleware.SanitizeMiddleware(),
-			handler.CreateStore,
-		) // franchise owner, manager
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateStore,
-		) // franchise owner, manager
+		router.POST("", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.CreateStore)       // franchise owner, manager
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.UpdateStore)    // franchise owner, manager
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseePermissions...), handler.DeleteStore) // franchise owner, manager
 	}
 }
@@ -249,20 +157,8 @@ func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHan
 	{
 		router.GET("", handler.GetAllCategories)
 		router.GET("/:id", handler.GetCategoryByID)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&productCategoryTypes.CreateProductCategoryDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.CreateCategory,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&productCategoryTypes.UpdateProductCategoryDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateCategory,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateCategory)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateCategory)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteCategory)
 	}
 }
@@ -272,40 +168,16 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 	{
 		router.GET("", handler.GetAdditives)
 		router.GET("/:id", handler.GetAdditiveByID)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&additiveTypes.CreateAdditiveDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.CreateAdditive,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&additiveTypes.UpdateAdditiveDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateAdditive,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditive)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditive)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditive)
 
 		additiveCategories := router.Group("/categories")
 		{
 			additiveCategories.GET("", handler.GetAdditiveCategories)
 			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
-			additiveCategories.POST(
-				"",
-				middleware.EmployeeRoleMiddleware(),
-				middleware.WithDTO(&additiveTypes.CreateAdditiveCategoryDTO{}),
-				middleware.SanitizeMiddleware(),
-				handler.CreateAdditiveCategory,
-			)
-			additiveCategories.PUT(
-				"/:id",
-				middleware.EmployeeRoleMiddleware(),
-				middleware.WithDTO(&additiveTypes.UpdateAdditiveCategoryDTO{}),
-				middleware.SanitizeMiddleware(),
-				handler.UpdateAdditiveCategory,
-			)
+			additiveCategories.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditiveCategory)
+			additiveCategories.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditiveCategory)
 			additiveCategories.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditiveCategory)
 		}
 	}
@@ -421,18 +293,8 @@ func (r *Router) RegisterSupplierRoutes(handler *supplier.SupplierHandler) {
 	{
 		router.GET("", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetSuppliers)        // Region, warehouse
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetSupplierByID) // Region, warehouse
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.SanitizeMiddleware(),
-			handler.CreateSupplier,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateSupplier,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateSupplier)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateSupplier)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteSupplier)
 
 		router.GET("/:id/materials", middleware.EmployeeRoleMiddleware(data.WarehouseReadPermissions...), handler.GetMaterialsBySupplier) // Region, warehouse
@@ -458,20 +320,8 @@ func (r *Router) RegisterStockMaterialRoutes(handler *stockMaterial.StockMateria
 	{
 		router.GET("", handler.GetAllStockMaterials)
 		router.GET("/:id", handler.GetStockMaterialByID)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&stockMaterialTypes.CreateStockMaterialDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.CreateStockMaterial,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.WithDTO(&stockMaterialTypes.UpdateStockMaterialDTO{}),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateStockMaterial,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStockMaterial)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStockMaterial)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStockMaterial)
 		router.PATCH("/:id/deactivate", middleware.EmployeeRoleMiddleware(), handler.DeactivateStockMaterial)
 
@@ -486,14 +336,8 @@ func (r *Router) RegisterStockMaterialCategoryRoutes(handler *stockMaterialCateg
 	{
 		router.GET("", handler.GetAll)
 		router.GET("/:id", handler.GetByID)
-		router.POST("",
-			middleware.EmployeeRoleMiddleware(),
-			handler.Create,
-		)
-		router.PUT("/:id",
-			middleware.EmployeeRoleMiddleware(),
-			handler.Update,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.Create)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.Update)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.Delete)
 	}
 }
@@ -503,18 +347,8 @@ func (r *Router) RegisterUnitRoutes(handler *units.UnitHandler) {
 	{
 		router.GET("", handler.GetAllUnits)
 		router.GET("/:id", handler.GetUnitByID)
-		router.POST(
-			"",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.SanitizeMiddleware(),
-			handler.CreateUnit,
-		)
-		router.PUT(
-			"/:id",
-			middleware.EmployeeRoleMiddleware(),
-			middleware.SanitizeMiddleware(),
-			handler.UpdateUnit,
-		)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateUnit)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateUnit)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteUnit)
 	}
 }
@@ -526,20 +360,8 @@ func (r *Router) RegisterWarehouseRoutes(handler *warehouse.WarehouseHandler, wa
 		{
 			warehouseRoutes.GET("/:warehouseId", handler.GetWarehouseByID)
 			warehouseRoutes.GET("", handler.GetWarehouses)
-			warehouseRoutes.POST(
-				"",
-				middleware.EmployeeRoleMiddleware(data.RegionPermissions...),
-				middleware.WithDTO(&warehouseTypes.CreateWarehouseDTO{}),
-				middleware.SanitizeMiddleware(),
-				handler.CreateWarehouse,
-			) // region
-			warehouseRoutes.PUT(
-				"/:warehouseId",
-				middleware.EmployeeRoleMiddleware(data.RegionPermissions...),
-				middleware.WithDTO(&warehouseTypes.UpdateWarehouseDTO{}),
-				middleware.SanitizeMiddleware(),
-				handler.UpdateWarehouse,
-			) // region
+			warehouseRoutes.POST("", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.CreateWarehouse)                // region
+			warehouseRoutes.PUT("/:warehouseId", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.UpdateWarehouse)    // region
 			warehouseRoutes.DELETE("/:warehouseId", middleware.EmployeeRoleMiddleware(data.RegionPermissions...), handler.DeleteWarehouse) // region
 		}
 
