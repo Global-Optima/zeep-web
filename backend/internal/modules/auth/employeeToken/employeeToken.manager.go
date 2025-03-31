@@ -11,13 +11,15 @@ import (
 type EmployeeTokenManager interface {
 	CreateToken(token *data.EmployeeToken) error
 	GetTokenByEmployeeID(employeeID uint) (*data.EmployeeToken, error)
+	GetToken(token string) (*data.EmployeeToken, error)
 	DeleteToken(token *data.EmployeeToken) error
 	DeleteTokenByEmployeeID(employeeID uint) error
 	DeleteTokenByStoreEmployeeID(storeEmployeeID uint) error
 	DeleteTokenByWarehouseEmployeeID(warehouseEmployeeID uint) error
 	DeleteTokenByRegionEmployeeID(regionEmployeeID uint) error
 	DeleteTokenByFranchiseeEmployeeID(franchiseeEmployeeID uint) error
-	UpdateTokenExpiration(employeeID uint, newExpiration time.Time) error
+	UpdateTokenExpirationByEmployeeID(employeeID uint, newExpiration time.Time) error
+	UpdateTokenExpiration(token *data.EmployeeToken, newExpiration time.Time) error
 }
 
 type employeeTokenManager struct {
@@ -30,6 +32,26 @@ func NewEmployeeTokenManager(db *gorm.DB) EmployeeTokenManager {
 
 func (r *employeeTokenManager) CreateToken(token *data.EmployeeToken) error {
 	return r.db.Create(token).Error
+}
+
+func (r *employeeTokenManager) GetToken(token string) (*data.EmployeeToken, error) {
+	var employeeToken data.EmployeeToken
+	err := r.db.Model(&data.EmployeeToken{}).
+		Preload("Employee").
+		Preload("Employee.StoreEmployee").
+		Preload("Employee.WarehouseEmployee").
+		Preload("Employee.RegionEmployee").
+		Preload("Employee.FranchiseeEmployee").
+		Preload("Employee.AdminEmployee").
+		Where("token = ?", token).First(&employeeToken).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &employeeToken, nil
 }
 
 func (r *employeeTokenManager) GetTokenByEmployeeID(employeeID uint) (*data.EmployeeToken, error) {
@@ -104,10 +126,17 @@ func (r *employeeTokenManager) DeleteTokenByFranchiseeEmployeeID(franchiseeEmplo
 	return r.DeleteTokenByEmployeeID(franchiseeEmp.EmployeeID)
 }
 
-func (r *employeeTokenManager) UpdateTokenExpiration(employeeID uint, newExpiration time.Time) error {
+func (r *employeeTokenManager) UpdateTokenExpirationByEmployeeID(employeeID uint, newExpiration time.Time) error {
 	return r.db.
 		Model(&data.EmployeeToken{}).
 		Where("employee_id = ?", employeeID).
+		Update("expires_at", newExpiration).
+		Error
+}
+
+func (r *employeeTokenManager) UpdateTokenExpiration(token *data.EmployeeToken, newExpiration time.Time) error {
+	return r.db.
+		Model(token).
 		Update("expires_at", newExpiration).
 		Error
 }

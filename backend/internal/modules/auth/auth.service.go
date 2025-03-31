@@ -159,8 +159,13 @@ func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, er
 		return "", fmt.Errorf("failed to check existing token: %w", err)
 	}
 
-	if existingToken != nil && existingToken.ExpiresAt.After(time.Now()) {
-		return existingToken.Token, nil
+	// Если токен существует и просрочен - удаляем его
+	if existingToken != nil && existingToken.ExpiresAt.Before(time.Now()) {
+		if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
+			return "", fmt.Errorf("failed to delete expired token: %w", err)
+		}
+		// Удаляем токен из памяти
+		existingToken = nil
 	}
 
 	sessionToken, err := types.GenerateEmployeeJWT(employeeID)
@@ -168,16 +173,15 @@ func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, er
 		return "", utils.WrapError("failed to generate session token", err)
 	}
 
-	if existingToken != nil {
-		if err := s.updateEmployeeToken(employeeID, sessionToken); err != nil {
-			return "", fmt.Errorf("failed to update employee token: %w", err)
-		}
-	} else {
+	if existingToken == nil {
 		if err := s.saveEmployeeToken(employeeID, sessionToken); err != nil {
-			return "", fmt.Errorf("failed to create employee token: %w", err)
+			return "", fmt.Errorf("failed to save new token: %w", err)
 		}
+
+		return sessionToken, nil
 	}
-	return sessionToken, nil
+
+	return existingToken.Token, nil
 }
 
 func (s *authenticationService) saveEmployeeToken(employeeID uint, token string) error {
@@ -191,17 +195,6 @@ func (s *authenticationService) saveEmployeeToken(employeeID uint, token string)
 	}
 	if err := s.employeeTokenManager.CreateToken(employeeToken); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
-	}
-	return nil
-}
-
-func (s *authenticationService) updateEmployeeToken(employeeID uint, token string) error {
-	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
-		return fmt.Errorf("failed to delete old token: %w", err)
-	}
-
-	if err := s.saveEmployeeToken(employeeID, token); err != nil {
-		return fmt.Errorf("failed to create new token: %w", err)
 	}
 	return nil
 }
