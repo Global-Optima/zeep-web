@@ -1,6 +1,7 @@
 <template>
 	<div>
-		<p v-if="!productDetails">Товар не найден</p>
+    <PageLoader v-if="isLoading"/>
+		<p v-else-if="!productDetails">Товар не найден</p>
 
 		<Tabs
 			v-else
@@ -20,6 +21,7 @@
 			</TabsList>
 			<TabsContent value="details">
 				<AdminProductDetailsForm
+          ref="formRef"
 					:product-details="productDetails"
 					@on-submit="onUpdate"
 					@on-cancel="onCancel"
@@ -51,6 +53,8 @@ import type { UpdateProductDTO } from '@/modules/kiosk/products/models/product.m
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
+import {useTemplateRef} from "vue";
+import PageLoader from "@/core/components/page-loader/PageLoader.vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -59,11 +63,13 @@ const { toast } = useToast()
 
 const productId = route.params.id as string
 
-const { data: productDetails } = useQuery({
+const { data: productDetails, isLoading } = useQuery({
 	queryKey: ['admin-product-details', productId],
 	queryFn: () => productsService.getProductDetails(Number(productId)),
 	enabled: !isNaN(Number(productId)),
 })
+
+const formRef = useTemplateRef<InstanceType<typeof AdminProductDetailsForm>>('formRef')
 
 const {mutate, isPending} = useMutation({
 	mutationFn: ({ id, dto }: { id: number; dto: UpdateProductDTO }) =>
@@ -77,7 +83,10 @@ const {mutate, isPending} = useMutation({
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-products'] })
 		queryClient.invalidateQueries({ queryKey: ['admin-product-details', productId] })
-		toast({
+
+    formRef.value?.resetFormValues();
+
+    toast({
 			title: 'Успех!',
 variant: 'success',
 			description: 'Данные товара успешно обновлены.',
