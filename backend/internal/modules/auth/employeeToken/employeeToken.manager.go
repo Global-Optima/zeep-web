@@ -2,7 +2,6 @@ package employeeToken
 
 import (
 	"errors"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"gorm.io/gorm"
@@ -17,7 +16,6 @@ type EmployeeTokenManager interface {
 	DeleteTokenByWarehouseEmployeeID(warehouseEmployeeID uint) error
 	DeleteTokenByRegionEmployeeID(regionEmployeeID uint) error
 	DeleteTokenByFranchiseeEmployeeID(franchiseeEmployeeID uint) error
-	UpdateTokenExpirationByEmployeeID(employeeID uint, newExpiration time.Time) error
 }
 
 type employeeTokenManager struct {
@@ -57,15 +55,7 @@ func (r *employeeTokenManager) DeleteToken(token *data.EmployeeToken) error {
 }
 
 func (r *employeeTokenManager) DeleteTokenByEmployeeID(employeeID uint) error {
-	err := r.db.Unscoped().
-		Where("employee_id = ?", employeeID).
-		Delete(&data.EmployeeToken{}).
-		Error
-
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-	return nil
+	return r.db.Unscoped().Where("employee_id = ?", employeeID).Delete(&data.EmployeeToken{}).Error
 }
 
 func (r *employeeTokenManager) DeleteTokenByStoreEmployeeID(storeEmployeeID uint) error {
@@ -110,12 +100,4 @@ func (r *employeeTokenManager) DeleteTokenByFranchiseeEmployeeID(franchiseeEmplo
 		return err
 	}
 	return r.DeleteTokenByEmployeeID(franchiseeEmp.EmployeeID)
-}
-
-func (r *employeeTokenManager) UpdateTokenExpirationByEmployeeID(employeeID uint, newExpiration time.Time) error {
-	return r.db.
-		Model(&data.EmployeeToken{}).
-		Where("employee_id = ?", employeeID).
-		Update("expires_at", newExpiration).
-		Error
 }
