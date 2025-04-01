@@ -1,6 +1,6 @@
 <template>
 	<section
-		class="top-0 z-10 sticky flex items-center gap-2 px-8 py-6 w-full overflow-x-auto transition-all no-scrollbar"
+		class="top-0 z-10 fixed flex items-center gap-2 px-8 py-6 w-full overflow-x-auto transition-all no-scrollbar"
 		data-testid="search-bar-wrapper"
 	>
 		<KioskHomeToolbarSearch
@@ -32,13 +32,4 @@ const emit = defineEmits<{
 }>()
 </script>
 
-<style scoped>
-/* Hide scrollbar for horizontal overflow */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>
+<style scoped></style>
