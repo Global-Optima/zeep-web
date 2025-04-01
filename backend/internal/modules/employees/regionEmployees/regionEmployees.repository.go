@@ -122,14 +122,14 @@ func (r *regionEmployeeRepository) UpdateRegionEmployee(id uint, regionID *uint,
 				Where(&data.RegionEmployee{
 					BaseEntity: data.BaseEntity{ID: id},
 				}).
-				Updates(updateModels.RegionEmployee).Error
+				Save(updateModels.RegionEmployee).Error
 			if err != nil {
 				return err
 			}
 		}
 
 		if updateModels.UpdateEmployeeModels != nil && !utils.IsEmpty(updateModels.UpdateEmployeeModels) {
-			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingRegionEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			err := r.employeeRepo.SaveEmployeeWithAssociations(tx, existingRegionEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err
 			}

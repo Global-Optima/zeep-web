@@ -88,7 +88,7 @@ func (s *auditService) GetAuditRecords(filter *types.EmployeeAuditFilter) ([]typ
 	for i, audit := range audits {
 		dto, err := types.ConvertToEmployeeAuditDTO(&audit)
 		if err != nil {
-			wrappedErr := utils.WrapError("failed to fetch audit records", err)
+			wrappedErr := utils.WrapError("failed to convert audit records", err)
 			s.logger.Error(wrappedErr)
 			return nil, wrappedErr
 		}

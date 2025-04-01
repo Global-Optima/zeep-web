@@ -18,7 +18,7 @@ type CreateStockMaterialDTO struct {
 	UnitID                 uint    `json:"unitId" binding:"required"`
 	CategoryID             uint    `json:"categoryId" binding:"required"`
 	IngredientID           uint    `json:"ingredientId" binding:"required"`
-	Barcode                string  `json:"barcode"`
+	Barcode                string  `json:"barcode" binding:"required"`
 	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
 	IsActive               bool    `json:"isActive" binding:"required"`
 	Size                   float64 `json:"size"`

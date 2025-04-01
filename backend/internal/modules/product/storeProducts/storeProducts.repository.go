@@ -2,9 +2,6 @@ package storeProducts
 
 import (
 	"fmt"
-	"time"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
@@ -126,8 +123,6 @@ func (r *storeProductRepository) GetStoreProductsByStoreProductIDs(storeID uint,
 }
 
 func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {
-	start := time.Now()
-
 	var storeProducts []data.StoreProduct
 	query := r.db.Model(&data.StoreProduct{}).
 		Where("store_id = ?", storeID).
@@ -174,7 +169,6 @@ func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.St
 		return nil, err
 	}
 
-	logrus.Infof("Estimated time for average find: %v", time.Since(start))
 	return storeProducts, nil
 }
 
