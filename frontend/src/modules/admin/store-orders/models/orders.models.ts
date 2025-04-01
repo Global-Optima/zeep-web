@@ -1,5 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
+import type { MachineCategory } from '@/modules/admin/product-categories/utils/category-options'
 
 export enum OrderStatus {
 	WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT',
@@ -84,7 +85,7 @@ export interface OrderProductSizeDTO {
 	size: number
 	unit: UnitDTO
 	machineId: string
-  machineCategory: string
+  machineCategory: MachineCategory
 }
 
 export interface OrderAdditiveDTO {

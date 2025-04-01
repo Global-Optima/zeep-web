@@ -66,7 +66,7 @@ export function useOrderEvents(
 	// Setup: Toast + QR Printer
 	// ----------------------------------
 	const { toast } = useToast()
-	// const { printQR } = useQRPrinter() // it is unused?
+	const { printQR } = useQRPrinter()
 
 	// ----------------------------------
 	// Reactive Filter
@@ -191,7 +191,6 @@ export function useOrderEvents(
     if (!isNew || !printOnCreate) return
 
     const { width, height } = getSavedBaristaQRSettings()
-    const { printQR } = useQRPrinter()
 
     try {
       await printQR(

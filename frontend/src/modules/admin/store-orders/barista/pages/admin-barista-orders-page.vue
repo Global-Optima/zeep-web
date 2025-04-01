@@ -306,10 +306,10 @@ function onSelectStatus(status: { label: string; count: number; status?: OrderSt
 
 			<!-- Right: SubOrder Details -->
 			<AdminBaristaSubOrderDetails
-				:suborder="selectedSuborder"
-        :customerName="selectedOrder?.customerName || ''"
-				@toggleSuborderStatus="toggleSuborderStatus"
-			/>
+        :order="selectedOrder"
+        :suborderId="selectedSuborder?.id || null"
+        @toggleSuborderStatus="toggleSuborderStatus"
+      />
 		</div>
 	</div>
 </template>

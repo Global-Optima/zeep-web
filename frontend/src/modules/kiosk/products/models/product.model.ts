@@ -1,5 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
+import type { MachineCategory } from '@/modules/admin/product-categories/utils/category-options'
 import type { ProductSizeIngredientDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
@@ -119,7 +120,7 @@ export interface ProductCategoryDTO {
 	id: number
 	name: string
 	description: string
-  machineCategory: string
+  machineCategory: MachineCategory
 }
 
 export interface ProductCategoriesFilterDTO extends PaginationParams {
@@ -129,11 +130,11 @@ export interface ProductCategoriesFilterDTO extends PaginationParams {
 export interface CreateProductCategoryDTO {
 	name: string
 	description?: string
-  machineCategory?: string
+  machineCategory?: MachineCategory
 }
 
 export interface UpdateProductCategoryDTO {
 	name?: string
 	description?: string
-  machineCategory?: string
+  machineCategory?: MachineCategory
 }

@@ -26,11 +26,9 @@ const emits = defineEmits<{
 // Form Setup
 const { handleSubmit, resetForm } = useForm<UpdateProductCategoryDTO>({
   validationSchema: createCategorySchema,
-  initialValues: {
-    ...productCategory,
-    machineCategory: productCategory.machineCategory || '',
-  }
+  initialValues: productCategory
 })
+
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
