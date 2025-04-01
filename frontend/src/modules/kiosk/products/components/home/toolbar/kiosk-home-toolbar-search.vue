@@ -23,7 +23,7 @@
 			@input="updateSearchTerm"
 			@focus="handleFocus"
 			@blur="handleBlur"
-			class="bg-transparent px-6 rounded-full focus:outline-none w-56 sm:w-80 h-[72px] font-medium text-base sm:text-xl transition-[width] duration-300"
+			class="bg-transparent px-6 rounded-full focus:outline-none w-56 sm:w-80 h-[72px] font-medium text-base sm:text-2xl transition-[width] duration-300"
 			placeholder="Поиск"
 			aria-label="Поиск продуктов"
 			data-testid="search-input"

@@ -36,13 +36,13 @@ const allergensList = computed(() => nutrition.allergenIngredients.join(", "))
 		</DialogTrigger>
 		<DialogContent
 			:include-close-button="false"
-			class="!rounded-3xl"
+			class="!rounded-2xl"
 		>
 			<DialogHeader>
-				<DialogTitle class="text-2xl">Ингредиенты</DialogTitle>
+				<DialogTitle class="text-3xl">Ингредиенты</DialogTitle>
 			</DialogHeader>
 			<div class="flex flex-col gap-8">
-				<div class="gap-8 grid grid-cols-4 shadow-md p-4 rounded-xl text-lg">
+				<div class="gap-8 grid grid-cols-4 shadow-md p-4 rounded-xl text-xl">
 					<div>
 						<p class="text-gray-500">Энергии</p>
 						<p class="mt-1 text-xl">{{nutrition.calories}} ккал</p>
@@ -65,17 +65,17 @@ const allergensList = computed(() => nutrition.allergenIngredients.join(", "))
 				</div>
 
 				<div v-if="showIngredients">
-					<p class="font-semibold text-xl">Состав</p>
+					<p class="font-semibold text-2xl">Состав</p>
 
-					<p class="mt-1 text-gray-500 text-lg">
+					<p class="mt-1 text-gray-500 text-xl">
 						{{ingredientsRecipe}}
 					</p>
 				</div>
 
 				<div v-if="showAllergens">
-					<p class="font-semibold text-xl">Аллергены</p>
+					<p class="font-semibold text-2xl">Аллергены</p>
 
-					<p class="mt-1 text-gray-500 text-lg">
+					<p class="mt-1 text-gray-500 text-xl">
 						{{allergensList}}
 					</p>
 				</div>

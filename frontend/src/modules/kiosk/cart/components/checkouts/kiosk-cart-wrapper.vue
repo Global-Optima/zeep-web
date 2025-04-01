@@ -151,7 +151,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 				<div>
 					<Input
 						v-model="customerName"
-						class="bg-white shadow-none px-6 py-8 rounded-xl w-full text-xl"
+						class="bg-white shadow-none px-6 py-8 rounded-xl w-full text-2xl"
 						placeholder="Введите ваше имя"
 					/>
 					<p
@@ -163,7 +163,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 					<div class="flex justify-center mt-4">
 						<Button
 							variant="ghost"
-							class="text-blue-500 text-xl"
+							class="text-blue-500 text-2xl"
 							@click="generateUniqueName"
 						>
 							Сгенерировать имя
@@ -171,11 +171,11 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 					</div>
 				</div>
 
-				<div class="flex justify-between items-center gap-4 mt-6">
+				<div class="flex justify-between items-center gap-4 mt-8">
 					<p class="font-semibold text-primary text-4xl">{{ formatPrice(totalPrice) }}</p>
 					<Button
 						size="lg"
-						class="py-6 text-xl"
+						class="py-6 text-2xl"
 						@click="handleProceed"
 					>
 						Оплатить
