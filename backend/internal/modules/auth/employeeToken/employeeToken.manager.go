@@ -33,13 +33,27 @@ func (r *employeeTokenManager) CreateToken(token *data.EmployeeToken) error {
 func (r *employeeTokenManager) GetTokenByEmployeeID(employeeID uint) (*data.EmployeeToken, error) {
 	var token data.EmployeeToken
 	err := r.db.Model(&data.EmployeeToken{}).
-		Preload("Employee").
-		Preload("Employee.StoreEmployee").
-		Preload("Employee.WarehouseEmployee").
-		Preload("Employee.RegionEmployee").
-		Preload("Employee.FranchiseeEmployee").
-		Preload("Employee.AdminEmployee").
-		Where("employee_id = ?", employeeID).First(&token).Error
+		Preload("Employee", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id")
+		}).
+		Preload("Employee.StoreEmployee", func(db *gorm.DB) *gorm.DB {
+			return db.Select("employee_id, store_id, role")
+		}).
+		Preload("Employee.WarehouseEmployee", func(db *gorm.DB) *gorm.DB {
+			return db.Select("employee_id, warehouse_id, role")
+		}).
+		Preload("Employee.RegionEmployee", func(db *gorm.DB) *gorm.DB {
+			return db.Select("employee_id, region_id, role")
+		}).
+		Preload("Employee.FranchiseeEmployee", func(db *gorm.DB) *gorm.DB {
+			return db.Select("employee_id, franchisee_id, role")
+		}).
+		Preload("Employee.AdminEmployee", func(db *gorm.DB) *gorm.DB {
+			return db.Select("employee_id, role")
+		}).
+		Where("employee_id = ?", employeeID).
+		First(&token).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
