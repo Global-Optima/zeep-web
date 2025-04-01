@@ -353,9 +353,9 @@ onBeforeUnmount(() => {
 			<!-- Action Buttons -->
 			<div class="flex justify-center gap-4 mt-16">
 				<Button
+					v-if="!paymentState.isPaying"
 					variant="ghost"
 					@click="handleBack"
-					:disabled="paymentState.isPaying"
 					class="hover:bg-slate-200 text-3xl"
 				>
 					Назад

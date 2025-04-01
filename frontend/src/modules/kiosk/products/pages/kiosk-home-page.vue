@@ -192,7 +192,7 @@ const onUpdateCategory = (categoryId: number) => {
 /* --- Search Term Interaction --- */
 const debouncedEmitSearchTerm = useDebounceFn((newTerm: string) => {
   searchTerm.value = newTerm.trim() !== '' ? newTerm : ''
-}, 300)
+}, 800)
 
 const onUpdateSearchTerm = (newSearchTerm: string) => {
   debouncedEmitSearchTerm(newSearchTerm)
@@ -203,26 +203,32 @@ const touchStartX = ref(0)
 const touchStartY = ref(0)
 
 const handleTouchStart = (e: TouchEvent) => {
+  if ((e.target as HTMLElement).closest('[data-testid="category-buttons"]')) {
+    return;
+  }
   if (e.touches.length > 0) {
-    const touch = e.touches[0]
-    touchStartX.value = touch.clientX
-    touchStartY.value = touch.clientY
+    const touch = e.touches[0];
+    touchStartX.value = touch.clientX;
+    touchStartY.value = touch.clientY;
   }
 }
 
 const handleTouchEnd = (e: TouchEvent) => {
+  // Ignore touches that end inside the category buttons container.
+  if ((e.target as HTMLElement).closest('[data-testid="category-buttons"]')) {
+    return;
+  }
   if (e.changedTouches.length > 0) {
-    const touch = e.changedTouches[0]
-    const deltaX = touch.clientX - touchStartX.value
-    const deltaY = touch.clientY - touchStartY.value
-    const threshold = 50
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX.value;
+    const deltaY = touch.clientY - touchStartY.value;
+    const threshold = 50;
     if (Math.abs(deltaX) > threshold && Math.abs(deltaX) > Math.abs(deltaY)) {
       if (deltaX < 0) {
         goToNextSection()
       } else {
         goToPreviousSection()
-      }
-    }
+      }    }
   }
 }
 
