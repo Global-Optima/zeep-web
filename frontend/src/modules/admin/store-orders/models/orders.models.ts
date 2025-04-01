@@ -179,3 +179,7 @@ export interface OrdersTimeZoneFilter {
 	includeYesterdayOrders?: boolean
 	statuses?: OrderStatus[]
 }
+
+export interface ToggleNextSuborderStatusOptions {
+	includeIfCompletedGapMinutes?: number
+}

@@ -113,9 +113,9 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 		<DialogContent
 			v-else
 			:include-close-button="false"
-			class="p-4 sm:rounded-[36px] max-w-2xl"
+			class="p-0 rounded-3xl sm:rounded-[36px] max-w-2xl overflow-clip"
 		>
-			<DialogHeader class="p-6 pb-0">
+			<DialogHeader class="p-8 pb-0">
 				<div class="flex justify-between items-start gap-4">
 					<DialogTitle class="text-4xl">Детали заказа</DialogTitle>
 					<Button
@@ -147,11 +147,11 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 				</div>
 			</div>
 
-			<DialogFooter class="block px-6 pb-6 w-full">
+			<DialogFooter class="block bg-slate-100 px-8 py-8 w-full">
 				<div>
 					<Input
 						v-model="customerName"
-						class="bg-slate-100 px-6 py-8 rounded-xl w-full text-xl"
+						class="bg-white shadow-none px-6 py-8 rounded-xl w-full text-2xl"
 						placeholder="Введите ваше имя"
 					/>
 					<p
@@ -163,7 +163,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 					<div class="flex justify-center mt-4">
 						<Button
 							variant="ghost"
-							class="text-blue-500 text-xl"
+							class="text-blue-500 text-2xl"
 							@click="generateUniqueName"
 						>
 							Сгенерировать имя
@@ -171,11 +171,11 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 					</div>
 				</div>
 
-				<div class="flex justify-between items-center gap-4 mt-6">
+				<div class="flex justify-between items-center gap-4 mt-8">
 					<p class="font-semibold text-primary text-4xl">{{ formatPrice(totalPrice) }}</p>
 					<Button
 						size="lg"
-						class="py-6 text-xl"
+						class="py-6 text-2xl"
 						@click="handleProceed"
 					>
 						Оплатить

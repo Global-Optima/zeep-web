@@ -33,14 +33,14 @@
 				<TableCell>
 					{{ formatPrice(product.storePrice) }}
 				</TableCell>
-        <TableCell class="hidden md:table-cell">
-          <p
-            class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
-            :class="getStatusClass(product)"
-          >
-            {{ getStatusLabel(product) }}
-          </p>
-        </TableCell>
+				<TableCell class="hidden md:table-cell">
+					<p
+						class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
+						:class="getStatusClass(product)"
+					>
+						{{ getStatusLabel(product) }}
+					</p>
+				</TableCell>
 				<TableCell
 					class="flex justify-end"
 					v-if="canDelete"
@@ -78,7 +78,6 @@ import { storeProductsService } from '@/modules/admin/store-products/services/st
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-import type {StoreWarehouseStockDTO} from "@/modules/admin/store-stocks/models/store-stock.model";
 
 type StoreProductStatus = 'available' | 'out_of_stock' | 'unavailable'
 

@@ -1,10 +1,10 @@
 <template>
-	<div class="relative bg-[#F3F4F9] pt-safe pb-32 text-black no-scrollbar">
+	<div class="relative bg-[#F3F4F9] pt-safe text-black no-scrollbar">
 		<!-- Loading State -->
 		<PageLoader v-if="isFetching" />
 		<!-- Error State -->
 		<div
-			v-else-if="isError"
+			v-else-if="isError || !isAddButtonEnabled"
 			class="flex flex-col justify-center items-center p-6 w-full h-screen text-center"
 		>
 			<h1 class="mt-8 font-bold text-red-600 text-4xl">Ошибка</h1>
@@ -24,7 +24,8 @@
 			v-else-if="productDetails"
 			class="pb-44"
 		>
-			<div class="bg-white shadow-gray-200 shadow-xl px-8 pb-6 rounded-b-[48px] w-full">
+			<!-- Non-sticky content -->
+			<div class="bg-white shadow-gray-200 shadow-xl px-8 pb-6 w-full">
 				<header class="flex justify-between items-center gap-6 pt-6">
 					<Button
 						size="icon"
@@ -42,41 +43,44 @@
 						<KioskProductRecipeDialog :nutrition="selectedSize.totalNutrition" />
 					</template>
 				</header>
-				<div class="flex flex-col justify-center items-center">
+				<div class="flex flex-col justify-center items-center mt-4">
 					<LazyImage
 						:src="productDetails.imageUrl"
 						alt="Изображение товара"
 						class="rounded-3xl w-38 h-64 object-contain"
 					/>
-					<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>
-					<p class="mt-2 text-slate-600 text-xl">{{ productDetails.description }}</p>
+					<p class="mt-7 font-semibold text-5xl">{{ productDetails.name }}</p>
+					<p class="mt-4 text-slate-600 text-2xl">{{ productDetails.description }}</p>
 				</div>
-				<!-- Sticky Section -->
-				<div class="top-0 z-10 sticky bg-white mt-8 pb-6">
-					<div class="flex justify-between items-center gap-4">
-						<!-- Size Selection -->
-						<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-							<KioskDetailsSizes
-								v-for="size in sortedSizes"
-								:key="size.id"
-								:size="size"
-								:is-selected="selectedSize?.id === size.id"
-								@click:size="onSizeSelect"
-							/>
-						</div>
-						<!-- Add to Cart Button -->
-						<div class="flex items-center gap-6">
-							<p class="font-medium text-4xl">{{ formatPrice(totalPrice) }}</p>
-							<button
-								@click="handleAddToCart"
-								class="flex items-center gap-3 bg-primary p-5 rounded-full text-primary-foreground"
-							>
-								<Plus class="size-8 sm:size-12" />
-							</button>
-						</div>
+			</div>
+
+			<!-- Sticky Section - moved outside the rounded container -->
+			<div class="top-0 z-10 sticky bg-white shadow-lg px-8 pt-4 pb-10 rounded-b-[52px]">
+				<div class="flex justify-between items-center gap-4">
+					<!-- Size Selection -->
+					<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+						<KioskDetailsSizes
+							v-for="size in sortedSizes"
+							:key="size.id"
+							:size="size"
+							:is-selected="selectedSize?.id === size.id"
+							@click:size="onSizeSelect"
+						/>
+					</div>
+					<!-- Add to Cart Button -->
+					<div class="flex items-center gap-8">
+						<p class="font-medium text-5xl truncate">{{ formatPrice(totalPrice) }}</p>
+						<button
+							@click="handleAddToCart"
+							:disabled="!isAddButtonEnabled"
+							class="flex items-center gap-3 bg-primary disabled:bg-muted p-5 rounded-full text-primary-foreground disabled:text-muted-foreground"
+						>
+							<Plus class="size-8 sm:size-12" />
+						</button>
 					</div>
 				</div>
 			</div>
+
 			<!-- Additives Selection -->
 			<div class="mt-10">
 				<KioskDetailsAdditivesSection
@@ -122,7 +126,7 @@ const onBackClick = () => router.push({ name: getRouteName('KIOSK_HOME') });
 const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null);
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({});
 
-const { data: productDetails, isPending: isFetching, isError } = useQuery({
+const { data: productDetails, isPending: isFetching, isError = true } = useQuery({
   queryKey: computed(() => ['kiosk-product-details', productId]),
   queryFn: () => storeProductsService.getStoreProduct(productId.value),
   enabled: computed(() => productId.value > 0),
@@ -131,6 +135,7 @@ const { data: productDetails, isPending: isFetching, isError } = useQuery({
 const sortedSizes = computed(() => {
   return productDetails.value?.sizes ? [...productDetails.value.sizes].sort((a, b) => a.size - b.size) : [];
 });
+
 
 watchEffect(() => {
   if (!selectedSize.value && sortedSizes.value.length > 0) {
@@ -147,6 +152,18 @@ const { data: additiveCategories } = useQuery({
   },
   initialData: [],
   enabled: computed(() => !!selectedSize.value),
+});
+
+const isAddButtonEnabled = computed(() => {
+  // First, check that the product itself is available
+  if (productDetails.value?.isOutOfStock) return false;
+
+  // Then, check that no default additive is out of stock
+  const hasDefaultOutOfStock = additiveCategories?.value?.some(category =>
+    category.additives.some(additive => additive.isDefault && additive.isOutOfStock)
+  );
+
+  return !hasDefaultOutOfStock;
 });
 
 const totalPrice = computed(() => {

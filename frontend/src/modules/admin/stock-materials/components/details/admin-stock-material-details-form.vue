@@ -64,8 +64,10 @@ const updateStockMaterialSchema = toTypedSchema(
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
-    barcode: z.string().max(20, 'Введите штрихкод'),
-  })
+    barcode: z
+      .string()
+      .min(1, 'Создайте или вставьте штрихкод')
+      .max(20, 'Введите штрихкод'),  })
 )
 
 const { handleSubmit, resetForm, setFieldValue } = useForm({

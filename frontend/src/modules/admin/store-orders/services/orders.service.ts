@@ -13,6 +13,7 @@ import type {
 	OrderStatusesCountDTO,
 	OrdersTimeZoneFilter,
 	SuborderDTO,
+	ToggleNextSuborderStatusOptions,
 	TransactionDTO,
 } from '../models/orders.models'
 
@@ -139,11 +140,12 @@ class OrderService {
 		}
 	}
 
-	async toggleNextStatus(subOrderId: number) {
+	async toggleNextSuborderStatus(subOrderId: number, options?: ToggleNextSuborderStatusOptions) {
 		try {
 			const response = await apiClient.put<SuborderDTO>(
 				`/orders/suborders/${subOrderId}/status-change`,
 				{},
+				{ params: buildRequestFilter(options) },
 			)
 			return response.data
 		} catch (error) {

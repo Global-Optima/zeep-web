@@ -44,7 +44,7 @@ type OrderService interface {
 	GenerateSuborderBarcodePDF(suborderID uint) ([]byte, error)
 
 	AcceptSubOrder(subOrderID uint) error
-	AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDTO, error)
+	AdvanceSubOrderStatus(subOrderID uint, options *types.ToggleNextSuborderStatusOptions) (*types.SuborderDTO, error)
 
 	SuccessOrderPayment(orderID uint, dto *types.TransactionDTO) error
 	FailOrderPayment(orderID uint) error
@@ -726,98 +726,140 @@ var allowedTransitions = map[data.SubOrderStatus]data.SubOrderStatus{
 	data.SubOrderStatusPreparing: data.SubOrderStatusCompleted,
 }
 
-func (s *orderService) AdvanceSubOrderStatus(subOrderID uint) (*types.SuborderDTO, error) {
+func (s *orderService) AdvanceSubOrderStatus(subOrderID uint, options *types.ToggleNextSuborderStatusOptions) (*types.SuborderDTO, error) {
 	suborder, err := s.orderRepo.GetSuborderByID(subOrderID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve suborder: %w", err)
-	}
-	if suborder == nil {
-		return nil, fmt.Errorf("suborder %d not found", subOrderID)
+	if err != nil || suborder == nil {
+		return nil, fmt.Errorf("failed to retrieve suborder %d: %w", subOrderID, err)
 	}
 
-	currentStatus := suborder.Status
-	nextStatus, ok := allowedTransitions[currentStatus]
-	if !ok {
-		return nil, fmt.Errorf("no allowed transition from status %s", currentStatus)
-	}
-	completedAt := time.Now()
-	updateSubOrder := types.UpdateSubOrderDTO{
-		Status:      nextStatus,
-		CompletedAt: &completedAt,
-	}
-	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, updateSubOrder); err != nil {
-		return nil, fmt.Errorf("failed to update suborder status: %w", err)
+	// Handle fallback if suborder is already completed within time gap
+	if dto := s.returnIfRecentlyCompleted(suborder, options); dto != nil {
+		return dto, nil
 	}
 
-	if nextStatus == data.SubOrderStatusCompleted {
-		suborder, err = s.orderRepo.GetSuborderByID(subOrderID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve updated suborder: %w", err)
-		}
-		order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
-		}
-		stockMap := make(map[uint]*data.StoreStock)
-		if err := s.deductSuborderIngredientsFromStock(order.StoreID, suborder, stockMap); err != nil {
-			return nil, fmt.Errorf("failed to deduct ingredients for suborder: %w", err)
-		}
-		s.notifyLowStockIngredients(order, stockMap)
+	// Attempt to advance suborder status
+	if err := s.advanceSuborder(subOrderID, suborder); err != nil {
+		return nil, err
 	}
 
-	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
+	// Sync and update order status
+	if err := s.updateOrderStatusBySuborder(subOrderID); err != nil {
+		return nil, err
 	}
 
-	suborders, err := s.orderRepo.GetSubOrdersByOrderID(order.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch suborders for order %d: %w", order.ID, err)
-	}
-
-	hasPreparing, allCompleted := evaluateSuborderStatuses(suborders)
-	if hasPreparing {
-		if order.Status != data.OrderStatusPreparing {
-			updateOrder := types.UpdateOrderDTO{
-				Status: data.OrderStatusPreparing,
-			}
-			if err := s.orderRepo.UpdateOrderStatus(order.ID, updateOrder); err != nil {
-				return nil, fmt.Errorf("failed to update order status to preparing: %w", err)
-			}
-		}
-	} else if allCompleted {
-		var newOrderStatus data.OrderStatus
-		if order.DeliveryAddressID != nil {
-			newOrderStatus = data.OrderStatusInDelivery
-		} else {
-			newOrderStatus = data.OrderStatusCompleted
-		}
-		completedAt := time.Now()
-		updateOrder := types.UpdateOrderDTO{
-			Status:      newOrderStatus,
-			CompletedAt: &completedAt,
-		}
-		if err := s.orderRepo.UpdateOrderStatus(order.ID, updateOrder); err != nil {
-			return nil, fmt.Errorf("failed to update order status to completed: %w", err)
-		}
-	} else {
-		if order.Status != data.OrderStatusPreparing {
-			updateOrder := types.UpdateOrderDTO{
-				Status: data.OrderStatusPreparing,
-			}
-			if err := s.orderRepo.UpdateOrderStatus(order.ID, updateOrder); err != nil {
-				return nil, fmt.Errorf("failed to update order status to preparing: %w", err)
-			}
-		}
-	}
-
+	// Return updated suborder
 	updatedSuborder, err := s.orderRepo.GetSuborderByID(subOrderID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch updated suborder: %w", err)
 	}
-
 	dto := types.ConvertSuborderToDTO(updatedSuborder)
 	return &dto, nil
+}
+
+func (s *orderService) returnIfRecentlyCompleted(suborder *data.Suborder, options *types.ToggleNextSuborderStatusOptions) *types.SuborderDTO {
+	if options == nil || options.IncludeIfCompletedGapMinutes == nil {
+		return nil
+	}
+
+	if suborder.Status == data.SubOrderStatusCompleted && suborder.CompletedAt != nil {
+		minutes := *options.IncludeIfCompletedGapMinutes
+		if time.Since(*suborder.CompletedAt) <= time.Duration(minutes)*time.Minute {
+			dto := types.ConvertSuborderToDTO(suborder)
+			return &dto
+		}
+	}
+	return nil
+}
+
+func (s *orderService) advanceSuborder(subOrderID uint, suborder *data.Suborder) error {
+	currentStatus := suborder.Status
+	nextStatus, ok := allowedTransitions[currentStatus]
+	if !ok {
+		return fmt.Errorf("no allowed transition from status %s", currentStatus)
+	}
+
+	completedAt := time.Now()
+	update := types.UpdateSubOrderDTO{
+		Status:      nextStatus,
+		CompletedAt: &completedAt,
+	}
+	if err := s.orderRepo.UpdateSubOrderStatus(subOrderID, update); err != nil {
+		return fmt.Errorf("failed to update suborder status: %w", err)
+	}
+
+	// If suborder is completed, deduct ingredients
+	if nextStatus == data.SubOrderStatusCompleted {
+		if err := s.handleSuborderCompletion(subOrderID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *orderService) handleSuborderCompletion(subOrderID uint) error {
+	suborder, err := s.orderRepo.GetSuborderByID(subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve updated suborder: %w", err)
+	}
+
+	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
+	}
+
+	stockMap := make(map[uint]*data.StoreStock)
+	if err := s.deductSuborderIngredientsFromStock(order.StoreID, suborder, stockMap); err != nil {
+		return fmt.Errorf("failed to deduct ingredients: %w", err)
+	}
+
+	s.notifyLowStockIngredients(order, stockMap)
+	return nil
+}
+
+func (s *orderService) updateOrderStatusBySuborder(subOrderID uint) error {
+	order, err := s.orderRepo.GetOrderBySubOrderID(subOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
+	}
+
+	suborders, err := s.orderRepo.GetSubOrdersByOrderID(order.ID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch suborders for order %d: %w", order.ID, err)
+	}
+
+	hasPreparing, allCompleted := evaluateSuborderStatuses(suborders)
+
+	switch {
+	case hasPreparing:
+		return s.ensureOrderStatus(order, data.OrderStatusPreparing, nil)
+
+	case allCompleted:
+		newStatus := data.OrderStatusCompleted
+		if order.DeliveryAddressID != nil {
+			newStatus = data.OrderStatusInDelivery
+		}
+		now := time.Now()
+		return s.ensureOrderStatus(order, newStatus, &now)
+
+	default:
+		return s.ensureOrderStatus(order, data.OrderStatusPreparing, nil)
+	}
+}
+
+func (s *orderService) ensureOrderStatus(order *data.Order, status data.OrderStatus, completedAt *time.Time) error {
+	if order.Status == status {
+		return nil
+	}
+
+	update := types.UpdateOrderDTO{
+		Status:      status,
+		CompletedAt: completedAt,
+	}
+	if err := s.orderRepo.UpdateOrderStatus(order.ID, update); err != nil {
+		return fmt.Errorf("failed to update order status to %s: %w", status, err)
+	}
+	return nil
 }
 
 func evaluateSuborderStatuses(suborders []data.Suborder) (hasPreparing bool, allCompleted bool) {
