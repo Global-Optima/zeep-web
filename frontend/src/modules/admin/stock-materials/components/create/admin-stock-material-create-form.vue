@@ -47,6 +47,7 @@ const createStockMaterialSchema = toTypedSchema(
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
     barcode: z
       .string()
+      .min(1, 'Создайте или вставьте штрихкод')
       .max(20, 'Введите штрихкод'),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
   })

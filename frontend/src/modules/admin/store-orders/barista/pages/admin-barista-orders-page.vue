@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
-import { useBarcodeScanner } from '@/core/hooks/use-barcode-listener.hook'
+import { useScannerListener } from '@/core/hooks/use-barcode-listener.hook'
 import { parseSubOrderQR } from '@/core/hooks/use-qr-print.hook'
 
 import AdminBaristaOrderStatusSelector from '@/modules/admin/store-orders/barista/components/admin-barista-order-status-selector.vue'
@@ -14,10 +14,12 @@ import {
   OrderStatus,
   SubOrderStatus,
   type OrderDTO,
-  type SuborderDTO
+  type SuborderDTO,
+  type ToggleNextSuborderStatusOptions
 } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 import { useMutation } from '@tanstack/vue-query'
+import { isAxiosError } from 'axios'
 
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -150,7 +152,7 @@ async function toggleSuborderStatus(suborder: SuborderDTO) {
 
   try {
     // Request the next status from the server
-    const updatedSuborder = await ordersService.toggleNextStatus(suborder.id)
+    const updatedSuborder = await ordersService.toggleNextSuborderStatus(suborder.id)
 
     // Immediate local feedback (optional, since WS will update eventually)
     Object.assign(suborder, updatedSuborder)
@@ -180,38 +182,39 @@ async function toggleSuborderStatus(suborder: SuborderDTO) {
  *  2. On scan, we toggle the suborder via the same `ordersService`.
  *  3. Optionally do local feedback or rely on websockets.
  */
+const toggleStatusOpts: ToggleNextSuborderStatusOptions = {
+  includeIfCompletedGapMinutes: 60
+}
+
 const {mutate: toggleNextStatus} = useMutation({
-		mutationFn: (suborderId: number) => ordersService.toggleNextStatus(suborderId),
+		mutationFn: (suborderId: number) => ordersService.toggleNextSuborderStatus(suborderId, toggleStatusOpts),
 		onSuccess: (updatedSuborder:  SuborderDTO) => {
       const localOrder = filteredOrders.value.find(o => o.id === updatedSuborder.orderId)
+      if (!localOrder) return
 
-      if (localOrder) {
-        // Optionally update the local suborder for immediate feedback
-        const localSub = localOrder.subOrders.find(so => so.id === updatedSuborder.id)
-        if (localSub) Object.assign(localSub, updatedSuborder)
+      const localSub = localOrder.subOrders.find(so => so.id === updatedSuborder.id)
+      if (localSub) Object.assign(localSub, updatedSuborder)
 
-        // If all suborders are completed, unselect
-        if (areAllSubordersCompleted(localOrder)) {
-          localOrder.status = OrderStatus.COMPLETED
-          selectedOrder.value = null
-          selectedSuborder.value = null
-        } else {
-          // Otherwise, select the updated suborder
-          selectedOrder.value = localOrder
-          selectedSuborder.value = localSub ?? null
-        }
+      selectedOrder.value = localOrder
+      selectedSuborder.value = localSub ?? null
+
+      if (!toggleStatusOpts.includeIfCompletedGapMinutes) {
+        toast({
+          description: `Статус подзаказа ${updatedSuborder.productSize.productName} ${updatedSuborder.productSize.sizeName} был изменен`,
+        })
       }
-
-      toast({
-        description: `Статус подзаказа ${updatedSuborder.productSize.productName} ${updatedSuborder.productSize.sizeName} был изменен`,
-      })
-
 		},
-		onError: () => {
-      toast({ description: 'Не удалось изменить статус подзаказа', variant: 'destructive' })		},
+    onError: (error: unknown) => {
+      const message = isAxiosError(error) && error.response?.status === 400
+        ? 'Этот подзаказ уже завершен. Обновите заказы или попробуйте снова позже.'
+        : 'Не удалось изменить статус подзаказа'
+
+      toast({ description: message, variant: 'destructive' })
+    },
+
 })
 
-useBarcodeScanner({
+useScannerListener({
   onScan: async (subOrderQR: string) => {
     const {subOrderId} = parseSubOrderQR(subOrderQR)
 
@@ -227,7 +230,6 @@ useBarcodeScanner({
     }
 
     toggleNextStatus(suborderIdNumber)
-
   },
   onError: (err: Error) => {
     console.error('Barcode Scan Error:', err)
