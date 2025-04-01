@@ -84,6 +84,7 @@ export interface OrderProductSizeDTO {
 	size: number
 	unit: UnitDTO
 	machineId: string
+  machineCategory: string
 }
 
 export interface OrderAdditiveDTO {

@@ -171,7 +171,7 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 
 	query := r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
-		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Order("created_at DESC")
 
@@ -235,9 +235,9 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 
 	// Base query with preloads and business logic
 	query := r.db.
-		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Where("store_id = ?", *filter.StoreID).
 		Where("status NOT IN (?)", []data.OrderStatus{data.OrderStatusWaitingForPayment}).
 		Where("created_at BETWEEN ? AND ?", startOfTodayUTC, endOfTodayUTC).
@@ -351,7 +351,8 @@ func (r *orderRepository) GetStatusesCount(filter types.OrdersTimeZoneFilter) (m
 
 func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 	var order data.Order
-	err := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
+	err := r.db.
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Store").

@@ -85,12 +85,13 @@ type UpdateSubOrderDTO struct {
 }
 
 type OrderStoreProductSizeDTO struct {
-	ID          uint               `json:"id"`
-	SizeName    string             `json:"sizeName"`
-	ProductName string             `json:"productName"`
-	Size        float64            `json:"size"`
-	Unit        unitTypes.UnitsDTO `json:"unit"`
-	MachineId   string             `json:"machineId"`
+	ID              uint                 `json:"id"`
+	SizeName        string               `json:"sizeName"`
+	ProductName     string               `json:"productName"`
+	Size            float64              `json:"size"`
+	Unit            unitTypes.UnitsDTO   `json:"unit"`
+	MachineId       string               `json:"machineId"`
+	MachineCategory data.MachineCategory `json:"machineCategory"`
 }
 
 type OrderStoreAdditiveDTO struct {

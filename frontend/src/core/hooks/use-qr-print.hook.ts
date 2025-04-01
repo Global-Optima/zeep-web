@@ -3,6 +3,14 @@ import type { SuborderDTO } from '@/modules/admin/store-orders/models/orders.mod
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode-generator'
 import { usePrinter, type PrintOptions } from './use-print.hook'
+import { MachineCategory } from '@/modules/admin/product-categories/utils/category-options'
+
+
+const categoryEmojis: Record<MachineCategory, string> = {
+  [MachineCategory.TEA]: '🍵',
+  [MachineCategory.COFFEE]: '☕',
+  [MachineCategory.ICE_CREAM]: '🍦'
+};
 
 export interface QRPrintOptions extends PrintOptions {
 	labelWidthMm?: number
@@ -131,8 +139,10 @@ export function useGenerateQR() {
       if (subOrder.productSize?.productName && subOrder.productSize?.sizeName) {
         ctx.font = `bold ${baseFontSize}px Arial, sans-serif`;
 
+        const emoji = categoryEmojis[subOrder.productSize?.machineCategory as MachineCategory] || '🥤';
+
         // Combine product name, and size
-        const productText = `${subOrder.productSize.productName} - ${subOrder.productSize.sizeName}`;
+        const productText = `${emoji} ${subOrder.productSize.productName} - ${subOrder.productSize.sizeName}`;
 
         // Centered text
         ctx.fillText(productText, usableWidthPx / 2, currentY);
