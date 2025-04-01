@@ -308,7 +308,7 @@ func (r *storageRepository) ConvertAndUploadMedia(
 }
 
 func (r *storageRepository) convertImage(imgFileHeader *multipart.FileHeader) (*media.FilesPair, error) {
-	convertedFiles, err := media.ConvertImageToRawAndWebp(imgFileHeader)
+	convertedFiles, err := media.ConvertImageToRawAndWebpV2(imgFileHeader)
 	if err != nil {
 		return nil, fmt.Errorf("image conversion failed: %w", err)
 	}
