@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import * as z from 'zod'
-import { ref } from 'vue';
+
+import { createCategorySchema } from '@/modules/admin/product-categories/utils/category-validation'
+import { machineCategoryOptions } from '@/modules/admin/product-categories/utils/category-options'
 
 // UI Components
 import { Button } from '@/core/components/ui/button'
@@ -23,17 +23,6 @@ const emits = defineEmits<{
   onCancel: []
 }>()
 
-// Validation Schema
-const createCategorySchema = toTypedSchema(
-  z.object({
-    name: z.string().min(1, 'Введите название категории'),
-    description: z.string().optional(),
-    machineCategory: z.enum(['TEA', 'COFFEE', 'ICE_CREAM'], {
-      message: 'Выберите категорию машины',
-    }),
-  })
-)
-
 // Form Setup
 const { handleSubmit, resetForm } = useForm<UpdateProductCategoryDTO>({
   validationSchema: createCategorySchema,
@@ -42,12 +31,6 @@ const { handleSubmit, resetForm } = useForm<UpdateProductCategoryDTO>({
     machineCategory: productCategory.machineCategory || '',
   }
 })
-
-const machineCategoryOptions = ref([
-  { label: "Чай", value: "TEA" },
-  { label: "Кофе", value: "COFFEE" },
-  { label: "Мороженое", value: "ICE_CREAM" }
-]);
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
