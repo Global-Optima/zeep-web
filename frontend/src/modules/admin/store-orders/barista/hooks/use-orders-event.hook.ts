@@ -1,6 +1,5 @@
 import { useToast } from '@/core/components/ui/toast'
 import {
-	generateSubOrderQR,
 	getSavedBaristaQRSettings,
 	useQRPrinter,
 } from '@/core/hooks/use-qr-print.hook'
@@ -66,7 +65,7 @@ export function useOrderEvents(
 	// Setup: Toast + QR Printer
 	// ----------------------------------
 	const { toast } = useToast()
-	const { printQR } = useQRPrinter()
+	const { printSubOrderQR } = useQRPrinter()
 
 	// ----------------------------------
 	// Reactive Filter
@@ -193,7 +192,7 @@ export function useOrderEvents(
     const { width, height } = getSavedBaristaQRSettings()
 
     try {
-      await printQR(
+      await printSubOrderQR(
         reactiveOrder.subOrders,
         reactiveOrder.customerName,
         {
