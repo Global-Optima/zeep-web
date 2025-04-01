@@ -3,12 +3,12 @@
     v-if="!(additive.isDefault && additive.isHidden)"
     @click="handleClick"
     :class="[
-    'relative text-center bg-white rounded-[24px] p-4 flex items-start border-2 gap-4 md:gap-6 transition-all duration-300',
-    additive.isOutOfStock
-      ? '!cursor-not-allowed opacity-60'
-      : (isSelected ? 'bg-primary border-primary cursor-pointer' : 'border-transparent cursor-pointer'),
-      additive.isDefault ? 'cursor-not-allowed opacity-50 !border-primary' : 'cursor-pointer',
-  ]"
+      'relative text-center bg-white rounded-[24px] p-4 flex items-start border-2 gap-4 md:gap-6 transition-all duration-300',
+      additive.isOutOfStock
+        ? '!cursor-not-allowed opacity-60'
+        : (isSelected ? 'bg-primary border-primary cursor-pointer' : 'border-transparent cursor-pointer'),
+        additive.isDefault ? 'cursor-not-allowed opacity-50 !border-primary' : 'cursor-pointer',
+    ]"
     data-testid="additive-card"
   >
     <LazyImage
@@ -18,13 +18,13 @@
     />
 
     <div class="flex flex-col justify-between items-start w-full h-full">
-      <p class="text-lg md:text-xl text-left line-clamp-2" data-testid="additive-name">
+      <p class="text-lg md:text-2xl text-left line-clamp-2" data-testid="additive-name">
         {{ additive.name }}
       </p>
 
-      <div class="flex justify-between items-center w-full gap-2 flex-wrap">
+      <div class="flex flex-wrap justify-between items-center gap-2 w-full">
         <p
-          class="text-left text-xl md:text-2xl"
+          class="text-xl md:text-2xl text-left"
           :class="additive.isOutOfStock ? 'text-gray-400' : 'text-primary'"
           data-testid="additive-price"
         >
@@ -41,7 +41,7 @@
 
         <template v-if="additive.isOutOfStock">
           <p
-            class="bg-slate-200 text-slate-800 text-sm font-medium px-3 py-1 rounded-xl"
+            class="bg-slate-200 px-3 py-1 rounded-xl font-medium text-slate-800 text-sm"
           >
             Нет в наличии
           </p>
