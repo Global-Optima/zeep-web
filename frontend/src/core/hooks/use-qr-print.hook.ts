@@ -214,7 +214,7 @@ export function useGenerateQR() {
   }
 
   // Helper function to wrap text
-  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
     const words = text.split(' ');
     let line = '';
     let testLine = '';
@@ -287,17 +287,5 @@ export function useQRPrinter() {
     }
   }
 
-  // For backward compatibility with original API
-  const printQRValues = async (qrValues: string | string[], options?: QRPrintOptions) => {
-    try {
-      const values = Array.isArray(qrValues) ? qrValues : [qrValues]
-      const qrPdfBlobs = await Promise.all(values.map(v => generateQR(v, undefined, undefined, options)))
-      await print(qrPdfBlobs, options)
-    } catch (error) {
-      console.error('Error generating or printing QR code:', error)
-      throw error
-    }
-  }
-
-  return { printQR, printQRValues }
+  return { printQR }
 }

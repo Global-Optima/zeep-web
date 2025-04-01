@@ -91,7 +91,7 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { generateSubOrderQR, getSavedBaristaQRSettings, useQRPrinter } from '@/core/hooks/use-qr-print.hook'
+import { getSavedBaristaQRSettings, useQRPrinter } from '@/core/hooks/use-qr-print.hook'
 import { cn } from '@/core/utils/tailwind.utils'
 import {
   SubOrderStatus,
@@ -105,9 +105,11 @@ import { computed } from 'vue'
  * - suborder: a single SuborderDTO or null (if none is selected).
  *   This suborder is assumed to be "deeply reactive" from the parent.
  */
-const {suborder} = defineProps<{
+ const { suborder, customerName } = defineProps<{
   suborder: SuborderDTO | null;
-}>()
+  customerName: string;
+}>();
+
 
 /**
  * Define events:
@@ -151,18 +153,21 @@ const disabledCompleteButton = computed(() =>
 /**
  * A hook to print a barcode for this suborder.
  */
- const { printQRValues } = useQRPrinter()
+ const { printQR } = useQRPrinter()
 
 async function printQrCode() {
   if (suborder) {
     const { width, height } = getSavedBaristaQRSettings()
 
-    const qr = generateSubOrderQR(suborder)
-    await printQRValues(qr, {
-      labelWidthMm: width,
-      labelHeightMm: height,
-      desktopOnly: true
-    })
+    await printQR(
+        [suborder],
+        customerName,
+        {
+          labelHeightMm: height,
+          labelWidthMm: width,
+          desktopOnly: true
+        }
+      )
   }
 }
 </script>
