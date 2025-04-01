@@ -16,6 +16,7 @@ export interface StockMaterialCategoryDTO {
 	description: string
 	createdAt?: string
 	updatedAt?: string
+  machineCategory: string
 }
 
 export interface StockMaterialCategoryFilterDTO extends PaginationParams {
