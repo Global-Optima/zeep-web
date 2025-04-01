@@ -31,6 +31,7 @@ func NewStockRequestsModule(
 		stockMaterialRepo,
 		stockRequests.NewTransactionManager(base.DB, repo, stockMaterialRepo),
 		notificationService,
+		base.Logger,
 	)
 	handler := stockRequests.NewStockRequestHandler(service, franchiseeService, regionService, auditService)
 

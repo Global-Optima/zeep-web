@@ -6,23 +6,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type StoreWarehouseCronTasks struct {
-	storeWarehouseService storeStocks.StoreStockService
-	storeWarehouseRepo    storeStocks.StoreStockRepository
-	storeService          stores.StoreService
-	logger                *zap.SugaredLogger
+type StoreStockCronTasks struct {
+	storeStockService storeStocks.StoreStockService
+	storeStockRepo    storeStocks.StoreStockRepository
+	storeService      stores.StoreService
+	logger            *zap.SugaredLogger
 }
 
-func NewStoreWarehouseCronTasks(storeWarehouseService storeStocks.StoreStockService, storeWarehouseRepo storeStocks.StoreStockRepository, storeService stores.StoreService, logger *zap.SugaredLogger) *StoreWarehouseCronTasks {
-	return &StoreWarehouseCronTasks{
-		storeWarehouseService: storeWarehouseService,
-		storeWarehouseRepo:    storeWarehouseRepo,
-		storeService:          storeService,
-		logger:                logger,
+func NewStoreStockCronTasks(storeStockService storeStocks.StoreStockService, storeStockRepo storeStocks.StoreStockRepository, storeService stores.StoreService, logger *zap.SugaredLogger) *StoreStockCronTasks {
+	return &StoreStockCronTasks{
+		storeStockService: storeStockService,
+		storeStockRepo:    storeStockRepo,
+		storeService:      storeService,
+		logger:            logger,
 	}
 }
 
-func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
+func (tasks *StoreStockCronTasks) CheckStockNotifications() {
 	tasks.logger.Info("Running CheckStockNotifications...")
 
 	storesList, err := tasks.storeService.GetAllStoresForNotifications()
@@ -34,7 +34,7 @@ func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
 	for _, store := range storesList {
 		processedStocks := make(map[uint]bool)
 
-		stockList, err := tasks.storeWarehouseRepo.GetAllStockList(store.ID)
+		stockList, err := tasks.storeStockRepo.GetAllStockList(store.ID)
 		if err != nil {
 			tasks.logger.Errorf("Failed to fetch stock list for store %d: %v", store.ID, err)
 			continue
@@ -46,7 +46,7 @@ func (tasks *StoreWarehouseCronTasks) CheckStockNotifications() {
 				continue
 			}
 
-			err := tasks.storeWarehouseService.CheckStockNotifications(store.ID, stock)
+			err := tasks.storeStockService.CheckStockNotifications(store.ID, stock)
 			if err != nil {
 				tasks.logger.Errorf("Failed to check notifications for stock ID %d: %v", stock.ID, err)
 			}
