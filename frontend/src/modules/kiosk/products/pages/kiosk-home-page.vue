@@ -19,7 +19,13 @@
 			<!-- Search Mode -->
 			<div v-if="searchTerm">
 				<div v-if="isSearchProductsPending">
-					<Skeleton class="h-20" />
+					<div class="gap-3 grid grid-cols-2 sm:grid-cols-3">
+						<Skeleton
+							v-for="n in 6"
+							:key="n"
+							class="bg-slate-200 bg-opacity-80 rounded-[38px] w-full h-[404px]"
+						/>
+					</div>
 				</div>
 				<div
 					v-else-if="searchProducts?.data?.length === 0"
@@ -30,7 +36,7 @@
 				<div v-else>
 					<div class="gap-3 grid grid-cols-2 sm:grid-cols-3">
 						<KioskHomeProductCard
-							v-for="product in searchProducts?.data"
+							v-for="product in sortedSearchProducts"
 							:key="product.id"
 							:product="product"
 						/>
@@ -45,19 +51,21 @@
 				>
 					<h2
 						:ref="el => setCategoryRef(category.id, el)"
-						:class="cn('mb-6 text-4xl', index !== 0 && 'mt-12')"
+						:class="cn('my-8 text-4xl px-4', index !== 0 && 'mt-12')"
 					>
 						{{ category.name }}
 					</h2>
+					<!-- Show skeleton grid (6 skeletons) if products are still loading -->
 					<div v-if="categoryProductsQueries[index].isPending">
-						<Skeleton class="h-20" />
+						<div class="gap-3 grid grid-cols-2 sm:grid-cols-3">
+							<Skeleton
+								v-for="n in 6"
+								:key="n"
+								class="bg-slate-200 bg-opacity-80 rounded-[38px] w-full h-96"
+							/>
+						</div>
 					</div>
-					<div
-						v-else-if="categoryProductsQueries[index].isError"
-						class="text-red-500"
-					>
-						<p>Error loading products</p>
-					</div>
+					<!-- Show products if loaded -->
 					<div v-else>
 						<div class="gap-3 grid grid-cols-2 sm:grid-cols-3">
 							<KioskHomeProductCard
@@ -115,7 +123,7 @@ watch(
 const categoryProductsQueries = useQueries({
   queries: computed(() =>
     categories.value.map((category) => ({
-      queryKey: ['store-products', category.id],
+      queryKey: ['kiosk-products', category.id],
       queryFn: () =>
         storeProductsService.getStoreProducts({
           categoryId: category.id,
@@ -129,14 +137,18 @@ const categoryProductsQueries = useQueries({
 
 const categoryProducts = computed(() => {
   return categories.value.reduce((acc, category, index) => {
-    acc[category.id] = categoryProductsQueries.value[index].data?.data || []
-    return acc
-  }, {} as Record<number, StoreProductDTO[]>)
-})
+    const products = categoryProductsQueries.value[index].data?.data || [];
+    acc[category.id] = products.slice().sort((a, b) => {
+      if (a.isOutOfStock === b.isOutOfStock) return 0;
+      return a.isOutOfStock ? 1 : -1;
+    });
+    return acc;
+  }, {} as Record<number, StoreProductDTO[]>);
+});
 
 /* Fetch Search Products */
 const { data: searchProducts, isPending: isSearchProductsPending } = useQuery({
-  queryKey: computed(() => ['search-products', searchTerm.value]),
+  queryKey: computed(() => ['kiosk-products', searchTerm.value]),
   queryFn: () =>
     storeProductsService.getStoreProducts({
       search: searchTerm.value,
@@ -145,6 +157,13 @@ const { data: searchProducts, isPending: isSearchProductsPending } = useQuery({
     }),
   enabled: computed(() => !!searchTerm.value)
 })
+
+const sortedSearchProducts = computed(() => {
+  return (searchProducts.value?.data || []).slice().sort((a, b) => {
+    if (a.isOutOfStock === b.isOutOfStock) return 0;
+    return a.isOutOfStock ? 1 : -1;
+  });
+});
 
 /* Category Refs & Scroll Handling */
 function setCategoryRef(id: number, el: Element | ComponentPublicInstance | null) {

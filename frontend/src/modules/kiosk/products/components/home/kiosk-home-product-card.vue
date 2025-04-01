@@ -1,47 +1,45 @@
 <template>
-  <div
-    class="relative flex flex-col justify-between bg-white p-6 rounded-[32px] h-full transition-all duration-300"
-    :class="{
+	<div
+		class="relative flex flex-col justify-between bg-white p-6 rounded-[32px] h-full transition-all duration-300"
+		:class="{
       'cursor-pointer': !product.isOutOfStock,
       'cursor-not-allowed opacity-60 !border-primary' : product.isOutOfStock
     }"
-    @click="selectProduct"
-    data-testid="product-card"
-  >
+		@click="selectProduct"
+		data-testid="product-card"
+	>
+		<div>
+			<LazyImage
+				:src="product.imageUrl"
+				alt="Изображение товара"
+				class="rounded-xl w-full h-44 sm:h-60 object-contain"
+			/>
 
-    <div>
-      <LazyImage
-        :src="product.imageUrl"
-        alt="Изображение товара"
-        class="rounded-xl w-full h-44 sm:h-60 object-contain"
-      />
+			<h3
+				class="mt-6 text-base sm:text-2xl line-clamp-2"
+				data-testid="product-title"
+			>
+				{{ product.name }}
+			</h3>
+		</div>
 
-      <h3
-        class="mt-6 text-base sm:text-xl line-clamp-2"
-        data-testid="product-title"
-      >
-        {{ product.name }}
-      </h3>
-    </div>
+		<div class="flex flex-wrap justify-between items-start gap-4 mt-6">
+			<p
+				class="font-medium text-xl sm:text-3xl"
+				:class="product.isOutOfStock ? 'text-gray-400' : 'text-primary'"
+				data-testid="product-price"
+			>
+				{{ formatPrice(product.storePrice) }}
+			</p>
 
-    <div class="mt-4 flex items-start justify-between gap-4 flex-wrap">
-      <p
-        class="font-medium text-xl sm:text-2xl"
-        :class="product.isOutOfStock ? 'text-gray-400' : 'text-primary'"
-        data-testid="product-price"
-      >
-        {{ formatPrice(product.storePrice) }}
-      </p>
-
-      <p
-        v-if="product.isOutOfStock"
-        class="bg-slate-200 text-slate-800 text-sm font-medium
-         px-4 py-2 rounded-xl"
-      >
-        Нет в наличии
-      </p>
-    </div>
-  </div>
+			<p
+				v-if="product.isOutOfStock"
+				class="bg-slate-200 px-4 py-2 rounded-xl text-slate-800 text-base"
+			>
+				Нет в наличии
+			</p>
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
