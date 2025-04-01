@@ -19,7 +19,16 @@ type OrdersModule struct {
 
 func NewOrdersModule(base *common.BaseModule, asynqManager *asynqTasks.AsynqManager, productRepo storeProducts.StoreProductRepository, additiveRepo storeAdditives.StoreAdditiveRepository, storeStockRepo storeStocks.StoreStockRepository, notificationService notifications.NotificationService) *OrdersModule {
 	repo := orders.NewOrderRepository(base.DB)
-	service := orders.NewOrderService(asynqManager, repo, productRepo, additiveRepo, storeStockRepo, notificationService, base.Logger)
+	service := orders.NewOrderService(
+		asynqManager,
+		repo,
+		productRepo,
+		additiveRepo,
+		storeStockRepo,
+		notificationService,
+		orders.NewTransactionManager(base.DB, repo, storeStockRepo, notificationService, base.Logger),
+		base.Logger,
+	)
 	handler := orders.NewOrderHandler(service)
 
 	ordersAsynqTasks := asynqTasks.NewOrderAsynqTasks(repo, base.Logger)

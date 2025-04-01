@@ -3,6 +3,7 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"log"
 	"net/http"
 	"time"
@@ -127,7 +128,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
 		if errors.Is(err, types.ErrInsufficientStock) {
-			localization.SendLocalizedResponseWithKey(c, types.Response400InsufficientStock)
+			localization.SendLocalizedResponseWithKey(c, types.Response409InsufficientStock)
 			return
 		}
 		if errors.Is(err, types.ErrMultipleSelect) {
@@ -143,129 +144,6 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	}
 
 	utils.SendSuccessResponse(c, types.ConvertOrderToDTO(createdOrder))
-}
-
-func (h *OrderHandler) CompleteSubOrder(c *gin.Context) {
-	orderID, errH := utils.ParseParam(c, "orderId")
-	if errH != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
-		return
-	}
-
-	subOrderID, errH := utils.ParseParam(c, "subOrderId")
-	if errH != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
-		return
-	}
-
-	err := h.service.CompleteSubOrder(orderID, subOrderID)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to complete suborder")
-		return
-	}
-
-	order, err := h.service.GetOrderBySubOrder(uint(subOrderID))
-	if err != nil {
-		errorMessage := fmt.Sprintf("failed to get order: %v", err)
-		utils.SendInternalServerError(c, errorMessage)
-		return
-	}
-
-	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
-
-	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
-}
-
-func (h *OrderHandler) GetSuborderBarcode(c *gin.Context) {
-	suborderID, err := utils.ParseParam(c, "subOrderId")
-	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
-		return
-	}
-
-	barcodeImage, err := h.service.GenerateSuborderBarcodePDF(suborderID)
-	if err != nil {
-		utils.SendInternalServerError(c, err.Error())
-		return
-	}
-
-	filename := fmt.Sprintf("suborder-barcode-%d.pdf", suborderID)
-
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Length", fmt.Sprintf("%d", len(barcodeImage)))
-	c.Data(http.StatusOK, "application/pdf", barcodeImage)
-}
-
-func (h *OrderHandler) CompleteSubOrderByBarcode(c *gin.Context) {
-	subOrderID, errH := utils.ParseParam(c, "subOrderId")
-	if errH != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
-		return
-	}
-
-	subOrder, err := h.service.CompleteSubOrderByBarcode(subOrderID)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to complete suborder")
-		return
-	}
-
-	order, err := h.service.GetOrderBySubOrder(subOrderID)
-	if err != nil {
-		errorMessage := fmt.Sprintf("failed to get order: %v", err)
-		utils.SendInternalServerError(c, errorMessage)
-		return
-	}
-
-	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
-
-	utils.SendSuccessResponse(c, subOrder)
-}
-
-func (h *OrderHandler) GeneratePDFReceipt(c *gin.Context) {
-	orderID, err := utils.ParseParam(c, "orderId")
-	if err != nil || orderID == 0 {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
-		return
-	}
-
-	pdfData, err := h.service.GeneratePDFReceipt(orderID)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to generate PDF receipt")
-		return
-	}
-
-	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=order_%d_receipt.pdf", orderID))
-	if _, err := c.Writer.Write(pdfData); err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-}
-
-// Get count of orders grouped by statuses
-func (h *OrderHandler) GetStatusesCount(c *gin.Context) {
-	var filter types.OrdersTimeZoneFilter
-
-	if err := c.ShouldBindQuery(&filter); err != nil {
-		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
-		return
-	}
-
-	storeID, errH := contexts.GetStoreId(c)
-	if errH != nil {
-		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
-		return
-	}
-	filter.StoreID = &storeID
-
-	statusesWithCounts, err := h.service.GetStatusesCount(filter)
-	if err != nil {
-		utils.SendInternalServerError(c, "failed to fetch statuses count")
-		return
-	}
-
-	utils.SendSuccessResponse(c, statusesWithCounts)
 }
 
 func (h *OrderHandler) ServeWS(c *gin.Context) {
@@ -367,30 +245,7 @@ func (h *OrderHandler) ExportOrders(c *gin.Context) {
 	c.Data(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelData)
 }
 
-func (h *OrderHandler) AcceptSubOrder(c *gin.Context) {
-	subOrderID, err := utils.ParseParam(c, "subOrderId")
-	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
-		return
-	}
-
-	if err := h.service.AcceptSubOrder(subOrderID); err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("failed to accept suborder: %v", err))
-		return
-	}
-
-	// Optionally fetch the updated order to broadcast the new status.
-	order, err := h.service.GetOrderBySubOrder(subOrderID)
-	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("failed to fetch updated order: %v", err))
-		return
-	}
-
-	BroadcastOrderUpdated(order.StoreID, types.ConvertOrderToDTO(order))
-	localization.SendLocalizedResponseWithKey(c, types.Response200OrderUpdate)
-}
-
-func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
+func (h *OrderHandler) SetNextSubOrderStatus(c *gin.Context) {
 	subOrderID, err := utils.ParseParam(c, "subOrderId")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Order)
@@ -399,13 +254,17 @@ func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 
 	var options types.ToggleNextSuborderStatusOptions
 	if err := c.ShouldBindQuery(&options); err != nil {
-		utils.SendBadRequestError(c, fmt.Sprintf("Invalid query params: %v", err))
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
-	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(subOrderID, &options)
+	updatedSuborderDTO, err := h.service.SetNextSubOrderStatus(subOrderID, &options)
 	if err != nil {
-		utils.SendInternalServerError(c, fmt.Sprintf("failed to update suborder status: %v", err))
+		if errors.Is(err, storeStocksTypes.ErrInsufficientStock) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409InsufficientStock)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500SuborderNextStatus)
 		return
 	}
 
