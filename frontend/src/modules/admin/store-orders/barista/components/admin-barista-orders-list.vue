@@ -38,7 +38,7 @@
 								<Truck class="w-5 h-5 text-yellow-500" />
 							</template>
 							<template v-else-if="order.status === OrderStatus.COMPLETED">
-								<Check class="w-5 h-5 text-green-800" />
+								<Check class="w-5 h-5 text-green-600" />
 							</template>
 						</div>
 					</div>
