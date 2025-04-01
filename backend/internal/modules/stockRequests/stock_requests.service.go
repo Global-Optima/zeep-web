@@ -3,6 +3,7 @@ package stockRequests
 import (
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -40,6 +41,7 @@ type stockRequestService struct {
 	stockMaterialRepo   stockMaterial.StockMaterialRepository
 	transactionManager  TransactionManager
 	notificationService notifications.NotificationService
+	logger              *zap.SugaredLogger
 }
 
 func NewStockRequestService(
@@ -47,12 +49,14 @@ func NewStockRequestService(
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
 	transactionManager TransactionManager,
 	notificationService notifications.NotificationService,
+	logger *zap.SugaredLogger,
 ) StockRequestService {
 	return &stockRequestService{
 		repo:                repo,
 		stockMaterialRepo:   stockMaterialRepo,
 		transactionManager:  transactionManager,
 		notificationService: notificationService,
+		logger:              logger,
 	}
 }
 
@@ -117,7 +121,7 @@ func (s *stockRequestService) CreateStockRequest(storeID uint, req types.CreateS
 
 	err = s.notificationService.NotifyNewStockRequest(requestDetails)
 	if err != nil {
-		return 0, "", fmt.Errorf("failed to send notification: %w", err)
+		s.logger.Errorf("failed to send notification: %v", err)
 	}
 
 	return stockRequest.ID, store.Name, nil
@@ -174,7 +178,7 @@ func (s *stockRequestService) RejectStockRequestByStore(requestID uint, dto type
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send notification: %w", err)
+		s.logger.Errorf("failed to send notification: %v", err)
 	}
 
 	return request, nil
@@ -209,7 +213,7 @@ func (s *stockRequestService) RejectStockRequestByWarehouse(requestID uint, dto 
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send notification: %w", err)
+		s.logger.Errorf("failed to send notification: %v", err)
 	}
 
 	return request, nil
@@ -235,10 +239,6 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) (*data.StockReq
 		}
 	}
 
-	if err := s.handleProcessedStatus(request); err != nil {
-		return nil, err
-	}
-
 	request.Status = data.StockRequestProcessed
 	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
 		return nil, fmt.Errorf("failed to update stock request status: %w", err)
@@ -255,15 +255,10 @@ func (s *stockRequestService) SetProcessedStatus(requestID uint) (*data.StockReq
 
 	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send notification: %w", err)
+		s.logger.Errorf("failed to send notification: %v", err)
 	}
 
 	return request, nil
-}
-
-func (s *stockRequestService) handleProcessedStatus(request *data.StockRequest) error {
-	fmt.Printf("Stock request ID %d is now PROCESSED. Notifications will be added.\n", request.ID)
-	return nil
 }
 
 func (s *stockRequestService) SetInDeliveryStatus(requestID uint) (*data.StockRequest, error) {
@@ -295,7 +290,7 @@ func (s *stockRequestService) SetInDeliveryStatus(requestID uint) (*data.StockRe
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send notification: %w", err)
+		s.logger.Errorf("failed to send notification: %v", err)
 	}
 
 	return request, nil
@@ -326,7 +321,7 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) (*data.StockReq
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send notification: %w", err)
+		s.logger.Errorf("failed to send notification: %v", err)
 	}
 
 	return request, nil
@@ -347,13 +342,8 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 		return nil, fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestAcceptedWithChange)
 	}
 
-	if err := s.handleAcceptedWithChange(request, store.ID, dto.Items, dto.Comment); err != nil {
+	if err := s.transactionManager.HandleAcceptedWithChange(request, store.ID, dto.Items, dto.Comment); err != nil {
 		return nil, err
-	}
-
-	request.Status = data.StockRequestAcceptedWithChange
-	if err := s.repo.UpdateStockRequestStatus(request); err != nil {
-		return nil, fmt.Errorf("failed to update stock request status: %w", err)
 	}
 
 	requestDetails := &details.StockRequestStatusUpdatedDetails{
@@ -366,7 +356,7 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 	}
 	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send notification: %w", err)
+		s.logger.Errorf("failed to send notification: %v", err)
 	}
 
 	return request, nil
@@ -404,81 +394,10 @@ func (s *stockRequestService) handleInDeliveryStatus(request *data.StockRequest)
 		if updatedStock.Quantity < ingredient.StockMaterial.SafetyStock {
 			err := s.notificationService.NotifyOutOfStock(requestDetails)
 			if err != nil {
-				return fmt.Errorf("failed to send out of stock notification: %w", err)
+				s.logger.Errorf("failed to send out of stock notification: %v", err)
 			}
 		}
 	}
-	return nil
-}
-
-func (s *stockRequestService) handleAcceptedWithChange(request *data.StockRequest, storeWarehouseID uint, items []types.StockRequestStockMaterialDTO, comment *string) error {
-	updatedIngredients := []data.StockRequestIngredient{}
-	var changeDetails []types.StockRequestDetails
-
-	for _, item := range items {
-		var material data.StockMaterial
-		if err := s.stockMaterialRepo.PopulateStockMaterial(item.StockMaterialID, &material); err != nil {
-			return fmt.Errorf("failed to fetch stock material for ID %d: %w", item.StockMaterialID, err)
-		}
-
-		originalIngredient := findOriginalIngredient(request.Ingredients, item.StockMaterialID)
-
-		if originalIngredient != nil {
-			if originalIngredient.Quantity != item.Quantity {
-				requestDetails := types.StockRequestDetails{
-					OriginalMaterialName: originalIngredient.StockMaterial.Name,
-					Quantity:             originalIngredient.Quantity,
-					ActualQuantity:       item.Quantity,
-				}
-				changeDetails = append(changeDetails, requestDetails)
-
-				// If accepted quantity is lower, return the difference to the warehouse.
-				if originalIngredient.Quantity > item.Quantity {
-					diff := originalIngredient.Quantity - item.Quantity
-					_, err := s.repo.ReturnWarehouseStock(item.StockMaterialID, request.WarehouseID, diff)
-					if err != nil {
-						return fmt.Errorf("failed to return excess stock for material ID %d: %w", item.StockMaterialID, err)
-					}
-				}
-			}
-		} else {
-			requestDetails := types.StockRequestDetails{
-				MaterialName:   material.Name,
-				ActualQuantity: item.Quantity,
-			}
-			changeDetails = append(changeDetails, requestDetails)
-		}
-
-		if item.Quantity > 0 {
-			if err := s.repo.UpsertToStoreStock(storeWarehouseID, item.StockMaterialID, item.Quantity); err != nil {
-				return fmt.Errorf("failed to add stock to store warehouse for stock material ID %d: %w", item.StockMaterialID, err)
-			}
-		}
-
-		updatedIngredients = append(updatedIngredients, data.StockRequestIngredient{
-			StockRequestID:  request.ID,
-			StockMaterialID: item.StockMaterialID,
-			Quantity:        item.Quantity,
-		})
-	}
-
-	if len(changeDetails) > 0 {
-		err := s.repo.AddDetails(request.ID, changeDetails)
-		if err != nil {
-			return fmt.Errorf("failed to add details of changes for request ID %d: %w", request.ID, err)
-		}
-	}
-
-	if err := s.repo.ReplaceStockRequestIngredients(*request, updatedIngredients); err != nil {
-		return fmt.Errorf("failed to replace ingredients for stock request ID %d: %w", request.ID, err)
-	}
-
-	if comment != nil {
-		if err := s.repo.AddStoreComment(request.ID, *comment); err != nil {
-			return fmt.Errorf("failed to add store comment for request ID %d: %w", request.ID, err)
-		}
-	}
-
 	return nil
 }
 
