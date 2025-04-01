@@ -68,6 +68,7 @@
 						</div>
 					</div>
 					<!-- Show products if loaded -->
+					<!-- Show products if loaded -->
 					<div v-else>
 						<div class="gap-4 grid grid-cols-2 sm:grid-cols-3">
 							<KioskHomeProductCard

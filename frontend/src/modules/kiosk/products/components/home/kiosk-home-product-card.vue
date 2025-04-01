@@ -34,7 +34,7 @@
 
 			<p
 				v-if="product.isOutOfStock"
-				class="bg-slate-200 px-4 py-2 rounded-xl text-slate-800 text-base"
+				class="top-8 right-8 absolute bg-slate-200 px-4 py-2 rounded-3xl text-slate-800 text-base"
 			>
 				Нет в наличии
 			</p>

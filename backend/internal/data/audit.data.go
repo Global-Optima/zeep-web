@@ -36,6 +36,7 @@ const (
 	AdminEmployeeComponent         ComponentName = "ADMIN_EMPLOYEE"
 	AdditiveComponent              ComponentName = "ADDITIVE"
 	AdditiveCategoryComponent      ComponentName = "ADDITIVE_CATEGORY"
+	AuditComponent                 ComponentName = "AUDIT"
 	StoreAdditiveComponent         ComponentName = "STORE_ADDITIVE"
 	ProductSizeComponent           ComponentName = "PRODUCT_SIZE"
 	RecipeStepsComponent           ComponentName = "RECIPE_STEPS"
