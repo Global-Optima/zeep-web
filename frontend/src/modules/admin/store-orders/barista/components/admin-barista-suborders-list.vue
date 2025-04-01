@@ -31,7 +31,7 @@
 						<p class="text-blue-600">2 мин.</p>
 					</template>
 					<template v-else-if="suborder.status === SubOrderStatus.COMPLETED">
-						<Check class="w-5 h-5 text-green-500" />
+						<Check class="w-5 h-5 text-green-600" />
 					</template>
 				</div>
 			</div>

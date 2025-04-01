@@ -19,10 +19,11 @@ import {
 } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 import { useMutation } from '@tanstack/vue-query'
-import { isAxiosError } from 'axios'
+import { isAxiosError} from 'axios'
 
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { type AxiosLocalizedError, useAxiosLocaleToast} from "@/core/hooks/use-axios-locale-toast.hooks";
 
 /* ------------------------------------------------------
    Basic Setup
@@ -147,30 +148,27 @@ function selectSuborder(suborder: SuborderDTO) {
  *  - Provide immediate feedback by assigning the returned status.
  *  - If all suborders are completed => order is effectively `COMPLETED` => unselect.
  */
-async function toggleSuborderStatus(suborder: SuborderDTO) {
-  if (!selectedOrder.value) return
 
-  try {
-    // Request the next status from the server
-    const updatedSuborder = await ordersService.toggleNextSuborderStatus(suborder.id)
+const { toastLocalizedError } = useAxiosLocaleToast()
 
-    // Immediate local feedback (optional, since WS will update eventually)
+const {mutate: toggleSuborderStatus} = useMutation({
+  mutationFn: async (suborder: SuborderDTO) =>  ordersService.toggleNextSuborderStatus(suborder.id),
+  onSuccess: (updatedSuborder, suborder: SuborderDTO) => {
+    // Immediate local feedback: update the suborder data.
     Object.assign(suborder, updatedSuborder)
 
-    // If all suborders are completed, close the selection
-    if (areAllSubordersCompleted(selectedOrder.value)) {
-      // We can also set the order's status to COMPLETED for local feedback:
+    // If all suborders are completed, update order status and clear selection.
+    if (selectedOrder.value && areAllSubordersCompleted(selectedOrder.value)) {
       selectedOrder.value.status = OrderStatus.COMPLETED
-
-      // Deselect the order and suborder to close the details panel
       selectedOrder.value = null
       selectedSuborder.value = null
     }
-  } catch (error) {
+  },
+  onError: (error: AxiosLocalizedError) => {
     console.error('Failed to complete suborder:', error)
-    toast({ description: 'Не удалось изменить статус подзаказа', variant: 'destructive' })
-  }
-}
+    toastLocalizedError(error, 'Не удалось изменить статус подзаказа')
+  },
+})
 
 /* ------------------------------------------------------
    Barcode Scanner

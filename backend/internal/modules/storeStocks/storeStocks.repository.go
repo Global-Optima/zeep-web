@@ -547,7 +547,7 @@ func (r *storeStockRepository) deductProductSizeIngredientStock(tx *gorm.DB, sto
 	}
 
 	if existingStock.Quantity < deductedQuantity {
-		return nil, fmt.Errorf("insufficient stock for ingredient ID %d", ingredient.IngredientID)
+		return nil, fmt.Errorf("%w: insufficient stock for ingredient ID %d", types.ErrInsufficientStock, ingredient.IngredientID)
 	}
 
 	existingStock.Quantity -= deductedQuantity
@@ -581,13 +581,13 @@ func (r *storeStockRepository) deductAdditiveIngredientStock(tx *gorm.DB, storeI
 	}
 
 	if existingStock.Quantity < deductedQuantity {
-		return nil, fmt.Errorf("insufficient stock for ingredient ID %d", ingredient.IngredientID)
+		return nil, fmt.Errorf("%w: insufficient stock for ingredient ID %d", types.ErrInsufficientStock, ingredient.IngredientID)
 	}
 
 	existingStock.Quantity -= deductedQuantity
 
 	if err := tx.Save(&existingStock).Error; err != nil {
-		return nil, fmt.Errorf("failed to save store warehouse stock for ingredient ID %d: %w", ingredient.IngredientID, err)
+		return nil, fmt.Errorf("failed to save store stock for ingredient ID %d: %w", ingredient.IngredientID, err)
 	}
 
 	return &existingStock, nil
