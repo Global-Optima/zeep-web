@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="relative flex flex-col justify-between bg-white p-6 rounded-[32px] h-full transition-all duration-300"
+		class="relative flex flex-col justify-between bg-white p-8 rounded-[52px] h-full transition-all duration-300"
 		:class="{
       'cursor-pointer': !product.isOutOfStock,
       'cursor-not-allowed opacity-60 !border-primary' : product.isOutOfStock
@@ -12,7 +12,7 @@
 			<LazyImage
 				:src="product.imageUrl"
 				alt="Изображение товара"
-				class="rounded-xl w-full h-44 sm:h-60 object-contain"
+				class="rounded-[32px] w-full h-64 sm:h-80 object-contain"
 			/>
 
 			<h3
@@ -23,7 +23,7 @@
 			</h3>
 		</div>
 
-		<div class="flex flex-wrap justify-between items-start gap-4 mt-6">
+		<div class="flex flex-wrap justify-between items-start gap-4 mt-10">
 			<p
 				class="font-medium text-xl sm:text-3xl"
 				:class="product.isOutOfStock ? 'text-gray-400' : 'text-primary'"
