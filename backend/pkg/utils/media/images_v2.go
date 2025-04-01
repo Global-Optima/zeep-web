@@ -93,7 +93,11 @@ func readFile(fileHeader *multipart.FileHeader) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %v", err)
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			fmt.Printf("failed to close file: %v\n", cerr)
+		}
+	}()
 
 	rawBytes, err := io.ReadAll(file)
 	if err != nil {
