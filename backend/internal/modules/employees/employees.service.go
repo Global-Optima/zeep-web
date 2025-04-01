@@ -67,7 +67,7 @@ func (s *employeeService) GetEmployeeByID(id uint) (*types.EmployeeDetailsDTO, e
 		return nil, errors.New("invalid store employee ID")
 	}
 
-	employee, err := s.repo.GetEmployeeByID(id)
+	employee, err := s.repo.GetEmployeeWithDetailsByID(id)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to retrieve employee with ID = %d: %w", id, err)
 		s.logger.Error(wrappedErr)
@@ -106,7 +106,14 @@ func (s *employeeService) UpdateEmployeeInfo(employeeID uint, dto *types.UpdateE
 		return fmt.Errorf("%w: invalid employee ID: %d", types.ErrValidation, employeeID)
 	}
 
-	updateModels, err := types.PrepareUpdateFields(dto)
+	employee, err := s.repo.GetEmployeeByID(employeeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve employee with ID = %d: %w", employeeID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	updateModels, err := types.PrepareUpdateFields(employee, dto)
 	if err != nil {
 		wrappedErr := fmt.Errorf("%w: %v", types.ErrValidation, err)
 		s.logger.Error(wrappedErr)
@@ -164,7 +171,7 @@ func (s *employeeService) UpdatePassword(employeeID uint, input *types.UpdatePas
 		return errors.New("invalid employee ID")
 	}
 
-	employee, err := s.repo.GetEmployeeByID(employeeID)
+	employee, err := s.repo.GetEmployeeWithDetailsByID(employeeID)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve employee: %v", err)
 	}

@@ -63,8 +63,11 @@ func ValidateEmployee(input *CreateEmployeeDTO) (*data.Employee, error) {
 	return employee, nil
 }
 
-func PrepareUpdateFields(input *UpdateEmployeeDTO) (*UpdateEmployeeModels, error) {
-	employee := &data.Employee{}
+func PrepareUpdateFields(employee *data.Employee, input *UpdateEmployeeDTO) (*UpdateEmployeeModels, error) {
+	if employee == nil {
+		return nil, fmt.Errorf("%w: employee cannot be nil", ErrValidation)
+	}
+
 	if input.FirstName != nil {
 		employee.FirstName = *input.FirstName
 	}

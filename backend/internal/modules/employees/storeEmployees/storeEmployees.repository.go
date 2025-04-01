@@ -106,14 +106,14 @@ func (r *storeEmployeeRepository) UpdateStoreEmployee(id uint, filter *contexts.
 		if updateModels.StoreEmployee != nil {
 			err := tx.Model(&data.StoreEmployee{}).
 				Where("id = ?", id).
-				Updates(updateModels.StoreEmployee).Error
+				Save(updateModels.StoreEmployee).Error
 			if err != nil {
 				return err
 			}
 		}
 
 		if updateModels.UpdateEmployeeModels != nil {
-			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingStoreEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			err := r.employeeRepo.SaveEmployeeWithAssociations(tx, existingStoreEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err
 			}

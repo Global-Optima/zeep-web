@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -395,7 +393,6 @@ func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, i
 }
 
 func (r *productRepository) SaveProduct(product *data.Product) error {
-	logrus.Info(*product)
 	err := r.db.Save(product).Error
 	if err != nil {
 		return err
