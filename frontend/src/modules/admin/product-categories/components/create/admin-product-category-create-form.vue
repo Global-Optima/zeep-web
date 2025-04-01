@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import * as z from 'zod'
+
+import { createCategorySchema } from '@/modules/admin/product-categories/utils/category-validation'
+import { machineCategoryOptions } from '@/modules/admin/product-categories/utils/category-options'
+
 
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/core/components/ui/select'
 import type { CreateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
@@ -17,15 +20,6 @@ const emits = defineEmits<{
   onCancel: []
 }>()
 
-
-
-// Validation Schema
-const createCategorySchema = toTypedSchema(
-  z.object({
-    name: z.string().min(1, 'Введите название категории'),
-    description: z.string().optional(),
-  })
-)
 
 // Form Setup
 const { handleSubmit, resetForm } = useForm<CreateProductCategoryDTO>({
@@ -117,6 +111,33 @@ const onCancel = () => {
 									v-bind="componentField"
 									placeholder="Введите описание категории"
 								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					</FormField>
+
+					<!-- Machine Category -->
+					<FormField
+						name="machineCategory"
+						v-slot="{ componentField }"
+					>
+						<FormItem>
+							<FormLabel>Категория Машины</FormLabel>
+							<FormControl>
+								<Select v-bind="componentField">
+									<SelectTrigger id="machine_category">
+										<SelectValue placeholder="Выберите категорию машины" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem
+											v-for="option in machineCategoryOptions"
+											:key="option.value"
+											:value="option.value"
+										>
+											{{ option.label }}
+										</SelectItem>
+									</SelectContent>
+								</Select>
 							</FormControl>
 							<FormMessage />
 						</FormItem>

@@ -1,6 +1,5 @@
 import { useToast } from '@/core/components/ui/toast'
 import {
-	generateSubOrderQR,
 	getSavedBaristaQRSettings,
 	useQRPrinter,
 } from '@/core/hooks/use-qr-print.hook'
@@ -66,7 +65,7 @@ export function useOrderEvents(
 	// Setup: Toast + QR Printer
 	// ----------------------------------
 	const { toast } = useToast()
-	const { printQR } = useQRPrinter()
+	const { printOrderQR } = useQRPrinter()
 
 	// ----------------------------------
 	// Reactive Filter
@@ -187,23 +186,30 @@ export function useOrderEvents(
 	}
 
 	async function handleOrderCreated(newOrder: OrderDTO) {
-		const [reactiveOrder, isNew] = upsertOrder(newOrder)
-		if (!isNew || !printOnCreate) return
+    const [reactiveOrder, isNew] = upsertOrder(newOrder)
+    if (!isNew || !printOnCreate) return
 
-		const { width, height } = getSavedBaristaQRSettings()
+    const { width, height } = getSavedBaristaQRSettings()
 
-		try {
-			const suborderQRs = reactiveOrder.subOrders.map(s => generateSubOrderQR(s))
-			printQR(suborderQRs, { labelHeightMm: height, labelWidthMm: width, desktopOnly: true })
-		} catch (err) {
-			console.error('Ошибка при печати QR-кода:', err)
-			toast({
-				title: 'Ошибка печати',
-				description: 'Не удалось напечатать один или несколько QR-кодов.',
-				variant: 'destructive',
-			})
-		}
-	}
+    try {
+      await printOrderQR(
+        reactiveOrder.subOrders,
+        reactiveOrder.customerName,
+        {
+          labelHeightMm: height,
+          labelWidthMm: width,
+          desktopOnly: true
+        }
+      )
+    } catch (err) {
+      console.error('Ошибка при печати QR-кода:', err)
+      toast({
+        title: 'Ошибка печати',
+        description: 'Не удалось напечатать один или несколько QR-кодов.',
+        variant: 'destructive',
+      })
+    }
+  }
 
 	function handleOrderUpdated(updatedOrder: OrderDTO) {
 		upsertOrder(updatedOrder)

@@ -1,4 +1,5 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { MachineCategory } from '@/modules/admin/product-categories/utils/category-options'
 
 export interface CreateStockMaterialCategoryDTO {
 	name: string
@@ -16,6 +17,7 @@ export interface StockMaterialCategoryDTO {
 	description: string
 	createdAt?: string
 	updatedAt?: string
+  machineCategory: MachineCategory
 }
 
 export interface StockMaterialCategoryFilterDTO extends PaginationParams {

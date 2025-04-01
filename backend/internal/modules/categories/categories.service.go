@@ -51,8 +51,9 @@ func (s *categoryService) GetCategoryByID(id uint) (*types.ProductCategoryDTO, e
 
 func (s *categoryService) CreateCategory(dto *types.CreateProductCategoryDTO) (uint, error) {
 	category := data.ProductCategory{
-		Name:        dto.Name,
-		Description: *dto.Description,
+		Name:            dto.Name,
+		Description:     *dto.Description,
+		MachineCategory: dto.MachineCategory,
 	}
 
 	id, err := s.repo.CreateCategory(&category)
