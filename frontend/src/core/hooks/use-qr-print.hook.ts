@@ -54,111 +54,250 @@ export const getSavedBaristaQRSettings = (): { width: number; height: number } =
 }
 
 export function useGenerateQR() {
-	/**
-	 * Generates a QR code as high-res PNG and embeds it into a PDF (correctly scaled for printing).
-	 * @param productName - The name of the product to display above/below the QR code.
-	 * @param qrValue - The string value to encode in the QR code.
-	 * @param labelWidthMm - Width of the label in millimeters.
-	 * @param labelHeightMm - Height of the label in millimeters.
-	 * @param dpi - Printer DPI (default: 300 for high-res prints).
-	 */
-	async function generateQR(qrValue: string, options: QRPrintOptions = {}): Promise<Blob> {
-		const { dpi = 203, labelWidthMm = 100, labelHeightMm = 100 } = options
-		// -------------------------------
-		// 1) Define Label Size in mm
-		// -------------------------------
-		const pxPerMm = dpi / 25.4 // Conversion factor: DPI to pixels per millimeter
+  /**
+   * Generates a QR code with human-readable text and embeds it into a PDF (correctly scaled for printing).
+   * @param qrValue - The string value to encode in the QR code.
+   * @param subOrder - The SuborderDTO to extract display information from.
+   * @param customerName - The name of the customer who placed the order.
+   * @param machineCategory - The machine category of the suborder product
+   * @param options - Configuration for QR printing.
+   */
+  async function generateQR(
+    qrValue: string,
+    subOrder?: SuborderDTO,
+    customerName?: string,
+    options: QRPrintOptions = {}
+  ): Promise<Blob> {
+    const { dpi = 203, labelWidthMm = 100, labelHeightMm = 100 } = options
 
-		// Compute usable area inside the label (no hardcoded margins)
-		const usableWidthPx = Math.round(labelWidthMm * pxPerMm)
-		const usableHeightPx = Math.round(labelHeightMm * pxPerMm)
+    // -------------------------------
+    // 1) Define Label Size in mm
+    // -------------------------------
+    const pxPerMm = dpi / 25.4 // Conversion factor: DPI to pixels per millimeter
 
-		// Create a high-res canvas
-		const canvas = document.createElement('canvas')
-		canvas.width = usableWidthPx
-		canvas.height = usableHeightPx
+    // Compute usable area inside the label
+    const usableWidthPx = Math.round(labelWidthMm * pxPerMm)
+    const usableHeightPx = Math.round(labelHeightMm * pxPerMm)
 
-		// -------------------------------
-		// 2) Generate QR Code
-		// -------------------------------
-		const qr = QRCode(0, 'M') // M = Medium Error Correction
-		qr.addData(qrValue)
-		qr.make()
+    // Create a high-res canvas
+    const canvas = document.createElement('canvas')
+    canvas.width = usableWidthPx
+    canvas.height = usableHeightPx
 
-		// Get QR code cell size
-		const qrSizePx = Math.min(usableWidthPx, usableHeightPx) * 0.8 // Scale QR to 80% of label size
-		const qrMarginPx = (Math.min(usableWidthPx, usableHeightPx) - qrSizePx) / 2 // Centering
+    // -------------------------------
+    // 2) Clear canvas with white background
+    // -------------------------------
+    const ctx = canvas.getContext('2d')!
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-		// Draw QR on canvas
-		const ctx = canvas.getContext('2d')!
-		ctx.fillStyle = '#FFFFFF' // White background
-		ctx.fillRect(0, 0, canvas.width, canvas.height) // Clear canvas
-		ctx.fillStyle = '#000000' // Black for QR Code
+    // -------------------------------
+    // 3) Determine layout - explicit text area and QR area
+    // -------------------------------
+    // Allocate top 30% for text, bottom 70% for QR
+    const textAreaHeightPx = Math.round(usableHeightPx * 0.3)
+    const qrAreaHeightPx = usableHeightPx - textAreaHeightPx
 
-		const qrModules = qr.getModuleCount()
-		const cellSize = qrSizePx / qrModules
+    // Calculate QR code size - make it slightly smaller than the QR area
+    const qrSizePx = Math.min(usableWidthPx * 0.9, qrAreaHeightPx * 0.9)
 
-		for (let row = 0; row < qrModules; row++) {
-			for (let col = 0; col < qrModules; col++) {
-				if (qr.isDark(row, col)) {
-					ctx.fillRect(qrMarginPx + col * cellSize, qrMarginPx + row * cellSize, cellSize, cellSize)
-				}
-			}
-		}
+    // Center QR code horizontally and position it in the QR area
+    const qrMarginHorizontalPx = (usableWidthPx - qrSizePx) / 2
+    const qrMarginVerticalPx = textAreaHeightPx + (qrAreaHeightPx - qrSizePx) / 2
 
-		// -------------------------------
-		// 3) Create PDF (Dynamic Orientation)
-		// -------------------------------
-		const isLandscape = labelWidthMm > labelHeightMm
-		const doc = new jsPDF({
-			orientation: isLandscape ? 'landscape' : 'portrait',
-			unit: 'mm',
-			format: [labelWidthMm, labelHeightMm],
-		})
+    // -------------------------------
+    // 4) Draw text information in the text area
+    // -------------------------------
+    if (subOrder) {
+      ctx.fillStyle = '#000000'
 
-		// Convert the QR canvas to data URL
-		const dataURL = canvas.toDataURL('image/png', 100)
+      // Base font size on label width (responsive)
+      const baseFontSize = Math.max(50, Math.min(35, labelWidthMm / 3))
+      const lineSpacing = baseFontSize * 1.2
 
-		// -------------------------------
-		// 4) Insert Image into PDF (Centered)
-		// -------------------------------
-		const pdfWidthMm = labelWidthMm
-		const pdfHeightMm = labelHeightMm
+      // Start position for text (top of text area with margin)
+      let currentY = lineSpacing
 
-		// Center the QR code image
-		const xStartMm = (pdfWidthMm - labelWidthMm) / 2
-		const yStartMm = (pdfHeightMm - labelHeightMm) / 2
+      // 1. Draw customer name (larger font)
+      ctx.font = `bold ${baseFontSize + 4}px Arial, sans-serif`
+      ctx.textAlign = 'center'
 
-		doc.addImage(dataURL, 'PNG', xStartMm, yStartMm, labelWidthMm, labelHeightMm)
+      if (customerName) {
+        ctx.fillText(customerName, usableWidthPx / 2, currentY)
+        currentY += lineSpacing
+      }
 
-		// Return as a Blob for printing
-		return doc.output('blob')
-	}
+      // 2. Draw product name with category emoji and size
+      if (subOrder.productSize?.productName && subOrder.productSize?.sizeName) {
+        ctx.font = `bold ${baseFontSize}px Arial, sans-serif`;
 
-	return { generateQR }
+        // Combine product name, and size
+        const productText = `${subOrder.productSize.productName} - ${subOrder.productSize.sizeName}`;
+
+        // Centered text
+        ctx.fillText(productText, usableWidthPx / 2, currentY);
+
+        currentY += lineSpacing; // Move to the next line
+      }
+
+      // 4. Draw additives if any
+      if (subOrder.additives?.length) {
+        ctx.font = `${baseFontSize - 2}px Arial, sans-serif`
+
+        // Draw "With:" text
+        ctx.fillText("Добавки:", usableWidthPx / 2, currentY);
+        currentY += lineSpacing * 0.8;
+
+        // Join additive names with commas for compact display
+        const additiveNames = subOrder.additives
+          .map(a => a.additive.name)
+          .join(", ");
+
+        // Handle text wrapping for additives
+        const maxWidth = usableWidthPx * 0.9;
+        wrapText(ctx, additiveNames, usableWidthPx / 2, currentY, maxWidth, lineSpacing * 0.8);
+      }
+
+      // Draw separator line between text and QR
+      ctx.strokeStyle = '#CCCCCC';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(10, textAreaHeightPx - 5);
+      ctx.lineTo(usableWidthPx - 10, textAreaHeightPx - 5);
+      ctx.stroke();
+    }
+
+    // -------------------------------
+    // 5) Generate and draw QR Code in the QR area
+    // -------------------------------
+    const qr = QRCode(0, 'M') // M = Medium Error Correction
+    qr.addData(qrValue)
+    qr.make()
+
+    ctx.fillStyle = '#000000' // Black for QR Code
+    const qrModules = qr.getModuleCount()
+    const cellSize = qrSizePx / qrModules
+
+    for (let row = 0; row < qrModules; row++) {
+      for (let col = 0; col < qrModules; col++) {
+        if (qr.isDark(row, col)) {
+          ctx.fillRect(
+            qrMarginHorizontalPx + col * cellSize,
+            qrMarginVerticalPx + row * cellSize,
+            cellSize,
+            cellSize
+          )
+        }
+      }
+    }
+
+    // -------------------------------
+    // 6) Create PDF with the combined image
+    // -------------------------------
+    const isLandscape = labelWidthMm > labelHeightMm
+    const doc = new jsPDF({
+      orientation: isLandscape ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: [labelWidthMm, labelHeightMm],
+    })
+
+    // Convert the canvas to data URL
+    const dataURL = canvas.toDataURL('image/png', 100)
+
+    // Insert the image into the PDF (full size)
+    const xStartMm = 0
+    const yStartMm = 0
+    doc.addImage(dataURL, 'PNG', xStartMm, yStartMm, labelWidthMm, labelHeightMm)
+
+    // Return as a Blob for printing
+    return doc.output('blob')
+  }
+
+  // Helper function to wrap text
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    let testLine = '';
+    let lineCount = 0;
+
+    for (let n = 0; n < words.length; n++) {
+      testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+
+      if (testWidth > maxWidth && n > 0) {
+        ctx.fillText(line, x, y);
+        line = words[n] + ' ';
+        y += lineHeight;
+        lineCount++;
+
+        // Limit to max 2 lines for additives
+        if (lineCount >= 2) {
+          // Add ellipsis if we're cutting off text
+          if (n < words.length - 1) {
+            // Remove last word and add ellipsis
+            line = line.substring(0, line.lastIndexOf(' ')) + '...';
+          }
+          ctx.fillText(line, x, y);
+          break;
+        }
+      } else {
+        line = testLine;
+      }
+    }
+
+    // Draw the last line if we haven't hit the limit
+    if (lineCount < 2) {
+      ctx.fillText(line, x, y);
+    }
+  }
+
+
+  return { generateQR }
 }
 
 export function useQRPrinter() {
-	const { print } = usePrinter()
-	const { generateQR } = useGenerateQR()
+  const { print } = usePrinter()
+  const { generateQR } = useGenerateQR()
 
-	/**
-	 * @param qrValue - The encoded QR value.
-	 * @param labelWidthMm - Label width in mm.
-	 * @param labelHeightMm - Label height in mm.
-	 * @param options - Optional print configurations.
-	 */
-	const printQR = async (qrValue: string | string[], options?: QRPrintOptions) => {
-		try {
-			const qrValues = Array.isArray(qrValue) ? qrValue : [qrValue]
-			const qrPdfBlobs = await Promise.all(qrValues.map(v => generateQR(v, options)))
+  /**
+   * Print QR codes for suborders with human-readable information
+   * @param subOrders - Array of suborders to print QR codes for
+   * @param customerName - Customer name to display on each QR
+   * @param machineCategory - The machine category of the suborder product
+   * @param options - Optional print configurations
+   */
+  const printQR = async (
+    subOrders: SuborderDTO[],
+    customerName?: string,
+    options?: QRPrintOptions
+  ) => {
+    try {
+      const qrPdfBlobs = await Promise.all(
+        subOrders.map(subOrder => {
+          const qrValue = generateSubOrderQR(subOrder)
+          return generateQR(qrValue, subOrder, customerName, options)
+        })
+      )
 
-			await print(qrPdfBlobs, options)
-		} catch (error) {
-			console.error('Error generating or printing QR code:', error)
-			throw error
-		}
-	}
+      await print(qrPdfBlobs, options)
+    } catch (error) {
+      console.error('Error generating or printing QR code:', error)
+      throw error
+    }
+  }
 
-	return { printQR }
+  // For backward compatibility with original API
+  const printQRValues = async (qrValues: string | string[], options?: QRPrintOptions) => {
+    try {
+      const values = Array.isArray(qrValues) ? qrValues : [qrValues]
+      const qrPdfBlobs = await Promise.all(values.map(v => generateQR(v, undefined, undefined, options)))
+      await print(qrPdfBlobs, options)
+    } catch (error) {
+      console.error('Error generating or printing QR code:', error)
+      throw error
+    }
+  }
+
+  return { printQR, printQRValues }
 }
