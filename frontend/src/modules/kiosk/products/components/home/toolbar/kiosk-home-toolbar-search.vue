@@ -7,7 +7,7 @@
 		<div
 			v-if="!isInputFocused && !searchTerm"
 			@click="focusInput"
-			class="flex justify-center items-center rounded-full w-[72px] h-[72px] hover:scale-105 transition-transform cursor-pointer select-none"
+			class="flex justify-center items-center rounded-full size-[84px] hover:scale-105 transition-transform cursor-pointer select-none"
 			data-testid="collapsed-search-trigger"
 			aria-label="Раскрыть поиск"
 		>
@@ -23,7 +23,7 @@
 			@input="updateSearchTerm"
 			@focus="handleFocus"
 			@blur="handleBlur"
-			class="bg-transparent px-6 rounded-full focus:outline-none w-56 sm:w-80 h-[72px] font-medium text-base sm:text-2xl transition-[width] duration-300"
+			class="bg-transparent px-6 rounded-full focus:outline-none w-56 sm:w-80 h-[84px] font-medium text-base sm:text-2xl transition-[width] duration-300"
 			placeholder="Поиск"
 			aria-label="Поиск продуктов"
 			data-testid="search-input"

@@ -1,5 +1,8 @@
 <template>
-	<div class="relative flex flex-col flex-1 pt-safe">
+	<div
+		class="z-0 pt-32 h-screen overflow-y-auto no-scrollbar"
+		ref="scrollContainer"
+	>
 		<!-- Toolbar for mobile view -->
 		<KioskHomeToolbarMobile
 			ref="toolbar"
@@ -12,10 +15,7 @@
 		/>
 
 		<!-- Scrollable Products List -->
-		<section
-			ref="scrollContainer"
-			class="relative flex-1 px-8 pb-4 overflow-y-auto no-scrollbar"
-		>
+		<section class="px-8 pb-4">
 			<!-- Search Mode -->
 			<div v-if="searchTerm">
 				<div v-if="isSearchProductsPending">
@@ -68,7 +68,6 @@
 						</div>
 					</div>
 					<!-- Show products if loaded -->
-					<!-- Show products if loaded -->
 					<div v-else>
 						<div class="gap-4 grid grid-cols-2 sm:grid-cols-3">
 							<KioskHomeProductCard
@@ -92,29 +91,44 @@ import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk
 import KioskHomeToolbarMobile from '@/modules/kiosk/products/components/home/toolbar/kiosk-home-toolbar-mobile.vue'
 import { useQueries, useQuery } from '@tanstack/vue-query'
 import { useDebounceFn, useScroll } from '@vueuse/core'
-import { computed, onBeforeUnmount, onMounted, ref, watch, type ComponentPublicInstance } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
+  watchEffect,
+  type ComponentPublicInstance
+} from 'vue'
 
-/* --- Reactive References --- */
-const selectedCategoryId = ref<number | null>(null)
+/* --- Reactive State --- */
+// Use shallowRef for refs that don't need deep reactivity
+const scrollContainer = shallowRef<HTMLElement | null>(null)
+const toolbar = shallowRef<InstanceType<typeof KioskHomeToolbarMobile> | null>(null)
+
+// Use ref for primitive values
 const searchTerm = ref('')
-const scrollContainer = ref<HTMLElement | null>(null)
+const selectedCategoryId = ref<number | null>(null)
 const categoryRefs = ref<Record<number, HTMLElement>>({})
-const toolbar = ref<InstanceType<typeof KioskHomeToolbarMobile> | null>(null)
+const isManualScroll = ref(false)
+const scrollEndTimeout = ref<number | null>(null)
 
 /* --- Fetch Categories --- */
 const { data: categories, isPending: categoriesLoading } = useQuery({
   queryKey: ['store-product-categories'],
   queryFn: () => storeProductsService.getStoreProductCategories(),
-  refetchInterval: 20000,
+  refetchInterval: 20_000,
   initialData: []
 })
 
-// Set initial active category from the first category
-watch(categories, (newCategories) => {
-  if (newCategories.length > 0 && selectedCategoryId.value === null) {
-    selectedCategoryId.value = newCategories[0].id
+// Initialize selected category when categories are loaded
+watchEffect(() => {
+  if (categories.value.length > 0 && selectedCategoryId.value === null) {
+    selectedCategoryId.value = categories.value[0].id
   }
-}, { immediate: true })
+})
 
 /* --- Fetch Products for Each Category --- */
 const categoryProductsQueries = useQueries({
@@ -132,6 +146,7 @@ const categoryProductsQueries = useQueries({
   )
 })
 
+// Use computed for derived state
 const categoryProducts = computed(() => {
   return categories.value.reduce((acc, category, index) => {
     const products = categoryProductsQueries.value[index].data?.data || []
@@ -156,89 +171,138 @@ const { data: searchProducts, isPending: isSearchProductsPending } = useQuery({
 })
 
 const sortedSearchProducts = computed(() => {
-  return (searchProducts.value?.data || []).slice().sort((a, b) => {
+  if (!searchProducts.value?.data) {
+    return []
+  }
+
+  return searchProducts.value.data.slice().sort((a, b) => {
     if (a.isOutOfStock === b.isOutOfStock) return 0
     return a.isOutOfStock ? 1 : -1
   })
 })
 
-/* --- Vertical Auto-Update & Snap-to-Section --- */
-// We use useScroll to track vertical scroll in the container.
-const { y: scrollY } = useScroll(scrollContainer)
+const { y: scrollY } = useScroll(
+  () => scrollContainer.value,
+)
 
-// This function calculates the nearest section (using offsetTop adjusted by toolbar height)
-// and updates the active category.
-function updateActiveCategory() {
-  if (searchTerm.value || !scrollContainer.value) return
-  const currentScroll = scrollContainer.value.scrollTop
+// Function to update active category based on scroll position
+const updateActiveCategory = () => {
+  // Skip if in search mode or manual scrolling
+  if (searchTerm.value || isManualScroll.value) return
   const toolbarHeight = toolbar.value?.$el?.offsetHeight || 0
   let closestId: number | null = null
   let minDistance = Infinity
 
+  // Find the category closest to the top of the viewport
   Object.entries(categoryRefs.value).forEach(([id, el]) => {
-    // Calculate distance from section's top (minus toolbar height) to current scroll.
-    const distance = Math.abs((el.offsetTop - toolbarHeight) - currentScroll)
+    const rect = el.getBoundingClientRect()
+    const distance = Math.abs(rect.top - toolbarHeight)
+
     if (distance < minDistance) {
       minDistance = distance
       closestId = Number(id)
     }
   })
 
+  // Update selected category if it changed
   if (closestId !== null && closestId !== selectedCategoryId.value) {
     selectedCategoryId.value = closestId
   }
 }
 
-// Snap to the nearest section when scrolling stops.
-const snapToNearestSection = useDebounceFn(() => {
-  if (!scrollContainer.value) return
-  const toolbarHeight = toolbar.value?.$el?.offsetHeight || 0
-  const currentScroll = scrollContainer.value.scrollTop
-  let closestId: number | null = null
-  let minDistance = Infinity
-
-  Object.entries(categoryRefs.value).forEach(([id, el]) => {
-    const distance = Math.abs((el.offsetTop - toolbarHeight) - currentScroll)
-    if (distance < minDistance) {
-      minDistance = distance
-      closestId = Number(id)
-    }
-  })
-
-  if (closestId !== null && scrollContainer.value && categoryRefs.value[closestId]) {
-    scrollContainer.value.scrollTo({
-      top: categoryRefs.value[closestId].offsetTop - toolbarHeight,
-      behavior: 'smooth'
-    })
-    selectedCategoryId.value = closestId
-  }
-}, 300)
-
-// Watch the vertical scroll to update active category and eventually snap to section.
+// Watch scroll position to update active category
 watch(scrollY, () => {
-  updateActiveCategory()
-  snapToNearestSection()
+  if (!isManualScroll.value) {
+    updateActiveCategory()
+  }
 })
 
-/* --- Touch Event Handling for Horizontal Swipe Gestures --- */
-// (These allow swiping left/right to jump between sections.)
-let touchStartX = 0, touchStartY = 0
+/* --- Category Reference Management --- */
+const setCategoryRef = (id: number, el: Element | ComponentPublicInstance | null) => {
+  let element: HTMLElement | null = null
 
-function handleTouchStart(e: TouchEvent) {
-  if (e.touches.length > 0) {
-    const touch = e.touches[0]
-    touchStartX = touch.clientX
-    touchStartY = touch.clientY
+  if (el) {
+    if (el instanceof HTMLElement) {
+      element = el
+    } else if ('$el' in el && el.$el instanceof HTMLElement) {
+      element = el.$el
+    }
+  }
+
+  if (element) {
+    categoryRefs.value[id] = element
+  } else {
+    delete categoryRefs.value[id]
   }
 }
 
-function handleTouchEnd(e: TouchEvent) {
+/* --- Toolbar Interaction: Scroll to a Specific Category Section --- */
+const onUpdateCategory = (categoryId: number) => {
+  // Clear search mode
+  searchTerm.value = ''
+
+  // Set flag to ignore scroll events during programmatic scrolling
+  isManualScroll.value = true
+
+  // Update category ID immediately
+  selectedCategoryId.value = categoryId
+
+  // Clear any existing timeout
+  if (scrollEndTimeout.value !== null) {
+    window.clearTimeout(scrollEndTimeout.value)
+  }
+
+  // Scroll to the selected category
+  const el = categoryRefs.value[categoryId]
+  if (el && scrollContainer.value) {
+    const toolbarHeight = toolbar.value?.$el?.offsetHeight || 0
+
+    scrollContainer.value.scrollTo({
+      top: el.offsetTop - toolbarHeight - 20, // Add some padding
+      behavior: 'smooth'
+    })
+
+    // Reset the manual scroll flag after animation completes
+    scrollEndTimeout.value = window.setTimeout(() => {
+      isManualScroll.value = false
+      scrollEndTimeout.value = null
+    }, 1000) // Typical smooth scroll duration
+  } else {
+    // If no scroll happened, reset the flag immediately
+    isManualScroll.value = false
+  }
+}
+
+/* --- Search Term Interaction --- */
+const debouncedEmitSearchTerm = useDebounceFn((newTerm: string) => {
+  searchTerm.value = newTerm.trim() !== '' ? newTerm : ''
+}, 300) // Reduced debounce time for more responsive search
+
+const onUpdateSearchTerm = (newSearchTerm: string) => {
+  debouncedEmitSearchTerm(newSearchTerm)
+}
+
+/* --- Touch Event Handling for Horizontal Swipe Gestures --- */
+// Use shallowRefs for touch data
+const touchStartX = shallowRef(0)
+const touchStartY = shallowRef(0)
+
+const handleTouchStart = (e: TouchEvent) => {
+  if (e.touches.length > 0) {
+    const touch = e.touches[0]
+    touchStartX.value = touch.clientX
+    touchStartY.value = touch.clientY
+  }
+}
+
+const handleTouchEnd = (e: TouchEvent) => {
   if (e.changedTouches.length > 0) {
     const touch = e.changedTouches[0]
-    const deltaX = touch.clientX - touchStartX
-    const deltaY = touch.clientY - touchStartY
+    const deltaX = touch.clientX - touchStartX.value
+    const deltaY = touch.clientY - touchStartY.value
     const threshold = 50 // pixels
-    // If horizontal swipe is dominant:
+
+    // If horizontal swipe is dominant
     if (Math.abs(deltaX) > threshold && Math.abs(deltaX) > Math.abs(deltaY)) {
       if (deltaX < 0) {
         goToNextSection()
@@ -249,7 +313,7 @@ function handleTouchEnd(e: TouchEvent) {
   }
 }
 
-function goToNextSection() {
+const goToNextSection = () => {
   const currentIndex = categories.value.findIndex(cat => cat.id === selectedCategoryId.value)
   if (currentIndex >= 0 && currentIndex < categories.value.length - 1) {
     const nextCat = categories.value[currentIndex + 1]
@@ -257,7 +321,7 @@ function goToNextSection() {
   }
 }
 
-function goToPreviousSection() {
+const goToPreviousSection = () => {
   const currentIndex = categories.value.findIndex(cat => cat.id === selectedCategoryId.value)
   if (currentIndex > 0) {
     const prevCat = categories.value[currentIndex - 1]
@@ -265,67 +329,32 @@ function goToPreviousSection() {
   }
 }
 
-/* --- Register Category Header References --- */
-function setCategoryRef(id: number, el: Element | ComponentPublicInstance | null) {
-  let element: HTMLElement | null = null
-  if (el) {
-    if (el instanceof HTMLElement) {
-      element = el
-    } else if ('$el' in el && el.$el instanceof HTMLElement) {
-      element = el.$el
-    }
-  }
-  if (element) {
-    categoryRefs.value[id] = element
-  } else {
-    delete categoryRefs.value[id]
-  }
-}
-
-/* --- Toolbar Interaction: Scroll to a Specific Category Section --- */
-function onUpdateCategory(categoryId: number) {
-  // Clear search mode and update active category.
-  searchTerm.value = ''
-  selectedCategoryId.value = categoryId
-  const el = categoryRefs.value[categoryId]
-  if (el) {
-    const headerOffset = toolbar.value?.$el?.offsetHeight || 0
-    scrollTo({
-      top: el.offsetTop - headerOffset,
-      behavior: 'smooth'
-    })
-  }
-}
-
-/* --- Search Term Interaction --- */
-const debouncedEmitSearchTerm = useDebounceFn((newTerm: string) => {
-  searchTerm.value = newTerm.trim() !== '' ? newTerm : ''
-}, 500)
-
-function onUpdateSearchTerm(newSearchTerm: string) {
-  debouncedEmitSearchTerm(newSearchTerm)
-}
-
-/* --- Setup Touch Listeners on the Scroll Container --- */
+/* --- Lifecycle Hooks --- */
 onMounted(() => {
+  // Set up event listeners
   if (scrollContainer.value) {
     scrollContainer.value.addEventListener('touchstart', handleTouchStart)
     scrollContainer.value.addEventListener('touchend', handleTouchEnd)
   }
+
+  // Initial update after DOM is ready
+  nextTick(() => {
+    updateActiveCategory()
+  })
 })
+
 onBeforeUnmount(() => {
+  // Clean up event listeners
   if (scrollContainer.value) {
     scrollContainer.value.removeEventListener('touchstart', handleTouchStart)
     scrollContainer.value.removeEventListener('touchend', handleTouchEnd)
   }
+
+  // Clear any pending timeouts
+  if (scrollEndTimeout.value !== null) {
+    window.clearTimeout(scrollEndTimeout.value)
+  }
 })
 </script>
 
-<style scoped lang="scss">
-.no-scrollbar {
-  scrollbar-width: none; /* Firefox */
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-</style>
+<style scoped lang="scss"></style>
