@@ -9,7 +9,7 @@ import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/
 import { toTypedSchema } from '@vee-validate/zod'
 import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import { defineAsyncComponent, ref, useTemplateRef, defineExpose } from 'vue'
+import { defineAsyncComponent, ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
 
 // Lazy-load the dialog component
@@ -290,7 +290,7 @@ const triggerVideoInput = () => videoInputRef.value?.click();
 											/>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 hover:bg-red-700 p-1 rounded-full text-white transition-all duration-200"
 												@click="onDeleteImage"
 											>
 												<X class="size-4" />
@@ -350,7 +350,7 @@ const triggerVideoInput = () => videoInputRef.value?.click();
 											></video>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 hover:bg-red-700 p-1 rounded-full text-white transition-all duration-200"
 												@click="onDeleteVideo"
 											>
 												<X class="size-4" />
