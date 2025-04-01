@@ -138,13 +138,13 @@ const disabledCompleteButton = computed(() =>
 /**
  * A hook to print a barcode for this suborder.
  */
-const { printQR } = useQRPrinter();
+ const { printOrderQR } = useQRPrinter();
 
 async function printQrCode() {
   if (selectedSuborder.value) {
     const { width, height } = getSavedBaristaQRSettings();
-    await printQR(
-      [selectedSuborder.value],
+    await printOrderQR(
+      selectedSuborder.value,
       props.order?.customerName,
       {
         labelHeightMm: height,

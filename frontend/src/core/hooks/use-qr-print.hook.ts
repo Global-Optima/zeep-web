@@ -5,78 +5,77 @@ import QRCode from 'qrcode-generator'
 import { usePrinter, type PrintOptions } from './use-print.hook'
 import { MachineCategory } from '@/modules/admin/product-categories/utils/category-options'
 
-
 const categoryEmojis: Record<MachineCategory, string> = {
-  [MachineCategory.TEA]: '🍵',
-  [MachineCategory.COFFEE]: '☕',
-  [MachineCategory.ICE_CREAM]: '🍦'
+  [MachineCategory.TEA]: 'Чай',
+  [MachineCategory.COFFEE]: 'Кофе',
+  [MachineCategory.ICE_CREAM]: 'Мороженое'
 };
 
 export interface QRPrintOptions extends PrintOptions {
-	labelWidthMm?: number
-	labelHeightMm?: number
-	dpi?: number
+  labelWidthMm?: number
+  labelHeightMm?: number
+  dpi?: number
+  textContent?: {
+    customerNameField?: string
+    productSizeField?: string
+    additivesField?: string
+  }
 }
 
 export const generateSubOrderQR = (sb: SuborderDTO) => {
-	const parts = [
-		sb.id ?? null,
-		sb.productSize?.machineId ?? null,
-		sb.additives?.length ? sb.additives.map(a => a.additive.machineId).join(',') : null,
-	]
+  const parts = [
+    sb.id ?? null,
+    sb.productSize?.machineId ?? null,
+    sb.additives?.length ? sb.additives.map(a => a.additive.machineId).join(',') : null,
+  ]
 
-	return parts.filter(Boolean).join('|')
+  return parts.filter(Boolean).join('|')
 }
 
 export const parseSubOrderQR = (qrString: string) => {
-	const [subOrderId, productSizeMachineId, additivesString] = qrString.split('|')
+  const [subOrderId, productSizeMachineId, additivesString] = qrString.split('|')
 
-	return {
-		subOrderId: subOrderId || null,
-		productSizeMachineId: productSizeMachineId || null,
-		additiveMachineIds: additivesString ? additivesString.split(',') : [],
-	}
+  return {
+    subOrderId: subOrderId || null,
+    productSizeMachineId: productSizeMachineId || null,
+    additiveMachineIds: additivesString ? additivesString.split(',') : [],
+  }
 }
 
 export const getSavedBaristaQRSettings = (): { width: number; height: number } => {
-	const stored = localStorage.getItem(SAVED_BARISTA_QR_SETTINGS_KEY)
+  const stored = localStorage.getItem(SAVED_BARISTA_QR_SETTINGS_KEY)
 
-	if (stored) {
-		try {
-			const parsed = JSON.parse(stored)
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored)
 
-			if (
-				parsed &&
-				typeof parsed === 'object' &&
-				typeof parsed.width === 'number' &&
-				typeof parsed.height === 'number'
-			) {
-				return { width: parsed.width, height: parsed.height }
-			}
-		} catch (error) {
-			console.error('Error parsing QR settings from localStorage:', error)
-		}
-	}
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        typeof parsed.width === 'number' &&
+        typeof parsed.height === 'number'
+      ) {
+        return { width: parsed.width, height: parsed.height }
+      }
+    } catch (error) {
+      console.error('Error parsing QR settings from localStorage:', error)
+    }
+  }
 
-	return { width: 100, height: 100 } // Default to a square QR label
+  return { width: 100, height: 100 } // Default to a square QR label
 }
 
 export function useGenerateQR() {
   /**
-   * Generates a QR code with human-readable text and embeds it into a PDF (correctly scaled for printing).
+   * Generates a QR code with optional text content and embeds it into a PDF.
    * @param qrValue - The string value to encode in the QR code.
-   * @param subOrder - The SuborderDTO to extract display information from.
-   * @param customerName - The name of the customer who placed the order.
-   * @param machineCategory - The machine category of the suborder product
-   * @param options - Configuration for QR printing.
+   * @param options - Configuration for QR printing including optional text content.
    */
   async function generateQR(
     qrValue: string,
-    subOrder?: SuborderDTO,
-    customerName?: string,
     options: QRPrintOptions = {}
   ): Promise<Blob> {
-    const { dpi = 203, labelWidthMm = 100, labelHeightMm = 100 } = options
+    const { dpi = 203, labelWidthMm = 100, labelHeightMm = 100, textContent } = options
 
     // -------------------------------
     // 1) Define Label Size in mm
@@ -100,10 +99,10 @@ export function useGenerateQR() {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     // -------------------------------
-    // 3) Determine layout - explicit text area and QR area
+    // 3) Determine layout - text area and QR area
     // -------------------------------
-    // Allocate top 30% for text, bottom 70% for QR
-    const textAreaHeightPx = Math.round(usableHeightPx * 0.3)
+    const hasTextContent = textContent && (textContent.customerNameField || textContent.productSizeField || textContent.additivesField)
+    const textAreaHeightPx = hasTextContent ? Math.round(usableHeightPx * 0.3) : 0
     const qrAreaHeightPx = usableHeightPx - textAreaHeightPx
 
     // Calculate QR code size - make it slightly smaller than the QR area
@@ -114,71 +113,102 @@ export function useGenerateQR() {
     const qrMarginVerticalPx = textAreaHeightPx + (qrAreaHeightPx - qrSizePx) / 2
 
     // -------------------------------
-    // 4) Draw text information in the text area
+    // 4) Draw text information if provided
     // -------------------------------
-    if (subOrder) {
+    if (hasTextContent) {
       ctx.fillStyle = '#000000'
 
-      // Base font size on label width (responsive)
-      const baseFontSize = Math.max(50, Math.min(35, labelWidthMm / 3))
-      const lineSpacing = baseFontSize * 1.2
+      // Calculate maximum available width (with some padding)
+      const maxTextWidth = usableWidthPx * 0.9
+      const sideMargin = (usableWidthPx - maxTextWidth) / 2
 
-      // Start position for text (top of text area with margin)
-      let currentY = lineSpacing
-
-      // 1. Draw customer name (larger font)
-      ctx.font = `bold ${baseFontSize + 4}px Arial, sans-serif`
-      ctx.textAlign = 'center'
-
-      if (customerName) {
-        ctx.fillText(customerName, usableWidthPx / 2, currentY)
-        currentY += lineSpacing
+      // Base font sizes
+      const baseFontSizes = {
+        customerName: Math.max(20, Math.min(30, labelWidthMm / 3)),
+        productSize: Math.max(20, Math.min(30, labelWidthMm / 3)),
+        additives: Math.max(15, Math.min(25, labelWidthMm / 3)) * 0.8
       }
 
-      // 2. Draw product name with category emoji and size
-      if (subOrder.productSize?.productName && subOrder.productSize?.sizeName) {
-        ctx.font = `bold ${baseFontSize}px Arial, sans-serif`;
+      // Calculate total text height needed
+      let totalTextHeight = 0;
+      const textBlocks: Array<{
+        text: string;
+        initialSize: number;
+        weight: string;
+        lineSpacing?: number;
+      }> = [];
 
-        const emoji = categoryEmojis[subOrder.productSize?.machineCategory as MachineCategory] || '🥤';
-
-        // Combine product name, and size
-        const productText = `${emoji} ${subOrder.productSize.productName} - ${subOrder.productSize.sizeName}`;
-
-        // Centered text
-        ctx.fillText(productText, usableWidthPx / 2, currentY);
-
-        currentY += lineSpacing; // Move to the next line
+      // Prepare text blocks and calculate total height
+      if (textContent.customerNameField) {
+        textBlocks.push({
+          text: textContent.customerNameField,
+          initialSize: baseFontSizes.customerName,
+          weight: '500',
+          lineSpacing: 1.2
+        });
       }
 
-      // 4. Draw additives if any
-      if (subOrder.additives?.length) {
-        ctx.font = `${baseFontSize - 2}px Arial, sans-serif`
-
-        // Draw "With:" text
-        ctx.fillText("Добавки:", usableWidthPx / 2, currentY);
-        currentY += lineSpacing * 0.8;
-
-        // Join additive names with commas for compact display
-        const additiveNames = subOrder.additives
-          .map(a => a.additive.name)
-          .join(", ");
-
-        // Handle text wrapping for additives
-        const maxWidth = usableWidthPx * 0.9;
-        wrapText(ctx, additiveNames, usableWidthPx / 2, currentY, maxWidth, lineSpacing * 0.8);
+      if (textContent.productSizeField) {
+        textBlocks.push({
+          text: textContent.productSizeField,
+          initialSize: baseFontSizes.productSize,
+          weight: '400',
+          lineSpacing: 1.2
+        });
       }
 
-      // Draw separator line between text and QR
-      ctx.strokeStyle = '#CCCCCC';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(10, textAreaHeightPx - 5);
-      ctx.lineTo(usableWidthPx - 10, textAreaHeightPx - 5);
-      ctx.stroke();
+      if (textContent.additivesField) {
+        textBlocks.push({
+          text: textContent.additivesField,
+          initialSize: baseFontSizes.additives,
+          weight: '400',
+          lineSpacing: 0.8
+        });
+      }
+
+      // First pass: calculate total height needed
+      let calculatedHeight = 0;
+      const textMeasurements = textBlocks.map(block => {
+        const { fontSize, lines } = getOptimalTextFit(
+          ctx,
+          block.text,
+          maxTextWidth,
+          block.initialSize,
+          block.weight
+        );
+
+        const blockHeight = lines.length * fontSize * (block.lineSpacing || 1.2);
+        calculatedHeight += blockHeight;
+
+        return {
+          ...block,
+          fontSize,
+          lines,
+          blockHeight
+        };
+      });
+
+      // Calculate available text area (30% of total height)
+      const textAreaHeightPx = usableHeightPx * 0.3;
+
+      // Calculate vertical centering
+      const verticalMargin = Math.max(0, (textAreaHeightPx - calculatedHeight) / 2);
+      let currentY = verticalMargin;
+
+      // Second pass: actual drawing
+      for (const block of textMeasurements) {
+        ctx.font = `${block.weight} ${block.fontSize}px Arial, sans-serif`;
+        ctx.textAlign = 'center';
+
+        for (const line of block.lines) {
+          ctx.fillText(line, usableWidthPx / 2, currentY + block.fontSize);
+          currentY += block.fontSize * (block.lineSpacing || 1.2);
+        }
+      }
     }
 
     // -------------------------------
-    // 5) Generate and draw QR Code in the QR area
+    // 5) Generate and draw QR Code
     // -------------------------------
     const qr = QRCode(0, 'M') // M = Medium Error Correction
     qr.addData(qrValue)
@@ -215,53 +245,185 @@ export function useGenerateQR() {
     const dataURL = canvas.toDataURL('image/png', 100)
 
     // Insert the image into the PDF (full size)
-    const xStartMm = 0
-    const yStartMm = 0
-    doc.addImage(dataURL, 'PNG', xStartMm, yStartMm, labelWidthMm, labelHeightMm)
+    doc.addImage(dataURL, 'PNG', 0, 0, labelWidthMm, labelHeightMm)
 
     // Return as a Blob for printing
     return doc.output('blob')
   }
 
   // Helper function to wrap text
-  function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
-    const words = text.split(' ');
-    let line = '';
-    let testLine = '';
-    let lineCount = 0;
+  function wrapText(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    lineHeight: number,
+    maxLines = 2
+  ) {
+    const words = text.split(' ')
+    let line = ''
+    let lineCount = 0
 
     for (let n = 0; n < words.length; n++) {
-      testLine = line + words[n] + ' ';
-      const metrics = ctx.measureText(testLine);
-      const testWidth = metrics.width;
+      const testLine = line + words[n] + ' '
+      const metrics = ctx.measureText(testLine)
+      const testWidth = metrics.width
 
       if (testWidth > maxWidth && n > 0) {
-        ctx.fillText(line, x, y);
-        line = words[n] + ' ';
-        y += lineHeight;
-        lineCount++;
+        ctx.fillText(line, x, y)
+        line = words[n] + ' '
+        y += lineHeight
+        lineCount++
 
-        // Limit to max 2 lines for additives
-        if (lineCount >= 2) {
-          // Add ellipsis if we're cutting off text
+        if (lineCount >= maxLines) {
           if (n < words.length - 1) {
-            // Remove last word and add ellipsis
-            line = line.substring(0, line.lastIndexOf(' ')) + '...';
+            line = line.substring(0, line.lastIndexOf(' ')) + '...'
           }
-          ctx.fillText(line, x, y);
-          break;
+          ctx.fillText(line, x, y)
+          break
         }
       } else {
-        line = testLine;
+        line = testLine
       }
     }
 
-    // Draw the last line if we haven't hit the limit
-    if (lineCount < 2) {
-      ctx.fillText(line, x, y);
+    if (lineCount < maxLines) {
+      ctx.fillText(line, x, y)
     }
   }
 
+  // Helper function to calculate optimal font size and line breaks
+  function getOptimalTextFit(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    maxWidth: number,
+    initialSize: number,
+    weight: string = '400',
+    maxLines: number = 3
+  ): { fontSize: number; lines: string[] } {
+    let fontSize = initialSize
+    let lines: string[] = []
+
+    // First try with initial font size
+    ctx.font = `${weight} ${fontSize}px Arial, sans-serif`
+
+    // Check if text fits on one line
+    const metrics = ctx.measureText(text)
+    if (metrics.width <= maxWidth) {
+      return { fontSize, lines: [text] }
+    }
+
+    // If not, try reducing font size
+    while (fontSize > 10) {
+      ctx.font = `${weight} ${fontSize}px Arial, sans-serif`
+      lines = wrapTextToLines(ctx, text, maxWidth, maxLines)
+
+      if (lines.length <= maxLines) {
+        break
+      }
+
+      fontSize -= 1 // Reduce font size and try again
+    }
+
+    return { fontSize, lines }
+  }
+
+  // Helper function to wrap text into multiple lines (handle long unbroken strings)
+  function wrapTextToLines(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    maxWidth: number,
+    maxLines: number = 3
+  ): string[] {
+    const lines: string[] = [];
+    let currentLine = '';
+    let currentLineWidth = 0;
+
+    // Function to add a line and reset counters
+    const addLine = (line: string) => {
+      lines.push(line);
+      currentLine = '';
+      currentLineWidth = 0;
+    };
+
+    // Split into words first
+    const words = text.split(' ');
+
+    for (const word of words) {
+      const wordWidth = ctx.measureText(word).width;
+
+      // If word fits in current line
+      if (currentLineWidth + wordWidth <= maxWidth) {
+        currentLine += (currentLine ? ' ' : '') + word;
+        currentLineWidth += wordWidth + (currentLine ? ctx.measureText(' ').width : 0);
+      }
+      // If word doesn't fit but is too long for a line by itself
+      else if (wordWidth > maxWidth) {
+        // If we already have content in current line, push it first
+        if (currentLine) {
+          addLine(currentLine);
+          if (lines.length >= maxLines) break;
+        }
+
+        // Handle the long word by breaking it into parts
+        let remainingWord = word;
+        while (remainingWord) {
+          // Find how many characters fit
+          let charsThatFit = 0;
+          let testWidth = 0;
+
+          while (charsThatFit < remainingWord.length) {
+            const testString = remainingWord.substring(0, charsThatFit + 1);
+            testWidth = ctx.measureText(testString).width;
+            if (testWidth > maxWidth) break;
+            charsThatFit++;
+          }
+
+          // Add the part that fits
+          const part = remainingWord.substring(0, charsThatFit);
+          addLine(part);
+          if (lines.length >= maxLines) break;
+
+          // Prepare remaining part
+          remainingWord = remainingWord.substring(charsThatFit);
+        }
+
+        if (lines.length >= maxLines) break;
+      }
+      else {
+        // Word doesn't fit in current line but would fit in new line
+        if (currentLine) {
+          addLine(currentLine);
+          if (lines.length >= maxLines) break;
+        }
+        currentLine = word;
+        currentLineWidth = wordWidth;
+      }
+    }
+
+    // Add any remaining content
+    if (currentLine && lines.length < maxLines) {
+      addLine(currentLine);
+    }
+
+    // Add ellipsis to last line if we truncated
+    if (lines.length === maxLines) {
+      const lastLine = lines[lines.length - 1];
+      const ellipsis = '...';
+      const ellipsisWidth = ctx.measureText(ellipsis).width;
+
+      // Remove characters until ellipsis fits
+      let trimmedLine = lastLine;
+      while (trimmedLine && ctx.measureText(trimmedLine + ellipsis).width > maxWidth) {
+        trimmedLine = trimmedLine.substring(0, trimmedLine.length - 1);
+      }
+
+      lines[lines.length - 1] = trimmedLine + (trimmedLine.length < lastLine.length ? ellipsis : '');
+    }
+
+    return lines;
+  }
 
   return { generateQR }
 }
@@ -271,24 +433,14 @@ export function useQRPrinter() {
   const { generateQR } = useGenerateQR()
 
   /**
-   * Print QR codes for suborders with human-readable information
-   * @param subOrders - Array of suborders to print QR codes for
-   * @param customerName - Customer name to display on each QR
-   * @param machineCategory - The machine category of the suborder product
+   * Generic QR printing function that can be used for any QR code printing
+   * @param qrValue - The encoded QR value or array of values
    * @param options - Optional print configurations
    */
-  const printQR = async (
-    subOrders: SuborderDTO[],
-    customerName?: string,
-    options?: QRPrintOptions
-  ) => {
+  const printQR = async (qrValue: string | string[], options?: QRPrintOptions) => {
     try {
-      const qrPdfBlobs = await Promise.all(
-        subOrders.map(subOrder => {
-          const qrValue = generateSubOrderQR(subOrder)
-          return generateQR(qrValue, subOrder, customerName, options)
-        })
-      )
+      const qrValues = Array.isArray(qrValue) ? qrValue : [qrValue]
+      const qrPdfBlobs = await Promise.all(qrValues.map(v => generateQR(v, options)))
 
       await print(qrPdfBlobs, options)
     } catch (error) {
@@ -297,5 +449,57 @@ export function useQRPrinter() {
     }
   }
 
-  return { printQR }
+  /**
+   * Order-specific QR printing function (maintained for backward compatibility)
+   * @param subOrders - Array of suborders to print QR codes for
+   * @param customerName - Customer name to display on each QR
+   * @param options - Optional print configurations
+   */
+  const printOrderQR = async (
+    subOrders: SuborderDTO | SuborderDTO[],
+    customerName?: string,
+    options?: QRPrintOptions
+  ) => {
+    const ordersArray = Array.isArray(subOrders) ? subOrders : [subOrders]
+
+    const qrValues = ordersArray.map(subOrder => {
+      const qrValue = generateSubOrderQR(subOrder)
+
+      const machineCategoryText = categoryEmojis[subOrder.productSize?.machineCategory as MachineCategory] ?? '';
+
+      const productSizeField = subOrder.productSize?.productName && subOrder.productSize?.sizeName
+        ? `${subOrder.productSize?.productName} ${subOrder.productSize?.sizeName} (${machineCategoryText}, ${subOrder.productSize?.size} ${subOrder.productSize?.unit?.name})`
+        : undefined
+
+      const additivesField = subOrder.additives?.length
+        ? `${subOrder.additives.map(a => a.additive.name).join(', ')}`
+        : undefined
+
+      return {
+        qrValue,
+        options: {
+          ...options,
+          textContent: {
+            customerNameField: customerName,
+            productSizeField,
+            additivesField
+          }
+        }
+      }
+    })
+
+    // Use the generic printQR function internally
+    await printQR(
+      qrValues.map(v => v.qrValue),
+      {
+        ...options,
+        textContent: qrValues[0]?.options.textContent
+      }
+    )
+  }
+
+  return {
+    printQR,       // Generic version
+    printOrderQR   // Order-specific version
+  }
 }
