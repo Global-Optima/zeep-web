@@ -3,6 +3,7 @@ package stockRequests
 import (
 	"errors"
 	"fmt"
+
 	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
