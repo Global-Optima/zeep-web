@@ -15,9 +15,10 @@ type EmployeeRepository interface {
 	CreateEmployee(employee *data.Employee) (uint, error)
 
 	GetEmployeeByID(employeeID uint) (*data.Employee, error)
+	GetEmployeeWithDetailsByID(employeeID uint) (*data.Employee, error)
 	GetEmployees(filter *types.EmployeesFilter) ([]data.Employee, error)
 	UpdateEmployee(id uint, updateModels *types.UpdateEmployeeModels) error
-	UpdateEmployeeWithAssociations(tx *gorm.DB, id uint, updateModels *types.UpdateEmployeeModels) error
+	SaveEmployeeWithAssociations(tx *gorm.DB, id uint, updateModels *types.UpdateEmployeeModels) error
 	ReassignEmployeeType(employeeID uint, dto *types.ReassignEmployeeTypeDTO) error
 
 	DeleteTypedEmployeeById(employeeID, workplaceID uint, employeeType data.EmployeeType) error
@@ -46,6 +47,19 @@ func (r *employeeRepository) CreateEmployee(employee *data.Employee) (uint, erro
 
 func (r *employeeRepository) GetEmployeeByID(employeeID uint) (*data.Employee, error) {
 	var employee data.Employee
+
+	err := r.db.Model(&data.Employee{}).
+		First(&employee, employeeID).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, moduleErrors.ErrNotFound
+	}
+	return &employee, nil
+}
+
+func (r *employeeRepository) GetEmployeeWithDetailsByID(employeeID uint) (*data.Employee, error) {
+	var employee data.Employee
+
 	err := r.db.Model(&data.Employee{}).
 		Preload("StoreEmployee.Store").
 		Preload("WarehouseEmployee.Warehouse").
@@ -146,7 +160,7 @@ func (r *employeeRepository) GetEmployeeByEmailOrPhone(email string, phone strin
 
 func (r *employeeRepository) UpdateEmployee(id uint, updateModels *types.UpdateEmployeeModels) error {
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		return r.UpdateEmployeeWithAssociations(tx, id, updateModels)
+		return r.SaveEmployeeWithAssociations(tx, id, updateModels)
 	})
 	if err != nil {
 		return err
@@ -155,9 +169,9 @@ func (r *employeeRepository) UpdateEmployee(id uint, updateModels *types.UpdateE
 	return nil
 }
 
-func (r *employeeRepository) UpdateEmployeeWithAssociations(tx *gorm.DB, id uint, updateModels *types.UpdateEmployeeModels) error {
+func (r *employeeRepository) SaveEmployeeWithAssociations(tx *gorm.DB, id uint, updateModels *types.UpdateEmployeeModels) error {
 	if updateModels.Employee != nil && !utils.IsEmpty(updateModels.Employee) {
-		err := tx.Model(&data.Employee{}).Where("id = ?", id).Updates(updateModels.Employee).Error
+		err := tx.Model(&data.Employee{}).Where("id = ?", id).Save(updateModels.Employee).Error
 		if err != nil {
 			return err
 		}
@@ -183,7 +197,7 @@ func (r *employeeRepository) UpdateEmployeeWithAssociations(tx *gorm.DB, id uint
 }
 
 func (r *employeeRepository) ReassignEmployeeType(employeeID uint, dto *types.ReassignEmployeeTypeDTO) error {
-	employee, err := r.GetEmployeeByID(employeeID)
+	employee, err := r.GetEmployeeWithDetailsByID(employeeID)
 	if err != nil {
 		return err
 	}

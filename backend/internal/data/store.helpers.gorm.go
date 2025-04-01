@@ -2,10 +2,8 @@ package data
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -17,10 +15,6 @@ type usageRow struct {
 
 // RecalculateOutOfStock allows nil values for ingredientIDs and productSizeIDs if no need to check by any of them
 func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, productSizeIDs, additiveIDs []uint) error {
-	start := time.Now()
-	logrus.Info("=================Start Recalculation===================")
-	logrus.Infof("initial values: storeID=%v ingredientIDs=%v productSizeIDs=%v additiveID=%v", storeID, ingredientIDs, productSizeIDs, additiveIDs)
-
 	if storeID == 0 || (len(ingredientIDs) == 0 && len(productSizeIDs) == 0 && len(additiveIDs) == 0) {
 		return nil
 	}
@@ -47,9 +41,6 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 		if len(productSizesIngredientIDs) > 0 {
 			ingredientIDs = utils.UnionSlices(ingredientIDs, productSizesIngredientIDs)
 		}
-		logrus.Infof("ingredients from product size: %v", productSizesIngredientIDs)
-		logrus.Infof("ingredients initial: %v", ingredientIDs)
-		logrus.Infof("ingredients diff: %v", utils.DiffSlice(ingredientIDs, productSizesIngredientIDs))
 	}
 
 	if len(additiveIDs) > 0 {
@@ -64,7 +55,6 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 		if err != nil {
 			return err
 		}
-		logrus.Infof("FrozenStockMap: %v", frozenStockMap)
 
 		storeProductIDsFromIngredients, err = getStoreProductIDsByIngredients(tx, storeID, ingredientIDs)
 		if err != nil {
@@ -99,8 +89,6 @@ func RecalculateOutOfStock(tx *gorm.DB, storeID uint, ingredientIDs []uint, prod
 		}
 	}
 
-	logrus.Infof("=============Estimated time: %v==================", time.Since(start))
-
 	return nil
 }
 
@@ -119,8 +107,6 @@ func RecalculateStoreProducts(
 		return err
 	}
 	inStockIDs := utils.DiffSlice(storeProductIDs, outOfStockIDs)
-	logrus.Infof("outOfStockProducts: %v", outOfStockIDs)
-	logrus.Infof("inStockProducts: %v", inStockIDs)
 
 	if err := updateStoreProductStockFlags(tx, outOfStockIDs, true); err != nil {
 		return err
@@ -147,8 +133,6 @@ func RecalculateStoreAdditives(
 		return err
 	}
 	inStockIDs := utils.DiffSlice(storeAdditiveIDs, outOfStockIDs)
-	logrus.Infof("OutAdditives: %v", outOfStockIDs)
-	logrus.Infof("InAdditives: %v", inStockIDs)
 
 	if err := updateStoreAdditiveStockFlags(tx, outOfStockIDs, true); err != nil {
 		return err
@@ -329,7 +313,6 @@ func getOutByIngredients(
 	for spID := range outSet {
 		outIDs = append(outIDs, spID)
 	}
-	logrus.Infof("TOTAL OUT IDS: %v", outIDs)
 
 	return outIDs, nil
 }

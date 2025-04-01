@@ -12,8 +12,15 @@ type UpdateRegionEmployeeModels struct {
 	RegionEmployee *data.RegionEmployee
 }
 
-func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.EmployeeRole) (*UpdateRegionEmployeeModels, error) {
-	regionEmployee := &data.RegionEmployee{}
+func RegionEmployeeUpdateFields(regionEmployee *data.RegionEmployee, input *UpdateRegionEmployeeDTO, role data.EmployeeRole) (*UpdateRegionEmployeeModels, error) {
+	if regionEmployee == nil {
+		return nil, fmt.Errorf("FranchiseeEmployee is nil")
+	}
+
+	if regionEmployee.Employee.ID == 0 {
+		return nil, fmt.Errorf("FranchiseeEmployee.Employee is not preloaded")
+	}
+
 	if input.RegionID != nil {
 		regionEmployee.RegionID = *input.RegionID
 	}
@@ -28,7 +35,7 @@ func RegionEmployeeUpdateFields(input *UpdateRegionEmployeeDTO, role data.Employ
 		regionEmployee.Role = *input.Role
 	}
 
-	updateEmployeeModels, err := employeesTypes.PrepareUpdateFields(&input.UpdateEmployeeDTO)
+	updateEmployeeModels, err := employeesTypes.PrepareUpdateFields(&regionEmployee.Employee, &input.UpdateEmployeeDTO)
 	if err != nil {
 		return nil, err
 	}

@@ -124,14 +124,14 @@ func (r *franchiseeEmployeeRepository) UpdateFranchiseeEmployee(id uint, franchi
 				Where(&data.FranchiseeEmployee{
 					BaseEntity: data.BaseEntity{ID: id},
 				}).
-				Updates(updateModels.FranchiseeEmployee).Error
+				Save(updateModels.FranchiseeEmployee).Error
 			if err != nil {
 				return err
 			}
 		}
 
 		if updateModels.UpdateEmployeeModels != nil && !utils.IsEmpty(updateModels.UpdateEmployeeModels) {
-			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingFranchiseeEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			err := r.employeeRepo.SaveEmployeeWithAssociations(tx, existingFranchiseeEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err
 			}

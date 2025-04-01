@@ -6,8 +6,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -70,7 +68,7 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 	if unsyncData == nil {
 		return nil, fmt.Errorf("could not fetch unsyncData: nil pointer dereference")
 	}
-	logrus.Info(unsyncData)
+
 	if len(unsyncData.AdditiveIDs) > 0 || len(unsyncData.IngredientIDs) > 0 || len(unsyncData.ProductSizeIDs) > 0 {
 		syncStatus.IsSync = false
 	}

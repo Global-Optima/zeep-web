@@ -124,7 +124,14 @@ func (s *storeEmployeeService) GetAllStoreEmployees(storeID uint) ([]employeesTy
 }
 
 func (s *storeEmployeeService) UpdateStoreEmployee(id uint, filter *contexts.StoreContextFilter, input *types.UpdateStoreEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.StoreEmployeeUpdateFields(input, role)
+	storeEmployee, err := s.repo.GetStoreEmployeeByID(id, filter)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to retrieve store employee for store employee", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	updateFields, err := types.StoreEmployeeUpdateFields(storeEmployee, input, role)
 	if err != nil {
 		return err
 	}

@@ -121,7 +121,14 @@ func (s *regionEmployeeService) GetAllRegionEmployees(regionID uint) ([]employee
 }
 
 func (s *regionEmployeeService) UpdateRegionEmployee(id uint, regionID *uint, input *types.UpdateRegionEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.RegionEmployeeUpdateFields(input, role)
+	regionEmployee, err := s.repo.GetRegionEmployeeByID(id, regionID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve region manager with ID = %d: %w", id, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	updateFields, err := types.RegionEmployeeUpdateFields(regionEmployee, input, role)
 	if err != nil {
 		return err
 	}

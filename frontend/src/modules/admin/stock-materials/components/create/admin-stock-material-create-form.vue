@@ -63,7 +63,6 @@ const onSubmit = handleSubmit((formValues) => {
     isActive: true
   }
   emits('onSubmit', dto)
-  resetForm()
 })
 
 const onCancel = () => {
