@@ -152,6 +152,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 					<Input
 						v-model="customerName"
 						class="bg-white shadow-none px-6 py-8 rounded-xl w-full text-2xl"
+						maxLength="20"
 						placeholder="Введите ваше имя"
 					/>
 					<p

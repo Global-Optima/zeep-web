@@ -73,7 +73,7 @@
 						<button
 							@click="handleAddToCart"
 							:disabled="!isAddButtonEnabled"
-							class="flex items-center gap-3 bg-primary disabled:bg-muted p-5 rounded-full text-primary-foreground disabled:text-muted-foreground"
+							class="flex items-center gap-3 bg-primary disabled:bg-muted p-8 rounded-full text-primary-foreground disabled:text-muted-foreground"
 						>
 							<Plus class="size-8 sm:size-12" />
 						</button>

@@ -13,23 +13,26 @@
 				@click="selectOrder(order)"
 				:class="orderClasses(order)"
 			>
-				<div class="flex flex-col w-full">
+				<div class="w-full overflow-hidden">
 					<!-- Order ID and Name -->
-					<div class="flex justify-between">
-						<div class="text-base">
-							<p class="text-gray-600">#{{ order.id }}</p>
-							<p class="mt-1 font-medium">
+					<div class="flex justify-between items-start">
+						<!-- Text Container -->
+						<div class="flex-1 overflow-hidden">
+							<p class="text-gray-600 text-sm truncate">#{{ order.displayNumber }}</p>
+							<p class="mt-1 font-medium text-base truncate">
 								{{ order.customerName }}
 							</p>
 						</div>
 
 						<!-- Status Icon / ETA -->
-						<div>
+						<div class="flex-shrink-0 ml-4">
 							<template v-if="order.status === OrderStatus.PENDING">
 								<Clock class="w-5 h-5 text-gray-500" />
 							</template>
 							<template v-else-if="order.status === OrderStatus.PREPARING">
-								<p class="text-blue-600">{{ formatEta(order.subOrdersQuantity) }}</p>
+								<p class="text-blue-600 text-base">
+									{{ formatEta(order.subOrdersQuantity) }}
+								</p>
 							</template>
 							<template v-else-if="order.status === OrderStatus.IN_DELIVERY">
 								<Truck class="w-5 h-5 text-yellow-500" />
@@ -45,7 +48,8 @@
 						v-if="order.status !== OrderStatus.COMPLETED"
 						class="mt-1 text-gray-700 text-sm"
 					>
-						<span>{{ order.deliveryAddressId !== null ? 'Доставка' : 'Кафе' }}</span
+						<span>
+							{{ order.deliveryAddressId !== null ? 'Доставка' : 'Кафе' }} </span
 						>,
 						<span>{{ order.subOrdersQuantity }} шт.</span>
 					</div>
@@ -53,7 +57,7 @@
 					<!-- Progress Bar for suborders -->
 					<div
 						v-if="order.status !== OrderStatus.COMPLETED"
-						class="relative bg-slate-200 mt-4 rounded-[6px] w-full h-4 overflow-hidden"
+						class="relative bg-slate-200 mt-4 rounded h-4 overflow-hidden"
 					>
 						<div
 							class="h-full transition-all duration-300 ease-in-out"
@@ -147,7 +151,7 @@ function progressBarClasses(order: OrderDTO) {
  */
 function orderClasses(order: OrderDTO) {
   return cn(
-    'flex items-start gap-2 p-4 rounded-xl cursor-pointer border transition-all duration-200 bg-white',
+    'flex items-start gap-2 p-4 rounded-3xl cursor-pointer border transition-all duration-200 bg-white',
     selectedOrder.value?.id === order.id ? '!border-primary' : 'border-transparent',
 
     // Example: highlight different statuses (optional)

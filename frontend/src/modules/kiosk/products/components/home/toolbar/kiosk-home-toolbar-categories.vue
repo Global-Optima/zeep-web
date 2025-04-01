@@ -12,7 +12,7 @@
 			:aria-pressed="selectedCategoryId === category.id"
 			:ref="el => setButtonRef(category.id, el)"
 			:class="[
-          'px-8 py-6 text-3xl rounded-full whitespace-nowrap',
+          'px-10 py-8 text-3xl rounded-full whitespace-nowrap',
           selectedCategoryId === category.id
             ? 'bg-primary text-primary-foreground font-medium'
             : 'bg-transparent text-gray-600 hover:bg-gray-100',

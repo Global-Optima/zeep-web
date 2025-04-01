@@ -7,11 +7,11 @@
 		<div
 			v-if="!isInputFocused && !searchTerm"
 			@click="focusInput"
-			class="flex justify-center items-center rounded-full size-[84px] hover:scale-105 transition-transform cursor-pointer select-none"
+			class="flex justify-center items-center rounded-full size-[100px] hover:scale-105 transition-transform cursor-pointer select-none"
 			data-testid="collapsed-search-trigger"
 			aria-label="Раскрыть поиск"
 		>
-			<Search class="size-7 text-gray-600" />
+			<Search class="size-10 text-slate-500" />
 		</div>
 
 		<!-- Expanded Search Input -->
@@ -23,7 +23,7 @@
 			@input="updateSearchTerm"
 			@focus="handleFocus"
 			@blur="handleBlur"
-			class="bg-transparent px-6 rounded-full focus:outline-none w-56 sm:w-80 h-[84px] font-medium text-base sm:text-2xl transition-[width] duration-300"
+			class="bg-transparent px-10 rounded-full focus:outline-none w-56 sm:w-80 h-[100px] text-3xl transition-[width] duration-300"
 			placeholder="Поиск"
 			aria-label="Поиск продуктов"
 			data-testid="search-input"
@@ -33,11 +33,11 @@
 		<button
 			v-if="searchTerm"
 			@click="clearSearchTerm"
-			class="top-5 sm:top-6 right-5 sm:right-8 absolute focus:outline-none text-primary text-2xl"
+			class="top-5 right-8 absolute p-2 focus:outline-none text-primary"
 			aria-label="Очистить поле поиска"
 			data-testid="clear-button"
 		>
-			<X />
+			<X class="size-10" />
 		</button>
 	</div>
 </template>
