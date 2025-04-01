@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/png"
 	"io"
 	"mime/multipart"
 	"path/filepath"
@@ -31,7 +32,8 @@ type JPEGConverter struct{}
 
 func (JPEGConverter) Convert(img image.Image) ([]byte, error) {
 	var jpegBuffer bytes.Buffer
-	if err := imaging.Encode(&jpegBuffer, img, imaging.JPEG, imaging.JPEGQuality(50)); err != nil {
+
+	if err := imaging.Encode(&jpegBuffer, img, imaging.JPEG, imaging.JPEGQuality(50), imaging.PNGCompressionLevel(png.BestCompression)); err != nil {
 		return nil, fmt.Errorf("failed to re-encode JPEG: %v", err)
 	}
 
@@ -53,18 +55,33 @@ func ConvertImageToRawAndWebpV2(fileHeader *multipart.FileHeader) (*FilesPair, e
 		return nil, err
 	}
 
-	img, err := decodeImage(rawBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	ext, err := getLowercaseExtension(fileHeader.Filename)
 	if err != nil {
 		return nil, err
 	}
 
 	uniqueName := GenerateUniqueName()
+
 	zipBytes, err := compressOriginal(uniqueName, ext, rawBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	if ext == ".jpeg" || ext == ".jpg" {
+		return &FilesPair{
+			CommonFileName: uniqueName,
+			OriginalFile: &FileData{
+				Ext:  TAR_GZ_FORMAT_KEY,
+				Data: zipBytes,
+			},
+			ConvertedFile: &FileData{
+				Ext:  ext,
+				Data: rawBytes,
+			},
+		}, nil
+	}
+
+	img, err := decodeImage(rawBytes)
 	if err != nil {
 		return nil, err
 	}
