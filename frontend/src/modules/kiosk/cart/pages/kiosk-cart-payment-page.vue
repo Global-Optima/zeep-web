@@ -15,7 +15,7 @@ import {
   type PaymentOption
 } from '@/modules/kiosk/cart/models/kiosk-cart.models'
 import { useMutation, useQuery } from '@tanstack/vue-query'
-import { QrCode } from 'lucide-vue-next'
+import { TabletSmartphone } from 'lucide-vue-next'
 import {
   computed,
   onBeforeUnmount,
@@ -33,7 +33,7 @@ const orderId = route.params.orderId as string
 
 // Payment configuration
 const paymentOptions: PaymentOption[] = [
-  { id: PaymentMethod.KASPI, label: 'Kaspi QR', icon: QrCode },
+  { id: PaymentMethod.KASPI, label: 'Kaspi QR', icon: TabletSmartphone },
 ]
 
 // Constants

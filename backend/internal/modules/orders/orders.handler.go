@@ -397,7 +397,13 @@ func (h *OrderHandler) ChangeSubOrderStatus(c *gin.Context) {
 		return
 	}
 
-	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(subOrderID)
+	var options types.ToggleNextSuborderStatusOptions
+	if err := c.ShouldBindQuery(&options); err != nil {
+		utils.SendBadRequestError(c, fmt.Sprintf("Invalid query params: %v", err))
+		return
+	}
+
+	updatedSuborderDTO, err := h.service.AdvanceSubOrderStatus(subOrderID, &options)
 	if err != nil {
 		utils.SendInternalServerError(c, fmt.Sprintf("failed to update suborder status: %v", err))
 		return
