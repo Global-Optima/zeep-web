@@ -4,8 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
@@ -18,6 +17,7 @@ type ProductRepository interface {
 	CheckProductExists(productName string) (bool, error)
 	CreateProduct(product *data.Product) (uint, error)
 	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
+	GetRawProductByID(productID uint) (*data.Product, error)
 	GetProductByID(productID uint) (*data.Product, error)
 	SaveProduct(product *data.Product) error
 	DeleteProduct(productID uint) (*data.Product, error)
@@ -82,7 +82,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		First(&productSize, productSizeID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, moduleErrors.ErrNotFound
+			return nil, types.ErrProductSizeNotFound
 		}
 		return nil, fmt.Errorf("failed to fetch ProductSize ID %d: %w", productSizeID, err)
 	}
@@ -126,6 +126,23 @@ func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data
 	return products, nil
 }
 
+func (r *productRepository) GetRawProductByID(productID uint) (*data.Product, error) {
+	var product data.Product
+
+	err := r.db.
+		Where("id = ?", productID).
+		First(&product).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrProductNotFound
+		}
+		return nil, err
+	}
+
+	return &product, nil
+}
+
 func (r *productRepository) GetProductByID(productID uint) (*data.Product, error) {
 	var product data.Product
 
@@ -137,7 +154,7 @@ func (r *productRepository) GetProductByID(productID uint) (*data.Product, error
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, moduleErrors.ErrNotFound
+			return nil, types.ErrProductNotFound
 		}
 		return nil, err
 	}
@@ -170,14 +187,17 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 			return fmt.Errorf("nothing to update")
 		}
 
-		if updateModels.ProductSize != nil {
-			if err := r.updateProductSize(tx, id, updateModels.ProductSize); err != nil {
-				return err
-			}
-		}
+		additivesUpdated := false
 
 		if updateModels.Additives != nil {
 			if err := r.updateAdditives(tx, id, updateModels.Additives); err != nil {
+				return err
+			}
+			additivesUpdated = true
+		}
+
+		if updateModels.ProductSize != nil {
+			if err := r.updateProductSize(tx, id, updateModels.ProductSize, additivesUpdated); err != nil {
 				return err
 			}
 		}
@@ -234,7 +254,11 @@ func (r *productRepository) GetProductSizeAdditives(productSizeID uint) ([]uint,
 	return ids, nil
 }
 
-func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize) error {
+func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize, additivesUpdated bool) error {
+	if additivesUpdated {
+		productSize.AdditivesUpdatedAt = time.Now().UTC()
+	}
+
 	if err := tx.Model(&data.ProductSize{}).
 		Where("id = ?", id).
 		Updates(productSize).Error; err != nil {
@@ -262,16 +286,19 @@ func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, add
 		existing, exists := existingMap[additive.AdditiveID]
 
 		if exists {
-			if existing.IsDefault != additive.IsDefault {
+			if existing.IsDefault != additive.IsDefault || existing.IsHidden != additive.IsHidden {
 				existing.IsDefault = additive.IsDefault
+				existing.IsHidden = additive.IsHidden
 				toUpdate = append(toUpdate, existing)
 			}
+
 			existingIDs[additive.AdditiveID] = struct{}{}
 		} else {
 			toInsert = append(toInsert, data.ProductSizeAdditive{
 				ProductSizeID: productSizeID,
 				AdditiveID:    additive.AdditiveID,
 				IsDefault:     additive.IsDefault,
+				IsHidden:      additive.IsHidden,
 			})
 		}
 	}
@@ -290,7 +317,7 @@ func (r *productRepository) updateAdditives(tx *gorm.DB, productSizeID uint, add
 	}
 
 	if len(toDeleteIDs) > 0 {
-		if err := tx.Where("product_size_id = ? AND additive_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
+		if err := tx.Unscoped().Where("product_size_id = ? AND additive_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeAdditive{}).Error; err != nil {
 			return fmt.Errorf("failed to delete old additives: %w", err)
 		}
 	}

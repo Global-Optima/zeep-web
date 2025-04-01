@@ -1,6 +1,10 @@
 <template>
 	<div
-		class="flex flex-col justify-between bg-white p-6 rounded-[32px] h-full cursor-pointer"
+		class="relative flex flex-col justify-between bg-white p-8 rounded-[52px] h-full transition-all duration-300"
+		:class="{
+      'cursor-pointer': !product.isOutOfStock,
+      'cursor-not-allowed opacity-60 !border-primary' : product.isOutOfStock
+    }"
 		@click="selectProduct"
 		data-testid="product-card"
 	>
@@ -8,23 +12,31 @@
 			<LazyImage
 				:src="product.imageUrl"
 				alt="Изображение товара"
-				class="rounded-xl w-full h-44 sm:h-60 object-contain"
+				class="rounded-[32px] w-full h-64 sm:h-80 object-contain"
 			/>
 
 			<h3
-				class="mt-6 text-base sm:text-xl line-clamp-2"
+				class="mt-6 text-base sm:text-2xl line-clamp-2"
 				data-testid="product-title"
 			>
 				{{ product.name }}
 			</h3>
 		</div>
 
-		<div class="mt-4">
+		<div class="flex flex-wrap justify-between items-start gap-4 mt-10">
 			<p
-				class="font-medium text-primary text-xl sm:text-2xl"
+				class="font-medium text-xl sm:text-3xl"
+				:class="product.isOutOfStock ? 'text-gray-400' : 'text-primary'"
 				data-testid="product-price"
 			>
 				{{ formatPrice(product.storePrice) }}
+			</p>
+
+			<p
+				v-if="product.isOutOfStock"
+				class="top-8 right-8 absolute bg-slate-200 px-4 py-2 rounded-3xl text-slate-800 text-base"
+			>
+				Нет в наличии
 			</p>
 		</div>
 	</div>
@@ -48,6 +60,9 @@ const router = useRouter()
 
  const selectProduct = () => {
   // currentProductStore.openModal(product.id)
+   if (product.isOutOfStock) {
+     return
+   }
   router.push({name: getRouteName("KIOSK_PRODUCT"), params: {id: product.id}})
 };
 </script>

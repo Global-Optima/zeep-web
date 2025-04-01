@@ -36,6 +36,7 @@ const (
 	AdminEmployeeComponent         ComponentName = "ADMIN_EMPLOYEE"
 	AdditiveComponent              ComponentName = "ADDITIVE"
 	AdditiveCategoryComponent      ComponentName = "ADDITIVE_CATEGORY"
+	AuditComponent                 ComponentName = "AUDIT"
 	StoreAdditiveComponent         ComponentName = "STORE_ADDITIVE"
 	ProductSizeComponent           ComponentName = "PRODUCT_SIZE"
 	RecipeStepsComponent           ComponentName = "RECIPE_STEPS"
@@ -128,7 +129,7 @@ func (d *ExtendedDetailsStore) ToDetails() ([]byte, error) {
 }
 
 func (d *ExtendedDetailsStore) SetStoreName(name string) {
-	d.StoreInfo.StoreName = name
+	d.StoreName = name
 }
 
 type ExtendedDetailsWarehouse struct {
@@ -141,7 +142,7 @@ func (d *ExtendedDetailsWarehouse) ToDetails() ([]byte, error) {
 }
 
 func (d *ExtendedDetailsWarehouse) SetWarehouseName(name string) {
-	d.WarehouseInfo.WarehouseName = name
+	d.WarehouseName = name
 }
 
 type ExtendedDetailsFranchisee struct {
@@ -154,7 +155,7 @@ func (d *ExtendedDetailsFranchisee) ToDetails() ([]byte, error) {
 }
 
 func (d *ExtendedDetailsFranchisee) SetFranchiseeName(name string) {
-	d.FranchiseeInfo.FranchiseeName = name
+	d.FranchiseeName = name
 }
 
 type ExtendedDetailsRegion struct {
@@ -167,7 +168,7 @@ func (d *ExtendedDetailsRegion) ToDetails() ([]byte, error) {
 }
 
 func (d *ExtendedDetailsRegion) SetRegionName(name string) {
-	d.RegionInfo.RegionName = name
+	d.RegionName = name
 }
 
 type HTTPMethod string

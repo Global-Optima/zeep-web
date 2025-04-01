@@ -15,6 +15,7 @@ export interface StoreProductDTO extends BaseProductDTO {
 	storeProductSizeCount: number
 	productSizeCount: number
 	isAvailable: boolean
+  isOutOfStock: boolean
 }
 
 export interface StoreProductSizeDTO extends BaseProductSizeDTO {
@@ -61,6 +62,7 @@ export interface UpdateStoreProductSizeDTO {
 
 export interface StoreProductsFilterDTO extends PaginationParams {
 	categoryId?: number
+  isOutOfStock?: boolean
 	isAvailable?: boolean
 	search?: string
 	maxPrice?: number

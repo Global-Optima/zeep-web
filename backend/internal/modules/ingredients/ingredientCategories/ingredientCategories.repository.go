@@ -12,7 +12,7 @@ import (
 type IngredientCategoryRepository interface {
 	Create(category *data.IngredientCategory) error
 	GetByID(id uint) (*data.IngredientCategory, error)
-	Update(id uint, updates data.IngredientCategory) error
+	Update(id uint, updates *data.IngredientCategory) error
 	Delete(id uint) error
 	GetAll(filter *types.IngredientCategoryFilter) ([]data.IngredientCategory, error)
 }
@@ -38,8 +38,8 @@ func (r *ingredientCategoryRepository) GetByID(id uint) (*data.IngredientCategor
 	return &category, nil
 }
 
-func (r *ingredientCategoryRepository) Update(id uint, updates data.IngredientCategory) error {
-	return r.db.Model(&data.IngredientCategory{}).Where("id = ?", id).Updates(updates).Error
+func (r *ingredientCategoryRepository) Update(id uint, updates *data.IngredientCategory) error {
+	return r.db.Model(&data.IngredientCategory{}).Where("id = ?", id).Save(updates).Error
 }
 
 func (r *ingredientCategoryRepository) Delete(id uint) error {

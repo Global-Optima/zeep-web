@@ -75,9 +75,9 @@
 									<p class="font-medium text-4xl">{{ formatPrice(totalPrice) }}</p>
 									<button
 										@click="handleUpdate"
-										class="flex items-center gap-3 bg-primary p-5 rounded-full text-primary-foreground"
+										class="flex items-center gap-3 bg-primary p-6 rounded-full text-primary-foreground"
 									>
-										<Pencil class="size-8 sm:size-12" />
+										<Pencil class="size-6 sm:size-10" />
 									</button>
 								</div>
 							</div>
@@ -135,8 +135,8 @@ const productDetails = ref(props.cartItem.product)
 const selectedSize = ref<StoreProductSizeDetailsDTO>(props.cartItem.size)
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>(
   props.cartItem.additives.reduce((acc, additive) => {
-    acc[additive.categoryId] = acc[additive.categoryId] || []
-    acc[additive.categoryId].push(additive)
+    acc[additive.category.id] = acc[additive.category.id] || []
+    acc[additive.category.id].push(additive)
     return acc
   }, {} as Record<number, StoreAdditiveCategoryItemDTO[]>)
 )

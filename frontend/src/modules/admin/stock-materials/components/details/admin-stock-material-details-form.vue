@@ -57,15 +57,17 @@ const openIngredientDialog = ref(false)
 const updateStockMaterialSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название материала'),
-    description: z.string().min(1, 'Введите описание'),
+    description: z.string().optional(),
     safetyStock: z.coerce.number().min(1, 'Безопасный запас упаковок должен быть больше 0'),
     size: z.coerce.number().min(1, 'Введите размер упаковки'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
     ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
-    barcode: z.string().max(20, 'Введите штрихкод'),
-  })
+    barcode: z
+      .string()
+      .min(1, 'Создайте или вставьте штрихкод')
+      .max(20, 'Введите штрихкод'),  })
 )
 
 const { handleSubmit, resetForm, setFieldValue } = useForm({

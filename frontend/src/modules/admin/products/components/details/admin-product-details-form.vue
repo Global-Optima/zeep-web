@@ -9,7 +9,7 @@ import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/
 import { toTypedSchema } from '@vee-validate/zod'
 import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import { defineAsyncComponent, ref, useTemplateRef} from 'vue'
+import { defineAsyncComponent, ref, useTemplateRef, defineExpose } from 'vue'
 import * as z from 'zod'
 
 // Lazy-load the dialog component
@@ -34,8 +34,8 @@ const updateProductSchema = toTypedSchema(
       .min(2, 'Название должно содержать не менее 2 символов')
       .max(100, 'Название не может превышать 100 символов'),
     description: z.string()
-      .min(1, 'Введите описание')
-      .max(500, 'Описание не может превышать 500 символов'),
+      .max(500, 'Описание не может превышать 500 символов')
+	  .optional(),
     categoryId: z.coerce.number().min(1, 'Выберите категорию из списка'),
     image: z.instanceof(File).optional().refine((file) => {
       if (!file) return true;
@@ -54,7 +54,7 @@ const updateProductSchema = toTypedSchema(
   })
 );
 
-const { handleSubmit, setFieldValue } = useForm({
+const { handleSubmit, setFieldValue, resetField } = useForm({
   validationSchema: updateProductSchema,
   initialValues: {
     name: productDetails.name,
@@ -112,6 +112,15 @@ const onSubmit = handleSubmit((values) => {
 
   emits('onSubmit', dto);
 });
+
+const resetFormValues = () => {
+  resetField('image')
+  resetField('video')
+  deleteImage.value = false
+  deleteVideo.value = false;
+};
+
+defineExpose({ resetFormValues });
 
 const onDeleteImage = () => {
   previewImage.value = null

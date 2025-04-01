@@ -121,7 +121,14 @@ func (s *franchiseeEmployeeService) GetAllFranchiseeEmployees(franchiseeID uint)
 }
 
 func (s *franchiseeEmployeeService) UpdateFranchiseeEmployee(id uint, franchiseeID *uint, input *types.UpdateFranchiseeEmployeeDTO, role data.EmployeeRole) error {
-	updateFields, err := types.FranchiseeEmployeeUpdateFields(input, role)
+	franchiseeEmployee, err := s.repo.GetFranchiseeEmployeeByID(id, franchiseeID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve franchisee employee with ID = %d: %w", id, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	updateFields, err := types.FranchiseeEmployeeUpdateFields(franchiseeEmployee, input, role)
 	if err != nil {
 		return err
 	}

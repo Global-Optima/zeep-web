@@ -62,7 +62,7 @@ export interface IngredientFilter extends PaginationParams {
 
 export interface CreateIngredientCategoryDTO {
 	name: string
-	description: string
+	description?: string
 }
 
 export interface UpdateIngredientCategoryDTO {

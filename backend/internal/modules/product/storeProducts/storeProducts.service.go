@@ -229,7 +229,7 @@ func (s *storeProductService) CreateMultipleStoreProducts(storeID uint, dtos []t
 				sizeIDs[j] = productSize.ProductSizeID
 			}
 
-			inputSizeIDs = utils.MergeDistinct(inputSizeIDs, sizeIDs)
+			inputSizeIDs = utils.UnionSlices(inputSizeIDs, sizeIDs)
 
 			if err := s.validateProductSizesByProductID(sizeIDs, dto.ProductID); err != nil {
 				return nil, utils.WrapError("failed to create store products", err)

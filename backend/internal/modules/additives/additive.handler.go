@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
@@ -46,7 +45,7 @@ func (h *AdditiveHandler) GetAdditiveCategories(c *gin.Context) {
 
 func (h *AdditiveHandler) CreateAdditiveCategory(c *gin.Context) {
 	var dto types.CreateAdditiveCategoryDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -73,7 +72,7 @@ func (h *AdditiveHandler) CreateAdditiveCategory(c *gin.Context) {
 
 func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 	var dto types.UpdateAdditiveCategoryDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -156,7 +155,7 @@ func (h *AdditiveHandler) GetAdditiveCategoryByID(c *gin.Context) {
 	category, err := h.service.GetAdditiveCategoryByID(uint(categoryID))
 	if err != nil {
 		switch {
-		case errors.Is(err, moduleErrors.ErrNotFound):
+		case errors.Is(err, types.ErrAdditiveCategoryNotFound):
 			localization.SendLocalizedResponseWithKey(c, types.Response404AdditiveCategory)
 			return
 		default:
@@ -188,7 +187,7 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	var dto types.CreateAdditiveDTO
 	var err error
 
-	if err := c.ShouldBind(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -243,7 +242,7 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 	}
 
 	var dto types.UpdateAdditiveDTO
-	if err := c.ShouldBind(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -295,6 +294,7 @@ func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, types.ErrAdditiveNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Additive)
+			return
 		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveDelete)
 		return
@@ -329,7 +329,7 @@ func (h *AdditiveHandler) GetAdditiveByID(c *gin.Context) {
 	additive, err := h.service.GetAdditiveByID(uint(additiveID))
 	if err != nil {
 		switch {
-		case errors.Is(err, moduleErrors.ErrNotFound):
+		case errors.Is(err, types.ErrAdditiveNotFound):
 			localization.SendLocalizedResponseWithKey(c, types.Response404Additive)
 			return
 		default:

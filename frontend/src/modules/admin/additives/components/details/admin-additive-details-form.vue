@@ -13,7 +13,7 @@ import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
-import type { AdditiveCategoryDTO, AdditiveDetailsDTO, BaseAdditiveCategoryDTO, SelectedIngredientDTO, UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDetailsDTO, AdditiveDetailsDTO, AdditiveCategoryDTO, SelectedIngredientDTO, UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import {Camera, ChevronLeft, Trash, X} from 'lucide-vue-next'
@@ -46,7 +46,7 @@ const emits = defineEmits<{
 const { toast } = useToast()
 
 // Reactive State
-const selectedCategory = ref<BaseAdditiveCategoryDTO | null>(additive.category)
+const selectedCategory = ref<AdditiveCategoryDTO | null>(additive.category)
 const openCategoryDialog = ref(false)
 const selectedUnit = ref<UnitDTO | null>(additive.unit)
 const openUnitDialog = ref(false)
@@ -64,8 +64,8 @@ const updateAdditiveSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название добавки')
       .max(100, 'Название не может превышать 100 символов'),
-    description: z.string().min(1, 'Введите описание')
-      .max(500, 'Описание не может превышать 500 символов'),
+    description: z.string()
+      .max(500, 'Описание не может превышать 500 символов').optional(),
     machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
@@ -82,7 +82,7 @@ const updateAdditiveSchema = toTypedSchema(
 )
 
 // Form Setup
-const { handleSubmit, resetForm, setFieldValue } = useForm({
+const { handleSubmit, resetField, setFieldValue } = useForm({
   validationSchema: updateAdditiveSchema,
   initialValues: {
     name: additive.name,
@@ -129,6 +129,13 @@ const onSubmit = handleSubmit((formValues) => {
   emits('onSubmit', dto)
 })
 
+const resetFormValues = () => {
+  resetField('image')
+  deleteImage.value = false
+}
+
+defineExpose({ resetFormValues })
+
 const onDeleteImage = () => {
   previewImage.value = null
   setFieldValue('image', undefined)
@@ -136,11 +143,10 @@ const onDeleteImage = () => {
 }
 
 const onCancel = () => {
-  resetForm()
   emits('onCancel')
 }
 
-function selectCategory(category: AdditiveCategoryDTO) {
+function selectCategory(category: AdditiveCategoryDetailsDTO) {
   selectedCategory.value = category
   openCategoryDialog.value = false
   setFieldValue('additiveCategoryId', category.id)

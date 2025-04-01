@@ -94,7 +94,7 @@ func (c *Container) mustInit() {
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo, *c.employeeTokenManager)
 	c.Orders = modules.NewOrdersModule(baseModule, c.AsynqManager, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Notifications.Service)
 	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.Franchisees.Service, c.Regions.Service, c.StockMaterials.Repo, c.Notifications.Service, c.Audits.Service)
-	c.StoreSynchronizer = modules.NewStoreSynchronizerSynchronizerModule(baseModule, c.Stores.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo)
+	c.StoreSynchronizer = modules.NewStoreSynchronizerSynchronizerModule(baseModule, c.Stores.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Ingredients.Repo)
 	c.Analytics = modules.NewAnalyticsModule(baseModule)
 
 	cronManager.Start()

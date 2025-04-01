@@ -85,7 +85,9 @@ func (h *Hub) RemoveClient(client *Client) {
 		log.Printf("Client disconnected from store %d. Total clients: %d", client.StoreID, len(h.connections[client.StoreID]))
 	}
 
-	client.Conn.Close()
+	defer func() {
+		_ = client.Conn.Close()
+	}()
 }
 
 // BroadcastMessage broadcasts a message to all clients connected to a specific store.

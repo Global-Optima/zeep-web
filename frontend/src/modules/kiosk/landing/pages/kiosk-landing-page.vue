@@ -71,8 +71,7 @@ import { Autoplay, Pagination } from 'swiper/modules'
 
 import LandingImage0 from '@/core/assets/landing/image0.avif'
 import LandingImage1 from '@/core/assets/landing/image1.avif'
-import LandingImage2 from '@/core/assets/landing/image2.avif'
-import LandingImage3 from '@/core/assets/landing/image3.avif'
+
 import LocaleSwitch from '@/core/components/locale-switch/LocaleSwitch.vue'
 import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
@@ -85,19 +84,9 @@ const slides = ref([
     price: 1400,
   },
   {
-    image: LandingImage3,
+    image: LandingImage1,
     title: 'Эспрессо Фраппучино',
     price: 1700,
-  },
-  {
-    image: LandingImage2,
-    title: 'Черный чай с лаймом',
-    price: 650,
-  },
-  {
-    image: LandingImage1,
-    title: 'Грейпфрутовый лимонад',
-    price: 1250,
   },
 ])
 

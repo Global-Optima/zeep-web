@@ -122,14 +122,14 @@ func (r *warehouseEmployeeRepository) UpdateWarehouseEmployee(id uint, filter *c
 		if updateModels.WarehouseEmployee != nil && !utils.IsEmpty(updateModels.WarehouseEmployee) {
 			err := tx.Model(&data.WarehouseEmployee{}).
 				Where(&data.WarehouseEmployee{BaseEntity: data.BaseEntity{ID: id}}).
-				Updates(updateModels.WarehouseEmployee).Error
+				Save(updateModels.WarehouseEmployee).Error
 			if err != nil {
 				return err
 			}
 		}
 
 		if updateModels.UpdateEmployeeModels != nil && !utils.IsEmpty(updateModels.UpdateEmployeeModels) {
-			err := r.employeeRepo.UpdateEmployeeWithAssociations(tx, existingWarehouseEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
+			err := r.employeeRepo.SaveEmployeeWithAssociations(tx, existingWarehouseEmployee.EmployeeID, updateModels.UpdateEmployeeModels)
 			if err != nil {
 				return err
 			}

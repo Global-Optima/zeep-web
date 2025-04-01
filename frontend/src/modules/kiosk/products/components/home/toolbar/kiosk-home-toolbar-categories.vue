@@ -9,7 +9,7 @@
 			@click="selectCategory(category.id)"
 			:aria-pressed="selectedCategoryId === category.id"
 			:class="[
-        'px-7 py-5 text-base sm:text-xl rounded-full font-medium whitespace-nowrap',
+        'px-7 py-5 text-base sm:text-2xl rounded-full font-medium whitespace-nowrap',
         selectedCategoryId === category.id
           ? 'bg-primary text-primary-foreground'
           : 'bg-transparent text-gray-700 hover:bg-gray-100',

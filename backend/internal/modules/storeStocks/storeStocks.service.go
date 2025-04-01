@@ -50,7 +50,7 @@ func (s *storeStockService) AddMultipleStock(storeId uint, dto *types.AddMultipl
 	err := s.repo.WithTransaction(func(txRepo storeStockRepository) error {
 		for _, stock := range dto.IngredientStocks {
 			// Add or update stock for each ingredient
-			id, err := txRepo.AddOrUpdateStock(storeId, &stock)
+			id, err := txRepo.AddOrSaveStock(storeId, &stock)
 			if err != nil {
 				wrappedErr := utils.WrapError("error adding/updating stock element", err)
 				s.logger.Error(wrappedErr)
@@ -137,7 +137,19 @@ func (s *storeStockService) GetStockById(stockId uint, filter *contexts.StoreCon
 }
 
 func (s *storeStockService) UpdateStockById(storeId, stockId uint, input *types.UpdateStoreStockDTO) error {
-	err := s.repo.UpdateStock(storeId, stockId, input)
+	storeStock, err := s.repo.GetRawStockByID(storeId, stockId)
+	if err != nil {
+		return err
+	}
+
+	err = types.UpdateToStoreStockModel(input, storeStock)
+	if err != nil {
+		wrappedErr := utils.WrapError("error updating store stock", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	err = s.repo.SaveStock(storeId, stockId, storeStock)
 	if err != nil {
 		wrappedErr := utils.WrapError("error updating stock", err)
 		s.logger.Error(wrappedErr)

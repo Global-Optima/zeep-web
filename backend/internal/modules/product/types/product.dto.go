@@ -59,12 +59,13 @@ type ProductSizeDetailsDTO struct {
 type ProductSizeAdditiveDTO struct {
 	additiveTypes.AdditiveDTO
 	IsDefault bool `json:"isDefault"`
+	IsHidden  bool `json:"isHidden"`
 }
 
 type CreateProductDTO struct {
-	Name        string `form:"name" binding:"required,min=2,max=100"`
-	Description string `form:"description" binding:"required,max=500"`
-	CategoryID  uint   `form:"categoryId" binding:"required"`
+	Name        string  `form:"name" binding:"required,min=2,max=100"`
+	Description *string `form:"description" binding:"omitempty,max=500"`
+	CategoryID  uint    `form:"categoryId" binding:"required"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
 }
@@ -72,6 +73,7 @@ type CreateProductDTO struct {
 type SelectedAdditiveDTO struct {
 	AdditiveID uint `json:"additiveId" binding:"required"`
 	IsDefault  bool `json:"isDefault"`
+	IsHidden   bool `json:"isHidden"`
 }
 
 type SelectedIngredientDTO struct {
@@ -85,15 +87,15 @@ type CreateProductSizeDTO struct {
 	Size        float64                 `json:"size" binding:"required,gt=0"`
 	UnitID      uint                    `json:"unitId" binding:"required,gt=0"`
 	BasePrice   float64                 `json:"basePrice" binding:"required,gt=0"`
-	MachineId   string                  `form:"machineId" binding:"required,max=40"`
+	MachineId   string                  `json:"machineId" binding:"required,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }
 
 type UpdateProductDTO struct {
-	Name        string `form:"name" binding:"omitempty,min=2,max=100"`
-	Description string `form:"description" binding:"omitempty,max=500"`
-	CategoryID  uint   `form:"categoryId" binding:"omitempty,gt=0"`
+	Name        *string `form:"name" binding:"min=2,omitempty,max=100"`
+	Description *string `form:"description" binding:"omitempty,max=500"`
+	CategoryID  uint    `form:"categoryId" binding:"omitempty,gt=0"`
 	Image       *multipart.FileHeader
 	Video       *multipart.FileHeader
 	DeleteImage bool `form:"deleteImage"`
@@ -101,11 +103,11 @@ type UpdateProductDTO struct {
 }
 
 type UpdateProductSizeDTO struct {
-	Name        *string                 `json:"name" binding:"omitempty,max=100"`
+	Name        *string                 `json:"name" binding:"min=0,omitempty,max=100"`
 	BasePrice   *float64                `json:"basePrice" binding:"omitempty,gt=0"`
 	Size        *float64                `json:"size" binding:"omitempty,gt=0"`
 	UnitID      *uint                   `json:"unitId" binding:"omitempty,gt=0"`
-	MachineId   *string                 `form:"machineId" binding:"omitempty,max=40"`
+	MachineId   *string                 `json:"machineId" binding:"omitempty,max=40"`
 	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
 }

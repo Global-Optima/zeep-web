@@ -37,7 +37,7 @@ func (r *franchiseeRepository) CreateFranchisee(franchisee *data.Franchisee) (ui
 }
 
 func (r *franchiseeRepository) UpdateFranchisee(id uint, updateData *data.Franchisee) error {
-	return r.db.Model(&data.Franchisee{}).Where("id = ?", id).Updates(updateData).Error
+	return r.db.Model(&data.Franchisee{}).Where("id = ?", id).Save(updateData).Error
 }
 
 func (r *franchiseeRepository) DeleteFranchisee(id uint) error {

@@ -67,7 +67,7 @@ func NewStoreAdditivesModule(
 		repo,
 		ingredientRepo,
 		storageRepo,
-		storeAdditives.NewTransactionManager(base.DB, repo, storeStockRepo),
+		storeAdditives.NewTransactionManager(base.DB, repo, storeStockRepo, ingredientRepo),
 		base.Logger)
 
 	handler := storeAdditives.NewStoreAdditiveHandler(service, additiveService, franchiseeService, auditService, base.Logger)

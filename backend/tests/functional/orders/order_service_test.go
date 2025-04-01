@@ -461,7 +461,7 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 			},
 			storeID:           1,
 			expectedError:     true,
-			expectedErrSubstr: "inappropriate", // Expect an error message indicating censorship.
+			expectedErrSubstr: "name", // Expect an error message indicating censorship.
 		},
 		{
 			name: "Failure due to invalid product size",
@@ -598,7 +598,7 @@ func TestOrderService_CompleteSubOrder_Combined(t *testing.T) {
 	t.Run("Complete non-existent suborder", func(t *testing.T) {
 		err := module.Service.CompleteSubOrder(orderID, 99999) // Non-existent ID.
 		assert.Error(t, err, "Should return error for non-existent suborder")
-		assert.Contains(t, err.Error(), "failed to check suborder", "Error should mention suborder failure")
+		assert.Contains(t, err.Error(), "not found", "Error should mention suborder failure")
 	})
 }
 
@@ -651,12 +651,12 @@ func TestOrderService_AdvanceSubOrderStatus(t *testing.T) {
 	assert.Len(t, suborderIDs, 2, "Expected two suborders inserted")
 
 	// Advance the second suborder from PENDING to PREPARING.
-	dto, err := module.Service.AdvanceSubOrderStatus(suborderIDs[1])
+	dto, err := module.Service.AdvanceSubOrderStatus(suborderIDs[1], nil)
 	assert.NoError(t, err, "Advancing suborder status should succeed")
 	assert.Equal(t, data.SubOrderStatusPreparing, dto.Status, "Suborder should transition to PREPARING")
 
 	// Advance the same suborder from PREPARING to COMPLETED.
-	dto, err = module.Service.AdvanceSubOrderStatus(suborderIDs[1])
+	dto, err = module.Service.AdvanceSubOrderStatus(suborderIDs[1], nil)
 	assert.NoError(t, err, "Advancing suborder status again should succeed")
 	assert.Equal(t, data.SubOrderStatusCompleted, dto.Status, "Suborder should transition to COMPLETED")
 

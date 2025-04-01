@@ -15,7 +15,7 @@ func ConvertFranchiseeToDTO(franchisee *data.Franchisee) *FranchiseeDTO {
 func CreateToFranchisee(dto *CreateFranchiseeDTO) *data.Franchisee {
 	return &data.Franchisee{
 		Name:        dto.Name,
-		Description: dto.Description,
+		Description: *dto.Description,
 	}
 }
 

@@ -7,6 +7,7 @@
 				<TableHead>Категория</TableHead>
 				<TableHead>Размер</TableHead>
 				<TableHead>Цена</TableHead>
+        <TableHead>Статус</TableHead>
 				<TableHead v-if="canDelete"></TableHead>
 			</TableRow>
 		</TableHeader>
@@ -34,6 +35,14 @@
 				<TableCell>
 					{{ formatPrice(additive.storePrice) }}
 				</TableCell>
+        <TableCell class="hidden md:table-cell">
+          <p
+            class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
+            :class="getStatusClass(additive)"
+          >
+            {{ getStatusLabel(additive) }}
+          </p>
+        </TableCell>
 				<TableCell v-if="canDelete">
 					<Button
 						variant="ghost"
@@ -68,6 +77,33 @@ import { storeAdditivesService } from '@/modules/admin/store-additives/services/
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+
+type IngredientStatus = 'in_stock' | 'out_of_stock'
+
+const STORE_ADDITIVE_STATUS_COLOR: Record<IngredientStatus, string> = {
+  in_stock: 'bg-green-100 text-green-800',
+  out_of_stock: 'bg-red-100 text-red-800',
+}
+
+const STORE_ADDITIVE_STATUS_FORMATTED: Record<IngredientStatus, string> = {
+  in_stock: 'В наличии',
+  out_of_stock: 'Нет в наличии',
+}
+
+function computeStatus(additive: StoreAdditiveDTO): IngredientStatus {
+  if (additive.isOutOfStock) {
+    return 'out_of_stock'
+  }
+  return 'in_stock'
+}
+
+function getStatusClass(additive: StoreAdditiveDTO): string {
+  return STORE_ADDITIVE_STATUS_COLOR[computeStatus(additive)]
+}
+
+function getStatusLabel(additive: StoreAdditiveDTO): string {
+  return STORE_ADDITIVE_STATUS_FORMATTED[computeStatus(additive)]
+}
 
 const router = useRouter()
 const queryClient = useQueryClient()

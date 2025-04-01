@@ -22,7 +22,7 @@
       "storeStock": "Store warehouse stock *{{.Name}}* was created in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was created",
       "ingredientCategory": "Ingredient category *{{.Name}}* was created",
-      "stockRequest": "New stock request created in store *{{.Name}}*.",
+      "stockRequests": "New stock request created in store *{{.Name}}*.",
       "stockMaterial": "Stock material *{{.Name}}* was created",
       "stockMaterialCategory": "Stock material category *{{.Name}}* was created",
       "warehouseStock": "Warehouse stock *{{.Name}}* was created",
@@ -51,7 +51,7 @@
       "storeStock": "Store warehouse stock *{{.Name}}* was updated in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was updated",
       "ingredientCategory": "Ingredient category *{{.Name}}* was updated",
-      "stockRequest": "Stock request was updated in *{{.Name}}*.",
+      "stockRequests": "Stock request was updated in *{{.Name}}*.",
       "stockMaterial": "Stock material *{{.Name}}* was updated",
       "stockMaterialCategory": "Stock material category *{{.Name}}* was updated",
       "warehouseStock": "Warehouse stock *{{.Name}}* was updated",
@@ -80,7 +80,7 @@
       "storeStock": "Store warehouse stock *{{.Name}}* was deleted in store *{{.StoreName}}*",
       "ingredient": "Ingredient *{{.Name}}* was deleted",
       "ingredientCategory": "Ingredient category *{{.Name}}* was deleted",
-      "stockRequest": " *{{.Name}}* deleted stock request.",
+      "stockRequests": " *{{.Name}}* deleted stock request.",
       "stockMaterial": "Stock material *{{.Name}}* was deleted",
       "stockMaterialCategory": "Stock material category *{{.Name}}* was deleted",
       "warehouseStock": "Warehouse stock *{{.Name}}* was deleted",
@@ -383,7 +383,9 @@
 
     "200-store-synchronization": "The store synchronization was successful.",
     "500-store-synchronization": "An unexpected error occurred while synchronizing the store. Please try again later.",
-    "500-store-synchronization-check": "An unexpected error occurred while checking the store synchronization status. Please try again later."
+    "500-store-synchronization-check": "An unexpected error occurred while checking the store synchronization status. Please try again later.",
+
+    "500-audit-get": "An unexpected error occurred while fetching audit data. Please try again later."
   },
   "notification": {
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",

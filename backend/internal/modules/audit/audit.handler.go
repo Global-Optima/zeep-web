@@ -2,6 +2,7 @@ package audit
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -20,13 +21,13 @@ func NewAuditHandler(service AuditService) *AuditHandler {
 func (h *AuditHandler) GetAudits(c *gin.Context) {
 	var filter types.EmployeeAuditFilter
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.EmployeeAudit{}); err != nil {
-		utils.SendBadRequestError(c, utils.ERROR_MESSAGE_BINDING_QUERY)
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingQuery)
 		return
 	}
 
 	audits, err := h.service.GetAuditRecords(&filter)
 	if err != nil {
-		utils.SendInternalServerError(c, "Failed to retrieve Audits")
+		localization.SendLocalizedResponseWithKey(c, types.Response500AuditGet)
 		return
 	}
 

@@ -32,7 +32,7 @@ export interface BarcodeScannerOptions {
 	onError?: (error: Error) => void
 }
 
-export function useBarcodeScanner(options: BarcodeScannerOptions) {
+export function useScannerListener(options: BarcodeScannerOptions) {
 	const {
 		minCharTime = 30, // Adjust if scanner sends too fast/slow
 		prefix = '',

@@ -12,8 +12,15 @@ type UpdateWarehouseEmployeeModels struct {
 	WarehouseEmployee *data.WarehouseEmployee
 }
 
-func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO, role data.EmployeeRole) (*UpdateWarehouseEmployeeModels, error) {
-	warehouseEmployee := &data.WarehouseEmployee{}
+func WarehouseEmployeeUpdateFields(warehouseEmployee *data.WarehouseEmployee, input *UpdateWarehouseEmployeeDTO, role data.EmployeeRole) (*UpdateWarehouseEmployeeModels, error) {
+	if warehouseEmployee == nil {
+		return nil, fmt.Errorf("FranchiseeEmployee is nil")
+	}
+
+	if warehouseEmployee.Employee.ID == 0 {
+		return nil, fmt.Errorf("FranchiseeEmployee.Employee is not preloaded")
+	}
+
 	if input.WarehouseID != nil {
 		warehouseEmployee.WarehouseID = *input.WarehouseID
 	}
@@ -28,7 +35,7 @@ func WarehouseEmployeeUpdateFields(input *UpdateWarehouseEmployeeDTO, role data.
 		warehouseEmployee.Role = *input.Role
 	}
 
-	updateEmployeeModels, err := employeesTypes.PrepareUpdateFields(&input.UpdateEmployeeDTO)
+	updateEmployeeModels, err := employeesTypes.PrepareUpdateFields(&warehouseEmployee.Employee, &input.UpdateEmployeeDTO)
 	if err != nil {
 		return nil, err
 	}

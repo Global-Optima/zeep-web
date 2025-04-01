@@ -13,12 +13,12 @@ type GenerateBarcodeResponse struct {
 
 type CreateStockMaterialDTO struct {
 	Name                   string  `json:"name" binding:"required"`
-	Description            string  `json:"description"`
+	Description            *string `json:"description" binding:"omitempty"`
 	SafetyStock            float64 `json:"safetyStock" binding:"required,gt=0"`
 	UnitID                 uint    `json:"unitId" binding:"required"`
 	CategoryID             uint    `json:"categoryId" binding:"required"`
 	IngredientID           uint    `json:"ingredientId" binding:"required"`
-	Barcode                string  `json:"barcode"`
+	Barcode                string  `json:"barcode" binding:"required"`
 	ExpirationPeriodInDays int     `json:"expirationPeriodInDays"`
 	IsActive               bool    `json:"isActive" binding:"required"`
 	Size                   float64 `json:"size"`
@@ -26,7 +26,7 @@ type CreateStockMaterialDTO struct {
 
 type UpdateStockMaterialDTO struct {
 	Name                   *string  `json:"name"`
-	Description            *string  `json:"description"`
+	Description            *string  `json:"description" binding:"omitempty"`
 	SafetyStock            *float64 `json:"safetyStock" binding:"omitempty,gt=0"`
 	UnitID                 *uint    `json:"unitId"`
 	CategoryID             *uint    `json:"categoryId"`

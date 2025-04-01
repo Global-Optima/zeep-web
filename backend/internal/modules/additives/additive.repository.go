@@ -3,6 +3,7 @@ package additives
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -15,10 +16,11 @@ type AdditiveRepository interface {
 	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]data.ProductSizeAdditive, error)
 	CheckAdditiveExists(additiveName string) (bool, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
+	GetAdditiveWithDetailsByID(additiveID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
 	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) (uint, error)
-	UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
+	SaveAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
 	DeleteAdditive(additiveID uint) (*data.Additive, error)
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
@@ -166,6 +168,21 @@ func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]
 func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
 	err := r.db.Model(&data.Additive{}).
+		Where("id = ?", additiveID).
+		First(&additive).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrAdditiveNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch raw additive with ID %d: %w", additiveID, err)
+	}
+
+	return &additive, nil
+}
+
+func (r *additiveRepository) GetAdditiveWithDetailsByID(additiveID uint) (*data.Additive, error) {
+	var additive data.Additive
+	err := r.db.Model(&data.Additive{}).
 		Preload("Category").
 		Where("id = ?", additiveID).
 		Preload("Unit").
@@ -174,7 +191,7 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 		First(&additive).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, moduleErrors.ErrNotFound
+			return nil, types.ErrAdditiveNotFound
 		}
 		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
 	}
@@ -205,13 +222,16 @@ func (r *additiveRepository) CreateAdditive(additive *data.Additive) (uint, erro
 	return additive.ID, nil
 }
 
-func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error {
+func (r *additiveRepository) SaveAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if updateModels == nil {
 			return fmt.Errorf("nothing to update")
 		}
 
 		if updateModels.Additive != nil {
+			if updateModels.Ingredients != nil {
+				updateModels.Additive.IngredientsUpdatedAt = time.Now().UTC()
+			}
 			err := r.saveAdditive(tx, updateModels.Additive)
 			if err != nil {
 				return err
@@ -219,10 +239,19 @@ func (r *additiveRepository) UpdateAdditiveWithAssociations(additiveID uint, upd
 		}
 
 		if updateModels.Ingredients != nil {
-			err := r.updateAdditiveIngredients(tx, additiveID, updateModels.Ingredients)
+			err := r.saveAdditiveIngredients(tx, additiveID, updateModels.Ingredients)
 			if err != nil {
 				return err
 			}
+		}
+
+		productSizeIDs, err := r.getProductSizeIDsByAdditive(additiveID)
+		if err != nil {
+			return err
+		}
+
+		if err := r.updateProductSizeAdditivesUpdatedAt(productSizeIDs); err != nil {
+			return err
 		}
 
 		return nil
@@ -233,7 +262,7 @@ func (r *additiveRepository) saveAdditive(tx *gorm.DB, additive *data.Additive) 
 	return tx.Save(additive).Error
 }
 
-func (r *additiveRepository) updateAdditiveIngredients(tx *gorm.DB, additiveID uint, additiveIngredients []data.AdditiveIngredient) error {
+func (r *additiveRepository) saveAdditiveIngredients(tx *gorm.DB, additiveID uint, additiveIngredients []data.AdditiveIngredient) error {
 	var existingIngredients []data.AdditiveIngredient
 	if err := tx.Where("additive_id = ?", additiveID).Find(&existingIngredients).Error; err != nil {
 		return fmt.Errorf("failed to fetch existing ingredients: %w", err)
@@ -290,6 +319,34 @@ func (r *additiveRepository) updateAdditiveIngredients(tx *gorm.DB, additiveID u
 		if err := tx.Create(&toInsert).Error; err != nil {
 			return fmt.Errorf("failed to insert new ingredients: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func (r *additiveRepository) getProductSizeIDsByAdditive(additiveID uint) ([]uint, error) {
+	var productSizeIDs []uint
+
+	err := r.db.Model(&data.ProductSizeAdditive{}).
+		Where("additive_id = ?", additiveID).
+		Pluck("product_size_id", &productSizeIDs).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get productSizeIDs by additiveID %d: %w", additiveID, err)
+	}
+
+	return productSizeIDs, nil
+}
+
+func (r *additiveRepository) updateProductSizeAdditivesUpdatedAt(productSizeIDs []uint) error {
+	if len(productSizeIDs) == 0 {
+		return nil
+	}
+
+	err := r.db.Model(&data.ProductSize{}).
+		Where("id IN ?", productSizeIDs).
+		Update("additives_updated_at", time.Now().UTC()).Error
+	if err != nil {
+		return fmt.Errorf("failed to update additives_updated_at for productSizeIDs: %w", err)
 	}
 
 	return nil

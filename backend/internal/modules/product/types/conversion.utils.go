@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
@@ -99,6 +98,7 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 	return ProductSizeAdditiveDTO{
 		AdditiveDTO: *additiveTypes.ConvertToAdditiveDTO(&productSizeAdditive.Additive),
 		IsDefault:   productSizeAdditive.IsDefault,
+		IsHidden:    productSizeAdditive.IsHidden,
 	}
 }
 
@@ -126,7 +126,7 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 func CreateToProductModel(dto *CreateProductDTO) *data.Product {
 	product := &data.Product{
 		Name:        dto.Name,
-		Description: dto.Description,
+		Description: *dto.Description,
 		CategoryID:  dto.CategoryID,
 	}
 
@@ -143,19 +143,9 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 		MachineId: dto.MachineId,
 	}
 
-	for _, additive := range dto.Additives {
-		productSize.Additives = append(productSize.Additives, data.ProductSizeAdditive{
-			AdditiveID: additive.AdditiveID,
-			IsDefault:  additive.IsDefault,
-		})
-	}
+	productSize.Additives = mapAdditivesToProductSizeAdditives(dto.Additives)
+	productSize.ProductSizeIngredients = mapIngredientsToProductSizeIngredients(dto.Ingredients)
 
-	for _, ingredient := range dto.Ingredients {
-		productSize.ProductSizeIngredients = append(productSize.ProductSizeIngredients, data.ProductSizeIngredient{
-			IngredientID: ingredient.IngredientID,
-			Quantity:     ingredient.Quantity,
-		})
-	}
 	return productSize
 }
 
@@ -164,20 +154,18 @@ func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 		return fmt.Errorf("cannot update nil product")
 	}
 
-	if strings.TrimSpace(dto.Name) != "" {
-		if dto.Name != product.Name {
-			product.Name = dto.Name
+	if dto.Name != nil {
+		if dto.Name != &product.Name {
+			product.Name = *dto.Name
 		}
 	}
-	if strings.TrimSpace(dto.Description) != "" {
-		if dto.Description != product.Description {
-			product.Description = dto.Description
-		}
+
+	if dto.Description != nil {
+		product.Description = *dto.Description
 	}
+
 	if dto.CategoryID != 0 {
-		if dto.CategoryID != product.CategoryID {
-			product.CategoryID = dto.CategoryID
-		}
+		product.CategoryID = dto.CategoryID
 	}
 
 	return nil
@@ -202,36 +190,8 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 		productSize.MachineId = *dto.MachineId
 	}
 
-	var additives []data.ProductSizeAdditive
-	var ingredients []data.ProductSizeIngredient
-
-	if dto.Additives != nil {
-		if len(dto.Additives) == 0 {
-			additives = []data.ProductSizeAdditive{}
-		} else {
-			for _, additive := range dto.Additives {
-				temp := data.ProductSizeAdditive{
-					AdditiveID: additive.AdditiveID,
-					IsDefault:  additive.IsDefault,
-				}
-				additives = append(additives, temp)
-			}
-		}
-	}
-
-	if dto.Ingredients != nil {
-		if len(dto.Ingredients) == 0 {
-			ingredients = []data.ProductSizeIngredient{}
-		} else {
-			for _, ingredient := range dto.Ingredients {
-				temp := data.ProductSizeIngredient{
-					IngredientID: ingredient.IngredientID,
-					Quantity:     ingredient.Quantity,
-				}
-				ingredients = append(ingredients, temp)
-			}
-		}
-	}
+	additives := mapAdditivesToProductSizeAdditives(dto.Additives)
+	ingredients := mapIngredientsToProductSizeIngredients(dto.Ingredients)
 
 	return &ProductSizeModels{
 		ProductSize: productSize,
@@ -240,29 +200,98 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 	}
 }
 
+func mapAdditivesToProductSizeAdditives(additivesDTO []SelectedAdditiveDTO) []data.ProductSizeAdditive {
+	if additivesDTO == nil {
+		return nil
+	}
+
+	additives := make([]data.ProductSizeAdditive, 0, len(additivesDTO))
+
+	for _, dto := range additivesDTO {
+		additive := data.ProductSizeAdditive{
+			AdditiveID: dto.AdditiveID,
+			IsDefault:  dto.IsDefault,
+		}
+
+		if dto.IsDefault {
+			additive.IsHidden = dto.IsHidden
+		} else {
+			additive.IsHidden = false
+		}
+
+		additives = append(additives, additive)
+	}
+
+	return additives
+}
+
+func mapIngredientsToProductSizeIngredients(ingredientsDTO []SelectedIngredientDTO) []data.ProductSizeIngredient {
+	if ingredientsDTO == nil {
+		return nil
+	}
+
+	ingredients := make([]data.ProductSizeIngredient, 0, len(ingredientsDTO))
+
+	for _, dto := range ingredientsDTO {
+		ingredient := data.ProductSizeIngredient{
+			IngredientID: dto.IngredientID,
+			Quantity:     dto.Quantity,
+		}
+		ingredients = append(ingredients, ingredient)
+	}
+
+	return ingredients
+}
+
+var emptyStringRu = "пустое значение"
+
+// emptyStringEn = "empty value"
+// emptyStringKk = "бос мән"
+
 func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKey *data.StorageImageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
-	if dto.Name != "" && dto.Name != before.Name {
+	if dto.Name != nil && dto.Name != &before.Name {
 		key := "notification.centralCatalogUpdateDetails.nameChange"
-		changes = append(changes, details.CentralCatalogChange{
-			Key: key,
-			Params: map[string]interface{}{
-				"OldName": before.Name,
-				"NewName": dto.Name,
-			},
-		})
+
+		if *dto.Name == "" {
+			changes = append(changes, details.CentralCatalogChange{
+				Key: key,
+				Params: map[string]interface{}{
+					"OldName": before.Name,
+					"NewName": emptyStringRu,
+				},
+			})
+		} else {
+			changes = append(changes, details.CentralCatalogChange{
+				Key: key,
+				Params: map[string]interface{}{
+					"OldName": before.Name,
+					"NewName": dto.Name,
+				},
+			})
+		}
 	}
 
-	if dto.Description != "" && dto.Description != before.Description {
+	if dto.Description != nil && dto.Description != &before.Description {
 		key := "notification.centralCatalogUpdateDetails.descriptionChange"
-		changes = append(changes, details.CentralCatalogChange{
-			Key: key,
-			Params: map[string]interface{}{
-				"OldDescription": before.Description,
-				"NewDescription": dto.Description,
-			},
-		})
+		if *dto.Description == "" {
+			changes = append(changes, details.CentralCatalogChange{
+				Key: key,
+				Params: map[string]interface{}{
+					"OldDescription": before.Description,
+					"NewDescription": emptyStringRu,
+				},
+			})
+		} else {
+			changes = append(changes, details.CentralCatalogChange{
+				Key: key,
+				Params: map[string]interface{}{
+					"OldDescription": before.Description,
+					"NewDescription": dto.Description,
+				},
+			})
+		}
 	}
 
 	if imageKey != before.ImageKey {
