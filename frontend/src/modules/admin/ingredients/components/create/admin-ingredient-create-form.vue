@@ -25,7 +25,7 @@ const emits = defineEmits<{
 // Validation Schema
 const updateIngredientSchema = toTypedSchema(
   z.object({
-    name: z.string().min(1, 'Введите название ингредиента'),
+    name: z.string().min(1, 'Введите название сырья'),
     calories: z.number().min(0, 'Введите корректное значение калорий'),
     fat: z.number().min(0, 'Введите корректное значение жиров'),
     carbs: z.number().min(0, 'Введите корректное значение углеводов'),
@@ -33,7 +33,7 @@ const updateIngredientSchema = toTypedSchema(
     expirationInDays: z.number().min(0, 'Введите корректные дни хранения'),
     unitId: z.coerce.number().min(1, 'Выберите корректный размер'),
     categoryId: z.coerce.number().min(1, 'Выберите корректную категорию'),
-    isAllergen: z.boolean({message: 'Выберите если этот ингредиент аллергеном'}).default(false)
+    isAllergen: z.boolean({message: 'Выберите если это сырье является аллергеном'}).default(false)
   })
 )
 
@@ -96,7 +96,7 @@ function selectUnit(unit: UnitDTO) {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Создать ингредиент
+				Создать сырье
 			</h1>
 
 			<div class="hidden md:flex items-center gap-2 md:ml-auto">
@@ -120,8 +120,8 @@ function selectUnit(unit: UnitDTO) {
 			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
 				<Card>
 					<CardHeader>
-						<CardTitle>Детали ингредиента</CardTitle>
-						<CardDescription>Заполните информацию об ингредиенте.</CardDescription>
+						<CardTitle>Детали сырья</CardTitle>
+						<CardDescription>Заполните информацию об сырьее.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div class="gap-6 grid">
@@ -137,7 +137,7 @@ function selectUnit(unit: UnitDTO) {
 											id="name"
 											type="text"
 											v-bind="componentField"
-											placeholder="Введите название ингредиента"
+											placeholder="Введите название сырья"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -248,7 +248,7 @@ function selectUnit(unit: UnitDTO) {
 									<div class="flex flex-col space-y-0.5">
 										<FormLabel class="font-medium text-base"> Аллерген </FormLabel>
 										<FormDescription class="text-sm">
-											Данный ингредиент является аллергеном
+											Данное сырье является аллергеном
 										</FormDescription>
 									</div>
 
@@ -271,7 +271,7 @@ function selectUnit(unit: UnitDTO) {
 					<!-- Category Card -->
 					<CardHeader>
 						<CardTitle>Единица измерения</CardTitle>
-						<CardDescription>Выберите единицу измерения ингредиента</CardDescription>
+						<CardDescription>Выберите единицу измерения сырья</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<FormField name="categoryId">
@@ -293,7 +293,7 @@ function selectUnit(unit: UnitDTO) {
 					<!-- Category Card -->
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию ингредиента</CardDescription>
+						<CardDescription>Выберите категорию сырья</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<FormField name="categoryId">

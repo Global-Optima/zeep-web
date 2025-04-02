@@ -15,7 +15,7 @@
 				<h1
 					class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0"
 				>
-					Размеры товара
+					Размеры продукта
 				</h1>
 			</div>
 			<template v-if="!readonly">

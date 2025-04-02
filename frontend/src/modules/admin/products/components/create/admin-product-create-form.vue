@@ -200,7 +200,7 @@ function triggerVideoInput() {
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription>Категория товара</CardDescription>
+						<CardDescription>Категория продукта</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<FormField name="categoryId">

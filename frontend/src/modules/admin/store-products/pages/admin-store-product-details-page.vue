@@ -1,5 +1,5 @@
 <template>
-	<p v-if="!storeProductDetails || !productDetails">Товар не найден</p>
+	<p v-if="!storeProductDetails || !productDetails">Продукт не найден</p>
 
 	<AdminStoreProductDetailsForm
 		v-else
@@ -50,7 +50,7 @@ const updateMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных товара кафе. Пожалуйста, подождите.',
+			description: 'Обновление данных продукта кафе. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -59,13 +59,13 @@ const updateMutation = useMutation({
 		toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Данные товара кафе успешно обновлены.',
+			description: 'Данные продукта кафе успешно обновлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении данных товара кафе.',
+			description: 'Произошла ошибка при обновлении данных продукта кафе.',
 			variant: 'destructive',
 		})
 	},
@@ -75,7 +75,7 @@ function handleUpdate(updatedData: UpdateStoreProductDTO) {
 	if (!storeProductDetails.value?.id) {
 		toast({
 			title: 'Ошибка',
-			description: 'Неверный идентификатор товара.',
+			description: 'Неверный идентификатор продукта.',
 			variant: 'destructive',
 		})
 		return router.back()

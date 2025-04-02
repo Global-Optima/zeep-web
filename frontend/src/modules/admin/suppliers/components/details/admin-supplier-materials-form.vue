@@ -123,7 +123,7 @@ function onCancel() {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Товары {{ supplier.name }}
+				Продукты {{ supplier.name }}
 			</h1>
 
 			<div
@@ -167,7 +167,7 @@ function onCancel() {
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead>Товар</TableHead>
+							<TableHead>Продукт</TableHead>
 							<TableHead>Упаковка</TableHead>
 							<TableHead>Цена</TableHead>
 							<TableHead

@@ -80,7 +80,7 @@ const createProductSizeSchema = toTypedSchema(
   z.object({
     name: z.nativeEnum(ProductSizeNames).describe('Выберите корректный вариант'),
     basePrice: z.number().min(0, 'Введите корректную цену'),
-    machineId: z.string().min(1, 'Введите код товара из автомата').max(40, "Максимум 40 символов"),
+    machineId: z.string().min(1, 'Введите код продукта из автомата').max(40, "Максимум 40 символов"),
     size: z.number().min(0, 'Введите корректный размер'),
     unitId: z.number().min(1, 'Введите корректный размер'),
   })
@@ -168,7 +168,6 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
     additives.value[index].isHidden = false
   }
 }
-
 </script>
 
 <template>
@@ -304,7 +303,7 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 							v-slot="{ componentField }"
 						>
 							<FormItem>
-								<FormLabel>Код товара из автомата</FormLabel>
+								<FormLabel>Код продукта из автомата</FormLabel>
 								<FormControl>
 									<Input
 										id="machineId"
@@ -325,8 +324,8 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 				<CardHeader>
 					<div class="flex justify-between items-start">
 						<div>
-							<CardTitle>Добавки</CardTitle>
-							<CardDescription class="mt-2"> Выберите добавки для варианта. </CardDescription>
+							<CardTitle>Модификаторы</CardTitle>
+							<CardDescription class="mt-2"> Выберите модификатора для варианта. </CardDescription>
 						</div>
 						<Button
 							variant="outline"
@@ -337,69 +336,69 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 					</div>
 				</CardHeader>
 				<CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead></TableHead>
-                <TableHead>Название</TableHead>
-                <TableHead>Категория</TableHead>
-                <TableHead>Размер</TableHead>
-                <TableHead class="text-center">В составе</TableHead>
-                <TableHead class="text-center">Не показывать</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead></TableHead>
+								<TableHead>Название</TableHead>
+								<TableHead>Категория</TableHead>
+								<TableHead>Размер</TableHead>
+								<TableHead class="text-center">В составе</TableHead>
+								<TableHead class="text-center">Не показывать</TableHead>
+								<TableHead></TableHead>
+							</TableRow>
+						</TableHeader>
 
-            <TableBody>
-              <TableRow
-                v-for="(additive, index) in additives"
-                :key="additive.additiveId"
-              >
-                <TableCell>
-                  <LazyImage
-                    :src="additive.imageUrl"
-                    alt="Изображение добавки"
-                    class="rounded-md size-16 object-contain"
-                  />
-                </TableCell>
+						<TableBody>
+							<TableRow
+								v-for="(additive, index) in additives"
+								:key="additive.additiveId"
+							>
+								<TableCell>
+									<LazyImage
+										:src="additive.imageUrl"
+										alt="Изображение модификатора"
+										class="rounded-md size-16 object-contain"
+									/>
+								</TableCell>
 
-                <TableCell>{{ additive.name }}</TableCell>
-                <TableCell>{{ additive.categoryName }}</TableCell>
-                <TableCell>{{ additive.size }} {{ additive.unitName }}</TableCell>
+								<TableCell>{{ additive.name }}</TableCell>
+								<TableCell>{{ additive.categoryName }}</TableCell>
+								<TableCell>{{ additive.size }} {{ additive.unitName }}</TableCell>
 
-                <!-- По умолчанию -->
-                <TableCell class="text-center !pr-2">
-                  <Checkbox
-                    type="checkbox"
-                    class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
-                    :checked="additive.isDefault"
-                    @update:checked="value => onAdditiveDefaultClick(index, value)"
-                  />
-                </TableCell>
+								<!-- По умолчанию -->
+								<TableCell class="text-center !pr-2">
+									<Checkbox
+										type="checkbox"
+										class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
+										:checked="additive.isDefault"
+										@update:checked="value => onAdditiveDefaultClick(index, value)"
+									/>
+								</TableCell>
 
-                <TableCell class="text-center !pr-2">
-                    <Checkbox
-                      type="checkbox"
-                      :disabled="!additive.isDefault"
-                      class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
-                      :checked="additive.isHidden ?? false"
-                      @update:checked="v => additive.isHidden = v"
-                    />
-                </TableCell>
+								<TableCell class="text-center !pr-2">
+									<Checkbox
+										type="checkbox"
+										:disabled="!additive.isDefault"
+										class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
+										:checked="additive.isHidden ?? false"
+										@update:checked="v => additive.isHidden = v"
+									/>
+								</TableCell>
 
-                <TableCell class="text-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    @click="removeAdditive(index)"
-                  >
-                    <Trash class="w-6 h-6 text-red-500" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-          <div
+								<TableCell class="text-center">
+									<Button
+										variant="ghost"
+										size="icon"
+										@click="removeAdditive(index)"
+									>
+										<Trash class="w-6 h-6 text-red-500" />
+									</Button>
+								</TableCell>
+							</TableRow>
+						</TableBody>
+					</Table>
+					<div
 						v-if="additivesError"
 						class="mt-2 text-red-500 text-sm"
 					>

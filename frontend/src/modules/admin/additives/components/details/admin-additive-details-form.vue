@@ -62,15 +62,15 @@ const openIngredientsDialog = ref(false)
 // Validation Schema
 const updateAdditiveSchema = toTypedSchema(
   z.object({
-    name: z.string().min(1, 'Введите название добавки')
+    name: z.string().min(1, 'Введите название модификатора')
       .max(100, 'Название не может превышать 100 символов'),
     description: z.string()
       .max(500, 'Описание не может превышать 500 символов').optional(),
-    machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
+    machineId: z.string().min(1, 'Введите код модификатора из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
     unitId: z.number().min(0, 'Введите единицу измерения'),
-    additiveCategoryId: z.coerce.number().min(1, 'Выберите категорию добавки'),
+    additiveCategoryId: z.coerce.number().min(1, 'Выберите категорию модификатора'),
     image: z.instanceof(File).optional().refine((file) => {
       if (!file) return true;
       return ['image/jpeg', 'image/png'].includes(file.type);
@@ -220,9 +220,9 @@ const triggerImageInput = () => imageInputRef.value?.click();
 			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
 				<Card>
 					<CardHeader>
-						<CardTitle>Детали добавки</CardTitle>
+						<CardTitle>Детали модификатора</CardTitle>
 						<CardDescription v-if="!readonly"
-							>Заполните название, описание и цену добавки.</CardDescription
+							>Заполните название, описание и цену модификатора.</CardDescription
 						>
 					</CardHeader>
 					<CardContent>
@@ -239,7 +239,7 @@ const triggerImageInput = () => imageInputRef.value?.click();
 											id="name"
 											type="text"
 											v-bind="componentField"
-											placeholder="Введите название добавки"
+											placeholder="Введите название модификатора"
 											:readonly="readonly"
 										/>
 									</FormControl>
@@ -258,7 +258,7 @@ const triggerImageInput = () => imageInputRef.value?.click();
 										<Textarea
 											id="description"
 											v-bind="componentField"
-											placeholder="Краткое описание добавки"
+											placeholder="Краткое описание модификатора"
 											class="min-h-32"
 											:readonly="readonly"
 										/>
@@ -280,7 +280,7 @@ const triggerImageInput = () => imageInputRef.value?.click();
 												id="price"
 												type="number"
 												v-bind="componentField"
-												placeholder="Введите цену добавки"
+												placeholder="Введите цену модификатора"
 												:readonly="readonly"
 											/>
 										</FormControl>
@@ -315,7 +315,7 @@ const triggerImageInput = () => imageInputRef.value?.click();
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Код топпинга из автомата</FormLabel>
+									<FormLabel>Код модификатора из автомата</FormLabel>
 									<FormControl>
 										<Input
 											id="machineId"
@@ -466,7 +466,7 @@ const triggerImageInput = () => imageInputRef.value?.click();
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription v-if="!readonly">Выберите категорию топпинга.</CardDescription>
+						<CardDescription v-if="!readonly">Выберите категорию модификатора.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div>

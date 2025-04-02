@@ -103,7 +103,7 @@ const onCancel = () => {
 									type="text"
 									v-bind="componentField"
 									:readonly="readonly"
-									placeholder="Введите название категории добавки"
+									placeholder="Введите название категории модификатора"
 								/>
 							</FormControl>
 							<FormMessage />

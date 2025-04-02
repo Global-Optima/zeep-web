@@ -44,7 +44,7 @@ const createStockMaterialSchema = toTypedSchema(
     size: z.coerce.number().min(1, 'Введите размер упаковки'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
-    ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
+    ingredientId: z.coerce.number().min(1, 'Выберите сырье'),
     barcode: z
       .string()
       .min(1, 'Создайте или вставьте штрихкод')
@@ -300,8 +300,8 @@ const onGenerateBarcodeClick = async () => {
 
 				<Card>
 					<CardHeader>
-						<CardTitle>Ингредиент</CardTitle>
-						<CardDescription>Выберите ингредиент.</CardDescription>
+						<CardTitle>Сырье</CardTitle>
+						<CardDescription>Выберите сырье.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<Button

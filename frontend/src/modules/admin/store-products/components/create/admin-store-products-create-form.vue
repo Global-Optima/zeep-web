@@ -99,7 +99,7 @@ function selectProduct(product: ProductDetailsDTO) {
   const exists = productsList.value.some(p => p.id === product.id)
   if (exists) {
     // You might optionally show a notification or toast here
-    // e.g., toast("Этот товар уже добавлен.")
+    // e.g., toast("Этот продукт уже добавлен.")
     openProductDialog.value = false
     return
   }
@@ -144,7 +144,7 @@ function removeProduct(index: number) {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Создать товар в кафе
+				Создать продукт в кафе
 			</h1>
 
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
@@ -246,7 +246,7 @@ function removeProduct(index: number) {
 				v-if="productsList.length === 0"
 				class="mt-4 text-center text-gray-500"
 			>
-				Нет добавленных товаров
+				Нет добавленных продуктов
 			</div>
 		</div>
 
@@ -257,7 +257,7 @@ function removeProduct(index: number) {
 				variant="outline"
 				@click="openProductDialog = true"
 			>
-				Добавить товар
+				Добавить продукт
 			</Button>
 		</div>
 

@@ -8,7 +8,7 @@
 			class="w-full max-w-7xl"
 		>
 			<DialogHeader>
-				<DialogTitle>Выберите товар</DialogTitle>
+				<DialogTitle>Выберите продукт</DialogTitle>
 			</DialogHeader>
 
 			<div>
@@ -26,7 +26,7 @@
 						v-if="!products || products.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Товары не найдены
+						Продукты не найдены
 					</p>
 
 					<ul v-else>
@@ -39,7 +39,7 @@
 							<div class="flex items-center gap-2">
 								<LazyImage
 									:src="product.imageUrl"
-									alt="Изображение добавки"
+									alt="Изображение модификатора"
 									class="rounded-md size-16 object-contain"
 								/>
 								<span>{{ product.name }}</span>

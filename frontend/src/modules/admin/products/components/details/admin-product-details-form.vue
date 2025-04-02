@@ -237,7 +237,7 @@ const triggerVideoInput = () => videoInputRef.value?.click();
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription>Категория товара</CardDescription>
+						<CardDescription>Категория продукта</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div>

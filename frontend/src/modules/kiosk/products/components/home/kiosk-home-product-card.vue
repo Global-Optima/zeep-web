@@ -11,7 +11,7 @@
 		<div>
 			<LazyImage
 				:src="product.imageUrl"
-				alt="Изображение товара"
+				alt="Изображение продукта"
 				class="rounded-[32px] w-full h-64 sm:h-80 object-contain"
 			/>
 

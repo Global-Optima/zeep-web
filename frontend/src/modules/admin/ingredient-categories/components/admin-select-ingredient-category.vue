@@ -77,7 +77,7 @@ function onClose() {
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите категорию ингредиента</DialogTitle>
+				<DialogTitle>Выберите категорию сырья</DialogTitle>
 			</DialogHeader>
 			<div>
 				<Input
@@ -91,7 +91,7 @@ function onClose() {
 						v-if="!categories || categories.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Категории ингредиента не найдены
+						Категории сырья не найдены
 					</p>
 					<ul v-else>
 						<li

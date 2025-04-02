@@ -12,7 +12,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 	KIOSK_PRODUCT: {
 		path: 'products/:id',
 		meta: {
-			title: 'Детали товара',
+			title: 'Детали продукта',
 		},
 		component: () => import('@/modules/kiosk/products/pages/kiosk-product-page.vue'),
 	},

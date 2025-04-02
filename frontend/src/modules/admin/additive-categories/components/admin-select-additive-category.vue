@@ -5,7 +5,7 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите категорию топпинга</DialogTitle>
+				<DialogTitle>Выберите категорию модификатора</DialogTitle>
 			</DialogHeader>
 			<div>
 				<!-- Search Input -->
@@ -21,7 +21,7 @@
 						v-if="!additiveCategories || additiveCategories.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Категории топпингов не найдены
+						Категории модификаторов не найдены
 					</p>
 					<ul v-else>
 						<li
