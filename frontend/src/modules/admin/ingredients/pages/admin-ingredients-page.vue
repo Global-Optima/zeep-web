@@ -14,7 +14,7 @@
 					v-if="!ingredientsResponse || ingredientsResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Ингредиенты не найдены
+					Сырье не найдено
 				</p>
 
 				<!-- Ingredients List -->

@@ -20,7 +20,7 @@
 				<TableCell class="hidden sm:table-cell">
 					<LazyImage
 						:src="additive.imageUrl"
-						alt="Изображение добавки"
+						alt="Изображение модификатора"
 						class="rounded-md size-16 object-contain aspect-square"
 					/>
 				</TableCell>

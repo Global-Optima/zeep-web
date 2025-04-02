@@ -37,7 +37,7 @@ const updateMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных категории добавок. Пожалуйста, подождите.',
+			description: 'Обновление данных категории модификаторов. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -52,7 +52,7 @@ const updateMutation = useMutation({
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении категории добавок.',
+			description: 'Произошла ошибка при обновлении категории модификаторов.',
 			variant: 'destructive',
 		})
 	},

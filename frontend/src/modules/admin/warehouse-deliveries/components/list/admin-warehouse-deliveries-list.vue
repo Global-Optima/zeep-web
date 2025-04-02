@@ -4,7 +4,7 @@
 			<TableRow>
 				<TableHead>Поставщик</TableHead>
 				<TableHead>Дата Доставки</TableHead>
-				<TableHead>Товаров</TableHead>
+				<TableHead>Продуктов</TableHead>
 			</TableRow>
 		</TableHeader>
 		<TableBody>

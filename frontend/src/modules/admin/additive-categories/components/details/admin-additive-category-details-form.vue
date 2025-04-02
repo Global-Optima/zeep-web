@@ -29,7 +29,7 @@ const createAdditiveCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
     description: z.string().optional(),
-    isMultipleSelect: z.boolean().optional().describe('Можно ли выбирать несколько топпингов в этой категории'),
+    isMultipleSelect: z.boolean().optional().describe('Можно ли выбирать несколько модификаторов в этой категории'),
   })
 )
 
@@ -90,8 +90,8 @@ const onCancel = () => {
 		<!-- Main Content -->
 		<Card>
 			<CardHeader>
-				<CardTitle>Детали категории добавки</CardTitle>
-				<CardDescription>Заполните информацию о категории добавки.</CardDescription>
+				<CardTitle>Детали категории модификатора</CardTitle>
+				<CardDescription>Заполните информацию о категории модификатора.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div class="gap-6 grid">
@@ -108,7 +108,7 @@ const onCancel = () => {
 									type="text"
 									v-bind="componentField"
 									:readonly="readonly"
-									placeholder="Введите название категории добавки"
+									placeholder="Введите название категории модификатора"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -128,7 +128,7 @@ const onCancel = () => {
 									type="text"
 									v-bind="componentField"
 									:readonly="readonly"
-									placeholder="Введите описание категории добавки"
+									placeholder="Введите описание категории модификатора"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -146,7 +146,7 @@ const onCancel = () => {
 							<div class="flex flex-col space-y-0.5">
 								<FormLabel class="font-medium text-base">Множественный выбор</FormLabel>
 								<FormDescription class="text-sm">
-									Укажите можно ли выбрать несколько топпингов в этой категории при заказе
+									Укажите можно ли выбрать несколько модификаторов в этой категории при заказе
 								</FormDescription>
 							</div>
 

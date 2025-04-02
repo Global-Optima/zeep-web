@@ -92,7 +92,7 @@ const updateProductSizeSchema = toTypedSchema(
     basePrice: z.number().min(0, 'Введите корректную цену'),
     size: z.number().min(0, 'Введите корректный размер'),
     unitId: z.number().min(1, 'Введите корректную единицу измерения'),
-    machineId: z.string().min(1, 'Введите код товара из автомата').max(40, "Максимум 40 символов"),
+    machineId: z.string().min(1, 'Введите код продукта из автомата').max(40, "Максимум 40 символов"),
   })
 )
 
@@ -210,7 +210,6 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
     additives.value[index].isHidden = false
   }
 }
-
 </script>
 
 <template>
@@ -360,7 +359,7 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 							v-slot="{ componentField }"
 						>
 							<FormItem>
-								<FormLabel>Код товара из автомата</FormLabel>
+								<FormLabel>Код продукта из автомата</FormLabel>
 								<FormControl>
 									<Input
 										id="machineId"
@@ -381,12 +380,12 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 				<CardHeader>
 					<div class="flex justify-between items-start">
 						<div>
-							<CardTitle>Добавки</CardTitle>
+							<CardTitle>Модификаторы</CardTitle>
 							<CardDescription
 								v-if="!readonly"
 								class="mt-2"
 							>
-								Выберите добавки для варианта.
+								Выберите модификатора для варианта.
 							</CardDescription>
 						</div>
 						<Button
@@ -407,7 +406,7 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 								<TableHead>Категория</TableHead>
 								<TableHead>Размер</TableHead>
 								<TableHead class="text-center !pr-2">В составе</TableHead>
-                <TableHead class="text-center !pr-2">Не показывать</TableHead>
+								<TableHead class="text-center !pr-2">Не показывать</TableHead>
 								<TableHead v-if="!readonly"></TableHead>
 							</TableRow>
 						</TableHeader>
@@ -419,31 +418,31 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 								<TableCell>
 									<LazyImage
 										:src="additive.imageUrl"
-										alt="Изображение добавки"
+										alt="Изображение модификатора"
 										class="rounded-md size-16 object-contain"
 									/>
 								</TableCell>
 								<TableCell>{{ additive.name }}</TableCell>
 								<TableCell>{{ additive.categoryName }}</TableCell>
 								<TableCell>{{ additive.size }} {{ additive.unitName }}</TableCell>
-                <TableCell class="text-center !pr-2">
-                  <Checkbox
-                    type="checkbox"
-                    class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
-                    :checked="additive.isDefault"
-                    @update:checked="value => onAdditiveDefaultClick(index, value)"
-                  />
-                </TableCell>
+								<TableCell class="text-center !pr-2">
+									<Checkbox
+										type="checkbox"
+										class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
+										:checked="additive.isDefault"
+										@update:checked="value => onAdditiveDefaultClick(index, value)"
+									/>
+								</TableCell>
 
-                <TableCell class="text-center !pr-2">
-                  <Checkbox
-                    type="checkbox"
-                    :disabled="!additive.isDefault"
-                    class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
-                    :checked="additive.isHidden ?? false"
-                    @update:checked="v => additive.isHidden = v"
-                  />
-                </TableCell>
+								<TableCell class="text-center !pr-2">
+									<Checkbox
+										type="checkbox"
+										:disabled="!additive.isDefault"
+										class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
+										:checked="additive.isHidden ?? false"
+										@update:checked="v => additive.isHidden = v"
+									/>
+								</TableCell>
 
 								<TableCell
 									v-if="!readonly"

@@ -50,7 +50,7 @@
 					<Button
 						size="icon"
 						variant="ghost"
-						aria-label="Добавить ингредиент в заказ"
+						aria-label="Добавить сырье в заказ"
 						@click.stop="handleAddToCartClick(stock.ingredient.id)"
 					>
 						<TooltipProvider>
@@ -59,7 +59,7 @@
 									<PackagePlus class="w-6 h-6 text-gray-500" />
 								</TooltipTrigger>
 								<TooltipContent>
-									<p>Добавить ингредиент в заказ</p>
+									<p>Добавить сырье в заказ</p>
 								</TooltipContent>
 							</Tooltip>
 						</TooltipProvider>

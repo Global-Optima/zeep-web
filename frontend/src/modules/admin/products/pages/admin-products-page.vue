@@ -13,7 +13,7 @@
 					v-if="!productsResponse || productsResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Товары не найдены
+					Продукты не найдены
 				</p>
 				<AdminProductsList
 					v-else

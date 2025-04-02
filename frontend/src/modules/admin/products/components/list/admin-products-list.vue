@@ -20,7 +20,7 @@
 				<TableCell class="hidden sm:table-cell">
 					<LazyImage
 						:src="product.imageUrl"
-						alt="Изображение товара"
+						alt="Изображение продукта"
 						class="rounded-md size-16 object-contain aspect-square"
 					/>
 				</TableCell>

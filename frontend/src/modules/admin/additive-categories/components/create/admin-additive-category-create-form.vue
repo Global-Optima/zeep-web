@@ -59,7 +59,7 @@ const onCancel = () => {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Создать категорию добавки
+				Создать категорию модификатора
 			</h1>
 
 			<div class="md:flex items-center gap-2 hidden md:ml-auto">
@@ -80,8 +80,8 @@ const onCancel = () => {
 		<!-- Main Content -->
 		<Card>
 			<CardHeader>
-				<CardTitle>Детали категории добавки</CardTitle>
-				<CardDescription>Заполните информацию о категории добавки.</CardDescription>
+				<CardTitle>Детали категории модификатора</CardTitle>
+				<CardDescription>Заполните информацию о категории модификатора.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div class="gap-6 grid">
@@ -97,7 +97,7 @@ const onCancel = () => {
 									id="name"
 									type="text"
 									v-bind="componentField"
-									placeholder="Введите название категории добавки"
+									placeholder="Введите название категории модификатора"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -116,7 +116,7 @@ const onCancel = () => {
 									id="description"
 									type="text"
 									v-bind="componentField"
-									placeholder="Введите описание категории добавки"
+									placeholder="Введите описание категории модификатора"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -134,7 +134,7 @@ const onCancel = () => {
 							<div class="flex flex-col space-y-0.5">
 								<FormLabel class="font-medium text-base"> Множественный выбор </FormLabel>
 								<FormDescription class="text-sm">
-									Укажите можно ли выбрать несколько топпингов в этой категории при заказе
+									Укажите можно ли выбрать несколько модификаторов в этой категории при заказе
 								</FormDescription>
 							</div>
 

@@ -17,7 +17,7 @@
 				>
 					<h1 class="mt-8 font-bold text-red-600 text-4xl">Ошибка</h1>
 					<p class="mt-6 max-w-md text-gray-600 text-2xl">
-						{{ errorMessage || 'К сожалению, данный товар временно недоступен, попробуйте позже' }}
+						{{ errorMessage || 'К сожалению, данный продукт временно недоступен, попробуйте позже' }}
 					</p>
 					<button
 						@click="emits('close')"
@@ -51,7 +51,7 @@
 						<div class="flex flex-col justify-center items-center">
 							<LazyImage
 								:src="productDetails.imageUrl"
-								alt="Изображение товара"
+								alt="Изображение продукта"
 								class="rounded-3xl w-38 h-64 object-contain"
 							/>
 							<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>

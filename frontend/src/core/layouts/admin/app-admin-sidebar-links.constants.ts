@@ -111,7 +111,7 @@ export const adminNavItems: SidebarNavItem[] = [
 		],
 	},
 	{
-		name: 'Товары',
+		name: 'Продукты',
 		routeKey: 'ADMIN_STORE_PRODUCTS',
 		icon: Package,
 		accessRoles: [
@@ -122,7 +122,7 @@ export const adminNavItems: SidebarNavItem[] = [
 		],
 	},
 	{
-		name: 'Топпинги',
+		name: 'Модификаторы',
 		routeKey: 'ADMIN_STORE_ADDITIVES',
 		icon: ListPlus,
 		accessRoles: [
@@ -221,7 +221,7 @@ export const adminNavItems: SidebarNavItem[] = [
 		],
 	},
 	{
-		label: 'Товары',
+		label: 'Продукты',
 		icon: Package,
 		accessRoles: [EmployeeRole.ADMIN],
 		items: [
@@ -241,7 +241,7 @@ export const adminNavItems: SidebarNavItem[] = [
 	},
 
 	{
-		label: 'Топпинги',
+		label: 'Модификаторы',
 		icon: ListPlus,
 		accessRoles: [EmployeeRole.ADMIN],
 		items: [
@@ -260,7 +260,7 @@ export const adminNavItems: SidebarNavItem[] = [
 		],
 	},
 	{
-		label: 'Ингредиенты',
+		label: 'Сырье',
 		icon: Apple,
 		accessRoles: [EmployeeRole.ADMIN],
 		items: [
@@ -279,7 +279,7 @@ export const adminNavItems: SidebarNavItem[] = [
 		],
 	},
 	{
-		label: 'Складские товары',
+		label: 'Складские продукты',
 		icon: Package,
 		accessRoles: [
 			EmployeeRole.ADMIN,

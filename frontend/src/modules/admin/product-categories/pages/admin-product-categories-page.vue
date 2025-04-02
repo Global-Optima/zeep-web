@@ -13,7 +13,7 @@
 					v-if="!productCategoriesResponse || productCategoriesResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Категории товаров не найдены
+					Категории продуктов не найдены
 				</p>
 				<AdminProductCategoriesList
 					v-else

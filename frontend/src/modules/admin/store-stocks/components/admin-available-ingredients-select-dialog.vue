@@ -5,7 +5,7 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите доступный ингредиент</DialogTitle>
+				<DialogTitle>Выберите доступный сырье</DialogTitle>
 			</DialogHeader>
 
 			<div>
@@ -21,7 +21,7 @@
 						v-if="!ingredients || ingredients.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Ингредиенты не найдены
+						Сырье не найдено
 					</p>
 
 					<ul v-else>

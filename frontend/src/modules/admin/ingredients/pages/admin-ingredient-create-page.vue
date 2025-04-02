@@ -22,7 +22,7 @@ const createMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Создание...',
-			description: 'Создание нового ингредиента. Пожалуйста, подождите.',
+			description: 'Создание нового сырья. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -30,14 +30,14 @@ const createMutation = useMutation({
 		toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Ингредиент успешно создан.',
+			description: 'Сырье успешно создано.',
 		})
 		router.back()
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при создании ингредиента.',
+			description: 'Произошла ошибка при создании сырья.',
 			variant: 'destructive',
 		})
 	},

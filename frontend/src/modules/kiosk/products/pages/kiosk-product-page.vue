@@ -9,7 +9,7 @@
 		>
 			<h1 class="mt-8 font-bold text-red-600 text-4xl">Ошибка</h1>
 			<p class="mt-6 max-w-md text-gray-600 text-2xl">
-				К сожалению, данный товар временно недоступен, попробуйте позже
+				К сожалению, данный продукт временно недоступен, попробуйте позже
 			</p>
 
 			<button
@@ -46,7 +46,7 @@
 				<div class="flex flex-col justify-center items-center mt-4">
 					<LazyImage
 						:src="productDetails.imageUrl"
-						alt="Изображение товара"
+						alt="Изображение продукта"
 						class="rounded-3xl w-38 h-64 object-contain"
 					/>
 					<p class="mt-7 font-semibold text-5xl">{{ productDetails.name }}</p>

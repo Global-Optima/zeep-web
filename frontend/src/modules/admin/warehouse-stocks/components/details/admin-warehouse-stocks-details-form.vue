@@ -50,7 +50,7 @@ const materialInfo = computed(() => [
   },
   {
     label: 'Ранняя дата истечения срока годности',
-    value: props.initialData.earliestExpirationDate ? formatDate(new Date(props.initialData.earliestExpirationDate)) : "Доставки товара отсутствуют",
+    value: props.initialData.earliestExpirationDate ? formatDate(new Date(props.initialData.earliestExpirationDate)) : "Доставки продукта отсутствуют",
   },
   { label: 'Штрихкод', value: props.initialData.stockMaterial.barcode },
 ])

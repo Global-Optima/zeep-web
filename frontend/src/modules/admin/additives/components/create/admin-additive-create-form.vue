@@ -54,9 +54,9 @@ const openIngredientsDialog = ref(false)
 // Validation Schema
 const createAdditiveSchema = toTypedSchema(
   z.object({
-    name: z.string().min(1, 'Введите название добавки'),
+    name: z.string().min(1, 'Введите название модификатора'),
     description: z.string().optional(),
-    machineId: z.string().min(1, 'Введите код топпинга из автомата').max(40, "Максимум 40 символов"),
+    machineId: z.string().min(1, 'Введите код модификатора из автомата').max(40, "Максимум 40 символов"),
     basePrice: z.coerce.number().min(0, 'Введите корректную цену'),
     size: z.coerce.number().min(0, 'Введите размер'),
     unitId: z.coerce.number()
@@ -163,7 +163,7 @@ function removeIngredient(index: number) {
 				<span class="sr-only">Назад</span>
 			</Button>
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				Создать Добавку
+				Создать Модификатор
 			</h1>
 
 			<div class="hidden md:flex items-center gap-2 md:ml-auto">
@@ -189,8 +189,8 @@ function removeIngredient(index: number) {
 			<div class="items-start gap-4 grid lg:col-span-2 auto-rows-max">
 				<Card>
 					<CardHeader>
-						<CardTitle>Детали добавки</CardTitle>
-						<CardDescription>Заполните название, описание и цену добавки.</CardDescription>
+						<CardTitle>Детали модификатора</CardTitle>
+						<CardDescription>Заполните название, описание и цену модификатора.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div class="gap-6 grid">
@@ -206,7 +206,7 @@ function removeIngredient(index: number) {
 											id="name"
 											type="text"
 											v-bind="componentField"
-											placeholder="Введите название добавки"
+											placeholder="Введите название модификатора"
 										/>
 									</FormControl>
 									<FormMessage />
@@ -224,7 +224,7 @@ function removeIngredient(index: number) {
 										<Textarea
 											id="description"
 											v-bind="componentField"
-											placeholder="Краткое описание добавки"
+											placeholder="Краткое описание модификатора"
 											class="min-h-32"
 										/>
 									</FormControl>
@@ -245,7 +245,7 @@ function removeIngredient(index: number) {
 												id="price"
 												type="number"
 												v-bind="componentField"
-												placeholder="Введите цену добавки"
+												placeholder="Введите цену модификатора"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -278,7 +278,7 @@ function removeIngredient(index: number) {
 								v-slot="{ componentField }"
 							>
 								<FormItem>
-									<FormLabel>Код топпинга из автомата</FormLabel>
+									<FormLabel>Код модификатора из автомата</FormLabel>
 									<FormControl>
 										<Input
 											id="machineId"
@@ -422,7 +422,7 @@ function removeIngredient(index: number) {
 				<Card>
 					<CardHeader>
 						<CardTitle>Категория</CardTitle>
-						<CardDescription>Выберите категорию товара</CardDescription>
+						<CardDescription>Выберите категорию продукта</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<FormField name="additiveCategoryId">

@@ -3,7 +3,7 @@
 		<!-- Product Image -->
 		<LazyImage
 			:src="item.product.imageUrl"
-			alt="Изображение товара"
+			alt="Изображение продукта"
 			class="rounded-md size-24 object-contain"
 		/>
 

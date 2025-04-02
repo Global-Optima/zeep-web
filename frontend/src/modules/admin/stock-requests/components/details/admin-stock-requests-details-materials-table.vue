@@ -22,7 +22,7 @@
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead>Товар</TableHead>
+						<TableHead>Продукт</TableHead>
 						<TableHead>Упаковка</TableHead>
 						<TableHead>Количество</TableHead>
 					</TableRow>

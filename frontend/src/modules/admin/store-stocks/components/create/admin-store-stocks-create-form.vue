@@ -36,9 +36,9 @@
 			<CardHeader>
 				<div class="flex justify-between items-start gap-4">
 					<div>
-						<CardTitle>Добавить ингредиенты на склад</CardTitle>
+						<CardTitle>Добавить сырье на склад</CardTitle>
 						<CardDescription class="mt-2">
-							Заполните таблицу ниже, чтобы добавить несколько ингредиентов на склад.
+							Заполните таблицу ниже, чтобы добавить несколько сырья на склад.
 						</CardDescription>
 					</div>
 					<Button
@@ -66,7 +66,7 @@
 								colspan="5"
 								class="py-5 text-gray-500 text-center"
 							>
-								Нет добавленных ингредиентов
+								Сырье не добавлено
 							</TableCell>
 						</TableRow>
 						<TableRow

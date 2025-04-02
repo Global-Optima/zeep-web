@@ -5,7 +5,7 @@
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите топпинг</DialogTitle>
+				<DialogTitle>Выберите модификатор</DialogTitle>
 			</DialogHeader>
 
 			<div>
@@ -23,7 +23,7 @@
 						v-if="!additives || additives.data.length === 0"
 						class="text-muted-foreground"
 					>
-						Топпинги не найдены
+						Модификаторы не найдены
 					</p>
 
 					<ul v-else>
@@ -36,7 +36,7 @@
 							<div class="flex items-center gap-2">
 								<LazyImage
 									:src="additive.imageUrl"
-									alt="Изображение добавки"
+									alt="Изображение модификатора"
 									class="rounded-md size-16 object-contain"
 								/>
 								<span>{{ additive.name }}</span>

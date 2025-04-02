@@ -1,5 +1,5 @@
 <template>
-	<p v-if="!storeAdditiveDetails">Топпинг не найден</p>
+	<p v-if="!storeAdditiveDetails">Модификатор не найден</p>
 
 	<AdminStoreAdditiveDetailsForm
 		v-else
@@ -42,7 +42,7 @@ const updateMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных добавки кафе. Пожалуйста, подождите.',
+			description: 'Обновление данных модификатора кафе. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -51,13 +51,13 @@ const updateMutation = useMutation({
 		toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Данные добавки кафе успешно обновлены.',
+			description: 'Данные модификатора кафе успешно обновлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении данных добавки кафе.',
+			description: 'Произошла ошибка при обновлении данных модификатора кафе.',
 			variant: 'destructive',
 		})
 	},
@@ -67,7 +67,7 @@ function handleUpdate(updatedData: UpdateStoreAdditiveDTO) {
 	if (isNaN(Number(storeAdditiveId))) {
 		toast({
 			title: 'Ошибка',
-			description: 'Неверный идентификатор добавки.',
+			description: 'Неверный идентификатор модификатора.',
 			variant: 'destructive',
 		})
 		return router.back()

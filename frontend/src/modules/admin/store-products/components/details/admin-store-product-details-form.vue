@@ -150,8 +150,8 @@ function onCancel() {
 			<CardContent class="space-y-4 mt-5">
 				<div class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg">
 					<div class="flex flex-col space-y-1">
-						<Label class="font-medium"> Товар доступен к продаже </Label>
-						<p class="text-gray-500 text-sm">Укажите доступен ли этот товар для продажи в кафе</p>
+						<Label class="font-medium"> Продукт доступен к продаже </Label>
+						<p class="text-gray-500 text-sm">Укажите доступен ли этот продукт для продажи в кафе</p>
 					</div>
 
 					<Switch

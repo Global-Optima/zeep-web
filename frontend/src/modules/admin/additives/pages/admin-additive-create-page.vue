@@ -23,7 +23,7 @@ const {mutate, isPending} = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Создание...',
-			description: 'Создание новой добавки. Пожалуйста, подождите.',
+			description: 'Создание новой модификатора. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -31,14 +31,14 @@ const {mutate, isPending} = useMutation({
 		toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Добавка успешно создана.',
+			description: 'Модификатор успешно создан.',
 		})
 		router.back()
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при создании добавки.',
+			description: 'Произошла ошибка при создании модификатора.',
 			variant: 'destructive',
 		})
 	},

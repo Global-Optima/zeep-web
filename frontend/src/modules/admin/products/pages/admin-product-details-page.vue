@@ -1,7 +1,7 @@
 <template>
 	<div>
-    <PageLoader v-if="isLoading"/>
-		<p v-else-if="!productDetails">Товар не найден</p>
+		<PageLoader v-if="isLoading" />
+		<p v-else-if="!productDetails">Продукт не найден</p>
 
 		<Tabs
 			v-else
@@ -21,7 +21,7 @@
 			</TabsList>
 			<TabsContent value="details">
 				<AdminProductDetailsForm
-          ref="formRef"
+					ref="formRef"
 					:product-details="productDetails"
 					@on-submit="onUpdate"
 					@on-cancel="onCancel"
@@ -77,7 +77,7 @@ const {mutate, isPending} = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных товара. Пожалуйста, подождите.',
+			description: 'Обновление данных продукта. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -89,13 +89,13 @@ const {mutate, isPending} = useMutation({
     toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Данные товара успешно обновлены.',
+			description: 'Данные продукта успешно обновлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении товара.',
+			description: 'Произошла ошибка при обновлении продукта.',
 			variant: 'destructive',
 		})
 	},
@@ -105,7 +105,7 @@ function onUpdate(dto: UpdateProductDTO) {
 	if (isNaN(Number(productId))) {
 		toast({
 			title: 'Ошибка',
-			description: 'Неверный идентификатор товара.',
+			description: 'Неверный идентификатор продукта.',
 			variant: 'destructive',
 		})
 		return router.back()

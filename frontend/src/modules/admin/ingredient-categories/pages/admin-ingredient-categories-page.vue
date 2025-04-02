@@ -14,7 +14,7 @@
 					v-if="!productCategoriesResponse || productCategoriesResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Категории ингредиентов не найдены
+					Категории сырья не найдены
 				</p>
 
 				<!-- Ingredient Categories List -->
