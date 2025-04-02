@@ -118,9 +118,8 @@ export function useGenerateQR() {
     if (hasTextContent) {
       ctx.fillStyle = '#000000'
 
-      // Calculate maximum available width (with some padding)
+      // Calculate maximum available width
       const maxTextWidth = usableWidthPx * 0.9
-      const sideMargin = (usableWidthPx - maxTextWidth) / 2
 
       // Base font sizes
       const baseFontSizes = {
@@ -130,7 +129,6 @@ export function useGenerateQR() {
       }
 
       // Calculate total text height needed
-      let totalTextHeight = 0;
       const textBlocks: Array<{
         text: string;
         initialSize: number;
@@ -249,48 +247,6 @@ export function useGenerateQR() {
 
     // Return as a Blob for printing
     return doc.output('blob')
-  }
-
-  // Helper function to wrap text
-  function wrapText(
-    ctx: CanvasRenderingContext2D,
-    text: string,
-    x: number,
-    y: number,
-    maxWidth: number,
-    lineHeight: number,
-    maxLines = 2
-  ) {
-    const words = text.split(' ')
-    let line = ''
-    let lineCount = 0
-
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + ' '
-      const metrics = ctx.measureText(testLine)
-      const testWidth = metrics.width
-
-      if (testWidth > maxWidth && n > 0) {
-        ctx.fillText(line, x, y)
-        line = words[n] + ' '
-        y += lineHeight
-        lineCount++
-
-        if (lineCount >= maxLines) {
-          if (n < words.length - 1) {
-            line = line.substring(0, line.lastIndexOf(' ')) + '...'
-          }
-          ctx.fillText(line, x, y)
-          break
-        }
-      } else {
-        line = testLine
-      }
-    }
-
-    if (lineCount < maxLines) {
-      ctx.fillText(line, x, y)
-    }
   }
 
   // Helper function to calculate optimal font size and line breaks
@@ -452,11 +408,13 @@ export function useQRPrinter() {
   /**
    * Order-specific QR printing function (maintained for backward compatibility)
    * @param subOrders - Array of suborders to print QR codes for
+   * @param orderNumber - Order number to display on each QR
    * @param customerName - Customer name to display on each QR
    * @param options - Optional print configurations
    */
   const printOrderQR = async (
     subOrders: SuborderDTO | SuborderDTO[],
+    orderNumber?: number,
     customerName?: string,
     options?: QRPrintOptions
   ) => {
@@ -480,7 +438,7 @@ export function useQRPrinter() {
         options: {
           ...options,
           textContent: {
-            customerNameField: customerName,
+            customerNameField: orderNumber + " " + customerName,
             productSizeField,
             additivesField
           }

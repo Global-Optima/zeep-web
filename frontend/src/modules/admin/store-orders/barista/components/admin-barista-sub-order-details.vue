@@ -145,6 +145,7 @@ async function printQrCode() {
     const { width, height } = getSavedBaristaQRSettings();
     await printOrderQR(
       selectedSuborder.value,
+      props.order?.displayNumber,
       props.order?.customerName,
       {
         labelHeightMm: height,

@@ -194,6 +194,7 @@ export function useOrderEvents(
     try {
       await printOrderQR(
         reactiveOrder.subOrders,
+        reactiveOrder.displayNumber,
         reactiveOrder.customerName,
         {
           labelHeightMm: height,
