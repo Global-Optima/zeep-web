@@ -285,7 +285,7 @@ func (r *stockRequestRepository) ReplaceStockRequestIngredients(request data.Sto
 			}
 		}
 
-		if err := tx.Where("stock_request_id = ?", request.ID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
+		if err := tx.Unscoped().Where("stock_request_id = ?", request.ID).Delete(&data.StockRequestIngredient{}).Error; err != nil {
 			return fmt.Errorf("failed to delete existing ingredients for stock request ID %d: %w", request.ID, err)
 		}
 

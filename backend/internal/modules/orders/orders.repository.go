@@ -21,8 +21,6 @@ type OrderRepository interface {
 	UpdateOrderStatus(suborderID uint, updateData types.UpdateOrderDTO) error
 	DeleteOrder(orderID uint) error
 
-	GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error)
-
 	GetSubOrdersByOrderID(orderID uint) ([]data.Suborder, error)
 	UpdateSubOrderStatus(suborderID uint, updateData types.UpdateSubOrderDTO) error
 	AddSubOrderAdditive(subOrderID uint, additive *data.SuborderAdditive) error
@@ -36,6 +34,7 @@ type OrderRepository interface {
 	CalculateFrozenStock(storeID uint) (map[uint]float64, error)
 	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error)
 	HandlePaymentFailure(orderID uint) error
+	CloneWithTransaction(tx *gorm.DB) orderRepository
 }
 
 type orderRepository struct {
@@ -45,6 +44,12 @@ type orderRepository struct {
 func NewOrderRepository(db *gorm.DB) OrderRepository {
 	return &orderRepository{
 		db: db,
+	}
+}
+
+func (r *orderRepository) CloneWithTransaction(tx *gorm.DB) orderRepository {
+	return orderRepository{
+		db: tx,
 	}
 }
 
@@ -284,69 +289,6 @@ func getTimeZoneLocation(filter types.OrdersTimeZoneFilter) (*time.Location, err
 	}
 
 	return location, nil
-}
-
-func (r *orderRepository) GetStatusesCount(filter types.OrdersTimeZoneFilter) (map[data.OrderStatus]int64, error) {
-	var counts []struct {
-		Status data.OrderStatus
-		Count  int64
-	}
-
-	var location *time.Location
-	var now time.Time
-
-	// Determine which location to use.
-	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
-		var err error
-		location, err = time.LoadLocation(*filter.TimeZoneLocation)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load timezone: %w", err)
-		}
-		now = time.Now().In(location)
-	} else if filter.TimeZoneOffset != nil {
-		offsetSeconds := int(*filter.TimeZoneOffset) * 60
-		location = time.FixedZone("offset", offsetSeconds)
-		now = time.Now().UTC().In(location)
-	} else {
-		location = time.UTC
-		now = time.Now().UTC()
-	}
-
-	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
-	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, location)
-
-	startOfTodayUTC := startOfToday.UTC()
-	endOfTodayUTC := endOfToday.UTC()
-
-	if filter.StoreID == nil {
-		return nil, fmt.Errorf("storeID is required")
-	}
-
-	query := r.db.Model(&data.Order{}).
-		Select("status, COUNT(*) as count").
-		Where("store_id = ?", filter.StoreID).
-		Where("created_at >= ? AND created_at <= ?", startOfTodayUTC, endOfTodayUTC).
-		Group("status")
-
-	err := query.Find(&counts).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch statuses count: %w", err)
-	}
-
-	statusCount := map[data.OrderStatus]int64{
-		data.OrderStatusPending:    0,
-		data.OrderStatusPreparing:  0,
-		data.OrderStatusCompleted:  0,
-		data.OrderStatusInDelivery: 0,
-		data.OrderStatusDelivered:  0,
-		data.OrderStatusCancelled:  0,
-	}
-
-	for _, c := range counts {
-		statusCount[c.Status] = c.Count
-	}
-
-	return statusCount, nil
 }
 
 func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {

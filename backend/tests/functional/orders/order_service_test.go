@@ -1,13 +1,11 @@
 package functional
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/censor"
 	"github.com/Global-Optima/zeep-web/backend/tests"
 	"github.com/stretchr/testify/assert"
@@ -313,34 +311,6 @@ func uintPtr(u uint) *uint {
 // 	}
 // }
 
-func TestOrderService_GeneratePDFReceipt(t *testing.T) {
-	db := resetTestData(t)
-	module := tests.GetOrdersModule()
-
-	// Retrieve an order from store 1 to test.
-	var order data.Order
-	if err := db.Where("store_id = ?", 1).First(&order).Error; err != nil {
-		t.Fatalf("Failed to fetch an order from store 1: %v", err)
-	}
-
-	pdfBytes, err := module.Service.GeneratePDFReceipt(order.ID)
-	assert.NoError(t, err, "GeneratePDFReceipt should not return an error")
-	assert.NotEmpty(t, pdfBytes, "Generated PDF should not be empty")
-}
-
-func TestOrderService_GenerateSuborderBarcodePDF(t *testing.T) {
-	_ = resetTestData(t)
-	module := tests.GetOrdersModule()
-
-	suborderID := uint(1)
-	// barcode text font might lead to a critical errors
-	_ = utils.InitBarcodeFont()
-
-	pdfBytes, err := module.Service.GenerateSuborderBarcodePDF(suborderID)
-	assert.NoError(t, err, fmt.Sprintf("GenerateSuborderBarcodePDF returned an error for suborderID %d", suborderID))
-	assert.NotEmpty(t, pdfBytes, "Generated PDF for suborder should not be empty")
-}
-
 // Test GetOrderBySubOrder function.
 func TestOrderService_GetOrderBySubOrder(t *testing.T) {
 	_ = resetTestData(t)
@@ -554,94 +524,6 @@ func insertTestOrderWithTwoSuborders(t *testing.T, db *gorm.DB) (orderID uint, s
 	return order.ID, suborderIDs
 }
 
-func TestOrderService_CompleteSubOrder_Combined(t *testing.T) {
-	db := resetTestData(t)
-	module := tests.GetOrdersModule()
-
-	// Insert our custom test order.
-	orderID, suborderIDs := insertTestOrderWithTwoSuborders(t, db)
-	assert.Len(t, suborderIDs, 2, "Expected two suborders inserted")
-
-	// Verify initial order status is PENDING.
-	orderBefore := &data.Order{}
-	err := db.Preload("Suborders").Where("id = ?", orderID).First(orderBefore).Error
-	assert.NoError(t, err)
-	assert.Equal(t, data.OrderStatusPending, orderBefore.Status, "Initial order status should be PENDING")
-
-	// --- Subtest 1: Complete first suborder only.
-	t.Run("Complete first suborder only", func(t *testing.T) {
-		err := module.Service.CompleteSubOrder(orderID, suborderIDs[0])
-		assert.NoError(t, err, "Completing first suborder should succeed")
-
-		// Reload order status.
-		orderAfterFirst := &data.Order{}
-		err = db.Where("id = ?", orderID).First(orderAfterFirst).Error
-		assert.NoError(t, err)
-		// Not all suborders completed; status should remain PENDING.
-		assert.Equal(t, data.OrderStatusPending, orderAfterFirst.Status, "Order status should remain PENDING")
-	})
-
-	// --- Subtest 2: Complete second suborder and check overall order update.
-	t.Run("Complete all suborders", func(t *testing.T) {
-		err := module.Service.CompleteSubOrder(orderID, suborderIDs[1])
-		assert.NoError(t, err, "Completing second suborder should succeed")
-
-		// Reload order status.
-		orderAfterSecond := &data.Order{}
-		err = db.Where("id = ?", orderID).First(orderAfterSecond).Error
-		assert.NoError(t, err)
-		// With both suborders complete, the order status should update.
-		assert.Equal(t, data.OrderStatusCompleted, orderAfterSecond.Status, "Order status should update to COMPLETED")
-	})
-
-	// --- Subtest 3: Attempt to complete a non-existent suborder.
-	t.Run("Complete non-existent suborder", func(t *testing.T) {
-		err := module.Service.CompleteSubOrder(orderID, 99999) // Non-existent ID.
-		assert.Error(t, err, "Should return error for non-existent suborder")
-		assert.Contains(t, err.Error(), "not found", "Error should mention suborder failure")
-	})
-}
-
-func TestOrderService_CompleteSubOrderByBarcode(t *testing.T) {
-	db := resetTestData(t)
-	module := tests.GetOrdersModule()
-
-	orderID, suborderIDs := insertTestOrderWithTwoSuborders(t, db)
-	assert.Len(t, suborderIDs, 2, "Expected two suborders inserted")
-
-	// Complete one suborder via barcode.
-	dto, err := module.Service.CompleteSubOrderByBarcode(suborderIDs[0])
-	assert.NoError(t, err, "Completing suborder by barcode should succeed")
-	assert.NotNil(t, dto, "Returned suborder DTO should not be nil")
-
-	// Order status remains PENDING because only one suborder is complete.
-	order, err := module.Service.GetOrderById(orderID)
-	assert.NoError(t, err)
-	assert.Equal(t, data.OrderStatusPending, order.Status, "Order status should remain PENDING if not all suborders are complete")
-}
-
-func TestOrderService_AcceptSubOrder(t *testing.T) {
-	db := resetTestData(t)
-	module := tests.GetOrdersModule()
-
-	// Insert an order with two suborders.
-	_, suborderIDs := insertTestOrderWithTwoSuborders(t, db)
-	assert.Len(t, suborderIDs, 2, "Expected two suborders inserted")
-
-	// Accept the first suborder (transitions from PENDING to PREPARING).
-	err := module.Service.AcceptSubOrder(suborderIDs[0])
-	assert.NoError(t, err, "Accepting suborder should succeed for pending suborder")
-
-	sub, err := module.Repo.GetSuborderByID(suborderIDs[0])
-	assert.NoError(t, err)
-	assert.Equal(t, data.SubOrderStatusPreparing, sub.Status, "Suborder status should be updated to PREPARING")
-
-	// Trying to accept a non-pending suborder should error.
-	err = module.Service.AcceptSubOrder(suborderIDs[0])
-	assert.Error(t, err, "Accepting an already accepted suborder should error")
-	assert.Contains(t, err.Error(), "is not pending", "Error message should indicate suborder is not pending")
-}
-
 func TestOrderService_AdvanceSubOrderStatus(t *testing.T) {
 	db := resetTestData(t)
 	module := tests.GetOrdersModule()
@@ -651,19 +533,24 @@ func TestOrderService_AdvanceSubOrderStatus(t *testing.T) {
 	assert.Len(t, suborderIDs, 2, "Expected two suborders inserted")
 
 	// Advance the second suborder from PENDING to PREPARING.
-	dto, err := module.Service.AdvanceSubOrderStatus(suborderIDs[1], nil)
+	dto, err := module.Service.SetNextSubOrderStatus(suborderIDs[1], nil)
 	assert.NoError(t, err, "Advancing suborder status should succeed")
 	assert.Equal(t, data.SubOrderStatusPreparing, dto.Status, "Suborder should transition to PREPARING")
 
 	// Advance the same suborder from PREPARING to COMPLETED.
-	dto, err = module.Service.AdvanceSubOrderStatus(suborderIDs[1], nil)
+	dto, err = module.Service.SetNextSubOrderStatus(suborderIDs[1], nil)
 	assert.NoError(t, err, "Advancing suborder status again should succeed")
 	assert.Equal(t, data.SubOrderStatusCompleted, dto.Status, "Suborder should transition to COMPLETED")
 
-	// After both suborders are complete, the order status should update to COMPLETED.
-	// For this test, complete the first suborder as well.
-	err = module.Service.CompleteSubOrder(orderID, suborderIDs[0])
-	assert.NoError(t, err, "Completing first suborder should succeed")
+	dto, err = module.Service.SetNextSubOrderStatus(suborderIDs[0], nil)
+	assert.NoError(t, err, "Advancing suborder status should succeed")
+	assert.Equal(t, data.SubOrderStatusPreparing, dto.Status, "Suborder should transition to PREPARING")
+
+	// Advance the same suborder from PREPARING to COMPLETED.
+	dto, err = module.Service.SetNextSubOrderStatus(suborderIDs[0], nil)
+	assert.NoError(t, err, "Advancing suborder status again should succeed")
+	assert.Equal(t, data.SubOrderStatusCompleted, dto.Status, "Suborder should transition to COMPLETED")
+
 	order, err := module.Service.GetOrderById(orderID)
 	assert.NoError(t, err)
 	assert.Equal(t, data.OrderStatusCompleted, order.Status, "Order status should be COMPLETED when all suborders are complete")

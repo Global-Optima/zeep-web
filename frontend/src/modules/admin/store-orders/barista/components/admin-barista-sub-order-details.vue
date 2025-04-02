@@ -4,67 +4,66 @@
 
 		<!-- If suborder is provided, show its details -->
 		<div
-			class="px-2 rounded-xl"
 			v-if="suborder"
+			class="relative flex flex-col gap-4 bg-white mx-2 p-6 rounded-3xl overflow-y-auto"
 		>
-			<div class="relative flex flex-col gap-4 bg-white p-6 rounded-xl overflow-y-auto">
-				<!-- Print Button -->
-				<Button
-					size="icon"
-					variant="ghost"
-					type="button"
-					class="top-6 right-6 absolute"
-					:disabled="disabledCompleteButton"
-					@click="printQrCode"
+			<!-- Print Button -->
+			<Button
+				size="icon"
+				variant="ghost"
+				type="button"
+				class="top-6 right-6 absolute"
+				:disabled="disabledCompleteButton"
+				@click="printQrCode"
+			>
+				<Printer
+					stroke-width="1.5"
+					class="!size-8"
+				/>
+			</Button>
+
+			<div>
+				<p class="font-medium text-xl">
+					{{ suborder.productSize.productName }} {{ suborder.productSize.sizeName }}
+				</p>
+				<!-- Toppings List -->
+				<ul
+					v-if="suborder.additives.length > 0"
+					class="space-y-1 mt-2"
 				>
-					<Printer
-						stroke-width="1.5"
-						class="!size-8"
-					/>
-				</Button>
-
-				<div>
-					<p class="font-medium text-xl">
-						{{ suborder.productSize.productName }} {{ suborder.productSize.sizeName }}
-					</p>
-					<!-- Toppings List -->
-					<ul
-						v-if="suborder.additives.length > 0"
-						class="space-y-1 mt-2"
+					<li
+						v-for="(topping, index) in suborder.additives"
+						:key="index"
+						class="flex items-center"
 					>
-						<li
-							v-for="(topping, index) in suborder.additives"
-							:key="index"
-							class="flex items-center"
-						>
-							<Plus class="mr-2 w-4 h-4 text-gray-500" />
-							<span class="text-gray-700">{{ topping.additive.name }}</span>
-						</li>
-					</ul>
-					<p
-						v-else
-						class="mt-2 text-gray-700"
-					>
-						Без топпингов
-					</p>
-				</div>
+						<Plus class="mr-2 w-4 h-4 text-gray-500" />
+						<span class="text-gray-700">{{ topping.additive.name }}</span>
+					</li>
+				</ul>
+				<p
+					v-else
+					class="mt-2 text-gray-700"
+				>
+					Без топпингов
+				</p>
+			</div>
 
-				<div>
-					<p class="font-medium text-lg">Комментарий</p>
-					<p class="mt-1 text-gray-700">Стандартное приготовление</p>
-				</div>
+			<div>
+				<p class="font-medium text-lg">Комментарий</p>
+				<p class="mt-1 text-gray-700">Стандартное приготовление</p>
+			</div>
 
-				<div>
-					<p class="font-medium text-lg">Время приготовления</p>
-					<p class="mt-1 text-gray-700">2 мин</p>
-				</div>
+			<div>
+				<p class="font-medium text-lg">Время приготовления</p>
+				<p class="mt-1 text-gray-700">2 мин</p>
+			</div>
 
-				<!-- Complete (or Next Status) Button -->
-				<div class="flex items-center gap-2 mt-4">
-					<button
-						@click="toggleSuborderStatus(suborder)"
-						:disabled="disabledCompleteButton"
-						:class="cn(
+			<!-- Complete (or Next Status) Button -->
+			<div class="flex items-center gap-2 mt-4">
+				<button
+					@click="toggleSuborderStatus(suborder)"
+					:disabled="disabledCompleteButton"
+					:class="cn(
               'flex-1 px-4 py-4 rounded-xl text-primary-foreground font-medium',
               suborder.status === SubOrderStatus.COMPLETED
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -72,10 +71,9 @@
                 ? 'bg-blue-500'
                 : 'bg-primary'
             )"
-					>
-						{{ completeButtonText }}
-					</button>
-				</div>
+				>
+					{{ completeButtonText }}
+				</button>
 			</div>
 		</div>
 

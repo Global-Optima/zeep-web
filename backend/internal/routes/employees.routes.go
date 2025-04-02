@@ -272,19 +272,13 @@ func (r *Router) RegisterOrderRoutes(handler *orders.OrderHandler) {
 		router.POST("/check-name", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CheckCustomerName)
 		router.POST("/:orderId/payment/fail", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.FailOrderPayment)
 		router.POST("/:orderId/payment/success", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SuccessOrderPayment)
-		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrders)                                            // all franchise, stores
-		router.GET("/ws", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.ServeWS)                                               // Store manager and barista
-		router.PUT("/:orderId/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteSubOrder) // Store manager and barista
-		router.GET("/kiosk", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetAllBaristaOrders)                                // Store manager and barista
-		router.GET("/:orderId/suborders", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetSubOrders)                          // Store manager and barista
-		router.GET("/statuses/count", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStatusesCount)                          // Store manager and barista
-		router.GET("/:orderId/receipt", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GeneratePDFReceipt)                      // Store manager and barista
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetOrders)                   // all franchise, stores
+		router.GET("/ws", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.ServeWS)                      // Store manager and barista
+		router.GET("/kiosk", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetAllBaristaOrders)       // Store manager and barista
+		router.GET("/:orderId/suborders", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetSubOrders) // Store manager and barista
 
 		router.GET("/export", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.ExportOrders) // franchise and store management
-		router.PUT("/suborders/:subOrderId/status-change", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.ChangeSubOrderStatus)
-		router.PUT("/suborders/:subOrderId/accept", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.AcceptSubOrder)
-		router.PUT("/suborders/:subOrderId/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteSubOrderByBarcode) // Store manager and barista
-		router.GET("/suborders/:subOrderId/barcode", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetSuborderBarcode)         // Store manager and barista
+		router.PUT("/suborders/:subOrderId/status-change", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SetNextSubOrderStatus)
 	}
 }
 

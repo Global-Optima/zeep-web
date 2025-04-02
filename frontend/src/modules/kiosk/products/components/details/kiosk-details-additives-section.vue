@@ -5,7 +5,7 @@
 			v-for="category in visibleCategories"
 			:key="category.id"
 		>
-			<p class="mb-4 font-medium text-3xl">{{ category.name }}</p>
+			<p class="mb-6 font-medium text-3xl">{{ category.name }}</p>
 
 			<div class="gap-4 grid grid-cols-1 md:grid-cols-2">
 				<KioskDetailsAdditivesCard

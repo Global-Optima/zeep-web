@@ -31,7 +31,7 @@
 						<p class="text-blue-600">2 мин.</p>
 					</template>
 					<template v-else-if="suborder.status === SubOrderStatus.COMPLETED">
-						<Check class="w-5 h-5 text-green-500" />
+						<Check class="w-5 h-5 text-green-600" />
 					</template>
 				</div>
 			</div>
@@ -89,7 +89,7 @@ function selectSuborder(suborder: SuborderDTO) {
  */
 function suborderClasses(suborder: SuborderDTO) {
   return cn(
-    'flex items-start justify-between gap-2 p-4 rounded-xl cursor-pointer border transition-all duration-200 bg-white',
+    'flex items-start justify-between gap-2 p-4 rounded-3xl cursor-pointer border transition-all duration-200 bg-white',
     // Highlight if it's the selected suborder
     selectedSuborder.value?.id === suborder.id ? '!border-primary' : 'border-transparent',
 

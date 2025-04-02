@@ -110,7 +110,7 @@
     "500-order-create": "An unexpected error occurred while creating the order. Please try again later.",
     "400-order": "Failed to validate order.",
     "400-order-customerName": "Inappropriate customer name.",
-    "400-order-insufficientStock": "Insufficient stock to fulfill the order.",
+    "409-order-insufficientStock": "Insufficient stock to fulfill the order.",
     "400-order-multipleSelect": "Multiple selection of the additive of this category is not allowed.",
     "201-order": "Order was successfully created",
     "200-order-update": "Order successfully updated.",
@@ -119,6 +119,8 @@
     "200-order-payment-success": "The payment was processed successfully.",
     "500-order-payment-fail": "An unexpected error occurred while processing the order. Please try again later.",
     "200-order-payment-fail": "The order was processed successfully, but failed during payment.",
+
+    "500-suborder-next-status": "An unexpected error occurred while updating the suborder status. Please try again later.",
 
     "500-product-get": "An unexpected error occurred while fetching product. Please try again later.",
     "500-product-create": "An unexpected error occurred while creating product. Please try again later.",

@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import { useNetwork } from '@vueuse/core'
-import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-
-// Kiosk & Services
-import { getRouteName, type RouteKey } from '@/core/config/routes.config'
-import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
-
-// UI Components
 import PageLoader from '@/core/components/page-loader/PageLoader.vue'
+import { getRouteName, type RouteKey } from '@/core/config/routes.config'
 import { useInactivityTimer } from '@/core/hooks/use-inactivity-timer.hooks'
 import { getKaspiConfig } from '@/core/integrations/kaspi.service'
 import { cn } from '@/core/utils/tailwind.utils'
+import { useCartStore } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskHomeCart from '@/modules/kiosk/products/components/home/kiosk-home-cart.vue'
+import { useNetwork } from '@vueuse/core'
 import { WifiOff } from 'lucide-vue-next'
-import { defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Lazy load the cart dialog
 const KioskCartDialog = defineAsyncComponent(() =>
@@ -42,11 +37,16 @@ function handleInactivity() {
   }
 }
 
-// We set up the composable
+// Set up the inactivity timer
 useInactivityTimer(INACTIVITY_MS, handleInactivity, true)
 
 // Some routes should NOT show the cart
-const omitShowCartPages: RouteKey[] = ['KIOSK_LANDING', 'KIOSK_CHECKLIST', "KIOSK_CART_PAYMENT", "KIOSK_CART_PAYMENT_SUCCESS"]
+const omitShowCartPages: RouteKey[] = [
+  'KIOSK_LANDING',
+  'KIOSK_CHECKLIST',
+  'KIOSK_CART_PAYMENT',
+  'KIOSK_CART_PAYMENT_SUCCESS'
+]
 
 const showCart = computed(() => {
   if (cartStore.isEmpty) return false
@@ -63,13 +63,13 @@ onMounted(() => {
 </script>
 
 <template>
-	<div class="relative bg-slate-100 w-full min-h-screen no-scrollbar">
-		<!-- If offline, show overlay -->
+	<div class="relative bg-slate-100 w-full min-h-screen overflow-hidden">
+		<!-- Offline Overlay -->
 		<div
 			v-if="!isOnline"
-			class="absolute inset-0 flex flex-col justify-center items-center bg-white p-6 text-center"
+			class="z-50 absolute inset-0 flex flex-col justify-center items-center bg-white p-6 text-center"
 		>
-			<WifiOff class="size-20 text-red-600" />
+			<WifiOff class="w-10 h-10 text-red-600" />
 			<h1 class="mt-6 font-bold text-gray-900 text-3xl">Сеть недоступна</h1>
 			<p class="mt-4 max-w-md text-gray-600 text-lg">
 				К сожалению, терминал временно не может принимать заказы. Пожалуйста, обратитесь к
@@ -77,9 +77,9 @@ onMounted(() => {
 			</p>
 		</div>
 
-		<!-- If online, show kiosk UI -->
+		<!-- Main Kiosk UI -->
 		<template v-else>
-			<main :class="cn('relative w-full h-full no-scrollbar', showCart && 'pb-40')">
+			<main :class="cn('relative w-full h-full overflow-auto', showCart && 'pb-40')">
 				<RouterView v-slot="{ Component, route }">
 					<template v-if="Component">
 						<Transition
@@ -99,16 +99,19 @@ onMounted(() => {
 				</RouterView>
 			</main>
 
-			<!-- Show the cart button if conditions pass -->
+			<!-- Fixed Cart Button -->
 			<div
 				v-if="showCart"
-				class="bottom-8 z-50 fixed flex justify-center w-full pointer-events-none"
+				class="bottom-8 z-50 fixed inset-x-0 flex justify-center pointer-events-none"
 				aria-label="Открыть корзину"
 			>
-				<KioskHomeCart />
+				<!-- Ensure the cart component can capture pointer events -->
+				<div class="pointer-events-auto">
+					<KioskHomeCart />
+				</div>
 			</div>
 
-			<!-- Cart dialog -->
+			<!-- Cart Dialog -->
 			<KioskCartDialog v-if="cartStore.isModalOpen" />
 		</template>
 	</div>
@@ -120,12 +123,10 @@ onMounted(() => {
 .fade-slide-leave-active {
   transition: opacity 0.15s ease-in-out;
 }
-
 .fade-slide-enter-from,
 .fade-slide-leave-to {
   opacity: 0;
 }
-
 .fade-slide-enter-to,
 .fade-slide-leave-from {
   opacity: 1;
