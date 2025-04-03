@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -13,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
