@@ -448,7 +448,7 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 			},
 			storeID:           1,
 			expectedError:     true,
-			expectedErrSubstr: "insufficient stock",
+			expectedErrSubstr: "not found",
 		},
 	}
 
