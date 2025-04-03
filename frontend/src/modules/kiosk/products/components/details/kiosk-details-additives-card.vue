@@ -8,10 +8,12 @@
 		<LazyImage
 			:src="additive.imageUrl"
 			alt="Изображение модификатора"
-			:class="cn('rounded-md size-16 md:size-20 object-contain', isPriceZero && 'md:size-8')"
+			:class="cn('rounded-[22px] size-16 md:size-24 object-contain', isPriceZero && 'md:size-16 rounded-[14px]')"
 		/>
 
-		<div class="flex flex-col justify-between items-start w-full h-full">
+		<div
+			:class="cn('flex flex-col justify-between items-start w-full h-full', isPriceZero && 'md:justify-center')"
+		>
 			<p
 				class="text-lg md:text-2xl text-left line-clamp-2"
 				data-testid="additive-name"
@@ -19,19 +21,13 @@
 				{{ additive.name }}
 			</p>
 
-			<div class="flex flex-wrap justify-between items-center gap-2 w-full">
+			<div class="flex justify-between items-center gap-2 w-full">
 				<p
 					class="text-xl md:text-2xl text-left"
 					:class="priceTextClass"
 					data-testid="additive-price"
 				>
-					<span
-						v-if="additive.isDefault"
-						class="text-xl"
-					>
-						{{ priceDisplay }}
-					</span>
-					<span v-else-if="additive.storePrice !== 0">{{ priceDisplay }}</span>
+					{{ priceDisplay }}
 				</p>
 
 				<template v-if="additive.isOutOfStock">
@@ -83,8 +79,8 @@ const cardClasses = computed(() => {
     'relative',
     'text-center',
     'bg-white',
-    'rounded-[24px]',
-    'p-4',
+    'rounded-[32px]',
+    'p-6',
     'flex',
     'items-start',
     'border-2',
