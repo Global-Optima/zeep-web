@@ -4,7 +4,7 @@
 			<TableRow>
 				<TableHead class="p-4">Название</TableHead>
 				<TableHead class="p-4">Описание</TableHead>
-				<TableHead class="p-4">Кол-во топпингов</TableHead>
+				<TableHead class="p-4">Кол-во модификаторов</TableHead>
 				<TableHead class="p-4"></TableHead>
 			</TableRow>
 		</TableHeader>

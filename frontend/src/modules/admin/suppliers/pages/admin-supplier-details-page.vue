@@ -15,7 +15,7 @@
 				<TabsTrigger
 					class="py-2"
 					value="variants"
-					>Товары</TabsTrigger
+					>Продукты</TabsTrigger
 				>
 			</TabsList>
 			<TabsContent value="details">

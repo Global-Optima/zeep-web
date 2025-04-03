@@ -4,7 +4,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_PRODUCTS: {
 		path: 'products',
 		meta: {
-			title: 'Все товары',
+			title: 'Все продукты',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/products/pages/admin-products-page.vue'),
@@ -12,7 +12,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_PRODUCT_CREATE: {
 		path: 'products/create',
 		meta: {
-			title: 'Создать товар',
+			title: 'Создать продукт',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/products/pages/admin-product-create-page.vue'),
@@ -20,7 +20,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_PRODUCT_DETAILS: {
 		path: 'products/:id',
 		meta: {
-			title: 'Детали товара',
+			title: 'Детали продукта',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/products/pages/admin-product-details-page.vue'),
@@ -28,7 +28,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_PRODUCT_SIZE_DETAILS: {
 		path: 'product-sizes/:id',
 		meta: {
-			title: 'Детали размера товара',
+			title: 'Детали размера продукта',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/products/pages/admin-product-size-details-page.vue'),
@@ -36,7 +36,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_PRODUCT_SIZE_CREATE: {
 		path: 'product-sizes/create',
 		meta: {
-			title: 'Детали размера товара',
+			title: 'Детали размера продукта',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/products/pages/admin-product-size-create-page.vue'),
@@ -44,7 +44,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_STORE_PRODUCTS: {
 		path: 'store-products',
 		meta: {
-			title: 'Товары кафе',
+			title: 'Продукты кафе',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/store-products/pages/admin-store-products-page.vue'),
@@ -52,7 +52,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_STORE_PRODUCT_DETAILS: {
 		path: 'store-products/:id',
 		meta: {
-			title: 'Детали товара кафе',
+			title: 'Детали продукта кафе',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -61,7 +61,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_STORE_PRODUCT_CREATE: {
 		path: 'store-products/create',
 		meta: {
-			title: 'Добавить товар в кафе',
+			title: 'Добавить продукт в кафе',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -70,7 +70,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_PRODUCT_CATEGORIES: {
 		path: 'product-categories',
 		meta: {
-			title: 'Категории товаров',
+			title: 'Категории продуктов',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -79,7 +79,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_PRODUCT_CATEGORY_DETAILS: {
 		path: 'product-categories/:id',
 		meta: {
-			title: 'Детали категории товара',
+			title: 'Детали категории продукта',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -88,7 +88,7 @@ export const ADMIN_PRODUCTS_CHILDREN_ROUTES = {
 	ADMIN_PRODUCT_CATEGORY_CREATE: {
 		path: 'product-categories/create',
 		meta: {
-			title: 'Cоздать категорию товара',
+			title: 'Cоздать категорию продукта',
 			requiresAuth: true,
 		},
 		component: () =>

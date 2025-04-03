@@ -17,7 +17,7 @@
 				>
 					<h1 class="mt-8 font-bold text-red-600 text-4xl">Ошибка</h1>
 					<p class="mt-6 max-w-md text-gray-600 text-2xl">
-						{{ errorMessage || 'К сожалению, данный товар временно недоступен, попробуйте позже' }}
+						{{ errorMessage || 'К сожалению, данный продукт временно недоступен, попробуйте позже' }}
 					</p>
 					<button
 						@click="emits('close')"
@@ -51,7 +51,7 @@
 						<div class="flex flex-col justify-center items-center">
 							<LazyImage
 								:src="productDetails.imageUrl"
-								alt="Изображение товара"
+								alt="Изображение продукта"
 								class="rounded-3xl w-38 h-64 object-contain"
 							/>
 							<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>
@@ -87,7 +87,7 @@
 					<div class="mt-10">
 						<KioskDetailsAdditivesSection
 							:categories="additiveCategories ?? []"
-							:isAdditiveSelected="isAdditiveSelected"
+							:selected-additives="selectedAdditives"
 							@toggle-additive="onAdditiveToggle"
 						/>
 					</div>
@@ -103,35 +103,29 @@ import PageLoader from '@/core/components/page-loader/PageLoader.vue'
 import { Button } from '@/core/components/ui/button'
 import { Dialog, DialogContent } from '@/core/components/ui/dialog'
 import { formatPrice } from '@/core/utils/price.utils'
-import type {
-  StoreAdditiveCategoryDTO,
-  StoreAdditiveCategoryItemDTO
-} from '@/modules/admin/store-additives/models/store-additves.model'
+import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
-import { type CartItem } from '@/modules/kiosk/cart/stores/cart.store'
+import type { CartItem } from '@/modules/kiosk/cart/stores/cart.store'
 import KioskDetailsAdditivesSection from '@/modules/kiosk/products/components/details/kiosk-details-additives-section.vue'
 import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk-details-sizes.vue'
 import KioskProductRecipeDialog from '@/modules/kiosk/products/components/details/kiosk-product-recipe-dialog.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft, Pencil } from 'lucide-vue-next'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 // ----- Props & Emits -----
 const props = defineProps<{
   isOpen: boolean;
-  cartItem: CartItem;
+  cartItem: CartItem
 }>()
 const emits = defineEmits<{
   (e: 'close'): void;
   (e: 'update', updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]): void;
 }>()
 
-
 // ----- Local State -----
-// Use the product data from the passed cartItem.
 const productDetails = ref(props.cartItem.product)
-// Initialize selected size and additives from the passed cartItem.
 const selectedSize = ref<StoreProductSizeDetailsDTO>(props.cartItem.size)
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>(
   props.cartItem.additives.reduce((acc, additive) => {
@@ -141,12 +135,11 @@ const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>(
   }, {} as Record<number, StoreAdditiveCategoryItemDTO[]>)
 )
 
-// This will hold the additive categories fetched for the selected size.
 const additiveCategories = ref<StoreAdditiveCategoryDTO[]>([])
 const errorMessage = ref<string | null>(null)
 
 // ----- Fetch Additive Categories -----
-// Use Vue Query to fetch additive categories for the current size.
+// Use Vue Query to fetch additive categories based on the selected size.
 const { data: fetchedAdditives, isPending: isFetching, isError } = useQuery({
   queryKey: computed(() => ['kiosk-additive-categories', selectedSize.value?.id]),
   queryFn: () => {
@@ -154,34 +147,47 @@ const { data: fetchedAdditives, isPending: isFetching, isError } = useQuery({
       return storeAdditivesService.getStoreAdditiveCategories(selectedSize.value.id)
     }
   },
-  initialData: [],
+  initialData: [] as StoreAdditiveCategoryDTO[],
   enabled: computed(() => !!selectedSize.value)
 })
 
-// When new additive data is fetched, merge the current selections.
-watchEffect(() => {
-  if (fetchedAdditives.value) {
-    additiveCategories.value = fetchedAdditives.value.map(category => ({
-      ...category,
-      additives: category.additives.map(additive => ({
-        ...additive,
-        isSelected: isAdditiveSelected(category, additive.additiveId)
-      }))
-    }))
-  }
-})
+// Watch fetchedAdditives and enforce required auto‑selection.
+watch(
+  fetchedAdditives,
+  (newAdditives) => {
+    if (newAdditives) {
+      additiveCategories.value = newAdditives
+      newAdditives.forEach(category => {
+        if (category.isRequired) {
+          const current = selectedAdditives.value[category.id] || []
+          if (current.length === 0 && category.additives.length > 0) {
+            const defaultAdditive = category.additives.find(a => a.isDefault)
+            selectedAdditives.value[category.id] = defaultAdditive ? [defaultAdditive] : [category.additives[0]]
+          }
+        }
+      })
+    }
+  },
+  { immediate: true }
+)
 
 // ----- Computed Values -----
 const sortedSizes = computed(() => {
-  return productDetails.value?.sizes ? [...productDetails.value.sizes].sort((a, b) => a.size - b.size) : []
+  return productDetails.value?.sizes
+    ? [...productDetails.value.sizes].sort((a, b) => a.size - b.size)
+    : []
 })
 
-watchEffect(() => {
-  // Ensure a size is selected; if not, select the first one.
-  if (!selectedSize.value && sortedSizes.value.length > 0) {
-    selectedSize.value = sortedSizes.value[0]
-  }
-})
+// Ensure a size is selected when sortedSizes updates.
+watch(
+  sortedSizes,
+  (newSizes) => {
+    if (!selectedSize.value && newSizes.length > 0) {
+      selectedSize.value = newSizes[0]
+    }
+  },
+  { immediate: true }
+)
 
 const totalPrice = computed(() => {
   if (!selectedSize.value) return 0
@@ -206,17 +212,21 @@ const onSizeSelect = (size: StoreProductSizeDetailsDTO) => {
 const onAdditiveToggle = (category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[category.id] || []
   const alreadySelected = current.some(a => a.additiveId === additive.additiveId)
-  if (category.isMultipleSelect) {
-    selectedAdditives.value[category.id] = alreadySelected
-      ? current.filter(a => a.additiveId !== additive.additiveId)
-      : [...current, additive]
+  if (alreadySelected) {
+    // Prevent unselecting if required category has only one selected or if additive is default.
+    if (category.isRequired && current.length === 1) return
+    if (additive.isDefault) return
+    selectedAdditives.value[category.id] = current.filter(a => a.additiveId !== additive.additiveId)
   } else {
-    selectedAdditives.value[category.id] = alreadySelected ? [] : [additive]
+    if (!category.isMultipleSelect) {
+      selectedAdditives.value[category.id] = [additive]
+    } else {
+      selectedAdditives.value[category.id] = [...current, additive]
+    }
   }
 }
 
 // ----- Action Handler -----
-// When the user clicks the update button, emit the updated size and additives.
 const handleUpdate = () => {
   const updatedAdditives = Object.values(selectedAdditives.value).flat()
   emits('update', selectedSize.value, updatedAdditives)
@@ -225,5 +235,5 @@ const handleUpdate = () => {
 </script>
 
 <style scoped>
-/* You can add additional styles if needed */
+/* Additional styles if needed */
 </style>

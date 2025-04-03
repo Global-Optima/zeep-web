@@ -91,8 +91,8 @@ const onCancel = () => {
 		<!-- Main Content -->
 		<Card>
 			<CardHeader>
-				<CardTitle>Детали добавки</CardTitle>
-				<CardDescription v-if="!readonly">Измените цену добавки для кафе.</CardDescription>
+				<CardTitle>Детали модификатора</CardTitle>
+				<CardDescription v-if="!readonly">Измените цену модификатора для кафе.</CardDescription>
 			</CardHeader>
 			<CardContent class="space-y-6">
 				<!-- Base Price -->

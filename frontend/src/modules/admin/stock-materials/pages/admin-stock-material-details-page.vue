@@ -1,5 +1,5 @@
 <template>
-	<p v-if="!additiveDetails">Товар не найден</p>
+	<p v-if="!additiveDetails">Продукт не найден</p>
 
 	<AdminStockMaterialDetailsForm
 		v-else
@@ -41,7 +41,7 @@ const updateMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных товара. Пожалуйста, подождите.',
+			description: 'Обновление данных продукта. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -50,13 +50,13 @@ const updateMutation = useMutation({
 		toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Данные товара успешно обновлены.',
+			description: 'Данные продукта успешно обновлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении данных товара.',
+			description: 'Произошла ошибка при обновлении данных продукта.',
 			variant: 'destructive',
 		})
 	},
@@ -66,7 +66,7 @@ function handleUpdate(data: UpdateStockMaterialDTO) {
 	if (isNaN(Number(stockMaterialId))) {
 		toast({
 			title: 'Ошибка',
-			description: 'Неверный идентификатор товара.',
+			description: 'Неверный идентификатор продукта.',
 			variant: 'destructive',
 		})
 		return router.back()

@@ -4,7 +4,7 @@
 			<TableRow>
 				<TableHead>Название</TableHead>
 				<TableHead>Категория</TableHead>
-				<TableHead>Ингредиент</TableHead>
+				<TableHead>Сырье</TableHead>
 				<TableHead>Упаковка</TableHead>
 			</TableRow>
 		</TableHeader>

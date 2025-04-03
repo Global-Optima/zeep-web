@@ -18,7 +18,7 @@
 						{{ suborder.productSize.productName }} {{ suborder.productSize.sizeName }}
 					</p>
 					<p class="text-gray-700 text-sm line-clamp-2">
-						{{ suborder.additives.map(a => a.additive.name).join(', ') || 'Без топпингов' }}
+						{{ suborder.additives.map(a => a.additive.name).join(', ') || 'Без модификаторов' }}
 					</p>
 				</div>
 

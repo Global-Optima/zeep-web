@@ -22,7 +22,7 @@ const createMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Создание...',
-			description: 'Создание новой категории добавок. Пожалуйста, подождите.',
+			description: 'Создание новой категории модификаторов. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -30,14 +30,14 @@ const createMutation = useMutation({
 		toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Категория добавок успешно создана.',
+			description: 'Категория модификаторов успешно создана.',
 		})
 		router.back()
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при создании категории добавок.',
+			description: 'Произошла ошибка при создании категории модификаторов.',
 			variant: 'destructive',
 		})
 	},

@@ -23,7 +23,7 @@ const createMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Создание...',
-			description: 'Добавление новых товаров кафе. Пожалуйста, подождите.',
+			description: 'Добавление новых продуктов кафе. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -31,14 +31,14 @@ const createMutation = useMutation({
 		toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Товары кафе успешно добавлены.',
+			description: 'Продукты кафе успешно добавлены.',
 		})
 		router.back()
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при добавлении товаров кафе.',
+			description: 'Произошла ошибка при добавлении продуктов кафе.',
 			variant: 'destructive',
 		})
 	},
@@ -48,7 +48,7 @@ function handleCreate(dto: CreateStoreProductDTO[]) {
 	if (dto.length === 0) {
 		toast({
 			title: 'Ошибка',
-			description: 'Список товаров пуст. Пожалуйста, добавьте товары перед сохранением.',
+			description: 'Список продуктов пуст. Пожалуйста, добавьте продукты перед сохранением.',
 			variant: 'destructive',
 		})
 		return

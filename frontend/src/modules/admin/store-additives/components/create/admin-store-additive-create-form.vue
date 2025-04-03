@@ -92,7 +92,7 @@ function removeAdditive(index: number) {
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
 			</Button>
-			<h1 class="font-semibold text-xl tracking-tight shrink-0">Добавить добавки в кафе</h1>
+			<h1 class="font-semibold text-xl tracking-tight shrink-0">Добавить модификатора в кафе</h1>
 			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
@@ -114,16 +114,16 @@ function removeAdditive(index: number) {
 		<Card>
 			<CardHeader>
 				<div class="flex justify-between">
-					<CardTitle>Добавки</CardTitle>
+					<CardTitle>Модификаторы</CardTitle>
 					<Button
 						type="button"
 						variant="outline"
 						@click="openAdditiveDialog = true"
 					>
-						Добавить добавку
+						Добавить модификатор
 					</Button>
 				</div>
-				<CardDescription class="mt-1"> Список добавленных добавок и их цены </CardDescription>
+				<CardDescription class="mt-1"> Список добавленных модификаторов и их цены </CardDescription>
 			</CardHeader>
 
 			<CardContent>
@@ -169,7 +169,7 @@ function removeAdditive(index: number) {
 									colspan="4"
 									class="text-gray-500 text-center"
 								>
-									Нет добавленных добавок
+									Нет добавленных модификаторов
 								</TableCell>
 							</TableRow>
 						</template>

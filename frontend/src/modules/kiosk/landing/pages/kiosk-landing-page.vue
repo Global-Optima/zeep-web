@@ -28,7 +28,10 @@
 					></div>
 
 					<!-- Text Content -->
-					<div class="bottom-64 left-12 z-10 absolute">
+					<div
+						class="bottom-64 left-12 z-10 absolute"
+						v-if="slide.title && slide.price"
+					>
 						<p class="text-white text-2xl sm:text-5xl">{{ slide.title }}</p>
 						<p class="mt-2 sm:mt-4 font-medium text-white text-3xl sm:text-5xl">
 							{{ formatPrice(slide.price) }}
@@ -69,25 +72,26 @@ import 'swiper/css/pagination'
 
 import { Autoplay, Pagination } from 'swiper/modules'
 
-import LandingImage0 from '@/core/assets/landing/image0.avif'
-import LandingImage1 from '@/core/assets/landing/image1.avif'
+import LandingImage1 from '@/core/assets/landing/1.webp'
+import LandingImage2 from '@/core/assets/landing/2.webp'
+import LandingImage3 from '@/core/assets/landing/3.webp'
 
 import LocaleSwitch from '@/core/components/locale-switch/LocaleSwitch.vue'
 import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import { MousePointerClickIcon } from 'lucide-vue-next'
 
-const slides = ref([
-  {
-    image: LandingImage0,
-    title: 'Капучино с карамельным сиропом',
-    price: 1400,
-  },
-  {
-    image: LandingImage1,
-    title: 'Эспрессо Фраппучино',
-    price: 1700,
-  },
+interface Slide {
+  image: string
+  placeholder?: string
+  title?: string
+  price?: number
+}
+
+const slides = ref<Slide[]>([
+  { image: LandingImage1, placeholder: LandingImage1 },
+  { image: LandingImage2, placeholder: LandingImage2 },
+  { image: LandingImage3, placeholder: LandingImage3 },
 ])
 
 const modules = [Autoplay, Pagination]

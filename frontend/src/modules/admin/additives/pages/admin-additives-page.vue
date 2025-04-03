@@ -14,7 +14,7 @@
 					v-if="!additivesResponse || additivesResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Топпинги не найдены
+					Модификаторы не найдены
 				</p>
 
 				<!-- Additive List -->

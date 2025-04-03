@@ -1,5 +1,5 @@
 <template>
-	<p v-if="!ingredientDetails">Ингредиент не найден</p>
+	<p v-if="!ingredientDetails">Сырье не найдено</p>
 
 	<AdminIngredientsDetailsForm
 		v-else
@@ -37,7 +37,7 @@ const updateMutation = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных ингредиента. Пожалуйста, подождите.',
+			description: 'Обновление данных сырья. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -46,13 +46,13 @@ const updateMutation = useMutation({
 		toast({
 			title: 'Успех!',
 variant: 'success',
-			description: 'Данные ингредиента успешно обновлены.',
+			description: 'Данные сырья успешно обновлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении ингредиента.',
+			description: 'Произошла ошибка при обновлении сырья.',
 			variant: 'destructive',
 		})
 	},
@@ -62,7 +62,7 @@ function handleUpdate(updatedData: UpdateIngredientDTO) {
 	if (isNaN(Number(ingredientId))) {
 		toast({
 			title: 'Ошибка',
-			description: 'Неверный идентификатор ингредиента.',
+			description: 'Неверный идентификатор сырья.',
 			variant: 'destructive',
 		})
 		return router.back()

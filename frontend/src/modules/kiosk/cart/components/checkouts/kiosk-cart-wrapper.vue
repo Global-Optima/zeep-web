@@ -99,7 +99,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 				<ShoppingBasket class="size-16 text-gray-400" />
 				<h2 class="font-semibold text-slate-800 text-3xl">Ваша корзина пуста</h2>
 				<p class="text-slate-500 text-xl text-center">
-					Добавьте товары из меню, чтобы начать оформление заказа
+					Добавьте продукты из меню, чтобы начать оформление заказа
 				</p>
 				<Button
 					class="!mt-8 px-6 h-14 text-xl"

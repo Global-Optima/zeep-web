@@ -7,7 +7,7 @@
 				<TableHead>Категория</TableHead>
 				<TableHead>Размер</TableHead>
 				<TableHead>Цена</TableHead>
-        <TableHead>Статус</TableHead>
+				<TableHead>Статус</TableHead>
 				<TableHead v-if="canDelete"></TableHead>
 			</TableRow>
 		</TableHeader>
@@ -21,7 +21,7 @@
 				<TableCell class="hidden sm:table-cell">
 					<LazyImage
 						:src="additive.imageUrl"
-						alt="Изображение добавки"
+						alt="Изображение модификатора"
 						class="rounded-md size-16 object-contain aspect-square"
 					/>
 				</TableCell>
@@ -35,14 +35,14 @@
 				<TableCell>
 					{{ formatPrice(additive.storePrice) }}
 				</TableCell>
-        <TableCell class="hidden md:table-cell">
-          <p
-            class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
-            :class="getStatusClass(additive)"
-          >
-            {{ getStatusLabel(additive) }}
-          </p>
-        </TableCell>
+				<TableCell class="hidden md:table-cell">
+					<p
+						class="inline-flex items-center px-2.5 py-1 rounded-md w-fit text-xs"
+						:class="getStatusClass(additive)"
+					>
+						{{ getStatusLabel(additive) }}
+					</p>
+				</TableCell>
 				<TableCell v-if="canDelete">
 					<Button
 						variant="ghost"
@@ -115,7 +115,7 @@ const canDelete = useHasRole([EmployeeRole.STORE_MANAGER])
 const {mutate: deleteStoreAdditive} = useMutation({
 		mutationFn: (id: number) => storeAdditivesService.deleteStoreAdditive(id),
 		onSuccess: () => {
-			toast({title: "Топпинг удален из кафе"})
+			toast({title: "Модификатор удален из кафе"})
 			queryClient.invalidateQueries({queryKey: ['admin-store-additives']})
 		},
 		onError: () => {

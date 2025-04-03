@@ -20,7 +20,7 @@
 					v-if="!storeAdditivesResponse || storeAdditivesResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Топпинги кафе не найдены
+					Модификаторы кафе не найдены
 				</p>
 
 				<AdminStoreAdditivesList

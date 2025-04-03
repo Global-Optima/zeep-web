@@ -13,7 +13,7 @@
 					v-if="!stockMaterialsResponse || stockMaterialsResponse.data.length === 0"
 					class="text-muted-foreground"
 				>
-					Складские товары не найдены
+					Складские продукты не найдены
 				</p>
 				<AdminStockMaterialsList
 					v-else

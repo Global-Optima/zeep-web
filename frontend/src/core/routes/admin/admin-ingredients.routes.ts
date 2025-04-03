@@ -4,7 +4,7 @@ export const ADMIN_INGREDIENTS_CHILDREN_ROUTES = {
 	ADMIN_INGREDIENTS_DETAILS: {
 		path: 'ingredients/:id',
 		meta: {
-			title: 'Детали ингредиента',
+			title: 'Детали сырья',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/ingredients/pages/admin-ingredient-details-page.vue'),
@@ -12,7 +12,7 @@ export const ADMIN_INGREDIENTS_CHILDREN_ROUTES = {
 	ADMIN_INGREDIENT_CREATE: {
 		path: 'ingredients/create',
 		meta: {
-			title: 'Создать ингредиент',
+			title: 'Создать сырье',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/ingredients/pages/admin-ingredient-create-page.vue'),
@@ -20,7 +20,7 @@ export const ADMIN_INGREDIENTS_CHILDREN_ROUTES = {
 	ADMIN_INGREDIENTS: {
 		path: 'ingredients',
 		meta: {
-			title: 'Ингредиенты',
+			title: 'Сырье',
 			requiresAuth: true,
 		},
 		component: () => import('@/modules/admin/ingredients/pages/admin-ingredients-page.vue'),
@@ -28,7 +28,7 @@ export const ADMIN_INGREDIENTS_CHILDREN_ROUTES = {
 	ADMIN_INGREDIENT_CATEGORIES: {
 		path: 'ingredient-categories',
 		meta: {
-			title: 'Категории товаров',
+			title: 'Категории продуктов',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -37,7 +37,7 @@ export const ADMIN_INGREDIENTS_CHILDREN_ROUTES = {
 	ADMIN_INGREDIENT_CATEGORY_DETAILS: {
 		path: 'ingredient-categories/:id',
 		meta: {
-			title: 'Детали категории товара',
+			title: 'Детали категории продукта',
 			requiresAuth: true,
 		},
 		component: () =>
@@ -48,7 +48,7 @@ export const ADMIN_INGREDIENTS_CHILDREN_ROUTES = {
 	ADMIN_INGREDIENT_CATEGORY_CREATE: {
 		path: 'ingredient-categories/create',
 		meta: {
-			title: 'Cоздать категорию товара',
+			title: 'Cоздать категорию продукта',
 			requiresAuth: true,
 		},
 		component: () =>

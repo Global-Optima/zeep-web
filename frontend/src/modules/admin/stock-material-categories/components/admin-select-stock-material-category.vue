@@ -75,7 +75,7 @@ function onClose() {
 	>
 		<DialogContent :include-close-button="false">
 			<DialogHeader>
-				<DialogTitle>Выберите категорию складских товаров</DialogTitle>
+				<DialogTitle>Выберите категорию складских продуктов</DialogTitle>
 			</DialogHeader>
 			<div>
 				<Input

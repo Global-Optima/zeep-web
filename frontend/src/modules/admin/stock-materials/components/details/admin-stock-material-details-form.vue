@@ -62,7 +62,7 @@ const updateStockMaterialSchema = toTypedSchema(
     size: z.coerce.number().min(1, 'Введите размер упаковки'),
     unitId: z.coerce.number().min(1, 'Выберите единицу измерения'),
     categoryId: z.coerce.number().min(1, 'Выберите категорию'),
-    ingredientId: z.coerce.number().min(1, 'Выберите ингредиент'),
+    ingredientId: z.coerce.number().min(1, 'Выберите сырье'),
     expirationPeriodInDays: z.coerce.number().min(1, 'Срок годности должен быть больше 0'),
     barcode: z
       .string()
@@ -361,8 +361,8 @@ const onPrintBarcode = async () => {
 				<!-- Ingredient -->
 				<Card>
 					<CardHeader>
-						<CardTitle>Ингредиент</CardTitle>
-						<CardDescription>Выберите ингредиент.</CardDescription>
+						<CardTitle>Сырье</CardTitle>
+						<CardDescription>Выберите сырье.</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<template v-if="!readonly">

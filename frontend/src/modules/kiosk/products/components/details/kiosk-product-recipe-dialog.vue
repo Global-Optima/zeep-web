@@ -39,7 +39,7 @@ const allergensList = computed(() => nutrition.allergenIngredients.join(", "))
 			class="!rounded-2xl"
 		>
 			<DialogHeader>
-				<DialogTitle class="text-3xl">Ингредиенты</DialogTitle>
+				<DialogTitle class="text-3xl">Сырье</DialogTitle>
 			</DialogHeader>
 			<div class="flex flex-col gap-8">
 				<div class="gap-8 grid grid-cols-4 shadow-md p-4 rounded-xl text-xl">

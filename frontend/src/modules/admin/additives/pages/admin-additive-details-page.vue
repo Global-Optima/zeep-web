@@ -1,10 +1,10 @@
 <template>
-  <PageLoader v-if="isLoading"/>
-	<p v-else-if="!additiveDetails">Топпинг не найден</p>
+	<PageLoader v-if="isLoading" />
+	<p v-else-if="!additiveDetails">Модификатор не найден</p>
 
 	<AdminAdditiveDetailsForm
 		v-else
-    ref="formRef"
+		ref="formRef"
 		:additive="additiveDetails"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
@@ -48,7 +48,7 @@ const {mutate, isPending} = useMutation({
 	onMutate: () => {
 		toast({
 			title: 'Обновление...',
-			description: 'Обновление данных топпинга. Пожалуйста, подождите.',
+			description: 'Обновление данных модификатора. Пожалуйста, подождите.',
 		})
 	},
 	onSuccess: () => {
@@ -60,13 +60,13 @@ const {mutate, isPending} = useMutation({
 		toast({
 			title: 'Успех!',
       variant: 'success',
-			description: 'Данные топпинга успешно обновлены.',
+			description: 'Данные модификатора успешно обновлены.',
 		})
 	},
 	onError: () => {
 		toast({
 			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении данных топпинга.',
+			description: 'Произошла ошибка при обновлении данных модификатора.',
 			variant: 'destructive',
 		})
 	},
@@ -76,7 +76,7 @@ function handleUpdate(data: UpdateAdditiveDTO) {
 	if (isNaN(Number(additiveId))) {
 		toast({
 			title: 'Ошибка',
-			description: 'Неверный идентификатор топпинга.',
+			description: 'Неверный идентификатор модификатора.',
 			variant: 'destructive',
 		})
 		return router.back()

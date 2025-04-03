@@ -20,7 +20,7 @@
 				<TableCell class="hidden sm:table-cell">
 					<LazyImage
 						:src="product.imageUrl"
-						alt="Изображение товара"
+						alt="Изображение продукта"
 						class="rounded-md size-16 object-contain aspect-square"
 					/>
 				</TableCell>
@@ -121,11 +121,11 @@ const canDelete = useHasRole([EmployeeRole.STORE_MANAGER])
 const { mutate: deleteStoreProduct } = useMutation({
 	mutationFn: (id: number) => storeProductsService.deleteStoreProduct(id),
 	onSuccess: () => {
-		toast({ title: "Товар удален из кафе" });
+		toast({ title: "Продукт удален из кафе" });
 		queryClient.invalidateQueries({ queryKey: ['admin-store-products'] });
 	},
 	onError: () => {
-		toast({ title: "Произошла ошибка при удалении товара" });
+		toast({ title: "Произошла ошибка при удалении продукта" });
 	},
 });
 
