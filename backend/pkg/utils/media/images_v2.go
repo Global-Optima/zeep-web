@@ -99,7 +99,12 @@ func callImageConverterService(imageBytes []byte, mode string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to call conversion service: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Printf("failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
