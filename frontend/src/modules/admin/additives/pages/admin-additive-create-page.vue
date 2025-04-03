@@ -30,7 +30,7 @@ const {mutate, isPending} = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-additives'] })
 		toast({
 			title: 'Успех!',
-variant: 'success',
+      variant: 'success',
 			description: 'Модификатор успешно создан.',
 		})
 		router.back()

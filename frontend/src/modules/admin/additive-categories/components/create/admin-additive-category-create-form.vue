@@ -11,6 +11,7 @@ import { Input } from '@/core/components/ui/input'
 import { Switch } from '@/core/components/ui/switch'
 import type { CreateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { ChevronLeft } from 'lucide-vue-next'
+import { Label } from '@/core/components/ui/label'
 
 // Emits
 const emits = defineEmits<{
@@ -23,21 +24,19 @@ const createAdditiveCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
     description: z.string().optional(),
-    isMultipleSelect: z.boolean(),
+    isMultipleSelect: z.boolean().default(true),
+    isRequired: z.boolean().default(false),
   })
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm<CreateAdditiveCategoryDTO>({
+const { handleSubmit, resetForm } = useForm({
   validationSchema: createAdditiveCategorySchema,
-  initialValues: {
-    isMultipleSelect: true
-  }
 })
 
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
-  emits('onSubmit', {...formValues, isMultipleSelect: formValues.isMultipleSelect ?? false})
+  emits('onSubmit', formValues)
 })
 
 const onCancel = () => {
@@ -62,7 +61,7 @@ const onCancel = () => {
 				Создать категорию модификатора
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -123,35 +122,63 @@ const onCancel = () => {
 						</FormItem>
 					</FormField>
 
-					<!-- Is Multiple Select -->
-					<FormField
-						v-slot="{ value, handleChange }"
-						name="isMultipleSelect"
-					>
-						<FormItem
-							class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
-						>
-							<div class="flex flex-col space-y-0.5">
-								<FormLabel class="font-medium text-base"> Множественный выбор </FormLabel>
-								<FormDescription class="text-sm">
-									Укажите можно ли выбрать несколько модификаторов в этой категории при заказе
-								</FormDescription>
-							</div>
+					<div class="space-y-3">
+						<Label class="font-medium">Дополнительные опции</Label>
 
-							<FormControl>
-								<Switch
-									:checked="value"
-									@update:checked="handleChange"
-								/>
-							</FormControl>
-						</FormItem>
-					</FormField>
+						<!-- Is Multiple Select -->
+						<FormField
+							v-slot="{ value, handleChange }"
+							name="isMultipleSelect"
+						>
+							<FormItem
+								class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
+							>
+								<div class="flex flex-col space-y-0.5">
+									<FormLabel class="font-medium text-base">Множественный выбор</FormLabel>
+									<FormDescription class="text-sm">
+										Укажите можно ли выбрать несколько модификаторов в этой категории при заказе
+									</FormDescription>
+								</div>
+
+								<FormControl>
+									<Switch
+										:checked="value"
+										@update:checked="handleChange"
+									/>
+								</FormControl>
+							</FormItem>
+						</FormField>
+
+						<!-- Is Required -->
+						<FormField
+							v-slot="{ value, handleChange }"
+							name="isRequired"
+						>
+							<FormItem
+								class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
+							>
+								<div class="flex flex-col space-y-0.5">
+									<FormLabel class="font-medium text-base"> Обязательный выбор </FormLabel>
+									<FormDescription class="text-sm">
+										Укажите нужно ли обязательно выбрать минимум один модификатор в данной категории
+									</FormDescription>
+								</div>
+
+								<FormControl>
+									<Switch
+										:checked="value"
+										@update:checked="handleChange"
+									/>
+								</FormControl>
+							</FormItem>
+						</FormField>
+					</div>
 				</div>
 			</CardContent>
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"
