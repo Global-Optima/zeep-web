@@ -147,4 +147,5 @@ type AdditiveCategory struct {
 	Description      string     `gorm:"type:text"`
 	Additives        []Additive `gorm:"foreignKey:AdditiveCategoryID"`
 	IsMultipleSelect bool       `gorm:"default:true" sort:"isMultipleSelect"`
+	IsRequired       bool       `gorm:"not null;default:false" sort:"isRequired"`
 }

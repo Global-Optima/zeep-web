@@ -17,7 +17,7 @@
 import type { StoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import KioskHomeProductsGrid from '@/modules/kiosk/products/components/home/list/kiosk-home-products-grid.vue'
 import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
-import { defineProps, type ComponentPublicInstance } from 'vue'
+import { type ComponentPublicInstance } from 'vue'
 
 defineProps<{
   category: ProductCategoryDTO

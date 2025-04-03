@@ -1,7 +1,4 @@
-import type {
-  AdditiveDTO,
-  BaseAdditiveDTO,
-} from '../../additives/models/additives.model'
+import type { AdditiveDTO, BaseAdditiveDTO } from '../../additives/models/additives.model'
 
 export interface CreateStoreAdditiveDTO {
 	additiveId: number
@@ -15,7 +12,7 @@ export interface UpdateStoreAdditiveDTO {
 export interface StoreAdditiveDTO extends AdditiveDTO {
 	additiveId: number
 	storePrice: number
-  isOutOfStock: boolean
+	isOutOfStock: boolean
 }
 
 export interface StoreAdditiveCategoriesFilter {
@@ -27,9 +24,9 @@ export interface StoreAdditiveCategoryItemDTO extends BaseAdditiveDTO {
 	id: number
 	additiveId: number
 	storePrice: number
-  isOutOfStock: boolean
+	isOutOfStock: boolean
 	isDefault: boolean
-  isHidden: boolean
+	isHidden: boolean
 }
 
 export interface StoreAdditiveCategoryDTO {
@@ -38,4 +35,5 @@ export interface StoreAdditiveCategoryDTO {
 	description: string
 	additives: StoreAdditiveCategoryItemDTO[]
 	isMultipleSelect: boolean
+	isRequired: boolean
 }

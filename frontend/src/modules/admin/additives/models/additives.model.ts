@@ -20,12 +20,13 @@ export interface AdditiveFilterQuery extends PaginationParams {
 
 // Base DTOs
 export interface BaseAdditiveCategoryDTO {
-  name: string
-  description: string
-  isMultipleSelect: boolean
+	name: string
+	description: string
+	isMultipleSelect: boolean
+	isRequired: boolean
 }
 
-export interface AdditiveCategoryDTO extends BaseAdditiveCategoryDTO{
+export interface AdditiveCategoryDTO extends BaseAdditiveCategoryDTO {
 	id: number
 }
 
@@ -63,6 +64,7 @@ export interface CreateAdditiveCategoryDTO {
 	name: string
 	description?: string
 	isMultipleSelect: boolean
+	isRequired: boolean
 }
 
 export interface UpdateAdditiveCategoryDTO {

@@ -13,6 +13,7 @@ type AdditiveCategoriesFilterQuery struct {
 	IncludeEmpty     *bool   `form:"includeEmpty"`
 	ProductSizeId    *uint   `form:"productSizeId"`
 	IsMultipleSelect *bool   `form:"isMultipleSelect"`
+	IsRequired       *bool   `form:"isRequired"`
 	Search           *string `form:"search"`
 }
 
@@ -29,6 +30,7 @@ type BaseAdditiveCategoryDTO struct {
 	Name             string `json:"name"`
 	Description      string `json:"description"`
 	IsMultipleSelect bool   `json:"isMultipleSelect"`
+	IsRequired       bool   `json:"isRequired"`
 }
 
 // BaseAdditiveDTO should not be returned directly as a response,
@@ -73,12 +75,14 @@ type CreateAdditiveCategoryDTO struct {
 	Name             string  `json:"name" binding:"required"`
 	Description      *string `json:"description" binding:"omitempty"`
 	IsMultipleSelect bool    `json:"isMultipleSelect"`
+	IsRequired       bool    `json:"isRequired"`
 }
 
 type UpdateAdditiveCategoryDTO struct {
 	Name             *string `json:"name" binding:"min=0,omitempty"`
 	Description      *string `json:"description" binding:"omitempty"`
 	IsMultipleSelect *bool   `json:"isMultipleSelect"`
+	IsRequired       *bool   `json:"isRequired"`
 }
 
 type UpdateAdditiveDTO struct {
@@ -102,10 +106,10 @@ type AdditiveCategoryDTO struct {
 type CreateAdditiveDTO struct {
 	Name               string                  `form:"name" binding:"required"`
 	Description        *string                 `form:"description" binding:"omitempty"`
-	BasePrice          float64                 `form:"basePrice" binding:"required,gte=0"`
-	Size               float64                 `form:"size" binding:"required,gt=0"`
-	UnitID             uint                    `form:"unitId" binding:"required,gt=0"`
-	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"required,gt=0"`
+	BasePrice          float64                 `form:"basePrice" binding:"gte=0"`
+	Size               float64                 `form:"size" binding:"gt=0"`
+	UnitID             uint                    `form:"unitId" binding:"gt=0"`
+	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"gt=0"`
 	MachineId          string                  `form:"machineId" binding:"required"`
 	Ingredients        []SelectedIngredientDTO `json:"-"`
 	Image              *multipart.FileHeader
