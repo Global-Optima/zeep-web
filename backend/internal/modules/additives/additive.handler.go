@@ -27,6 +27,22 @@ func NewAdditiveHandler(service AdditiveService, auditService audit.AuditService
 	}
 }
 
+// GetAdditiveCategories godoc
+// @Summary Get additive categories
+// @Description Returns list of additive categories with filters and pagination
+// @Tags additive-categories
+// @Accept json
+// @Produce json
+// @Param includeEmpty query bool false "Include empty categories"
+// @Param productSizeId query int false "Filter by product size ID"
+// @Param isMultipleSelect query bool false "Filter by multiple select flag"
+// @Param isRequired query bool false "Filter by required flag"
+// @Param search query string false "Search query"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/v1/additives/categories [get]
 func (h *AdditiveHandler) GetAdditiveCategories(c *gin.Context) {
 	var filter types.AdditiveCategoriesFilterQuery
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.AdditiveCategory{}); err != nil {
@@ -43,6 +59,17 @@ func (h *AdditiveHandler) GetAdditiveCategories(c *gin.Context) {
 	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
 }
 
+// CreateAdditiveCategory godoc
+// @Summary Create additive category
+// @Description Adds a new additive category
+// @Tags additive-categories
+// @Accept json
+// @Produce json
+// @Param input body types.CreateAdditiveCategoryDTO true "Category data"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/additives/categories [post]
 func (h *AdditiveHandler) CreateAdditiveCategory(c *gin.Context) {
 	var dto types.CreateAdditiveCategoryDTO
 	if err := utils.ParseRequestBody(c, &dto); err != nil {
@@ -70,6 +97,18 @@ func (h *AdditiveHandler) CreateAdditiveCategory(c *gin.Context) {
 	localization.SendLocalizedResponseWithKey(c, types.Response201AdditiveCategory)
 }
 
+// UpdateAdditiveCategory godoc
+// @Summary Update additive category
+// @Description Updates existing additive category
+// @Tags additive-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param input body types.UpdateAdditiveCategoryDTO true "Updated category data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/additives/categories/{id} [put]
 func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 	var dto types.UpdateAdditiveCategoryDTO
 	if err := utils.ParseRequestBody(c, &dto); err != nil {
@@ -109,6 +148,17 @@ func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 	localization.SendLocalizedResponseWithKey(c, types.Response200AdditiveCategoryUpdate)
 }
 
+// DeleteAdditiveCategory godoc
+// @Summary Delete additive category
+// @Description Deletes an additive category by ID
+// @Tags additive-categories
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 409 {object} map[string]interface{} "If the category is in use"
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/additives/categories/{id} [delete]
 func (h *AdditiveHandler) DeleteAdditiveCategory(c *gin.Context) {
 	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -145,6 +195,16 @@ func (h *AdditiveHandler) DeleteAdditiveCategory(c *gin.Context) {
 	localization.SendLocalizedResponseWithKey(c, types.Response200AdditiveCategoryDelete)
 }
 
+// GetAdditiveCategoryByID godoc
+// @Summary Get additive category details
+// @Description Returns a single additive category by ID
+// @Tags additive-categories
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} types.AdditiveCategoryDetailsDTO
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/v1/additives/categories/{id} [get]
 func (h *AdditiveHandler) GetAdditiveCategoryByID(c *gin.Context) {
 	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -167,6 +227,22 @@ func (h *AdditiveHandler) GetAdditiveCategoryByID(c *gin.Context) {
 	utils.SendSuccessResponse(c, category)
 }
 
+// GetAdditives godoc
+// @Summary Get list of additives
+// @Description Retrieves all additives with optional filters and pagination
+// @Tags additives
+// @Accept json
+// @Produce json
+// @Param search query string false "Search term"
+// @Param minPrice query number false "Minimum price"
+// @Param maxPrice query number false "Maximum price"
+// @Param categoryId query int false "Filter by category ID"
+// @Param productSizeId query int false "Filter by product size ID"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/v1/additives [get]
 func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 	var filter types.AdditiveFilterQuery
 	if err := utils.ParseQueryWithBaseFilter(c, &filter, &data.Additive{}); err != nil {
@@ -183,6 +259,25 @@ func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 	utils.SendSuccessResponseWithPagination(c, additives, filter.Pagination)
 }
 
+// CreateAdditive godoc
+// @Summary Create a new additive
+// @Description Creates an additive, including ingredients and optional image
+// @Tags additives
+// @Accept multipart/form-data
+// @Produce json
+// @Param name formData string true "Additive name"
+// @Param description formData string false "Description"
+// @Param basePrice formData number true "Base price"
+// @Param size formData number true "Size"
+// @Param unitId formData int true "Unit ID"
+// @Param additiveCategoryId formData int true "Category ID"
+// @Param machineId formData string true "Machine ID"
+// @Param image formData file false "Additive image"
+// @Param ingredients formData string false "JSON-encoded ingredients array"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/additives [post]
 func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	var dto types.CreateAdditiveDTO
 	var err error
@@ -234,6 +329,27 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 	localization.SendLocalizedResponseWithKey(c, types.Response201Additive)
 }
 
+// UpdateAdditive godoc
+// @Summary Update an existing additive
+// @Description Updates additive fields and image
+// @Tags additives
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path int true "Additive ID"
+// @Param name formData string false "Name"
+// @Param description formData string false "Description"
+// @Param basePrice formData number false "Base price"
+// @Param size formData number false "Size"
+// @Param unitId formData int false "Unit ID"
+// @Param additiveCategoryId formData int false "Category ID"
+// @Param machineId formData string false "Machine ID"
+// @Param image formData file false "Image file"
+// @Param deleteImage formData bool false "Delete existing image"
+// @Param ingredients formData string false "JSON-encoded ingredients array"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/additives/{id} [put]
 func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -283,6 +399,17 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 	localization.SendLocalizedResponseWithKey(c, types.Response200AdditiveUpdate)
 }
 
+// DeleteAdditive godoc
+// @Summary Delete an additive
+// @Description Deletes an additive by ID
+// @Tags additives
+// @Produce json
+// @Param id path int true "Additive ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/additives/{id} [delete]
 func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
 	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -318,6 +445,17 @@ func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200AdditiveDelete)
 }
+
+// GetAdditiveByID godoc
+// @Summary Get additive details
+// @Description Returns a single additive by ID
+// @Tags additives
+// @Produce json
+// @Param id path int true "Additive ID"
+// @Success 200 {object} types.AdditiveDetailsDTO
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/v1/additives/{id} [get]
 
 func (h *AdditiveHandler) GetAdditiveByID(c *gin.Context) {
 	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)

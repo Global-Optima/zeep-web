@@ -25,6 +25,18 @@ func NewCategoryHandler(service CategoryService, auditService audit.AuditService
 	}
 }
 
+// GetAllCategories godoc
+// @Summary Get all product categories
+// @Description Returns paginated list of product categories
+// @Tags product-categories
+// @Accept json
+// @Produce json
+// @Param search query string false "Search term"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/v1/product-categories [get]
 func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 	var filter types.ProductCategoriesFilterDTO
 
@@ -43,6 +55,16 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 	utils.SendSuccessResponseWithPagination(c, categories, filter.Pagination)
 }
 
+// GetCategoryByID godoc
+// @Summary Get product category by ID
+// @Description Retrieves product category details by ID
+// @Tags product-categories
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} types.ProductCategoryDTO
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/product-categories/{id} [get]
 func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -59,6 +81,17 @@ func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
 	utils.SendSuccessResponse(c, category)
 }
 
+// CreateCategory godoc
+// @Summary Create new product category
+// @Description Creates a new product category
+// @Tags product-categories
+// @Accept json
+// @Produce json
+// @Param input body types.CreateProductCategoryDTO true "New category data"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/product-categories [post]
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 	var dto types.CreateProductCategoryDTO
 	if err := utils.ParseRequestBody(c, &dto); err != nil {
@@ -86,6 +119,18 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 	localization.SendLocalizedResponseWithKey(c, types.Response201ProductCategory)
 }
 
+// UpdateCategory godoc
+// @Summary Update a product category
+// @Description Updates an existing product category
+// @Tags product-categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param input body types.UpdateProductCategoryDTO true "Updated category data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/product-categories/{id} [put]
 func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -126,6 +171,18 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	localization.SendLocalizedResponseWithKey(c, types.Response200ProductCategoryUpdate)
 }
 
+// DeleteCategory godoc
+// @Summary Delete product category
+// @Description Deletes a product category by ID
+// @Tags product-categories
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 409 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/product-categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {

@@ -1,0 +1,711 @@
+definitions:
+  types.AdditiveCategoryDetailsDTO:
+    properties:
+      additivesCount:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      isMultipleSelect:
+        type: boolean
+      isRequired:
+        type: boolean
+      name:
+        type: string
+    type: object
+  types.CreateAdditiveCategoryDTO:
+    properties:
+      description:
+        type: string
+      isMultipleSelect:
+        type: boolean
+      isRequired:
+        type: boolean
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  types.CreateProductCategoryDTO:
+    properties:
+      description:
+        type: string
+      name:
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  types.EmployeeLoginDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  types.ProductCategoryDTO:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  types.UpdateAdditiveCategoryDTO:
+    properties:
+      description:
+        type: string
+      isMultipleSelect:
+        type: boolean
+      isRequired:
+        type: boolean
+      name:
+        minLength: 0
+        type: string
+    type: object
+  types.UpdateProductCategoryDTO:
+    properties:
+      description:
+        type: string
+      name:
+        minLength: 2
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/additives:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all additives with optional filters and pagination
+      parameters:
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      - description: Minimum price
+        in: query
+        name: minPrice
+        type: number
+      - description: Maximum price
+        in: query
+        name: maxPrice
+        type: number
+      - description: Filter by category ID
+        in: query
+        name: categoryId
+        type: integer
+      - description: Filter by product size ID
+        in: query
+        name: productSizeId
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get list of additives
+      tags:
+      - additives
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates an additive, including ingredients and optional image
+      parameters:
+      - description: Additive name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Description
+        in: formData
+        name: description
+        type: string
+      - description: Base price
+        in: formData
+        name: basePrice
+        required: true
+        type: number
+      - description: Size
+        in: formData
+        name: size
+        required: true
+        type: number
+      - description: Unit ID
+        in: formData
+        name: unitId
+        required: true
+        type: integer
+      - description: Category ID
+        in: formData
+        name: additiveCategoryId
+        required: true
+        type: integer
+      - description: Machine ID
+        in: formData
+        name: machineId
+        required: true
+        type: string
+      - description: Additive image
+        in: formData
+        name: image
+        type: file
+      - description: JSON-encoded ingredients array
+        in: formData
+        name: ingredients
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new additive
+      tags:
+      - additives
+  /api/v1/additives/{id}:
+    delete:
+      description: Deletes an additive by ID
+      parameters:
+      - description: Additive ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete an additive
+      tags:
+      - additives
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates additive fields and image
+      parameters:
+      - description: Additive ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Name
+        in: formData
+        name: name
+        type: string
+      - description: Description
+        in: formData
+        name: description
+        type: string
+      - description: Base price
+        in: formData
+        name: basePrice
+        type: number
+      - description: Size
+        in: formData
+        name: size
+        type: number
+      - description: Unit ID
+        in: formData
+        name: unitId
+        type: integer
+      - description: Category ID
+        in: formData
+        name: additiveCategoryId
+        type: integer
+      - description: Machine ID
+        in: formData
+        name: machineId
+        type: string
+      - description: Image file
+        in: formData
+        name: image
+        type: file
+      - description: Delete existing image
+        in: formData
+        name: deleteImage
+        type: boolean
+      - description: JSON-encoded ingredients array
+        in: formData
+        name: ingredients
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update an existing additive
+      tags:
+      - additives
+  /api/v1/additives/categories:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of additive categories with filters and pagination
+      parameters:
+      - description: Include empty categories
+        in: query
+        name: includeEmpty
+        type: boolean
+      - description: Filter by product size ID
+        in: query
+        name: productSizeId
+        type: integer
+      - description: Filter by multiple select flag
+        in: query
+        name: isMultipleSelect
+        type: boolean
+      - description: Filter by required flag
+        in: query
+        name: isRequired
+        type: boolean
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get additive categories
+      tags:
+      - additive-categories
+    post:
+      consumes:
+      - application/json
+      description: Adds a new additive category
+      parameters:
+      - description: Category data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateAdditiveCategoryDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create additive category
+      tags:
+      - additive-categories
+  /api/v1/additives/categories/{id}:
+    delete:
+      description: Deletes an additive category by ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: If the category is in use
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete additive category
+      tags:
+      - additive-categories
+    get:
+      description: Returns a single additive category by ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.AdditiveCategoryDetailsDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get additive category details
+      tags:
+      - additive-categories
+    put:
+      consumes:
+      - application/json
+      description: Updates existing additive category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated category data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateAdditiveCategoryDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update additive category
+      tags:
+      - additive-categories
+  /api/v1/auth/employees/employee/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates an employee and returns a session token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/types.EmployeeLoginDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful, session token returned
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid credentials or bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Employee account inactive
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Employee login
+      tags:
+      - employee-auth
+  /api/v1/auth/employees/logout:
+    post:
+      description: Logs out the currently authenticated employee
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout successful
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Employee logout
+      tags:
+      - employee-auth
+  /api/v1/product-categories:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated list of product categories
+      parameters:
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all product categories
+      tags:
+      - product-categories
+    post:
+      consumes:
+      - application/json
+      description: Creates a new product category
+      parameters:
+      - description: New category data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateProductCategoryDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create new product category
+      tags:
+      - product-categories
+  /api/v1/product-categories/{id}:
+    delete:
+      description: Deletes a product category by ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete product category
+      tags:
+      - product-categories
+    get:
+      description: Retrieves product category details by ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ProductCategoryDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get product category by ID
+      tags:
+      - product-categories
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing product category
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated category data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateProductCategoryDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a product category
+      tags:
+      - product-categories
+swagger: "2.0"

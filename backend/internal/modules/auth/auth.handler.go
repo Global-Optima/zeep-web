@@ -83,6 +83,18 @@ func (h *AuthenticationHandler) CustomerLogout(c *gin.Context) {
 	utils.SendSuccessResponse(c, gin.H{"message": "logout successful"})
 }
 
+// EmployeeLogin godoc
+// @Summary Employee login
+// @Description Authenticates an employee and returns a session token
+// @Tags employee-auth
+// @Accept json
+// @Produce json
+// @Param input body types.EmployeeLoginDTO true "Login credentials"
+// @Success 200 {object} map[string]interface{} "Login successful, session token returned"
+// @Failure 400 {object} map[string]interface{} "Invalid credentials or bad request"
+// @Failure 403 {object} map[string]interface{} "Employee account inactive"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /api/v1/auth/employees/employee/login [post]
 func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 	var input types.EmployeeLoginDTO
 
@@ -122,6 +134,13 @@ func (h *AuthenticationHandler) EmployeeLogin(c *gin.Context) {
 	})
 }
 
+// EmployeeLogout godoc
+// @Summary Employee logout
+// @Description Logs out the currently authenticated employee
+// @Tags employee-auth
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Logout successful"
+// @Router /api/v1/auth/employees/logout [post]
 func (h *AuthenticationHandler) EmployeeLogout(c *gin.Context) {
 	c.Set(contexts.EMPLOYEE_CONTEXT, nil)
 

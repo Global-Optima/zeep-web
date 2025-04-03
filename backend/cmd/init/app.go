@@ -2,6 +2,8 @@ package init
 
 import (
 	"fmt"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"time"
 
@@ -130,7 +132,9 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 		).Observe(time.Since(start).Seconds())
 	})
 
+	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
 	apiRouter := routes.NewRouter(router, "/api", "/v1")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	employeeTokenManager := employeeToken.NewEmployeeTokenManager(dbHandler.DB)
 	apiRouter.EmployeeRoutes.Use(middleware.EmployeeAuth(employeeTokenManager))
 
