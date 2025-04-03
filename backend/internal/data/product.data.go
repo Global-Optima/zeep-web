@@ -24,6 +24,14 @@ func IsValidSize(size Size) bool {
 	return false
 }
 
+type ProvisionStatus string
+
+const (
+	PROVISION_STATUS_PREPARING ProvisionStatus = "PREPARING"
+	PROVISION_STATUS_COMPLETED ProvisionStatus = "COMPLETED"
+	PROVISION_STATUS_EXPIRED   ProvisionStatus = "EXPIRED"
+)
+
 type Product struct {
 	BaseEntity
 	Name         string           `gorm:"size:100;not null" sort:"name"`
@@ -104,6 +112,23 @@ type IngredientCategory struct {
 	Name        string       `gorm:"size:255;not null;uniqueIndex"`
 	Description string       `gorm:"type:text"`
 	Ingredients []Ingredient `gorm:"foreignKey:CategoryID"`
+}
+
+type Provision struct {
+	BaseEntity
+	Name                 string                `gorm:"size:255;not null;uniqueIndex"`
+	Description          string                `gorm:"type:text"`
+	ProvisionIngredients []ProvisionIngredient `gorm:"foreignKey:ProvisionID"`
+	Status               string                `gorm:"size:50;not null"`
+}
+
+type ProvisionIngredient struct {
+	BaseEntity
+	IngredientID uint       `gorm:"index;not null"`
+	Ingredient   Ingredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	ProvisionID  uint       `gorm:"index;not null"`
+	Provision    Provision  `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
+	Quantity     float64    `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 }
 
 type ProductSizeAdditive struct {
