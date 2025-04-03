@@ -89,6 +89,7 @@ func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.Additi
 		Name:             dto.Name,
 		Description:      *dto.Description,
 		IsMultipleSelect: dto.IsMultipleSelect,
+		IsRequired:       dto.IsRequired,
 	}
 }
 
@@ -101,6 +102,9 @@ func ConvertToUpdatedAdditiveCategoryModel(dto *UpdateAdditiveCategoryDTO, exist
 	}
 	if dto.IsMultipleSelect != nil {
 		existing.IsMultipleSelect = *dto.IsMultipleSelect
+	}
+	if dto.IsRequired != nil {
+		existing.IsRequired = *dto.IsRequired
 	}
 	return existing
 }
@@ -150,6 +154,7 @@ func ConvertToBaseAdditiveCategoryDTO(category *data.AdditiveCategory) *BaseAddi
 		Name:             category.Name,
 		Description:      category.Description,
 		IsMultipleSelect: category.IsMultipleSelect,
+		IsRequired:       category.IsRequired,
 	}
 }
 

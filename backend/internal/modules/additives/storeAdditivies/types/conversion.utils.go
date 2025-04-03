@@ -42,6 +42,7 @@ func ConvertToStoreAdditiveCategoryDTO(category *data.AdditiveCategory) *StoreAd
 		Name:             category.Name,
 		Description:      category.Description,
 		IsMultipleSelect: category.IsMultipleSelect,
+		IsRequired:       category.IsRequired,
 		Additives:        ConvertToStoreAdditiveCategoryItemDTOs(category), // Always initialized as a slice
 	}
 }
