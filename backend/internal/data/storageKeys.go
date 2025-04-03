@@ -11,7 +11,8 @@ import (
 var storageKeyInfo = &StorageKeyInfo{}
 
 type StorageKeyInfo struct {
-	Endpoint              string
+	AccessEndpoint        string
+	ResponseEndpoint      string
 	BucketName            string
 	OriginalImagesPrefix  string
 	ConvertedImagesPrefix string
@@ -37,7 +38,7 @@ func (s *StorageImageKey) GetURL() string {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s/%s",
-		storageKeyInfo.Endpoint,
+		storageKeyInfo.ResponseEndpoint,
 		storageKeyInfo.BucketName,
 		url.PathEscape(s.GetConvertedImageObjectKey()),
 	)
@@ -71,7 +72,7 @@ func (s *StorageVideoKey) GetURL() string {
 		return ""
 	}
 	return fmt.Sprintf("%s/%s/%s",
-		storageKeyInfo.Endpoint,
+		storageKeyInfo.ResponseEndpoint,
 		storageKeyInfo.BucketName,
 		url.PathEscape(s.GetConvertedVideoObjectKey()),
 	)
@@ -90,7 +91,8 @@ func validateStorageKeyInfo(info *StorageKeyInfo) error {
 	}
 
 	fields := map[string]string{
-		"Endpoint":              info.Endpoint,
+		"AccessEndpoint":        info.AccessEndpoint,
+		"ResponseEndpoint":      info.ResponseEndpoint,
 		"BucketName":            info.BucketName,
 		"OriginalImagesPrefix":  info.OriginalImagesPrefix,
 		"ConvertedImagesPrefix": info.ConvertedImagesPrefix,

@@ -147,19 +147,6 @@ func InitializeRouter(dbHandler *database.DBHandler, redisClient *database.Redis
 	return router
 }
 
-func InitializeStorage(cfg *config.Config) storage.StorageRepository {
-	storageRepo, err := storage.NewStorageRepository(
-		cfg.S3.Endpoint,
-		cfg.S3.AccessKey,
-		cfg.S3.SecretKey,
-		cfg.S3.BucketName,
-	)
-	if err != nil {
-		log.Fatalf("Failed to initialize storage repository: %v", err)
-	}
-	return storageRepo
-}
-
 func InitializeApp() (*gin.Engine, *config.Config) {
 	cfg := InitializeConfig()
 
@@ -168,23 +155,28 @@ func InitializeApp() (*gin.Engine, *config.Config) {
 		panic(err)
 	}
 
+	zapLogger := logger.GetZapSugaredLogger()
+
 	if err := utils.InitBarcodeFont(); err != nil {
-		log.Fatalf("Failed to initialize Barcode font: %v", err)
+		zapLogger.Fatalf("Failed to initialize Barcode font: %v", err)
 	}
 
 	if err := localization.InitLocalizer(nil); err != nil {
-		logger.GetZapSugaredLogger().Fatalf("Failed to initialize localizer: %v", err)
+		zapLogger.Fatalf("Failed to initialize localizer: %v", err)
 	}
 
 	if err := censor.InitCensor(); err != nil {
-		logger.GetZapSugaredLogger().Fatalf("Failed to initialize censor: %v", err)
+		zapLogger.Fatalf("Failed to initialize censor: %v", err)
 	}
 
 	dbHandler := InitializeDatabase(cfg)
 
 	redisClient := InitializeRedis(cfg)
 
-	storageRepo := InitializeStorage(cfg)
+	storageRepo, err := storage.NewStorageRepository(&cfg.S3)
+	if err != nil {
+		zapLogger.Errorf("Failed to initialize storage repository: %v", err)
+	}
 
 	router := InitializeRouter(dbHandler, redisClient, storageRepo)
 
