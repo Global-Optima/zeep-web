@@ -124,6 +124,7 @@ services:
         DB_SSL_MODE: ${DB_SSL_MODE}
         SERVER_PORT: ${SERVER_PORT}
         CLIENT_URL: ${CLIENT_URL}
+        IMAGE_CONVERTER_URL: ${IMAGE_CONVERTER_URL}
         JWT_CUSTOMER_SECRET_KEY: ${JWT_CUSTOMER_SECRET_KEY}
         JWT_EMPLOYEE_SECRET_KEY: ${JWT_EMPLOYEE_SECRET_KEY}
         JWT_CUSTOMER_TOKEN_TTL: ${JWT_CUSTOMER_TOKEN_TTL}
@@ -153,6 +154,15 @@ services:
         condition: service_healthy
     volumes:
       - ./backend/logs:/app/logs
+    networks:
+      - app_network
+
+  image-converter:
+    container_name: image-converter
+    build:
+      context: ./image-converter
+    ports:
+      - '8082:8082'
     networks:
       - app_network
 
