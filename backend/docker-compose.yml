@@ -81,6 +81,13 @@ services:
     env_file:
       - ./.env
 
+  image-converter:
+    container_name: image-converter
+    build:
+      context: .././image-converter
+    ports:
+      - '8082:8082'
+
 volumes:
   postgres-data:
   redis-insight:
