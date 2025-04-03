@@ -14,7 +14,7 @@ import (
 )
 
 var httpClient = &http.Client{
-	Timeout: 15 * time.Second,
+	Timeout: 60 * time.Second,
 }
 
 func ConvertImageToRawAndWebpV2(fileHeader *multipart.FileHeader) (*FilesPair, error) {
