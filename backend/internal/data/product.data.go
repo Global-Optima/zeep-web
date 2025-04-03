@@ -24,26 +24,6 @@ func IsValidSize(size Size) bool {
 	return false
 }
 
-type ProvisionStatus string
-
-const (
-	PROVISION_STATUS_PREPARING ProvisionStatus = "PREPARING"
-	PROVISION_STATUS_COMPLETED ProvisionStatus = "COMPLETED"
-	PROVISION_STATUS_EXPIRED   ProvisionStatus = "EXPIRED"
-)
-
-type Product struct {
-	BaseEntity
-	Name         string           `gorm:"size:100;not null" sort:"name"`
-	Description  string           `gorm:"type:text"`
-	ImageKey     *StorageImageKey `gorm:"size:2048"`
-	VideoKey     *StorageVideoKey `gorm:"size:2048"`
-	CategoryID   uint             `gorm:"index;not null"`
-	Category     ProductCategory  `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
-	RecipeSteps  []RecipeStep     `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-	ProductSizes []ProductSize    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
-}
-
 type RecipeStep struct {
 	BaseEntity
 	ProductID   uint    `gorm:"index;not null"`
@@ -97,7 +77,7 @@ type Ingredient struct {
 	Proteins               float64                 `gorm:"type:decimal(5,2);check:proteins >= 0" sort:"proteins"`
 	ExpirationInDays       int                     `gorm:"not null;default:0" sort:"expirationInDays"` // Changed to int
 	UnitID                 uint                    `gorm:"not null"`                                   // Link to Unit
-	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:SET NULL"`
+	Unit                   Unit                    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
 	CategoryID             uint                    `gorm:"not null"` // Link to IngredientCategory
 	IsAllergen             bool                    `gorm:"default:false" sort:"isAllergen"`
 	IngredientCategory     IngredientCategory      `gorm:"foreignKey:CategoryID;constraint:OnDelete:SET NULL"`
@@ -116,10 +96,15 @@ type IngredientCategory struct {
 
 type Provision struct {
 	BaseEntity
-	Name                 string                `gorm:"size:255;not null;uniqueIndex"`
+	Name                 string                `gorm:"size:255;not null;uniqueIndex" sort:"name"`
 	Description          string                `gorm:"type:text"`
+	AbsoluteVolume       float64               `gorm:"type:decimal(10,2);not null;check:absoluteVolume > 0"`
+	NetCost              float64               `gorm:"type:decimal(10,2);not null;check:netCost >= 0"`
+	UnitID               uint                  `gorm:"not null"`
+	Unit                 Unit                  `gorm:"foreignKey:UnitID;constraint:CASCADE"`
+	PreparationInMinutes uint                  `gorm:"not null" sort:"preparationInMinutes"`
+	LimitPerDay          uint                  `gorm:"not null" sort:"limitPerDay"`
 	ProvisionIngredients []ProvisionIngredient `gorm:"foreignKey:ProvisionID"`
-	Status               string                `gorm:"size:50;not null"`
 }
 
 type ProvisionIngredient struct {
