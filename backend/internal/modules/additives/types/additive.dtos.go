@@ -106,10 +106,10 @@ type AdditiveCategoryDTO struct {
 type CreateAdditiveDTO struct {
 	Name               string                  `form:"name" binding:"required"`
 	Description        *string                 `form:"description" binding:"omitempty"`
-	BasePrice          float64                 `form:"basePrice" binding:"required,gte=0"`
-	Size               float64                 `form:"size" binding:"required,gt=0"`
-	UnitID             uint                    `form:"unitId" binding:"required,gt=0"`
-	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"required,gt=0"`
+	BasePrice          float64                 `form:"basePrice" binding:"gte=0"`
+	Size               float64                 `form:"size" binding:"gt=0"`
+	UnitID             uint                    `form:"unitId" binding:"gt=0"`
+	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"gt=0"`
 	MachineId          string                  `form:"machineId" binding:"required"`
 	Ingredients        []SelectedIngredientDTO `json:"-"`
 	Image              *multipart.FileHeader
