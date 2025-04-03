@@ -34,7 +34,8 @@ type mockStorageRepository struct {
 func NewMockStorageRepository() (storage.StorageRepository, error) {
 	err := data.InitStorageKeysBuilder(&data.StorageKeyInfo{
 		BucketName:            mockBucketName,
-		Endpoint:              mockS3Endpoint,
+		AccessEndpoint:        mockS3Endpoint,
+		ResponseEndpoint:      mockS3Endpoint,
 		OriginalImagesPrefix:  storage.IMAGES_ORIGINAL_STORAGE_REPO_KEY,
 		ConvertedImagesPrefix: storage.IMAGES_CONVERTED_STORAGE_REPO_KEY,
 		ConvertedVideosPrefix: storage.VIDEOS_CONVERTED_STORAGE_REPO_KEY,

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -53,10 +54,11 @@ type storageRepository struct {
 	s3Endpoint string
 }
 
-func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (StorageRepository, error) {
+func NewStorageRepository(cfg *config.S3Config) (StorageRepository, error) {
 	err := data.InitStorageKeysBuilder(&data.StorageKeyInfo{
-		BucketName:            bucketName,
-		Endpoint:              endpoint,
+		BucketName:            cfg.BucketName,
+		AccessEndpoint:        cfg.AccessEndpoint,
+		ResponseEndpoint:      cfg.ResponseEndpoint,
 		OriginalImagesPrefix:  IMAGES_ORIGINAL_STORAGE_REPO_KEY,
 		ConvertedImagesPrefix: IMAGES_CONVERTED_STORAGE_REPO_KEY,
 		ConvertedVideosPrefix: VIDEOS_CONVERTED_STORAGE_REPO_KEY,
@@ -66,8 +68,8 @@ func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (St
 	}
 
 	sess, err := session.NewSession(&aws.Config{
-		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
-		Endpoint:         aws.String(endpoint),
+		Credentials:      credentials.NewStaticCredentials(cfg.AccessKey, cfg.SecretKey, ""),
+		Endpoint:         aws.String(cfg.AccessEndpoint),
 		S3ForcePathStyle: aws.Bool(true),
 		Region:           aws.String("us-east-1"), // temp value
 	})
@@ -77,8 +79,8 @@ func NewStorageRepository(endpoint, accessKey, secretKey, bucketName string) (St
 
 	return &storageRepository{
 		s3Client:   s3.New(sess),
-		bucketName: bucketName,
-		s3Endpoint: endpoint,
+		bucketName: cfg.BucketName,
+		s3Endpoint: cfg.AccessEndpoint,
 	}, nil
 }
 
