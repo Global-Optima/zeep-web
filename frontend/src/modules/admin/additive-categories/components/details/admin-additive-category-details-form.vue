@@ -8,6 +8,7 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { Label } from '@/core/components/ui/label'
 import Switch from '@/core/components/ui/switch/Switch.vue'
 import type { AdditiveCategoryDetailsDTO, UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { ChevronLeft } from 'lucide-vue-next'
@@ -29,12 +30,13 @@ const createAdditiveCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
     description: z.string().optional(),
-    isMultipleSelect: z.boolean().optional().describe('Можно ли выбирать несколько модификаторов в этой категории'),
+    isMultipleSelect: z.boolean().default(true),
+    isRequired: z.boolean().default(false),
   })
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm<UpdateAdditiveCategoryDTO>({
+const { handleSubmit, resetForm } = useForm({
   validationSchema: createAdditiveCategorySchema,
   initialValues: props.category
 })
@@ -42,7 +44,7 @@ const { handleSubmit, resetForm } = useForm<UpdateAdditiveCategoryDTO>({
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
   if (props.readonly) return // Prevent submission in readonly mode
-  emits('onSubmit', { ...formValues, isMultipleSelect: formValues.isMultipleSelect ?? false })
+  emits('onSubmit', formValues)
 })
 
 const onCancel = () => {
@@ -68,7 +70,7 @@ const onCancel = () => {
 			</h1>
 
 			<div
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
 				<Button
@@ -135,37 +137,66 @@ const onCancel = () => {
 						</FormItem>
 					</FormField>
 
-					<!-- Is Multiple Select -->
-					<FormField
-						v-slot="{ value, handleChange }"
-						name="isMultipleSelect"
-					>
-						<FormItem
-							class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
-						>
-							<div class="flex flex-col space-y-0.5">
-								<FormLabel class="font-medium text-base">Множественный выбор</FormLabel>
-								<FormDescription class="text-sm">
-									Укажите можно ли выбрать несколько модификаторов в этой категории при заказе
-								</FormDescription>
-							</div>
+					<div class="space-y-3">
+						<Label class="font-medium">Дополнительные опции</Label>
 
-							<FormControl>
-								<Switch
-									:checked="value"
-									@update:checked="handleChange"
-									:disabled="readonly"
-								/>
-							</FormControl>
-						</FormItem>
-					</FormField>
+						<!-- Is Multiple Select -->
+						<FormField
+							v-slot="{ value, handleChange }"
+							name="isMultipleSelect"
+						>
+							<FormItem
+								class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
+							>
+								<div class="flex flex-col space-y-0.5">
+									<FormLabel class="font-medium text-base">Множественный выбор</FormLabel>
+									<FormDescription class="text-sm">
+										Укажите можно ли выбрать несколько модификаторов в этой категории при заказе
+									</FormDescription>
+								</div>
+
+								<FormControl>
+									<Switch
+										:checked="value"
+										@update:checked="handleChange"
+										:disabled="readonly"
+									/>
+								</FormControl>
+							</FormItem>
+						</FormField>
+
+						<!-- Is Required -->
+						<FormField
+							v-slot="{ value, handleChange }"
+							name="isRequired"
+						>
+							<FormItem
+								class="flex flex-row justify-between items-center gap-12 p-4 border rounded-lg"
+							>
+								<div class="flex flex-col space-y-0.5">
+									<FormLabel class="font-medium text-base"> Обязательный выбор </FormLabel>
+									<FormDescription class="text-sm">
+										Укажите нужно ли обязательно выбрать минимум один модификатор в данной категории
+									</FormDescription>
+								</div>
+
+								<FormControl>
+									<Switch
+										:checked="value"
+										@update:checked="handleChange"
+										:disabled="readonly"
+									/>
+								</FormControl>
+							</FormItem>
+						</FormField>
+					</div>
 				</div>
 			</CardContent>
 		</Card>
 
 		<!-- Footer -->
 		<div
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 			v-if="!readonly"
 		>
 			<Button

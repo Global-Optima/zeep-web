@@ -1,6 +1,6 @@
 <!-- src/components/AdditivesSection.vue -->
 <template>
-	<div :class="cn('flex flex-col gap-10 px-8', containerClass)">
+	<div class="flex flex-col gap-10 px-8">
 		<div
 			v-for="category in visibleCategories"
 			:key="category.id"
@@ -21,15 +21,13 @@
 </template>
 
 <script setup lang="ts">
-import { cn } from '@/core/utils/tailwind.utils'
 import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import KioskDetailsAdditivesCard from '@/modules/kiosk/products/components/details/kiosk-details-additives-card.vue'
 import { computed } from "vue"
 
-const props = defineProps<{
+const {categories, selectedAdditives} = defineProps<{
   categories: StoreAdditiveCategoryDTO[]
-  isAdditiveSelected: (category: StoreAdditiveCategoryDTO, additiveId: number) => boolean
-  containerClass?: string
+  selectedAdditives: Record<number, StoreAdditiveCategoryItemDTO[]>
 }>()
 
 const emits = defineEmits<{
@@ -43,8 +41,12 @@ const onAdditiveToggle = (
   emits('toggleAdditive', category, additive)
 }
 
+const isAdditiveSelected = (category: StoreAdditiveCategoryDTO, additiveId: number): boolean =>
+  selectedAdditives[category.id]?.some((a) => a.additiveId === additiveId) || false;
+
+
 const visibleCategories = computed(() => {
-  return props.categories
+  return categories
     .map(category => {
       const visibleAdditives = category.additives.filter(a => !a.isHidden)
       return {
