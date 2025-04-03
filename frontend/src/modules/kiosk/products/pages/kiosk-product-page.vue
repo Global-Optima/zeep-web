@@ -85,7 +85,7 @@
 			<div class="mt-10">
 				<KioskDetailsAdditivesSection
 					:categories="additiveCategories ?? []"
-					:isAdditiveSelected="isAdditiveSelected"
+					:selected-additives="selectedAdditives"
 					@toggle-additive="onAdditiveToggle"
 				/>
 			</div>
@@ -112,7 +112,7 @@ import KioskDetailsSizes from '@/modules/kiosk/products/components/details/kiosk
 import KioskProductRecipeDialog from '@/modules/kiosk/products/components/details/kiosk-product-recipe-dialog.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { ChevronLeft, Plus } from 'lucide-vue-next'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute();
@@ -133,15 +133,21 @@ const { data: productDetails, isPending: isFetching, isError = true } = useQuery
 });
 
 const sortedSizes = computed(() => {
-  return productDetails.value?.sizes ? [...productDetails.value.sizes].sort((a, b) => a.size - b.size) : [];
+  return productDetails.value?.sizes
+    ? productDetails.value.sizes.slice().sort((a, b) => a.size - b.size)
+    : [];
 });
 
-
-watchEffect(() => {
-  if (!selectedSize.value && sortedSizes.value.length > 0) {
-    selectedSize.value = sortedSizes.value[0];
-  }
-});
+// Watch sortedSizes to set initial selectedSize.
+watch(
+  sortedSizes,
+  (newSizes) => {
+    if (!selectedSize.value && newSizes.length > 0) {
+      selectedSize.value = newSizes[0];
+    }
+  },
+  { immediate: true }
+);
 
 const { data: additiveCategories } = useQuery({
   queryKey: computed(() => ['kiosk-additive-categories', selectedSize.value]),
@@ -150,15 +156,31 @@ const { data: additiveCategories } = useQuery({
       return storeAdditivesService.getStoreAdditiveCategories(selectedSize.value.id)
     }
   },
-  initialData: [],
   enabled: computed(() => !!selectedSize.value),
 });
 
+// Watch additiveCategories to enforce required auto‑selection.
+watch(
+  additiveCategories,
+  (newCategories) => {
+    newCategories?.forEach(category => {
+      if (category.isRequired) {
+        const current = selectedAdditives.value[category.id] || [];
+        if (current.length === 0 && category.additives.length > 0) {
+          const defaultAdditive = category.additives.find(a => a.isDefault);
+          selectedAdditives.value[category.id] = defaultAdditive ? [defaultAdditive] : [category.additives[0]];
+        }
+      }
+    });
+  },
+  { immediate: true }
+);
+
 const isAddButtonEnabled = computed(() => {
-  // First, check that the product itself is available
+  // Check that the product itself is available
   if (productDetails.value?.isOutOfStock) return false;
 
-  // Then, check that no default additive is out of stock
+  // Check that no default additive is out of stock
   const hasDefaultOutOfStock = additiveCategories?.value?.some(category =>
     category.additives.some(additive => additive.isDefault && additive.isOutOfStock)
   );
@@ -183,19 +205,22 @@ const onSizeSelect = (size: StoreProductSizeDetailsDTO) => {
 
 const onAdditiveToggle = (category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) => {
   const current = selectedAdditives.value[category.id] || [];
-  const isSelected = current.some((a) => a.additiveId === additive.additiveId);
+  const isSelected = current.some(a => a.additiveId === additive.additiveId);
 
-  if (category.isMultipleSelect) {
-    selectedAdditives.value[category.id] = isSelected
-      ? current.filter(a => a.additiveId !== additive.additiveId)
-      : [...current, additive];
+  if (isSelected) {
+    // Prevent unselecting if required category has only one selected
+    if (category.isRequired && current.length === 1) return;
+    // Prevent unselecting default additive.
+    if (additive.isDefault) return;
+    selectedAdditives.value[category.id] = current.filter(a => a.additiveId !== additive.additiveId);
   } else {
-    selectedAdditives.value[category.id] = isSelected ? [] : [additive];
+    if (!category.isMultipleSelect) {
+      selectedAdditives.value[category.id] = [additive];
+    } else {
+      selectedAdditives.value[category.id] = [...current, additive];
+    }
   }
 };
-
-const isAdditiveSelected = (category: StoreAdditiveCategoryDTO, additiveId: number): boolean =>
-  selectedAdditives.value[category.id]?.some((a) => a.additiveId === additiveId) || false;
 
 const handleAddToCart = () => {
   if (!productDetails.value || !selectedSize.value) return;
