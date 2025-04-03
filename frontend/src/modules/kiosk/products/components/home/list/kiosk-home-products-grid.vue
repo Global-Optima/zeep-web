@@ -26,7 +26,6 @@
 import type { StoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import KioskHomeProductCard from '@/modules/kiosk/products/components/home/kiosk-home-product-card.vue'
 import KioskHomeProductsLoading from '@/modules/kiosk/products/components/home/list/kiosk-home-products-loading.vue'
-import { defineProps } from 'vue'
 
 const props = defineProps<{
   products: StoreProductDTO[]

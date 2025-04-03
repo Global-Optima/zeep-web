@@ -9,7 +9,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
 import { Skeleton } from '@/core/components/ui/skeleton'
 
 const props = defineProps<{ skeletonCount?: number }>()
