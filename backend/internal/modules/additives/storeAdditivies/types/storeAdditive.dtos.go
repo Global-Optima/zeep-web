@@ -48,4 +48,5 @@ type StoreAdditiveCategoryDTO struct {
 	Description      string                         `json:"description"`
 	Additives        []StoreAdditiveCategoryItemDTO `json:"additives"`
 	IsMultipleSelect bool                           `json:"isMultipleSelect"`
+	IsRequired       bool                           `json:"isRequired"`
 }

@@ -25,7 +25,7 @@ type AdditiveRepository interface {
 
 	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error)
-	UpdateAdditiveCategory(category *data.AdditiveCategory) error
+	SaveAdditiveCategory(category *data.AdditiveCategory) error
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error)
 }
@@ -94,6 +94,10 @@ func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategor
 
 	if filter.IsMultipleSelect != nil {
 		query = query.Where("additives.is_multiple_select = ?", *filter.IsMultipleSelect)
+	}
+
+	if filter.IsRequired != nil {
+		query = query.Where("additives.is_required = ?", *filter.IsRequired)
 	}
 
 	if filter.IncludeEmpty != nil && *filter.IncludeEmpty {
@@ -411,7 +415,7 @@ func (r *additiveRepository) CreateAdditiveCategory(category *data.AdditiveCateg
 	return category.ID, nil
 }
 
-func (r *additiveRepository) UpdateAdditiveCategory(category *data.AdditiveCategory) error {
+func (r *additiveRepository) SaveAdditiveCategory(category *data.AdditiveCategory) error {
 	return r.db.Save(category).Error
 }
 
