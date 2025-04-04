@@ -397,7 +397,11 @@ func (r *storeProductRepository) GetSufficientStoreProductSizeById(
 		Preload("ProductSize.Additives.Additive.Unit").
 		First(&storeProductSize).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to load StoreProductSize (ID=%d): %w", storeProductSizeID, err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStoreProductSizeNotFound
+		}
+		return nil, fmt.Errorf("%w: failed to load StoreProductSize (ID=%d): %w",
+			types.ErrFailedToFetchStoreProductSize, storeProductSizeID, err)
 	}
 
 	for _, usage := range storeProductSize.ProductSize.ProductSizeIngredients {
@@ -409,23 +413,23 @@ func (r *storeProductRepository) GetSufficientStoreProductSizeById(
 			Where("ingredient_id = ?", usage.IngredientID).
 			First(&stock).Error
 		if err != nil {
-			return nil, fmt.Errorf("failed to find stock for ingredient %d: %w",
-				usage.IngredientID, err)
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, types.ErrStoreStockNotFound
+			}
+			return nil, fmt.Errorf("%w: failed to find stock for ingredient %d: %w",
+				types.ErrFailedToFetchStoreStock, usage.IngredientID, err)
 		}
 
 		if stock.Quantity < frozenMap[usage.IngredientID] {
-			return nil, fmt.Errorf(
-				"insufficient stock for ingredient %q (ID=%d): already pending %.2f, need %.2f, have left %.2f",
-				usage.Ingredient.Name, usage.IngredientID, frozenMap[usage.IngredientID], needed, stock.Quantity,
-			)
+			return nil, fmt.Errorf("%w: insufficient stock for ingredient %q (ID=%d): already pending %.2f, need %.2f, have left %.2f",
+				types.ErrInsufficientStock, usage.Ingredient.Name, usage.IngredientID,
+				frozenMap[usage.IngredientID], needed, stock.Quantity)
 		}
 
 		effectiveAvailable := stock.Quantity - frozenMap[usage.IngredientID]
 		if effectiveAvailable < needed {
-			return nil, fmt.Errorf(
-				"insufficient stock for ingredient %q (ID=%d): need %.2f, have effective available %.2f",
-				usage.Ingredient.Name, usage.IngredientID, needed, effectiveAvailable,
-			)
+			return nil, fmt.Errorf("%w: insufficient effective available for ingredient %q (ID=%d): need %.2f, have %.2f",
+				types.ErrInsufficientStock, usage.Ingredient.Name, usage.IngredientID, needed, effectiveAvailable)
 		}
 	}
 

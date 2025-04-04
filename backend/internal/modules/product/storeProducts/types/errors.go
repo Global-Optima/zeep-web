@@ -13,4 +13,9 @@ var (
 	ErrInappropriateProductSizeID = moduleErrors.NewModuleError(errors.New("product size ID does not match the product given"))
 	ErrValidationFailed           = moduleErrors.NewModuleError(errors.New("validation failed"))
 	ErrNoUpdateContext            = moduleErrors.NewModuleError(errors.New("no update context found"))
+
+	ErrStoreStockNotFound            = moduleErrors.NewModuleError(errors.New("store stock not found"))
+	ErrInsufficientStock             = moduleErrors.NewModuleError(errors.New("insufficient stock"))
+	ErrFailedToFetchStoreProductSize = moduleErrors.NewModuleError(errors.New("failed to fetch store product size"))
+	ErrFailedToFetchStoreStock       = moduleErrors.NewModuleError(errors.New("failed to fetch store stock for product size"))
 )
