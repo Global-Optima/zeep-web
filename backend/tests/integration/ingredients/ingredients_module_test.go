@@ -105,11 +105,11 @@ func TestIngredientEndpoints(t *testing.T) {
 				ExpectedCode: http.StatusOK,
 			},
 			{
-				Description:  "Should return 500 for non-existent ingredient", // Note: Your service returns 404 instead of 500 here if not found.
+				Description:  "Should return 404 for non-existent ingredient", // Note: Your service returns 404 instead of 500 here if not found.
 				Method:       http.MethodGet,
 				URL:          "/api/test/ingredients/9999",
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusInternalServerError,
+				ExpectedCode: http.StatusNotFound,
 			},
 		}
 		env.RunTests(t, testCases)
