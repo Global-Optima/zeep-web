@@ -75,6 +75,7 @@
 							<TableHead>Упаковка</TableHead>
 							<TableHead>Категория</TableHead>
 							<TableHead>Количество</TableHead>
+							<TableHead>Цена</TableHead>
 							<TableHead class="text-center"></TableHead>
 						</TableRow>
 					</TableHeader>
@@ -102,6 +103,16 @@
 									class="w-20"
 									:class="{ 'border-red-500': material.quantity <= 0 }"
 									placeholder="Введите количество"
+								/>
+							</TableCell>
+							<TableCell>
+								<Input
+									type="number"
+									v-model.number="material.price"
+									:min="0"
+									class="w-20"
+									:class="{ 'border-red-500': material.price <= 0 }"
+									placeholder="Введите цену"
 								/>
 							</TableCell>
 							<TableCell class="text-center">
@@ -223,6 +234,7 @@ function addStockMaterial(stockMaterial: StockMaterialsDTO) {
 	materials.value.push({
 		stockMaterialId: stockMaterial.id,
 		quantity: 0,
+		price: 0,
 		name: stockMaterial.name,
     category: stockMaterial.category.name,
     size: stockMaterial.size,

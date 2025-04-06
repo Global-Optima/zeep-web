@@ -59,6 +59,7 @@
 							<TableHead>Упаковка</TableHead>
 							<TableHead>Количество</TableHead>
 							<TableHead>Срок годности</TableHead>
+							<TableHead>Цена</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -72,6 +73,7 @@
 							>
 							<TableCell>{{ material.quantity }}</TableCell>
 							<TableCell>{{ format(material.expirationDate, "dd.MM.yyyy") }}</TableCell>
+							<TableCell>{{ material.price }}</TableCell>
 						</TableRow>
 						<TableRow v-if="delivery.materials.length === 0">
 							<TableCell
