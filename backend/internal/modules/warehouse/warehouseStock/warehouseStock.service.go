@@ -85,6 +85,7 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 			StockMaterialID: material.StockMaterialID,
 			Barcode:         stockMaterial.Barcode,
 			Quantity:        material.Quantity,
+			Price:           material.Price,
 			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
 		}
 	}
