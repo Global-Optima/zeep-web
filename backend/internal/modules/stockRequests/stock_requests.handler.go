@@ -13,7 +13,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type StockRequestHandler struct {
@@ -146,11 +145,11 @@ func (h *StockRequestHandler) GetStockRequestByID(c *gin.Context) {
 
 	request, err := h.service.GetStockRequestByID(stockRequestID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
-		} else {
-			localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
+		if errors.Is(err, types.ErrStockRequestNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockRequest)
+			return
 		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockRequest)
 		return
 	}
 

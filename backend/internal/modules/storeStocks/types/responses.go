@@ -8,6 +8,7 @@ import (
 var (
 	Response500StoreStockIsInUse  = localization.NewResponseKey(500, data.StoreStockComponent, "in-use")
 	Response500StoreStock         = localization.NewResponseKey(500, data.StoreStockComponent)
+	Response404StoreStock         = localization.NewResponseKey(404, data.StoreStockComponent)
 	Response400StoreStock         = localization.NewResponseKey(400, data.StoreStockComponent)
 	Response200StoreStockUpdate   = localization.NewResponseKey(200, data.StoreStockComponent, data.UpdateOperation.ToString())
 	Response200StoreStockDelete   = localization.NewResponseKey(200, data.StoreStockComponent, data.DeleteOperation.ToString())

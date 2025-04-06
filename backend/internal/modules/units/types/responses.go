@@ -12,6 +12,7 @@ var (
 	Response500UnitDelete = localization.NewResponseKey(500, data.UnitComponent, data.DeleteOperation.ToString())
 
 	Response409UnitDeleteInUse = localization.NewResponseKey(409, data.UnitComponent, data.DeleteOperation.ToString(), "in-use")
+	Response404Unit            = localization.NewResponseKey(404, data.UnitComponent)
 	Response400Unit            = localization.NewResponseKey(400, data.UnitComponent)
 
 	Response201Unit       = localization.NewResponseKey(201, data.UnitComponent)
