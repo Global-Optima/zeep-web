@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
@@ -29,8 +28,6 @@ func NewWarehousesModule(
 	franchiseeService franchisees.FranchiseeService,
 	auditService audit.AuditService,
 ) *WarehousesModule {
-	cfg := config.GetConfig()
-
 	warehouseRepo := warehouse.NewWarehouseRepository(base.DB)
 	warehouseStockRepo := warehouseStock.NewWarehouseStockRepository(base.DB)
 
@@ -45,15 +42,11 @@ func NewWarehousesModule(
 
 	warehouseStockCronTasks := scheduler.NewWarehouseStockCronTasks(warehouseRepo, warehouseStockService, warehouseStockRepo, base.Logger)
 
-	if cfg.Server.CronJobsEnabled {
-		err := cronManager.RegisterJob(scheduler.DailyJob, func() {
-			warehouseStockCronTasks.CheckWarehouseStockNotifications()
-		})
-		if err != nil {
-			base.Logger.Errorf("Failed to register warehouse stock cron job: %v", err)
-		}
-	} else {
-		base.Logger.Info("Cron jobs are disabled in configuration.")
+	err := cronManager.RegisterJob(scheduler.DailyJob, func() {
+		warehouseStockCronTasks.CheckWarehouseStockNotifications()
+	})
+	if err != nil {
+		base.Logger.Errorf("Failed to register warehouse stock cron job: %v", err)
 	}
 
 	return &WarehousesModule{
