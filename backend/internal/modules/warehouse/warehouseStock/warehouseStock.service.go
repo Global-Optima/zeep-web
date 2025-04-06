@@ -211,7 +211,7 @@ func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, d
 
 func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error {
 	// Check for low stock notification
-	if stock.Quantity < stock.StockMaterial.SafetyStock {
+	if stock.Quantity <= stock.StockMaterial.SafetyStock {
 		details := &details.OutOfStockDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           warehouseID,
@@ -251,7 +251,7 @@ func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock 
 }
 
 func (s *warehouseStockService) checkStockAndNotify(stock *data.WarehouseStock) error {
-	if stock.Quantity < stock.StockMaterial.SafetyStock {
+	if stock.Quantity <= stock.StockMaterial.SafetyStock {
 		details := &details.OutOfStockDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           stock.WarehouseID,
