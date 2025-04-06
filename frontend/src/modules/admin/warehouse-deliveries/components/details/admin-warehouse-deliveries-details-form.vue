@@ -59,7 +59,7 @@
 							<TableHead>Упаковка</TableHead>
 							<TableHead>Количество</TableHead>
 							<TableHead>Срок годности</TableHead>
-							<TableHead>Цена</TableHead>
+							<TableHead>Цена за упаковку</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>

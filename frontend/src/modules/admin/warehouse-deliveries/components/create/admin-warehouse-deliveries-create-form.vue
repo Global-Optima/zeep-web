@@ -75,7 +75,7 @@
 							<TableHead>Упаковка</TableHead>
 							<TableHead>Категория</TableHead>
 							<TableHead>Количество</TableHead>
-							<TableHead>Цена</TableHead>
+							<TableHead>Цена за упаковку</TableHead>
 							<TableHead class="text-center"></TableHead>
 						</TableRow>
 					</TableHeader>
