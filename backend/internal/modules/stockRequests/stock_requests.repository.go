@@ -153,6 +153,9 @@ func (r *stockRequestRepository) GetStockRequestByID(requestID uint) (*data.Stoc
 		First(&stockRequest, requestID).
 		Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStockRequestNotFound
+		}
 		return nil, err
 	}
 

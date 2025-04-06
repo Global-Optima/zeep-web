@@ -47,6 +47,9 @@ func (r *regionRepository) DeleteRegion(id uint) error {
 func (r *regionRepository) GetRegionByID(id uint) (*data.Region, error) {
 	var region data.Region
 	if err := r.db.Preload("Warehouses").First(&region, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrRegionNotFound
+		}
 		return nil, err
 	}
 	return &region, nil

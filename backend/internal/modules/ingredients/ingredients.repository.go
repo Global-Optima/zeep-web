@@ -1,6 +1,8 @@
 package ingredients
 
 import (
+	"errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -57,6 +59,9 @@ func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingre
 		Preload("IngredientCategory").
 		First(&ingredient, ingredientID).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrIngredientNotFound
+		}
 		return nil, err
 	}
 
