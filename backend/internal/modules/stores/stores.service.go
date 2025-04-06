@@ -96,9 +96,6 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 
 	store, err := s.repo.GetStoreByID(storeID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrStoreNotFound
-		}
 		return nil, err
 	}
 

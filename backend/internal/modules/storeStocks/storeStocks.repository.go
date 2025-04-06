@@ -313,6 +313,9 @@ func (r *storeStockRepository) GetStockById(stockId uint, filter *contexts.Store
 
 	err := query.First(&StoreStock).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStockNotFound
+		}
 		return nil, err
 	}
 

@@ -76,6 +76,10 @@ func (h *UnitHandler) GetUnitByID(c *gin.Context) {
 
 	unit, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrUnitNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Unit)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500UnitGet)
 		return
 	}
@@ -98,6 +102,10 @@ func (h *UnitHandler) UpdateUnit(c *gin.Context) {
 
 	unit, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrUnitNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Unit)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500UnitUpdate)
 		return
 	}
@@ -129,6 +137,10 @@ func (h *UnitHandler) DeleteUnit(c *gin.Context) {
 
 	unit, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrUnitNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Unit)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500UnitDelete)
 		return
 	}

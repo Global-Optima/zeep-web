@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -80,7 +81,7 @@ func (h *StoreHandler) GetStoreByID(c *gin.Context) {
 
 	store, err := h.service.GetStoreByID(uint(storeID))
 	if err != nil {
-		if err == types.ErrStoreNotFound {
+		if errors.Is(err, types.ErrStoreNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Store)
 			return
 		}
@@ -131,7 +132,7 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 
 	existingStore, err := h.service.GetStoreByID(uint(storeID))
 	if err != nil {
-		if err == types.ErrStoreNotFound {
+		if errors.Is(err, types.ErrStoreNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Store)
 			return
 		}
@@ -175,7 +176,7 @@ func (h *StoreHandler) DeleteStore(c *gin.Context) {
 
 	existingStore, err := h.service.GetStoreByID(uint(storeID))
 	if err != nil {
-		if err == types.ErrStoreNotFound {
+		if errors.Is(err, types.ErrStoreNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Store)
 			return
 		}
