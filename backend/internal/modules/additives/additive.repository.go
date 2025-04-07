@@ -192,6 +192,7 @@ func (r *additiveRepository) GetAdditiveWithDetailsByID(additiveID uint) (*data.
 		Preload("Unit").
 		Preload("Ingredients.Ingredient.Unit").
 		Preload("Ingredients.Ingredient.IngredientCategory").
+		Preload("AdditiveProvisions.Provision.Unit").
 		First(&additive).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

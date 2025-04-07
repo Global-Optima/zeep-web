@@ -9,6 +9,11 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
+const (
+	PROVISIONS_FORM_DATA_KEY  = "provisions"
+	INGREDIENTS_FORM_DATA_KEY = "ingredients"
+)
+
 type AdditiveCategoriesFilterQuery struct {
 	utils.BaseFilter
 	IncludeEmpty     *bool   `form:"includeEmpty"`
@@ -59,8 +64,8 @@ type AdditiveDetailsDTO struct {
 }
 
 type AdditiveProvisionDTO struct {
-	Volume float64 `json:"volume"`
-	provisionsTypes.ProvisionDTO
+	Volume    float64                      `json:"volume"`
+	Provision provisionsTypes.ProvisionDTO `json:"provision"`
 }
 
 type AdditiveIngredientDTO struct {

@@ -79,6 +79,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		Preload("Additives.Additive.Ingredients.Ingredient").
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
 		Preload("ProductSizeIngredients.Ingredient.Unit").
+		Preload("ProductSizeProvisions.Provision.Unit").
 		First(&productSize, productSizeID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

@@ -117,14 +117,14 @@ func mapIngredientsToProvisionIngredients(dto []ingredientTypes.SelectedIngredie
 	return result
 }
 
-func ParseJSONProvisionsFromString(provisionsJSON string, provisions []SelectedProvisionDTO) error {
+func ParseJSONProvisionsFromString(provisionsJSON string, provisions *[]SelectedProvisionDTO) error {
 	if provisionsJSON != "" {
-		err := json.Unmarshal([]byte(provisionsJSON), &provisions)
+		err := json.Unmarshal([]byte(provisionsJSON), provisions)
 		if err != nil {
 			return err
 		}
 
-		for _, provision := range provisions {
+		for _, provision := range *provisions {
 			if provision.ProvisionID == 0 || provision.Volume <= 0 {
 				return fmt.Errorf("invalid provision json input")
 			}

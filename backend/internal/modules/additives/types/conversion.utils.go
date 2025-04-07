@@ -72,34 +72,22 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO, additive *data.Addit
 	}
 
 	var ingredients []data.AdditiveIngredient
-
 	if dto.Ingredients != nil {
-		if len(dto.Ingredients) == 0 {
-			ingredients = []data.AdditiveIngredient{}
-		} else {
-			for _, ingredient := range dto.Ingredients {
-				temp := data.AdditiveIngredient{
-					IngredientID: ingredient.IngredientID,
-					Quantity:     ingredient.Quantity,
-				}
-				ingredients = append(ingredients, temp)
-			}
+		for _, ing := range dto.Ingredients {
+			ingredients = append(ingredients, data.AdditiveIngredient{
+				IngredientID: ing.IngredientID,
+				Quantity:     ing.Quantity,
+			})
 		}
 	}
 
 	var provisions []data.AdditiveProvision
-
 	if dto.Provisions != nil {
-		if len(dto.Provisions) == 0 {
-			provisions = []data.AdditiveProvision{}
-		} else {
-			for _, provision := range dto.Provisions {
-				temp := data.AdditiveProvision{
-					ProvisionID: provision.ProvisionID,
-					Volume:      provision.Volume,
-				}
-				provisions = append(provisions, temp)
-			}
+		for _, prov := range dto.Provisions {
+			provisions = append(provisions, data.AdditiveProvision{
+				ProvisionID: prov.ProvisionID,
+				Volume:      prov.Volume,
+			})
 		}
 	}
 
@@ -158,8 +146,8 @@ func ConvertToAdditiveIngredientDTO(additiveIngredient *data.AdditiveIngredient)
 
 func ConvertToAdditiveProvisionDTO(additiveProvision *data.AdditiveProvision) *AdditiveProvisionDTO {
 	return &AdditiveProvisionDTO{
-		ProvisionDTO: *provisionsTypes.MapToProvisionDTO(&additiveProvision.Provision),
-		Volume:       additiveProvision.Volume,
+		Provision: *provisionsTypes.MapToProvisionDTO(&additiveProvision.Provision),
+		Volume:    additiveProvision.Volume,
 	}
 }
 

@@ -126,14 +126,14 @@ func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []Ingredient
 	return dtos
 }
 
-func ParseJSONIngredientsFromString(ingredientsJSON string, ingredients []SelectedIngredientDTO) error {
+func ParseJSONIngredientsFromString(ingredientsJSON string, ingredients *[]SelectedIngredientDTO) error {
 	if ingredientsJSON != "" {
-		err := json.Unmarshal([]byte(ingredientsJSON), &ingredients)
+		err := json.Unmarshal([]byte(ingredientsJSON), ingredients)
 		if err != nil {
 			return err
 		}
 
-		for _, ingredient := range ingredients {
+		for _, ingredient := range *ingredients {
 			if ingredient.IngredientID == 0 || ingredient.Quantity <= 0 {
 				return fmt.Errorf("invalid ingredients json input")
 			}
