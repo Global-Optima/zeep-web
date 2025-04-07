@@ -8,6 +8,13 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/core/components/ui/select'
 import { MACHINE_CATEGORY_OPTIONS, MachineCategory, type CreateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
@@ -128,7 +135,7 @@ const onCancel = () => {
 						v-slot="{ componentField }"
 					>
 						<FormItem>
-							<FormLabel>Категория Машины</FormLabel>
+							<FormLabel>Категория машины</FormLabel>
 							<FormControl>
 								<Select v-bind="componentField">
 									<SelectTrigger id="machine_category">
