@@ -155,6 +155,11 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
+	if err := ValidateMultipleSelect(storeID, *createOrderDTO, s.storeAdditiveRepo); err != nil {
+		s.logger.Error(err)
+		return nil, types.ErrMultipleSelect // TODO: test updates
+	}
+
 	frozenMap, err := s.orderRepo.CalculateFrozenStock(storeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
@@ -239,9 +244,6 @@ func ValidateStoreAdditives(
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 
-	// This map will count how many additives are selected per category.
-	categoryCount := make(map[uint]int)
-
 	for _, addID := range storeAdditiveIDs {
 		storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
 		if err != nil {
@@ -254,16 +256,6 @@ func ValidateStoreAdditives(
 			return nil, nil, fmt.Errorf("store additive with ID %d has an empty name", addID)
 		}
 
-		// Increase the count for the additive's category.
-		categoryID := storeAdd.Additive.AdditiveCategoryID
-		categoryCount[categoryID]++
-
-		// If the additive category does NOT allow multiple selection,
-		// then more than one additive in this category is an error.
-		if !storeAdd.Additive.Category.IsMultipleSelect && categoryCount[categoryID] > 1 {
-			return nil, nil, types.ErrMultipleSelect
-		}
-
 		// Get the effective price (store-specific price overrides the base price if available).
 		price := storeAdd.Additive.BasePrice
 		if storeAdd.StorePrice != nil {
@@ -274,6 +266,25 @@ func ValidateStoreAdditives(
 	}
 
 	return prices, additiveNames, nil
+}
+
+func ValidateMultipleSelect(storeID uint, createOrderDTO types.CreateOrderDTO, repo storeAdditives.StoreAdditiveRepository) error {
+	for _, suborder := range createOrderDTO.Suborders {
+		categoryCount := make(map[uint]int)
+		for _, addID := range suborder.StoreAdditivesIDs {
+			storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
+			if err != nil {
+				return err
+			}
+			categoryID := storeAdd.Additive.AdditiveCategoryID
+			categoryCount[categoryID]++
+			if !storeAdd.Additive.Category.IsMultipleSelect && categoryCount[categoryID] > 1 {
+				return types.ErrMultipleSelect
+			}
+		}
+	}
+
+	return nil
 }
 
 func ValidateStoreProductSizes(
