@@ -438,10 +438,10 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 		Preload("DeliveryAddress")
 
 	if filter.StartDate != nil {
-		query = query.Where("created_at >= ?", *filter.StartDate)
+		query = query.Where("created_at >= ?", filter.StartDate.UTC())
 	}
 	if filter.EndDate != nil {
-		query = query.Where("created_at <= ?", *filter.EndDate)
+		query = query.Where("created_at <= ?", filter.EndDate.UTC())
 	}
 	if filter.StoreID != nil {
 		query = query.Where("store_id = ?", *filter.StoreID)

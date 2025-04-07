@@ -10,16 +10,6 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-func setGreyRowStyle(row *xlsx.Row) {
-	style := xlsx.NewStyle()
-	style.Fill.FgColor = "D3D3D3"
-	style.Fill.PatternType = "solid"
-
-	for _, cell := range row.Cells {
-		cell.SetStyle(style)
-	}
-}
-
 func GenerateSalesExcelV2(data []types.OrderExportDTO, headers []string) ([]byte, error) {
 	file := xlsx.NewFile()
 
@@ -52,7 +42,7 @@ func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO, headers []str
 	}
 
 	setHeadersStyle(headerRow)
-	for i, order := range data {
+	for _, order := range data {
 		for _, suborder := range order.Suborders {
 			row := sheet.AddRow()
 			row.AddCell().Value = fmt.Sprintf("%d", order.ID)
@@ -61,7 +51,9 @@ func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO, headers []str
 			row.AddCell().Value = fmt.Sprintf("%d", suborder.ID)
 			row.AddCell().Value = suborder.ProductSize.ProductName
 			row.AddCell().Value = suborder.ProductSize.SizeName
-			row.AddCell().Value = fmt.Sprintf("%.2f KZT", suborder.Price)
+
+			priceCell := row.AddCell()
+			priceCell.SetFloat(suborder.Price)
 
 			total := suborder.Price
 			var additivesDetails []string
@@ -69,17 +61,11 @@ func addOrdersData(sheet *xlsx.Sheet, data []types.OrderExportDTO, headers []str
 				total += additive.Price
 				additivesDetails = append(additivesDetails, fmt.Sprintf("ID: %d %s(%.2f) - %.2f KZT", additive.Additive.ID, additive.Additive.Name, additive.Additive.Size, additive.Price))
 			}
-			row.AddCell().Value = fmt.Sprintf("%.2f KZT", total)
+			totalCell := row.AddCell()
+			totalCell.SetFloat(total)
+
 			row.AddCell().Value = strings.Join(additivesDetails, "\n")
 			row.AddCell().Value = order.CreatedAt.Format("2006-01-02 15:04:05")
-		}
-
-		if i < len(data)-1 {
-			greyRow := sheet.AddRow()
-			for j := 0; j < 10; j++ {
-				greyRow.AddCell()
-			}
-			setGreyRowStyle(greyRow)
 		}
 	}
 }
