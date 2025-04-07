@@ -10,13 +10,17 @@ import (
 type StoreProvisionDTO struct {
 	ID uint `json:"id"`
 	types.BaseProvisionDTO
-	ProvisionID       uint                          `json:"provisionId"`
-	ExpirationInHours int                           `json:"expirationInHours"`
-	Volume            float64                       `json:"volume"`
-	Status            string                        `json:"status"`
-	CompletedAt       *time.Time                    `json:"completedAt,omitempty"`
-	ExpiresAt         *time.Time                    `json:"expiresAt"`
-	Ingredients       []StoreProvisionIngredientDTO `json:"ingredients"`
+	ProvisionID       uint       `json:"provisionId"`
+	ExpirationInHours int        `json:"expirationInHours"`
+	Volume            float64    `json:"volume"`
+	Status            string     `json:"status"`
+	CompletedAt       *time.Time `json:"completedAt,omitempty"`
+	ExpiresAt         *time.Time `json:"expiresAt"`
+}
+
+type StoreProvisionDetailsDTO struct {
+	StoreProvisionDTO
+	Ingredients []StoreProvisionIngredientDTO `json:"ingredients"`
 }
 
 type StoreProvisionIngredientDTO struct {

@@ -1,10 +1,11 @@
 package types
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 )
 
@@ -14,23 +15,13 @@ type ProvisionModels struct {
 }
 
 func MapToBaseProvisionDTO(provision *data.Provision) *BaseProvisionDTO {
-	ingredients := make([]ProvisionIngredientDTO, len(provision.ProvisionIngredients))
-	for i, pi := range provision.ProvisionIngredients {
-		ingredients[i] = ProvisionIngredientDTO{
-			Ingredient: *ingredientTypes.ConvertToIngredientResponseDTO(&pi.Ingredient),
-			Quantity:   pi.Quantity,
-		}
-	}
-
 	return &BaseProvisionDTO{
 		Name:                 provision.Name,
-		Description:          provision.Description,
 		AbsoluteVolume:       provision.AbsoluteVolume,
 		NetCost:              provision.NetCost,
 		Unit:                 unitTypes.ToUnitResponse(provision.Unit),
 		PreparationInMinutes: provision.PreparationInMinutes,
 		LimitPerDay:          provision.LimitPerDay,
-		Ingredients:          ingredients,
 	}
 }
 
@@ -41,10 +32,24 @@ func MapToProvisionDTO(provision *data.Provision) *ProvisionDTO {
 	}
 }
 
+func MapToProvisionDetailsDTO(provision *data.Provision) *ProvisionDetailsDTO {
+	ingredients := make([]ProvisionIngredientDTO, len(provision.ProvisionIngredients))
+	for i, pi := range provision.ProvisionIngredients {
+		ingredients[i] = ProvisionIngredientDTO{
+			Ingredient: *ingredientTypes.ConvertToIngredientResponseDTO(&pi.Ingredient),
+			Quantity:   pi.Quantity,
+		}
+	}
+
+	return &ProvisionDetailsDTO{
+		ProvisionDTO: *MapToProvisionDTO(provision),
+		Ingredients:  ingredients,
+	}
+}
+
 func CreateToProvisionModel(dto *CreateProvisionDTO) *data.Provision {
 	return &data.Provision{
 		Name:                 dto.Name,
-		Description:          utils.DerefString(dto.Description),
 		AbsoluteVolume:       dto.AbsoluteVolume,
 		NetCost:              dto.NetCost,
 		UnitID:               dto.UnitID,
@@ -65,9 +70,6 @@ func UpdateToProvisionModels(provision *data.Provision, dto *UpdateProvisionDTO)
 
 	if dto.Name != nil {
 		provision.Name = *dto.Name
-	}
-	if dto.Description != nil {
-		provision.Description = *dto.Description
 	}
 	if dto.AbsoluteVolume != nil {
 		provision.AbsoluteVolume = *dto.AbsoluteVolume
@@ -113,4 +115,20 @@ func mapIngredientsToProvisionIngredients(dto []ingredientTypes.SelectedIngredie
 		}
 	}
 	return result
+}
+
+func ParseJSONProvisionsFromString(provisionsJSON string, provisions []SelectedProvisionDTO) error {
+	if provisionsJSON != "" {
+		err := json.Unmarshal([]byte(provisionsJSON), &provisions)
+		if err != nil {
+			return err
+		}
+
+		for _, provision := range provisions {
+			if provision.ProvisionID == 0 || provision.Quantity <= 0 {
+				return fmt.Errorf("invalid provision json input")
+			}
+		}
+	}
+	return nil
 }

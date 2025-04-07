@@ -49,9 +49,6 @@ func (r *storeProvisionRepository) GetStoreProvisions(storeID uint, filter *type
 
 	query := r.db.Model(&data.StoreProvision{}).
 		Preload("Provision.Unit").
-		Preload("Provision.ProvisionIngredients.Ingredient.Unit").
-		Preload("StoreProvisionIngredients.Ingredient.Unit").
-		Preload("StoreProvisionIngredients.Ingredient.IngredientCategory").
 		Where("store_id = ?", storeID)
 
 	if filter == nil {
@@ -119,8 +116,6 @@ func (r *storeProvisionRepository) GetStoreProvisionByID(storeID, storeProvision
 func (r *storeProvisionRepository) GetStoreProvisionWithDetailsByID(storeID, storeProvisionID uint) (*data.StoreProvision, error) {
 	var sp data.StoreProvision
 	err := r.db.Preload("Provision.Unit").
-		Preload("Provision.ProvisionIngredients.Ingredient.Unit").
-		Preload("Provision.ProvisionIngredients.Ingredient.IngredientCategory").
 		Preload("StoreProvisionIngredients.Ingredient.Unit").
 		Preload("StoreProvisionIngredients.Ingredient.IngredientCategory").
 		Where("id = ? AND store_id = ?", storeProvisionID, storeID).

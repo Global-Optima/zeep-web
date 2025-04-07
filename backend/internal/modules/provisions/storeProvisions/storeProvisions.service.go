@@ -13,7 +13,7 @@ import (
 )
 
 type StoreProvisionService interface {
-	GetStoreProvisionByID(storeID, storeProvisionID uint) (*types.StoreProvisionDTO, error)
+	GetStoreProvisionByID(storeID, storeProvisionID uint) (*types.StoreProvisionDetailsDTO, error)
 	GetStoreProvisions(storeID uint, filter *types.StoreProvisionFilterDTO) ([]types.StoreProvisionDTO, error)
 	CreateStoreProvision(storeID uint, dto *types.CreateStoreProvisionDTO) (*types.StoreProvisionDTO, error)
 	UpdateStoreProvision(storeID, storeProvisionID uint, dto *types.UpdateStoreProvisionDTO) (*types.StoreProvisionDTO, error)
@@ -36,7 +36,7 @@ func NewStoreProvisionService(repo StoreProvisionRepository, notificationService
 	}
 }
 
-func (s *storeProvisionService) GetStoreProvisionByID(storeID, storeProvisionID uint) (*types.StoreProvisionDTO, error) {
+func (s *storeProvisionService) GetStoreProvisionByID(storeID, storeProvisionID uint) (*types.StoreProvisionDetailsDTO, error) {
 	provision, err := s.repo.GetStoreProvisionWithDetailsByID(storeID, storeProvisionID)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to get store provision by ID %d: %w", storeProvisionID, err)
@@ -44,7 +44,7 @@ func (s *storeProvisionService) GetStoreProvisionByID(storeID, storeProvisionID 
 		return nil, wrapped
 	}
 
-	return types.MapToStoreProvisionDTO(provision), nil
+	return types.MapToStoreProvisionDetailsDTO(provision), nil
 }
 
 func (s *storeProvisionService) GetStoreProvisions(storeID uint, filter *types.StoreProvisionFilterDTO) ([]types.StoreProvisionDTO, error) {

@@ -56,8 +56,7 @@ func (r *provisionRepository) GetProvisions(filter *types.ProvisionFilterDTO) ([
 	var provisions []data.Provision
 
 	query := r.db.Model(&data.Provision{}).
-		Preload("Unit").
-		Preload("ProvisionIngredients.Ingredient")
+		Preload("Unit")
 
 	if filter.Search != nil {
 		pattern := "%" + *filter.Search + "%"

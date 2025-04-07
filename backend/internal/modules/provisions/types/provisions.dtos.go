@@ -7,19 +7,22 @@ import (
 )
 
 type BaseProvisionDTO struct {
-	Name                 string                   `json:"name"`
-	Description          string                   `json:"description"`
-	AbsoluteVolume       float64                  `json:"absoluteVolume"`
-	NetCost              float64                  `json:"netCost"`
-	Unit                 unitTypes.UnitsDTO       `json:"unit"`
-	PreparationInMinutes uint                     `json:"preparationInMinutes"`
-	LimitPerDay          uint                     `json:"limitPerDay"`
-	Ingredients          []ProvisionIngredientDTO `json:"ingredients"`
+	Name                 string             `json:"name"`
+	AbsoluteVolume       float64            `json:"absoluteVolume"`
+	NetCost              float64            `json:"netCost"`
+	Unit                 unitTypes.UnitsDTO `json:"unit"`
+	PreparationInMinutes uint               `json:"preparationInMinutes"`
+	LimitPerDay          uint               `json:"limitPerDay"`
 }
 
 type ProvisionDTO struct {
 	ID uint `json:"id"`
 	BaseProvisionDTO
+}
+
+type ProvisionDetailsDTO struct {
+	ProvisionDTO
+	Ingredients []ProvisionIngredientDTO `json:"ingredients"`
 }
 
 type ProvisionIngredientDTO struct {
@@ -29,7 +32,6 @@ type ProvisionIngredientDTO struct {
 
 type CreateProvisionDTO struct {
 	Name                 string                                  `json:"name" binding:"required,min=2,max=255"`
-	Description          *string                                 `json:"description" binding:"omitempty,max=1000"`
 	AbsoluteVolume       float64                                 `json:"absoluteVolume" binding:"required,gt=0"`
 	NetCost              float64                                 `json:"netCost" binding:"required,gte=0"`
 	UnitID               uint                                    `json:"unitId" binding:"required,gt=0"`
@@ -40,7 +42,6 @@ type CreateProvisionDTO struct {
 
 type UpdateProvisionDTO struct {
 	Name                 *string                                 `json:"name" binding:"omitempty,min=2,max=255"`
-	Description          *string                                 `json:"description" binding:"omitempty,max=1000"`
 	AbsoluteVolume       *float64                                `json:"absoluteVolume" binding:"omitempty,gt=0"`
 	NetCost              *float64                                `json:"netCost" binding:"omitempty,gte=0"`
 	UnitID               *uint                                   `json:"unitId" binding:"omitempty,gt=0"`
@@ -52,4 +53,9 @@ type UpdateProvisionDTO struct {
 type ProvisionFilterDTO struct {
 	utils.BaseFilter
 	Search *string `form:"search"`
+}
+
+type SelectedProvisionDTO struct {
+	ProvisionID uint    `json:"provisionId" binding:"required,gt=0"`
+	Quantity    float64 `json:"quantity" binding:"required,gt=0"`
 }

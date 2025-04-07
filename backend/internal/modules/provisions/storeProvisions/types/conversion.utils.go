@@ -8,6 +8,17 @@ import (
 )
 
 func MapToStoreProvisionDTO(sp *data.StoreProvision) *StoreProvisionDTO {
+	return &StoreProvisionDTO{
+		ID:               sp.ID,
+		BaseProvisionDTO: *provisionsTypes.MapToBaseProvisionDTO(&sp.Provision),
+		Volume:           sp.Volume,
+		Status:           sp.Status.ToString(),
+		CompletedAt:      sp.CompletedAt,
+		ExpiresAt:        sp.ExpiresAt,
+	}
+}
+
+func MapToStoreProvisionDetailsDTO(sp *data.StoreProvision) *StoreProvisionDetailsDTO {
 	ingredients := make([]StoreProvisionIngredientDTO, len(sp.StoreProvisionIngredients))
 	for i, spi := range sp.StoreProvisionIngredients {
 		ingredients[i] = StoreProvisionIngredientDTO{
@@ -16,14 +27,9 @@ func MapToStoreProvisionDTO(sp *data.StoreProvision) *StoreProvisionDTO {
 		}
 	}
 
-	return &StoreProvisionDTO{
-		ID:               sp.ID,
-		BaseProvisionDTO: *provisionsTypes.MapToBaseProvisionDTO(&sp.Provision),
-		Volume:           sp.Volume,
-		Status:           sp.Status.ToString(),
-		CompletedAt:      sp.CompletedAt,
-		ExpiresAt:        sp.ExpiresAt,
-		Ingredients:      ingredients,
+	return &StoreProvisionDetailsDTO{
+		StoreProvisionDTO: *MapToStoreProvisionDTO(sp),
+		Ingredients:       ingredients,
 	}
 }
 

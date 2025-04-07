@@ -2,12 +2,11 @@
 CREATE TABLE provisions (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT,
     absolute_volume DECIMAL(10,2) NOT NULL CHECK (absolute_volume > 0),
-    net_cost DECIMAL(10,2) NOT NULL CHECK (net_cost >= 0),
+    net_cost DECIMAL(10,2) NOT NULL CHECK (net_cost > 0),
     unit_id INT NOT NULL REFERENCES units(id) ON DELETE CASCADE,
-    preparation_in_minutes INT NOT NULL,
-    limit_per_day INT NOT NULL,
+    preparation_in_minutes INT NOT NULL CHECK (preparation_in_minutes > 0),
+    limit_per_day INT NOT NULL CHECK (limit_per_day > 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ

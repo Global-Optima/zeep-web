@@ -1,7 +1,6 @@
 package additives
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -192,20 +191,14 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 		return
 	}
 
-	ingredientsJSON := c.PostForm("ingredients")
-	if ingredientsJSON != "" {
-		err := json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients)
-		if err != nil {
-			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-			return
-		}
+	if err := ParseJSONIngredientsFromString(c.PostForm("ingredients"), dto.Ingredients); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
 
-		for _, ingredient := range dto.Ingredients {
-			if ingredient.IngredientID == 0 || ingredient.Quantity <= 0 {
-				localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-				return
-			}
-		}
+	if err := ParseJSONProvisionsFromString(c.PostForm("provisions"), dto.Provisions); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)
@@ -247,13 +240,14 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		return
 	}
 
-	ingredientsJSON := c.PostForm("ingredients")
-	if ingredientsJSON != "" {
-		err = json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients)
-		if err != nil {
-			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-			return
-		}
+	if err := ParseJSONIngredientsFromString(c.PostForm("ingredients"), dto.Ingredients); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	if err := ParseJSONProvisionsFromString(c.PostForm("provisions"), dto.Provisions); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)

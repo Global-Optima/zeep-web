@@ -1,6 +1,7 @@
 package types
 
 import (
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"mime/multipart"
 
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
@@ -105,6 +106,7 @@ type UpdateProductSizeDTO struct {
 	MachineId   *string                                 `json:"machineId" binding:"omitempty,max=40"`
 	Additives   []SelectedAdditiveDTO                   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []ingredientTypes.SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	Provisions  []provisionsTypes.SelectedProvisionDTO  `json:"provisions" binding:"omitempty,dive"`
 }
 
 type ProductsFilterDto struct {

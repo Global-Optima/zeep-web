@@ -115,7 +115,6 @@ type IngredientCategory struct {
 type Provision struct {
 	BaseEntity
 	Name                 string                `gorm:"size:255;not null;uniqueIndex" sort:"name"`
-	Description          string                `gorm:"type:text"`
 	AbsoluteVolume       float64               `gorm:"type:decimal(10,2);not null;check:absoluteVolume > 0"`
 	NetCost              float64               `gorm:"type:decimal(10,2);not null;check:netCost >= 0"`
 	UnitID               uint                  `gorm:"not null"`
