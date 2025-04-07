@@ -175,6 +175,7 @@ type SupplierWarehouseDeliveryMaterial struct {
 	StockMaterial   StockMaterial             `gorm:"foreignKey:StockMaterialID;constraint:OnDelete:CASCADE"`
 	Barcode         string                    `gorm:"size:255;not null"`
 	Quantity        float64                   `gorm:"type:decimal(10,2);not null;check:quantity > 0" sort:"quantity"`
+	Price           float64                   `gorm:"type:decimal(10,2);not null;check:price > 0" sort:"price"`
 	ExpirationDate  time.Time                 `gorm:"not null" sort:"expirationDate"`
 }
 
