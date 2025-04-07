@@ -158,7 +158,7 @@ async function printQrCode() {
   if (suborder && order) {
     const {width, height} = getSavedBaristaQRSettings()
 
-    await printSubOrderQR(order, {
+    await printSubOrderQR(order, suborder, {
       labelWidthMm: width,
       labelHeightMm: height,
       desktopOnly: false

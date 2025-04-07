@@ -256,9 +256,13 @@ export function useOrderQRPrinter() {
 	 * Prints one or more QR labels for a suborder.
 	 * Accepts either a single SuborderDTO or an array.
 	 */
-	const printSubOrderQR = async (order: OrderDTO, options?: QRPrintOptions) => {
+	const printSubOrderQR = async (
+		order: OrderDTO,
+		subOrders: SuborderDTO | SuborderDTO[],
+		options?: QRPrintOptions,
+	) => {
 		try {
-			const suborders = Array.isArray(order.subOrders) ? order.subOrders : [order.subOrders]
+			const suborders = Array.isArray(subOrders) ? subOrders : [subOrders]
 			const pdfBlobs = await Promise.all(
 				suborders.map(sb => generateQRFromSuborder(order, sb, options)),
 			)

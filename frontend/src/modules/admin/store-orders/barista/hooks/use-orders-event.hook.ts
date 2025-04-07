@@ -154,7 +154,7 @@ export function useOrderEvents(
 
 		const { width, height } = getSavedBaristaQRSettings()
 		try {
-			await printSubOrderQR(reactiveOrder, {
+			await printSubOrderQR(reactiveOrder, reactiveOrder.subOrders, {
 				labelWidthMm: width,
 				labelHeightMm: height,
 				desktopOnly: false,

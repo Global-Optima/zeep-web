@@ -293,9 +293,9 @@ func getTimeZoneLocation(filter types.OrdersTimeZoneFilter) (*time.Location, err
 
 func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 	var order data.Order
-	err := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
-		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
+	err := r.db.Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Store").
 		Where("id = ?", orderId).
 		First(&order).Error
