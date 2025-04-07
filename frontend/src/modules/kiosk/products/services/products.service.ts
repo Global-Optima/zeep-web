@@ -1,4 +1,5 @@
 import { apiClient } from '@/core/config/axios-instance.config'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import { buildFormData } from '@/core/utils/request-form-data-builder.utils'
 import type {
@@ -10,12 +11,12 @@ import type {
 	ProductDetailsDTO,
 	ProductSizeDTO,
 	ProductSizeDetailsDTO,
+	ProductSizeTechnicalMap,
 	ProductsFilterDTO,
 	UpdateProductCategoryDTO,
 	UpdateProductDTO,
 	UpdateProductSizeDTO,
 } from '../models/product.model'
-import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 
 class ProductsService {
 	async getProducts(filter?: ProductsFilterDTO) {
@@ -36,6 +37,18 @@ class ProductsService {
 			return response.data
 		} catch (error) {
 			console.error(`Failed to fetch product details for ID ${id}: `, error)
+			throw error
+		}
+	}
+
+	async getProductSizeTechMap(sizeId: number) {
+		try {
+			const response = await apiClient.get<ProductSizeTechnicalMap>(
+				`/products/sizes/${sizeId}/technical-map`,
+			)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to fetch product size technical map for ID ${sizeId}: `, error)
 			throw error
 		}
 	}
