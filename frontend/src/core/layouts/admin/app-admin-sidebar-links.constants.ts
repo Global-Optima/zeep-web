@@ -112,6 +112,17 @@ export const adminNavItems: SidebarNavItem[] = [
 		],
 	},
 	{
+		name: 'Заготовки',
+		routeKey: 'ADMIN_STORE_PROVISIONS',
+		icon: ReceiptText,
+		accessRoles: [
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.FRANCHISEE_MANAGER,
+			EmployeeRole.FRANCHISEE_OWNER,
+		],
+	},
+	{
 		name: 'Продукты',
 		routeKey: 'ADMIN_STORE_PRODUCTS',
 		icon: Package,

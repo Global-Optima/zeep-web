@@ -4,6 +4,7 @@ import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import type {
 	CreateProvisionDTO,
+	ProvisionDetailsDTO,
 	ProvisionDTO,
 	ProvisionFilter,
 	UpdateProvisionDTO,
@@ -18,7 +19,7 @@ class ProvisionsService {
 	}
 
 	async getProvisionById(id: number) {
-		const response = await apiClient.get<ProvisionDTO>(`/provisions/${id}`)
+		const response = await apiClient.get<ProvisionDetailsDTO>(`/provisions/${id}`)
 		return response.data
 	}
 
