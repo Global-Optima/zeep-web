@@ -5,6 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
@@ -14,10 +15,11 @@ import (
 
 type AdditivesModule struct {
 	*common.BaseModule
-	Repo                 additives.AdditiveRepository
-	Service              additives.AdditiveService
-	Handler              *additives.AdditiveHandler
-	StoreAdditivesModule *StoreAdditivesModule
+	Repo                   additives.AdditiveRepository
+	Service                additives.AdditiveService
+	Handler                *additives.AdditiveHandler
+	StoreAdditivesModule   *StoreAdditivesModule
+	AdditivesTechMapModule *AdditivesTechMapModule
 }
 
 func NewAdditivesModule(
@@ -34,15 +36,17 @@ func NewAdditivesModule(
 	handler := additives.NewAdditiveHandler(service, auditService)
 
 	storeAdditivesModule := NewStoreAdditivesModule(base, service, franchiseeService, auditService, ingredientRepo, storeStockRepo, storageRepo)
+	additivesTechMapModule := NewAdditivesTechMapModule(base)
 
-	base.Router.RegisterAdditivesRoutes(handler)
+	base.Router.RegisterAdditivesRoutes(handler, additivesTechMapModule.Handler)
 
 	return &AdditivesModule{
-		BaseModule:           base,
-		Repo:                 repo,
-		Service:              service,
-		Handler:              handler,
-		StoreAdditivesModule: storeAdditivesModule,
+		BaseModule:             base,
+		Repo:                   repo,
+		Service:                service,
+		Handler:                handler,
+		StoreAdditivesModule:   storeAdditivesModule,
+		AdditivesTechMapModule: additivesTechMapModule,
 	}
 }
 
@@ -75,6 +79,26 @@ func NewStoreAdditivesModule(
 	base.Router.RegisterStoreAdditivesRoutes(handler)
 
 	return &StoreAdditivesModule{
+		BaseModule: base,
+		Repo:       repo,
+		Service:    service,
+		Handler:    handler,
+	}
+}
+
+type AdditivesTechMapModule struct {
+	*common.BaseModule
+	Repo    technicalMap.TechnicalMapRepository
+	Service technicalMap.TechnicalMapService
+	Handler *technicalMap.TechnicalMapHandler
+}
+
+func NewAdditivesTechMapModule(base *common.BaseModule) *AdditivesTechMapModule {
+	repo := technicalMap.NewTechnicalMapRepository(base.DB)
+	service := technicalMap.NewTechnicalMapService(repo)
+	handler := technicalMap.NewTechnicalMapHandler(service)
+
+	return &AdditivesTechMapModule{
 		BaseModule: base,
 		Repo:       repo,
 		Service:    service,
