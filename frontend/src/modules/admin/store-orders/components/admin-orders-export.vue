@@ -17,9 +17,9 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
-const {storeId} = defineProps<{storeId?: number}>()
+const { storeId } = defineProps<{ storeId?: number }>()
 
-// Validation schema for the form
+// Validation schema for the form (without timezone input)
 const formSchema = toTypedSchema(
   z.object({
     startDate: z.string().optional().refine(
@@ -32,20 +32,20 @@ const formSchema = toTypedSchema(
     ),
     language: z.enum(['kk', 'ru', 'en'], { required_error: 'Выберите язык' }),
   }).refine(
-      (data) =>
-        !data.startDate ||
-        !data.endDate ||
-        new Date(data.startDate).getTime() <= new Date(data.endDate).getTime(),
-      {
-        message: 'Дата начала должна быть раньше даты окончания',
-        path: ['startDate'],
-      }
-    )
+    (data) =>
+      !data.startDate ||
+      !data.endDate ||
+      new Date(data.startDate).getTime() <= new Date(data.endDate).getTime(),
+    {
+      message: 'Дата начала должна быть раньше даты окончания',
+      path: ['startDate'],
+    }
+  )
 )
 
-const {toast} = useToast()
+const { toast } = useToast()
 
-// Form setup
+// Form setup with initial values
 const { handleSubmit, isFieldDirty } = useForm({
   validationSchema: formSchema,
   initialValues: {
@@ -53,19 +53,21 @@ const { handleSubmit, isFieldDirty } = useForm({
   }
 })
 
-// Submit handler
 const onSubmit = handleSubmit(async (values) => {
+  const timezoneLocation = Intl.DateTimeFormat().resolvedOptions().timeZone
+
   const filter: OrdersExportFilterQuery = {
     ...values,
     storeId: storeId,
     startDate: values.startDate ? new Date(values.startDate).toISOString() : undefined,
     endDate: values.endDate ? new Date(values.endDate).toISOString() : undefined,
+    timezoneLocation: timezoneLocation,
   }
 
   await ordersService.exportOrders(filter).catch(() => {
     toast({
       title: 'Ошибка',
-      description: "'Не удалось выполнить действие. Попробуйте снова.'",
+      description: 'Не удалось выполнить действие. Попробуйте снова.',
       variant: 'destructive',
     })
   })
@@ -77,59 +79,35 @@ const onSubmit = handleSubmit(async (values) => {
 		<DialogTrigger as-child>
 			<Button variant="outline">Экспорт</Button>
 		</DialogTrigger>
-		<DialogContent
-			class="sm:max-w-[425px]"
-			:include-close-button="false"
-		>
+		<DialogContent class="sm:max-w-[425px]" :include-close-button="false">
 			<DialogHeader>
 				<DialogTitle>Экспорт заказов</DialogTitle>
 			</DialogHeader>
-			<form
-				class="space-y-6"
-				@submit="onSubmit"
-			>
+			<form class="space-y-6" @submit="onSubmit">
 				<!-- Start Date -->
-				<FormField
-					v-slot="{ componentField }"
-					name="startDate"
-					:validate-on-blur="!isFieldDirty"
-				>
+				<FormField v-slot="{ componentField }" name="startDate" :validate-on-blur="!isFieldDirty">
 					<FormItem>
 						<FormLabel>Дата начала</FormLabel>
 						<FormControl>
-							<Input
-								type="date"
-								v-bind="componentField"
-							/>
+							<Input type="date" v-bind="componentField" />
 						</FormControl>
 						<FormMessage />
 					</FormItem>
 				</FormField>
 
 				<!-- End Date -->
-				<FormField
-					v-slot="{ componentField }"
-					name="endDate"
-					:validate-on-blur="!isFieldDirty"
-				>
+				<FormField v-slot="{ componentField }" name="endDate" :validate-on-blur="!isFieldDirty">
 					<FormItem>
 						<FormLabel>Дата окончания</FormLabel>
 						<FormControl>
-							<Input
-								type="date"
-								v-bind="componentField"
-							/>
+							<Input type="date" v-bind="componentField" />
 						</FormControl>
 						<FormMessage />
 					</FormItem>
 				</FormField>
 
 				<!-- Language -->
-				<FormField
-					v-slot="{ componentField }"
-					name="language"
-					:validate-on-blur="!isFieldDirty"
-				>
+				<FormField v-slot="{ componentField }" name="language" :validate-on-blur="!isFieldDirty">
 					<FormItem>
 						<FormLabel>Язык</FormLabel>
 						<FormControl>

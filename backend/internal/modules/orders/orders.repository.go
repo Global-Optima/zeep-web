@@ -450,7 +450,28 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 	if err := query.Find(&orders).Error; err != nil {
 		return nil, err
 	}
+
+	clientLoc := time.Local // Default to the system's local timezone.
+	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
+		if loc, err := time.LoadLocation(*filter.TimeZoneLocation); err == nil {
+			clientLoc = loc
+		}
+	}
+
+	orders = convertOrdersToLocalTime(orders, clientLoc)
+
 	return orders, nil
+}
+
+func convertOrdersToLocalTime(orders []data.Order, loc *time.Location) []data.Order {
+	for i, order := range orders {
+		orders[i].CreatedAt = order.CreatedAt.In(loc)
+		if !order.CreatedAt.IsZero() {
+			createdAt := order.CreatedAt.In(loc)
+			orders[i].CreatedAt = createdAt
+		}
+	}
+	return orders
 }
 
 func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, error) {
