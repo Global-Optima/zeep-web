@@ -56,7 +56,7 @@ CREATE TABLE store_provisions (
     volume DECIMAL(10,2) NOT NULL CHECK (volume > 0),
     status VARCHAR(50) NOT NULL,
     store_id INT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
-    expiration_in_hours INT NOT NULL,
+    expiration_in_minutes INT NOT NULL CHECK (expiration_in_minutes > 0),
     completed_at TIMESTAMPTZ,
     expires_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
