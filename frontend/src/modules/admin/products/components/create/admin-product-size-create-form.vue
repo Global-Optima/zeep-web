@@ -10,6 +10,12 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import Checkbox from "@/core/components/ui/checkbox/Checkbox.vue"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/core/components/ui/dropdown-menu'
+import {
   FormControl,
   FormField,
   FormItem,
@@ -33,6 +39,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from "@/core/components/ui/toast"
+import { useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
 import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
@@ -40,7 +47,7 @@ import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredie
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames } from '@/modules/kiosk/products/models/product.model'
-import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
+import { ChevronDown, ChevronLeft, EllipsisVertical, Trash } from 'lucide-vue-next'
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
@@ -105,6 +112,8 @@ const { handleSubmit, isSubmitting, setFieldValue } = useForm<CreateProductSizeF
   validationSchema: createProductSizeSchema,
 })
 
+const { fetchTechnicalMap } = useCopyTechnicalMap()
+
 const additives = ref<SelectedAdditiveTypesDTO[]>([])
 const additivesError = ref<string | null>(null)
 const openAdditiveDialog = ref(false)
@@ -166,6 +175,29 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
   additives.value[index].isDefault = value
   if (!value) {
     additives.value[index].isHidden = false
+  }
+}
+
+const onPasteTechMapClick = async () => {
+  try {
+    const techMap = await fetchTechnicalMap()
+    if (!techMap) {
+      toast({ description: "Технологическая карта не найдена" })
+      return
+    }
+
+    ingredients.value = techMap.map(t => ({
+      ingredientId: t.ingredient.id,
+      name: t.ingredient.name,
+      unit: t.ingredient.unit.name,
+      category: t.ingredient.category.name,
+      quantity: t.quantity,
+    }))
+
+    toast({ description: "Технологическая карта успешно вставлена", variant: "success" })
+
+  } catch {
+    toast({ description: "Ошибка при вставке технологической карты", variant: "destructive" })
   }
 }
 </script>
@@ -367,20 +399,20 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 								<TableCell>{{ additive.size }} {{ additive.unitName }}</TableCell>
 
 								<!-- По умолчанию -->
-								<TableCell class="text-center !pr-2">
+								<TableCell class="!pr-2 text-center">
 									<Checkbox
 										type="checkbox"
-										class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
+										class="data-[state=checked]:bg-slate-500 border-slate-400 size-6 data-[state=checked]:text-white"
 										:checked="additive.isDefault"
 										@update:checked="value => onAdditiveDefaultClick(index, value)"
 									/>
 								</TableCell>
 
-								<TableCell class="text-center !pr-2">
+								<TableCell class="!pr-2 text-center">
 									<Checkbox
 										type="checkbox"
 										:disabled="!additive.isDefault"
-										class="size-6 border-slate-400 data-[state=checked]:bg-slate-500 data-[state=checked]:text-white"
+										class="data-[state=checked]:bg-slate-500 border-slate-400 size-6 data-[state=checked]:text-white"
 										:checked="additive.isHidden ?? false"
 										@update:checked="v => additive.isHidden = v"
 									/>
@@ -416,12 +448,24 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 								Выберите инргредиент и его количество
 							</CardDescription>
 						</div>
-						<Button
-							variant="outline"
-							@click="openIngredientsDialog = true"
-						>
-							Добавить
-						</Button>
+
+						<div class="flex items-center gap-2">
+							<DropdownMenu>
+								<DropdownMenuTrigger class="p-2 border rounded-md">
+									<EllipsisVertical class="size-4" />
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									<DropdownMenuItem @click="onPasteTechMapClick">Вставить</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+
+							<Button
+								variant="outline"
+								@click="openIngredientsDialog = true"
+							>
+								Добавить
+							</Button>
+						</div>
 					</div>
 				</CardHeader>
 				<CardContent>

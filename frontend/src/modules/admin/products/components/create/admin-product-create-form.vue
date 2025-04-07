@@ -9,7 +9,7 @@ import type { CreateProductDTO, ProductCategoryDTO } from '@/modules/kiosk/produ
 import { toTypedSchema } from '@vee-validate/zod'
 import { Camera, ChevronLeft, Video, X } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
-import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
+import { defineAsyncComponent, ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
 
 const AdminSelectProductCategory = defineAsyncComponent(() =>
@@ -248,7 +248,7 @@ function triggerVideoInput() {
 											/>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 hover:bg-red-700 p-1 rounded-full text-white transition-all duration-200"
 												@click="previewImage = null; setFieldValue('image', undefined)"
 											>
 												<X class="size-4" />
@@ -308,7 +308,7 @@ function triggerVideoInput() {
 											></video>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 hover:bg-red-700 p-1 rounded-full text-white transition-all duration-200"
 												@click="previewVideo = null; setFieldValue('video', undefined)"
 											>
 												<X class="size-4" />
