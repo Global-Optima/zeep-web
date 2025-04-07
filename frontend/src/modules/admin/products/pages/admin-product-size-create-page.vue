@@ -2,6 +2,7 @@
 	<AdminProductSizeCreateForm
 		@onSubmit="handleCreate"
 		@onCancel="handleCancel"
+		:initialProductSize="productSizeDetails"
 	/>
 </template>
 
@@ -14,13 +15,22 @@ import type {
   SelectedIngredientDTO
 } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
-import { useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
 const route = useRoute()
 const { toast } = useToast()
+
+const templateProductSizeId = route.query.templateProductSizeId as string
+
+const { data: productSizeDetails } = useQuery({
+	queryKey: ['admin-additive-details', templateProductSizeId],
+	queryFn: () => productsService.getProductSizeById(Number(templateProductSizeId)),
+	enabled: computed(() => !isNaN(Number(templateProductSizeId))),
+})
 
 const productId = route.query.productId as string
 
@@ -33,7 +43,7 @@ const createMutation = useMutation({
 		})
 	},
 	onSuccess: () => {
-		queryClient.invalidateQueries({ queryKey: ['admin-product-sizes', Number(productId)] })
+		queryClient.invalidateQueries({ queryKey: ['admin-product-sizes', productId] })
 		queryClient.invalidateQueries({ queryKey: ['admin-product-details', productId] })
 		toast({
 			title: 'Успех!',

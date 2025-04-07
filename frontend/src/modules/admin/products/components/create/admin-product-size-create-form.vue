@@ -46,7 +46,7 @@ import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import { ProductSizeNames } from '@/modules/kiosk/products/models/product.model'
+import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, EllipsisVertical, Trash } from 'lucide-vue-next'
 
 interface SelectedAdditiveTypesDTO {
@@ -78,6 +78,8 @@ export interface CreateProductSizeFormSchema {
   ingredients: SelectedIngredientsTypesDTO[]
 }
 
+const {initialProductSize} = defineProps<{initialProductSize?: ProductSizeDetailsDTO }>()
+
 const emits = defineEmits<{
   onSubmit: [dto: CreateProductSizeFormSchema]
   onCancel: []
@@ -93,7 +95,14 @@ const createProductSizeSchema = toTypedSchema(
   })
 )
 
-const ingredients = ref<SelectedIngredientsTypesDTO[]>([])
+const ingredients = ref<SelectedIngredientsTypesDTO[]>(initialProductSize?.ingredients?.map(i => ({
+  ingredientId: i.ingredient.id,
+  name: i.ingredient.name,
+  unit: i.ingredient.unit.name,
+  category: i.ingredient.category.name,
+  quantity: i.quantity
+})) || [])
+
 const openIngredientsDialog = ref(false)
 
 function addIngredient(ingredient: IngredientsDTO) {
@@ -108,13 +117,29 @@ function addIngredient(ingredient: IngredientsDTO) {
   }
 }
 
-const { handleSubmit, isSubmitting, setFieldValue } = useForm<CreateProductSizeFormSchema>({
+const { handleSubmit, isSubmitting, setFieldValue } = useForm({
   validationSchema: createProductSizeSchema,
+  initialValues: {
+	name: initialProductSize?.name,
+	basePrice: initialProductSize?.basePrice,
+	size: initialProductSize?.size,
+	unitId: initialProductSize?.unit.id,
+	machineId: initialProductSize?.machineId,
+  },
 })
 
 const { fetchTechnicalMap } = useCopyTechnicalMap()
 
-const additives = ref<SelectedAdditiveTypesDTO[]>([])
+const additives = ref<SelectedAdditiveTypesDTO[]>(initialProductSize?.additives?.map(a => ({
+  additiveId: a.id,
+  isDefault: a.isDefault,
+  isHidden: a.isHidden,
+  name: a.name,
+  categoryName: a.category.name,
+  size: a.size,
+  unitName: a.unit.name,
+  imageUrl: a.imageUrl,
+})) || [])
 const additivesError = ref<string | null>(null)
 const openAdditiveDialog = ref(false)
 
@@ -163,7 +188,7 @@ const onCancel = () => {
 }
 
 const openUnitDialog = ref(false)
-const selectedUnit = ref<UnitDTO | null>(null)
+const selectedUnit = ref<UnitDTO | null>(initialProductSize?.unit || null)
 
 function selectUnit(unit: UnitDTO) {
   selectedUnit.value = unit

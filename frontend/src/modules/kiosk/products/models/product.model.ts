@@ -59,7 +59,7 @@ export interface ProductTotalNutrition {
 }
 
 export interface BaseProductSizeDTO {
-	name: string
+	name: ProductSizeNames
 	basePrice: number
 	productId: number
 	unit: UnitDTO

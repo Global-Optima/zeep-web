@@ -3,6 +3,7 @@
 		@onSubmit="handleCreate"
 		@onCancel="handleCancel"
 		:isSubmitting="isPending"
+		:initialAdditive="additiveDetails"
 	/>
 </template>
 
@@ -11,12 +12,22 @@ import { useToast } from '@/core/components/ui/toast/use-toast'
 import AdminAdditiveCreateForm from '@/modules/admin/additives/components/create/admin-additive-create-form.vue'
 import type { CreateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
-import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { useRouter } from 'vue-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useRoute, useRouter } from 'vue-router'
 
+const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+
+const templateAdditiveId = route.query.templateAdditiveId as string
+
+const { data: additiveDetails } = useQuery({
+	queryKey: ['admin-additive-details', templateAdditiveId],
+	queryFn: () => additivesService.getAdditiveById(Number(templateAdditiveId)),
+	enabled: !isNaN(Number(templateAdditiveId)),
+})
+
 
 const {mutate, isPending} = useMutation({
 	mutationFn: (dto: CreateAdditiveDTO) => additivesService.createAdditive(dto),

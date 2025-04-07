@@ -20,7 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
 import { useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
-import type { AdditiveCategoryDetailsDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
+import type { AdditiveCategoryDetailsDTO, AdditiveCategoryDTO, AdditiveDetailsDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
@@ -38,7 +38,7 @@ interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   category: string
 }
 
-const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
+const {isSubmitting, initialAdditive} = defineProps<{isSubmitting: boolean, initialAdditive?: AdditiveDetailsDTO }>()
 
 const emits = defineEmits<{
   onSubmit: [dto: CreateAdditiveDTO]
@@ -49,13 +49,19 @@ const { toast } = useToast()
 const { fetchTechnicalMap } = useCopyTechnicalMap()
 
 // Reactive State for Category Selection
-const selectedCategory = ref<AdditiveCategoryDetailsDTO | null>(null)
+const selectedCategory = ref<AdditiveCategoryDTO | null>(initialAdditive?.category || null)
 const openCategoryDialog = ref(false)
 
-const selectedUnit = ref<UnitDTO | null>(null)
+const selectedUnit = ref<UnitDTO | null>(initialAdditive?.unit || null)
 const openUnitDialog = ref(false)
 
-const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>([])
+const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(initialAdditive?.ingredients.map(i => ({
+  ingredientId: i.ingredient.id,
+  name: i.ingredient.name,
+  unit: i.ingredient.unit.name,
+  category: i.ingredient.category.name,
+  quantity: i.quantity
+})) || [])
 const openIngredientsDialog = ref(false)
 
 
@@ -83,9 +89,17 @@ const createAdditiveSchema = toTypedSchema(
   })
 )
 
-// Form Setup
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createAdditiveSchema,
+  initialValues: {
+	name: initialAdditive?.name,
+	description: initialAdditive?.description,
+	machineId: initialAdditive?.machineId,
+	basePrice: initialAdditive?.basePrice,
+	size: initialAdditive?.size,
+	unitId: initialAdditive?.unit.id,
+	additiveCategoryId: initialAdditive?.category.id,
+  },
 })
 
 const previewImage = ref<string | null>(null);
