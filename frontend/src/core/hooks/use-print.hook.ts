@@ -1,5 +1,9 @@
+import { saveAs } from 'file-saver'
 import isMobile from 'is-mobile'
 import printJS from 'print-js'
+import { v4 as uuidv4 } from 'uuid'
+
+const SAVE_ON_PRINT = import.meta.env.VITE_SAVE_ON_PRINT === 'true'
 
 export interface PrintOptions {
 	/** If true, printing is allowed only on desktop devices.
@@ -10,6 +14,8 @@ export interface PrintOptions {
 	beforePrint?: () => void
 	/** Invoked after printing each PDF. */
 	afterPrint?: () => void
+
+	saveOnPrint?: boolean
 }
 
 interface PrintJob {
@@ -89,39 +95,50 @@ export function usePrinter() {
 	}
 
 	/**
-	 * Helper to print a single PDF Blob with printJS,
-	 * returning a Promise that resolves AFTER the user closes
-	 * the print dialog.
+	 * Prints or Saves a single PDF file based on the given options.
+	 *
+	 * @param blob - The PDF file blob.
+	 * @param opts - Printing options.
+	 * @returns A promise that resolves once printing or saving is done.
 	 */
-	function printSinglePDF(blob: Blob, opts?: PrintOptions) {
+	async function printSinglePDF(blob: Blob, opts?: PrintOptions): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
-			const { beforePrint, afterPrint } = opts || {}
-			if (beforePrint) beforePrint()
+			const { beforePrint, afterPrint, saveOnPrint = SAVE_ON_PRINT } = opts || {}
 
-			const pdfUrl = URL.createObjectURL(blob)
+			if (typeof beforePrint === 'function') beforePrint()
+
 			let cleanedUp = false
+			const pdfUrl = URL.createObjectURL(blob)
 
-			// Called when we release the object URL & call afterPrint
+			// Cleanup function to revoke the blob URL and call `afterPrint` once
 			const cleanup = () => {
 				if (!cleanedUp) {
 					cleanedUp = true
 					URL.revokeObjectURL(pdfUrl)
-					if (afterPrint) afterPrint()
+					if (typeof afterPrint === 'function') afterPrint()
 				}
 			}
 
 			try {
-				printJS({
-					printable: pdfUrl,
-					type: 'pdf',
-					onLoadingEnd: () => {
-						cleanup()
-					},
-					onPrintDialogClose: () => {
-						console.log('[usePrinter] Dialog closed')
-						resolve()
-					},
-				})
+				// If saveOnPrint is true, skip printing and just trigger a save
+				if (saveOnPrint) {
+					const uniqueFileName = `${uuidv4()}.pdf`
+
+					saveAs(blob, uniqueFileName)
+					cleanup()
+					resolve()
+				} else {
+					// Otherwise, proceed with printing using printJS
+					printJS({
+						printable: pdfUrl,
+						type: 'pdf',
+						onLoadingEnd: cleanup, // called once PDF has loaded in print preview
+						onPrintDialogClose: () => {
+							console.log('[printSinglePDF] Print dialog closed')
+							resolve()
+						},
+					})
+				}
 			} catch (err) {
 				cleanup()
 				reject(err)

@@ -9,6 +9,27 @@ export enum ProductSizeNames {
 	L = 'L',
 }
 
+export enum MachineCategory {
+	TEA = 'TEA',
+	COFFEE = 'COFFEE',
+	ICE_CREAM = 'ICE_CREAM',
+	OTHERS = 'OTHERS',
+}
+
+export const MACHINE_CATEGORY_OPTIONS = [
+	{ label: 'Чай', value: MachineCategory.TEA },
+	{ label: 'Кофе', value: MachineCategory.COFFEE },
+	{ label: 'Мороженое', value: MachineCategory.ICE_CREAM },
+	{ label: 'Другое', value: MachineCategory.OTHERS },
+]
+
+export const MACHINE_CATEGORY_FORMATTED: Record<MachineCategory, string> = {
+	[MachineCategory.TEA]: 'Чай',
+	[MachineCategory.COFFEE]: 'Кофе',
+	[MachineCategory.ICE_CREAM]: 'Мороженое',
+	[MachineCategory.OTHERS]: 'Другое',
+}
+
 export interface BaseProductDTO {
 	name: string
 	description: string
@@ -56,7 +77,7 @@ export interface ProductSizeDetailsDTO extends ProductSizeDTO {
 
 export interface ProductSizeAdditiveDTO extends AdditiveDTO {
 	isDefault: boolean
-  isHidden: boolean
+	isHidden: boolean
 }
 
 export interface CreateProductDTO {
@@ -70,7 +91,7 @@ export interface CreateProductDTO {
 export interface SelectedAdditiveDTO {
 	additiveId: number
 	isDefault: boolean
-  isHidden: boolean
+	isHidden: boolean
 }
 
 export interface SelectedIngredientDTO {
@@ -119,6 +140,7 @@ export interface ProductCategoryDTO {
 	id: number
 	name: string
 	description: string
+	machineCategory: MachineCategory
 }
 
 export interface ProductCategoriesFilterDTO extends PaginationParams {
@@ -128,9 +150,11 @@ export interface ProductCategoriesFilterDTO extends PaginationParams {
 export interface CreateProductCategoryDTO {
 	name: string
 	description?: string
+	machineCategory?: MachineCategory
 }
 
 export interface UpdateProductCategoryDTO {
 	name?: string
 	description?: string
+	machineCategory?: MachineCategory
 }

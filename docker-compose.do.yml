@@ -51,6 +51,7 @@ services:
         VITE_API_URL: ${VITE_API_URL}
         VITE_WS_URL: ${VITE_WS_URL}
         VITE_PAYMENT_SECRET: ${PAYMENT_SECRET}
+        VITE_SAVE_ON_PRINT: ${VITE_SAVE_ON_PRINT}
         VITE_TEST_PAYMENT: ${VITE_TEST_PAYMENT}
     env_file:
       - .env

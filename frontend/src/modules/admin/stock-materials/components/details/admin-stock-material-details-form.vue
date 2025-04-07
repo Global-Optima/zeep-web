@@ -122,7 +122,7 @@ const {print} = usePrinter()
 const onPrintBarcode = async () => {
   const barcodeBlob = await stockMaterialsService.getBarcodeFile(stockMaterial.id)
 
-  await print(barcodeBlob)
+  await print(barcodeBlob, {saveOnPrint: false})
 }
 </script>
 
