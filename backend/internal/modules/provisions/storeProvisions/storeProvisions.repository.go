@@ -15,9 +15,10 @@ type StoreProvisionRepository interface {
 	GetStoreProvisions(storeID uint, filter *types.StoreProvisionFilterDTO) ([]data.StoreProvision, error)
 	GetStoreProvisionByID(storeID uint, storeProvisionID uint) (*data.StoreProvision, error)
 	GetStoreProvisionWithDetailsByID(storeID, storeProvisionID uint) (*data.StoreProvision, error)
-	SaveStoreProvision(storeProvision *data.StoreProvision) error
+	SaveStoreProvisionWithAssociations(updateModels *types.StoreProvisionModels) error
 	DeleteStoreProvision(storeID, storeProvisionID uint) (*data.StoreProvision, error)
 	CountStoreProvisionsToday(storeID, provisionID uint) (uint, error)
+	SaveStoreProvision(storeProvision *data.StoreProvision) error
 
 	CloneWithTransaction(tx *gorm.DB) StoreProvisionRepository
 }
@@ -129,8 +130,54 @@ func (r *storeProvisionRepository) GetStoreProvisionWithDetailsByID(storeID, sto
 	return &sp, nil
 }
 
+func (r *storeProvisionRepository) SaveStoreProvisionWithAssociations(updateModels *types.StoreProvisionModels) error {
+	if updateModels == nil {
+		return fmt.Errorf("nothing to update")
+	}
+
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if updateModels.StoreProvision != nil || updateModels.StoreProvision.ID != 0 {
+			err := tx.Save(updateModels.StoreProvision).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		if updateModels.StoreProvisionIngredientsMultiplier != nil && *updateModels.StoreProvisionIngredientsMultiplier != 1 {
+			err := r.updateStoreProvisionIngredients(
+				tx, updateModels.StoreProvision.StoreID, updateModels.StoreProvision.StoreID, *updateModels.StoreProvisionIngredientsMultiplier,
+			)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (r *storeProvisionRepository) updateStoreProvisionIngredients(tx *gorm.DB, storeID, storeProvisionID uint, multiplier float64) error {
+	return tx.Model(&data.StoreProvisionIngredient{}).
+		Where("store_provision_id = ? AND store_id = ?", storeProvisionID, storeID).
+		Update("volume", gorm.Expr("volume * ?", multiplier)).Error
+}
+
 func (r *storeProvisionRepository) SaveStoreProvision(storeProvision *data.StoreProvision) error {
-	return r.db.Save(storeProvision).Error
+	if storeProvision == nil || storeProvision.ID == 0 {
+		return fmt.Errorf("invalid store provision model")
+	}
+
+	err := r.db.Model(&data.StoreProvision{}).
+		Save(storeProvision).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrStoreProvisionNotFound
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (r *storeProvisionRepository) DeleteStoreProvision(storeID, storeProvisionID uint) (*data.StoreProvision, error) {

@@ -113,7 +113,7 @@ func (s *storeProvisionService) UpdateStoreProvision(storeID, storeProvisionID u
 		return nil, fmt.Errorf("failed to apply update: %w", err)
 	}
 
-	err = s.repo.SaveStoreProvision(storeProvision)
+	err = s.repo.SaveStoreProvisionWithAssociations(updateModels)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to save store provision: %w", err)
 		s.logger.Error(wrapped)

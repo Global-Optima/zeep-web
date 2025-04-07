@@ -8,7 +8,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
-type UpdateModels struct {
+type StoreProvisionModels struct {
 	StoreProvision                      *data.StoreProvision
 	StoreProvisionIngredientsMultiplier *float64
 }
@@ -53,7 +53,7 @@ func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO, cen
 	}
 }
 
-func UpdateToStoreProvisionModel(storeProvision *data.StoreProvision, dto *UpdateStoreProvisionDTO) (*UpdateModels, error) {
+func UpdateToStoreProvisionModel(storeProvision *data.StoreProvision, dto *UpdateStoreProvisionDTO) (*StoreProvisionModels, error) {
 	if dto == nil {
 		return nil, fmt.Errorf("dto is nil")
 	}
@@ -62,7 +62,7 @@ func UpdateToStoreProvisionModel(storeProvision *data.StoreProvision, dto *Updat
 		return nil, fmt.Errorf("invalid argument for ID paramters fetched while validating existing provision")
 	}
 
-	updateModels := &UpdateModels{}
+	updateModels := &StoreProvisionModels{}
 
 	if dto.Volume != nil {
 		multiplier := CalculateStoreProvisionIngredientsMultiplier(*dto.Volume, storeProvision.Volume)
