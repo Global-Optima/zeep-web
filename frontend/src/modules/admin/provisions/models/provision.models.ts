@@ -6,14 +6,17 @@ export interface ProvisionFilter extends PaginationParams {
 	search?: string
 }
 
-export interface ProvisionDTO {
-	id: number
+export interface BaseProvisionDTO {
 	name: string
 	absoluteVolume: number
 	unit: UnitDTO
 	preparationInMinutes: number
 	netCost: number
 	limitPerDay: number
+}
+
+export interface ProvisionDTO extends BaseProvisionDTO {
+	id: number
 }
 
 export interface ProvisionDetailsIngredients {

@@ -25,7 +25,7 @@ export interface StoreProvisionDTO {
 
 export interface StoreProvisionDetailsIngredients {
 	ingredient: IngredientsDTO
-	volume: number
+	quantity: number
 }
 
 export interface StoreProvisionDetailsDTO extends StoreProvisionDTO {

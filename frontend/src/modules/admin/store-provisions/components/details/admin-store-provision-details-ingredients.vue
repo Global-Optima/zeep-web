@@ -21,7 +21,7 @@
 					>
 						<TableCell>{{ item.ingredient.name }}</TableCell>
 						<TableCell>{{ item.ingredient.category }}</TableCell>
-						<TableCell>{{ item.volume }} {{ item.ingredient.unit.name.toLowerCase() }}</TableCell>
+						<TableCell>{{ item.quantity }} {{ item.ingredient.unit.name.toLowerCase() }}</TableCell>
 					</TableRow>
 				</TableBody>
 			</Table>
