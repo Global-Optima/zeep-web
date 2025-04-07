@@ -66,7 +66,7 @@ func NewContainer(dbHandler *database.DBHandler, redisClient *database.RedisClie
 func (c *Container) mustInit() {
 	cfg := config.GetConfig()
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
-	cronManager := scheduler.NewCronManager(cfg.Server.CronJobsEnabled, c.logger)
+	cronManager := scheduler.NewCronManager(*cfg.Server.CronJobsEnabled, c.logger)
 
 	var err error
 	c.AsynqManager, err = asynqManager.NewAsyncManager(c.RedisClient.Client, c.logger)
