@@ -20,6 +20,7 @@ type ProductSizeModels struct {
 	ProductSize *data.ProductSize
 	Additives   []data.ProductSizeAdditive
 	Ingredients []data.ProductSizeIngredient
+	Provisions  []data.ProductSizeProvision
 }
 
 func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
@@ -165,6 +166,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 
 	productSize.Additives = mapAdditivesToProductSizeAdditives(dto.Additives)
 	productSize.ProductSizeIngredients = mapIngredientsToProductSizeIngredients(dto.Ingredients)
+	productSize.ProductSizeProvisions = mapProvisionsToProductSizeProvisions(dto.Provisions)
 
 	return productSize
 }
@@ -212,11 +214,13 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 
 	additives := mapAdditivesToProductSizeAdditives(dto.Additives)
 	ingredients := mapIngredientsToProductSizeIngredients(dto.Ingredients)
+	provisions := mapProvisionsToProductSizeProvisions(dto.Provisions)
 
 	return &ProductSizeModels{
 		ProductSize: productSize,
 		Additives:   additives,
 		Ingredients: ingredients,
+		Provisions:  provisions,
 	}
 }
 
@@ -261,6 +265,24 @@ func mapIngredientsToProductSizeIngredients(ingredientsDTO []ingredientTypes.Sel
 	}
 
 	return ingredients
+}
+
+func mapProvisionsToProductSizeProvisions(provisionsDTO []provisionsTypes.SelectedProvisionDTO) []data.ProductSizeProvision {
+	if provisionsDTO == nil {
+		return nil
+	}
+
+	provisions := make([]data.ProductSizeProvision, 0, len(provisionsDTO))
+
+	for _, dto := range provisionsDTO {
+		provision := data.ProductSizeProvision{
+			ProvisionID: dto.ProvisionID,
+			Volume:      dto.Volume,
+		}
+		provisions = append(provisions, provision)
+	}
+
+	return provisions
 }
 
 var emptyStringRu = "пустое значение"

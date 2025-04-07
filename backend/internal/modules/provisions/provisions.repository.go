@@ -144,8 +144,82 @@ func (r *provisionRepository) SaveProvisionWithAssociations(updateModels *types.
 			return err
 		}
 
+		productSizeIDs, err := r.getProductSizeIDsByProvision(tx, updateModels.Provision.ID)
+		if err != nil {
+			return err
+		}
+
+		additiveIDs, err := r.getProductSizeIDsByProvision(tx, updateModels.Provision.ID)
+		if err != nil {
+			return err
+		}
+
+		if err := r.updateProductSizeProvisionsUpdatedAt(tx, productSizeIDs); err != nil {
+			return err
+		}
+
+		if err := r.updateAdditiveProvisionsUpdatedAt(tx, additiveIDs); err != nil {
+			return err
+		}
+
 		return nil
 	})
+}
+
+func (r *provisionRepository) getProductSizeIDsByProvision(tx *gorm.DB, provisionID uint) ([]uint, error) {
+	var productSizeIDs []uint
+
+	err := tx.Model(&data.ProductSizeProvision{}).
+		Where("provision_id = ?", provisionID).
+		Pluck("product_size_id", &productSizeIDs).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get productSizeIDs by proviosionID %d: %w", provisionID, err)
+	}
+
+	return productSizeIDs, nil
+}
+
+func (r *provisionRepository) getAdditivesIDsByProvision(tx *gorm.DB, provisionID uint) ([]uint, error) {
+	var additiveIDs []uint
+
+	err := tx.Model(&data.AdditiveProvision{}).
+		Where("provision_id = ?", provisionID).
+		Pluck("additive_id", &additiveIDs).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get additiveIDs by proviosionID %d: %w", provisionID, err)
+	}
+
+	return additiveIDs, nil
+}
+
+func (r *provisionRepository) updateProductSizeProvisionsUpdatedAt(tx *gorm.DB, productSizeIDs []uint) error {
+	if len(productSizeIDs) == 0 {
+		return nil
+	}
+
+	err := tx.Model(&data.ProductSize{}).
+		Where("id IN ?", productSizeIDs).
+		Update("provisions_updated_at", time.Now().UTC()).Error
+	if err != nil {
+		return fmt.Errorf("failed to update provisions_updated_at for productSizeIDs: %w", err)
+	}
+
+	return nil
+}
+
+func (r *provisionRepository) updateAdditiveProvisionsUpdatedAt(tx *gorm.DB, additiveIDs []uint) error {
+	if len(additiveIDs) == 0 {
+		return nil
+	}
+
+	err := tx.Model(&data.Additive{}).
+		Where("id IN ?", additiveIDs).
+		Update("provisions_updated_at", time.Now().UTC()).Error
+	if err != nil {
+		return fmt.Errorf("failed to update provisions_updated_at for additiveIDs: %w", err)
+	}
+
+	return nil
 }
 
 func (r *provisionRepository) saveProvision(tx *gorm.DB, provision *data.Provision, ingredientsUpdated bool) error {

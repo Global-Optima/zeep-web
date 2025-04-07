@@ -233,9 +233,14 @@ func (r *additiveRepository) SaveAdditiveWithAssociations(additiveID uint, updat
 		}
 
 		if updateModels.Additive != nil {
+			currentTime := time.Now().UTC()
 			if updateModels.Ingredients != nil {
-				updateModels.Additive.IngredientsUpdatedAt = time.Now().UTC()
+				updateModels.Additive.IngredientsUpdatedAt = currentTime
 			}
+			if updateModels.Provisions != nil {
+				updateModels.Additive.ProvisionsUpdatedAt = currentTime
+			}
+
 			err := r.saveAdditive(tx, updateModels.Additive)
 			if err != nil {
 				return err
@@ -249,12 +254,18 @@ func (r *additiveRepository) SaveAdditiveWithAssociations(additiveID uint, updat
 			}
 		}
 
-		productSizeIDs, err := r.getProductSizeIDsByAdditive(additiveID)
+		if updateModels.Provisions != nil {
+			if err := r.saveAdditiveProvisions(tx, additiveID, updateModels.Provisions); err != nil {
+				return err
+			}
+		}
+
+		productSizeIDs, err := r.getProductSizeIDsByAdditive(tx, additiveID)
 		if err != nil {
 			return err
 		}
 
-		if err := r.updateProductSizeAdditivesUpdatedAt(productSizeIDs); err != nil {
+		if err := r.updateProductSizeAdditivesUpdatedAt(tx, productSizeIDs); err != nil {
 			return err
 		}
 
@@ -328,10 +339,72 @@ func (r *additiveRepository) saveAdditiveIngredients(tx *gorm.DB, additiveID uin
 	return nil
 }
 
-func (r *additiveRepository) getProductSizeIDsByAdditive(additiveID uint) ([]uint, error) {
+func (r *additiveRepository) saveAdditiveProvisions(tx *gorm.DB, additiveID uint, provisions []data.AdditiveProvision) error {
+	var existing []data.AdditiveProvision
+	if err := tx.Where("additive_id = ?", additiveID).Find(&existing).Error; err != nil {
+		return fmt.Errorf("failed to load existing additive provisions: %w", err)
+	}
+
+	existingMap := make(map[uint]data.AdditiveProvision)
+	for _, ap := range existing {
+		existingMap[ap.ProvisionID] = ap
+	}
+
+	var toInsert []data.AdditiveProvision
+	var toUpdate []data.AdditiveProvision
+	newIDs := make(map[uint]struct{})
+
+	for _, prov := range provisions {
+		existing, found := existingMap[prov.ProvisionID]
+		newIDs[prov.ProvisionID] = struct{}{}
+
+		if found {
+			if existing.Volume != prov.Volume {
+				existing.Volume = prov.Volume
+				toUpdate = append(toUpdate, existing)
+			}
+		} else {
+			toInsert = append(toInsert, data.AdditiveProvision{
+				AdditiveID:  additiveID,
+				ProvisionID: prov.ProvisionID,
+				Volume:      prov.Volume,
+			})
+		}
+	}
+
+	var toDeleteIDs []uint
+	for id := range existingMap {
+		if _, found := newIDs[id]; !found {
+			toDeleteIDs = append(toDeleteIDs, id)
+		}
+	}
+
+	if len(toUpdate) > 0 {
+		if err := tx.Save(&toUpdate).Error; err != nil {
+			return fmt.Errorf("failed to update additive provisions: %w", err)
+		}
+	}
+
+	if len(toDeleteIDs) > 0 {
+		if err := tx.Unscoped().Where("additive_id = ? AND provision_id IN (?)", additiveID, toDeleteIDs).
+			Delete(&data.AdditiveProvision{}).Error; err != nil {
+			return fmt.Errorf("failed to delete old additive provisions: %w", err)
+		}
+	}
+
+	if len(toInsert) > 0 {
+		if err := tx.Create(&toInsert).Error; err != nil {
+			return fmt.Errorf("failed to insert new additive provisions: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (r *additiveRepository) getProductSizeIDsByAdditive(tx *gorm.DB, additiveID uint) ([]uint, error) {
 	var productSizeIDs []uint
 
-	err := r.db.Model(&data.ProductSizeAdditive{}).
+	err := tx.Model(&data.ProductSizeAdditive{}).
 		Where("additive_id = ?", additiveID).
 		Pluck("product_size_id", &productSizeIDs).Error
 	if err != nil {
@@ -341,12 +414,12 @@ func (r *additiveRepository) getProductSizeIDsByAdditive(additiveID uint) ([]uin
 	return productSizeIDs, nil
 }
 
-func (r *additiveRepository) updateProductSizeAdditivesUpdatedAt(productSizeIDs []uint) error {
+func (r *additiveRepository) updateProductSizeAdditivesUpdatedAt(tx *gorm.DB, productSizeIDs []uint) error {
 	if len(productSizeIDs) == 0 {
 		return nil
 	}
 
-	err := r.db.Model(&data.ProductSize{}).
+	err := tx.Model(&data.ProductSize{}).
 		Where("id IN ?", productSizeIDs).
 		Update("additives_updated_at", time.Now().UTC()).Error
 	if err != nil {
