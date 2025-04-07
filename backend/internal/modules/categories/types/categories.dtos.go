@@ -20,11 +20,11 @@ type ProductCategoriesFilterDTO struct {
 type CreateProductCategoryDTO struct {
 	Name            string               `json:"name" binding:"required,min=2"`
 	Description     *string              `json:"description" binding:"omitempty"`
-	MachineCategory data.MachineCategory `json:"machineCategory" binding:"required,oneof=TEA COFFEE ICE_CREAM"`
+	MachineCategory data.MachineCategory `json:"machineCategory" binding:"required"`
 }
 
 type UpdateProductCategoryDTO struct {
 	Name            *string               `json:"name,omitempty" binding:"min=2,omitempty"`
 	Description     *string               `json:"description" binding:"omitempty"`
-	MachineCategory *data.MachineCategory `json:"machineCategory,omitempty" binding:"omitempty,oneof=TEA COFFEE ICE_CREAM"`
+	MachineCategory *data.MachineCategory `json:"machineCategory,omitempty" binding:"omitempty"`
 }
