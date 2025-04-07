@@ -354,8 +354,9 @@ func InitValidators() {
 	RegisterCustomValidators(validate)
 }
 
-func RoundToOneDecimal(value float64) float64 {
-	return math.Round(value*10) / 10
+func RoundToDecimal(value float64, precision int) float64 {
+	multiplier := math.Pow(10, float64(precision))
+	return math.Round(value*multiplier) / multiplier
 }
 
 func UnionSlices[T comparable](arr1, arr2 []T) []T {

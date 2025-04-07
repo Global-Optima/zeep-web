@@ -31,6 +31,7 @@ CREATE TABLE additive_provisions (
     id SERIAL PRIMARY KEY,
     additive_id INT NOT NULL REFERENCES additives(id) ON DELETE CASCADE,
     provision_id INT NOT NULL REFERENCES provisions(id) ON DELETE CASCADE,
+    volume DECIMAL(10, 2) NOT NULL CHECK (volume > 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
@@ -41,6 +42,7 @@ CREATE TABLE product_size_provisions (
     id SERIAL PRIMARY KEY,
     product_size_id INT NOT NULL REFERENCES product_sizes(id) ON DELETE CASCADE,
     provision_id INT NOT NULL REFERENCES provisions(id) ON DELETE CASCADE,
+    volume DECIMAL(10, 2) NOT NULL CHECK (volume > 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ

@@ -57,5 +57,5 @@ type ProvisionFilterDTO struct {
 
 type SelectedProvisionDTO struct {
 	ProvisionID uint    `json:"provisionId" binding:"required,gt=0"`
-	Quantity    float64 `json:"quantity" binding:"required,gt=0"`
+	Volume      float64 `json:"volume" binding:"required,gt=0"`
 }

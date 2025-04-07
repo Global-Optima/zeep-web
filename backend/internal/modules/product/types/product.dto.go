@@ -55,6 +55,12 @@ type ProductSizeDetailsDTO struct {
 	TotalNutrition TotalNutrition             `json:"totalNutrition"`
 	Additives      []ProductSizeAdditiveDTO   `json:"additives"`
 	Ingredients    []ProductSizeIngredientDTO `json:"ingredients"`
+	Provisions     []ProductSizeProvisionDTO  `json:"provisions"`
+}
+
+type ProductSizeProvisionDTO struct {
+	provisionsTypes.ProvisionDTO
+	Volume float64 `json:"volume"`
 }
 
 type ProductSizeAdditiveDTO struct {
@@ -86,6 +92,7 @@ type CreateProductSizeDTO struct {
 	MachineId   string                                  `json:"machineId" binding:"required,max=40"`
 	Additives   []SelectedAdditiveDTO                   `json:"additives" binding:"omitempty,dive"`
 	Ingredients []ingredientTypes.SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	Provisions  []provisionsTypes.SelectedProvisionDTO  `json:"provisions" binding:"omitempty,dive"`
 }
 
 type UpdateProductDTO struct {

@@ -125,7 +125,7 @@ func ParseJSONProvisionsFromString(provisionsJSON string, provisions []SelectedP
 		}
 
 		for _, provision := range provisions {
-			if provision.ProvisionID == 0 || provision.Quantity <= 0 {
+			if provision.ProvisionID == 0 || provision.Volume <= 0 {
 				return fmt.Errorf("invalid provision json input")
 			}
 		}

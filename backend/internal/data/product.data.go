@@ -58,6 +58,7 @@ type ProductSizeProvision struct {
 	ProductSize   ProductSize `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProvisionID   uint        `gorm:"index,not null"`
 	Provision     Provision   `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
+	Volume        float64     `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 }
 
 type ProductSizeIngredient struct {
@@ -84,6 +85,7 @@ type AdditiveProvision struct {
 	Additive    Additive  `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	ProvisionID uint      `gorm:"index,not null"`
 	Provision   Provision `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
+	Volume      float64   `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
 }
 
 type Ingredient struct {

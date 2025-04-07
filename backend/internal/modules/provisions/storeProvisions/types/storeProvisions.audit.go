@@ -7,7 +7,7 @@ import (
 
 type UpdateStoreProvisionFields struct {
 	*UpdateStoreProvisionDTO
-	Status *string `json:"status,omitempty"`
+	Status *data.StoreProvisionStatus `json:"status,omitempty"`
 }
 
 var (

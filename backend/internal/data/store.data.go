@@ -4,16 +4,16 @@ import (
 	"time"
 )
 
-type ProvisionStatus string
+type StoreProvisionStatus string
 
-func (p ProvisionStatus) ToString() string {
+func (p StoreProvisionStatus) ToString() string {
 	return string(p)
 }
 
 const (
-	PROVISION_STATUS_PREPARING ProvisionStatus = "PREPARING"
-	PROVISION_STATUS_COMPLETED ProvisionStatus = "COMPLETED"
-	PROVISION_STATUS_EXPIRED   ProvisionStatus = "EXPIRED"
+	PROVISION_STATUS_PREPARING StoreProvisionStatus = "PREPARING"
+	PROVISION_STATUS_COMPLETED StoreProvisionStatus = "COMPLETED"
+	PROVISION_STATUS_EXPIRED   StoreProvisionStatus = "EXPIRED"
 )
 
 type Product struct {
@@ -108,7 +108,7 @@ type StoreProvision struct {
 	ProvisionID               uint                       `gorm:"not null;index"`
 	Provision                 Provision                  `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
 	Volume                    float64                    `gorm:"type:decimal(10,2);not null;check:volume > 0" sort:"volume"`
-	Status                    ProvisionStatus            `gorm:"not null" sort:"status"`
+	Status                    StoreProvisionStatus       `gorm:"not null" sort:"status"`
 	ExpirationInHours         int                        `gorm:"not null" sort:"expirationInHours"`
 	StoreProvisionIngredients []StoreProvisionIngredient `gorm:"foreignKey:StoreProvisionID;constraint:OnDelete:CASCADE"`
 	StoreID                   uint                       `gorm:"not null;index"`

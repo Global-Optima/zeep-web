@@ -55,6 +55,12 @@ type AdditiveDTO struct {
 type AdditiveDetailsDTO struct {
 	AdditiveDTO
 	Ingredients []AdditiveIngredientDTO `json:"ingredients"`
+	Provisions  []AdditiveProvisionDTO  `json:"provisions"`
+}
+
+type AdditiveProvisionDTO struct {
+	Volume float64 `json:"volume"`
+	provisionsTypes.ProvisionDTO
 }
 
 type AdditiveIngredientDTO struct {

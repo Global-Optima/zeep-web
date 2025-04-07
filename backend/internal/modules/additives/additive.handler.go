@@ -1,6 +1,8 @@
 package additives
 
 import (
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"net/http"
 	"strconv"
 
@@ -191,12 +193,12 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 		return
 	}
 
-	if err := ParseJSONIngredientsFromString(c.PostForm("ingredients"), dto.Ingredients); err != nil {
+	if err := ingredientTypes.ParseJSONIngredientsFromString(c.PostForm("ingredients"), dto.Ingredients); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	if err := ParseJSONProvisionsFromString(c.PostForm("provisions"), dto.Provisions); err != nil {
+	if err := provisionsTypes.ParseJSONProvisionsFromString(c.PostForm("provisions"), dto.Provisions); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -240,12 +242,12 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		return
 	}
 
-	if err := ParseJSONIngredientsFromString(c.PostForm("ingredients"), dto.Ingredients); err != nil {
+	if err := ingredientTypes.ParseJSONIngredientsFromString(c.PostForm("ingredients"), dto.Ingredients); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	if err := ParseJSONProvisionsFromString(c.PostForm("provisions"), dto.Provisions); err != nil {
+	if err := provisionsTypes.ParseJSONProvisionsFromString(c.PostForm("provisions"), dto.Provisions); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}

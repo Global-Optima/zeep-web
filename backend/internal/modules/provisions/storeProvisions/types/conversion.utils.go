@@ -5,16 +5,25 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
+
+type UpdateModels struct {
+	StoreProvision                      *data.StoreProvision
+	StoreProvisionIngredientsMultiplier *float64
+}
 
 func MapToStoreProvisionDTO(sp *data.StoreProvision) *StoreProvisionDTO {
 	return &StoreProvisionDTO{
-		ID:               sp.ID,
-		BaseProvisionDTO: *provisionsTypes.MapToBaseProvisionDTO(&sp.Provision),
-		Volume:           sp.Volume,
-		Status:           sp.Status.ToString(),
-		CompletedAt:      sp.CompletedAt,
-		ExpiresAt:        sp.ExpiresAt,
+		ID:                sp.ID,
+		BaseProvisionDTO:  *provisionsTypes.MapToBaseProvisionDTO(&sp.Provision),
+		ProvisionID:       sp.ProvisionID,
+		ExpirationInHours: sp.ExpirationInHours,
+		Volume:            sp.Volume,
+		Status:            sp.Status,
+		CompletedAt:       sp.CompletedAt,
+		ExpiresAt:         sp.ExpiresAt,
+		CreatedAt:         sp.CreatedAt,
 	}
 }
 
@@ -33,44 +42,54 @@ func MapToStoreProvisionDetailsDTO(sp *data.StoreProvision) *StoreProvisionDetai
 	}
 }
 
-func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO) *data.StoreProvision {
+func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO, centralCatalogProvision *data.Provision) *data.StoreProvision {
 	return &data.StoreProvision{
 		ProvisionID:               dto.ProvisionID,
 		Volume:                    dto.Volume,
 		ExpirationInHours:         dto.ExpirationInHours,
 		Status:                    data.PROVISION_STATUS_PREPARING,
 		StoreID:                   storeID,
-		StoreProvisionIngredients: mapIngredientsToStoreProvisionIngredients(dto.Ingredients),
+		StoreProvisionIngredients: mapIngredientsToStoreProvisionIngredients(dto.Volume, centralCatalogProvision),
 	}
 }
 
-func UpdateToStoreProvisionModel(storeProvision *data.StoreProvision, dto *UpdateStoreProvisionDTO) error {
+func UpdateToStoreProvisionModel(storeProvision *data.StoreProvision, dto *UpdateStoreProvisionDTO) (*UpdateModels, error) {
 	if dto == nil {
-		return fmt.Errorf("dto is nil")
+		return nil, fmt.Errorf("dto is nil")
 	}
 
 	if storeProvision == nil || storeProvision.ID == 0 || storeProvision.ProvisionID == 0 {
-		return fmt.Errorf("invalid argument for ID paramters fetched while validating existing provision")
+		return nil, fmt.Errorf("invalid argument for ID paramters fetched while validating existing provision")
 	}
 
+	updateModels := &UpdateModels{}
+
 	if dto.Volume != nil {
-		storeProvision.Volume = *dto.Volume
+		multiplier := CalculateStoreProvisionIngredientsMultiplier(*dto.Volume, storeProvision.Volume)
+		if multiplier != 1 {
+			storeProvision.Volume = *dto.Volume
+			updateModels.StoreProvisionIngredientsMultiplier = &multiplier
+		}
 	}
 	if dto.ExpirationInHours != nil {
 		storeProvision.ExpirationInHours = *dto.ExpirationInHours
 	}
-	storeProvision.StoreProvisionIngredients = mapIngredientsToStoreProvisionIngredients(dto.Ingredients)
 
-	return nil
+	return updateModels, nil
 }
 
-func mapIngredientsToStoreProvisionIngredients(dto []ingredientTypes.SelectedIngredientDTO) []data.StoreProvisionIngredient {
-	result := make([]data.StoreProvisionIngredient, len(dto))
-	for i, item := range dto {
+func mapIngredientsToStoreProvisionIngredients(volume float64, provision *data.Provision) []data.StoreProvisionIngredient {
+	result := make([]data.StoreProvisionIngredient, len(provision.ProvisionIngredients))
+	multiplier := CalculateStoreProvisionIngredientsMultiplier(volume, provision.AbsoluteVolume)
+	for i, ingredient := range provision.ProvisionIngredients {
 		result[i] = data.StoreProvisionIngredient{
-			IngredientID: item.IngredientID,
-			Quantity:     item.Quantity,
+			IngredientID: ingredient.IngredientID,
+			Quantity:     ingredient.Quantity * multiplier,
 		}
 	}
 	return result
+}
+
+func CalculateStoreProvisionIngredientsMultiplier(volume, absoluteVolume float64) float64 {
+	return utils.RoundToDecimal(volume/absoluteVolume, 1)
 }

@@ -24,6 +24,7 @@ type StoreAdditiveDTO struct {
 type StoreAdditiveDetailsDTO struct {
 	StoreAdditiveDTO
 	Ingredients []additiveTypes.AdditiveIngredientDTO `json:"ingredients"`
+	Provisions  []additiveTypes.AdditiveProvisionDTO  `json:"provisions"`
 }
 
 type StoreAdditiveCategoriesFilter struct {

@@ -64,34 +64,30 @@ func (s *storeProvisionService) GetStoreProvisions(storeID uint, filter *types.S
 }
 
 func (s *storeProvisionService) CreateStoreProvision(storeID uint, dto *types.CreateStoreProvisionDTO) (*types.StoreProvisionDTO, error) {
-	existingProvision, err := s.provisionRepo.GetProvisionWithDetailsByID(dto.ProvisionID)
+	centralCatalogProvision, err := s.provisionRepo.GetProvisionWithDetailsByID(dto.ProvisionID)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to get store provision by ID %d: %w", dto.ProvisionID, err)
 		s.logger.Error(wrapped)
 		return nil, wrapped
 	}
 
-	provisionIngredientIDs := make([]uint, len(existingProvision.ProvisionIngredients))
-	for i, ingredient := range existingProvision.ProvisionIngredients {
+	provisionIngredientIDs := make([]uint, len(centralCatalogProvision.ProvisionIngredients))
+	for i, ingredient := range centralCatalogProvision.ProvisionIngredients {
 		provisionIngredientIDs[i] = ingredient.IngredientID
 	}
 
-	if err := validateStoreProvisionIngredients(dto.Ingredients, provisionIngredientIDs); err != nil {
-		return nil, fmt.Errorf("ingredient validation failed: %w", err)
-	}
-
-	count, err := s.repo.CountStoreProvisionsToday(storeID, existingProvision.ID)
+	count, err := s.repo.CountStoreProvisionsToday(storeID, centralCatalogProvision.ID)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to count store provisions today: %w", err)
 		s.logger.Error(wrapped)
 		return nil, wrapped
 	}
 
-	if count >= existingProvision.LimitPerDay {
+	if count >= centralCatalogProvision.LimitPerDay {
 		return nil, types.ErrStoreProvisionDailyLimitReached
 	}
 
-	storeProvision := types.CreateToStoreProvisionModel(storeID, dto)
+	storeProvision := types.CreateToStoreProvisionModel(storeID, dto, centralCatalogProvision)
 
 	_, err = s.repo.CreateStoreProvision(storeProvision)
 	if err != nil {
@@ -112,16 +108,8 @@ func (s *storeProvisionService) UpdateStoreProvision(storeID, storeProvisionID u
 		return nil, fmt.Errorf("failed to update store provision: %w", types.ErrProvisionAlreadyCompleted)
 	}
 
-	provisionIngredientIDs, err := s.provisionRepo.GetProvisionIngredientIDs(storeProvision.ProvisionID)
+	updateModels, err := types.UpdateToStoreProvisionModel(storeProvision, dto)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find store provision ingredient IDs: %w", err)
-	}
-
-	if err := validateStoreProvisionIngredients(dto.Ingredients, provisionIngredientIDs); err != nil {
-		return nil, fmt.Errorf("ingredient validation failed: %w", err)
-	}
-
-	if err := types.UpdateToStoreProvisionModel(storeProvision, dto); err != nil {
 		return nil, fmt.Errorf("failed to apply update: %w", err)
 	}
 

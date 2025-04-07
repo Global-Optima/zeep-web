@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -10,12 +11,13 @@ import (
 type StoreProvisionDTO struct {
 	ID uint `json:"id"`
 	types.BaseProvisionDTO
-	ProvisionID       uint       `json:"provisionId"`
-	ExpirationInHours int        `json:"expirationInHours"`
-	Volume            float64    `json:"volume"`
-	Status            string     `json:"status"`
-	CompletedAt       *time.Time `json:"completedAt,omitempty"`
-	ExpiresAt         *time.Time `json:"expiresAt"`
+	ProvisionID       uint                      `json:"provisionId"`
+	ExpirationInHours int                       `json:"expirationInHours"`
+	Volume            float64                   `json:"volume"`
+	Status            data.StoreProvisionStatus `json:"status"`
+	CompletedAt       *time.Time                `json:"completedAt,omitempty"`
+	ExpiresAt         *time.Time                `json:"expiresAt"`
+	CreatedAt         time.Time                 `json:"createdAt"`
 }
 
 type StoreProvisionDetailsDTO struct {
@@ -29,16 +31,14 @@ type StoreProvisionIngredientDTO struct {
 }
 
 type CreateStoreProvisionDTO struct {
-	ProvisionID       uint                                    `json:"provisionId" binding:"required"`
-	Volume            float64                                 `json:"volume" binding:"required,gt=0"`
-	ExpirationInHours int                                     `json:"expirationInHours" binding:"required,gt=0"`
-	Ingredients       []ingredientTypes.SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	ProvisionID       uint    `json:"provisionId" binding:"required"`
+	Volume            float64 `json:"volume" binding:"required,gt=0"`
+	ExpirationInHours int     `json:"expirationInHours" binding:"required,gt=0"`
 }
 
 type UpdateStoreProvisionDTO struct {
-	Volume            *float64                                `json:"volume" binding:"omitempty,gt=0"`
-	ExpirationInHours *int                                    `json:"expirationInHours" binding:"omitempty,gt=0"`
-	Ingredients       []ingredientTypes.SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	Volume            *float64 `json:"volume" binding:"omitempty,gt=0"`
+	ExpirationInHours *int     `json:"expirationInHours" binding:"omitempty,gt=0"`
 }
 
 type StoreProvisionFilterDTO struct {
