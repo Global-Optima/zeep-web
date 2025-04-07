@@ -10,4 +10,5 @@ var (
 	ErrProvisionAlreadyCompleted        = moduleErrors.NewModuleError(errors.New("provision already completed"))
 	ErrStoreProvisionIngredientMismatch = moduleErrors.NewModuleError(errors.New("selected ingredient does not match the actual provision ingredients from central catalog"))
 	ErrStoreProvisionDailyLimitReached  = moduleErrors.NewModuleError(errors.New("selected daily limit reached"))
+	ErrStoreProvisionNotExpired         = moduleErrors.NewModuleError(errors.New("selected provision not expired"))
 )

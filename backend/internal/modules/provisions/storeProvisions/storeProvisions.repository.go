@@ -16,7 +16,7 @@ type StoreProvisionRepository interface {
 	GetStoreProvisionByID(storeID uint, storeProvisionID uint) (*data.StoreProvision, error)
 	GetStoreProvisionWithDetailsByID(storeID, storeProvisionID uint) (*data.StoreProvision, error)
 	SaveStoreProvisionWithAssociations(updateModels *types.StoreProvisionModels) error
-	DeleteStoreProvision(storeID, storeProvisionID uint) (*data.StoreProvision, error)
+	DeleteStoreProvision(storeProvisionID uint) error
 	CountStoreProvisionsToday(storeID, provisionID uint) (uint, error)
 	SaveStoreProvision(storeProvision *data.StoreProvision) error
 
@@ -132,24 +132,22 @@ func (r *storeProvisionRepository) GetStoreProvisionWithDetailsByID(storeID, sto
 
 func (r *storeProvisionRepository) SaveStoreProvisionWithAssociations(updateModels *types.StoreProvisionModels) error {
 	if updateModels == nil {
-
 		return fmt.Errorf("nothing to update")
 	}
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if updateModels.StoreProvision != nil && updateModels.StoreProvision.ID != 0 {
-			err := tx.Save(updateModels.StoreProvision).Error
-			if err != nil {
-				return err
-			}
-		}
+		sp := updateModels.StoreProvision
+		multiplier := updateModels.StoreProvisionIngredientsMultiplier
 
-		if updateModels.StoreProvisionIngredientsMultiplier != nil && *updateModels.StoreProvisionIngredientsMultiplier != 1 {
-			err := r.updateStoreProvisionIngredients(
-				tx, updateModels.StoreProvision.StoreID, updateModels.StoreProvision.ID, *updateModels.StoreProvisionIngredientsMultiplier,
-			)
-			if err != nil {
-				return err
+		if sp != nil && sp.ID != 0 && sp.StoreID != 0 {
+			if err := tx.Save(sp).Error; err != nil {
+				return fmt.Errorf("failed to save store provision: %w", err)
+			}
+
+			if multiplier != nil && *multiplier != 1 {
+				if err := r.updateStoreProvisionIngredients(tx, sp.StoreID, sp.ID, *multiplier); err != nil {
+					return fmt.Errorf("failed to update ingredients: %w", err)
+				}
 			}
 		}
 
@@ -180,24 +178,17 @@ func (r *storeProvisionRepository) SaveStoreProvision(storeProvision *data.Store
 	return nil
 }
 
-func (r *storeProvisionRepository) DeleteStoreProvision(storeID, storeProvisionID uint) (*data.StoreProvision, error) {
-	var sp data.StoreProvision
-
+func (r *storeProvisionRepository) DeleteStoreProvision(storeProvisionID uint) error {
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("id = ? AND store_id = ?", storeProvisionID, storeID).
-			First(&sp).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return types.ErrStoreProvisionNotFound
-			}
-			return err
-		}
-
-		if err := tx.Where("store_provision_id = ?", storeProvisionID).
+		if err := tx.Unscoped().
+			Where("store_provision_id = ?", storeProvisionID).
 			Delete(&data.StoreProvisionIngredient{}).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Delete(&sp).Error; err != nil {
+		if err := tx.Unscoped().
+			Where("id = ?", storeProvisionID).
+			Delete(&data.StoreProvision{}).Error; err != nil {
 			return err
 		}
 
@@ -205,10 +196,10 @@ func (r *storeProvisionRepository) DeleteStoreProvision(storeID, storeProvisionI
 	})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &sp, nil
+	return nil
 }
 
 func (r *storeProvisionRepository) CountStoreProvisionsToday(storeID, provisionID uint) (uint, error) {

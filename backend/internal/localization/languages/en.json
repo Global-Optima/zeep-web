@@ -410,6 +410,7 @@
     "409-storeProvision-limit": "The store provision limit has been reached.",
     "409-storeProvision-completed": "The store provision has already been completed.",
     "409-storeProvision-ingredientsMismatch": "Ingredients in the store provision do not match the expected ones.",
+    "409-storeProvision-notExpired": "The store provision has not yet expired.",
     "404-storeProvision": "Store provision not found.",
     "400-storeProvision": "Invalid data for the store provision. Please check and try again.",
     "201-storeProvision": "Store provision created successfully.",

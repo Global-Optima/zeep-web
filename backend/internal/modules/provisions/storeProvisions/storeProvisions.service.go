@@ -150,11 +150,23 @@ func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID
 }
 
 func (s *storeProvisionService) DeleteStoreProvision(storeID, storeProvisionID uint) (*types.StoreProvisionDTO, error) {
-	deleted, err := s.repo.DeleteStoreProvision(storeID, storeProvisionID)
+	storeProvision, err := s.repo.GetStoreProvisionByID(storeID, storeProvisionID)
+	if err != nil {
+		wrapped := fmt.Errorf("failed to get store provision by ID %d: %w", storeProvisionID, err)
+		s.logger.Error(wrapped)
+		return nil, wrapped
+	}
+
+	if storeProvision.Status != data.PROVISION_STATUS_EXPIRED {
+		wrapped := fmt.Errorf("failed to delete store provision by ID %d: %w", storeProvisionID, types.ErrStoreProvisionNotExpired)
+		return nil, wrapped
+	}
+
+	err = s.repo.DeleteStoreProvision(storeProvisionID)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to delete store provision: %w", err)
 		s.logger.Error(wrapped)
 		return nil, wrapped
 	}
-	return types.MapToStoreProvisionDTO(deleted), nil
+	return types.MapToStoreProvisionDTO(storeProvision), nil
 }

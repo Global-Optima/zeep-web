@@ -420,12 +420,12 @@ func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler) 
 func (r *Router) RegisterStoreProvisionsRoutes(handler *storeProvisions.StoreProvisionHandler) {
 	router := r.EmployeeRoutes.Group("/store-provisions")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(), handler.GetStoreProvisions)
-		router.GET("/:id", middleware.EmployeeRoleMiddleware(), handler.GetStoreProvisionByID)
-		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStoreProvision)
-		router.POST("/:id/complete", middleware.EmployeeRoleMiddleware(), handler.CompleteStoreProvisionByID)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStoreProvisionByID)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStoreProvisionByID)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStoreProvisions)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStoreProvisionByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateStoreProvision)
+		router.POST("/:id/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteStoreProvisionByID)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.UpdateStoreProvisionByID)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.DeleteStoreProvisionByID)
 	}
 }
 

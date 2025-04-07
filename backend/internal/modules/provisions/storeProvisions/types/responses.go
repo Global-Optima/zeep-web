@@ -13,6 +13,7 @@ var (
 	Response409StoreProvisionLimit               = localization.NewResponseKey(409, data.StoreProvisionComponent, "LIMIT")
 	Response409StoreProvisionCompleted           = localization.NewResponseKey(409, data.StoreProvisionComponent, "COMPLETED")
 	Response409StoreProvisionIngredientsMismatch = localization.NewResponseKey(409, data.StoreProvisionComponent, "INGREDIENTS_MISMATCH")
+	Response409StoreProvisionNotExpired          = localization.NewResponseKey(409, data.StoreProvisionComponent, "NOT_EXPIRED")
 	Response404StoreProvision                    = localization.NewResponseKey(404, data.StoreProvisionComponent)
 	Response400StoreProvision                    = localization.NewResponseKey(400, data.StoreProvisionComponent)
 	Response201StoreProvision                    = localization.NewResponseKey(201, data.StoreProvisionComponent)

@@ -409,6 +409,7 @@
 		"409-storeProvision-limit": "Превышен лимит заготовок кафе.",
 		"409-storeProvision-completed": "Заготовка кафе завершена.",
 		"409-storeProvision-ingredientsMismatch": "Не совпадают ингредиенты заготовки кафе.",
+		"409-storeProvision-notExpired": "Заготовка кафе еще не просрочена.",
 		"404-storeProvision": "Заготовка кафе не найдена.",
 		"400-storeProvision": "Неверные данные для заготовки кафе. Пожалуйста, проверьте и попробуйте снова.",
 		"201-storeProvision": "Заготовка кафе успешно создана.",

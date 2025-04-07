@@ -246,6 +246,14 @@ func (h *StoreProvisionHandler) DeleteStoreProvisionByID(c *gin.Context) {
 
 	storeProvision, err := h.service.DeleteStoreProvision(storeID, storeProvisionID)
 	if err != nil {
+		switch {
+		case errors.Is(err, types.ErrStoreProvisionNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response404StoreProvision)
+			return
+		case errors.Is(err, types.ErrStoreProvisionNotExpired):
+			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionNotExpired)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProvisionDelete)
 		return
 	}
