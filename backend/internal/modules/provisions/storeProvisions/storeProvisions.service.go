@@ -131,6 +131,11 @@ func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID
 		return nil, wrapped
 	}
 
+	if provision.Status != data.PROVISION_STATUS_PREPARING {
+		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionAlreadyCompleted)
+		return nil, wrapped
+	}
+
 	provision.Status = data.PROVISION_STATUS_COMPLETED
 
 	currentTime := time.Now().UTC()
