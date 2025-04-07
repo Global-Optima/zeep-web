@@ -2321,9 +2321,8 @@ VALUES
     (1, 2, '222222222222', 30, '2025-06-05', 2.50),  -- Sugar Delivery
     (2, 3, '333333333333', 40, '2025-11-20', 3.75),  -- Chocolate Delivery
     (3, 4, '444444444444', 20, '2026-06-10', 4.25),  -- Cinnamon Delivery
-    (3, 5, '555555555555', 15, '2027-12-15', 5.00);  -- Another product
+    (3, 5, '555555555555', 15, '2027-12-15', 5.00);  -- Vanilla Delivery
 
--- Vanilla Delivery
 -- Insert mock data into supplier_materials
 INSERT INTO
     supplier_materials (
