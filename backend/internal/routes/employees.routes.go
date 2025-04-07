@@ -409,8 +409,8 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler) {
 	router := r.EmployeeRoutes.Group("/provisions")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(), handler.GetProvisions)
-		router.GET("/:id", middleware.EmployeeRoleMiddleware(), handler.GetProvisionByID)
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetProvisions)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetProvisionByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProvision)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProvisionByID)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProvisionByID)
