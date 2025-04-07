@@ -167,8 +167,7 @@ func (r *storeProvisionRepository) SaveStoreProvision(storeProvision *data.Store
 		return fmt.Errorf("invalid store provision model")
 	}
 
-	err := r.db.Model(&data.StoreProvision{}).
-		Save(storeProvision).Error
+	err := r.db.Save(storeProvision).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

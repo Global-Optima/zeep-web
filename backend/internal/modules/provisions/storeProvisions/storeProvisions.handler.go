@@ -52,7 +52,7 @@ func (h *StoreProvisionHandler) CreateStoreProvision(c *gin.Context) {
 		return
 	}
 
-	storeProvision, err := h.service.CreateStoreProvision(0, &dto)
+	storeProvision, err := h.service.CreateStoreProvision(storeID, &dto)
 	if err != nil {
 		switch {
 		case errors.Is(err, provisionsTypes.ErrProvisionNotFound):
