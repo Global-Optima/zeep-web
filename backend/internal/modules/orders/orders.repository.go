@@ -176,7 +176,7 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 
 	query := r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
-		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Order("created_at DESC")
 
@@ -240,7 +240,7 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 
 	// Base query with preloads and business logic
 	query := r.db.
-		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Where("store_id = ?", *filter.StoreID).
@@ -293,9 +293,9 @@ func getTimeZoneLocation(filter types.OrdersTimeZoneFilter) (*time.Location, err
 
 func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 	var order data.Order
-	err := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
-		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
+	err := r.db.Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Store").
 		Where("id = ?", orderId).
 		First(&order).Error

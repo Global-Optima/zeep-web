@@ -53,6 +53,7 @@ export interface WarehouseDeliveryStockMaterialDTO {
 	stockMaterial: StockMaterialsDTO
 	quantity: number
 	barcode: string
+	price: number
 	expirationDate: Date
 }
 
@@ -64,6 +65,7 @@ export interface ReceiveWarehouseDelivery {
 export interface ReceiveWarehouseStockMaterial {
 	stockMaterialId: number
 	quantity: number
+	price: number
 }
 
 export interface WarehouseDeliveryFilter extends PaginationParams {

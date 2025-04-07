@@ -333,10 +333,10 @@ func (s *orderService) CheckAndAccumulateSuborders(
 		sps, err := s.storeProductRepo.GetSufficientStoreProductSizeById(storeID, sub.StoreProductSizeID, frozenMap)
 		if err != nil {
 			s.logger.Error(fmt.Errorf(
-				"insufficient stock for store product size %d: %w",
+				"error occured while trying to get sufficient store product size %d: %w",
 				sub.StoreProductSizeID, err,
 			))
-			return types.ErrInsufficientStock
+			return err
 		}
 
 		// If success, we 'freeze' that usage. We add the usage from the product size to the frozenMap.
@@ -349,10 +349,10 @@ func (s *orderService) CheckAndAccumulateSuborders(
 			sa, err := s.storeAdditiveRepo.GetSufficientStoreAdditiveByID(storeID, addID, frozenMap)
 			if err != nil {
 				s.logger.Error(fmt.Errorf(
-					"insufficient stock for store additive %d: %w",
+					"error occured while trying to get sufficient store additive %d: %w",
 					addID, err,
 				))
-				return types.ErrInsufficientStock
+				return err
 			}
 			// freeze additive usage
 			for _, ingrUsage := range sa.Additive.Ingredients {

@@ -1,6 +1,7 @@
 package regions
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -63,7 +64,11 @@ func (h *RegionHandler) UpdateRegion(c *gin.Context) {
 
 	region, err := h.service.GetRegionByID(uint(regionID))
 	if err != nil {
-		localization.SendLocalizedResponseWithKey(c, types.Response404Region)
+		if errors.Is(err, types.ErrRegionNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Region)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500RegionGet)
 		return
 	}
 
@@ -95,6 +100,10 @@ func (h *RegionHandler) DeleteRegion(c *gin.Context) {
 
 	region, err := h.service.GetRegionByID(uint(regionID))
 	if err != nil {
+		if errors.Is(err, types.ErrRegionNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Region)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response404Region)
 		return
 	}
@@ -126,6 +135,10 @@ func (h *RegionHandler) GetRegionByID(c *gin.Context) {
 
 	region, err := h.service.GetRegionByID(uint(regionID))
 	if err != nil {
+		if errors.Is(err, types.ErrRegionNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Region)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500RegionGet)
 		return
 	}

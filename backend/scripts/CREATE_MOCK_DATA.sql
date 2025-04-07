@@ -115,44 +115,50 @@ VALUES
 
 -- Insert into ProductCategory
 INSERT INTO
-    product_categories (name, description)
+    product_categories (name, description, machine_category)
 VALUES
-    ('Напитки', 'Различные виды напитков'),
-    ('Кофе', 'Горячие кофейные напитки'),
-    ('Чай', 'Различные виды чая'),
-    ('Смузи', 'Фруктовые и овощные смузи'),
-    ('Соки', 'Свежевыжатые соки и напитки'),
+    ('Напитки', 'Различные виды напитков', 'TEA'),
+    ('Кофе', 'Горячие кофейные напитки', 'TEA'),
+    ('Чай', 'Различные виды чая', 'TEA'),
+    ('Смузи', 'Фруктовые и овощные смузи', 'OTHERS'),
+    ('Соки', 'Свежевыжатые соки и напитки', 'OTHERS'),
     (
         'Коктейли',
-        'Алкогольные и безалкогольные коктейли'
+        'Алкогольные и безалкогольные коктейли',
+        'OTHERS'
     ),
     (
         'Газированные напитки',
-        'Прохладительные газированные напитки'
+        'Прохладительные газированные напитки',
+        'OTHERS'
     ),
     (
         'Энергетические напитки',
-        'Напитки для повышения энергии'
+        'Напитки для повышения энергии',
+        'OTHERS'
     ),
     (
         'Молочные коктейли',
-        'Коктейли на основе молока и сливок'
+        'Коктейли на основе молока и сливок',
+        'OTHERS'
     ),
     (
         'Минеральная вода',
-        'Природная и газированная минеральная вода'
+        'Природная и газированная минеральная вода',
+        'OTHERS'
     ),
-    ('Фраппе', 'Кофейные напитки со льдом'),
-    ('Травяные чаи', 'Настои и чаи на травах'),
+    ('Фраппе', 'Кофейные напитки со льдом', 'COFFEE'),
+    ('Травяные чаи', 'Настои и чаи на травах', 'TEA'),
     (
         'Круассаны',
-        'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе'
+        'Свежая выпечка с хрустящей корочкой и разнообразной начинкой — идеально к кофе',
+        'OTHERS'
     ),
     (
         'Тестовые продукты',
-        'Продукты для тестирования функционала QR-кодов'
+        'Продукты для тестирования функционала QR-кодов',
+        'OTHERS'
     );
-
 
 -- Insert into AdditiveCategory
 INSERT INTO
@@ -1158,7 +1164,17 @@ VALUES
     ('Мед', 304, 0, 82, 0, 365, 2, 3, true), -- Грамм
     ('Ваниль', 288, 12, 55, 0, 730, 2, 4, true), -- Грамм
     ('Орехи', 607, 54, 18, 20, 365, 2, 5, true), -- Грамм
-    ('Кокосовое молоко', 230, 23, 6, 2, 120, 3, 1, false), -- Литр
+    (
+        'Кокосовое молоко',
+        230,
+        23,
+        6,
+        2,
+        120,
+        3,
+        1,
+        false
+    ), -- Литр
     ('Яблоки', 52, 0.2, 14, 0.3, 14, 1, 2, false), -- Килограмм
     ('Бананы', 96, 0.3, 27, 1.3, 7, 1, 2, false), -- Килограмм
     ('Сливки', 195, 20, 3, 2, 10, 3, 1, false), -- Литр (исправлено)
@@ -1210,146 +1226,166 @@ FROM
 WHERE
     ai.id IS NULL;
 
-
 -- =============================================
 -- 1) INSERT THE 21 NEW TEST PRODUCTS
 --    (All in category_id=14 = "Тестовые продукты")
 -- =============================================
-INSERT INTO products (
-    name,
-    description,
-    image_key,
-    video_key,
-    category_id
-)
+INSERT INTO
+    products (
+        name,
+        description,
+        image_key,
+        video_key,
+        category_id
+    )
 VALUES
-    ('Zeep Grape',
-     'Тестовый продукт: виноградный вкус',
-     'https://example.com/img/zeep_grape.png',
-     NULL,
-     14
+    (
+        'Zeep Grape',
+        'Тестовый продукт: виноградный вкус',
+        'https://example.com/img/zeep_grape.png',
+        NULL,
+        14
     ),
-    ('Zeep Light Grape',
-     'Тестовый продукт: легкий виноградный вкус',
-     'https://example.com/img/zeep_light_grape.png',
-     NULL,
-     14
+    (
+        'Zeep Light Grape',
+        'Тестовый продукт: легкий виноградный вкус',
+        'https://example.com/img/zeep_light_grape.png',
+        NULL,
+        14
     ),
-    ('Zeep Shine Muskat',
-     'Тестовый продукт: мускатный аромат',
-     'https://example.com/img/zeep_shine_muskat.png',
-     NULL,
-     14
+    (
+        'Zeep Shine Muskat',
+        'Тестовый продукт: мускатный аромат',
+        'https://example.com/img/zeep_shine_muskat.png',
+        NULL,
+        14
     ),
-    ('Zeep Mango',
-     'Тестовый продукт: манговый вкус',
-     'https://example.com/img/zeep_mango.png',
-     NULL,
-     14
+    (
+        'Zeep Mango',
+        'Тестовый продукт: манговый вкус',
+        'https://example.com/img/zeep_mango.png',
+        NULL,
+        14
     ),
-    ('Pulpy Grape Tea',
-     'Тестовый продукт: чай с виноградной мякотью',
-     'https://example.com/img/pulpy_grape_tea.png',
-     NULL,
-     14
+    (
+        'Pulpy Grape Tea',
+        'Тестовый продукт: чай с виноградной мякотью',
+        'https://example.com/img/pulpy_grape_tea.png',
+        NULL,
+        14
     ),
-    ('Pulpy Coco-Mango Tea',
-     'Тестовый продукт: чай с кокосом и манго',
-     'https://example.com/img/pulpy_coco_mango.png',
-     NULL,
-     14
+    (
+        'Pulpy Coco-Mango Tea',
+        'Тестовый продукт: чай с кокосом и манго',
+        'https://example.com/img/pulpy_coco_mango.png',
+        NULL,
+        14
     ),
-    ('Pulpy Mango Saga Tea',
-     'Тестовый продукт: манговый чай с мякотью',
-     'https://example.com/img/pulpy_mango_saga.png',
-     NULL,
-     14
+    (
+        'Pulpy Mango Saga Tea',
+        'Тестовый продукт: манговый чай с мякотью',
+        'https://example.com/img/pulpy_mango_saga.png',
+        NULL,
+        14
     ),
-    ('Pulpy Super Mango Tea',
-     'Тестовый продукт: интенсивный манговый вкус',
-     'https://example.com/img/pulpy_super_mango.png',
-     NULL,
-     14
+    (
+        'Pulpy Super Mango Tea',
+        'Тестовый продукт: интенсивный манговый вкус',
+        'https://example.com/img/pulpy_super_mango.png',
+        NULL,
+        14
     ),
-    ('Pulpy Shine Muscat Tea',
-     'Тестовый продукт: Shine Muscat чай с мякотью',
-     'https://example.com/img/pulpy_shine_muscat.png',
-     NULL,
-     14
+    (
+        'Pulpy Shine Muscat Tea',
+        'Тестовый продукт: Shine Muscat чай с мякотью',
+        'https://example.com/img/pulpy_shine_muscat.png',
+        NULL,
+        14
     ),
-    ('Passion Green Tea',
-     'Тестовый продукт: зеленый чай с маракуйей',
-     'https://example.com/img/passion_green_tea.png',
-     NULL,
-     14
+    (
+        'Passion Green Tea',
+        'Тестовый продукт: зеленый чай с маракуйей',
+        'https://example.com/img/passion_green_tea.png',
+        NULL,
+        14
     ),
-    ('Mango Passion Tea',
-     'Тестовый продукт: чай с манго и маракуйей',
-     'https://example.com/img/mango_passion_tea.png',
-     NULL,
-     14
+    (
+        'Mango Passion Tea',
+        'Тестовый продукт: чай с манго и маракуйей',
+        'https://example.com/img/mango_passion_tea.png',
+        NULL,
+        14
     ),
-    ('Ruby Grapefruit Tea',
-     'Тестовый продукт: чай с красным грейпфрутом',
-     'https://example.com/img/ruby_grapefruit_tea.png',
-     NULL,
-     14
+    (
+        'Ruby Grapefruit Tea',
+        'Тестовый продукт: чай с красным грейпфрутом',
+        'https://example.com/img/ruby_grapefruit_tea.png',
+        NULL,
+        14
     ),
-    ('Duck Citrus Lemon Tea',
-     'Тестовый продукт: чай с лимоном и цитрусами',
-     'https://example.com/img/duck_citrus_lemon.png',
-     NULL,
-     14
+    (
+        'Duck Citrus Lemon Tea',
+        'Тестовый продукт: чай с лимоном и цитрусами',
+        'https://example.com/img/duck_citrus_lemon.png',
+        NULL,
+        14
     ),
-    ('Lemon Tea',
-     'Тестовый продукт: классический чай с лимоном',
-     'https://example.com/img/lemon_tea.png',
-     NULL,
-     14
+    (
+        'Lemon Tea',
+        'Тестовый продукт: классический чай с лимоном',
+        'https://example.com/img/lemon_tea.png',
+        NULL,
+        14
     ),
-    ('Cheesy Matcha',
-     'Тестовый продукт: матча с сырной шапкой',
-     'https://example.com/img/cheesy_matcha.png',
-     NULL,
-     14
+    (
+        'Cheesy Matcha',
+        'Тестовый продукт: матча с сырной шапкой',
+        'https://example.com/img/cheesy_matcha.png',
+        NULL,
+        14
     ),
-    ('Matcha Milk Pudding',
-     'Тестовый продукт: матча с молочным пудингом',
-     'https://example.com/img/matcha_milk_pudding.png',
-     NULL,
-     14
+    (
+        'Matcha Milk Pudding',
+        'Тестовый продукт: матча с молочным пудингом',
+        'https://example.com/img/matcha_milk_pudding.png',
+        NULL,
+        14
     ),
-    ('Milk Ceylon Tea',
-     'Тестовый продукт: Цейлонский чай с молоком',
-     'https://example.com/img/milk_ceylon.png',
-     NULL,
-     14
+    (
+        'Milk Ceylon Tea',
+        'Тестовый продукт: Цейлонский чай с молоком',
+        'https://example.com/img/milk_ceylon.png',
+        NULL,
+        14
     ),
-    ('Milk Tapioca Tea',
-     'Тестовый продукт: молочный чай с тапиокой',
-     'https://example.com/img/milk_tapioca.png',
-     NULL,
-     14
+    (
+        'Milk Tapioca Tea',
+        'Тестовый продукт: молочный чай с тапиокой',
+        'https://example.com/img/milk_tapioca.png',
+        NULL,
+        14
     ),
-    ('Tapioca&Milk Pudding',
-     'Тестовый продукт: чай с тапиокой и пудингом',
-     'https://example.com/img/tapioca_milk_pudding.png',
-     NULL,
-     14
+    (
+        'Tapioca&Milk Pudding',
+        'Тестовый продукт: чай с тапиокой и пудингом',
+        'https://example.com/img/tapioca_milk_pudding.png',
+        NULL,
+        14
     ),
-    ('Black Sugar Milk',
-     'Тестовый продукт: молоко с чёрным сахаром',
-     'https://example.com/img/black_sugar_milk.png',
-     NULL,
-     14
+    (
+        'Black Sugar Milk',
+        'Тестовый продукт: молоко с чёрным сахаром',
+        'https://example.com/img/black_sugar_milk.png',
+        NULL,
+        14
     ),
-    ('OREO CREME BRULEE',
-     'Тестовый продукт: крем-брюле со вкусом Oreo',
-     'https://example.com/img/oreo_creme_brulee.png',
-     NULL,
-     14
+    (
+        'OREO CREME BRULEE',
+        'Тестовый продукт: крем-брюле со вкусом Oreo',
+        'https://example.com/img/oreo_creme_brulee.png',
+        NULL,
+        14
     );
-
 
 -- =============================================
 -- 2) INSERT PRODUCT_SIZES FOR THOSE 21 NEW ITEMS
@@ -1358,79 +1394,58 @@ VALUES
 --          new products are assigned IDs 23..43.
 --          Adjust if needed based on your DB.
 -- =============================================
-
-INSERT INTO product_sizes (
-    name,
-    unit_id,
-    base_price,
-    size,
-    product_id,
-    machine_id
-)
+INSERT INTO
+    product_sizes (
+        name,
+        unit_id,
+        base_price,
+        size,
+        product_id,
+        machine_id
+    )
 VALUES
     -- Zeep Grape (product_id = 23?)
     ('S', 4, 1300.00, 300, 23, 'ZG0001'),
-
     -- Zeep Light Grape (product_id = 24?)
     ('S', 4, 1400.00, 300, 24, 'ZLG002'),
-
     -- Zeep Shine Muskat (25?)
     ('S', 4, 1500.00, 300, 25, 'ZSM003'),
-
     -- Zeep Mango (26?)
     ('S', 4, 1400.00, 300, 26, 'ZM0004'),
-
     -- Pulpy Grape Tea (27?)
     ('S', 4, 1300.00, 300, 27, 'PGT005'),
-
     -- Pulpy Coco-Mango Tea (28?)
     ('S', 4, 1350.00, 300, 28, 'PCMT06'),
-
     -- Pulpy Mango Saga Tea (29?)
     ('S', 4, 1400.00, 300, 29, 'PMST07'),
-
     -- Pulpy Super Mango Tea (30?)
     ('S', 4, 1450.00, 300, 30, 'PSMT08'),
-
     -- Pulpy Shine Muscat Tea (31?)
     ('S', 4, 1450.00, 300, 31, 'PSMT09'),
-
     -- Passion Green Tea (32?)
     ('S', 4, 1300.00, 300, 32, 'PGT010'),
-
     -- Mango Passion Tea (33?)
     ('S', 4, 1400.00, 300, 33, 'MPT011'),
-
     -- Ruby Grapefruit Tea (34?)
     ('S', 4, 1500.00, 300, 34, 'RGT012'),
-
     -- Duck Citrus Lemon Tea (35?)
     ('S', 4, 1300.00, 300, 35, 'DCLT13'),
-
     -- Lemon Tea (36?)
     ('S', 4, 1200.00, 300, 36, 'LT0014'),
-
     -- Cheesy Matcha (37?)
     ('S', 4, 1800.00, 300, 37, 'CM0015'),
-
     -- Matcha Milk Pudding (38?)
     ('S', 4, 1800.00, 300, 38, 'MMP016'),
-
     -- Milk Ceylon Tea (39?)
     ('S', 4, 1300.00, 300, 39, 'MCT017'),
-
     -- Milk Tapioca Tea (40?)
     ('S', 4, 1600.00, 300, 40, 'MTT018'),
-
     -- Tapioca&Milk Pudding (41?)
     ('S', 4, 1700.00, 300, 41, 'TMP019'),
-
     -- Black Sugar Milk (42?)
     ('S', 4, 1800.00, 300, 42, 'BSM020'),
-
     -- OREO CREME BRULEE (43?)
     ('S', 4, 2000.00, 300, 43, 'OCM021');
-
 
 -- Орехи и семена
 -- Insert into ProductIngredients
@@ -2292,21 +2307,21 @@ VALUES
     );
 
 -- Delivery 3
--- Insert into supplier_warehouse_delivery_materials
-INSERT INTO
-    supplier_warehouse_delivery_materials (
-        delivery_id,
-        stock_material_id,
-        barcode,
-        quantity,
-        expiration_date
-    )
+-- Insert into supplier_warehouse_delivery_materials with prices
+INSERT INTO supplier_warehouse_delivery_materials (
+    delivery_id,
+    stock_material_id,
+    barcode,
+    quantity,
+    expiration_date,
+    price
+)
 VALUES
-    (1, 1, '111111111111', 50, '2026-12-01'), -- Milk Delivery
-    (1, 2, '222222222222', 30, '2025-06-05'), -- Sugar Delivery
-    (2, 3, '333333333333', 40, '2025-11-20'), -- Chocolate Delivery
-    (3, 4, '444444444444', 20, '2026-06-10'), -- Cinnamon Delivery
-    (3, 5, '555555555555', 15, '2027-12-15');
+    (1, 1, '111111111111', 50, '2026-12-01', 1.99),  -- Milk Delivery
+    (1, 2, '222222222222', 30, '2025-06-05', 2.50),  -- Sugar Delivery
+    (2, 3, '333333333333', 40, '2025-11-20', 3.75),  -- Chocolate Delivery
+    (3, 4, '444444444444', 20, '2026-06-10', 4.25),  -- Cinnamon Delivery
+    (3, 5, '555555555555', 15, '2027-12-15', 5.00);  -- Another product
 
 -- Vanilla Delivery
 -- Insert mock data into supplier_materials

@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit/shared"
@@ -61,8 +60,8 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 	productDetails, err := h.service.GetStoreProductById(uint(storeProductID), filter)
 	if err != nil {
 		switch {
-		case errors.Is(err, moduleErrors.ErrNotFound):
-			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+		case errors.Is(err, types.ErrStoreProductNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response404StoreProduct)
 			return
 		default:
 			localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
@@ -326,6 +325,10 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.GetStoreProductById(uint(storeProductID), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
+		if errors.Is(err, types.ErrStoreProductNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StoreProduct)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
@@ -366,8 +369,8 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 	existingProduct, err := h.service.GetStoreProductById(uint(storeProductID), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		switch {
-		case errors.Is(err, moduleErrors.ErrNotFound):
-			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+		case errors.Is(err, types.ErrStoreProductNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response404StoreProduct)
 			return
 		default:
 			localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)

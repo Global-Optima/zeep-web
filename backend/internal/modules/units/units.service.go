@@ -1,7 +1,6 @@
 package units
 
 import (
-	"errors"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -58,9 +57,6 @@ func (s *unitService) GetAll(filter *types.UnitFilter) ([]types.UnitsDTO, error)
 func (s *unitService) GetByID(id uint) (*types.UnitsDTO, error) {
 	unit, err := s.repo.GetByID(id)
 	if err != nil {
-		if errors.Is(err, types.ErrUnitNotFound) {
-			return nil, err
-		}
 		wrappedErr := fmt.Errorf("failed to get unit: %w", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr

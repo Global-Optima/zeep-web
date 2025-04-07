@@ -89,11 +89,11 @@ func TestRegionEndpoints(t *testing.T) {
 				ExpectedCode: http.StatusForbidden,
 			},
 			{
-				Description:  "Should return 500 for non-existent region", // 404 not shown, using 500 instead
+				Description:  "Should return 404 for non-existent region", // 404 not shown, using 500 instead
 				Method:       http.MethodGet,
 				URL:          "/api/test/regions/9999",
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusInternalServerError,
+				ExpectedCode: http.StatusNotFound,
 			},
 		}
 		env.RunTests(t, testCases)

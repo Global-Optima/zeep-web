@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/core/components/ui/input'
 import type { StockMaterialCategoryDTO, StockMaterialCategoryFilterDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
 import { stockMaterialCategoryService } from '@/modules/admin/stock-material-categories/services/stock-materials.service'
-import type { ProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { useQuery } from '@tanstack/vue-query'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
@@ -48,8 +47,8 @@ function loadMore() {
   }
 }
 
-function selectCategory(productCategory: ProductCategoryDTO) {
-  emit('select', productCategory)
+function selectCategory(category: StockMaterialCategoryDTO) {
+  emit('select', category)
   onClose()
 }
 

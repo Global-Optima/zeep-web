@@ -85,6 +85,7 @@ func (s *warehouseStockService) ReceiveInventory(warehouseID uint, req types.Rec
 			StockMaterialID: material.StockMaterialID,
 			Barcode:         stockMaterial.Barcode,
 			Quantity:        material.Quantity,
+			Price:           material.Price,
 			ExpirationDate:  time.Now().AddDate(0, 0, stockMaterial.ExpirationPeriodInDays),
 		}
 	}
@@ -211,7 +212,7 @@ func (s *warehouseStockService) UpdateStock(warehouseID, stockMaterialID uint, d
 
 func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock data.WarehouseStock) error {
 	// Check for low stock notification
-	if stock.Quantity < stock.StockMaterial.SafetyStock {
+	if stock.Quantity <= stock.StockMaterial.SafetyStock {
 		details := &details.OutOfStockDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           warehouseID,
@@ -251,7 +252,7 @@ func (s *warehouseStockService) CheckStockNotifications(warehouseID uint, stock 
 }
 
 func (s *warehouseStockService) checkStockAndNotify(stock *data.WarehouseStock) error {
-	if stock.Quantity < stock.StockMaterial.SafetyStock {
+	if stock.Quantity <= stock.StockMaterial.SafetyStock {
 		details := &details.OutOfStockDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{
 				ID:           stock.WarehouseID,

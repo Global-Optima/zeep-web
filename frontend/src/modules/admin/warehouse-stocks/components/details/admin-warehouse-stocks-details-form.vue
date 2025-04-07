@@ -60,7 +60,7 @@ const {print} = usePrinter()
 const onPrintBarcode = async () => {
   if (props.readonly) return
   const blob = await stockMaterialsService.getStockMaterialsBarcodeFile(props.initialData.stockMaterial.id);
-  await print(blob)
+  await print(blob, {saveOnPrint: false})
 }
 
 // Date Formatter Utility
