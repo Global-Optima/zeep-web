@@ -116,11 +116,33 @@ type ProductSizeAdditive struct {
 	Additive      Additive    `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 }
 
+type MachineCategory string
+
+const (
+	TEA       MachineCategory = "TEA"
+	COFFEE    MachineCategory = "COFFEE"
+	ICE_CREAM MachineCategory = "ICE_CREAM"
+	OTHERS    MachineCategory = "OTHERS"
+)
+
+func (m MachineCategory) ToString() string {
+	return string(m)
+}
+
+func IsValidMachineCategory(m MachineCategory) bool {
+	switch m {
+	case TEA, COFFEE, ICE_CREAM:
+		return true
+	}
+	return false
+}
+
 type ProductCategory struct {
 	BaseEntity
-	Name        string    `gorm:"size:100;not null" sort:"name"`
-	Description string    `gorm:"type:text"`
-	Products    []Product `gorm:"foreignKey:CategoryID"`
+	Name            string          `gorm:"size:100;not null" sort:"name"`
+	Description     string          `gorm:"type:text"`
+	MachineCategory MachineCategory `gorm:"type:varchar(20);not null"`
+	Products        []Product       `gorm:"foreignKey:CategoryID"`
 }
 
 type Additive struct {

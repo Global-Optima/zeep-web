@@ -1,11 +1,15 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 type ProductCategoryDTO struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID              uint                 `json:"id"`
+	Name            string               `json:"name"`
+	Description     string               `json:"description"`
+	MachineCategory data.MachineCategory `json:"machineCategory"`
 }
 
 type ProductCategoriesFilterDTO struct {
@@ -14,11 +18,13 @@ type ProductCategoriesFilterDTO struct {
 }
 
 type CreateProductCategoryDTO struct {
-	Name        string  `json:"name" binding:"required,min=2"`
-	Description *string `json:"description" binding:"omitempty"`
+	Name            string               `json:"name" binding:"required,min=2"`
+	Description     *string              `json:"description" binding:"omitempty"`
+	MachineCategory data.MachineCategory `json:"machineCategory" binding:"required,oneof=TEA COFFEE ICE_CREAM"`
 }
 
 type UpdateProductCategoryDTO struct {
-	Name        *string `json:"name,omitempty" binding:"min=2,omitempty"`
-	Description *string `json:"description" binding:"omitempty"`
+	Name            *string              `json:"name,omitempty" binding:"min=2,omitempty"`
+	Description     *string              `json:"description" binding:"omitempty"`
+	MachineCategory *data.MachineCategory `json:"machineCategory,omitempty" binding:"omitempty,oneof=TEA COFFEE ICE_CREAM"`
 }
