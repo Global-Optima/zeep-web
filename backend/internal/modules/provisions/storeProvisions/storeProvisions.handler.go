@@ -69,7 +69,7 @@ func (h *StoreProvisionHandler) CreateStoreProvision(c *gin.Context) {
 	action := types.CreateStoreProvisionAuditFactory(
 		&data.BaseDetails{
 			ID:   storeProvision.ID,
-			Name: storeProvision.Name,
+			Name: storeProvision.Provision.Name,
 		},
 		&dto, storeID)
 
@@ -166,7 +166,7 @@ func (h *StoreProvisionHandler) CompleteStoreProvisionByID(c *gin.Context) {
 	action := types.UpdateStoreProvisionAuditFactory(
 		&data.BaseDetails{
 			ID:   storeProvisionID,
-			Name: storeProvision.Name,
+			Name: storeProvision.Provision.Name,
 		},
 		&types.UpdateStoreProvisionFields{
 			Status: &storeProvision.Status,
@@ -217,7 +217,7 @@ func (h *StoreProvisionHandler) UpdateStoreProvisionByID(c *gin.Context) {
 	action := types.UpdateStoreProvisionAuditFactory(
 		&data.BaseDetails{
 			ID:   storeProvisionID,
-			Name: storeProvision.Name,
+			Name: storeProvision.Provision.Name,
 		},
 		&types.UpdateStoreProvisionFields{
 			UpdateStoreProvisionDTO: &dto,
@@ -253,7 +253,7 @@ func (h *StoreProvisionHandler) DeleteStoreProvisionByID(c *gin.Context) {
 	action := types.DeleteStoreProvisionAuditFactory(
 		&data.BaseDetails{
 			ID:   storeProvisionID,
-			Name: storeProvision.Name,
+			Name: storeProvision.Provision.Name,
 		},
 		nil, storeID)
 

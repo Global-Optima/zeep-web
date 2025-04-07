@@ -16,15 +16,14 @@ type StoreProvisionModels struct {
 
 func MapToStoreProvisionDTO(sp *data.StoreProvision) *StoreProvisionDTO {
 	return &StoreProvisionDTO{
-		ID:                sp.ID,
-		BaseProvisionDTO:  *provisionsTypes.MapToBaseProvisionDTO(&sp.Provision),
-		ProvisionID:       sp.ProvisionID,
-		ExpirationInHours: sp.ExpirationInHours,
-		Volume:            sp.Volume,
-		Status:            sp.Status,
-		CompletedAt:       sp.CompletedAt,
-		ExpiresAt:         sp.ExpiresAt,
-		CreatedAt:         sp.CreatedAt,
+		ID:                  sp.ID,
+		Provision:           *provisionsTypes.MapToProvisionDTO(&sp.Provision),
+		ExpirationInMinutes: sp.ExpirationInMinutes,
+		Volume:              sp.Volume,
+		Status:              sp.Status,
+		CompletedAt:         sp.CompletedAt,
+		ExpiresAt:           sp.ExpiresAt,
+		CreatedAt:           sp.CreatedAt,
 	}
 }
 
@@ -47,7 +46,7 @@ func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO, cen
 	return &data.StoreProvision{
 		ProvisionID:               dto.ProvisionID,
 		Volume:                    dto.Volume,
-		ExpirationInHours:         dto.ExpirationInHours,
+		ExpirationInMinutes:       dto.ExpirationInMinutes,
 		Status:                    data.PROVISION_STATUS_PREPARING,
 		StoreID:                   storeID,
 		StoreProvisionIngredients: mapIngredientsToStoreProvisionIngredients(dto.Volume, centralCatalogProvision),
@@ -72,8 +71,8 @@ func UpdateToStoreProvisionModel(storeProvision *data.StoreProvision, dto *Updat
 			updateModels.StoreProvisionIngredientsMultiplier = &multiplier
 		}
 	}
-	if dto.ExpirationInHours != nil {
-		storeProvision.ExpirationInHours = *dto.ExpirationInHours
+	if dto.ExpirationInMinutes != nil {
+		storeProvision.ExpirationInMinutes = *dto.ExpirationInMinutes
 	}
 
 	return updateModels, nil

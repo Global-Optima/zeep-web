@@ -136,7 +136,7 @@ func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID
 	currentTime := time.Now().UTC()
 	provision.CompletedAt = &currentTime
 
-	expirationTime := currentTime.Add(time.Duration(provision.ExpirationInHours) * time.Hour)
+	expirationTime := currentTime.Add(time.Duration(provision.ExpirationInMinutes) * time.Minute)
 	provision.ExpiresAt = &expirationTime
 
 	err = s.repo.SaveStoreProvision(provision)

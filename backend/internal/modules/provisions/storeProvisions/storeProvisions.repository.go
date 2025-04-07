@@ -132,11 +132,12 @@ func (r *storeProvisionRepository) GetStoreProvisionWithDetailsByID(storeID, sto
 
 func (r *storeProvisionRepository) SaveStoreProvisionWithAssociations(updateModels *types.StoreProvisionModels) error {
 	if updateModels == nil {
+
 		return fmt.Errorf("nothing to update")
 	}
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if updateModels.StoreProvision != nil || updateModels.StoreProvision.ID != 0 {
+		if updateModels.StoreProvision != nil && updateModels.StoreProvision.ID != 0 {
 			err := tx.Save(updateModels.StoreProvision).Error
 			if err != nil {
 				return err
@@ -145,7 +146,7 @@ func (r *storeProvisionRepository) SaveStoreProvisionWithAssociations(updateMode
 
 		if updateModels.StoreProvisionIngredientsMultiplier != nil && *updateModels.StoreProvisionIngredientsMultiplier != 1 {
 			err := r.updateStoreProvisionIngredients(
-				tx, updateModels.StoreProvision.StoreID, updateModels.StoreProvision.StoreID, *updateModels.StoreProvisionIngredientsMultiplier,
+				tx, updateModels.StoreProvision.StoreID, updateModels.StoreProvision.ID, *updateModels.StoreProvisionIngredientsMultiplier,
 			)
 			if err != nil {
 				return err

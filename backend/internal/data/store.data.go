@@ -109,7 +109,7 @@ type StoreProvision struct {
 	Provision                 Provision                  `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
 	Volume                    float64                    `gorm:"type:decimal(10,2);not null;check:volume > 0" sort:"volume"`
 	Status                    StoreProvisionStatus       `gorm:"not null" sort:"status"`
-	ExpirationInHours         int                        `gorm:"not null" sort:"expirationInHours"`
+	ExpirationInMinutes       uint                       `gorm:"not null;check:expiration_in_minutes > 0" sort:"expirationInHours"`
 	StoreProvisionIngredients []StoreProvisionIngredient `gorm:"foreignKey:StoreProvisionID;constraint:OnDelete:CASCADE"`
 	StoreID                   uint                       `gorm:"not null;index"`
 	Store                     Store                      `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
