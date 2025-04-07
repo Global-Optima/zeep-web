@@ -2292,21 +2292,21 @@ VALUES
     );
 
 -- Delivery 3
--- Insert into supplier_warehouse_delivery_materials
-INSERT INTO
-    supplier_warehouse_delivery_materials (
-        delivery_id,
-        stock_material_id,
-        barcode,
-        quantity,
-        expiration_date
-    )
+-- Insert into supplier_warehouse_delivery_materials with prices
+INSERT INTO supplier_warehouse_delivery_materials (
+    delivery_id,
+    stock_material_id,
+    barcode,
+    quantity,
+    expiration_date,
+    price
+)
 VALUES
-    (1, 1, '111111111111', 50, '2026-12-01'), -- Milk Delivery
-    (1, 2, '222222222222', 30, '2025-06-05'), -- Sugar Delivery
-    (2, 3, '333333333333', 40, '2025-11-20'), -- Chocolate Delivery
-    (3, 4, '444444444444', 20, '2026-06-10'), -- Cinnamon Delivery
-    (3, 5, '555555555555', 15, '2027-12-15');
+    (1, 1, '111111111111', 50, '2026-12-01', 1.99),  -- Milk Delivery
+    (1, 2, '222222222222', 30, '2025-06-05', 2.50),  -- Sugar Delivery
+    (2, 3, '333333333333', 40, '2025-11-20', 3.75),  -- Chocolate Delivery
+    (3, 4, '444444444444', 20, '2026-06-10', 4.25),  -- Cinnamon Delivery
+    (3, 5, '555555555555', 15, '2027-12-15', 5.00);  -- Another product
 
 -- Vanilla Delivery
 -- Insert mock data into supplier_materials
