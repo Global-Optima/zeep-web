@@ -11,7 +11,8 @@ import AdminProductSizeCreateForm, { type CreateProductSizeFormSchema } from '@/
 import type {
   CreateProductSizeDTO,
   SelectedAdditiveDTO,
-  SelectedIngredientDTO
+  SelectedIngredientDTO,
+  SelectedProvisionDTO
 } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -37,7 +38,7 @@ const createMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-product-details', productId] })
 		toast({
 			title: 'Успех!',
-variant: 'success',
+      variant: 'success',
 			description: 'Размер продукта успешно создан.',
 		})
 		router.back()
@@ -72,6 +73,11 @@ function handleCreate(data: CreateProductSizeFormSchema) {
     quantity: a.quantity
   }))
 
+  const provisions: SelectedProvisionDTO[] = data.provisions.map(a => ({
+    provisionId: a.provisionId,
+    volume: a.volume
+  }))
+
 	const dto: CreateProductSizeDTO = {
 		productId: Number(productId),
 		name: data.name,
@@ -81,6 +87,7 @@ function handleCreate(data: CreateProductSizeFormSchema) {
     machineId: data.machineId,
 		additives,
 		ingredients,
+    provisions
 	}
 
 	createMutation.mutate(dto)

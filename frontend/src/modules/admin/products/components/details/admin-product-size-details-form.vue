@@ -38,6 +38,8 @@ import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
 import {toast} from "@/core/components/ui/toast";
+import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
+import AdminSelectProvisionDialog from "@/modules/admin/provisions/components/admin-select-provision-dialog.vue"
 
 const AdminSelectAdditiveDialog = defineAsyncComponent(() =>
   import('@/modules/admin/additives/components/admin-select-additive-dialog.vue'))
@@ -65,14 +67,23 @@ interface SelectedIngredientsTypesDTO {
   quantity: number
 }
 
+interface SelectedProvisionsTypesDTO {
+  provisionId: number
+  name: string
+  absoluteVolume: number
+  unit: string
+  volume: number
+}
+
 export interface UpdateProductSizeFormSchema {
   name: ProductSizeNames
   unitId: number
   basePrice: number
   size: number
+  machineId: string
   additives: SelectedAdditiveTypesDTO[]
   ingredients: SelectedIngredientsTypesDTO[]
-  machineId: string
+  provisions: SelectedProvisionsTypesDTO[]
 }
 
 const { productSize, readonly = false } = defineProps<{
@@ -107,6 +118,15 @@ const { handleSubmit, isSubmitting, setFieldValue } = useForm({
   }
 })
 
+const provisions = ref<SelectedProvisionsTypesDTO[]>(productSize.provisions.map(p => ({
+  provisionId: p.provision.id,
+  name: p.provision.name,
+  absoluteVolume: p.provision.absoluteVolume,
+  unit: p.provision.unit.name,
+  volume: p.volume,
+})))
+const openProvisionsDialog = ref(false)
+
 const additives = ref<SelectedAdditiveTypesDTO[]>(productSize.additives.map(a => ({
   additiveId: a.id,
   isDefault: a.isDefault,
@@ -130,6 +150,19 @@ const ingredients = ref<SelectedIngredientsTypesDTO[]>(productSize.ingredients.m
 })))
 
 const openIngredientsDialog = ref(false)
+
+function addProvision(provision: ProvisionDTO) {
+  if (readonly) return
+  if (!provisions.value.some((item) => item.provisionId === provision.id)) {
+    provisions.value.push({
+      provisionId: provision.id,
+      name: provision.name,
+      unit: provision.unit.name,
+      absoluteVolume: provision.absoluteVolume,
+      volume: 0
+    })
+  }
+}
 
 function addAdditive(additive: AdditiveDTO) {
   if (readonly) return
@@ -170,6 +203,11 @@ function removeIngredient(index: number) {
   ingredients.value.splice(index, 1)
 }
 
+function removeProvision(index: number) {
+  if (readonly) return
+  provisions.value.splice(index, 1)
+}
+
 const onSubmit = handleSubmit((formValues) => {
   if (readonly) return
 
@@ -181,10 +219,15 @@ const onSubmit = handleSubmit((formValues) => {
     return toast({ description: "Укажите количество в технологической карте" })
   }
 
+  if (provisions.value.some(i => i.volume <= 0)) {
+    return toast({ description: "Укажите обьем в заготовке" })
+  }
+
   const finalDTO: UpdateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
-    ingredients: ingredients.value
+    ingredients: ingredients.value,
+    provisions: provisions.value
   }
 
   emits('onSubmit', finalDTO)
@@ -535,6 +578,72 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 					</Table>
 				</CardContent>
 			</Card>
+
+			<Card class="mt-4">
+				<CardHeader>
+					<div class="flex justify-between items-start">
+						<div>
+							<CardTitle>Заготовки</CardTitle>
+							<CardDescription
+								v-if="!readonly"
+								class="mt-2"
+							>
+								Выберите заготовки и их обьем
+							</CardDescription>
+						</div>
+						<Button
+							v-if="!readonly"
+							variant="outline"
+							@click="openProvisionsDialog = true"
+						>
+							Добавить
+						</Button>
+					</div>
+				</CardHeader>
+				<CardContent>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Название</TableHead>
+								<TableHead>Изначальный обьем</TableHead>
+								<TableHead>Обьем для продукта</TableHead>
+								<TableHead></TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							<TableRow
+								v-for="(provision, index) in provisions"
+								:key="provision.provisionId"
+							>
+								<TableCell>{{ provision.name }}</TableCell>
+								<TableCell
+									>{{ provision.absoluteVolume }} {{ provision.unit.toLowerCase() }}</TableCell
+								>
+
+								<TableCell class="flex items-center gap-4">
+									<Input
+										type="number"
+										v-model.number="provision.volume"
+										:min="0"
+										class="w-24"
+										placeholder="Введите нужный обьем"
+									/>
+									{{ provision.unit.toLowerCase() }}
+								</TableCell>
+								<TableCell class="text-center">
+									<Button
+										variant="ghost"
+										size="icon"
+										@click="removeProvision(index)"
+									>
+										<Trash class="w-6 h-6 text-red-500" />
+									</Button>
+								</TableCell>
+							</TableRow>
+						</TableBody>
+					</Table>
+				</CardContent>
+			</Card>
 		</div>
 
 		<!-- Dialogs -->
@@ -543,6 +652,12 @@ function onAdditiveDefaultClick(index: number, value: boolean) {
 			:open="openAdditiveDialog"
 			@close="openAdditiveDialog = false"
 			@select="addAdditive"
+		/>
+
+		<AdminSelectProvisionDialog
+			:open="openProvisionsDialog"
+			@close="openProvisionsDialog = false"
+			@select="addProvision"
 		/>
 
 		<AdminIngredientsSelectDialog
