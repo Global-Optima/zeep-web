@@ -126,7 +126,7 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 func CreateToProductModel(dto *CreateProductDTO) *data.Product {
 	product := &data.Product{
 		Name:        dto.Name,
-		Description: *dto.Description,
+		Description: utils.DerefString(dto.Description),
 		CategoryID:  dto.CategoryID,
 	}
 
@@ -225,7 +225,7 @@ func mapAdditivesToProductSizeAdditives(additivesDTO []SelectedAdditiveDTO) []da
 	return additives
 }
 
-func mapIngredientsToProductSizeIngredients(ingredientsDTO []SelectedIngredientDTO) []data.ProductSizeIngredient {
+func mapIngredientsToProductSizeIngredients(ingredientsDTO []ingredientTypes.SelectedIngredientDTO) []data.ProductSizeIngredient {
 	if ingredientsDTO == nil {
 		return nil
 	}

@@ -387,3 +387,10 @@ func DiffSlice[T comparable](all, subset []T) []T {
 	}
 	return diff
 }
+
+func DerefString(s *string) string {
+	if s != nil {
+		return *s
+	}
+	return ""
+}

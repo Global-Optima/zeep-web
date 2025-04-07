@@ -6,6 +6,10 @@ import (
 
 type ProvisionStatus string
 
+func (p ProvisionStatus) ToString() string {
+	return string(p)
+}
+
 const (
 	PROVISION_STATUS_PREPARING ProvisionStatus = "PREPARING"
 	PROVISION_STATUS_COMPLETED ProvisionStatus = "COMPLETED"
@@ -101,12 +105,16 @@ type FacilityAddress struct {
 
 type StoreProvision struct {
 	BaseEntity
-	ProvisionID uint            `gorm:"not null;index"`
-	Provision   Provision       `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
-	Volume      float64         `gorm:"type:decimal(10,2);not null;check:volume > 0" sort:"volume"`
-	Status      ProvisionStatus `gorm:"not null" sort:"status"`
-	CompletedAt time.Time       `gorm:"" sort:"completedAt"`
-	ExpiresAt   time.Time       `gorm:"not null" sort:"expiresAt"`
+	ProvisionID               uint                       `gorm:"not null;index"`
+	Provision                 Provision                  `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
+	Volume                    float64                    `gorm:"type:decimal(10,2);not null;check:volume > 0" sort:"volume"`
+	Status                    ProvisionStatus            `gorm:"not null" sort:"status"`
+	ExpirationInHours         int                        `gorm:"not null" sort:"expirationInHours"`
+	StoreProvisionIngredients []StoreProvisionIngredient `gorm:"foreignKey:StoreProvisionID;constraint:OnDelete:CASCADE"`
+	StoreID                   uint                       `gorm:"not null;index"`
+	Store                     Store                      `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	CompletedAt               *time.Time                 `gorm:"" sort:"completedAt"`
+	ExpiresAt                 *time.Time                 `gorm:"" sort:"expiresAt"`
 }
 
 type StoreProvisionIngredient struct {

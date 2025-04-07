@@ -22,6 +22,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -401,6 +402,17 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 			statusGroup.PATCH("/reject-store", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.RejectStoreStatus)             // Store
 			statusGroup.PATCH("/completed", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SetCompletedStatus)               // Store
 		}
+	}
+}
+
+func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler) {
+	router := r.EmployeeRoutes.Group("/provisions")
+	{
+		router.GET("", middleware.EmployeeRoleMiddleware(), handler.GetProvisions)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(), handler.GetProvisionByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProvision)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProvisionByID)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProvisionByID)
 	}
 }
 

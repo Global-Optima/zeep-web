@@ -46,8 +46,18 @@ type ProductSize struct {
 	DiscountID             uint                    `gorm:"index"`
 	MachineId              string                  `gorm:"size:40;not null;unique" sort:"machineId"`
 	AdditivesUpdatedAt     time.Time               `gorm:"index" sort:"additivesUpdatedAt"`
+	ProvisionsUpdatedAt    time.Time               `gorm:"index" sort:"provisionsUpdatedAt"`
 	Additives              []ProductSizeAdditive   `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
+	ProductSizeProvisions  []ProductSizeProvision  `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
+}
+
+type ProductSizeProvision struct {
+	BaseEntity
+	ProductSizeID uint        `gorm:"index,not null"`
+	ProductSize   ProductSize `gorm:"foreignKey:ProductSizeID;constraint:OnDelete:CASCADE"`
+	ProvisionID   uint        `gorm:"index,not null"`
+	Provision     Provision   `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
 }
 
 type ProductSizeIngredient struct {
@@ -66,6 +76,14 @@ type AdditiveIngredient struct {
 	AdditiveID   uint       `gorm:"index;not null"`
 	Additive     Additive   `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	Quantity     float64    `gorm:"type:decimal(10,2);not null;check:quantity > 0"`
+}
+
+type AdditiveProvision struct {
+	BaseEntity
+	AdditiveID  uint      `gorm:"index,not null"`
+	Additive    Additive  `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
+	ProvisionID uint      `gorm:"index,not null"`
+	Provision   Provision `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
 }
 
 type Ingredient struct {
@@ -104,6 +122,7 @@ type Provision struct {
 	Unit                 Unit                  `gorm:"foreignKey:UnitID;constraint:CASCADE"`
 	PreparationInMinutes uint                  `gorm:"not null" sort:"preparationInMinutes"`
 	LimitPerDay          uint                  `gorm:"not null" sort:"limitPerDay"`
+	IngredientsUpdatedAt time.Time             `gorm:"not null" sort:"ingredientsUpdatedAt"`
 	ProvisionIngredients []ProvisionIngredient `gorm:"foreignKey:ProvisionID"`
 }
 
@@ -146,9 +165,11 @@ type Additive struct {
 	ImageKey             *StorageImageKey      `gorm:"size:2048"`
 	MachineId            string                `gorm:"size:40;not null;unique" sort:"machineId"`
 	IngredientsUpdatedAt time.Time             `gorm:"index" sort:"ingredientsUpdatedAt"`
+	ProvisionsUpdatedAt  time.Time             `gorm:"index" sort:"provisionsUpdatedAt"`
 	ProductSizeAdditives []ProductSizeAdditive `gorm:"foreignKey:AdditiveID;constraint:OnDelete:CASCADE"`
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`
 	Ingredients          []AdditiveIngredient  `gorm:"foreignKey:AdditiveID"`
+	AdditiveProvisions   []AdditiveProvision   `gorm:"foreignKey:AdditiveID"`
 }
 
 type AdditiveCategory struct {
