@@ -1,8 +1,6 @@
 package supplier
 
 import (
-	"errors"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/supplier/types"
 )
@@ -47,9 +45,6 @@ func (s *supplierService) CreateSupplier(dto types.CreateSupplierDTO) (*types.Su
 func (s *supplierService) GetSupplierByID(id uint) (types.SupplierResponse, error) {
 	supplier, err := s.repo.GetSupplierByID(id)
 	if err != nil {
-		if errors.Is(err, types.ErrSupplierNotFound) {
-			return types.SupplierResponse{}, types.ErrSupplierNotFound
-		}
 		return types.SupplierResponse{}, err
 	}
 	return types.ToSupplierResponse(*supplier), nil

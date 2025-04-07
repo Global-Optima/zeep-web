@@ -41,6 +41,7 @@ func NewWarehousesModule(
 	base.Router.RegisterCommonWarehousesRoutes(warehouseHandler)
 
 	warehouseStockCronTasks := scheduler.NewWarehouseStockCronTasks(warehouseRepo, warehouseStockService, warehouseStockRepo, base.Logger)
+
 	err := cronManager.RegisterJob(scheduler.DailyJob, func() {
 		warehouseStockCronTasks.CheckWarehouseStockNotifications()
 	})

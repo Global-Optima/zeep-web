@@ -7,6 +7,7 @@ import (
 
 var (
 	Response500StoreProduct         = localization.NewResponseKey(500, data.StoreProductComponent)
+	Response404StoreProduct         = localization.NewResponseKey(404, data.StoreProductComponent)
 	Response400StoreProduct         = localization.NewResponseKey(400, data.StoreProductComponent)
 	Response200StoreProductUpdate   = localization.NewResponseKey(200, data.StoreProductComponent, data.UpdateOperation.ToString())
 	Response200StoreProductDelete   = localization.NewResponseKey(200, data.StoreProductComponent, data.DeleteOperation.ToString())

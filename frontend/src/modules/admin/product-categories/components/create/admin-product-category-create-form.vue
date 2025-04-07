@@ -8,7 +8,14 @@ import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
-import type { CreateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/core/components/ui/select'
+import { MACHINE_CATEGORY_OPTIONS, MachineCategory, type CreateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Props and Emits
@@ -17,18 +24,19 @@ const emits = defineEmits<{
   onCancel: []
 }>()
 
-
-
 // Validation Schema
 const createCategorySchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название категории'),
     description: z.string().optional(),
+    machineCategory: z.nativeEnum(MachineCategory, {
+      message: 'Выберите категорию для аппарата',
+    }),
   })
 )
 
 // Form Setup
-const { handleSubmit, resetForm } = useForm<CreateProductCategoryDTO>({
+const { handleSubmit, resetForm } = useForm({
   validationSchema: createCategorySchema,
 })
 
@@ -59,7 +67,7 @@ const onCancel = () => {
 				Создать категорию
 			</h1>
 
-			<div class="md:flex items-center gap-2 hidden md:ml-auto">
+			<div class="hidden md:flex items-center gap-2 md:ml-auto">
 				<Button
 					variant="outline"
 					type="button"
@@ -121,12 +129,38 @@ const onCancel = () => {
 							<FormMessage />
 						</FormItem>
 					</FormField>
+
+					<FormField
+						name="machineCategory"
+						v-slot="{ componentField }"
+					>
+						<FormItem>
+							<FormLabel>Категория машины</FormLabel>
+							<FormControl>
+								<Select v-bind="componentField">
+									<SelectTrigger id="machine_category">
+										<SelectValue placeholder="Выберите категорию машины" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem
+											v-for="option in MACHINE_CATEGORY_OPTIONS"
+											:key="option.value"
+											:value="option.value"
+										>
+											{{ option.label }}
+										</SelectItem>
+									</SelectContent>
+								</Select>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					</FormField>
 				</div>
 			</CardContent>
 		</Card>
 
 		<!-- Footer -->
-		<div class="flex justify-center items-center gap-2 md:hidden">
+		<div class="md:hidden flex justify-center items-center gap-2">
 			<Button
 				variant="outline"
 				@click="onCancel"

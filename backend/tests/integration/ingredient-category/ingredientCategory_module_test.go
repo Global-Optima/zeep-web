@@ -114,11 +114,11 @@ func TestIngredientCategoryEndpoints(t *testing.T) {
 				ExpectedCode: http.StatusUnauthorized,
 			},
 			{
-				Description:  "Should return 500 for non-existent ingredient category",
+				Description:  "Should return 404 for non-existent ingredient category",
 				Method:       http.MethodGet,
 				URL:          "/api/test/ingredient-categories/9999",
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusInternalServerError,
+				ExpectedCode: http.StatusNotFound,
 			},
 		}
 		env.RunTests(t, testCases)

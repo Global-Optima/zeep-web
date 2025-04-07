@@ -173,6 +173,7 @@
     "200-additiveCategory-delete": "Additive category successfully deleted.",
 
     "500-stockRequests": "An unexpected error occurred with stock requests. Please try again later.",
+    "404-stockRequests": "Stock request not found.",
     "403-stockRequests": "Access denied to the stock request resource.",
     "400-stockRequests": "Invalid stock request data provided. Please check and try again.",
     "400-stockRequests-insufficientStock": "Insufficient stock to fulfill the request. Please check and try again.",
@@ -193,6 +194,7 @@
     "200-store-delete": "Store successfully deleted.",
 
     "500-storeProduct": "An unexpected error occurred with the store product. Please try again later.",
+    "404-storeProduct": "Store product not found.",
     "400-storeProduct": "Invalid store product data provided. Please check and try again.",
     "201-storeProduct": "Product successfully added to the store.",
     "201-storeProduct-multiple": "Products successfully added to the store.",
@@ -209,6 +211,7 @@
 
     "500-storeStock-inUse": "The store stock is currently in use. Please try again later.",
     "500-storeStock": "An unexpected error occurred with the store stocks. Please try again later.",
+    "404-storeStock": "Store stock not found.",
     "400-storeStock": "Invalid store stocks data provided. Please check and try again.",
     "201-storeStock": "Store stock successfully created.",
     "201-storeStock-multiple": "Store stocks successfully created.",
@@ -323,6 +326,7 @@
     "200-unit-update": "Unit successfully updated.",
     "200-unit-delete": "Unit successfully deleted.",
     "400-unit": "Invalid unit data provided. Please check and try again.",
+    "404-unit": "Unit not found.",
     "500-unit-create": "An unexpected error occurred while creating the unit. Please try again later.",
     "500-unit-get": "An unexpected error occurred while fetching unit data. Please try again later.",
     "500-unit-update": "An unexpected error occurred while updating the unit. Please try again later.",
@@ -344,6 +348,7 @@
     "500-ingredientCategory-update": "An unexpected error occurred while updating the ingredient category. Please try again later.",
     "500-ingredientCategory-delete": "An unexpected error occurred while deleting the ingredient category. Please try again later.",
     "409-ingredientCategory-delete-inUse": "Ingredient category cannot be deleted because it is in use.",
+    "404-ingredientCategory": "Ingredient category not found.",
     "200-ingredientCategory-update": "Ingredient category successfully updated.",
     "200-ingredientCategory-delete": "Ingredient category successfully deleted.",
     "201-ingredientCategory": "Ingredient category successfully created.",

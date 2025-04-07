@@ -2,7 +2,6 @@
 import { useToast } from '@/core/components/ui/toast'
 import { getRouteName } from '@/core/config/routes.config'
 import { useScannerListener } from '@/core/hooks/use-barcode-listener.hook'
-import { parseSubOrderQR } from '@/core/hooks/use-qr-print.hook'
 
 import AdminBaristaOrderStatusSelector from '@/modules/admin/store-orders/barista/components/admin-barista-order-status-selector.vue'
 import AdminBaristaOrdersList from '@/modules/admin/store-orders/barista/components/admin-barista-orders-list.vue'
@@ -19,8 +18,10 @@ import {
 } from '@/modules/admin/store-orders/models/orders.models'
 import { ordersService } from '@/modules/admin/store-orders/services/orders.service'
 import { useMutation } from '@tanstack/vue-query'
-import { isAxiosError} from 'axios'
+import { isAxiosError } from 'axios'
 
+import { useAxiosLocaleToast, type AxiosLocalizedError } from "@/core/hooks/use-axios-locale-toast.hooks"
+import { parseSubOrderQR } from '@/modules/admin/store-orders/hooks/use-order-qr-print.hook'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { type AxiosLocalizedError, useAxiosLocaleToast} from "@/core/hooks/use-axios-locale-toast.hooks";
@@ -305,6 +306,7 @@ function onSelectStatus(status: { label: string; count: number; status?: OrderSt
 			<!-- Right: SubOrder Details -->
 			<AdminBaristaSubOrderDetails
 				:suborder="selectedSuborder"
+				:order="selectedOrder"
 				@toggleSuborderStatus="toggleSuborderStatus"
 			/>
 		</div>

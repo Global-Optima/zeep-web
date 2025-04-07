@@ -61,6 +61,10 @@ func (h *IngredientCategoryHandler) GetByID(c *gin.Context) {
 
 	category, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrIngredientCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404IngredientCategory)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryGet)
 		return
 	}
@@ -83,6 +87,10 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 
 	existingCategory, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrIngredientCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404IngredientCategory)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryUpdate)
 		return
 	}
@@ -116,6 +124,10 @@ func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 
 	existingCategory, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrIngredientCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404IngredientCategory)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryDelete)
 		return
 	}

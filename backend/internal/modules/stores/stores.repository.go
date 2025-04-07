@@ -125,6 +125,9 @@ func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
 		Preload("Warehouse.Region").
 		Preload("Warehouse.FacilityAddress").
 		Where("id = ?", storeID).First(&store).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStoreNotFound
+		}
 		return nil, err
 	}
 	return &store, nil
