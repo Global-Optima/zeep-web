@@ -3,7 +3,6 @@ package types
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 )
 
 func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
@@ -26,13 +25,18 @@ func getStorePrice(storeAdditive *data.StoreAdditive) float64 {
 func ConvertToStoreAdditiveDetailsDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDetailsDTO {
 	ingredients := make([]additiveTypes.AdditiveIngredientDTO, len(storeAdditive.Additive.Ingredients))
 	for i, additiveIngredient := range storeAdditive.Additive.Ingredients {
-		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
-		ingredients[i].Quantity = additiveIngredient.Quantity
+		ingredients[i] = *additiveTypes.ConvertToAdditiveIngredientDTO(&additiveIngredient)
+	}
+
+	provisions := make([]additiveTypes.AdditiveProvisionDTO, len(storeAdditive.Additive.AdditiveProvisions))
+	for i, additiveProvisions := range storeAdditive.Additive.AdditiveProvisions {
+		provisions[i] = *additiveTypes.ConvertToAdditiveProvisionDTO(&additiveProvisions)
 	}
 
 	return &StoreAdditiveDetailsDTO{
 		StoreAdditiveDTO: *ConvertToStoreAdditiveDTO(storeAdditive),
 		Ingredients:      ingredients,
+		Provisions:       provisions,
 	}
 }
 

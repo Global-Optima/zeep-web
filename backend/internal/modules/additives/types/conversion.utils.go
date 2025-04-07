@@ -1,6 +1,7 @@
 package types
 
 import (
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/pkg/errors"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -123,16 +124,36 @@ func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 	}
 }
 
+func ConvertToAdditiveIngredientDTO(additiveIngredient *data.AdditiveIngredient) *AdditiveIngredientDTO {
+	return &AdditiveIngredientDTO{
+		Ingredient: *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient),
+		Quantity:   additiveIngredient.Quantity,
+	}
+}
+
+func ConvertToAdditiveProvisionDTO(additiveProvision *data.AdditiveProvision) *AdditiveProvisionDTO {
+	return &AdditiveProvisionDTO{
+		ProvisionDTO: *provisionsTypes.MapToProvisionDTO(&additiveProvision.Provision),
+		Volume:       additiveProvision.Volume,
+	}
+}
+
 func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
 	ingredients := make([]AdditiveIngredientDTO, len(additive.Ingredients))
+	provisions := make([]AdditiveProvisionDTO, len(additive.AdditiveProvisions))
+
 	for i, additiveIngredient := range additive.Ingredients {
-		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
-		ingredients[i].Quantity = additiveIngredient.Quantity
+		ingredients[i] = *ConvertToAdditiveIngredientDTO(&additiveIngredient)
+	}
+
+	for i, additiveProvision := range additive.AdditiveProvisions {
+		provisions[i] = *ConvertToAdditiveProvisionDTO(&additiveProvision)
 	}
 
 	return &AdditiveDetailsDTO{
 		AdditiveDTO: *ConvertToAdditiveDTO(additive),
 		Ingredients: ingredients,
+		Provisions:  provisions,
 	}
 }
 

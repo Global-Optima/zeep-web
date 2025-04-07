@@ -53,7 +53,7 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 		return
 	}
 
-	productDetails, err := h.service.GetProductByID(uint(productID))
+	productDetails, err := h.service.GetProductByID(productID)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrProductNotFound):
@@ -123,7 +123,7 @@ func (h *ProductHandler) GetProductSizesByProductID(c *gin.Context) {
 		return
 	}
 
-	productSizes, err := h.service.GetProductSizesByProductID(uint(productID))
+	productSizes, err := h.service.GetProductSizesByProductID(productID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeGet)
 		return
@@ -139,7 +139,7 @@ func (h *ProductHandler) GetProductSizeByID(c *gin.Context) {
 		return
 	}
 
-	productSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
+	productSize, err := h.service.GetProductSizeDetailsByID(productSizeID)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrProductSizeNotFound):
@@ -211,7 +211,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.UpdateProduct(uint(productID), &dto)
+	existingProduct, err := h.service.UpdateProduct(productID, &dto)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductUpdate)
 		return
@@ -219,7 +219,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 
 	action := types.UpdateProductAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(productID),
+			ID:   productID,
 			Name: existingProduct.Name,
 		},
 		&dto,
@@ -245,7 +245,7 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		return
 	}
 
-	existingProductSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
+	existingProductSize, err := h.service.GetProductSizeDetailsByID(productSizeID)
 	if err != nil {
 		if errors.Is(err, types.ErrProductSizeNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404ProductSize)
@@ -255,7 +255,7 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateProductSize(uint(productSizeID), input)
+	err = h.service.UpdateProductSize(productSizeID, input)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeUpdate)
 		return
@@ -263,7 +263,7 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 
 	action := types.UpdateProductSizeAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(productSizeID),
+			ID:   productSizeID,
 			Name: existingProductSize.Name,
 		},
 		input,
@@ -283,7 +283,7 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.DeleteProduct(uint(productID))
+	existingProduct, err := h.service.DeleteProduct(productID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductDelete)
 		return
@@ -291,7 +291,7 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 
 	action := types.DeleteProductAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(productID),
+			ID:   productID,
 			Name: existingProduct.Name,
 		},
 	)
@@ -310,13 +310,13 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.GetProductByID(uint(productSizeID))
+	existingProduct, err := h.service.GetProductByID(productSizeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeDelete)
 		return
 	}
 
-	err = h.service.DeleteProductSize(uint(productSizeID))
+	err = h.service.DeleteProductSize(productSizeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeDelete)
 		return
@@ -324,7 +324,7 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 
 	action := types.DeleteProductSizeAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(productSizeID),
+			ID:   productSizeID,
 			Name: existingProduct.Name,
 		},
 	)

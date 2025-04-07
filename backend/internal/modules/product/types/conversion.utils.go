@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"sort"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -102,17 +103,35 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 	}
 }
 
+func ConvertToProductSizeProvisionDTO(productSizeProvision *data.ProductSizeProvision) ProductSizeProvisionDTO {
+	return ProductSizeProvisionDTO{
+		ProvisionDTO: *provisionsTypes.MapToProvisionDTO(&productSizeProvision.Provision),
+		Volume:       productSizeProvision.Volume,
+	}
+}
+
+func ConvertToProductSizeIngredientDTO(productSizeIngredient *data.ProductSizeIngredient) ProductSizeIngredientDTO {
+	return ProductSizeIngredientDTO{
+		Ingredient: *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient),
+		Quantity:   productSizeIngredient.Quantity,
+	}
+}
+
 func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
 	additives := make([]ProductSizeAdditiveDTO, len(productSize.Additives))
 	ingredients := make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
+	provisions := make([]ProductSizeProvisionDTO, len(productSize.ProductSizeProvisions))
 
 	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
-		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
-		ingredients[i].Quantity = productSizeIngredient.Quantity
+		ingredients[i] = ConvertToProductSizeIngredientDTO(&productSizeIngredient)
 	}
 
 	for i, productSizeAdditive := range productSize.Additives {
 		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
+	}
+
+	for i, productSizeProvision := range productSize.ProductSizeProvisions {
+		provisions[i] = ConvertToProductSizeProvisionDTO(&productSizeProvision)
 	}
 
 	return ProductSizeDetailsDTO{
@@ -120,13 +139,14 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 		TotalNutrition: *CalculateTotalNutrition(&productSize),
 		Additives:      additives,
 		Ingredients:    ingredients,
+		Provisions:     provisions,
 	}
 }
 
 func CreateToProductModel(dto *CreateProductDTO) *data.Product {
 	product := &data.Product{
 		Name:        dto.Name,
-		Description: *dto.Description,
+		Description: utils.DerefString(dto.Description),
 		CategoryID:  dto.CategoryID,
 	}
 
@@ -225,7 +245,7 @@ func mapAdditivesToProductSizeAdditives(additivesDTO []SelectedAdditiveDTO) []da
 	return additives
 }
 
-func mapIngredientsToProductSizeIngredients(ingredientsDTO []SelectedIngredientDTO) []data.ProductSizeIngredient {
+func mapIngredientsToProductSizeIngredients(ingredientsDTO []ingredientTypes.SelectedIngredientDTO) []data.ProductSizeIngredient {
 	if ingredientsDTO == nil {
 		return nil
 	}
@@ -353,10 +373,10 @@ func CalculateTotalNutrition(productSize *data.ProductSize) *TotalNutrition {
 		totalNutrition.AllergenIngredients = append(totalNutrition.AllergenIngredients, name)
 	}
 
-	totalNutrition.Calories = utils.RoundToOneDecimal(totalNutrition.Calories)
-	totalNutrition.Proteins = utils.RoundToOneDecimal(totalNutrition.Proteins)
-	totalNutrition.Fats = utils.RoundToOneDecimal(totalNutrition.Fats)
-	totalNutrition.Carbs = utils.RoundToOneDecimal(totalNutrition.Carbs)
+	totalNutrition.Calories = utils.RoundToDecimal(totalNutrition.Calories, 1)
+	totalNutrition.Proteins = utils.RoundToDecimal(totalNutrition.Proteins, 1)
+	totalNutrition.Fats = utils.RoundToDecimal(totalNutrition.Fats, 1)
+	totalNutrition.Carbs = utils.RoundToDecimal(totalNutrition.Carbs, 1)
 
 	return totalNutrition
 }

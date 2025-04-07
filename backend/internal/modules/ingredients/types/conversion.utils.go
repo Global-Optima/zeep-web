@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -123,4 +124,20 @@ func ConvertToIngredientResponseDTOs(ingredients []data.Ingredient) []Ingredient
 		dtos[i] = *ConvertToIngredientResponseDTO(&ingredient)
 	}
 	return dtos
+}
+
+func ParseJSONIngredientsFromString(ingredientsJSON string, ingredients []SelectedIngredientDTO) error {
+	if ingredientsJSON != "" {
+		err := json.Unmarshal([]byte(ingredientsJSON), &ingredients)
+		if err != nil {
+			return err
+		}
+
+		for _, ingredient := range ingredients {
+			if ingredient.IngredientID == 0 || ingredient.Quantity <= 0 {
+				return fmt.Errorf("invalid ingredients json input")
+			}
+		}
+	}
+	return nil
 }
