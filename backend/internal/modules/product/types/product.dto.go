@@ -59,8 +59,8 @@ type ProductSizeDetailsDTO struct {
 }
 
 type ProductSizeProvisionDTO struct {
-	provisionsTypes.ProvisionDTO
-	Volume float64 `json:"volume"`
+	Provision provisionsTypes.ProvisionDTO `json:"provision"`
+	Volume    float64                      `json:"volume"`
 }
 
 type ProductSizeAdditiveDTO struct {

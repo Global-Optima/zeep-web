@@ -106,8 +106,8 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 
 func ConvertToProductSizeProvisionDTO(productSizeProvision *data.ProductSizeProvision) ProductSizeProvisionDTO {
 	return ProductSizeProvisionDTO{
-		ProvisionDTO: *provisionsTypes.MapToProvisionDTO(&productSizeProvision.Provision),
-		Volume:       productSizeProvision.Volume,
+		Provision: *provisionsTypes.MapToProvisionDTO(&productSizeProvision.Provision),
+		Volume:    productSizeProvision.Volume,
 	}
 }
 
