@@ -53,4 +53,13 @@ export const ADMIN_PROVISIONS_CHILDREN_ROUTES = {
 		component: () =>
 			import('@/modules/admin/store-provisions/pages/admin-store-provision-create-page.vue'),
 	},
+	ADMIN_STORE_PROVISION_UPDATE: {
+		path: `store-provisions/:id/update`,
+		meta: {
+			title: 'Обновить заготовку',
+			requiresAuth: true,
+		},
+		component: () =>
+			import('@/modules/admin/store-provisions/pages/admin-store-provision-update-page.vue'),
+	},
 } satisfies AppRouteRecord

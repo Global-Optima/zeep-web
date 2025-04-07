@@ -31,7 +31,7 @@ import { Button } from '@/core/components/ui/button'
 import { Input } from '@/core/components/ui/input'
 import { getRouteName } from '@/core/config/routes.config'
 import { DEFAULT_PAGINATION_META } from '@/core/utils/pagination.utils'
-import type { ProvisionFilter } from "@/modules/admin/provisions/models/provision.models"
+import type { StoreProvisionFilter } from '@/modules/admin/store-provisions/models/store-provision.models'
 import { useDebounce } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
