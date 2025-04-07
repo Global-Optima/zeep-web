@@ -379,6 +379,7 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 		Preload("Suborders.StoreProductSize").
 		Preload("Suborders.StoreProductSize.ProductSize").
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Joins("JOIN suborders ON suborders.order_id = orders.id").
