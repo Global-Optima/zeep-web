@@ -39,7 +39,6 @@ import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/pr
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
 import {toast} from "@/core/components/ui/toast";
 import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
-import AdminSelectProvisionDialog from "@/modules/admin/provisions/components/admin-select-provision-dialog.vue"
 
 const AdminSelectAdditiveDialog = defineAsyncComponent(() =>
   import('@/modules/admin/additives/components/admin-select-additive-dialog.vue'))
@@ -47,6 +46,8 @@ const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
   import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
 const AdminSelectUnit = defineAsyncComponent(() =>
   import('@/modules/admin/units/components/admin-select-unit.vue'))
+const AdminSelectProvisionDialog = defineAsyncComponent(() =>
+  import("@/modules/admin/provisions/components/admin-select-provision-dialog.vue"))
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number

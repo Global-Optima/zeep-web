@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -33,16 +33,21 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from "@/core/components/ui/toast"
-import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
-import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
-import AdminSelectProvisionDialog from "@/modules/admin/provisions/components/admin-select-provision-dialog.vue"
 import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
+
+const AdminSelectAdditiveDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/additives/components/admin-select-additive-dialog.vue'))
+const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
+const AdminSelectUnit = defineAsyncComponent(() =>
+  import('@/modules/admin/units/components/admin-select-unit.vue'))
+const AdminSelectProvisionDialog = defineAsyncComponent(() =>
+  import("@/modules/admin/provisions/components/admin-select-provision-dialog.vue"))
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
