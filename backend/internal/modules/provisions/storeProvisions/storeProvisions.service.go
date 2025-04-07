@@ -2,9 +2,7 @@ package storeProvisions
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
@@ -28,11 +26,12 @@ type storeProvisionService struct {
 	logger              *zap.SugaredLogger
 }
 
-func NewStoreProvisionService(repo StoreProvisionRepository, notificationService notifications.NotificationService, storageRepo storage.StorageRepository, logger *zap.SugaredLogger) StoreProvisionService {
+func NewStoreProvisionService(repo StoreProvisionRepository, provisionRepo provisions.ProvisionRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) StoreProvisionService {
 	return &storeProvisionService{
 		repo:                repo,
-		logger:              logger,
+		provisionRepo:       provisionRepo,
 		notificationService: notificationService,
+		logger:              logger,
 	}
 }
 
@@ -71,11 +70,6 @@ func (s *storeProvisionService) CreateStoreProvision(storeID uint, dto *types.Cr
 		return nil, wrapped
 	}
 
-	provisionIngredientIDs := make([]uint, len(centralCatalogProvision.ProvisionIngredients))
-	for i, ingredient := range centralCatalogProvision.ProvisionIngredients {
-		provisionIngredientIDs[i] = ingredient.IngredientID
-	}
-
 	count, err := s.repo.CountStoreProvisionsToday(storeID, centralCatalogProvision.ID)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to count store provisions today: %w", err)
@@ -101,16 +95,22 @@ func (s *storeProvisionService) CreateStoreProvision(storeID uint, dto *types.Cr
 func (s *storeProvisionService) UpdateStoreProvision(storeID, storeProvisionID uint, dto *types.UpdateStoreProvisionDTO) (*types.StoreProvisionDTO, error) {
 	storeProvision, err := s.repo.GetStoreProvisionByID(storeID, storeProvisionID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find store provision: %w", err)
+		wrapped := fmt.Errorf("failed to get store provision by ID %d: %w", storeProvisionID, err)
+		s.logger.Error(wrapped)
+		return nil, wrapped
 	}
 
 	if storeProvision.Status != data.PROVISION_STATUS_PREPARING {
-		return nil, fmt.Errorf("failed to update store provision: %w", types.ErrProvisionAlreadyCompleted)
+		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionAlreadyCompleted)
+		s.logger.Error(wrapped)
+		return nil, wrapped
 	}
 
 	updateModels, err := types.UpdateToStoreProvisionModel(storeProvision, dto)
 	if err != nil {
-		return nil, fmt.Errorf("failed to apply update: %w", err)
+		wrapped := fmt.Errorf("failed to update store provision: %w", err)
+		s.logger.Error(wrapped)
+		return nil, wrapped
 	}
 
 	err = s.repo.SaveStoreProvisionWithAssociations(updateModels)
@@ -123,37 +123,12 @@ func (s *storeProvisionService) UpdateStoreProvision(storeID, storeProvisionID u
 	return types.MapToStoreProvisionDTO(storeProvision), nil
 }
 
-func validateStoreProvisionIngredients(
-	ingredients []ingredientTypes.SelectedIngredientDTO,
-	provisionIngredientIDs []uint,
-) error {
-	expectedSet := make(map[uint]struct{}, len(provisionIngredientIDs))
-	for _, id := range provisionIngredientIDs {
-		expectedSet[id] = struct{}{}
-	}
-
-	inputSet := make(map[uint]struct{}, len(ingredients))
-	for _, ing := range ingredients {
-		inputSet[ing.IngredientID] = struct{}{}
-	}
-
-	if len(expectedSet) != len(inputSet) {
-		return types.ErrStoreProvisionIngredientMismatch
-	}
-
-	for id := range expectedSet {
-		if _, found := inputSet[id]; !found {
-			return types.ErrStoreProvisionIngredientMismatch
-		}
-	}
-
-	return nil
-}
-
 func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID uint) (*types.StoreProvisionDTO, error) {
 	provision, err := s.repo.GetStoreProvisionByID(storeID, storeProvisionID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find store provision: %w", err)
+		wrapped := fmt.Errorf("failed to find store provision: %w", err)
+		s.logger.Error(wrapped)
+		return nil, wrapped
 	}
 
 	provision.Status = data.PROVISION_STATUS_COMPLETED
@@ -166,7 +141,9 @@ func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID
 
 	err = s.repo.SaveStoreProvision(provision)
 	if err != nil {
-		return nil, fmt.Errorf("failed to complete store provision: %w", err)
+		wrapped := fmt.Errorf("failed to complete store provision: %w", err)
+		s.logger.Error(wrapped)
+		return nil, wrapped
 	}
 
 	return types.MapToStoreProvisionDTO(provision), nil

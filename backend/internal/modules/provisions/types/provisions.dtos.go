@@ -33,7 +33,7 @@ type ProvisionIngredientDTO struct {
 type CreateProvisionDTO struct {
 	Name                 string                                  `json:"name" binding:"required,min=2,max=255"`
 	AbsoluteVolume       float64                                 `json:"absoluteVolume" binding:"required,gt=0"`
-	NetCost              float64                                 `json:"netCost" binding:"required,gte=0"`
+	NetCost              float64                                 `json:"netCost" binding:"required,gt=0"`
 	UnitID               uint                                    `json:"unitId" binding:"required,gt=0"`
 	PreparationInMinutes uint                                    `json:"preparationInMinutes" binding:"required"`
 	LimitPerDay          uint                                    `json:"limitPerDay" binding:"required"`

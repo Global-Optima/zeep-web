@@ -9,7 +9,7 @@ import (
 )
 
 type ProvisionService interface {
-	GetProvisionByID(provisionID uint) (*types.ProvisionDTO, error)
+	GetProvisionByID(provisionID uint) (*types.ProvisionDetailsDTO, error)
 	GetProvisions(filter *types.ProvisionFilterDTO) ([]types.ProvisionDTO, error)
 	CreateProvision(dto *types.CreateProvisionDTO) (uint, error)
 	UpdateProvision(provisionID uint, dto *types.UpdateProvisionDTO) (*types.ProvisionDTO, error)
@@ -28,15 +28,14 @@ func NewProvisionService(repo ProvisionRepository, logger *zap.SugaredLogger) Pr
 	}
 }
 
-func (s *provisionService) GetProvisionByID(provisionID uint) (*types.ProvisionDTO, error) {
+func (s *provisionService) GetProvisionByID(provisionID uint) (*types.ProvisionDetailsDTO, error) {
 	provision, err := s.repo.GetProvisionWithDetailsByID(provisionID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to retrieve provision ID %d: %w", provisionID, err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
-	dto := types.MapToProvisionDTO(provision)
-	return dto, nil
+	return types.MapToProvisionDetailsDTO(provision), nil
 }
 
 func (s *provisionService) GetProvisions(filter *types.ProvisionFilterDTO) ([]types.ProvisionDTO, error) {

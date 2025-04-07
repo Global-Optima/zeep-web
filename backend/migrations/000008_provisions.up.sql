@@ -7,6 +7,7 @@ CREATE TABLE provisions (
     unit_id INT NOT NULL REFERENCES units(id) ON DELETE CASCADE,
     preparation_in_minutes INT NOT NULL CHECK (preparation_in_minutes > 0),
     limit_per_day INT NOT NULL CHECK (limit_per_day > 0),
+    ingredients_updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ
@@ -53,7 +54,7 @@ CREATE TABLE store_provisions (
     id SERIAL PRIMARY KEY,
     provision_id INT NOT NULL REFERENCES provisions(id) ON DELETE CASCADE,
     volume DECIMAL(10,2) NOT NULL CHECK (volume > 0),
-    status INT NOT NULL,
+    status VARCHAR(50) NOT NULL,
     store_id INT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
     expiration_in_hours INT NOT NULL,
     completed_at TIMESTAMPTZ,

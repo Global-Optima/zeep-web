@@ -60,7 +60,7 @@ func (r *provisionRepository) GetProvisions(filter *types.ProvisionFilterDTO) ([
 
 	if filter.Search != nil {
 		pattern := "%" + *filter.Search + "%"
-		query = query.Where("name ILIKE ? OR description ILIKE ?", pattern, pattern)
+		query = query.Where("name ILIKE ?", pattern)
 	}
 
 	var err error
@@ -153,8 +153,7 @@ func (r *provisionRepository) saveProvision(tx *gorm.DB, provision *data.Provisi
 		provision.IngredientsUpdatedAt = time.Now().UTC()
 	}
 
-	err := tx.Model(&data.Provision{}).
-		Save(provision).Error
+	err := tx.Save(provision).Error
 	if err != nil {
 		return fmt.Errorf("failed to update provision: %w", err)
 	}

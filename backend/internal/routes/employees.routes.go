@@ -423,7 +423,7 @@ func (r *Router) RegisterStoreProvisionsRoutes(handler *storeProvisions.StorePro
 		router.GET("", middleware.EmployeeRoleMiddleware(), handler.GetStoreProvisions)
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(), handler.GetStoreProvisionByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateStoreProvision)
-		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CompleteStoreProvisionByID)
+		router.POST("/:id/complete", middleware.EmployeeRoleMiddleware(), handler.CompleteStoreProvisionByID)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateStoreProvisionByID)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteStoreProvisionByID)
 	}

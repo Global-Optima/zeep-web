@@ -3,7 +3,6 @@ package modules
 import (
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
@@ -28,7 +27,6 @@ func NewProductsModule(
 	base *common.BaseModule,
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
-	additiveService additives.AdditiveService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
