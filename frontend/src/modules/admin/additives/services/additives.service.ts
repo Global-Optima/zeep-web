@@ -1,4 +1,5 @@
 import { apiClient } from '@/core/config/axios-instance.config'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import { buildFormData } from '@/core/utils/request-form-data-builder.utils'
 import type {
@@ -7,12 +8,12 @@ import type {
 	AdditiveDetailsDTO,
 	AdditiveDTO,
 	AdditiveFilterQuery,
+	AdditiveTechnicalMap,
 	CreateAdditiveCategoryDTO,
 	CreateAdditiveDTO,
 	UpdateAdditiveCategoryDTO,
 	UpdateAdditiveDTO,
 } from '../models/additives.model'
-import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 
 class AdditiveService {
 	async getAdditives(filter?: AdditiveFilterQuery) {
@@ -25,6 +26,16 @@ class AdditiveService {
 	async getAdditiveById(id: number) {
 		const response = await apiClient.get<AdditiveDetailsDTO>(`/additives/${id}`)
 		return response.data
+	}
+
+	async getAdditiveTechMap(id: number) {
+		try {
+			const response = await apiClient.get<AdditiveTechnicalMap>(`/additives/${id}/technical-map`)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to fetch additive technical map for ID ${id}: `, error)
+			throw error
+		}
 	}
 
 	async createAdditive(dto: CreateAdditiveDTO) {

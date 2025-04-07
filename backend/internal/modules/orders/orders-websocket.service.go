@@ -68,7 +68,6 @@ func (h *Hub) AddClient(storeID uint, client *Client) {
 		h.connections[storeID] = make(map[*Client]bool)
 	}
 	h.connections[storeID][client] = true
-	log.Printf("Client connected for store %d. Total clients: %d", storeID, len(h.connections[storeID]))
 }
 
 // RemoveClient removes a WebSocket client from the hub.
@@ -82,7 +81,6 @@ func (h *Hub) RemoveClient(client *Client) {
 		if len(clients) == 0 {
 			delete(h.connections, client.StoreID)
 		}
-		log.Printf("Client disconnected from store %d. Total clients: %d", client.StoreID, len(h.connections[client.StoreID]))
 	}
 
 	defer func() {

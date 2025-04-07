@@ -1,4 +1,5 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { TechnicalMapDTO } from '@/modules/kiosk/products/models/product.model'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
 import type { UnitDTO } from '../../units/models/units.model'
 // Filters
@@ -103,4 +104,8 @@ export interface CreateAdditiveDTO {
 export interface SelectedIngredientDTO {
 	ingredientId: number
 	quantity: number
+}
+
+export interface AdditiveTechnicalMap {
+	ingredients: TechnicalMapDTO[]
 }
