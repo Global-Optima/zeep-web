@@ -54,11 +54,11 @@ func (h *StockMaterialHandler) GetStockMaterialByID(c *gin.Context) {
 
 	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
 	if err != nil {
-		if err.Error() == "StockMaterial not found" {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
-		} else {
-			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialGet)
+			return
 		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialGet)
 		return
 	}
 
@@ -107,6 +107,10 @@ func (h *StockMaterialHandler) UpdateStockMaterial(c *gin.Context) {
 
 	stockMaterialResponse, err := h.service.GetStockMaterialByID(uint(stockMaterialID))
 	if err != nil {
+		if errors.Is(err, types.ErrStockMaterialNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialGet)
 		return
 	}

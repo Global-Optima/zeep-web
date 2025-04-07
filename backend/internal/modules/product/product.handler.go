@@ -247,6 +247,10 @@ func (h *ProductHandler) UpdateProductSize(c *gin.Context) {
 
 	existingProductSize, err := h.service.GetProductSizeDetailsByID(uint(productSizeID))
 	if err != nil {
+		if errors.Is(err, types.ErrProductSizeNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404ProductSize)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeUpdate)
 		return
 	}

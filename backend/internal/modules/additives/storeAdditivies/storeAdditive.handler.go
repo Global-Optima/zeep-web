@@ -197,6 +197,11 @@ func (h *StoreAdditiveHandler) UpdateStoreAdditive(c *gin.Context) {
 
 	storeAdditive, err := h.service.GetStoreAdditiveByID(uint(storeAdditiveID), &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
+		if errors.Is(err, types.ErrStoreAdditiveNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StoreAdditive)
+			return
+		}
+
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}
@@ -287,6 +292,11 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveByID(c *gin.Context) {
 
 	additive, err := h.service.GetStoreAdditiveByID(uint(additiveID), filter)
 	if err != nil {
+		if errors.Is(err, types.ErrStoreAdditiveNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StoreAdditive)
+			return
+		}
+
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return
 	}

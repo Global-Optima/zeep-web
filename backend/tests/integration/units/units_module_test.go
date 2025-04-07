@@ -81,7 +81,7 @@ func TestUnitEndpoints(t *testing.T) {
 				Method:       http.MethodGet,
 				URL:          "/api/test/units/9999",
 				AuthRole:     data.RoleAdmin, // ✅ Still requires admin access
-				ExpectedCode: http.StatusInternalServerError,
+				ExpectedCode: http.StatusNotFound,
 			},
 		}
 		env.RunTests(t, testCases)
