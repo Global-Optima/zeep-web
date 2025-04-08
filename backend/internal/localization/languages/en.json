@@ -106,7 +106,8 @@
 
     "400-auth": "The email or password you entered is incorrect. Please try again.",
 
-    "500-tecnicalMap-get": "An unexpected error occurred while fetching the technical map. Please try again later.",
+    "500-technicalMap-get": "An unexpected error occurred while fetching the technical map. Please try again later.",
+    "404-technicalMap": "Technological map not found.",
 
     "500-order": "An unexpected error occurred with the order. Please try again later.",
     "500-order-create": "An unexpected error occurred while creating the order. Please try again later.",
@@ -436,7 +437,7 @@
       "newOrder": "A new order has been placed by *{{.CustomerName}}*.",
       "storeWarehouseRunOut": "The warehouse is running out of *{{.StockItem}}*.",
 
-      "centralCatalogUpdate": "The central catalog was updated: *{{.Changes}}*.",
+      "centralCatalogUpdate": "The central catalog was updated.",
       "centralCatalogUpdateDetails": {
         "nameChange": "Name changed from {{.OldName}} to {{.NewName}}",
         "descriptionChange": "Description updated from {{.OldDescription}} to {{.NewDescription}}",
