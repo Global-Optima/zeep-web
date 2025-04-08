@@ -11,6 +11,7 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import AdminProvisionUpdateForm from "@/modules/admin/provisions/components/details/admin-provision-update-form.vue"
 import type { UpdateProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import { provisionsService } from "@/modules/admin/provisions/services/provisions.service"
@@ -24,6 +25,8 @@ const queryClient = useQueryClient()
 const { toast } = useToast()
 
 const provisionId = route.params.id as string
+
+const {toastLocalizedError} = useAxiosLocaleToast()
 
 const { data: ingredientDetails } = useQuery({
 	queryKey: computed(() => ['admin-provision-details', provisionId]),
@@ -49,12 +52,8 @@ const updateMutation = useMutation({
 			description: 'Данные сырья успешно обновлены.',
 		})
 	},
-	onError: () => {
-		toast({
-			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении.',
-			variant: 'destructive',
-		})
+	onError: (err: AxiosLocalizedError) => {
+    toastLocalizedError(err, 'Произошла ошибка при обновлении.')
 	},
 })
 

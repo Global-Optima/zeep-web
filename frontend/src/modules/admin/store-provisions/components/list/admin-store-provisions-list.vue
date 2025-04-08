@@ -34,6 +34,7 @@
 
 				<TableCell class="flex justify-end">
 					<Button
+						v-if="canDelete(storeProvision)"
 						variant="ghost"
 						size="icon"
 						@click="e => onDeleteClick(e, storeProvision.id)"
@@ -57,8 +58,9 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
-import { provisionsService } from "@/modules/admin/provisions/services/provisions.service"
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import { StoreProvisionStatus, type StoreProvisionDTO } from "@/modules/admin/store-provisions/models/store-provision.models"
+import { storeProvisionsService } from '@/modules/admin/store-provisions/services/store-provision.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
@@ -70,14 +72,16 @@ const {storeProvisions} = defineProps<{storeProvisions: StoreProvisionDTO[]}>()
 const router = useRouter();
 const queryClient = useQueryClient()
 
+const {toastLocalizedError} = useAxiosLocaleToast()
+
 const { mutate: deleteMutation } = useMutation({
-	mutationFn: (id: number) => provisionsService.deleteProvision(id),
+	mutationFn: (id: number) => storeProvisionsService.deleteStoreProvision(id),
 	onSuccess: () => {
 		toast({ title: 'Успешное удаление' })
 		queryClient.invalidateQueries({ queryKey: ['admin-store-provisions'] })
 	},
-	onError: () => {
-		toast({ title: 'Произошла ошибка при удалении' })
+	onError: (err: AxiosLocalizedError) => {
+    toastLocalizedError(err, 'Произошла ошибка при удалении')
 	},
 })
 
@@ -92,6 +96,10 @@ const onDeleteClick = (e: Event, id: number) => {
 
 const formatCreatedDate = (date: Date) => {
   return format(date, "dd.MM.yyyy hh:mm", {locale: ru})
+}
+
+const canDelete = (provision: StoreProvisionDTO) => {
+  return provision.status === StoreProvisionStatus.PREPARING
 }
 
 const onProvisionClick = (id: number) => {

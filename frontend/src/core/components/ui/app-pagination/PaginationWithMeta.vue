@@ -3,8 +3,9 @@
 		<!-- Rows per page dropdown -->
 		<div class="flex items-center space-x-2">
 			<p class="font-medium text-sm">Cтрок на странице</p>
+
 			<select
-				class="border-gray-300 border rounded-md w-[70px] h-8 text-center text-sm"
+				class="px-2 border border-gray-300 rounded-md h-8 text-sm text-center"
 				v-model="selectedPageSize"
 			>
 				<option
@@ -18,7 +19,7 @@
 		</div>
 
 		<!-- Page count display -->
-		<div class="flex justify-center items-center w-[100px] font-medium text-nowrap text-sm">
+		<div class="flex justify-center items-center w-[100px] font-medium text-sm text-nowrap">
 			<span v-if="totalPages > 0">Страница {{ currentPage }} из {{ totalPages }}</span>
 			<span v-else>Нет данных</span>
 		</div>
@@ -28,7 +29,7 @@
 			<!-- First page button -->
 			<Button
 				variant="outline"
-				class="lg:flex hidden p-0 w-8 h-8"
+				class="hidden lg:flex p-0 w-8 h-8"
 				:disabled="totalPages === 0 || currentPage === 1"
 				@click="handlePageChange(1)"
 			>
@@ -61,7 +62,7 @@
 			<!-- Last page button -->
 			<Button
 				variant="outline"
-				class="lg:flex hidden p-0 w-8 h-8"
+				class="hidden lg:flex p-0 w-8 h-8"
 				:disabled="totalPages === 0 || currentPage === totalPages"
 				@click="handlePageChange(totalPages)"
 			>

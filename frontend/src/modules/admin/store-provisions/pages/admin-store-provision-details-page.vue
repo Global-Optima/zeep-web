@@ -41,6 +41,7 @@
 <script lang="ts" setup>
 import { Button } from '@/core/components/ui/button'
 import { useToast } from '@/core/components/ui/toast'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import AdminStoreProvisionDetailsInfo from '@/modules/admin/store-provisions/components/details/admin-store-provision-details-info.vue'
 import AdminStoreProvisionDetailsIngredients from '@/modules/admin/store-provisions/components/details/admin-store-provision-details-ingredients.vue'
 import type { StoreProvisionDetailsDTO } from '@/modules/admin/store-provisions/models/store-provision.models'
@@ -56,6 +57,7 @@ const route = useRoute()
 const router = useRouter()
 const { toast } = useToast()
 const queryClient = useQueryClient()
+const {toastLocalizedError} = useAxiosLocaleToast()
 
 const storeProvisionId = route.params.id as string
 
@@ -64,7 +66,7 @@ function onCancel() {
 }
 
 const { data: storeProvision } = useQuery<StoreProvisionDetailsDTO>({
-  queryKey: computed(() => ['admin-store-provision', Number(storeProvisionId)]),
+  queryKey: computed(() => ['admin-store-provision', storeProvisionId]),
   queryFn: () => storeProvisionsService.getStoreProvisionById(Number(storeProvisionId)),
   enabled: !isNaN(Number(storeProvisionId)),
 })
@@ -79,19 +81,15 @@ const {mutate: completeProvision} = useMutation({
 	},
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-store-provisions'] })
-		queryClient.invalidateQueries({ queryKey: ['admin-store-provision-details', storeProvisionId] })
+		queryClient.invalidateQueries({ queryKey: ['admin-store-provision', storeProvisionId] })
 		toast({
 			title: 'Успех!',
       variant: 'success',
 			description: 'Данные успешно обновлены.',
 		})
 	},
-	onError: () => {
-		toast({
-			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении.',
-			variant: 'destructive',
-		})
+	onError: (err: AxiosLocalizedError) => {
+    toastLocalizedError(err, 'Произошла ошибка при обновлении.')
 	},
 })
 

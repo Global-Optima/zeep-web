@@ -139,6 +139,7 @@ export interface UpdateProductSizeDTO {
 	machineId?: string
 	additives?: SelectedAdditiveDTO[]
 	ingredients?: SelectedIngredientDTO[]
+	provisions?: SelectedProvisionDTO[]
 }
 
 export interface ProductsFilterDTO extends PaginationParams {

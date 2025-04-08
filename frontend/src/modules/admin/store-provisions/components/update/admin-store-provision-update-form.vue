@@ -34,8 +34,8 @@ const emits = defineEmits<{
 // Only volume and expirationInMinutes are updated.
 const updateStoreProvisionSchema = toTypedSchema(
   z.object({
-    volume: z.number().min(1, 'Введите объем заготовки'),
-    expirationInMinutes: z.number().min(0, 'Введите срок годности в минутах'),
+    volume: z.number().min(0.0001, 'Введите объем заготовки'),
+    expirationInMinutes: z.number().min(0, 'Введите срок годности в минутах').default(60),
   })
 )
 
@@ -126,6 +126,7 @@ const onCancel = () => {
 								<Input
 									id="volume"
 									type="number"
+									step="0.5"
 									v-bind="componentField"
 									placeholder="Введите объем заготовки"
 								/>
@@ -158,20 +159,16 @@ const onCancel = () => {
 		<Card>
 			<CardHeader>
 				<CardTitle>Сырье</CardTitle>
-				<CardDescription>
-					Рассчитано для объема шаблона:
-					<span v-if="provision">{{ provision.absoluteVolume }}</span>
-				</CardDescription>
+				<CardDescription> Технологическая карта на заданный обьем </CardDescription>
 			</CardHeader>
 			<CardContent>
-				<Table v-if="provision">
+				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead>Название ингредиента</TableHead>
+							<TableHead>Название</TableHead>
 							<TableHead>Категория</TableHead>
-							<TableHead>Кол-во (шаблон)</TableHead>
-							<TableHead>Кол-во (масштаб.)</TableHead>
-							<TableHead>Единица</TableHead>
+							<TableHead>Абсолютный обьем</TableHead>
+							<TableHead>Итоговый обьем</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -180,16 +177,15 @@ const onCancel = () => {
 							:key="ingredient.ingredientId"
 						>
 							<TableCell>{{ ingredient.name }}</TableCell>
-							<TableCell>{{ ingredient.category }}</TableCell>
-							<TableCell>{{ ingredient.quantity }}</TableCell>
-							<TableCell>{{ ingredient.scaledQuantity.toFixed(2) }}</TableCell>
-							<TableCell>{{ ingredient.unit }}</TableCell>
+							<TableCell>{{ ingredient.category.name }}</TableCell>
+							<TableCell>{{ ingredient.quantity }} {{ ingredient.unit.toLowerCase() }}</TableCell>
+							<TableCell class="font-semibold">
+								{{ ingredient.scaledQuantity.toFixed(2) }}
+								{{ ingredient.unit.toLowerCase() }}
+							</TableCell>
 						</TableRow>
 					</TableBody>
 				</Table>
-				<div v-else>
-					<p class="text-gray-500 text-sm">Нет данных для отображения технической карты.</p>
-				</div>
 			</CardContent>
 		</Card>
 

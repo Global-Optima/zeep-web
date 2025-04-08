@@ -20,7 +20,7 @@
 						:key="index"
 					>
 						<TableCell>{{ item.ingredient.name }}</TableCell>
-						<TableCell>{{ item.ingredient.category }}</TableCell>
+						<TableCell>{{ item.ingredient.category.name }}</TableCell>
 						<TableCell>{{ item.quantity }} {{ item.ingredient.unit.name.toLowerCase() }}</TableCell>
 					</TableRow>
 				</TableBody>

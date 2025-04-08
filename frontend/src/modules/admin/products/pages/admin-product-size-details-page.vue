@@ -15,6 +15,7 @@ import AdminProductSizeUpdateForm, { type UpdateProductSizeFormSchema } from '@/
 import type {
   SelectedAdditiveDTO,
   SelectedIngredientDTO,
+  SelectedProvisionDTO,
   UpdateProductSizeDTO
 } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
@@ -84,12 +85,18 @@ function handleUpdate(data: UpdateProductSizeFormSchema) {
     quantity: a.quantity
   }))
 
+  const provisions: SelectedProvisionDTO[] = data.provisions.map(a => ({
+    provisionId: a.provisionId,
+    volume: a.volume
+  }))
+
 	const dto: UpdateProductSizeDTO = {
     name: data.name,
     basePrice: data.basePrice,
     size: data.size,
     unitId: data.unitId,
     machineId: data.machineId,
+    provisions,
     additives,
     ingredients,
   }

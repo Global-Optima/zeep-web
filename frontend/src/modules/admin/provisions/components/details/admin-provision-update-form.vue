@@ -29,7 +29,7 @@ const createProvisionSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название заготовки'),
     absoluteVolume: z.number().min(0, 'Введите абсолютное значение объема'),
-    preparationInMinutes: z.number().min(0, 'Введите корректное значение времени подготовки'),
+    preparationInMinutes: z.number().min(0, 'Введите корректное значение времени приготовления'),
     netCost: z.number().min(0, 'Введите корректное значение себестоимости'),
     limitPerDay: z.number().min(0, 'Введите корректное значение лимита по созданию в день'),
     unitId: z.coerce.number().min(1, 'Выберите корректную единицу измерения'),
@@ -255,14 +255,14 @@ function selectUnit(unit: UnitDTO) {
 						v-slot="{ componentField }"
 					>
 						<FormItem>
-							<FormLabel>Время подготовки (минут)</FormLabel>
+							<FormLabel>Время приготовления (минут)</FormLabel>
 							<FormControl>
 								<Input
 									id="preparationInMinutes"
 									type="number"
 									v-bind="componentField"
 									:readonly="readonly"
-									placeholder="Введите время подготовки"
+									placeholder="Введите время приготовления"
 								/>
 							</FormControl>
 							<FormMessage />

@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronDown, ChevronLeft } from 'lucide-vue-next'
 
 import AdminSelectProvisionDialog from '@/modules/admin/provisions/components/admin-select-provision-dialog.vue'
 
@@ -28,8 +28,8 @@ const emits = defineEmits<{
 // Validation Schema for the store provision details
 const createStoreProvisionSchema = toTypedSchema(
   z.object({
-    volume: z.number().min(1, 'Введите объем заготовки'),
-    expirationInMinutes: z.number().min(0, 'Введите срок годности в минутах'),
+    volume: z.number().min(0.0001, 'Введите объем заготовки'),
+    expirationInMinutes: z.number().min(0, 'Введите срок годности в минутах').default(60),
   })
 )
 
@@ -142,15 +142,17 @@ const onCancel = () => {
 			</CardHeader>
 			<CardContent>
 				<div v-if="selectedProvision">
-					<p class="font-semibold">Выбрана заготовка:</p>
-					<p>{{ selectedProvision.name }}</p>
-					<p>Объем шаблона: {{ selectedProvision.absoluteVolume }}</p>
 					<Button
 						variant="outline"
-						class="mt-2"
+						class="gap-3"
 						@click="openProvisionDialog = true"
 					>
-						Изменить заготовку
+						<span>
+							{{ selectedProvision.name }} - {{ selectedProvision.absoluteVolume }}
+							{{ selectedProvision.unit.name.toLowerCase()}}
+						</span>
+
+						<ChevronDown class="size-4 text-gray-600" />
 					</Button>
 				</div>
 				<div v-else>
@@ -177,7 +179,7 @@ const onCancel = () => {
 						v-slot="{ componentField }"
 					>
 						<FormItem>
-							<FormLabel>Объем</FormLabel>
+							<FormLabel>Объем ({{ selectedProvision.unit.name.toLowerCase() }})</FormLabel>
 							<FormControl>
 								<Input
 									id="volume"
@@ -213,20 +215,16 @@ const onCancel = () => {
 		<Card v-if="selectedProvision">
 			<CardHeader>
 				<CardTitle>Сырье</CardTitle>
-				<CardDescription>
-					Рассчитано для объема
-					<span v-if="selectedProvision">{{ selectedProvision.absoluteVolume }}</span>
-				</CardDescription>
+				<CardDescription> Технологическая карта на заданный обьем </CardDescription>
 			</CardHeader>
 			<CardContent>
 				<Table v-if="selectedProvision">
 					<TableHeader>
 						<TableRow>
-							<TableHead>Название ингредиента</TableHead>
+							<TableHead>Название</TableHead>
 							<TableHead>Категория</TableHead>
-							<TableHead>Кол-во (шаблон)</TableHead>
-							<TableHead>Кол-во (масштаб.)</TableHead>
-							<TableHead>Единица</TableHead>
+							<TableHead>Абсолютный обьем</TableHead>
+							<TableHead>Итоговый обьем</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -235,10 +233,12 @@ const onCancel = () => {
 							:key="ingredient.ingredientId"
 						>
 							<TableCell>{{ ingredient.name }}</TableCell>
-							<TableCell>{{ ingredient.category }}</TableCell>
-							<TableCell>{{ ingredient.quantity }}</TableCell>
-							<TableCell>{{ ingredient.scaledQuantity.toFixed(2) }}</TableCell>
-							<TableCell>{{ ingredient.unit }}</TableCell>
+							<TableCell>{{ ingredient.category.name }}</TableCell>
+							<TableCell>{{ ingredient.quantity }} {{ ingredient.unit.toLowerCase() }}</TableCell>
+							<TableCell class="font-semibold">
+								{{ ingredient.scaledQuantity.toFixed(2) }}
+								{{ ingredient.unit.toLowerCase() }}
+							</TableCell>
 						</TableRow>
 					</TableBody>
 				</Table>

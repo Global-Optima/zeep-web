@@ -11,11 +11,11 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core
 import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import AdminIngredientsSelectDialog from "@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue"
+import type { IngredientsDTO } from "@/modules/admin/ingredients/models/ingredients.model"
 import type { CreateProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
-import type { IngredientsDTO } from "@/modules/admin/ingredients/models/ingredients.model"
 
 
 const emits = defineEmits<{
@@ -28,7 +28,7 @@ const createProvisionSchema = toTypedSchema(
   z.object({
     name: z.string().min(1, 'Введите название заготовки'),
     absoluteVolume: z.number().min(0, 'Введите абсолютное значение объема'),
-    preparationInMinutes: z.number().min(0, 'Введите корректное значение времени подготовки'),
+    preparationInMinutes: z.number().min(0, 'Введите корректное значение времени приготовления'),
     netCost: z.number().min(0, 'Введите корректное значение себестоимости'),
     limitPerDay: z.number().min(0, 'Введите корректное значение лимита по созданию в день'),
     unitId: z.coerce.number().min(1, 'Выберите корректную единицу измерения'),
@@ -225,13 +225,13 @@ function selectUnit(unit: UnitDTO) {
 						v-slot="{ componentField }"
 					>
 						<FormItem>
-							<FormLabel>Время подготовки (минут)</FormLabel>
+							<FormLabel>Время приготовления (минут)</FormLabel>
 							<FormControl>
 								<Input
 									id="preparationInMinutes"
 									type="number"
 									v-bind="componentField"
-									placeholder="Введите время подготовки"
+									placeholder="Введите время приготовления"
 								/>
 							</FormControl>
 							<FormMessage />

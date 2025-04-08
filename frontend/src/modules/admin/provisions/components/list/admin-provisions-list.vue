@@ -45,6 +45,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import { provisionsService } from "@/modules/admin/provisions/services/provisions.service"
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -52,6 +53,8 @@ import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const {provisions} = defineProps<{provisions: ProvisionDTO[]}>()
+
+const {toastLocalizedError} = useAxiosLocaleToast()
 
 const router = useRouter();
 const queryClient = useQueryClient()
@@ -62,8 +65,8 @@ const { mutate: deleteMutation } = useMutation({
 		toast({ title: 'Успешное удаление' })
 		queryClient.invalidateQueries({ queryKey: ['admin-provisions'] })
 	},
-	onError: () => {
-		toast({ title: 'Произошла ошибка при удалении' })
+	onError: (err: AxiosLocalizedError) => {
+    toastLocalizedError(err, 'Произошла ошибка при удалении')
 	},
 })
 

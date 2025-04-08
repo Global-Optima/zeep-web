@@ -2,6 +2,7 @@
 	<Table class="bg-white rounded-xl">
 		<TableHeader>
 			<TableRow>
+				<TableHead>Номер</TableHead>
 				<TableHead class="p-4">Создано</TableHead>
 				<TableHead class="p-4">Заказчик</TableHead>
 				<TableHead class="p-4">Сумма</TableHead>
@@ -15,6 +16,9 @@
 				:key="order.id"
 				class="hover:bg-gray-50 h-12"
 			>
+				<TableCell>
+					{{ order.id }}
+				</TableCell>
 				<TableCell class="p-4">
 					{{ formatDate(order.createdAt) }}
 				</TableCell>
