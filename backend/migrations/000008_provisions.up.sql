@@ -70,6 +70,7 @@ CREATE TABLE store_provision_ingredients (
     ingredient_id INT NOT NULL REFERENCES ingredients(id) ON DELETE CASCADE,
     store_provision_id INT NOT NULL REFERENCES store_provisions(id) ON DELETE CASCADE,
     quantity DECIMAL(10,2) NOT NULL CHECK (quantity > 0),
+    initial_quantity DECIMAL(10,2) NOT NULL CHECK (initial_quantity > 0),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ

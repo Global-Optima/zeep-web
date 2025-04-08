@@ -124,4 +124,5 @@ type StoreProvisionIngredient struct {
 	StoreProvisionID uint           `gorm:"not null"`
 	StoreProvision   StoreProvision `gorm:"foreignKey:StoreProvisionID;constraint:OnDelete:CASCADE"`
 	Quantity         float64        `gorm:"not null;check:quantity > 0"`
+	InitialQuantity  float64        `gorm:"not null;check:initialQuantity > 0"`
 }
