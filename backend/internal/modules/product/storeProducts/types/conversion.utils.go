@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 )
 
@@ -74,20 +73,25 @@ func StoreProductAdditionalInfo(sp data.StoreProduct) (float64, int) {
 func MapToStoreProductSizeDetailsDTO(sps data.StoreProductSize) StoreProductSizeDetailsDTO {
 	additives := make([]productTypes.ProductSizeAdditiveDTO, len(sps.ProductSize.Additives))
 	ingredients := make([]productTypes.ProductSizeIngredientDTO, len(sps.ProductSize.ProductSizeIngredients))
+	provisions := make([]productTypes.ProductSizeProvisionDTO, len(sps.ProductSize.ProductSizeProvisions))
 
 	for i, productSizeAdditive := range sps.ProductSize.Additives {
 		additives[i] = productTypes.ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
 	}
 
 	for i, productSizeIngredient := range sps.ProductSize.ProductSizeIngredients {
-		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
-		ingredients[i].Quantity = productSizeIngredient.Quantity
+		ingredients[i] = productTypes.ConvertToProductSizeIngredientDTO(&productSizeIngredient)
+	}
+
+	for i, productSizeProvision := range sps.ProductSize.ProductSizeProvisions {
+		provisions[i] = productTypes.ConvertToProductSizeProvisionDTO(&productSizeProvision)
 	}
 
 	return StoreProductSizeDetailsDTO{
 		StoreProductSizeDTO: *MapToStoreProductSizeDTO(&sps),
 		Additives:           additives,
 		Ingredients:         ingredients,
+		Provisions:          provisions,
 	}
 }
 

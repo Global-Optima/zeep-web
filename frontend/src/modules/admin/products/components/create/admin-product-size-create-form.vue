@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -40,14 +40,21 @@ import {
 } from '@/core/components/ui/table'
 import { toast } from "@/core/components/ui/toast"
 import { useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
-import AdminSelectAdditiveDialog from '@/modules/admin/additives/components/admin-select-additive-dialog.vue'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
-import AdminIngredientsSelectDialog from '@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
+import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, EllipsisVertical, Trash } from 'lucide-vue-next'
+
+const AdminSelectAdditiveDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/additives/components/admin-select-additive-dialog.vue'))
+const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
+const AdminSelectUnit = defineAsyncComponent(() =>
+  import('@/modules/admin/units/components/admin-select-unit.vue'))
+const AdminSelectProvisionDialog = defineAsyncComponent(() =>
+  import("@/modules/admin/provisions/components/admin-select-provision-dialog.vue"))
 
 interface SelectedAdditiveTypesDTO {
   additiveId: number
@@ -68,6 +75,14 @@ interface SelectedIngredientsTypesDTO {
   quantity: number
 }
 
+interface SelectedProvisionsTypesDTO {
+  provisionId: number
+  name: string
+  absoluteVolume: number
+  unit: string
+  volume: number
+}
+
 export interface CreateProductSizeFormSchema {
   name: ProductSizeNames
   unitId: number
@@ -76,6 +91,7 @@ export interface CreateProductSizeFormSchema {
   machineId: string
   additives: SelectedAdditiveTypesDTO[]
   ingredients: SelectedIngredientsTypesDTO[]
+  provisions: SelectedProvisionsTypesDTO[]
 }
 
 const {initialProductSize} = defineProps<{initialProductSize?: ProductSizeDetailsDTO }>()
@@ -105,6 +121,9 @@ const ingredients = ref<SelectedIngredientsTypesDTO[]>(initialProductSize?.ingre
 
 const openIngredientsDialog = ref(false)
 
+const provisions = ref<SelectedProvisionsTypesDTO[]>([])
+const openProvisionsDialog = ref(false)
+
 function addIngredient(ingredient: IngredientsDTO) {
   if (!ingredients.value.some((item) => item.ingredientId === ingredient.id)) {
     ingredients.value.push({
@@ -113,6 +132,18 @@ function addIngredient(ingredient: IngredientsDTO) {
       unit: ingredient.unit.name,
       category: ingredient.category.name,
       quantity: 0
+    })
+  }
+}
+
+function addProvision(provision: ProvisionDTO) {
+  if (!provisions.value.some((item) => item.provisionId === provision.id)) {
+    provisions.value.push({
+      provisionId: provision.id,
+      name: provision.name,
+      unit: provision.unit.name,
+      absoluteVolume: provision.absoluteVolume,
+      volume: 0
     })
   }
 }
@@ -166,6 +197,10 @@ function removeIngredient(index: number) {
   ingredients.value.splice(index, 1)
 }
 
+function removeProvision(index: number) {
+  provisions.value.splice(index, 1)
+}
+
 const onSubmit = handleSubmit((formValues) => {
   if (additivesError.value) {
     return
@@ -175,11 +210,17 @@ const onSubmit = handleSubmit((formValues) => {
     return toast({ description: "Укажите количество в технологической карте" })
   }
 
+  if (provisions.value.some(i => i.volume <= 0)) {
+    return toast({ description: "Укажите обьем в заготовке" })
+  }
+
   const finalDTO: CreateProductSizeFormSchema = {
     ...formValues,
     additives: additives.value,
-    ingredients: ingredients.value
+    ingredients: ingredients.value,
+    provisions: provisions.value
   }
+
   emits('onSubmit', finalDTO)
 })
 
@@ -535,12 +576,66 @@ const onPasteTechMapClick = async () => {
 							</TableRow>
 						</TableBody>
 					</Table>
-					<div
-						v-if="additivesError"
-						class="mt-2 text-red-500 text-sm"
-					>
-						{{ additivesError }}
+				</CardContent>
+			</Card>
+
+			<Card class="mt-4">
+				<CardHeader>
+					<div class="flex justify-between items-start">
+						<div>
+							<CardTitle>Заготовки</CardTitle>
+							<CardDescription class="mt-2"> Выберите заготовки и их обьем </CardDescription>
+						</div>
+						<Button
+							variant="outline"
+							@click="openProvisionsDialog = true"
+						>
+							Добавить
+						</Button>
 					</div>
+				</CardHeader>
+				<CardContent>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Название</TableHead>
+								<TableHead>Изначальный обьем</TableHead>
+								<TableHead>Обьем для продукта</TableHead>
+								<TableHead></TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							<TableRow
+								v-for="(provision, index) in provisions"
+								:key="provision.provisionId"
+							>
+								<TableCell>{{ provision.name }}</TableCell>
+								<TableCell
+									>{{ provision.absoluteVolume }} {{ provision.unit.toLowerCase() }}</TableCell
+								>
+
+								<TableCell class="flex items-center gap-4">
+									<Input
+										type="number"
+										v-model.number="provision.volume"
+										:min="0"
+										class="w-24"
+										placeholder="Введите нужный обьем"
+									/>
+									{{ provision.unit.toLowerCase() }}
+								</TableCell>
+								<TableCell class="text-center">
+									<Button
+										variant="ghost"
+										size="icon"
+										@click="removeProvision(index)"
+									>
+										<Trash class="w-6 h-6 text-red-500" />
+									</Button>
+								</TableCell>
+							</TableRow>
+						</TableBody>
+					</Table>
 				</CardContent>
 			</Card>
 		</div>
@@ -549,6 +644,12 @@ const onPasteTechMapClick = async () => {
 			:open="openIngredientsDialog"
 			@close="openIngredientsDialog = false"
 			@select="addIngredient"
+		/>
+
+		<AdminSelectProvisionDialog
+			:open="openProvisionsDialog"
+			@close="openProvisionsDialog = false"
+			@select="addProvision"
 		/>
 
 		<!-- Additive Dialog -->

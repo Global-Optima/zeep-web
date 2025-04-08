@@ -3,6 +3,8 @@ package types
 import (
 	"mime/multipart"
 
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -54,6 +56,12 @@ type ProductSizeDetailsDTO struct {
 	TotalNutrition TotalNutrition             `json:"totalNutrition"`
 	Additives      []ProductSizeAdditiveDTO   `json:"additives"`
 	Ingredients    []ProductSizeIngredientDTO `json:"ingredients"`
+	Provisions     []ProductSizeProvisionDTO  `json:"provisions"`
+}
+
+type ProductSizeProvisionDTO struct {
+	Provision provisionsTypes.ProvisionDTO `json:"provision"`
+	Volume    float64                      `json:"volume"`
 }
 
 type ProductSizeAdditiveDTO struct {
@@ -76,20 +84,16 @@ type SelectedAdditiveDTO struct {
 	IsHidden   bool `json:"isHidden"`
 }
 
-type SelectedIngredientDTO struct {
-	IngredientID uint    `json:"ingredientId" binding:"required,gt=0"`
-	Quantity     float64 `json:"quantity" binding:"required,gt=0"`
-}
-
 type CreateProductSizeDTO struct {
-	ProductID   uint                    `json:"productId" binding:"required,gt=0"`
-	Name        string                  `json:"name" binding:"required,oneof=S M L"`
-	Size        float64                 `json:"size" binding:"required,gt=0"`
-	UnitID      uint                    `json:"unitId" binding:"required,gt=0"`
-	BasePrice   float64                 `json:"basePrice" binding:"required,gt=0"`
-	MachineId   string                  `json:"machineId" binding:"required,max=40"`
-	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
-	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	ProductID   uint                                    `json:"productId" binding:"required,gt=0"`
+	Name        string                                  `json:"name" binding:"required,oneof=S M L"`
+	Size        float64                                 `json:"size" binding:"required,gt=0"`
+	UnitID      uint                                    `json:"unitId" binding:"required,gt=0"`
+	BasePrice   float64                                 `json:"basePrice" binding:"required,gt=0"`
+	MachineId   string                                  `json:"machineId" binding:"required,max=40"`
+	Additives   []SelectedAdditiveDTO                   `json:"additives" binding:"omitempty,dive"`
+	Ingredients []ingredientTypes.SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	Provisions  []provisionsTypes.SelectedProvisionDTO  `json:"provisions" binding:"omitempty,dive"`
 }
 
 type UpdateProductDTO struct {
@@ -103,13 +107,14 @@ type UpdateProductDTO struct {
 }
 
 type UpdateProductSizeDTO struct {
-	Name        *string                 `json:"name" binding:"min=0,omitempty,max=100"`
-	BasePrice   *float64                `json:"basePrice" binding:"omitempty,gt=0"`
-	Size        *float64                `json:"size" binding:"omitempty,gt=0"`
-	UnitID      *uint                   `json:"unitId" binding:"omitempty,gt=0"`
-	MachineId   *string                 `json:"machineId" binding:"omitempty,max=40"`
-	Additives   []SelectedAdditiveDTO   `json:"additives" binding:"omitempty,dive"`
-	Ingredients []SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	Name        *string                                 `json:"name" binding:"min=0,omitempty,max=100"`
+	BasePrice   *float64                                `json:"basePrice" binding:"omitempty,gt=0"`
+	Size        *float64                                `json:"size" binding:"omitempty,gt=0"`
+	UnitID      *uint                                   `json:"unitId" binding:"omitempty,gt=0"`
+	MachineId   *string                                 `json:"machineId" binding:"omitempty,max=40"`
+	Additives   []SelectedAdditiveDTO                   `json:"additives" binding:"omitempty,dive"`
+	Ingredients []ingredientTypes.SelectedIngredientDTO `json:"ingredients" binding:"omitempty,dive"`
+	Provisions  []provisionsTypes.SelectedProvisionDTO  `json:"provisions" binding:"omitempty,dive"`
 }
 
 type ProductsFilterDto struct {

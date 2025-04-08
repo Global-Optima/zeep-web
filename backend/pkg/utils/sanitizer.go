@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"reflect"
 	"regexp"
 	"strings"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/shopspring/decimal"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/text/unicode/norm"
 )
@@ -354,8 +354,12 @@ func InitValidators() {
 	RegisterCustomValidators(validate)
 }
 
-func RoundToOneDecimal(value float64) float64 {
-	return math.Round(value*10) / 10
+func RoundToDecimal(value float64, precision int32) float64 {
+	d := decimal.NewFromFloat(value)
+	rounded := d.Round(precision)
+	result, _ := rounded.Float64()
+
+	return result
 }
 
 func UnionSlices[T comparable](arr1, arr2 []T) []T {
@@ -386,4 +390,11 @@ func DiffSlice[T comparable](all, subset []T) []T {
 		}
 	}
 	return diff
+}
+
+func DerefString(s *string) string {
+	if s != nil {
+		return *s
+	}
+	return ""
 }

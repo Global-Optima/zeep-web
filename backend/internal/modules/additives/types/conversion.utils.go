@@ -1,6 +1,7 @@
 package types
 
 import (
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/pkg/errors"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -12,6 +13,7 @@ import (
 type AdditiveModels struct {
 	Additive    *data.Additive
 	Ingredients []data.AdditiveIngredient
+	Provisions  []data.AdditiveProvision
 }
 
 func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
@@ -29,6 +31,13 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 		additive.Ingredients = append(additive.Ingredients, data.AdditiveIngredient{
 			IngredientID: ingredient.IngredientID,
 			Quantity:     ingredient.Quantity,
+		})
+	}
+
+	for _, provision := range dto.Provisions {
+		additive.AdditiveProvisions = append(additive.AdditiveProvisions, data.AdditiveProvision{
+			ProvisionID: provision.ProvisionID,
+			Volume:      provision.Volume,
 		})
 	}
 
@@ -63,24 +72,29 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO, additive *data.Addit
 	}
 
 	var ingredients []data.AdditiveIngredient
-
 	if dto.Ingredients != nil {
-		if len(dto.Ingredients) == 0 {
-			ingredients = []data.AdditiveIngredient{}
-		} else {
-			for _, ingredient := range dto.Ingredients {
-				temp := data.AdditiveIngredient{
-					IngredientID: ingredient.IngredientID,
-					Quantity:     ingredient.Quantity,
-				}
-				ingredients = append(ingredients, temp)
-			}
+		for _, ing := range dto.Ingredients {
+			ingredients = append(ingredients, data.AdditiveIngredient{
+				IngredientID: ing.IngredientID,
+				Quantity:     ing.Quantity,
+			})
+		}
+	}
+
+	var provisions []data.AdditiveProvision
+	if dto.Provisions != nil {
+		for _, prov := range dto.Provisions {
+			provisions = append(provisions, data.AdditiveProvision{
+				ProvisionID: prov.ProvisionID,
+				Volume:      prov.Volume,
+			})
 		}
 	}
 
 	return &AdditiveModels{
 		Additive:    additive,
 		Ingredients: ingredients,
+		Provisions:  provisions,
 	}, nil
 }
 
@@ -123,16 +137,36 @@ func ConvertToAdditiveDTO(additive *data.Additive) *AdditiveDTO {
 	}
 }
 
+func ConvertToAdditiveIngredientDTO(additiveIngredient *data.AdditiveIngredient) *AdditiveIngredientDTO {
+	return &AdditiveIngredientDTO{
+		Ingredient: *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient),
+		Quantity:   additiveIngredient.Quantity,
+	}
+}
+
+func ConvertToAdditiveProvisionDTO(additiveProvision *data.AdditiveProvision) *AdditiveProvisionDTO {
+	return &AdditiveProvisionDTO{
+		Provision: *provisionsTypes.MapToProvisionDTO(&additiveProvision.Provision),
+		Volume:    additiveProvision.Volume,
+	}
+}
+
 func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
 	ingredients := make([]AdditiveIngredientDTO, len(additive.Ingredients))
+	provisions := make([]AdditiveProvisionDTO, len(additive.AdditiveProvisions))
+
 	for i, additiveIngredient := range additive.Ingredients {
-		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&additiveIngredient.Ingredient)
-		ingredients[i].Quantity = additiveIngredient.Quantity
+		ingredients[i] = *ConvertToAdditiveIngredientDTO(&additiveIngredient)
+	}
+
+	for i, additiveProvision := range additive.AdditiveProvisions {
+		provisions[i] = *ConvertToAdditiveProvisionDTO(&additiveProvision)
 	}
 
 	return &AdditiveDetailsDTO{
 		AdditiveDTO: *ConvertToAdditiveDTO(additive),
 		Ingredients: ingredients,
+		Provisions:  provisions,
 	}
 }
 

@@ -4,6 +4,30 @@ import (
 	"time"
 )
 
+type StoreProvisionStatus string
+
+func (p StoreProvisionStatus) ToString() string {
+	return string(p)
+}
+
+const (
+	PROVISION_STATUS_PREPARING StoreProvisionStatus = "PREPARING"
+	PROVISION_STATUS_COMPLETED StoreProvisionStatus = "COMPLETED"
+	PROVISION_STATUS_EXPIRED   StoreProvisionStatus = "EXPIRED"
+)
+
+type Product struct {
+	BaseEntity
+	Name         string           `gorm:"size:100;not null" sort:"name"`
+	Description  string           `gorm:"type:text"`
+	ImageKey     *StorageImageKey `gorm:"size:2048"`
+	VideoKey     *StorageVideoKey `gorm:"size:2048"`
+	CategoryID   uint             `gorm:"index;not null"`
+	Category     ProductCategory  `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
+	RecipeSteps  []RecipeStep     `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	ProductSizes []ProductSize    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+}
+
 type Franchisee struct {
 	BaseEntity
 	Name                string               `gorm:"size:255;not null" sort:"name"`
@@ -77,4 +101,27 @@ type FacilityAddress struct {
 	Longitude *float64 `gorm:"type:decimal(9,6)"`
 	Latitude  *float64 `gorm:"type:decimal(9,6)"`
 	Stores    []Store  `gorm:"foreignKey:FacilityAddressID"`
+}
+
+type StoreProvision struct {
+	BaseEntity
+	ProvisionID               uint                       `gorm:"not null;index"`
+	Provision                 Provision                  `gorm:"foreignKey:ProvisionID;constraint:OnDelete:CASCADE"`
+	Volume                    float64                    `gorm:"type:decimal(10,2);not null;check:volume > 0" sort:"volume"`
+	Status                    StoreProvisionStatus       `gorm:"not null" sort:"status"`
+	ExpirationInMinutes       uint                       `gorm:"not null;check:expiration_in_minutes > 0" sort:"expirationInMinutes"`
+	StoreProvisionIngredients []StoreProvisionIngredient `gorm:"foreignKey:StoreProvisionID;constraint:OnDelete:CASCADE"`
+	StoreID                   uint                       `gorm:"not null;index"`
+	Store                     Store                      `gorm:"foreignKey:StoreID;constraint:OnDelete:CASCADE"`
+	CompletedAt               *time.Time                 `gorm:"" sort:"completedAt"`
+	ExpiresAt                 *time.Time                 `gorm:"" sort:"expiresAt"`
+}
+
+type StoreProvisionIngredient struct {
+	BaseEntity
+	IngredientID     uint           `gorm:"not null;index"`
+	Ingredient       Ingredient     `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	StoreProvisionID uint           `gorm:"not null"`
+	StoreProvision   StoreProvision `gorm:"foreignKey:StoreProvisionID;constraint:OnDelete:CASCADE"`
+	Quantity         float64        `gorm:"not null;check:quantity > 0"`
 }

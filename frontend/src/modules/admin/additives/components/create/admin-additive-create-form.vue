@@ -24,6 +24,7 @@ import type { AdditiveCategoryDetailsDTO, AdditiveCategoryDTO, AdditiveDetailsDT
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
+import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 
 const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
   import('@/modules/admin/additive-categories/components/admin-select-additive-category.vue'))
@@ -31,11 +32,29 @@ const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
   import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
 const AdminSelectUnit = defineAsyncComponent(() =>
   import('@/modules/admin/units/components/admin-select-unit.vue'))
+const AdminSelectProvisionDialog = defineAsyncComponent(() =>
+  import("@/modules/admin/provisions/components/admin-select-provision-dialog.vue"))
 
 interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   name: string
   unit: string
   category: string
+}
+
+interface SelectedProvisionsTypesDTO {
+  provisionId: number
+  name: string
+  absoluteVolume: number
+  unit: string
+  volume: number
+}
+
+interface SelectedProvisionsTypesDTO {
+  provisionId: number
+  name: string
+  absoluteVolume: number
+  unit: string
+  volume: number
 }
 
 const {isSubmitting, initialAdditive} = defineProps<{isSubmitting: boolean, initialAdditive?: AdditiveDetailsDTO }>()
@@ -64,6 +83,8 @@ const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(initialAdditive?.
 })) || [])
 const openIngredientsDialog = ref(false)
 
+const provisions = ref<SelectedProvisionsTypesDTO[]>([])
+const openProvisionsDialog = ref(false)
 
 // Validation Schema
 const createAdditiveSchema = toTypedSchema(
@@ -128,11 +149,16 @@ const onSubmit = handleSubmit((formValues) => {
     return toast({ description: "Укажите количество в технологической карте" })
   }
 
+  if (provisions.value.some(i => i.volume <= 0)) {
+    return toast({ description: "Укажите обьем в заготовке" })
+  }
+
   const dto: CreateAdditiveDTO = {
     ...formValues,
     additiveCategoryId: selectedCategory.value.id,
     unitId: selectedUnit.value.id,
-    ingredients: selectedIngredients.value.map(i => ({ingredientId: i.ingredientId, quantity: i.quantity}))
+    ingredients: selectedIngredients.value.map(i => ({ingredientId: i.ingredientId, quantity: i.quantity})),
+    provisions: provisions.value.map(p => ({provisionId: p.provisionId, volume: p.volume}))
   }
 
   emits('onSubmit', dto)
@@ -141,6 +167,18 @@ const onSubmit = handleSubmit((formValues) => {
 const onCancel = () => {
   resetForm()
   emits('onCancel')
+}
+
+function addProvision(provision: ProvisionDTO) {
+  if (!provisions.value.some((item) => item.provisionId === provision.id)) {
+    provisions.value.push({
+      provisionId: provision.id,
+      name: provision.name,
+      unit: provision.unit.name,
+      absoluteVolume: provision.absoluteVolume,
+      volume: 0
+    })
+  }
 }
 
 function selectCategory(category: AdditiveCategoryDetailsDTO) {
@@ -192,6 +230,10 @@ const onPasteTechMapClick = async () => {
   } catch {
     toast({ description: "Ошибка при вставке технологической карты", variant: "destructive" })
   }
+}
+
+function removeProvision(index: number) {
+  provisions.value.splice(index, 1)
 }
 </script>
 
@@ -340,7 +382,7 @@ const onPasteTechMapClick = async () => {
 					</CardContent>
 				</Card>
 
-				<Card class="mt-4">
+				<Card>
 					<CardHeader>
 						<div class="flex justify-between items-start">
 							<div>
@@ -402,6 +444,66 @@ const onPasteTechMapClick = async () => {
 											variant="ghost"
 											size="icon"
 											@click="removeIngredient(index)"
+										>
+											<Trash class="w-6 h-6 text-red-500" />
+										</Button>
+									</TableCell>
+								</TableRow>
+							</TableBody>
+						</Table>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<div class="flex justify-between items-start">
+							<div>
+								<CardTitle>Заготовки</CardTitle>
+								<CardDescription class="mt-2"> Выберите заготовки и их обьем </CardDescription>
+							</div>
+							<Button
+								variant="outline"
+								@click="openProvisionsDialog = true"
+							>
+								Добавить
+							</Button>
+						</div>
+					</CardHeader>
+					<CardContent>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Название</TableHead>
+									<TableHead>Изначальный обьем</TableHead>
+									<TableHead>Обьем для продукта</TableHead>
+									<TableHead></TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								<TableRow
+									v-for="(provision, index) in provisions"
+									:key="provision.provisionId"
+								>
+									<TableCell>{{ provision.name }}</TableCell>
+									<TableCell
+										>{{ provision.absoluteVolume }} {{ provision.unit.toLowerCase() }}</TableCell
+									>
+
+									<TableCell class="flex items-center gap-4">
+										<Input
+											type="number"
+											v-model.number="provision.volume"
+											:min="0"
+											class="w-24"
+											placeholder="Введите нужный обьем"
+										/>
+										{{ provision.unit.toLowerCase() }}
+									</TableCell>
+									<TableCell class="text-center">
+										<Button
+											variant="ghost"
+											size="icon"
+											@click="removeProvision(index)"
 										>
 											<Trash class="w-6 h-6 text-red-500" />
 										</Button>
@@ -540,6 +642,12 @@ const onPasteTechMapClick = async () => {
 			:open="openIngredientsDialog"
 			@close="openIngredientsDialog = false"
 			@select="addIngredient"
+		/>
+
+		<AdminSelectProvisionDialog
+			:open="openProvisionsDialog"
+			@close="openProvisionsDialog = false"
+			@select="addProvision"
 		/>
 
 		<!-- Category Dialog -->

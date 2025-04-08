@@ -1,9 +1,12 @@
 package additives
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
+
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -192,20 +195,14 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 		return
 	}
 
-	ingredientsJSON := c.PostForm("ingredients")
-	if ingredientsJSON != "" {
-		err := json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients)
-		if err != nil {
-			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-			return
-		}
+	if err := ingredientTypes.ParseJSONIngredientsFromString(c.PostForm(types.INGREDIENTS_FORM_DATA_KEY), &dto.Ingredients); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
 
-		for _, ingredient := range dto.Ingredients {
-			if ingredient.IngredientID == 0 || ingredient.Quantity <= 0 {
-				localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-				return
-			}
-		}
+	if err := provisionsTypes.ParseJSONProvisionsFromString(c.PostForm(types.PROVISIONS_FORM_DATA_KEY), &dto.Provisions); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)
@@ -247,13 +244,14 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		return
 	}
 
-	ingredientsJSON := c.PostForm("ingredients")
-	if ingredientsJSON != "" {
-		err = json.Unmarshal([]byte(ingredientsJSON), &dto.Ingredients)
-		if err != nil {
-			localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-			return
-		}
+	if err := ingredientTypes.ParseJSONIngredientsFromString(c.PostForm(types.INGREDIENTS_FORM_DATA_KEY), &dto.Ingredients); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	if err := provisionsTypes.ParseJSONProvisionsFromString(c.PostForm(types.PROVISIONS_FORM_DATA_KEY), &dto.Provisions); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
 	}
 
 	dto.Image, err = media.GetImageWithFormFile(c)
@@ -261,6 +259,8 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
+
+	logrus.Info(dto.Provisions)
 
 	additive, err := h.service.UpdateAdditive(uint(additiveID), &dto)
 	if err != nil {

@@ -10,6 +10,7 @@ import {
 	MapPinned,
 	Package,
 	PackageCheck,
+	ReceiptText,
 	Ruler,
 	Settings,
 	ShoppingCart,
@@ -103,6 +104,17 @@ export const adminNavItems: SidebarNavItem[] = [
 		name: 'Склад',
 		routeKey: 'ADMIN_STORE_STOCKS',
 		icon: Warehouse,
+		accessRoles: [
+			EmployeeRole.STORE_MANAGER,
+			EmployeeRole.BARISTA,
+			EmployeeRole.FRANCHISEE_MANAGER,
+			EmployeeRole.FRANCHISEE_OWNER,
+		],
+	},
+	{
+		name: 'Заготовки',
+		routeKey: 'ADMIN_STORE_PROVISIONS',
+		icon: ReceiptText,
 		accessRoles: [
 			EmployeeRole.STORE_MANAGER,
 			EmployeeRole.BARISTA,
@@ -219,6 +231,12 @@ export const adminNavItems: SidebarNavItem[] = [
 			EmployeeRole.WAREHOUSE_EMPLOYEE,
 			EmployeeRole.REGION_WAREHOUSE_MANAGER,
 		],
+	},
+	{
+		name: 'Заготовки',
+		routeKey: 'ADMIN_PROVISIONS',
+		icon: ReceiptText,
+		accessRoles: [EmployeeRole.ADMIN],
 	},
 	{
 		label: 'Продукты',

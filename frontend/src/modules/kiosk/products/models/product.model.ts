@@ -1,7 +1,10 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
-import type { ProductSizeIngredientDTO } from '@/modules/admin/store-products/models/store-products.model'
+import type {
+	ProductSizeIngredientDTO,
+	ProductSizeProvisionDTO,
+} from '@/modules/admin/store-products/models/store-products.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 
 export enum ProductSizeNames {
@@ -74,6 +77,7 @@ export interface ProductSizeDTO extends BaseProductSizeDTO {
 export interface ProductSizeDetailsDTO extends ProductSizeDTO {
 	additives: ProductSizeAdditiveDTO[]
 	ingredients: ProductSizeIngredientDTO[]
+	provisions: ProductSizeProvisionDTO[]
 }
 
 export interface ProductSizeAdditiveDTO extends AdditiveDTO {
@@ -100,6 +104,11 @@ export interface SelectedIngredientDTO {
 	quantity: number
 }
 
+export interface SelectedProvisionDTO {
+	provisionId: number
+	volume: number
+}
+
 export interface CreateProductSizeDTO {
 	productId: number
 	name: string
@@ -109,6 +118,7 @@ export interface CreateProductSizeDTO {
 	machineId: string
 	additives?: SelectedAdditiveDTO[]
 	ingredients: SelectedIngredientDTO[]
+	provisions: SelectedProvisionDTO[]
 }
 
 export interface UpdateProductDTO {
@@ -130,6 +140,7 @@ export interface UpdateProductSizeDTO {
 	machineId?: string
 	additives?: SelectedAdditiveDTO[]
 	ingredients?: SelectedIngredientDTO[]
+	provisions?: SelectedProvisionDTO[]
 }
 
 export interface ProductsFilterDTO extends PaginationParams {

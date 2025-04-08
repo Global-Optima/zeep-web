@@ -24,6 +24,7 @@ import type { AdditiveCategoryDetailsDTO, AdditiveCategoryDTO, AdditiveDetailsDT
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
+import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 
 // Async Components
 const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
@@ -32,11 +33,21 @@ const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
   import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
 const AdminSelectUnit = defineAsyncComponent(() =>
   import('@/modules/admin/units/components/admin-select-unit.vue'))
+const AdminSelectProvisionDialog = defineAsyncComponent(() =>
+  import("@/modules/admin/provisions/components/admin-select-provision-dialog.vue"))
 
 interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   name: string
   unit: string
   category: string
+}
+
+interface SelectedProvisionsTypesDTO {
+  provisionId: number
+  name: string
+  absoluteVolume: number
+  unit: string
+  volume: number
 }
 
 const { additive, readonly = false, isSubmitting } = defineProps<{
@@ -117,6 +128,15 @@ const handleImageUpload = (event: Event) => {
   }
 };
 
+const provisions = ref<SelectedProvisionsTypesDTO[]>(additive.provisions.map(p => ({
+  provisionId: p.provision.id,
+  name: p.provision.name,
+  absoluteVolume: p.provision.absoluteVolume,
+  unit: p.provision.unit.name,
+  volume: p.volume,
+})))
+const openProvisionsDialog = ref(false)
+
 // Handlers
 const onSubmit = handleSubmit((formValues) => {
   if (readonly) return
@@ -127,12 +147,17 @@ const onSubmit = handleSubmit((formValues) => {
     return toast({ description: "Укажите количество в технологической карте" })
   }
 
+  if (provisions.value.some(i => i.volume <= 0)) {
+    return toast({ description: "Укажите количество в технологической карте" })
+  }
+
   const dto: UpdateAdditiveDTO = {
     ...formValues,
     additiveCategoryId: selectedCategory.value.id,
     unitId: selectedUnit.value.id,
     ingredients: selectedIngredients.value.map(i => ({ ingredientId: i.ingredientId, quantity: i.quantity })),
     deleteImage: deleteImage.value,
+    provisions: provisions.value.map(p => ({provisionId: p.provisionId, volume: p.volume}))
   }
 
   emits('onSubmit', dto)
@@ -154,6 +179,19 @@ const onDeleteImage = () => {
 const onCancel = () => {
   emits('onCancel')
 }
+
+function addProvision(provision: ProvisionDTO) {
+  if (!provisions.value.some((item) => item.provisionId === provision.id)) {
+    provisions.value.push({
+      provisionId: provision.id,
+      name: provision.name,
+      unit: provision.unit.name,
+      absoluteVolume: provision.absoluteVolume,
+      volume: 0
+    })
+  }
+}
+
 
 function selectCategory(category: AdditiveCategoryDetailsDTO) {
   selectedCategory.value = category
@@ -181,6 +219,11 @@ function addIngredient(ingredient: IngredientsDTO) {
 
 function removeIngredient(index: number) {
   selectedIngredients.value.splice(index, 1)
+}
+
+function removeProvision(index: number) {
+  if (readonly) return
+  provisions.value.splice(index, 1)
 }
 
 const imageInputRef = useTemplateRef("imageInputRef");
@@ -455,6 +498,72 @@ const onPasteTechMapClick = async () => {
 						</Table>
 					</CardContent>
 				</Card>
+
+				<Card class="mt-4">
+					<CardHeader>
+						<div class="flex justify-between items-start">
+							<div>
+								<CardTitle>Заготовки</CardTitle>
+								<CardDescription
+									v-if="!readonly"
+									class="mt-2"
+								>
+									Выберите заготовки и их обьем
+								</CardDescription>
+							</div>
+							<Button
+								v-if="!readonly"
+								variant="outline"
+								@click="openProvisionsDialog = true"
+							>
+								Добавить
+							</Button>
+						</div>
+					</CardHeader>
+					<CardContent>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Название</TableHead>
+									<TableHead>Изначальный обьем</TableHead>
+									<TableHead>Обьем для продукта</TableHead>
+									<TableHead></TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								<TableRow
+									v-for="(provision, index) in provisions"
+									:key="provision.provisionId"
+								>
+									<TableCell>{{ provision.name }}</TableCell>
+									<TableCell
+										>{{ provision.absoluteVolume }} {{ provision.unit.toLowerCase() }}</TableCell
+									>
+
+									<TableCell class="flex items-center gap-4">
+										<Input
+											type="number"
+											v-model.number="provision.volume"
+											:min="0"
+											class="w-24"
+											placeholder="Введите нужный обьем"
+										/>
+										{{ provision.unit.toLowerCase() }}
+									</TableCell>
+									<TableCell class="text-center">
+										<Button
+											variant="ghost"
+											size="icon"
+											@click="removeProvision(index)"
+										>
+											<Trash class="w-6 h-6 text-red-500" />
+										</Button>
+									</TableCell>
+								</TableRow>
+							</TableBody>
+						</Table>
+					</CardContent>
+				</Card>
 			</div>
 
 			<!-- Media and Category Blocks -->
@@ -599,6 +708,12 @@ const onPasteTechMapClick = async () => {
 			:open="openIngredientsDialog"
 			@close="openIngredientsDialog = false"
 			@select="addIngredient"
+		/>
+
+		<AdminSelectProvisionDialog
+			:open="openProvisionsDialog"
+			@close="openProvisionsDialog = false"
+			@select="addProvision"
 		/>
 
 		<AdminSelectAdditiveCategory

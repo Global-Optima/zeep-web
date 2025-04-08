@@ -10,7 +10,7 @@ import type {
 	UpdateIngredientCategoryDTO,
 	UpdateIngredientDTO,
 } from '../models/ingredients.model'
-import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 
 class IngredientsService {
 	async getIngredients(filter?: IngredientFilter) {

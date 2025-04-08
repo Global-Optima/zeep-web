@@ -6,6 +6,7 @@ import type {
 	ProductTotalNutrition,
 } from '@/modules/kiosk/products/models/product.model'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
+import type { ProvisionDTO } from '@/modules/admin/provisions/models/provision.models'
 
 export interface StoreProductDTO extends BaseProductDTO {
 	id: number
@@ -15,7 +16,7 @@ export interface StoreProductDTO extends BaseProductDTO {
 	storeProductSizeCount: number
 	productSizeCount: number
 	isAvailable: boolean
-  isOutOfStock: boolean
+	isOutOfStock: boolean
 }
 
 export interface StoreProductSizeDTO extends BaseProductSizeDTO {
@@ -37,6 +38,11 @@ export interface StoreProductSizeDetailsDTO extends StoreProductSizeDTO {
 export interface ProductSizeIngredientDTO {
 	quantity: number
 	ingredient: IngredientsDTO
+}
+
+export interface ProductSizeProvisionDTO {
+	volume: number
+	provision: ProvisionDTO
 }
 
 export interface CreateStoreProductDTO {
@@ -62,7 +68,7 @@ export interface UpdateStoreProductSizeDTO {
 
 export interface StoreProductsFilterDTO extends PaginationParams {
 	categoryId?: number
-  isOutOfStock?: boolean
+	isOutOfStock?: boolean
 	isAvailable?: boolean
 	search?: string
 	maxPrice?: number

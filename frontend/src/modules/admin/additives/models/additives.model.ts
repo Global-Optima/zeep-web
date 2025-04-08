@@ -2,6 +2,8 @@ import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { TechnicalMapDTO } from '@/modules/kiosk/products/models/product.model'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
 import type { UnitDTO } from '../../units/models/units.model'
+import type { ProvisionDTO } from '../../provisions/models/provision.models'
+import type { SelectedProvisionDTO } from '@/modules/kiosk/products/models/product.model'
 // Filters
 export interface AdditiveCategoriesFilterQuery extends PaginationParams {
 	includeEmpty?: boolean
@@ -49,11 +51,17 @@ export interface AdditiveDTO extends BaseAdditiveDTO {
 
 export interface AdditiveDetailsDTO extends AdditiveDTO {
 	ingredients: SelectedDetailedIngredientDTO[]
+	provisions: SelectedDetailedProvisionsDTO[]
 }
 
 export interface SelectedDetailedIngredientDTO {
 	ingredient: IngredientsDTO
 	quantity: number
+}
+
+export interface SelectedDetailedProvisionsDTO {
+	provision: ProvisionDTO
+	volume: number
 }
 
 export interface AdditiveCategoryDetailsDTO extends AdditiveCategoryDTO {
@@ -83,6 +91,7 @@ export interface UpdateAdditiveDTO {
 	additiveCategoryId?: number
 	machineId?: string
 	ingredients?: SelectedIngredientDTO[]
+	provisions?: SelectedProvisionDTO[]
 	image?: File
 	deleteImage: boolean
 }
@@ -97,6 +106,7 @@ export interface CreateAdditiveDTO {
 	additiveCategoryId: number
 	machineId: string
 	ingredients: SelectedIngredientDTO[]
+	provisions?: SelectedProvisionDTO[]
 	image?: File
 }
 

@@ -24,6 +24,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
 	productTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/product/technicalMap"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -405,6 +407,29 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 			statusGroup.PATCH("/reject-store", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.RejectStoreStatus)             // Store
 			statusGroup.PATCH("/completed", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SetCompletedStatus)               // Store
 		}
+	}
+}
+
+func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler) {
+	router := r.EmployeeRoutes.Group("/provisions")
+	{
+		router.GET("", handler.GetProvisions)
+		router.GET("/:id", handler.GetProvisionByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProvision)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProvisionByID)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProvisionByID)
+	}
+}
+
+func (r *Router) RegisterStoreProvisionsRoutes(handler *storeProvisions.StoreProvisionHandler) {
+	router := r.EmployeeRoutes.Group("/store-provisions")
+	{
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStoreProvisions)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStoreProvisionByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateStoreProvision)
+		router.POST("/:id/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteStoreProvisionByID)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.UpdateStoreProvisionByID)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.DeleteStoreProvisionByID)
 	}
 }
 
