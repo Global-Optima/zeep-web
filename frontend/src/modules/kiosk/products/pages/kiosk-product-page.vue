@@ -130,6 +130,7 @@ const { data: productDetails, isPending: isFetching, isError = true } = useQuery
   queryKey: computed(() => ['kiosk-product-details', productId]),
   queryFn: () => storeProductsService.getStoreProduct(productId.value),
   enabled: computed(() => productId.value > 0),
+  refetchInterval: 20_000
 });
 
 const sortedSizes = computed(() => {
@@ -157,6 +158,7 @@ const { data: additiveCategories } = useQuery({
     }
   },
   enabled: computed(() => !!selectedSize.value),
+  refetchInterval: 20_000
 });
 
 // Watch additiveCategories to enforce required auto‑selection.

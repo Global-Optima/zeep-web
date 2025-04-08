@@ -9,18 +9,17 @@ import { ordersService } from '@/modules/admin/store-orders/services/orders.serv
 // ------------------------------------------------------------------
 // Constants & Config
 // ------------------------------------------------------------------
-const ORDERS_PER_PAGE = 6
+const ORDERS_PER_PAGE = 5
 const AUTO_PAGE_INTERVAL = 6000 // 6 seconds
 
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
- const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-
- const filter: OrdersTimeZoneFilter = {
+const filter: OrdersTimeZoneFilter = {
   timeGapMinutes: 15,
   timezone: timezone,
   includeYesterdayOrders: false,
   statuses: [OrderStatus.PREPARING, OrderStatus.COMPLETED]
- }
+}
 
 const {
   data: orders,
