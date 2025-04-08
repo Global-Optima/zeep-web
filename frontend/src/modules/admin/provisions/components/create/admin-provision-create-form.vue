@@ -46,6 +46,7 @@ const { handleSubmit, resetForm, setFieldValue } = useForm({
 	preparationInMinutes: initialProvision.value?.preparationInMinutes,
 	netCost: initialProvision.value?.netCost,
 	limitPerDay: initialProvision.value?.limitPerDay,
+	unitId: initialProvision.value?.unit.id,
   }
 })
 
