@@ -379,6 +379,7 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 		Preload("Suborders.StoreProductSize").
 		Preload("Suborders.StoreProductSize.ProductSize").
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Joins("JOIN suborders ON suborders.order_id = orders.id").
@@ -438,10 +439,10 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 		Preload("DeliveryAddress")
 
 	if filter.StartDate != nil {
-		query = query.Where("created_at >= ?", *filter.StartDate)
+		query = query.Where("created_at >= ?", filter.StartDate.UTC())
 	}
 	if filter.EndDate != nil {
-		query = query.Where("created_at <= ?", *filter.EndDate)
+		query = query.Where("created_at <= ?", filter.EndDate.UTC())
 	}
 	if filter.StoreID != nil {
 		query = query.Where("store_id = ?", *filter.StoreID)
@@ -450,7 +451,28 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 	if err := query.Find(&orders).Error; err != nil {
 		return nil, err
 	}
+
+	clientLoc := time.Local // Default to the system's local timezone.
+	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
+		if loc, err := time.LoadLocation(*filter.TimeZoneLocation); err == nil {
+			clientLoc = loc
+		}
+	}
+
+	orders = convertOrdersToLocalTime(orders, clientLoc)
+
 	return orders, nil
+}
+
+func convertOrdersToLocalTime(orders []data.Order, loc *time.Location) []data.Order {
+	for i, order := range orders {
+		orders[i].CreatedAt = order.CreatedAt.In(loc)
+		if !order.CreatedAt.IsZero() {
+			createdAt := order.CreatedAt.In(loc)
+			orders[i].CreatedAt = createdAt
+		}
+	}
+	return orders
 }
 
 func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, error) {

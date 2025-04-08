@@ -154,6 +154,7 @@ export function useOrderGenerateQR() {
 	async function generateQRFromSuborder(
 		order: OrderDTO,
 		suborder: SuborderDTO,
+		index: number,
 		options: QRPrintOptions = {},
 	): Promise<Blob> {
 		// 1) Retrieve label dimensions and DPI (defaulting if necessary)
@@ -164,8 +165,8 @@ export function useOrderGenerateQR() {
 		const qrValue = generateSubOrderQR(suborder)
 
 		// 3) Define text lines.
-		const line1 = `#${order.displayNumber} ${order.customerName}`
-		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory]})`
+		const line1 = `#${order.displayNumber} ${order.customerName} (${index + 1}/${order.subOrders.length})`
+		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name.toLowerCase()}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory].toLowerCase()})`
 
 		// 4) Generate the QR code onto a canvas.
 		const usableWidthPx = Math.round(labelWidthMm * pxPerMm)
@@ -264,7 +265,12 @@ export function useOrderQRPrinter() {
 		try {
 			const suborders = Array.isArray(subOrders) ? subOrders : [subOrders]
 			const pdfBlobs = await Promise.all(
-				suborders.map(sb => generateQRFromSuborder(order, sb, options)),
+				suborders.map((sb, idx) => {
+					const printIndex =
+						suborders.length === 1 ? order.subOrders.findIndex(s => s.id === sb.id) : idx
+
+					return generateQRFromSuborder(order, sb, printIndex, options)
+				}),
 			)
 			await print(pdfBlobs, options)
 		} catch (error) {

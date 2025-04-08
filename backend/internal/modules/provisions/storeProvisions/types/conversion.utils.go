@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
@@ -68,11 +69,10 @@ func UpdateToStoreProvisionModels(storeProvision *data.StoreProvision, dto *Upda
 
 	if dto.Volume != nil {
 		multiplier := CalculateStoreProvisionIngredientsMultiplier(*dto.Volume, storeProvision.Provision.AbsoluteVolume)
-		if multiplier != 1 {
-			storeProvision.Volume = *dto.Volume
-			updateModels.StoreProvisionIngredientsMultiplier = &multiplier
-		}
+		storeProvision.Volume = *dto.Volume
+		updateModels.StoreProvisionIngredientsMultiplier = &multiplier
 	}
+
 	if dto.ExpirationInMinutes != nil {
 		storeProvision.ExpirationInMinutes = *dto.ExpirationInMinutes
 	}

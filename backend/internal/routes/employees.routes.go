@@ -5,6 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
+	additivesTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/analytics"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
@@ -22,6 +23,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	productTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/product/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
@@ -78,7 +80,7 @@ func (r *Router) RegisterNotificationsRoutes(handler *notifications.Notification
 	}
 }
 
-func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
+func (r *Router) RegisterProductRoutes(handler *product.ProductHandler, productTechMapHandler *productTechnicalMap.TechnicalMapHandler) {
 	router := r.EmployeeRoutes.Group("/products")
 	{
 		router.GET("", handler.GetProducts)
@@ -91,6 +93,7 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.DELETE("sizes/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProductSize)
 		router.POST("/sizes", middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
 		router.PUT("/sizes/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
+		router.GET("/sizes/:id/technical-map", middleware.EmployeeRoleMiddleware(), productTechMapHandler.GetProductSizeTechnicalMapByID)
 	}
 }
 
@@ -165,7 +168,7 @@ func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHan
 	}
 }
 
-func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
+func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler, additivesTechMapHandler *additivesTechnicalMap.TechnicalMapHandler) {
 	router := r.EmployeeRoutes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditives)
@@ -173,6 +176,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditive)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditive)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditive)
+		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(), additivesTechMapHandler.GetAdditiveTechnicalMapByID)
 
 		additiveCategories := router.Group("/categories")
 		{

@@ -1,22 +1,29 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
+import { defineAsyncComponent, ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
 
 // UI Components
 import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/core/components/ui/dropdown-menu'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
-import type { AdditiveCategoryDetailsDTO, AdditiveDetailsDTO, AdditiveCategoryDTO, SelectedIngredientDTO, UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
+import { TechnicalMapEntity, useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
+import type { AdditiveCategoryDetailsDTO, AdditiveCategoryDTO, AdditiveDetailsDTO, SelectedIngredientDTO, UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import {Camera, ChevronLeft, Trash, X} from 'lucide-vue-next'
+import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
 import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 
 // Async Components
@@ -55,6 +62,8 @@ const emits = defineEmits<{
 }>()
 
 const { toast } = useToast()
+const { setTechnicalMapReference, fetchTechnicalMap } = useCopyTechnicalMap()
+
 
 // Reactive State
 const selectedCategory = ref<AdditiveCategoryDTO | null>(additive.category)
@@ -207,6 +216,7 @@ function addIngredient(ingredient: IngredientsDTO) {
     })
   }
 }
+
 function removeIngredient(index: number) {
   selectedIngredients.value.splice(index, 1)
 }
@@ -218,6 +228,39 @@ function removeProvision(index: number) {
 
 const imageInputRef = useTemplateRef("imageInputRef");
 const triggerImageInput = () => imageInputRef.value?.click();
+
+const onCopyTechMapClick = () => {
+  try {
+    setTechnicalMapReference(TechnicalMapEntity.ADDITIVE, additive.id)
+    toast({ description: "Технологическая карта успешно скопирована", variant: "success" })
+
+  } catch {
+    toast({ description: "Ошибка при копировании технологической карты", variant: "destructive" })
+  }
+}
+
+const onPasteTechMapClick = async () => {
+  try {
+    const techMap = await fetchTechnicalMap()
+    if (!techMap) {
+      toast({ description: "Технологическая карта не найдена" })
+      return
+    }
+
+    selectedIngredients.value = techMap.map(t => ({
+      ingredientId: t.ingredient.id,
+      name: t.ingredient.name,
+      unit: t.ingredient.unit.name,
+      category: t.ingredient.category.name,
+      quantity: t.quantity,
+    }))
+
+    toast({ description: "Технологическая карта успешно вставлена", variant: "success" })
+
+  } catch {
+    toast({ description: "Ошибка при вставке технологической карты", variant: "destructive" })
+  }
+}
 </script>
 
 <template>
@@ -386,13 +429,27 @@ const triggerImageInput = () => imageInputRef.value?.click();
 									Выберите инргредиент и его количество
 								</CardDescription>
 							</div>
-							<Button
+							<div
 								v-if="!readonly"
-								variant="outline"
-								@click="openIngredientsDialog = true"
+								class="flex items-center gap-2"
 							>
-								Добавить
-							</Button>
+								<DropdownMenu>
+									<DropdownMenuTrigger class="p-2 border rounded-md">
+										<EllipsisVertical class="size-4" />
+									</DropdownMenuTrigger>
+									<DropdownMenuContent>
+										<DropdownMenuItem @click="onCopyTechMapClick">Копировать</DropdownMenuItem>
+										<DropdownMenuItem @click="onPasteTechMapClick">Вставить</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+
+								<Button
+									variant="outline"
+									@click="openIngredientsDialog = true"
+								>
+									Добавить
+								</Button>
+							</div>
 						</div>
 					</CardHeader>
 					<CardContent>
@@ -537,7 +594,7 @@ const triggerImageInput = () => imageInputRef.value?.click();
 											/>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 hover:bg-red-700 p-1 rounded-full text-white transition-all duration-200"
 												@click="onDeleteImage"
 											>
 												<X class="size-4" />

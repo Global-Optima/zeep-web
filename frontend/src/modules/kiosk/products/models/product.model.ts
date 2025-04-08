@@ -1,5 +1,6 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
+import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type {
 	ProductSizeIngredientDTO,
 	ProductSizeProvisionDTO,
@@ -61,7 +62,7 @@ export interface ProductTotalNutrition {
 }
 
 export interface BaseProductSizeDTO {
-	name: string
+	name: ProductSizeNames
 	basePrice: number
 	productId: number
 	unit: UnitDTO
@@ -168,4 +169,13 @@ export interface UpdateProductCategoryDTO {
 	name?: string
 	description?: string
 	machineCategory?: MachineCategory
+}
+
+export interface TechnicalMapDTO {
+	ingredient: IngredientsDTO
+	quantity: number
+}
+
+export interface ProductSizeTechnicalMap {
+	ingredients: TechnicalMapDTO[]
 }

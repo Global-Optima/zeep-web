@@ -159,6 +159,7 @@ export interface OrdersExportFilterQuery {
 	endDate?: string
 	storeId?: number
 	language?: 'kk' | 'ru' | 'en'
+	timezoneLocation?: string
 }
 
 export interface TransactionDTO {

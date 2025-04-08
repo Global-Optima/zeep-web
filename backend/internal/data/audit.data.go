@@ -56,6 +56,7 @@ const (
 	OrderComponent                 ComponentName = "ORDER"
 
 	AuthenticationComponent ComponentName = "AUTH"
+	TechnicalMapComponent   ComponentName = "TECHNICAL_MAP"
 )
 
 func (o OperationType) ToString() string {

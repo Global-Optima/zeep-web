@@ -1,22 +1,29 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
+import { defineAsyncComponent, ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
 
 // UI Components
 import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/core/components/ui/dropdown-menu'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
-import type { AdditiveCategoryDetailsDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
+import { useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
+import type { AdditiveCategoryDetailsDTO, AdditiveCategoryDTO, AdditiveDetailsDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import { Camera, ChevronLeft, Trash, X } from 'lucide-vue-next'
+import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
 import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 
 const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
@@ -42,23 +49,38 @@ interface SelectedProvisionsTypesDTO {
   volume: number
 }
 
-const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
+interface SelectedProvisionsTypesDTO {
+  provisionId: number
+  name: string
+  absoluteVolume: number
+  unit: string
+  volume: number
+}
+
+const {isSubmitting, initialAdditive} = defineProps<{isSubmitting: boolean, initialAdditive?: AdditiveDetailsDTO }>()
 
 const emits = defineEmits<{
   onSubmit: [dto: CreateAdditiveDTO]
   onCancel: []
 }>()
 
-const {toast} = useToast()
+const { toast } = useToast()
+const { fetchTechnicalMap } = useCopyTechnicalMap()
 
 // Reactive State for Category Selection
-const selectedCategory = ref<AdditiveCategoryDetailsDTO | null>(null)
+const selectedCategory = ref<AdditiveCategoryDTO | null>(initialAdditive?.category || null)
 const openCategoryDialog = ref(false)
 
-const selectedUnit = ref<UnitDTO | null>(null)
+const selectedUnit = ref<UnitDTO | null>(initialAdditive?.unit || null)
 const openUnitDialog = ref(false)
 
-const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>([])
+const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(initialAdditive?.ingredients.map(i => ({
+  ingredientId: i.ingredient.id,
+  name: i.ingredient.name,
+  unit: i.ingredient.unit.name,
+  category: i.ingredient.category.name,
+  quantity: i.quantity
+})) || [])
 const openIngredientsDialog = ref(false)
 
 const provisions = ref<SelectedProvisionsTypesDTO[]>([])
@@ -88,9 +110,17 @@ const createAdditiveSchema = toTypedSchema(
   })
 )
 
-// Form Setup
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createAdditiveSchema,
+  initialValues: {
+	name: initialAdditive?.name,
+	description: initialAdditive?.description,
+	machineId: initialAdditive?.machineId,
+	basePrice: initialAdditive?.basePrice,
+	size: initialAdditive?.size,
+	unitId: initialAdditive?.unit.id,
+	additiveCategoryId: initialAdditive?.category.id,
+  },
 })
 
 const previewImage = ref<string | null>(null);
@@ -177,6 +207,29 @@ function addIngredient(ingredient: IngredientsDTO) {
 
 function removeIngredient(index: number) {
   selectedIngredients.value.splice(index, 1)
+}
+
+const onPasteTechMapClick = async () => {
+  try {
+    const techMap = await fetchTechnicalMap()
+    if (!techMap) {
+      toast({ description: "Технологическая карта не найдена" })
+      return
+    }
+
+    selectedIngredients.value = techMap.map(t => ({
+      ingredientId: t.ingredient.id,
+      name: t.ingredient.name,
+      unit: t.ingredient.unit.name,
+      category: t.ingredient.category.name,
+      quantity: t.quantity,
+    }))
+
+    toast({ description: "Технологическая карта успешно вставлена", variant: "success" })
+
+  } catch {
+    toast({ description: "Ошибка при вставке технологической карты", variant: "destructive" })
+  }
 }
 
 function removeProvision(index: number) {
@@ -338,12 +391,23 @@ function removeProvision(index: number) {
 									Выберите инргредиент и его количество
 								</CardDescription>
 							</div>
-							<Button
-								variant="outline"
-								@click="openIngredientsDialog = true"
-							>
-								Добавить
-							</Button>
+							<div class="flex items-center gap-2">
+								<DropdownMenu>
+									<DropdownMenuTrigger class="p-2 border rounded-md">
+										<EllipsisVertical class="size-4" />
+									</DropdownMenuTrigger>
+									<DropdownMenuContent>
+										<DropdownMenuItem @click="onPasteTechMapClick">Вставить</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+
+								<Button
+									variant="outline"
+									@click="openIngredientsDialog = true"
+								>
+									Добавить
+								</Button>
+							</div>
 						</div>
 					</CardHeader>
 					<CardContent>
@@ -479,7 +543,7 @@ function removeProvision(index: number) {
 											/>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 hover:bg-red-700 p-1 rounded-full text-white transition-all duration-200"
 												@click="previewImage = null; setFieldValue('image', undefined)"
 											>
 												<X class="size-4" />
