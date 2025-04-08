@@ -27,7 +27,9 @@
       "stockMaterialCategory": "Stock material category *{{.Name}}* was created",
       "warehouseStock": "Warehouse stock *{{.Name}}* was created",
       "supplier": "Supplier *{{.Name}}* was created",
-      "unit": "Unit *{{.Name}}* was created"
+      "unit": "Unit *{{.Name}}* was created",
+      "provision": "Provision *{{.Name}}* was created.",
+      "storeProvision": "StoreProvision *{{.Name}}* was created in store *{{.StoreName}}*."
     },
     "update": {
       "franchisee": "Franchisee *{{.Name}}* was updated",
@@ -56,7 +58,9 @@
       "stockMaterialCategory": "Stock material category *{{.Name}}* was updated",
       "warehouseStock": "Warehouse stock *{{.Name}}* was updated",
       "supplier": "Supplier *{{.Name}}* was updated",
-      "unit": "Unit *{{.Name}}* was updated"
+      "unit": "Unit *{{.Name}}* was updated",
+      "provision": "Provision *{{.Name}}* was updated.",
+      "storeProvision": "StoreProvision *{{.Name}}* was updated in store *{{.StoreName}}*."
     },
     "delete": {
       "franchisee": "Franchisee *{{.Name}}* was deleted",
@@ -85,7 +89,9 @@
       "stockMaterialCategory": "Stock material category *{{.Name}}* was deleted",
       "warehouseStock": "Warehouse stock *{{.Name}}* was deleted",
       "supplier": "Supplier *{{.Name}}* was deleted",
-      "unit": "Unit *{{.Name}}* was deleted"
+      "unit": "Unit *{{.Name}}* was deleted",
+      "provision": "Provision *{{.Name}}* was deleted.",
+      "storeProvision": "StoreProvision *{{.Name}}* was deleted from store *{{.StoreName}}*."
     }
   },
   "responses": {
@@ -337,7 +343,7 @@
     "500-ingredient-update": "Failed to update ingredient.",
     "500-ingredient-delete": "Failed to delete ingredient.",
     "404-ingredient": "Ingredient not found.",
-    "409-ingredient-inUse": "The ingredient cannot be deleted because it is in use. Please remove all dependencies before trying again.",
+    "409-ingredient-delete-inUse": "The ingredient cannot be deleted because it is in use. Please remove all dependencies before trying again.",
     "201-ingredient": "Ingredient successfully created.",
     "200-ingredient-update": "Ingredient successfully updated.",
     "200-ingredient-delete": "Ingredient successfully deleted.",

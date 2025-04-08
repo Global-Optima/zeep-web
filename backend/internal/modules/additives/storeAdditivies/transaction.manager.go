@@ -81,7 +81,7 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			storeAdditiveIDs[i] = storeAdditive.ID
 		}
 
-		frozenStockMap, err := data.CalculateFrozenStock(tx, storeID, ingredientIDs)
+		frozenStockMap, err := data.CalculateFrozenInventory(tx, storeID, ingredientIDs)
 		if err != nil {
 			return err
 		}

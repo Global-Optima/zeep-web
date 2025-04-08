@@ -79,7 +79,7 @@ func (m *transactionManager) HandleCompleteStockRequest(request *data.StockReque
 			return fmt.Errorf("failed to update stock request status: %w", err)
 		}
 
-		if err := data.RecalculateOutOfStock(tx, request.StoreID, ingredientIDs, nil, nil); err != nil {
+		if err := data.RecalculateOutOfStock(tx, request.StoreID, &data.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
 			return err
 		}
 
@@ -176,7 +176,7 @@ func (m *transactionManager) HandleAcceptedWithChange(request *data.StockRequest
 			return fmt.Errorf("failed to update stock request status: %w", err)
 		}
 
-		if err := data.RecalculateOutOfStock(tx, request.StoreID, ingredientIDs, nil, nil); err != nil {
+		if err := data.RecalculateOutOfStock(tx, request.StoreID, &data.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
 			return err
 		}
 

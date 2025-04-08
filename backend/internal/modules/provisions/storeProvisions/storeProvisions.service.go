@@ -101,7 +101,7 @@ func (s *storeProvisionService) UpdateStoreProvision(storeID, storeProvisionID u
 		return nil, wrapped
 	}
 
-	if storeProvision.Status != data.PROVISION_STATUS_PREPARING {
+	if storeProvision.Status != data.STORE_PROVISION_STATUS_PREPARING {
 		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionCompleted)
 		s.logger.Error(wrapped)
 		return nil, wrapped
@@ -132,12 +132,12 @@ func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID
 		return nil, wrapped
 	}
 
-	if provision.Status != data.PROVISION_STATUS_PREPARING {
+	if provision.Status != data.STORE_PROVISION_STATUS_PREPARING {
 		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionCompleted)
 		return nil, wrapped
 	}
 
-	provision.Status = data.PROVISION_STATUS_COMPLETED
+	provision.Status = data.STORE_PROVISION_STATUS_COMPLETED
 
 	currentTime := time.Now().UTC()
 	provision.CompletedAt = &currentTime
@@ -163,7 +163,7 @@ func (s *storeProvisionService) DeleteStoreProvision(storeID, storeProvisionID u
 		return nil, wrapped
 	}
 
-	if storeProvision.Status == data.PROVISION_STATUS_COMPLETED {
+	if storeProvision.Status == data.STORE_PROVISION_STATUS_COMPLETED {
 		wrapped := fmt.Errorf("failed to delete store provision by ID %d: %w", storeProvisionID, types.ErrProvisionCompleted)
 		return nil, wrapped
 	}

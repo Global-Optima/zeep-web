@@ -11,9 +11,9 @@ func (p StoreProvisionStatus) ToString() string {
 }
 
 const (
-	PROVISION_STATUS_PREPARING StoreProvisionStatus = "PREPARING"
-	PROVISION_STATUS_COMPLETED StoreProvisionStatus = "COMPLETED"
-	PROVISION_STATUS_EXPIRED   StoreProvisionStatus = "EXPIRED"
+	STORE_PROVISION_STATUS_PREPARING StoreProvisionStatus = "PREPARING"
+	STORE_PROVISION_STATUS_COMPLETED StoreProvisionStatus = "COMPLETED"
+	STORE_PROVISION_STATUS_EXPIRED   StoreProvisionStatus = "EXPIRED"
 )
 
 type Product struct {

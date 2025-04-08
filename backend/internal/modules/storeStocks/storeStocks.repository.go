@@ -341,7 +341,7 @@ func (r *storeStockRepository) SaveStock(storeID, stockID uint, storeStock *data
 	}
 
 	if storeStock.Quantity <= storeStock.LowStockThreshold || (existingStock.Quantity <= existingStock.LowStockThreshold && storeStock.Quantity > storeStock.LowStockThreshold) {
-		if err := data.RecalculateOutOfStock(r.db, storeID, []uint{storeStock.IngredientID}, nil, nil); err != nil {
+		if err := data.RecalculateOutOfStock(r.db, storeID, &data.RecalculateInput{IngredientIDs: []uint{storeStock.IngredientID}}); err != nil {
 			return err
 		}
 	}
@@ -414,8 +414,14 @@ func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, storePr
 		return nil, err
 	}
 
+	productSizeProvisions, err := r.getProductSizeProvisions(storeProductSize.ProductSizeID)
+	if err != nil {
+		return nil, err
+	}
+
 	var updatedStocks []data.StoreStock
 	var ingredientsToRecalculate []uint
+	var provisionsToRecalculate []uint
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		for _, ingredient := range productSizeIngredients {
@@ -429,8 +435,19 @@ func (r *storeStockRepository) DeductStockByProductSizeTechCart(storeID, storePr
 			}
 		}
 
+		for _, provision := range productSizeProvisions {
+			updatedStock, err := r.deductProductSizeProvisionStock(tx, store.ID, provision)
+			if err != nil {
+				return err
+			}
+			updatedStocks = append(updatedStocks, *updatedStock)
+			if updatedStock.Quantity <= updatedStock.LowStockThreshold {
+				ingredientsToRecalculate = append(ingredientsToRecalculate, updatedStock.IngredientID)
+			}
+		}
+
 		if len(ingredientsToRecalculate) > 0 {
-			if err := data.RecalculateOutOfStock(tx, storeID, ingredientsToRecalculate, nil, nil); err != nil {
+			if err := data.RecalculateOutOfStock(tx, storeID, &data.RecalculateInput{IngredientIDs: ingredientsToRecalculate}); err != nil {
 				return err
 			}
 		}
@@ -480,7 +497,7 @@ func (r *storeStockRepository) DeductStockByAdditiveTechCart(storeID, storeAddit
 		}
 
 		if len(ingredientsToRecalculate) > 0 {
-			if err := data.RecalculateOutOfStock(tx, storeID, ingredientsToRecalculate, nil, nil); err != nil {
+			if err := data.RecalculateOutOfStock(tx, storeID, &data.RecalculateInput{IngredientIDs: ingredientsToRecalculate}); err != nil {
 				return err
 			}
 		}
@@ -515,6 +532,18 @@ func (r *storeStockRepository) getProductSizeIngredients(productSizeID uint) ([]
 		return nil, fmt.Errorf("failed to fetch product size ingredients: %w", err)
 	}
 	return productSizeIngredients, nil
+}
+
+func (r *storeStockRepository) getProductSizeProvisions(productSizeID uint) ([]data.ProductSizeProvision, error) {
+	var productSizeProvisions []data.ProductSizeProvision
+	err := r.db.Preload("Provision").
+		Preload("Provision.Unit").
+		Where("product_size_id = ?", productSizeID).
+		Find(&productSizeProvisions).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch product size provisions: %w", err)
+	}
+	return productSizeProvisions, nil
 }
 
 func (r *storeStockRepository) getAdditiveIngredients(additiveID uint) ([]data.AdditiveIngredient, error) {

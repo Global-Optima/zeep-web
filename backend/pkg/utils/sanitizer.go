@@ -362,18 +362,20 @@ func RoundToDecimal(value float64, precision int32) float64 {
 	return result
 }
 
-func UnionSlices[T comparable](arr1, arr2 []T) []T {
+func UnionSlices[T comparable](slices ...[]T) []T {
 	uniqueMap := make(map[T]struct{})
-	for _, v := range arr1 {
-		uniqueMap[v] = struct{}{}
+
+	for _, slice := range slices {
+		for _, v := range slice {
+			uniqueMap[v] = struct{}{}
+		}
 	}
-	for _, v := range arr2 {
-		uniqueMap[v] = struct{}{}
-	}
+
 	mergedSlice := make([]T, 0, len(uniqueMap))
 	for key := range uniqueMap {
 		mergedSlice = append(mergedSlice, key)
 	}
+
 	return mergedSlice
 }
 

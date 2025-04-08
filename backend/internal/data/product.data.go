@@ -116,15 +116,16 @@ type IngredientCategory struct {
 
 type Provision struct {
 	BaseEntity
-	Name                 string                `gorm:"size:255;not null;uniqueIndex" sort:"name"`
-	AbsoluteVolume       float64               `gorm:"type:decimal(10,2);not null;check:absoluteVolume > 0"`
-	NetCost              float64               `gorm:"type:decimal(10,2);not null;check:netCost >= 0"`
-	UnitID               uint                  `gorm:"not null"`
-	Unit                 Unit                  `gorm:"foreignKey:UnitID;constraint:CASCADE"`
-	PreparationInMinutes uint                  `gorm:"not null" sort:"preparationInMinutes"`
-	LimitPerDay          uint                  `gorm:"not null" sort:"limitPerDay"`
-	IngredientsUpdatedAt time.Time             `gorm:"not null" sort:"ingredientsUpdatedAt"`
-	ProvisionIngredients []ProvisionIngredient `gorm:"foreignKey:ProvisionID"`
+	Name                       string                `gorm:"size:255;not null;uniqueIndex" sort:"name"`
+	AbsoluteVolume             float64               `gorm:"type:decimal(10,2);not null;check:absoluteVolume > 0"`
+	NetCost                    float64               `gorm:"type:decimal(10,2);not null;check:netCost >= 0"`
+	UnitID                     uint                  `gorm:"not null"`
+	Unit                       Unit                  `gorm:"foreignKey:UnitID;constraint:CASCADE"`
+	PreparationInMinutes       uint                  `gorm:"not null" sort:"preparationInMinutes"`
+	DefaultExpirationInMinutes uint                  `gorm:"not null;check:default_expiration_in_minutes > 0" sort:"defaultExpirationInMinutes"`
+	LimitPerDay                uint                  `gorm:"not null" sort:"limitPerDay"`
+	IngredientsUpdatedAt       time.Time             `gorm:"not null" sort:"ingredientsUpdatedAt"`
+	ProvisionIngredients       []ProvisionIngredient `gorm:"foreignKey:ProvisionID"`
 }
 
 type ProvisionIngredient struct {

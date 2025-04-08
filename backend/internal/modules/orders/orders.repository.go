@@ -114,7 +114,7 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 			return fmt.Errorf("failed to get order ingredients: %w", err)
 		}
 
-		if err := data.RecalculateOutOfStock(tx, order.StoreID, orderIngredients, nil, nil); err != nil {
+		if err := data.RecalculateOutOfStock(tx, order.StoreID, &data.RecalculateInput{IngredientIDs: orderIngredients}); err != nil {
 			return fmt.Errorf("failed to recalculate out of stock: %w", err)
 		}
 
@@ -594,7 +594,7 @@ func (r *orderRepository) HandlePaymentFailure(orderID uint) error {
 		return err
 	}
 
-	if err := data.RecalculateOutOfStock(r.db, order.StoreID, orderIngredients, nil, nil); err != nil {
+	if err := data.RecalculateOutOfStock(r.db, order.StoreID, &data.RecalculateInput{IngredientIDs: orderIngredients}); err != nil {
 		return err
 	}
 

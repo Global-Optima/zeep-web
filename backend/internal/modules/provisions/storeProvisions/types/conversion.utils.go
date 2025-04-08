@@ -47,7 +47,7 @@ func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO, cen
 		ProvisionID:               dto.ProvisionID,
 		Volume:                    dto.Volume,
 		ExpirationInMinutes:       dto.ExpirationInMinutes,
-		Status:                    data.PROVISION_STATUS_PREPARING,
+		Status:                    data.STORE_PROVISION_STATUS_PREPARING,
 		StoreID:                   storeID,
 		StoreProvisionIngredients: mapIngredientsToStoreProvisionIngredients(dto.Volume, centralCatalogProvision),
 	}
