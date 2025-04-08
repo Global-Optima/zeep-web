@@ -21,6 +21,7 @@ func NewTechnicalMapService(repository TechnicalMapRepository, logger *zap.Sugar
 		logger:     logger,
 	}
 }
+
 func (s *technicalMapService) GetAdditiveTechnicalMapByID(AdditiveID uint) (*types.AdditiveTechnicalMap, error) {
 	AdditiveIngredients, err := s.repository.GetAdditiveTechnicalMapByID(AdditiveID)
 	if err != nil {
