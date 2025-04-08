@@ -94,7 +94,7 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler, productT
 		router.DELETE("sizes/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProductSize)
 		router.POST("/sizes", middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
 		router.PUT("/sizes/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
-		router.GET("/sizes/:id/technical-map", middleware.EmployeeRoleMiddleware(), productTechMapHandler.GetProductSizeTechnicalMapByID)
+		router.GET("/sizes/:id/technical-map", middleware.EmployeeRoleMiddleware(data.AdminPermissions...), productTechMapHandler.GetProductSizeTechnicalMapByID)
 	}
 }
 
@@ -177,7 +177,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler, add
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditive)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditive)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditive)
-		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(), additivesTechMapHandler.GetAdditiveTechnicalMapByID)
+		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(data.AdminPermissions...), additivesTechMapHandler.GetAdditiveTechnicalMapByID)
 
 		additiveCategories := router.Group("/categories")
 		{
@@ -419,7 +419,7 @@ func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler, 
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProvision)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProvisionByID)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProvisionByID)
-		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(), provisionTechMapHandler.GetProvisionTechnicalMapByID)
+		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(data.AdminPermissions...), provisionTechMapHandler.GetProvisionTechnicalMapByID)
 	}
 }
 

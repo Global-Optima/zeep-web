@@ -1,6 +1,8 @@
 package technicalMap
 
 import (
+	"errors"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/technicalMap/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
@@ -24,6 +26,11 @@ func (h *TechnicalMapHandler) GetProductSizeTechnicalMapByID(c *gin.Context) {
 
 	technicalMap, err := h.technicalMapService.GetProductSizeTechnicalMapByID(productSizeID)
 	if err != nil {
+		if errors.Is(err, types.TechnicalMapNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404TechnicalMap)
+			return
+		}
+
 		localization.SendLocalizedResponseWithKey(c, types.Response500TechnicalMapGet)
 		return
 	}

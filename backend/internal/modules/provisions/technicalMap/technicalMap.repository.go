@@ -2,6 +2,7 @@ package technicalMap
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/technicalMap/types"
 	"gorm.io/gorm"
 )
 
@@ -26,5 +27,10 @@ func (r *technicalMapRepository) GetProvisionTechnicalMapByID(provisionID uint) 
 		Find(&ProvisionIngredients).Error; err != nil {
 		return nil, err
 	}
+
+	if len(ProvisionIngredients) == 0 {
+		return nil, types.TechnicalMapNotFound
+	}
+
 	return ProvisionIngredients, nil
 }

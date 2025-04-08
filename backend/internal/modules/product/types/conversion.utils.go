@@ -178,13 +178,15 @@ func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 	}
 
 	if dto.Name != nil {
-		if dto.Name != &product.Name {
+		if *dto.Name != product.Name {
 			product.Name = *dto.Name
 		}
 	}
 
 	if dto.Description != nil {
-		product.Description = *dto.Description
+		if *dto.Description != product.Description {
+			product.Description = *dto.Description
+		}
 	}
 
 	if dto.CategoryID != 0 {
@@ -286,64 +288,82 @@ func mapProvisionsToProductSizeProvisions(provisionsDTO []provisionsTypes.Select
 	return provisions
 }
 
-var emptyStringRu = "пустое значение"
-
-// emptyStringEn = "empty value"
-// emptyStringKk = "бос мән"
-
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKey *data.StorageImageKey) []details.CentralCatalogChange {
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, newImageKey *data.StorageImageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
-	if dto.Name != nil && dto.Name != &before.Name {
+	emptyStringMap := map[string]string{
+		"en": "empty value",
+		"ru": "пустое значение",
+		"kk": "бос мән",
+	}
+
+	if dto.Name != nil && *dto.Name != before.Name {
 		key := "notification.centralCatalogUpdateDetails.nameChange"
 
+		var oldNameParam interface{} = before.Name
+		if before.Name == "" {
+			oldNameParam = emptyStringMap
+		}
+
+		var newNameParam interface{} = *dto.Name
 		if *dto.Name == "" {
-			changes = append(changes, details.CentralCatalogChange{
-				Key: key,
-				Params: map[string]interface{}{
-					"OldName": before.Name,
-					"NewName": emptyStringRu,
-				},
-			})
-		} else {
-			changes = append(changes, details.CentralCatalogChange{
-				Key: key,
-				Params: map[string]interface{}{
-					"OldName": before.Name,
-					"NewName": dto.Name,
-				},
-			})
+			newNameParam = emptyStringMap
 		}
-	}
 
-	if dto.Description != nil && dto.Description != &before.Description {
-		key := "notification.centralCatalogUpdateDetails.descriptionChange"
-		if *dto.Description == "" {
-			changes = append(changes, details.CentralCatalogChange{
-				Key: key,
-				Params: map[string]interface{}{
-					"OldDescription": before.Description,
-					"NewDescription": emptyStringRu,
-				},
-			})
-		} else {
-			changes = append(changes, details.CentralCatalogChange{
-				Key: key,
-				Params: map[string]interface{}{
-					"OldDescription": before.Description,
-					"NewDescription": dto.Description,
-				},
-			})
-		}
-	}
-
-	if imageKey != before.ImageKey {
-		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
 			Params: map[string]interface{}{
-				"OldImageURL": before.ImageKey.GetURL(),
-				"NewImageURL": imageKey.GetURL(),
+				"OldName": oldNameParam,
+				"NewName": newNameParam,
+			},
+		})
+	}
+
+	if dto.Description != nil && *dto.Description != before.Description {
+		key := "notification.centralCatalogUpdateDetails.descriptionChange"
+
+		var oldDescParam interface{} = before.Description
+		if before.Description == "" {
+			oldDescParam = emptyStringMap
+		}
+
+		var newDescParam interface{} = *dto.Description
+		if *dto.Description == "" {
+			newDescParam = emptyStringMap
+		}
+
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldDescription": oldDescParam,
+				"NewDescription": newDescParam,
+			},
+		})
+	}
+
+	// Process image URL changes.
+	var oldImageURL, newImageURL string
+	if before.ImageKey != nil {
+		oldImageURL = before.ImageKey.GetURL()
+	}
+	if newImageKey != nil {
+		newImageURL = newImageKey.GetURL()
+	}
+	if oldImageURL != newImageURL {
+		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
+		var oldURLParam interface{} = oldImageURL
+		var newURLParam interface{} = newImageURL
+		if oldImageURL == "" {
+			oldURLParam = emptyStringMap
+		}
+		if newImageURL == "" {
+			newURLParam = emptyStringMap
+		}
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldImageURL": oldURLParam,
+				"NewImageURL": newURLParam,
 			},
 		})
 	}

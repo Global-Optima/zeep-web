@@ -2,6 +2,7 @@ package technicalMap
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/technicalMap/types"
 	"gorm.io/gorm"
 )
 
@@ -26,5 +27,10 @@ func (r *technicalMapRepository) GetProductSizeTechnicalMapByID(productSizeID ui
 		Find(&productSizeIngredients).Error; err != nil {
 		return nil, err
 	}
+
+	if len(productSizeIngredients) == 0 {
+		return nil, types.TechnicalMapNotFound
+	}
+
 	return productSizeIngredients, nil
 }

@@ -2,6 +2,7 @@ package technicalMap
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/technicalMap/types"
 	"gorm.io/gorm"
 )
 
@@ -26,5 +27,10 @@ func (r *technicalMapRepository) GetAdditiveTechnicalMapByID(AdditiveID uint) ([
 		Find(&AdditiveIngredients).Error; err != nil {
 		return nil, err
 	}
+
+	if len(AdditiveIngredients) == 0 {
+		return nil, types.TechnicalMapNotFound
+	}
+
 	return AdditiveIngredients, nil
 }
