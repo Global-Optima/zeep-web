@@ -2,16 +2,16 @@ import { apiClient } from '@/core/config/axios-instance.config'
 import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
-  ProductCategoryDTO,
-  ProductDetailsDTO,
-  ProductsFilterDTO,
+	ProductCategoryDTO,
+	ProductDetailsDTO,
+	ProductsFilterDTO,
 } from '@/modules/kiosk/products/models/product.model'
 import type {
-  CreateStoreProductDTO,
-  StoreProductDetailsDTO,
-  StoreProductDTO,
-  StoreProductsFilterDTO,
-  UpdateStoreProductDTO,
+	CreateStoreProductDTO,
+	StoreProductDetailsDTO,
+	StoreProductDTO,
+	StoreProductsFilterDTO,
+	UpdateStoreProductDTO,
 } from '../models/store-products.model'
 
 class StoreProductsService {

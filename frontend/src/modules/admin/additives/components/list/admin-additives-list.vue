@@ -31,17 +31,25 @@
 				<TableCell class="text-right">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="icon" @click.stop>
-							<EllipsisVertical class="w-6 h-6" />
-						</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								@click.stop
+							>
+								<EllipsisVertical class="w-6 h-6" />
+							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
-						<DropdownMenuItem @click="(e) => { e.stopPropagation(); onDeleteClick(e, additive.id); }">
-							Удалить
-						</DropdownMenuItem>
-						<DropdownMenuItem @click="(e) => { e.stopPropagation(); onDuplicateClick(additive.id); }">
-							Дублировать
-						</DropdownMenuItem>
+							<DropdownMenuItem
+								@click="(e) => { e.stopPropagation(); onDeleteClick(e, additive.id); }"
+							>
+								Удалить
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								@click="(e) => { e.stopPropagation(); onDuplicateClick(additive.id); }"
+							>
+								Дублировать
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</TableCell>
@@ -69,7 +77,6 @@ import { formatPrice } from '@/core/utils/price.utils'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { getRouteName } from '@/core/config/routes.config'
 
@@ -106,5 +113,4 @@ const onAdditiveClick = (additiveID: number) => {
 const onDuplicateClick = (id: number) => {
  router.push({name: getRouteName('ADMIN_ADDITIVE_CREATE'), query: {templateAdditiveId: id}})
 }
-
 </script>

@@ -199,10 +199,6 @@ const totalPrice = computed(() => {
 })
 
 // ----- Helper Functions -----
-function isAdditiveSelected(category: StoreAdditiveCategoryDTO, additiveId: number): boolean {
-  return selectedAdditives.value[category.id]?.some(a => a.additiveId === additiveId) || false
-}
-
 const onSizeSelect = (size: StoreProductSizeDetailsDTO) => {
   if (selectedSize.value?.id === size.id) return
   selectedSize.value = size

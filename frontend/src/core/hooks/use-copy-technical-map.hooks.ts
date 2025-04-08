@@ -74,7 +74,7 @@ async function getTechnicalMapReferenceFromBuffer(): Promise<string | null> {
  * Returns a promise that resolves with an array of TechnicalMapDTO, or null if no reference is stored.
  */
 async function fetchTechnicalMap(): Promise<TechnicalMapDTO[] | null> {
-  const refStr = await getTechnicalMapReferenceFromBuffer()
+	const refStr = await getTechnicalMapReferenceFromBuffer()
 	if (!refStr) return null
 
 	// Reference should be in the format "entity-{id}"
@@ -109,6 +109,6 @@ export function useCopyTechnicalMap() {
 		getTechnicalMapReference,
 		clearTechnicalMapReference,
 		fetchTechnicalMap,
-    getTechnicalMapReferenceFromBuffer
+		getTechnicalMapReferenceFromBuffer,
 	}
 }
