@@ -73,7 +73,7 @@ func TestTranslateComponentResponse(t *testing.T) {
 			),
 			expectedMessages: &LocalizedMessage{
 				En: "Store employee successfully updated.",
-				Ru: "Сотрудник магазина успешно обновлен.",
+				Ru: "Сотрудник кафе успешно обновлен.",
 				Kk: "Дүкен қызметкері сәтті жаңартылды.",
 			},
 		},
