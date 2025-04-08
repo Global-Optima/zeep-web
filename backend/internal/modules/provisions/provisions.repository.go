@@ -2,13 +2,14 @@ package provisions
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"strings"
-	"time"
 )
 
 type ProvisionRepository interface {
@@ -101,7 +102,6 @@ func (r *provisionRepository) GetProvisionWithDetailsByID(provisionID uint) (*da
 		Preload("ProvisionIngredients.Ingredient.IngredientCategory").
 		Where("id = ?", provisionID).
 		First(&provision).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrProvisionNotFound

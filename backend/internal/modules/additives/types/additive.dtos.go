@@ -1,8 +1,9 @@
 package types
 
 import (
-	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"mime/multipart"
+
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"

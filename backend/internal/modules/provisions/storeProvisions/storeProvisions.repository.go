@@ -2,12 +2,13 @@ package storeProvisions
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"time"
 )
 
 type StoreProvisionRepository interface {
@@ -167,7 +168,6 @@ func (r *storeProvisionRepository) SaveStoreProvision(storeProvision *data.Store
 	}
 
 	err := r.db.Save(storeProvision).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return types.ErrStoreProvisionNotFound
@@ -194,7 +194,6 @@ func (r *storeProvisionRepository) DeleteStoreProvision(storeProvisionID uint) e
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}

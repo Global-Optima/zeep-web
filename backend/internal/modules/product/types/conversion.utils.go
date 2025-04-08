@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"sort"
+
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
