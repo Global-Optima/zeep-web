@@ -28,6 +28,11 @@ type StoreAdditiveRepository interface {
 	GetStoreAdditiveCategories(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, input *data.StoreAdditive) error
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
+	GetStoreAdditiveWithPSA(
+		storeID uint,
+		productSizeID uint,
+		additiveID uint,
+	) (*data.StoreAdditive, *data.ProductSizeAdditive, error)
 
 	CloneWithTransaction(tx *gorm.DB) StoreAdditiveRepository
 }
@@ -321,6 +326,46 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint, fil
 	}
 
 	return storeAdditive, nil
+}
+
+func (r *storeAdditiveRepository) GetStoreAdditiveWithPSA(
+	storeID uint,
+	productSizeID uint,
+	additiveID uint,
+) (*data.StoreAdditive, *data.ProductSizeAdditive, error) {
+
+	var sa data.StoreAdditive
+	err := r.db.
+		Model(&data.StoreAdditive{}).
+		Preload("Additive").
+		Where("store_id = ? AND additive_id = ?", storeID, additiveID).
+		First(&sa).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, fmt.Errorf(
+				"storeAdditive not found for storeID=%d, additiveID=%d",
+				storeID, additiveID,
+			)
+		}
+		return nil, nil, fmt.Errorf("failed to load StoreAdditive: %w", err)
+	}
+
+	var psa data.ProductSizeAdditive
+	err = r.db.
+		Model(&data.ProductSizeAdditive{}).
+		Preload("Additive").
+		Where("product_size_id = ? AND additive_id = ?", productSizeID, additiveID).
+		First(&psa).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &sa, nil, nil
+		}
+		return &sa, nil, fmt.Errorf("failed to load ProductSizeAdditive: %w", err)
+	}
+
+	return &sa, &psa, nil
 }
 
 func (r *storeAdditiveRepository) GetSufficientStoreAdditiveByID(

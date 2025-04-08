@@ -171,6 +171,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
 	validations, err := s.StockAndPriceValidationResults(
+		createOrderDTO.Suborders,
 		storeID,
 		storeProductSizeIDs,
 		storeAdditiveIDs,
@@ -211,6 +212,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 }
 
 func (s *orderService) StockAndPriceValidationResults(
+	suborders []types.CreateSubOrderDTO,
 	storeID uint,
 	storeProductSizeIDs, storeAdditiveIDs []uint,
 	frozenMap map[uint]float64,
@@ -221,7 +223,13 @@ func (s *orderService) StockAndPriceValidationResults(
 		return nil, err
 	}
 
-	additivePrices, additiveNames, err := ValidateStoreAdditives(storeID, storeAdditiveIDs, s.storeAdditiveRepo, frozenMap)
+	additivePrices, additiveNames, err := ValidateStoreAdditives(
+		storeID,
+		suborders,
+		s.storeAdditiveRepo,
+		frozenMap,
+	)
+
 	if err != nil {
 		s.logger.Error(fmt.Errorf("additive validation failed: %w", err))
 		return nil, err
@@ -237,34 +245,54 @@ func (s *orderService) StockAndPriceValidationResults(
 
 func ValidateStoreAdditives(
 	storeID uint,
-	storeAdditiveIDs []uint,
+	suborders []types.CreateSubOrderDTO, // Instead of just storeAdditiveIDs
 	repo storeAdditives.StoreAdditiveRepository,
 	frozenMap map[uint]float64,
 ) (map[uint]float64, map[uint]string, error) {
+
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 
-	for _, addID := range storeAdditiveIDs {
-		storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
-		if err != nil {
-			return nil, nil, fmt.Errorf("error with store additive: %w", err)
-		}
-		if storeAdd == nil {
-			return nil, nil, fmt.Errorf("store additive with ID %d is nil", addID)
-		}
-		if storeAdd.Additive.Name == "" {
-			return nil, nil, fmt.Errorf("store additive with ID %d has an empty name", addID)
-		}
+	for _, suborder := range suborders {
+		psID := suborder.StoreProductSizeID
+		for _, addID := range suborder.StoreAdditivesIDs {
+			sa, psa, err := repo.GetStoreAdditiveWithPSA(storeID, psID, addID)
+			if err != nil {
+				return nil, nil, fmt.Errorf("error loading storeAdditive/PSA for suborder: %w", err)
+			}
+			if sa == nil {
+				return nil, nil, fmt.Errorf("no storeAdditive found for addID=%d", addID)
+			}
 
-		// Get the effective price (store-specific price overrides the base price if available).
-		price := storeAdd.Additive.BasePrice
-		if storeAdd.StorePrice != nil {
-			price = *storeAdd.StorePrice
+			if psa == nil {
+				return nil, nil, fmt.Errorf(
+					"additive %d not linked to productSize %d in store %d",
+					addID, psID, storeID,
+				)
+			}
+
+			if sa.IsOutOfStock {
+				return nil, nil, fmt.Errorf(
+					"additive %s (ID=%d) is out of stock",
+					sa.Additive.Name, addID,
+				)
+			}
+
+			var price float64
+			if psa.IsDefault {
+				price = 0
+			} else {
+				if sa.StorePrice != nil {
+					price = *sa.StorePrice
+				} else {
+					price = sa.Additive.BasePrice
+				}
+			}
+
+			prices[addID] = price
+			additiveNames[addID] = sa.Additive.Name
 		}
-		prices[addID] = price
-		additiveNames[addID] = storeAdd.Additive.Name
 	}
-
 	return prices, additiveNames, nil
 }
 
