@@ -131,6 +131,7 @@ watch(initialProvision, (newVal) => {
 		preparationInMinutes: newVal.preparationInMinutes,
 		netCost: newVal.netCost,
 		limitPerDay: newVal.limitPerDay,
+		unitId: newVal.unit.id,
       }
     })
     // Update dependent reactive state.
