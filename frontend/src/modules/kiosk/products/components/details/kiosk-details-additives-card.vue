@@ -79,7 +79,9 @@ const emit = defineEmits<{
   (e: 'click:additive', additive: StoreAdditiveCategoryItemDTO): void
 }>()
 
-const isVisible = computed(() => !(props.additive.isDefault && props.additive.isHidden))
+const isVisible = computed(() => {
+  return !(props.additive.isDefault && props.additive.isHidden)
+})
 
 const cardClasses = computed(() => {
   const base = [
@@ -105,10 +107,10 @@ const cardClasses = computed(() => {
     base.push('border-transparent', 'cursor-pointer')
   }
 
-  // If additive is default, treat it as disabled from user toggling
   if (props.additive.isDefault) {
     base.push('cursor-not-allowed', 'opacity-50', '!border-primary')
   }
+
   return base
 })
 
@@ -132,7 +134,9 @@ const priceTextClass = computed(() => {
   return props.additive.isOutOfStock ? 'text-gray-400' : 'text-primary'
 })
 
-const isPriceZero = computed(() => props.additive.storePrice === 0 && !props.hasCategoryPrice)
+const isPriceZero = computed(() => {
+  return props.additive.storePrice === 0 && !props.hasCategoryPrice
+})
 
 const showSelectedIndicator = computed(() => {
   if (props.additive.isOutOfStock) return false
@@ -140,6 +144,7 @@ const showSelectedIndicator = computed(() => {
     if (isPriceZero.value && !props.hasCategoryPrice) {
       return false
     }
+
     return true
   }
   return false
@@ -149,6 +154,7 @@ function handleClick() {
   if (props.additive.isDefault || props.additive.isOutOfStock) {
     return
   }
+
   emit('click:additive', props.additive)
 }
 </script>

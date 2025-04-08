@@ -54,7 +54,6 @@ export interface UpdateProvisionDTO {
 	ingredients: SelectedProvisionsIngredients[]
 }
 
-
 export interface ProvisionTechnicalMap {
-  ingredients: TechnicalMapDTO[]
+	ingredients: TechnicalMapDTO[]
 }
