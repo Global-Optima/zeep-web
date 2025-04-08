@@ -26,6 +26,7 @@ import (
 	productTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/product/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
+	provisionsTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -410,7 +411,7 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 	}
 }
 
-func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler) {
+func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler, provisionTechMapHandler *provisionsTechnicalMap.TechnicalMapHandler) {
 	router := r.EmployeeRoutes.Group("/provisions")
 	{
 		router.GET("", handler.GetProvisions)
@@ -418,6 +419,7 @@ func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler) 
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProvision)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProvisionByID)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProvisionByID)
+		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(), provisionTechMapHandler.GetProvisionTechnicalMapByID)
 	}
 }
 
