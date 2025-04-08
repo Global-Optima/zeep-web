@@ -7,7 +7,6 @@ import (
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 )
 
 type StoreProvisionModels struct {
@@ -83,16 +82,17 @@ func UpdateToStoreProvisionModels(storeProvision *data.StoreProvision, dto *Upda
 func mapIngredientsToStoreProvisionIngredients(volume float64, provision *data.Provision) []data.StoreProvisionIngredient {
 	result := make([]data.StoreProvisionIngredient, len(provision.ProvisionIngredients))
 	multiplier := CalculateStoreProvisionIngredientsMultiplier(volume, provision.AbsoluteVolume)
+
 	for i, ingredient := range provision.ProvisionIngredients {
-		logrus.Info(ingredient.ID)
 		result[i] = data.StoreProvisionIngredient{
-			IngredientID: ingredient.IngredientID,
-			Quantity:     ingredient.Quantity * multiplier,
+			IngredientID:    ingredient.IngredientID,
+			Quantity:        ingredient.Quantity * multiplier,
+			InitialQuantity: ingredient.Quantity,
 		}
 	}
 	return result
 }
 
 func CalculateStoreProvisionIngredientsMultiplier(volume, absoluteVolume float64) float64 {
-	return utils.RoundToDecimal(volume/absoluteVolume, 1)
+	return utils.RoundToDecimal(volume/absoluteVolume, 2)
 }
