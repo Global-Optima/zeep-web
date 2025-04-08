@@ -16,7 +16,7 @@ export interface CartItem {
 }
 
 interface CartState {
-	cartItems: { [key: string]: CartItem }
+	cartItems: Record<string, CartItem>
 	isModalOpen: boolean
 }
 
@@ -33,12 +33,16 @@ export const useCartStore = defineStore('ZEEP_CART', {
 		isEmpty(state): boolean {
 			return Object.values(state.cartItems).length === 0
 		},
+
 		totalPrice(state): number {
 			return Object.values(state.cartItems).reduce((total, item) => {
-				const additivesPrice = item.additives.reduce(
-					(sum, additive) => sum + additive.storePrice,
-					0,
-				)
+				const additivesPrice = item.additives.reduce((sum, additive) => {
+					if (additive.isDefault) {
+						return sum
+					}
+					return sum + additive.storePrice
+				}, 0)
+
 				return total + (item.size.storePrice + additivesPrice) * item.quantity
 			}, 0)
 		},
@@ -122,7 +126,7 @@ export const useCartStore = defineStore('ZEEP_CART', {
 			updates: {
 				size?: StoreProductSizeDetailsDTO
 				additives?: StoreAdditiveCategoryItemDTO[]
-				quantity?: number // additional quantity to add (default 1 if not provided)
+				quantity?: number
 			},
 		) {
 			const existingItem = this.cartItems[key]
@@ -130,19 +134,15 @@ export const useCartStore = defineStore('ZEEP_CART', {
 
 			const updatedSize = updates.size || existingItem.size
 			const updatedAdditives = updates.additives || existingItem.additives
-			// Default additional quantity to 1 if not specified.
 			const additionalQuantity = updates.quantity !== undefined ? updates.quantity : 1
 
-			// Generate the new key based on the updated configuration.
 			const newKey = this.generateCartItemKey(existingItem.product, updatedSize, updatedAdditives)
 
 			if (newKey !== key) {
-				// If an item with the new configuration already exists, add the quantities.
 				if (this.cartItems[newKey]) {
 					this.cartItems[newKey].quantity += additionalQuantity
 					delete this.cartItems[key]
 				} else {
-					// Otherwise, remove the old item and add the updated one.
 					delete this.cartItems[key]
 					this.cartItems[newKey] = {
 						key: newKey,
@@ -153,7 +153,6 @@ export const useCartStore = defineStore('ZEEP_CART', {
 					}
 				}
 			} else {
-				// If configuration hasn't changed, simply add the additional quantity.
 				this.cartItems[key].quantity += additionalQuantity
 			}
 		},
