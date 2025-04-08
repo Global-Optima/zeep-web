@@ -29,7 +29,7 @@ func (r *technicalMapRepository) GetProductSizeTechnicalMapByID(productSizeID ui
 	}
 
 	if len(productSizeIngredients) == 0 {
-		return nil, types.TechnicalMapNotFound
+		return nil, types.ErrorTechnicalMapNotFound
 	}
 
 	return productSizeIngredients, nil

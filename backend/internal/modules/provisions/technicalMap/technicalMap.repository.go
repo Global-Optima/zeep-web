@@ -29,7 +29,7 @@ func (r *technicalMapRepository) GetProvisionTechnicalMapByID(provisionID uint) 
 	}
 
 	if len(ProvisionIngredients) == 0 {
-		return nil, types.TechnicalMapNotFound
+		return nil, types.ErrorTechnicalMapNotFound
 	}
 
 	return ProvisionIngredients, nil

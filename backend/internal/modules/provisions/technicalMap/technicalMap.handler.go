@@ -26,7 +26,7 @@ func (h *TechnicalMapHandler) GetProvisionTechnicalMapByID(c *gin.Context) {
 
 	technicalMap, err := h.technicalMapService.GetProvisionTechnicalMapByID(ProvisionID)
 	if err != nil {
-		if errors.Is(err, types.TechnicalMapNotFound) {
+		if errors.Is(err, types.ErrorTechnicalMapNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404TechnicalMap)
 			return
 		}

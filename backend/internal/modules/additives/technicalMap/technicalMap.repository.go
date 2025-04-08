@@ -29,7 +29,7 @@ func (r *technicalMapRepository) GetAdditiveTechnicalMapByID(AdditiveID uint) ([
 	}
 
 	if len(AdditiveIngredients) == 0 {
-		return nil, types.TechnicalMapNotFound
+		return nil, types.ErrorTechnicalMapNotFound
 	}
 
 	return AdditiveIngredients, nil
