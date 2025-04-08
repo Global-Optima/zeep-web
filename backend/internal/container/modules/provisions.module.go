@@ -82,7 +82,7 @@ type ProvisionsTechnicalMapModule struct {
 
 func NewProvisionsTechnicalMapModule(base *common.BaseModule) *ProvisionsTechnicalMapModule {
 	repo := technicalMap.NewTechnicalMapRepository(base.DB)
-	service := technicalMap.NewTechnicalMapService(repo)
+	service := technicalMap.NewTechnicalMapService(repo, base.Logger)
 	handler := technicalMap.NewTechnicalMapHandler(service)
 
 	return &ProvisionsTechnicalMapModule{
