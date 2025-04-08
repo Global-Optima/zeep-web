@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { defineAsyncComponent, ref, useTemplateRef } from 'vue'
+import { defineAsyncComponent, ref, toRefs, useTemplateRef, watch } from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -22,9 +22,9 @@ import { useToast } from '@/core/components/ui/toast'
 import { useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
 import type { AdditiveCategoryDetailsDTO, AdditiveCategoryDTO, AdditiveDetailsDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
-import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 
 const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
   import('@/modules/admin/additive-categories/components/admin-select-additive-category.vue'))
@@ -57,7 +57,10 @@ interface SelectedProvisionsTypesDTO {
   volume: number
 }
 
-const {isSubmitting, initialAdditive} = defineProps<{isSubmitting: boolean, initialAdditive?: AdditiveDetailsDTO }>()
+const props = defineProps<{isSubmitting: boolean, initialAdditive?: AdditiveDetailsDTO }>()
+
+const { isSubmitting, initialAdditive } = toRefs(props)
+
 
 const emits = defineEmits<{
   onSubmit: [dto: CreateAdditiveDTO]
@@ -68,13 +71,13 @@ const { toast } = useToast()
 const { fetchTechnicalMap } = useCopyTechnicalMap()
 
 // Reactive State for Category Selection
-const selectedCategory = ref<AdditiveCategoryDTO | null>(initialAdditive?.category || null)
+const selectedCategory = ref<AdditiveCategoryDTO | null>(initialAdditive.value?.category || null)
 const openCategoryDialog = ref(false)
 
-const selectedUnit = ref<UnitDTO | null>(initialAdditive?.unit || null)
+const selectedUnit = ref<UnitDTO | null>(initialAdditive.value?.unit || null)
 const openUnitDialog = ref(false)
 
-const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(initialAdditive?.ingredients.map(i => ({
+const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(initialAdditive.value?.ingredients.map(i => ({
   ingredientId: i.ingredient.id,
   name: i.ingredient.name,
   unit: i.ingredient.unit.name,
@@ -113,13 +116,13 @@ const createAdditiveSchema = toTypedSchema(
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createAdditiveSchema,
   initialValues: {
-	name: initialAdditive?.name,
-	description: initialAdditive?.description,
-	machineId: initialAdditive?.machineId,
-	basePrice: initialAdditive?.basePrice,
-	size: initialAdditive?.size,
-	unitId: initialAdditive?.unit.id,
-	additiveCategoryId: initialAdditive?.category.id,
+	name: initialAdditive.value?.name,
+	description: initialAdditive.value?.description,
+	machineId: initialAdditive.value?.machineId,
+	basePrice: initialAdditive.value?.basePrice,
+	size: initialAdditive.value?.size,
+	unitId: initialAdditive.value?.unit.id,
+	additiveCategoryId: initialAdditive.value?.category.id,
   },
 })
 
@@ -135,6 +138,41 @@ function handleImageUpload(event: Event) {
     previewImage.value = URL.createObjectURL(file);
   }
 }
+
+watch(initialAdditive, (newVal) => {
+  if (newVal) {
+    // Reset the form with new initial values.
+    resetForm({
+      values: {
+        name: newVal.name,
+        description: newVal.description,
+        machineId: newVal.machineId,
+        basePrice: newVal.basePrice,
+        size: newVal.size,
+        unitId: newVal.unit.id,
+        additiveCategoryId: newVal.category.id,
+      }
+    })
+    // Update dependent reactive state.
+    selectedCategory.value = newVal.category
+    selectedUnit.value = newVal.unit
+    selectedIngredients.value = newVal.ingredients.map(i => ({
+      ingredientId: i.ingredient.id,
+      name: i.ingredient.name,
+      unit: i.ingredient.unit.name,
+      category: i.ingredient.category.name,
+      quantity: i.quantity
+    }))
+
+    provisions.value = newVal.provisions.map(p => ({
+      provisionId: p.provision.id,
+      name: p.provision.name,
+      absoluteVolume: p.provision.absoluteVolume,
+      unit: p.provision.unit.name,
+      volume: p.volume,
+    }))
+  }
+}, { immediate: true })
 
 function triggerImageInput() {
   imageInputRef.value?.click();

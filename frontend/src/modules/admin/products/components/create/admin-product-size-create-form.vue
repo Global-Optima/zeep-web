@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { defineAsyncComponent, ref } from 'vue'
+import { defineAsyncComponent, ref, toRefs } from 'vue'
 import * as z from 'zod'
 
 // UI Components
@@ -46,6 +46,7 @@ import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.m
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, EllipsisVertical, Trash } from 'lucide-vue-next'
+import { watch } from 'vue'
 
 const AdminSelectAdditiveDialog = defineAsyncComponent(() =>
   import('@/modules/admin/additives/components/admin-select-additive-dialog.vue'))
@@ -94,7 +95,9 @@ export interface CreateProductSizeFormSchema {
   provisions: SelectedProvisionsTypesDTO[]
 }
 
-const {initialProductSize} = defineProps<{initialProductSize?: ProductSizeDetailsDTO }>()
+const props = defineProps<{initialProductSize?: ProductSizeDetailsDTO }>()
+const { initialProductSize } = toRefs(props)
+
 
 const emits = defineEmits<{
   onSubmit: [dto: CreateProductSizeFormSchema]
@@ -111,7 +114,7 @@ const createProductSizeSchema = toTypedSchema(
   })
 )
 
-const ingredients = ref<SelectedIngredientsTypesDTO[]>(initialProductSize?.ingredients?.map(i => ({
+const ingredients = ref<SelectedIngredientsTypesDTO[]>(initialProductSize.value?.ingredients?.map(i => ({
   ingredientId: i.ingredient.id,
   name: i.ingredient.name,
   unit: i.ingredient.unit.name,
@@ -148,20 +151,20 @@ function addProvision(provision: ProvisionDTO) {
   }
 }
 
-const { handleSubmit, isSubmitting, setFieldValue } = useForm({
+const { handleSubmit, isSubmitting, setFieldValue, resetForm } = useForm({
   validationSchema: createProductSizeSchema,
   initialValues: {
-	name: initialProductSize?.name,
-	basePrice: initialProductSize?.basePrice,
-	size: initialProductSize?.size,
-	unitId: initialProductSize?.unit.id,
-	machineId: initialProductSize?.machineId,
+	name: initialProductSize.value?.name,
+	basePrice: initialProductSize.value?.basePrice,
+	size: initialProductSize.value?.size,
+	unitId: initialProductSize.value?.unit.id,
+	machineId: initialProductSize.value?.machineId,
   },
 })
 
 const { fetchTechnicalMap } = useCopyTechnicalMap()
 
-const additives = ref<SelectedAdditiveTypesDTO[]>(initialProductSize?.additives?.map(a => ({
+const additives = ref<SelectedAdditiveTypesDTO[]>(initialProductSize.value?.additives?.map(a => ({
   additiveId: a.id,
   isDefault: a.isDefault,
   isHidden: a.isHidden,
@@ -229,7 +232,7 @@ const onCancel = () => {
 }
 
 const openUnitDialog = ref(false)
-const selectedUnit = ref<UnitDTO | null>(initialProductSize?.unit || null)
+const selectedUnit = ref<UnitDTO | null>(initialProductSize.value?.unit || null)
 
 function selectUnit(unit: UnitDTO) {
   selectedUnit.value = unit
@@ -266,6 +269,50 @@ const onPasteTechMapClick = async () => {
     toast({ description: "Ошибка при вставке технологической карты", variant: "destructive" })
   }
 }
+
+watch(initialProductSize, (newVal) => {
+  if (newVal) {
+    // Reset the form with new initial values
+    resetForm({
+      values: {
+        name: newVal.name,
+        basePrice: newVal.basePrice,
+        size: newVal.size,
+        unitId: newVal.unit.id,
+        machineId: newVal.machineId,
+      }
+    })
+    // Update reactive states
+    ingredients.value = newVal.ingredients.map(i => ({
+      ingredientId: i.ingredient.id,
+      name: i.ingredient.name,
+      unit: i.ingredient.unit.name,
+      category: i.ingredient.category.name,
+      quantity: i.quantity
+    }))
+
+    additives.value = newVal.additives.map(a => ({
+      additiveId: a.id,
+      isDefault: a.isDefault,
+      isHidden: a.isHidden,
+      name: a.name,
+      categoryName: a.category.name,
+      size: a.size,
+      unitName: a.unit.name,
+      imageUrl: a.imageUrl,
+    }))
+
+    provisions.value = newVal.provisions.map(p => ({
+      provisionId: p.provision.id,
+      name: p.provision.name,
+      absoluteVolume: p.provision.absoluteVolume,
+      unit: p.provision.unit.name,
+      volume: p.volume,
+    }))
+
+    selectedUnit.value = newVal.unit
+  }
+}, { immediate: true })
 </script>
 
 <template>
