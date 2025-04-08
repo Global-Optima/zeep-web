@@ -7,8 +7,7 @@ import (
 
 var (
 	ErrStoreProvisionNotFound           = moduleErrors.NewModuleError(errors.New("store provision not found"))
-	ErrProvisionAlreadyCompleted        = moduleErrors.NewModuleError(errors.New("provision already completed"))
+	ErrProvisionCompleted               = moduleErrors.NewModuleError(errors.New("store provision has completed status"))
 	ErrStoreProvisionIngredientMismatch = moduleErrors.NewModuleError(errors.New("selected ingredient does not match the actual provision ingredients from central catalog"))
 	ErrStoreProvisionDailyLimitReached  = moduleErrors.NewModuleError(errors.New("selected daily limit reached"))
-	ErrStoreProvisionNotExpired         = moduleErrors.NewModuleError(errors.New("selected provision not expired"))
 )

@@ -202,7 +202,7 @@ func (h *StoreProvisionHandler) UpdateStoreProvisionByID(c *gin.Context) {
 
 	storeProvision, err := h.service.UpdateStoreProvision(storeID, storeProvisionID, &dto)
 	if err != nil {
-		if errors.Is(err, types.ErrProvisionAlreadyCompleted) {
+		if errors.Is(err, types.ErrProvisionCompleted) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionCompleted)
 			return
 		}
@@ -250,8 +250,8 @@ func (h *StoreProvisionHandler) DeleteStoreProvisionByID(c *gin.Context) {
 		case errors.Is(err, types.ErrStoreProvisionNotFound):
 			localization.SendLocalizedResponseWithKey(c, types.Response404StoreProvision)
 			return
-		case errors.Is(err, types.ErrStoreProvisionNotExpired):
-			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionNotExpired)
+		case errors.Is(err, types.ErrProvisionCompleted):
+			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionCompleted)
 			return
 		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProvisionDelete)

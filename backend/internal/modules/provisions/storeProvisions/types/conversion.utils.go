@@ -53,7 +53,7 @@ func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO, cen
 	}
 }
 
-func UpdateToStoreProvisionModel(storeProvision *data.StoreProvision, dto *UpdateStoreProvisionDTO) (*StoreProvisionModels, error) {
+func UpdateToStoreProvisionModels(storeProvision *data.StoreProvision, dto *UpdateStoreProvisionDTO) (*StoreProvisionModels, error) {
 	if dto == nil {
 		return nil, fmt.Errorf("dto is nil")
 	}
@@ -62,10 +62,12 @@ func UpdateToStoreProvisionModel(storeProvision *data.StoreProvision, dto *Updat
 		return nil, fmt.Errorf("invalid argument for ID paramters fetched while validating existing provision")
 	}
 
-	updateModels := &StoreProvisionModels{}
+	updateModels := &StoreProvisionModels{
+		StoreProvision: storeProvision,
+	}
 
 	if dto.Volume != nil {
-		multiplier := CalculateStoreProvisionIngredientsMultiplier(*dto.Volume, storeProvision.Volume)
+		multiplier := CalculateStoreProvisionIngredientsMultiplier(*dto.Volume, storeProvision.Provision.AbsoluteVolume)
 		if multiplier != 1 {
 			storeProvision.Volume = *dto.Volume
 			updateModels.StoreProvisionIngredientsMultiplier = &multiplier

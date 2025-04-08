@@ -93,7 +93,7 @@ func (s *storeProvisionService) CreateStoreProvision(storeID uint, dto *types.Cr
 }
 
 func (s *storeProvisionService) UpdateStoreProvision(storeID, storeProvisionID uint, dto *types.UpdateStoreProvisionDTO) (*types.StoreProvisionDTO, error) {
-	storeProvision, err := s.repo.GetStoreProvisionByID(storeID, storeProvisionID)
+	storeProvision, err := s.repo.GetStoreProvisionWithDetailsByID(storeID, storeProvisionID)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to get store provision by ID %d: %w", storeProvisionID, err)
 		s.logger.Error(wrapped)
@@ -101,12 +101,12 @@ func (s *storeProvisionService) UpdateStoreProvision(storeID, storeProvisionID u
 	}
 
 	if storeProvision.Status != data.PROVISION_STATUS_PREPARING {
-		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionAlreadyCompleted)
+		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionCompleted)
 		s.logger.Error(wrapped)
 		return nil, wrapped
 	}
 
-	updateModels, err := types.UpdateToStoreProvisionModel(storeProvision, dto)
+	updateModels, err := types.UpdateToStoreProvisionModels(storeProvision, dto)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to update store provision: %w", err)
 		s.logger.Error(wrapped)
@@ -132,7 +132,7 @@ func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID
 	}
 
 	if provision.Status != data.PROVISION_STATUS_PREPARING {
-		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionAlreadyCompleted)
+		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionCompleted)
 		return nil, wrapped
 	}
 
@@ -162,8 +162,8 @@ func (s *storeProvisionService) DeleteStoreProvision(storeID, storeProvisionID u
 		return nil, wrapped
 	}
 
-	if storeProvision.Status != data.PROVISION_STATUS_EXPIRED {
-		wrapped := fmt.Errorf("failed to delete store provision by ID %d: %w", storeProvisionID, types.ErrStoreProvisionNotExpired)
+	if storeProvision.Status == data.PROVISION_STATUS_COMPLETED {
+		wrapped := fmt.Errorf("failed to delete store provision by ID %d: %w", storeProvisionID, types.ErrProvisionCompleted)
 		return nil, wrapped
 	}
 

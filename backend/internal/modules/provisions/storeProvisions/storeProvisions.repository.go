@@ -145,7 +145,7 @@ func (r *storeProvisionRepository) SaveStoreProvisionWithAssociations(updateMode
 			}
 
 			if multiplier != nil && *multiplier != 1 {
-				if err := r.updateStoreProvisionIngredients(tx, sp.StoreID, sp.ID, *multiplier); err != nil {
+				if err := r.updateStoreProvisionIngredients(tx, sp.ID, *multiplier); err != nil {
 					return fmt.Errorf("failed to update ingredients: %w", err)
 				}
 			}
@@ -155,10 +155,10 @@ func (r *storeProvisionRepository) SaveStoreProvisionWithAssociations(updateMode
 	})
 }
 
-func (r *storeProvisionRepository) updateStoreProvisionIngredients(tx *gorm.DB, storeID, storeProvisionID uint, multiplier float64) error {
+func (r *storeProvisionRepository) updateStoreProvisionIngredients(tx *gorm.DB, storeProvisionID uint, multiplier float64) error {
 	return tx.Model(&data.StoreProvisionIngredient{}).
-		Where("store_provision_id = ? AND store_id = ?", storeProvisionID, storeID).
-		Update("volume", gorm.Expr("volume * ?", multiplier)).Error
+		Where("store_provision_id = ?", storeProvisionID).
+		Update("quantity", gorm.Expr("quantity * ?", multiplier)).Error
 }
 
 func (r *storeProvisionRepository) SaveStoreProvision(storeProvision *data.StoreProvision) error {
