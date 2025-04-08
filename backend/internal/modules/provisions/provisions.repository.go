@@ -179,18 +179,18 @@ func (r *provisionRepository) getProductSizeIDsByProvision(tx *gorm.DB, provisio
 	return productSizeIDs, nil
 }
 
-func (r *provisionRepository) getAdditivesIDsByProvision(tx *gorm.DB, provisionID uint) ([]uint, error) {
-	var additiveIDs []uint
+// func (r *provisionRepository) getAdditivesIDsByProvision(tx *gorm.DB, provisionID uint) ([]uint, error) {
+// 	var additiveIDs []uint
 
-	err := tx.Model(&data.AdditiveProvision{}).
-		Where("provision_id = ?", provisionID).
-		Pluck("additive_id", &additiveIDs).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to get additiveIDs by proviosionID %d: %w", provisionID, err)
-	}
+// 	err := tx.Model(&data.AdditiveProvision{}).
+// 		Where("provision_id = ?", provisionID).
+// 		Pluck("additive_id", &additiveIDs).Error
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to get additiveIDs by proviosionID %d: %w", provisionID, err)
+// 	}
 
-	return additiveIDs, nil
-}
+// 	return additiveIDs, nil
+// }
 
 func (r *provisionRepository) updateProductSizeProvisionsUpdatedAt(tx *gorm.DB, productSizeIDs []uint) error {
 	if len(productSizeIDs) == 0 {
