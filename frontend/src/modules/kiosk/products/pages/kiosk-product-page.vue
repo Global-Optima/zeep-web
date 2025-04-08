@@ -51,7 +51,9 @@
 						class="rounded-3xl w-38 h-64 object-contain"
 					/>
 					<p class="mt-7 font-semibold text-5xl">{{ productDetails.name }}</p>
-					<p class="mt-4 text-slate-600 text-2xl">{{ productDetails.description }}</p>
+					<p class="mt-4 text-slate-600 text-2xl">
+						{{ productDetails.description }}
+					</p>
 				</div>
 			</div>
 
@@ -71,7 +73,9 @@
 
 					<!-- Add to Cart Button + Price -->
 					<div class="flex items-center gap-8">
-						<p class="font-medium text-5xl truncate">{{ formatPrice(totalPrice) }}</p>
+						<p class="font-medium text-5xl truncate">
+							{{ formatPrice(totalPrice) }}
+						</p>
 						<button
 							@click="handleAddToCart"
 							:disabled="!isAddButtonEnabled"
@@ -119,16 +123,22 @@ const router = useRouter()
 const cartStore = useCartStore()
 
 const productId = computed(() => Number(route.params.id))
-const onBackClick = () => router.push({ name: getRouteName('KIOSK_HOME') })
+function onBackClick() {
+  router.push({ name: getRouteName('KIOSK_HOME') })
+}
 
 const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null)
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({})
 
-const { data: productDetails, isPending: isFetching, isError = true } = useQuery({
+const {
+  data: productDetails,
+  isPending: isFetching,
+  isError = true,
+} = useQuery({
   queryKey: computed(() => ['kiosk-product-details', productId]),
   queryFn: () => storeProductsService.getStoreProduct(productId.value),
   enabled: computed(() => productId.value > 0),
-  refetchInterval: 20_000
+  refetchInterval: 20_000,
 })
 
 const sortedSizes = computed(() => {
@@ -155,21 +165,21 @@ const { data: additiveCategories } = useQuery({
     }
   },
   enabled: computed(() => !!selectedSize.value),
-  refetchInterval: 20_000
+  refetchInterval: 20_000,
 })
 
 watch(
   additiveCategories,
   (newCategories) => {
     newCategories?.forEach((category) => {
-      if (category.isRequired) {
-        const current = selectedAdditives.value[category.id] || []
+      const current = selectedAdditives.value[category.id] || []
 
-        if (current.length === 0 && category.additives.length > 0) {
-          const defaultAdd = category.additives.find(a => a.isDefault)
-          selectedAdditives.value[category.id] = defaultAdd
-            ? [defaultAdd]
-            : [category.additives[0]]
+      if (category.isRequired && current.length === 0) {
+        const nonDefaultAdditive = category.additives.find(a => !a.isDefault)
+        if (nonDefaultAdditive) {
+          selectedAdditives.value[category.id] = [nonDefaultAdditive]
+        } else {
+          selectedAdditives.value[category.id] = []
         }
       }
     })
@@ -211,12 +221,17 @@ function onSizeSelect(size: StoreProductSizeDetailsDTO) {
 }
 
 function onAdditiveToggle(category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) {
+  if (additive.isDefault) {
+    return
+  }
+
   const current = selectedAdditives.value[category.id] || []
   const isSelected = current.some((a) => a.additiveId === additive.additiveId)
 
   if (isSelected) {
-    if (category.isRequired && current.length === 1) return
-    if (additive.isDefault) return
+    if (category.isRequired && current.length === 1) {
+      return
+    }
 
     selectedAdditives.value[category.id] = current.filter(
       (a) => a.additiveId !== additive.additiveId

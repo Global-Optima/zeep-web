@@ -60,7 +60,9 @@
 								class="rounded-3xl w-38 h-64 object-contain"
 							/>
 							<p class="mt-7 font-semibold text-4xl">{{ productDetails.name }}</p>
-							<p class="mt-2 text-slate-600 text-xl">{{ productDetails.description }}</p>
+							<p class="mt-2 text-slate-600 text-xl">
+								{{ productDetails.description }}
+							</p>
 						</div>
 
 						<!-- Sticky Section -->
@@ -140,33 +142,49 @@ const props = defineProps<{
 }>()
 
 const emits = defineEmits<{
-  (e: 'close'): void;
-  (e: 'update', updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]): void;
+  (e: 'close'): void
+  (e: 'update', updatedSize: StoreProductSizeDetailsDTO, updatedAdditives: StoreAdditiveCategoryItemDTO[]): void
 }>()
 
 /* ---------------------------
  * Local State
  * ------------------------- */
-// The product details are taken from the cartItem itself; presumably, cartItem.product is a StoreProductDTO.
+// The product details are taken from the cartItem itself.
 const productDetails = ref<StoreProductDetailsDTO>(props.cartItem.product)
+
+// Size = stored from cartItem
 const selectedSize = ref<StoreProductSizeDetailsDTO>(props.cartItem.size)
 
-// Convert the array of additive items from the cart into a record by category ID
+/**
+ * selectedAdditives = a map of categoryId => array of chosen additives
+ * We do NOT want to store default additives here. So we must filter them out
+ * from cartItem.additives on initialization.
+ */
+function convertAdditivesToRecord(additives: StoreAdditiveCategoryItemDTO[]) {
+  const record: Record<number, StoreAdditiveCategoryItemDTO[]> = {}
+  additives.forEach(add => {
+    // If it’s default, skip adding
+    if (add.isDefault) return
+    const catId = add.category.id
+    if (!record[catId]) {
+      record[catId] = []
+    }
+    record[catId].push(add)
+  })
+  return record
+}
+
+// Initialize from cartItem.additives
 const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>(
-  props.cartItem.additives.reduce((acc, additive) => {
-    acc[additive.category.id] = acc[additive.category.id] || []
-    acc[additive.category.id].push(additive)
-    return acc
-  }, {} as Record<number, StoreAdditiveCategoryItemDTO[]>)
+  convertAdditivesToRecord(props.cartItem.additives)
 )
 
+/* ---------------------------
+ * Additive Categories
+ * ------------------------- */
 const additiveCategories = ref<StoreAdditiveCategoryDTO[]>([])
 const errorMessage = ref<string | null>(null)
 
-/* ---------------------------
- * Fetch Additive Categories
- * ------------------------- */
-// We fetch the additive categories for the currently selected size:
 const { data: fetchedAdditives, isPending: isFetching, isError } = useQuery({
   queryKey: computed(() => ['kiosk-additive-categories', selectedSize.value?.id]),
   queryFn: () => {
@@ -175,25 +193,27 @@ const { data: fetchedAdditives, isPending: isFetching, isError } = useQuery({
     }
   },
   enabled: computed(() => !!selectedSize.value),
-  // Return an empty array initially to avoid undefined
   initialData: [] as StoreAdditiveCategoryDTO[]
 })
 
-// Once we fetch them, store in additiveCategories. Also ensure required categories have something selected.
+// On fetch, set additiveCategories and handle "required" logic
 watch(
   fetchedAdditives,
-  (newAdditives) => {
-    if (!newAdditives) return
-    additiveCategories.value = newAdditives
+  (newCats) => {
+    if (!newCats) return
+    additiveCategories.value = newCats
 
-    // Enforce required categories auto-selection if none selected
-    newAdditives.forEach((category) => {
+    // For each required category, if nothing is selected, pick the first NON-default
+    newCats.forEach((category) => {
       const current = selectedAdditives.value[category.id] || []
-      if (category.isRequired && current.length === 0 && category.additives.length > 0) {
-        const defaultAdd = category.additives.find((a) => a.isDefault)
-        selectedAdditives.value[category.id] = defaultAdd
-          ? [defaultAdd]
-          : [category.additives[0]]
+      if (category.isRequired && current.length === 0) {
+        const nonDefaultAdd = category.additives.find(a => !a.isDefault)
+        if (nonDefaultAdd) {
+          selectedAdditives.value[category.id] = [nonDefaultAdd]
+        } else {
+          // if only default => we select none
+          selectedAdditives.value[category.id] = []
+        }
       }
     })
   },
@@ -209,7 +229,6 @@ const sortedSizes = computed(() => {
     : []
 })
 
-// Ensure a size is selected when sortedSizes updates
 watch(
   sortedSizes,
   (newSizes) => {
@@ -221,42 +240,35 @@ watch(
 )
 
 /* ---------------------------
- * Computed: totalPrice
- * - We skip default additives in the sum.
+ * Total Price
+ * Skip default additives
  * ------------------------- */
 const totalPrice = computed(() => {
   if (!selectedSize.value) return 0
   const basePrice = selectedSize.value.storePrice
 
-  // sum of all selected additives that are NOT default
-  const additivesPrice = Object.values(selectedAdditives.value)
+  const addPrice = Object.values(selectedAdditives.value)
     .flat()
-    .reduce((sum, additive) => {
-      // if default => skip
-      if (additive.isDefault) return sum
-      return sum + additive.storePrice
-    }, 0)
-
-  return basePrice + additivesPrice
+    .reduce((sum, add) => sum + add.storePrice, 0) // no default in selectedAdditives => no condition needed
+  return basePrice + addPrice
 })
 
 /* ---------------------------
  * isUpdateEnabled
- * - The product must not be outOfStock
- * - Any default additive must not be outOfStock
+ * (1) Product not outOfStock
+ * (2) No default additive outOfStock
  * ------------------------- */
 const isUpdateEnabled = computed(() => {
   if (productDetails.value.isOutOfStock) return false
-
-  const hasDefaultOutOfStock = additiveCategories.value.some((category) =>
-    category.additives.some((a) => a.isDefault && a.isOutOfStock)
+  // if any default additive is outOfStock => disable
+  return !additiveCategories.value.some(cat =>
+    cat.additives.some(a => a.isDefault && a.isOutOfStock)
   )
-  return !hasDefaultOutOfStock
 })
 
 /* ---------------------------
  * onSizeSelect
- * - If user selects a different size, reset selectedAdditives
+ * If user picks a new size => reset selectedAdditives
  * ------------------------- */
 function onSizeSelect(size: StoreProductSizeDetailsDTO) {
   if (selectedSize.value?.id === size.id) return
@@ -266,22 +278,23 @@ function onSizeSelect(size: StoreProductSizeDetailsDTO) {
 
 /* ---------------------------
  * onAdditiveToggle
- * - Same logic as in product page:
- *   * cannot unselect if required with only 1 selected
- *   * cannot unselect if additive is default
- *   * if multipleSelect = false => replace
- *   * else push
+ * Mirroring product page logic:
+ * - If additive is default => skip.
+ * - If category required & only 1 selected => can't unselect.
+ * - Single/multi select logic.
  * ------------------------- */
 function onAdditiveToggle(category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) {
-  const current = selectedAdditives.value[category.id] || []
-  const alreadySelected = current.some((a) => a.additiveId === additive.additiveId)
+  // skip if default
+  if (additive.isDefault) return
 
-  if (alreadySelected) {
-    if (category.isRequired && current.length === 1) return
-    if (additive.isDefault) return
-    selectedAdditives.value[category.id] = current.filter(
-      (a) => a.additiveId !== additive.additiveId
-    )
+  const current = selectedAdditives.value[category.id] || []
+  const isSelected = current.some((a) => a.additiveId === additive.additiveId)
+
+  if (isSelected) {
+    if (category.isRequired && current.length === 1) {
+      return
+    }
+    selectedAdditives.value[category.id] = current.filter(a => a.additiveId !== additive.additiveId)
   } else {
     if (!category.isMultipleSelect) {
       selectedAdditives.value[category.id] = [additive]
@@ -293,19 +306,14 @@ function onAdditiveToggle(category: StoreAdditiveCategoryDTO, additive: StoreAdd
 
 /* ---------------------------
  * handleUpdate
- * - Gather final selections and emit
+ * Final step: gather selected, emit
  * ------------------------- */
 function handleUpdate() {
-  // Final list of additives
-  const updatedAdditives = Object.values(selectedAdditives.value).flat()
   if (!selectedSize.value) return
-
-  // Emit the new size & additives to parent
+  const updatedAdditives = Object.values(selectedAdditives.value).flat()
   emits('update', selectedSize.value, updatedAdditives)
   emits('close')
 }
 </script>
 
-<style scoped>
-/* Optional styling */
-</style>
+<style scoped></style>
