@@ -19,6 +19,7 @@
 				Вернуться назад
 			</button>
 		</div>
+
 		<!-- Product Content -->
 		<div
 			v-else-if="productDetails"
@@ -54,7 +55,7 @@
 				</div>
 			</div>
 
-			<!-- Sticky Section - moved outside the rounded container -->
+			<!-- Sticky Section -->
 			<div class="top-0 z-10 sticky bg-white shadow-lg px-8 pt-4 pb-10 rounded-b-[52px]">
 				<div class="flex justify-between items-center gap-4">
 					<!-- Size Selection -->
@@ -67,7 +68,8 @@
 							@click:size="onSizeSelect"
 						/>
 					</div>
-					<!-- Add to Cart Button -->
+
+					<!-- Add to Cart Button + Price -->
 					<div class="flex items-center gap-8">
 						<p class="font-medium text-5xl truncate">{{ formatPrice(totalPrice) }}</p>
 						<button
@@ -99,10 +101,7 @@ import PageLoader from '@/core/components/page-loader/PageLoader.vue'
 import { Button } from '@/core/components/ui/button'
 import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
-import type {
-  StoreAdditiveCategoryDTO,
-  StoreAdditiveCategoryItemDTO
-} from '@/modules/admin/store-additives/models/store-additves.model'
+import type { StoreAdditiveCategoryDTO, StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { storeAdditivesService } from '@/modules/admin/store-additives/services/store-additives.service'
 import type { StoreProductSizeDetailsDTO } from '@/modules/admin/store-products/models/store-products.model'
 import { storeProductsService } from '@/modules/admin/store-products/services/store-products.service'
@@ -115,40 +114,38 @@ import { ChevronLeft, Plus } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const route = useRoute();
-const router = useRouter();
-const cartStore = useCartStore();
+const route = useRoute()
+const router = useRouter()
+const cartStore = useCartStore()
 
-const productId = computed(() => Number(route.params.id));
+const productId = computed(() => Number(route.params.id))
+const onBackClick = () => router.push({ name: getRouteName('KIOSK_HOME') })
 
-const onBackClick = () => router.push({ name: getRouteName('KIOSK_HOME') });
-
-const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null);
-const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({});
+const selectedSize = ref<StoreProductSizeDetailsDTO | null>(null)
+const selectedAdditives = ref<Record<number, StoreAdditiveCategoryItemDTO[]>>({})
 
 const { data: productDetails, isPending: isFetching, isError = true } = useQuery({
   queryKey: computed(() => ['kiosk-product-details', productId]),
   queryFn: () => storeProductsService.getStoreProduct(productId.value),
   enabled: computed(() => productId.value > 0),
   refetchInterval: 20_000
-});
+})
 
 const sortedSizes = computed(() => {
   return productDetails.value?.sizes
     ? productDetails.value.sizes.slice().sort((a, b) => a.size - b.size)
-    : [];
-});
+    : []
+})
 
-// Watch sortedSizes to set initial selectedSize.
 watch(
   sortedSizes,
   (newSizes) => {
     if (!selectedSize.value && newSizes.length > 0) {
-      selectedSize.value = newSizes[0];
+      selectedSize.value = newSizes[0]
     }
   },
   { immediate: true }
-);
+)
 
 const { data: additiveCategories } = useQuery({
   queryKey: computed(() => ['kiosk-additive-categories', selectedSize.value]),
@@ -159,76 +156,85 @@ const { data: additiveCategories } = useQuery({
   },
   enabled: computed(() => !!selectedSize.value),
   refetchInterval: 20_000
-});
+})
 
-// Watch additiveCategories to enforce required auto‑selection.
 watch(
   additiveCategories,
   (newCategories) => {
-    newCategories?.forEach(category => {
+    newCategories?.forEach((category) => {
       if (category.isRequired) {
-        const current = selectedAdditives.value[category.id] || [];
+        const current = selectedAdditives.value[category.id] || []
+
         if (current.length === 0 && category.additives.length > 0) {
-          const defaultAdditive = category.additives.find(a => a.isDefault);
-          selectedAdditives.value[category.id] = defaultAdditive ? [defaultAdditive] : [category.additives[0]];
+          const defaultAdd = category.additives.find(a => a.isDefault)
+          selectedAdditives.value[category.id] = defaultAdd
+            ? [defaultAdd]
+            : [category.additives[0]]
         }
       }
-    });
+    })
   },
   { immediate: true }
-);
+)
 
 const isAddButtonEnabled = computed(() => {
-  // Check that the product itself is available
-  if (productDetails.value?.isOutOfStock) return false;
+  if (productDetails.value?.isOutOfStock) return false
 
-  // Check that no default additive is out of stock
-  const hasDefaultOutOfStock = additiveCategories?.value?.some(category =>
-    category.additives.some(additive => additive.isDefault && additive.isOutOfStock)
-  );
+  const hasDefaultOutOfStock = additiveCategories?.value?.some((category) =>
+    category.additives.some((additive) => additive.isDefault && additive.isOutOfStock)
+  )
 
-  return !hasDefaultOutOfStock;
-});
+  return !hasDefaultOutOfStock
+})
 
 const totalPrice = computed(() => {
-  if (!selectedSize.value) return 0;
-  const storePrice = selectedSize.value.storePrice;
+  if (!selectedSize.value) return 0
+
+  const storePrice = selectedSize.value.storePrice
+
   const additivePrice = Object.values(selectedAdditives.value)
     .flat()
-    .reduce((sum, add) => sum + add.storePrice, 0);
-  return storePrice + additivePrice;
-});
+    .reduce((sum, add) => {
+      if (add.isDefault) {
+        return sum
+      }
+      return sum + add.storePrice
+    }, 0)
 
-const onSizeSelect = (size: StoreProductSizeDetailsDTO) => {
-  if (selectedSize.value?.id === size.id) return;
-  selectedSize.value = size;
-  selectedAdditives.value = {};
-};
+  return storePrice + additivePrice
+})
 
-const onAdditiveToggle = (category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) => {
-  const current = selectedAdditives.value[category.id] || [];
-  const isSelected = current.some(a => a.additiveId === additive.additiveId);
+function onSizeSelect(size: StoreProductSizeDetailsDTO) {
+  if (selectedSize.value?.id === size.id) return
+  selectedSize.value = size
+  selectedAdditives.value = {}
+}
+
+function onAdditiveToggle(category: StoreAdditiveCategoryDTO, additive: StoreAdditiveCategoryItemDTO) {
+  const current = selectedAdditives.value[category.id] || []
+  const isSelected = current.some((a) => a.additiveId === additive.additiveId)
 
   if (isSelected) {
-    // Prevent unselecting if required category has only one selected
-    if (category.isRequired && current.length === 1) return;
-    // Prevent unselecting default additive.
-    if (additive.isDefault) return;
-    selectedAdditives.value[category.id] = current.filter(a => a.additiveId !== additive.additiveId);
+    if (category.isRequired && current.length === 1) return
+    if (additive.isDefault) return
+
+    selectedAdditives.value[category.id] = current.filter(
+      (a) => a.additiveId !== additive.additiveId
+    )
   } else {
     if (!category.isMultipleSelect) {
-      selectedAdditives.value[category.id] = [additive];
+      selectedAdditives.value[category.id] = [additive]
     } else {
-      selectedAdditives.value[category.id] = [...current, additive];
+      selectedAdditives.value[category.id] = [...current, additive]
     }
   }
-};
+}
 
-const handleAddToCart = () => {
-  if (!productDetails.value || !selectedSize.value) return;
-  const allAdditives = Object.values(selectedAdditives.value).flat();
-  cartStore.addToCart(productDetails.value, selectedSize.value, allAdditives, 1);
-};
+function handleAddToCart() {
+  if (!productDetails.value || !selectedSize.value) return
+  const allAdditives = Object.values(selectedAdditives.value).flat()
+  cartStore.addToCart(productDetails.value, selectedSize.value, allAdditives, 1)
+}
 </script>
 
 <style scoped></style>
