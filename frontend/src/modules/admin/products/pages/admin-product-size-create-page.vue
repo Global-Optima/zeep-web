@@ -28,7 +28,7 @@ const { toast } = useToast()
 const templateProductSizeId = route.query.templateProductSizeId as string
 
 const { data: productSizeDetails } = useQuery({
-	queryKey: ['admin-additive-details', templateProductSizeId],
+	queryKey: computed(() => ['admin-additive-details', templateProductSizeId]),
 	queryFn: () => productsService.getProductSizeById(Number(templateProductSizeId)),
 	enabled: computed(() => !isNaN(Number(templateProductSizeId))),
 })

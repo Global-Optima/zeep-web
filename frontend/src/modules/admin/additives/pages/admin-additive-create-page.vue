@@ -13,6 +13,7 @@ import AdminAdditiveCreateForm from '@/modules/admin/additives/components/create
 import type { CreateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -23,11 +24,10 @@ const { toast } = useToast()
 const templateAdditiveId = route.query.templateAdditiveId as string
 
 const { data: additiveDetails } = useQuery({
-	queryKey: ['admin-additive-details', templateAdditiveId],
+	queryKey: computed(() =>['admin-additive-details', templateAdditiveId]),
 	queryFn: () => additivesService.getAdditiveById(Number(templateAdditiveId)),
-	enabled: !isNaN(Number(templateAdditiveId)),
+	enabled: computed(() => !isNaN(Number(templateAdditiveId))),
 })
-
 
 const {mutate, isPending} = useMutation({
 	mutationFn: (dto: CreateAdditiveDTO) => additivesService.createAdditive(dto),
