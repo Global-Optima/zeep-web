@@ -48,16 +48,14 @@
 						v-if="order.status !== OrderStatus.COMPLETED"
 						class="mt-1 text-gray-700 text-sm"
 					>
-						<span>
-							{{ order.deliveryAddressId !== null ? 'Доставка' : 'Кафе' }} </span
-						>,
+						<span> {{ order?.deliveryAddressId ? 'Доставка' : 'Кафе' }} </span>,
 						<span>{{ order.subOrdersQuantity }} шт.</span>
 					</div>
 
 					<!-- Progress Bar for suborders -->
 					<div
 						v-if="order.status !== OrderStatus.COMPLETED"
-						class="relative bg-slate-200 mt-4 rounded h-4 overflow-hidden"
+						class="relative bg-slate-200 mt-4 rounded-xl h-4 overflow-hidden"
 					>
 						<div
 							class="h-full transition-all duration-300 ease-in-out"

@@ -23,17 +23,25 @@
 				<TableCell class="text-right">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="icon" @click.stop>
-							<EllipsisVertical class="w-6 h-6" />
-						</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								@click.stop
+							>
+								<EllipsisVertical class="w-6 h-6" />
+							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
-						<DropdownMenuItem @click="(e) => { e.stopPropagation(); onDeleteClick(e, provision.id); }">
-							Удалить
-						</DropdownMenuItem>
-						<DropdownMenuItem @click="(e) => { e.stopPropagation(); onDuplicateClick(provision.id); }">
-							Дублировать
-						</DropdownMenuItem>
+							<DropdownMenuItem
+								@click="(e) => { e.stopPropagation(); onDeleteClick(e, provision.id); }"
+							>
+								Удалить
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								@click="(e) => { e.stopPropagation(); onDuplicateClick(provision.id); }"
+							>
+								Дублировать
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</TableCell>
@@ -60,7 +68,6 @@ import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-
 import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import { provisionsService } from "@/modules/admin/provisions/services/provisions.service"
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const {provisions} = defineProps<{provisions: ProvisionDTO[]}>()
@@ -97,5 +104,4 @@ const onProvisionClick = (id: number) => {
 const onDuplicateClick = (id: number) => {
  router.push({name: getRouteName('ADMIN_PROVISION_CREATE'), query: {templateProvisionId: id}})
 }
-
 </script>

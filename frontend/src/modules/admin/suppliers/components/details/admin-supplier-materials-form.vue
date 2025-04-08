@@ -102,7 +102,7 @@ function onSubmit() {
 
   emit('on-submit', payload)
 
-  
+
   toast({ title: 'Успех', description: 'Данные успешно сохранены.', variant: 'default' })
 }
 

@@ -2,7 +2,11 @@
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-6xl">
 		<!-- Header -->
 		<div class="flex items-center gap-4">
-			<Button variant="outline" size="icon" @click="onCancel">
+			<Button
+				variant="outline"
+				size="icon"
+				@click="onCancel"
+			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
 			</Button>
@@ -58,7 +62,10 @@
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						<TableRow v-for="material in delivery.materials" :key="material.stockMaterial.id">
+						<TableRow
+							v-for="material in delivery.materials"
+							:key="material.stockMaterial.id"
+						>
 							<TableCell class="py-4 font-medium">{{ material.stockMaterial.name }}</TableCell>
 							<TableCell>
 								{{ material.stockMaterial.size }} {{ material.stockMaterial.unit.name }}
@@ -69,7 +76,10 @@
 							<TableCell>{{ (material.quantity * material.price).toFixed(2) }}</TableCell>
 						</TableRow>
 						<TableRow v-if="delivery.materials.length === 0">
-							<TableCell colspan="6" class="py-4 text-center text-muted-foreground">
+							<TableCell
+								colspan="6"
+								class="py-4 text-center text-muted-foreground"
+							>
 								Материалы отсутствуют
 							</TableCell>
 						</TableRow>
@@ -77,7 +87,10 @@
 					<TableFooter>
 						<TableRow>
 							<!-- Span first 5 columns for the total label -->
-							<TableCell colspan="5" class="=font-medium">
+							<TableCell
+								colspan="5"
+								class="=font-medium"
+							>
 								Итого
 							</TableCell>
 							<TableCell>
