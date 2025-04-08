@@ -229,7 +229,6 @@ func (s *orderService) StockAndPriceValidationResults(
 		s.storeAdditiveRepo,
 		frozenMap,
 	)
-
 	if err != nil {
 		s.logger.Error(fmt.Errorf("additive validation failed: %w", err))
 		return nil, err
@@ -245,36 +244,35 @@ func (s *orderService) StockAndPriceValidationResults(
 
 func ValidateStoreAdditives(
 	storeID uint,
-	suborders []types.CreateSubOrderDTO, // Instead of just storeAdditiveIDs
+	suborders []types.CreateSubOrderDTO,
 	repo storeAdditives.StoreAdditiveRepository,
 	frozenMap map[uint]float64,
 ) (map[uint]float64, map[uint]string, error) {
-
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 
 	for _, suborder := range suborders {
-		psID := suborder.StoreProductSizeID
-		for _, addID := range suborder.StoreAdditivesIDs {
-			sa, psa, err := repo.GetStoreAdditiveWithPSA(storeID, psID, addID)
+		storePsID := suborder.StoreProductSizeID
+		for _, storeAddID := range suborder.StoreAdditivesIDs {
+			sa, psa, err := repo.GetStoreAdditiveWithProductSizeAdditive(storeID, storePsID, storeAddID)
 			if err != nil {
 				return nil, nil, fmt.Errorf("error loading storeAdditive/PSA for suborder: %w", err)
 			}
 			if sa == nil {
-				return nil, nil, fmt.Errorf("no storeAdditive found for addID=%d", addID)
+				return nil, nil, fmt.Errorf("no storeAdditive found for storeAddID=%d", storeAddID)
 			}
 
 			if psa == nil {
 				return nil, nil, fmt.Errorf(
-					"additive %d not linked to productSize %d in store %d",
-					addID, psID, storeID,
+					"additive %d not linked to storeProductSize %d in store %d",
+					storeAddID, storePsID, storeID,
 				)
 			}
 
 			if sa.IsOutOfStock {
 				return nil, nil, fmt.Errorf(
 					"additive %s (ID=%d) is out of stock",
-					sa.Additive.Name, addID,
+					sa.Additive.Name, storeAddID,
 				)
 			}
 
@@ -289,8 +287,8 @@ func ValidateStoreAdditives(
 				}
 			}
 
-			prices[addID] = price
-			additiveNames[addID] = sa.Additive.Name
+			prices[storeAddID] = price
+			additiveNames[storeAddID] = sa.Additive.Name
 		}
 	}
 	return prices, additiveNames, nil
