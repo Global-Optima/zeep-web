@@ -1,6 +1,7 @@
 import type { PaginationParams } from '@/core/utils/pagination.utils'
 import type { IngredientsDTO } from '../../ingredients/models/ingredients.model'
 import type { UnitDTO } from '../../units/models/units.model'
+import type { TechnicalMapDTO } from '@/modules/kiosk/products/models/product.model'
 
 export interface ProvisionFilter extends PaginationParams {
 	search?: string
@@ -51,4 +52,9 @@ export interface UpdateProvisionDTO {
 	netCost: number
 	limitPerDay: number
 	ingredients: SelectedProvisionsIngredients[]
+}
+
+
+export interface ProvisionTechnicalMap {
+  ingredients: TechnicalMapDTO[]
 }

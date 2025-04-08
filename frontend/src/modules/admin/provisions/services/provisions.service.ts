@@ -7,6 +7,7 @@ import type {
 	ProvisionDetailsDTO,
 	ProvisionDTO,
 	ProvisionFilter,
+	ProvisionTechnicalMap,
 	UpdateProvisionDTO,
 } from '../models/provision.models'
 
@@ -35,6 +36,16 @@ class ProvisionsService {
 
 	async deleteProvision(id: number) {
 		await apiClient.delete<void>(`/provisions/${id}`)
+	}
+
+	async getProvisionTechMap(id: number) {
+		try {
+			const response = await apiClient.get<ProvisionTechnicalMap>(`/provisions/${id}/technical-map`)
+			return response.data
+		} catch (error) {
+			console.error(`Failed to fetch provision technical map for ID ${id}: `, error)
+			throw error
+		}
 	}
 }
 
