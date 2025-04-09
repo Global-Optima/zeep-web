@@ -2,13 +2,14 @@ package orders
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders/types"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -18,26 +19,26 @@ type TransactionManager interface {
 }
 
 type transactionManager struct {
-	db                  *gorm.DB
-	repo                OrderRepository
-	storeStockRepo      storeStocks.StoreStockRepository
-	notificationService notifications.NotificationService
-	logger              *zap.SugaredLogger
+	db                        *gorm.DB
+	repo                      OrderRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
+	notificationService       notifications.NotificationService
+	logger                    *zap.SugaredLogger
 }
 
 func NewTransactionManager(
 	db *gorm.DB,
 	repo OrderRepository,
-	storeStockRepo storeStocks.StoreStockRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	notificationService notifications.NotificationService,
 	logger *zap.SugaredLogger,
 ) TransactionManager {
 	return &transactionManager{
-		db:                  db,
-		repo:                repo,
-		storeStockRepo:      storeStockRepo,
-		notificationService: notificationService,
-		logger:              logger,
+		db:                        db,
+		repo:                      repo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
+		notificationService:       notificationService,
+		logger:                    logger,
 	}
 }
 
@@ -48,10 +49,9 @@ func (m *transactionManager) SetNextSubOrderStatus(suborder *data.Suborder) erro
 
 	return m.db.Transaction(func(tx *gorm.DB) error {
 		repoTx := m.repo.CloneWithTransaction(tx)
-		storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
-
+		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
 		// Attempt to advance suborder status
-		if err := m.advanceSuborder(&repoTx, &storeStockRepoTx, suborder.ID, suborder); err != nil {
+		if err := m.advanceSuborder(&repoTx, storeInventoryManagerRepoTx, suborder.ID, suborder); err != nil {
 			return err
 		}
 
@@ -64,7 +64,7 @@ func (m *transactionManager) SetNextSubOrderStatus(suborder *data.Suborder) erro
 	}) // Handle fallback if suborder is already completed within time gap
 }
 
-func (m *transactionManager) advanceSuborder(repoTx OrderRepository, storeStockRepoTX storeStocks.StoreStockRepository, subOrderID uint, suborder *data.Suborder) error {
+func (m *transactionManager) advanceSuborder(repoTx OrderRepository, storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, subOrderID uint, suborder *data.Suborder) error {
 	currentStatus := suborder.Status
 	nextStatus, ok := allowedTransitions[currentStatus]
 	if !ok {
@@ -82,7 +82,7 @@ func (m *transactionManager) advanceSuborder(repoTx OrderRepository, storeStockR
 
 	// If suborder is completed, deduct ingredients
 	if nextStatus == data.SubOrderStatusCompleted {
-		if err := m.handleSuborderCompletion(repoTx, storeStockRepoTX, subOrderID); err != nil {
+		if err := m.handleSuborderCompletion(repoTx, storeInventoryManagerRepoTx, subOrderID); err != nil {
 			return err
 		}
 	}
@@ -90,7 +90,7 @@ func (m *transactionManager) advanceSuborder(repoTx OrderRepository, storeStockR
 	return nil
 }
 
-func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, storeStockRepoTx storeStocks.StoreStockRepository, subOrderID uint) error {
+func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, subOrderID uint) error {
 	suborder, err := repoTx.GetSuborderByID(subOrderID)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve updated suborder: %w", err)
@@ -101,12 +101,21 @@ func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, st
 		return fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
 	}
 
-	stockMap := make(map[uint]*data.StoreStock)
-	if err := m.deductSuborderIngredientsFromStock(storeStockRepoTx, order.StoreID, suborder, stockMap); err != nil {
+	inventoryMap := types.DeductedInventoryMap{}
+	if err := m.deductSuborderIngredientsFromStock(storeInventoryManagerRepoTx, order.StoreID, suborder, inventoryMap); err != nil {
 		return fmt.Errorf("failed to deduct ingredients: %w", err)
 	}
 
-	m.notifyLowStockIngredients(order, stockMap)
+	ingredientIDs, provisionIDs := inventoryMap.GetKeys()
+	err = storeInventoryManagerRepoTx.RecalculateOutOfStock(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+		IngredientIDs: ingredientIDs,
+		ProvisionIDs:  provisionIDs,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to recalculate out of stock: %w", err)
+	}
+
+	m.notifyLowStockIngredients(order, inventoryMap.IngredientStoreStockMap)
 	return nil
 }
 
@@ -169,29 +178,29 @@ func (m *transactionManager) evaluateSuborderStatuses(suborders []data.Suborder)
 	return
 }
 
-func (m *transactionManager) deductSuborderIngredientsFromStock(storeStockRepoTX storeStocks.StoreStockRepository, storeID uint, suborder *data.Suborder, stockMap map[uint]*data.StoreStock) error {
-	updatedStocks, err := storeStockRepoTX.DeductStockByProductSizeTechCart(storeID, suborder.StoreProductSizeID)
+func (m *transactionManager) deductSuborderIngredientsFromStock(storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, storeID uint, suborder *data.Suborder, inventoryMap types.DeductedInventoryMap) error {
+	deductedInventoryFromProductSize, err := storeInventoryManagerRepoTx.DeductStoreInventoryByProductSize(storeID, suborder.StoreProductSize.ProductSizeID)
 	if err != nil {
 		return fmt.Errorf("failed to deduct product size ingredients: %w", err)
 	}
-	for _, stock := range updatedStocks {
-		if existingStock, exists := stockMap[stock.IngredientID]; exists {
+	for _, stock := range deductedInventoryFromProductSize.StoreStocks {
+		if existingStock, exists := inventoryMap.IngredientStoreStockMap[stock.IngredientID]; exists {
 			existingStock.Quantity = stock.Quantity
 		} else {
-			stockMap[stock.IngredientID] = &stock
+			inventoryMap.IngredientStoreStockMap[stock.IngredientID] = &stock
 		}
 	}
 
 	for _, subAdditive := range suborder.SuborderAdditives {
-		updatedStocks, err := storeStockRepoTX.DeductStockByAdditiveTechCart(storeID, subAdditive.StoreAdditiveID)
+		deductedInventoryFromAdditive, err := storeInventoryManagerRepoTx.DeductStoreInventoryByAdditive(storeID, subAdditive.StoreAdditive.AdditiveID)
 		if err != nil {
 			return fmt.Errorf("failed to deduct additive ingredients: %w", err)
 		}
-		for _, stock := range updatedStocks {
-			if existingStock, exists := stockMap[stock.IngredientID]; exists {
+		for _, stock := range deductedInventoryFromAdditive.StoreStocks {
+			if existingStock, exists := inventoryMap.IngredientStoreStockMap[stock.IngredientID]; exists {
 				existingStock.Quantity = stock.Quantity
 			} else {
-				stockMap[stock.IngredientID] = &stock
+				inventoryMap.IngredientStoreStockMap[stock.IngredientID] = &stock
 			}
 		}
 	}

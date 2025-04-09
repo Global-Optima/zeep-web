@@ -14,6 +14,8 @@ type StoreSynchronizeRepository interface {
 	GetNotSynchronizedProductSizeIngredientsIDs(storeID uint, lastSync time.Time) ([]uint, error)
 	GetNotSynchronizedProductSizesAdditivesIDs(storeID uint, lastSync time.Time) ([]uint, error)
 	GetNotSynchronizedAdditivesIDs(storeID uint, lastSync time.Time) ([]uint, error)
+	GetNotSynchronizedProductSizesProvisionsIDs(storeID uint, lastSync time.Time) ([]uint, error)
+	GetNotSynchronizedAdditiveProvisionIDs(storeID uint, lastSync time.Time) ([]uint, error)
 }
 
 type storeSynchronizeRepository struct {
@@ -69,7 +71,7 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesIDs(storeID u
 		Joins("JOIN store_product_sizes ON product_sizes.id = store_product_sizes.product_size_id").
 		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
 		Where("store_products.store_id = ?", storeID).
-		Where("additives_updated_at > ?", lastSync).
+		Where("additives_updated_at > ? OR provisions_updated_at > ?", lastSync, lastSync).
 		Pluck("product_sizes.id", &productSizeIDs).Error
 	if err != nil {
 		return nil, err
@@ -90,10 +92,27 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesAdditivesIDs(
 			lastSync, lastSync).
 		Pluck("product_size_additives.additive_id", &notSynchronizedProductSizesAdditivesIDs).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch product sizes: %w", err)
+		return nil, fmt.Errorf("failed to fetch product size additives: %w", err)
 	}
 
 	return notSynchronizedProductSizesAdditivesIDs, nil
+}
+
+func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesProvisionsIDs(storeID uint, lastSync time.Time) ([]uint, error) {
+	var notSynchronizedProductSizesProvisionsIDs []uint
+	err := r.db.Model(&data.ProductSizeProvision{}).
+		Distinct("product_size_provisions.provision_id").
+		Joins("JOIN store_product_sizes ON product_size_provisions.product_size_id = store_product_sizes.product_size_id").
+		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
+		Where("store_products.store_id = ?", storeID).
+		Where("product_size_provisions.created_at > ? OR product_size_provisions.updated_at > ?",
+			lastSync, lastSync).
+		Pluck("product_size_provisions.provision_id", &notSynchronizedProductSizesProvisionsIDs).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch product size provisions: %w", err)
+	}
+
+	return notSynchronizedProductSizesProvisionsIDs, nil
 }
 
 func (r *storeSynchronizeRepository) GetNotSynchronizedAdditivesIDs(storeID uint, lastSync time.Time) ([]uint, error) {
@@ -102,11 +121,28 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedAdditivesIDs(storeID uint
 		Distinct("additives.id").
 		Joins("JOIN store_additives ON store_additives.additive_id = additives.id").
 		Where("store_additives.store_id = ?", storeID).
-		Where("additives.ingredients_updated_at > ?", lastSync).
+		Where("additives.ingredients_updated_at > ? OR additives.provisions_updated_at > ?",
+			lastSync, lastSync).
 		Pluck("additive.id", &notSynchronizedAdditives).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return notSynchronizedAdditives, nil
+}
+
+func (r *storeSynchronizeRepository) GetNotSynchronizedAdditiveProvisionIDs(storeID uint, lastSync time.Time) ([]uint, error) {
+	var notSynchronizedAdditiveProvisionsIDs []uint
+	err := r.db.Model(&data.AdditiveProvision{}).
+		Distinct("additive_provisions.provision_id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additive_provisions.additive_id").
+		Where("store_additives.store_id = ?", storeID).
+		Where("additive_provisions.created_at > ? OR additive_provisions.updated_at > ?",
+			lastSync, lastSync).
+		Pluck("additive_provisions.provision_id", &notSynchronizedAdditiveProvisionsIDs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return notSynchronizedAdditiveProvisionsIDs, nil
 }

@@ -17,7 +17,6 @@ import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
 
-
 const emits = defineEmits<{
   onSubmit: [dto: CreateProvisionDTO]
   onCancel: []
@@ -29,6 +28,7 @@ const createProvisionSchema = toTypedSchema(
     name: z.string().min(1, 'Введите название заготовки'),
     absoluteVolume: z.number().min(0, 'Введите абсолютное значение объема'),
     preparationInMinutes: z.number().min(0, 'Введите корректное значение времени приготовления'),
+    defaultExpirationInMinutes: z.number().min(0, 'Введите корректное значение времени истечения срока годности'),
     netCost: z.number().min(0, 'Введите корректное значение себестоимости'),
     limitPerDay: z.number().min(0, 'Введите корректное значение лимита по созданию в день'),
     unitId: z.coerce.number().min(1, 'Выберите корректную единицу измерения'),
@@ -77,6 +77,7 @@ const onSubmit = handleSubmit((formValues) => {
     name: formValues.name,
     absoluteVolume: formValues.absoluteVolume,
     preparationInMinutes: formValues.preparationInMinutes,
+    defaultExpirationInMinutes: formValues.defaultExpirationInMinutes,
     netCost: formValues.netCost,
     limitPerDay: formValues.limitPerDay,
     unitId: formValues.unitId,
@@ -237,6 +238,25 @@ function selectUnit(unit: UnitDTO) {
 							<FormMessage />
 						</FormItem>
 					</FormField>
+
+          <!-- Default Expiration Time (Minutes) -->
+          <FormField
+            name="defaultExpirationInMinutes"
+            v-slot="{ componentField }"
+          >
+            <FormItem>
+              <FormLabel>Срок годности по умолчанию (минут)</FormLabel>
+              <FormControl>
+                <Input
+                  id="defaultExpirationInMinutes"
+                  type="number"
+                  v-bind="componentField"
+                  placeholder="Введите срок годности"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
 
 					<!-- Limit Per Day -->
 					<FormField

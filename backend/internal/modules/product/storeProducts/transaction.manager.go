@@ -5,6 +5,8 @@ import (
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"gorm.io/gorm"
@@ -17,11 +19,12 @@ type TransactionManager interface {
 }
 
 type transactionManager struct {
-	db                *gorm.DB
-	storeProductRepo  StoreProductRepository
-	storeAdditiveRepo storeAdditives.StoreAdditiveRepository
-	storeStockRepo    storeStocks.StoreStockRepository
-	ingredientRepo    ingredients.IngredientRepository
+	db                        *gorm.DB
+	storeProductRepo          StoreProductRepository
+	storeAdditiveRepo         storeAdditives.StoreAdditiveRepository
+	storeStockRepo            storeStocks.StoreStockRepository
+	ingredientRepo            ingredients.IngredientRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
 }
 
 func NewTransactionManager(
@@ -30,13 +33,15 @@ func NewTransactionManager(
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	ingredientRepo ingredients.IngredientRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 ) TransactionManager {
 	return &transactionManager{
-		db:                db,
-		storeProductRepo:  storeProductRepo,
-		storeAdditiveRepo: storeAdditiveRepo,
-		storeStockRepo:    storeStockRepo,
-		ingredientRepo:    ingredientRepo,
+		db:                        db,
+		storeProductRepo:          storeProductRepo,
+		storeAdditiveRepo:         storeAdditiveRepo,
+		storeStockRepo:            storeStockRepo,
+		ingredientRepo:            ingredientRepo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
 	}
 }
 
@@ -52,7 +57,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
+		storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
 
 		storeAdditiveRepoTx := m.storeAdditiveRepo.CloneWithTransaction(tx)
 		storeAdditiveIDs, err = storeAdditiveRepoTx.CreateStoreAdditives(storeAdditives)
@@ -60,7 +65,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 			return err
 		}
 
-		missingIngredientIDs, err := storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
+		missingIngredientIDs, err := storeStockRepoTx.FilterMissingIngredientsIDs(storeID, ingredientIDs)
 		if err != nil {
 			return err
 		}
@@ -80,13 +85,14 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 		}
 
 		if len(newStoreStocks) > 0 {
-			_, err = m.addStocks(&storeStockRepo, newStoreStocks)
+			_, err = m.addStocks(storeStockRepoTx, newStoreStocks)
 			if err != nil {
 				return err
 			}
 		}
 
-		if err := data.RecalculateOutOfStock(tx, storeID, &data.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
+		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
+		if err := storeInventoryManagerRepoTx.RecalculateOutOfStock(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
 			return err
 		}
 
@@ -144,13 +150,14 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 		}
 
 		if len(newStoreStocks) > 0 {
-			_, err = m.addStocks(&storeStockRepoTx, newStoreStocks)
+			_, err = m.addStocks(storeStockRepoTx, newStoreStocks)
 			if err != nil {
 				return err
 			}
 		}
 
-		if err := data.RecalculateOutOfStock(tx, storeID, &data.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
+		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
+		if err := storeInventoryManagerRepoTx.RecalculateOutOfStock(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
 			return err
 		}
 
@@ -168,7 +175,7 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 		if err := sp.UpdateStoreProductByID(storeID, storeProductID, updateModels); err != nil {
 			return err
 		}
-		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
+		storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
 
 		missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
 		if err != nil {
@@ -190,13 +197,14 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 		}
 
 		if len(newStoreStocks) > 0 {
-			_, err = m.addStocks(&storeStockRepo, newStoreStocks)
+			_, err = m.addStocks(storeStockRepoTx, newStoreStocks)
 			if err != nil {
 				return err
 			}
 		}
 
-		if err := data.RecalculateOutOfStock(tx, storeID, &data.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
+		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
+		if err := storeInventoryManagerRepoTx.RecalculateOutOfStock(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
 			return err
 		}
 

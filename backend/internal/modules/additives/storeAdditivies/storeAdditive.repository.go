@@ -20,7 +20,8 @@ type StoreAdditiveRepository interface {
 	FilterMissingStoreAdditiveIDs(storeID uint, additivesIDs []uint) ([]uint, error)
 	CreateStoreAdditive(storeID uint, dto *types.CreateStoreAdditiveDTO) (uint, error)
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
-	GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
+	GetStoreAdditiveWithDetailsByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
+	GetStoreAdditiveByID(storeAdditiveID uint) (*data.StoreAdditive, error)
 	GetSufficientStoreAdditiveByID(storeID, storeAdditiveID uint, frozenStock map[uint]float64) (*data.StoreAdditive, error)
 	GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
@@ -286,7 +287,7 @@ func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
 	return categories, nil
 }
 
-func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error) {
+func (r *storeAdditiveRepository) GetStoreAdditiveWithDetailsByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error) {
 	var storeAdditive *data.StoreAdditive
 
 	query := r.db.Model(&data.StoreAdditive{}).
@@ -313,6 +314,22 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint, fil
 	}
 
 	err := query.First(&storeAdditive).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStoreAdditiveNotFound
+		}
+		return nil, err
+	}
+
+	return storeAdditive, nil
+}
+
+func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint) (*data.StoreAdditive, error) {
+	var storeAdditive *data.StoreAdditive
+
+	err := r.db.Model(&data.StoreAdditive{}).
+		Where(&data.StoreAdditive{BaseEntity: data.BaseEntity{ID: storeAdditiveID}}).
+		First(&storeAdditive).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrStoreAdditiveNotFound

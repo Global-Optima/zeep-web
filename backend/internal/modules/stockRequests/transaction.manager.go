@@ -2,6 +2,8 @@ package stockRequests
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -21,20 +23,23 @@ type TransactionManager interface {
 }
 
 type transactionManager struct {
-	db                *gorm.DB
-	repo              StockRequestRepository
-	stockMaterialRepo stockMaterial.StockMaterialRepository
+	db                        *gorm.DB
+	repo                      StockRequestRepository
+	stockMaterialRepo         stockMaterial.StockMaterialRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
 }
 
 func NewTransactionManager(
 	db *gorm.DB,
 	repo StockRequestRepository,
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 ) TransactionManager {
 	return &transactionManager{
-		db:                db,
-		repo:              repo,
-		stockMaterialRepo: stockMaterialRepo,
+		db:                        db,
+		repo:                      repo,
+		stockMaterialRepo:         stockMaterialRepo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
 	}
 }
 
@@ -79,7 +84,14 @@ func (m *transactionManager) HandleCompleteStockRequest(request *data.StockReque
 			return fmt.Errorf("failed to update stock request status: %w", err)
 		}
 
-		if err := data.RecalculateOutOfStock(tx, request.StoreID, &data.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
+		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
+		err = storeInventoryManagerRepoTx.RecalculateOutOfStock(
+			request.StoreID,
+			&storeInventoryManagersTypes.RecalculateInput{
+				IngredientIDs: ingredientIDs,
+			},
+		)
+		if err != nil {
 			return err
 		}
 
@@ -176,9 +188,13 @@ func (m *transactionManager) HandleAcceptedWithChange(request *data.StockRequest
 			return fmt.Errorf("failed to update stock request status: %w", err)
 		}
 
-		if err := data.RecalculateOutOfStock(tx, request.StoreID, &data.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
-			return err
-		}
+		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
+		err = storeInventoryManagerRepoTx.RecalculateOutOfStock(
+			request.StoreID,
+			&storeInventoryManagersTypes.RecalculateInput{
+				IngredientIDs: ingredientIDs,
+			},
+		)
 
 		return nil
 	})

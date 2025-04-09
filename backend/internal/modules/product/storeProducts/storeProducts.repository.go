@@ -26,7 +26,8 @@ type StoreProductRepository interface {
 	UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error
 	DeleteStoreProductWithSizes(storeID, storeProductID uint) error
 
-	GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
+	GetStoreProductSizeByID(storeProductSizeID uint) (*data.StoreProductSize, error)
+	GetStoreProductSizeWithDetailsByID(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
 	GetSufficientStoreProductSizeById(storeID, storeProductSizeID uint, frozenMap map[uint]float64) (*data.StoreProductSize, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
@@ -356,7 +357,7 @@ func (r *storeProductRepository) DeleteStoreProductWithSizes(storeID, storeProdu
 	})
 }
 
-func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSizeID uint) (*data.StoreProductSize, error) {
+func (r *storeProductRepository) GetStoreProductSizeWithDetailsByID(storeID, storeProductSizeID uint) (*data.StoreProductSize, error) {
 	var storeProductSize data.StoreProductSize
 
 	err := r.db.Model(&data.StoreProductSize{}).
@@ -373,6 +374,21 @@ func (r *storeProductRepository) GetStoreProductSizeById(storeID, storeProductSi
 	if err != nil {
 		return &storeProductSize, err
 	}
+	return &storeProductSize, nil
+}
+
+func (r *storeProductRepository) GetStoreProductSizeByID(storeProductSizeID uint) (*data.StoreProductSize, error) {
+	var storeProductSize data.StoreProductSize
+
+	err := r.db.Model(&data.StoreProductSize{}).
+		Where("id = ?", storeProductSizeID).First(&storeProductSize).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStoreProductSizeNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch store product size: %w", err)
+	}
+
 	return &storeProductSize, nil
 }
 

@@ -42,6 +42,7 @@ type Container struct {
 	Provisions              *modules.ProvisionsModule
 	Regions                 *modules.RegionsModule
 	Stores                  *modules.StoresModule
+	StoreInventoryManager   *modules.StoreInventoryManagerModule
 	StoreStocks             *modules.StoreStockModule
 	StoreSynchronizer       *modules.StoreSynchronizerModule
 	Suppliers               *modules.SuppliersModule
@@ -90,15 +91,18 @@ func (c *Container) mustInit() {
 	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service)
 	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Notifications.Service, cronManager, c.Regions.Service, c.Franchisees.Service, c.Audits.Service)
 	c.Stores = modules.NewStoresModule(baseModule, c.Franchisees.Service, c.Audits.Service)
-	c.StoreStocks = modules.NewStoreStockModule(baseModule, c.Ingredients.Service, c.Franchisees.Service, c.Audits.Service, c.Notifications.Service, c.Stores.Service, cronManager)
 
-	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, *c.storageRepo, c.Notifications.Service)
-	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, *c.storageRepo, c.Notifications.Service)
-	c.Provisions = modules.NewProvisionsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Notifications.Service)
+	c.StoreInventoryManager = modules.NewStoreInventoryManagersModule(baseModule, c.Notifications.Service)
+
+	c.StoreStocks = modules.NewStoreStockModule(baseModule, c.Ingredients.Service, c.Franchisees.Service, c.Audits.Service, c.Notifications.Service, c.Stores.Service, c.StoreInventoryManager.Repo, cronManager)
+	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service)
+	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service)
+	c.Provisions = modules.NewProvisionsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Notifications.Service, c.Ingredients.Repo, c.StoreStocks.Repo)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo, *c.employeeTokenManager)
-	c.Orders = modules.NewOrdersModule(baseModule, c.AsynqManager, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Notifications.Service)
-	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.Franchisees.Service, c.Regions.Service, c.StockMaterials.Repo, c.Notifications.Service, c.Audits.Service)
-	c.StoreSynchronizer = modules.NewStoreSynchronizerSynchronizerModule(baseModule, c.Stores.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Ingredients.Repo)
+
+	c.Orders = modules.NewOrdersModule(baseModule, c.AsynqManager, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, c.Notifications.Service)
+	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.Franchisees.Service, c.Regions.Service, c.StockMaterials.Repo, c.StoreInventoryManager.Repo, c.Notifications.Service, c.Audits.Service)
+	c.StoreSynchronizer = modules.NewStoreSynchronizerSynchronizerModule(baseModule, c.Stores.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Ingredients.Repo, c.StoreInventoryManager.Repo)
 	c.Analytics = modules.NewAnalyticsModule(baseModule)
 
 	cronManager.Start()

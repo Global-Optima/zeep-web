@@ -2,6 +2,8 @@ package storeProvisions
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -22,16 +24,27 @@ type StoreProvisionService interface {
 
 type storeProvisionService struct {
 	repo                StoreProvisionRepository
+	ingredientsRepo     ingredients.IngredientRepository
 	provisionRepo       provisions.ProvisionRepository
 	notificationService notifications.NotificationService
+	transactionManager  TransactionManager
 	logger              *zap.SugaredLogger
 }
 
-func NewStoreProvisionService(repo StoreProvisionRepository, provisionRepo provisions.ProvisionRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) StoreProvisionService {
+func NewStoreProvisionService(
+	repo StoreProvisionRepository,
+	ingredientsRepo ingredients.IngredientRepository,
+	provisionRepo provisions.ProvisionRepository,
+	notificationService notifications.NotificationService,
+	transactionManager TransactionManager,
+	logger *zap.SugaredLogger,
+) StoreProvisionService {
 	return &storeProvisionService{
 		repo:                repo,
+		ingredientsRepo:     ingredientsRepo,
 		provisionRepo:       provisionRepo,
 		notificationService: notificationService,
+		transactionManager:  transactionManager,
 		logger:              logger,
 	}
 }
@@ -84,7 +97,14 @@ func (s *storeProvisionService) CreateStoreProvision(storeID uint, dto *types.Cr
 
 	storeProvision := types.CreateToStoreProvisionModel(storeID, dto, centralCatalogProvision)
 
-	_, err = s.repo.CreateStoreProvision(storeProvision)
+	ingredientIDs, err := s.formAddStockDTOsFromProvisions([]uint{storeProvision.ProvisionID})
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to create store provision: ", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	_, err = s.transactionManager.CreateStoreProvisionWithStocks(storeProvision, ingredientIDs)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to create store provision: %w", err)
 		s.logger.Error(wrapped)
@@ -175,4 +195,17 @@ func (s *storeProvisionService) DeleteStoreProvision(storeID, storeProvisionID u
 		return nil, wrapped
 	}
 	return types.MapToStoreProvisionDTO(storeProvision), nil
+}
+
+func (s *storeProvisionService) formAddStockDTOsFromProvisions(provisionIDs []uint) ([]uint, error) {
+	ingredientsList, err := s.ingredientsRepo.GetIngredientsForProvisions(provisionIDs)
+	if err != nil {
+		return nil, utils.WrapError("could not get ingredients", err)
+	}
+
+	ingredientIDs := make([]uint, len(ingredientsList))
+	for i, ingredient := range ingredientsList {
+		ingredientIDs[i] = ingredient.ID
+	}
+	return ingredientIDs, nil
 }

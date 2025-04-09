@@ -28,6 +28,8 @@ type AdditiveRepository interface {
 	SaveAdditiveCategory(category *data.AdditiveCategory) error
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error)
+
+	CloneWithTransaction(tx *gorm.DB) AdditiveRepository
 }
 
 type additiveRepository struct {
@@ -36,6 +38,10 @@ type additiveRepository struct {
 
 func NewAdditiveRepository(db *gorm.DB) AdditiveRepository {
 	return &additiveRepository{db: db}
+}
+
+func (r *additiveRepository) CloneWithTransaction(tx *gorm.DB) AdditiveRepository {
+	return &additiveRepository{db: tx}
 }
 
 func (r *additiveRepository) GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]data.ProductSizeAdditive, error) {

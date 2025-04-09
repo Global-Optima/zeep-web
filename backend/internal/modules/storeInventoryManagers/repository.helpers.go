@@ -1,172 +1,93 @@
-package data
+package storeInventoryManagers
 
 import (
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 	"slices"
 	"time"
-
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"gorm.io/gorm"
 )
 
-type RecalculateInput struct {
-	IngredientIDs  []uint
-	ProvisionIDs   []uint
-	ProductSizeIDs []uint
-	AdditiveIDs    []uint
+func deductStoreStock(tx *gorm.DB, storeID, ingredientID uint, requiredQuantity float64) (*data.StoreStock, error) {
+	var existingStock data.StoreStock
+	err := tx.Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		Where("store_id = ? AND ingredient_id = ?", storeID, ingredientID).
+		First(&existingStock).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("stock not found for ingredient ID %d", ingredientID)
+		}
+		return nil, fmt.Errorf("failed to fetch store warehouse stock: %w", err)
+	}
+
+	if existingStock.Quantity < requiredQuantity {
+		return nil, fmt.Errorf("%w: insufficient stock for ingredient ID %d", storeStocksTypes.ErrInsufficientStock, ingredientID)
+	}
+
+	existingStock.Quantity -= requiredQuantity
+
+	if err := tx.Save(&existingStock).Error; err != nil {
+		return nil, fmt.Errorf("failed to save store warehouse stock for ingredient ID %d: %w", ingredientID, err)
+	}
+
+	return &existingStock, nil
 }
 
-type FrozenInventory struct {
-	Ingredients map[uint]float64
-	Provisions  map[uint]float64
-}
-
-type IngredientUsageRow struct {
-	EntityID         uint
-	IngredientID     uint
-	RequiredQuantity float64
-}
-
-type ProvisionUsageRow struct {
-	EntityID       uint
-	ProvisionID    uint
-	RequiredVolume float64
-}
-
-type FrozenInventoryFilter struct {
-	IngredientIDs []uint
-	ProvisionIDs  []uint
-}
-
-// RecalculateOutOfStock allows nil values for ingredientIDs and productSizeIDs if no need to check by any of them
-func RecalculateOutOfStock(tx *gorm.DB, storeID uint, input *RecalculateInput) error {
-	if tx == nil || storeID == 0 {
-		return errors.New("failed to recalculate with invalid input parameters")
-	}
-	if input == nil {
-		return nil
+func deductStoreProvisions(tx *gorm.DB, storeID, provisionID uint, requiredVolume float64) ([]data.StoreProvision, error) {
+	if requiredVolume <= 0 {
+		return nil, nil
 	}
 
-	var (
-		hasIngredients  = len(input.IngredientIDs) != 0
-		hasProvisions   = len(input.ProvisionIDs) != 0
-		hasProductSizes = len(input.ProductSizeIDs) != 0
-		hasAdditives    = len(input.AdditiveIDs) != 0
-	)
-
-	if !hasIngredients && !hasProvisions && !hasProductSizes && !hasAdditives {
-		return nil
+	var provisions []data.StoreProvision
+	err := tx.Where("store_id = ? AND provision_id = ? AND status = ? AND (expires_at IS NULL OR expires_at > ?)",
+		storeID, provisionID, data.STORE_PROVISION_STATUS_COMPLETED, time.Now().UTC()).
+		Order("created_at ASC").
+		Find(&provisions).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to load store provisions: %w", err)
 	}
 
-	var productSizesIngredientIDs,
-		productSizesProvisionIDs,
-		storeProductIDsFromPS,
-		storeProductIDsFromIngredients,
-		storeProductIDsFromProvisions,
-		storeAdditiveIDsFromAdditives,
-		storeAdditiveIDsFromIngredients,
-		storeAdditiveIDsFromProvisions []uint
-	var err error
+	var usedProvisions []data.StoreProvision
+	remaining := requiredVolume
 
-	frozenInventory := &FrozenInventory{
-		Ingredients: make(map[uint]float64),
-		Provisions:  make(map[uint]float64),
+	for _, provision := range provisions {
+		if remaining <= 0 {
+			break
+		}
+
+		available := provision.Volume
+		deduct := min(available, remaining)
+		if deduct == 0 {
+			continue
+		}
+
+		provision.Volume -= deduct
+		remaining -= deduct
+
+		if err := tx.Save(&provision).Error; err != nil {
+			return nil, fmt.Errorf("failed to update provision volume for ID %d: %w", provision.ID, err)
+		}
+
+		usedProvisions = append(usedProvisions, provision)
 	}
 
-	if hasProductSizes {
-		storeProductIDsFromPS, err = getStoreProductIDsByProductSizes(tx, storeID, input.ProductSizeIDs)
-		if err != nil {
-			return err
-		}
-
-		productSizesIngredientIDs, err = getAllIngredientIDsByProductSizes(tx, productSizesIngredientIDs)
-		if err != nil {
-			return err
-		}
-
-		productSizesProvisionIDs, err = getAllProvisionIDsByProductSizes(tx, productSizesProvisionIDs)
-		if err != nil {
-			return err
-		}
-
-		if len(productSizesIngredientIDs) > 0 {
-			input.IngredientIDs = utils.UnionSlices(input.IngredientIDs, productSizesIngredientIDs)
-		}
+	if remaining > 0 {
+		return nil, fmt.Errorf("%w: not enough provision volume for provision ID %d", storeProvisionsTypes.ErrInsufficientStoreProvision, provisionID)
 	}
 
-	if hasAdditives {
-		storeAdditiveIDsFromAdditives, err = getStoreAdditiveIDsByAdditives(tx, storeID, input.AdditiveIDs)
-		if err != nil {
-			return err
-		}
-	}
-
-	if hasIngredients || hasProvisions {
-		frozenInventoryFilter := &FrozenInventoryFilter{
-			IngredientIDs: input.IngredientIDs,
-			ProvisionIDs:  input.ProvisionIDs,
-		}
-
-		frozenInventory, err = CalculateFrozenInventory(tx, storeID, frozenInventoryFilter)
-		if err != nil {
-			return err
-		}
-	}
-
-	if hasIngredients {
-		storeProductIDsFromIngredients, err = getStoreProductIDsByIngredients(tx, storeID, input.IngredientIDs)
-		if err != nil {
-			return err
-		}
-
-		storeAdditiveIDsFromIngredients, err = getStoreAdditiveIDsByIngredients(tx, storeID, input.IngredientIDs)
-		if err != nil {
-			return err
-		}
-	}
-
-	if hasProvisions {
-		storeProductIDsFromProvisions, err = getStoreProductIDsByProvisions(tx, storeID, input.ProvisionIDs)
-		if err != nil {
-			return err
-		}
-
-		storeAdditiveIDsFromProvisions, err = getStoreAdditiveIDsByProvisions(tx, storeID, input.ProvisionIDs)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(storeProductIDsFromPS) > 0 || len(storeProductIDsFromIngredients) > 0 {
-		if err := RecalculateStoreProducts(
-			tx,
-			utils.UnionSlices(storeProductIDsFromPS, storeProductIDsFromIngredients, storeProductIDsFromProvisions),
-			frozenInventory,
-			storeID,
-		); err != nil {
-			return err
-		}
-	}
-
-	if len(storeAdditiveIDsFromAdditives) > 0 || len(storeAdditiveIDsFromIngredients) > 0 {
-		if err := RecalculateStoreAdditives(
-			tx,
-			utils.UnionSlices(storeAdditiveIDsFromAdditives, storeAdditiveIDsFromIngredients, storeAdditiveIDsFromProvisions),
-			storeID,
-			frozenInventory,
-		); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return usedProvisions, nil
 }
 
 func RecalculateStoreProducts(
 	tx *gorm.DB,
 	storeProductIDs []uint,
-	frozenInventory *FrozenInventory,
+	frozenInventory *types.FrozenInventory,
 	storeID uint,
 ) error {
 	if len(storeProductIDs) == 0 {
@@ -193,7 +114,7 @@ func RecalculateStoreAdditives(
 	tx *gorm.DB,
 	storeAdditiveIDs []uint,
 	storeID uint,
-	frozenInventory *FrozenInventory,
+	frozenInventory *types.FrozenInventory,
 ) error {
 	if len(storeAdditiveIDs) == 0 {
 		return nil
@@ -219,7 +140,7 @@ func updateStoreProductStockFlags(tx *gorm.DB, ids []uint, isOutOfStock bool) er
 	if len(ids) == 0 {
 		return nil
 	}
-	return tx.Model(&StoreProduct{}).
+	return tx.Model(&data.StoreProduct{}).
 		Where("id IN ?", ids).
 		Update("is_out_of_stock", isOutOfStock).Error
 }
@@ -228,7 +149,7 @@ func updateStoreAdditiveStockFlags(tx *gorm.DB, ids []uint, isOutOfStock bool) e
 	if len(ids) == 0 {
 		return nil
 	}
-	return tx.Model(&StoreAdditive{}).
+	return tx.Model(&data.StoreAdditive{}).
 		Where("id IN ?", ids).
 		Update("is_out_of_stock", isOutOfStock).Error
 }
@@ -271,7 +192,7 @@ func getStoreProductIDsByProvisions(tx *gorm.DB, storeID uint, provisionIDs []ui
 
 func getStoreProductIDsByProvisionUsage(tx *gorm.DB, storeID uint, provisionIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Model(&StoreProductSize{}).
+	err := tx.Model(&data.StoreProductSize{}).
 		Select("DISTINCT store_product_sizes.store_product_id").
 		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
 		Joins("JOIN product_size_provisions ON product_size_provisions.product_size_id = store_product_sizes.product_size_id").
@@ -283,7 +204,7 @@ func getStoreProductIDsByProvisionUsage(tx *gorm.DB, storeID uint, provisionIDs 
 
 func getStoreProductIDsByDefaultAdditiveProvisionUsage(tx *gorm.DB, storeID uint, provisionIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Model(&StoreProductSize{}).
+	err := tx.Model(&data.StoreProductSize{}).
 		Select("DISTINCT store_product_sizes.store_product_id").
 		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
 		Joins("JOIN product_size_additives ON product_size_additives.product_size_id = store_product_sizes.product_size_id AND product_size_additives.is_default = TRUE").
@@ -297,7 +218,7 @@ func getStoreProductIDsByDefaultAdditiveProvisionUsage(tx *gorm.DB, storeID uint
 func getStoreProductIDsByIngredientUsage(tx *gorm.DB, storeID uint, ingredientIDs []uint) ([]uint, error) {
 	var productIDs []uint
 
-	err := tx.Model(&StoreProductSize{}).
+	err := tx.Model(&data.StoreProductSize{}).
 		Select("DISTINCT store_product_sizes.store_product_id").
 		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
 		Joins("JOIN product_size_ingredients ON product_size_ingredients.product_size_id = store_product_sizes.product_size_id").
@@ -311,7 +232,7 @@ func getStoreProductIDsByIngredientUsage(tx *gorm.DB, storeID uint, ingredientID
 func getStoreProductIDsByDefaultAdditiveUsage(tx *gorm.DB, storeID uint, ingredientIDs []uint) ([]uint, error) {
 	var productIDs []uint
 
-	err := tx.Model(&StoreProductSize{}).
+	err := tx.Model(&data.StoreProductSize{}).
 		Select("DISTINCT store_product_sizes.store_product_id").
 		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
 		Joins("JOIN product_size_additives ON product_size_additives.product_size_id = store_product_sizes.product_size_id AND product_size_additives.is_default = true").
@@ -325,7 +246,7 @@ func getStoreProductIDsByDefaultAdditiveUsage(tx *gorm.DB, storeID uint, ingredi
 
 func getStoreAdditiveIDsByAdditives(tx *gorm.DB, storeID uint, additiveIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Model(&StoreAdditive{}).
+	err := tx.Model(&data.StoreAdditive{}).
 		Select("DISTINCT store_additives.id").
 		Joins("JOIN additives ON additives.id = store_additives.additive_id").
 		Where("store_additives.store_id = ?", storeID).
@@ -339,7 +260,7 @@ func getStoreAdditiveIDsByAdditives(tx *gorm.DB, storeID uint, additiveIDs []uin
 
 func getStoreAdditiveIDsByIngredients(tx *gorm.DB, storeID uint, ingredientIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Model(&StoreAdditive{}).
+	err := tx.Model(&data.StoreAdditive{}).
 		Select("DISTINCT store_additives.id").
 		Joins("JOIN additive_ingredients ON additive_ingredients.additive_id = store_additives.additive_id").
 		Where("store_additives.store_id = ?", storeID).
@@ -354,7 +275,7 @@ func getStoreAdditiveIDsByProvisions(tx *gorm.DB, storeID uint, provisionIDs []u
 	}
 
 	var additiveIDs []uint
-	err := tx.Model(&StoreAdditive{}).
+	err := tx.Model(&data.StoreAdditive{}).
 		Distinct("store_additives.id").
 		Joins("JOIN additive_provisions ON additive_provisions.additive_id = store_additives.additive_id").
 		Where("store_additives.store_id = ?", storeID).
@@ -368,7 +289,7 @@ func getOutOfStockStoreProductIDs(
 	tx *gorm.DB,
 	storeProductIDs []uint,
 	storeID uint,
-	frozenInventory *FrozenInventory,
+	frozenInventory *types.FrozenInventory,
 ) ([]uint, error) {
 	outByIngredients, err := getOutByInventory(tx, storeProductIDs, storeID, frozenInventory)
 	if err != nil {
@@ -387,7 +308,7 @@ func getOutByInventory(
 	tx *gorm.DB,
 	storeProductIDs []uint,
 	storeID uint,
-	frozen *FrozenInventory,
+	frozen *types.FrozenInventory,
 ) ([]uint, error) {
 	if len(storeProductIDs) == 0 {
 		return nil, nil
@@ -398,8 +319,8 @@ func getOutByInventory(
 
 	//TODO make separate functions
 	// === INGREDIENTS ===
-	var ingredientRows []IngredientUsageRow
-	err := tx.Model(&StoreProductSize{}).
+	var ingredientRows []types.IngredientUsageRow
+	err := tx.Model(&data.StoreProductSize{}).
 		Select(`DISTINCT store_product_sizes.store_product_id AS entity_id,
                 product_size_ingredients.ingredient_id,
                 product_size_ingredients.quantity AS required_quantity`).
@@ -412,8 +333,8 @@ func getOutByInventory(
 	}
 
 	// === PROVISIONS ===
-	var provisionRows []ProvisionUsageRow
-	err = tx.Model(&StoreProductSize{}).
+	var provisionRows []types.ProvisionUsageRow
+	err = tx.Model(&data.StoreProductSize{}).
 		Select(`DISTINCT store_product_sizes.store_product_id AS entity_id,
                 product_size_provisions.provision_id,
                 product_size_provisions.volume AS required_volume`).
@@ -435,8 +356,8 @@ func getOutByInventory(
 		neededIngredientIDs = append(neededIngredientIDs, id)
 	}
 
-	var stocks []StoreStock
-	err = tx.Model(&StoreStock{}).
+	var stocks []data.StoreStock
+	err = tx.Model(&data.StoreStock{}).
 		Where("store_id = ?", storeID).
 		Where("ingredient_id IN ?", neededIngredientIDs).
 		Find(&stocks).Error
@@ -459,11 +380,11 @@ func getOutByInventory(
 		neededProvisionIDs = append(neededProvisionIDs, id)
 	}
 
-	var provisions []StoreProvision
-	err = tx.Model(&StoreProvision{}).
+	var provisions []data.StoreProvision
+	err = tx.Model(&data.StoreProvision{}).
 		Where("store_id = ?", storeID).
 		Where("provision_id IN ?", neededProvisionIDs).
-		Where("status = ?", STORE_PROVISION_STATUS_COMPLETED).
+		Where("status = ?", data.STORE_PROVISION_STATUS_COMPLETED).
 		Where("expires_at IS NULL OR expires_at > ?", time.Now().UTC()).
 		Find(&provisions).Error
 	if err != nil {
@@ -505,7 +426,7 @@ func getOutByDefaultAdditives(
 	tx *gorm.DB,
 	storeProductIDs []uint,
 	storeID uint,
-	frozen *FrozenInventory,
+	frozen *types.FrozenInventory,
 ) ([]uint, error) {
 	if len(storeProductIDs) == 0 {
 		return nil, nil
@@ -516,8 +437,8 @@ func getOutByDefaultAdditives(
 
 	//TODO make separate functions
 	// === INGREDIENTS ===
-	var ingredientRows []IngredientUsageRow
-	err := tx.Model(&StoreProductSize{}).
+	var ingredientRows []types.IngredientUsageRow
+	err := tx.Model(&data.StoreProductSize{}).
 		Select(`DISTINCT store_product_sizes.store_product_id AS entity_id,
                 additive_ingredients.ingredient_id,
                 additive_ingredients.quantity AS required_quantity`).
@@ -534,8 +455,8 @@ func getOutByDefaultAdditives(
 	}
 
 	// === PROVISIONS ===
-	var provisionRows []ProvisionUsageRow
-	err = tx.Model(&StoreProductSize{}).
+	var provisionRows []types.ProvisionUsageRow
+	err = tx.Model(&data.StoreProductSize{}).
 		Select(`DISTINCT store_product_sizes.store_product_id AS entity_id,
                 additive_provisions.provision_id,
                 additive_provisions.volume AS required_volume`).
@@ -558,8 +479,8 @@ func getOutByDefaultAdditives(
 		neededIngredientIDs = append(neededIngredientIDs, id)
 	}
 
-	var stocks []StoreStock
-	err = tx.Model(&StoreStock{}).
+	var stocks []data.StoreStock
+	err = tx.Model(&data.StoreStock{}).
 		Where("store_id = ?", storeID).
 		Where("ingredient_id IN ?", neededIngredientIDs).
 		Find(&stocks).Error
@@ -582,11 +503,11 @@ func getOutByDefaultAdditives(
 		neededProvisionIDs = append(neededProvisionIDs, id)
 	}
 
-	var provisions []StoreProvision
-	err = tx.Model(&StoreProvision{}).
+	var provisions []data.StoreProvision
+	err = tx.Model(&data.StoreProvision{}).
 		Where("store_id = ?", storeID).
 		Where("provision_id IN ?", neededProvisionIDs).
-		Where("status = ?", STORE_PROVISION_STATUS_COMPLETED).
+		Where("status = ?", data.STORE_PROVISION_STATUS_COMPLETED).
 		Where("expires_at IS NULL OR expires_at > ?", time.Now().UTC()).
 		Find(&provisions).Error
 	if err != nil {
@@ -628,7 +549,7 @@ func getOutOfStockStoreAdditiveIDs(
 	tx *gorm.DB,
 	storeAdditiveIDs []uint,
 	storeID uint,
-	frozen *FrozenInventory,
+	frozen *types.FrozenInventory,
 ) ([]uint, error) {
 	if len(storeAdditiveIDs) == 0 {
 		return nil, nil
@@ -639,8 +560,8 @@ func getOutOfStockStoreAdditiveIDs(
 
 	//TODO make separate functions
 	// === INGREDIENTS ===
-	var ingredientRows []IngredientUsageRow
-	err := tx.Model(&StoreAdditive{}).
+	var ingredientRows []types.IngredientUsageRow
+	err := tx.Model(&data.StoreAdditive{}).
 		Select(`DISTINCT store_additives.id AS entity_id,
                 additive_ingredients.ingredient_id,
                 additive_ingredients.quantity AS required_quantity`).
@@ -653,8 +574,8 @@ func getOutOfStockStoreAdditiveIDs(
 	}
 
 	// === PROVISIONS ===
-	var provisionRows []ProvisionUsageRow
-	err = tx.Model(&StoreAdditive{}).
+	var provisionRows []types.ProvisionUsageRow
+	err = tx.Model(&data.StoreAdditive{}).
 		Select(`DISTINCT store_additives.id AS entity_id,
                 additive_provisions.provision_id AS provision_id,
                 additive_provisions.volume AS required_volume`).
@@ -676,8 +597,8 @@ func getOutOfStockStoreAdditiveIDs(
 		neededIngredientIDs = append(neededIngredientIDs, id)
 	}
 
-	var stocks []StoreStock
-	err = tx.Model(&StoreStock{}).
+	var stocks []data.StoreStock
+	err = tx.Model(&data.StoreStock{}).
 		Where("store_id = ?", storeID).
 		Where("ingredient_id IN ?", neededIngredientIDs).
 		Find(&stocks).Error
@@ -700,11 +621,11 @@ func getOutOfStockStoreAdditiveIDs(
 		neededProvisionIDs = append(neededProvisionIDs, id)
 	}
 
-	var provisions []StoreProvision
-	err = tx.Model(&StoreProvision{}).
+	var provisions []data.StoreProvision
+	err = tx.Model(&data.StoreProvision{}).
 		Where("store_id = ?", storeID).
 		Where("provision_id IN ?", neededProvisionIDs).
-		Where("status = ?", STORE_PROVISION_STATUS_COMPLETED).
+		Where("status = ?", data.STORE_PROVISION_STATUS_COMPLETED).
 		Where("expires_at IS NULL OR expires_at > ?", time.Now().UTC()).
 		Find(&provisions).Error
 	if err != nil {
@@ -750,7 +671,7 @@ func getOutOfStockStoreAdditiveIDs(
 
 func getStoreProductIDsByProductSizes(tx *gorm.DB, storeID uint, productSizeIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Model(&StoreProduct{}).
+	err := tx.Model(&data.StoreProduct{}).
 		Distinct("store_products.id").
 		Joins("JOIN store_product_sizes ON store_products.id = store_product_sizes.store_product_id").
 		Where("store_products.store_id = ?", storeID).
@@ -798,7 +719,7 @@ func getAllProvisionIDsByProductSizes(tx *gorm.DB, productSizeIDs []uint) ([]uin
 
 func getProductSizeDirectProvisionsByProductSizeIDs(tx *gorm.DB, productSizeIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Model(&ProductSizeProvision{}).
+	err := tx.Model(&data.ProductSizeProvision{}).
 		Distinct("product_size_provisions.provision_id").
 		Where("product_size_id IN ?", productSizeIDs).
 		Pluck("provision_id", &ids).Error
@@ -810,7 +731,7 @@ func getProductSizeDirectProvisionsByProductSizeIDs(tx *gorm.DB, productSizeIDs 
 
 func getDefaultAdditiveProvisionsByProductSizeIDs(tx *gorm.DB, productSizeIDs []uint) ([]uint, error) {
 	var ids []uint
-	err := tx.Model(&AdditiveProvision{}).
+	err := tx.Model(&data.AdditiveProvision{}).
 		Distinct("additive_provisions.provision_id").
 		Joins("JOIN product_size_additives ON product_size_additives.additive_id = additive_provisions.additive_id").
 		Where("product_size_additives.product_size_id IN ?", productSizeIDs).
@@ -824,7 +745,7 @@ func getDefaultAdditiveProvisionsByProductSizeIDs(tx *gorm.DB, productSizeIDs []
 
 func getProductSizeDirectIngredientsByProductSizeIDs(tx *gorm.DB, productSizeIDs []uint) ([]uint, error) {
 	var directIDs []uint
-	err := tx.Model(&ProductSizeIngredient{}).
+	err := tx.Model(&data.ProductSizeIngredient{}).
 		Distinct("product_size_ingredients.ingredient_id").
 		Where("product_size_ingredients.product_size_id IN ?", productSizeIDs).
 		Pluck("product_size_ingredients.ingredient_id", &directIDs).Error
@@ -837,7 +758,7 @@ func getProductSizeDirectIngredientsByProductSizeIDs(tx *gorm.DB, productSizeIDs
 
 func getDefaultAdditiveIngredientsByProductSizeIDs(tx *gorm.DB, productSizeIDs []uint) ([]uint, error) {
 	var additiveIngredientIDs []uint
-	err := tx.Model(&AdditiveIngredient{}).
+	err := tx.Model(&data.AdditiveIngredient{}).
 		Distinct("additive_ingredients.ingredient_id").
 		Joins("JOIN product_size_additives ON product_size_additives.additive_id = additive_ingredients.additive_id").
 		Where("product_size_additives.product_size_id IN ?", productSizeIDs).
@@ -850,8 +771,8 @@ func getDefaultAdditiveIngredientsByProductSizeIDs(tx *gorm.DB, productSizeIDs [
 }
 
 // CalculateFrozenInventory allows nil value for ingredientIDs if no need to filter ingredients
-func CalculateFrozenInventory(tx *gorm.DB, storeID uint, filter *FrozenInventoryFilter) (*FrozenInventory, error) {
-	frozen := &FrozenInventory{
+func CalculateFrozenInventory(tx *gorm.DB, storeID uint, filter *types.FrozenInventoryFilter) (*types.FrozenInventory, error) {
+	frozen := &types.FrozenInventory{
 		Ingredients: make(map[uint]float64),
 		Provisions:  make(map[uint]float64),
 	}
@@ -874,18 +795,18 @@ func CalculateFrozenInventory(tx *gorm.DB, storeID uint, filter *FrozenInventory
 	return frozen, nil
 }
 
-func loadActiveOrders(tx *gorm.DB, storeID uint, filter *FrozenInventoryFilter) ([]Order, error) {
-	var orders []Order
+func loadActiveOrders(tx *gorm.DB, storeID uint, filter *types.FrozenInventoryFilter) ([]data.Order, error) {
+	var orders []data.Order
 
 	query := tx.Preload("Suborders.SuborderAdditives.StoreAdditive.Additive.Ingredients.Ingredient").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive.AdditiveProvisions.Provision").
 		Preload("Suborders.StoreProductSize.ProductSize.ProductSizeIngredients.Ingredient").
 		Preload("Suborders.StoreProductSize.ProductSize.ProductSizeProvisions.Provision").
 		Where("store_id = ?", storeID).
-		Where("status IN ?", []OrderStatus{
-			OrderStatusWaitingForPayment,
-			OrderStatusPending,
-			OrderStatusPreparing,
+		Where("status IN ?", []data.OrderStatus{
+			data.OrderStatusWaitingForPayment,
+			data.OrderStatusPending,
+			data.OrderStatusPreparing,
 		})
 
 	if filter != nil {
@@ -905,11 +826,11 @@ func loadActiveOrders(tx *gorm.DB, storeID uint, filter *FrozenInventoryFilter) 
 	return orders, err
 }
 
-func isSuborderActive(sub Suborder) bool {
-	return sub.Status == SubOrderStatusPending || sub.Status == SubOrderStatusPreparing
+func isSuborderActive(sub data.Suborder) bool {
+	return sub.Status == data.SubOrderStatusPending || sub.Status == data.SubOrderStatusPreparing
 }
 
-func accumulateProductUsage(frozen *FrozenInventory, sub Suborder, filter *FrozenInventoryFilter) {
+func accumulateProductUsage(frozen *types.FrozenInventory, sub data.Suborder, filter *types.FrozenInventoryFilter) {
 	for _, ing := range sub.StoreProductSize.ProductSize.ProductSizeIngredients {
 		if filter == nil || len(filter.IngredientIDs) == 0 || slices.Contains(filter.IngredientIDs, ing.IngredientID) {
 			frozen.Ingredients[ing.IngredientID] += ing.Quantity
@@ -922,7 +843,7 @@ func accumulateProductUsage(frozen *FrozenInventory, sub Suborder, filter *Froze
 	}
 }
 
-func accumulateAdditiveUsage(frozen *FrozenInventory, sub Suborder, filter *FrozenInventoryFilter) {
+func accumulateAdditiveUsage(frozen *types.FrozenInventory, sub data.Suborder, filter *types.FrozenInventoryFilter) {
 	for _, subAdd := range sub.SuborderAdditives {
 		for _, ing := range subAdd.StoreAdditive.Additive.Ingredients {
 			if filter == nil || len(filter.IngredientIDs) == 0 || slices.Contains(filter.IngredientIDs, ing.IngredientID) {

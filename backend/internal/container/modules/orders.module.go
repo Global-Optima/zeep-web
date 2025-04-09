@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/orders"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 )
 
@@ -17,7 +18,15 @@ type OrdersModule struct {
 	Handler *orders.OrderHandler
 }
 
-func NewOrdersModule(base *common.BaseModule, asynqManager *asynqTasks.AsynqManager, productRepo storeProducts.StoreProductRepository, additiveRepo storeAdditives.StoreAdditiveRepository, storeStockRepo storeStocks.StoreStockRepository, notificationService notifications.NotificationService) *OrdersModule {
+func NewOrdersModule(
+	base *common.BaseModule,
+	asynqManager *asynqTasks.AsynqManager,
+	productRepo storeProducts.StoreProductRepository,
+	additiveRepo storeAdditives.StoreAdditiveRepository,
+	storeStockRepo storeStocks.StoreStockRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
+	notificationService notifications.NotificationService,
+) *OrdersModule {
 	repo := orders.NewOrderRepository(base.DB)
 	service := orders.NewOrderService(
 		asynqManager,
@@ -26,7 +35,13 @@ func NewOrdersModule(base *common.BaseModule, asynqManager *asynqTasks.AsynqMana
 		additiveRepo,
 		storeStockRepo,
 		notificationService,
-		orders.NewTransactionManager(base.DB, repo, storeStockRepo, notificationService, base.Logger),
+		orders.NewTransactionManager(
+			base.DB,
+			repo,
+			storeInventoryManagerRepo,
+			notificationService,
+			base.Logger,
+		),
 		base.Logger,
 	)
 	handler := orders.NewOrderHandler(service)

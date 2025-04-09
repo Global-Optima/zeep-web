@@ -29,7 +29,7 @@ const emits = defineEmits<{
 const createStoreProvisionSchema = toTypedSchema(
   z.object({
     volume: z.number().min(0.0001, 'Введите объем заготовки'),
-    expirationInMinutes: z.number().min(0, 'Введите срок годности в минутах').default(60),
+    expirationInMinutes: z.number().min(0, 'Введите срок годности в минутах'),
   })
 )
 
@@ -48,6 +48,7 @@ function selectProvision(provision: ProvisionDTO) {
   selectedProvision.value = provision
   openProvisionDialog.value = false
   setFieldValue('volume', provision.absoluteVolume)
+  setFieldValue('expirationInMinutes', provision.defaultExpirationInMinutes)
 }
 
 // Query to fetch the full provision details (including ingredients)

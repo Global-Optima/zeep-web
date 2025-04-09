@@ -155,7 +155,7 @@ func (s *storeProductService) GetRecommendedStoreProducts(storeID uint, excluded
 }
 
 func (s *storeProductService) GetStoreProductSizeByID(storeID, storeProductSizeID uint) (*types.StoreProductSizeDetailsDTO, error) {
-	storeProduct, err := s.repo.GetStoreProductSizeById(storeID, storeProductSizeID)
+	storeProduct, err := s.repo.GetStoreProductSizeWithDetailsByID(storeID, storeProductSizeID)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to get store product size by ID", err)
 		s.logger.Error(wrappedErr)

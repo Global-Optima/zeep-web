@@ -245,7 +245,7 @@ func ValidateStoreAdditives(
 	additiveNames := make(map[uint]string)
 
 	for _, addID := range storeAdditiveIDs {
-		storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
+		storeAdd, err := repo.GetStoreAdditiveWithDetailsByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
 		if err != nil {
 			return nil, nil, fmt.Errorf("error with store additive: %w", err)
 		}
@@ -272,7 +272,7 @@ func ValidateMultipleSelect(storeID uint, createOrderDTO types.CreateOrderDTO, r
 	for _, suborder := range createOrderDTO.Suborders {
 		categoryCount := make(map[uint]int)
 		for _, addID := range suborder.StoreAdditivesIDs {
-			storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
+			storeAdd, err := repo.GetStoreAdditiveWithDetailsByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
 			if err != nil {
 				return err
 			}
@@ -297,7 +297,7 @@ func ValidateStoreProductSizes(
 	productNames := make(map[uint]string)
 
 	for _, psID := range storeProductSizeIDs {
-		storePS, err := repo.GetStoreProductSizeById(storeID, psID)
+		storePS, err := repo.GetStoreProductSizeWithDetailsByID(storeID, psID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error with store product size: %w", err)
 		}

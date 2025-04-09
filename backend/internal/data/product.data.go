@@ -105,6 +105,7 @@ type Ingredient struct {
 	ProductSizeIngredients []ProductSizeIngredient `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	StoreStocks            []StoreStock            `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	AdditiveIngredients    []AdditiveIngredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+	ProvisionIngredients   []ProvisionIngredient   `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 }
 
 type IngredientCategory struct {

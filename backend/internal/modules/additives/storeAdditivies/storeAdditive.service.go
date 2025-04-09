@@ -141,7 +141,7 @@ func (s *storeAdditiveService) GetStoreAdditivesByIDs(storeID uint, IDs []uint) 
 }
 
 func (s *storeAdditiveService) GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*types.StoreAdditiveDetailsDTO, error) {
-	storeAdditive, err := s.repo.GetStoreAdditiveByID(storeAdditiveID, filter)
+	storeAdditive, err := s.repo.GetStoreAdditiveWithDetailsByID(storeAdditiveID, filter)
 	if err != nil {
 		wrappedError := utils.WrapError("failed to retrieve store additive", err)
 		s.logger.Error(wrappedError)

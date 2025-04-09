@@ -48,7 +48,7 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			return err
 		}
 
-		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
+		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
 		missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
 		if err != nil {
@@ -70,7 +70,7 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 		}
 
 		if len(newStoreStocks) > 0 {
-			_, err = m.addStocks(&storeWarehouseRepo, newStoreStocks)
+			_, err = m.addStocks(storeStockRepo, newStoreStocks)
 			if err != nil {
 				return err
 			}
@@ -81,7 +81,7 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			storeAdditiveIDs[i] = storeAdditive.ID
 		}
 
-		frozenStockMap, err := data.CalculateFrozenInventory(tx, storeID, ingredientIDs)
+		frozenStockMap, err := data.CalculateFrozenInventory(tx, storeID, &data.FrozenInventoryFilter{IngredientIDs: ingredientIDs})
 		if err != nil {
 			return err
 		}

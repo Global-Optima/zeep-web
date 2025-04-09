@@ -11,6 +11,7 @@ export interface BaseProvisionDTO {
 	absoluteVolume: number
 	unit: UnitDTO
 	preparationInMinutes: number
+  defaultExpirationInMinutes: number
 	netCost: number
 	limitPerDay: number
 }
@@ -38,6 +39,7 @@ export interface CreateProvisionDTO {
 	absoluteVolume: number
 	unitId: number
 	preparationInMinutes: number
+  defaultExpirationInMinutes: number
 	netCost: number
 	limitPerDay: number
 	ingredients: SelectedProvisionsIngredients[]
@@ -48,6 +50,7 @@ export interface UpdateProvisionDTO {
 	absoluteVolume: number
 	unitId: number
 	preparationInMinutes: number
+  defaultExpirationInMinutes: number
 	netCost: number
 	limitPerDay: number
 	ingredients: SelectedProvisionsIngredients[]

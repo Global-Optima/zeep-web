@@ -7,6 +7,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
 )
 
@@ -22,6 +23,7 @@ func NewStockRequestsModule(
 	franchiseeService franchisees.FranchiseeService,
 	regionService regions.RegionService,
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	notificationService notifications.NotificationService,
 	auditService audit.AuditService,
 ) *StockRequestsModule {
@@ -29,7 +31,7 @@ func NewStockRequestsModule(
 	service := stockRequests.NewStockRequestService(
 		repo,
 		stockMaterialRepo,
-		stockRequests.NewTransactionManager(base.DB, repo, stockMaterialRepo),
+		stockRequests.NewTransactionManager(base.DB, repo, stockMaterialRepo, storeInventoryManagerRepo),
 		notificationService,
 		base.Logger,
 	)
