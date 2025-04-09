@@ -158,6 +158,7 @@
     "500-additive-create": "An unexpected error occurred while creating modificator. Please try again later.",
     "500-additive-update": "An unexpected error occurred while updating modificator data. Please try again later.",
     "500-additive-delete": "An unexpected error occurred while deleting modificator data. Please try again later.",
+    "409-additive-delete-inUse": "The modificator cannot be deleted because it is in use.",
     "404-additive": "Modificator not found.",
     "400-additive": "Invalid modificator data provided. Please check and try again.",
     "201-additive": "Modificator successfully created.",

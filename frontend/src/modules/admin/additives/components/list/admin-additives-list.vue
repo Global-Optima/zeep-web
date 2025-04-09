@@ -79,11 +79,14 @@ import { additivesService } from '@/modules/admin/additives/services/additives.s
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRouter } from 'vue-router'
 import { getRouteName } from '@/core/config/routes.config'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 
 const {additives} = defineProps<{additives: AdditiveDTO[]}>()
 
 const router = useRouter();
 const queryClient = useQueryClient()
+const { toastLocalizedError } = useAxiosLocaleToast()
+
 
 const { mutate: deleteMutation } = useMutation({
 	mutationFn: (id: number) => additivesService.deleteAdditive(id),
@@ -91,9 +94,9 @@ const { mutate: deleteMutation } = useMutation({
 		toast({ title: 'Успешное удаление' })
 		queryClient.invalidateQueries({ queryKey: ['admin-additives'] })
 	},
-	onError: () => {
-		toast({ title: 'Произошла ошибка при удалении' })
-	},
+	onError: (error: AxiosLocalizedError) => {
+    	toastLocalizedError(error, "Произошла ошибка при удалении модификатора.")
+  },
 })
 
 const onDeleteClick = (e: Event, id: number) => {
