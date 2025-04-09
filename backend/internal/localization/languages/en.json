@@ -423,6 +423,7 @@
     "500-audit-get": "An unexpected error occurred while fetching audit data. Please try again later."
   },
   "notification": {
+      "emptyValue": "empty value",
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
       "stockRequestStatus": {
           "created": "Created",
@@ -437,10 +438,10 @@
       "newOrder": "A new order has been placed by *{{.CustomerName}}*.",
       "storeWarehouseRunOut": "The warehouse is running out of *{{.StockItem}}*.",
 
-      "centralCatalogUpdate": "The central catalog was updated.",
+      "centralCatalogUpdate": "The central catalog was updated, changes: {{.Changes}}.",
       "centralCatalogUpdateDetails": {
-        "nameChange": "Name changed from {{.OldName}} to {{.NewName}}",
-        "descriptionChange": "Description updated from {{.OldDescription}} to {{.NewDescription}}",
+        "nameChange": "Name changed from *{{.OldName}}* to *{{.NewName}}*",
+        "descriptionChange": "Description updated from *{{.OldDescription}}* to *{{.NewDescription}}*",
         "imageUrlChange": "Image URL updated from {{.OldImageURL}} to {{.NewImageURL}}",
         "categoryChange": "Category updated from {{.OldCategory}} to {{.NewCategory}}"
       },

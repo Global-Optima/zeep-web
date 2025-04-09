@@ -184,7 +184,7 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		return nil, wrappedErr
 	}
 
-	oldProduct := product
+	oldProduct := *product
 	oldImageKey := product.ImageKey
 	oldVideoKey := product.VideoKey
 
@@ -254,7 +254,7 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		}()
 	}
 
-	changes := types.GenerateProductChanges(oldProduct, dto, product.ImageKey)
+	changes := types.GenerateProductChanges(&oldProduct, dto, product.ImageKey)
 	if len(changes) != 0 {
 		notificationDetails := &details.CentralCatalogUpdateDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{

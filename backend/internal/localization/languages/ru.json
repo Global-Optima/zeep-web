@@ -422,6 +422,7 @@
 		"500-audit-get": "Произошла непредвиденная ошибка при получении данных аудита. Пожалуйста, попробуйте позже."
 	},
 	"notification": {
+		"emptyValue": "пустое значение",
 		"stockRequestStatusUpdated": "Статус запроса на запас был обновлен на *{{.RequestStatus}}*.",
 		"stockRequestStatus": {
 			"created": "Создан",
@@ -436,10 +437,10 @@
 		"newOrder": "Новый заказ был сделан *{{.CustomerName}}*.",
 		"storeWarehouseRunOut": "На складе заканчивается *{{.StockItem}}*.",
 
-		"centralCatalogUpdate": "Центральный каталог был обновлен.",
+		"centralCatalogUpdate": "Центральный каталог был обновлен. Изменения: {{.Changes}}.",
 		"centralCatalogUpdateDetails": {
-			"nameChange": "Название изменено с {{.OldName}} на {{.NewName}}",
-			"descriptionChange": "Описание обновлено с {{.OldDescription}} на {{.NewDescription}}",
+			"nameChange": "Название изменено с *{{.OldName}}* на *{{.NewName}}*",
+			"descriptionChange": "Описание обновлено с *{{.OldDescription}}* на *{{.NewDescription}}*",
 			"imageUrlChange": "URL изображения обновлен с {{.OldImageURL}} на {{.NewImageURL}}",
 			"categoryChange": "Категория изменена с {{.OldCategory}} на {{.NewCategory}}"
 		},

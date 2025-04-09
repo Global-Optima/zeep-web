@@ -291,23 +291,17 @@ func mapProvisionsToProductSizeProvisions(provisionsDTO []provisionsTypes.Select
 func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, newImageKey *data.StorageImageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
-	emptyStringMap := map[string]string{
-		"en": "empty value",
-		"ru": "пустое значение",
-		"kk": "бос мән",
-	}
-
 	if dto.Name != nil && *dto.Name != before.Name {
 		key := "notification.centralCatalogUpdateDetails.nameChange"
 
 		var oldNameParam interface{} = before.Name
 		if before.Name == "" {
-			oldNameParam = emptyStringMap
+			oldNameParam = ""
 		}
 
 		var newNameParam interface{} = *dto.Name
 		if *dto.Name == "" {
-			newNameParam = emptyStringMap
+			newNameParam = ""
 		}
 
 		changes = append(changes, details.CentralCatalogChange{
@@ -324,12 +318,12 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, newImag
 
 		var oldDescParam interface{} = before.Description
 		if before.Description == "" {
-			oldDescParam = emptyStringMap
+			oldDescParam = ""
 		}
 
 		var newDescParam interface{} = *dto.Description
 		if *dto.Description == "" {
-			newDescParam = emptyStringMap
+			newDescParam = ""
 		}
 
 		changes = append(changes, details.CentralCatalogChange{
@@ -337,33 +331,6 @@ func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, newImag
 			Params: map[string]interface{}{
 				"OldDescription": oldDescParam,
 				"NewDescription": newDescParam,
-			},
-		})
-	}
-
-	// Process image URL changes.
-	var oldImageURL, newImageURL string
-	if before.ImageKey != nil {
-		oldImageURL = before.ImageKey.GetURL()
-	}
-	if newImageKey != nil {
-		newImageURL = newImageKey.GetURL()
-	}
-	if oldImageURL != newImageURL {
-		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
-		var oldURLParam interface{} = oldImageURL
-		var newURLParam interface{} = newImageURL
-		if oldImageURL == "" {
-			oldURLParam = emptyStringMap
-		}
-		if newImageURL == "" {
-			newURLParam = emptyStringMap
-		}
-		changes = append(changes, details.CentralCatalogChange{
-			Key: key,
-			Params: map[string]interface{}{
-				"OldImageURL": oldURLParam,
-				"NewImageURL": newURLParam,
 			},
 		})
 	}

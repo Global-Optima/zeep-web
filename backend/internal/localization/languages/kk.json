@@ -424,6 +424,7 @@
     "500-audit-get": "Аудит деректерін алу кезінде күтпеген қате орын алды. Кейінірек қайтадан қолданып көріңіз."
   },
 "notification": {
+    "emptyValue": "бос мән",
     "stockRequestStatusUpdated": "Қор сұранысының күйі *{{.RequestStatus}}* болып жаңартылды.",
     "stockRequestStatus": {
       "created": "Жасалды",
@@ -438,12 +439,12 @@
     "newOrder": "Жаңа тапсырысты *{{.CustomerName}}* жасады.",
     "storeWarehouseRunOut": "Қоймада *{{.StockItem}}* таусылуға жақын.",
 
-    "centralCatalogUpdate": "Орталық каталог жаңартылды.",
+    "centralCatalogUpdate": "Орталық каталог жаңартылды. Өзгерістер: {{.Changes}}.",
     "centralCatalogUpdateDetails": {
-      "nameChange": "Атауы {{.OldName}}-ден {{.NewName}}-ке өзгертілді",
-      "descriptionChange": "Сипаттама {{.OldDescription}}-ден {{.NewDescription}}-ке жаңартылды",
-      "imageUrlChange": "Сурет URL {{.OldImageURL}}-ден {{.NewImageURL}}-ке жаңартылды",
-      "categoryChange": "Санат {{.OldCategory}}-ден {{.NewCategory}}-ке өзгертілді"
+      "nameChange": "Атауы *{{.OldName}}*-ден *{{.NewName}}*-ге өзгертілді",
+      "descriptionChange": "Сипаттама *{{.OldDescription}}*-ден *{{.NewDescription}}*-ге жаңартылды",
+      "imageUrlChange": "Сурет URL {{.OldImageURL}}-ден {{.NewImageURL}}-ге жаңартылды",
+      "categoryChange": "Санат {{.OldCategory}}-ден {{.NewCategory}}-ге өзгертілді"
     },
 
     "storeStockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
