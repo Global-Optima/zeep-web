@@ -95,7 +95,7 @@ const { mutate: deleteMutation } = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-additives'] })
 	},
 	onError: (error: AxiosLocalizedError) => {
-    	toastLocalizedError(error, "Произошла ошибка при удалении модификатора.")
+    	toastLocalizedError(error, "Произошла ошибка при удалении.")
   },
 })
 

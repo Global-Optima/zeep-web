@@ -122,7 +122,7 @@ const {mutate: deleteStoreAdditive} = useMutation({
 			queryClient.invalidateQueries({queryKey: ['admin-store-additives']})
 		},
 		onError: (error: AxiosLocalizedError) => {
-			toastLocalizedError(error,  "Произошла ошибка при удаленииff")
+			toastLocalizedError(error,  "Произошла ошибка при удалении.")
 		},
 })
 
