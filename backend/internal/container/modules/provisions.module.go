@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
@@ -32,7 +33,7 @@ func NewProvisionsModule(
 	service := provisions.NewProvisionService(repo, base.Logger)
 	handler := provisions.NewProvisionHandler(service, auditService, base.Logger)
 
-	storeProvisionsModule := NewStoreProvisionsModule(base, service, franchiseeService, auditService, notificationService, repo)
+	storeProvisionsModule := NewStoreProvisionsModule(base, service, franchiseeService, auditService, notificationService, repo, ingredientRepo, storeStockRepo)
 	provisionTechMapModule := NewProvisionsTechnicalMapModule(base)
 
 	base.Router.RegisterProvisionsRoutes(handler, provisionTechMapModule.Handler)
