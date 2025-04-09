@@ -205,7 +205,7 @@ func TestAdditiveEndpoints(t *testing.T) {
 				Method:       http.MethodDelete,
 				URL:          "/api/test/additives/1",
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusInternalServerError,
+				ExpectedCode: http.StatusConflict,
 			},
 			{
 				Description:  "Barista should NOT be able to delete an additive",
