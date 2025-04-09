@@ -2,7 +2,11 @@
 	<div class="flex-1 gap-4 grid auto-rows-max mx-auto max-w-6xl">
 		<!-- Header -->
 		<div class="flex items-center gap-4">
-			<Button variant="outline" size="icon" @click="onCancel">
+			<Button
+				variant="outline"
+				size="icon"
+				@click="onCancel"
+			>
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
 			</Button>
@@ -11,10 +15,17 @@
 			</h1>
 
 			<div class="hidden md:flex items-center gap-2 md:ml-auto">
-				<Button variant="outline" type="button" @click="onCancel">
+				<Button
+					variant="outline"
+					type="button"
+					@click="onCancel"
+				>
 					Отменить
 				</Button>
-				<Button type="submit" @click="onSubmit">
+				<Button
+					type="submit"
+					@click="onSubmit"
+				>
 					Сохранить
 				</Button>
 			</div>
@@ -27,7 +38,11 @@
 				<CardDescription>Укажите поставщика для этой доставки.</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<Button variant="link" @click="openSupplierDialog = true" class="mt-0 p-0 underline">
+				<Button
+					variant="link"
+					@click="openSupplierDialog = true"
+					class="mt-0 p-0 underline"
+				>
 					{{ selectedSupplier?.name || 'Не выбран' }}
 				</Button>
 			</CardContent>
@@ -43,7 +58,11 @@
 							Добавьте материалы и укажите их количество, цену и упаковку.
 						</CardDescription>
 					</div>
-					<Button variant="outline" @click="openStockMaterialDialog = true" :disabled="!selectedSupplier">
+					<Button
+						variant="outline"
+						@click="openStockMaterialDialog = true"
+						:disabled="!selectedSupplier"
+					>
 						{{ !selectedSupplier ? "Выберите поставщика" : "Добавить" }}
 					</Button>
 				</div>
@@ -63,11 +82,17 @@
 					</TableHeader>
 					<TableBody>
 						<TableRow v-if="materials.length === 0">
-							<TableCell colspan="7" class="py-5 text-muted-foreground text-center">
+							<TableCell
+								colspan="7"
+								class="py-5 text-muted-foreground text-center"
+							>
 								Нет добавленных материалов
 							</TableCell>
 						</TableRow>
-						<TableRow v-for="(material, index) in materials" :key="material.stockMaterialId">
+						<TableRow
+							v-for="(material, index) in materials"
+							:key="material.stockMaterialId"
+						>
 							<TableCell>{{ material.name }}</TableCell>
 							<TableCell>{{ material.size }} {{ material.unit.name }}</TableCell>
 							<TableCell>{{ material.category }}</TableCell>
@@ -97,28 +122,43 @@
 								{{ (material.quantity * material.price).toFixed(2) }}
 							</TableCell>
 							<TableCell class="text-center">
-								<Trash class="text-red-500 hover:text-red-700 cursor-pointer" @click="removeMaterial(index)" />
+								<Trash
+									class="text-red-500 hover:text-red-700 cursor-pointer"
+									@click="removeMaterial(index)"
+								/>
 							</TableCell>
 						</TableRow>
 					</TableBody>
-          <TableFooter v-if="materials.length > 0">
-            <TableRow>
-              <TableCell colspan="5" class="font-medium">Итого</TableCell>
-              <TableCell>
-                {{ totalSum.toFixed(2) }}
-              </TableCell>
-              <!-- Empty cell for action column -->
-              <TableCell></TableCell>
-            </TableRow>
-          </TableFooter>
+					<TableFooter v-if="materials.length > 0">
+						<TableRow>
+							<TableCell
+								colspan="5"
+								class="font-medium"
+								>Итого</TableCell
+							>
+							<TableCell>
+								{{ totalSum.toFixed(2) }}
+							</TableCell>
+							<!-- Empty cell for action column -->
+							<TableCell></TableCell>
+						</TableRow>
+					</TableFooter>
 				</Table>
 			</CardContent>
 		</Card>
 
 		<!-- Footer -->
 		<div class="md:hidden flex justify-center items-center gap-2">
-			<Button variant="outline" @click="onCancel">Отменить</Button>
-			<Button type="submit" @click="onSubmit">Сохранить</Button>
+			<Button
+				variant="outline"
+				@click="onCancel"
+				>Отменить</Button
+			>
+			<Button
+				type="submit"
+				@click="onSubmit"
+				>Сохранить</Button
+			>
 		</div>
 
 		<!-- Dialogs -->

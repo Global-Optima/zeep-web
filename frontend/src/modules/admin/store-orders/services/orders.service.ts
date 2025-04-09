@@ -10,7 +10,6 @@ import type {
 	OrderDTO,
 	OrdersExportFilterQuery,
 	OrdersFilterQuery,
-	OrderStatusesCountDTO,
 	OrdersTimeZoneFilter,
 	SuborderDTO,
 	ToggleNextSuborderStatusOptions,

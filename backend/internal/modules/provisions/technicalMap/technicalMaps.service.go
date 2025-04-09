@@ -1,13 +1,13 @@
 package technicalMap
 
 import (
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/technicalMap/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/technicalMap/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
 type TechnicalMapService interface {
-	GetAdditiveTechnicalMapByID(AdditiveID uint) (*types.AdditiveTechnicalMap, error)
+	GetProvisionTechnicalMapByID(ProvisionID uint) (*types.ProvisionTechnicalMap, error)
 }
 
 type technicalMapService struct {
@@ -22,14 +22,14 @@ func NewTechnicalMapService(repository TechnicalMapRepository, logger *zap.Sugar
 	}
 }
 
-func (s *technicalMapService) GetAdditiveTechnicalMapByID(AdditiveID uint) (*types.AdditiveTechnicalMap, error) {
-	AdditiveIngredients, err := s.repository.GetAdditiveTechnicalMapByID(AdditiveID)
+func (s *technicalMapService) GetProvisionTechnicalMapByID(ProvisionID uint) (*types.ProvisionTechnicalMap, error) {
+	ProvisionIngredients, err := s.repository.GetProvisionTechnicalMapByID(ProvisionID)
 	if err != nil {
-		wrappedErr := utils.WrapError("failed to get technical map for additive: ", err)
+		wrappedErr := utils.WrapError("failed to get technical map for provision: ", err)
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
 
-	technicalMap := types.ConvertToAdditiveTechnicalMapDTO(AdditiveIngredients)
+	technicalMap := types.ConvertToProvisionTechnicalMapDTO(ProvisionIngredients)
 	return &technicalMap, nil
 }

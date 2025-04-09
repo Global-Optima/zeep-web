@@ -1,26 +1,40 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref } from 'vue'
+import { ref, toRefs, watch } from 'vue'
 import * as z from 'zod'
 
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/core/components/ui/dropdown-menu'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
+import { useToast } from '@/core/components/ui/toast'
+import { useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
 import AdminIngredientsSelectDialog from "@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue"
 import type { IngredientsDTO } from "@/modules/admin/ingredients/models/ingredients.model"
-import type { CreateProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
+import type { CreateProvisionDTO, ProvisionDetailsDTO } from "@/modules/admin/provisions/models/provision.models"
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
+import { ChevronDown, ChevronLeft, EllipsisVertical, Trash } from 'lucide-vue-next'
+
+const props = defineProps<{initialProvision?: ProvisionDetailsDTO }>()
+const { initialProvision } = toRefs(props)
 
 const emits = defineEmits<{
   onSubmit: [dto: CreateProvisionDTO]
   onCancel: []
 }>()
+
+const {toast} = useToast()
+const {fetchTechnicalMap} = useCopyTechnicalMap()
 
 // Validation Schema for Create Provision
 const createProvisionSchema = toTypedSchema(
@@ -38,6 +52,14 @@ const createProvisionSchema = toTypedSchema(
 // Form Setup
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createProvisionSchema,
+  initialValues: {
+	name: initialProvision.value?.name,
+	absoluteVolume: initialProvision.value?.absoluteVolume,
+	preparationInMinutes: initialProvision.value?.preparationInMinutes,
+	netCost: initialProvision.value?.netCost,
+	limitPerDay: initialProvision.value?.limitPerDay,
+	unitId: initialProvision.value?.unit.id,
+  }
 })
 
 // Manage selected ingredients for the provision
@@ -49,7 +71,15 @@ interface SelectedIngredientDisplay {
   quantity: number
 }
 
-const selectedIngredients = ref<SelectedIngredientDisplay[]>([])
+const selectedIngredients = ref<SelectedIngredientDisplay[]>(
+  initialProvision.value?.ingredients.map((provisionIngredient) => ({
+	ingredientId: provisionIngredient.ingredient.id,
+	name: provisionIngredient.ingredient.name,
+	unit: provisionIngredient.ingredient.unit.name,
+	category: provisionIngredient.ingredient.category.name,
+	quantity: provisionIngredient.quantity,
+  })) || []
+)
 const openIngredientsDialog = ref(false)
 
 function removeIngredient(index: number) {
@@ -97,13 +127,61 @@ const onCancel = () => {
 
 // Unit selection
 const openUnitDialog = ref(false)
-const selectedUnit = ref<UnitDTO | null>(null)
+const selectedUnit = ref<UnitDTO | null>(initialProvision.value?.unit || null)
 
 function selectUnit(unit: UnitDTO) {
   selectedUnit.value = unit
   openUnitDialog.value = false
   setFieldValue('unitId', unit.id)
 }
+
+const onPasteTechMapClick = async () => {
+  try {
+    const techMap = await fetchTechnicalMap()
+    if (!techMap) {
+      toast({ description: "Технологическая карта не найдена" })
+      return
+    }
+
+    selectedIngredients.value = techMap.map(t => ({
+      ingredientId: t.ingredient.id,
+      name: t.ingredient.name,
+      unit: t.ingredient.unit.name,
+      category: t.ingredient.category.name,
+      quantity: t.quantity,
+    }))
+
+    toast({ description: "Технологическая карта успешно вставлена", variant: "success" })
+
+  } catch {
+    toast({ description: "Ошибка при вставке технологической карты", variant: "destructive" })
+  }
+}
+
+watch(initialProvision, (newVal) => {
+  if (newVal) {
+    // Reset the form with new initial values.
+    resetForm({
+      values: {
+        name: newVal.name,
+        absoluteVolume: newVal.absoluteVolume,
+        preparationInMinutes: newVal.preparationInMinutes,
+        netCost: newVal.netCost,
+        limitPerDay: newVal.limitPerDay,
+        unitId: newVal.unit.id,
+      }
+    })
+    // Update dependent reactive state.
+	selectedUnit.value = newVal.unit
+	selectedIngredients.value = newVal.ingredients.map((provisionIngredient) => ({
+	  ingredientId: provisionIngredient.ingredient.id,
+	  name: provisionIngredient.ingredient.name,
+	  unit: provisionIngredient.ingredient.unit.name,
+	  category: provisionIngredient.ingredient.category.name,
+	  quantity: provisionIngredient.quantity,
+	}))
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -288,12 +366,23 @@ function selectUnit(unit: UnitDTO) {
 						<CardTitle>Технологическая карта</CardTitle>
 						<CardDescription class="mt-2"> Выберите ингредиенты и их количество </CardDescription>
 					</div>
-					<Button
-						variant="outline"
-						@click="openIngredientsDialog = true"
-					>
-						Добавить
-					</Button>
+					<div class="flex items-center gap-2">
+						<DropdownMenu>
+							<DropdownMenuTrigger class="p-2 border rounded-md">
+								<EllipsisVertical class="size-4" />
+							</DropdownMenuTrigger>
+							<DropdownMenuContent>
+								<DropdownMenuItem @click="onPasteTechMapClick">Вставить</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+
+						<Button
+							variant="outline"
+							@click="openIngredientsDialog = true"
+						>
+							Добавить
+						</Button>
+					</div>
 				</div>
 			</CardHeader>
 			<CardContent>

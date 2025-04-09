@@ -7,15 +7,23 @@ import * as z from 'zod'
 // UI Components
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/core/components/ui/dropdown-menu'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
+import { useToast } from '@/core/components/ui/toast'
+import { TechnicalMapEntity, useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
 import AdminIngredientsSelectDialog from "@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue"
 import type { IngredientsDTO } from "@/modules/admin/ingredients/models/ingredients.model"
 import type { ProvisionDetailsDTO, UpdateProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import AdminSelectUnit from '@/modules/admin/units/components/admin-select-unit.vue'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import { ChevronDown, ChevronLeft, Trash } from 'lucide-vue-next'
+import { ChevronDown, ChevronLeft, EllipsisVertical, Trash } from 'lucide-vue-next'
 
 const {provision, readonly = false } = defineProps<{provision: ProvisionDetailsDTO, readonly?: boolean}>()
 
@@ -23,6 +31,9 @@ const emits = defineEmits<{
   onSubmit: [dto: UpdateProvisionDTO]
   onCancel: []
 }>()
+
+const { toast } = useToast()
+const { setTechnicalMapReference, fetchTechnicalMap } = useCopyTechnicalMap()
 
 // Validation Schema for Create Provision
 const createProvisionSchema = toTypedSchema(
@@ -125,6 +136,39 @@ function selectUnit(unit: UnitDTO) {
   selectedUnit.value = unit
   openUnitDialog.value = false
   setFieldValue('unitId', unit.id)
+}
+
+const onCopyTechMapClick = () => {
+  try {
+    setTechnicalMapReference(TechnicalMapEntity.PROVISION, provision.id)
+    toast({ description: "Технологическая карта успешно скопирована", variant: "success" })
+
+  } catch {
+    toast({ description: "Ошибка при копировании технологической карты", variant: "destructive" })
+  }
+}
+
+const onPasteTechMapClick = async () => {
+  try {
+    const techMap = await fetchTechnicalMap()
+    if (!techMap) {
+      toast({ description: "Технологическая карта не найдена" })
+      return
+    }
+
+    selectedIngredients.value = techMap.map(t => ({
+      ingredientId: t.ingredient.id,
+      name: t.ingredient.name,
+      unit: t.ingredient.unit.name,
+      category: t.ingredient.category.name,
+      quantity: t.quantity,
+    }))
+
+    toast({ description: "Технологическая карта успешно вставлена", variant: "success" })
+
+  } catch {
+    toast({ description: "Ошибка при вставке технологической карты", variant: "destructive" })
+  }
 }
 </script>
 
@@ -328,13 +372,27 @@ function selectUnit(unit: UnitDTO) {
 							Выберите ингредиенты и их количество
 						</CardDescription>
 					</div>
-					<Button
+					<div
 						v-if="!readonly"
-						variant="outline"
-						@click="openIngredientsDialog = true"
+						class="flex items-center gap-2"
 					>
-						Добавить
-					</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger class="p-2 border rounded-md">
+								<EllipsisVertical class="size-4" />
+							</DropdownMenuTrigger>
+							<DropdownMenuContent>
+								<DropdownMenuItem @click="onCopyTechMapClick">Копировать</DropdownMenuItem>
+								<DropdownMenuItem @click="onPasteTechMapClick">Вставить</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+
+						<Button
+							variant="outline"
+							@click="openIngredientsDialog = true"
+						>
+							Добавить
+						</Button>
+					</div>
 				</div>
 			</CardHeader>
 			<CardContent>

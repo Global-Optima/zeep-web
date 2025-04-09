@@ -130,7 +130,7 @@ type ProductTechMapModule struct {
 
 func NewProductTechMapModule(base *common.BaseModule) *ProductTechMapModule {
 	repo := technicalMap.NewTechnicalMapRepository(base.DB)
-	service := technicalMap.NewTechnicalMapService(repo)
+	service := technicalMap.NewTechnicalMapService(repo, base.Logger)
 	handler := technicalMap.NewTechnicalMapHandler(service)
 
 	return &ProductTechMapModule{

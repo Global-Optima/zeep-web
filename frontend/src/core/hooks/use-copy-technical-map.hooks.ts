@@ -1,4 +1,5 @@
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
+import { provisionsService } from '@/modules/admin/provisions/services/provisions.service'
 // useTechnicalMapCopy.ts
 import type { TechnicalMapDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
@@ -7,6 +8,7 @@ import { ref } from 'vue'
 export enum TechnicalMapEntity {
 	PRODUCT_SIZE = 'productSize',
 	ADDITIVE = 'additive',
+	PROVISION = 'provision',
 }
 
 // Internal buffer for the technical map reference.
@@ -74,7 +76,7 @@ async function getTechnicalMapReferenceFromBuffer(): Promise<string | null> {
  * Returns a promise that resolves with an array of TechnicalMapDTO, or null if no reference is stored.
  */
 async function fetchTechnicalMap(): Promise<TechnicalMapDTO[] | null> {
-  const refStr = await getTechnicalMapReferenceFromBuffer()
+	const refStr = await getTechnicalMapReferenceFromBuffer()
 	if (!refStr) return null
 
 	// Reference should be in the format "entity-{id}"
@@ -98,6 +100,10 @@ async function fetchTechnicalMap(): Promise<TechnicalMapDTO[] | null> {
 			const additiveMap = await additivesService.getAdditiveTechMap(id)
 			return additiveMap.ingredients
 		}
+		case TechnicalMapEntity.PROVISION: {
+			const provisionMap = await provisionsService.getProvisionTechMap(id)
+			return provisionMap.ingredients
+		}
 		default:
 			throw new Error(`Unknown technical map entity: ${entity}`)
 	}
@@ -109,6 +115,6 @@ export function useCopyTechnicalMap() {
 		getTechnicalMapReference,
 		clearTechnicalMapReference,
 		fetchTechnicalMap,
-    getTechnicalMapReferenceFromBuffer
+		getTechnicalMapReferenceFromBuffer,
 	}
 }

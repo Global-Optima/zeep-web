@@ -79,35 +79,59 @@ const onSubmit = handleSubmit(async (values) => {
 		<DialogTrigger as-child>
 			<Button variant="outline">Экспорт</Button>
 		</DialogTrigger>
-		<DialogContent class="sm:max-w-[425px]" :include-close-button="false">
+		<DialogContent
+			class="sm:max-w-[425px]"
+			:include-close-button="false"
+		>
 			<DialogHeader>
 				<DialogTitle>Экспорт заказов</DialogTitle>
 			</DialogHeader>
-			<form class="space-y-6" @submit="onSubmit">
+			<form
+				class="space-y-6"
+				@submit="onSubmit"
+			>
 				<!-- Start Date -->
-				<FormField v-slot="{ componentField }" name="startDate" :validate-on-blur="!isFieldDirty">
+				<FormField
+					v-slot="{ componentField }"
+					name="startDate"
+					:validate-on-blur="!isFieldDirty"
+				>
 					<FormItem>
 						<FormLabel>Дата начала</FormLabel>
 						<FormControl>
-							<Input type="date" v-bind="componentField" />
+							<Input
+								type="date"
+								v-bind="componentField"
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
 				</FormField>
 
 				<!-- End Date -->
-				<FormField v-slot="{ componentField }" name="endDate" :validate-on-blur="!isFieldDirty">
+				<FormField
+					v-slot="{ componentField }"
+					name="endDate"
+					:validate-on-blur="!isFieldDirty"
+				>
 					<FormItem>
 						<FormLabel>Дата окончания</FormLabel>
 						<FormControl>
-							<Input type="date" v-bind="componentField" />
+							<Input
+								type="date"
+								v-bind="componentField"
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
 				</FormField>
 
 				<!-- Language -->
-				<FormField v-slot="{ componentField }" name="language" :validate-on-blur="!isFieldDirty">
+				<FormField
+					v-slot="{ componentField }"
+					name="language"
+					:validate-on-blur="!isFieldDirty"
+				>
 					<FormItem>
 						<FormLabel>Язык</FormLabel>
 						<FormControl>

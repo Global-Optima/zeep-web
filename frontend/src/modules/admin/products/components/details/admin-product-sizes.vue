@@ -50,14 +50,20 @@
 							<TableCell class="text-right">
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon" @click.stop>
-										<EllipsisVertical class="w-6 h-6" />
-									</Button>
+										<Button
+											variant="ghost"
+											size="icon"
+											@click.stop
+										>
+											<EllipsisVertical class="w-6 h-6" />
+										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent align="end">
-									<DropdownMenuItem @click="(e) => { e.stopPropagation(); onDuplicateClick(variant.id); }">
-										Дублировать
-									</DropdownMenuItem>
+										<DropdownMenuItem
+											@click="(e) => { e.stopPropagation(); onDuplicateClick(variant.id); }"
+										>
+											Дублировать
+										</DropdownMenuItem>
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TableCell>
