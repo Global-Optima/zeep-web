@@ -6,10 +6,14 @@ import { MACHINE_CATEGORY_FORMATTED } from '@/modules/kiosk/products/models/prod
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode-generator'
 
-// Optionally import vfs_fonts to support Cyrillic characters
-// import 'pdfmake/build/vfs_fonts'
+// If using VITE_SAVE_ON_PRINT in your .env file:
+const SAVE_ON_PRINT = import.meta.env.VITE_SAVE_ON_PRINT === 'true'
 
-export const generateSubOrderQR = (sb: SuborderDTO) => {
+/**
+ * Utility to combine the suborder IDs, product machine IDs, etc. into a single string
+ * that you can parse out later (the "qrValue").
+ */
+export function generateSubOrderQR(sb: SuborderDTO): string {
 	const parts = [
 		sb.id ?? null,
 		sb.productSize?.machineId ?? null,
@@ -18,7 +22,7 @@ export const generateSubOrderQR = (sb: SuborderDTO) => {
 	return parts.filter(Boolean).join('|')
 }
 
-export const parseSubOrderQR = (qrString: string) => {
+export function parseSubOrderQR(qrString: string) {
 	const [subOrderId, productSizeMachineId, additivesString] = qrString.split('|')
 	return {
 		subOrderId: subOrderId || null,
@@ -27,7 +31,11 @@ export const parseSubOrderQR = (qrString: string) => {
 	}
 }
 
-export const getSavedBaristaQRSettings = (): { width: number; height: number } => {
+/**
+ * Gets the user's saved label dimensions from localStorage,
+ * falling back to 80x80 mm if none is saved.
+ */
+export function getSavedBaristaQRSettings(): { width: number; height: number } {
 	const stored = localStorage.getItem(SAVED_BARISTA_QR_SETTINGS_KEY)
 	if (stored) {
 		try {
@@ -44,22 +52,13 @@ export const getSavedBaristaQRSettings = (): { width: number; height: number } =
 			console.error('Error parsing QR settings from localStorage:', error)
 		}
 	}
-	// Default fallback (e.g. 80×80 mm label)
 	return { width: 80, height: 80 }
 }
 
 /**
- * Renders text using an offscreen high‑resolution canvas (which properly supports Cyrillic)
- * and centers each rendered text image within the available width.
- *
- * @param doc jsPDF instance
- * @param text The text to render.
- * @param x Left margin (in mm) for the text block.
- * @param y Vertical starting position (in mm).
- * @param maxWidth Maximum width (in mm) available for text.
- * @param fontSize Font size (in pt).
- * @param isBold Whether to render the text in bold.
- * @returns The updated vertical position after rendering the text.
+ * This helper draws text onto an offscreen canvas (so it can handle Cyrillic),
+ * then places the rasterized text in a PDF at the correct position.
+ * (Unchanged from your original logic.)
  */
 function drawText(
 	doc: jsPDF,
@@ -70,7 +69,8 @@ function drawText(
 	fontSize: number,
 	isBold: boolean = false,
 ): number {
-	const scaleFactor = 2 // for high-res rendering
+	// your original text → image logic ...
+	const scaleFactor = 2
 	const baseCanvas = document.createElement('canvas')
 	const baseCtx = baseCanvas.getContext('2d')!
 	if (!baseCtx) return y
@@ -78,7 +78,6 @@ function drawText(
 	const fontStyle = isBold ? 'bold' : 'normal'
 	baseCtx.font = `${fontStyle} ${fontSize}pt Helvetica`
 
-	// Configure line spacing – increase this factor for more space between lines.
 	const lineSpacingFactor = 1
 	const lineHeight = fontSize * lineSpacingFactor
 
@@ -86,14 +85,13 @@ function drawText(
 	let currentLine = ''
 	let currentY = y
 
-	// Process each word to fit within the maxWidth.
 	for (let i = 0; i < words.length; i++) {
 		const testLine = currentLine + words[i] + ' '
 		const metrics = baseCtx.measureText(testLine)
-		const testLineWidthMm = metrics.width * 0.35 // approximate conversion px → mm
+		const testLineWidthMm = metrics.width * 0.35 // approximate px → mm
 
 		if (testLineWidthMm > maxWidth && currentLine !== '') {
-			// Render the current line before starting a new one.
+			// Render currentLine
 			const lineMetrics = baseCtx.measureText(currentLine)
 			const textWidthPx = lineMetrics.width
 
@@ -119,7 +117,7 @@ function drawText(
 		}
 	}
 
-	// Render any remaining text.
+	// Render leftover text
 	if (currentLine.trim()) {
 		const lineMetrics = baseCtx.measureText(currentLine)
 		const textWidthPx = lineMetrics.width
@@ -141,34 +139,42 @@ function drawText(
 		doc.addImage(textDataUrl, 'PNG', imageX, currentY, finalTextWidthMm, lineHeight)
 		currentY += lineHeight
 	}
+
 	return currentY
+}
+
+/**
+ * Helper: Convert a string to ZPL-compatible hex-escaped UTF-8,
+ * so we can print Cyrillic via ^CI28 + ^FH\.
+ */
+function escapeZplUnicode(input: string): string {
+	// Convert to UTF-8 bytes:
+	const utf8Bytes = new TextEncoder().encode(input)
+	// Each byte gets escaped as \XX (hex).
+	// Example: 0xD0 => '\d0', 0x9F => '\9f', etc.
+	return Array.from(utf8Bytes, byte => `\\${byte.toString(16).padStart(2, '0')}`).join('')
 }
 
 export function useOrderGenerateQR() {
 	/**
-	 * Generates a QR code as a high-res PNG and embeds it into a PDF (scaled for printing),
-	 * along with two lines of text:
-	 *   1) "#OrderNumber  CustomerName"
-	 *   2) "ProductName ProductSizeString (CategoryName, 350 ml)"
+	 * Generate the PDF version (unchanged from your original).
+	 * This is for normal prints (when SAVE_ON_PRINT = false).
 	 */
-	async function generateQRFromSuborder(
+	async function generatePdfFromSuborder(
 		order: OrderDTO,
 		suborder: SuborderDTO,
 		index: number,
 		options: QRPrintOptions = {},
 	): Promise<Blob> {
-		// 1) Retrieve label dimensions and DPI (defaulting if necessary)
 		const { dpi = 203, labelWidthMm = 80, labelHeightMm = 80 } = options
 		const pxPerMm = dpi / 25.4
 
-		// 2) Prepare the QR content.
 		const qrValue = generateSubOrderQR(suborder)
 
-		// 3) Define text lines.
 		const line1 = `#${order.displayNumber} ${order.customerName} (${index + 1}/${order.subOrders.length})`
 		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name.toLowerCase()}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory].toLowerCase()})`
 
-		// 4) Generate the QR code onto a canvas.
+		// Draw QR code on a canvas
 		const usableWidthPx = Math.round(labelWidthMm * pxPerMm)
 		const usableHeightPx = Math.round(labelHeightMm * pxPerMm)
 
@@ -186,7 +192,7 @@ export function useOrderGenerateQR() {
 		ctx.fillStyle = '#000000'
 
 		const qrModules = qr.getModuleCount()
-		const qrScaleFactor = 0.9 // increased scale for a larger, high-res QR
+		const qrScaleFactor = 0.9
 		const qrSizePx = Math.min(usableWidthPx, usableHeightPx) * qrScaleFactor
 		const cellSize = qrSizePx / qrModules
 		const qrMarginPx = (Math.min(usableWidthPx, usableHeightPx) - qrSizePx) / 2
@@ -199,35 +205,27 @@ export function useOrderGenerateQR() {
 			}
 		}
 
-		// Convert the QR canvas to a PNG data URL.
 		const qrDataURL = canvas.toDataURL('image/png', 1.0)
 
-		// 5) Create a new jsPDF document with the proper dimensions.
+		// Create jsPDF doc
 		const doc = new jsPDF({
 			orientation: labelWidthMm > labelHeightMm ? 'landscape' : 'portrait',
 			unit: 'mm',
 			format: [labelWidthMm, labelHeightMm],
 		})
 
-		// 6) Determine a responsive font size.
 		const baseFontSize = Math.min(10, labelWidthMm / 8)
-
-		// 7) Define margins.
 		const margin = Math.max(2, labelWidthMm * 0.025)
 		let currentY = margin
-
-		// 8) Calculate the maximum text width (accounting for margins).
 		const maxTextWidth = labelWidthMm - margin * 2
 
-		// 9) Render the text lines using our high-res canvas approach.
+		// Draw text lines
 		currentY = drawText(doc, line1, margin, currentY, maxTextWidth, baseFontSize, true)
 		currentY = drawText(doc, line2, margin, currentY, maxTextWidth, baseFontSize * 0.9)
 
-		// 10) Add additional spacing between the text and QR code.
+		// Then place the QR code
 		const qrSpacing = baseFontSize * 0.5
 		currentY += qrSpacing
-
-		// 11) Determine the QR code’s size and position.
 		const remainingHeight = labelHeightMm - currentY - margin
 		const qrImageSizeMm = Math.min(remainingHeight, labelWidthMm - 2 * margin)
 		const finalQrSizeMm = Math.max(qrImageSizeMm, Math.min(labelWidthMm, labelHeightMm) * 0.3)
@@ -242,11 +240,84 @@ export function useOrderGenerateQR() {
 			}
 		}
 
-		// 12) Return the PDF as a Blob.
 		return doc.output('blob')
 	}
 
-	return { generateQRFromSuborder }
+	/**
+	 * Generate a .PRN file with ZPL-like content, forcing UTF-8 with ^CI28,
+	 * and hex-escaped strings via ^FH\ so Cyrillic can print on supported printers.
+	 */
+	async function generatePrnFromSuborder(
+		order: OrderDTO,
+		suborder: SuborderDTO,
+		index: number,
+		options: QRPrintOptions = {},
+	): Promise<Blob> {
+		// 1) Retrieve label dimensions in mm
+		//    Then convert mm → dots, typically ~8 dots/mm @ 203 dpi
+		const { labelWidthMm = 80, labelHeightMm = 80 } = options
+		const labelWidthDots = Math.round(labelWidthMm * 8)
+		const labelHeightDots = Math.round(labelHeightMm * 8)
+
+		// 2) Prepare data
+		const qrValue = generateSubOrderQR(suborder)
+
+		// Build the lines with actual text
+		const line1 = `#${order.displayNumber} ${order.customerName} (${index + 1}/${order.subOrders.length})`
+		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name.toLowerCase()}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory].toLowerCase()})`
+
+		// 3) Escape them into ZPL-friendly hex strings
+		const escapedLine1 = escapeZplUnicode(line1)
+		const escapedLine2 = escapeZplUnicode(line2)
+
+		// 4) Build raw spool data (.prn). We:
+		//    - Use ^CI28 for UTF-8
+		//    - Use ^FH\ to parse \xx sequences as hex
+		//    - ^BQN for QR code (model 2, mag factor 6)
+		//    - ^FDLA,<data> for the QR code content
+		//
+		//    If your printer cuts after each label, you can use ^MMC or ^PN1, etc.
+		//    Adjust ^FO offsets, ^A0N font sizes, etc. to suit your layout needs.
+		const zplCommands = `
+^XA
+^CI28
+^PW${labelWidthDots}
+^LL${labelHeightDots}
+^FO50,50^A0N,30,30^FH\\^FD${escapedLine1}^FS
+^FO50,100^A0N,24,24^FH\\^FD${escapedLine2}^FS
+^FO50,180^BQN,2,6
+^FDLA,${qrValue}^FS
+^MMC
+^XZ
+`.trim()
+
+		// 5) Return as .prn
+		//    We use "application/octet-stream" or "application/x-prn"
+		//    so that it can be recognized as a spool data file.
+		return new Blob([zplCommands], { type: 'application/octet-stream' })
+	}
+
+	/**
+	 * Decide which type of label to generate (PDF vs. raw spool .prn).
+	 */
+	async function generateQRFromSuborder(
+		order: OrderDTO,
+		suborder: SuborderDTO,
+		index: number,
+		options: QRPrintOptions = {},
+	): Promise<Blob> {
+		if (SAVE_ON_PRINT) {
+			// Generate raw spool file (.prn) with ZPL commands
+			return generatePrnFromSuborder(order, suborder, index, options)
+		} else {
+			// Generate PDF
+			return generatePdfFromSuborder(order, suborder, index, options)
+		}
+	}
+
+	return {
+		generateQRFromSuborder,
+	}
 }
 
 export function useOrderQRPrinter() {
@@ -254,30 +325,36 @@ export function useOrderQRPrinter() {
 	const { generateQRFromSuborder } = useOrderGenerateQR()
 
 	/**
-	 * Prints one or more QR labels for a suborder.
-	 * Accepts either a single SuborderDTO or an array.
+	 * Prints (or saves) one or more QR labels for a suborder.
+	 * If SAVE_ON_PRINT = true, we generate a .prn spool file
+	 * (ZPL commands, cyrillic in hex).
+	 * Otherwise, we generate a PDF and pass it to the default print logic.
 	 */
-	const printSubOrderQR = async (
+	async function printSubOrderQR(
 		order: OrderDTO,
 		subOrders: SuborderDTO | SuborderDTO[],
 		options?: QRPrintOptions,
-	) => {
+	) {
 		try {
 			const suborders = Array.isArray(subOrders) ? subOrders : [subOrders]
-			const pdfBlobs = await Promise.all(
+			// Generate a Blob for each suborder (PDF or .prn)
+			const labelBlobs = await Promise.all(
 				suborders.map((sb, idx) => {
 					const printIndex =
 						suborders.length === 1 ? order.subOrders.findIndex(s => s.id === sb.id) : idx
-
 					return generateQRFromSuborder(order, sb, printIndex, options)
 				}),
 			)
-			await print(pdfBlobs, options)
+
+			// Hand them off to the printer or saving logic
+			await print(labelBlobs, options)
 		} catch (error) {
 			console.error('Error generating or printing QR code:', error)
 			throw error
 		}
 	}
 
-	return { printSubOrderQR }
+	return {
+		printSubOrderQR,
+	}
 }

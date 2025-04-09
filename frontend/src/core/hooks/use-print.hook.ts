@@ -3,6 +3,10 @@ import isMobile from 'is-mobile'
 import printJS from 'print-js'
 import { v4 as uuidv4 } from 'uuid'
 
+/**
+ * If your .env has VITE_SAVE_ON_PRINT set to 'true',
+ * we’ll save files instead of using the print dialog.
+ */
 const SAVE_ON_PRINT = import.meta.env.VITE_SAVE_ON_PRINT === 'true'
 
 export interface PrintOptions {
@@ -10,58 +14,42 @@ export interface PrintOptions {
 	 *  On mobile/tablet, the print job will be skipped.
 	 */
 	desktopOnly?: boolean
-	/** Invoked before printing each PDF. */
+	/** Invoked before printing each file. */
 	beforePrint?: () => void
-	/** Invoked after printing each PDF. */
+	/** Invoked after printing each file. */
 	afterPrint?: () => void
 
+	/** Whether to force 'save' on the file instead of printing. */
 	saveOnPrint?: boolean
 }
 
 interface PrintJob {
-	blobs: Blob[] // one or more PDF Blobs
+	blobs: Blob[]
 	options?: PrintOptions
-	resolve: () => void // For resolving the .print(...) Promise
+	resolve: () => void
 	reject: (err: unknown) => void
 }
 
-/**
- * Check if the argument is a valid PDF Blob (application/pdf).
- */
-function isPDFBlob(content: unknown): content is Blob {
-	return content instanceof Blob && content.type === 'application/pdf'
-}
-
-/**
- * Hook for printing PDF blobs in a queued, sequential manner.
- */
 export function usePrinter() {
 	// Queue of print jobs
 	const jobQueue: PrintJob[] = []
 	let isProcessing = false
 
 	/**
-	 * Enqueues a print job and returns a Promise that resolves
-	 * when the entire job (all blobs) has finished printing.
+	 * Main API: queue up a print (or save) job.
+	 * The job can contain one or more Blob(s).
 	 */
 	const print = async (content: Blob | Blob[], options?: PrintOptions): Promise<void> => {
-		// If desktopOnly flag is set and the device is mobile, skip printing.
+		// 1) If desktopOnly & device is mobile, skip
 		if (options?.desktopOnly && isMobile({ tablet: true })) {
-			console.warn('[usePrinter] Printing skipped: Desktop-only mode active on a mobile device.')
+			console.warn('[usePrinter] Skipped: Desktop-only mode on a mobile device.')
 			return Promise.resolve()
 		}
 
-		// Normalize to an array of Blobs
+		// 2) Convert content → array of Blobs
 		const blobs = Array.isArray(content) ? content : [content]
 
-		// Validate each blob
-		for (const blob of blobs) {
-			if (!isPDFBlob(blob)) {
-				throw new Error('Invalid content: Only PDF blobs are supported.')
-			}
-		}
-
-		// Enqueue the job
+		// 3) Create a job & enqueue
 		return new Promise<void>((resolve, reject) => {
 			jobQueue.push({ blobs, options, resolve, reject })
 			processQueue()
@@ -69,9 +57,7 @@ export function usePrinter() {
 	}
 
 	/**
-	 * Core logic: process the queue in FIFO order.
-	 * Only one job is processed at a time. Once finished,
-	 * move on to the next job until the queue is empty.
+	 * Processes jobs in FIFO order, one at a time.
 	 */
 	async function processQueue() {
 		if (isProcessing) return
@@ -82,9 +68,9 @@ export function usePrinter() {
 			try {
 				// Print each Blob in the job sequentially
 				for (const blob of job.blobs) {
-					await printSinglePDF(blob, job.options)
+					await printOrSaveSingleFile(blob, job.options)
 				}
-				// All blobs in this job have been printed
+				// Mark the entire job as done
 				job.resolve()
 			} catch (error) {
 				job.reject(error)
@@ -95,49 +81,52 @@ export function usePrinter() {
 	}
 
 	/**
-	 * Prints or Saves a single PDF file based on the given options.
-	 *
-	 * @param blob - The PDF file blob.
-	 * @param opts - Printing options.
-	 * @returns A promise that resolves once printing or saving is done.
+	 * Prints or saves a single file, depending on:
+	 * - The 'saveOnPrint' option (either local or fallback to global)
+	 * - The Blob's type (PDF vs. ZPL or anything else)
 	 */
-	async function printSinglePDF(blob: Blob, opts?: PrintOptions): Promise<void> {
+	async function printOrSaveSingleFile(blob: Blob, opts?: PrintOptions) {
 		return new Promise<void>((resolve, reject) => {
 			const { beforePrint, afterPrint, saveOnPrint = SAVE_ON_PRINT } = opts || {}
-
 			if (typeof beforePrint === 'function') beforePrint()
 
+			// Create an object URL for printing
+			const fileUrl = URL.createObjectURL(blob)
 			let cleanedUp = false
-			const pdfUrl = URL.createObjectURL(blob)
 
-			// Cleanup function to revoke the blob URL and call `afterPrint` once
+			// Cleanup helper
 			const cleanup = () => {
 				if (!cleanedUp) {
 					cleanedUp = true
-					URL.revokeObjectURL(pdfUrl)
+					URL.revokeObjectURL(fileUrl)
 					if (typeof afterPrint === 'function') afterPrint()
 				}
 			}
 
 			try {
-				// If saveOnPrint is true, skip printing and just trigger a save
 				if (saveOnPrint) {
-					const uniqueFileName = `${uuidv4()}.pdf`
-
+					const uniqueFileName = `${uuidv4()}.prn`
+					console.warn(
+						`[usePrinter] Non-PDF mime type detected: ${blob.type}. Saving file instead of printing.`,
+					)
 					saveAs(blob, uniqueFileName)
 					cleanup()
 					resolve()
 				} else {
-					// Otherwise, proceed with printing using printJS
-					printJS({
-						printable: pdfUrl,
-						type: 'pdf',
-						onLoadingEnd: cleanup, // called once PDF has loaded in print preview
-						onPrintDialogClose: () => {
-							console.log('[printSinglePDF] Print dialog closed')
-							resolve()
-						},
-					})
+					// Option 2: We want to "print", but we must handle PDF vs. non‑PDF
+					if (blob.type === 'application/pdf') {
+						// Print PDF with printJS
+						printJS({
+							printable: fileUrl,
+							type: 'pdf',
+							onLoadingEnd: cleanup,
+							onPrintDialogClose: () => {
+								console.log('[usePrinter] PDF print dialog closed.')
+								resolve()
+							},
+							// If you want to debug or pass header info, you can add more config here
+						})
+					}
 				}
 			} catch (err) {
 				cleanup()
