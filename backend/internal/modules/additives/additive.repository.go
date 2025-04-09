@@ -475,7 +475,7 @@ func checkAdditiveReferences(db *gorm.DB, additiveID uint) error {
 	}
 
 	if len(additive.ProductSizeAdditives) > 0 || len(additive.StoreAdditives) > 0 {
-		return types.ErrAdditiveCategoryIsInUse
+		return types.ErrAdditiveInUse
 	}
 
 	return nil

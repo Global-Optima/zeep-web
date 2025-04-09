@@ -158,6 +158,7 @@
     "500-additive-create": "An unexpected error occurred while creating modificator. Please try again later.",
     "500-additive-update": "An unexpected error occurred while updating modificator data. Please try again later.",
     "500-additive-delete": "An unexpected error occurred while deleting modificator data. Please try again later.",
+    "409-additive-delete-inUse": "The modificator cannot be deleted because it is in use.",
     "404-additive": "Modificator not found.",
     "400-additive": "Invalid modificator data provided. Please check and try again.",
     "201-additive": "Modificator successfully created.",
@@ -423,6 +424,7 @@
     "500-audit-get": "An unexpected error occurred while fetching audit data. Please try again later."
   },
   "notification": {
+      "emptyValue": "empty value",
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
       "stockRequestStatus": {
           "created": "Created",
@@ -437,10 +439,10 @@
       "newOrder": "A new order has been placed by *{{.CustomerName}}*.",
       "storeWarehouseRunOut": "The warehouse is running out of *{{.StockItem}}*.",
 
-      "centralCatalogUpdate": "The central catalog was updated.",
+      "centralCatalogUpdate": "The central catalog was updated, changes: {{.Changes}}.",
       "centralCatalogUpdateDetails": {
-        "nameChange": "Name changed from {{.OldName}} to {{.NewName}}",
-        "descriptionChange": "Description updated from {{.OldDescription}} to {{.NewDescription}}",
+        "nameChange": "Name changed from *{{.OldName}}* to *{{.NewName}}*",
+        "descriptionChange": "Description updated from *{{.OldDescription}}* to *{{.NewDescription}}*",
         "imageUrlChange": "Image URL updated from {{.OldImageURL}} to {{.NewImageURL}}",
         "categoryChange": "Category updated from {{.OldCategory}} to {{.NewCategory}}"
       },

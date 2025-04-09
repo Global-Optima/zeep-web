@@ -119,3 +119,26 @@ func TestTranslateCommonResponse(t *testing.T) {
 		})
 	}
 }
+
+func TestTranslateKey(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "notification.emptyValue",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			localizedMessage, err := Translate(tt.name, nil)
+
+			assert.NoError(t, err)
+			assert.NotNil(t, localizedMessage)
+
+			println(localizedMessage.En)
+			println(localizedMessage.Ru)
+			println(localizedMessage.Kk)
+		})
+	}
+}

@@ -301,6 +301,11 @@ func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteAdditive(uint(additiveID)); err != nil {
+		if errors.Is(err, types.ErrAdditiveInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409AdditiveDeleteInUse)
+			return
+		}
+
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveDelete)
 		return
 	}

@@ -158,6 +158,7 @@
 		"500-additive-create": "Произошла непредвиденная ошибка при создании модификатора. Пожалуйста, попробуйте позже.",
 		"500-additive-update": "Произошла непредвиденная ошибка при обновлении данных модификатора. Пожалуйста, попробуйте позже.",
 		"500-additive-delete": "Произошла непредвиденная ошибка при удалении данных модификатора. Пожалуйста, попробуйте позже.",
+		"409-additive-delete-inUse": "Модификатор не может быть удален, так как он используется.",
 		"404-additive": "Модификатор не найден.",
 		"400-additive": "Предоставлены неверные данные модификатора. Пожалуйста, проверьте и попробуйте снова.",
 		"201-additive": "Модификатор успешно создан.",
@@ -422,6 +423,7 @@
 		"500-audit-get": "Произошла непредвиденная ошибка при получении данных аудита. Пожалуйста, попробуйте позже."
 	},
 	"notification": {
+		"emptyValue": "пустое значение",
 		"stockRequestStatusUpdated": "Статус запроса на запас был обновлен на *{{.RequestStatus}}*.",
 		"stockRequestStatus": {
 			"created": "Создан",
@@ -436,10 +438,10 @@
 		"newOrder": "Новый заказ был сделан *{{.CustomerName}}*.",
 		"storeWarehouseRunOut": "На складе заканчивается *{{.StockItem}}*.",
 
-		"centralCatalogUpdate": "Центральный каталог был обновлен.",
+		"centralCatalogUpdate": "Центральный каталог был обновлен. Изменения: {{.Changes}}.",
 		"centralCatalogUpdateDetails": {
-			"nameChange": "Название изменено с {{.OldName}} на {{.NewName}}",
-			"descriptionChange": "Описание обновлено с {{.OldDescription}} на {{.NewDescription}}",
+			"nameChange": "Название изменено с *{{.OldName}}* на *{{.NewName}}*",
+			"descriptionChange": "Описание обновлено с *{{.OldDescription}}* на *{{.NewDescription}}*",
 			"imageUrlChange": "URL изображения обновлен с {{.OldImageURL}} на {{.NewImageURL}}",
 			"categoryChange": "Категория изменена с {{.OldCategory}} на {{.NewCategory}}"
 		},
