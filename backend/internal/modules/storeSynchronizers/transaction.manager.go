@@ -112,7 +112,7 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
 
-		err = storeInventoryManagerRepoTx.RecalculateOutOfStock(storeID,
+		err = storeInventoryManagerRepoTx.RecalculateStoreInventory(storeID,
 			&storeInventoryManagersTypes.RecalculateInput{
 				IngredientIDs:  ingredientIDs,
 				ProductSizeIDs: productSizeIDs,

@@ -12,8 +12,9 @@ import (
 type StoreInventoryManagerRepository interface {
 	DeductStoreInventoryByProductSize(storeID, productSizeID uint) (*types.DeductedStoreInventory, error)
 	DeductStoreInventoryByAdditive(storeID, additiveID uint) (*types.DeductedStoreInventory, error)
+	DeductStoreStocksByStoreProvision(storeProvision *data.StoreProvision) ([]data.StoreStock, error)
 
-	RecalculateOutOfStock(storeID uint, input *types.RecalculateInput) error
+	RecalculateStoreInventory(storeID uint, input *types.RecalculateInput) error
 	CalculateFrozenInventory(storeID uint, filter *types.FrozenInventoryFilter) (*types.FrozenInventory, error)
 
 	CloneWithTransaction(tx *gorm.DB) StoreInventoryManagerRepository
@@ -49,7 +50,6 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByProductSize(stor
 	}
 
 	deductedStoreInventory := &types.DeductedStoreInventory{}
-	var ingredientsToRecalculate []uint
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		for _, ingredient := range productSizeIngredients {
@@ -58,9 +58,6 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByProductSize(stor
 				return err
 			}
 			deductedStoreInventory.StoreStocks = append(deductedStoreInventory.StoreStocks, *updatedStock)
-			if updatedStock.Quantity <= updatedStock.LowStockThreshold {
-				ingredientsToRecalculate = append(ingredientsToRecalculate, updatedStock.IngredientID)
-			}
 		}
 
 		for _, provision := range productSizeProvisions {
@@ -92,7 +89,6 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByAdditive(storeID
 	}
 
 	deductedStoreInventory := &types.DeductedStoreInventory{}
-	var ingredientsToRecalculate []uint
 
 	err = r.db.Transaction(func(tx *gorm.DB) error {
 		for _, ingredient := range additiveIngredients {
@@ -101,9 +97,6 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByAdditive(storeID
 				return err
 			}
 			deductedStoreInventory.StoreStocks = append(deductedStoreInventory.StoreStocks, *updatedStock)
-			if updatedStock.Quantity <= updatedStock.LowStockThreshold {
-				ingredientsToRecalculate = append(ingredientsToRecalculate, updatedStock.IngredientID)
-			}
 		}
 
 		for _, provision := range additiveProvisions {
@@ -123,7 +116,36 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByAdditive(storeID
 	return deductedStoreInventory, nil
 }
 
-func (r *storeInventoryManagerRepository) RecalculateOutOfStock(storeID uint, input *types.RecalculateInput) error {
+func (r *storeInventoryManagerRepository) DeductStoreStocksByStoreProvision(storeProvision *data.StoreProvision) ([]data.StoreStock, error) {
+	if storeProvision == nil || storeProvision.StoreID == 0 || storeProvision.ID == 0 {
+		return nil, fmt.Errorf("invalid input parameters")
+	}
+
+	storeProvisionIngredients, err := r.getStoreProvisionIngredients(storeProvision.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var deductedStocks []data.StoreStock
+
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+		for _, ingredient := range storeProvisionIngredients {
+			updatedStock, err := deductStoreStock(tx, storeProvision.StoreID, ingredient.IngredientID, ingredient.Quantity)
+			if err != nil {
+				return err
+			}
+			deductedStocks = append(deductedStocks, *updatedStock)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return deductedStocks, nil
+}
+
+func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint, input *types.RecalculateInput) error {
 	if storeID == 0 {
 		return errors.New("failed to recalculate with invalid input parameters")
 	}
@@ -296,4 +318,15 @@ func (r *storeInventoryManagerRepository) getAdditiveProvisions(provisionID uint
 		return nil, fmt.Errorf("failed to fetch additive provisions: %w", err)
 	}
 	return additiveProvisions, nil
+}
+
+func (r *storeInventoryManagerRepository) getStoreProvisionIngredients(storeProvisionID uint) ([]data.StoreProvisionIngredient, error) {
+	var storeProvisionIngredients []data.StoreProvisionIngredient
+	err := r.db.Preload("Ingredient.Unit").
+		Where("store_provision_id = ?", storeProvisionID).
+		Find(&storeProvisionIngredients).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch store provision ingredients: %w", err)
+	}
+	return storeProvisionIngredients, nil
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type StoreInventoryManagerService interface {
-	/*RecalculateOutOfStock(storeID uint, input *types.RecalculateInput) error
+	/*RecalculateStoreInventory(storeID uint, input *types.RecalculateInput) error
 	RecalculateStoreProduct(storeID uint, storeProductIDs []uint) error
 	RecalculateStoreAdditive(storeID uint, storeAdditiveIDs []uint) error*/
 	CalculateFrozenInventory(storeID uint, filter *types.FrozenInventoryFilter) (*types.FrozenInventory, error)

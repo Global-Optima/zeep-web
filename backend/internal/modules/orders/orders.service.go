@@ -206,7 +206,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, fmt.Errorf("failed to get ingredients: %w", err)
 	}
 
-	err = s.storeInventoryManagerRepo.RecalculateOutOfStock(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+	err = s.storeInventoryManagerRepo.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
 		IngredientIDs: inventoryLists.IngredientIDs,
 		ProvisionIDs:  inventoryLists.ProvisionIDs,
 	})
@@ -563,7 +563,7 @@ func (s *orderService) FailOrderPayment(orderID uint) error {
 	}
 
 	go func() {
-		err = s.storeInventoryManagerRepo.RecalculateOutOfStock(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+		err = s.storeInventoryManagerRepo.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
 			IngredientIDs: inventoryLists.IngredientIDs,
 			ProvisionIDs:  inventoryLists.ProvisionIDs,
 		})

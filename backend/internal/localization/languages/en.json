@@ -419,7 +419,7 @@
     "409-storeProvision-limit": "The cafe provision limit has been reached.",
     "409-storeProvision-completed": "The cafe provision has already been completed.",
     "409-storeProvision-ingredientsMismatch": "Raw materials in the cafe provision do not match the expected ones.",
-    "409-storeProvision-notExpired": "The cafe provision has not yet expired.",
+    "409-storeProvision-complete-insufficientStock": "Could not complete cafe provision: insufficient stock",
     "404-storeProvision": "Cafe provision not found.",
     "400-storeProvision": "Invalid data for the cafe provision. Please check and try again.",
     "201-storeProvision": "Cafe provision created successfully.",

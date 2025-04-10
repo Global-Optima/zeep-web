@@ -161,7 +161,7 @@ func (s *storeStockService) UpdateStockById(storeId, stockId uint, input *types.
 		return wrappedErr
 	}
 
-	err = s.storeInventoryManagerRepo.RecalculateOutOfStock(storeId,
+	err = s.storeInventoryManagerRepo.RecalculateStoreInventory(storeId,
 		&storeInventoryManagersTypes.RecalculateInput{
 			IngredientIDs: []uint{storeStock.IngredientID},
 		})

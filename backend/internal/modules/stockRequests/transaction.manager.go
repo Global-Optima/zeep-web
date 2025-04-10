@@ -85,7 +85,7 @@ func (m *transactionManager) HandleCompleteStockRequest(request *data.StockReque
 		}
 
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
-		err = storeInventoryManagerRepoTx.RecalculateOutOfStock(
+		err = storeInventoryManagerRepoTx.RecalculateStoreInventory(
 			request.StoreID,
 			&storeInventoryManagersTypes.RecalculateInput{
 				IngredientIDs: ingredientIDs,
@@ -189,7 +189,7 @@ func (m *transactionManager) HandleAcceptedWithChange(request *data.StockRequest
 		}
 
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
-		err = storeInventoryManagerRepoTx.RecalculateOutOfStock(
+		err = storeInventoryManagerRepoTx.RecalculateStoreInventory(
 			request.StoreID,
 			&storeInventoryManagersTypes.RecalculateInput{
 				IngredientIDs: ingredientIDs,

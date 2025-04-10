@@ -92,7 +92,7 @@ func (m *transactionManager) CreateStoreProductWithStocks(storeID uint, storePro
 		}
 
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
-		if err := storeInventoryManagerRepoTx.RecalculateOutOfStock(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
+		if err := storeInventoryManagerRepoTx.RecalculateStoreInventory(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
 			return err
 		}
 
@@ -157,7 +157,7 @@ func (m *transactionManager) CreateMultipleStoreProductsWithStocks(storeID uint,
 		}
 
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
-		if err := storeInventoryManagerRepoTx.RecalculateOutOfStock(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
+		if err := storeInventoryManagerRepoTx.RecalculateStoreInventory(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
 			return err
 		}
 
@@ -204,7 +204,7 @@ func (m *transactionManager) UpdateStoreProductWithStocks(storeID, storeProductI
 		}
 
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
-		if err := storeInventoryManagerRepoTx.RecalculateOutOfStock(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
+		if err := storeInventoryManagerRepoTx.RecalculateStoreInventory(storeID, &storeInventoryManagersTypes.RecalculateInput{IngredientIDs: ingredientIDs}); err != nil {
 			return err
 		}
 

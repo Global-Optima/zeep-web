@@ -2,14 +2,14 @@ package storeProvisions
 
 import (
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
-	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"time"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
 
@@ -23,29 +23,32 @@ type StoreProvisionService interface {
 }
 
 type storeProvisionService struct {
-	repo                StoreProvisionRepository
-	ingredientsRepo     ingredients.IngredientRepository
-	provisionRepo       provisions.ProvisionRepository
-	notificationService notifications.NotificationService
-	transactionManager  TransactionManager
-	logger              *zap.SugaredLogger
+	repo                      StoreProvisionRepository
+	ingredientsRepo           ingredients.IngredientRepository
+	provisionRepo             provisions.ProvisionRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
+	notificationService       notifications.NotificationService
+	transactionManager        TransactionManager
+	logger                    *zap.SugaredLogger
 }
 
 func NewStoreProvisionService(
 	repo StoreProvisionRepository,
 	ingredientsRepo ingredients.IngredientRepository,
 	provisionRepo provisions.ProvisionRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	notificationService notifications.NotificationService,
 	transactionManager TransactionManager,
 	logger *zap.SugaredLogger,
 ) StoreProvisionService {
 	return &storeProvisionService{
-		repo:                repo,
-		ingredientsRepo:     ingredientsRepo,
-		provisionRepo:       provisionRepo,
-		notificationService: notificationService,
-		transactionManager:  transactionManager,
-		logger:              logger,
+		repo:                      repo,
+		ingredientsRepo:           ingredientsRepo,
+		provisionRepo:             provisionRepo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
+		notificationService:       notificationService,
+		transactionManager:        transactionManager,
+		logger:                    logger,
 	}
 }
 
@@ -145,34 +148,39 @@ func (s *storeProvisionService) UpdateStoreProvision(storeID, storeProvisionID u
 }
 
 func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID uint) (*types.StoreProvisionDTO, error) {
-	provision, err := s.repo.GetStoreProvisionByID(storeID, storeProvisionID)
+	storeProvision, err := s.repo.GetStoreProvisionByID(storeID, storeProvisionID)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to find store provision: %w", err)
 		s.logger.Error(wrapped)
 		return nil, wrapped
 	}
 
-	if provision.Status != data.STORE_PROVISION_STATUS_PREPARING {
-		wrapped := fmt.Errorf("failed to update store provision: %w", types.ErrProvisionCompleted)
-		return nil, wrapped
-	}
-
-	provision.Status = data.STORE_PROVISION_STATUS_COMPLETED
-
-	currentTime := time.Now().UTC()
-	provision.CompletedAt = &currentTime
-
-	expirationTime := currentTime.Add(time.Duration(provision.ExpirationInMinutes) * time.Minute)
-	provision.ExpiresAt = &expirationTime
-
-	err = s.repo.SaveStoreProvision(provision)
+	deductedStocks, err := s.transactionManager.CompleteStoreProvision(storeProvision)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to complete store provision: %w", err)
 		s.logger.Error(wrapped)
 		return nil, wrapped
 	}
 
-	return types.MapToStoreProvisionDTO(provision), nil
+	var ingredientsToRecalculate []uint
+
+	//filter storeStocks to recalculate: only keep stocks below or equal to lowStockThreshold
+	for _, stock := range deductedStocks {
+		if stock.Quantity <= stock.LowStockThreshold {
+			ingredientsToRecalculate = append(ingredientsToRecalculate, stock.IngredientID)
+		}
+	}
+
+	err = s.storeInventoryManagerRepo.RecalculateStoreInventory(storeProvision.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+		IngredientIDs: ingredientsToRecalculate,
+		ProvisionIDs:  []uint{storeProvision.ProvisionID},
+	})
+	if err != nil {
+		wrapped := fmt.Errorf("failed to recalculate store inventory: %w", err)
+		s.logger.Error(wrapped)
+	}
+
+	return types.MapToStoreProvisionDTO(storeProvision), nil
 }
 
 func (s *storeProvisionService) DeleteStoreProvision(storeID, storeProvisionID uint) (*types.StoreProvisionDTO, error) {

@@ -420,7 +420,7 @@
     "409-storeProvision-limit": "Кафе заготовкасы лимиті асып кетті.",
     "409-storeProvision-completed": "Кафе заготовкасы аяқталды.",
     "409-storeProvision-ingredientsMismatch": "Кафе заготовкасы шикізаттарынын сәйкес келмеуі.",
-    "409-storeProvision-notExpired": "Кафе заготовка әлі мерзімі өткен жоқ.",
+    "409-storeProvision-complete-insufficientStock": "Кафе үшін заготовканы аяқтау мүмкін болмады: шикізат қоры жеткіліксіз",
     "404-storeProvision": "Кафе заготовкасы табылмады.",
     "400-storeProvision": "Кафе заготовкасы үшін жарамсыз деректер. Тексеріп, қайтадан көріңіз.",
     "201-storeProvision": "Кафе заготовкасы сәтті құрылды.",

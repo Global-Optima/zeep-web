@@ -110,11 +110,19 @@ func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, st
 		return fmt.Errorf("failed to deduct ingredients: %w", err)
 	}
 
+	//filter storeStocks for recalculation: only keep those below or equal to lowStockThreshold
+	for id, stock := range inventoryMap.IngredientStoreStockMap {
+		if stock.Quantity > stock.LowStockThreshold {
+			delete(inventoryMap.IngredientStoreStockMap, id)
+		}
+	}
+
 	ingredientIDs, provisionIDs := inventoryMap.GetKeys()
-	err = storeInventoryManagerRepoTx.RecalculateOutOfStock(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+	err = storeInventoryManagerRepoTx.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
 		IngredientIDs: ingredientIDs,
 		ProvisionIDs:  provisionIDs,
 	})
+
 	if err != nil {
 		return fmt.Errorf("failed to recalculate out of stock: %w", err)
 	}

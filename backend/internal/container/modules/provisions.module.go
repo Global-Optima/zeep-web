@@ -9,6 +9,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/technicalMap"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 )
 
@@ -28,12 +29,23 @@ func NewProvisionsModule(
 	notificationService notifications.NotificationService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 ) *ProvisionsModule {
 	repo := provisions.NewProvisionRepository(base.DB)
 	service := provisions.NewProvisionService(repo, base.Logger)
 	handler := provisions.NewProvisionHandler(service, auditService, base.Logger)
 
-	storeProvisionsModule := NewStoreProvisionsModule(base, service, franchiseeService, auditService, notificationService, repo, ingredientRepo, storeStockRepo)
+	storeProvisionsModule := NewStoreProvisionsModule(
+		base,
+		service,
+		franchiseeService,
+		auditService,
+		notificationService,
+		repo,
+		ingredientRepo,
+		storeStockRepo,
+		storeInventoryManagerRepo,
+	)
 	provisionTechMapModule := NewProvisionsTechnicalMapModule(base)
 
 	base.Router.RegisterProvisionsRoutes(handler, provisionTechMapModule.Handler)
@@ -57,14 +69,16 @@ func NewStoreProvisionsModule(
 	provisionRepo provisions.ProvisionRepository,
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 ) *StoreProvisionsModule {
 	repo := storeProvisions.NewStoreProvisionRepository(base.DB)
 	service := storeProvisions.NewStoreProvisionService(
 		repo,
 		ingredientRepo,
 		provisionRepo,
+		storeInventoryManagerRepo,
 		notificationService,
-		storeProvisions.NewTransactionManager(base.DB, repo, storeStockRepo, ingredientRepo),
+		storeProvisions.NewTransactionManager(base.DB, repo, storeStockRepo, ingredientRepo, storeInventoryManagerRepo),
 		base.Logger,
 	)
 	handler := storeProvisions.NewStoreProvisionHandler(service, provisionService, franchiseeService, auditService, base.Logger)
