@@ -82,7 +82,6 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 			Limit(1).
 			Select("display_number, created_at").
 			Scan(&lastOrder).Error; err != nil {
-
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return fmt.Errorf("failed to fetch last order: %w", err)
 			}
