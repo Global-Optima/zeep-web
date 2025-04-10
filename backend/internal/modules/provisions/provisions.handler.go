@@ -146,6 +146,10 @@ func (h *ProvisionHandler) DeleteProvisionByID(c *gin.Context) {
 
 	existingProvision, err := h.service.DeleteProvision(provisionID)
 	if err != nil {
+		if errors.Is(err, types.ErrProvisionIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409ProvisionDeleteInUse)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProvisionDelete)
 		return
 	}

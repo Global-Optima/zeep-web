@@ -402,6 +402,7 @@
     "500-provision-delete": "An unexpected error occurred while deleting the provision. Please try again later.",
     "500-provision-get": "An unexpected error occurred while fetching the provision. Please try again later.",
     "409-provision-create-duplicate": "A provision with the same details already exists.",
+    "409-provision-delete-inUse": "The provision cannot be deleted because it is in use.",
     "404-provision": "Provision not found.",
     "400-provision": "Invalid provision data. Please check and try again.",
     "201-provision": "Provision created successfully.",
