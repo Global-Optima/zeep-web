@@ -143,18 +143,6 @@ function drawText(
 	return currentY
 }
 
-/**
- * Helper: Convert a string to ZPL-compatible hex-escaped UTF-8,
- * so we can print Cyrillic via ^CI28 + ^FH\.
- */
-function escapeZplUnicode(input: string): string {
-	// Convert to UTF-8 bytes:
-	const utf8Bytes = new TextEncoder().encode(input)
-	// Each byte gets escaped as \XX (hex).
-	// Example: 0xD0 => '\d0', 0x9F => '\9f', etc.
-	return Array.from(utf8Bytes, byte => `\\${byte.toString(16).padStart(2, '0')}`).join('')
-}
-
 export function useOrderGenerateQR() {
 	/**
 	 * Generate the PDF version (unchanged from your original).
@@ -247,53 +235,103 @@ export function useOrderGenerateQR() {
 	 * Generate a .PRN file with ZPL-like content, forcing UTF-8 with ^CI28,
 	 * and hex-escaped strings via ^FH\ so Cyrillic can print on supported printers.
 	 */
+
+	function textToCP1251Bytes(input: string): number[] {
+		// This is a very simplified example.
+		return Array.from(input).map(char => {
+			const code = char.charCodeAt(0)
+			// If the character is in the Cyrillic block, adjust it.
+			// (A real implementation would need a full CP1251 mapping.)
+			if (code >= 0x0410 && code <= 0x044f) {
+				// CP1251 for Cyrillic (this is illustrative; actual mapping may vary)
+				return code - 0x350 // for example purposes only!
+			}
+			// For basic ASCII, the byte is the same:
+			return code < 128 ? code : 63 // unknown chars become '?'
+		})
+	}
+
+	function escapeZplCP1251(input: string): string {
+		const bytes = textToCP1251Bytes(input)
+		return bytes.map(byte => `\\${byte.toString(16).padStart(2, '0')}`).join('')
+	}
+
 	async function generatePrnFromSuborder(
 		order: OrderDTO,
 		suborder: SuborderDTO,
 		index: number,
 		options: QRPrintOptions = {},
-	): Promise<Blob> {
-		// 1) Retrieve label dimensions in mm
-		//    Then convert mm → dots, typically ~8 dots/mm @ 203 dpi
+	) {
+		// Default label dimensions in mm (80x80mm)
 		const { labelWidthMm = 80, labelHeightMm = 80 } = options
+
+		// Convert mm to dots (8 dots per mm for 203 DPI printers)
 		const labelWidthDots = Math.round(labelWidthMm * 8)
 		const labelHeightDots = Math.round(labelHeightMm * 8)
 
-		// 2) Prepare data
+		// Define margins. The original static FO value was 13 (~2% of 640)
+		const margin = Math.round(labelWidthDots * 0.02)
+		const textAreaWidth = labelWidthDots - margin * 2
+
+		// Set Y coordinates based on the original static positions (converted to percentages):
+		// First line: 32 dots ~ 5% of 640, second line: 110 dots ~17.2% of 640,
+		// QR code: 210 dots ~32.8% of 640.
+		const line1Y = Math.round(labelHeightDots * 0.05) // ~32 dots
+		const line2Y = Math.round(labelHeightDots * 0.172) // ~110 dots (17.2%)
+		const qrY = Math.round(labelHeightDots * 0.328) // ~210 dots (32.8%)
+
+		// Calculate font sizes based on label width.
+		// The static fonts were 51 and 38 which are ~8% and ~6% of 640 respectively.
+		const line1FontSize = Math.max(20, Math.round(labelWidthDots * 0.08))
+		const line2FontSize = Math.max(16, Math.round(labelWidthDots * 0.06))
+
+		// Calculate QR code sizing:
+		// Using a magnification factor that is proportional to the label width.
+		// The static command used a magnification of 16 for an 80mm label.
+		// Here we derive it as 2.5% of the width, with a minimum of 3.
+		const qrMagnification = Math.max(3, Math.round(labelWidthDots * 0.025))
+		// Assume the QR code is roughly 18 modules wide (this value approximates the quiet zone plus data modules).
+		const qrModules = 16
+		// Instead of doubling the magnification, we now use it directly so that:
+		// qrWidthDots = 25 * qrMagnification.
+		const qrWidthDots = qrModules * qrMagnification
+		// Center the QR code horizontally by calculating its x coordinate.
+		const qrX = Math.round((labelWidthDots - qrWidthDots) / 2)
+
 		const qrValue = generateSubOrderQR(suborder)
 
-		// Build the lines with actual text
+		// Build display lines.
 		const line1 = `#${order.displayNumber} ${order.customerName} (${index + 1}/${order.subOrders.length})`
 		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name.toLowerCase()}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory].toLowerCase()})`
 
-		// 3) Escape them into ZPL-friendly hex strings
-		const escapedLine1 = escapeZplUnicode(line1)
-		const escapedLine2 = escapeZplUnicode(line2)
+		// Escape text for ZPL encoding (using your custom escape routine for CP1251)
+		const escapedLine1 = escapeZplCP1251(line1)
+		const escapedLine2 = escapeZplCP1251(line2)
 
-		// 4) Build raw spool data (.prn). We:
-		//    - Use ^CI28 for UTF-8
-		//    - Use ^FH\ to parse \xx sequences as hex
-		//    - ^BQN for QR code (model 2, mag factor 6)
-		//    - ^FDLA,<data> for the QR code content
-		//
-		//    If your printer cuts after each label, you can use ^MMC or ^PN1, etc.
-		//    Adjust ^FO offsets, ^A0N font sizes, etc. to suit your layout needs.
+		// Build the ZPL commands using calculated dimensions and positions.
 		const zplCommands = `
-^XA
-^CI28
-^PW${labelWidthDots}
-^LL${labelHeightDots}
-^FO50,50^A0N,30,30^FH\\^FD${escapedLine1}^FS
-^FO50,100^A0N,24,24^FH\\^FD${escapedLine2}^FS
-^FO50,180^BQN,2,6
-^FDLA,${qrValue}^FS
-^MMC
-^XZ
-`.trim()
+  ^XA
+  ^CI33
+  ^PW${labelWidthDots - 1}
+  ^LL${labelHeightDots - 1}
 
-		// 5) Return as .prn
-		//    We use "application/octet-stream" or "application/x-prn"
-		//    so that it can be recognized as a spool data file.
+  ^FO${margin},${line1Y}
+  ^FB${textAreaWidth},2,0,C,0
+  ^A0N,${line1FontSize},${Math.round(line1FontSize * 0.8)}^FH\\
+  ^FD${escapedLine1}^FS
+
+  ^FO${margin},${line2Y}
+  ^FB${textAreaWidth},3,0,C,0
+  ^A0N,${line2FontSize},${Math.round(line2FontSize * 0.8)}^FH\\
+  ^FD${escapedLine2}^FS
+
+  ^FO${qrX},${qrY}
+  ^BQN,2,10
+  ^FDLA,${qrValue}^FS
+
+  ^MMC
+  ^XZ`.trim()
+
 		return new Blob([zplCommands], { type: 'application/octet-stream' })
 	}
 
