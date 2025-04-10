@@ -281,7 +281,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.CreateAdditiveCategoryDTO"
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.CreateAdditiveCategoryDTO"
                         }
                     }
                 ],
@@ -333,7 +333,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.AdditiveCategoryDetailsDTO"
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.AdditiveCategoryDetailsDTO"
                         }
                     },
                     "400": {
@@ -378,7 +378,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.UpdateAdditiveCategoryDTO"
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.UpdateAdditiveCategoryDTO"
                         }
                     }
                 ],
@@ -632,7 +632,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.EmployeeLoginDTO"
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_auth_types.EmployeeLoginDTO"
                         }
                     }
                 ],
@@ -758,7 +758,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.CreateProductCategoryDTO"
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.CreateProductCategoryDTO"
                         }
                     }
                 ],
@@ -810,7 +810,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.ProductCategoryDTO"
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.ProductCategoryDTO"
                         }
                     },
                     "400": {
@@ -855,7 +855,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.UpdateProductCategoryDTO"
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.UpdateProductCategoryDTO"
                         }
                     }
                 ],
@@ -939,10 +939,684 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/stock-requests": {
+            "get": {
+                "description": "Retrieves stock requests filtered by store, warehouse, or date range. Supports pagination.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Get stock requests",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (ISO8601 format)",
+                        "name": "startDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (ISO8601 format)",
+                        "name": "endDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Stock request statuses",
+                        "name": "statuses",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock requests with pagination",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new stock request using the provided stock materials.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Create a new stock request",
+                "parameters": [
+                    {
+                        "description": "Stock Request Data",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.CreateStockRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created stock request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request – invalid input or missing stock materials",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/add-material-to-latest-cart": {
+            "post": {
+                "description": "Adds a stock material entry to the current cart for the store.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Add stock material to cart",
+                "parameters": [
+                    {
+                        "description": "Stock Material Data",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Stock material added to cart",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/current": {
+            "get": {
+                "description": "Retrieves the most recently created stock request for the franchisee store.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Get last created stock request",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/status/{requestId}/accept-with-change": {
+            "put": {
+                "description": "Accepts a stock request, applying changes as specified.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Accept stock request with changes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Acceptance details with changes",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.AcceptWithChangeRequestStatusDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock request status updated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/status/{requestId}/completed": {
+            "put": {
+                "description": "Updates the stock request status to \"completed\".",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Set stock request to completed",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock request updated to completed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/status/{requestId}/in-delivery": {
+            "put": {
+                "description": "Updates the stock request status to \"in delivery\".",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Set stock request to in-delivery",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock request updated to in delivery",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/status/{requestId}/processed": {
+            "put": {
+                "description": "Updates the stock request status to \"processed\".",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Set stock request to processed",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock request updated to processed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/status/{requestId}/reject-store": {
+            "put": {
+                "description": "Rejects a stock request at the store level with a comment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Reject stock request by store",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Rejection details",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.RejectStockRequestStatusDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock request status updated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/status/{requestId}/reject-warehouse": {
+            "put": {
+                "description": "Rejects a stock request at the warehouse level with a comment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Reject stock request by warehouse",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Rejection details",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.RejectStockRequestStatusDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock request status updated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stock-requests/{requestId}": {
+            "get": {
+                "description": "Retrieves the stock request details by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Get a stock request by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates the stock materials for an existing stock request.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Update stock request",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Stock materials update data",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock request updated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a stock request based on its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stock-requests"
+                ],
+                "summary": "Delete stock request",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Stock Request ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock request deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "types.AdditiveCategoryDetailsDTO": {
+        "github_com_Global-Optima_zeep-web_backend_internal_data.MachineCategory": {
+            "type": "string",
+            "enum": [
+                "TEA",
+                "COFFEE",
+                "ICE_CREAM",
+                "OTHERS"
+            ],
+            "x-enum-varnames": [
+                "TEA",
+                "COFFEE",
+                "ICE_CREAM",
+                "OTHERS"
+            ]
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_localization.LocalizedMessage": {
+            "type": "object",
+            "properties": {
+                "en": {
+                    "type": "string"
+                },
+                "kk": {
+                    "type": "string"
+                },
+                "ru": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.AdditiveCategoryDetailsDTO": {
             "type": "object",
             "properties": {
                 "additivesCount": {
@@ -965,7 +1639,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.CreateAdditiveCategoryDTO": {
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.CreateAdditiveCategoryDTO": {
             "type": "object",
             "required": [
                 "name"
@@ -985,51 +1659,7 @@ const docTemplate = `{
                 }
             }
         },
-        "types.CreateProductCategoryDTO": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "minLength": 2
-                }
-            }
-        },
-        "types.EmployeeLoginDTO": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.ProductCategoryDTO": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.UpdateAdditiveCategoryDTO": {
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.UpdateAdditiveCategoryDTO": {
             "type": "object",
             "properties": {
                 "description": {
@@ -1047,15 +1677,400 @@ const docTemplate = `{
                 }
             }
         },
-        "types.UpdateProductCategoryDTO": {
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_auth_types.EmployeeLoginDTO": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.CreateProductCategoryDTO": {
+            "type": "object",
+            "required": [
+                "machineCategory",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "machineCategory": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_data.MachineCategory"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.ProductCategoryDTO": {
             "type": "object",
             "properties": {
                 "description": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
+                "machineCategory": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_data.MachineCategory"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.UpdateProductCategoryDTO": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "machineCategory": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_data.MachineCategory"
+                },
                 "name": {
                     "type": "string",
                     "minLength": 2
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_facilityAddresses_types.FacilityAddressDTO": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_franchisees_types.FranchiseeDTO": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_ingredients_ingredientCategories_types.IngredientCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_ingredients_types.IngredientDTO": {
+            "type": "object",
+            "properties": {
+                "calories": {
+                    "type": "number"
+                },
+                "carbs": {
+                    "type": "number"
+                },
+                "category": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_ingredients_ingredientCategories_types.IngredientCategoryResponse"
+                },
+                "expirationInDays": {
+                    "type": "integer"
+                },
+                "fat": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isAllergen": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "proteins": {
+                    "type": "number"
+                },
+                "unit": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_units_types.UnitsDTO"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_regions_types.RegionDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.AcceptWithChangeRequestStatusDTO": {
+            "type": "object",
+            "required": [
+                "comment",
+                "items"
+            ],
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO"
+                    }
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.CreateStockRequestDTO": {
+            "type": "object",
+            "required": [
+                "stockMaterials"
+            ],
+            "properties": {
+                "stockMaterials": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO"
+                    }
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.RejectStockRequestStatusDTO": {
+            "type": "object",
+            "required": [
+                "comment"
+            ],
+            "properties": {
+                "comment": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestMaterial": {
+            "type": "object",
+            "properties": {
+                "quantity": {
+                    "type": "number"
+                },
+                "stockMaterial": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_stockMaterial_types.StockMaterialsDTO"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestResponse": {
+            "type": "object",
+            "properties": {
+                "autogeneratedComment": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_localization.LocalizedMessage"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "requestId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "stockMaterials": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestMaterial"
+                    }
+                },
+                "store": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stores_types.StoreDTO"
+                },
+                "storeComment": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "warehouse": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_types.WarehouseDTO"
+                },
+                "warehouseComment": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO": {
+            "type": "object",
+            "required": [
+                "quantity",
+                "stockMaterialId"
+            ],
+            "properties": {
+                "quantity": {
+                    "type": "number"
+                },
+                "stockMaterialId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_stores_types.StoreDTO": {
+            "type": "object",
+            "properties": {
+                "contactEmail": {
+                    "type": "string"
+                },
+                "contactPhone": {
+                    "type": "string"
+                },
+                "facilityAddress": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_facilityAddresses_types.FacilityAddressDTO"
+                },
+                "franchisee": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_franchisees_types.FranchiseeDTO"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "storeHours": {
+                    "type": "string"
+                },
+                "warehouse": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_types.WarehouseDTO"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_units_types.UnitsDTO": {
+            "type": "object",
+            "properties": {
+                "conversionFactor": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_stockMaterial_stockMaterialCategory_types.StockMaterialCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_stockMaterial_types.StockMaterialsDTO": {
+            "type": "object",
+            "properties": {
+                "barcode": {
+                    "type": "string"
+                },
+                "category": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_stockMaterial_stockMaterialCategory_types.StockMaterialCategoryResponse"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "expirationPeriodInDays": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ingredient": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_ingredients_types.IngredientDTO"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "safetyStock": {
+                    "type": "number"
+                },
+                "size": {
+                    "type": "number"
+                },
+                "unit": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_units_types.UnitsDTO"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_types.WarehouseDTO": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "facilityAddress": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_facilityAddresses_types.FacilityAddressDTO"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "region": {
+                    "$ref": "#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_regions_types.RegionDTO"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         }

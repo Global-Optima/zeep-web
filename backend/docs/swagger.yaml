@@ -1,5 +1,26 @@
 definitions:
-  types.AdditiveCategoryDetailsDTO:
+  github_com_Global-Optima_zeep-web_backend_internal_data.MachineCategory:
+    enum:
+    - TEA
+    - COFFEE
+    - ICE_CREAM
+    - OTHERS
+    type: string
+    x-enum-varnames:
+    - TEA
+    - COFFEE
+    - ICE_CREAM
+    - OTHERS
+  github_com_Global-Optima_zeep-web_backend_internal_localization.LocalizedMessage:
+    properties:
+      en:
+        type: string
+      kk:
+        type: string
+      ru:
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.AdditiveCategoryDetailsDTO:
     properties:
       additivesCount:
         type: integer
@@ -14,7 +35,7 @@ definitions:
       name:
         type: string
     type: object
-  types.CreateAdditiveCategoryDTO:
+  github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.CreateAdditiveCategoryDTO:
     properties:
       description:
         type: string
@@ -27,36 +48,7 @@ definitions:
     required:
     - name
     type: object
-  types.CreateProductCategoryDTO:
-    properties:
-      description:
-        type: string
-      name:
-        minLength: 2
-        type: string
-    required:
-    - name
-    type: object
-  types.EmployeeLoginDTO:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  types.ProductCategoryDTO:
-    properties:
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  types.UpdateAdditiveCategoryDTO:
+  github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.UpdateAdditiveCategoryDTO:
     properties:
       description:
         type: string
@@ -68,12 +60,264 @@ definitions:
         minLength: 0
         type: string
     type: object
-  types.UpdateProductCategoryDTO:
+  github_com_Global-Optima_zeep-web_backend_internal_modules_auth_types.EmployeeLoginDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.CreateProductCategoryDTO:
     properties:
       description:
         type: string
+      machineCategory:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_data.MachineCategory'
       name:
         minLength: 2
+        type: string
+    required:
+    - machineCategory
+    - name
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.ProductCategoryDTO:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      machineCategory:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_data.MachineCategory'
+      name:
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.UpdateProductCategoryDTO:
+    properties:
+      description:
+        type: string
+      machineCategory:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_data.MachineCategory'
+      name:
+        minLength: 2
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_facilityAddresses_types.FacilityAddressDTO:
+    properties:
+      address:
+        type: string
+      id:
+        type: integer
+      latitude:
+        type: number
+      longitude:
+        type: number
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_franchisees_types.FranchiseeDTO:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_ingredients_ingredientCategories_types.IngredientCategoryResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_ingredients_types.IngredientDTO:
+    properties:
+      calories:
+        type: number
+      carbs:
+        type: number
+      category:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_ingredients_ingredientCategories_types.IngredientCategoryResponse'
+      expirationInDays:
+        type: integer
+      fat:
+        type: number
+      id:
+        type: integer
+      isAllergen:
+        type: boolean
+      name:
+        type: string
+      proteins:
+        type: number
+      unit:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_units_types.UnitsDTO'
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_regions_types.RegionDTO:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.AcceptWithChangeRequestStatusDTO:
+    properties:
+      comment:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO'
+        type: array
+    required:
+    - comment
+    - items
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.CreateStockRequestDTO:
+    properties:
+      stockMaterials:
+        items:
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO'
+        type: array
+    required:
+    - stockMaterials
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.RejectStockRequestStatusDTO:
+    properties:
+      comment:
+        type: string
+    required:
+    - comment
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestMaterial:
+    properties:
+      quantity:
+        type: number
+      stockMaterial:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_stockMaterial_types.StockMaterialsDTO'
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestResponse:
+    properties:
+      autogeneratedComment:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_localization.LocalizedMessage'
+      createdAt:
+        type: string
+      requestId:
+        type: integer
+      status:
+        type: string
+      stockMaterials:
+        items:
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestMaterial'
+        type: array
+      store:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stores_types.StoreDTO'
+      storeComment:
+        type: string
+      updatedAt:
+        type: string
+      warehouse:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_types.WarehouseDTO'
+      warehouseComment:
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO:
+    properties:
+      quantity:
+        type: number
+      stockMaterialId:
+        type: integer
+    required:
+    - quantity
+    - stockMaterialId
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_stores_types.StoreDTO:
+    properties:
+      contactEmail:
+        type: string
+      contactPhone:
+        type: string
+      facilityAddress:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_facilityAddresses_types.FacilityAddressDTO'
+      franchisee:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_franchisees_types.FranchiseeDTO'
+      id:
+        type: integer
+      isActive:
+        type: boolean
+      name:
+        type: string
+      storeHours:
+        type: string
+      warehouse:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_types.WarehouseDTO'
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_units_types.UnitsDTO:
+    properties:
+      conversionFactor:
+        type: number
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  ? github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_stockMaterial_stockMaterialCategory_types.StockMaterialCategoryResponse
+  : properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_stockMaterial_types.StockMaterialsDTO:
+    properties:
+      barcode:
+        type: string
+      category:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_stockMaterial_stockMaterialCategory_types.StockMaterialCategoryResponse'
+      createdAt:
+        type: string
+      description:
+        type: string
+      expirationPeriodInDays:
+        type: integer
+      id:
+        type: integer
+      ingredient:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_ingredients_types.IngredientDTO'
+      isActive:
+        type: boolean
+      name:
+        type: string
+      safetyStock:
+        type: number
+      size:
+        type: number
+      unit:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_units_types.UnitsDTO'
+      updatedAt:
+        type: string
+    type: object
+  github_com_Global-Optima_zeep-web_backend_internal_modules_warehouse_types.WarehouseDTO:
+    properties:
+      createdAt:
+        type: string
+      facilityAddress:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_facilityAddresses_types.FacilityAddressDTO'
+      id:
+        type: integer
+      name:
+        type: string
+      region:
+        $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_regions_types.RegionDTO'
+      updatedAt:
         type: string
     type: object
 info:
@@ -363,7 +607,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/types.CreateAdditiveCategoryDTO'
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.CreateAdditiveCategoryDTO'
       produces:
       - application/json
       responses:
@@ -434,7 +678,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.AdditiveCategoryDetailsDTO'
+            $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.AdditiveCategoryDetailsDTO'
         "400":
           description: Bad Request
           schema:
@@ -463,7 +707,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/types.UpdateAdditiveCategoryDTO'
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_additives_types.UpdateAdditiveCategoryDTO'
       produces:
       - application/json
       responses:
@@ -496,7 +740,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/types.EmployeeLoginDTO'
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_auth_types.EmployeeLoginDTO'
       produces:
       - application/json
       responses:
@@ -581,7 +825,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/types.CreateProductCategoryDTO'
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.CreateProductCategoryDTO'
       produces:
       - application/json
       responses:
@@ -657,7 +901,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ProductCategoryDTO'
+            $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.ProductCategoryDTO'
         "400":
           description: Bad Request
           schema:
@@ -686,7 +930,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/types.UpdateProductCategoryDTO'
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_categories_types.UpdateProductCategoryDTO'
       produces:
       - application/json
       responses:
@@ -708,4 +952,444 @@ paths:
       summary: Update a product category
       tags:
       - product-categories
+  /api/v1/stock-requests:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves stock requests filtered by store, warehouse, or date
+        range. Supports pagination.
+      parameters:
+      - description: Start date (ISO8601 format)
+        in: query
+        name: startDate
+        type: string
+      - description: End date (ISO8601 format)
+        in: query
+        name: endDate
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      - collectionFormat: multi
+        description: Stock request statuses
+        in: query
+        items:
+          type: string
+        name: statuses
+        type: array
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock requests with pagination
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get stock requests
+      tags:
+      - stock-requests
+    post:
+      consumes:
+      - application/json
+      description: Creates a new stock request using the provided stock materials.
+      parameters:
+      - description: Stock Request Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.CreateStockRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created stock request
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request – invalid input or missing stock materials
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new stock request
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/{requestId}:
+    delete:
+      description: Deletes a stock request based on its ID.
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock request deleted
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete stock request
+      tags:
+      - stock-requests
+    get:
+      description: Retrieves the stock request details by its ID.
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a stock request by ID
+      tags:
+      - stock-requests
+    put:
+      consumes:
+      - application/json
+      description: Updates the stock materials for an existing stock request.
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      - description: Stock materials update data
+        in: body
+        name: input
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock request updated
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update stock request
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/add-material-to-latest-cart:
+    post:
+      consumes:
+      - application/json
+      description: Adds a stock material entry to the current cart for the store.
+      parameters:
+      - description: Stock Material Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestStockMaterialDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Stock material added to cart
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Add stock material to cart
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/current:
+    get:
+      description: Retrieves the most recently created stock request for the franchisee
+        store.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.StockRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get last created stock request
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/status/{requestId}/accept-with-change:
+    put:
+      consumes:
+      - application/json
+      description: Accepts a stock request, applying changes as specified.
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      - description: Acceptance details with changes
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.AcceptWithChangeRequestStatusDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock request status updated
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Accept stock request with changes
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/status/{requestId}/completed:
+    put:
+      description: Updates the stock request status to "completed".
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock request updated to completed
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Set stock request to completed
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/status/{requestId}/in-delivery:
+    put:
+      description: Updates the stock request status to "in delivery".
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock request updated to in delivery
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Set stock request to in-delivery
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/status/{requestId}/processed:
+    put:
+      description: Updates the stock request status to "processed".
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock request updated to processed
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Set stock request to processed
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/status/{requestId}/reject-store:
+    put:
+      consumes:
+      - application/json
+      description: Rejects a stock request at the store level with a comment.
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      - description: Rejection details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.RejectStockRequestStatusDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock request status updated
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Reject stock request by store
+      tags:
+      - stock-requests
+  /api/v1/stock-requests/status/{requestId}/reject-warehouse:
+    put:
+      consumes:
+      - application/json
+      description: Rejects a stock request at the warehouse level with a comment.
+      parameters:
+      - description: Stock Request ID
+        in: path
+        name: requestId
+        required: true
+        type: integer
+      - description: Rejection details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Global-Optima_zeep-web_backend_internal_modules_stockRequests_types.RejectStockRequestStatusDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stock request status updated
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Reject stock request by warehouse
+      tags:
+      - stock-requests
 swagger: "2.0"
