@@ -85,6 +85,8 @@ jobs:
           cat <<EOF > tests/test.env
           ENV=test
 
+          CRON_JOBS_ENABLE=false
+
           DB_HOST=localhost
           DB_PORT=5432
           DB_USER=testuser

@@ -1,0 +1,2 @@
+ALTER TABLE supplier_warehouse_delivery_materials
+DROP COLUMN price;

@@ -1,6 +1,7 @@
 package ingredientCategories
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -33,6 +34,9 @@ func (r *ingredientCategoryRepository) GetByID(id uint) (*data.IngredientCategor
 	var category data.IngredientCategory
 	err := r.db.First(&category, id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrIngredientCategoryNotFound
+		}
 		return nil, err
 	}
 	return &category, nil

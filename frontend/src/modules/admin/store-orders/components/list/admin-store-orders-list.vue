@@ -2,10 +2,10 @@
 	<Table class="bg-white rounded-xl">
 		<TableHeader>
 			<TableRow>
-				<TableHead class="p-4">Создано</TableHead>
+				<TableHead>Номер</TableHead>
 				<TableHead class="p-4">Заказчик</TableHead>
+				<TableHead class="p-4">Создано</TableHead>
 				<TableHead class="p-4">Сумма</TableHead>
-				<!-- <TableHead class="hidden md:table-cell p-4">Оплата</TableHead> -->
 				<TableHead class="hidden md:table-cell p-4">Статус</TableHead>
 			</TableRow>
 		</TableHeader>
@@ -15,33 +15,21 @@
 				:key="order.id"
 				class="hover:bg-gray-50 h-12"
 			>
-				<TableCell class="p-4">
-					{{ formatDate(order.createdAt) }}
+				<TableCell>
+					{{ order.id }}
 				</TableCell>
+
 				<TableCell class="p-4 font-medium">
 					{{ order.customerName }}
 				</TableCell>
+
+				<TableCell class="p-4">
+					{{ formatDate(order.createdAt) }}
+				</TableCell>
+
 				<TableCell class="p-4 font-medium">
 					{{ formatPrice(order.total) }}
 				</TableCell>
-
-				<!-- TODO: add paid cell back -->
-				<!-- <TableCell class="hidden md:table-cell p-4">
-					<div
-						v-if="order?.isPaid"
-						class="flex items-center gap-2 text-green-500"
-					>
-						<Check class="w-4 h-4" />
-						Оплачено
-					</div>
-					<div
-						v-else
-						class="flex items-center gap-2 text-red-500"
-					>
-						<X class="w-4 h-4" />
-						Не оплачено
-					</div>
-				</TableCell> -->
 
 				<TableCell class="hidden md:table-cell p-4">
 					<p
@@ -76,7 +64,7 @@ import { ru } from 'date-fns/locale'
 const { orders } = defineProps<{ orders: OrderDTO[] }>();
 
 const formatDate = (dateString: string) => {
-  return format(new Date(dateString), 'dd MMMM yyyy', { locale: ru })
+  return format(new Date(dateString), 'dd MMMM yyyy, HH:mm', { locale: ru })
 }
 const ORDER_STATUS_COLOR: Record<OrderStatus, string> = {
   [OrderStatus.WAITING_FOR_PAYMENT]: 'bg-pink-100 text-pink-800',

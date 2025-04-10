@@ -24,7 +24,8 @@
 
 			<div>
 				<p class="font-medium text-xl">
-					{{ suborder.productSize.productName }} {{ suborder.productSize.sizeName }}
+					{{ suborder.productSize.productName }} "{{ suborder.productSize.sizeName }}" ({{suborder.productSize.size}}
+					{{ suborder.productSize.unit.name.toLowerCase() }})
 				</p>
 				<!-- Toppings List -->
 				<ul
@@ -89,10 +90,12 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { generateSubOrderQR, getSavedBaristaQRSettings, useQRPrinter } from '@/core/hooks/use-qr-print.hook'
+import { getSavedBaristaQRSettings } from '@/core/hooks/use-qr-print.hook'
 import { cn } from '@/core/utils/tailwind.utils'
+import { useOrderQRPrinter } from '@/modules/admin/store-orders/hooks/use-order-qr-print.hook'
 import {
   SubOrderStatus,
+  type OrderDTO,
   type SuborderDTO
 } from '@/modules/admin/store-orders/models/orders.models'
 import { Plus, Printer } from 'lucide-vue-next'
@@ -103,7 +106,8 @@ import { computed } from 'vue'
  * - suborder: a single SuborderDTO or null (if none is selected).
  *   This suborder is assumed to be "deeply reactive" from the parent.
  */
-const {suborder} = defineProps<{
+const {suborder, order} = defineProps<{
+  order: OrderDTO | null;
   suborder: SuborderDTO | null;
 }>()
 
@@ -149,18 +153,16 @@ const disabledCompleteButton = computed(() =>
 /**
  * A hook to print a barcode for this suborder.
  */
-const { printQR } = useQRPrinter()
+const { printSubOrderQR } = useOrderQRPrinter()
 
 async function printQrCode() {
-  if (suborder) {
+  if (suborder && order) {
     const {width, height} = getSavedBaristaQRSettings()
 
-    const qr = generateSubOrderQR(suborder)
-
-    await printQR(qr, {
+    await printSubOrderQR(order, suborder, {
       labelWidthMm: width,
       labelHeightMm: height,
-      desktopOnly: true
+      desktopOnly: false
     })
   }
 }

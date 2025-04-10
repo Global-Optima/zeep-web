@@ -18,6 +18,7 @@ type ReceiveWarehouseDelivery struct {
 type ReceiveWarehouseStockMaterial struct {
 	StockMaterialID uint    `json:"stockMaterialId"`
 	Quantity        float64 `json:"quantity"`
+	Price           float64 `json:"price"`
 }
 
 type WarehouseDeliveryDTO struct {
@@ -32,6 +33,7 @@ type WarehouseDeliveryStockMaterialDTO struct {
 	StockMaterial  stockMaterialTypes.StockMaterialsDTO `json:"stockMaterial"`
 	Quantity       float64                              `json:"quantity"`
 	Barcode        string                               `json:"barcode"`
+	Price          float64                              `json:"price"`
 	ExpirationDate time.Time                            `json:"expirationDate"`
 }
 

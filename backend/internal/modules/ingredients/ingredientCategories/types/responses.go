@@ -7,6 +7,7 @@ import (
 
 var (
 	Response400IngredientCategory            = localization.NewResponseKey(400, data.IngredientCategoryComponent)
+	Response404IngredientCategory            = localization.NewResponseKey(404, data.IngredientCategoryComponent)
 	Response500IngredientCategoryGet         = localization.NewResponseKey(500, data.IngredientCategoryComponent, data.GetOperation.ToString())
 	Response500IngredientCategoryCreate      = localization.NewResponseKey(500, data.IngredientCategoryComponent, data.CreateOperation.ToString())
 	Response500IngredientCategoryUpdate      = localization.NewResponseKey(500, data.IngredientCategoryComponent, data.UpdateOperation.ToString())

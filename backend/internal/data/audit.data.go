@@ -27,7 +27,9 @@ const (
 	RegionComponent                ComponentName = "REGION"
 	ProductComponent               ComponentName = "PRODUCT"
 	ProductCategoryComponent       ComponentName = "PRODUCT_CATEGORY"
+	ProvisionComponent             ComponentName = "PROVISION"
 	StoreProductComponent          ComponentName = "STORE_PRODUCT"
+	StoreProvisionComponent        ComponentName = "STORE_PROVISION"
 	EmployeeComponent              ComponentName = "EMPLOYEE"
 	StoreEmployeeComponent         ComponentName = "STORE_EMPLOYEE"
 	WarehouseEmployeeComponent     ComponentName = "WAREHOUSE_EMPLOYEE"
@@ -54,6 +56,7 @@ const (
 	OrderComponent                 ComponentName = "ORDER"
 
 	AuthenticationComponent ComponentName = "AUTH"
+	TechnicalMapComponent   ComponentName = "TECHNICAL_MAP"
 )
 
 func (o OperationType) ToString() string {

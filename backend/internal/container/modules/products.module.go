@@ -3,7 +3,6 @@ package modules
 import (
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
@@ -12,6 +11,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 )
 
@@ -22,13 +22,13 @@ type ProductsModule struct {
 	Handler             *product.ProductHandler
 	Recipe              *RecipeModule
 	StoreProductsModule *StoreProductsModule
+	TechnicalMapModule  *ProductTechMapModule
 }
 
 func NewProductsModule(
 	base *common.BaseModule,
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
-	additiveService additives.AdditiveService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
@@ -41,8 +41,9 @@ func NewProductsModule(
 
 	recipeModule := NewRecipeModule(base, auditService)
 	storeProductsModule := NewStoreProductsModule(base, auditService, service, franchiseeService, repo, ingredientRepo, storeAdditiveRepo, storeStockRepo, storageRepo)
+	technicalMapModule := NewProductTechMapModule(base)
 
-	base.Router.RegisterProductRoutes(handler)
+	base.Router.RegisterProductRoutes(handler, technicalMapModule.Handler)
 
 	return &ProductsModule{
 		BaseModule:          base,
@@ -51,6 +52,7 @@ func NewProductsModule(
 		Handler:             handler,
 		Recipe:              recipeModule,
 		StoreProductsModule: storeProductsModule,
+		TechnicalMapModule:  technicalMapModule,
 	}
 }
 
@@ -109,6 +111,26 @@ func NewStoreProductsModule(
 	base.Router.RegisterStoreProductRoutes(handler)
 
 	return &StoreProductsModule{
+		BaseModule: base,
+		Repo:       repo,
+		Service:    service,
+		Handler:    handler,
+	}
+}
+
+type ProductTechMapModule struct {
+	*common.BaseModule
+	Repo    technicalMap.TechnicalMapRepository
+	Service technicalMap.TechnicalMapService
+	Handler *technicalMap.TechnicalMapHandler
+}
+
+func NewProductTechMapModule(base *common.BaseModule) *ProductTechMapModule {
+	repo := technicalMap.NewTechnicalMapRepository(base.DB)
+	service := technicalMap.NewTechnicalMapService(repo, base.Logger)
+	handler := technicalMap.NewTechnicalMapHandler(service)
+
+	return &ProductTechMapModule{
 		BaseModule: base,
 		Repo:       repo,
 		Service:    service,

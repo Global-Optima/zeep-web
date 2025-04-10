@@ -79,6 +79,7 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 		Preload("Additives.Additive.Ingredients.Ingredient").
 		Preload("ProductSizeIngredients.Ingredient.IngredientCategory").
 		Preload("ProductSizeIngredients.Ingredient.Unit").
+		Preload("ProductSizeProvisions.Provision.Unit").
 		First(&productSize, productSizeID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -188,6 +189,7 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 		}
 
 		additivesUpdated := false
+		provisionsUpdated := false
 
 		if updateModels.Additives != nil {
 			if err := r.updateAdditives(tx, id, updateModels.Additives); err != nil {
@@ -196,8 +198,15 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 			additivesUpdated = true
 		}
 
+		if updateModels.Provisions != nil {
+			if err := r.updateProvisions(tx, id, updateModels.Provisions); err != nil {
+				return err
+			}
+			provisionsUpdated = true
+		}
+
 		if updateModels.ProductSize != nil {
-			if err := r.updateProductSize(tx, id, updateModels.ProductSize, additivesUpdated); err != nil {
+			if err := r.updateProductSize(tx, id, updateModels.ProductSize, additivesUpdated, provisionsUpdated); err != nil {
 				return err
 			}
 		}
@@ -254,9 +263,13 @@ func (r *productRepository) GetProductSizeAdditives(productSizeID uint) ([]uint,
 	return ids, nil
 }
 
-func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize, additivesUpdated bool) error {
+func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize, additivesUpdated, provisionsUpdated bool) error {
 	if additivesUpdated {
 		productSize.AdditivesUpdatedAt = time.Now().UTC()
+	}
+
+	if provisionsUpdated {
+		productSize.ProvisionsUpdatedAt = time.Now().UTC()
 	}
 
 	if err := tx.Model(&data.ProductSize{}).
@@ -386,6 +399,67 @@ func (r *productRepository) updateIngredients(tx *gorm.DB, productSizeID uint, i
 	if len(toInsert) > 0 {
 		if err := tx.Create(&toInsert).Error; err != nil {
 			return fmt.Errorf("failed to insert new ingredients: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (r *productRepository) updateProvisions(tx *gorm.DB, productSizeID uint, provisions []data.ProductSizeProvision) error {
+	var existingProvisions []data.ProductSizeProvision
+	if err := tx.Where("product_size_id = ?", productSizeID).Find(&existingProvisions).Error; err != nil {
+		return fmt.Errorf("failed to fetch existing provisions: %w", err)
+	}
+
+	existingMap := make(map[uint]data.ProductSizeProvision)
+	for _, prov := range existingProvisions {
+		existingMap[prov.ProvisionID] = prov
+	}
+
+	var toInsert []data.ProductSizeProvision
+	var toUpdate []data.ProductSizeProvision
+	existingIDs := make(map[uint]struct{})
+
+	for _, provision := range provisions {
+		existing, exists := existingMap[provision.ProvisionID]
+
+		if exists {
+			if existing.Volume != provision.Volume {
+				existing.Volume = provision.Volume
+				toUpdate = append(toUpdate, existing)
+			}
+			existingIDs[provision.ProvisionID] = struct{}{}
+		} else {
+			toInsert = append(toInsert, data.ProductSizeProvision{
+				ProductSizeID: productSizeID,
+				ProvisionID:   provision.ProvisionID,
+				Volume:        provision.Volume,
+			})
+		}
+	}
+
+	var toDeleteIDs []uint
+	for id := range existingMap {
+		if _, found := existingIDs[id]; !found {
+			toDeleteIDs = append(toDeleteIDs, id)
+		}
+	}
+
+	if len(toUpdate) > 0 {
+		if err := tx.Save(&toUpdate).Error; err != nil {
+			return fmt.Errorf("failed to update provisions: %w", err)
+		}
+	}
+
+	if len(toDeleteIDs) > 0 {
+		if err := tx.Unscoped().Where("product_size_id = ? AND provision_id IN (?)", productSizeID, toDeleteIDs).Delete(&data.ProductSizeProvision{}).Error; err != nil {
+			return fmt.Errorf("failed to delete old provisions: %w", err)
+		}
+	}
+
+	if len(toInsert) > 0 {
+		if err := tx.Create(&toInsert).Error; err != nil {
+			return fmt.Errorf("failed to insert new provisions: %w", err)
 		}
 	}
 

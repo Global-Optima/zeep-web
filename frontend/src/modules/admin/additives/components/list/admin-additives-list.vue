@@ -28,14 +28,30 @@
 				<TableCell>{{ additive.category.name }}</TableCell>
 				<TableCell>{{ formatPrice(additive.basePrice) }}</TableCell>
 				<TableCell>{{ additive.size }}</TableCell>
-				<TableCell class="flex justify-end">
-					<Button
-						variant="ghost"
-						size="icon"
-						@click="e => onDeleteClick(e, additive.id)"
-					>
-						<Trash class="w-6 h-6 text-red-400" />
-					</Button>
+				<TableCell class="text-right">
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								@click.stop
+							>
+								<EllipsisVertical class="w-6 h-6" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem
+								@click="(e) => { e.stopPropagation(); onDeleteClick(e, additive.id); }"
+							>
+								Удалить
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								@click="(e) => { e.stopPropagation(); onDuplicateClick(additive.id); }"
+							>
+								Дублировать
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</TableCell>
 			</TableRow>
 		</TableBody>
@@ -53,18 +69,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/core/components/ui/dropdown-menu'
+import { EllipsisVertical } from 'lucide-vue-next'
+
 import { toast } from '@/core/components/ui/toast'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import { additivesService } from '@/modules/admin/additives/services/additives.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { Trash } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import { getRouteName } from '@/core/config/routes.config'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 
 const {additives} = defineProps<{additives: AdditiveDTO[]}>()
 
 const router = useRouter();
 const queryClient = useQueryClient()
+const { toastLocalizedError } = useAxiosLocaleToast()
+
 
 const { mutate: deleteMutation } = useMutation({
 	mutationFn: (id: number) => additivesService.deleteAdditive(id),
@@ -72,9 +94,9 @@ const { mutate: deleteMutation } = useMutation({
 		toast({ title: 'Успешное удаление' })
 		queryClient.invalidateQueries({ queryKey: ['admin-additives'] })
 	},
-	onError: () => {
-		toast({ title: 'Произошла ошибка при удалении' })
-	},
+	onError: (error: AxiosLocalizedError) => {
+    	toastLocalizedError(error, "Произошла ошибка при удалении.")
+  },
 })
 
 const onDeleteClick = (e: Event, id: number) => {
@@ -89,4 +111,9 @@ const onDeleteClick = (e: Event, id: number) => {
 const onAdditiveClick = (additiveID: number) => {
   router.push(`/admin/additives/${additiveID}`);
 };
+
+
+const onDuplicateClick = (id: number) => {
+ router.push({name: getRouteName('ADMIN_ADDITIVE_CREATE'), query: {templateAdditiveId: id}})
+}
 </script>

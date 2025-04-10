@@ -28,6 +28,11 @@ type StoreAdditiveRepository interface {
 	GetStoreAdditiveCategories(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, input *data.StoreAdditive) error
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
+	GetStoreAdditiveWithProductSizeAdditive(
+		storeID uint,
+		storeProductSizeID uint,
+		storeAdditiveID uint,
+	) (*data.StoreAdditive, *data.ProductSizeAdditive, error)
 
 	CloneWithTransaction(tx *gorm.DB) StoreAdditiveRepository
 }
@@ -323,6 +328,61 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint, fil
 	return storeAdditive, nil
 }
 
+func (r *storeAdditiveRepository) GetStoreAdditiveWithProductSizeAdditive(
+	storeID uint,
+	storeProductSizeId uint,
+	storeAdditiveId uint,
+) (*data.StoreAdditive, *data.ProductSizeAdditive, error) {
+	var sa data.StoreAdditive
+	err := r.db.
+		Model(&data.StoreAdditive{}).
+		Preload("Additive").
+		Where("id = ? AND store_id = ?", storeAdditiveId, storeID).
+		First(&sa).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, fmt.Errorf("storeAdditive not found (storeID=%d, storeAdditiveID=%d)", storeID, storeAdditiveId)
+		}
+		return nil, nil, fmt.Errorf("failed to load StoreAdditive: %w", err)
+	}
+
+	var sps data.StoreProductSize
+	err = r.db.
+		Model(&data.StoreProductSize{}).
+		Preload("ProductSize").
+		Where("id = ?", storeProductSizeId).
+		First(&sps).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &sa, nil, fmt.Errorf("storeProductSize not found (id=%d)", storeProductSizeId)
+		}
+		return &sa, nil, fmt.Errorf("failed to load StoreProductSize: %w", err)
+	}
+
+	productSizeId := sps.ProductSizeID
+
+	var psa data.ProductSizeAdditive
+	err = r.db.
+		Model(&data.ProductSizeAdditive{}).
+		Where("product_size_id = ? AND additive_id = ?", productSizeId, sa.AdditiveID).
+		Preload("Additive").
+		First(&psa).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &sa, nil, fmt.Errorf(
+				"productSizeAdditive not found (productSizeId=%d, additiveId=%d)",
+				productSizeId, sa.AdditiveID,
+			)
+		}
+		return &sa, nil, fmt.Errorf("failed to load ProductSizeAdditive: %w", err)
+	}
+
+	return &sa, &psa, nil
+}
+
 func (r *storeAdditiveRepository) GetSufficientStoreAdditiveByID(
 	storeID, storeAdditiveID uint, frozenMap map[uint]float64,
 ) (*data.StoreAdditive, error) {
@@ -339,7 +399,11 @@ func (r *storeAdditiveRepository) GetSufficientStoreAdditiveByID(
 		Preload("Additive.Ingredients.Ingredient.IngredientCategory").
 		First(&storeAdditive).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to get storeAdditive (id=%d): %w", storeAdditiveID, err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStoreAdditiveNotFound
+		}
+		return nil, fmt.Errorf("%w: failed to get storeAdditive (id=%d): %w",
+			types.ErrFailedToFetchStoreAdditive, storeAdditiveID, err)
 	}
 
 	for _, ingrUsage := range storeAdditive.Additive.Ingredients {
@@ -350,22 +414,24 @@ func (r *storeAdditiveRepository) GetSufficientStoreAdditiveByID(
 			Where("store_id = ? AND ingredient_id = ?", storeID, ingrUsage.IngredientID).
 			First(&stock).Error
 		if err != nil {
-			return nil, fmt.Errorf("failed to get stock for ingredient %d: %w", ingrUsage.IngredientID, err)
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, types.ErrStoreStockNotFound
+			}
+			return nil, fmt.Errorf("%w: failed to get stock for ingredient %d: %w",
+				types.ErrFailedToFetchStoreStock, ingrUsage.IngredientID, err)
 		}
 
 		if stock.Quantity < frozenMap[ingrUsage.IngredientID] {
-			return nil, fmt.Errorf(
-				"insufficient stock for ingredient %q (ID=%d): already pending %.2f, need %.2f, have left %.2f",
-				ingrUsage.Ingredient.Name, ingrUsage.IngredientID, frozenMap[ingrUsage.IngredientID], requiredAmount, stock.Quantity,
-			)
+			return nil, fmt.Errorf("%w: insufficient stock for ingredient %q (ID=%d): already pending %.2f, need %.2f, have left %.2f",
+				types.ErrInsufficientStock, ingrUsage.Ingredient.Name, ingrUsage.IngredientID,
+				frozenMap[ingrUsage.IngredientID], requiredAmount, stock.Quantity)
 		}
 
 		effectiveAvailable := stock.Quantity - frozenMap[ingrUsage.IngredientID]
 		if effectiveAvailable < requiredAmount {
-			return nil, fmt.Errorf(
-				"insufficient stock for ingredient %q (ID=%d): need %.2f, have %.2f",
-				ingrUsage.Ingredient.Name, ingrUsage.IngredientID, requiredAmount, stock.Quantity,
-			)
+			return nil, fmt.Errorf("%w: insufficient effective stock for ingredient %q (ID=%d): need %.2f, have %.2f",
+				types.ErrInsufficientStock, ingrUsage.Ingredient.Name, ingrUsage.IngredientID,
+				requiredAmount, effectiveAvailable)
 		}
 	}
 

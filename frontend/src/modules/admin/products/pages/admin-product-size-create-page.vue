@@ -2,6 +2,7 @@
 	<AdminProductSizeCreateForm
 		@onSubmit="handleCreate"
 		@onCancel="handleCancel"
+		:initialProductSize="productSizeDetails"
 	/>
 </template>
 
@@ -11,16 +12,26 @@ import AdminProductSizeCreateForm, { type CreateProductSizeFormSchema } from '@/
 import type {
   CreateProductSizeDTO,
   SelectedAdditiveDTO,
-  SelectedIngredientDTO
+  SelectedIngredientDTO,
+  SelectedProvisionDTO
 } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
-import { useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const queryClient = useQueryClient()
 const route = useRoute()
 const { toast } = useToast()
+
+const templateProductSizeId = route.query.templateProductSizeId as string
+
+const { data: productSizeDetails } = useQuery({
+	queryKey: computed(() => ['admin-additive-details', templateProductSizeId]),
+	queryFn: () => productsService.getProductSizeById(Number(templateProductSizeId)),
+	enabled: computed(() => !isNaN(Number(templateProductSizeId))),
+})
 
 const productId = route.query.productId as string
 
@@ -33,11 +44,11 @@ const createMutation = useMutation({
 		})
 	},
 	onSuccess: () => {
-		queryClient.invalidateQueries({ queryKey: ['admin-product-sizes', Number(productId)] })
+		queryClient.invalidateQueries({ queryKey: ['admin-product-sizes', productId] })
 		queryClient.invalidateQueries({ queryKey: ['admin-product-details', productId] })
 		toast({
 			title: 'Успех!',
-variant: 'success',
+      variant: 'success',
 			description: 'Размер продукта успешно создан.',
 		})
 		router.back()
@@ -72,6 +83,11 @@ function handleCreate(data: CreateProductSizeFormSchema) {
     quantity: a.quantity
   }))
 
+  const provisions: SelectedProvisionDTO[] = data.provisions.map(a => ({
+    provisionId: a.provisionId,
+    volume: a.volume
+  }))
+
 	const dto: CreateProductSizeDTO = {
 		productId: Number(productId),
 		name: data.name,
@@ -81,6 +97,7 @@ function handleCreate(data: CreateProductSizeFormSchema) {
     machineId: data.machineId,
 		additives,
 		ingredients,
+    provisions
 	}
 
 	createMutation.mutate(dto)

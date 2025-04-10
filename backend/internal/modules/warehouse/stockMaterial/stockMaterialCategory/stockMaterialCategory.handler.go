@@ -1,9 +1,6 @@
 package stockMaterialCategory
 
 import (
-	"net/http"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial/stockMaterialCategory/types"
@@ -63,8 +60,8 @@ func (h *StockMaterialCategoryHandler) GetByID(c *gin.Context) {
 	response, err := h.service.GetByID(uint(id))
 	if err != nil {
 		switch {
-		case errors.Is(err, moduleErrors.ErrNotFound):
-			localization.SendLocalizedResponseWithStatus(c, http.StatusNotFound)
+		case errors.Is(err, types.ErrStockMaterialCategoryNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response200StockMaterialCategoryDelete)
 			return
 		default:
 			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryGet)
@@ -108,6 +105,10 @@ func (h *StockMaterialCategoryHandler) Update(c *gin.Context) {
 
 	response, err := h.service.GetByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrStockMaterialCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterialCategory)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryUpdate)
 		return
 	}
@@ -141,6 +142,7 @@ func (h *StockMaterialCategoryHandler) Delete(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, types.ErrStockMaterialCategoryNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterialCategory)
+			return
 		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialCategoryDelete)
 		return

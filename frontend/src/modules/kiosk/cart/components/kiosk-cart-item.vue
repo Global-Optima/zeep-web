@@ -86,7 +86,13 @@ const itemTotalPrice = computed(() => {
   const storePrice = props.item.size.storePrice;
 
   const additivesPrice = props.item.additives.reduce(
-    (sum, additive) => sum + additive.storePrice,
+    (sum, additive) => {
+      if (additive.isDefault) {
+				return sum
+			}
+
+      return sum + additive.storePrice
+    },
     0
   );
   return (storePrice + additivesPrice) * props.item.quantity;

@@ -1,12 +1,9 @@
 import { useToast } from '@/core/components/ui/toast'
-import {
-	generateSubOrderQR,
-	getSavedBaristaQRSettings,
-	useQRPrinter,
-} from '@/core/hooks/use-qr-print.hook'
+import { getSavedBaristaQRSettings } from '@/core/hooks/use-qr-print.hook'
 import type { OrderDTO, OrderStatus } from '@/modules/admin/store-orders/models/orders.models'
 import { useWebSocket } from '@vueuse/core'
 import { computed, ref } from 'vue'
+import { useOrderQRPrinter } from '../../hooks/use-order-qr-print.hook'
 
 interface OrderFilterOptions {
 	status?: OrderStatus
@@ -44,7 +41,7 @@ export function useOrderEvents(
 
 	// Toast and QR Printer setup
 	const { toast } = useToast()
-	const { printQR } = useQRPrinter()
+	const { printSubOrderQR } = useOrderQRPrinter()
 
 	// Reactive filter – only a shallow reactive object (a ref) is needed here.
 	const localFilter = ref<OrderFilterOptions>({ ...initialFilter })
@@ -157,8 +154,11 @@ export function useOrderEvents(
 
 		const { width, height } = getSavedBaristaQRSettings()
 		try {
-			const suborderQRs = reactiveOrder.subOrders.map(s => generateSubOrderQR(s))
-			printQR(suborderQRs, { labelHeightMm: height, labelWidthMm: width, desktopOnly: true })
+			await printSubOrderQR(reactiveOrder, reactiveOrder.subOrders, {
+				labelWidthMm: width,
+				labelHeightMm: height,
+				desktopOnly: false,
+			})
 		} catch (err) {
 			console.error('Ошибка при печати QR-кода:', err)
 			toast({

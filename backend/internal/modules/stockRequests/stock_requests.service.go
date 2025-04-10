@@ -546,6 +546,7 @@ func (s *stockRequestService) createNewCart(storeID uint) (*data.StockRequest, e
 	}
 	newCart := &data.StockRequest{
 		StoreID:     storeID,
+		Store:       *store,
 		WarehouseID: store.WarehouseID,
 		Status:      data.StockRequestCreated,
 	}

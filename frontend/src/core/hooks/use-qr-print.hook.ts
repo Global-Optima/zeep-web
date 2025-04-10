@@ -1,5 +1,4 @@
 import { SAVED_BARISTA_QR_SETTINGS_KEY } from '@/core/constants/qr.constants'
-import type { SuborderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode-generator'
 import { usePrinter, type PrintOptions } from './use-print.hook'
@@ -8,26 +7,6 @@ export interface QRPrintOptions extends PrintOptions {
 	labelWidthMm?: number
 	labelHeightMm?: number
 	dpi?: number
-}
-
-export const generateSubOrderQR = (sb: SuborderDTO) => {
-	const parts = [
-		sb.id ?? null,
-		sb.productSize?.machineId ?? null,
-		sb.additives?.length ? sb.additives.map(a => a.additive.machineId).join(',') : null,
-	]
-
-	return parts.filter(Boolean).join('|')
-}
-
-export const parseSubOrderQR = (qrString: string) => {
-	const [subOrderId, productSizeMachineId, additivesString] = qrString.split('|')
-
-	return {
-		subOrderId: subOrderId || null,
-		productSizeMachineId: productSizeMachineId || null,
-		additiveMachineIds: additivesString ? additivesString.split(',') : [],
-	}
 }
 
 export const getSavedBaristaQRSettings = (): { width: number; height: number } => {

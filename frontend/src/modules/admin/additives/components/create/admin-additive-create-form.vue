@@ -1,22 +1,30 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import {defineAsyncComponent, ref, useTemplateRef} from 'vue'
+import { defineAsyncComponent, ref, toRefs, useTemplateRef, watch } from 'vue'
 import * as z from 'zod'
 
 // UI Components
 import LazyImage from '@/core/components/lazy-image/LazyImage.vue'
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/core/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/core/components/ui/dropdown-menu'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
-import type { AdditiveCategoryDetailsDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
+import { useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
+import type { AdditiveCategoryDetailsDTO, AdditiveCategoryDTO, AdditiveDetailsDTO, CreateAdditiveDTO, SelectedIngredientDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
-import { Camera, ChevronLeft, Trash, X } from 'lucide-vue-next'
+import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
 
 const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
   import('@/modules/admin/additive-categories/components/admin-select-additive-category.vue'))
@@ -24,6 +32,8 @@ const AdminIngredientsSelectDialog = defineAsyncComponent(() =>
   import('@/modules/admin/ingredients/components/admin-ingredients-select-dialog.vue'))
 const AdminSelectUnit = defineAsyncComponent(() =>
   import('@/modules/admin/units/components/admin-select-unit.vue'))
+const AdminSelectProvisionDialog = defineAsyncComponent(() =>
+  import("@/modules/admin/provisions/components/admin-select-provision-dialog.vue"))
 
 interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   name: string
@@ -31,25 +41,53 @@ interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   category: string
 }
 
-const {isSubmitting} = defineProps<{isSubmitting: boolean}>()
+interface SelectedProvisionsTypesDTO {
+  provisionId: number
+  name: string
+  absoluteVolume: number
+  unit: string
+  volume: number
+}
+
+interface SelectedProvisionsTypesDTO {
+  provisionId: number
+  name: string
+  absoluteVolume: number
+  unit: string
+  volume: number
+}
+
+const props = defineProps<{isSubmitting: boolean, initialAdditive?: AdditiveDetailsDTO }>()
+
+const { isSubmitting, initialAdditive } = toRefs(props)
+
 
 const emits = defineEmits<{
   onSubmit: [dto: CreateAdditiveDTO]
   onCancel: []
 }>()
 
-const {toast} = useToast()
+const { toast } = useToast()
+const { fetchTechnicalMap } = useCopyTechnicalMap()
 
 // Reactive State for Category Selection
-const selectedCategory = ref<AdditiveCategoryDetailsDTO | null>(null)
+const selectedCategory = ref<AdditiveCategoryDTO | null>(initialAdditive.value?.category || null)
 const openCategoryDialog = ref(false)
 
-const selectedUnit = ref<UnitDTO | null>(null)
+const selectedUnit = ref<UnitDTO | null>(initialAdditive.value?.unit || null)
 const openUnitDialog = ref(false)
 
-const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>([])
+const selectedIngredients = ref<SelectedIngredientsTypesDTO[]>(initialAdditive.value?.ingredients.map(i => ({
+  ingredientId: i.ingredient.id,
+  name: i.ingredient.name,
+  unit: i.ingredient.unit.name,
+  category: i.ingredient.category.name,
+  quantity: i.quantity
+})) || [])
 const openIngredientsDialog = ref(false)
 
+const provisions = ref<SelectedProvisionsTypesDTO[]>([])
+const openProvisionsDialog = ref(false)
 
 // Validation Schema
 const createAdditiveSchema = toTypedSchema(
@@ -75,9 +113,17 @@ const createAdditiveSchema = toTypedSchema(
   })
 )
 
-// Form Setup
 const { handleSubmit, resetForm, setFieldValue } = useForm({
   validationSchema: createAdditiveSchema,
+  initialValues: {
+	name: initialAdditive.value?.name,
+	description: initialAdditive.value?.description,
+	machineId: initialAdditive.value?.machineId,
+	basePrice: initialAdditive.value?.basePrice,
+	size: initialAdditive.value?.size,
+	unitId: initialAdditive.value?.unit.id,
+	additiveCategoryId: initialAdditive.value?.category.id,
+  },
 })
 
 const previewImage = ref<string | null>(null);
@@ -93,6 +139,41 @@ function handleImageUpload(event: Event) {
   }
 }
 
+watch(initialAdditive, (newVal) => {
+  if (newVal) {
+    // Reset the form with new initial values.
+    resetForm({
+      values: {
+        name: newVal.name,
+        description: newVal.description,
+        machineId: newVal.machineId,
+        basePrice: newVal.basePrice,
+        size: newVal.size,
+        unitId: newVal.unit.id,
+        additiveCategoryId: newVal.category.id,
+      }
+    })
+    // Update dependent reactive state.
+    selectedCategory.value = newVal.category
+    selectedUnit.value = newVal.unit
+    selectedIngredients.value = newVal.ingredients.map(i => ({
+      ingredientId: i.ingredient.id,
+      name: i.ingredient.name,
+      unit: i.ingredient.unit.name,
+      category: i.ingredient.category.name,
+      quantity: i.quantity
+    }))
+
+    provisions.value = newVal.provisions.map(p => ({
+      provisionId: p.provision.id,
+      name: p.provision.name,
+      absoluteVolume: p.provision.absoluteVolume,
+      unit: p.provision.unit.name,
+      volume: p.volume,
+    }))
+  }
+}, { immediate: true })
+
 function triggerImageInput() {
   imageInputRef.value?.click();
 }
@@ -106,11 +187,16 @@ const onSubmit = handleSubmit((formValues) => {
     return toast({ description: "Укажите количество в технологической карте" })
   }
 
+  if (provisions.value.some(i => i.volume <= 0)) {
+    return toast({ description: "Укажите обьем в заготовке" })
+  }
+
   const dto: CreateAdditiveDTO = {
     ...formValues,
     additiveCategoryId: selectedCategory.value.id,
     unitId: selectedUnit.value.id,
-    ingredients: selectedIngredients.value.map(i => ({ingredientId: i.ingredientId, quantity: i.quantity}))
+    ingredients: selectedIngredients.value.map(i => ({ingredientId: i.ingredientId, quantity: i.quantity})),
+    provisions: provisions.value.map(p => ({provisionId: p.provisionId, volume: p.volume}))
   }
 
   emits('onSubmit', dto)
@@ -119,6 +205,18 @@ const onSubmit = handleSubmit((formValues) => {
 const onCancel = () => {
   resetForm()
   emits('onCancel')
+}
+
+function addProvision(provision: ProvisionDTO) {
+  if (!provisions.value.some((item) => item.provisionId === provision.id)) {
+    provisions.value.push({
+      provisionId: provision.id,
+      name: provision.name,
+      unit: provision.unit.name,
+      absoluteVolume: provision.absoluteVolume,
+      volume: 0
+    })
+  }
 }
 
 function selectCategory(category: AdditiveCategoryDetailsDTO) {
@@ -144,8 +242,36 @@ function addIngredient(ingredient: IngredientsDTO) {
     })
   }
 }
+
 function removeIngredient(index: number) {
   selectedIngredients.value.splice(index, 1)
+}
+
+const onPasteTechMapClick = async () => {
+  try {
+    const techMap = await fetchTechnicalMap()
+    if (!techMap) {
+      toast({ description: "Технологическая карта не найдена" })
+      return
+    }
+
+    selectedIngredients.value = techMap.map(t => ({
+      ingredientId: t.ingredient.id,
+      name: t.ingredient.name,
+      unit: t.ingredient.unit.name,
+      category: t.ingredient.category.name,
+      quantity: t.quantity,
+    }))
+
+    toast({ description: "Технологическая карта успешно вставлена", variant: "success" })
+
+  } catch {
+    toast({ description: "Ошибка при вставке технологической карты", variant: "destructive" })
+  }
+}
+
+function removeProvision(index: number) {
+  provisions.value.splice(index, 1)
 }
 </script>
 
@@ -294,7 +420,7 @@ function removeIngredient(index: number) {
 					</CardContent>
 				</Card>
 
-				<Card class="mt-4">
+				<Card>
 					<CardHeader>
 						<div class="flex justify-between items-start">
 							<div>
@@ -303,12 +429,23 @@ function removeIngredient(index: number) {
 									Выберите инргредиент и его количество
 								</CardDescription>
 							</div>
-							<Button
-								variant="outline"
-								@click="openIngredientsDialog = true"
-							>
-								Добавить
-							</Button>
+							<div class="flex items-center gap-2">
+								<DropdownMenu>
+									<DropdownMenuTrigger class="p-2 border rounded-md">
+										<EllipsisVertical class="size-4" />
+									</DropdownMenuTrigger>
+									<DropdownMenuContent>
+										<DropdownMenuItem @click="onPasteTechMapClick">Вставить</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+
+								<Button
+									variant="outline"
+									@click="openIngredientsDialog = true"
+								>
+									Добавить
+								</Button>
+							</div>
 						</div>
 					</CardHeader>
 					<CardContent>
@@ -354,6 +491,66 @@ function removeIngredient(index: number) {
 						</Table>
 					</CardContent>
 				</Card>
+
+				<Card>
+					<CardHeader>
+						<div class="flex justify-between items-start">
+							<div>
+								<CardTitle>Заготовки</CardTitle>
+								<CardDescription class="mt-2"> Выберите заготовки и их обьем </CardDescription>
+							</div>
+							<Button
+								variant="outline"
+								@click="openProvisionsDialog = true"
+							>
+								Добавить
+							</Button>
+						</div>
+					</CardHeader>
+					<CardContent>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Название</TableHead>
+									<TableHead>Изначальный обьем</TableHead>
+									<TableHead>Обьем для продукта</TableHead>
+									<TableHead></TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								<TableRow
+									v-for="(provision, index) in provisions"
+									:key="provision.provisionId"
+								>
+									<TableCell>{{ provision.name }}</TableCell>
+									<TableCell
+										>{{ provision.absoluteVolume }} {{ provision.unit.toLowerCase() }}</TableCell
+									>
+
+									<TableCell class="flex items-center gap-4">
+										<Input
+											type="number"
+											v-model.number="provision.volume"
+											:min="0"
+											class="w-24"
+											placeholder="Введите нужный обьем"
+										/>
+										{{ provision.unit.toLowerCase() }}
+									</TableCell>
+									<TableCell class="text-center">
+										<Button
+											variant="ghost"
+											size="icon"
+											@click="removeProvision(index)"
+										>
+											<Trash class="w-6 h-6 text-red-500" />
+										</Button>
+									</TableCell>
+								</TableRow>
+							</TableBody>
+						</Table>
+					</CardContent>
+				</Card>
 			</div>
 
 			<!-- Media and Category Blocks -->
@@ -384,7 +581,7 @@ function removeIngredient(index: number) {
 											/>
 											<button
 												type="button"
-												class="top-2 right-2 absolute bg-gray-500 transition-all duration-200 hover:bg-red-700 p-1 rounded-full text-white"
+												class="top-2 right-2 absolute bg-gray-500 hover:bg-red-700 p-1 rounded-full text-white transition-all duration-200"
 												@click="previewImage = null; setFieldValue('image', undefined)"
 											>
 												<X class="size-4" />
@@ -483,6 +680,12 @@ function removeIngredient(index: number) {
 			:open="openIngredientsDialog"
 			@close="openIngredientsDialog = false"
 			@select="addIngredient"
+		/>
+
+		<AdminSelectProvisionDialog
+			:open="openProvisionsDialog"
+			@close="openProvisionsDialog = false"
+			@select="addProvision"
 		/>
 
 		<!-- Category Dialog -->

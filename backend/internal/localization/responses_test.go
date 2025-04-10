@@ -72,9 +72,9 @@ func TestTranslateComponentResponse(t *testing.T) {
 				data.UpdateOperation.ToString(),
 			),
 			expectedMessages: &LocalizedMessage{
-				En: "Store employee successfully updated.",
-				Ru: "Сотрудник магазина успешно обновлен.",
-				Kk: "Дүкен қызметкері сәтті жаңартылды.",
+				En: "Cafe employee successfully updated.",
+				Ru: "Сотрудник кафе успешно обновлен.",
+				Kk: "Кафе қызметкері сәтті жаңартылды.",
 			},
 		},
 	}
@@ -116,6 +116,29 @@ func TestTranslateCommonResponse(t *testing.T) {
 			assert.NotNil(t, localizedMessage)
 
 			assert.Equal(t, tt.expectedMessages, localizedMessage)
+		})
+	}
+}
+
+func TestTranslateKey(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "notification.emptyValue",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			localizedMessage, err := Translate(tt.name, nil)
+
+			assert.NoError(t, err)
+			assert.NotNil(t, localizedMessage)
+
+			println(localizedMessage.En)
+			println(localizedMessage.Ru)
+			println(localizedMessage.Kk)
 		})
 	}
 }

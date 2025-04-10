@@ -68,6 +68,10 @@ func (h *IngredientHandler) UpdateIngredient(c *gin.Context) {
 
 	existingIngredient, err := h.service.GetIngredientByID(uint(ingredientID))
 	if err != nil {
+		if errors.Is(err, types.ErrIngredientNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Ingredient)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientUpdate)
 		return
 	}
@@ -101,6 +105,10 @@ func (h *IngredientHandler) DeleteIngredient(c *gin.Context) {
 
 	existing, err := h.service.GetIngredientByID(uint(ingredientID))
 	if err != nil {
+		if errors.Is(err, types.ErrIngredientNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Ingredient)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response404Ingredient)
 		return
 	}
@@ -137,6 +145,10 @@ func (h *IngredientHandler) GetIngredientByID(c *gin.Context) {
 
 	ingredient, err := h.service.GetIngredientByID(uint(ingredientID))
 	if err != nil {
+		if errors.Is(err, types.ErrIngredientNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Ingredient)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientDelete)
 		return
 	}

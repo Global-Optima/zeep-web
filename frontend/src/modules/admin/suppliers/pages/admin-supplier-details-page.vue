@@ -112,9 +112,10 @@ const { mutate: updateSupplierMaterials } = useMutation({
 	onSuccess: () => {
 		queryClient.invalidateQueries({ queryKey: ['admin-suppliers'] })
 		queryClient.invalidateQueries({ queryKey: ['admin-supplier-details', supplierId] })
-		toast({
+		queryClient.invalidateQueries({ queryKey: ['admin-supplier-materials', Number(supplierId)] })
+    toast({
 			title: 'Успех!',
-variant: 'success',
+      variant: 'success',
 			description: 'Материалы поставщика успешно обновлены.',
 		})
 	},

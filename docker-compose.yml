@@ -124,13 +124,16 @@ services:
         DB_SSL_MODE: ${DB_SSL_MODE}
         SERVER_PORT: ${SERVER_PORT}
         CLIENT_URL: ${CLIENT_URL}
+        IMAGE_CONVERTER_URL: ${IMAGE_CONVERTER_URL}
+        CRON_JOBS_ENABLE: ${CRON_JOBS_ENABLE}
         JWT_CUSTOMER_SECRET_KEY: ${JWT_CUSTOMER_SECRET_KEY}
         JWT_EMPLOYEE_SECRET_KEY: ${JWT_EMPLOYEE_SECRET_KEY}
         JWT_CUSTOMER_TOKEN_TTL: ${JWT_CUSTOMER_TOKEN_TTL}
         JWT_EMPLOYEE_TOKEN_TTL: ${JWT_EMPLOYEE_TOKEN_TTL}
         S3_ACCESS_KEY: ${S3_ACCESS_KEY}
         S3_SECRET_KEY: ${S3_SECRET_KEY}
-        S3_ENDPOINT: ${S3_ENDPOINT}
+        S3_ACCESS_ENDPOINT: ${S3_ACCESS_ENDPOINT}
+        S3_RESPONSE_ENDPOINT: ${S3_RESPONSE_ENDPOINT}
         S3_BUCKET_NAME: ${S3_BUCKET_NAME}
         REDIS_USERNAME: ${REDIS_USERNAME}
         REDIS_HOST: ${REDIS_HOST}
@@ -156,6 +159,15 @@ services:
     networks:
       - app_network
 
+  image-converter:
+    container_name: image-converter
+    build:
+      context: ./image-converter
+    ports:
+      - '8082:8082'
+    networks:
+      - app_network
+
   ########################################################################
   # 5) Frontend (Vite Vue 3) w/ Nginx
   ########################################################################
@@ -167,6 +179,7 @@ services:
         VITE_API_URL: ${VITE_API_URL}
         VITE_WS_URL: ${VITE_WS_URL}
         VITE_PAYMENT_SECRET: ${PAYMENT_SECRET}
+        VITE_SAVE_ON_PRINT: ${VITE_SAVE_ON_PRINT}
         VITE_TEST_PAYMENT: ${VITE_TEST_PAYMENT}
     env_file:
       - .env
@@ -206,8 +219,6 @@ services:
       - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - '9090:9090'
-    depends_on:
-      - cadvisor
     networks:
       - app_network
 
@@ -288,22 +299,6 @@ services:
       - ./backend/logs:/app/logs
     depends_on:
       - loki
-    networks:
-      - app_network
-
-  ########################################################################
-  # 11) cAdvisor (Container Metrics)
-  ########################################################################
-  cadvisor:
-    container_name: cadvisor
-    image: gcr.io/cadvisor/cadvisor:latest
-    ports:
-      - '8082:8080'
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
     networks:
       - app_network
 

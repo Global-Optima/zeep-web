@@ -402,8 +402,8 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 			},
 			storeID:       1,
 			expectedError: false,
-			// Expected total = 2 * (2.75 + 0.55) = 6.60
-			expectedTotal: 6.60,
+			// Expected total = 2 * (2.75 + 0(0.55 not counted since it is a default additive)) = 5.50
+			expectedTotal: 5.5,
 		},
 		{
 			name: "Failure due to empty suborders",
@@ -448,7 +448,7 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 			},
 			storeID:           1,
 			expectedError:     true,
-			expectedErrSubstr: "insufficient stock",
+			expectedErrSubstr: "not found",
 		},
 	}
 
