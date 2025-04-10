@@ -85,7 +85,7 @@ func deductStoreProvisions(tx *gorm.DB, storeID, provisionID uint, requiredVolum
 	return usedProvisions, nil
 }
 
-func RecalculateStoreProducts(
+func recalculateStoreProducts(
 	tx *gorm.DB,
 	storeProductIDs []uint,
 	frozenInventory *types.FrozenInventory,
@@ -111,7 +111,7 @@ func RecalculateStoreProducts(
 	return nil
 }
 
-func RecalculateStoreAdditives(
+func recalculateStoreAdditives(
 	tx *gorm.DB,
 	storeAdditiveIDs []uint,
 	storeID uint,
@@ -122,6 +122,7 @@ func RecalculateStoreAdditives(
 	}
 
 	outOfStockIDs, err := getOutOfStockStoreAdditiveIDs(tx, storeAdditiveIDs, storeID, frozenInventory)
+	logrus.Infof("outOfstock additives: %v", outOfStockIDs)
 	if err != nil {
 		return err
 	}
@@ -323,7 +324,7 @@ func getOutByInventory(
 	// === INGREDIENTS ===
 	var ingredientRows []types.IngredientUsageRow
 	err := tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS entity_id,
+		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
                 product_size_ingredients.ingredient_id,
                 product_size_ingredients.quantity AS required_quantity`).
 		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
@@ -337,7 +338,7 @@ func getOutByInventory(
 	// === PROVISIONS ===
 	var provisionRows []types.ProvisionUsageRow
 	err = tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS entity_id,
+		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
                 product_size_provisions.provision_id,
                 product_size_provisions.volume AS required_volume`).
 		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
@@ -408,14 +409,14 @@ func getOutByInventory(
 	outSet := make(map[uint]struct{})
 	for _, row := range ingredientRows {
 		if stockMap[row.IngredientID] < row.RequiredQuantity {
-			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
+			outSet[row.StoreProductOrAdditiveID] = struct{}{}
 			logrus.Infof("outByIngredient %d", row.IngredientID)
 		}
 	}
 	for _, row := range provisionRows {
 		if provisionStockMap[row.ProvisionID] < row.RequiredVolume {
 			logrus.Infof("provisionStock: %v / requiredVolume: %v", provisionStockMap[row.ProvisionID], row.RequiredVolume)
-			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
+			outSet[row.StoreProductOrAdditiveID] = struct{}{}
 			logrus.Infof("outByProvision %d", row.ProvisionID)
 		}
 	}
@@ -444,7 +445,7 @@ func getOutByDefaultAdditives(
 	// === INGREDIENTS ===
 	var ingredientRows []types.IngredientUsageRow
 	err := tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS entity_id,
+		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
                 additive_ingredients.ingredient_id,
                 additive_ingredients.quantity AS required_quantity`).
 		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
@@ -462,7 +463,7 @@ func getOutByDefaultAdditives(
 	// === PROVISIONS ===
 	var provisionRows []types.ProvisionUsageRow
 	err = tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS entity_id,
+		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
                 additive_provisions.provision_id,
                 additive_provisions.volume AS required_volume`).
 		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
@@ -534,12 +535,12 @@ func getOutByDefaultAdditives(
 	outSet := make(map[uint]struct{})
 	for _, row := range ingredientRows {
 		if stockMap[row.IngredientID] < row.RequiredQuantity {
-			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
+			outSet[row.StoreProductOrAdditiveID] = struct{}{}
 		}
 	}
 	for _, row := range provisionRows {
 		if provisionStockMap[row.ProvisionID] < row.RequiredVolume {
-			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
+			outSet[row.StoreProductOrAdditiveID] = struct{}{}
 		}
 	}
 
@@ -567,7 +568,7 @@ func getOutOfStockStoreAdditiveIDs(
 	// === INGREDIENTS ===
 	var ingredientRows []types.IngredientUsageRow
 	err := tx.Model(&data.StoreAdditive{}).
-		Select(`DISTINCT store_additives.id AS entity_id,
+		Select(`DISTINCT store_additives.id AS store_product_or_additive_id,
                 additive_ingredients.ingredient_id,
                 additive_ingredients.quantity AS required_quantity`).
 		Joins(`JOIN additive_ingredients
@@ -581,7 +582,7 @@ func getOutOfStockStoreAdditiveIDs(
 	// === PROVISIONS ===
 	var provisionRows []types.ProvisionUsageRow
 	err = tx.Model(&data.StoreAdditive{}).
-		Select(`DISTINCT store_additives.id AS entity_id,
+		Select(`DISTINCT store_additives.id AS store_product_or_additive_id,
                 additive_provisions.provision_id AS provision_id,
                 additive_provisions.volume AS required_volume`).
 		Joins(`JOIN additive_provisions
@@ -655,14 +656,14 @@ func getOutOfStockStoreAdditiveIDs(
 	for _, row := range ingredientRows {
 		available := stockMap[row.IngredientID]
 		if available < row.RequiredQuantity {
-			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
+			outSet[row.StoreProductOrAdditiveID] = struct{}{}
 		}
 	}
 
 	for _, row := range provisionRows {
 		available := provisionStockMap[row.ProvisionID]
 		if available < row.RequiredVolume {
-			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
+			outSet[row.StoreProductOrAdditiveID] = struct{}{}
 		}
 	}
 
@@ -775,8 +776,8 @@ func getDefaultAdditiveIngredientsByProductSizeIDs(tx *gorm.DB, productSizeIDs [
 	return additiveIngredientIDs, nil
 }
 
-// CalculateFrozenInventory allows nil value for ingredientIDs if no need to filter ingredients
-func CalculateFrozenInventory(tx *gorm.DB, storeID uint, filter *types.FrozenInventoryFilter) (*types.FrozenInventory, error) {
+// calculateFrozenInventory allows nil value for ingredientIDs if no need to filter ingredients
+func calculateFrozenInventory(tx *gorm.DB, storeID uint, filter *types.FrozenInventoryFilter) (*types.FrozenInventory, error) {
 	frozen := &types.FrozenInventory{
 		Ingredients: make(map[uint]float64),
 		Provisions:  make(map[uint]float64),

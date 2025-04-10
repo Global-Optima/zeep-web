@@ -99,7 +99,7 @@ const formatCreatedDate = (date: Date) => {
 }
 
 const canDelete = (provision: StoreProvisionDTO) => {
-  return provision.status === StoreProvisionStatus.PREPARING
+  return provision.status != StoreProvisionStatus.COMPLETED
 }
 
 const onProvisionClick = (id: number) => {

@@ -11,6 +11,8 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
+	"github.com/Global-Optima/zeep-web/backend/internal/scheduler"
 )
 
 type ProvisionsModule struct {
@@ -26,10 +28,12 @@ func NewProvisionsModule(
 	base *common.BaseModule,
 	auditService audit.AuditService,
 	franchiseeService franchisees.FranchiseeService,
+	storeService stores.StoreService,
 	notificationService notifications.NotificationService,
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
+	cronManager *scheduler.CronManager,
 ) *ProvisionsModule {
 	repo := provisions.NewProvisionRepository(base.DB)
 	service := provisions.NewProvisionService(repo, base.Logger)
@@ -39,12 +43,14 @@ func NewProvisionsModule(
 		base,
 		service,
 		franchiseeService,
+		storeService,
 		auditService,
 		notificationService,
 		repo,
 		ingredientRepo,
 		storeStockRepo,
 		storeInventoryManagerRepo,
+		cronManager,
 	)
 	provisionTechMapModule := NewProvisionsTechnicalMapModule(base)
 
@@ -64,12 +70,14 @@ func NewStoreProvisionsModule(
 	base *common.BaseModule,
 	provisionService provisions.ProvisionService,
 	franchiseeService franchisees.FranchiseeService,
+	storeService stores.StoreService,
 	auditService audit.AuditService,
 	notificationService notifications.NotificationService,
 	provisionRepo provisions.ProvisionRepository,
 	ingredientRepo ingredients.IngredientRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
+	cronManager *scheduler.CronManager,
 ) *StoreProvisionsModule {
 	repo := storeProvisions.NewStoreProvisionRepository(base.DB)
 	service := storeProvisions.NewStoreProvisionService(
@@ -84,6 +92,21 @@ func NewStoreProvisionsModule(
 	handler := storeProvisions.NewStoreProvisionHandler(service, provisionService, franchiseeService, auditService, base.Logger)
 
 	base.Router.RegisterStoreProvisionsRoutes(handler)
+
+	storeProvisionCronTasks := scheduler.NewStoreProvisionCronTasks(
+		service,
+		repo,
+		storeInventoryManagerRepo,
+		storeService,
+		notificationService,
+		base.Logger,
+	)
+	err := cronManager.RegisterJob(scheduler.HourlyJob, func() {
+		storeProvisionCronTasks.CheckStoreProvisionNotifications()
+	})
+	if err != nil {
+		base.Logger.Errorf("Failed to register warehouse stock cron job: %v", err)
+	}
 
 	return &StoreProvisionsModule{
 		BaseModule: base,

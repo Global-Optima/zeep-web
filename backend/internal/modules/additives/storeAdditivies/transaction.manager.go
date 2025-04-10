@@ -3,6 +3,8 @@ package storeAdditives
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"gorm.io/gorm"
@@ -13,10 +15,11 @@ type TransactionManager interface {
 }
 
 type transactionManager struct {
-	db                *gorm.DB
-	storeAdditiveRepo StoreAdditiveRepository
-	storeStockRepo    storeStocks.StoreStockRepository
-	ingredientRepo    ingredients.IngredientRepository
+	db                        *gorm.DB
+	storeAdditiveRepo         StoreAdditiveRepository
+	storeStockRepo            storeStocks.StoreStockRepository
+	ingredientRepo            ingredients.IngredientRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
 }
 
 func NewTransactionManager(
@@ -24,12 +27,14 @@ func NewTransactionManager(
 	storeAdditiveRepo StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	ingredientRepo ingredients.IngredientRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 ) TransactionManager {
 	return &transactionManager{
-		db:                db,
-		storeAdditiveRepo: storeAdditiveRepo,
-		storeStockRepo:    storeStockRepo,
-		ingredientRepo:    ingredientRepo,
+		db:                        db,
+		storeAdditiveRepo:         storeAdditiveRepo,
+		storeStockRepo:            storeStockRepo,
+		ingredientRepo:            ingredientRepo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
 	}
 }
 
@@ -81,12 +86,18 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			storeAdditiveIDs[i] = storeAdditive.ID
 		}
 
-		frozenStockMap, err := data.CalculateFrozenInventory(tx, storeID, &data.FrozenInventoryFilter{IngredientIDs: ingredientIDs})
+		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
+		frozenStockMap, err := storeInventoryManagerRepoTx.CalculateFrozenInventory(
+			storeID,
+			&storeInventoryManagersTypes.FrozenInventoryFilter{
+				IngredientIDs: ingredientIDs,
+			},
+		)
 		if err != nil {
 			return err
 		}
 
-		if err := data.RecalculateStoreAdditives(tx, storeAdditiveIDs, storeID, frozenStockMap); err != nil {
+		if err := storeInventoryManagerRepoTx.RecalculateStoreAdditives(storeAdditiveIDs, storeID, frozenStockMap); err != nil {
 			return err
 		}
 

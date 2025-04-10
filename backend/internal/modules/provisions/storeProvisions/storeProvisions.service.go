@@ -11,6 +11,7 @@ import (
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
+	"time"
 )
 
 type StoreProvisionService interface {
@@ -191,17 +192,19 @@ func (s *storeProvisionService) DeleteStoreProvision(storeID, storeProvisionID u
 		return nil, wrapped
 	}
 
-	if storeProvision.Status == data.STORE_PROVISION_STATUS_COMPLETED {
+	if storeProvision.Status == data.STORE_PROVISION_STATUS_COMPLETED &&
+		(storeProvision.ExpiresAt == nil || storeProvision.ExpiresAt.UTC().After(time.Now().UTC())) {
 		wrapped := fmt.Errorf("failed to delete store provision by ID %d: %w", storeProvisionID, types.ErrProvisionCompleted)
 		return nil, wrapped
 	}
 
-	err = s.repo.DeleteStoreProvision(storeProvisionID)
+	err = s.repo.HardDeleteStoreProvision(storeProvisionID)
 	if err != nil {
 		wrapped := fmt.Errorf("failed to delete store provision: %w", err)
 		s.logger.Error(wrapped)
 		return nil, wrapped
 	}
+
 	return types.MapToStoreProvisionDTO(storeProvision), nil
 }
 

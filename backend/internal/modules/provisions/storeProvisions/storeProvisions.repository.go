@@ -16,8 +16,9 @@ type StoreProvisionRepository interface {
 	GetStoreProvisions(storeID uint, filter *types.StoreProvisionFilterDTO) ([]data.StoreProvision, error)
 	GetStoreProvisionByID(storeID uint, storeProvisionID uint) (*data.StoreProvision, error)
 	GetStoreProvisionWithDetailsByID(storeID, storeProvisionID uint) (*data.StoreProvision, error)
+	GetAllStoreProvisionList(storeID uint) ([]data.StoreProvision, error)
 	SaveStoreProvisionWithAssociations(updateModels *types.StoreProvisionModels) error
-	DeleteStoreProvision(storeProvisionID uint) error
+	HardDeleteStoreProvision(storeProvisionID uint) error
 	CountStoreProvisionsToday(storeID, provisionID uint) (uint, error)
 	SaveStoreProvision(storeProvision *data.StoreProvision) error
 
@@ -178,7 +179,7 @@ func (r *storeProvisionRepository) SaveStoreProvision(storeProvision *data.Store
 	return nil
 }
 
-func (r *storeProvisionRepository) DeleteStoreProvision(storeProvisionID uint) error {
+func (r *storeProvisionRepository) HardDeleteStoreProvision(storeProvisionID uint) error {
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Unscoped().
 			Where("store_provision_id = ?", storeProvisionID).
@@ -220,4 +221,24 @@ func (r *storeProvisionRepository) CountStoreProvisionsToday(storeID, provisionI
 	}
 
 	return uint(count), nil
+}
+
+func (r *storeProvisionRepository) GetAllStoreProvisionList(storeID uint) ([]data.StoreProvision, error) {
+	if storeID == 0 {
+		return nil, fmt.Errorf("storeId cannot be 0")
+	}
+
+	var storeProvisionList []data.StoreProvision
+
+	query := r.db.Model(&data.StoreProvision{}).
+		Preload("Provision.Unit").
+		Preload("Store").
+		Where("store_id = ?", storeID)
+
+	err := query.Find(&storeProvisionList).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve store provison list: %w", err)
+	}
+
+	return storeProvisionList, nil
 }

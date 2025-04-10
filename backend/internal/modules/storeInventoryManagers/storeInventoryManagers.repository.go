@@ -14,6 +14,7 @@ type StoreInventoryManagerRepository interface {
 	DeductStoreInventoryByAdditive(storeID, additiveID uint) (*types.DeductedStoreInventory, error)
 	DeductStoreStocksByStoreProvision(storeProvision *data.StoreProvision) ([]data.StoreStock, error)
 
+	RecalculateStoreAdditives(storeAdditiveIDs []uint, storeID uint, frozenInventory *types.FrozenInventory) error
 	RecalculateStoreInventory(storeID uint, input *types.RecalculateInput) error
 	CalculateFrozenInventory(storeID uint, filter *types.FrozenInventoryFilter) (*types.FrozenInventory, error)
 
@@ -171,7 +172,9 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 		storeProductIDsFromProvisions,
 		storeAdditiveIDsFromAdditives,
 		storeAdditiveIDsFromIngredients,
-		storeAdditiveIDsFromProvisions []uint
+		storeAdditiveIDsFromProvisions,
+		totalIngredientIDs,
+		totalProvisionIDs []uint
 	var err error
 
 	frozenInventory := &types.FrozenInventory{
@@ -185,20 +188,19 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 			return err
 		}
 
-		productSizesIngredientIDs, err = getAllIngredientIDsByProductSizes(r.db, productSizesIngredientIDs)
+		productSizesIngredientIDs, err = getAllIngredientIDsByProductSizes(r.db, input.ProductSizeIDs)
 		if err != nil {
 			return err
 		}
 
-		productSizesProvisionIDs, err = getAllProvisionIDsByProductSizes(r.db, productSizesProvisionIDs)
+		productSizesProvisionIDs, err = getAllProvisionIDsByProductSizes(r.db, input.ProductSizeIDs)
 		if err != nil {
 			return err
-		}
-
-		if len(productSizesIngredientIDs) > 0 {
-			input.IngredientIDs = utils.UnionSlices(input.IngredientIDs, productSizesIngredientIDs)
 		}
 	}
+
+	totalIngredientIDs = utils.UnionSlices(input.IngredientIDs, productSizesIngredientIDs)
+	totalProvisionIDs = utils.UnionSlices(input.ProvisionIDs, productSizesProvisionIDs)
 
 	if hasAdditives {
 		storeAdditiveIDsFromAdditives, err = getStoreAdditiveIDsByAdditives(r.db, storeID, input.AdditiveIDs)
@@ -207,37 +209,38 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 		}
 	}
 
-	if hasIngredients || hasProvisions {
+	//TODO remove IF?
+	if len(totalIngredientIDs) > 0 || len(totalProvisionIDs) > 0 {
 		frozenInventoryFilter := &types.FrozenInventoryFilter{
-			IngredientIDs: input.IngredientIDs,
-			ProvisionIDs:  input.ProvisionIDs,
+			IngredientIDs: totalIngredientIDs,
+			ProvisionIDs:  totalProvisionIDs,
 		}
 
-		frozenInventory, err = CalculateFrozenInventory(r.db, storeID, frozenInventoryFilter)
+		frozenInventory, err = calculateFrozenInventory(r.db, storeID, frozenInventoryFilter)
 		if err != nil {
 			return err
 		}
 	}
 
-	if hasIngredients {
-		storeProductIDsFromIngredients, err = getStoreProductIDsByIngredients(r.db, storeID, input.IngredientIDs)
+	if len(totalIngredientIDs) > 0 {
+		storeProductIDsFromIngredients, err = getStoreProductIDsByIngredients(r.db, storeID, totalIngredientIDs)
 		if err != nil {
 			return err
 		}
 
-		storeAdditiveIDsFromIngredients, err = getStoreAdditiveIDsByIngredients(r.db, storeID, input.IngredientIDs)
+		storeAdditiveIDsFromIngredients, err = getStoreAdditiveIDsByIngredients(r.db, storeID, totalIngredientIDs)
 		if err != nil {
 			return err
 		}
 	}
 
-	if hasProvisions {
-		storeProductIDsFromProvisions, err = getStoreProductIDsByProvisions(r.db, storeID, input.ProvisionIDs)
+	if len(totalProvisionIDs) > 0 {
+		storeProductIDsFromProvisions, err = getStoreProductIDsByProvisions(r.db, storeID, totalProvisionIDs)
 		if err != nil {
 			return err
 		}
 
-		storeAdditiveIDsFromProvisions, err = getStoreAdditiveIDsByProvisions(r.db, storeID, input.ProvisionIDs)
+		storeAdditiveIDsFromProvisions, err = getStoreAdditiveIDsByProvisions(r.db, storeID, totalProvisionIDs)
 		if err != nil {
 			return err
 		}
@@ -245,7 +248,7 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if len(storeProductIDsFromPS) > 0 || len(storeProductIDsFromIngredients) > 0 {
-			if err := RecalculateStoreProducts(
+			if err := recalculateStoreProducts(
 				tx,
 				utils.UnionSlices(storeProductIDsFromPS, storeProductIDsFromIngredients, storeProductIDsFromProvisions),
 				frozenInventory,
@@ -256,7 +259,7 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 		}
 
 		if len(storeAdditiveIDsFromAdditives) > 0 || len(storeAdditiveIDsFromIngredients) > 0 {
-			if err := RecalculateStoreAdditives(
+			if err := recalculateStoreAdditives(
 				tx,
 				utils.UnionSlices(storeAdditiveIDsFromAdditives, storeAdditiveIDsFromIngredients, storeAdditiveIDsFromProvisions),
 				storeID,
@@ -270,8 +273,16 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 	})
 }
 
+func (r *storeInventoryManagerRepository) RecalculateStoreAdditives(
+	storeAdditiveIDs []uint,
+	storeID uint,
+	frozenInventory *types.FrozenInventory,
+) error {
+	return recalculateStoreAdditives(r.db, storeAdditiveIDs, storeID, frozenInventory)
+}
+
 func (r *storeInventoryManagerRepository) CalculateFrozenInventory(storeID uint, filter *types.FrozenInventoryFilter) (*types.FrozenInventory, error) {
-	return CalculateFrozenInventory(r.db, storeID, filter)
+	return calculateFrozenInventory(r.db, storeID, filter)
 }
 
 func (r *storeInventoryManagerRepository) getProductSizeIngredients(productSizeID uint) ([]data.ProductSizeIngredient, error) {

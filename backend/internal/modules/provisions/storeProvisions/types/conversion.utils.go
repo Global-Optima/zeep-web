@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -15,16 +16,23 @@ type StoreProvisionModels struct {
 }
 
 func MapToStoreProvisionDTO(sp *data.StoreProvision) *StoreProvisionDTO {
-	return &StoreProvisionDTO{
+	storeProvisionDTO := &StoreProvisionDTO{
 		ID:                  sp.ID,
 		Provision:           *provisionsTypes.MapToProvisionDTO(&sp.Provision),
 		ExpirationInMinutes: sp.ExpirationInMinutes,
 		Volume:              sp.Volume,
-		Status:              sp.Status,
 		CompletedAt:         sp.CompletedAt,
 		ExpiresAt:           sp.ExpiresAt,
 		CreatedAt:           sp.CreatedAt,
 	}
+
+	if sp.ExpiresAt != nil && sp.ExpiresAt.UTC().Before(time.Now().UTC()) {
+		storeProvisionDTO.Status = data.STORE_PROVISION_VISUAL_STATUS_EXPIRED
+	} else {
+		storeProvisionDTO.Status = sp.Status
+	}
+
+	return storeProvisionDTO
 }
 
 func MapToStoreProvisionDetailsDTO(sp *data.StoreProvision) *StoreProvisionDetailsDTO {
