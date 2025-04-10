@@ -51,7 +51,7 @@ func (m *transactionManager) SetNextSubOrderStatus(suborder *data.Suborder) erro
 		repoTx := m.repo.CloneWithTransaction(tx)
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
 		// Attempt to advance suborder status
-		if err := m.advanceSuborder(&repoTx, storeInventoryManagerRepoTx, suborder.ID, suborder); err != nil {
+		if err := m.nextSuborderStatus(&repoTx, storeInventoryManagerRepoTx, suborder.ID, suborder); err != nil {
 			return err
 		}
 
@@ -64,7 +64,7 @@ func (m *transactionManager) SetNextSubOrderStatus(suborder *data.Suborder) erro
 	}) // Handle fallback if suborder is already completed within time gap
 }
 
-func (m *transactionManager) advanceSuborder(repoTx OrderRepository, storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, subOrderID uint, suborder *data.Suborder) error {
+func (m *transactionManager) nextSuborderStatus(repoTx OrderRepository, storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, subOrderID uint, suborder *data.Suborder) error {
 	currentStatus := suborder.Status
 	nextStatus, ok := allowedTransitions[currentStatus]
 	if !ok {
@@ -101,8 +101,12 @@ func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, st
 		return fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
 	}
 
-	inventoryMap := types.DeductedInventoryMap{}
-	if err := m.deductSuborderIngredientsFromStock(storeInventoryManagerRepoTx, order.StoreID, suborder, inventoryMap); err != nil {
+	inventoryMap := &types.DeductedInventoryMap{
+		IngredientStoreStockMap:     make(map[uint]*data.StoreStock),
+		ProvisionStoreProvisionsMap: make(map[uint][]data.StoreProvision),
+	}
+
+	if err := m.deductSuborderInventoryFromStock(storeInventoryManagerRepoTx, order.StoreID, suborder, inventoryMap); err != nil {
 		return fmt.Errorf("failed to deduct ingredients: %w", err)
 	}
 
@@ -178,7 +182,11 @@ func (m *transactionManager) evaluateSuborderStatuses(suborders []data.Suborder)
 	return
 }
 
-func (m *transactionManager) deductSuborderIngredientsFromStock(storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, storeID uint, suborder *data.Suborder, inventoryMap types.DeductedInventoryMap) error {
+func (m *transactionManager) deductSuborderInventoryFromStock(storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, storeID uint, suborder *data.Suborder, inventoryMap *types.DeductedInventoryMap) error {
+	if storeID == 0 || suborder == nil || inventoryMap == nil {
+		return fmt.Errorf("failed to deduct suborder: invalid input parameters passed")
+	}
+
 	deductedInventoryFromProductSize, err := storeInventoryManagerRepoTx.DeductStoreInventoryByProductSize(storeID, suborder.StoreProductSize.ProductSizeID)
 	if err != nil {
 		return fmt.Errorf("failed to deduct product size ingredients: %w", err)

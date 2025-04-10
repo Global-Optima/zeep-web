@@ -3,6 +3,8 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -50,14 +52,15 @@ type orderValidationResults struct {
 }
 
 type orderService struct {
-	taskQueue           taskqueue.TaskQueue
-	orderRepo           OrderRepository
-	storeProductRepo    storeProducts.StoreProductRepository
-	storeAdditiveRepo   storeAdditives.StoreAdditiveRepository
-	storeStockRepo      storeStocks.StoreStockRepository
-	notificationService notifications.NotificationService
-	transactionManager  TransactionManager
-	logger              *zap.SugaredLogger
+	taskQueue                 taskqueue.TaskQueue
+	orderRepo                 OrderRepository
+	storeProductRepo          storeProducts.StoreProductRepository
+	storeAdditiveRepo         storeAdditives.StoreAdditiveRepository
+	storeStockRepo            storeStocks.StoreStockRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
+	notificationService       notifications.NotificationService
+	transactionManager        TransactionManager
+	logger                    *zap.SugaredLogger
 }
 
 func NewOrderService(
@@ -66,19 +69,21 @@ func NewOrderService(
 	storeProductRepo storeProducts.StoreProductRepository,
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	notificationService notifications.NotificationService,
 	transactionManager TransactionManager,
 	logger *zap.SugaredLogger,
 ) OrderService {
 	return &orderService{
-		taskQueue:           taskQueue,
-		orderRepo:           orderRepo,
-		storeProductRepo:    storeProductRepo,
-		storeAdditiveRepo:   storeAdditiveRepo,
-		storeStockRepo:      storeStockRepo,
-		notificationService: notificationService,
-		transactionManager:  transactionManager,
-		logger:              logger,
+		taskQueue:                 taskQueue,
+		orderRepo:                 orderRepo,
+		storeProductRepo:          storeProductRepo,
+		storeAdditiveRepo:         storeAdditiveRepo,
+		storeStockRepo:            storeStockRepo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
+		notificationService:       notificationService,
+		transactionManager:        transactionManager,
+		logger:                    logger,
 	}
 }
 
@@ -193,9 +198,20 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 
 	id, err := s.orderRepo.CreateOrder(&order)
 	if err != nil {
-		wrappedErr := fmt.Errorf("error creating order: %w", err)
-		s.logger.Error(wrappedErr.Error())
-		return nil, wrappedErr
+		return nil, fmt.Errorf("failed to create order: %w", err)
+	}
+
+	inventoryLists, err := s.orderRepo.GetOrderInventory(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ingredients: %w", err)
+	}
+
+	err = s.storeInventoryManagerRepo.RecalculateOutOfStock(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+		IngredientIDs: inventoryLists.IngredientIDs,
+		ProvisionIDs:  inventoryLists.ProvisionIDs,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to recalculate out of stock: %w", err)
 	}
 
 	payload, err := json.Marshal(types.WaitingOrderPayload{OrderID: id})
@@ -521,11 +537,40 @@ func (s *orderService) SuccessOrderPayment(orderID uint, dto *types.TransactionD
 }
 
 func (s *orderService) FailOrderPayment(orderID uint) error {
-	err := s.orderRepo.HandlePaymentFailure(orderID)
+	order, err := s.orderRepo.GetRawOrderById(orderID)
 	if err != nil {
-		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
-		return err
+		wrappedErr := fmt.Errorf("failed to delete the order %d after payment refuse: failed to get order data: %w", orderID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
+
+	inventoryLists, err := s.orderRepo.GetOrderInventory(orderID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("could not get inventory lists for order id %d: %w", orderID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	if order.Status != data.OrderStatusWaitingForPayment {
+		return types.ErrInappropriateOrderStatus
+	}
+
+	err = s.orderRepo.HardDeleteOrderByID(orderID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to delete the order %d after payment refuse: %w", orderID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	go func() {
+		err = s.storeInventoryManagerRepo.RecalculateOutOfStock(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+			IngredientIDs: inventoryLists.IngredientIDs,
+			ProvisionIDs:  inventoryLists.ProvisionIDs,
+		})
+		if err != nil {
+			s.logger.Errorf("could not recalculate stock after order deletion: %v", err)
+		}
+	}()
 
 	return nil
 }

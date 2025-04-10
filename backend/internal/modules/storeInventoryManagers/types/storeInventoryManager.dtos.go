@@ -15,15 +15,15 @@ type RecalculateInput struct {
 }
 
 type IngredientUsageRow struct {
-	EntityID         uint
-	IngredientID     uint
-	RequiredQuantity float64
+	ProductSizeOrAdditiveID uint
+	IngredientID            uint
+	RequiredQuantity        float64
 }
 
 type ProvisionUsageRow struct {
-	EntityID       uint
-	ProvisionID    uint
-	RequiredVolume float64
+	ProductSizeOrAdditiveID uint
+	ProvisionID             uint
+	RequiredVolume          float64
 }
 
 type FrozenInventory struct {
@@ -32,6 +32,11 @@ type FrozenInventory struct {
 }
 
 type FrozenInventoryFilter struct {
+	IngredientIDs []uint
+	ProvisionIDs  []uint
+}
+
+type InventoryIDsLists struct {
 	IngredientIDs []uint
 	ProvisionIDs  []uint
 }

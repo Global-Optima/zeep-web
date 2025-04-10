@@ -8,6 +8,7 @@ import (
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"slices"
 	"time"
@@ -300,6 +301,7 @@ func getOutOfStockStoreProductIDs(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Info("outByInventory")
 
 	return utils.UnionSlices(outByIngredients, outByAdditives), nil
 }
@@ -406,12 +408,15 @@ func getOutByInventory(
 	outSet := make(map[uint]struct{})
 	for _, row := range ingredientRows {
 		if stockMap[row.IngredientID] < row.RequiredQuantity {
-			outSet[row.EntityID] = struct{}{}
+			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
+			logrus.Infof("outByIngredient %d", row.IngredientID)
 		}
 	}
 	for _, row := range provisionRows {
 		if provisionStockMap[row.ProvisionID] < row.RequiredVolume {
-			outSet[row.EntityID] = struct{}{}
+			logrus.Infof("provisionStock: %v / requiredVolume: %v", provisionStockMap[row.ProvisionID], row.RequiredVolume)
+			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
+			logrus.Infof("outByProvision %d", row.ProvisionID)
 		}
 	}
 
@@ -529,12 +534,12 @@ func getOutByDefaultAdditives(
 	outSet := make(map[uint]struct{})
 	for _, row := range ingredientRows {
 		if stockMap[row.IngredientID] < row.RequiredQuantity {
-			outSet[row.EntityID] = struct{}{}
+			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
 		}
 	}
 	for _, row := range provisionRows {
 		if provisionStockMap[row.ProvisionID] < row.RequiredVolume {
-			outSet[row.EntityID] = struct{}{}
+			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
 		}
 	}
 
@@ -650,14 +655,14 @@ func getOutOfStockStoreAdditiveIDs(
 	for _, row := range ingredientRows {
 		available := stockMap[row.IngredientID]
 		if available < row.RequiredQuantity {
-			outSet[row.EntityID] = struct{}{}
+			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
 		}
 	}
 
 	for _, row := range provisionRows {
 		available := provisionStockMap[row.ProvisionID]
 		if available < row.RequiredVolume {
-			outSet[row.EntityID] = struct{}{}
+			outSet[row.ProductSizeOrAdditiveID] = struct{}{}
 		}
 	}
 

@@ -102,11 +102,12 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesProvisionsIDs
 	var notSynchronizedProductSizesProvisionsIDs []uint
 	err := r.db.Model(&data.ProductSizeProvision{}).
 		Distinct("product_size_provisions.provision_id").
+		Joins("JOIN product_sizes ON product_sizes.id = product_size_provisions.product_size_id").
 		Joins("JOIN store_product_sizes ON product_size_provisions.product_size_id = store_product_sizes.product_size_id").
 		Joins("JOIN store_products ON store_products.id = store_product_sizes.store_product_id").
 		Where("store_products.store_id = ?", storeID).
-		Where("product_size_provisions.created_at > ? OR product_size_provisions.updated_at > ?",
-			lastSync, lastSync).
+		Where("product_size_provisions.created_at > ? OR product_size_provisions.updated_at > ? OR product_sizes.provisions_updated_at > ?",
+			lastSync, lastSync, lastSync).
 		Pluck("product_size_provisions.provision_id", &notSynchronizedProductSizesProvisionsIDs).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch product size provisions: %w", err)
@@ -135,10 +136,11 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedAdditiveProvisionIDs(stor
 	var notSynchronizedAdditiveProvisionsIDs []uint
 	err := r.db.Model(&data.AdditiveProvision{}).
 		Distinct("additive_provisions.provision_id").
+		Joins("JOIN additives ON additive_provisions.additive_id = additives.id").
 		Joins("JOIN store_additives ON store_additives.additive_id = additive_provisions.additive_id").
 		Where("store_additives.store_id = ?", storeID).
-		Where("additive_provisions.created_at > ? OR additive_provisions.updated_at > ?",
-			lastSync, lastSync).
+		Where("additive_provisions.created_at > ? OR additive_provisions.updated_at > ? OR additives.provisions_updated_at > ?",
+			lastSync, lastSync, lastSync).
 		Pluck("additive_provisions.provision_id", &notSynchronizedAdditiveProvisionsIDs).Error
 	if err != nil {
 		return nil, err

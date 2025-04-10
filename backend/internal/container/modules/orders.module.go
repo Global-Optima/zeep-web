@@ -34,6 +34,7 @@ func NewOrdersModule(
 		productRepo,
 		additiveRepo,
 		storeStockRepo,
+		storeInventoryManagerRepo,
 		notificationService,
 		orders.NewTransactionManager(
 			base.DB,
@@ -46,7 +47,7 @@ func NewOrdersModule(
 	)
 	handler := orders.NewOrderHandler(service)
 
-	ordersAsynqTasks := asynqTasks.NewOrderAsynqTasks(repo, base.Logger)
+	ordersAsynqTasks := asynqTasks.NewOrderAsynqTasks(service, base.Logger)
 	asynqManager.RegisterTask(orders.OrderPaymentFailure, ordersAsynqTasks.HandleOrderPaymentFailureTask)
 	base.Router.RegisterOrderRoutes(handler)
 
