@@ -51,6 +51,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import type { StockMaterialCategoryDTO } from '@/modules/admin/stock-material-categories/models/stock-material-categories.model'
@@ -64,6 +65,8 @@ const router = useRouter();
 const queryClient = useQueryClient()
 
 const canDelete = useHasRole([EmployeeRole.ADMIN])
+const { toastLocalizedError } = useAxiosLocaleToast()
+
 
 const { mutate: deleteMutation } = useMutation({
 	mutationFn: (id: number) => stockMaterialCategoryService.delete(id),
@@ -71,8 +74,8 @@ const { mutate: deleteMutation } = useMutation({
 		toast({ title: 'Успешное удаление' })
 		queryClient.invalidateQueries({ queryKey: ['admin-stock-material-categories'] })
 	},
-	onError: () => {
-		toast({ title: 'Произошла ошибка при удалении' })
+	onError: (error: AxiosLocalizedError) => {
+		toastLocalizedError(error, 'Произошла ошибка при удалении' )
 	},
 })
 
